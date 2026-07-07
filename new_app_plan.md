@@ -1,12 +1,12 @@
-# New App Plan: KTodo
+# New App Plan: KGraph
 
-**Status:** Completed
+**Status:** Not Started
 
 ## Description
-KTodo is a minimal, bloat-free task management application. It will allow users to add, check off, and delete tasks.
+KGraph is a minimal, bloat-free mathematics application. It will allow users to plot basic mathematical functions (e.g., sin(x), x^2, linear equations) on a clean, scalable grid.
 
 ## Phases
-- [x] **Phase 1:** Scaffold the KTodo application directory. Create `ktodo.html` for the web version with the basic layout (input field, add button, and list container). Integrate the web app into `KiloOS/src/App.jsx`.
-- [x] **Phase 2:** Implement the Javascript logic in `ktodo.html` to add, toggle, and remove tasks. Apply rich aesthetics (dark mode, glassmorphism) ensuring we remain under the 999KB limit.
-- [x] **Phase 3:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KTodo` directory for the standalone executable. Use native Win32 controls for the list and input.
-- [x] **Phase 4:** Polish the web app with micro-animations and verify the native build pipeline by updating `rebuild_all.bat`. Finally, commit and push to GitHub so the CI deploys it automatically.
+- [ ] **Phase 1:** Scaffold the `KGraph` application directory. Create `kgraph.html` for the web version with the basic layout (a canvas element for drawing, and an input field for the function expression). Integrate the web app into `KiloOS/src/App.jsx`.
+- [ ] **Phase 2:** Implement the Javascript logic in `kgraph.html` to parse simple math expressions (using basic `eval` with sanitization or Math operations) and render the function curve on the HTML5 `<canvas>`. Add dark mode grid styling and keep it under the 999KB limit.
+- [ ] **Phase 3:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KGraph` directory. Use GDI (Graphics Device Interface) to draw the grid and the plotted function natively.
+- [ ] **Phase 4:** Polish the web app canvas rendering and verify the native build pipeline by updating `rebuild_all.bat`. Finally, commit and push to GitHub so the CI deploys it automatically.
