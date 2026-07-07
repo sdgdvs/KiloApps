@@ -4,7 +4,7 @@
 The project aims to return software development to the lightweight, compute-efficient philosophy of 1999. The goal is to produce extremely minimal, fast, and bloat-free applications, fighting against the excessive resource consumption of modern software. 
 
 ## High-Level Objectives
-- Maintain a suite of standalone, minimal native Windows applications (KTimer, KWrite, KZip, etc.).
+- Maintain a suite of standalone, minimal native Windows applications (KTimer, KWrite, KZip, etc.). **Crucially, no individual kiloApp should exceed 999 kilobytes, even after polish and expansion.**
 - Maintain a minimal web-based OS environment (`KiloOS`) that packages HTML5 apps into sub-150KB Windows executables using Crinkler.
 - Keep dependencies and framework overhead to an absolute minimum.
 

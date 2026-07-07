@@ -1,7 +1,7 @@
 # KiloApps Architecture
 
 ## Core Philosophy
-Minimalism in size and compute efficiency is prioritized above all else. Every kilobyte and CPU cycle is accounted for.
+Minimalism in size and compute efficiency is prioritized above all else. Every kilobyte and CPU cycle is accounted for. **Crucially, no individual kiloApp should exceed 999 kilobytes, even after polish and expansion.**
 
 ## Repository Layout
 - **Native Applications:** Subdirectories prefixed with 'K' (e.g., `KCalc`, `KWrite`, `KTetris`) contain minimal C/C++ or ASM based Windows applications.
