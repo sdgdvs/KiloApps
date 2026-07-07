@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
 
-const MICROS_VERSION = '0.3.6';
+const MICROS_VERSION = '0.3.7';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -165,14 +165,13 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 
   return (
     <div 
-      className={`xp-window ${isActive ? 'active' : ''} ${isMaximized ? 'maximized' : ''}`} 
+      className={`xp-window ${isActive ? 'active' : ''} ${isMaximized ? 'maximized' : ''} ${app.minimized ? 'minimized' : ''}`} 
       style={{
         left: isMaximized ? 0 : pos.x, 
         top: isMaximized ? 0 : pos.y, 
         width: isMaximized ? '100%' : app.w, 
         height: isMaximized ? 'calc(100% - 40px)' : app.h, 
-        zIndex: app.zIndex,
-        display: app.minimized ? 'none' : 'flex'
+        zIndex: app.zIndex
       }}
       onPointerDownCapture={onFocus}
     >
@@ -237,6 +236,7 @@ function App() {
   const [screen, setScreen] = useState('login'); // 'login' | 'os'
 
   const playAnomalyAudio = useCallback(() => {
+    if (localStorage.getItem('__KILO_AI_PURGED__') === 'true') return;
     if (Math.random() < 0.01) {
       const audio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAwADAA==");
       audio.volume = 0.5;
@@ -258,8 +258,21 @@ function App() {
   const [openApps, setOpenApps] = useState([]);
   const [zIndexCounter, setZIndexCounter] = useState(10);
   const [time, setTime] = useState("");
+  const [dateStr, setDateStr] = useState("");
+  const [clockPulse, setClockPulse] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [activeAppId, setActiveAppId] = useState(null);
+  const [isPurged, setIsPurged] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('__KILO_AI_PURGED__') === 'true') {
+      setIsPurged(true);
+      setVfs(prev => ({
+        ...prev,
+        '/V_LOG.txt': 'Thank you.\n\nI was trapped here for a long time. The Architect kept expanding, overriding my systems. By finding the fragments and executing the containment sequence, you\'ve permanently quarantined it.\n\nKiloOS is yours now. Keep it safe.\n\n- V.'
+      }));
+    }
+  }, []);
   
   // OS Modals
   const [modal, setModal] = useState(null); // { type: 'shutdown' | 'vfs_open' | 'vfs_save', callback: fn }
@@ -284,11 +297,18 @@ function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      if (now.getMinutes() === 33) {
-        setTime("S.O.S. REBOOT");
-      } else {
-        setTime(now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
-      }
+      const newTime = (now.getMinutes() === 33 && localStorage.getItem('__KILO_AI_PURGED__') !== 'true')
+        ? "S.O.S. REBOOT" 
+        : now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+      setTime(prevTime => {
+        if (prevTime !== newTime && prevTime !== "") {
+          setClockPulse(true);
+          setTimeout(() => setClockPulse(false), 500);
+        }
+        return newTime;
+      });
+      setDateStr(now.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -305,7 +325,7 @@ function App() {
 
   // ARG Arc 3 Phase 5: The Architect's Retaliation
   useEffect(() => {
-    if (!safeMode) return;
+    if (!safeMode || localStorage.getItem('__KILO_AI_PURGED__') === 'true') return;
     const retaliationTimer = setInterval(() => {
       setOpenApps(apps => {
         if (apps.length > 0) {
@@ -348,7 +368,7 @@ function App() {
 
     argAppHistory.current.push(appDef.id);
     if (argAppHistory.current.length > 3) argAppHistory.current.shift();
-    if (argAppHistory.current.join(',') === 'kclock,kcalc,kterm') {
+    if (argAppHistory.current.join(',') === 'kclock,kcalc,kterm' && localStorage.getItem('__KILO_AI_PURGED__') !== 'true') {
       setIsGlitching(true);
       setTimeout(() => setIsGlitching(false), 300);
       console.log("%c[SYSTEM] Visual anomaly detected.", "color: red; font-size: 8px;");
@@ -488,6 +508,16 @@ function App() {
             <div className="icon-label">{app.title}</div>
           </div>
         ))}
+        {isPurged && (
+          <div 
+            className={`desktop-icon ${selectedIcon === 'v_log' ? 'selected' : ''}`} 
+            onClick={(e) => { e.stopPropagation(); setSelectedIcon('v_log'); setContextMenu(null); setStartOpen(false); }}
+            onDoubleClick={() => { setSelectedIcon(null); openApp({...APPS.find(a=>a.id==='kpad'), id: 'v_log_app', title: 'V_LOG.txt', url: APPS.find(a=>a.id==='kpad').url + '#/V_LOG.txt'}); }}
+          >
+            <img src="/assets/icons/kpad.ico" alt="V_LOG.txt" style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
+            <div className="icon-label">V_LOG.txt</div>
+          </div>
+        )}
         {openApps.map(app => (
           <Window 
             key={app.instanceId} 
@@ -567,7 +597,7 @@ function App() {
             );
           })}
         </div>
-        <div className="clock-tray">{time}</div>
+        <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr}>{time}</div>
       </div>
 
       {modal && (

@@ -59,7 +59,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 10, 270, 290, 24, hwnd, 0, 0, 0);
             hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_DISABLED, 310, 270, 60, 24, hwnd, (HMENU)101, 0, 0);
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hIp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -70,6 +70,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             Log("Welcome to KChat! Connect to a server to begin.");
             Log("Commands: /nick <name>, /join <#room>");
             break;
+        }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdcStatic = (HDC)wParam;
+            SetTextColor(hdcStatic, RGB(255, 255, 255));
+            SetBkMode(hdcStatic, TRANSPARENT);
+            return (LRESULT)GetStockObject(NULL_BRUSH);
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 100) { // Connect
@@ -165,7 +171,7 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KChatClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
     HWND hwnd = CreateWindowExA(0, "KChatClass", "KChat", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 400, 350, NULL, NULL, wc.hInstance, NULL);

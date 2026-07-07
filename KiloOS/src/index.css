@@ -357,6 +357,11 @@ body, html {
   align-items: center;
   font-size: 13px;
   border-left: 1px solid var(--border-color);
+  transition: color 0.3s;
+}
+.clock-tray.update-pulse {
+  color: var(--primary);
+  text-shadow: 0 0 8px var(--primary);
 }
 
 /* Window */
