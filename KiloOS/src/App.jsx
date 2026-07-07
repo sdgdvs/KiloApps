@@ -88,7 +88,8 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 
   const handlePointerMove = (e) => {
     if (dragging) {
-      setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
+      let newY = Math.max(0, e.clientY - offset.current.y);
+      setPos({ x: e.clientX - offset.current.x, y: newY });
     }
   };
 
@@ -96,6 +97,26 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
     setDragging(false);
     e.target.releasePointerCapture(e.pointerId);
   };
+
+  // Ensure windows stay reachable even if viewport resizes or they spawn out of bounds
+  useEffect(() => {
+    const handleResize = () => {
+      setPos(p => {
+        let newX = p.x;
+        let newY = p.y;
+        if (newY < 0) newY = 0;
+        if (newY > window.innerHeight - 60) newY = Math.max(0, window.innerHeight - 60);
+        if (newX > window.innerWidth - 60) newX = window.innerWidth - 60;
+        if (newX < -app.w + 60) newX = -app.w + 60;
+        
+        if (newX !== p.x || newY !== p.y) return { x: newX, y: newY };
+        return p;
+      });
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [app.w]);
 
   // Handle postMessage from iframe
   useEffect(() => {
