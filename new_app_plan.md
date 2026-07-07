@@ -1,9 +1,12 @@
-# New App Plan: KConverter
+# New App Plan: KTodo
 
-**Status:** Completed
+**Status:** Not Started
+
+## Description
+KTodo is a minimal, bloat-free task management application. It will allow users to add, check off, and delete tasks.
 
 ## Phases
-- [x] **Phase 1:** Scaffold the new KConverter application directory, creating the HTML, CSS, and basic JavaScript structure. Ensure it integrates with kiloapps.web.app.
-- [x] **Phase 2:** Implement the unit conversion logic (length, weight, temperature) and connect it to the UI. Ensure it uses rich aesthetics (dark mode, glassmorphism) without exceeding the size limit.
-- [x] **Phase 3:** Create the native Windows wrapper for KConverter to build a standalone .exe file. Update packaging scripts if necessary.
-- [x] **Phase 4:** Polish component state feedback, hover states, and animations. Ensure the final KConverter executable is bundled into the .exe zip file and fully functional.
+- [ ] **Phase 1:** Scaffold the KTodo application directory. Create `ktodo.html` for the web version with the basic layout (input field, add button, and list container). Integrate the web app into `KiloOS/src/App.jsx`.
+- [ ] **Phase 2:** Implement the Javascript logic in `ktodo.html` to add, toggle, and remove tasks. Apply rich aesthetics (dark mode, glassmorphism) ensuring we remain under the 999KB limit.
+- [ ] **Phase 3:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KTodo` directory for the standalone executable. Use native Win32 controls for the list and input.
+- [ ] **Phase 4:** Polish the web app with micro-animations and verify the native build pipeline by updating `rebuild_all.bat`. Finally, commit and push to GitHub so the CI deploys it automatically.
