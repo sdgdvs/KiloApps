@@ -49,7 +49,8 @@ const APPS = [
   { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktimer.ico', w: 300, h: 200 },
   { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksynth.ico', w: 300, h: 200 },
   { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 400, h: 300 },
-  { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 350, h: 400 }
+  { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 350, h: 400 },
+  { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200 }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
@@ -239,6 +240,18 @@ function App() {
   }, [openApps]);
 
   const openApp = (appDef) => {
+    if (appDef.id === 'kquarantine') {
+      const pwd = prompt("FATAL EXCEPTION: SECTOR LOCKED.\nREQUIRES LEVEL 9 CLEARANCE PASSPHRASE:");
+      if (pwd !== null) {
+        setVfs(prev => ({
+          ...prev, 
+          '/.sys_quarantine_log': (prev['/.sys_quarantine_log'] || '') + `[DENIED] Attempted Passphrase: ${pwd}\n`
+        }));
+        alert("ACCESS DENIED. INCIDENT LOGGED.");
+      }
+      return;
+    }
+
     argAppHistory.current.push(appDef.id);
     if (argAppHistory.current.length > 3) argAppHistory.current.shift();
     if (argAppHistory.current.join(',') === 'kclock,kcalc,kterm') {
@@ -377,25 +390,34 @@ function App() {
       
       {startOpen && (
         <div className="start-menu">
-          <div className="start-header">KiloOS User</div>
-          <div className="start-items">
-            {APPS.map(app => (
-              <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                {app.title}
-              </div>
-            ))}
-            <div className="start-item" onClick={() => { setStartOpen(false); alert(`KiloOS Version ${MICROS_VERSION}`); }}>
-              About KiloOS
+          <div className="start-columns">
+            <div className="start-apps">
+              {APPS.map(app => (
+                <div key={app.id} className="start-item" onClick={() => openApp(app)}>
+                  <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
+                  <span>{app.title}</span>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="start-footer">
-            <a href="/exe/KApps.zip" download className="shutdown-btn" style={{textDecoration:'none', textAlign:'center', display:'block', marginBottom:'5px', background:'linear-gradient(to bottom, #77a2df, #3b73c4)'}}>
-              Download All .exe (.zip)
-            </a>
-            <button className="shutdown-btn" onClick={() => { setStartOpen(false); setModal({ type: 'shutdown' }); setModalInput('micros_state.json'); }}>
-              Shutdown...
-            </button>
+            <div className="start-system">
+              <div className="start-user">
+                <div className="start-avatar">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <span>KiloOS User</span>
+              </div>
+              <div className="start-system-actions">
+                <div className="start-item" onClick={() => { setStartOpen(false); alert(`KiloOS Version ${MICROS_VERSION}`); }}>
+                  About KiloOS
+                </div>
+                <a href="/exe/KApps.zip" download className="start-item" style={{textDecoration:'none', color:'inherit'}}>
+                  Download .exe Pack
+                </a>
+                <div className="start-item" onClick={() => { setStartOpen(false); setModal({ type: 'shutdown' }); setModalInput('micros_state.json'); }}>
+                  Shutdown...
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
