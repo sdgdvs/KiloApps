@@ -44,11 +44,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HBRUSH brush;
                     
                     if (x == selX && y == selY) {
-                        brush = CreateSolidBrush(RGB(255, 255, 100)); // selected
+                        brush = CreateSolidBrush(RGB(245, 158, 11)); // selected
                     } else if ((x + y) % 2 == 0) {
-                        brush = CreateSolidBrush(RGB(240, 217, 181)); // light
+                        brush = CreateSolidBrush(RGB(203, 213, 225)); // light
                     } else {
-                        brush = CreateSolidBrush(RGB(181, 136, 99)); // dark
+                        brush = CreateSolidBrush(RGB(30, 41, 59)); // dark
                     }
                     
                     FillRect(hdc, &rc, brush);
@@ -70,7 +70,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT statusRc = { 10, H - 60, W - 10, H - 30 };
             HFONT sFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             oldFont = SelectObject(hdc, sFont);
-            SetTextColor(hdc, RGB(0, 0, 0));
+            SetTextColor(hdc, RGB(255, 255, 255));
             
             if (whiteTurn) {
                 DrawTextA(hdc, "White's Turn", -1, &statusRc, DT_LEFT);
@@ -139,7 +139,7 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KChessApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,

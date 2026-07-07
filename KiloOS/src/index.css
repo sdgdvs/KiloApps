@@ -24,6 +24,23 @@ body, html {
   color: var(--text-main);
 }
 
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
 #root {
   width: 100%;
   height: 100%;
@@ -98,6 +115,41 @@ body, html {
 .login-btn:hover { opacity: 0.9; }
 
 /* Desktop */
+.boot-screen {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-color);
+  animation: bootFadeOut 0.5s ease 1.5s forwards;
+}
+
+@keyframes bootFadeOut {
+  to { opacity: 0; pointer-events: none; }
+}
+
+.boot-progress-container {
+  width: 200px;
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.boot-progress-bar {
+  height: 100%;
+  background: var(--primary);
+  width: 0%;
+  animation: bootLoad 1.5s ease-out forwards;
+}
+
+@keyframes bootLoad {
+  0% { width: 0%; }
+  50% { width: 70%; }
+  100% { width: 100%; }
+}
 .desktop {
   width: 100%;
   height: calc(100% - 40px);

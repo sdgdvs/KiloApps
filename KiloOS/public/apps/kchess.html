@@ -3,8 +3,25 @@
 <head>
 <title>KChess</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; }
-  canvas { background-color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 1px solid #333; cursor: pointer; }
+  :root {
+    --bg-color: #09090b;
+    --text-main: #ffffff;
+  }
+  body { 
+    margin: 0; font-family: 'Inter', -apple-system, sans-serif; 
+    background: radial-gradient(circle at top right, #1e1b4b, var(--bg-color) 80%); 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    height: 100vh; user-select: none; color: var(--text-main);
+  }
+  canvas { 
+    background-color: rgba(0, 0, 0, 0.2); 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    border-radius: 8px;
+    cursor: pointer; 
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
 </style>
 </head>
 <body>
@@ -50,11 +67,11 @@
               let py = OY + y * TS;
 
               if (x === selX && y === selY) {
-                  ctx.fillStyle = "rgb(255, 255, 100)";
+                  ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
               } else if ((x + y) % 2 === 0) {
-                  ctx.fillStyle = "rgb(240, 217, 181)";
+                  ctx.fillStyle = "rgb(203, 213, 225)";
               } else {
-                  ctx.fillStyle = "rgb(181, 136, 99)";
+                  ctx.fillStyle = "rgb(30, 41, 59)";
               }
               
               ctx.fillRect(px, py, TS, TS);
@@ -67,8 +84,8 @@
           }
       }
       
-      ctx.font = "16px 'Segoe UI'";
-      ctx.fillStyle = "rgb(0, 0, 0)";
+      ctx.font = "16px 'Inter'";
+      ctx.fillStyle = "rgb(255, 255, 255)";
       ctx.textAlign = "left";
       ctx.fillText(whiteTurn ? "White's Turn" : "Black's Turn", 10, cvs.height - 30);
   }

@@ -54,6 +54,12 @@ Type 'help' for a list of commands.
 
       if (cmd === 'help') {
           print("Commands: help, ver, clear, dir, cd, type");
+      } else if (cmd === 'containment_override') {
+          if (args[1] === '0xDEADBEEF') {
+              print("[SYSTEM OVERRIDE ACCEPTED] SEQUENCE INITIATED...");
+          } else {
+              print("ARCHITECT: Nice try. But your primitive syntax cannot contain me.");
+          }
       } else if (cmd === 'operator') {
           if (args[1] === '--help') {
               print(">> INCOMING CONNECTION [THE OPERATOR] <<");
