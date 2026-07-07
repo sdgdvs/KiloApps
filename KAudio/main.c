@@ -75,14 +75,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(20, 20, 20));
+            HBRUSH bg = CreateSolidBrush(RGB(15, 23, 42)); // Slate 900
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
-            HBRUSH white = CreateSolidBrush(RGB(240, 240, 240));
-            HBRUSH active = CreateSolidBrush(RGB(100, 200, 100));
-            HBRUSH black = CreateSolidBrush(RGB(40, 40, 40));
+            HBRUSH white = CreateSolidBrush(RGB(226, 232, 240)); // Slate 200
+            HBRUSH activeWhite = CreateSolidBrush(RGB(14, 165, 233)); // Cyan 500
+            HBRUSH activeBlack = CreateSolidBrush(RGB(56, 189, 248)); // Sky 400
+            HBRUSH black = CreateSolidBrush(RGB(30, 41, 59)); // Slate 800
             
             int num_white = 8;
             int whiteW = W / num_white;
@@ -90,9 +91,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < NUM_KEYS; i++) {
                 if (!is_black[i]) {
                     RECT r = {white_idx * whiteW + 2, 20, (white_idx + 1) * whiteW - 2, H - 20};
-                    FillRect(memDC, &r, activeKeys[i] ? active : white);
+                    FillRect(memDC, &r, activeKeys[i] ? activeWhite : white);
                     SetBkMode(memDC, TRANSPARENT);
-                    SetTextColor(memDC, RGB(0, 0, 0));
+                    SetTextColor(memDC, RGB(71, 85, 105)); // Slate 600
+                    if (activeKeys[i]) SetTextColor(memDC, RGB(255, 255, 255));
                     char text[2] = {binds[i], 0};
                     TextOutA(memDC, white_idx * whiteW + whiteW / 2 - 4, H - 40, text, 1);
                     white_idx++;
@@ -103,9 +105,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < NUM_KEYS; i++) {
                 if (is_black[i]) {
                     RECT r = {white_idx * whiteW - whiteW / 3, 20, white_idx * whiteW + whiteW / 3, H / 2};
-                    FillRect(memDC, &r, activeKeys[i] ? active : black);
+                    FillRect(memDC, &r, activeKeys[i] ? activeBlack : black);
                     SetBkMode(memDC, TRANSPARENT);
-                    SetTextColor(memDC, RGB(255, 255, 255));
+                    SetTextColor(memDC, RGB(148, 163, 184)); // Slate 400
+                    if (activeKeys[i]) SetTextColor(memDC, RGB(255, 255, 255));
                     char text[2] = {binds[i], 0};
                     TextOutA(memDC, white_idx * whiteW - 4, H / 2 - 20, text, 1);
                 } else {

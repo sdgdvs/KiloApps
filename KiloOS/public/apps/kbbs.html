@@ -3,26 +3,57 @@
 <head>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#ece9d8; font-family:Tahoma,sans-serif; font-size:12px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+        body { background:#09090b; font-family:'Inter', system-ui, sans-serif; font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; color: #a1a1aa; }
 
-        .conn-bar { display:flex; align-items:center; gap:4px; padding:4px 6px; background:#ece9d8; border-bottom:1px solid #aca899; }
-        .conn-bar input[type="text"], .conn-bar select { border:1px solid #7f9db9; padding:2px 4px; font-family:Tahoma; font-size:12px; }
-        .conn-bar input:disabled { background:#e8e8e8; color:#999; cursor:not-allowed; }
-        .conn-bar button { font-family:Tahoma; font-size:11px; padding:2px 8px; cursor:pointer; background:#ece9d8; border:1px solid #999; }
-        .conn-bar button:active { background:#ccc; }
-        #host { width:160px; }
-        #port { width:48px; }
-        #bbsSelect { width:160px; margin-left: 8px; }
+        .conn-bar { 
+            display:flex; align-items:center; gap:8px; padding:12px 16px; 
+            background:rgba(24, 24, 27, 0.7); backdrop-filter:blur(8px); 
+            -webkit-backdrop-filter:blur(8px);
+            border-bottom:1px solid rgba(255, 255, 255, 0.05); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); z-index: 10;
+        }
+        .conn-bar span { font-weight: 600; color: #d4d4d8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .conn-bar input[type="text"], .conn-bar select { 
+            background: rgba(0, 0, 0, 0.5); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3); 
+            padding: 6px 10px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; transition: all 0.2s; outline: none;
+        }
+        .conn-bar input[type="text"]:focus, .conn-bar select:focus { border-color: #0ea5e9; box-shadow: 0 0 8px rgba(14, 165, 233, 0.3); }
+        .conn-bar input:disabled { background:rgba(255, 255, 255, 0.02); color:#52525b; border-color: rgba(255, 255, 255, 0.05); cursor:not-allowed; }
+        .conn-bar select option { background: #18181b; color: #e4e4e7; }
+        
+        .conn-bar button { 
+            font-family:'Inter', sans-serif; font-weight: 600; font-size:12px; padding:6px 14px; cursor:pointer; 
+            background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); color: #fff; 
+            border: 1px solid #0369a1; border-radius: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); transition: all 0.1s;
+        }
+        .conn-bar button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        
+        #host { width:220px; }
+        #port { width:60px; text-align: center; }
+        #bbsSelect { width:220px; margin-left: auto; }
 
         /* Main area */
-        .main { flex:1; display:flex; overflow:hidden; }
+        .main { flex:1; display:flex; overflow:hidden; position: relative; }
 
         /* Terminal */
-        .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; }
-        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; }
+        .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; position: relative; }
+        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; z-index: 1; }
+
+        /* CRT Scanline overlay */
+        .term-wrap::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%; z-index: 2; pointer-events: none;
+        }
 
         /* Status bar */
-        .status-bar { padding:2px 6px; background:#ece9d8; border-top:1px solid #fff; font-size:11px; color:#444; display:flex; justify-content:space-between; }
+        .status-bar { 
+            padding:6px 16px; background:#09090b; border-top:1px solid rgba(255,255,255,0.05); 
+            font-size:11px; font-weight: 500; color:#71717a; display:flex; justify-content:space-between; 
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.2); z-index: 10;
+        }
+        #statusInfo { color: #10b981; text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
 <body>
@@ -51,12 +82,12 @@
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0;
 
-    // ─── ANSI Color Palette (standard 16) ───
+    // ─── ANSI Color Palette (Modern Vibrant) ───
     const COLORS = [
-        '#000000','#aa0000','#00aa00','#aa5500',
-        '#0000aa','#aa00aa','#00aaaa','#aaaaaa',
-        '#555555','#ff5555','#55ff55','#ffff55',
-        '#5555ff','#ff55ff','#55ffff','#ffffff'
+        '#282a36','#ff5555','#50fa7b','#f1fa8c',
+        '#bd93f9','#ff79c6','#8be9fd','#f8f8f2',
+        '#6272a4','#ff6e6e','#69ff94','#ffffa5',
+        '#d6acff','#ff92df','#a4ffff','#ffffff'
     ];
 
     // ─── Screen Buffer ───

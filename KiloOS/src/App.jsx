@@ -48,17 +48,26 @@ const APPS = [
   { id: 'kmandel', title: 'KMandel', url: '/apps/kmandel.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmandel.ico', w: 400, h: 400 },
   { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktimer.ico', w: 300, h: 200 },
   { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksynth.ico', w: 300, h: 200 },
-  { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 400, h: 300 }
+  { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 400, h: 300 },
+  { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 350, h: 400 }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
   const [pos, setPos] = useState({ x: app.x, y: app.y });
   const [dragging, setDragging] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const offset = useRef({ x: 0, y: 0 });
   const iframeRef = useRef(null);
+  const isActive = !app.minimized && app.zIndex === Math.max(...openApps.map(a => a.zIndex));
+
+  const toggleMaximize = () => {
+    setIsMaximized(!isMaximized);
+    onFocus();
+  };
 
   const handlePointerDown = (e) => {
     onFocus();
+    if (isMaximized) return;
     setDragging(true);
     offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     e.target.setPointerCapture(e.pointerId);
@@ -121,9 +130,13 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 
   return (
     <div 
-      className="xp-window" 
+      className={`xp-window ${isActive ? 'active' : ''} ${isMaximized ? 'maximized' : ''}`} 
       style={{
-        left: pos.x, top: pos.y, width: app.w, height: app.h, zIndex: app.zIndex,
+        left: isMaximized ? 0 : pos.x, 
+        top: isMaximized ? 0 : pos.y, 
+        width: isMaximized ? '100%' : app.w, 
+        height: isMaximized ? 'calc(100% - 40px)' : app.h, 
+        zIndex: app.zIndex,
         display: app.minimized ? 'none' : 'flex'
       }}
       onPointerDownCapture={onFocus}
@@ -133,6 +146,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onDoubleClick={toggleMaximize}
       >
         <div className="xp-title" style={{display:'flex', alignItems:'center', gap:'6px'}}>
           {app.icon && <img src={app.icon} alt="" style={{width:'16px', height:'16px', imageRendering:'pixelated'}} />}
@@ -143,6 +157,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
             <a href={app.exeUrl} download className="xp-btn" title="Download KApps.zip" onClick={e => e.stopPropagation()} style={{textDecoration:'none', color:'white', background:'linear-gradient(to bottom, #77a2df, #3b73c4)', marginRight:'5px'}}>↓</a>
           )}
           <div className="xp-btn" onClick={(e) => { e.stopPropagation(); onMinimize(); }}>_</div>
+          <div className="xp-btn" onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}>☐</div>
           <div className="xp-btn xp-btn-close" onClick={(e) => { e.stopPropagation(); onClose(); }}>X</div>
         </div>
       </div>
@@ -157,6 +172,24 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 
 function App() {
   const [screen, setScreen] = useState('login'); // 'login' | 'os'
+
+  const playAnomalyAudio = useCallback(() => {
+    if (Math.random() < 0.01) {
+      const audio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAwADAA==");
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    }
+  }, []);
+  const argClicks = useRef(0);
+  const handlePixelClick = (e) => {
+    e.stopPropagation();
+    argClicks.current += 1;
+    if (argClicks.current === 5) {
+      alert(atob("WyBWLiBdIFlvdSBmb3VuZCBpdC4gVGhlIGFyY2hpdmUgaXMgd2FpdGluZy4="));
+    }
+  };
+  const argAppHistory = useRef([]);
+  const [isGlitching, setIsGlitching] = useState(false);
   const [vfs, setVfs] = useState(DEFAULT_VFS);
   const [openApps, setOpenApps] = useState([]);
   const [zIndexCounter, setZIndexCounter] = useState(10);
@@ -167,6 +200,21 @@ function App() {
   // OS Modals
   const [modal, setModal] = useState(null); // { type: 'shutdown' | 'vfs_open' | 'vfs_save', callback: fn }
   const [modalInput, setModalInput] = useState('');
+
+  // Desktop State
+  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [contextMenu, setContextMenu] = useState(null);
+
+  const handleDesktopClick = () => {
+    setStartOpen(false);
+    setSelectedIcon(null);
+    setContextMenu(null);
+  };
+
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY });
+  };
 
   // Clock
   useEffect(() => {
@@ -191,6 +239,13 @@ function App() {
   }, [openApps]);
 
   const openApp = (appDef) => {
+    argAppHistory.current.push(appDef.id);
+    if (argAppHistory.current.length > 3) argAppHistory.current.shift();
+    if (argAppHistory.current.join(',') === 'kclock,kcalc,kterm') {
+      setIsGlitching(true);
+      setTimeout(() => setIsGlitching(false), 300);
+      console.log("%c[SYSTEM] Visual anomaly detected.", "color: red; font-size: 8px;");
+    }
     setStartOpen(false);
     const existing = openApps.find(a => a.id === appDef.id && a.url === appDef.url);
     if (existing) {
@@ -272,21 +327,34 @@ function App() {
   if (screen === 'login') {
     return (
       <div className="login-screen">
-        <div className="login-title">KiloOS</div>
-        <div style={{color:'white', marginBottom: '20px', fontSize: '14px'}}>Version {MICROS_VERSION}</div>
         <div className="login-box">
-          <button className="login-btn" onClick={() => setScreen('os')}>Start Fresh</button>
-          <button className="login-btn" onClick={handleUploadState}>Upload Saved State (.json)</button>
+          <div className="login-avatar">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <div className="login-title">KiloOS</div>
+          <div style={{color:'var(--text-muted)', marginBottom: '20px', fontSize: '13px'}}>Version {MICROS_VERSION}</div>
+          <button className="login-btn" onClick={() => setScreen('os')} style={{width: '100%', justifyContent: 'center'}}>Start Fresh</button>
+          <button className="login-btn" onClick={handleUploadState} style={{width: '100%', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', color: 'var(--text-main)'}}>Upload Saved State</button>
         </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="desktop" onClick={() => setStartOpen(false)}>
+    <div className={`os-wrapper ${isGlitching ? 'arg-corrupted-glitch' : ''}`} onContextMenu={handleContextMenu} onPointerDownCapture={playAnomalyAudio}>
+      <div className="desktop" onClick={handleDesktopClick}>
+        <div 
+          onClick={handlePixelClick}
+          style={{ position: 'absolute', bottom: '0px', right: '0px', width: '5px', height: '5px', opacity: 0.01, zIndex: 9999, cursor: 'default' }}
+          title=" "
+        />
         {APPS.map(app => (
-          <div key={app.id} className="desktop-icon" onDoubleClick={() => openApp(app)}>
+          <div 
+            key={app.id} 
+            className={`desktop-icon ${selectedIcon === app.id ? 'selected' : ''}`} 
+            onClick={(e) => { e.stopPropagation(); setSelectedIcon(app.id); setContextMenu(null); setStartOpen(false); }}
+            onDoubleClick={() => { setSelectedIcon(null); openApp(app); }}
+          >
             <img src={app.icon} alt={app.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
             <div className="icon-label">{app.title}</div>
           </div>
@@ -389,7 +457,19 @@ function App() {
           </div>
         </div>
       )}
-    </>
+      
+      {contextMenu && (
+        <div 
+          className="context-menu" 
+          style={{left: contextMenu.x, top: contextMenu.y}}
+        >
+          <div className="context-item" onClick={() => { setContextMenu(null); window.location.reload(); }}>Refresh Desktop</div>
+          <div className="context-item" onClick={() => { setContextMenu(null); alert('Wallpaper settings not available.'); }}>Change Wallpaper</div>
+          <div className="context-separator" />
+          <div className="context-item" onClick={() => { setContextMenu(null); alert('Display settings not available.'); }}>Display Settings</div>
+        </div>
+      )}
+    </div>
   );
 }
 

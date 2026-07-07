@@ -77,10 +77,10 @@ int dpiScale(int x) {
 
 /* 16-color ANSI palette (COLORREF is BGR) */
 COLORREF ansiColors[16] = {
-    0x000000, 0x000080, 0x008000, 0x008080,  /* black, dark red, dark green, dark yellow */
-    0x800000, 0x800080, 0x808000, 0xC0C0C0,  /* dark blue, dark magenta, dark cyan, light gray */
-    0x808080, 0x0000FF, 0x00FF00, 0x00FFFF,  /* dark gray, bright red, bright green, bright yellow */
-    0xFF0000, 0xFF00FF, 0xFFFF00, 0xFFFFFF   /* bright blue, bright magenta, bright cyan, white */
+    0x362A28, 0x5555FF, 0x7BFA50, 0x8CFAF1,  /* black, dark red, dark green, dark yellow */
+    0xF993BD, 0xC679FF, 0xFDE98B, 0xF2F8F8,  /* dark blue, dark magenta, dark cyan, light gray */
+    0xA47262, 0x6E6EFF, 0x94FF69, 0xA5FFFF,  /* dark gray, bright red, bright green, bright yellow */
+    0xFFACD6, 0xDF92FF, 0xFFFFA4, 0xFFFFFF   /* bright blue, bright magenta, bright cyan, white */
 };
 
 struct Cell { char ch; unsigned char fg; unsigned char bg; };
@@ -849,7 +849,7 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KBBSClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(9, 9, 11));
     wc.hIcon = LoadIconA(wc.hInstance, MAKEINTRESOURCEA(1));
 
     RegisterClassA(&wc);

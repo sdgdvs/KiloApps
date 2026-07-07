@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KConverter</title>
+<style>
+  body, html { 
+    margin: 0; padding: 0; width: 100%; height: 100%; 
+    font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; 
+    background: linear-gradient(135deg, #1e1e1e, #121212); 
+    color: #f0f0f0; 
+    user-select: none;
+  }
+  .app-container { 
+    padding: 16px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; 
+  }
+  .header { 
+    font-size: 20px; font-weight: 600; margin-bottom: 16px; text-align: center; 
+    background: linear-gradient(to right, #77a2df, #3b73c4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+  .row { display: flex; flex-direction: column; gap: 4px; }
+  label { font-size: 12px; color: #aaa; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  select, input {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  select:hover, input:hover:not([readonly]) {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  select:focus, input:focus {
+    border-color: #5a8bd4;
+    box-shadow: 0 0 0 3px rgba(90, 139, 212, 0.3);
+    transform: translateY(-1px);
+  }
+  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+  .tab { 
+    flex: 1; padding: 8px 0; text-align: center; cursor: pointer; 
+    background: rgba(255, 255, 255, 0.05); border-radius: 6px; 
+    font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent;
+  }
+  .tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+  }
+  .tab.active { 
+    background: rgba(90, 139, 212, 0.2); 
+    border-color: rgba(90, 139, 212, 0.5);
+    color: #8ab4f8; font-weight: 600;
+    box-shadow: 0 4px 10px rgba(90, 139, 212, 0.2);
+  }
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .glass-panel:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  }
+</style>
+</head>
+<body>
+  <div class="app-container">
+    <div class="header">KConverter</div>
+    <div class="glass-panel">
+      <div class="tabs">
+        <div class="tab active" onclick="setMode('length')">Length</div>
+        <div class="tab" onclick="setMode('weight')">Weight</div>
+        <div class="tab" onclick="setMode('temp')">Temp</div>
+      </div>
+
+      <div class="row">
+        <label>From</label>
+        <div style="display:flex; gap:8px;">
+          <input type="number" id="inputVal" value="1" oninput="convert()" style="flex:1" />
+          <select id="unitFrom" onchange="convert()" style="flex:1"></select>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <label>To</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="outputVal" readonly style="flex:1; background:rgba(0,0,0,0.4);" />
+          <select id="unitTo" onchange="convert()" style="flex:1"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const units = {
+      length: {
+        m: { name: 'Meters', factor: 1 },
+        km: { name: 'Kilometers', factor: 1000 },
+        mi: { name: 'Miles', factor: 1609.34 },
+        ft: { name: 'Feet', factor: 0.3048 },
+        in: { name: 'Inches', factor: 0.0254 }
+      },
+      weight: {
+        kg: { name: 'Kilograms', factor: 1 },
+        g: { name: 'Grams', factor: 0.001 },
+        lb: { name: 'Pounds', factor: 0.453592 },
+        oz: { name: 'Ounces', factor: 0.0283495 }
+      },
+      temp: {
+        c: { name: 'Celsius' },
+        f: { name: 'Fahrenheit' },
+        k: { name: 'Kelvin' }
+      }
+    };
+
+    let currentMode = 'length';
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.tab').forEach(el => {
+        el.classList.remove('active');
+        if (el.innerText.toLowerCase().startsWith(mode.substring(0,4))) {
+          el.classList.add('active');
+        }
+      });
+      populateDropdowns();
+      convert();
+    }
+
+    function populateDropdowns() {
+      const uf = document.getElementById('unitFrom');
+      const ut = document.getElementById('unitTo');
+      uf.innerHTML = ''; ut.innerHTML = '';
+      
+      const modeUnits = units[currentMode];
+      let first = true, second = null;
+      
+      for (const [key, val] of Object.entries(modeUnits)) {
+        uf.innerHTML += `<option value="${key}">${val.name}</option>`;
+        ut.innerHTML += `<option value="${key}">${val.name}</option>`;
+        if (first) { first = false; }
+        else if (!second) { second = key; }
+      }
+      if (second) { ut.value = second; }
+    }
+
+    function convert() {
+      const val = parseFloat(document.getElementById('inputVal').value);
+      if (isNaN(val)) {
+        document.getElementById('outputVal').value = '';
+        return;
+      }
+
+      const from = document.getElementById('unitFrom').value;
+      const to = document.getElementById('unitTo').value;
+      let result = 0;
+
+      if (currentMode === 'temp') {
+        let celsius = 0;
+        if (from === 'c') celsius = val;
+        else if (from === 'f') celsius = (val - 32) * 5/9;
+        else if (from === 'k') celsius = val - 273.15;
+
+        if (to === 'c') result = celsius;
+        else if (to === 'f') result = (celsius * 9/5) + 32;
+        else if (to === 'k') result = celsius + 273.15;
+      } else {
+        const modeUnits = units[currentMode];
+        const baseVal = val * modeUnits[from].factor;
+        result = baseVal / modeUnits[to].factor;
+      }
+
+      // Format nicely (up to 4 decimal places)
+      let pretty = result.toFixed(4);
+      pretty = pretty.replace(/\.?0+$/, ''); // remove trailing zeros
+      if (pretty === '') pretty = '0';
+      
+      document.getElementById('outputVal').value = pretty;
+    }
+
+    window.onload = () => {
+      setMode('length');
+    };
+  </script>
+</body>
+</html>

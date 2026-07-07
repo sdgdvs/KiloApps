@@ -3,15 +3,25 @@
 <head>
 <meta charset="utf-8">
 <title>KCalc</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Tahoma', sans-serif; background: #ece9d8; user-select: none; }
-  .calc { padding: 8px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
-  .display { background: white; border: 2px inset #ccc; font-size: 20px; text-align: right; padding: 5px; margin-bottom: 8px; font-family: 'Consolas', monospace; overflow-x: auto; white-space: nowrap; height: 32px; line-height: 22px; }
-  .keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; flex: 1; }
-  button { font-size: 14px; border: 1px solid #999; border-radius: 3px; background: linear-gradient(to bottom, #f9f9f9, #e0e0e0); cursor: pointer; box-shadow: 1px 1px 2px rgba(0,0,0,0.2); padding: 0; }
-  button:active { background: #d0d0d0; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
-  button.operator { color: #d00; }
-  button.func { color: #00d; font-size: 12px; }
+  :root {
+    --bg-color: hsl(210, 15%, 12%);
+    --card-bg: hsl(210, 15%, 20%);
+    --primary: hsl(200, 85%, 60%);
+    --secondary: hsl(30, 85%, 60%);
+    --text-main: #ffffff;
+    --border-color: rgba(255, 255, 255, 0.1);
+  }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); user-select: none; }
+  .calc { padding: 10px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; gap: 10px; }
+  .display { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; font-size: 24px; text-align: right; padding: 10px; font-family: 'Consolas', monospace; overflow-x: auto; white-space: nowrap; height: 40px; line-height: 20px; color: var(--text-main); }
+  .keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; flex: 1; }
+  button { font-family: 'Inter', sans-serif; font-size: 16px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--card-bg); color: var(--text-main); cursor: pointer; transition: all 0.15s ease; padding: 0; }
+  button:hover { background: rgba(255,255,255,0.05); }
+  button:active { background: rgba(255,255,255,0.1); }
+  button.operator { color: var(--primary); font-weight: 600; }
+  button.func { color: var(--secondary); font-size: 13px; }
 </style>
 </head>
 <body>

@@ -3,27 +3,101 @@
 <head>
 <title>KAudio</title>
 <style>
-  body { margin: 0; background-color: #141414; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; user-select: none; }
-  .keys { display: flex; gap: 4px; padding: 20px; background: #222; border-radius: 8px; }
-  .key { width: 40px; height: 160px; background: #eee; border-radius: 0 0 4px 4px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-weight: bold; color: #333; cursor: pointer; transition: background 0.1s; }
-  .key.active { background: #64c864; }
+  body { 
+    margin: 0; 
+    background: linear-gradient(135deg, #0f172a, #1e1b4b); 
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; 
+    height: 100vh; overflow: hidden; 
+    font-family: 'Inter', system-ui, sans-serif; user-select: none; color: #fff;
+  }
+  .synth-container {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .controls {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+  }
+  .waveform-select {
+    background: rgba(0, 0, 0, 0.4); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.4);
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; outline: none; font-size: 13px;
+    transition: all 0.2s; appearance: none; text-align: center; font-weight: 500;
+  }
+  .waveform-select:hover { border-color: #0ea5e9; background: rgba(0, 0, 0, 0.6); }
+  .waveform-select option { background: #1e1b4b; color: #fff; }
+  .keys-wrapper { position: relative; display: flex; gap: 4px; }
+  
+  .key { 
+    width: 44px; height: 160px; background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%); 
+    border-radius: 0 0 6px 6px; display: flex; align-items: flex-end; justify-content: center; 
+    padding-bottom: 12px; font-weight: 600; color: #475569; font-size: 13px;
+    cursor: pointer; transition: transform 0.1s, box-shadow 0.1s, background 0.1s; 
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 -4px 0 rgba(0,0,0,0.1);
+    position: relative; z-index: 1;
+  }
+  .key.black {
+    position: absolute; top: 0; left: 0; 
+    width: 28px; height: 90px; background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+    border-radius: 0 0 4px 4px; color: #94a3b8; font-size: 11px; z-index: 2;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), inset 0 -3px 0 rgba(0,0,0,0.5);
+    padding-bottom: 8px;
+  }
+  
+  /* Black Key Positions */
+  .key.black[data-note="1"] { margin-left: 32px; }
+  .key.black[data-note="3"] { margin-left: 80px; }
+  .key.black[data-note="6"] { margin-left: 176px; }
+  .key.black[data-note="8"] { margin-left: 224px; }
+  .key.black[data-note="10"] { margin-left: 272px; }
+  
+  /* Active States */
+  .key.active { 
+    background: #0ea5e9; color: #fff; transform: translateY(2px);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0,0,0,0.2), 0 0 15px rgba(14, 165, 233, 0.4);
+  }
+  .key.black.active {
+    background: #38bdf8; transform: translateY(2px); color: #fff;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(0,0,0,0.5), 0 0 10px rgba(56, 189, 248, 0.4);
+  }
 </style>
 </head>
 <body>
-<div class="keys" id="keys"></div>
+<div class="synth-container">
+  <div class="controls">
+    <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">KAudio<span style="color:#0ea5e9">.</span></div>
+    <select id="waveType" class="waveform-select">
+      <option value="square">Square Wave</option>
+      <option value="sine">Sine Wave</option>
+      <option value="sawtooth">Sawtooth Wave</option>
+      <option value="triangle">Triangle Wave</option>
+    </select>
+  </div>
+  <div class="keys-wrapper" id="keys"></div>
+</div>
 <script>
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let ctx = null;
-  const binds = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K'];
-  const freqs = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+  
+  // 13 notes: C, C#, D, D#, E, F, F#, G, G#, A, A#, B, C
+  const binds = ['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K'];
+  const freqs = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25];
+  const isBlack = [false, true, false, true, false, false, true, false, true, false, true, false, false];
   
   const keyEls = [];
   const activeOscs = {};
-
+  
+  const waveSelect = document.getElementById('waveType');
   const keysContainer = document.getElementById('keys');
+  
   for (let i = 0; i < binds.length; i++) {
       let el = document.createElement('div');
-      el.className = 'key';
+      el.className = 'key' + (isBlack[i] ? ' black' : '');
+      el.dataset.note = i;
       el.textContent = binds[i];
       keysContainer.appendChild(el);
       keyEls.push(el);
@@ -44,7 +118,7 @@
       let osc = ctx.createOscillator();
       let gain = ctx.createGain();
       
-      osc.type = 'square';
+      osc.type = waveSelect.value;
       osc.frequency.value = freqs[i];
       
       gain.gain.setValueAtTime(0.1, ctx.currentTime);
@@ -70,6 +144,13 @@
   document.addEventListener('keydown', e => {
       let idx = binds.indexOf(e.key.toUpperCase());
       if (idx !== -1 && !e.repeat) play(idx);
+      
+      if (e.key === 'ArrowUp') {
+          waveSelect.selectedIndex = (waveSelect.selectedIndex - 1 + waveSelect.options.length) % waveSelect.options.length;
+      }
+      if (e.key === 'ArrowDown') {
+          waveSelect.selectedIndex = (waveSelect.selectedIndex + 1) % waveSelect.options.length;
+      }
   });
 
   document.addEventListener('keyup', e => {
