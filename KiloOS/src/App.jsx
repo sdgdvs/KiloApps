@@ -4,52 +4,64 @@ import './App.css';
 
 const MICROS_VERSION = '0.3.0';
 
+const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
+
+const FOLDERS = [
+  { id: 'System', title: 'System Tools', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
+  { id: 'Media', title: 'Media & Arts', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
+  { id: 'Office', title: 'Office', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
+  { id: 'Games', title: 'Games', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
+  { id: 'Network', title: 'Network', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
+  { id: 'Dev', title: 'Development', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 }
+];
+
 const APPS = [
-  { id: 'kexplorer', title: 'File Browser', url: '/apps/kexplorer.html', icon: '/assets/icons/kexplorer.ico', w: 400, h: 300 },
-  { id: 'kchat', title: 'KChat', url: '/apps/kchat.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchat.ico', w: 400, h: 300 },
-  { id: 'kchatserver', title: 'KChat Server', url: '/apps/kchatserver.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchatserver.ico', w: 350, h: 250 },
-  { id: 'kpad', title: 'KPad', url: '/apps/kpad.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpad.ico', w: 500, h: 400 },
-  { id: 'kcalc', title: 'KCalc', url: '/apps/kcalc.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalc.ico', w: 320, h: 340 },
-  { id: 'kpaint', title: 'KPaint', url: '/apps/kpaint.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpaint.ico', w: 600, h: 450 },
-  { id: 'kmines', title: 'KMines', url: '/apps/kmines.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmines.ico', w: 250, h: 290 },
-  { id: 'kclock', title: 'KClock', url: '/apps/kclock.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 220, h: 140 },
-  { id: 'ktask', title: 'KTask', url: '/apps/ktask.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktask.ico', w: 400, h: 300 },
-  { id: 'kbbs', title: 'KBBS', url: '/apps/kbbs.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbbs.ico', w: 720, h: 480 },
-  { id: 'krogue', title: 'KRogue', url: '/apps/krogue.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/krogue.ico', w: 400, h: 250 },
-  { id: 'ksnake', title: 'KSnake', url: '/apps/ksnake.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksnake.ico', w: 320, h: 360 },
-  { id: 'ktetris', title: 'KTetris', url: '/apps/ktetris.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktetris.ico', w: 220, h: 440 },
-  { id: 'kpong', title: 'KPong', url: '/apps/kpong.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpong.ico', w: 420, h: 340 },
-  { id: 'kterm', title: 'KTerm', url: '/apps/kterm.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kterm.ico', w: 500, h: 350 },
-  { id: 'kmaze', title: 'KMaze', url: '/apps/kmaze.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmaze.ico', w: 340, h: 290 },
-  { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kaudio.ico', w: 420, h: 260 },
-  { id: 'kwrite', title: 'KWrite', url: '/apps/kwrite.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwrite.ico', w: 500, h: 400 },
-  { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalendar.ico', w: 320, h: 320 },
-  { id: 'kdraw', title: 'KDraw', url: '/apps/kdraw.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdraw.ico', w: 500, h: 400 },
-  { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksolitaire.ico', w: 420, h: 450 },
-  { id: 'kspace', title: 'KSpace', url: '/apps/kspace.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kspace.ico', w: 340, h: 520 },
-  { id: 'kpac', title: 'KPac', url: '/apps/kpac.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpac.ico', w: 340, h: 360 },
-  { id: 'kmail', title: 'KMail', url: '/apps/kmail.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmail.ico', w: 500, h: 400 },
-  { id: 'kmedia', title: 'KMedia', url: '/apps/kmedia.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmedia.ico', w: 320, h: 150 },
-  { id: 'kimage', title: 'KImage', url: '/apps/kimage.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kimage.ico', w: 500, h: 500 },
-  { id: 'knet', title: 'KNet', url: '/apps/knet.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knet.ico', w: 600, h: 500 },
-  { id: 'kdb', title: 'KDB', url: '/apps/kdb.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdb.ico', w: 500, h: 400 },
-  { id: 'kscript', title: 'KScript', url: '/apps/kscript.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kscript.ico', w: 400, h: 300 },
-  { id: 'kchess', title: 'KChess', url: '/apps/kchess.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchess.ico', w: 480, h: 500 },
-  { id: 'ktype', title: 'KType', url: '/apps/ktype.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktype.ico', w: 400, h: 500 },
-  { id: 'kchart', title: 'KChart', url: '/apps/kchart.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchart.ico', w: 400, h: 300 },
-  { id: 'kzip', title: 'KZip', url: '/apps/kzip.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kzip.ico', w: 400, h: 300 },
-  { id: 'knote', title: 'KNote', url: '/apps/knote.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 250, h: 250 },
-  { id: 'kcolor', title: 'KColor', url: '/apps/kcolor.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcolor.ico', w: 300, h: 200 },
-  { id: 'ksound', title: 'KSound', url: '/apps/ksound.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksound.ico', w: 400, h: 200 },
-  { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpass.ico', w: 300, h: 150 },
-  { id: 'kping', title: 'KPing', url: '/apps/kping.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kping.ico', w: 400, h: 300 },
-  { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/khex.ico', w: 300, h: 200 },
-  { id: 'ksys', title: 'KSys', url: '/apps/ksys.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 400, h: 300 },
-  { id: 'kmandel', title: 'KMandel', url: '/apps/kmandel.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmandel.ico', w: 400, h: 400 },
-  { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktimer.ico', w: 300, h: 200 },
-  { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksynth.ico', w: 300, h: 200 },
-  { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 400, h: 300 },
-  { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 350, h: 400 },
+  { id: 'kexplorer', title: 'File Browser', url: '/apps/kexplorer.html', icon: '/assets/icons/kexplorer.ico', w: 400, h: 300, folder: 'System' },
+  { id: 'kchat', title: 'KChat', url: '/apps/kchat.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchat.ico', w: 400, h: 300, folder: 'Network' },
+  { id: 'kchatserver', title: 'KChat Server', url: '/apps/kchatserver.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchatserver.ico', w: 350, h: 250, folder: 'Network' },
+  { id: 'kpad', title: 'KPad', url: '/apps/kpad.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpad.ico', w: 500, h: 400, folder: 'Office' },
+  { id: 'kcalc', title: 'KCalc', url: '/apps/kcalc.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalc.ico', w: 320, h: 340, folder: 'System' },
+  { id: 'kpaint', title: 'KPaint', url: '/apps/kpaint.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpaint.ico', w: 600, h: 450, folder: 'Media' },
+  { id: 'kmines', title: 'KMines', url: '/apps/kmines.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmines.ico', w: 250, h: 290, folder: 'Games' },
+  { id: 'kclock', title: 'KClock', url: '/apps/kclock.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 220, h: 140, folder: 'System' },
+  { id: 'ktask', title: 'KTask', url: '/apps/ktask.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktask.ico', w: 400, h: 300, folder: 'System' },
+  { id: 'kbbs', title: 'KBBS', url: '/apps/kbbs.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbbs.ico', w: 720, h: 480, folder: 'Network' },
+  { id: 'krogue', title: 'KRogue', url: '/apps/krogue.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/krogue.ico', w: 400, h: 250, folder: 'Games' },
+  { id: 'ksnake', title: 'KSnake', url: '/apps/ksnake.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksnake.ico', w: 320, h: 360, folder: 'Games' },
+  { id: 'ktetris', title: 'KTetris', url: '/apps/ktetris.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktetris.ico', w: 220, h: 440, folder: 'Games' },
+  { id: 'kpong', title: 'KPong', url: '/apps/kpong.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpong.ico', w: 420, h: 340, folder: 'Games' },
+  { id: 'kterm', title: 'KTerm', url: '/apps/kterm.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kterm.ico', w: 500, h: 350, folder: 'System' },
+  { id: 'kmaze', title: 'KMaze', url: '/apps/kmaze.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmaze.ico', w: 340, h: 290, folder: 'Games' },
+  { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kaudio.ico', w: 420, h: 260, folder: 'Media' },
+  { id: 'kwrite', title: 'KWrite', url: '/apps/kwrite.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwrite.ico', w: 500, h: 400, folder: 'Office' },
+  { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalendar.ico', w: 320, h: 320, folder: 'Office' },
+  { id: 'kdraw', title: 'KDraw', url: '/apps/kdraw.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdraw.ico', w: 500, h: 400, folder: 'Media' },
+  { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksolitaire.ico', w: 420, h: 450, folder: 'Games' },
+  { id: 'kspace', title: 'KSpace', url: '/apps/kspace.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kspace.ico', w: 340, h: 520, folder: 'Games' },
+  { id: 'kpac', title: 'KPac', url: '/apps/kpac.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpac.ico', w: 340, h: 360, folder: 'Games' },
+  { id: 'kmail', title: 'KMail', url: '/apps/kmail.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmail.ico', w: 500, h: 400, folder: 'Network' },
+  { id: 'kmedia', title: 'KMedia', url: '/apps/kmedia.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmedia.ico', w: 320, h: 150, folder: 'Media' },
+  { id: 'kimage', title: 'KImage', url: '/apps/kimage.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kimage.ico', w: 500, h: 500, folder: 'Media' },
+  { id: 'knet', title: 'KNet', url: '/apps/knet.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knet.ico', w: 600, h: 500, folder: 'Network' },
+  { id: 'kdb', title: 'KDB', url: '/apps/kdb.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdb.ico', w: 500, h: 400, folder: 'Dev' },
+  { id: 'kscript', title: 'KScript', url: '/apps/kscript.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kscript.ico', w: 400, h: 300, folder: 'Dev' },
+  { id: 'kchess', title: 'KChess', url: '/apps/kchess.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchess.ico', w: 480, h: 500, folder: 'Games' },
+  { id: 'ktype', title: 'KType', url: '/apps/ktype.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktype.ico', w: 400, h: 500, folder: 'Dev' },
+  { id: 'kchart', title: 'KChart', url: '/apps/kchart.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchart.ico', w: 400, h: 300, folder: 'Media' },
+  { id: 'kzip', title: 'KZip', url: '/apps/kzip.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kzip.ico', w: 400, h: 300, folder: 'System' },
+  { id: 'knote', title: 'KNote', url: '/apps/knote.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 250, h: 250, folder: 'Office' },
+  { id: 'kcolor', title: 'KColor', url: '/apps/kcolor.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcolor.ico', w: 300, h: 200, folder: 'Media' },
+  { id: 'ksound', title: 'KSound', url: '/apps/ksound.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksound.ico', w: 400, h: 200, folder: 'Media' },
+  { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpass.ico', w: 300, h: 150, folder: 'System' },
+  { id: 'kping', title: 'KPing', url: '/apps/kping.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kping.ico', w: 400, h: 300, folder: 'System' },
+  { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/khex.ico', w: 300, h: 200, folder: 'System' },
+  { id: 'ksys', title: 'KSys', url: '/apps/ksys.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 400, h: 300, folder: 'System' },
+  { id: 'kmandel', title: 'KMandel', url: '/apps/kmandel.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmandel.ico', w: 400, h: 400, folder: 'Media' },
+  { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktimer.ico', w: 300, h: 200, folder: 'System' },
+  { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksynth.ico', w: 300, h: 200, folder: 'Media' },
+  { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 400, h: 300, folder: 'System' },
+  { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 350, h: 400, folder: 'System' }
+];,
   { id: 'ktodo', title: 'KTodo', url: '/apps/ktodo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktask.ico', w: 350, h: 450 },
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200 }
 ];
@@ -166,7 +178,24 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
       <div className="xp-content">
         {/* Transparent overlay while dragging to prevent iframe from stealing mouse */}
         {dragging && <div style={{position:'absolute', top:0, left:0, right:0, bottom:0, zIndex:10}} />}
-        <iframe ref={iframeRef} className="xp-iframe" src={app.url} title={app.title} sandbox="allow-scripts allow-same-origin allow-downloads allow-popups" />
+        {app.isFolder ? (
+          <div className="folder-content" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px', alignContent: 'flex-start', overflowY: 'auto', width: '100%', height: '100%', background: 'var(--bg-color)' }}>
+            {APPS.filter(a => a.folder === app.id).map(child => (
+              <div 
+                key={child.id} 
+                className="desktop-icon" 
+                style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                onClick={(e) => { e.stopPropagation(); }}
+                onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
+              >
+                <img src={child.icon} alt={child.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
+                <div className="icon-label" style={{color: 'var(--text-main)', textAlign: 'center', marginTop: '4px'}}>{child.title}</div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <iframe ref={iframeRef} className="xp-iframe" src={app.url} title={app.title} sandbox="allow-scripts allow-same-origin allow-downloads allow-popups" />
+        )}
       </div>
     </div>
   );
@@ -362,7 +391,18 @@ function App() {
           style={{ position: 'absolute', bottom: '0px', right: '0px', width: '5px', height: '5px', opacity: 0.01, zIndex: 9999, cursor: 'default' }}
           title=" "
         />
-        {APPS.map(app => (
+        {FOLDERS.map(folder => (
+          <div 
+            key={folder.id} 
+            className={`desktop-icon ${selectedIcon === folder.id ? 'selected' : ''}`} 
+            onClick={(e) => { e.stopPropagation(); setSelectedIcon(folder.id); setContextMenu(null); setStartOpen(false); }}
+            onDoubleClick={() => { setSelectedIcon(null); openApp(folder); }}
+          >
+            <img src={folder.icon} alt={folder.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
+            <div className="icon-label">{folder.title}</div>
+          </div>
+        ))}
+        {APPS.filter(a => !a.folder).map(app => (
           <div 
             key={app.id} 
             className={`desktop-icon ${selectedIcon === app.id ? 'selected' : ''}`} 
@@ -392,9 +432,25 @@ function App() {
       {startOpen && (
         <div className="start-menu">
           <div className="start-columns">
-            <div className="start-apps">
-              {APPS.map(app => (
-                <div key={app.id} className="start-item" onClick={() => openApp(app)}>
+            <div className="start-apps" style={{overflowY: 'auto', height: '100%'}}>
+              {FOLDERS.map(folder => (
+                <details key={folder.id} className="start-folder-details" style={{listStyle: 'none'}}>
+                  <summary className="start-item" style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', listStyle: 'none'}}>
+                    <img src={folder.icon} alt={folder.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
+                    {folder.title} <span style={{marginLeft:'auto', fontSize:'10px', color:'rgba(255,255,255,0.5)'}}>▼</span>
+                  </summary>
+                  <div className="folder-contents" style={{paddingLeft: '16px', background: 'rgba(0,0,0,0.1)'}}>
+                    {APPS.filter(a => a.folder === folder.id).map(app => (
+                      <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                        <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
+                        <span>{app.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              ))}
+              {APPS.filter(a => !a.folder).map(app => (
+                <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                   <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
                   <span>{app.title}</span>
                 </div>

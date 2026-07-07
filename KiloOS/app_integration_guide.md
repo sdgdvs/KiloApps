@@ -75,3 +75,33 @@ import './App.css'; // basic styles shared across apps
 ```
 ---
 *All CSS utilities are defined in `src/App.css` (see **design_guidelines.md** for palette & micro‑animations).*
+
+## App Organization (Folders)
+To keep the KiloOS desktop and start menu organized, new apps must be categorized into one of the designated folders.
+
+When adding a new app to `APPS` in `App.jsx`, ensure you assign the correct folder string to the `folder` property:
+
+```js
+const APPS = [
+  ...
+  { 
+    id: 'mynewapp', 
+    title: 'My New App', 
+    url: '/apps/mynewapp.html', 
+    icon: '/assets/icons/mynewapp.ico', 
+    w: 400, 
+    h: 300, 
+    folder: 'System' // <-- Must be one of the defined categories
+  }
+];
+```
+
+**Available Folders / Categories:**
+- `'System'` (System Tools)
+- `'Media'` (Media & Arts)
+- `'Office'` (Office)
+- `'Games'` (Games)
+- `'Network'` (Network)
+- `'Dev'` (Development)
+
+If an app does not fit neatly into one of these, default it to `'System'` or the most relevant alternative, but **do not** create a new folder unless absolutely necessary.
