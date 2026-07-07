@@ -18,4 +18,7 @@ The project aims to return software development to the lightweight, compute-effi
 3. Add further integrations or new micro-apps based on the template guidelines.
 
 ## Agent Workflow Rules
-- **Continuous Deployment:** On the completion of each agent turn, you must commit and push all changes to GitHub. This is required because GitHub Actions is configured to automatically deploy the changes to `kiloapps.web.app`.
+- **Continuous Deployment & Versioning:** On the completion of each agent turn, you must:
+  1. Build/update the `kiloapps.web.app` assets and the `.zip` executable packages as applicable for your changes.
+  2. Bump/update the `kiloapps.web.app` version number.
+  3. Commit and push all changes to GitHub. This triggers the GitHub Actions pipeline to automatically deploy the changes to `kiloapps.web.app`.
