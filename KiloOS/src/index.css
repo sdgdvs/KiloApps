@@ -167,35 +167,68 @@ body, html {
   position: absolute;
   bottom: 50px;
   left: 10px;
-  width: 250px;
-  background: var(--card-bg);
+  width: 450px;
+  background: rgba(30, 35, 40, 0.85);
+  backdrop-filter: blur(15px);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.6);
   display: flex;
   flex-direction: column;
   z-index: 10001;
   overflow: hidden;
 }
 
-.start-header {
-  background: rgba(255,255,255,0.03);
+.start-columns {
+  display: flex;
+  flex: 1;
+}
+
+.start-apps {
+  flex: 1;
+  padding: 10px 0;
+}
+
+.start-system {
+  width: 180px;
+  background: rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border-color);
+}
+
+.start-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 15px;
   font-weight: 600;
   border-bottom: 1px solid var(--border-color);
 }
 
-.start-items {
-  padding: 10px 0;
+.start-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+}
+
+.start-system-actions {
   flex: 1;
+  padding: 10px 0;
 }
 
 .start-item {
-  padding: 10px 15px;
+  padding: 12px 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   font-size: 14px;
 }
 .start-item:hover {
@@ -203,54 +236,59 @@ body, html {
   color: var(--primary);
 }
 
-.start-footer {
-  background: rgba(0,0,0,0.2);
-  padding: 10px 15px;
-  display: flex;
-  justify-content: flex-end;
-  border-top: 1px solid var(--border-color);
-}
-
-.shutdown-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  font-size: 13px;
-}
-.shutdown-btn:hover { color: var(--secondary); }
-
 .taskbar-items {
   display: flex;
   flex: 1;
   padding: 0 10px;
-  gap: 5px;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.taskbar-items::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes taskbarItemIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .taskbar-item {
   background: rgba(255,255,255,0.03);
   color: var(--text-muted);
-  height: 30px;
-  min-width: 120px;
-  max-width: 160px;
+  height: 32px;
+  min-width: 130px;
+  max-width: 180px;
   display: flex;
   align-items: center;
   padding: 0 15px;
-  border-radius: 4px;
+  border-radius: 6px;
   border: 1px solid var(--border-color);
   font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  animation: taskbarItemIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  position: relative;
 }
+
 .taskbar-item.active {
   background: rgba(255,255,255,0.1);
   color: var(--text-main);
-  border-color: var(--primary);
+  border-color: rgba(255,255,255,0.2);
+}
+.taskbar-item.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 10px;
+  right: 10px;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px 2px 0 0;
+  animation: taskbarItemIn 0.2s ease forwards;
 }
 
 .clock-tray {

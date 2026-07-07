@@ -220,7 +220,7 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KCalcClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
     // Adjusted dimensions: 320x340
