@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KMail</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; height: 100vh; }
+  .list { width: 33%; border-right: 1px solid #ccc; background: #fff; overflow-y: auto; }
+  .item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+  .item:hover { background: #e0f0ff; }
+  .item.selected { background: #0078d7; color: #fff; }
+  .item .subject { font-weight: bold; }
+  .item .sender { font-size: 12px; color: #666; }
+  .item.selected .sender { color: #cce4f7; }
+  
+  .pane { flex: 1; padding: 20px; display: flex; flex-direction: column; background: #fff; }
+  .pane-header { padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+  .pane-subject { font-size: 20px; font-weight: bold; margin: 0 0 5px 0; }
+  .pane-sender { font-size: 14px; color: #666; margin: 0; }
+  .pane-body { flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="list" id="list"></div>
+<div class="pane">
+  <div class="pane-header">
+    <h2 class="pane-subject" id="p-sub">Select an email to read...</h2>
+    <p class="pane-sender" id="p-sen"></p>
+  </div>
+  <div class="pane-body" id="p-body"></div>
+</div>
+<script>
+  const emails = [
+    {
+      subject: "Welcome to KiloOS",
+      sender: "sysadmin@kilo.os",
+      body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment. We have installed several micro-apps for your convenience.\n\nEnjoy your stay!\n- SysAdmin"
+    },
+    {
+      subject: "Meeting at 3PM",
+      sender: "boss@kilo.os",
+      body: "Don't forget our meeting at 3PM in the conference room. We need to discuss the Q3 roadmap.\n\nRegards,\nBoss"
+    },
+    {
+      subject: "URGENT: Server down",
+      sender: "alerts@kilo.os",
+      body: "The primary database server is unresponsive. Please investigate immediately. This is not a drill."
+    },
+    {
+      subject: "Newsletter #42",
+      sender: "news@kilo.os",
+      body: "Here is your weekly digest of what's new in the world of retro computing..."
+    }
+  ];
+
+  const list = document.getElementById('list');
+  const pSub = document.getElementById('p-sub');
+  const pSen = document.getElementById('p-sen');
+  const pBody = document.getElementById('p-body');
+
+  function renderList() {
+      list.innerHTML = '';
+      emails.forEach((em, idx) => {
+          let d = document.createElement('div');
+          d.className = 'item';
+          d.innerHTML = `<div class="subject">${em.subject}</div><div class="sender">${em.sender}</div>`;
+          d.onclick = () => {
+              document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
+              d.classList.add('selected');
+              pSub.textContent = em.subject;
+              pSen.textContent = `From: ${em.sender}`;
+              pBody.textContent = em.body;
+          };
+          list.appendChild(d);
+      });
+  }
+
+  renderList();
+</script>
+</body>
+</html>

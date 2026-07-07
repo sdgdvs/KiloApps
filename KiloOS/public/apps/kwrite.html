@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KWrite</title>
+<style>
+  body { margin: 0; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; overflow: hidden; }
+  .tabs { display: flex; background: #e0e0e0; border-bottom: 1px solid #ccc; }
+  .tab { padding: 8px 16px; cursor: pointer; border-right: 1px solid #ccc; background: #e0e0e0; font-size: 14px; }
+  .tab.active { background: #fff; border-bottom: 1px solid #fff; margin-bottom: -1px; font-weight: bold; }
+  .toolbar { padding: 5px; background: #fff; border-bottom: 1px solid #ddd; display: flex; gap: 5px; }
+  button { padding: 2px 8px; font-size: 12px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 3px; }
+  button:hover { background: #ddd; }
+  .content { display: flex; flex: 1; overflow: hidden; background: #fff; }
+  textarea { flex: 1; border: none; padding: 10px; font-family: monospace; font-size: 14px; resize: none; outline: none; }
+  .preview { flex: 1; padding: 10px; border-left: 1px solid #ddd; overflow-y: auto; display: none; }
+  .preview.show { display: block; }
+  
+  /* Basic markdown styles */
+  .preview h1 { font-size: 24px; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+  .preview h2 { font-size: 20px; }
+  .preview p { line-height: 1.5; }
+  .preview strong { font-weight: bold; }
+  .preview em { font-style: italic; }
+</style>
+</head>
+<body>
+<div class="tabs">
+  <div class="tab active" onclick="switchTab(0)">Document 1</div>
+  <div class="tab" onclick="switchTab(1)">Document 2</div>
+</div>
+<div class="toolbar">
+  <button onclick="togglePreview()">Toggle Markdown Preview</button>
+</div>
+<div class="content">
+  <textarea id="editor" spellcheck="false" oninput="updatePreview()"></textarea>
+  <div id="preview" class="preview"></div>
+</div>
+<script>
+  let currentDoc = 0;
+  const docs = [
+      "# Welcome to KWrite\n\nThis is a richer text editor supporting multiple tabs.\n\nToggle the **Markdown Preview** button to see basic rendering in action!\n\n## Features\n- Tabs\n- Markdown Preview\n- *Italics* and **Bold** text.",
+      ""
+  ];
+
+  const editor = document.getElementById('editor');
+  const preview = document.getElementById('preview');
+
+  function switchTab(index) {
+      docs[currentDoc] = editor.value;
+      currentDoc = index;
+      
+      document.querySelectorAll('.tab').forEach((t, i) => {
+          t.classList.toggle('active', i === index);
+      });
+      
+      editor.value = docs[index];
+      updatePreview();
+  }
+
+  function togglePreview() {
+      preview.classList.toggle('show');
+      updatePreview();
+  }
+
+  function renderMarkdown(text) {
+      let html = text
+          .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+          .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+          .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+          .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+          .replace(/\n\n/g, '</p><p>');
+      
+      return '<p>' + html + '</p>';
+  }
+
+  function updatePreview() {
+      if (preview.classList.contains('show')) {
+          preview.innerHTML = renderMarkdown(editor.value);
+      }
+  }
+
+  // Init
+  editor.value = docs[0];
+  updatePreview();
+</script>
+</body>
+</html>

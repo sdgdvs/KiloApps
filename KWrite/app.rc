@@ -1,0 +1,13 @@
+#include <windows.h>
+
+1 ICON "icon.ico"
+
+101 MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Save\tCtrl+S", 1001
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit", 1002
+    END
+END

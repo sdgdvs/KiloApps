@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KMedia</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+  .title { margin-bottom: 20px; color: #333; font-size: 14px; text-align: center; word-break: break-all; padding: 0 10px; }
+  .controls { display: flex; gap: 10px; }
+  button { padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; border-radius: 2px; }
+  button:hover { background: #d0d0d0; }
+  button:active { background: #c0c0c0; }
+  input[type="file"] { display: none; }
+</style>
+</head>
+<body>
+<div class="title" id="title">No file selected</div>
+<div class="controls">
+  <button id="btnOpen">Open</button>
+  <button id="btnPlay">Play</button>
+  <button id="btnStop">Stop</button>
+</div>
+<input type="file" id="fileInput" accept="audio/*,video/*" />
+<audio id="audioPlayer"></audio>
+<script>
+  const title = document.getElementById('title');
+  const btnOpen = document.getElementById('btnOpen');
+  const btnPlay = document.getElementById('btnPlay');
+  const btnStop = document.getElementById('btnStop');
+  const fileInput = document.getElementById('fileInput');
+  const audioPlayer = document.getElementById('audioPlayer');
+
+  btnOpen.onclick = () => fileInput.click();
+
+  fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+          title.textContent = file.name;
+          const url = URL.createObjectURL(file);
+          audioPlayer.src = url;
+      }
+  };
+
+  btnPlay.onclick = () => {
+      if (audioPlayer.src) {
+          audioPlayer.play();
+      }
+  };
+
+  btnStop.onclick = () => {
+      if (audioPlayer.src) {
+          audioPlayer.pause();
+          audioPlayer.currentTime = 0;
+      }
+  };
+</script>
+</body>
+</html>

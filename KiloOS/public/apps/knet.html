@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KNet</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
+  .bar { display: flex; gap: 10px; margin-bottom: 10px; }
+  input[type="text"] { flex: 1; padding: 5px; font-size: 14px; border: 1px solid #ccc; }
+  button { padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; }
+  button:hover { background: #d0d0d0; }
+  textarea { flex: 1; padding: 5px; font-family: "Consolas", monospace; font-size: 14px; border: 1px solid #ccc; resize: none; white-space: pre; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <input type="text" id="urlInput" value="http://example.com" />
+  <button id="btnGo">Go</button>
+</div>
+<textarea id="contentArea" readonly></textarea>
+<script>
+  const urlInput = document.getElementById('urlInput');
+  const btnGo = document.getElementById('btnGo');
+  const contentArea = document.getElementById('contentArea');
+
+  btnGo.onclick = async () => {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      contentArea.value = "Fetching...";
+      try {
+          // In a real browser context, fetching arbitrary HTTP URLs will likely fail due to CORS.
+          // For demo purposes, we attempt to fetch via a CORS proxy if available, or just fetch directly.
+          // Using a public proxy like corsproxy.io as a fallback/demo for a minimal OS environment.
+          const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
+          const response = await fetch(proxyUrl);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const text = await response.text();
+          contentArea.value = text;
+      } catch (err) {
+          contentArea.value = "Error fetching URL: " + err.message + "\n\n(Note: Browsers block arbitrary cross-origin requests. Use the native KNet.exe for full functionality!)";
+      }
+  };
+</script>
+</body>
+</html>

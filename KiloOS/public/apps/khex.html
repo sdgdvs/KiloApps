@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KHex</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; height: 100vh; overflow: hidden; }
+  .row { display: flex; align-items: center; margin-bottom: 10px; }
+  .label { width: 35px; }
+  input[type="text"] { flex: 1; padding: 3px; font-family: "Consolas", monospace; border: 1px solid #ccc; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1); }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="label">Hex:</div>
+    <input type="text" id="hex" value="0">
+  </div>
+  <div class="row">
+    <div class="label">Dec:</div>
+    <input type="text" id="dec" value="0">
+  </div>
+  <div class="row">
+    <div class="label">Bin:</div>
+    <input type="text" id="bin" value="0">
+  </div>
+<script>
+  const hex = document.getElementById('hex');
+  const dec = document.getElementById('dec');
+  const bin = document.getElementById('bin');
+  
+  let updating = false;
+  
+  function updateFrom(source) {
+      if (updating) return;
+      updating = true;
+      
+      let val = 0;
+      try {
+          if (source === hex) val = parseInt(hex.value, 16) || 0;
+          else if (source === dec) val = parseInt(dec.value, 10) || 0;
+          else if (source === bin) val = parseInt(bin.value, 2) || 0;
+      } catch(e) {}
+      
+      // Prevent floating point / large number issues by using BigInt if needed, but standard JS numbers are fine up to 2^53.
+      // However we want to simulate 32-bit unsigned for exact KHex parity.
+      val = val >>> 0; 
+      
+      if (source !== hex) hex.value = val.toString(16).toUpperCase();
+      if (source !== dec) dec.value = val.toString(10);
+      if (source !== bin) bin.value = val.toString(2);
+      
+      updating = false;
+  }
+  
+  hex.oninput = () => updateFrom(hex);
+  dec.oninput = () => updateFrom(dec);
+  bin.oninput = () => updateFrom(bin);
+</script>
+</body>
+</html>

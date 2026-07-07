@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KSys</title>
+<style>
+  body { margin: 0; background-color: #f0f0f0; display: flex; height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
+  textarea { flex: 1; width: 100%; resize: none; font-family: "Consolas", monospace; font-size: 16px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; background: white; }
+</style>
+</head>
+<body>
+  <textarea id="out" readonly></textarea>
+<script>
+  const out = document.getElementById('out');
+  
+  function update() {
+      let info = "--- System Information ---\n\n";
+      
+      const cores = navigator.hardwareConcurrency || "Unknown";
+      info += `Processor Cores: ${cores}\n`;
+      info += `Platform: ${navigator.platform}\n`;
+      info += `User Agent:\n${navigator.userAgent}\n\n`;
+      
+      info += "--- Memory Information ---\n\n";
+      
+      if (navigator.deviceMemory) {
+          info += `Device Memory: ~${navigator.deviceMemory} GB\n`;
+      } else {
+          info += `Device Memory: Restricted by Browser\n`;
+      }
+      
+      out.value = info;
+  }
+  
+  update();
+</script>
+</body>
+</html>

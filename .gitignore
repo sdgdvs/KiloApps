@@ -1,0 +1,39 @@
+# Node.js dependencies
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+**/dist/
+**/build/
+**/bin/
+**/obj/
+*.obj
+*.o
+*.res
+*.pdb
+
+# Local environment/IDE configurations
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Firebase temporary files
+.firebase/
+firebase-debug.log*
+ui-debug.log*
+
+# Executables/Zips that can be rebuilt or downloaded (optional, adjust if needed)
+# *.exe
+# *.zip
+# If you want to keep your compiled release binaries inside KiloOS/public/exe/ and MicrOS/public/exe/, 
+# we can explicitly allow them:
+# !**/public/exe/**/*.exe
+# !**/public/exe/**/*.zip

@@ -1,0 +1,24 @@
+{
+  "name": "kiloos-server",
+  "version": "1.0.0",
+  "description": "Unified standalone KiloOS Server and Proxy",
+  "main": "server.js",
+  "bin": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:exe": "pkg . -t node18-win-x64 -o KiloOS_Server.exe"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "scripts": [],
+    "assets": [
+      "public/**/*"
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KSound</title>
+<style>
+  body { margin: 0; background-color: #f0f0f0; display: flex; height: 100vh; overflow: hidden; user-select: none; }
+  .key {
+      flex: 1;
+      border: 1px solid #ccc;
+      background-color: white;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 10px;
+      font-family: "Arial", sans-serif;
+      font-weight: bold;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: inset -1px -1px 3px rgba(0,0,0,0.2);
+  }
+  .key:active {
+      background-color: #e0e0e0;
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+  <div class="key" data-freq="261.63">C</div>
+  <div class="key" data-freq="293.66">D</div>
+  <div class="key" data-freq="329.63">E</div>
+  <div class="key" data-freq="349.23">F</div>
+  <div class="key" data-freq="392.00">G</div>
+  <div class="key" data-freq="440.00">A</div>
+  <div class="key" data-freq="493.88">B</div>
+  <div class="key" data-freq="523.25">C2</div>
+<script>
+  let actx = null;
+  
+  function playNote(freq) {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const osc = actx.createOscillator();
+      const gain = actx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      
+      osc.connect(gain);
+      gain.connect(actx.destination);
+      
+      gain.gain.setValueAtTime(1, actx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 1.0);
+      
+      osc.start();
+      osc.stop(actx.currentTime + 1.0);
+  }
+  
+  document.querySelectorAll('.key').forEach(el => {
+      el.onmousedown = () => playNote(parseFloat(el.getAttribute('data-freq')));
+  });
+</script>
+</body>
+</html>

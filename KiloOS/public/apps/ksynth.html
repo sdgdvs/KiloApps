@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KSynth</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; height: 100vh; overflow: hidden; }
+  .row { display: flex; align-items: center; margin-bottom: 15px; }
+  .label { margin-right: 10px; width: 80px; }
+  select, input[type="text"] { width: 120px; padding: 3px; font-family: "Segoe UI", sans-serif; border: 1px solid #ccc; }
+  input[type="text"] { font-family: "Consolas", monospace; }
+  button { padding: 5px 15px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; margin-left: 90px; width: 100px;}
+  button:hover { background: #d0d0d0; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="label">Waveform:</div>
+    <select id="wave">
+      <option value="sine">Sine</option>
+      <option value="square">Square</option>
+      <option value="sawtooth">Sawtooth</option>
+    </select>
+  </div>
+  <div class="row">
+    <div class="label">Freq (Hz):</div>
+    <input type="text" id="freq" value="440">
+  </div>
+  <div class="row">
+    <button id="btnPlay">Play Tone</button>
+  </div>
+<script>
+  const wave = document.getElementById('wave');
+  const freqIn = document.getElementById('freq');
+  const btnPlay = document.getElementById('btnPlay');
+  
+  let ctx = null;
+  
+  btnPlay.onclick = () => {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      
+      let freq = parseInt(freqIn.value, 10);
+      if (isNaN(freq) || freq < 20) freq = 440;
+      if (freq > 20000) freq = 20000;
+      freqIn.value = freq;
+      
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = wave.value;
+      osc.frequency.value = freq;
+      
+      gain.gain.setValueAtTime(0.5, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start();
+      osc.stop(ctx.currentTime + 1.0);
+  };
+</script>
+</body>
+</html>

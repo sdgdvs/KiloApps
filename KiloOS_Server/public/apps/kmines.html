@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KMines</title>
+<style>
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Tahoma', sans-serif; background: #ece9d8; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .board { display: grid; grid-template-columns: repeat(10, 20px); grid-template-rows: repeat(10, 20px); border: 2px solid #7b7b7b; border-right-color: #fff; border-bottom-color: #fff; }
+  .cell { width: 20px; height: 20px; box-sizing: border-box; background: #bdbdbd; border: 2px solid #fff; border-right-color: #7b7b7b; border-bottom-color: #7b7b7b; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; cursor: default; }
+  .cell.revealed { border: 1px solid #7b7b7b; background: #e0e0e0; }
+  .cell.mine { background: red; }
+  .cell.flag { color: red; }
+  .c1 { color: blue; } .c2 { color: green; } .c3 { color: red; } .c4 { color: darkblue; } .c5 { color: darkred; } .c6 { color: teal; } .c7 { color: black; } .c8 { color: gray; }
+  .toolbar { margin-bottom: 10px; }
+  button { padding: 4px 10px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button onclick="init()">Restart</button>
+  </div>
+  <div class="board" id="board" oncontextmenu="return false;"></div>
+
+  <script>
+    const ROWS = 10;
+    const COLS = 10;
+    const MINES = 10;
+    let grid = [];
+    let gameOver = false;
+    let initialized = false;
+
+    function init() {
+      grid = Array(ROWS).fill().map(() => Array(COLS).fill(0)); // 0:empty, 1:mine, 2:revealed, 4:flagged, 8:mine(hidden)
+      gameOver = false;
+      initialized = false;
+      render();
+    }
+
+    function placeMines(firstR, firstC) {
+      let placed = 0;
+      while (placed < MINES) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (grid[r][c] === 0 && (r !== firstR || c !== firstC)) {
+          grid[r][c] = 8; // Mine
+          placed++;
+        }
+      }
+      initialized = true;
+    }
+
+    function countMines(r, c) {
+      let count = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          let nr = r + i, nc = c + j;
+          if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+            if (grid[nr][nc] & 8) count++;
+          }
+        }
+      }
+      return count;
+    }
+
+    function reveal(r, c) {
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+      if (grid[r][c] & 2 || grid[r][c] & 4) return;
+      
+      grid[r][c] |= 2; // set revealed
+      
+      if (grid[r][c] & 8) {
+        gameOver = true;
+        return;
+      }
+      
+      if (countMines(r, c) === 0) {
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            reveal(r + i, c + j);
+          }
+        }
+      }
+    }
+
+    function checkWin() {
+      let revealed = 0;
+      for(let r=0; r<ROWS; r++) {
+        for(let c=0; c<COLS; c++) {
+          if (grid[r][c] & 2) revealed++;
+        }
+      }
+      return revealed === (ROWS * COLS - MINES);
+    }
+
+    function handleLeftClick(r, c) {
+      if (gameOver) return;
+      if (!initialized) placeMines(r, c);
+      if (!(grid[r][c] & 4)) {
+        reveal(r, c);
+        if (gameOver) {
+          for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
+          render();
+          alert("Boom! Click Restart.");
+        } else if (checkWin()) {
+          gameOver = true;
+          render();
+          alert("You Win! Click Restart.");
+        } else {
+          render();
+        }
+      }
+    }
+
+    function handleRightClick(r, c) {
+      if (gameOver) return;
+      if (!(grid[r][c] & 2)) {
+        grid[r][c] ^= 4; // toggle flag
+        render();
+      }
+    }
+
+    function render() {
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const div = document.createElement('div');
+          div.className = 'cell';
+          
+          if (grid[r][c] & 2) {
+            div.classList.add('revealed');
+            if (grid[r][c] & 8) {
+              div.classList.add('mine');
+            } else {
+              let m = countMines(r, c);
+              if (m > 0) {
+                div.innerText = m;
+                div.classList.add('c' + m);
+              }
+            }
+          } else if (grid[r][c] & 4) {
+            div.innerText = 'F';
+            div.classList.add('flag');
+          }
+          
+          div.onmousedown = (e) => {
+            if (e.button === 0) handleLeftClick(r, c);
+            else if (e.button === 2) handleRightClick(r, c);
+          };
+          board.appendChild(div);
+        }
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

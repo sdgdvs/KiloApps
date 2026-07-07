@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MicroPad</title>
+<style>
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Tahoma', sans-serif; background: #fff; }
+  .menu { background: #ece9d8; border-bottom: 1px solid #ccc; display: flex; font-size: 12px; padding: 2px; }
+  .menu-item { padding: 4px 8px; cursor: pointer; position: relative; }
+  .menu-item:hover { background: #316ac5; color: white; }
+  .dropdown { display: none; position: absolute; top: 100%; left: 0; background: #fff; border: 1px solid #999; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); z-index: 100; min-width: 150px; }
+  .menu-item:hover .dropdown { display: block; color: black; }
+  .dropdown div { padding: 5px 15px; }
+  .dropdown div:hover { background: #316ac5; color: white; }
+  .divider { border-bottom: 1px solid #ccc; margin: 2px 0; padding: 0 !important; height: 0; }
+  textarea { width: 100%; height: calc(100% - 25px); border: none; outline: none; padding: 5px; font-family: 'Consolas', monospace; font-size: 14px; resize: none; box-sizing: border-box; }
+</style>
+</head>
+<body>
+  <div class="menu">
+    <div class="menu-item">File
+      <div class="dropdown">
+        <div onclick="newFile()">New</div>
+        <div class="divider"></div>
+        <div onclick="openVFS()">Open (Virtual FS)...</div>
+        <div onclick="saveVFS()">Save (Virtual FS)</div>
+        <div class="divider"></div>
+        <div onclick="openFileNative()">Open (Local Disk)...</div>
+        <div onclick="saveFileNative()">Save As (Local Disk)...</div>
+      </div>
+    </div>
+    <div class="menu-item">Edit
+      <div class="dropdown">
+        <div onclick="document.execCommand('undo')">Undo</div>
+        <div class="divider"></div>
+        <div onclick="document.execCommand('cut')">Cut</div>
+        <div onclick="document.execCommand('copy')">Copy</div>
+        <div onclick="document.execCommand('paste')">Paste</div>
+        <div class="divider"></div>
+        <div onclick="document.getElementById('editor').select()">Select All</div>
+      </div>
+    </div>
+  </div>
+  <textarea id="editor" spellcheck="false"></textarea>
+  
+  <script>
+    let currentVfsPath = null;
+    let currentReqId = 0;
+    const callbacks = {};
+
+    window.addEventListener('message', (e) => {
+      const msg = e.data;
+      if (callbacks[msg.requestId]) {
+        callbacks[msg.requestId](msg);
+        delete callbacks[msg.requestId];
+      }
+    });
+
+    function sendToOS(msg) {
+      return new Promise((resolve) => {
+        const id = ++currentReqId;
+        callbacks[id] = resolve;
+        window.parent.postMessage({ ...msg, requestId: id }, '*');
+      });
+    }
+
+    function newFile() {
+      document.getElementById('editor').value = '';
+      currentVfsPath = null;
+    }
+
+    async function loadVFSFile(path) {
+      currentVfsPath = path;
+      const res = await sendToOS({ type: 'VFS_READ', path });
+      document.getElementById('editor').value = res.data || '';
+    }
+
+    // Check if OS asked us to open a specific file via URL hash
+    window.onload = () => {
+      if (window.location.hash) {
+        const path = window.location.hash.substring(1); // remove '#'
+        if (path) loadVFSFile(path);
+      }
+    };
+
+    // Virtual FS Operations
+    async function openVFS() {
+      const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+      if (res.path) loadVFSFile(res.path);
+    }
+
+    async function saveVFS() {
+      if (!currentVfsPath) {
+        const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
+        if (!res.path) return;
+        currentVfsPath = res.path;
+      }
+      const data = document.getElementById('editor').value;
+      await sendToOS({ type: 'VFS_WRITE', path: currentVfsPath, data });
+      alert("Saved to Virtual Filesystem!");
+    }
+
+    // Native Local Disk Operations
+    async function openFileNative() {
+      try {
+        const [fileHandle] = await window.showOpenFilePicker();
+        const file = await fileHandle.getFile();
+        document.getElementById('editor').value = await file.text();
+        currentVfsPath = null; // Unlink from VFS
+      } catch (e) { console.log(e); }
+    }
+    
+    async function saveFileNative() {
+      try {
+        const fileHandle = await window.showSaveFilePicker();
+        const writable = await fileHandle.createWritable();
+        await writable.write(document.getElementById('editor').value);
+        await writable.close();
+      } catch (e) { console.log(e); }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>KSnake</title>
+    <style>
+        body { margin: 0; padding: 0; background: #1e1e1e; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; color: white; }
+        canvas { background: #1e1e1e; }
+        #message { position: absolute; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="300" height="300"></canvas>
+    <div id="message">
+        <h2 style="color: red; margin:0">GAME OVER</h2>
+        <p style="margin:5px 0">Press ENTER to restart</p>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const msgBox = document.getElementById('message');
+        const CELL = 15;
+        const WIDTH = 20;
+        const HEIGHT = 20;
+
+        let snake, food, dir, gameOver;
+
+        function init() {
+            snake = [{x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}];
+            dir = {x: 1, y: 0};
+            gameOver = false;
+            msgBox.style.display = 'none';
+            placeFood();
+        }
+
+        function placeFood() {
+            food = {
+                x: Math.floor(Math.random() * WIDTH),
+                y: Math.floor(Math.random() * HEIGHT)
+            };
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+            if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT || snake.some(s => s.x === head.x && s.y === head.y)) {
+                gameOver = true;
+                msgBox.style.display = 'block';
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                placeFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (gameOver) return;
+
+            ctx.fillStyle = '#0f0';
+            for (let s of snake) {
+                ctx.fillRect(s.x * CELL, s.y * CELL, CELL - 1, CELL - 1);
+            }
+
+            ctx.fillStyle = '#f00';
+            ctx.fillRect(food.x * CELL, food.y * CELL, CELL - 1, CELL - 1);
+        }
+
+        window.addEventListener('keydown', e => {
+            if (gameOver && e.key === 'Enter') {
+                init();
+            } else if (!gameOver) {
+                if (e.key === 'ArrowUp' && dir.y !== 1) dir = {x: 0, y: -1};
+                if (e.key === 'ArrowDown' && dir.y !== -1) dir = {x: 0, y: 1};
+                if (e.key === 'ArrowLeft' && dir.x !== 1) dir = {x: -1, y: 0};
+                if (e.key === 'ArrowRight' && dir.x !== -1) dir = {x: 1, y: 0};
+            }
+        });
+
+        setInterval(() => {
+            update();
+            draw();
+        }, 150);
+
+        init();
+    </script>
+</body>
+</html>

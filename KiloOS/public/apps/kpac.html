@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KPac</title>
+<style>
+  body { margin: 0; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  canvas { image-rendering: pixelated; width: 100%; height: 100%; max-width: 600px; max-height: 600px; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="300" height="300"></canvas>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  const COLS = 15;
+  const ROWS = 15;
+  const TS = 20;
+  
+  const initialMap = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
+      [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+      [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+      [1,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+      [1,2,1,1,1,2,1,1,1,2,1,1,1,2,1],
+      [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
+      [1,1,1,1,1,1,2,1,2,1,1,1,1,1,1],
+      [0,0,0,0,0,1,2,1,2,1,0,0,0,0,0],
+      [1,1,1,1,1,1,2,2,2,1,1,1,1,1,1],
+      [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
+      [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+      [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
+      [1,1,1,2,2,2,2,1,2,2,2,2,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+  ];
+  let map = [];
+  
+  let px, py, pdx, pdy, ndx, ndy;
+  let gx, gy;
+  let score, gameOver, dotCount, frameCount;
+  
+  const keys = {};
+  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keyup', e => keys[e.key] = false);
+
+  function init() {
+      map = initialMap.map(row => [...row]);
+      px = 7; py = 12;
+      pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+      gx = 7; gy = 6;
+      score = 0; gameOver = 0; dotCount = 0; frameCount = 0;
+      
+      for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+              if (map[r][c] === 2) dotCount++;
+          }
+      }
+  }
+
+  function update() {
+      if (gameOver) {
+          if (keys['Enter']) init();
+          return;
+      }
+      
+      if (keys['ArrowLeft'] || keys['a']) { ndx = -1; ndy = 0; }
+      if (keys['ArrowRight'] || keys['d']) { ndx = 1; ndy = 0; }
+      if (keys['ArrowUp'] || keys['w']) { ndx = 0; ndy = -1; }
+      if (keys['ArrowDown'] || keys['s']) { ndx = 0; ndy = 1; }
+      
+      if (frameCount % 4 === 0) {
+          const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
+          const d = Math.floor(Math.random() * 4);
+          const nx = gx + dirs[d][0], ny = gy + dirs[d][1];
+          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+              gx = nx; gy = ny;
+          }
+          if (gx < 0) gx = COLS - 1;
+          if (gx >= COLS) gx = 0;
+      }
+      
+      if (ndx !== 0 || ndy !== 0) {
+          const nx = px + ndx, ny = py + ndy;
+          if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+              pdx = ndx; pdy = ndy;
+              ndx = 0; ndy = 0;
+          }
+      }
+      
+      if (frameCount % 2 === 0) {
+          let nx = px + pdx, ny = py + pdy;
+          if (nx < 0) nx = COLS - 1;
+          if (nx >= COLS) nx = 0;
+          
+          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+              px = nx; py = ny;
+              if (map[py][px] === 2) {
+                  map[py][px] = 0;
+                  score += 10;
+                  dotCount--;
+                  if (dotCount === 0) gameOver = 2; // win
+              }
+          }
+      }
+      
+      if (px === gx && py === gy) gameOver = 1; // lose
+      
+      frameCount++;
+  }
+
+  function draw() {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, 300, 300);
+      
+      for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+              if (map[r][c] === 1) {
+                  ctx.fillStyle = '#1414c8';
+                  ctx.fillRect(c * TS, r * TS, TS, TS);
+              } else if (map[r][c] === 2) {
+                  ctx.fillStyle = '#ffc896';
+                  ctx.fillRect(c * TS + 8, r * TS + 8, 4, 4);
+              }
+          }
+      }
+      
+      ctx.fillStyle = '#ffff00';
+      ctx.fillRect(px * TS + 2, py * TS + 2, TS - 4, TS - 4);
+      
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(gx * TS + 2, gy * TS + 2, TS - 4, TS - 4);
+      
+      ctx.fillStyle = '#fff';
+      ctx.font = '12px monospace';
+      ctx.fillText(`Score: ${score}`, 5, 15);
+      
+      if (gameOver) {
+          ctx.fillStyle = gameOver === 1 ? '#ff0000' : '#00ff00';
+          ctx.fillText(gameOver === 1 ? 'GAME OVER' : 'YOU WIN!', 120, 150);
+      }
+  }
+
+  init();
+  setInterval(() => {
+      update();
+      draw();
+  }, 100);
+</script>
+</body>
+</html>

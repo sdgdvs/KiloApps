@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KTerm</title>
+<style>
+  body { margin: 0; background-color: #000; color: #0f0; font-family: monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  #output { flex: 1; overflow-y: auto; padding: 5px; white-space: pre-wrap; word-wrap: break-word; }
+  #inputLine { display: flex; padding: 5px; }
+  #prompt { margin-right: 5px; }
+  #input { flex: 1; background: transparent; border: none; color: #0f0; font-family: monospace; outline: none; }
+</style>
+</head>
+<body>
+<div id="output">KiloOS Web Terminal
+Type 'help' for a list of commands.
+</div>
+<div id="inputLine">
+  <span id="prompt">C:\></span>
+  <input type="text" id="input" autofocus autocomplete="off" spellcheck="false">
+</div>
+<script>
+  const output = document.getElementById('output');
+  const input = document.getElementById('input');
+  const prompt = document.getElementById('prompt');
+  
+  let currentPath = '/';
+  
+  function print(text) {
+      output.textContent += text + '\n';
+      output.scrollTop = output.scrollHeight;
+  }
+  
+  function getVFS() {
+      if (window.parent && window.parent.vfs) return window.parent.vfs;
+      return null;
+  }
+
+  function resolvePath(path) {
+      if (path.startsWith('/')) return path;
+      let parts = currentPath.split('/').filter(Boolean);
+      let newParts = path.split('/').filter(Boolean);
+      for (let p of newParts) {
+          if (p === '..') parts.pop();
+          else if (p !== '.') parts.push(p);
+      }
+      return '/' + parts.join('/');
+  }
+
+  function execute(cmdStr) {
+      print(prompt.textContent + cmdStr);
+      let args = cmdStr.trim().split(/\s+/);
+      let cmd = args[0].toLowerCase();
+      let vfs = getVFS();
+
+      if (cmd === 'help') {
+          print("Commands: help, ver, clear, dir, cd, type");
+      } else if (cmd === 'ver') {
+          print("KiloOS Web v1.0");
+      } else if (cmd === 'clear' || cmd === 'cls') {
+          output.textContent = '';
+      } else if (cmd === 'dir' || cmd === 'ls') {
+          if (vfs) {
+              let node = vfs.getNode(currentPath);
+              if (node && node.type === 'dir') {
+                  for (let key in node.children) {
+                      let child = node.children[key];
+                      print((child.type === 'dir' ? '<DIR>  ' : '       ') + child.name);
+                  }
+              }
+          } else {
+              print("VFS not available.");
+          }
+      } else if (cmd === 'cd') {
+          if (args[1]) {
+              if (vfs) {
+                  let target = resolvePath(args[1]);
+                  let node = vfs.getNode(target);
+                  if (node && node.type === 'dir') {
+                      currentPath = target;
+                      prompt.textContent = (currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')) + '>';
+                  } else {
+                      print("Path not found.");
+                  }
+              }
+          }
+      } else if (cmd === 'type' || cmd === 'cat') {
+          if (args[1] && vfs) {
+              let target = resolvePath(args[1]);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'file') {
+                  print(node.content);
+              } else {
+                  print("File not found.");
+              }
+          }
+      } else if (cmdStr.trim().length > 0) {
+          print("Bad command or file name.");
+      }
+  }
+
+  input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+          execute(input.value);
+          input.value = '';
+      }
+  });
+  
+  document.addEventListener('click', () => input.focus());
+</script>
+</body>
+</html>

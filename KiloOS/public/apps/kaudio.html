@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KAudio</title>
+<style>
+  body { margin: 0; background-color: #141414; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; user-select: none; }
+  .keys { display: flex; gap: 4px; padding: 20px; background: #222; border-radius: 8px; }
+  .key { width: 40px; height: 160px; background: #eee; border-radius: 0 0 4px 4px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 10px; font-weight: bold; color: #333; cursor: pointer; transition: background 0.1s; }
+  .key.active { background: #64c864; }
+</style>
+</head>
+<body>
+<div class="keys" id="keys"></div>
+<script>
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let ctx = null;
+  const binds = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K'];
+  const freqs = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+  
+  const keyEls = [];
+  const activeOscs = {};
+
+  const keysContainer = document.getElementById('keys');
+  for (let i = 0; i < binds.length; i++) {
+      let el = document.createElement('div');
+      el.className = 'key';
+      el.textContent = binds[i];
+      keysContainer.appendChild(el);
+      keyEls.push(el);
+      
+      el.addEventListener('mousedown', () => play(i));
+      el.addEventListener('mouseup', () => stop(i));
+      el.addEventListener('mouseleave', () => stop(i));
+  }
+
+  function initAudio() {
+      if (!ctx) ctx = new AudioContext();
+  }
+
+  function play(i) {
+      initAudio();
+      if (activeOscs[i]) return;
+      
+      let osc = ctx.createOscillator();
+      let gain = ctx.createGain();
+      
+      osc.type = 'square';
+      osc.frequency.value = freqs[i];
+      
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      
+      activeOscs[i] = { osc, gain };
+      keyEls[i].classList.add('active');
+  }
+
+  function stop(i) {
+      if (activeOscs[i]) {
+          let { osc, gain } = activeOscs[i];
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+          osc.stop(ctx.currentTime + 0.1);
+          delete activeOscs[i];
+      }
+      keyEls[i].classList.remove('active');
+  }
+
+  document.addEventListener('keydown', e => {
+      let idx = binds.indexOf(e.key.toUpperCase());
+      if (idx !== -1 && !e.repeat) play(idx);
+  });
+
+  document.addEventListener('keyup', e => {
+      let idx = binds.indexOf(e.key.toUpperCase());
+      if (idx !== -1) stop(idx);
+  });
+</script>
+</body>
+</html>

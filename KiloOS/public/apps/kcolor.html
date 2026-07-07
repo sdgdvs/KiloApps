@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KColor</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; height: 100vh; overflow: hidden; user-select: none; }
+  .row { display: flex; align-items: center; margin-bottom: 10px; }
+  .label { width: 20px; font-weight: bold; }
+  .val-label { width: 30px; text-align: right; }
+  input[type="range"] { flex: 1; margin: 0 10px; }
+  .preview { margin-top: 15px; flex: 1; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; font-family: monospace; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="label">R:</div>
+    <input type="range" id="r" min="0" max="255" value="100">
+    <div class="val-label" id="vr">100</div>
+  </div>
+  <div class="row">
+    <div class="label">G:</div>
+    <input type="range" id="g" min="0" max="255" value="150">
+    <div class="val-label" id="vg">150</div>
+  </div>
+  <div class="row">
+    <div class="label">B:</div>
+    <input type="range" id="b" min="0" max="255" value="200">
+    <div class="val-label" id="vb">200</div>
+  </div>
+  <div class="preview" id="preview">#6496C8</div>
+<script>
+  const rr = document.getElementById('r');
+  const gg = document.getElementById('g');
+  const bb = document.getElementById('b');
+  const vr = document.getElementById('vr');
+  const vg = document.getElementById('vg');
+  const vb = document.getElementById('vb');
+  const preview = document.getElementById('preview');
+  
+  function update() {
+      const r = parseInt(rr.value);
+      const g = parseInt(gg.value);
+      const b = parseInt(bb.value);
+      vr.textContent = r;
+      vg.textContent = g;
+      vb.textContent = b;
+      
+      const hex = "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1).toUpperCase();
+      preview.style.backgroundColor = hex;
+      preview.textContent = hex;
+      // Adjust text color based on brightness
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      preview.style.color = brightness > 125 ? 'black' : 'white';
+  }
+  
+  rr.oninput = update;
+  gg.oninput = update;
+  bb.oninput = update;
+  update();
+</script>
+</body>
+</html>

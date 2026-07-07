@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KPass</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; padding: 20px; box-sizing: border-box; }
+  input[type="text"] { font-family: "Consolas", monospace; font-size: 18px; width: 100%; text-align: center; padding: 5px; margin-bottom: 15px; border: 1px solid #ccc; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1); }
+  .controls { display: flex; gap: 10px; width: 100%; justify-content: space-between; }
+  button { padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; flex: 1; }
+  button:hover { background: #d0d0d0; }
+</style>
+</head>
+<body>
+  <input type="text" id="passOut" readonly>
+  <div class="controls">
+      <button id="btnGen">Generate</button>
+      <button id="btnCopy">Copy</button>
+  </div>
+<script>
+  const passOut = document.getElementById('passOut');
+  const btnGen = document.getElementById('btnGen');
+  const btnCopy = document.getElementById('btnCopy');
+  const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+  
+  function generate() {
+      let pass = "";
+      for (let i = 0; i < 16; i++) {
+          pass += alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+      passOut.value = pass;
+  }
+  
+  btnGen.onclick = generate;
+  btnCopy.onclick = () => {
+      passOut.select();
+      document.execCommand("copy");
+  };
+  
+  generate();
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KScript</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
+  .bar { display: flex; gap: 10px; margin-bottom: 10px; }
+  input[type="text"] { flex: 1; padding: 5px; font-size: 14px; border: 1px solid #ccc; font-family: "Consolas", monospace; }
+  button { padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; }
+  button:hover { background: #d0d0d0; }
+  textarea { flex: 1; padding: 5px; font-family: "Consolas", monospace; font-size: 14px; border: 1px solid #ccc; resize: none; white-space: pre; background-color: #fff; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <input type="text" id="exprInput" value="10 + 2 * (5 - 3)" />
+  <button id="btnRun">Run</button>
+</div>
+<textarea id="outputArea" readonly></textarea>
+<script>
+  const exprInput = document.getElementById('exprInput');
+  const btnRun = document.getElementById('btnRun');
+  const outputArea = document.getElementById('outputArea');
+
+  // We write a tiny recursive descent parser in JS to match the C implementation exactly.
+  // Although JS has `eval()`, writing the identical logic is safer and more authentic.
+  function runParser(str) {
+      let idx = 0;
+      const peek = () => idx < str.length ? str[idx] : '\0';
+      const advance = () => { if (idx < str.length) idx++; };
+      const skipSpace = () => { while (peek() === ' ') advance(); };
+      
+      const parseFactor = () => {
+          skipSpace();
+          let val = 0;
+          if (peek() === '(') {
+              advance();
+              val = parseExpr();
+              skipSpace();
+              if (peek() === ')') advance();
+          } else {
+              let start = idx;
+              while (peek() >= '0' && peek() <= '9') advance();
+              if (idx > start) val = parseInt(str.substring(start, idx), 10);
+          }
+          skipSpace();
+          return val;
+      };
+      
+      const parseTerm = () => {
+          let val = parseFactor();
+          while (peek() === '*' || peek() === '/') {
+              let op = peek();
+              advance();
+              let nextVal = parseFactor();
+              if (op === '*') val *= nextVal;
+              else if (nextVal !== 0) val = Math.floor(val / nextVal);
+          }
+          return val;
+      };
+      
+      const parseExpr = () => {
+          let val = parseTerm();
+          while (peek() === '+' || peek() === '-') {
+              let op = peek();
+              advance();
+              let nextVal = parseTerm();
+              if (op === '+') val += nextVal;
+              else val -= nextVal;
+          }
+          return val;
+      };
+      
+      return parseExpr();
+  }
+
+  btnRun.onclick = () => {
+      const expr = exprInput.value;
+      if (!expr) return;
+      try {
+          const result = runParser(expr);
+          outputArea.value = `Evaluating:\n${expr}\n\nResult: ${result}`;
+      } catch (err) {
+          outputArea.value = `Error parsing expression.\n\n${err.message}`;
+      }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KMaze</title>
+<style>
+  body { margin: 0; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  canvas { image-rendering: pixelated; width: 100%; height: 100%; max-width: 640px; max-height: 480px; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="320" height="240"></canvas>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  const W = 320, H = 240;
+  const map = [
+      [1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,1,0,0,1],
+      [1,0,1,1,0,0,1,0,0,1],
+      [1,0,0,1,0,0,0,0,0,1],
+      [1,0,0,1,1,1,1,0,0,1],
+      [1,0,0,0,0,0,0,0,0,1],
+      [1,1,0,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1]
+  ];
+  
+  let pX = 1.5, pY = 1.5;
+  let dX = 1.0, dY = 0.0;
+  let planeX = 0.0, planeY = 0.66;
+  
+  const keys = {};
+  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keyup', e => keys[e.key] = false);
+
+  function update() {
+      const moveSpeed = 0.1;
+      const rotSpeed = 0.05;
+      
+      if (keys['ArrowUp'] || keys['w']) {
+          if (map[Math.floor(pX + dX * moveSpeed)][Math.floor(pY)] === 0) pX += dX * moveSpeed;
+          if (map[Math.floor(pX)][Math.floor(pY + dY * moveSpeed)] === 0) pY += dY * moveSpeed;
+      }
+      if (keys['ArrowDown'] || keys['s']) {
+          if (map[Math.floor(pX - dX * moveSpeed)][Math.floor(pY)] === 0) pX -= dX * moveSpeed;
+          if (map[Math.floor(pX)][Math.floor(pY - dY * moveSpeed)] === 0) pY -= dY * moveSpeed;
+      }
+      if (keys['ArrowRight'] || keys['d']) {
+          let oldDX = dX;
+          dX = dX * Math.cos(-rotSpeed) - dY * Math.sin(-rotSpeed);
+          dY = oldDX * Math.sin(-rotSpeed) + dY * Math.cos(-rotSpeed);
+          let oldPlaneX = planeX;
+          planeX = planeX * Math.cos(-rotSpeed) - planeY * Math.sin(-rotSpeed);
+          planeY = oldPlaneX * Math.sin(-rotSpeed) + planeY * Math.cos(-rotSpeed);
+      }
+      if (keys['ArrowLeft'] || keys['a']) {
+          let oldDX = dX;
+          dX = dX * Math.cos(rotSpeed) - dY * Math.sin(rotSpeed);
+          dY = oldDX * Math.sin(rotSpeed) + dY * Math.cos(rotSpeed);
+          let oldPlaneX = planeX;
+          planeX = planeX * Math.cos(rotSpeed) - planeY * Math.sin(rotSpeed);
+          planeY = oldPlaneX * Math.sin(rotSpeed) + planeY * Math.cos(rotSpeed);
+      }
+  }
+
+  function draw() {
+      ctx.fillStyle = '#323232'; // Ceil
+      ctx.fillRect(0, 0, W, H/2);
+      ctx.fillStyle = '#646464'; // Floor
+      ctx.fillRect(0, H/2, W, H/2);
+      
+      for (let x = 0; x < W; x++) {
+          let cameraX = 2 * x / W - 1;
+          let rayDX = dX + planeX * cameraX;
+          let rayDY = dY + planeY * cameraX;
+          
+          let mapX = Math.floor(pX);
+          let mapY = Math.floor(pY);
+          
+          let sideDistX, sideDistY;
+          let deltaDistX = (rayDX === 0) ? 1e30 : Math.abs(1 / rayDX);
+          let deltaDistY = (rayDY === 0) ? 1e30 : Math.abs(1 / rayDY);
+          let perpWallDist;
+          
+          let stepX, stepY, hit = 0, side;
+          
+          if (rayDX < 0) { stepX = -1; sideDistX = (pX - mapX) * deltaDistX; }
+          else           { stepX = 1;  sideDistX = (mapX + 1.0 - pX) * deltaDistX; }
+          if (rayDY < 0) { stepY = -1; sideDistY = (pY - mapY) * deltaDistY; }
+          else           { stepY = 1;  sideDistY = (mapY + 1.0 - pY) * deltaDistY; }
+          
+          while (hit === 0) {
+              if (sideDistX < sideDistY) {
+                  sideDistX += deltaDistX;
+                  mapX += stepX;
+                  side = 0;
+              } else {
+                  sideDistY += deltaDistY;
+                  mapY += stepY;
+                  side = 1;
+              }
+              if (map[mapX] && map[mapX][mapY] > 0) hit = 1;
+          }
+          
+          if (side === 0) perpWallDist = (sideDistX - deltaDistX);
+          else            perpWallDist = (sideDistY - deltaDistY);
+          
+          let lineHeight = Math.floor(H / perpWallDist);
+          let drawStart = -lineHeight / 2 + H / 2;
+          if (drawStart < 0) drawStart = 0;
+          let drawEnd = lineHeight / 2 + H / 2;
+          if (drawEnd >= H) drawEnd = H - 1;
+          
+          ctx.fillStyle = side === 1 ? '#960000' : '#c80000';
+          ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
+      }
+  }
+
+  setInterval(() => {
+      update();
+      draw();
+  }, 30);
+</script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KFont</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; padding: 10px; box-sizing: border-box; height: 100vh; overflow: hidden; }
+  .list-container { width: 150px; display: flex; flex-direction: column; margin-right: 20px; }
+  .label { margin-bottom: 5px; font-size: 14px; }
+  select { flex: 1; font-family: "Segoe UI", sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; }
+  .sample-container { flex: 1; background: #fff; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; overflow: hidden; }
+  #sample { font-size: 24px; }
+</style>
+</head>
+<body>
+  <div class="list-container">
+    <div class="label">System Fonts:</div>
+    <select id="fontList" size="10">
+      <option value="Arial" selected>Arial</option>
+      <option value="Calibri">Calibri</option>
+      <option value="Comic Sans MS">Comic Sans MS</option>
+      <option value="Consolas">Consolas</option>
+      <option value="Courier New">Courier New</option>
+      <option value="Georgia">Georgia</option>
+      <option value="Impact">Impact</option>
+      <option value="Lucida Console">Lucida Console</option>
+      <option value="Segoe UI">Segoe UI</option>
+      <option value="Tahoma">Tahoma</option>
+      <option value="Times New Roman">Times New Roman</option>
+      <option value="Trebuchet MS">Trebuchet MS</option>
+      <option value="Verdana">Verdana</option>
+    </select>
+  </div>
+  <div class="sample-container">
+    <div id="sample">
+      The quick brown fox jumps over the lazy dog.<br><br>
+      0123456789<br><br>
+      Aa Bb Cc Dd Ee Ff
+    </div>
+  </div>
+<script>
+  const fontList = document.getElementById('fontList');
+  const sample = document.getElementById('sample');
+  
+  fontList.onchange = () => {
+      sample.style.fontFamily = `"${fontList.value}", sans-serif`;
+  };
+  
+  // Trigger initial
+  fontList.onchange();
+</script>
+</body>
+</html>

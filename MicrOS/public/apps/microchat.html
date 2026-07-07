@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin:0; padding:10px; background:#ece9d8; font-family: Tahoma, sans-serif; font-size:12px; display:flex; flex-direction:column; height: 100vh; box-sizing:border-box; }
+        .row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
+        input[type="text"] { border: 1px solid #7f9db9; padding: 3px; font-family: Tahoma; font-size:12px; }
+        button { font-family: Tahoma; font-size:12px; padding: 2px 10px; }
+        #log { flex: 1; border: 1px solid #7f9db9; background: white; overflow-y: auto; padding: 5px; margin-bottom: 5px; white-space: pre-wrap; }
+        #input { flex: 1; }
+    </style>
+</head>
+<body>
+    <div class="row">
+        <span>IP:</span> <input type="text" id="ip" value="127.0.0.1" style="width: 100px;">
+        <span>Port:</span> <input type="text" id="port" value="6667" style="width: 50px;">
+        <button id="btnConnect" onclick="connect()">Connect</button>
+    </div>
+    <div id="log">Welcome to MicroChat (Web Edition)!
+Connect to any running MicroChat Server to begin.
+Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action&gt;</div>
+    <div class="row">
+        <input type="text" id="input" onkeypress="if(event.key==='Enter') send()" disabled>
+        <button id="btnSend" onclick="send()" disabled>Send</button>
+    </div>
+
+    <script>
+        let ws = null;
+        const logEl = document.getElementById('log');
+        const inputEl = document.getElementById('input');
+        const btnConnect = document.getElementById('btnConnect');
+        const btnSend = document.getElementById('btnSend');
+
+        function log(msg) {
+            logEl.textContent += '\n' + msg;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function connect() {
+            if (ws) {
+                ws.close();
+                return;
+            }
+            const ip = document.getElementById('ip').value;
+            const port = document.getElementById('port').value;
+            log('Connecting to ws://' + ip + ':' + port + ' ...');
+            
+            try {
+                ws = new WebSocket('ws://' + ip + ':' + port);
+                ws.onopen = () => {
+                    log('Connected!');
+                    btnConnect.textContent = 'Disconnect';
+                    inputEl.disabled = false;
+                    btnSend.disabled = false;
+                };
+                ws.onmessage = (e) => {
+                    log(e.data);
+                };
+                ws.onclose = () => {
+                    log('Disconnected.');
+                    ws = null;
+                    btnConnect.textContent = 'Connect';
+                    inputEl.disabled = true;
+                    btnSend.disabled = true;
+                };
+                ws.onerror = (e) => {
+                    log('Socket error.');
+                };
+            } catch (err) {
+                log('Error: ' + err.message);
+            }
+        }
+
+        function send() {
+            if (!ws || !inputEl.value) return;
+            ws.send(inputEl.value);
+            inputEl.value = '';
+        }
+    </script>
+</body>
+</html>

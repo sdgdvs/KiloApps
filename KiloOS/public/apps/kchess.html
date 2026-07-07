@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KChess</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; }
+  canvas { background-color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); border: 1px solid #333; cursor: pointer; }
+</style>
+</head>
+<body>
+<canvas id="cvs" width="480" height="500"></canvas>
+<script>
+  const cvs = document.getElementById('cvs');
+  const ctx = cvs.getContext('2d');
+  
+  const TS = 50;
+  const OX = 30;
+  const OY = 30;
+
+  let board = [
+      [10, 8, 9, 11, 12, 9, 8, 10],
+      [7,  7, 7,  7,  7, 7, 7,  7],
+      [0,  0, 0,  0,  0, 0, 0,  0],
+      [0,  0, 0,  0,  0, 0, 0,  0],
+      [0,  0, 0,  0,  0, 0, 0,  0],
+      [0,  0, 0,  0,  0, 0, 0,  0],
+      [1,  1, 1,  1,  1, 1, 1,  1],
+      [4,  2, 3,  5,  6, 3, 2,  4]
+  ];
+
+  const pieceChars = [
+      "", "P", "N", "B", "R", "Q", "K",
+      "p", "n", "b", "r", "q", "k"
+  ];
+
+  let selX = -1;
+  let selY = -1;
+  let whiteTurn = true;
+
+  function draw() {
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      
+      ctx.font = "bold 32px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+              let px = OX + x * TS;
+              let py = OY + y * TS;
+
+              if (x === selX && y === selY) {
+                  ctx.fillStyle = "rgb(255, 255, 100)";
+              } else if ((x + y) % 2 === 0) {
+                  ctx.fillStyle = "rgb(240, 217, 181)";
+              } else {
+                  ctx.fillStyle = "rgb(181, 136, 99)";
+              }
+              
+              ctx.fillRect(px, py, TS, TS);
+
+              let p = board[y][x];
+              if (p !== 0) {
+                  ctx.fillStyle = (p <= 6) ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)";
+                  ctx.fillText(pieceChars[p], px + TS / 2, py + TS / 2);
+              }
+          }
+      }
+      
+      ctx.font = "16px 'Segoe UI'";
+      ctx.fillStyle = "rgb(0, 0, 0)";
+      ctx.textAlign = "left";
+      ctx.fillText(whiteTurn ? "White's Turn" : "Black's Turn", 10, cvs.height - 30);
+  }
+
+  cvs.onmousedown = (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      
+      const tx = Math.floor((mx - OX) / TS);
+      const ty = Math.floor((my - OY) / TS);
+      
+      if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
+          if (selX === -1) {
+              if (board[ty][tx] !== 0) {
+                  let isWhite = board[ty][tx] <= 6;
+                  if ((whiteTurn && isWhite) || (!whiteTurn && !isWhite)) {
+                      selX = tx;
+                      selY = ty;
+                  }
+              }
+          } else {
+              if (selX === tx && selY === ty) {
+                  selX = -1;
+                  selY = -1;
+              } else {
+                  board[ty][tx] = board[selY][selX];
+                  board[selY][selX] = 0;
+                  selX = -1;
+                  selY = -1;
+                  whiteTurn = !whiteTurn;
+              }
+          }
+          draw();
+      }
+  };
+
+  draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KType</title>
+<style>
+  body { margin: 0; background-color: #141428; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; }
+  canvas { background-color: #141428; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 1px solid #333; }
+</style>
+</head>
+<body>
+<canvas id="cvs" width="400" height="500"></canvas>
+<script>
+  const cvs = document.getElementById('cvs');
+  const ctx = cvs.getContext('2d');
+  
+  const words = [
+      "hello", "world", "kilo", "system", "typing",
+      "speed", "code", "native", "win32", "game",
+      "fast", "keyboard", "monitor", "software", "mouse"
+  ];
+  
+  let score = 0;
+  let lives = 3;
+  let activeWord = "";
+  let wordY = 0;
+  let wordX = 150;
+  let matchLen = 0;
+  
+  function spawnWord() {
+      activeWord = words[Math.floor(Math.random() * words.length)];
+      wordY = -20;
+      wordX = 50 + Math.random() * 200;
+      matchLen = 0;
+  }
+  
+  spawnWord();
+  
+  function draw() {
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+      
+      ctx.font = "bold 24px Consolas";
+      ctx.textBaseline = "top";
+      
+      if (lives > 0) {
+          let matched = activeWord.substring(0, matchLen);
+          let unmatched = activeWord.substring(matchLen);
+          
+          ctx.fillStyle = "rgb(100, 255, 100)";
+          ctx.fillText(matched, wordX, wordY);
+          
+          let mWidth = ctx.measureText(matched).width;
+          ctx.fillStyle = "rgb(255, 255, 255)";
+          ctx.fillText(unmatched, wordX + mWidth, wordY);
+      } else {
+          ctx.textAlign = "center";
+          ctx.fillStyle = "rgb(255, 100, 100)";
+          ctx.fillText("GAME OVER", cvs.width / 2, 200);
+          ctx.fillStyle = "rgb(200, 200, 200)";
+          ctx.fillText("Press any key to restart", cvs.width / 2, 240);
+          ctx.textAlign = "left";
+      }
+      
+      ctx.fillStyle = "rgb(200, 200, 200)";
+      ctx.fillText("Score: " + score, 10, 10);
+      ctx.fillText("Lives: " + lives, 10, 40);
+  }
+  
+  function update() {
+      if (lives > 0) {
+          wordY += 2;
+          if (wordY > cvs.height) {
+              lives--;
+              spawnWord();
+          }
+      }
+      draw();
+  }
+  
+  window.addEventListener('keydown', (e) => {
+      if (lives <= 0) {
+          lives = 3;
+          score = 0;
+          spawnWord();
+      } else {
+          let c = e.key;
+          if (c.length === 1) { // Ignore meta keys
+              if (c === activeWord[matchLen]) {
+                  matchLen++;
+                  if (matchLen === activeWord.length) {
+                      score += 10;
+                      spawnWord();
+                  }
+              }
+          }
+      }
+  });
+  
+  setInterval(update, 30);
+</script>
+</body>
+</html>

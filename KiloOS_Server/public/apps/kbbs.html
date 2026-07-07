@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:#ece9d8; font-family:Tahoma,sans-serif; font-size:12px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+        .conn-bar { display:flex; align-items:center; gap:4px; padding:4px 6px; background:#ece9d8; border-bottom:1px solid #aca899; }
+        .conn-bar input[type="text"], .conn-bar select { border:1px solid #7f9db9; padding:2px 4px; font-family:Tahoma; font-size:12px; }
+        .conn-bar input:disabled { background:#e8e8e8; color:#999; cursor:not-allowed; }
+        .conn-bar button { font-family:Tahoma; font-size:11px; padding:2px 8px; cursor:pointer; background:#ece9d8; border:1px solid #999; }
+        .conn-bar button:active { background:#ccc; }
+        #host { width:160px; }
+        #port { width:48px; }
+        #bbsSelect { width:160px; margin-left: 8px; }
+
+        /* Main area */
+        .main { flex:1; display:flex; overflow:hidden; }
+
+        /* Terminal */
+        .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; }
+        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; }
+
+        /* Status bar */
+        .status-bar { padding:2px 6px; background:#ece9d8; border-top:1px solid #fff; font-size:11px; color:#444; display:flex; justify-content:space-between; }
+    </style>
+</head>
+<body>
+    <div class="conn-bar">
+        <span>Host:</span>
+        <input type="text" id="host" placeholder="" value="" disabled title="EXE only feature. Select a BBS from the dropdown.">
+        <span>Port:</span>
+        <input type="text" id="port" value="23" disabled title="EXE only feature">
+        <button id="btnConn" onclick="toggleConnect()">Connect</button>
+        <select id="bbsSelect"></select>
+    </div>
+    <div class="main">
+        <div class="term-wrap">
+            <canvas id="terminal" tabindex="0"></canvas>
+        </div>
+    </div>
+    <div class="status-bar">
+        <span id="statusInfo">Ready — Select a BBS or enter an address</span>
+        <span id="bytesInfo"></span>
+    </div>
+
+    <script>
+    // ─── Configuration ───
+    const COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
+    const canvas = document.getElementById('terminal');
+    const ctx = canvas.getContext('2d');
+    let ws = null, bytesRx = 0;
+
+    // ─── ANSI Color Palette (standard 16) ───
+    const COLORS = [
+        '#000000','#aa0000','#00aa00','#aa5500',
+        '#0000aa','#aa00aa','#00aaaa','#aaaaaa',
+        '#555555','#ff5555','#55ff55','#ffff55',
+        '#5555ff','#ff55ff','#55ffff','#ffffff'
+    ];
+
+    // ─── Screen Buffer ───
+    let screen = [];
+    let curX = 0, curY = 0, savX = 0, savY = 0;
+    let curFg = 7, curBg = 0, curBold = false, curBlink = false;
+    let ansiState = 0, ansiParams = ''; // 0=normal, 1=esc, 2=csi
+    let scrollOffset = 0;
+    const MAX_LINES = 1000;
+
+    function initScreen() {
+        screen = [];
+        for (let r = 0; r < ROWS; r++) {
+            let row = [];
+            for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
+            screen.push(row);
+        }
+        curX = curY = 0; curFg = 7; curBg = 0; curBold = false; curBlink = false;
+        ansiState = 0; ansiParams = '';
+        scrollOffset = 0;
+    }
+
+    function resizeCanvas() {
+        const wrap = canvas.parentElement;
+        const scaleX = wrap.clientWidth / (COLS * CELL_W);
+        const scaleY = wrap.clientHeight / (ROWS * CELL_H);
+        const scale = Math.min(scaleX, scaleY, 2);
+        canvas.width = COLS * CELL_W;
+        canvas.height = ROWS * CELL_H;
+        canvas.style.width = Math.floor(COLS * CELL_W * scale) + 'px';
+        canvas.style.height = Math.floor(ROWS * CELL_H * scale) + 'px';
+        canvas.style.margin = 'auto';
+        render();
+    }
+
+    function render() {
+        ctx.font = CELL_H + 'px monospace';
+        ctx.textBaseline = 'top';
+        const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const cell = screen[startRow + r][c] || {ch: ' ', fg: 7, bg: 0, blink: false};
+                ctx.fillStyle = COLORS[cell.bg] || COLORS[0];
+                ctx.fillRect(c * CELL_W, r * CELL_H, CELL_W, CELL_H);
+                if (!cell.blink || window.blinkToggle) {
+                    ctx.fillStyle = COLORS[cell.fg] || COLORS[7];
+                    ctx.fillText(cell.ch, c * CELL_W, r * CELL_H);
+                }
+            }
+        }
+        // Cursor blink
+        if (scrollOffset === 0 && window.blinkToggle) {
+            ctx.fillStyle = COLORS[curFg];
+            ctx.globalAlpha = 0.7;
+            ctx.fillRect(curX * CELL_W, curY * CELL_H + CELL_H - 2, CELL_W, 2);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+
+    function scrollUp() {
+        let row = [];
+        for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
+        screen.push(row);
+        if (screen.length > MAX_LINES) screen.shift();
+    }
+
+    function putChar(ch) {
+        if (curX >= COLS) { curX = 0; curY++; }
+        if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; }
+        const fg = curBold && curFg < 8 ? curFg + 8 : curFg;
+        const activeY = screen.length - ROWS + curY;
+        screen[activeY][curX] = { ch: ch, fg: fg, bg: curBg, blink: curBlink };
+        curX++;
+    }
+
+    function clearScreen() {
+        const start = screen.length - ROWS;
+        for (let r = start; r < screen.length; r++)
+            for (let c = 0; c < COLS; c++)
+                screen[r][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
+        curX = curY = 0;
+    }
+
+    function clearLine(mode) {
+        if (curY >= ROWS) return;
+        const activeY = screen.length - ROWS + curY;
+        if (mode === 0 || mode === undefined) {
+            for (let c = curX; c < COLS; c++) screen[activeY][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
+        } else if (mode === 1) {
+            for (let c = 0; c <= curX; c++) screen[activeY][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
+        } else if (mode === 2) {
+            for (let c = 0; c < COLS; c++) screen[activeY][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
+        }
+    }
+
+    function parseSGR(params) {
+        const parts = params.split(';').map(n => parseInt(n) || 0);
+        for (let i = 0; i < parts.length; i++) {
+            const p = parts[i];
+            if (p === 0) { curFg = 7; curBg = 0; curBold = false; curBlink = false; }
+            else if (p === 1) curBold = true;
+            else if (p === 2 || p === 22) curBold = false;
+            else if (p === 5) curBlink = true;
+            else if (p === 25) curBlink = false;
+            else if (p === 7) { let t = curFg; curFg = curBg; curBg = t; } // reverse
+            else if (p >= 30 && p <= 37) curFg = p - 30;
+            else if (p === 39) curFg = 7;
+            else if (p >= 40 && p <= 47) curBg = p - 40;
+            else if (p === 49) curBg = 0;
+            else if (p >= 90 && p <= 97) curFg = p - 90 + 8;
+            else if (p >= 100 && p <= 107) curBg = p - 100 + 8;
+        }
+    }
+
+    function processCSI(params, cmd) {
+        const p = params.split(';').map(n => parseInt(n) || 0);
+        const n = p[0] || 1;
+        switch (cmd) {
+            case 'm': parseSGR(params || '0'); break;
+            case 'H': case 'f':
+                curY = Math.max(0, Math.min((p[0] || 1) - 1, ROWS - 1));
+                curX = Math.max(0, Math.min((p[1] || 1) - 1, COLS - 1));
+                break;
+            case 'A': curY = Math.max(0, curY - n); break;
+            case 'B': curY = Math.min(ROWS - 1, curY + n); break;
+            case 'C': curX = Math.min(COLS - 1, curX + n); break;
+            case 'D': curX = Math.max(0, curX - n); break;
+            case 'J':
+                if (p[0] === 2 || p[0] === 3) clearScreen();
+                else if (p[0] === 0) {
+                    clearLine(0);
+                    for (let r = curY + 1; r < ROWS; r++)
+                        for (let c = 0; c < COLS; c++)
+                            screen[screen.length - ROWS + r][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
+                } else if (p[0] === 1) {
+                    for (let r = 0; r < curY; r++)
+                        for (let c = 0; c < COLS; c++)
+                            screen[screen.length - ROWS + r][c] = { ch: ' ', fg: 7, bg: 0, blink: false };
+                    clearLine(1);
+                }
+                break;
+            case 'K': clearLine(p[0]); break;
+            case 's': savX = curX; savY = curY; break;
+            case 'u': curX = savX; curY = savY; break;
+            case 'E': curX = 0; curY = Math.min(ROWS - 1, curY + n); break;
+            case 'F': curX = 0; curY = Math.max(0, curY - n); break;
+            case 'G': curX = Math.max(0, Math.min(n - 1, COLS - 1)); break;
+            case 'S': for (let i = 0; i < n; i++) scrollUp(); break;
+            case 'T':
+                for (let i = 0; i < n; i++) {
+                    screen.pop();
+                    let row = [];
+                    for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
+                    screen.unshift(row);
+                }
+                break;
+        }
+    }
+
+    function feedByte(ch) {
+        const code = ch.charCodeAt(0);
+        if (ansiState === 0) {
+            if (code === 0x1B) { ansiState = 1; ansiParams = ''; }
+            else if (code === 0x0D) curX = 0;  // CR
+            else if (code === 0x0A) { curY++; if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; } } // LF
+            else if (code === 0x08) { if (curX > 0) curX--; } // BS
+            else if (code === 0x09) { curX = Math.min(COLS - 1, (Math.floor(curX / 8) + 1) * 8); } // TAB
+            else if (code === 0x07) { /* BEL - ignore */ }
+            else if (code >= 0x20) putChar(ch);
+            // Handle telnet IAC sequences
+            else if (code === 0xFF) { ansiState = 10; } // IAC
+        } else if (ansiState === 1) {
+            if (ch === '[') ansiState = 2;
+            else if (ch === ']') ansiState = 3; // OSC - eat until BEL/ST
+            else ansiState = 0;
+        } else if (ansiState === 2) {
+            if ((code >= 0x30 && code <= 0x3F)) { ansiParams += ch; } // digits, semicolons, ?
+            else if (code >= 0x40 && code <= 0x7E) { processCSI(ansiParams, ch); ansiState = 0; }
+            else { ansiState = 0; }
+        } else if (ansiState === 3) {
+            // OSC - eat until BEL (0x07) or ST (ESC \)
+            if (code === 0x07) ansiState = 0;
+            else if (code === 0x1B) ansiState = 4;
+        } else if (ansiState === 4) {
+            // After ESC in OSC
+            ansiState = 0; // ST = ESC \ ends OSC
+        } else if (ansiState === 10) {
+            // Telnet: after IAC, eat command byte
+            if (code >= 251 && code <= 254) ansiState = 11; // WILL/WONT/DO/DONT - need option byte
+            else ansiState = 0;
+        } else if (ansiState === 11) {
+            // Telnet: option byte after WILL/WONT/DO/DONT
+            ansiState = 0;
+        }
+    }
+
+    function processData(data) {
+        for (let i = 0; i < data.length; i++) feedByte(data[i]);
+        if (data.length > 0) scrollOffset = 0;
+        render();
+    }
+
+    // ─── WebSocket Connection ───
+    function toggleConnect() {
+        if (ws) { ws.close(); return; }
+        const host = document.getElementById('host').value.trim();
+        const port = document.getElementById('port').value.trim();
+        if (!host) return;
+
+        let url;
+        if (host.startsWith('ws://') || host.startsWith('wss://')) {
+            url = host;
+        } else {
+            url = 'ws://localhost:8080/?host=' + encodeURIComponent(host) + '&port=' + encodeURIComponent(port || '23');
+        }
+
+        initScreen();
+        render();
+        setStatus('connecting', 'Connecting to ' + url + '...');
+        bytesRx = 0;
+
+        try {
+            ws = new WebSocket(url);
+            ws.binaryType = 'arraybuffer';
+            ws.onopen = () => {
+                setStatus('connected', 'Connected to ' + host);
+                document.getElementById('btnConn').textContent = 'Disconnect';
+                canvas.focus();
+            };
+            ws.onmessage = (e) => {
+                let text;
+                if (e.data instanceof ArrayBuffer) {
+                    const arr = new Uint8Array(e.data);
+                    text = '';
+                    for (let i = 0; i < arr.length; i++) text += String.fromCharCode(arr[i]);
+                } else {
+                    text = e.data;
+                }
+                bytesRx += text.length;
+                document.getElementById('bytesInfo').textContent = bytesRx + ' bytes';
+                processData(text);
+            };
+            ws.onclose = () => {
+                setStatus('disconnected', 'Disconnected');
+                document.getElementById('btnConn').textContent = 'Connect';
+                ws = null;
+            };
+            ws.onerror = () => {
+                setStatus('disconnected', 'Connection failed');
+            };
+        } catch (err) {
+            setStatus('disconnected', 'Error: ' + err.message);
+            ws = null;
+        }
+    }
+
+    function setStatus(state, text) {
+        const prefix = state === 'connected' ? 'Connected' : state === 'connecting' ? 'Connecting...' : 'Disconnected';
+        document.getElementById('statusInfo').textContent = prefix + ' - ' + text;
+    }
+
+    // ─── Keyboard ───
+    canvas.addEventListener('keydown', (e) => {
+        if (!ws || ws.readyState !== 1) return;
+        let seq = null;
+        switch (e.key) {
+            case 'ArrowUp': seq = '\x1B[A'; break;
+            case 'ArrowDown': seq = '\x1B[B'; break;
+            case 'ArrowRight': seq = '\x1B[C'; break;
+            case 'ArrowLeft': seq = '\x1B[D'; break;
+            case 'Home': seq = '\x1B[H'; break;
+            case 'End': seq = '\x1B[F'; break;
+            case 'PageUp': seq = '\x1B[5~'; break;
+            case 'PageDown': seq = '\x1B[6~'; break;
+            case 'Delete': seq = '\x1B[3~'; break;
+            case 'Insert': seq = '\x1B[2~'; break;
+            case 'Escape': seq = '\x1B'; break;
+            case 'Backspace': seq = '\x08'; break;
+            case 'Enter': seq = '\r\n'; break;
+            case 'Tab': seq = '\t'; break;
+            case 'F1': seq = '\x1BOP'; break;
+            case 'F2': seq = '\x1BOQ'; break;
+            case 'F3': seq = '\x1BOR'; break;
+            case 'F4': seq = '\x1BOS'; break;
+            case 'F5': seq = '\x1B[15~'; break;
+            case 'F6': seq = '\x1B[17~'; break;
+            case 'F7': seq = '\x1B[18~'; break;
+            case 'F8': seq = '\x1B[19~'; break;
+            case 'F9': seq = '\x1B[20~'; break;
+            case 'F10': seq = '\x1B[21~'; break;
+            case 'F11': seq = '\x1B[23~'; break;
+            case 'F12': seq = '\x1B[24~'; break;
+            default:
+                if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
+                    ws.send(e.key);
+                    e.preventDefault();
+                    return;
+                }
+                if (e.ctrlKey && e.key.length === 1) {
+                    const code = e.key.toUpperCase().charCodeAt(0) - 64;
+                    if (code >= 0 && code <= 31) {
+                        ws.send(String.fromCharCode(code));
+                        e.preventDefault();
+                        return;
+                    }
+                }
+                return;
+        }
+        if (seq) { ws.send(seq); e.preventDefault(); scrollOffset = 0; render(); }
+    });
+    
+    canvas.addEventListener('wheel', (e) => {
+        if (e.deltaY < 0) {
+            scrollOffset = Math.min(scrollOffset + 3, screen.length - ROWS);
+        } else {
+            scrollOffset = Math.max(0, scrollOffset - 3);
+        }
+        render();
+    }, {passive: true});
+
+    // ─── BBS Directory ───
+    const BBS_LIST = [
+        { cat: '🎮 Gaming', name: '20 For Beers', host: '20forbeers.com', port: 1337, ws: false },
+        { cat: '🎮 Gaming', name: 'Mutiny BBS', host: 'mutinybbs.com', port: 23, ws: false },
+        { cat: '🎮 Gaming', name: 'Borderline BBS', host: 'borderlinebbs.dyndns.org', port: 9023, ws: false },
+        { cat: '🎮 Gaming', name: 'Dreamline BBS', host: 'din.asciiattic.com', port: 23, ws: false },
+        { cat: '🎮 Gaming', name: 'Bottomless Abyss', host: 'bbs.bottomlessabyss.net', port: 2323, ws: false },
+        { cat: '🎮 Gaming', name: 'Dark Realms', host: 'bbs.darkrealms.ca', port: 23, ws: false },
+        { cat: '🎮 Gaming', name: 'Throwback BBS', host: 'bbs.throwbackbbs.com', port: 23, ws: false },
+        { cat: '💬 Social', name: 'Vertrauen', host: 'vert.synchro.net', port: 11235, ws: true },
+        { cat: '💬 Social', name: 'Electronic Chicken', host: 'bbs.electronicchicken.com', port: 8080, ws: true },
+        { cat: '💬 Social', name: 'Capitol City Online', host: 'capitolcityonline.net', port: 23, ws: false },
+        { cat: '💬 Social', name: 'Agency BBS', host: 'bbs.agency', port: 23, ws: false },
+        { cat: '💬 Social', name: 'Xibalba', host: 'xibalba.l33t.codes', port: 44510, ws: false },
+        { cat: '💬 Social', name: 'Black Flag', host: 'blackflag.acid.org', port: 23, ws: false },
+        { cat: '💬 Social', name: 'Absinthe', host: 'bbs.absinthe.ws', port: 23, ws: false },
+        { cat: '💬 Social', name: 'Broken Bubble', host: 'bbs.thebrokenbubble.com', port: 23, ws: false },
+        { cat: '📁 Files', name: 'Titanic BBS', host: 'ttb.rgbbs.info', port: 23, ws: false },
+        { cat: '📁 Files', name: "Al's Geek Lab", host: 'bbs.alsgeeklab.com', port: 2323, ws: false },
+        { cat: '📁 Files', name: 'Retrocampus BBS', host: 'bbs.retrocampus.com', port: 23, ws: false },
+        { cat: '📁 Files', name: 'Air & Wave BBS', host: 'bbs.airandwave.net', port: 2323, ws: false },
+        { cat: '📁 Files', name: 'BBS NZ', host: 'bbs.nz', port: 23, ws: false },
+        { cat: '🎨 Art', name: 'Blocktronics HQ', host: 'blocktronics.org', port: 23, ws: false },
+        { cat: '🎨 Art', name: 'The Keep', host: 'bbs.thekeep.net', port: 23, ws: false },
+        { cat: '🖥️ Retro', name: '13th Leader', host: '13leader.net', port: 8023, ws: false },
+        { cat: '🖥️ Retro', name: '8-Bit Boyz', host: 'bbs.8bitboyz.com', port: 23, ws: false },
+        { cat: '🖥️ Retro', name: 'Particles BBS', host: 'particlesbbs.dyndns.org', port: 23, ws: false },
+        { cat: '🖥️ Retro', name: '300 Baud', host: '300baud.dynu.net', port: 2525, ws: false },
+        { cat: '🖥️ Retro', name: 'Fozztexx', host: 'bbs.fozztexx.com', port: 23, ws: false },
+        { cat: '🖥️ Retro', name: 'Clutch BBS', host: 'clutchbbs.com', port: 23, ws: false },
+        { cat: '🖥️ Retro', name: 'End of the Line', host: 'bbs.endofthelinebbs.com', port: 23, ws: false },
+        { cat: '🖥️ Retro', name: '20 For Beers', host: '20forbeers.com', port: 1337, ws: false }
+    ];
+
+    function connectTo(host, port, isWs) {
+        document.getElementById('host').value = isWs ? 'ws://' + host + ':' + port : host;
+        document.getElementById('port').value = port;
+        if (ws) ws.close();
+        setTimeout(() => toggleConnect(), 100);
+    }
+
+    function renderBBSList() {
+        const sel = document.getElementById('bbsSelect');
+        sel.innerHTML = '<option value="">-- Select BBS --</option>';
+        BBS_LIST.forEach((bbs, i) => {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = bbs.name;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', () => {
+            if (sel.value === '') return;
+            const bbs = BBS_LIST[sel.value];
+            connectTo(bbs.host, bbs.port, bbs.ws);
+        });
+    }
+
+    // ─── Init ───
+    initScreen();
+    renderBBSList();
+    // Welcome message
+    const welcome = [
+        '\x1B[1;36m╔══════════════════════════════════════════════════════════════════════════════╗',
+        '║\x1B[1;33m  __  __ _                ___ ___ ___                                       \x1B[1;36m║',
+        '║\x1B[1;33m |  \\/  (_)__ _ _ ___    | _ ) _ ) __|                                      \x1B[1;36m║',
+        '║\x1B[1;33m | |\\/| | / _| \'_/ _ \\   | _ \\ _ \\__ \\                                      \x1B[1;36m║',
+        '║\x1B[1;33m |_|  |_|_\\__|_| \\___/   |___/___/___/                                      \x1B[1;36m║',
+        '║                                                                            ║',
+        '║\x1B[0;37m  Minimalist BBS Terminal Client                      v1.0 — Web Edition   \x1B[1;36m║',
+        '╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m',
+        '',
+        '\x1B[1;32m  ► \x1B[0;37mSelect a BBS from the dropdown menu above',
+        '\x1B[1;32m  ► \x1B[0;37mOr enter a WebSocket address (ws://host:port)',
+        '',
+        '\x1B[0;36m  Raw telnet connections are routed through the KBBSProxy.',
+        '\x1B[0;36m  Make sure to run KBBSProxy/run.bat before connecting.',
+        '',
+        '\x1B[0;90m  ─────────────────────────────────────────────────────────────────────────────'
+    ];
+    welcome.forEach(line => { processData(line + '\r\n'); });
+
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 10);
+
+    // Focus terminal on click
+    canvas.addEventListener('click', () => canvas.focus());
+
+    // Cursor and text blink
+    window.blinkToggle = true;
+    setInterval(() => { 
+        window.blinkToggle = !window.blinkToggle;
+        if (document.hasFocus()) render(); 
+    }, 500);
+    </script>
+</body>
+</html>

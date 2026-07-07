@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KTetris</title>
+<style>
+  body { margin: 0; background-color: #1e1e1e; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: monospace; }
+  canvas { background-color: #1e1e1e; border: 1px solid #333; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="200" height="400"></canvas>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const CELL = 20;
+  const W = 10, H = 20;
+  
+  const colors = ['#000', '#0ff', '#00f', '#fa0', '#ff0', '#0f0', '#808', '#f00'];
+  const tetrominos = [
+      [0x0F00, 0x2222, 0x00F0, 0x4444],
+      [0x44C0, 0x8E00, 0x6220, 0x0710],
+      [0x2260, 0x0E80, 0xC440, 0x2E00],
+      [0xCC00, 0xCC00, 0xCC00, 0xCC00],
+      [0x06C0, 0x8C40, 0x6C00, 0x4620],
+      [0x0E40, 0x4C40, 0x4E00, 0x4640],
+      [0x0C60, 0x4C80, 0xC600, 0x2640]
+  ];
+
+  let grid = Array(H).fill().map(() => Array(W).fill(0));
+  let pc, rot, cx, cy, gameOver = false, score = 0;
+
+  function checkCol(p, r, x, y) {
+      let shape = tetrominos[p][r];
+      for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+              if (shape & (1 << (15 - (i * 4 + j)))) {
+                  let nx = x + j, ny = y + i;
+                  if (nx < 0 || nx >= W || ny >= H || (ny >= 0 && grid[ny][nx])) return true;
+              }
+          }
+      }
+      return false;
+  }
+
+  function spawn() {
+      pc = Math.floor(Math.random() * 7);
+      rot = 0; cx = 3; cy = -2;
+      if (checkCol(pc, rot, cx, cy + 1)) gameOver = true;
+  }
+
+  function lock() {
+      let shape = tetrominos[pc][rot];
+      for (let i = 0; i < 4; i++) {
+          for (let j = 0; j < 4; j++) {
+              if (shape & (1 << (15 - (i * 4 + j)))) {
+                  if (cy + i >= 0) grid[cy + i][cx + j] = pc + 1;
+              }
+          }
+      }
+      for (let y = H - 1; y >= 0; y--) {
+          if (grid[y].every(c => c > 0)) {
+              grid.splice(y, 1);
+              grid.unshift(Array(W).fill(0));
+              score += 100;
+              y++;
+          }
+      }
+  }
+
+  function init() {
+      grid = Array(H).fill().map(() => Array(W).fill(0));
+      gameOver = false;
+      score = 0;
+      spawn();
+  }
+
+  document.addEventListener('keydown', e => {
+      if (gameOver && e.key === 'Enter') init();
+      if (gameOver) return;
+      if (e.key === 'ArrowLeft' && !checkCol(pc, rot, cx - 1, cy)) cx--;
+      if (e.key === 'ArrowRight' && !checkCol(pc, rot, cx + 1, cy)) cx++;
+      if (e.key === 'ArrowDown' && !checkCol(pc, rot, cx, cy + 1)) cy++;
+      if (e.key === 'ArrowUp') {
+          let nr = (rot + 1) % 4;
+          if (!checkCol(pc, nr, cx, cy)) rot = nr;
+      }
+      draw();
+  });
+
+  function draw() {
+      ctx.fillStyle = '#1e1e1e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+              if (grid[y][x]) {
+                  ctx.fillStyle = colors[grid[y][x]];
+                  ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+              }
+          }
+      }
+
+      if (!gameOver) {
+          let shape = tetrominos[pc][rot];
+          ctx.fillStyle = colors[pc + 1];
+          for (let i = 0; i < 4; i++) {
+              for (let j = 0; j < 4; j++) {
+                  if (shape & (1 << (15 - (i * 4 + j)))) {
+                      if (cy + i >= 0) {
+                          ctx.fillRect((cx + j) * CELL + 1, (cy + i) * CELL + 1, CELL - 2, CELL - 2);
+                      }
+                  }
+              }
+          }
+      } else {
+          ctx.fillStyle = 'red';
+          ctx.font = '20px monospace';
+          ctx.fillText('GAME OVER', 50, 200);
+      }
+  }
+
+  setInterval(() => {
+      if (!gameOver) {
+          if (!checkCol(pc, rot, cx, cy + 1)) cy++;
+          else { lock(); spawn(); }
+          draw();
+      }
+  }, 500);
+
+  init();
+</script>
+</body>
+</html>

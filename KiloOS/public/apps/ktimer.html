@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KTimer</title>
+<style>
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; padding: 10px; box-sizing: border-box; height: 100vh; overflow: hidden; }
+  .display { font-family: "Consolas", monospace; font-size: 48px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+  .row { display: flex; align-items: center; margin-bottom: 10px; }
+  .label { margin-right: 10px; }
+  input[type="text"] { width: 100px; padding: 3px; font-family: "Consolas", monospace; border: 1px solid #ccc; }
+  button { padding: 5px 15px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; margin-right: 10px; }
+  button:hover { background: #d0d0d0; }
+</style>
+</head>
+<body>
+  <div class="display" id="disp">00:00.00</div>
+  <div class="row">
+    <div class="label">Target (mm:ss):</div>
+    <input type="text" id="target" value="">
+  </div>
+  <div class="row">
+    <button id="btnStart">Start</button>
+    <button id="btnReset">Reset</button>
+  </div>
+<script>
+  const disp = document.getElementById('disp');
+  const targetIn = document.getElementById('target');
+  const btnStart = document.getElementById('btnStart');
+  const btnReset = document.getElementById('btnReset');
+  
+  let running = false;
+  let countdown = false;
+  let startTime = 0;
+  let totalMs = 0;
+  let targetMs = 0;
+  let timerId = null;
+  
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  function beep() {
+      if (ctx.state === 'suspended') ctx.resume();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+  }
+  
+  function format(ms) {
+      const totalSec = Math.floor(ms / 1000);
+      const dec = Math.floor((ms % 1000) / 10);
+      const sec = totalSec % 60;
+      const min = Math.floor(totalSec / 60);
+      return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}.${dec.toString().padStart(2, '0')}`;
+  }
+  
+  function parse() {
+      const val = targetIn.value.trim();
+      if (!val) return 0;
+      const parts = val.split(':');
+      let min = 0, sec = 0;
+      if (parts.length > 1) {
+          min = parseInt(parts[0]) || 0;
+          sec = parseInt(parts[1]) || 0;
+      } else {
+          sec = parseInt(parts[0]) || 0;
+      }
+      return (min * 60 + sec) * 1000;
+  }
+  
+  function update() {
+      const now = performance.now();
+      let elapsed = totalMs;
+      if (running) {
+          elapsed += (now - startTime);
+      }
+      
+      if (countdown) {
+          if (elapsed >= targetMs) {
+              disp.textContent = format(0);
+              if (running) {
+                  running = false;
+                  btnStart.textContent = "Start";
+                  cancelAnimationFrame(timerId);
+                  beep();
+              }
+          } else {
+              disp.textContent = format(targetMs - elapsed);
+          }
+      } else {
+          disp.textContent = format(elapsed);
+      }
+      
+      if (running) {
+          timerId = requestAnimationFrame(update);
+      }
+  }
+  
+  btnStart.onclick = () => {
+      if (running) {
+          running = false;
+          totalMs += (performance.now() - startTime);
+          btnStart.textContent = "Start";
+          cancelAnimationFrame(timerId);
+      } else {
+          if (totalMs === 0) {
+              targetMs = parse();
+              countdown = targetMs > 0;
+          }
+          running = true;
+          startTime = performance.now();
+          btnStart.textContent = "Stop";
+          timerId = requestAnimationFrame(update);
+      }
+      update();
+  };
+  
+  btnReset.onclick = () => {
+      running = false;
+      totalMs = 0;
+      btnStart.textContent = "Start";
+      cancelAnimationFrame(timerId);
+      
+      targetMs = parse();
+      countdown = targetMs > 0;
+      update();
+  };
+</script>
+</body>
+</html>

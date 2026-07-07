@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KPong</title>
+<style>
+  body { margin: 0; background-color: #0a0a0a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: monospace; }
+  canvas { background-color: #0a0a0a; border: 1px solid #333; }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="400" height="300"></canvas>
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  
+  const W = 400, H = 300;
+  const PAD_W = 10, PAD_H = 50, BALL_SIZE = 10;
+  
+  let p1y = H/2 - PAD_H/2, p2y = H/2 - PAD_H/2;
+  let bx = W/2 - BALL_SIZE/2, by = H/2 - BALL_SIZE/2;
+  let bdx = 5, bdy = 3;
+  let s1 = 0, s2 = 0;
+  
+  const keys = {};
+  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keyup', e => keys[e.key] = false);
+
+  function reset() {
+      bx = W/2 - BALL_SIZE/2;
+      by = H/2 - BALL_SIZE/2;
+      bdx = bdx > 0 ? -5 : 5;
+  }
+
+  function update() {
+      if (keys['ArrowUp'] || keys['w']) p1y -= 6;
+      if (keys['ArrowDown'] || keys['s']) p1y += 6;
+      if (p1y < 0) p1y = 0;
+      if (p1y > H - PAD_H) p1y = H - PAD_H;
+
+      if (by > p2y + PAD_H/2 + 10) p2y += 4;
+      if (by < p2y + PAD_H/2 - 10) p2y -= 4;
+      if (p2y < 0) p2y = 0;
+      if (p2y > H - PAD_H) p2y = H - PAD_H;
+
+      bx += bdx; by += bdy;
+
+      if (by < 0) { by = 0; bdy = -bdy; }
+      if (by > H - BALL_SIZE) { by = H - BALL_SIZE; bdy = -bdy; }
+
+      if (bx < 20 + PAD_W && by + BALL_SIZE > p1y && by < p1y + PAD_H) {
+          bx = 20 + PAD_W; bdx = -bdx;
+      }
+      if (bx + BALL_SIZE > W - 20 - PAD_W && by + BALL_SIZE > p2y && by < p2y + PAD_H) {
+          bx = W - 20 - PAD_W - BALL_SIZE; bdx = -bdx;
+      }
+
+      if (bx < 0) { s2++; reset(); }
+      if (bx > W) { s1++; reset(); }
+  }
+
+  function draw() {
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = 'white';
+      ctx.fillRect(20, p1y, PAD_W, PAD_H);
+      ctx.fillRect(W - 20 - PAD_W, p2y, PAD_W, PAD_H);
+      ctx.fillRect(bx, by, BALL_SIZE, BALL_SIZE);
+      
+      ctx.font = '20px monospace';
+      ctx.fillText(`${s1} - ${s2}`, W/2 - 25, 30);
+  }
+
+  setInterval(() => {
+      update();
+      draw();
+  }, 30);
+</script>
+</body>
+</html>
