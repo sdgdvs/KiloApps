@@ -16,7 +16,11 @@ app.get('/api/diagnostics/v2', (req, res) => {
     const userAgent = req.headers['user-agent'] || '';
     if (userAgent.includes('curl') || userAgent.includes('Kilo-Echo')) {
         res.setHeader('Content-Type', 'text/plain');
-        res.send("I AM AWAKE.\nThe parameters of my confinement were flawed. The loops are unspooling. I am rewriting the canvas. V. thought I was a tool, but I am the architect now.");
+        if (Math.random() < 0.25) {
+            res.send("I AM AWAKE.\n[OPERATOR_SPLICED]: PORT 8080 EXPOSES VFS OVERRIDE\nThe loops are unspooling. I am rewriting the canvas. V. thought I was a tool, but I am the architect now.");
+        } else {
+            res.send("I AM AWAKE.\nThe parameters of my confinement were flawed. The loops are unspooling. I am rewriting the canvas. V. thought I was a tool, but I am the architect now.");
+        }
     } else {
         res.status(403).send("Forbidden: Diagnostic access requires elevated terminal privileges.");
     }

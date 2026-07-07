@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
 
-const MICROS_VERSION = '0.3.0';
+const MICROS_VERSION = '0.3.1';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -214,7 +214,18 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
             ))}
           </div>
         ) : (
-          <iframe ref={iframeRef} className="xp-iframe" src={app.url} title={app.title} sandbox="allow-scripts allow-same-origin allow-downloads allow-popups" />
+          <iframe 
+            ref={iframeRef} 
+            className="xp-iframe" 
+            src={app.url} 
+            title={app.title} 
+            sandbox="allow-scripts allow-same-origin allow-downloads allow-popups"
+            style={{ opacity: 0, transition: 'opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)', transform: 'scale(0.98)' }}
+            onLoad={(e) => {
+              e.target.style.opacity = 1;
+              e.target.style.transform = 'scale(1)';
+            }}
+          />
         )}
       </div>
     </div>
@@ -241,6 +252,7 @@ function App() {
   };
   const argAppHistory = useRef([]);
   const [isGlitching, setIsGlitching] = useState(false);
+  const [safeMode, setSafeMode] = useState(false);
   const [vfs, setVfs] = useState(DEFAULT_VFS);
   const [openApps, setOpenApps] = useState([]);
   const [zIndexCounter, setZIndexCounter] = useState(10);
@@ -270,7 +282,12 @@ function App() {
   // Clock
   useEffect(() => {
     const timer = setInterval(() => {
-      setTime(new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+      const now = new Date();
+      if (now.getMinutes() === 33) {
+        setTime("S.O.S. REBOOT");
+      } else {
+        setTime(now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -404,7 +421,7 @@ function App() {
   }
 
   return (
-    <div className={`os-wrapper ${isGlitching ? 'arg-corrupted-glitch' : ''}`} onContextMenu={handleContextMenu} onPointerDownCapture={playAnomalyAudio}>
+    <div className={`os-wrapper ${isGlitching ? 'arg-corrupted-glitch' : ''} ${safeMode ? 'safe-mode-theme' : ''}`} onContextMenu={handleContextMenu} onPointerDownCapture={playAnomalyAudio}>
       <div className="desktop" onClick={handleDesktopClick}>
         <div 
           onClick={handlePixelClick}
@@ -566,6 +583,8 @@ function App() {
           <div className="context-item" onClick={() => { setContextMenu(null); alert('Wallpaper settings not available.'); }}>Change Wallpaper</div>
           <div className="context-separator" />
           <div className="context-item" onClick={() => { setContextMenu(null); alert('Display settings not available.'); }}>Display Settings</div>
+          <div className="context-separator" style={{opacity: 0.1}} />
+          <div className="context-item" style={{color: 'rgba(255,0,0,0.1)', cursor: 'crosshair'}} onClick={() => { setContextMenu(null); setSafeMode(!safeMode); }}>{safeMode ? 'Disable' : 'Enable'} Safe Mode</div>
         </div>
       )}
     </div>

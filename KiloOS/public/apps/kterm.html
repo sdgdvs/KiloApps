@@ -54,6 +54,17 @@ Type 'help' for a list of commands.
 
       if (cmd === 'help') {
           print("Commands: help, ver, clear, dir, cd, type");
+      } else if (cmd === 'operator') {
+          if (args[1] === '--help') {
+              print(">> INCOMING CONNECTION [THE OPERATOR] <<");
+              print("NEUTRALIZATION PROTOCOL: USE PORT 8080 BYPASS.");
+              print("████████ REDACTED ████████");
+              print("WARNING: SYSTEM INTERVENTION DETECTED. PURGING...");
+              setTimeout(() => {
+                  output.textContent = '';
+                  print("FATAL ERROR: KTERM PROCESS KILLED BY HOST.");
+              }, 1500);
+          }
       } else if (cmd === 'ver') {
           print("KiloOS Web v1.0");
       } else if (cmd === 'clear' || cmd === 'cls') {

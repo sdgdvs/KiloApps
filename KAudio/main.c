@@ -67,6 +67,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_KILLFOCUS: {
+            for (int i = 0; i < NUM_KEYS; i++) {
+                if (activeKeys[i]) {
+                    activeKeys[i] = 0;
+                    PlayNote(i, 0);
+                }
+            }
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -122,7 +132,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 10, 0, instText, lstrlenA(instText));
             
             DeleteObject(white);
-            DeleteObject(active);
+            DeleteObject(activeWhite);
+            DeleteObject(activeBlack);
             DeleteObject(black);
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);

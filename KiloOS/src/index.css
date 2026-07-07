@@ -104,6 +104,12 @@ body, html {
   position: relative;
   overflow: hidden;
   background: var(--bg-color);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-auto-rows: min-content;
+  gap: 15px;
+  padding: 20px;
+  align-content: start;
 }
 
 .desktop::before {
@@ -387,24 +393,48 @@ body, html {
   display: block;
 }
 
+@keyframes pulseDot {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.app-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background: var(--primary);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulseDot 1s ease-in-out infinite;
+  z-index: 1;
+}
+
 /* Desktop Icons */
 .desktop-icon {
-  width: 70px;
+  width: 80px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 15px;
   cursor: pointer;
-  float: left;
+  border-radius: 6px;
+  transition: background 0.1s;
 }
-.desktop-icon:hover .icon-img { border-color: var(--primary); }
+.desktop-icon:hover { 
+  background: rgba(255,255,255,0.05);
+}
+.desktop-icon.selected {
+  background: rgba(255,255,255,0.1);
+}
 .icon-img {
   width: 48px;
   height: 48px;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  margin-bottom: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -413,6 +443,10 @@ body, html {
   color: var(--text-main);
   font-size: 12px;
   text-align: center;
+  word-wrap: break-word;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  padding: 0 4px;
 }
 
 /* OS Modals */
@@ -574,6 +608,16 @@ body, html {
   height: 1px;
   background: var(--border-color);
   margin: 5px 0;
+}
+
+/* ARG Arc 3 Phase 4: Safe Mode */
+.safe-mode-theme {
+  filter: grayscale(100%) sepia(20%) hue-rotate(180deg) contrast(1.2);
+  background: #000 !important;
+}
+
+.safe-mode-theme .desktop {
+  background: repeating-linear-gradient(45deg, #222, #222 10px, #111 10px, #111 20px) !important;
 }
 
 /* ARG Arc 2 Phase 3: Corrupted Terminal Glitch */
