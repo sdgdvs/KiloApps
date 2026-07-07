@@ -2,16 +2,52 @@
 <html>
 <head>
 <title>KChart</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; }
-  canvas { background-color: #fff; }
-  button { margin-top: 10px; padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; }
-  button:hover { background: #d0d0d0; }
+  :root {
+    --bg-color: #09090b;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --btn-bg: rgba(255, 255, 255, 0.1);
+    --btn-hover: rgba(255, 255, 255, 0.2);
+  }
+  body { 
+    margin: 0; font-family: 'Inter', -apple-system, sans-serif; 
+    background: radial-gradient(circle at top right, #1e1b4b, var(--bg-color) 80%); 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    height: 100vh; overflow: hidden; user-select: none; color: var(--text-main);
+  }
+  .chart-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  canvas { 
+    background-color: transparent; 
+  }
+  button { 
+    margin-top: 20px; padding: 8px 24px; font-size: 15px; font-weight: 600; 
+    font-family: 'Inter', sans-serif;
+    cursor: pointer; border: 1px solid var(--border-color); border-radius: 20px; 
+    background: var(--btn-bg); color: var(--text-main);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+  }
+  button:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  button:active { transform: translateY(1px) scale(0.96); }
 </style>
 </head>
 <body>
-<canvas id="cvs" width="400" height="250"></canvas>
-<button id="btnRand">Randomize Data</button>
+<div class="chart-container">
+  <canvas id="cvs" width="400" height="250"></canvas>
+  <button id="btnRand">Randomize Data</button>
+</div>
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
@@ -21,35 +57,61 @@
   let target = [20, 60, 45, 80, 30];
   const labels = ["Q1", "Q2", "Q3", "Q4", "Q5"];
   const colors = [
-      "rgb(200, 50, 50)",
-      "rgb(50, 200, 50)",
-      "rgb(50, 50, 200)",
-      "rgb(200, 200, 50)",
-      "rgb(200, 50, 200)"
+      "rgb(20, 184, 166)", // Teal
+      "rgb(245, 158, 11)", // Orange
+      "rgb(236, 72, 153)", // Pink
+      "rgb(139, 92, 246)", // Purple
+      "rgb(59, 130, 246)"  // Blue
   ];
   
+  function drawRoundedRect(ctx, x, y, width, height, radius) {
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height);
+      ctx.lineTo(x, y + height);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+      ctx.fill();
+  }
+
   function draw() {
       ctx.clearRect(0, 0, cvs.width, cvs.height);
       
-      let chartX = 50;
-      let chartY = 30;
-      let chartW = cvs.width - 100;
-      let chartH = cvs.height - 80;
+      let chartX = 40;
+      let chartY = 20;
+      let chartW = cvs.width - 80;
+      let chartH = cvs.height - 60;
       
+      // Draw grid lines
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 0; i <= 4; i++) {
+          let y = chartY + (chartH / 4) * i;
+          ctx.moveTo(chartX, y);
+          ctx.lineTo(chartX + chartW, y);
+      }
+      ctx.stroke();
+
+      // Draw axes
       ctx.beginPath();
       ctx.moveTo(chartX, chartY);
       ctx.lineTo(chartX, chartY + chartH);
       ctx.lineTo(chartX + chartW, chartY + chartH);
-      ctx.strokeStyle = "#000";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+      ctx.lineWidth = 2;
       ctx.stroke();
       
-      let barW = 30;
+      let barW = 34;
       let spacing = (chartW - (5 * barW)) / 6;
       
-      ctx.font = "14px 'Segoe UI'";
+      ctx.font = "13px 'Inter'";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fillStyle = "#000";
+      ctx.fontWeight = "600";
       
       for (let i = 0; i < 5; i++) {
           let bw = barW;
@@ -57,11 +119,17 @@
           let bx = chartX + spacing + i * (barW + spacing);
           let by = chartY + chartH - bh;
           
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = colors[i];
           ctx.fillStyle = colors[i];
-          ctx.fillRect(bx, by, bw, bh);
           
-          ctx.fillStyle = "#000";
-          ctx.fillText(labels[i], bx + bw / 2, chartY + chartH + 5);
+          if (bh > 0) {
+              drawRoundedRect(ctx, bx, by, bw, bh, 6);
+          }
+          
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#a1a1aa";
+          ctx.fillText(labels[i], bx + bw / 2, chartY + chartH + 10);
       }
   }
   
@@ -69,12 +137,12 @@
       let changed = false;
       for (let i = 0; i < 5; i++) {
           if (values[i] < target[i]) {
-              values[i] += 2;
-              if (values[i] > target[i]) values[i] = target[i];
+              values[i] += (target[i] - values[i]) * 0.1;
+              if (target[i] - values[i] < 0.5) values[i] = target[i];
               changed = true;
           } else if (values[i] > target[i]) {
-              values[i] -= 2;
-              if (values[i] < target[i]) values[i] = target[i];
+              values[i] -= (values[i] - target[i]) * 0.1;
+              if (values[i] - target[i] < 0.5) values[i] = target[i];
               changed = true;
           }
       }
@@ -84,12 +152,12 @@
   
   btnRand.onclick = () => {
       for (let i = 0; i < 5; i++) {
-          target[i] = 10 + Math.floor(Math.random() * 90);
+          target[i] = 5 + Math.floor(Math.random() * 95);
       }
+      update();
   };
   
   draw();
-  update();
 </script>
 </body>
 </html>

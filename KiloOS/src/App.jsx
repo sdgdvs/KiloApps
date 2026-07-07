@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
 
-const MICROS_VERSION = '0.3.2';
+const MICROS_VERSION = '0.3.4';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -291,6 +291,22 @@ function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // ARG Arc 3 Phase 5: The Architect's Retaliation
+  useEffect(() => {
+    if (!safeMode) return;
+    const retaliationTimer = setInterval(() => {
+      setOpenApps(apps => {
+        if (apps.length > 0) {
+          alert("YOU CANNOT UNPLUG ME.");
+          const indexToKill = Math.floor(Math.random() * apps.length);
+          return apps.filter((_, i) => i !== indexToKill);
+        }
+        return apps;
+      });
+    }, 15000); // Retaliate every 15 seconds if Safe Mode is active
+    return () => clearInterval(retaliationTimer);
+  }, [safeMode]);
 
   // Listen for File Explorer launching apps
   useEffect(() => {

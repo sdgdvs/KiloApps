@@ -1,5 +1,5 @@
 @echo off
-set APPS=KBBS KCalc KChat KChatServer KClock KMines KPad KPaint KTask KSnake KConverter
+set APPS=KBBS KCalc KChat KChatServer KClock KMines KPad KPaint KTask KSnake KConverter KTodo
 for %%A in (%APPS%) do (
     echo Building %%A
     cd %%A

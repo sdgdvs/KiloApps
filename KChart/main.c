@@ -8,11 +8,11 @@ int values[5] = { 20, 60, 45, 80, 30 };
 int target[5] = { 20, 60, 45, 80, 30 };
 const char* labels[5] = { "Q1", "Q2", "Q3", "Q4", "Q5" };
 COLORREF colors[5] = {
-    RGB(200, 50, 50),
-    RGB(50, 200, 50),
-    RGB(50, 50, 200),
-    RGB(200, 200, 50),
-    RGB(200, 50, 200)
+    RGB(20, 184, 166), // Teal
+    RGB(245, 158, 11), // Orange
+    RGB(236, 72, 153), // Pink
+    RGB(139, 92, 246), // Purple
+    RGB(59, 130, 246)  // Blue
 };
 
 int randSeed = 42;
@@ -68,15 +68,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
             SelectObject(memDC, memBM);
             
-            HBRUSH bg = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH bg = CreateSolidBrush(RGB(9, 9, 11));
             RECT full = {0, 0, W, H};
             FillRect(memDC, &full, bg);
             DeleteObject(bg);
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_SEMIBOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
-            SetTextColor(memDC, RGB(0, 0, 0));
+            SetTextColor(memDC, RGB(161, 161, 170));
             
             int chartX = 50;
             int chartY = 30;
@@ -84,9 +84,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int chartH = H - 120;
             
             // Draw axes
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 116, 139));
+            HGDIOBJ oldPen = SelectObject(memDC, hPen);
             MoveToEx(memDC, chartX, chartY, NULL);
             LineTo(memDC, chartX, chartY + chartH);
             LineTo(memDC, chartX + chartW, chartY + chartH);
+            SelectObject(memDC, oldPen);
+            DeleteObject(hPen);
             
             int barW = 30;
             int spacing = (chartW - (5 * barW)) / 6;
