@@ -113,7 +113,88 @@
   </div>
 
   <script>
-    // Phase 1 Scaffold
+    const fileInp = document.getElementById('fileInp');
+    const btnClear = document.getElementById('btnClear');
+    const btnAUp = document.getElementById('btnAUp');
+    const btnADown = document.getElementById('btnADown');
+    const btnTheme = document.getElementById('btnTheme');
+    
+    const readerContainer = document.getElementById('readerContainer');
+    const emptyState = document.getElementById('emptyState');
+    const textContent = document.getElementById('textContent');
+
+    let currentText = localStorage.getItem('kread_text') || '';
+    let currentScroll = parseInt(localStorage.getItem('kread_scroll') || '0');
+    let fontSize = parseInt(localStorage.getItem('kread_fontsize') || '18');
+    let isDark = localStorage.getItem('kread_dark') === 'true';
+
+    function applyState() {
+      textContent.style.fontSize = fontSize + 'px';
+      if (isDark) document.body.classList.add('dark');
+      else document.body.classList.remove('dark');
+      
+      if (currentText) {
+        emptyState.style.display = 'none';
+        textContent.style.display = 'block';
+        textContent.textContent = currentText;
+        setTimeout(() => readerContainer.scrollTop = currentScroll, 10);
+      } else {
+        emptyState.style.display = 'flex';
+        textContent.style.display = 'none';
+      }
+    }
+
+    fileInp.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        currentText = ev.target.result;
+        currentScroll = 0;
+        localStorage.setItem('kread_text', currentText);
+        localStorage.setItem('kread_scroll', '0');
+        applyState();
+      };
+      reader.readAsText(file);
+    });
+
+    btnClear.onclick = () => {
+      currentText = '';
+      currentScroll = 0;
+      localStorage.removeItem('kread_text');
+      localStorage.setItem('kread_scroll', '0');
+      applyState();
+    };
+
+    btnAUp.onclick = () => {
+      fontSize = Math.min(fontSize + 2, 48);
+      localStorage.setItem('kread_fontsize', fontSize);
+      applyState();
+    };
+
+    btnADown.onclick = () => {
+      fontSize = Math.max(fontSize - 2, 12);
+      localStorage.setItem('kread_fontsize', fontSize);
+      applyState();
+    };
+
+    btnTheme.onclick = () => {
+      isDark = !isDark;
+      localStorage.setItem('kread_dark', isDark);
+      applyState();
+    };
+
+    let scrollTimeout;
+    readerContainer.onscroll = () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        if (currentText) {
+          localStorage.setItem('kread_scroll', readerContainer.scrollTop);
+        }
+      }, 500);
+    };
+
+    applyState();
   </script>
 </body>
 </html>
