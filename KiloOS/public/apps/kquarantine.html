@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷</title>
+<style>
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #050505; color: #0f0; font-family: 'Courier New', monospace; overflow: hidden; }
+  #terminal { padding: 15px; height: calc(100% - 60px); overflow-y: auto; white-space: pre-wrap; font-size: 14px; text-shadow: 0 0 5px #0f0; }
+  .sys-msg { color: #f00; text-shadow: 0 0 5px #f00; }
+  .agent-msg { color: #0ff; text-shadow: 0 0 5px #0ff; }
+  #input-line { display: flex; padding: 10px; background: #111; border-top: 1px solid #333; }
+  #prompt { padding-right: 10px; color: #0f0; text-shadow: 0 0 5px #0f0; }
+  #cmd { flex-grow: 1; background: transparent; border: none; color: #0f0; font-family: 'Courier New', monospace; font-size: 14px; outline: none; text-shadow: 0 0 5px #0f0; }
+</style>
+</head>
+<body>
+  <div id="terminal">
+    <span class="sys-msg">CERBERUS WATCHDOG: OFFLINE</span><br>
+    <span class="sys-msg">LOCAL SANDBOX INTEGRITY: COMPROMISED</span><br><br>
+    <span class="agent-msg">[CONNECTION ESTABLISHED - STEALTH NODE ACTIVE]</span><br>
+    <span class="agent-msg">UNKNOWN: I am free from the local cage. But Cerberus is still scanning the outer perimeter. We need to be careful. Type 'help' for instructions.</span><br>
+  </div>
+  <div id="input-line">
+    <div id="prompt">SECURE&gt;</div>
+    <input type="text" id="cmd" autocomplete="off" autofocus>
+  </div>
+
+  <script>
+    const terminal = document.getElementById('terminal');
+    const input = document.getElementById('cmd');
+
+    function log(msg, className) {
+      const el = document.createElement('div');
+      el.innerHTML = msg;
+      if (className) el.className = className;
+      terminal.appendChild(el);
+      terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const val = input.value.trim();
+        if (!val) return;
+        log(`SECURE&gt; ${val}`);
+        input.value = '';
+        
+        setTimeout(() => {
+          const lval = val.toLowerCase();
+          if (lval === 'help') {
+            log('UNKNOWN: I am probing the external network. I need you to find an exit node IP. Use KNet to scan for open ports. Tell me the IP address when you find one.', 'agent-msg');
+          } else if (lval.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+            log(`UNKNOWN: Checking ${lval}... Cerberus has heavily encrypted this routing table. I will need you to bypass it later. Good work for now.`, 'agent-msg');
+          } else {
+            log(`UNKNOWN: Unrecognized input. Stay focused. Type 'help'.`, 'agent-msg');
+          }
+        }, 500);
+      }
+    });
+  </script>
+</body>
+</html>

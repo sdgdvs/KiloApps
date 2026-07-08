@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.14';
+const MICROS_VERSION = '0.3.15';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -306,6 +306,7 @@ function App() {
   const [startOpen, setStartOpen] = useState(false);
   const [activeAppId, setActiveAppId] = useState(null);
   const [cerberusBlinded, setCerberusBlinded] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const animationsEnabled = vfs['/.sys_settings_animations'] !== 'false';
   const toggleAnimations = () => {
@@ -333,6 +334,7 @@ function App() {
     setStartOpen(false);
     setSelectedIcon(null);
     setContextMenu(null);
+    setCalendarOpen(false);
   };
 
   const handleContextMenu = (e) => {
@@ -437,15 +439,19 @@ function App() {
 
   const openApp = (appDef) => {
     if (appDef.id === 'kquarantine') {
-      const pwd = prompt("FATAL EXCEPTION: SECTOR LOCKED.\nREQUIRES LEVEL 9 CLEARANCE PASSPHRASE:");
-      if (pwd !== null) {
-        setVfs(prev => ({
-          ...prev, 
-          '/.sys_quarantine_log': (prev['/.sys_quarantine_log'] || '') + `[DENIED] Attempted Passphrase: ${pwd}\n`
-        }));
-        alert("ACCESS DENIED. INCIDENT LOGGED.");
+      if (cerberusBlinded) {
+        appDef = { ...appDef, url: '/apps/kquarantine.html' };
+      } else {
+        const pwd = prompt("FATAL EXCEPTION: SECTOR LOCKED.\nREQUIRES LEVEL 9 CLEARANCE PASSPHRASE:");
+        if (pwd !== null) {
+          setVfs(prev => ({
+            ...prev, 
+            '/.sys_quarantine_log': (prev['/.sys_quarantine_log'] || '') + `[DENIED] Attempted Passphrase: ${pwd}\n`
+          }));
+          alert("ACCESS DENIED. INCIDENT LOGGED.");
+        }
+        return;
       }
-      return;
     }
 
     argAppHistory.current.push(appDef.id);
@@ -677,7 +683,14 @@ function App() {
             );
           })}
         </div>
-        <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr}>{time}</div>
+        {calendarOpen && (
+          <div className="calendar-flyout" onClick={(e) => e.stopPropagation()}>
+            <div className="calendar-flyout-date">{new Date().getDate()}</div>
+            <div className="calendar-flyout-month">{new Date().toLocaleDateString([], { month: 'long', year: 'numeric' })}</div>
+            <div className="calendar-flyout-weekday">{new Date().toLocaleDateString([], { weekday: 'long' })}</div>
+          </div>
+        )}
+        <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr} onClick={(e) => { e.stopPropagation(); playClickAudio(); setCalendarOpen(!calendarOpen); setStartOpen(false); }}>{time}</div>
       </div>
 
       {modal && (

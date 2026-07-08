@@ -41,6 +41,13 @@
   <div class="calc">
     <div class="display" id="disp">0</div>
     <div class="keys">
+      <!-- Row 0 -->
+      <button class="func" onclick="memClear()">MC</button>
+      <button class="func" onclick="memRecall()">MR</button>
+      <button class="func" onclick="memAdd()">M+</button>
+      <button class="func" onclick="memSub()">M-</button>
+      <button class="func" style="visibility:hidden"></button>
+
       <!-- Row 1 -->
       <button class="func" onclick="append('Math.sin(')">sin</button>
       <button class="func" onclick="append('Math.cos(')">cos</button>
@@ -87,6 +94,7 @@
   <script>
     let d = document.getElementById('disp');
     let expr = '';
+    let memoryStore = 0.0;
     
     function render() {
       let pretty = expr
@@ -112,6 +120,21 @@
     function clearDisp() { 
       expr = ''; 
       render();
+    }
+
+    function memClear() { memoryStore = 0.0; }
+    function memRecall() { append(String(memoryStore)); }
+    function memAdd() {
+      try {
+        let res = eval(expr);
+        if (!isNaN(res)) memoryStore += res;
+      } catch {}
+    }
+    function memSub() {
+      try {
+        let res = eval(expr);
+        if (!isNaN(res)) memoryStore -= res;
+      } catch {}
     }
     
     function backspace() { 

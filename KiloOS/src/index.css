@@ -384,6 +384,40 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   text-shadow: 0 0 8px var(--primary);
 }
 
+.calendar-flyout {
+  position: absolute;
+  bottom: 50px;
+  right: 10px;
+  background: rgba(10, 15, 20, 0.95);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 10000;
+  animation: taskbarItemIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.calendar-flyout-date {
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.calendar-flyout-month {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.calendar-flyout-weekday {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 /* Window */
 .xp-window {
   position: absolute;

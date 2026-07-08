@@ -49,6 +49,7 @@ HWND hDisplay;
 char displayBuffer[64] = "0";
 double operand1 = 0;
 int operator = 0;
+double memoryStore = 0.0;
 int isNewOperand = 1;
 
 void FormatDisplay(double val) {
@@ -105,7 +106,7 @@ void DoCalculate() {
     else if (operator == '/') {
         if (operand2 != 0) res = operand1 / operand2;
         else {
-            my_strcpy(displayBuffer, "Error");
+            my_strcpy(displayBuffer, "ERR_MEM_LEAK: 0x8FA0B2");
             SetWindowTextA(hDisplay, displayBuffer);
             isNewOperand = 1;
             operator = 0;
@@ -158,7 +159,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = CreateFontA(24, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            char labels[30][6] = {
+            char labels[35][6] = {
+                "MC",  "MR",  "M+",  "M-",  "",
                 "sin", "cos", "tan", "pi", "C",
                 "ln",  "log", "sqr", "e",  "<",
                 "exp", "7",   "8",   "9",  "/",
@@ -166,7 +168,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 "+/-", "1",   "2",   "3",  "-",
                 "1/x", "0",   ".",   "=",  "+"
             };
-            int ids[30] = {
+            int ids[35] = {
+                2001, 2002, 2003, 2004, 0,
                 1001, 1002, 1003, 1010, 'C',
                 1004, 1005, 1006, 1011, '<',
                 1007, '7',  '8',  '9',  '/',
@@ -175,10 +178,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 1009, '0',  '.',  '=',  '+'
             };
 
-            for(int i=0; i<30; i++) {
+            for(int i=0; i<35; i++) {
                 int col = i % 5;
                 int row = i / 5;
-                CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10 + col * 57, 50 + row * 40, 52, 35, hwnd, (HMENU)ids[i], NULL, NULL);
+                if (ids[i]) CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10 + col * 57, 50 + row * 40, 52, 35, hwnd, (HMENU)ids[i], NULL, NULL);
             }
             break;
         }
@@ -204,6 +207,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 operator = 0;
             } else if (id >= 1001 && id <= 1011) {
                 DoUnary(id - 1000);
+            } else if (id == 2001) { // MC
+                memoryStore = 0.0;
+            } else if (id == 2002) { // MR
+                operand1 = memoryStore;
+                FormatDisplay(operand1);
+                isNewOperand = 1;
+            } else if (id == 2003) { // M+
+                memoryStore += m_atof(displayBuffer);
+                isNewOperand = 1;
+            } else if (id == 2004) { // M-
+                memoryStore -= m_atof(displayBuffer);
+                isNewOperand = 1;
             }
             break;
         }
@@ -223,8 +238,8 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
-    // Adjusted dimensions: 320x340
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 320, 340, NULL, NULL, wc.hInstance, NULL);
+    // Adjusted dimensions: 320x380
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 320, 380, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
