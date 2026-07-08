@@ -526,8 +526,17 @@ function App() {
     const accent = vfs['/.sys_settings_accent'];
     if (accent) {
       document.documentElement.style.setProperty('--primary', accent);
+      localStorage.setItem('kiloos_accent', accent);
     }
   }, [vfs]);
+
+  // Load from localStorage on boot
+  useEffect(() => {
+    const savedAccent = localStorage.getItem('kiloos_accent');
+    if (savedAccent && !vfs['/.sys_settings_accent']) {
+      setVfs(prev => ({ ...prev, '/.sys_settings_accent': savedAccent }));
+    }
+  }, []);
 
   // Listen for File Explorer launching apps
   useEffect(() => {
@@ -663,7 +672,7 @@ function App() {
 
   if (screen === 'boot') {
     return (
-      <div className="boot-screen">
+      <div className="boot-screen crt-flicker">
         <div className="boot-logs" style={{width: '600px', margin: '0 auto', textAlign: 'left', fontFamily: 'Consolas, monospace', fontSize: '15px', color: '#00ff00', textShadow: '0 0 5px #00ff00', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
           {bootLogs.map((log, i) => <div key={i}>{log}</div>)}
         </div>
