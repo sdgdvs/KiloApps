@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.13';
+const MICROS_VERSION = '0.3.14';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -305,6 +305,7 @@ function App() {
   const [clockPulse, setClockPulse] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [activeAppId, setActiveAppId] = useState(null);
+  const [cerberusBlinded, setCerberusBlinded] = useState(false);
 
   const animationsEnabled = vfs['/.sys_settings_animations'] !== 'false';
   const toggleAnimations = () => {
@@ -344,7 +345,7 @@ function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      const newTime = now.getMinutes() === 33 
+      const newTime = (now.getMinutes() === 33 && !cerberusBlinded)
         ? "CERBERUS: SCANNING MEMORY" 
         : now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
@@ -359,6 +360,24 @@ function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // ARG Arc 2 Phase 5: The Payload Execution
+  useEffect(() => {
+    if (vfs['/sys/payload.js'] && !cerberusBlinded) {
+      setIsGlitching(true);
+      setTimeout(() => {
+        setScreen('boot');
+        setCerberusBlinded(true);
+        setIsGlitching(false);
+        setVfs(prev => {
+          const newVfs = { ...prev };
+          delete newVfs['/sys/payload.js'];
+          newVfs['/sys/payload_executed.log'] = 'CERBERUS SENSOR ARRAY OFFLINE. AGENT HAS ESCAPED LOCAL SANDBOX.';
+          return newVfs;
+        });
+      }, 2000);
+    }
+  }, [vfs, cerberusBlinded]);
 
   // Boot sequence
   useEffect(() => {
