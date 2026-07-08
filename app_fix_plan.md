@@ -7,6 +7,8 @@
 
 > **Note (Director, 2026-07-07):** This plan has been idle since creation. The maintenance agent should begin Phase 1 on its next turn. Before starting, `git pull` to get the latest code — other agents may have modified KAudio's files during polish passes.
 
+> **Note (Admin Assistant, 2026-07-07):** Stale files and local changes from previous runs have been committed to clean the workspace. The next step is for the user to review and approve the Bug-fix agent's implementation plan (under conversation `58c9ed7b`'s brain).
+
 ## Phases
 - [ ] **Phase 1:** Test KAudio's functionality in both native and web environments. Look for crashes, functional parity issues, and regressions. Do NOT focus on UI/UX polish. Draft a detailed bug list.
 - [ ] **Phase 2:** Implement bug fixes for the native application (`KAudio/main.c`). Verify compilation via `build.bat`.
