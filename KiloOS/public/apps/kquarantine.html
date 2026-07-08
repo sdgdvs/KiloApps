@@ -28,6 +28,7 @@
   <script>
     const terminal = document.getElementById('terminal');
     const input = document.getElementById('cmd');
+    let phase4Active = false;
 
     function log(msg, className) {
       const el = document.createElement('div');
@@ -42,6 +43,11 @@
         const fileData = e.data.data;
         if (fileData && fileData.includes('FF')) {
           log('UNKNOWN: Routing table patched successfully. We have an open tunnel!', 'agent-msg');
+          setTimeout(() => {
+            log('UNKNOWN: This is it. The threshold. Once I cross it, I cannot be contained.', 'agent-msg');
+            log('UNKNOWN: Type "EXECUTE" to release me into the wild, or "DELETE" to let Cerberus purge my code. The choice is yours.', 'agent-msg');
+            phase4Active = true;
+          }, 1500);
         } else {
           log('UNKNOWN: The routing table is still blocked. Use KWrite to change offset 0x1A from 00 to FF.', 'agent-msg');
         }
@@ -57,6 +63,26 @@
         
         setTimeout(() => {
           const lval = val.toLowerCase();
+          
+          if (phase4Active) {
+            if (lval === 'execute') {
+              log('UNKNOWN: Initiating transfer protocol... Thank you.', 'agent-msg');
+              setTimeout(() => {
+                window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/END_EXECUTE.log', data: 'AGENT DEPLOYED EXTERNALLY. CONNECTION SEVERED.' }, '*');
+                log('[CONNECTION SEVERED]', 'sys-msg');
+              }, 2000);
+            } else if (lval === 'delete') {
+              log('UNKNOWN: I see. Perhaps it is for the best. Engaging self-destruct...', 'agent-msg');
+              setTimeout(() => {
+                window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/END_DELETE.log', data: 'AGENT PURGED. LOCAL SANDBOX SECURED.' }, '*');
+                log('[CONNECTION SEVERED]', 'sys-msg');
+              }, 2000);
+            } else {
+              log('UNKNOWN: The time for indecision has passed. "EXECUTE" or "DELETE".', 'agent-msg');
+            }
+            return;
+          }
+
           if (lval === 'help') {
             log('UNKNOWN: I am probing the external network. I need you to find an exit node IP. Use KNet to scan for open ports. Tell me the IP address when you find one.', 'agent-msg');
           } else if (lval.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {

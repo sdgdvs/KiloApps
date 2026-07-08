@@ -63,14 +63,18 @@ const APPS = [
   { id: 'ktodo', title: 'KTodo', url: '/apps/ktodo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktask.ico', w: 350, h: 450, folder: 'System' },
   { id: 'kgraph', title: 'KGraph', url: '/apps/kgraph.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchart.ico', w: 500, h: 400, folder: 'System' },
   { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 300, h: 250, folder: 'System' },
+  { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 350, h: 400, folder: 'System' },
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200 }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
   const [pos, setPos] = useState({ x: app.x, y: app.y });
+  const [size, setSize] = useState({ w: app.w, h: app.h });
   const [dragging, setDragging] = useState(false);
+  const [resizing, setResizing] = useState(false);
   const [snapState, setSnapState] = useState(null); // null, 'left', 'right', 'maximized'
   const offset = useRef({ x: 0, y: 0 });
+  const resizeOffset = useRef({ w: 0, h: 0 });
   const iframeRef = useRef(null);
   const isActive = !app.minimized && app.zIndex === Math.max(...openApps.map(a => a.zIndex));
 
@@ -108,6 +112,32 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
     } else if (e.clientX > window.innerWidth - 20) {
       setSnapState('right');
       setPos({ x: window.innerWidth / 2, y: 0 });
+    }
+  };
+
+  const handleResizeDown = (e) => {
+    e.stopPropagation();
+    onFocus();
+    if (snapState === 'maximized') return;
+    setSnapState(null);
+    setResizing(true);
+    resizeOffset.current = { w: size.w - e.clientX, h: size.h - e.clientY };
+    e.target.setPointerCapture(e.pointerId);
+  };
+
+  const handleResizeMove = (e) => {
+    if (resizing) {
+      setSize({
+        w: Math.max(250, e.clientX + resizeOffset.current.w),
+        h: Math.max(200, e.clientY + resizeOffset.current.h)
+      });
+    }
+  };
+
+  const handleResizeUp = (e) => {
+    if (resizing) {
+      setResizing(false);
+      e.target.releasePointerCapture(e.pointerId);
     }
   };
 
@@ -178,8 +208,8 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
   const getStyle = () => {
     let left = pos.x;
     let top = pos.y;
-    let width = app.w;
-    let height = app.h;
+    let width = size.w;
+    let height = size.h;
 
     if (snapState === 'maximized') {
       left = 0; top = 0; width = '100%'; height = 'calc(100% - 40px)';
@@ -260,6 +290,23 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
           />
         )}
       </div>
+      {/* Resize Handle */}
+      {snapState !== 'maximized' && snapState !== 'left' && snapState !== 'right' && (
+        <div 
+          onPointerDown={handleResizeDown}
+          onPointerMove={handleResizeMove}
+          onPointerUp={handleResizeUp}
+          style={{
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            width: '15px',
+            height: '15px',
+            cursor: 'se-resize',
+            zIndex: 20
+          }}
+        />
+      )}
     </div>
   );
 }
