@@ -1,12 +1,12 @@
-# New App Plan: KPass
+# New App Plan: KContacts
 
-**Status:** Completed
+**Status:** Not Started
 
 ## Description
-KPass is a minimal, bloat-free password generator and local vault. It allows users to instantly generate secure passwords and safely store them in their virtual filesystem. It strictly maintains the < 999KB KiloOS aesthetic constraints.
+KContacts is a minimal, bloat-free local address book and contact manager. It allows users to quickly save, search, and manage their contacts directly inside the KiloOS virtual filesystem, adhering strictly to the < 999KB constraints.
 
 ## Phases
-- [x] **Phase 1:** Scaffold the `KPass` application directory. Create `kpass.html` with a tabbed UI (Generator and Vault) and integrate the web app into `KiloOS/src/App.jsx`.
-- [x] **Phase 2:** Implement the Javascript logic for the Password Generator (slider for length, toggles for character types, and a prominent 'Generate' button).
-- [x] **Phase 3:** Implement the Javascript logic for the Local Vault (saving credentials to the VFS with a rudimentary XOR-based obfuscation for themed security).
-- [x] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KPass` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.
+- [x] **Phase 1:** Scaffold the `KContacts` application directory. Create `kcontacts.html` with a split UI (List view on left, Details/Edit view on right) and integrate the web app into `KiloOS/src/App.jsx`.
+- [ ] **Phase 2:** Implement the Javascript logic for adding, editing, and deleting contacts (Name, Email, Phone, Notes).
+- [ ] **Phase 3:** Implement the Javascript logic for saving/loading from the VFS (`localStorage`) and add a real-time search/filter bar for the contact list.
+- [ ] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KContacts` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.
