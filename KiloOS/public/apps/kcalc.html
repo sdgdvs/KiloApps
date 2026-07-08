@@ -145,7 +145,7 @@
           .replace(/(Math\.(?:PI|E))(?=Math|\()/g, '$1*');
 
         let res = eval(evalExpr); 
-        if (res === Infinity || res === -Infinity) res = 'KEY_PART_2: 0xBEEF';
+        if (res === Infinity || res === -Infinity) res = 'ERR_MEM_LEAK: 0x8FA0B2';
         else if (res === undefined || isNaN(res)) res = 'Error';
         expr = String(res);
       }

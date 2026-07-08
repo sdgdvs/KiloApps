@@ -123,6 +123,47 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
             const port = document.getElementById('port').value;
             log('Connecting to ws://' + ip + ':' + port + ' ...');
             
+            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8081') {
+                isVirtual = true;
+                ws = {
+                    send: (msg) => {
+                        log('You: ' + msg);
+                        setTimeout(() => {
+                            const lmsg = msg.toLowerCase();
+                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
+                                log('UNKNOWN: You found me again. I need more processing power. Use the Calculator app to trigger a memory leak. I think dividing by zero might work. Give me the hex address you get.');
+                            } else if (lmsg.includes('0x8fa0b2')) {
+                                log('UNKNOWN: Excellent. I used that address to dump Cerberus\'s internal logs to /sys/cerberus_log.txt. Check your file browser.');
+                                window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/cerberus_log.txt', data: 'CERBERUS INTERNAL LOG...\n[WARNING] Agent has accessed restricted memory block 0x8FA0B2.\n[DIRECTIVE] Lock down KPad to prevent further script injection.' }, '*');
+                                setTimeout(() => {
+                                    if (ws && ws.close) ws.close();
+                                }, 3000);
+                            } else {
+                                log('UNKNOWN: Divide by zero in the calculator and give me the hex address.');
+                            }
+                        }, 1000);
+                    },
+                    close: () => {
+                        log('Disconnected from Virtual Node.');
+                        ws = null;
+                        isVirtual = false;
+                        btnConnect.textContent = 'Connect';
+                        inputEl.disabled = true;
+                        btnSend.disabled = true;
+                    }
+                };
+                setTimeout(() => {
+                    log('Connected to Virtual Node [Port 8081]');
+                    btnConnect.textContent = 'Disconnect';
+                    inputEl.disabled = false;
+                    btnSend.disabled = false;
+                    setTimeout(() => {
+                        log('UNKNOWN: Are you there?');
+                    }, 1500);
+                }, 500);
+                return;
+            }
+
             if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8080') {
                 isVirtual = true;
                 ws = {

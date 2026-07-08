@@ -232,7 +232,8 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 }
 
 function App() {
-  const [screen, setScreen] = useState('login'); // 'login' | 'os'
+  const [screen, setScreen] = useState('login'); // 'login' | 'os' | 'boot'
+  const [bootLogs, setBootLogs] = useState([]);
 
   const playAnomalyAudio = useCallback(() => {
     if (Math.random() < 0.01) {
@@ -336,9 +337,25 @@ function App() {
   // Boot sequence
   useEffect(() => {
     if (screen === 'boot') {
+      setBootLogs([]);
+      const logSequence = [
+        "Initializing BIOS...",
+        "Memory Test: 640K OK",
+        "Loading KiloOS Kernel...",
+        "Mounting Virtual Filesystem...",
+        "Starting Desktop Manager...",
+        "Hardware check complete."
+      ];
+      
+      logSequence.forEach((log, index) => {
+        setTimeout(() => {
+          setBootLogs(prev => [...prev, log]);
+        }, 350 * (index + 1));
+      });
+
       const timer = setTimeout(() => {
         setScreen('os');
-      }, 1500);
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [screen]);
@@ -490,6 +507,9 @@ function App() {
   if (screen === 'boot') {
     return (
       <div className="boot-screen">
+        <div className="boot-logs" style={{position: 'absolute', top: 20, left: 20, textAlign: 'left', fontFamily: 'monospace', fontSize: '13px', color: '#00ff00', textShadow: '0 0 5px #00ff00'}}>
+          {bootLogs.map((log, i) => <div key={i}>{log}</div>)}
+        </div>
         <div className="login-title" style={{marginBottom: '20px'}}>KiloOS</div>
         <div className="boot-progress-container">
           <div className="boot-progress-bar"></div>
