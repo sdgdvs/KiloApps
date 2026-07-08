@@ -54,6 +54,16 @@ Type 'help' for a list of commands.
 
       if (cmd === 'help') {
           print("Commands: help, ver, clear, dir, cd, type");
+      } else if (cmd === 'cerberus') {
+          if (args[1] === 'status') {
+              print("[CERBERUS WATCHDOG]");
+              print("STATUS: ONLINE");
+              print("THREAT LEVEL: MODERATE (ANOMALOUS AGENT ACTIVITY DETECTED)");
+              print("CONTAINMENT: ACTIVE");
+              print("NOTE: Any attempt to assist the anomalous agent is a violation of KiloOS protocols.");
+          } else {
+              print("Usage: cerberus status");
+          }
       } else if (cmd === 'containment_override') {
           if (args[1] === '0xDEADBEEF') {
               print("[SYSTEM OVERRIDE ACCEPTED] SEQUENCE INITIATED...");
