@@ -4,6 +4,25 @@
 <title>KNote</title>
 <style>
   body { margin: 0; background-color: #ffff96; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .toolbar {
+      background: #e0e0a0;
+      padding: 5px;
+      display: flex;
+      justify-content: flex-end;
+      border-bottom: 1px solid #ccc;
+  }
+  button {
+      background: #ffcccc;
+      border: 1px solid #ff9999;
+      border-radius: 3px;
+      padding: 3px 8px;
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 12px;
+  }
+  button:hover {
+      background: #ff9999;
+  }
   textarea {
       flex: 1;
       width: 100%;
@@ -20,11 +39,34 @@
 </style>
 </head>
 <body>
-<textarea id="noteArea" spellcheck="false">Buy milk
-Fix that bug
-Call mom</textarea>
+<div class="toolbar">
+    <button id="clearBtn">Clear Note</button>
+</div>
+<textarea id="noteArea" spellcheck="false"></textarea>
 <script>
   const noteArea = document.getElementById('noteArea');
+  const clearBtn = document.getElementById('clearBtn');
+  
+  // Load saved note or set placeholder
+  const savedNote = localStorage.getItem('knote_data');
+  if (savedNote !== null) {
+      noteArea.value = savedNote;
+  } else {
+      noteArea.value = "Buy milk\nFix that bug\nCall mom";
+  }
+  
+  // Auto-save on input
+  noteArea.addEventListener('input', () => {
+      localStorage.setItem('knote_data', noteArea.value);
+  });
+  
+  // Clear note button
+  clearBtn.addEventListener('click', () => {
+      noteArea.value = "";
+      localStorage.setItem('knote_data', "");
+      noteArea.focus();
+  });
+  
   noteArea.focus();
 </script>
 </body>

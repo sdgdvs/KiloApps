@@ -726,12 +726,14 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   font-size: 13px;
   color: var(--text-main);
   cursor: pointer;
-  transition: background 0.1s;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .context-item:hover {
   background: var(--primary);
   color: #111;
+  padding-left: 20px;
+  box-shadow: inset 4px 0 0 0 #fff;
 }
 
 .context-separator {

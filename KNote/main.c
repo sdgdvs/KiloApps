@@ -7,9 +7,22 @@
 HWND hEdit;
 HBRUSH bgBrush;
 
+#define ID_FILE_OPEN 9001
+#define ID_FILE_SAVE 9002
+#define ID_FILE_EXIT 9003
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            HMENU hMenu = CreateMenu();
+            HMENU hFileMenu = CreatePopupMenu();
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_OPEN, "Open");
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVE, "Save");
+            AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_EXIT, "Exit");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hFileMenu, "File");
+            SetMenu(hwnd, hMenu);
+
             bgBrush = CreateSolidBrush(RGB(255, 255, 150));
             
             HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS");
@@ -20,6 +33,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 0, 0, W, H, hwnd, NULL, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            break;
+        }
+        case WM_COMMAND: {
+            if (LOWORD(wParam) == ID_FILE_OPEN) {
+                HANDLE hFile = CreateFileA("knote_data.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD fileSize = GetFileSize(hFile, NULL);
+                    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
+                    if (buf) {
+                        DWORD bytesRead;
+                        ReadFile(hFile, buf, fileSize, &bytesRead, NULL);
+                        buf[fileSize] = 0;
+                        SetWindowTextA(hEdit, buf);
+                        HeapFree(GetProcessHeap(), 0, buf);
+                    }
+                    CloseHandle(hFile);
+                }
+            } else if (LOWORD(wParam) == ID_FILE_SAVE) {
+                int len = GetWindowTextLengthA(hEdit);
+                char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+                if (buf) {
+                    GetWindowTextA(hEdit, buf, len + 1);
+                    HANDLE hFile = CreateFileA("knote_data.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        DWORD bytesWritten;
+                        WriteFile(hFile, buf, len, &bytesWritten, NULL);
+                        CloseHandle(hFile);
+                    }
+                    HeapFree(GetProcessHeap(), 0, buf);
+                }
+            } else if (LOWORD(wParam) == ID_FILE_EXIT) {
+                PostMessageA(hwnd, WM_CLOSE, 0, 0);
+            }
             break;
         }
         case WM_CTLCOLOREDIT: {

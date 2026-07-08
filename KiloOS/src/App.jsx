@@ -505,6 +505,14 @@ function App() {
     return () => clearInterval(retaliationTimer);
   }, [safeMode]);
 
+  // Apply Theme Accent Color
+  useEffect(() => {
+    const accent = vfs['/.sys_settings_accent'];
+    if (accent) {
+      document.documentElement.style.setProperty('--primary', accent);
+    }
+  }, [vfs]);
+
   // Listen for File Explorer launching apps
   useEffect(() => {
     const handler = (e) => {
@@ -810,6 +818,20 @@ function App() {
                   </select>
                 </>
               )}
+              {modal.type === 'display_settings' && (
+                <>
+                  <p>System Accent Color:</p>
+                  <input 
+                    type="color" 
+                    value={vfs['/.sys_settings_accent'] || '#2196F3'} 
+                    onChange={(e) => {
+                      const newColor = e.target.value;
+                      setVfs(prev => ({ ...prev, '/.sys_settings_accent': newColor }));
+                    }} 
+                    style={{ width: '100%', height: '40px', border: 'none', padding: 0, cursor: 'pointer', background: 'transparent' }} 
+                  />
+                </>
+              )}
               <div className="os-modal-buttons">
                 <button onClick={() => {
                   if (modal.type === 'shutdown') doShutdown();
@@ -833,7 +855,7 @@ function App() {
           <div className="context-item" onClick={() => { setContextMenu(null); window.location.reload(); }}>Refresh Desktop</div>
           <div className="context-item" onClick={() => { setContextMenu(null); alert('Wallpaper settings not available.'); }}>Change Wallpaper</div>
           <div className="context-separator" />
-          <div className="context-item" onClick={() => { setContextMenu(null); alert('Display settings not available.'); }}>Display Settings</div>
+          <div className="context-item" onClick={() => { setContextMenu(null); setModal({ type: 'display_settings', title: 'Display Settings' }); }}>Display Settings</div>
           <div className="context-separator" style={{opacity: 0.1}} />
           <div className="context-item" style={{color: 'rgba(255,0,0,0.1)', cursor: 'crosshair'}} onClick={() => { setContextMenu(null); setSafeMode(!safeMode); }}>{safeMode ? 'Disable' : 'Enable'} Safe Mode</div>
         </div>
