@@ -84,24 +84,180 @@
   </div>
   
   <div class="content" id="contentStopwatch">
-    <div class="display">00:00:00.000</div>
+    <div class="display" id="swDisplay">00:00:00.000</div>
     <div class="controls">
-      <button class="primary">Start</button>
+      <button class="primary" id="swBtnStart">Start</button>
       <button>Lap</button>
-      <button>Reset</button>
+      <button id="swBtnReset">Reset</button>
     </div>
   </div>
   
   <div class="content" id="contentTimer" style="display: none;">
-    <div class="display">00:00:00</div>
+    <input type="text" id="tmInput" value="00:05:00" style="background: transparent; border: 1px solid #444; color: #5a8bd4; font-family: 'Consolas', monospace; font-size: 48px; text-align: center; margin-bottom: 30px; width: 250px; outline: none;">
+    <div class="display" id="tmDisplay" style="display: none;">00:00:00</div>
     <div class="controls">
-      <button class="primary">Start</button>
-      <button>Reset</button>
+      <button class="primary" id="tmBtnStart">Start</button>
+      <button id="tmBtnReset">Reset</button>
     </div>
   </div>
 
   <script>
-    // Phase 1: Layout Scaffold
+    // Tab Switching
+    const tabStopwatch = document.getElementById('tabStopwatch');
+    const tabTimer = document.getElementById('tabTimer');
+    const contentStopwatch = document.getElementById('contentStopwatch');
+    const contentTimer = document.getElementById('contentTimer');
+
+    tabStopwatch.onclick = () => {
+      tabStopwatch.classList.add('active');
+      tabTimer.classList.remove('active');
+      contentStopwatch.style.display = 'flex';
+      contentTimer.style.display = 'none';
+    };
+
+    tabTimer.onclick = () => {
+      tabTimer.classList.add('active');
+      tabStopwatch.classList.remove('active');
+      contentTimer.style.display = 'flex';
+      contentStopwatch.style.display = 'none';
+    };
+
+    // --- Phase 2: Stopwatch Logic ---
+    let swStart = 0;
+    let swElapsed = 0;
+    let swInterval = null;
+    const swDisplay = document.getElementById('swDisplay');
+    const swBtnStart = document.getElementById('swBtnStart');
+    const swBtnReset = document.getElementById('swBtnReset');
+
+    function formatTime(ms) {
+      let d = new Date(ms);
+      let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
+      let m = d.getUTCMinutes().toString().padStart(2, '0');
+      let s = d.getUTCSeconds().toString().padStart(2, '0');
+      let milli = d.getUTCMilliseconds().toString().padStart(3, '0');
+      return `${h}:${m}:${s}.${milli}`;
+    }
+
+    function updateSw() {
+      swDisplay.innerText = formatTime(swElapsed + (swInterval ? performance.now() - swStart : 0));
+    }
+
+    swBtnStart.onclick = () => {
+      if (swInterval) {
+        clearInterval(swInterval);
+        swInterval = null;
+        swElapsed += performance.now() - swStart;
+        swBtnStart.innerText = "Start";
+        swBtnStart.classList.add("primary");
+      } else {
+        swStart = performance.now();
+        swInterval = setInterval(updateSw, 10);
+        swBtnStart.innerText = "Stop";
+        swBtnStart.classList.remove("primary");
+      }
+    };
+
+    swBtnReset.onclick = () => {
+      if (swInterval) { clearInterval(swInterval); swInterval = null; }
+      swElapsed = 0;
+      swBtnStart.innerText = "Start";
+      swBtnStart.classList.add("primary");
+      updateSw();
+    };
+
+    // --- Phase 3: Timer Logic ---
+    let timerTarget = 0;
+    let timerRemaining = 0;
+    let timerInterval = null;
+    const tmDisplay = document.getElementById('tmDisplay');
+    const tmInput = document.getElementById('tmInput');
+    const tmBtnStart = document.getElementById('tmBtnStart');
+    const tmBtnReset = document.getElementById('tmBtnReset');
+    
+    function formatTimer(ms) {
+      if (ms < 0) ms = 0;
+      let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
+      let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+      let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    }
+
+    function playAlarm() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+        for(let i=0; i<3; i++) {
+          let osc = ctx.createOscillator();
+          let gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(600, ctx.currentTime + i * 0.4);
+          osc.frequency.setValueAtTime(800, ctx.currentTime + i * 0.4 + 0.1);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime + i * 0.4);
+          gain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * 0.4 + 0.3);
+          osc.start(ctx.currentTime + i * 0.4);
+          osc.stop(ctx.currentTime + i * 0.4 + 0.3);
+        }
+      } catch (e) {}
+    }
+
+    function updateTimer() {
+      timerRemaining = timerTarget - Date.now();
+      if (timerRemaining <= 0) {
+        timerRemaining = 0;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        tmBtnStart.innerText = "Start";
+        tmBtnStart.classList.add("primary");
+        playAlarm();
+        tmInput.style.display = 'block';
+        tmDisplay.style.display = 'none';
+      } else {
+        tmDisplay.innerText = formatTimer(timerRemaining);
+      }
+    }
+
+    tmBtnStart.onclick = () => {
+      if (timerInterval) {
+        // Pause
+        clearInterval(timerInterval);
+        timerInterval = null;
+        tmBtnStart.innerText = "Resume";
+        tmBtnStart.classList.add("primary");
+      } else {
+        // Start / Resume
+        if (tmInput.style.display !== 'none') {
+          // Parse HH:MM:SS
+          let parts = tmInput.value.split(':').reverse();
+          let ms = 0;
+          if (parts[0]) ms += parseInt(parts[0]) * 1000;
+          if (parts[1]) ms += parseInt(parts[1]) * 60000;
+          if (parts[2]) ms += parseInt(parts[2]) * 3600000;
+          if (isNaN(ms) || ms <= 0) return;
+          timerRemaining = ms;
+          tmInput.style.display = 'none';
+          tmDisplay.style.display = 'block';
+        }
+        timerTarget = Date.now() + timerRemaining;
+        timerInterval = setInterval(updateTimer, 50);
+        updateTimer();
+        tmBtnStart.innerText = "Pause";
+        tmBtnStart.classList.remove("primary");
+      }
+    };
+
+    tmBtnReset.onclick = () => {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = null;
+      timerRemaining = 0;
+      tmBtnStart.innerText = "Start";
+      tmBtnStart.classList.add("primary");
+      tmInput.style.display = 'block';
+      tmDisplay.style.display = 'none';
+      tmInput.value = "00:05:00";
+    };
   </script>
 </body>
 </html>
