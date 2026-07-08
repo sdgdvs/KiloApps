@@ -17,7 +17,7 @@
 body, html {
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow: clip; /* clip prevents programmatic focus scroll */
   font-family: 'Inter', system-ui, sans-serif;
   user-select: none;
   background: var(--bg-color);
@@ -160,7 +160,7 @@ body, html {
   width: 100%;
   height: calc(100% - 40px);
   position: relative;
-  overflow: hidden;
+  overflow: clip; /* clip prevents programmatic focus scroll */
   background: linear-gradient(135deg, var(--bg-color), #0a111a, #05161e, var(--bg-color));
   background-size: 400% 400%;
   animation: gradientMesh 20s ease infinite;

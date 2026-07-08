@@ -496,7 +496,7 @@ function App() {
 
   return (
     <div className={`os-wrapper ${isGlitching ? 'arg-corrupted-glitch' : ''} ${safeMode ? 'safe-mode-theme' : ''}`} onContextMenu={handleContextMenu} onPointerDownCapture={playAnomalyAudio}>
-      <div className="desktop" onClick={handleDesktopClick}>
+      <div className="desktop" onClick={handleDesktopClick} onScroll={(e) => { e.currentTarget.scrollTop = 0; e.currentTarget.scrollLeft = 0; }}>
         <div 
           onClick={handlePixelClick}
           style={{ position: 'absolute', bottom: '0px', right: '0px', width: '5px', height: '5px', opacity: 0.01, zIndex: 9999, cursor: 'default' }}
