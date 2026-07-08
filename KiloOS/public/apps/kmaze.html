@@ -14,7 +14,8 @@
   const ctx = canvas.getContext('2d');
   
   const W = 320, H = 240;
-  const map = [
+  const maps = [
+    [
       [1,1,1,1,1,1,1,1,1,1],
       [1,0,0,0,0,0,1,0,0,1],
       [1,0,1,1,0,0,1,0,0,1],
@@ -23,9 +24,52 @@
       [1,0,0,0,0,0,0,0,0,1],
       [1,1,0,1,1,1,1,1,0,1],
       [1,0,0,0,0,0,0,1,0,1],
-      [1,0,0,0,0,0,0,0,0,1],
+      [1,0,0,0,0,0,0,2,0,1],
       [1,1,1,1,1,1,1,1,1,1]
+    ],
+    [
+      [1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,1,0,0,0,0,0,1],
+      [1,0,1,1,0,1,0,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,1,0,1,0,1],
+      [1,0,0,0,1,0,0,1,0,1,0,1],
+      [1,1,1,0,1,0,1,1,0,1,0,1],
+      [1,0,0,0,1,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,1,0,1],
+      [1,1,1,1,1,1,1,1,0,1,2,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1]
+    ],
+    [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
+      [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
+      [1,0,1,0,1,0,1,2,1,0,1,0,1,0,1],
+      [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
+      [1,0,1,0,1,0,0,0,1,0,1,0,1,0,1],
+      [1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,1,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ]
   ];
+  let currentLevel = 0;
+  let map = maps[currentLevel];
+  
+  function nextLevel() {
+      currentLevel++;
+      if (currentLevel >= maps.length) currentLevel = 0;
+      map = maps[currentLevel];
+      pX = 1.5; pY = 1.5;
+      dX = 1.0; dY = 0.0;
+      planeX = 0.0; planeY = 0.66;
+  }
   
   let pX = 1.5, pY = 1.5;
   let dX = 1.0, dY = 0.0;
@@ -40,12 +84,16 @@
       const rotSpeed = 0.05;
       
       if (keys['ArrowUp'] || keys['w']) {
-          if (map[Math.floor(pX + dX * moveSpeed)][Math.floor(pY)] === 0) pX += dX * moveSpeed;
-          if (map[Math.floor(pX)][Math.floor(pY + dY * moveSpeed)] === 0) pY += dY * moveSpeed;
+          if (map[Math.floor(pX + dX * moveSpeed)] && map[Math.floor(pX + dX * moveSpeed)][Math.floor(pY)] === 0) pX += dX * moveSpeed;
+          if (map[Math.floor(pX)] && map[Math.floor(pX)][Math.floor(pY + dY * moveSpeed)] === 0) pY += dY * moveSpeed;
       }
       if (keys['ArrowDown'] || keys['s']) {
-          if (map[Math.floor(pX - dX * moveSpeed)][Math.floor(pY)] === 0) pX -= dX * moveSpeed;
-          if (map[Math.floor(pX)][Math.floor(pY - dY * moveSpeed)] === 0) pY -= dY * moveSpeed;
+          if (map[Math.floor(pX - dX * moveSpeed)] && map[Math.floor(pX - dX * moveSpeed)][Math.floor(pY)] === 0) pX -= dX * moveSpeed;
+          if (map[Math.floor(pX)] && map[Math.floor(pX)][Math.floor(pY - dY * moveSpeed)] === 0) pY -= dY * moveSpeed;
+      }
+      
+      if (map[Math.floor(pX)] && map[Math.floor(pX)][Math.floor(pY)] === 2) {
+          nextLevel();
       }
       if (keys['ArrowRight'] || keys['d']) {
           let oldDX = dX;
@@ -101,7 +149,7 @@
                   mapY += stepY;
                   side = 1;
               }
-              if (map[mapX] && map[mapX][mapY] > 0) hit = 1;
+              if (map[mapX] && map[mapX][mapY] > 0) hit = map[mapX][mapY];
           }
           
           if (side === 0) perpWallDist = (sideDistX - deltaDistX);
@@ -113,7 +161,11 @@
           let drawEnd = lineHeight / 2 + H / 2;
           if (drawEnd >= H) drawEnd = H - 1;
           
-          ctx.fillStyle = side === 1 ? '#960000' : '#c80000';
+          if (hit === 2) {
+              ctx.fillStyle = side === 1 ? '#00cc00' : '#00ff00';
+          } else {
+              ctx.fillStyle = side === 1 ? '#960000' : '#c80000';
+          }
           ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
       }
   }

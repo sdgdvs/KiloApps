@@ -7,9 +7,7 @@ long _ftol2(float f) { return (long)f; }
 
 #define W 320
 #define H 240
-#define MAP_SIZE 10
-
-int map[MAP_SIZE][MAP_SIZE] = {
+int map1[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,0,0,1,0,0,1},
     {1,0,1,1,0,0,1,0,0,1},
@@ -18,13 +16,70 @@ int map[MAP_SIZE][MAP_SIZE] = {
     {1,0,0,0,0,0,0,0,0,1},
     {1,1,0,1,1,1,1,1,0,1},
     {1,0,0,0,0,0,0,1,0,1},
-    {1,0,0,0,0,0,0,0,0,1},
+    {1,0,0,0,0,0,0,2,0,1},
     {1,1,1,1,1,1,1,1,1,1}
 };
+
+int map2[12][12] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,0,0,1,0,0,0,0,0,1},
+    {1,0,1,1,0,1,0,1,1,1,0,1},
+    {1,0,1,0,0,0,0,0,0,1,0,1},
+    {1,0,1,0,1,1,1,1,0,1,0,1},
+    {1,0,0,0,1,0,0,1,0,1,0,1},
+    {1,1,1,0,1,0,1,1,0,1,0,1},
+    {1,0,0,0,1,0,0,0,0,0,0,1},
+    {1,0,1,1,1,1,1,1,1,1,0,1},
+    {1,0,0,0,0,0,0,0,0,1,0,1},
+    {1,1,1,1,1,1,1,1,0,1,2,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+int map3[15][15] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {1,0,1,1,1,1,1,1,1,1,1,1,1,0,1},
+    {1,0,1,0,0,0,0,0,0,0,0,0,1,0,1},
+    {1,0,1,0,1,1,1,1,1,1,1,0,1,0,1},
+    {1,0,1,0,1,0,0,0,0,0,1,0,1,0,1},
+    {1,0,1,0,1,0,1,1,1,0,1,0,1,0,1},
+    {1,0,1,0,1,0,1,2,1,0,1,0,1,0,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1},
+    {1,0,1,0,1,0,0,0,1,0,1,0,1,0,1},
+    {1,0,1,0,1,1,1,1,1,0,1,0,1,0,1},
+    {1,0,1,0,0,0,0,0,0,0,1,0,1,0,1},
+    {1,0,1,1,1,1,1,1,1,1,1,0,1,0,1},
+    {1,0,0,0,0,0,0,0,0,0,0,0,1,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+int currentLevel = 0;
+
+int GetMapValue(int x, int y) {
+    if (x < 0 || y < 0) return 1;
+    if (currentLevel == 0) {
+        if (x >= 10 || y >= 10) return 1;
+        return map1[x][y];
+    } else if (currentLevel == 1) {
+        if (x >= 12 || y >= 12) return 1;
+        return map2[x][y];
+    } else {
+        if (x >= 15 || y >= 15) return 1;
+        return map3[x][y];
+    }
+}
 
 float pX = 1.5f, pY = 1.5f;
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
+
+void NextLevel() {
+    currentLevel++;
+    if (currentLevel > 2) currentLevel = 0;
+    pX = 1.5f; pY = 1.5f;
+    dX = 1.0f; dY = 0.0f;
+    planeX = 0.0f; planeY = 0.66f;
+}
 
 void Rotate(float speed) {
     // rotate dX, dY
@@ -51,12 +106,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             float moveSpeed = 0.1f;
             float rotSpeed = 0.05f;
             if (GetAsyncKeyState(VK_UP) & 0x8000) {
-                if (map[(int)(pX + dX * moveSpeed)][(int)pY] == 0) pX += dX * moveSpeed;
-                if (map[(int)pX][(int)(pY + dY * moveSpeed)] == 0) pY += dY * moveSpeed;
+                if (GetMapValue((int)(pX + dX * moveSpeed), (int)pY) == 0) pX += dX * moveSpeed;
+                if (GetMapValue((int)pX, (int)(pY + dY * moveSpeed)) == 0) pY += dY * moveSpeed;
             }
             if (GetAsyncKeyState(VK_DOWN) & 0x8000) {
-                if (map[(int)(pX - dX * moveSpeed)][(int)pY] == 0) pX -= dX * moveSpeed;
-                if (map[(int)pX][(int)(pY - dY * moveSpeed)] == 0) pY -= dY * moveSpeed;
+                if (GetMapValue((int)(pX - dX * moveSpeed), (int)pY) == 0) pX -= dX * moveSpeed;
+                if (GetMapValue((int)pX, (int)(pY - dY * moveSpeed)) == 0) pY -= dY * moveSpeed;
+            }
+            if (GetMapValue((int)pX, (int)pY) == 2) {
+                NextLevel();
             }
             if (GetAsyncKeyState(VK_RIGHT) & 0x8000) Rotate(-rotSpeed);
             if (GetAsyncKeyState(VK_LEFT) & 0x8000) Rotate(rotSpeed);
@@ -82,6 +140,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HBRUSH w1 = CreateSolidBrush(RGB(200, 0, 0));
             HBRUSH w2 = CreateSolidBrush(RGB(150, 0, 0));
+            HBRUSH e1 = CreateSolidBrush(RGB(0, 255, 0));
+            HBRUSH e2 = CreateSolidBrush(RGB(0, 204, 0));
             
             for (int x = 0; x < W; x++) {
                 float cameraX = 2.0f * x / (float)W - 1.0f;
@@ -113,7 +173,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         mapY += stepY;
                         side = 1;
                     }
-                    if (map[mapX][mapY] > 0) hit = 1;
+                    if (GetMapValue(mapX, mapY) > 0) hit = GetMapValue(mapX, mapY);
                 }
                 
                 float perpWallDist = (side == 0) ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
@@ -124,10 +184,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (drawEnd >= H) drawEnd = H - 1;
                 
                 RECT wallRc = {x, drawStart, x+1, drawEnd};
-                FillRect(memDC, &wallRc, side == 1 ? w2 : w1);
+                if (hit == 2) {
+                    FillRect(memDC, &wallRc, side == 1 ? e2 : e1);
+                } else {
+                    FillRect(memDC, &wallRc, side == 1 ? w2 : w1);
+                }
             }
             
             DeleteObject(w1); DeleteObject(w2);
+            DeleteObject(e1); DeleteObject(e2);
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             DeleteObject(hbm);
