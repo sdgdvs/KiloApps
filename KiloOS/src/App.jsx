@@ -265,6 +265,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
                 <div 
                   key={child.id} 
                   className="desktop-icon" 
+                  title={child.isFolder ? 'System Folder' : 'Application'}
                   style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                   onClick={(e) => { e.stopPropagation(); }}
                   onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
@@ -485,7 +486,20 @@ function App() {
         setScreen('os');
         playStartupAudio();
       }, 3000);
-      return () => clearTimeout(timer);
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape' || e.key === 'Enter') {
+          clearTimeout(timer);
+          setScreen('os');
+          playStartupAudio();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     }
   }, [screen, playStartupAudio]);
 
@@ -671,6 +685,7 @@ function App() {
           <div 
             key={folder.id} 
             className={`desktop-icon ${selectedIcon === folder.id ? 'selected' : ''}`} 
+            title="System Folder"
             onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcon(folder.id); setContextMenu(null); }}
             onDoubleClick={(e) => { e.stopPropagation(); playClickAudio(); setStartOpen(false); setContextMenu(null); openApp({ ...folder, isFolder: true }); }}
             onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcon(folder.id); setContextMenu({ type: 'folder', id: folder.id, x: e.clientX, y: e.clientY }); }}
@@ -683,6 +698,7 @@ function App() {
           <div 
             key={app.id} 
             className={`desktop-icon ${selectedIcon === app.id ? 'selected' : ''}`} 
+            title="Application"
             onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcon(app.id); setContextMenu(null); }}
             onDoubleClick={(e) => { e.stopPropagation(); playClickAudio(); setStartOpen(false); setContextMenu(null); openApp(app); }}
             onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcon(app.id); setContextMenu({ type: 'app', id: app.id, x: e.clientX, y: e.clientY }); }}

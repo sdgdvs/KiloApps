@@ -7,6 +7,6 @@ KPass is a minimal, bloat-free password generator and local vault. It allows use
 
 ## Phases
 - [x] **Phase 1:** Scaffold the `KPass` application directory. Create `kpass.html` with a tabbed UI (Generator and Vault) and integrate the web app into `KiloOS/src/App.jsx`.
-- [ ] **Phase 2:** Implement the Javascript logic for the Password Generator (slider for length, toggles for character types, and a prominent 'Generate' button).
-- [ ] **Phase 3:** Implement the Javascript logic for the Local Vault (saving credentials to the VFS with a rudimentary XOR-based obfuscation for themed security).
+- [x] **Phase 2:** Implement the Javascript logic for the Password Generator (slider for length, toggles for character types, and a prominent 'Generate' button).
+- [x] **Phase 3:** Implement the Javascript logic for the Local Vault (saving credentials to the VFS with a rudimentary XOR-based obfuscation for themed security).
 - [ ] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KPass` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.
