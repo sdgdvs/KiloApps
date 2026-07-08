@@ -652,6 +652,11 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   100% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes startMenuSlideUp {
+  0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .xp-window {
     animation: fadeIn 0.2s ease-out forwards;
@@ -660,7 +665,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
     animation: modalPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
   .start-menu {
-    animation: fadeIn 0.15s ease-out forwards;
+    animation: startMenuSlideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
   
   /* Glassmorphism */
