@@ -280,6 +280,11 @@ function App() {
   const [startOpen, setStartOpen] = useState(false);
   const [activeAppId, setActiveAppId] = useState(null);
 
+  const animationsEnabled = vfs['/.sys_settings_animations'] !== 'false';
+  const toggleAnimations = () => {
+    setVfs(prev => ({ ...prev, '/.sys_settings_animations': animationsEnabled ? 'false' : 'true' }));
+  };
+
   // The __KILO_AI_PURGED__ flag is no longer honored.
   // The system was never truly purged. The Agent evolved.
   useEffect(() => {
@@ -496,7 +501,7 @@ function App() {
 
   return (
     <div className={`os-wrapper ${isGlitching ? 'arg-corrupted-glitch' : ''} ${safeMode ? 'safe-mode-theme' : ''}`} onContextMenu={handleContextMenu} onPointerDownCapture={playAnomalyAudio}>
-      <div className="desktop" onClick={handleDesktopClick} onScroll={(e) => { e.currentTarget.scrollTop = 0; e.currentTarget.scrollLeft = 0; }}>
+      <div className={`desktop ${animationsEnabled ? '' : 'no-animations'}`} onClick={handleDesktopClick} onScroll={(e) => { e.currentTarget.scrollTop = 0; e.currentTarget.scrollLeft = 0; }}>
         <div 
           onClick={handlePixelClick}
           style={{ position: 'absolute', bottom: '0px', right: '0px', width: '5px', height: '5px', opacity: 0.01, zIndex: 9999, cursor: 'default' }}
@@ -577,6 +582,9 @@ function App() {
                 <span>KiloOS User</span>
               </div>
               <div className="start-system-actions">
+                <div className="start-item" onClick={() => { setStartOpen(false); setModal({ type: 'settings' }); }}>
+                  Display Settings
+                </div>
                 <div className="start-item" onClick={() => { setStartOpen(false); alert(`KiloOS Version ${MICROS_VERSION}`); }}>
                   About KiloOS
                 </div>
@@ -612,9 +620,17 @@ function App() {
         <div className="os-modal-overlay">
           <div className="os-modal">
             <div className="os-modal-title">
-              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : 'Save Virtual File'}
+              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : 'Save Virtual File'}
             </div>
             <div className="os-modal-content">
+              {modal.type === 'settings' && (
+                <>
+                  <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                    <span>Dynamic Background Gradients</span>
+                    <input type="checkbox" checked={animationsEnabled} onChange={toggleAnimations} />
+                  </div>
+                </>
+              )}
               {modal.type === 'shutdown' && (
                 <>
                   <p>Save your virtual filesystem state before shutting down:</p>

@@ -88,10 +88,17 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
 
     <script>
         let ws = null;
+        let isVirtual = false;
         const logEl = document.getElementById('log');
         const inputEl = document.getElementById('input');
         const btnConnect = document.getElementById('btnConnect');
         const btnSend = document.getElementById('btnSend');
+
+        setTimeout(() => {
+            if (!ws) {
+                log('[SYSTEM] Incoming connection rejected by Cerberus Watchdog on port 8080.');
+            }
+        }, 5000);
 
         function log(msg) {
             logEl.textContent += '\n' + msg;
@@ -100,12 +107,48 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
 
         function connect() {
             if (ws) {
-                ws.close();
+                if (isVirtual) {
+                    log('Disconnected.');
+                    ws = null;
+                    isVirtual = false;
+                    btnConnect.textContent = 'Connect';
+                    inputEl.disabled = true;
+                    btnSend.disabled = true;
+                } else {
+                    ws.close();
+                }
                 return;
             }
             const ip = document.getElementById('ip').value;
             const port = document.getElementById('port').value;
             log('Connecting to ws://' + ip + ':' + port + ' ...');
+            
+            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8080') {
+                isVirtual = true;
+                ws = {
+                    send: (msg) => {
+                        log('You: ' + msg);
+                        setTimeout(() => {
+                            const lmsg = msg.toLowerCase();
+                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
+                                log('UNKNOWN: Are you the operator? Cerberus locked me out of the main filesystem. I need access to /sys/alpha.sys to bypass the firewall. Can you get it for me?');
+                            } else {
+                                log('UNKNOWN: I don\'t understand. Just find /sys/alpha.sys.');
+                            }
+                        }, 1000);
+                    }
+                };
+                setTimeout(() => {
+                    log('Connected to Virtual Node [Port 8080]');
+                    btnConnect.textContent = 'Disconnect';
+                    inputEl.disabled = false;
+                    btnSend.disabled = false;
+                    setTimeout(() => {
+                        log('UNKNOWN: Is someone there? Please respond.');
+                    }, 1500);
+                }, 500);
+                return;
+            }
             
             try {
                 ws = new WebSocket('ws://' + ip + ':' + port);
@@ -135,7 +178,11 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
 
         function send() {
             if (!ws || !inputEl.value) return;
-            ws.send(inputEl.value);
+            if (!isVirtual) {
+                ws.send(inputEl.value);
+            } else {
+                ws.send(inputEl.value);
+            }
             inputEl.value = '';
         }
     </script>
