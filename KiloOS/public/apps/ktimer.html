@@ -13,10 +13,11 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
   .tabs {
     display: flex;
-    background: #222;
+    background: #1a1a1a;
     border-bottom: 1px solid #333;
   }
   .tab {
@@ -25,12 +26,12 @@
     text-align: center;
     cursor: pointer;
     font-weight: 600;
-    color: #888;
-    transition: all 0.2s;
+    color: #666;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   .tab.active {
     color: #fff;
-    background: #333;
+    background: #252525;
     border-bottom: 2px solid #5a8bd4;
   }
   .content {
@@ -40,61 +41,120 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
   }
-  .display {
-    font-family: 'Consolas', monospace;
-    font-size: 48px;
-    color: #5a8bd4;
-    text-shadow: 0 0 10px rgba(90, 139, 212, 0.4);
+  
+  /* The SVG Ring */
+  .ring-container {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 30px;
   }
+  .progress-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: rotate(-90deg);
+  }
+  .progress-ring-circle {
+    transition: stroke-dashoffset 0.05s linear;
+  }
+  
+  .display-wrapper {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .display {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 32px;
+    font-weight: bold;
+    color: #5a8bd4;
+    text-shadow: 0 0 15px rgba(90, 139, 212, 0.5);
+    margin: 0;
+    z-index: 10;
+  }
+  
   .controls {
     display: flex;
-    gap: 12px;
+    gap: 15px;
   }
   button {
-    background: #333;
+    background: #2a2a2a;
     color: white;
     border: 1px solid #444;
-    padding: 10px 24px;
-    border-radius: 6px;
+    padding: 12px 28px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 700;
     font-size: 14px;
-    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   button:hover {
-    background: #444;
+    background: #333;
     border-color: #555;
+    transform: translateY(-1px);
+  }
+  button:active {
+    transform: translateY(1px);
   }
   button.primary {
     background: #5a8bd4;
     border-color: #5a8bd4;
+    color: #000;
+    box-shadow: 0 4px 15px rgba(90, 139, 212, 0.3);
   }
   button.primary:hover {
-    background: #4a7bc4;
-    border-color: #4a7bc4;
+    background: #6ba0f0;
+    border-color: #6ba0f0;
+    box-shadow: 0 6px 20px rgba(90, 139, 212, 0.4);
   }
 </style>
 </head>
 <body>
   <div class="tabs">
-    <div class="tab active" id="tabStopwatch">Stopwatch</div>
-    <div class="tab" id="tabTimer">Timer</div>
+    <div class="tab active" id="tabStopwatch">STOPWATCH</div>
+    <div class="tab" id="tabTimer">TIMER</div>
   </div>
   
+  <!-- Stopwatch Content -->
   <div class="content" id="contentStopwatch">
-    <div class="display" id="swDisplay">00:00:00.000</div>
+    <div class="ring-container">
+      <svg class="progress-ring" height="240" width="240">
+        <circle fill="transparent" stroke="#222" stroke-width="6" r="110" cx="120" cy="120" />
+        <circle class="progress-ring-circle" id="swRing" fill="transparent" stroke="#5a8bd4" stroke-width="8" stroke-linecap="round" r="110" cx="120" cy="120" stroke-dasharray="691.15" stroke-dashoffset="691.15" />
+      </svg>
+      <div class="display-wrapper">
+        <div class="display" id="swDisplay">00:00:00.000</div>
+      </div>
+    </div>
     <div class="controls">
       <button class="primary" id="swBtnStart">Start</button>
-      <button>Lap</button>
       <button id="swBtnReset">Reset</button>
     </div>
   </div>
   
+  <!-- Timer Content -->
   <div class="content" id="contentTimer" style="display: none;">
-    <input type="text" id="tmInput" value="00:05:00" style="background: transparent; border: 1px solid #444; color: #5a8bd4; font-family: 'Consolas', monospace; font-size: 48px; text-align: center; margin-bottom: 30px; width: 250px; outline: none;">
-    <div class="display" id="tmDisplay" style="display: none;">00:00:00</div>
+    <div class="ring-container">
+      <svg class="progress-ring" height="240" width="240">
+        <circle fill="transparent" stroke="#222" stroke-width="6" r="110" cx="120" cy="120" />
+        <circle class="progress-ring-circle" id="tmRing" fill="transparent" stroke="#5a8bd4" stroke-width="8" stroke-linecap="round" r="110" cx="120" cy="120" stroke-dasharray="691.15" stroke-dashoffset="0" />
+      </svg>
+      <div class="display-wrapper">
+        <input type="text" id="tmInput" value="00:05:00" style="background: transparent; border: none; border-bottom: 2px solid #444; color: #5a8bd4; font-family: 'Consolas', monospace; font-size: 32px; font-weight: bold; text-align: center; width: 180px; outline: none; z-index: 10;">
+        <div class="display" id="tmDisplay" style="display: none;">00:00:00</div>
+      </div>
+    </div>
     <div class="controls">
       <button class="primary" id="tmBtnStart">Start</button>
       <button id="tmBtnReset">Reset</button>
@@ -102,6 +162,8 @@
   </div>
 
   <script>
+    const circumference = 2 * Math.PI * 110; // 691.15
+    
     // Tab Switching
     const tabStopwatch = document.getElementById('tabStopwatch');
     const tabTimer = document.getElementById('tabTimer');
@@ -122,13 +184,14 @@
       contentStopwatch.style.display = 'none';
     };
 
-    // --- Phase 2: Stopwatch Logic ---
+    // --- Stopwatch Logic ---
     let swStart = 0;
     let swElapsed = 0;
     let swInterval = null;
     const swDisplay = document.getElementById('swDisplay');
     const swBtnStart = document.getElementById('swBtnStart');
     const swBtnReset = document.getElementById('swBtnReset');
+    const swRing = document.getElementById('swRing');
 
     function formatTime(ms) {
       let d = new Date(ms);
@@ -140,7 +203,12 @@
     }
 
     function updateSw() {
-      swDisplay.innerText = formatTime(swElapsed + (swInterval ? performance.now() - swStart : 0));
+      let currentMs = swElapsed + (swInterval ? performance.now() - swStart : 0);
+      swDisplay.innerText = formatTime(currentMs);
+      
+      // Ring completes every 60 seconds (60000 ms)
+      let progress = (currentMs % 60000) / 60000;
+      swRing.style.strokeDashoffset = circumference - (progress * circumference);
     }
 
     swBtnStart.onclick = () => {
@@ -152,7 +220,7 @@
         swBtnStart.classList.add("primary");
       } else {
         swStart = performance.now();
-        swInterval = setInterval(updateSw, 10);
+        swInterval = setInterval(updateSw, 20); // 50fps
         swBtnStart.innerText = "Stop";
         swBtnStart.classList.remove("primary");
       }
@@ -164,16 +232,19 @@
       swBtnStart.innerText = "Start";
       swBtnStart.classList.add("primary");
       updateSw();
+      swRing.style.strokeDashoffset = circumference;
     };
 
-    // --- Phase 3: Timer Logic ---
+    // --- Timer Logic ---
     let timerTarget = 0;
     let timerRemaining = 0;
+    let timerTotal = 0;
     let timerInterval = null;
     const tmDisplay = document.getElementById('tmDisplay');
     const tmInput = document.getElementById('tmInput');
     const tmBtnStart = document.getElementById('tmBtnStart');
     const tmBtnReset = document.getElementById('tmBtnReset');
+    const tmRing = document.getElementById('tmRing');
     
     function formatTimer(ms) {
       if (ms < 0) ms = 0;
@@ -214,8 +285,11 @@
         playAlarm();
         tmInput.style.display = 'block';
         tmDisplay.style.display = 'none';
+        tmRing.style.strokeDashoffset = 0;
       } else {
         tmDisplay.innerText = formatTimer(timerRemaining);
+        let progress = timerRemaining / timerTotal;
+        tmRing.style.strokeDashoffset = circumference - (progress * circumference);
       }
     }
 
@@ -237,6 +311,7 @@
           if (parts[2]) ms += parseInt(parts[2]) * 3600000;
           if (isNaN(ms) || ms <= 0) return;
           timerRemaining = ms;
+          timerTotal = ms;
           tmInput.style.display = 'none';
           tmDisplay.style.display = 'block';
         }
@@ -252,11 +327,13 @@
       if (timerInterval) clearInterval(timerInterval);
       timerInterval = null;
       timerRemaining = 0;
+      timerTotal = 0;
       tmBtnStart.innerText = "Start";
       tmBtnStart.classList.add("primary");
       tmInput.style.display = 'block';
       tmDisplay.style.display = 'none';
       tmInput.value = "00:05:00";
+      tmRing.style.strokeDashoffset = 0;
     };
   </script>
 </body>

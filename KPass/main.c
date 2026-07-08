@@ -2,17 +2,63 @@
 #include <windows.h>
 
 #define W 300
-#define H 150
+#define H 350
 
 HWND hEdit;
 HWND hBtnGen;
 HWND hBtnCopy;
+HWND hLabel;
+HWND hBtnSave;
+HWND hListBox;
 
 const char alphabet[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
 int randSeed = 42;
 int MyRand() {
     randSeed = randSeed * 1103515245 + 12345;
     return (unsigned int)(randSeed / 65536) % 32768;
+}
+
+void LoadVault() {
+    SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+    HANDLE hFile = CreateFileA("kpass_vault.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD size = GetFileSize(hFile, NULL);
+        char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size + 1);
+        if (buf) {
+            DWORD read;
+            ReadFile(hFile, buf, size, &read, NULL);
+            char* line = strtok(buf, "\r\n");
+            while (line) {
+                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)line);
+                line = strtok(NULL, "\r\n");
+            }
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+        CloseHandle(hFile);
+    }
+}
+
+void SaveToVault() {
+    char label[64];
+    char pass[32];
+    GetWindowTextA(hLabel, label, 64);
+    GetWindowTextA(hEdit, pass, 32);
+    if (lstrlenA(label) == 0 || lstrlenA(pass) == 0) {
+        MessageBoxA(NULL, "Please enter a label and generate a password.", "Error", MB_OK);
+        return;
+    }
+    
+    char entry[128];
+    wsprintfA(entry, "%s: %s\r\n", label, pass);
+    
+    HANDLE hFile = CreateFileA("kpass_vault.txt", FILE_APPEND_DATA, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, entry, lstrlenA(entry), &written, NULL);
+        CloseHandle(hFile);
+    }
+    SetWindowTextA(hLabel, "");
+    LoadVault();
 }
 
 void GeneratePassword() {
@@ -67,6 +113,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 W - 135, 60, 100, 30, hwnd, (HMENU)2, NULL, NULL);
             SendMessage(hBtnCopy, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
             
+            hLabel = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
+                WS_CHILD | WS_VISIBLE,
+                20, 100, 150, 25, hwnd, NULL, NULL, NULL);
+            SendMessage(hLabel, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save",
+                WS_CHILD | WS_VISIBLE,
+                180, 100, 85, 25, hwnd, (HMENU)3, NULL, NULL);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            
+            hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_STANDARD,
+                20, 140, W - 55, 150, hwnd, NULL, NULL, NULL);
+            SendMessage(hListBox, WM_SETFONT, (WPARAM)hFontBtn, TRUE);
+            
+            LoadVault();
             GeneratePassword();
             break;
         }
@@ -75,6 +137,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GeneratePassword();
             } else if (LOWORD(wParam) == 2) {
                 CopyToClipboard(hwnd);
+            } else if (LOWORD(wParam) == 3) {
+                SaveToVault();
             }
             break;
         }

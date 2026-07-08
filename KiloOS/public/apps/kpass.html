@@ -61,6 +61,15 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    background: #222;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 6px;
   }
   button {
     background: #333;
@@ -87,6 +96,21 @@
     background: #c0392b;
     border-color: #c0392b;
   }
+  .vault-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .vault-item {
+    background: #2a2a2a;
+    padding: 10px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .vault-label { font-weight: bold; color: #fff; }
+  .vault-pass { font-family: monospace; color: #aaa; }
 </style>
 </head>
 <body>
@@ -96,178 +120,99 @@
   </div>
   
   <div class="content" id="contentGen">
-    <div class="display" id="pwdDisplay">Click Generate...</div>
+    <div class="display" id="pwdDisplay">...</div>
     <div class="controls">
       <div class="control-row">
-        <label>Length: <span id="lenDisplay">16</span></label>
-        <input type="range" id="lenSlider" min="8" max="64" value="16">
-      </div>
-      <div class="control-row">
-        <label><input type="checkbox" id="chkUpper" checked> Uppercase</label>
-        <label><input type="checkbox" id="chkLower" checked> Lowercase</label>
-      </div>
-      <div class="control-row">
-        <label><input type="checkbox" id="chkNum" checked> Numbers</label>
-        <label><input type="checkbox" id="chkSym" checked> Symbols</label>
+        <input type="text" id="labelInput" placeholder="Label (e.g. Email)">
+        <button id="btnSave">Save</button>
       </div>
       <button class="primary" id="btnGen">Generate</button>
     </div>
   </div>
   
   <div class="content" id="contentVault" style="display: none;">
-    <div style="display:flex; gap:8px; margin-bottom:15px;">
-      <input type="text" id="vName" placeholder="Account Name" style="flex:1; background:#111; color:#fff; border:1px solid #444; padding:8px; border-radius:4px; outline:none;">
-      <button class="primary" id="btnSave" style="margin:0; width:auto;">Save</button>
+    <div class="vault-list" id="vaultList">
+      <!-- Vault items go here -->
     </div>
-    <div id="vaultList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
   </div>
 
   <script>
-    // Tab Switching
     const tabGen = document.getElementById('tabGen');
     const tabVault = document.getElementById('tabVault');
     const contentGen = document.getElementById('contentGen');
     const contentVault = document.getElementById('contentVault');
-
-    tabGen.onclick = () => {
-      tabGen.classList.add('active');
-      tabVault.classList.remove('active');
-      contentGen.style.display = 'flex';
-      contentVault.style.display = 'none';
-    };
-
-    tabVault.onclick = () => {
-      tabVault.classList.add('active');
-      tabGen.classList.remove('active');
-      contentVault.style.display = 'block';
-      contentGen.style.display = 'none';
-    };
-
-    // Phase 2: Generator Logic
     const pwdDisplay = document.getElementById('pwdDisplay');
     const btnGen = document.getElementById('btnGen');
-    const lenSlider = document.getElementById('lenSlider');
-    const lenDisplay = document.getElementById('lenDisplay');
-    const chkUpper = document.getElementById('chkUpper');
-    const chkLower = document.getElementById('chkLower');
-    const chkNum = document.getElementById('chkNum');
-    const chkSym = document.getElementById('chkSym');
-
-    lenSlider.oninput = () => {
-      lenDisplay.innerText = lenSlider.value;
-    };
-
-    const charSets = {
-      upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      lower: "abcdefghijklmnopqrstuvwxyz",
-      num: "0123456789",
-      sym: "!@#$%^&*()_+~`|}{[]:;?><,./-="
-    };
-
-    btnGen.onclick = () => {
-      let pool = "";
-      if (chkUpper.checked) pool += charSets.upper;
-      if (chkLower.checked) pool += charSets.lower;
-      if (chkNum.checked) pool += charSets.num;
-      if (chkSym.checked) pool += charSets.sym;
-
-      if (!pool) {
-        pwdDisplay.innerText = "Select at least one option!";
-        return;
-      }
-
-      let pwd = "";
-      const len = parseInt(lenSlider.value);
-      for (let i = 0; i < len; i++) {
-        pwd += pool.charAt(Math.floor(Math.random() * pool.length));
-      }
-      pwdDisplay.innerText = pwd;
-    };
-
-    // Phase 3: Vault Logic
-    const vName = document.getElementById('vName');
     const btnSave = document.getElementById('btnSave');
+    const labelInput = document.getElementById('labelInput');
     const vaultList = document.getElementById('vaultList');
-
-    const XOR_KEY = "kpass_sec_key";
     
-    function xorCrypt(str) {
-      let out = "";
-      for (let i = 0; i < str.length; i++) {
-        out += String.fromCharCode(str.charCodeAt(i) ^ XOR_KEY.charCodeAt(i % XOR_KEY.length));
-      }
-      return out;
+    let vault = JSON.parse(localStorage.getItem('kpass_vault') || '[]');
+
+    function switchTab(isGen) {
+        if(isGen) {
+            tabGen.classList.add('active'); tabVault.classList.remove('active');
+            contentGen.style.display = 'flex'; contentVault.style.display = 'none';
+        } else {
+            tabVault.classList.add('active'); tabGen.classList.remove('active');
+            contentVault.style.display = 'flex'; contentGen.style.display = 'none';
+            renderVault();
+        }
+    }
+    
+    tabGen.addEventListener('click', () => switchTab(true));
+    tabVault.addEventListener('click', () => switchTab(false));
+
+    function generate() {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+        let pass = "";
+        for(let i=0; i<16; i++) {
+            pass += chars[Math.floor(Math.random() * chars.length)];
+        }
+        pwdDisplay.innerText = pass;
     }
 
-    function getVault() {
-      try {
-        let raw = localStorage.getItem('/.kpass_vault');
-        if (!raw) return {};
-        return JSON.parse(xorCrypt(atob(raw)));
-      } catch(e) { return {}; }
-    }
+    btnGen.addEventListener('click', generate);
 
-    function saveVault(data) {
-      localStorage.setItem('/.kpass_vault', btoa(xorCrypt(JSON.stringify(data))));
-    }
+    btnSave.addEventListener('click', () => {
+        const label = labelInput.value.trim();
+        const pass = pwdDisplay.innerText;
+        if (label && pass && pass !== '...') {
+            vault.push({label, pass});
+            localStorage.setItem('kpass_vault', JSON.stringify(vault));
+            labelInput.value = '';
+            alert("Saved to Vault!");
+        } else {
+            alert("Please enter a label and generate a password.");
+        }
+    });
 
     function renderVault() {
-      vaultList.innerHTML = '';
-      const data = getVault();
-      for (const [name, pwd] of Object.entries(data)) {
-        const item = document.createElement('div');
-        item.style.cssText = 'background:#111; border:1px solid #333; padding:10px; border-radius:6px; display:flex; justify-content:space-between; align-items:center;';
-        
-        const title = document.createElement('div');
-        title.style.fontWeight = 'bold';
-        title.innerText = name;
-        
-        const btnGroup = document.createElement('div');
-        
-        const cBtn = document.createElement('button');
-        cBtn.innerText = 'Copy';
-        cBtn.style.padding = '4px 8px';
-        cBtn.style.marginRight = '4px';
-        cBtn.onclick = () => { navigator.clipboard.writeText(pwd); alert('Copied!'); };
-        
-        const dBtn = document.createElement('button');
-        dBtn.innerText = 'Del';
-        dBtn.style.padding = '4px 8px';
-        dBtn.style.background = '#8e44ad';
-        dBtn.style.borderColor = '#8e44ad';
-        dBtn.onclick = () => {
-          if (confirm(`Delete ${name}?`)) {
-            const d = getVault();
-            delete d[name];
-            saveVault(d);
-            renderVault();
-          }
-        };
-        
-        btnGroup.appendChild(cBtn);
-        btnGroup.appendChild(dBtn);
-        item.appendChild(title);
-        item.appendChild(btnGroup);
-        vaultList.appendChild(item);
-      }
+        vaultList.innerHTML = '';
+        if (vault.length === 0) {
+            vaultList.innerHTML = '<div style="text-align:center;color:#666;margin-top:20px;">Vault is empty</div>';
+        }
+        vault.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = 'vault-item';
+            div.innerHTML = `
+                <div>
+                    <div class="vault-label">${item.label}</div>
+                    <div class="vault-pass">${item.pass}</div>
+                </div>
+                <button onclick="deleteItem(${index})">X</button>
+            `;
+            vaultList.appendChild(div);
+        });
     }
 
-    btnSave.onclick = () => {
-      const pwd = pwdDisplay.innerText;
-      const n = vName.value.trim();
-      if (!n || pwd === "Click Generate..." || pwd === "Select at least one option!") {
-        alert("Generate a valid password and enter an account name first.");
-        return;
-      }
-      const data = getVault();
-      data[n] = pwd;
-      saveVault(data);
-      vName.value = '';
-      alert('Saved to Vault!');
-      renderVault();
-    };
+    window.deleteItem = (index) => {
+        vault.splice(index, 1);
+        localStorage.setItem('kpass_vault', JSON.stringify(vault));
+        renderVault();
+    }
 
-    renderVault();
+    generate();
   </script>
 </body>
 </html>

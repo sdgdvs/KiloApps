@@ -726,29 +726,38 @@ function App() {
       {startOpen && (
         <div className="start-menu">
           <div className="start-columns">
-            <div className="start-apps" style={{overflowY: 'auto', height: '100%'}}>
-              {FOLDERS.map(folder => (
-                <details key={folder.id} className="start-folder-details" style={{listStyle: 'none'}}>
-                  <summary className="start-item" style={{display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', listStyle: 'none'}}>
-                    <img src={folder.icon} alt={folder.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                    {folder.title} <span style={{marginLeft:'auto', fontSize:'10px', color:'rgba(255,255,255,0.5)'}}>▼</span>
-                  </summary>
-                  <div className="folder-contents" style={{paddingLeft: '16px', background: 'rgba(0,0,0,0.1)'}}>
-                    {APPS.filter(a => a.folder === folder.id).map(app => (
-                      <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <div className="start-apps" style={{overflowY: 'auto', height: '100%', padding: '10px 0'}}>
+              {FOLDERS.map(folder => {
+                const folderApps = APPS.filter(a => a.folder === folder.id);
+                if (folderApps.length === 0) return null;
+                return (
+                  <div key={folder.id} style={{marginBottom: '10px'}}>
+                    <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
+                      {folder.title}
+                    </div>
+                    {folderApps.map(app => (
+                      <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
                         <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                        <span>{app.title}</span>
+                        <span style={{fontSize: '14px'}}>{app.title}</span>
                       </div>
                     ))}
                   </div>
-                </details>
-              ))}
-              {APPS.filter(a => !a.folder).map(app => (
-                <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                  <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                  <span>{app.title}</span>
+                );
+              })}
+              
+              {APPS.filter(a => !a.folder).length > 0 && (
+                <div style={{marginBottom: '10px'}}>
+                  <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
+                    Applications
+                  </div>
+                  {APPS.filter(a => !a.folder).map(app => (
+                    <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
+                      <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
+                      <span style={{fontSize: '14px'}}>{app.title}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
             <div className="start-system">
               <div className="start-user">
