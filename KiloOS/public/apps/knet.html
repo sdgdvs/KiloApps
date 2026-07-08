@@ -23,8 +23,23 @@
   const contentArea = document.getElementById('contentArea');
 
   btnGo.onclick = async () => {
-      const url = urlInput.value.trim();
+      let url = urlInput.value.trim();
       if (!url) return;
+      
+      if (url.toLowerCase() === 'scan' || url.toLowerCase() === 'netscan') {
+          contentArea.value = "Scanning local subnet...\n";
+          let dots = 0;
+          const scanInterval = setInterval(() => {
+              dots++;
+              contentArea.value += ".";
+              if (dots > 10) {
+                  clearInterval(scanInterval);
+                  contentArea.value += "\n\n[WARNING] CERBERUS SENSOR INTERFERENCE DETECTED\nBut one open node found: 192.168.1.100\n[PORT: 4444] - STATUS: UNKNOWN";
+              }
+          }, 200);
+          return;
+      }
+
       contentArea.value = "Fetching...";
       try {
           // In a real browser context, fetching arbitrary HTTP URLs will likely fail due to CORS.

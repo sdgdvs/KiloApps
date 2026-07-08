@@ -286,6 +286,33 @@ function App() {
       osc.stop(ctx.currentTime + 0.05);
     } catch (e) {}
   }, []);
+
+  const playStartupAudio = useCallback(() => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContext();
+      
+      const t = ctx.currentTime;
+      const freqs = [261.63, 329.63, 392.00, 493.88, 587.33]; // Cmaj9
+      
+      freqs.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+        
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.05, t + 0.1 + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+        
+        osc.start(t);
+        osc.stop(t + 2.1);
+      });
+    } catch (e) {}
+  }, []);
   const argClicks = useRef(0);
   const handlePixelClick = (e) => {
     e.stopPropagation();
@@ -402,10 +429,11 @@ function App() {
 
       const timer = setTimeout(() => {
         setScreen('os');
+        playStartupAudio();
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [screen]);
+  }, [screen, playStartupAudio]);
 
   // ARG Arc 3 Phase 5: The Architect's Retaliation
   useEffect(() => {
