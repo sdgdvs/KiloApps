@@ -773,29 +773,38 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 
 .context-menu {
   position: absolute;
-  background: rgba(30, 35, 40, 0.85);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1), 0 15px 40px rgba(0,0,0,0.5);
-  padding: 5px 0;
+  background: rgba(15, 20, 25, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+  padding: 6px;
   z-index: 100000;
-  min-width: 180px;
+  min-width: 200px;
+  animation: contextMenuPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes contextMenuPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(-5px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .context-item {
-  padding: 8px 15px;
+  padding: 8px 12px;
   font-size: 13px;
   color: var(--text-main);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.1s;
 }
 
 .context-item:hover {
   background: var(--primary);
-  color: #111;
-  padding-left: 20px;
-  box-shadow: inset 4px 0 0 0 #fff;
+  color: #fff;
 }
 
 .context-separator {

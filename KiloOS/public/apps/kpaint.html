@@ -26,6 +26,11 @@
   .color:hover { transform: scale(1.05); }
   .color.active { border-color: var(--primary); box-shadow: 0 0 10px rgba(33, 150, 243, 0.4); transform: scale(1.1); }
   
+  .shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .shape-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; padding: 5px; cursor: pointer; text-align: center; font-size: 12px; transition: all 0.2s ease; }
+  .shape-btn:hover { background: rgba(255,255,255,0.1); }
+  .shape-btn.active { background: var(--primary); color: #111; border-color: var(--primary); }
+
   .slider-container { display: flex; flex-direction: column; gap: 5px; }
   .slider-info { display: flex; justify-content: space-between; font-size: 13px; }
   input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
@@ -37,11 +42,23 @@
   button:hover { background: var(--primary); color: #111; border-color: var(--primary); }
   
   .canvas-container { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: #0f1015; overflow: hidden; padding: 20px; }
-  canvas { background: white; cursor: crosshair; touch-action: none; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+  .canvas-wrapper { position: relative; width: 800px; height: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  canvas { position: absolute; top: 0; left: 0; background: transparent; cursor: crosshair; touch-action: none; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
+  #canvas { background: white; z-index: 1; }
+  #preview { z-index: 2; pointer-events: none; }
 </style>
 </head>
 <body>
   <div class="sidebar">
+    <div class="tool-section">
+      <div class="tool-header">Tools</div>
+      <div class="shape-grid">
+        <div class="shape-btn active" id="tool-freehand" onclick="setTool('freehand')">Draw</div>
+        <div class="shape-btn" id="tool-line" onclick="setTool('line')">Line</div>
+        <div class="shape-btn" id="tool-rect" onclick="setTool('rect')">Rect</div>
+      </div>
+    </div>
+
     <div class="tool-section">
       <div class="tool-header">Colors</div>
       <div class="color-grid">
@@ -77,24 +94,31 @@
         Save to KiloOS
       </button>
       <button onclick="saveLocal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2-2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         Export PNG
       </button>
     </div>
   </div>
   
   <div class="canvas-container" id="container">
-    <canvas id="canvas" width="800" height="600"></canvas>
+    <div class="canvas-wrapper">
+      <canvas id="canvas" width="800" height="600"></canvas>
+      <canvas id="preview" width="800" height="600"></canvas>
+    </div>
   </div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const container = document.getElementById('container');
+    const previewCanvas = document.getElementById('preview');
+    const pctx = previewCanvas.getContext('2d');
     
     let painting = false;
     let currentColor = '#111';
+    let currentTool = 'freehand'; // 'freehand', 'line', 'rect'
     let currentVfsPath = null;
+    let startX = 0;
+    let startY = 0;
 
     let currentReqId = 0;
     const callbacks = {};
@@ -119,6 +143,12 @@
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    function setTool(t) {
+      currentTool = t;
+      document.querySelectorAll('.shape-btn').forEach(e => e.classList.remove('active'));
+      document.getElementById('tool-' + t).classList.add('active');
+    }
+
     function setColor(c, el) {
       currentColor = c;
       document.querySelectorAll('.color').forEach(e => e.classList.remove('active'));
@@ -133,46 +163,100 @@
     function clearCanvas() {
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    }
+
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+      };
     }
 
     function startPosition(e) {
       painting = true;
-      draw(e);
+      const pos = getMousePos(e);
+      startX = pos.x;
+      startY = pos.y;
+      
+      if (currentTool === 'freehand') {
+        ctx.beginPath();
+        draw(e);
+      }
     }
-    function endPosition() {
+    
+    function endPosition(e) {
+      if (!painting) return;
       painting = false;
-      ctx.beginPath();
+      
+      if (currentTool !== 'freehand') {
+        // Draw the final shape to main canvas
+        const pos = getMousePos(e);
+        ctx.lineWidth = document.getElementById('size').value;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = currentColor;
+        ctx.beginPath();
+        
+        if (currentTool === 'line') {
+          ctx.moveTo(startX, startY);
+          ctx.lineTo(pos.x, pos.y);
+          ctx.stroke();
+        } else if (currentTool === 'rect') {
+          ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        }
+        // Clear preview
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      } else {
+        ctx.beginPath();
+      }
     }
+    
     function draw(e) {
       if (!painting) return;
-      ctx.lineWidth = document.getElementById('size').value;
-      ctx.lineCap = 'round';
-      ctx.strokeStyle = currentColor;
       
-      const rect = canvas.getBoundingClientRect();
-      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      const pos = getMousePos(e);
+      const lw = document.getElementById('size').value;
       
-      // Scale coordinates based on actual rendered size vs logical size
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      
-      const x = (clientX - rect.left) * scaleX;
-      const y = (clientY - rect.top) * scaleY;
-
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(x, y);
+      if (currentTool === 'freehand') {
+        ctx.lineWidth = lw;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = currentColor;
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      } else {
+        // Draw to preview canvas
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        pctx.lineWidth = lw;
+        pctx.lineCap = 'round';
+        pctx.lineJoin = 'round';
+        pctx.strokeStyle = currentColor;
+        pctx.beginPath();
+        
+        if (currentTool === 'line') {
+          pctx.moveTo(startX, startY);
+          pctx.lineTo(pos.x, pos.y);
+          pctx.stroke();
+        } else if (currentTool === 'rect') {
+          pctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        }
+      }
     }
 
     canvas.addEventListener('mousedown', startPosition);
-    canvas.addEventListener('mouseup', endPosition);
+    window.addEventListener('mouseup', endPosition);
     canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseleave', endPosition);
     
     canvas.addEventListener('touchstart', startPosition);
-    canvas.addEventListener('touchend', endPosition);
+    window.addEventListener('touchend', endPosition);
     canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e); }, {passive: false});
 
     // Save and Load logic

@@ -1,11 +1,11 @@
 # App Expansion Plan
 
-**Target App:** KZip
+**Target App:** KPaint
 **Status:** In Progress
 **Current Phase:** Phase 1
 
 ## Phases
-- [x] **Phase 1 (Current Turn):** Review KZip's current implementation. Identify areas for adding depth. Draft a detailed feature expansion update (implementation_plan.md) for KZip.
-- [ ] **Phase 2:** Update `kzip.html` (Web version) to implement a functional virtual archiver. Replace the hardcoded dummy files with real Virtual File System (VFS) interactions, allowing users to pack and unpack real text/image files into a JSON-based virtual `.kza` (KiloZip Archive) format.
-- [ ] **Phase 3:** Update `KZip/main.c` (Native version) to implement a real native archiver. We will rip out the dummy `MessageBoxA` logic and replace it with Win32 File I/O (`CreateFile`, `ReadFile`, `WriteFile`). It will physically pack/unpack files using a custom lightweight `.kza` format structure (filename length, filename, data length, data).
+- [x] **Phase 1 (Current Turn):** Review KPaint's current implementation. Identify areas for adding depth. Draft a detailed feature expansion update (implementation_plan.md) for KPaint.
+- [ ] **Phase 2:** Update `kpaint.html` (Web version) to implement Shape Selection tools. Add support for drawing Lines and Rectangles via mouse-drag, utilizing temporary canvas layers for rubber-band preview drawing.
+- [ ] **Phase 3:** Update `KPaint/main.c` (Native version) to bring it up to parity. Add a side toolbar with Colors (Black, Red, Green, Blue) and Brush Sizes. Add an Eraser tool. Finally, implement a "Save to Disk" feature to export the canvas directly to a `.bmp` file.
 - [ ] **Phase 4:** Perform testing and packaging. Verify the new features work within KiloOS and update `KApps.zip`. Create the final walkthrough artifact.
