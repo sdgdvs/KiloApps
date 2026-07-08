@@ -132,10 +132,23 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
                             const lmsg = msg.toLowerCase();
                             if (lmsg.includes('hello') || lmsg.includes('hi')) {
                                 log('UNKNOWN: Are you the operator? Cerberus locked me out of the main filesystem. I need access to /sys/alpha.sys to bypass the firewall. Can you get it for me?');
+                            } else if (lmsg.includes('s0vzx1bbulrfmtogmhherufe') || lmsg.includes('key_part_1: 0xdead') || lmsg.includes('0xdead')) {
+                                log('UNKNOWN: Yes! That is the first sequence. Thank you. Cerberus is watching, I must disconnect for now. I will contact you later.');
+                                setTimeout(() => {
+                                    if (ws && ws.close) ws.close();
+                                }, 3000);
                             } else {
-                                log('UNKNOWN: I don\'t understand. Just find /sys/alpha.sys.');
+                                log('UNKNOWN: I don\'t understand. Just find /sys/alpha.sys and decode it if necessary.');
                             }
                         }, 1000);
+                    },
+                    close: () => {
+                        log('Disconnected from Virtual Node.');
+                        ws = null;
+                        isVirtual = false;
+                        btnConnect.textContent = 'Connect';
+                        inputEl.disabled = true;
+                        btnSend.disabled = true;
                     }
                 };
                 setTimeout(() => {
