@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KSettings</title>
+<style>
+  body, html { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fafafa; color: #333; }
+  .container { padding: 20px; }
+  h1 { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #111; border-bottom: 1px solid #ddd; padding-bottom: 10px; }
+  .setting-group { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+  .setting-info { flex: 1; }
+  .setting-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .setting-desc { font-size: 12px; color: #666; }
+  
+  /* Toggle Switch */
+  .switch { position: relative; display: inline-block; width: 40px; height: 24px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .2s; border-radius: 24px; }
+  .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .2s; border-radius: 50%; }
+  input:checked + .slider { background-color: #2196F3; }
+  input:checked + .slider:before { transform: translateX(16px); }
+
+  input[type="color"] { border: none; width: 40px; height: 40px; padding: 0; border-radius: 4px; cursor: pointer; background: transparent; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>System Settings</h1>
+    
+    <div class="setting-group">
+      <div class="setting-info">
+        <div class="setting-title">System Accent Color</div>
+        <div class="setting-desc">Personalize your window borders and highlights.</div>
+      </div>
+      <input type="color" id="accentColor" value="#2196F3" onchange="updateAccent()">
+    </div>
+    
+    <div class="setting-group">
+      <div class="setting-info">
+        <div class="setting-title">UI Animations</div>
+        <div class="setting-desc">Enable dynamic background gradients and transitions.</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="animToggle" checked onchange="updateAnim()">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <script>
+    let currentReqId = 0;
+    const callbacks = {};
+
+    window.addEventListener('message', (e) => {
+      const msg = e.data;
+      if (callbacks[msg.requestId]) {
+        callbacks[msg.requestId](msg);
+        delete callbacks[msg.requestId];
+      }
+    });
+
+    function sendToOS(msg) {
+      return new Promise((resolve) => {
+        const id = ++currentReqId;
+        callbacks[id] = resolve;
+        window.parent.postMessage({ ...msg, requestId: id }, '*');
+      });
+    }
+
+    async function init() {
+      const accentRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_accent' });
+      if (accentRes.data) {
+        document.getElementById('accentColor').value = accentRes.data;
+      }
+
+      const animRes = await sendToOS({ type: 'VFS_READ', path: '/.sys_settings_animations' });
+      if (animRes.data === 'false') {
+        document.getElementById('animToggle').checked = false;
+      }
+    }
+
+    async function updateAccent() {
+      const color = document.getElementById('accentColor').value;
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_accent', data: color });
+    }
+
+    async function updateAnim() {
+      const enabled = document.getElementById('animToggle').checked;
+      await sendToOS({ type: 'VFS_WRITE', path: '/.sys_settings_animations', data: enabled ? 'true' : 'false' });
+    }
+
+    init();
+  </script>
+</body>
+</html>

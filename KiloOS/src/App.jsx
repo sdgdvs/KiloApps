@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.31';
+const MICROS_VERSION = '0.3.32';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -66,6 +66,7 @@ const APPS = [
   { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 350, h: 400, folder: 'System' },
   { id: 'kcontacts', title: 'KContacts', url: '/apps/kcontacts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kterm.ico', w: 500, h: 350, folder: 'System' },
   { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 500, folder: 'System' },
+  { id: 'ksettings', title: 'KSettings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 400, h: 300, folder: 'System' },
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200 }
 ];
 
@@ -411,12 +412,50 @@ function App() {
   const [modalInput, setModalInput] = useState('');
 
   // Desktop State
-  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [selectedIcons, setSelectedIcons] = useState([]);
   const [contextMenu, setContextMenu] = useState(null);
+  const [marquee, setMarquee] = useState(null);
+
+  const handleDesktopPointerDown = (e) => {
+    // Only trigger if clicking directly on the desktop background
+    if (e.target.closest('.desktop-icon') || e.target.closest('.xp-window') || e.target.closest('.taskbar') || e.target.closest('.start-menu') || e.target.closest('.context-menu')) return;
+    
+    setStartOpen(false);
+    setSelectedIcons([]);
+    setContextMenu(null);
+    setCalendarOpen(false);
+    setMarquee({ startX: e.clientX, startY: e.clientY, currentX: e.clientX, currentY: e.clientY });
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleDesktopPointerMove = (e) => {
+    if (marquee) {
+      setMarquee(prev => ({ ...prev, currentX: e.clientX, currentY: e.clientY }));
+      const rx1 = Math.min(marquee.startX, e.clientX);
+      const ry1 = Math.min(marquee.startY, e.clientY);
+      const rx2 = Math.max(marquee.startX, e.clientX);
+      const ry2 = Math.max(marquee.startY, e.clientY);
+      
+      const newSelected = [];
+      document.querySelectorAll('.desktop-icon').forEach(icon => {
+        const rect = icon.getBoundingClientRect();
+        if (rect.left < rx2 && rect.right > rx1 && rect.top < ry2 && rect.bottom > ry1) {
+          newSelected.push(icon.getAttribute('data-id'));
+        }
+      });
+      setSelectedIcons(newSelected);
+    }
+  };
+
+  const handleDesktopPointerUp = (e) => {
+    if (marquee) {
+      setMarquee(null);
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+  };
 
   const handleDesktopClick = () => {
     setStartOpen(false);
-    setSelectedIcon(null);
     setContextMenu(null);
     setCalendarOpen(false);
   };
@@ -688,7 +727,27 @@ function App() {
 
   return (
     <div className={`os-wrapper ${isGlitching ? 'arg-corrupted-glitch' : ''} ${safeMode ? 'safe-mode-theme' : ''}`} onContextMenu={handleContextMenu} onPointerDownCapture={playAnomalyAudio}>
-      <div className={`desktop ${animationsEnabled ? '' : 'no-animations'}`} onClick={handleDesktopClick} onScroll={(e) => { e.currentTarget.scrollTop = 0; e.currentTarget.scrollLeft = 0; }}>
+      <div 
+        className={`desktop ${animationsEnabled ? '' : 'no-animations'}`} 
+        onClick={handleDesktopClick}
+        onPointerDown={handleDesktopPointerDown}
+        onPointerMove={handleDesktopPointerMove}
+        onPointerUp={handleDesktopPointerUp}
+        onScroll={(e) => { e.currentTarget.scrollTop = 0; e.currentTarget.scrollLeft = 0; }}
+      >
+        {marquee && (
+          <div style={{
+            position: 'fixed',
+            left: Math.min(marquee.startX, marquee.currentX),
+            top: Math.min(marquee.startY, marquee.currentY),
+            width: Math.abs(marquee.currentX - marquee.startX),
+            height: Math.abs(marquee.currentY - marquee.startY),
+            backgroundColor: 'rgba(33, 150, 243, 0.3)',
+            border: '1px solid rgba(33, 150, 243, 0.8)',
+            pointerEvents: 'none',
+            zIndex: 9000
+          }} />
+        )}
         <div 
           onClick={handlePixelClick}
           style={{ position: 'absolute', bottom: '0px', right: '0px', width: '5px', height: '5px', opacity: 0.01, zIndex: 9999, cursor: 'default' }}
@@ -696,12 +755,13 @@ function App() {
         />
         {FOLDERS.map(folder => (
           <div 
-            key={folder.id} 
-            className={`desktop-icon ${selectedIcon === folder.id ? 'selected' : ''}`} 
+            key={folder.id}
+            data-id={folder.id}
+            className={`desktop-icon ${selectedIcons.includes(folder.id) ? 'selected' : ''}`} 
             title="System Folder"
-            onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcon(folder.id); setContextMenu(null); }}
+            onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcons([folder.id]); setContextMenu(null); }}
             onDoubleClick={(e) => { e.stopPropagation(); playClickAudio(); setStartOpen(false); setContextMenu(null); openApp({ ...folder, isFolder: true }); }}
-            onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcon(folder.id); setContextMenu({ type: 'folder', id: folder.id, x: e.clientX, y: e.clientY }); }}
+            onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcons([folder.id]); setContextMenu({ type: 'folder', id: folder.id, x: e.clientX, y: e.clientY }); }}
           >
             <img src={folder.icon} alt={folder.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
             <div className="icon-label">{folder.title}</div>
@@ -710,11 +770,12 @@ function App() {
         {APPS.filter(a => !a.folder).map(app => (
           <div 
             key={app.id} 
-            className={`desktop-icon ${selectedIcon === app.id ? 'selected' : ''}`} 
+            data-id={app.id}
+            className={`desktop-icon ${selectedIcons.includes(app.id) ? 'selected' : ''}`} 
             title="Application"
-            onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcon(app.id); setContextMenu(null); }}
+            onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcons([app.id]); setContextMenu(null); }}
             onDoubleClick={(e) => { e.stopPropagation(); playClickAudio(); setStartOpen(false); setContextMenu(null); openApp(app); }}
-            onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcon(app.id); setContextMenu({ type: 'app', id: app.id, x: e.clientX, y: e.clientY }); }}
+            onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcons([app.id]); setContextMenu({ type: 'app', id: app.id, x: e.clientX, y: e.clientY }); }}
           >
             <img src={app.icon} alt={app.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
             <div className="icon-label">{app.title}</div>
@@ -933,11 +994,7 @@ function App() {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
             New Web App
           </div>
-          <div className="context-separator" />
-          <div className="context-item" onClick={() => { setContextMenu(null); setModal({ type: 'display_settings', title: 'Display Settings' }); }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            Display Settings
-          </div>
+          <div className="context-separator" style={{opacity: 0.1}} />
           <div className="context-separator" style={{opacity: 0.1}} />
           <div className="context-item" style={{color: 'rgba(255,0,0,0.4)'}} onClick={() => { setContextMenu(null); setSafeMode(!safeMode); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
