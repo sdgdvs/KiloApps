@@ -9,7 +9,7 @@
 
 char map[ROWS][COLS] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+    {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
     {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
     {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
     {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
@@ -21,50 +21,70 @@ char map[ROWS][COLS] = {
     {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
     {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
     {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
-    {1,1,1,2,2,2,2,1,2,2,2,2,1,1,1},
+    {1,1,1,3,2,2,2,1,2,2,2,3,1,1,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 char initialMap[ROWS][COLS];
+
+int randSeed = 42;
+int MyRand() {
+    randSeed = randSeed * 1103515245 + 12345;
+    return (unsigned int)(randSeed / 65536) % 32768;
+}
 
 int px = 7, py = 12;
 int pdx = 0, pdy = 0;
 int ndx = 0, ndy = 0;
 
-int gx = 7, gy = 6;
+typedef struct { int x; int y; COLORREF c; } Ghost;
+Ghost ghosts[4];
 int score = 0;
 int gameOver = 0;
 int dotCount = 0;
 int frameCount = 0;
+int level = 1;
+int frightTimer = 0;
 
-void Init() {
-    score = 0;
+void Init(int keepScore) {
+    if (!keepScore) { score = 0; level = 1; }
     gameOver = 0;
     dotCount = 0;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
             map[r][c] = initialMap[r][c];
-            if (map[r][c] == 2) dotCount++;
+            if (map[r][c] == 2 || map[r][c] == 3) dotCount++;
         }
     }
     px = 7; py = 12;
     pdx = 0; pdy = 0;
     ndx = 0; ndy = 0;
-    gx = 7; gy = 6;
+    ghosts[0] = (Ghost){7, 6, RGB(255, 0, 0)};
+    ghosts[1] = (Ghost){6, 7, RGB(255, 184, 255)};
+    ghosts[2] = (Ghost){8, 7, RGB(0, 255, 255)};
+    ghosts[3] = (Ghost){7, 7, RGB(255, 184, 82)};
+    frightTimer = 0;
 }
 
 void Update() {
     if (gameOver) return;
     
     // Ghost basic logic (random move)
-    if (frameCount % 4 == 0) {
+    if (frightTimer > 0) frightTimer--;
+    int ghostSpeed = 4 - (level / 3);
+    if (ghostSpeed < 1) ghostSpeed = 1;
+    if (frightTimer > 0) ghostSpeed *= 2;
+
+    if (frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
-        int d = GetTickCount() % 4;
-        if (map[gy + dirs[d][1]][gx + dirs[d][0]] != 1) {
-            gx += dirs[d][0];
-            gy += dirs[d][1];
+        for(int i=0; i<4; i++) {
+            int d = MyRand() % 4;
+            if (map[ghosts[i].y + dirs[d][1]][ghosts[i].x + dirs[d][0]] != 1) {
+                ghosts[i].x += dirs[d][0];
+                ghosts[i].y += dirs[d][1];
+            }
+            if (ghosts[i].x < 0) ghosts[i].x = COLS - 1;
+            if (ghosts[i].x >= COLS) ghosts[i].x = 0;
         }
-        if (gx < 0) gx = COLS - 1;
-        if (gx >= COLS) gx = 0;
     }
     
     // Player logic
@@ -86,19 +106,28 @@ void Update() {
         if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
             px = nx;
             py = ny;
-            if (map[py][px] == 2) {
+            if (map[py][px] == 2 || map[py][px] == 3) {
+                if (map[py][px] == 3) { score += 40; frightTimer = 50; }
+                else { score += 10; }
                 map[py][px] = 0;
-                score += 10;
                 dotCount--;
                 if (dotCount == 0) {
-                    gameOver = 2; // win
+                    level++;
+                    Init(1);
                 }
             }
         }
     }
     
-    if (px == gx && py == gy) {
-        gameOver = 1; // lose
+    for(int i=0; i<4; i++) {
+        if (px == ghosts[i].x && py == ghosts[i].y) {
+            if (frightTimer > 0) {
+                score += 200;
+                ghosts[i].x = 7; ghosts[i].y = 6;
+            } else {
+                gameOver = 1;
+            }
+        }
     }
     
     frameCount++;
@@ -108,7 +137,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) initialMap[r][c] = map[r][c];
-            Init();
+            Init(0);
+            randSeed = GetTickCount();
             SetTimer(hwnd, 1, 100, NULL);
             break;
         case WM_KEYDOWN:
@@ -116,7 +146,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_RIGHT) { ndx = 1; ndy = 0; }
             if (wParam == VK_UP) { ndx = 0; ndy = -1; }
             if (wParam == VK_DOWN) { ndx = 0; ndy = 1; }
-            if (wParam == VK_RETURN && gameOver) Init();
+            if (wParam == VK_RETURN && gameOver) Init(0);
             break;
         case WM_TIMER:
             Update();
@@ -144,6 +174,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (map[r][c] == 2) {
                         RECT dr = {c * TS + 8, r * TS + 8, c * TS + 12, r * TS + 12};
                         FillRect(memDC, &dr, dotBr);
+                    } else if (map[r][c] == 3) {
+                        RECT dr = {c * TS + 6, r * TS + 6, c * TS + 14, r * TS + 14};
+                        FillRect(memDC, &dr, dotBr);
                     }
                 }
             }
@@ -154,15 +187,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &pr, pacBr);
             DeleteObject(pacBr);
             
-            HBRUSH gBr = CreateSolidBrush(RGB(255, 0, 0));
-            RECT gr = {gx * TS + 2, gy * TS + 2, gx * TS + TS - 2, gy * TS + TS - 2};
-            FillRect(memDC, &gr, gBr);
-            DeleteObject(gBr);
+            for(int i=0; i<4; i++) {
+                COLORREF c = ghosts[i].c;
+                if (frightTimer > 0) {
+                    c = ((frightTimer / 2) % 2 == 0) ? RGB(0,0,255) : RGB(255,255,255);
+                }
+                HBRUSH gBr = CreateSolidBrush(c);
+                RECT gr = {ghosts[i].x * TS + 2, ghosts[i].y * TS + 2, ghosts[i].x * TS + TS - 2, ghosts[i].y * TS + TS - 2};
+                FillRect(memDC, &gr, gBr);
+                DeleteObject(gBr);
+            }
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
-            char sstr[32];
-            wsprintfA(sstr, "Score: %d", score);
+            char sstr[64];
+            wsprintfA(sstr, "Lvl: %d Score: %d", level, score);
             TextOutA(memDC, 5, 5, sstr, lstrlenA(sstr));
             
             if (gameOver) {
