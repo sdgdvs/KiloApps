@@ -2,52 +2,127 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>KTask</title>
+<title>KTask Monitor</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Tahoma', sans-serif; background: #ece9d8; user-select: none; display: flex; flex-direction: column; box-sizing: border-box; }
-  .list-container { flex: 1; padding: 10px; padding-bottom: 0; }
-  select { width: 100%; height: 100%; font-family: 'Tahoma', sans-serif; font-size: 13px; border: 2px inset #ccc; outline: none; }
-  .buttons { display: flex; gap: 10px; padding: 10px; justify-content: space-between; }
-  button { padding: 4px 10px; cursor: pointer; border: 1px solid #999; border-radius: 3px; background: linear-gradient(to bottom, #f9f9f9, #e0e0e0); }
-  button:active { background: #d0d0d0; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.3); }
+  :root {
+    --bg-color: hsl(210, 15%, 12%);
+    --card-bg: hsl(210, 15%, 16%);
+    --card-hover: hsl(210, 15%, 22%);
+    --primary: hsl(200, 85%, 60%);
+    --danger: hsl(0, 85%, 60%);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --text-main: #ffffff;
+    --text-muted: #858585;
+  }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); user-select: none; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; }
+  
+  .header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); }
+  .header h1 { margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .header button { padding: 6px 12px; cursor: pointer; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px; transition: all 0.2s ease; }
+  .header button:hover { background: var(--primary); color: #111; border-color: var(--primary); }
+
+  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
+  .metric { display: flex; flex-direction: column; gap: 8px; }
+  .metric-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+  .progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.5s ease-out; }
+  
+  .task-list { flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .task-list::-webkit-scrollbar { width: 8px; }
+  .task-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+  
+  .task-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
+  .task-card:hover { background: var(--card-hover); border-color: rgba(255,255,255,0.15); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  
+  .task-info { display: flex; flex-direction: column; gap: 4px; }
+  .task-title { font-size: 14px; font-weight: 600; }
+  .task-id { font-size: 11px; color: var(--text-muted); font-family: 'Consolas', monospace; }
+  
+  .btn-kill { background: rgba(255, 0, 0, 0.1); color: var(--danger); border: 1px solid rgba(255, 0, 0, 0.2); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+  .btn-kill:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+  
+  .empty-state { text-align: center; color: var(--text-muted); font-size: 14px; padding: 40px; font-style: italic; }
 </style>
 </head>
 <body>
-  <div class="list-container">
-    <select id="tasklist" size="10"></select>
+  <div class="header">
+    <h1>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      System Monitor
+    </h1>
+    <button onclick="refresh()">Refresh Tasks</button>
   </div>
-  <div class="buttons">
-    <button onclick="refresh()">Refresh</button>
-    <button onclick="endTask()">End Task</button>
+  
+  <div class="dashboard">
+    <div class="metric">
+      <div class="metric-header">
+        <span>CPU Usage</span>
+        <span id="cpu-val">14%</span>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" id="cpu-fill" style="width: 14%"></div></div>
+    </div>
+    <div class="metric">
+      <div class="metric-header">
+        <span>Memory Allocation</span>
+        <span id="mem-val">2.4 GB</span>
+      </div>
+      <div class="progress-bg"><div class="progress-fill" id="mem-fill" style="width: 60%; background: #a277ff;"></div></div>
+    </div>
+  </div>
+
+  <div class="task-list" id="tasklist">
+    <!-- Tasks injected here -->
   </div>
 
   <script>
     let reqIdCounter = 0;
+    
+    // Fake telemetry for visual flair
+    setInterval(() => {
+      const cpu = Math.floor(Math.random() * 30) + 5; // 5 - 35%
+      document.getElementById('cpu-val').innerText = cpu + '%';
+      document.getElementById('cpu-fill').style.width = cpu + '%';
+      
+      const memBase = 2.0;
+      const mem = (memBase + Math.random() * 0.8).toFixed(1);
+      document.getElementById('mem-val').innerText = mem + ' GB';
+      document.getElementById('mem-fill').style.width = Math.floor((mem / 4.0) * 100) + '%';
+    }, 2000);
     
     function refresh() {
       const reqId = ++reqIdCounter;
       window.parent.postMessage({ type: 'OS_LIST_TASKS', requestId: reqId }, '*');
     }
 
-    function endTask() {
-      const select = document.getElementById('tasklist');
-      if (select.selectedIndex !== -1) {
-        const taskId = select.options[select.selectedIndex].value;
-        const reqId = ++reqIdCounter;
-        window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: taskId }, '*');
-        setTimeout(refresh, 50); // slight delay to let it close
-      }
+    function endTask(taskId) {
+      const reqId = ++reqIdCounter;
+      window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: taskId }, '*');
+      setTimeout(refresh, 50); // slight delay to let it close
     }
 
     window.addEventListener('message', (e) => {
       if (e.data.type === 'OS_LIST_TASKS_DONE') {
-        const select = document.getElementById('tasklist');
-        select.innerHTML = '';
+        const list = document.getElementById('tasklist');
+        list.innerHTML = '';
+        
+        if (e.data.tasks.length === 0) {
+          list.innerHTML = '<div class="empty-state">No running applications.</div>';
+          return;
+        }
+        
         e.data.tasks.forEach(task => {
-          const opt = document.createElement('option');
-          opt.value = task.id;
-          opt.innerText = `[${task.id.substring(0,6)}] ${task.title}`;
-          select.appendChild(opt);
+          const card = document.createElement('div');
+          card.className = 'task-card';
+          
+          card.innerHTML = `
+            <div class="task-info">
+              <div class="task-title">${task.title}</div>
+              <div class="task-id">PID: ${task.id}</div>
+            </div>
+            <button class="btn-kill" onclick="endTask('${task.id}')">End Task</button>
+          `;
+          list.appendChild(card);
         });
       }
     });

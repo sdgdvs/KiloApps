@@ -179,11 +179,12 @@
   </div>
   
   <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
-    <div class="tabs">
+    <div class="tabs" id="tabs-container">
       <div class="tab active" onclick="switchTab(0)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg>
-        untitled.txt
+        untitled-0.txt
       </div>
+      <div class="tab" onclick="newTab()" style="padding: 8px; justify-content: center; width: 30px; font-weight: bold; border-left: none;">+</div>
     </div>
     
     <div class="editor-container">
@@ -199,6 +200,24 @@
   const docs = [
       "// Welcome to KCode\n// The premier text editor for KiloOS.\n\nfunction helloWorld() {\n  console.log('Hello, KiloOS!');\n}\n\n// Supports basic markdown rendering via the sidebar eye icon!"
   ];
+
+  function renderTabs() {
+      const container = document.getElementById('tabs-container');
+      let html = '';
+      for (let i = 0; i < docs.length; i++) {
+          html += `<div class="tab ${i === currentDoc ? 'active' : ''}" onclick="switchTab(${i})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path></svg>
+            untitled-${i}.txt
+          </div>`;
+      }
+      html += `<div class="tab" onclick="newTab()" style="padding: 8px; justify-content: center; width: 30px; font-weight: bold; border-left: none;">+</div>`;
+      container.innerHTML = html;
+  }
+
+  function newTab() {
+      docs.push("");
+      switchTab(docs.length - 1);
+  }
 
   const editor = document.getElementById('editor');
   const preview = document.getElementById('preview');
@@ -224,12 +243,11 @@
   }
 
   function switchTab(index) {
+      if (index === currentDoc && docs.length > 1) return;
       docs[currentDoc] = editor.value;
       currentDoc = index;
       
-      document.querySelectorAll('.tab').forEach((t, i) => {
-          t.classList.toggle('active', i === index);
-      });
+      renderTabs();
       
       editor.value = docs[index];
       handleInput();
