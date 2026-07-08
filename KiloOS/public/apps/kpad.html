@@ -41,7 +41,16 @@
       </div>
     </div>
   </div>
-  <textarea id="editor" spellcheck="false"></textarea>
+  <textarea id="editor" spellcheck="false" oninput="checkInput()"></textarea>
+  
+  <script>
+    function checkInput() {
+      const val = document.getElementById('editor').value.toLowerCase();
+      if (val.includes('script')) {
+        alert('[CERBERUS WATCHDOG: LOCKDOWN INITIATED]\nUNAUTHORIZED INJECTION ATTEMPT DETECTED.\nTERMINATING APPLICATION.');
+        document.body.innerHTML = '<h1 style="color:red; text-align:center; margin-top:50px; font-family:monospace;">[APP LOCKED BY CERBERUS]</h1>';
+      }
+    }
   
   <script>
     let currentVfsPath = null;
