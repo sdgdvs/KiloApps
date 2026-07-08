@@ -231,6 +231,28 @@ void __stdcall MainEntry() {
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            int key = msg.wParam;
+            int cmd = 0;
+            if (key >= '0' && key <= '9') {
+                if (!(GetKeyState(VK_SHIFT) & 0x8000)) cmd = key;
+                else if (key == '8') cmd = '*';
+            }
+            else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) cmd = key - VK_NUMPAD0 + '0';
+            else if (key == VK_ADD || key == VK_OEM_PLUS) cmd = '+';
+            else if (key == VK_SUBTRACT || key == VK_OEM_MINUS) cmd = '-';
+            else if (key == VK_MULTIPLY) cmd = '*';
+            else if (key == VK_DIVIDE || key == VK_OEM_2 || key == VK_OEM_5) cmd = '/';
+            else if (key == VK_RETURN) cmd = '=';
+            else if (key == VK_BACK) cmd = '<';
+            else if (key == VK_ESCAPE) cmd = 'C';
+            else if (key == VK_DECIMAL || key == VK_OEM_PERIOD) cmd = '.';
+            
+            if (cmd) {
+                SendMessageA(hwnd, WM_COMMAND, cmd, 0);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

@@ -23,6 +23,9 @@ jobs:
           cd KiloOS
           npm ci
 
+      - name: Enforce 999KB Limit
+        run: python check_sizes.py
+
       - name: Build Web App
         run: |
           cd KiloOS
