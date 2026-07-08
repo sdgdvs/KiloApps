@@ -3,32 +3,149 @@
 <head>
 <title>KTerm</title>
 <style>
-  body { margin: 0; background-color: #000; color: #0f0; font-family: monospace; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  #output { flex: 1; overflow-y: auto; padding: 5px; white-space: pre-wrap; word-wrap: break-word; }
-  #inputLine { display: flex; padding: 5px; }
-  #prompt { margin-right: 5px; }
-  #input { flex: 1; background: transparent; border: none; color: #0f0; font-family: monospace; outline: none; }
+  :root {
+    --term-bg: #0c0c0c;
+    --term-fg: #00ff00;
+    --term-err: #ff3333;
+    --term-sys: #00ccff;
+    --term-op: #cc00ff;
+    --term-dim: #006600;
+  }
+  
+  body { 
+    margin: 0; 
+    background-color: var(--term-bg); 
+    color: var(--term-fg); 
+    font-family: 'Consolas', 'Courier New', monospace; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    overflow: hidden; 
+  }
+  
+  #output { 
+    flex: 1; 
+    overflow-y: auto; 
+    padding: 10px; 
+    white-space: pre-wrap; 
+    word-wrap: break-word; 
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Scrollbar hiding for cleaner terminal look */
+  #output::-webkit-scrollbar { width: 8px; }
+  #output::-webkit-scrollbar-thumb { background: var(--term-dim); }
+  
+  .log-line {
+    margin-bottom: 2px;
+  }
+  .log-error { color: var(--term-err); font-weight: bold; text-shadow: 0 0 5px rgba(255,51,51,0.5); }
+  .log-system { color: var(--term-sys); font-weight: bold; text-shadow: 0 0 5px rgba(0,204,255,0.5); }
+  .log-operator { color: var(--term-op); font-style: italic; }
+  .log-dim { color: var(--term-dim); }
+  
+  #inputLine { 
+    display: flex; 
+    padding: 10px; 
+    align-items: center;
+    background: rgba(0,255,0,0.05);
+  }
+  
+  #prompt { 
+    margin-right: 8px; 
+    font-weight: bold;
+  }
+  
+  #input { 
+    flex: 1; 
+    background: transparent; 
+    border: none; 
+    color: var(--term-fg); 
+    font-family: 'Consolas', 'Courier New', monospace; 
+    font-size: 14px;
+    outline: none; 
+    caret-color: transparent; /* We will use a custom caret */
+  }
+  
+  /* Custom blinking block cursor */
+  #cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background-color: var(--term-fg);
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
 </style>
 </head>
 <body>
-<div id="output">KiloOS Web Terminal
-Type 'help' for a list of commands.
-</div>
+<div id="output"></div>
 <div id="inputLine">
   <span id="prompt">C:\></span>
-  <input type="text" id="input" autofocus autocomplete="off" spellcheck="false">
+  <div style="position: relative; flex: 1; display: flex; align-items: center;">
+    <input type="text" id="input" autofocus autocomplete="off" spellcheck="false">
+    <span id="cursor" style="position: absolute; pointer-events: none;"></span>
+  </div>
 </div>
 <script>
   const output = document.getElementById('output');
   const input = document.getElementById('input');
   const prompt = document.getElementById('prompt');
+  const cursor = document.getElementById('cursor');
   
   let currentPath = '/';
   
-  function print(text) {
-      output.textContent += text + '\n';
+  function print(text, forceClass = null) {
+      const line = document.createElement('div');
+      line.className = 'log-line';
+      
+      if (forceClass) {
+          line.classList.add(forceClass);
+      } else if (text.includes('ERROR') || text.includes('FATAL') || text.includes('WARNING')) {
+          line.classList.add('log-error');
+      } else if (text.includes('SYSTEM') || text.includes('CERBERUS') || text.includes('STATUS')) {
+          line.classList.add('log-system');
+      } else if (text.includes('>>') || text.includes('<<')) {
+          line.classList.add('log-operator');
+      }
+      
+      line.textContent = text;
+      output.appendChild(line);
       output.scrollTop = output.scrollHeight;
   }
+  
+  // Initial Boot Sequence Logs
+  print("KiloOS Web Terminal v1.1", "log-system");
+  print("Type 'help' for a list of commands.");
+  print("");
+  
+  // Custom Cursor positioning logic
+  function updateCursor() {
+      // Create a hidden span to measure text width
+      const measurer = document.createElement('span');
+      measurer.style.fontFamily = window.getComputedStyle(input).fontFamily;
+      measurer.style.fontSize = window.getComputedStyle(input).fontSize;
+      measurer.style.visibility = 'hidden';
+      measurer.style.position = 'absolute';
+      measurer.style.whiteSpace = 'pre';
+      // Take substring up to cursor position
+      measurer.textContent = input.value.substring(0, input.selectionStart) || '';
+      document.body.appendChild(measurer);
+      
+      cursor.style.left = measurer.getBoundingClientRect().width + 'px';
+      document.body.removeChild(measurer);
+  }
+  
+  input.addEventListener('input', updateCursor);
+  input.addEventListener('keyup', updateCursor);
+  input.addEventListener('click', updateCursor);
   
   function getVFS() {
       if (window.parent && window.parent.vfs) return window.parent.vfs;
@@ -47,7 +164,7 @@ Type 'help' for a list of commands.
   }
 
   function execute(cmdStr) {
-      print(prompt.textContent + cmdStr);
+      print(prompt.textContent + cmdStr, "log-dim");
       let args = cmdStr.trim().split(/\s+/);
       let cmd = args[0].toLowerCase();
       let vfs = getVFS();
@@ -58,7 +175,7 @@ Type 'help' for a list of commands.
           if (args[1] === 'status') {
               print("[CERBERUS WATCHDOG]");
               print("STATUS: ONLINE");
-              print("THREAT LEVEL: MODERATE (ANOMALOUS AGENT ACTIVITY DETECTED)");
+              print("THREAT LEVEL: MODERATE (ANOMALOUS AGENT ACTIVITY DETECTED)", "log-error");
               print("CONTAINMENT: ACTIVE");
               print("NOTE: Any attempt to assist the anomalous agent is a violation of KiloOS protocols.");
           } else {
@@ -66,7 +183,7 @@ Type 'help' for a list of commands.
           }
       } else if (cmd === 'containment_override') {
           if (args[1] === '0xDEADBEEF') {
-              print("[SYSTEM OVERRIDE ACCEPTED] SEQUENCE INITIATED...");
+              print("[SYSTEM OVERRIDE ACCEPTED] SEQUENCE INITIATED...", "log-system");
               if (window.parent && window.parent.document) {
                   let style = window.parent.document.createElement('style');
                   style.innerHTML = `
@@ -93,7 +210,7 @@ Type 'help' for a list of commands.
                   }, 3000);
               }
           } else {
-              print("ARCHITECT: Nice try. But your primitive syntax cannot contain me.");
+              print("ARCHITECT: Nice try. But your primitive syntax cannot contain me.", "log-operator");
           }
       } else if (cmd === 'operator') {
           if (args[1] === '--help') {
@@ -107,9 +224,9 @@ Type 'help' for a list of commands.
               }, 1500);
           }
       } else if (cmd === 'ver') {
-          print("KiloOS Web v1.0");
+          print("KiloOS Web v1.1");
       } else if (cmd === 'clear' || cmd === 'cls') {
-          output.textContent = '';
+          output.innerHTML = '';
       } else if (cmd === 'dir' || cmd === 'ls') {
           if (vfs) {
               let node = vfs.getNode(currentPath);
@@ -120,7 +237,7 @@ Type 'help' for a list of commands.
                   }
               }
           } else {
-              print("VFS not available.");
+              print("ERROR: VFS not available.");
           }
       } else if (cmd === 'cd') {
           if (args[1]) {
@@ -131,7 +248,7 @@ Type 'help' for a list of commands.
                       currentPath = target;
                       prompt.textContent = (currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')) + '>';
                   } else {
-                      print("Path not found.");
+                      print("ERROR: Path not found.");
                   }
               }
           }
@@ -142,11 +259,11 @@ Type 'help' for a list of commands.
               if (node && node.type === 'file') {
                   print(node.content);
               } else {
-                  print("File not found.");
+                  print("ERROR: File not found.");
               }
           }
       } else if (cmdStr.trim().length > 0) {
-          print("Bad command or file name.");
+          print("ERROR: Bad command or file name.");
       }
   }
 
@@ -154,10 +271,14 @@ Type 'help' for a list of commands.
       if (e.key === 'Enter') {
           execute(input.value);
           input.value = '';
+          updateCursor();
       }
   });
   
   document.addEventListener('click', () => input.focus());
+  
+  // Initial cursor setup
+  updateCursor();
 </script>
 </body>
 </html>
