@@ -812,7 +812,7 @@ function App() {
         <div className="os-modal-overlay">
           <div className="os-modal">
             <div className="os-modal-title">
-              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : 'Save Virtual File'}
+              {modal.type === 'shutdown' ? 'Shutdown KiloOS' : modal.type === 'vfs_open' ? 'Open Virtual File' : modal.type === 'settings' ? 'Display Settings' : modal.type === 'create_app' ? 'Create New App' : 'Save Virtual File'}
             </div>
             <div className="os-modal-content">
               {modal.type === 'settings' && (
@@ -857,6 +857,12 @@ function App() {
                   />
                 </>
               )}
+              {modal.type === 'create_app' && (
+                <>
+                  <p>App Name (without extension):</p>
+                  <input type="text" value={modalInput} onChange={e => setModalInput(e.target.value)} placeholder="myapp" style={{width: '100%', marginBottom: '10px'}} />
+                </>
+              )}
               <div className="os-modal-buttons">
                 <button onClick={() => {
                   if (modal.type === 'shutdown') doShutdown();
@@ -878,7 +884,29 @@ function App() {
           style={{left: contextMenu.x, top: contextMenu.y}}
         >
           <div className="context-item" onClick={() => { setContextMenu(null); window.location.reload(); }}>Refresh Desktop</div>
-          <div className="context-item" onClick={() => { setContextMenu(null); alert('Wallpaper settings not available.'); }}>Change Wallpaper</div>
+          <div className="context-separator" />
+          <div className="context-item" onClick={() => { 
+            setContextMenu(null); 
+            setModalInput('myapp');
+            setModal({ 
+              type: 'create_app', 
+              title: 'Create New App', 
+              callback: (appName) => {
+                if (appName) {
+                  const path = `/${appName}.html`;
+                  if (!vfs[path]) {
+                    setVfs(prev => ({
+                      ...prev,
+                      [path]: `<!DOCTYPE html>\n<html>\n<head>\n<title>${appName}</title>\n<style>\n  body { font-family: sans-serif; background: #fff; color: #000; padding: 20px; }\n</style>\n</head>\n<body>\n  <h1>Hello ${appName}!</h1>\n  <p>Welcome to KiloOS web development.</p>\n</body>\n</html>`
+                    }));
+                    alert(`Created ${path}! Open KExplorer to view it.`);
+                  } else {
+                    alert("File already exists.");
+                  }
+                }
+              }
+            }); 
+          }}>New Web App</div>
           <div className="context-separator" />
           <div className="context-item" onClick={() => { setContextMenu(null); setModal({ type: 'display_settings', title: 'Display Settings' }); }}>Display Settings</div>
           <div className="context-separator" style={{opacity: 0.1}} />

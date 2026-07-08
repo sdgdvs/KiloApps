@@ -3,46 +3,83 @@
 <head>
 <title>KMedia</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
-  .title { margin-bottom: 20px; color: #333; font-size: 14px; text-align: center; word-break: break-all; padding: 0 10px; }
-  .controls { display: flex; gap: 10px; }
-  button { padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; border-radius: 2px; }
-  button:hover { background: #d0d0d0; }
-  button:active { background: #c0c0c0; }
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; }
+  .header { padding: 10px; text-align: center; background: #e0e0e0; border-bottom: 1px solid #ccc; }
+  .title { margin-bottom: 10px; color: #333; font-size: 14px; text-align: center; word-break: break-all; font-weight: bold; }
+  .controls { display: flex; gap: 10px; justify-content: center; margin-bottom: 5px; }
+  button { padding: 5px 15px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #f9f9f9; border-radius: 2px; }
+  button:hover { background: #e9e9e9; }
+  button:active { background: #d9d9d9; }
   input[type="file"] { display: none; }
+  .playlist { flex: 1; overflow-y: auto; background: #fff; padding: 0; margin: 0; list-style: none; }
+  .playlist-item { padding: 8px 15px; border-bottom: 1px solid #eee; cursor: pointer; color: #444; font-size: 14px; }
+  .playlist-item:hover { background: #f0f8ff; }
+  .playlist-item.active { background: #0078d7; color: white; }
 </style>
 </head>
 <body>
-<div class="title" id="title">No file selected</div>
-<div class="controls">
-  <button id="btnOpen">Open</button>
-  <button id="btnPlay">Play</button>
-  <button id="btnStop">Stop</button>
+<div class="header">
+  <div class="title" id="title">No file selected</div>
+  <div class="controls">
+    <button id="btnAdd">Add...</button>
+    <button id="btnPlay">Play</button>
+    <button id="btnStop">Stop</button>
+  </div>
 </div>
-<input type="file" id="fileInput" accept="audio/*,video/*" />
+<ul class="playlist" id="playlist"></ul>
+<input type="file" id="fileInput" accept="audio/*,video/*" multiple />
 <audio id="audioPlayer"></audio>
 <script>
   const title = document.getElementById('title');
-  const btnOpen = document.getElementById('btnOpen');
+  const btnAdd = document.getElementById('btnAdd');
   const btnPlay = document.getElementById('btnPlay');
   const btnStop = document.getElementById('btnStop');
   const fileInput = document.getElementById('fileInput');
   const audioPlayer = document.getElementById('audioPlayer');
+  const playlistEl = document.getElementById('playlist');
 
-  btnOpen.onclick = () => fileInput.click();
+  let playlist = [];
+  let currentIndex = -1;
+
+  btnAdd.onclick = () => fileInput.click();
 
   fileInput.onchange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-          title.textContent = file.name;
+      const files = e.target.files;
+      for (let i = 0; i < files.length; i++) {
+          const file = files[i];
           const url = URL.createObjectURL(file);
-          audioPlayer.src = url;
+          playlist.push({ name: file.name, url: url });
       }
+      renderPlaylist();
   };
+  
+  function renderPlaylist() {
+      playlistEl.innerHTML = '';
+      playlist.forEach((item, index) => {
+          const li = document.createElement('li');
+          li.className = 'playlist-item' + (index === currentIndex ? ' active' : '');
+          li.textContent = item.name;
+          li.onclick = () => playTrack(index);
+          playlistEl.appendChild(li);
+      });
+  }
+  
+  function playTrack(index) {
+      if (index >= 0 && index < playlist.length) {
+          currentIndex = index;
+          const track = playlist[index];
+          title.textContent = track.name;
+          audioPlayer.src = track.url;
+          audioPlayer.play();
+          renderPlaylist();
+      }
+  }
 
   btnPlay.onclick = () => {
       if (audioPlayer.src) {
           audioPlayer.play();
+      } else if (playlist.length > 0) {
+          playTrack(0);
       }
   };
 
@@ -50,6 +87,12 @@
       if (audioPlayer.src) {
           audioPlayer.pause();
           audioPlayer.currentTime = 0;
+      }
+  };
+  
+  audioPlayer.onended = () => {
+      if (currentIndex + 1 < playlist.length) {
+          playTrack(currentIndex + 1);
       }
   };
 </script>

@@ -13,12 +13,13 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 }
 
 #define W 320
-#define H 150
+#define H 350
 
 HWND hTitle;
 HWND hBtnOpen;
 HWND hBtnPlay;
 HWND hBtnStop;
+HWND hListBox;
 
 char currentFile[MAX_PATH] = {0};
 char mciCmd[512] = {0};
@@ -34,15 +35,42 @@ void OpenFileDlg(HWND hwnd) {
     ofn.nMaxFile = sizeof(szFile);
     ofn.lpstrFilter = "Media Files\0*.wav;*.mp3;*.mid\0All Files\0*.*\0";
     ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_ALLOWMULTISELECT | OFN_EXPLORER;
     
     if (GetOpenFileNameA(&ofn) == TRUE) {
-        lstrcpyA(currentFile, szFile);
-        SetWindowTextA(hTitle, szFile);
+        char dir[MAX_PATH];
+        char* p = ofn.lpstrFile;
+        lstrcpyA(dir, p);
+        p += lstrlenA(p) + 1;
+        if (*p == '\0') {
+            // Single file selected
+            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)dir);
+        } else {
+            // Multiple files selected
+            while (*p) {
+                char fullPath[MAX_PATH];
+                wsprintfA(fullPath, "%s\\%s", dir, p);
+                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)fullPath);
+                p += lstrlenA(p) + 1;
+            }
+        }
+    }
+}
+
+void PlaySelectedTrack() {
+    int idx = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+    if (idx != LB_ERR) {
+        SendMessageA(hListBox, LB_GETTEXT, idx, (LPARAM)currentFile);
+        
+        // Extract just the filename for the title
+        char* title = strrchr(currentFile, '\\');
+        title = title ? title + 1 : currentFile;
+        SetWindowTextA(hTitle, title);
         
         mciSendStringA("close myMedia", NULL, 0, NULL);
         wsprintfA(mciCmd, "open \"%s\" alias myMedia", currentFile);
         mciSendStringA(mciCmd, NULL, 0, NULL);
+        mciSendStringA("play myMedia from 0", NULL, 0, NULL);
     }
 }
 
@@ -56,7 +84,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 15, W - 36, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open",
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Add",
                 WS_CHILD | WS_VISIBLE,
                 10, 50, 90, 30, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -71,17 +99,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 210, 50, 90, 30, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
+                10, 90, W - 36, 210, hwnd, (HMENU)4, NULL, NULL);
+            SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             break;
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
                 OpenFileDlg(hwnd);
             } else if (LOWORD(wParam) == 2) {
-                if (currentFile[0]) {
-                    mciSendStringA("play myMedia from 0", NULL, 0, NULL);
-                }
+                PlaySelectedTrack();
             } else if (LOWORD(wParam) == 3) {
                 mciSendStringA("stop myMedia", NULL, 0, NULL);
+            } else if (LOWORD(wParam) == 4 && HIWORD(wParam) == LBN_DBLCLK) {
+                PlaySelectedTrack();
             }
             break;
         }
