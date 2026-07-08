@@ -5,11 +5,22 @@
 #define W 600
 #define H 500
 
+HWND hBtnBack;
+HWND hBtnForward;
 HWND hUrlEdit;
 HWND hGoBtn;
 HWND hContentEdit;
 
-void FetchUrl(HWND hwnd) {
+char history[100][512];
+int historyCount = 0;
+int historyIdx = -1;
+
+void UpdateNavButtons() {
+    EnableWindow(hBtnBack, historyIdx > 0);
+    EnableWindow(hBtnForward, historyIdx < historyCount - 1);
+}
+
+void FetchUrl(HWND hwnd, BOOL addToHistory) {
     char* url = (char*)VirtualAlloc(NULL, 512, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
     GetWindowTextA(hUrlEdit, url, 512);
     
@@ -17,6 +28,16 @@ void FetchUrl(HWND hwnd) {
         VirtualFree(url, 0, MEM_RELEASE);
         return;
     }
+    
+    if (addToHistory) {
+        if (historyIdx < 99) {
+            historyCount = historyIdx + 1;
+            lstrcpyA(history[historyCount], url);
+            historyIdx = historyCount;
+            historyCount++;
+        }
+    }
+    UpdateNavButtons();
     
     SetWindowTextA(hContentEdit, "Fetching...");
     
@@ -86,9 +107,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             
+            hBtnBack = CreateWindowEx(0, "BUTTON", "<",
+                WS_CHILD | WS_VISIBLE | WS_DISABLED,
+                10, 10, 30, 24, hwnd, (HMENU)2, NULL, NULL);
+            SendMessage(hBtnBack, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hBtnForward = CreateWindowEx(0, "BUTTON", ">",
+                WS_CHILD | WS_VISIBLE | WS_DISABLED,
+                45, 10, 30, 24, hwnd, (HMENU)3, NULL, NULL);
+            SendMessage(hBtnForward, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                10, 10, W - 100, 24, hwnd, NULL, NULL, NULL);
+                85, 10, W - 175, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hUrlEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hGoBtn = CreateWindowEx(0, "BUTTON", "Go",
@@ -104,14 +135,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
-                FetchUrl(hwnd);
+                FetchUrl(hwnd, TRUE);
+            } else if (LOWORD(wParam) == 2) { // Back
+                if (historyIdx > 0) {
+                    historyIdx--;
+                    SetWindowTextA(hUrlEdit, history[historyIdx]);
+                    FetchUrl(hwnd, FALSE);
+                }
+            } else if (LOWORD(wParam) == 3) { // Forward
+                if (historyIdx < historyCount - 1) {
+                    historyIdx++;
+                    SetWindowTextA(hUrlEdit, history[historyIdx]);
+                    FetchUrl(hwnd, FALSE);
+                }
             }
             break;
         }
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hUrlEdit, 10, 10, nw - 100, 24, TRUE);
+            MoveWindow(hBtnBack, 10, 10, 30, 24, TRUE);
+            MoveWindow(hBtnForward, 45, 10, 30, 24, TRUE);
+            MoveWindow(hUrlEdit, 85, 10, nw - 175, 24, TRUE);
             MoveWindow(hGoBtn, nw - 80, 10, 60, 24, TRUE);
             MoveWindow(hContentEdit, 10, 44, nw - 20, nh - 55, TRUE);
             break;
