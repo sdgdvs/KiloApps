@@ -7,10 +7,12 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 }
 
 HWND hDisplay;
-HWND hBtnStart, hBtnStop, hBtnReset;
+HWND hBtnStart, hBtnStop, hBtnReset, hBtnLap;
+HWND hListBox;
 DWORD startTime = 0;
 DWORD elapsed = 0;
 int isRunning = 0;
+int lapCount = 0;
 
 void FormatTime(DWORD ms, char* buf) {
     int centis = (ms % 1000) / 10;
@@ -47,7 +49,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 60, 50, 25, hwnd, (HMENU)1, NULL, NULL);
             hBtnStop = CreateWindowA("BUTTON", "Stop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 60, 50, 25, hwnd, (HMENU)2, NULL, NULL);
-            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 60, 50, 25, hwnd, (HMENU)3, NULL, NULL);
+            hBtnLap = CreateWindowA("BUTTON", "Lap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 60, 50, 25, hwnd, (HMENU)4, NULL, NULL);
+            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 60, 50, 25, hwnd, (HMENU)3, NULL, NULL);
+            
+            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 95, 215, 140, hwnd, NULL, NULL, NULL);
+            HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFontMono, TRUE);
             
             SetTimer(hwnd, 1, 15, NULL); // Roughly 60fps update
             break;
@@ -72,7 +79,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 3) { // Reset
                 isRunning = 0;
                 elapsed = 0;
+                lapCount = 0;
+                SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
                 UpdateDisplay();
+            } else if (id == 4) { // Lap
+                if (isRunning) {
+                    lapCount++;
+                    DWORD currentMs = elapsed + (GetTickCount() - startTime);
+                    char timeBuf[16];
+                    FormatTime(currentMs, timeBuf);
+                    
+                    char lapStr[64];
+                    wsprintfA(lapStr, "Lap %d:\t%s", lapCount, timeBuf);
+                    SendMessageA(hListBox, LB_INSERTSTRING, 0, (LPARAM)lapStr);
+                }
             }
             break;
         }
@@ -94,8 +114,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    // Client area size: 180x95
-    RECT rc = {0, 0, 180, 95};
+    // Client area size: 235x245
+    RECT rc = {0, 0, 235, 245};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KClockClass", "KClock", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);

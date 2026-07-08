@@ -8,41 +8,92 @@
   :root {
     --bg-color: hsl(210, 15%, 12%);
     --card-bg: hsl(210, 15%, 20%);
+    --card-hover: hsl(210, 15%, 25%);
     --primary: hsl(200, 85%, 60%);
     --border-color: rgba(255, 255, 255, 0.1);
     --text-main: #ffffff;
+    --text-muted: #858585;
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; flex-direction: column; background: var(--bg-color); font-family: 'Inter', sans-serif; color: var(--text-main); }
-  .toolbar { padding: 8px; background: var(--card-bg); border-bottom: 1px solid var(--border-color); display: flex; gap: 8px; align-items: center; }
-  .color { width: 24px; height: 24px; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; transition: transform 0.1s ease; }
-  .color:hover { transform: scale(1.1); }
-  .color.active { outline: 2px solid var(--primary); outline-offset: 1px; }
-  canvas { background: white; flex: 1; cursor: crosshair; touch-action: none; border-radius: 0; }
-  button { padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 12px; cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; transition: all 0.15s ease; }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; display: flex; background: var(--bg-color); font-family: 'Inter', sans-serif; color: var(--text-main); overflow: hidden; }
+  
+  .sidebar { width: 220px; background: var(--card-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px; gap: 20px; box-sizing: border-box; }
+  
+  .tool-section { display: flex; flex-direction: column; gap: 10px; }
+  .tool-header { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; }
+  
+  .color-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .color { width: 100%; aspect-ratio: 1; border: 2px solid transparent; border-radius: 6px; cursor: pointer; transition: transform 0.1s ease, border-color 0.1s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2); box-sizing: border-box; }
+  .color:hover { transform: scale(1.05); }
+  .color.active { border-color: var(--primary); box-shadow: 0 0 10px rgba(33, 150, 243, 0.4); transform: scale(1.1); }
+  
+  .slider-container { display: flex; flex-direction: column; gap: 5px; }
+  .slider-info { display: flex; justify-content: space-between; font-size: 13px; }
+  input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; margin: 8px 0; }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb { border: none; height: 16px; width: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; -webkit-appearance: none; margin-top: -5px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+  
+  .actions { display: flex; flex-direction: column; gap: 8px; margin-top: auto; }
+  button { padding: 10px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 8px; }
   button:hover { background: var(--primary); color: #111; border-color: var(--primary); }
-  input[type=range] { accent-color: var(--primary); }
+  
+  .canvas-container { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; background: #0f1015; overflow: hidden; padding: 20px; }
+  canvas { background: white; cursor: crosshair; touch-action: none; border-radius: 4px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
 </style>
 </head>
 <body>
-  <div class="toolbar">
-    <div class="color active" style="background: black;" onclick="setColor('black', this)"></div>
-    <div class="color" style="background: red;" onclick="setColor('red', this)"></div>
-    <div class="color" style="background: blue;" onclick="setColor('blue', this)"></div>
-    <div class="color" style="background: green;" onclick="setColor('green', this)"></div>
-    <div class="color" style="background: white;" onclick="setColor('white', this)" title="Eraser"></div>
-    <input type="range" id="size" min="1" max="20" value="2" style="width: 60px;">
-    <button onclick="clearCanvas()">Clear</button>
-    <div style="flex:1"></div>
-    <button onclick="saveVFS()">Save (VFS)</button>
-    <button onclick="saveLocal()">Save (Local)</button>
+  <div class="sidebar">
+    <div class="tool-section">
+      <div class="tool-header">Colors</div>
+      <div class="color-grid">
+        <div class="color active" style="background: #111;" onclick="setColor('#111', this)"></div>
+        <div class="color" style="background: #e74c3c;" onclick="setColor('#e74c3c', this)"></div>
+        <div class="color" style="background: #e67e22;" onclick="setColor('#e67e22', this)"></div>
+        <div class="color" style="background: #f1c40f;" onclick="setColor('#f1c40f', this)"></div>
+        <div class="color" style="background: #2ecc71;" onclick="setColor('#2ecc71', this)"></div>
+        <div class="color" style="background: #3498db;" onclick="setColor('#3498db', this)"></div>
+        <div class="color" style="background: #9b59b6;" onclick="setColor('#9b59b6', this)"></div>
+        <div class="color" style="background: #ecf0f1;" onclick="setColor('white', this)" title="Eraser"></div>
+      </div>
+    </div>
+    
+    <div class="tool-section">
+      <div class="tool-header">Brush Size</div>
+      <div class="slider-container">
+        <div class="slider-info">
+          <span>Width</span>
+          <span id="size-val">4px</span>
+        </div>
+        <input type="range" id="size" min="1" max="50" value="4" oninput="updateSize()">
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button onclick="clearCanvas()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Clear Canvas
+      </button>
+      <button onclick="saveVFS()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        Save to KiloOS
+      </button>
+      <button onclick="saveLocal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Export PNG
+      </button>
+    </div>
   </div>
-  <canvas id="canvas"></canvas>
+  
+  <div class="canvas-container" id="container">
+    <canvas id="canvas" width="800" height="600"></canvas>
+  </div>
 
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
+    const container = document.getElementById('container');
+    
     let painting = false;
-    let currentColor = 'black';
+    let currentColor = '#111';
     let currentVfsPath = null;
 
     let currentReqId = 0;
@@ -64,24 +115,19 @@
       });
     }
 
-    function resize() {
-      // Only resize if canvas is empty to not clear drawing, or just do it once on load
-      if (!canvas.width) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 32;
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
-    }
-    window.addEventListener('resize', () => {
-      // Re-adjusting canvas size clears it in HTML5, so we avoid dynamic resize during painting in this minimal app
-    });
-    resize();
+    // Initialize blank white canvas
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     function setColor(c, el) {
       currentColor = c;
       document.querySelectorAll('.color').forEach(e => e.classList.remove('active'));
       el.classList.add('active');
+    }
+    
+    function updateSize() {
+      const v = document.getElementById('size').value;
+      document.getElementById('size-val').innerText = v + 'px';
     }
 
     function clearCanvas() {
@@ -106,8 +152,13 @@
       const rect = canvas.getBoundingClientRect();
       const clientX = e.clientX || (e.touches && e.touches[0].clientX);
       const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
+      
+      // Scale coordinates based on actual rendered size vs logical size
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      
+      const x = (clientX - rect.left) * scaleX;
+      const y = (clientY - rect.top) * scaleY;
 
       ctx.lineTo(x, y);
       ctx.stroke();
@@ -152,7 +203,7 @@
       }
       const data = canvas.toDataURL('image/png');
       await sendToOS({ type: 'VFS_WRITE', path: currentVfsPath, data });
-      alert("Saved to Virtual Filesystem!");
+      alert("Saved to KiloOS Filesystem!");
     }
 
     async function saveLocal() {
