@@ -168,7 +168,109 @@
   </div>
 
   <script>
-    // Phase 1 Scaffold
+    const searchInput = document.getElementById('searchInput');
+    const contactList = document.getElementById('contactList');
+    const btnNew = document.getElementById('btnNew');
+    const btnSave = document.getElementById('btnSave');
+    const btnDel = document.getElementById('btnDel');
+    const emptyState = document.getElementById('emptyState');
+    const formArea = document.getElementById('formArea');
+    
+    const inpName = document.getElementById('inpName');
+    const inpEmail = document.getElementById('inpEmail');
+    const inpPhone = document.getElementById('inpPhone');
+    const inpNotes = document.getElementById('inpNotes');
+
+    let contacts = JSON.parse(localStorage.getItem('kcontacts_data') || '[]');
+    let currentEditIndex = -1;
+
+    function renderList(filter = '') {
+      contactList.innerHTML = '';
+      contacts.forEach((c, i) => {
+        if (c.name.toLowerCase().includes(filter.toLowerCase()) || c.email.toLowerCase().includes(filter.toLowerCase())) {
+          const div = document.createElement('div');
+          div.className = 'contact-item' + (i === currentEditIndex ? ' active' : '');
+          div.innerHTML = `<div class="contact-item-name">${c.name || 'Unnamed Contact'}</div>
+                           <div class="contact-item-sub">${c.email}</div>`;
+          div.onclick = () => selectContact(i);
+          contactList.appendChild(div);
+        }
+      });
+    }
+
+    function selectContact(index) {
+      currentEditIndex = index;
+      const c = contacts[index];
+      inpName.value = c.name;
+      inpEmail.value = c.email;
+      inpPhone.value = c.phone;
+      inpNotes.value = c.notes;
+      
+      emptyState.style.display = 'none';
+      formArea.style.display = 'flex';
+      btnSave.style.display = 'block';
+      btnDel.style.display = 'block';
+      renderList(searchInput.value);
+    }
+
+    btnNew.onclick = () => {
+      currentEditIndex = -1;
+      inpName.value = '';
+      inpEmail.value = '';
+      inpPhone.value = '';
+      inpNotes.value = '';
+      
+      emptyState.style.display = 'none';
+      formArea.style.display = 'flex';
+      btnSave.style.display = 'block';
+      btnDel.style.display = 'none';
+      renderList(searchInput.value);
+    };
+
+    btnSave.onclick = () => {
+      const c = {
+        name: inpName.value.trim(),
+        email: inpEmail.value.trim(),
+        phone: inpPhone.value.trim(),
+        notes: inpNotes.value.trim()
+      };
+      
+      if (!c.name) {
+        alert("Name is required!");
+        return;
+      }
+
+      if (currentEditIndex === -1) {
+        contacts.push(c);
+        currentEditIndex = contacts.length - 1;
+      } else {
+        contacts[currentEditIndex] = c;
+      }
+      
+      localStorage.setItem('kcontacts_data', JSON.stringify(contacts));
+      btnDel.style.display = 'block';
+      renderList(searchInput.value);
+    };
+
+    btnDel.onclick = () => {
+      if (confirm('Delete this contact?')) {
+        contacts.splice(currentEditIndex, 1);
+        localStorage.setItem('kcontacts_data', JSON.stringify(contacts));
+        currentEditIndex = -1;
+        
+        emptyState.style.display = 'flex';
+        formArea.style.display = 'none';
+        btnSave.style.display = 'none';
+        btnDel.style.display = 'none';
+        renderList(searchInput.value);
+      }
+    };
+
+    searchInput.oninput = () => {
+      renderList(searchInput.value);
+    };
+
+    renderList();
   </script>
 </body>
 </html>

@@ -461,7 +461,8 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   transition: background 0.2s;
 }
 .xp-window.active .xp-titlebar {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(33, 150, 243, 0.15); /* Subtle primary tint */
+  border-bottom: 1px solid rgba(33, 150, 243, 0.3);
 }
 
 .xp-title {
@@ -471,7 +472,12 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-muted);
+  transition: color 0.2s, text-shadow 0.2s;
+}
+.xp-window.active .xp-title {
   color: var(--text-main);
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
 }
 
 .xp-controls {

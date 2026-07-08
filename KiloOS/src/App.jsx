@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.24';
+const MICROS_VERSION = '0.3.25';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -32,7 +32,7 @@ const APPS = [
   { id: 'kterm', title: 'KTerm', url: '/apps/kterm.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kterm.ico', w: 500, h: 350, folder: 'System' },
   { id: 'kmaze', title: 'KMaze', url: '/apps/kmaze.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmaze.ico', w: 340, h: 290, folder: 'Games' },
   { id: 'kaudio', title: 'KAudio', url: '/apps/kaudio.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kaudio.ico', w: 420, h: 260, folder: 'Media' },
-  { id: 'kwrite', title: 'KWrite', url: '/apps/kwrite.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwrite.ico', w: 500, h: 400, folder: 'Office' },
+  { id: 'kwrite', title: 'KCode', url: '/apps/kwrite.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwrite.ico', w: 800, h: 600, folder: 'Dev' },
   { id: 'kcalendar', title: 'KCalendar', url: '/apps/kcalendar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcalendar.ico', w: 320, h: 320, folder: 'Office' },
   { id: 'kdraw', title: 'KDraw', url: '/apps/kdraw.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdraw.ico', w: 500, h: 400, folder: 'Media' },
   { id: 'ksolitaire', title: 'KSolitaire', url: '/apps/ksolitaire.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksolitaire.ico', w: 420, h: 450, folder: 'Games' },
@@ -232,7 +232,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
       onPointerDownCapture={onFocus}
     >
       <div 
-        className="xp-titlebar"
+        className={`xp-titlebar ${isActive ? 'active' : ''}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
