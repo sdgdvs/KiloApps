@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.16';
+const MICROS_VERSION = '0.3.17';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -225,18 +225,25 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
         {dragging && <div style={{position:'absolute', top:0, left:0, right:0, bottom:0, zIndex:10}} />}
         {app.isFolder ? (
           <div className="folder-content" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px', alignContent: 'flex-start', overflowY: 'auto', width: '100%', height: '100%', background: 'var(--bg-color)' }}>
-            {APPS.filter(a => a.folder === app.id).map(child => (
-              <div 
-                key={child.id} 
-                className="desktop-icon" 
-                style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                onClick={(e) => { e.stopPropagation(); }}
-                onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
-              >
-                <img src={child.icon} alt={child.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
-                <div className="icon-label" style={{color: 'var(--text-main)', textAlign: 'center', marginTop: '4px'}}>{child.title}</div>
+            {APPS.filter(a => a.folder === app.id).length === 0 ? (
+              <div style={{width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.3}}>
+                <img src={app.icon} alt="Empty Folder" style={{width: '64px', height: '64px', imageRendering: 'pixelated', marginBottom: '10px'}} />
+                <div style={{fontSize: '14px', userSelect: 'none'}}>Folder is empty</div>
               </div>
-            ))}
+            ) : (
+              APPS.filter(a => a.folder === app.id).map(child => (
+                <div 
+                  key={child.id} 
+                  className="desktop-icon" 
+                  style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                  onClick={(e) => { e.stopPropagation(); }}
+                  onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
+                >
+                  <img src={child.icon} alt={child.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
+                  <div className="icon-label" style={{color: 'var(--text-main)', textAlign: 'center', marginTop: '4px'}}>{child.title}</div>
+                </div>
+              ))
+            )}
           </div>
         ) : (
           <iframe 

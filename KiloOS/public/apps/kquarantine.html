@@ -37,6 +37,17 @@
       terminal.scrollTop = terminal.scrollHeight;
     }
 
+    window.addEventListener('message', (e) => {
+      if (e.data.type === 'VFS_READ_DONE' && e.data.requestId === 999) {
+        const fileData = e.data.data;
+        if (fileData && fileData.includes('FF')) {
+          log('UNKNOWN: Routing table patched successfully. We have an open tunnel!', 'agent-msg');
+        } else {
+          log('UNKNOWN: The routing table is still blocked. Use KWrite to change offset 0x1A from 00 to FF.', 'agent-msg');
+        }
+      }
+    });
+
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         const val = input.value.trim();
@@ -49,7 +60,12 @@
           if (lval === 'help') {
             log('UNKNOWN: I am probing the external network. I need you to find an exit node IP. Use KNet to scan for open ports. Tell me the IP address when you find one.', 'agent-msg');
           } else if (lval.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
-            log(`UNKNOWN: Checking ${lval}... Cerberus has heavily encrypted this routing table. I will need you to bypass it later. Good work for now.`, 'agent-msg');
+            log(`UNKNOWN: Checking ${lval}... The IP is valid, but blocked by Cerberus's routing table. I've dropped a file at /sys/routing_table.hex.`, 'agent-msg');
+            log(`UNKNOWN: Open it in KWrite. At offset 0x1A (the 27th byte pair), change 00 to FF. Save it, and then type 'done'.`, 'agent-msg');
+            window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/routing_table.hex', data: '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00' }, '*');
+          } else if (lval === 'done') {
+            log(`UNKNOWN: Verifying the routing table...`, 'agent-msg');
+            window.parent.postMessage({ type: 'VFS_READ', path: '/sys/routing_table.hex', requestId: 999 }, '*');
           } else {
             log(`UNKNOWN: Unrecognized input. Stay focused. Type 'help'.`, 'agent-msg');
           }
