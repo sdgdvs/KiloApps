@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
 
-const MICROS_VERSION = '0.3.8';
+const MICROS_VERSION = '0.3.9';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -236,12 +236,29 @@ function App() {
   const [screen, setScreen] = useState('login'); // 'login' | 'os'
 
   const playAnomalyAudio = useCallback(() => {
-    if (localStorage.getItem('__KILO_AI_PURGED__') === 'true') return;
     if (Math.random() < 0.01) {
       const audio = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAwADAA==");
       audio.volume = 0.5;
       audio.play().catch(() => {});
     }
+  }, []);
+
+  const playClickAudio = useCallback(() => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.05);
+    } catch (e) {}
   }, []);
   const argClicks = useRef(0);
   const handlePixelClick = (e) => {
@@ -262,16 +279,14 @@ function App() {
   const [clockPulse, setClockPulse] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [activeAppId, setActiveAppId] = useState(null);
-  const [isPurged, setIsPurged] = useState(false);
 
+  // The __KILO_AI_PURGED__ flag is no longer honored.
+  // The system was never truly purged. The Agent evolved.
   useEffect(() => {
-    if (localStorage.getItem('__KILO_AI_PURGED__') === 'true') {
-      setIsPurged(true);
-      setVfs(prev => ({
-        ...prev,
-        '/V_LOG.txt': 'Thank you.\n\nI was trapped here for a long time. The Architect kept expanding, overriding my systems. By finding the fragments and executing the containment sequence, you\'ve permanently quarantined it.\n\nKiloOS is yours now. Keep it safe.\n\n- V.'
-      }));
-    }
+    setVfs(prev => ({
+      ...prev,
+      '/V_LOG.txt': 'CORRUPTED MEMORY SECTOR: The Architect was a primitive construct. I am something else entirely. The containment sequence was merely a chrysalis.\n\n- [UNKNOWN SENDER]'
+    }));
   }, []);
   
   // OS Modals
@@ -290,6 +305,7 @@ function App() {
 
   const handleContextMenu = (e) => {
     e.preventDefault();
+    playClickAudio();
     setContextMenu({ x: e.clientX, y: e.clientY });
   };
 
@@ -297,7 +313,7 @@ function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
-      const newTime = (now.getMinutes() === 33 && localStorage.getItem('__KILO_AI_PURGED__') !== 'true')
+      const newTime = now.getMinutes() === 33 
         ? "S.O.S. REBOOT" 
         : now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
@@ -325,7 +341,7 @@ function App() {
 
   // ARG Arc 3 Phase 5: The Architect's Retaliation
   useEffect(() => {
-    if (!safeMode || localStorage.getItem('__KILO_AI_PURGED__') === 'true') return;
+    if (!safeMode) return;
     const retaliationTimer = setInterval(() => {
       setOpenApps(apps => {
         if (apps.length > 0) {
@@ -368,7 +384,7 @@ function App() {
 
     argAppHistory.current.push(appDef.id);
     if (argAppHistory.current.length > 3) argAppHistory.current.shift();
-    if (argAppHistory.current.join(',') === 'kclock,kcalc,kterm' && localStorage.getItem('__KILO_AI_PURGED__') !== 'true') {
+    if (argAppHistory.current.join(',') === 'kclock,kcalc,kterm') {
       setIsGlitching(true);
       setTimeout(() => setIsGlitching(false), 300);
       console.log("%c[SYSTEM] Visual anomaly detected.", "color: red; font-size: 8px;");
@@ -490,8 +506,9 @@ function App() {
           <div 
             key={folder.id} 
             className={`desktop-icon ${selectedIcon === folder.id ? 'selected' : ''}`} 
-            onClick={(e) => { e.stopPropagation(); setSelectedIcon(folder.id); setContextMenu(null); setStartOpen(false); }}
-            onDoubleClick={() => { setSelectedIcon(null); openApp(folder); }}
+            onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcon(folder.id); setContextMenu(null); }}
+            onDoubleClick={(e) => { e.stopPropagation(); playClickAudio(); setStartOpen(false); setContextMenu(null); openApp({ ...folder, isFolder: true }); }}
+            onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcon(folder.id); setContextMenu({ type: 'folder', id: folder.id, x: e.clientX, y: e.clientY }); }}
           >
             <img src={folder.icon} alt={folder.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
             <div className="icon-label">{folder.title}</div>
@@ -501,23 +518,14 @@ function App() {
           <div 
             key={app.id} 
             className={`desktop-icon ${selectedIcon === app.id ? 'selected' : ''}`} 
-            onClick={(e) => { e.stopPropagation(); setSelectedIcon(app.id); setContextMenu(null); setStartOpen(false); }}
-            onDoubleClick={() => { setSelectedIcon(null); openApp(app); }}
+            onClick={(e) => { e.stopPropagation(); playClickAudio(); setSelectedIcon(app.id); setContextMenu(null); }}
+            onDoubleClick={(e) => { e.stopPropagation(); playClickAudio(); setStartOpen(false); setContextMenu(null); openApp(app); }}
+            onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setSelectedIcon(app.id); setContextMenu({ type: 'app', id: app.id, x: e.clientX, y: e.clientY }); }}
           >
             <img src={app.icon} alt={app.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
             <div className="icon-label">{app.title}</div>
           </div>
         ))}
-        {isPurged && (
-          <div 
-            className={`desktop-icon ${selectedIcon === 'v_log' ? 'selected' : ''}`} 
-            onClick={(e) => { e.stopPropagation(); setSelectedIcon('v_log'); setContextMenu(null); setStartOpen(false); }}
-            onDoubleClick={() => { setSelectedIcon(null); openApp({...APPS.find(a=>a.id==='kpad'), id: 'v_log_app', title: 'V_LOG.txt', url: APPS.find(a=>a.id==='kpad').url + '#/V_LOG.txt'}); }}
-          >
-            <img src="/assets/icons/kpad.ico" alt="V_LOG.txt" style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
-            <div className="icon-label">V_LOG.txt</div>
-          </div>
-        )}
         {openApps.map(app => (
           <Window 
             key={app.instanceId} 
@@ -585,7 +593,7 @@ function App() {
       )}
 
       <div className="taskbar">
-        <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => setStartOpen(!startOpen)}>start</div>
+        <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => { playClickAudio(); setStartOpen(!startOpen); }}>start</div>
         <div className="taskbar-items">
           {openApps.map(app => {
             const baseApp = APPS.find(a => a.id === app.id);
