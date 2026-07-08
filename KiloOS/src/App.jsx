@@ -65,6 +65,7 @@ const APPS = [
   { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 300, h: 250, folder: 'System' },
   { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 350, h: 400, folder: 'System' },
   { id: 'kcontacts', title: 'KContacts', url: '/apps/kcontacts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kterm.ico', w: 500, h: 350, folder: 'System' },
+  { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 500, folder: 'System' },
   { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200 }
 ];
 

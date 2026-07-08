@@ -1,12 +1,12 @@
-# New App Plan: KContacts
+# New App Plan: KRead
 
-**Status:** Completed
+**Status:** Not Started
 
 ## Description
-KContacts is a minimal, bloat-free local address book and contact manager. It allows users to quickly save, search, and manage their contacts directly inside the KiloOS virtual filesystem, adhering strictly to the < 999KB constraints.
+KRead is a minimalist, distraction-free text reader. It allows users to load text documents and read them with configurable font sizes, automatically persisting their reading progress (scroll position) into the VFS, all while keeping under the < 999KB KiloOS limit.
 
 ## Phases
-- [x] **Phase 1:** Scaffold the `KContacts` application directory. Create `kcontacts.html` with a split UI (List view on left, Details/Edit view on right) and integrate the web app into `KiloOS/src/App.jsx`.
-- [x] **Phase 2:** Implement the Javascript logic for adding, editing, and deleting contacts (Name, Email, Phone, Notes).
-- [x] **Phase 3:** Implement the Javascript logic for saving/loading from the VFS (`localStorage`) and add a real-time search/filter bar for the contact list.
-- [x] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KContacts` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.
+- [x] **Phase 1:** Scaffold the `KRead` application directory. Create `kread.html` with a clean typography-focused UI (file loader, reading pane, top toolbar) and integrate the web app into `KiloOS/src/App.jsx`.
+- [ ] **Phase 2:** Implement the Javascript logic to load local text files via a file picker or drag-and-drop, parsing the text into the reading pane.
+- [ ] **Phase 3:** Implement the Javascript logic for a font-size toggle, and auto-saving the current text and scroll position into the `localStorage` VFS to resume later.
+- [ ] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KRead` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.
