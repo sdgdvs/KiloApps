@@ -5,9 +5,21 @@
 #define H 200
 #define CELL 20
 
-int grid[10][10];
-int state[10][10]; // 0=hidden, 1=revealed, 2=flagged
+#define MAX_ROWS 16
+#define MAX_COLS 30
+
+int grid[MAX_ROWS][MAX_COLS];
+int state[MAX_ROWS][MAX_COLS]; // 0=hidden, 1=revealed, 2=flagged
 int gameOver = 0;
+
+int cols = 10;
+int rows = 10;
+int totalMines = 15;
+
+#define IDM_BEGINNER 1001
+#define IDM_INTERMEDIATE 1002
+#define IDM_EXPERT 1003
+HMENU hMenu, hSubMenu;
 
 int randSeed = 42;
 int MyRand() {
@@ -18,32 +30,32 @@ int MyRand() {
 void InitGame() {
     randSeed = GetTickCount();
     gameOver = 0;
-    for (int y = 0; y < 10; y++) {
-        for (int x = 0; x < 10; x++) {
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x++) {
             grid[y][x] = 0;
             state[y][x] = 0;
         }
     }
     
     int mines = 0;
-    while (mines < 15) {
-        int x = MyRand() % 10;
-        int y = MyRand() % 10;
+    while (mines < totalMines) {
+        int x = MyRand() % cols;
+        int y = MyRand() % rows;
         if (grid[y][x] != 9) {
             grid[y][x] = 9;
             mines++;
         }
     }
     
-    for (int y = 0; y < 10; y++) {
-        for (int x = 0; x < 10; x++) {
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x++) {
             if (grid[y][x] == 9) continue;
             int count = 0;
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dx = -1; dx <= 1; dx++) {
                     int nx = x + dx;
                     int ny = y + dy;
-                    if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10 && grid[ny][nx] == 9) {
+                    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && grid[ny][nx] == 9) {
                         count++;
                     }
                 }
@@ -54,13 +66,13 @@ void InitGame() {
 }
 
 void Reveal(int x, int y) {
-    if (x < 0 || x >= 10 || y < 0 || y >= 10 || state[y][x] != 0) return;
+    if (x < 0 || x >= cols || y < 0 || y >= rows || state[y][x] != 0) return;
     state[y][x] = 1;
     if (grid[y][x] == 9) {
         gameOver = 1;
         // reveal all
-        for (int i=0; i<10; i++)
-            for (int j=0; j<10; j++)
+        for (int i=0; i<rows; i++)
+            for (int j=0; j<cols; j++)
                 if (grid[i][j] == 9) state[i][j] = 1;
         return;
     }
@@ -73,10 +85,37 @@ void Reveal(int x, int y) {
     }
 }
 
+void SetDifficulty(HWND hwnd, int c, int r, int m) {
+    cols = c;
+    rows = r;
+    totalMines = m;
+    RECT rc = {0, 0, cols * CELL, rows * CELL};
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
+    SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
+    InitGame();
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
-            InitGame();
+            hMenu = CreateMenu();
+            hSubMenu = CreatePopupMenu();
+            AppendMenuA(hSubMenu, MF_STRING, IDM_BEGINNER, "Beginner");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_INTERMEDIATE, "Intermediate");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
+            SetMenu(hwnd, hMenu);
+            SetDifficulty(hwnd, 10, 10, 15);
+            break;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDM_BEGINNER) {
+                SetDifficulty(hwnd, 10, 10, 15);
+            } else if (LOWORD(wParam) == IDM_INTERMEDIATE) {
+                SetDifficulty(hwnd, 16, 16, 40);
+            } else if (LOWORD(wParam) == IDM_EXPERT) {
+                SetDifficulty(hwnd, 30, 16, 99);
+            }
             break;
         case WM_LBUTTONDOWN: {
             if (gameOver) {
@@ -94,7 +133,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameOver) break;
             int x = LOWORD(lParam) / CELL;
             int y = HIWORD(lParam) / CELL;
-            if (x >= 0 && x < 10 && y >= 0 && y < 10 && state[y][x] != 1) {
+            if (x >= 0 && x < cols && y >= 0 && y < rows && state[y][x] != 1) {
                 state[y][x] = (state[y][x] == 0) ? 2 : 0;
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -105,11 +144,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             
             HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
+            int w = cols * CELL;
+            int h = rows * CELL;
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, w, h);
             SelectObject(memDC, memBM);
             
             HBRUSH bg = CreateSolidBrush(RGB(192, 192, 192));
-            RECT full = {0, 0, W, H};
+            RECT full = {0, 0, w, h};
             FillRect(memDC, &full, bg);
             DeleteObject(bg);
             
@@ -117,8 +158,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
             
-            for (int y = 0; y < 10; y++) {
-                for (int x = 0; x < 10; x++) {
+            for (int y = 0; y < rows; y++) {
+                for (int x = 0; x < cols; x++) {
                     RECT r = { x * CELL, y * CELL, (x + 1) * CELL, (y + 1) * CELL };
                     if (state[y][x] == 0) {
                         DrawEdge(memDC, &r, EDGE_RAISED, BF_RECT | BF_MIDDLE);
@@ -147,7 +188,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldFont);
             DeleteObject(hFont);
             
-            BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, w, h, memDC, 0, 0, SRCCOPY);
             DeleteObject(memBM);
             DeleteDC(memDC);
             
@@ -180,8 +221,8 @@ void MainEntry() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
-    RECT r = {0, 0, W, H};
-    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
+    RECT r = {0, 0, 10 * CELL, 10 * CELL};
+    AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
     HWND hwnd = CreateWindowEx(0, "KMineApp", "KMine", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, hInstance, NULL);
 

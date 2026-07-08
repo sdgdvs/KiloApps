@@ -8,44 +8,61 @@
 </style>
 </head>
 <body oncontextmenu="return false;">
+<div id="controls" style="margin-bottom: 10px;">
+  <select id="diff" onchange="changeDiff()">
+    <option value="0">Beginner</option>
+    <option value="1">Intermediate</option>
+    <option value="2">Expert</option>
+  </select>
+  <button onclick="initGame()">Restart</button>
+</div>
 <canvas id="cvs" width="200" height="200"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
   const CELL = 20;
-  let grid = Array.from({length: 10}, () => Array(10).fill(0));
-  let state = Array.from({length: 10}, () => Array(10).fill(0));
+  let cols = 10;
+  let rows = 10;
+  let totalMines = 15;
+  let grid = [];
+  let state = [];
   let gameOver = false;
+  
+  function changeDiff() {
+      const val = document.getElementById('diff').value;
+      if (val === "0") { cols = 10; rows = 10; totalMines = 15; }
+      else if (val === "1") { cols = 16; rows = 16; totalMines = 40; }
+      else if (val === "2") { cols = 30; rows = 16; totalMines = 99; }
+      cvs.width = cols * CELL;
+      cvs.height = rows * CELL;
+      initGame();
+  }
   
   function initGame() {
       gameOver = false;
-      for (let y = 0; y < 10; y++) {
-          for (let x = 0; x < 10; x++) {
-              grid[y][x] = 0;
-              state[y][x] = 0;
-          }
-      }
+      grid = Array.from({length: rows}, () => Array(cols).fill(0));
+      state = Array.from({length: rows}, () => Array(cols).fill(0));
       
       let mines = 0;
-      while (mines < 15) {
-          let x = Math.floor(Math.random() * 10);
-          let y = Math.floor(Math.random() * 10);
+      while (mines < totalMines) {
+          let x = Math.floor(Math.random() * cols);
+          let y = Math.floor(Math.random() * rows);
           if (grid[y][x] !== 9) {
               grid[y][x] = 9;
               mines++;
           }
       }
       
-      for (let y = 0; y < 10; y++) {
-          for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
               if (grid[y][x] === 9) continue;
               let count = 0;
               for (let dy = -1; dy <= 1; dy++) {
                   for (let dx = -1; dx <= 1; dx++) {
                       let nx = x + dx;
                       let ny = y + dy;
-                      if (nx >= 0 && nx < 10 && ny >= 0 && ny < 10 && grid[ny][nx] === 9) {
+                      if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && grid[ny][nx] === 9) {
                           count++;
                       }
                   }
@@ -57,12 +74,12 @@
   }
   
   function reveal(x, y) {
-      if (x < 0 || x >= 10 || y < 0 || y >= 10 || state[y][x] !== 0) return;
+      if (x < 0 || x >= cols || y < 0 || y >= rows || state[y][x] !== 0) return;
       state[y][x] = 1;
       if (grid[y][x] === 9) {
           gameOver = true;
-          for (let i=0; i<10; i++) {
-              for (let j=0; j<10; j++) {
+          for (let i=0; i<rows; i++) {
+              for (let j=0; j<cols; j++) {
                   if (grid[i][j] === 9) state[i][j] = 1;
               }
           }
@@ -78,13 +95,13 @@
   }
   
   function draw() {
-      ctx.clearRect(0, 0, 200, 200);
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
       ctx.font = "bold 14px Arial";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       
-      for (let y = 0; y < 10; y++) {
-          for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
               let bx = x * CELL;
               let by = y * CELL;
               
@@ -137,7 +154,7 @@
       if (e.button === 0) {
           reveal(x, y);
       } else if (e.button === 2) {
-          if (x >= 0 && x < 10 && y >= 0 && y < 10 && state[y][x] !== 1) {
+          if (x >= 0 && x < cols && y >= 0 && y < rows && state[y][x] !== 1) {
               state[y][x] = (state[y][x] === 0) ? 2 : 0;
           }
       }
