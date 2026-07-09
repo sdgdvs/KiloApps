@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.34';
+const MICROS_VERSION = '0.3.35';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -60,15 +60,16 @@ const APPS = [
   { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksynth.ico', w: 300, h: 200, folder: 'Media' },
   { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfont.ico', w: 400, h: 300, folder: 'System' },
   { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconverter.ico', w: 350, h: 400, folder: 'System' },
-  { id: 'ktodo', title: 'KTodo', url: '/apps/ktodo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktask.ico', w: 350, h: 450, folder: 'System' },
-  { id: 'kgraph', title: 'KGraph', url: '/apps/kgraph.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kchart.ico', w: 500, h: 400, folder: 'System' },
-  { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kclock.ico', w: 300, h: 250, folder: 'System' },
-  { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 350, h: 400, folder: 'System' },
-  { id: 'kcontacts', title: 'KContacts', url: '/apps/kcontacts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kterm.ico', w: 500, h: 350, folder: 'System' },
-  { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 500, folder: 'System' },
-  { id: 'kbase', title: 'KBase', url: '/apps/kbase.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 400, h: 300, folder: 'System' },
-  { id: 'ksettings', title: 'KSettings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 400, h: 300, folder: 'System' },
-  { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200, folder: 'Hidden' }
+  { id: 'kexplorer', title: 'File Explorer', url: '/apps/kexplorer.html', exeUrl: null, icon: FOLDER_ICON, w: 500, h: 400 },
+  { id: 'kpad', title: 'Notepad', url: '/apps/kpad.html', exeUrl: '/exe/KPad.exe', icon: '/assets/icons/kpad.ico', w: 400, h: 300 },
+  { id: 'kpaint', title: 'Paint', url: '/apps/kpaint.html', exeUrl: null, icon: '/assets/icons/kpaint.ico', w: 600, h: 400 },
+  { id: 'kmines', title: 'Minesweeper', url: '/apps/kmines.html', exeUrl: '/exe/KMines.exe', icon: '/assets/icons/kmines.ico', w: 320, h: 380, folder: 'games' },
+  { id: 'kcalc', title: 'Calculator', url: '/apps/kcalc.html', exeUrl: null, icon: '/assets/icons/kcalc.ico', w: 250, h: 320, folder: 'accessories' },
+  { id: 'kterm', title: 'Terminal', url: '/apps/kterm.html', exeUrl: null, icon: '/assets/icons/kterm.ico', w: 500, h: 350, folder: 'system' },
+  { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 450, h: 350, folder: 'system' },
+  { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 500, h: 400, folder: 'system' },
+  { id: 'kclock', title: 'Clock & Alarms', url: '/apps/kclock.html', exeUrl: null, icon: '/assets/icons/kclock.ico', w: 300, h: 300, folder: 'accessories' },
+  { id: 'kbrowser', title: 'Internet Explorer', url: '/apps/kbrowser.html', exeUrl: null, icon: '/assets/icons/kbrowser.ico', w: 800, h: 600, folder: 'internet' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
@@ -428,6 +429,21 @@ function App() {
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, 5000);
   }, []);
+
+  // Pinned Apps
+  const pinnedAppsIds = (() => {
+    try {
+      return JSON.parse(vfs['/.sys_pinned_apps'] || '[]');
+    } catch {
+      return [];
+    }
+  })();
+
+  const togglePinApp = (appId) => {
+    const isPinned = pinnedAppsIds.includes(appId);
+    let newPinned = isPinned ? pinnedAppsIds.filter(id => id !== appId) : [...pinnedAppsIds, appId];
+    setVfs(prev => ({ ...prev, '/.sys_pinned_apps': JSON.stringify(newPinned) }));
+  };
 
   // Desktop State
   const [selectedIcons, setSelectedIcons] = useState([]);
@@ -829,6 +845,24 @@ function App() {
           </div>
           <div className="start-columns">
             <div className="start-apps" style={{overflowY: 'auto', height: '100%', padding: '10px 0'}}>
+              {pinnedAppsIds.length > 0 && !startSearch && (
+                <div style={{marginBottom: '10px'}}>
+                  <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
+                    Pinned Apps
+                  </div>
+                  {pinnedAppsIds.map(appId => {
+                    const app = APPS.find(a => a.id === appId);
+                    if (!app) return null;
+                    return (
+                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
+                        <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
+                        <span style={{fontSize: '14px'}}>{app.title}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {FOLDERS.map(folder => {
                 const folderApps = APPS.filter(a => a.folder === folder.id && a.title.toLowerCase().includes(startSearch.toLowerCase()));
                 if (folderApps.length === 0) return null;
@@ -838,7 +872,7 @@ function App() {
                       {folder.title}
                     </div>
                     {folderApps.map(app => (
-                      <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
+                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
                         <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
                         <span style={{fontSize: '14px'}}>{app.title}</span>
                       </div>
@@ -853,7 +887,7 @@ function App() {
                     Applications
                   </div>
                   {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).map(app => (
-                    <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
+                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
                       <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
                       <span style={{fontSize: '14px'}}>{app.title}</span>
                     </div>
@@ -988,7 +1022,15 @@ function App() {
         </div>
       )}
       
-      {contextMenu && (
+      {contextMenu && contextMenu.type === 'start_app' && (
+        <div className="context-menu" style={{left: contextMenu.x, top: contextMenu.y}}>
+          <div className="context-item" onClick={() => { setContextMenu(null); togglePinApp(contextMenu.id); }}>
+            {pinnedAppsIds.includes(contextMenu.id) ? 'Unpin from Top' : 'Pin to Top'}
+          </div>
+        </div>
+      )}
+
+      {contextMenu && !contextMenu.type && (
         <div 
           className="context-menu" 
           style={{left: contextMenu.x, top: contextMenu.y}}

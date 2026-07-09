@@ -2,257 +2,112 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>KClock</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<title>Clock</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: hsl(210, 15%, 12%);
-    --clock-face: radial-gradient(circle at 50% 50%, #2a2d3e, #1a1b26);
-    --clock-bezel: linear-gradient(145deg, #414868, #24283b);
-    --primary: #7aa2f7;
-    --accent: #f7768e;
+    --card-bg: hsl(210, 15%, 20%);
+    --primary: hsl(200, 85%, 60%);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Tahoma', sans-serif; background: var(--bg-color); user-select: none; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px; }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border-color); background: var(--card-bg); }
+  .tab { padding: 12px 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: #aaa; transition: all 0.2s; border-bottom: 2px solid transparent; }
+  .tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+  .content { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+  .content.active { display: flex; }
   
-  .clock-container {
-    width: 240px;
-    height: 240px;
-    border-radius: 50%;
-    background: var(--clock-bezel);
-    box-shadow: 
-      20px 20px 60px rgba(0,0,0,0.5),
-      -20px -20px 60px rgba(255,255,255,0.05),
-      inset 4px 4px 10px rgba(255,255,255,0.1),
-      inset -4px -4px 10px rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-  }
+  .digital-clock { font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 0 20px rgba(0,0,0,0.5); }
+  .date-display { font-size: 14px; color: #888; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px; }
   
-  .clock-face {
-    width: 210px;
-    height: 210px;
-    border-radius: 50%;
-    background: var(--clock-face);
-    box-shadow: inset 4px 4px 15px rgba(0,0,0,0.8);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .marker {
-    position: absolute;
-    width: 4px;
-    height: 12px;
-    background: #565f89;
-    border-radius: 2px;
-    top: 10px;
-    left: 50%;
-    transform-origin: 50% 95px;
-    transform: translateX(-50%);
-  }
-  .marker.main {
-    width: 6px;
-    height: 16px;
-    background: #c0caf5;
-    top: 8px;
-    transform-origin: 50% 97px;
-  }
-
-  /* Clock Hands */
-  .hand {
-    position: absolute;
-    bottom: 50%;
-    left: 50%;
-    transform-origin: bottom center;
-    border-radius: 4px;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-    z-index: 10;
-  }
-  
-  .hour-hand {
-    width: 6px;
-    height: 60px;
-    background: #c0caf5;
-    transform: translateX(-50%) rotate(0deg);
-  }
-  
-  .minute-hand {
-    width: 4px;
-    height: 80px;
-    background: var(--primary);
-    transform: translateX(-50%) rotate(0deg);
-  }
-  
-  .second-hand {
-    width: 2px;
-    height: 90px;
-    background: var(--accent);
-    transform: translateX(-50%) rotate(0deg);
-  }
-  .second-hand::after {
-    content: '';
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: var(--accent);
-    border-radius: 50%;
-    bottom: -4px;
-    left: -4px;
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  }
-  
-  .center-dot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 14px;
-    height: 14px;
-    background: #1a1b26;
-    border: 2px solid var(--primary);
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 20;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  }
-
-  /* Chronograph Display (Stopwatch) */
-  .chrono-display {
-    position: absolute;
-    bottom: 40px;
-    background: #000;
-    color: var(--primary);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid #333;
-    box-shadow: inset 0 0 5px rgba(122, 162, 247, 0.2);
-    z-index: 5;
-    cursor: pointer;
-    transition: color 0.2s, box-shadow 0.2s;
-  }
-  .chrono-display:hover {
-    color: #c0caf5;
-    box-shadow: inset 0 0 8px rgba(192, 202, 245, 0.4);
-  }
-  .chrono-display:active {
-    transform: scale(0.95);
-  }
+  .btn-row { display: flex; gap: 10px; margin-top: 30px; }
+  button { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 8px 20px; border-radius: 20px; cursor: pointer; font-family: 'Inter', sans-serif; font-weight: 600; transition: all 0.2s; }
+  button:hover { background: rgba(255,255,255,0.15); }
+  button.primary { background: var(--primary); color: #111; border-color: var(--primary); }
+  button.primary:hover { filter: brightness(1.2); }
 </style>
 </head>
 <body>
-  <div class="clock-container">
-    <div class="clock-face" id="face">
-      <!-- Markers generated by JS -->
-      
-      <div class="hand hour-hand" id="hour"></div>
-      <div class="hand minute-hand" id="minute"></div>
-      <div class="hand second-hand" id="second"></div>
-      <div class="center-dot"></div>
-      
-      <div class="chrono-display" id="chrono" onclick="toggleChrono()">00:00.00</div>
-    </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('clock')">Clock</div>
+    <div class="tab" onclick="switchTab('stopwatch')">Stopwatch</div>
   </div>
-  
-  <div class="laps-container" id="laps" style="background: var(--clock-bezel); border: none; border-radius: 10px; padding: 10px; color: #c0caf5; height: 240px; width: 180px; box-shadow: 10px 10px 30px rgba(0,0,0,0.5); font-family: 'JetBrains Mono', monospace; font-size: 13px; overflow-y: auto; box-sizing: border-box;">
-    <div style="text-align:center; margin-bottom:10px; font-weight:bold; color:var(--primary); cursor:pointer;" onclick="lap()">[ + RECORD LAP ]</div>
-    <div id="lapsList"></div>
+
+  <div id="tab-clock" class="content active">
+    <div class="digital-clock" id="main-clock">00:00:00</div>
+    <div class="date-display" id="main-date">...</div>
+  </div>
+
+  <div id="tab-stopwatch" class="content">
+    <div class="digital-clock" id="stopwatch-display">00:00.00</div>
+    <div class="btn-row">
+      <button onclick="toggleStopwatch()" id="sw-btn" class="primary">Start</button>
+      <button onclick="resetStopwatch()">Reset</button>
+    </div>
   </div>
 
   <script>
-    // Generate Markers
-    const face = document.getElementById('face');
-    for (let i = 0; i < 12; i++) {
-      const marker = document.createElement('div');
-      marker.className = i % 3 === 0 ? 'marker main' : 'marker';
-      marker.style.transform = `translateX(-50%) rotate(${i * 30}deg)`;
-      face.appendChild(marker);
+    function switchTab(id) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + id).classList.add('active');
     }
 
     // Clock Logic
     function updateClock() {
       const now = new Date();
-      const h = now.getHours();
-      const m = now.getMinutes();
-      const s = now.getSeconds();
-      const ms = now.getMilliseconds();
-      
-      const hourDeg = (h % 12) * 30 + (m * 0.5);
-      const minuteDeg = m * 6 + (s * 0.1);
-      const secondDeg = s * 6 + (ms * 0.006);
-      
-      document.getElementById('hour').style.transform = `translateX(-50%) rotate(${hourDeg}deg)`;
-      document.getElementById('minute').style.transform = `translateX(-50%) rotate(${minuteDeg}deg)`;
-      document.getElementById('second').style.transform = `translateX(-50%) rotate(${secondDeg}deg)`;
-      
-      requestAnimationFrame(updateClock);
+      document.getElementById('main-clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
+      document.getElementById('main-date').innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     }
+    setInterval(updateClock, 1000);
     updateClock();
 
-    // Chronograph Logic
-    let startTime = 0;
-    let elapsed = 0;
-    let timer = null;
-    let lapCount = 0;
+    // Stopwatch Logic
+    let swStart = 0;
+    let swElapsed = 0;
+    let swInterval = null;
+    let swRunning = false;
 
-    function formatTime(msTime) {
-      let centis = Math.floor((msTime % 1000) / 10);
-      let seconds = Math.floor((msTime / 1000) % 60);
-      let minutes = Math.floor(msTime / 60000);
-      
-      return String(minutes).padStart(2, '0') + ':' + 
-             String(seconds).padStart(2, '0') + '.' + 
-             String(centis).padStart(2, '0');
+    function formatSw(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+      const centi = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
+      return `${minutes}:${seconds}.${centi}`;
     }
 
-    function updateChrono() {
-      const currentMs = elapsed + (timer ? (Date.now() - startTime) : 0);
-      document.getElementById('chrono').innerText = formatTime(currentMs);
-      if (timer) requestAnimationFrame(updateChrono);
+    function updateSwDisplay() {
+      const current = swRunning ? Date.now() - swStart + swElapsed : swElapsed;
+      document.getElementById('stopwatch-display').innerText = formatSw(current);
     }
 
-    // Click behavior: Start -> Stop -> Reset -> Start...
-    let chronoState = 0; // 0: reset, 1: running, 2: stopped
-    
-    function toggleChrono() {
-      if (chronoState === 0) {
-        // Start
-        startTime = Date.now();
-        timer = true;
-        chronoState = 1;
-        updateChrono();
-      } else if (chronoState === 1) {
-        // Stop
-        elapsed += (Date.now() - startTime);
-        timer = null;
-        chronoState = 2;
-        updateChrono(); // final render
+    function toggleStopwatch() {
+      if (swRunning) {
+        swElapsed += Date.now() - swStart;
+        clearInterval(swInterval);
+        swRunning = false;
+        document.getElementById('sw-btn').innerText = 'Start';
+        document.getElementById('sw-btn').classList.add('primary');
       } else {
-        // Reset
-        timer = null;
-        elapsed = 0;
-        chronoState = 0;
-        lapCount = 0;
-        document.getElementById('lapsList').innerHTML = '';
-        document.getElementById('chrono').innerText = formatTime(0);
+        swStart = Date.now();
+        swInterval = setInterval(updateSwDisplay, 10);
+        swRunning = true;
+        document.getElementById('sw-btn').innerText = 'Stop';
+        document.getElementById('sw-btn').classList.remove('primary');
       }
     }
 
-    function lap() {
-      if (!timer) return;
-      lapCount++;
-      const currentMs = elapsed + (Date.now() - startTime);
-      const lapsDiv = document.getElementById('lapsList');
-      const item = document.createElement('div');
-      item.style.display = 'flex';
-      item.style.justifyContent = 'space-between';
-      item.style.borderBottom = '1px solid #414868';
-      item.style.padding = '4px 0';
-      item.innerHTML = `<span>#${lapCount}</span><span>${formatTime(currentMs)}</span>`;
-      lapsDiv.insertBefore(item, lapsDiv.firstChild);
+    function resetStopwatch() {
+      swRunning = false;
+      clearInterval(swInterval);
+      swElapsed = 0;
+      updateSwDisplay();
+      document.getElementById('sw-btn').innerText = 'Start';
+      document.getElementById('sw-btn').classList.add('primary');
     }
   </script>
 </body>

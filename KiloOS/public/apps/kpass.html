@@ -123,6 +123,18 @@
     <div class="display" id="pwdDisplay">...</div>
     <div class="controls">
       <div class="control-row">
+        <label><input type="checkbox" id="chkUpper" checked> Uppercase</label>
+        <label><input type="checkbox" id="chkLower" checked> Lowercase</label>
+      </div>
+      <div class="control-row">
+        <label><input type="checkbox" id="chkNum" checked> Numbers</label>
+        <label><input type="checkbox" id="chkSym" checked> Symbols</label>
+      </div>
+      <div class="control-row" style="margin-top: 10px;">
+        <label style="flex: 1; color: #fff;">Length: <span id="lenVal">16</span></label>
+        <input type="range" id="rngLen" min="8" max="64" value="16" style="flex: 2;">
+      </div>
+      <div class="control-row">
         <input type="text" id="labelInput" placeholder="Label (e.g. Email)">
         <button id="btnSave">Save</button>
       </div>
@@ -163,10 +175,33 @@
     tabGen.addEventListener('click', () => switchTab(true));
     tabVault.addEventListener('click', () => switchTab(false));
 
+    const chkUpper = document.getElementById('chkUpper');
+    const chkLower = document.getElementById('chkLower');
+    const chkNum = document.getElementById('chkNum');
+    const chkSym = document.getElementById('chkSym');
+    const rngLen = document.getElementById('rngLen');
+    const lenVal = document.getElementById('lenVal');
+
+    rngLen.addEventListener('input', () => {
+        lenVal.innerText = rngLen.value;
+        generate();
+    });
+    chkUpper.addEventListener('change', generate);
+    chkLower.addEventListener('change', generate);
+    chkNum.addEventListener('change', generate);
+    chkSym.addEventListener('change', generate);
+
     function generate() {
-        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+        let chars = "";
+        if (chkUpper.checked) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (chkLower.checked) chars += "abcdefghijklmnopqrstuvwxyz";
+        if (chkNum.checked) chars += "0123456789";
+        if (chkSym.checked) chars += "!@#$%^&*()_+";
+        if (chars === "") { chars = "abcdefghijklmnopqrstuvwxyz"; chkLower.checked = true; }
+        
         let pass = "";
-        for(let i=0; i<16; i++) {
+        let len = parseInt(rngLen.value);
+        for(let i=0; i<len; i++) {
             pass += chars[Math.floor(Math.random() * chars.length)];
         }
         pwdDisplay.innerText = pass;
