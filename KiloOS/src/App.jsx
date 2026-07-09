@@ -131,22 +131,51 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
     }
   };
 
-  const handleResizeDown = (e) => {
+  const handleResizeDown = (e, dir) => {
     e.stopPropagation();
     onFocus();
     if (snapState === 'maximized') return;
     setSnapState(null);
-    setResizing(true);
-    resizeOffset.current = { w: size.w - e.clientX, h: size.h - e.clientY };
+    setResizing(dir);
+    resizeOffset.current = { 
+      w: size.w, h: size.h, 
+      x: pos.x, y: pos.y, 
+      startX: e.clientX, startY: e.clientY 
+    };
     e.target.setPointerCapture(e.pointerId);
   };
 
   const handleResizeMove = (e) => {
     if (resizing) {
-      setSize({
-        w: Math.max(250, e.clientX + resizeOffset.current.w),
-        h: Math.max(200, e.clientY + resizeOffset.current.h)
-      });
+      let deltaX = e.clientX - resizeOffset.current.startX;
+      let deltaY = e.clientY - resizeOffset.current.startY;
+      
+      let newW = resizeOffset.current.w;
+      let newH = resizeOffset.current.h;
+      let newX = resizeOffset.current.x;
+      let newY = resizeOffset.current.y;
+
+      if (resizing.includes('e')) newW = Math.max(250, resizeOffset.current.w + deltaX);
+      if (resizing.includes('s')) newH = Math.max(200, resizeOffset.current.h + deltaY);
+      if (resizing.includes('w')) {
+        let proposedW = resizeOffset.current.w - deltaX;
+        if (proposedW >= 250) {
+          newW = proposedW;
+          newX = resizeOffset.current.x + deltaX;
+        }
+      }
+      if (resizing.includes('n')) {
+        let proposedH = resizeOffset.current.h - deltaY;
+        if (proposedH >= 200) {
+          newH = proposedH;
+          newY = resizeOffset.current.y + deltaY;
+        }
+      }
+
+      setSize({ w: newW, h: newH });
+      setPos({ x: newX, y: newY });
+    }
+  };
     }
   };
 
@@ -246,6 +275,15 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
       style={getStyle()}
       onPointerDownCapture={onFocus}
     >
+      <div className="resize-handle n" onPointerDown={e => handleResizeDown(e, 'n')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle s" onPointerDown={e => handleResizeDown(e, 's')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle e" onPointerDown={e => handleResizeDown(e, 'e')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle w" onPointerDown={e => handleResizeDown(e, 'w')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle ne" onPointerDown={e => handleResizeDown(e, 'ne')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle nw" onPointerDown={e => handleResizeDown(e, 'nw')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle se" onPointerDown={e => handleResizeDown(e, 'se')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+      <div className="resize-handle sw" onPointerDown={e => handleResizeDown(e, 'sw')} onPointerMove={handleResizeMove} onPointerUp={handleResizeUp} />
+
       <div 
         className={`xp-titlebar ${isActive ? 'active' : ''}`}
         onPointerDown={handlePointerDown}
@@ -631,7 +669,32 @@ function App() {
     return () => window.removeEventListener('os-launch-app', handler);
   }, [openApps]);
 
-  const openApp = (appDef) => {
+  // Handle Window Switching Shortcut
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Alt + ` to switch windows
+      if (e.altKey && e.key === '`') {
+        e.preventDefault();
+        setOpenApps(prev => {
+          if (prev.length < 2) return prev;
+          const sorted = [...prev].sort((a,b) => a.zIndex - b.zIndex);
+          const topApp = sorted.pop(); // the current active app
+          // Send the current active app to the back
+          return prev.map(a => {
+            if (a.instanceId === topApp.instanceId) {
+              return { ...a, zIndex: 0 };
+            }
+            return { ...a, zIndex: a.zIndex + 1 };
+          });
+        });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const openApp = useCallback((appParams) => {
+    let appDef = appParams;
     if (appDef.id === 'kquarantine') {
       if (cerberusBlinded) {
         appDef = { ...appDef, url: '/apps/kquarantine.html' };
