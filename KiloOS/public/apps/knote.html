@@ -3,71 +3,98 @@
 <head>
 <title>KNote</title>
 <style>
-  body { margin: 0; background-color: #ffff96; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  .toolbar {
-      background: #e0e0a0;
-      padding: 5px;
-      display: flex;
-      justify-content: flex-end;
-      border-bottom: 1px solid #ccc;
-  }
-  button {
-      background: #ffcccc;
-      border: 1px solid #ff9999;
-      border-radius: 3px;
-      padding: 3px 8px;
-      cursor: pointer;
-      font-family: sans-serif;
-      font-size: 12px;
-  }
-  button:hover {
-      background: #ff9999;
-  }
-  textarea {
-      flex: 1;
-      width: 100%;
-      height: 100%;
-      box-sizing: border-box;
-      background-color: transparent;
-      border: none;
-      padding: 10px;
-      font-family: "Comic Sans MS", "Segoe UI", sans-serif;
-      font-size: 16px;
-      resize: none;
-      outline: none;
-  }
+  body { margin: 0; background-color: #ffff96; display: flex; height: 100vh; overflow: hidden; font-family: sans-serif; }
+  .sidebar { width: 150px; background: #e0e0a0; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
+  .main { flex: 1; display: flex; flex-direction: column; }
+  .toolbar { padding: 5px; display: flex; justify-content: flex-end; border-bottom: 1px solid #ccc; }
+  button { background: #ffcccc; border: 1px solid #ff9999; border-radius: 3px; padding: 3px 8px; cursor: pointer; font-family: sans-serif; font-size: 12px; }
+  button:hover { background: #ff9999; }
+  .note-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+  .note-item { padding: 8px; border-bottom: 1px solid #ccc; cursor: pointer; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .note-item:hover { background: #d0d090; }
+  .note-item.active { background: #ffff96; font-weight: bold; }
+  textarea { flex: 1; width: 100%; box-sizing: border-box; background-color: transparent; border: none; padding: 10px; font-family: "Comic Sans MS", "Segoe UI", sans-serif; font-size: 16px; resize: none; outline: none; }
 </style>
 </head>
 <body>
-<div class="toolbar">
-    <button id="clearBtn">Clear Note</button>
+<div class="sidebar">
+    <div style="padding: 5px;"><button id="newBtn" style="width: 100%">New Note</button></div>
+    <ul class="note-list" id="noteList"></ul>
 </div>
-<textarea id="noteArea" spellcheck="false"></textarea>
+<div class="main">
+    <div class="toolbar">
+        <button id="delBtn">Delete Note</button>
+    </div>
+    <textarea id="noteArea" spellcheck="false"></textarea>
+</div>
 <script>
   const noteArea = document.getElementById('noteArea');
-  const clearBtn = document.getElementById('clearBtn');
+  const newBtn = document.getElementById('newBtn');
+  const delBtn = document.getElementById('delBtn');
+  const noteList = document.getElementById('noteList');
   
-  // Load saved note or set placeholder
-  const savedNote = localStorage.getItem('knote_data');
-  if (savedNote !== null) {
-      noteArea.value = savedNote;
-  } else {
-      noteArea.value = "Buy milk\nFix that bug\nCall mom";
+  let notes = [];
+  try {
+      let saved = localStorage.getItem('knote_data_multi');
+      if (saved) notes = JSON.parse(saved);
+      else {
+          let old = localStorage.getItem('knote_data');
+          if (old) notes.push({ text: old });
+          else notes.push({ text: "Buy milk\nFix that bug\nCall mom" });
+      }
+  } catch (e) {
+      notes = [{ text: "" }];
   }
   
-  // Auto-save on input
-  noteArea.addEventListener('input', () => {
-      localStorage.setItem('knote_data', noteArea.value);
-  });
+  if (notes.length === 0) notes.push({ text: "" });
+  let activeIndex = 0;
   
-  // Clear note button
-  clearBtn.addEventListener('click', () => {
-      noteArea.value = "";
-      localStorage.setItem('knote_data', "");
+  function save() {
+      localStorage.setItem('knote_data_multi', JSON.stringify(notes));
+      renderList();
+  }
+  
+  function renderList() {
+      noteList.innerHTML = '';
+      notes.forEach((note, i) => {
+          let li = document.createElement('li');
+          li.className = 'note-item' + (i === activeIndex ? ' active' : '');
+          let title = note.text.trim().split('\\n')[0];
+          li.innerText = title ? title : 'Empty Note';
+          li.onclick = () => { activeIndex = i; loadActive(); };
+          noteList.appendChild(li);
+      });
+  }
+  
+  function loadActive() {
+      if (notes.length === 0) notes.push({ text: "" });
+      if (activeIndex >= notes.length) activeIndex = notes.length - 1;
+      noteArea.value = notes[activeIndex].text;
+      renderList();
       noteArea.focus();
+  }
+  
+  noteArea.addEventListener('input', () => {
+      notes[activeIndex].text = noteArea.value;
+      save();
   });
   
-  noteArea.focus();
+  newBtn.addEventListener('click', () => {
+      notes.push({ text: "" });
+      activeIndex = notes.length - 1;
+      save();
+      loadActive();
+  });
+  
+  delBtn.addEventListener('click', () => {
+      notes.splice(activeIndex, 1);
+      if (notes.length === 0) notes.push({ text: "" });
+      if (activeIndex >= notes.length) activeIndex = notes.length - 1;
+      save();
+      loadActive();
+  });
+  
+  loadActive();
 </script>
 </body>
 </html>

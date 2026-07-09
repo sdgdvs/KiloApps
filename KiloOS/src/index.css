@@ -568,10 +568,22 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   box-shadow: 0 4px 10px rgba(0,0,0,0.15), 0 10px 25px rgba(0,0,0,0.4);
   min-width: 250px;
   min-height: 200px;
-  resize: both;
-  overflow: hidden;
+  overflow: visible;
   transition: width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+
+.resize-handle {
+  position: absolute;
+  z-index: 99;
+}
+.resize-handle.n { top: -3px; left: 10px; right: 10px; height: 6px; cursor: n-resize; }
+.resize-handle.s { bottom: -3px; left: 10px; right: 10px; height: 6px; cursor: s-resize; }
+.resize-handle.e { right: -3px; top: 10px; bottom: 10px; width: 6px; cursor: e-resize; }
+.resize-handle.w { left: -3px; top: 10px; bottom: 10px; width: 6px; cursor: w-resize; }
+.resize-handle.ne { top: -3px; right: -3px; width: 10px; height: 10px; cursor: ne-resize; z-index: 100; }
+.resize-handle.nw { top: -3px; left: -3px; width: 10px; height: 10px; cursor: nw-resize; z-index: 100; }
+.resize-handle.se { bottom: -3px; right: -3px; width: 10px; height: 10px; cursor: se-resize; z-index: 100; }
+.resize-handle.sw { bottom: -3px; left: -3px; width: 10px; height: 10px; cursor: sw-resize; z-index: 100; }
 .xp-window.minimized {
   opacity: 0;
   transform: scale(0.5) translateY(50vh);

@@ -66,7 +66,7 @@
   
   <div class="controls">
     <button id="btnEncode">B64 Encode ▼</button>
-    <button id="btnDecode">B64 Decode ▲</button>
+    <button id="btnDecode">B64 Decode ▼</button>
     <button id="btnHash">SHA-256 ▼</button>
   </div>
   
@@ -76,7 +76,48 @@
   </div>
 
   <script>
-    // Phase 1 Scaffold
+    const inpText = document.getElementById('inpText');
+    const outText = document.getElementById('outText');
+    const btnEncode = document.getElementById('btnEncode');
+    const btnDecode = document.getElementById('btnDecode');
+    const btnHash = document.getElementById('btnHash');
+
+    btnEncode.onclick = () => {
+      try {
+        outText.value = btoa(unescape(encodeURIComponent(inpText.value)));
+      } catch(e) {
+        outText.value = "Error: Could not encode to Base64.";
+      }
+    };
+
+    btnDecode.onclick = () => {
+      try {
+        outText.value = decodeURIComponent(escape(atob(inpText.value.trim())));
+      } catch(e) {
+        outText.value = "Error: Invalid Base64 input string.";
+      }
+    };
+
+    btnHash.onclick = async () => {
+      try {
+        const msgUint8 = new TextEncoder().encode(inpText.value);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        outText.value = hashHex;
+      } catch(e) {
+        outText.value = "Error: Could not generate hash.";
+      }
+    };
+
+    outText.onclick = () => {
+      if (outText.value && !outText.value.startsWith("Error")) {
+        navigator.clipboard.writeText(outText.value);
+        const original = outText.value;
+        outText.value = "Copied to clipboard!";
+        setTimeout(() => outText.value = original, 1000);
+      }
+    };
   </script>
 </body>
 </html>
