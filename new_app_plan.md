@@ -1,12 +1,12 @@
-# New App Plan: KRead
+# New App Plan: KBase
 
 **Status:** Not Started
 
 ## Description
-KRead is a minimalist, distraction-free text reader. It allows users to load text documents and read them with configurable font sizes, automatically persisting their reading progress (scroll position) into the VFS, all while keeping under the < 999KB KiloOS limit.
+KBase is a minimal developer utility for rapid Base64 encoding/decoding and basic string hashing (MD5/SHA). It operates entirely locally and fits perfectly into the KiloOS ecosystem by remaining strictly under the < 999KB constraints.
 
 ## Phases
-- [x] **Phase 1:** Scaffold the `KRead` application directory. Create `kread.html` with a clean typography-focused UI (file loader, reading pane, top toolbar) and integrate the web app into `KiloOS/src/App.jsx`.
-- [x] **Phase 2:** Implement the Javascript logic to load local text files via a file picker or drag-and-drop, parsing the text into the reading pane.
-- [x] **Phase 3:** Implement the Javascript logic for a font-size toggle, and auto-saving the current text and scroll position into the `localStorage` VFS to resume later.
-- [ ] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KRead` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.
+- [ ] **Phase 1:** Scaffold the `KBase` application directory. Create `kbase.html` with a UI featuring input/output text areas and conversion buttons, and integrate it into `KiloOS/src/App.jsx`.
+- [ ] **Phase 2:** Implement the Javascript logic for Base64 encoding and decoding directly in the browser.
+- [ ] **Phase 3:** Implement the Javascript logic for basic string hashing (using Web Crypto API for SHA-256) and a quick 'Copy to Clipboard' function.
+- [ ] **Phase 4:** Create the native Windows wrapper (`main.c`, `app.rc`, `build.bat`) in the `KBase` directory using native Win32 controls, and add it to `rebuild_all.bat`. Finally, commit and push to GitHub.

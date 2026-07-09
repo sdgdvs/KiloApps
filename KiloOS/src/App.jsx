@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.32';
+const MICROS_VERSION = '0.3.34';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -88,12 +88,15 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
 
   const handlePointerDown = (e) => {
     onFocus();
-    if (snapState === 'maximized') return;
-    if (snapState === 'left' || snapState === 'right') {
+    if (snapState) {
       setSnapState(null);
+      const newX = Math.max(0, e.clientX - (size.w / 2));
+      setPos({ x: newX, y: Math.max(0, e.clientY - 10) });
+      offset.current = { x: size.w / 2, y: 10 };
+    } else {
+      offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     }
     setDragging(true);
-    offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
     e.target.setPointerCapture(e.pointerId);
   };
 
@@ -107,7 +110,6 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
   const handlePointerUp = (e) => {
     setDragging(false);
     e.target.releasePointerCapture(e.pointerId);
-    if (snapState === 'maximized') return;
     
     if (e.clientX < 20) {
       setSnapState('left');
@@ -115,6 +117,9 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
     } else if (e.clientX > window.innerWidth - 20) {
       setSnapState('right');
       setPos({ x: window.innerWidth / 2, y: 0 });
+    } else if (e.clientY < 10) {
+      setSnapState('maximized');
+      setPos({ x: 0, y: 0 });
     }
   };
 
@@ -389,6 +394,7 @@ function App() {
   const [dateStr, setDateStr] = useState("");
   const [clockPulse, setClockPulse] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
+  const [startSearch, setStartSearch] = useState('');
   const [activeAppId, setActiveAppId] = useState(null);
   const [cerberusBlinded, setCerberusBlinded] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -410,6 +416,17 @@ function App() {
   // OS Modals
   const [modal, setModal] = useState(null); // { type: 'shutdown' | 'vfs_open' | 'vfs_save', callback: fn }
   const [modalInput, setModalInput] = useState('');
+
+  // Notifications State
+  const [notifications, setNotifications] = useState([]);
+  
+  const notify = useCallback((title, message) => {
+    const id = Date.now() + Math.random();
+    setNotifications(prev => [...prev, { id, title, message }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  }, []);
 
   // Desktop State
   const [selectedIcons, setSelectedIcons] = useState([]);
@@ -799,10 +816,20 @@ function App() {
       
       {startOpen && (
         <div className="start-menu">
+          <div className="start-search-bar" style={{padding: '10px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)'}}>
+            <input 
+              type="text" 
+              placeholder="Search apps..." 
+              value={startSearch} 
+              onChange={e => setStartSearch(e.target.value)} 
+              style={{width: '100%', padding: '6px 12px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', outline: 'none'}} 
+              autoFocus 
+            />
+          </div>
           <div className="start-columns">
             <div className="start-apps" style={{overflowY: 'auto', height: '100%', padding: '10px 0'}}>
               {FOLDERS.map(folder => {
-                const folderApps = APPS.filter(a => a.folder === folder.id);
+                const folderApps = APPS.filter(a => a.folder === folder.id && a.title.toLowerCase().includes(startSearch.toLowerCase()));
                 if (folderApps.length === 0) return null;
                 return (
                   <div key={folder.id} style={{marginBottom: '10px'}}>
@@ -819,12 +846,12 @@ function App() {
                 );
               })}
               
-              {APPS.filter(a => !a.folder).length > 0 && (
+              {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).length > 0 && (
                 <div style={{marginBottom: '10px'}}>
                   <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
                     Applications
                   </div>
-                  {APPS.filter(a => !a.folder).map(app => (
+                  {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).map(app => (
                     <div key={app.id} className="start-item" onClick={() => openApp(app)} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
                       <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
                       <span style={{fontSize: '14px'}}>{app.title}</span>
@@ -867,7 +894,7 @@ function App() {
       )}
       
       <div className="taskbar">
-        <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => { playClickAudio(); setStartOpen(!startOpen); }}>start</div>
+        <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => { playClickAudio(); setStartOpen(!startOpen); setStartSearch(''); }}>start</div>
         <div className="taskbar-items">
           {openApps.map(app => {
             const baseApp = APPS.find(a => a.id === app.id);
@@ -875,6 +902,7 @@ function App() {
               <div key={app.instanceId} className={`taskbar-item ${(!app.minimized && app.zIndex === Math.max(...openApps.map(a => a.zIndex))) ? 'active' : ''}`} onClick={() => toggleMinimize(app.instanceId)} style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
                 {baseApp && <img src={baseApp.icon} alt="" style={{width:'16px', height:'16px', imageRendering: 'pixelated', flexShrink: 0}} />}
                 <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{app.title}</span>
+                <div className="taskbar-preview">{app.title}</div>
               </div>
             );
           })}
@@ -983,9 +1011,9 @@ function App() {
                       ...prev,
                       [path]: `<!DOCTYPE html>\n<html>\n<head>\n<title>${appName}</title>\n<style>\n  body { font-family: sans-serif; background: #fff; color: #000; padding: 20px; }\n</style>\n</head>\n<body>\n  <h1>Hello ${appName}!</h1>\n  <p>Welcome to KiloOS web development.</p>\n</body>\n</html>`
                     }));
-                    alert(`Created ${path}! Open KExplorer to view it.`);
+                    notify('App Created', `Created ${path}! Open KExplorer to view it.`);
                   } else {
-                    alert("File already exists.");
+                    notify('Error', "File already exists.");
                   }
                 }
               }
@@ -1002,6 +1030,15 @@ function App() {
           </div>
         </div>
       )}
+
+      <div className="notification-tray">
+        {notifications.map(n => (
+          <div key={n.id} className="notification-toast">
+            <div className="notification-title">{n.title}</div>
+            <div className="notification-message">{n.message}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

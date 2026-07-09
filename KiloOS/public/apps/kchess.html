@@ -112,11 +112,65 @@
                   selX = -1;
                   selY = -1;
               } else {
-                  board[ty][tx] = board[selY][selX];
-                  board[selY][selX] = 0;
-                  selX = -1;
-                  selY = -1;
-                  whiteTurn = !whiteTurn;
+                  let p = board[selY][selX];
+                  let isWhite = p <= 6;
+                  let dstP = board[ty][tx];
+                  let dstIsWhite = dstP <= 6;
+                  
+                  if (dstP !== 0 && isWhite === dstIsWhite) {
+                      // Cannot capture own piece
+                      selX = tx;
+                      selY = ty;
+                  } else {
+                      let valid = false;
+                      let dx = tx - selX;
+                      let dy = ty - selY;
+                      let adx = Math.abs(dx);
+                      let ady = Math.abs(dy);
+                      let pType = p > 6 ? p - 6 : p;
+                      
+                      let checkPath = () => {
+                          let stepX = dx === 0 ? 0 : dx / adx;
+                          let stepY = dy === 0 ? 0 : dy / ady;
+                          let cx = selX + stepX;
+                          let cy = selY + stepY;
+                          while (cx !== tx || cy !== ty) {
+                              if (board[cy][cx] !== 0) return false;
+                              cx += stepX; cy += stepY;
+                          }
+                          return true;
+                      };
+                      
+                      if (pType === 1) { // Pawn
+                          if (isWhite) {
+                              if (dx === 0 && dy === -1 && dstP === 0) valid = true;
+                              if (dx === 0 && dy === -2 && selY === 6 && dstP === 0 && board[5][tx] === 0) valid = true;
+                              if (adx === 1 && dy === -1 && dstP !== 0) valid = true;
+                          } else {
+                              if (dx === 0 && dy === 1 && dstP === 0) valid = true;
+                              if (dx === 0 && dy === 2 && selY === 1 && dstP === 0 && board[2][tx] === 0) valid = true;
+                              if (adx === 1 && dy === 1 && dstP !== 0) valid = true;
+                          }
+                      } else if (pType === 2) { // Knight
+                          if ((adx === 1 && ady === 2) || (adx === 2 && ady === 1)) valid = true;
+                      } else if (pType === 3) { // Bishop
+                          if (adx === ady && checkPath()) valid = true;
+                      } else if (pType === 4) { // Rook
+                          if ((adx === 0 || ady === 0) && checkPath()) valid = true;
+                      } else if (pType === 5) { // Queen
+                          if ((adx === ady || adx === 0 || ady === 0) && checkPath()) valid = true;
+                      } else if (pType === 6) { // King
+                          if (adx <= 1 && ady <= 1) valid = true;
+                      }
+                      
+                      if (valid) {
+                          board[ty][tx] = board[selY][selX];
+                          board[selY][selX] = 0;
+                          selX = -1;
+                          selY = -1;
+                          whiteTurn = !whiteTurn;
+                      }
+                  }
               }
           }
           draw();

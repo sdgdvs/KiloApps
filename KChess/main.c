@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <math.h>
 
 #define W 480
 #define H 500
@@ -104,12 +105,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selX = -1;
                         selY = -1;
                     } else {
-                        // Very basic move (no validation for a minimal toy)
-                        board[ty][tx] = board[selY][selX];
-                        board[selY][selX] = 0;
-                        selX = -1;
-                        selY = -1;
-                        whiteTurn = !whiteTurn;
+                        int p = board[selY][selX];
+                        int isWhite = p <= 6;
+                        int dstP = board[ty][tx];
+                        int dstIsWhite = dstP <= 6;
+                        
+                        if (dstP != 0 && isWhite == dstIsWhite) {
+                            selX = tx;
+                            selY = ty;
+                        } else {
+                            int valid = 0;
+                            int dx = tx - selX;
+                            int dy = ty - selY;
+                            int adx = abs(dx);
+                            int ady = abs(dy);
+                            int pType = p > 6 ? p - 6 : p;
+                            
+                            int pathClear = 1;
+                            int stepX = dx == 0 ? 0 : dx / adx;
+                            int stepY = dy == 0 ? 0 : dy / ady;
+                            int cx = selX + stepX;
+                            int cy = selY + stepY;
+                            while (cx != tx || cy != ty) {
+                                if (board[cy][cx] != 0) { pathClear = 0; break; }
+                                cx += stepX; cy += stepY;
+                            }
+                            
+                            if (pType == 1) { // Pawn
+                                if (isWhite) {
+                                    if (dx == 0 && dy == -1 && dstP == 0) valid = 1;
+                                    if (dx == 0 && dy == -2 && selY == 6 && dstP == 0 && board[5][tx] == 0) valid = 1;
+                                    if (adx == 1 && dy == -1 && dstP != 0) valid = 1;
+                                } else {
+                                    if (dx == 0 && dy == 1 && dstP == 0) valid = 1;
+                                    if (dx == 0 && dy == 2 && selY == 1 && dstP == 0 && board[2][tx] == 0) valid = 1;
+                                    if (adx == 1 && dy == 1 && dstP != 0) valid = 1;
+                                }
+                            } else if (pType == 2) { // Knight
+                                if ((adx == 1 && ady == 2) || (adx == 2 && ady == 1)) valid = 1;
+                            } else if (pType == 3) { // Bishop
+                                if (adx == ady && pathClear) valid = 1;
+                            } else if (pType == 4) { // Rook
+                                if ((adx == 0 || ady == 0) && pathClear) valid = 1;
+                            } else if (pType == 5) { // Queen
+                                if ((adx == ady || adx == 0 || ady == 0) && pathClear) valid = 1;
+                            } else if (pType == 6) { // King
+                                if (adx <= 1 && ady <= 1) valid = 1;
+                            }
+                            
+                            if (valid) {
+                                board[ty][tx] = board[selY][selX];
+                                board[selY][selX] = 0;
+                                selX = -1;
+                                selY = -1;
+                                whiteTurn = !whiteTurn;
+                            }
+                        }
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
