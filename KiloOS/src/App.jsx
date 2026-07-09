@@ -68,7 +68,7 @@ const APPS = [
   { id: 'kread', title: 'KRead', url: '/apps/kread.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 500, folder: 'System' },
   { id: 'kbase', title: 'KBase', url: '/apps/kbase.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 400, h: 300, folder: 'System' },
   { id: 'ksettings', title: 'KSettings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 400, h: 300, folder: 'System' },
-  { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200 }
+  { id: 'kquarantine', title: 'Q̷u̷a̷r̷a̷n̷t̷i̷n̷e̷', url: '#', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 300, h: 200, folder: 'Hidden' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
