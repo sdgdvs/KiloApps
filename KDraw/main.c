@@ -4,15 +4,24 @@
 int W = 500, H = 400;
 HDC hdcMem = NULL;
 HBITMAP hbmMem = NULL;
-COLORREF currentColor = RGB(0, 0, 0);
+COLORREF currentColor = RGB(255, 255, 255);
+int currentSize = 2;
 int isDrawing = 0;
 int lastX = 0, lastY = 0;
 HPEN currentPen = NULL;
 
+// New color palette: white, red, green, blue, yellow, magenta, cyan, black
 const COLORREF colors[] = {
-    RGB(0, 0, 0), RGB(255, 0, 0), RGB(0, 255, 0), RGB(0, 0, 255),
-    RGB(255, 255, 0), RGB(255, 0, 255), RGB(0, 255, 255), RGB(255, 255, 255)
+    RGB(255, 255, 255), RGB(255, 85, 85), RGB(85, 255, 85), RGB(85, 85, 255),
+    RGB(255, 255, 85), RGB(255, 85, 255), RGB(85, 255, 255), RGB(0, 0, 0)
 };
+
+void ClearCanvas(HDC hdc) {
+    RECT rc = {0, 0, W, H};
+    HBRUSH bg = CreateSolidBrush(RGB(26, 30, 35)); // #1a1e23
+    FillRect(hdc, &rc, bg);
+    DeleteObject(bg);
+}
 
 void SetupMemDC(HWND hwnd) {
     HDC hdc = GetDC(hwnd);
@@ -21,18 +30,22 @@ void SetupMemDC(HWND hwnd) {
     hbmMem = CreateCompatibleBitmap(hdc, W, H);
     SelectObject(hdcMem, hbmMem);
     
-    RECT rc = {0, 0, W, H};
-    HBRUSH bg = CreateSolidBrush(RGB(255, 255, 255));
-    FillRect(hdcMem, &rc, bg);
-    DeleteObject(bg);
+    ClearCanvas(hdcMem);
     
-    currentPen = CreatePen(PS_SOLID, 2, currentColor);
+    currentPen = CreatePen(PS_SOLID, currentSize, currentColor);
     SelectObject(hdcMem, currentPen);
     
     ReleaseDC(hwnd, hdc);
 }
 
-void DrawColorPalette(HDC hdc) {
+void DrawToolbar(HDC hdc) {
+    // Background for toolbar
+    RECT tbRc = {0, 0, W, 45};
+    HBRUSH tbBg = CreateSolidBrush(RGB(40, 44, 52));
+    FillRect(hdc, &tbRc, tbBg);
+    DeleteObject(tbBg);
+
+    // Draw colors
     for (int i = 0; i < 8; i++) {
         RECT r = {i * 30 + 10, 10, i * 30 + 35, 35};
         HBRUSH br = CreateSolidBrush(colors[i]);
@@ -41,9 +54,27 @@ void DrawColorPalette(HDC hdc) {
         if (currentColor == colors[i]) {
             DrawEdge(hdc, &r, BDR_SUNKENOUTER, BF_RECT);
         } else {
-            DrawEdge(hdc, &r, BDR_RAISEDINNER, BF_RECT);
+            HBRUSH border = CreateSolidBrush(RGB(80, 80, 80));
+            FrameRect(hdc, &r, border);
+            DeleteObject(border);
         }
     }
+    
+    // Draw Size button (toggle)
+    RECT sizeRc = {270, 10, 330, 35};
+    HBRUSH sizeBg = CreateSolidBrush(currentSize > 2 ? RGB(100, 150, 255) : RGB(80, 80, 80));
+    FillRect(hdc, &sizeRc, sizeBg);
+    DeleteObject(sizeBg);
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(255, 255, 255));
+    DrawTextA(hdc, currentSize > 2 ? "Thick" : "Thin", -1, &sizeRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    
+    // Draw Clear button
+    RECT clearRc = {340, 10, 400, 35};
+    HBRUSH clearBg = CreateSolidBrush(RGB(80, 80, 80));
+    FillRect(hdc, &clearRc, clearBg);
+    DeleteObject(clearBg);
+    DrawTextA(hdc, "Clear", -1, &clearRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -52,21 +83,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupMemDC(hwnd);
             break;
         case WM_SIZE:
-            // Minimalist: we don't resize the canvas in this simple version
             break;
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            if (y >= 10 && y <= 35 && x >= 10 && x < 10 + 8 * 30) {
-                int idx = (x - 10) / 30;
-                if (idx >= 0 && idx < 8) {
-                    currentColor = colors[idx];
-                    if (currentPen) DeleteObject(currentPen);
-                    currentPen = CreatePen(PS_SOLID, 2, currentColor);
-                    SelectObject(hdcMem, currentPen);
-                    
-                    RECT pRc = {0, 0, W, 45};
-                    InvalidateRect(hwnd, &pRc, FALSE);
+            if (y >= 0 && y <= 45) { // Toolbar area
+                if (y >= 10 && y <= 35) {
+                    if (x >= 10 && x < 10 + 8 * 30) {
+                        // Clicked a color
+                        int idx = (x - 10) / 30;
+                        if (idx >= 0 && idx < 8) {
+                            currentColor = colors[idx];
+                            if (currentPen) DeleteObject(currentPen);
+                            currentPen = CreatePen(PS_SOLID, currentSize, currentColor);
+                            SelectObject(hdcMem, currentPen);
+                            RECT pRc = {0, 0, W, 45};
+                            InvalidateRect(hwnd, &pRc, FALSE);
+                        }
+                    } else if (x >= 270 && x <= 330) {
+                        // Clicked Size toggle
+                        currentSize = currentSize == 2 ? 8 : 2;
+                        if (currentPen) DeleteObject(currentPen);
+                        currentPen = CreatePen(PS_SOLID, currentSize, currentColor);
+                        SelectObject(hdcMem, currentPen);
+                        RECT pRc = {270, 10, 330, 35};
+                        InvalidateRect(hwnd, &pRc, FALSE);
+                    } else if (x >= 340 && x <= 400) {
+                        // Clicked Clear
+                        ClearCanvas(hdcMem);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
                 }
             } else {
                 isDrawing = 1;
@@ -86,7 +132,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 lastY = y;
                 
                 HDC hdc = GetDC(hwnd);
-                MoveToEx(hdc, lastX, lastY, NULL); // draw locally for speed
                 HPEN old = (HPEN)SelectObject(hdc, currentPen);
                 MoveToEx(hdc, lastX, lastY, NULL);
                 LineTo(hdc, x, y);
@@ -104,8 +149,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            BitBlt(hdc, 0, 0, W, H, hdcMem, 0, 0, SRCCOPY);
-            DrawColorPalette(hdc);
+            BitBlt(hdc, 0, 45, W, H-45, hdcMem, 0, 45, SRCCOPY);
+            DrawToolbar(hdc);
             EndPaint(hwnd, &ps);
             break;
         }
@@ -128,6 +173,7 @@ void MainEntry() {
     wc.lpszClassName = "KDrawApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     wc.hCursor = LoadCursor(NULL, IDC_CROSS);
+    wc.hbrBackground = CreateSolidBrush(RGB(40, 44, 52));
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KDrawApp", "KDraw", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,

@@ -2,23 +2,134 @@
 <html>
 <head>
 <title>KDraw</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  body { margin: 0; background-color: #fff; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
-  .toolbar { display: flex; padding: 10px; gap: 10px; background: #eee; border-bottom: 1px solid #ccc; }
-  .color { width: 25px; height: 25px; border: 2px solid #ccc; cursor: pointer; box-sizing: border-box; }
-  .color.active { border: 2px solid #000; box-shadow: inset 0 0 0 2px #fff; }
-  canvas { flex: 1; cursor: crosshair; touch-action: none; }
+  :root {
+    --bg-color: hsl(210, 15%, 12%);
+    --panel-bg: rgba(255, 255, 255, 0.05);
+    --primary: hsl(200, 85%, 60%);
+    --border: rgba(255, 255, 255, 0.1);
+  }
+  body, html { 
+    margin: 0; padding: 0; 
+    background-color: var(--bg-color); 
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+  }
+  .toolbar { 
+    display: flex; 
+    align-items: center;
+    padding: 12px 20px; 
+    gap: 20px; 
+    background: var(--panel-bg); 
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+  .section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .divider {
+    width: 1px;
+    height: 24px;
+    background: var(--border);
+  }
+  .color { 
+    width: 24px; 
+    height: 24px; 
+    border-radius: 50%;
+    cursor: pointer; 
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 0 2px transparent;
+  }
+  .color:hover {
+    transform: scale(1.1);
+  }
+  .color.active { 
+    box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 4px var(--primary); 
+    transform: scale(1.1);
+  }
+  .size-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .size-btn:hover { background: rgba(255,255,255,0.1); }
+  .size-btn.active { background: var(--primary); border-color: var(--primary); color: #000; }
+  .dot { background: currentColor; border-radius: 50%; }
+  
+  .btn {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: rgba(255,255,255,0.2); }
+  
+  canvas { 
+    flex: 1; 
+    cursor: crosshair; 
+    touch-action: none; 
+    background: #ffffff; /* Canvas itself remains white so colors show up well, or could be dark? Let's make the canvas area dark but the drawing surface white in the middle, or just make the canvas white for drawing */
+  }
+  .canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: var(--bg-color);
+  }
+  #canvas {
+    background: #1a1e23;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+  }
 </style>
 </head>
 <body>
-<div class="toolbar" id="toolbar"></div>
-<canvas id="canvas"></canvas>
+<div class="toolbar" id="toolbar">
+  <div class="section" id="colors"></div>
+  <div class="divider"></div>
+  <div class="section">
+    <button class="size-btn active" data-size="2"><div class="dot" style="width:4px;height:4px"></div></button>
+    <button class="size-btn" data-size="5"><div class="dot" style="width:8px;height:8px"></div></button>
+    <button class="size-btn" data-size="10"><div class="dot" style="width:14px;height:14px"></div></button>
+  </div>
+  <div class="divider"></div>
+  <button class="btn" id="clearBtn">Clear</button>
+</div>
+<div class="canvas-container">
+  <canvas id="canvas"></canvas>
+</div>
 <script>
-  const colors = ['#000000', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffffff'];
-  let currentColor = colors[0];
+  // KDraw with Dark Mode and features
+  const colorList = ['#ffffff', '#ff5555', '#55ff55', '#5555ff', '#ffff55', '#ff55ff', '#55ffff', '#000000'];
+  let currentColor = colorList[0];
+  let currentSize = 2;
   
-  const toolbar = document.getElementById('toolbar');
-  colors.forEach(c => {
+  const colorContainer = document.getElementById('colors');
+  colorList.forEach(c => {
       let d = document.createElement('div');
       d.className = 'color';
       d.style.backgroundColor = c;
@@ -28,19 +139,34 @@
           document.querySelectorAll('.color').forEach(el => el.classList.remove('active'));
           d.classList.add('active');
       };
-      toolbar.appendChild(d);
+      colorContainer.appendChild(d);
+  });
+
+  document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.onclick = () => {
+          currentSize = parseInt(btn.getAttribute('data-size'));
+          document.querySelectorAll('.size-btn').forEach(el => el.classList.remove('active'));
+          btn.classList.add('active');
+      };
   });
 
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
+  const container = document.querySelector('.canvas-container');
   
   function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight - toolbar.offsetHeight;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = 2;
+      // Fit canvas in container
+      canvas.width = container.clientWidth - 40;
+      canvas.height = container.clientHeight - 40;
+      clearCanvas();
   }
+  
+  function clearCanvas() {
+      ctx.fillStyle = '#1a1e23';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  
+  document.getElementById('clearBtn').onclick = clearCanvas;
   window.onresize = resize;
   
   let isDrawing = false;
@@ -48,10 +174,11 @@
   let lastY = 0;
   
   function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
       if (e.touches && e.touches.length > 0) {
-          return { x: e.touches[0].clientX, y: e.touches[0].clientY - toolbar.offsetHeight };
+          return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
       }
-      return { x: e.clientX, y: e.clientY - toolbar.offsetHeight };
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
 
   function startPos(e) {
@@ -63,6 +190,7 @@
 
   function endPos() {
       isDrawing = false;
+      ctx.beginPath(); // clear path
   }
 
   function draw(e) {
@@ -70,10 +198,14 @@
       e.preventDefault();
       const pos = getPos(e);
       
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = currentSize;
+      ctx.strokeStyle = currentColor;
+      
       ctx.beginPath();
       ctx.moveTo(lastX, lastY);
       ctx.lineTo(pos.x, pos.y);
-      ctx.strokeStyle = currentColor;
       ctx.stroke();
       
       lastX = pos.x;
@@ -89,12 +221,7 @@
   canvas.addEventListener('touchmove', draw, {passive: false});
   canvas.addEventListener('touchend', endPos);
 
-  // Small delay to ensure toolbar layout is done
-  setTimeout(() => {
-      resize();
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }, 0);
+  setTimeout(resize, 0);
 </script>
 </body>
 </html>
