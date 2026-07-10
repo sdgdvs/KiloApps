@@ -238,10 +238,10 @@
             case 'S': for (let i = 0; i < n; i++) scrollUp(); break;
             case 'T':
                 for (let i = 0; i < n; i++) {
-                    screen.pop();
                     let row = [];
                     for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
-                    screen.unshift(row);
+                    screen.splice(screen.length - ROWS, 0, row);
+                    screen.pop();
                 }
                 break;
         }

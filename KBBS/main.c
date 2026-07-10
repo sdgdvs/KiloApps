@@ -171,6 +171,7 @@ void ScrollUp(void) {
             }
         }
         activeTop -= shift;
+        if (scrollOffset > activeTop) scrollOffset = activeTop;
         for (r = MAX_LINES - shift; r < MAX_LINES; r++) {
             for (c = 0; c < TERM_COLS; c++) {
                 screen[r][c].ch = ' ';
@@ -672,15 +673,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             oldFont = (HFONT)SelectObject(memDC, hTermFont);
 
             SetBkMode(memDC, OPAQUE);
-
+            
+            int viewTop = activeTop - scrollOffset;
             for (r = 0; r < TERM_ROWS; r++) {
                 for (c = 0; c < TERM_COLS; c++) {
-                    char ch = screen[activeTop + r][c].ch;
-                    if ((screen[activeTop + r][c].fg & 0x80) && !blinkState) {
+                    char ch = screen[viewTop + r][c].ch;
+                    if ((screen[viewTop + r][c].fg & 0x80) && !blinkState) {
                         ch = ' ';
                     }
-                    SetTextColor(memDC, ansiColors[screen[activeTop + r][c].fg & 0x0F]);
-                    SetBkColor(memDC, ansiColors[screen[activeTop + r][c].bg & 0x0F]);
+                    SetTextColor(memDC, ansiColors[screen[viewTop + r][c].fg & 0x0F]);
+                    SetBkColor(memDC, ansiColors[screen[viewTop + r][c].bg & 0x0F]);
                     TextOutA(memDC, c * dpiScale(8), r * dpiScale(16), &ch, 1);
                 }
             }
