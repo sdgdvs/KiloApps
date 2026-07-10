@@ -42,6 +42,7 @@
 </div>
 <script>
   let currentDate = new Date();
+  currentDate.setDate(1); // Prevent month wrap-around on 31st
   
   // Mock events
   const events = {
