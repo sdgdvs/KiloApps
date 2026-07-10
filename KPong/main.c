@@ -74,24 +74,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(10, 10, 10));
+            HBRUSH bg = CreateSolidBrush(RGB(10, 10, 15));
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
-            HBRUSH fg = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH p1_brush = CreateSolidBrush(RGB(51, 204, 255));
+            HBRUSH p2_brush = CreateSolidBrush(RGB(255, 51, 204));
+            HBRUSH ball_brush = CreateSolidBrush(RGB(255, 255, 255));
             
             // Draw paddles
             RECT r1 = { 20, p1_y, 20 + PAD_W, p1_y + PAD_H };
             RECT r2 = { W - 20 - PAD_W, p2_y, W - 20, p2_y + PAD_H };
-            FillRect(memDC, &r1, fg);
-            FillRect(memDC, &r2, fg);
+            FillRect(memDC, &r1, p1_brush);
+            FillRect(memDC, &r2, p2_brush);
             
             // Draw ball
             RECT rBall = { ball_x, ball_y, ball_x + BALL_SIZE, ball_y + BALL_SIZE };
-            FillRect(memDC, &rBall, fg);
+            FillRect(memDC, &rBall, ball_brush);
             
-            DeleteObject(fg);
+            DeleteObject(p1_brush);
+            DeleteObject(p2_brush);
+            DeleteObject(ball_brush);
             
             // Draw score
             char scoreStr[32];

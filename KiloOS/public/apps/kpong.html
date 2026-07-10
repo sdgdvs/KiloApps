@@ -2,13 +2,51 @@
 <html>
 <head>
 <title>KPong</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
 <style>
-  body { margin: 0; background-color: #0a0a0a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: monospace; }
-  canvas { background-color: #0a0a0a; border: 1px solid #333; }
+  :root {
+    --bg-color: hsl(210, 15%, 8%);
+    --card-bg: rgba(30, 40, 50, 0.4);
+    --primary: hsl(200, 85%, 60%);
+    --secondary: hsl(300, 85%, 60%);
+  }
+  body { 
+    margin: 0; background-color: var(--bg-color); overflow: hidden; 
+    display: flex; justify-content: center; align-items: center; height: 100vh; 
+    color: white; font-family: 'Inter', sans-serif; 
+    background: radial-gradient(circle at center, #1a2a3a 0%, #050a10 100%);
+  }
+  .container {
+    padding: 20px;
+    background: var(--card-bg);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex; flex-direction: column; align-items: center; gap: 15px;
+  }
+  .score-board {
+    display: flex; width: 360px; justify-content: space-between; font-size: 32px; font-weight: 700;
+  }
+  .p1-score { color: var(--primary); text-shadow: 0 0 15px var(--primary); }
+  .p2-score { color: var(--secondary); text-shadow: 0 0 15px var(--secondary); }
+  
+  canvas { 
+    background-color: rgba(0, 0, 0, 0.3); 
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+  }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="400" height="300"></canvas>
+<div class="container">
+  <div class="score-board">
+    <div class="p1-score" id="s1">0</div>
+    <div class="p2-score" id="s2">0</div>
+  </div>
+  <canvas id="gameCanvas" width="400" height="300"></canvas>
+</div>
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -54,19 +92,43 @@
           bx = W - 20 - PAD_W - BALL_SIZE; bdx = -bdx;
       }
 
-      if (bx < 0) { s2++; reset(); }
-      if (bx > W) { s1++; reset(); }
+      if (bx < 0) { s2++; reset(); document.getElementById('s2').innerText = s2; }
+      if (bx > W) { s1++; reset(); document.getElementById('s1').innerText = s1; }
   }
 
   function draw() {
       ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = 'white';
-      ctx.fillRect(20, p1y, PAD_W, PAD_H);
-      ctx.fillRect(W - 20 - PAD_W, p2y, PAD_W, PAD_H);
-      ctx.fillRect(bx, by, BALL_SIZE, BALL_SIZE);
       
-      ctx.font = '20px monospace';
-      ctx.fillText(`${s1} - ${s2}`, W/2 - 25, 30);
+      // Center line
+      ctx.setLineDash([10, 15]);
+      ctx.beginPath();
+      ctx.moveTo(W/2, 0);
+      ctx.lineTo(W/2, H);
+      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // P1 Paddle (Cyan glow)
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'hsl(200, 85%, 60%)';
+      ctx.fillStyle = 'hsl(200, 85%, 60%)';
+      ctx.fillRect(20, p1y, PAD_W, PAD_H);
+      
+      // P2 Paddle (Magenta glow)
+      ctx.shadowColor = 'hsl(300, 85%, 60%)';
+      ctx.fillStyle = 'hsl(300, 85%, 60%)';
+      ctx.fillRect(W - 20 - PAD_W, p2y, PAD_W, PAD_H);
+      
+      // Ball (White glow)
+      ctx.shadowColor = 'white';
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.arc(bx + BALL_SIZE/2, by + BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Reset shadow for next frame
+      ctx.shadowBlur = 0;
   }
 
   setInterval(() => {
