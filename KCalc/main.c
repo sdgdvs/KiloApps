@@ -254,7 +254,8 @@ void __stdcall MainEntry() {
                 else if (key == '8') cmd = '*';
             }
             else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) cmd = key - VK_NUMPAD0 + '0';
-            else if (key == VK_ADD || key == VK_OEM_PLUS) cmd = '+';
+            else if (key == VK_ADD) cmd = '+';
+            else if (key == VK_OEM_PLUS) cmd = (GetKeyState(VK_SHIFT) & 0x8000) ? '+' : '=';
             else if (key == VK_SUBTRACT || key == VK_OEM_MINUS) cmd = '-';
             else if (key == VK_MULTIPLY) cmd = '*';
             else if (key == VK_DIVIDE || key == VK_OEM_2 || key == VK_OEM_5) cmd = '/';

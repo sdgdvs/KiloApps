@@ -3,24 +3,114 @@
 <head>
 <title>KHex</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; padding: 15px; box-sizing: border-box; height: 100vh; overflow: hidden; }
-  .row { display: flex; align-items: center; margin-bottom: 10px; }
-  .label { width: 35px; }
-  input[type="text"] { flex: 1; padding: 3px; font-family: "Consolas", monospace; border: 1px solid #ccc; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1); }
+  :root {
+    --bg-color: #0f172a;
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --accent-color: #3b82f6;
+    --accent-hover: #60a5fa;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  }
+  
+  body { 
+    margin: 0; 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    background-color: var(--bg-color); 
+    color: var(--text-primary);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    justify-content: center;
+    padding: 15px; 
+    box-sizing: border-box; 
+    height: 100vh; 
+    overflow: hidden; 
+    backdrop-filter: blur(10px);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .container {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+  }
+  
+  .row { 
+    display: flex; 
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .label { 
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  input[type="text"] { 
+    width: 100%;
+    padding: 10px 12px; 
+    font-family: 'JetBrains Mono', 'Consolas', monospace; 
+    font-size: 1.1rem;
+    background: rgba(15, 23, 42, 0.6);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color); 
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+  
+  input[type="text"]:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    background: rgba(15, 23, 42, 0.9);
+  }
+  
+  /* Adds subtle glowing border animation on input */
+  @keyframes input-pulse {
+    0% { border-color: var(--accent-color); }
+    50% { border-color: var(--accent-hover); box-shadow: 0 0 8px rgba(96, 165, 250, 0.4); }
+    100% { border-color: var(--accent-color); }
+  }
+  
+  input[type="text"].updated {
+    animation: input-pulse 0.4s ease;
+  }
 </style>
 </head>
 <body>
-  <div class="row">
-    <div class="label">Hex:</div>
-    <input type="text" id="hex" value="0">
-  </div>
-  <div class="row">
-    <div class="label">Dec:</div>
-    <input type="text" id="dec" value="0">
-  </div>
-  <div class="row">
-    <div class="label">Bin:</div>
-    <input type="text" id="bin" value="0">
+  <div class="container">
+    <div class="row">
+      <div class="label">Hexadecimal</div>
+      <input type="text" id="hex" value="0" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="row">
+      <div class="label">Decimal</div>
+      <input type="text" id="dec" value="0" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="row">
+      <div class="label">Binary</div>
+      <input type="text" id="bin" value="0" autocomplete="off" spellcheck="false">
+    </div>
   </div>
 <script>
   const hex = document.getElementById('hex');
@@ -29,31 +119,56 @@
   
   let updating = false;
   
+  function triggerAnimation(el) {
+    el.classList.remove('updated');
+    void el.offsetWidth; // trigger reflow
+    el.classList.add('updated');
+  }
+  
   function updateFrom(source) {
       if (updating) return;
       updating = true;
       
       let val = 0;
       try {
-          if (source === hex) val = parseInt(hex.value, 16) || 0;
-          else if (source === dec) val = parseInt(dec.value, 10) || 0;
-          else if (source === bin) val = parseInt(bin.value, 2) || 0;
+          if (source === hex) {
+              val = parseInt(hex.value.replace(/[^0-9a-fA-F]/g, ''), 16) || 0;
+          } else if (source === dec) {
+              val = parseInt(dec.value.replace(/[^0-9]/g, ''), 10) || 0;
+          } else if (source === bin) {
+              val = parseInt(bin.value.replace(/[^01]/g, ''), 2) || 0;
+          }
       } catch(e) {}
       
-      // Prevent floating point / large number issues by using BigInt if needed, but standard JS numbers are fine up to 2^53.
-      // However we want to simulate 32-bit unsigned for exact KHex parity.
+      // Simulate 32-bit unsigned for exact KHex parity
       val = val >>> 0; 
       
-      if (source !== hex) hex.value = val.toString(16).toUpperCase();
-      if (source !== dec) dec.value = val.toString(10);
-      if (source !== bin) bin.value = val.toString(2);
+      if (source !== hex) {
+          hex.value = val.toString(16).toUpperCase();
+          triggerAnimation(hex);
+      }
+      if (source !== dec) {
+          dec.value = val.toString(10);
+          triggerAnimation(dec);
+      }
+      if (source !== bin) {
+          bin.value = val.toString(2);
+          triggerAnimation(bin);
+      }
       
       updating = false;
   }
   
-  hex.oninput = () => updateFrom(hex);
-  dec.oninput = () => updateFrom(dec);
-  bin.oninput = () => updateFrom(bin);
+  hex.addEventListener('input', () => updateFrom(hex));
+  dec.addEventListener('input', () => updateFrom(dec));
+  bin.addEventListener('input', () => updateFrom(bin));
+  
+  // Select all text on focus for quick replacing
+  [hex, dec, bin].forEach(el => {
+    el.addEventListener('focus', function() {
+      this.select();
+    });
+  });
 </script>
 </body>
 </html>

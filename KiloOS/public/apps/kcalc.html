@@ -242,13 +242,15 @@
     function memRecall() { append(String(memoryStore)); }
     function memAdd() {
       try {
-        let res = eval(expr);
+        let evalExpr = expr.replace(/([0-9\)])(?=Math|\()/g, '$1*').replace(/(Math\.(?:PI|E)|\))(?=[0-9])/g, '$1*').replace(/(Math\.(?:PI|E))(?=Math|\()/g, '$1*');
+        let res = eval(evalExpr);
         if (!isNaN(res)) memoryStore += res;
       } catch {}
     }
     function memSub() {
       try {
-        let res = eval(expr);
+        let evalExpr = expr.replace(/([0-9\)])(?=Math|\()/g, '$1*').replace(/(Math\.(?:PI|E)|\))(?=[0-9])/g, '$1*').replace(/(Math\.(?:PI|E))(?=Math|\()/g, '$1*');
+        let res = eval(evalExpr);
         if (!isNaN(res)) memoryStore -= res;
       } catch {}
     }
