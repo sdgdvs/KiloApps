@@ -16,7 +16,10 @@
   const words = [
       "hello", "world", "kilo", "system", "typing",
       "speed", "code", "native", "win32", "game",
-      "fast", "keyboard", "monitor", "software", "mouse"
+      "fast", "keyboard", "monitor", "software", "mouse",
+      "hardware", "interface", "compiler", "linker", "binary",
+      "execute", "process", "thread", "memory", "storage",
+      "network", "server", "client", "packet", "router"
   ];
   
   let score = 0;
@@ -67,7 +70,7 @@
   
   function update() {
       if (lives > 0) {
-          wordY += 2;
+          wordY += 2 + Math.floor(score / 50);
           if (wordY > cvs.height) {
               lives--;
               spawnWord();
@@ -90,6 +93,9 @@
                       score += 10;
                       spawnWord();
                   }
+              } else if (c >= 'a' && c <= 'z') {
+                  score -= 2;
+                  if (score < 0) score = 0;
               }
           }
       }

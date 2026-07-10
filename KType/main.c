@@ -7,9 +7,12 @@
 const char* words[] = {
     "hello", "world", "kilo", "system", "typing",
     "speed", "code", "native", "win32", "game",
-    "fast", "keyboard", "monitor", "software", "mouse"
+    "fast", "keyboard", "monitor", "software", "mouse",
+    "hardware", "interface", "compiler", "linker", "binary",
+    "execute", "process", "thread", "memory", "storage",
+    "network", "server", "client", "packet", "router"
 };
-int numWords = 15;
+int numWords = 30;
 
 int score = 0;
 int lives = 3;
@@ -57,7 +60,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER: {
             if (lives > 0) {
-                wordY += 2;
+                wordY += 2 + (score / 50);
                 if (wordY > H) {
                     lives--;
                     SpawnWord();
@@ -81,6 +84,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         score += 10;
                         SpawnWord();
                     }
+                } else if (c >= 'a' && c <= 'z') {
+                    score -= 2;
+                    if (score < 0) score = 0;
                 }
             }
             InvalidateRect(hwnd, NULL, TRUE);
