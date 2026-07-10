@@ -1,31 +1,43 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 400
-#define H 300
+#define W 500
+#define H 400
 
 HWND hInput;
 HWND hOutput;
 HWND hBtnRun;
 
-// A tiny recursive descent parser for basic math expressions without CRT
+int vars[26] = {0};
+
 int ParseExpr(const char** p);
 
+void SkipWhitespace(const char** p) {
+    while (**p == ' ' || **p == '\t' || **p == '\r' || **p == '\n' || **p == ';') {
+        (*p)++;
+    }
+}
+
 int ParseFactor(const char** p) {
-    while (**p == ' ') (*p)++;
+    SkipWhitespace(p);
     int val = 0;
     if (**p == '(') {
         (*p)++;
         val = ParseExpr(p);
-        while (**p == ' ') (*p)++;
+        SkipWhitespace(p);
         if (**p == ')') (*p)++;
+    } else if ((**p >= 'a' && **p <= 'z') || (**p >= 'A' && **p <= 'Z')) {
+        char v = **p;
+        int idx = (v >= 'a') ? v - 'a' : v - 'A';
+        (*p)++;
+        val = vars[idx];
     } else {
         while (**p >= '0' && **p <= '9') {
             val = val * 10 + (**p - '0');
             (*p)++;
         }
     }
-    while (**p == ' ') (*p)++;
+    SkipWhitespace(p);
     return val;
 }
 
@@ -75,39 +87,85 @@ void IntToStr(int val, char* buf) {
     buf[j] = '\0';
 }
 
+int StrLen(const char* s) {
+    int c = 0;
+    while (*s++) c++;
+    return c;
+}
+
 void RunScript() {
-    char input[256];
+    char input[4096];
     GetWindowTextA(hInput, input, sizeof(input));
+    for (int i = 0; i < 26; i++) vars[i] = 0;
+    
+    char outStr[4096];
+    outStr[0] = '\0';
     
     const char* p = input;
-    int result = ParseExpr(&p);
+    int lastVal = 0;
+    while (*p) {
+        SkipWhitespace(&p);
+        if (!*p) break;
+        
+        const char* q = p;
+        int isAssign = 0;
+        int varIdx = -1;
+        if ((*q >= 'a' && *q <= 'z') || (*q >= 'A' && *q <= 'Z')) {
+            char v = *q;
+            q++;
+            while (*q == ' ' || *q == '\t') q++;
+            if (*q == '=') {
+                isAssign = 1;
+                varIdx = (v >= 'a') ? v - 'a' : v - 'A';
+                p = q + 1;
+            }
+        }
+        
+        int val = ParseExpr(&p);
+        if (isAssign) {
+            vars[varIdx] = val;
+            char vname = varIdx + 'A';
+            char vstr[32];
+            IntToStr(val, vstr);
+            int l = StrLen(outStr);
+            if (l < sizeof(outStr) - 64) {
+                wsprintfA(outStr + l, "%c = %s\r\n", vname, vstr);
+            }
+        }
+        lastVal = val;
+    }
     
-    char outStr[256];
     char resStr[32];
-    IntToStr(result, resStr);
+    IntToStr(lastVal, resStr);
+    int l = StrLen(outStr);
+    if (l < sizeof(outStr) - 64) {
+        wsprintfA(outStr + l, "\r\nReturn: %s", resStr);
+    }
     
-    wsprintfA(outStr, "Evaluating:\r\n%s\r\n\r\nResult: %s", input, resStr);
     SetWindowTextA(hOutput, outStr);
 }
+
+HBRUSH hbrBg;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            hbrBg = CreateSolidBrush(RGB(30, 30, 30));
+            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             
-            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "10 + 2 * (5 - 3)",
-                WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                10, 10, W - 100, 24, hwnd, NULL, NULL, NULL);
+            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\na * b + 5",
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
+                10, 44, (W - 30) / 2, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnRun = CreateWindowEx(0, "BUTTON", "Run",
+            hBtnRun = CreateWindowEx(0, "BUTTON", "Run Script",
                 WS_CHILD | WS_VISIBLE,
-                W - 80, 10, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+                10, 10, 100, 24, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnRun, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
-                WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-                10, 44, W - 35, H - 95, hwnd, NULL, NULL, NULL);
+                WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
+                10 + (W - 30) / 2 + 10, 44, (W - 30) / 2, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
         }
@@ -117,15 +175,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wParam;
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, RGB(220, 220, 220));
+            return (LRESULT)hbrBg;
+        }
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            FillRect(hdc, &rc, hbrBg);
+            return 1;
+        }
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hInput, 10, 10, nw - 100, 24, TRUE);
-            MoveWindow(hBtnRun, nw - 80, 10, 60, 24, TRUE);
-            MoveWindow(hOutput, 10, 44, nw - 20, nh - 55, TRUE);
+            int halfW = (nw - 30) / 2;
+            MoveWindow(hBtnRun, 10, 10, 100, 24, TRUE);
+            MoveWindow(hInput, 10, 44, halfW, nh - 55, TRUE);
+            MoveWindow(hOutput, 20 + halfW, 44, halfW, nh - 55, TRUE);
             break;
         }
         case WM_DESTROY:
+            DeleteObject(hbrBg);
             PostQuitMessage(0);
             break;
         default:
@@ -148,10 +222,10 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KScriptApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = NULL;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript REPL", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
