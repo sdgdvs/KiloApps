@@ -101,7 +101,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = (HDC)wParam;
             RECT rc;
             GetClientRect(hwnd, &rc);
-            HBRUSH brush = CreateSolidBrush(RGB(200, 200, 200));
+            HBRUSH brush = CreateSolidBrush(RGB(30, 30, 30));
             FillRect(hdc, &rc, brush);
             DeleteObject(brush);
             return 1;
