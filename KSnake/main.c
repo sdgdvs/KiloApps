@@ -12,6 +12,9 @@ int snake_len = 3;
 int dir_x = 1, dir_y = 0;
 struct Point food = { 10, 10 };
 int game_over = 0;
+int score = 0;
+int high_score = 0;
+int current_speed = 150;
 
 void InitGame() {
     snake_len = 3;
@@ -20,6 +23,8 @@ void InitGame() {
     snake[2].x = 3; snake[2].y = 5;
     dir_x = 1; dir_y = 0;
     game_over = 0;
+    score = 0;
+    current_speed = 150;
 }
 
 unsigned int rng_state = 12345;
@@ -37,7 +42,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             InitGame();
-            SetTimer(hwnd, TIMER_ID, 150, NULL);
+            SetTimer(hwnd, TIMER_ID, current_speed, NULL);
             break;
         case WM_TIMER: {
             if (game_over) break;
@@ -69,6 +74,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     snake[snake_len] = snake[snake_len-1]; // grow
                     snake_len++;
                 }
+                score += 10;
+                if (score > high_score) high_score = score;
+                if (current_speed > 50) current_speed -= 2;
+                SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                 PlaceFood();
             }
 
@@ -78,6 +87,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (game_over && wParam == VK_RETURN) {
                 InitGame();
+                SetTimer(hwnd, TIMER_ID, current_speed, NULL);
             } else if (!game_over) {
                 if (wParam == VK_UP && dir_y != 1) { dir_x = 0; dir_y = -1; }
                 if (wParam == VK_DOWN && dir_y != -1) { dir_x = 0; dir_y = 1; }
@@ -114,6 +124,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(hdc, &fr, foodBrush);
                 DeleteObject(foodBrush);
             }
+
+            char score_text[64];
+            wsprintf(score_text, "Score: %d  High: %d", score, high_score);
+            SetTextColor(hdc, RGB(255, 255, 255));
+            SetBkMode(hdc, TRANSPARENT);
+            TextOutA(hdc, 5, 5, score_text, lstrlenA(score_text));
 
             EndPaint(hwnd, &ps);
             break;

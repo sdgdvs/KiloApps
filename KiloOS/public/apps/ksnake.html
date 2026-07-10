@@ -24,13 +24,33 @@
         const HEIGHT = 20;
 
         let snake, food, dir, gameOver;
+        let score = 0;
+        let highScore = localStorage.getItem('ksnakeHighScore') || 0;
+        let currentSpeed = 150;
+        let gameLoop;
 
         function init() {
             snake = [{x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}];
             dir = {x: 1, y: 0};
             gameOver = false;
+            score = 0;
+            currentSpeed = 150;
             msgBox.style.display = 'none';
             placeFood();
+            startGameLoop();
+        }
+
+        function startGameLoop() {
+            if (gameLoop) clearTimeout(gameLoop);
+            gameLoop = setTimeout(loop, currentSpeed);
+        }
+
+        function loop() {
+            update();
+            draw();
+            if (!gameOver) {
+                gameLoop = setTimeout(loop, currentSpeed);
+            }
         }
 
         function placeFood() {
@@ -54,6 +74,12 @@
             snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
+                score += 10;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('ksnakeHighScore', highScore);
+                }
+                if (currentSpeed > 50) currentSpeed -= 2;
                 placeFood();
             } else {
                 snake.pop();
@@ -71,6 +97,10 @@
 
             ctx.fillStyle = '#f00';
             ctx.fillRect(food.x * CELL, food.y * CELL, CELL - 1, CELL - 1);
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px sans-serif';
+            ctx.fillText(`Score: ${score}  High: ${highScore}`, 5, 15);
         }
 
         window.addEventListener('keydown', e => {
@@ -83,11 +113,6 @@
                 if (e.key === 'ArrowRight' && dir.x !== -1) dir = {x: 1, y: 0};
             }
         });
-
-        setInterval(() => {
-            update();
-            draw();
-        }, 150);
 
         init();
     </script>
