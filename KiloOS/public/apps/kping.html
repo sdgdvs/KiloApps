@@ -3,52 +3,198 @@
 <head>
 <title>KPing</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
-  .top { display: flex; align-items: center; margin-bottom: 10px; }
-  .label { margin-right: 10px; }
-  input[type="text"] { flex: 1; padding: 3px; font-family: "Consolas", monospace; margin-right: 10px; border: 1px solid #ccc; }
-  button { padding: 3px 15px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; }
-  button:hover { background: #d0d0d0; }
-  button:disabled { background: #ccc; cursor: not-allowed; }
-  textarea { flex: 1; width: 100%; resize: none; font-family: "Consolas", monospace; font-size: 14px; padding: 5px; box-sizing: border-box; border: 1px solid #ccc; background: white; }
+  :root {
+    --bg: #0f172a;
+    --panel: rgba(30, 41, 59, 0.7);
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #e2e8f0;
+    --text-muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --success: #10b981;
+    --danger: #ef4444;
+  }
+  body {
+    margin: 0; padding: 20px; font-family: "Inter", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    color: var(--text); display: flex; flex-direction: column;
+    height: 100vh; box-sizing: border-box; overflow: hidden;
+  }
+  .glass {
+    background: var(--panel);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; margin-bottom: 20px; align-items: flex-end;
+  }
+  .input-group {
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .input-group label {
+    font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  input[type="text"], input[type="number"] {
+    background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 6px; outline: none;
+    font-family: "Consolas", monospace; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+  .checkbox-group {
+    display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; padding-bottom: 8px;
+  }
+  input[type="checkbox"] { accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer; }
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 6px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s ease;
+    display: flex; align-items: center; justify-content: center; min-width: 100px;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger:hover { background: #f87171; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+  
+  .terminal {
+    flex: 1; display: flex; flex-direction: column; padding: 15px; border-radius: 12px;
+    background: rgba(0, 0, 0, 0.6); border: 1px solid var(--border); overflow: hidden;
+  }
+  .terminal-header {
+    display: flex; align-items: center; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+  #out {
+    flex: 1; background: transparent; border: none; color: #a3be8c;
+    font-family: "Consolas", "Courier New", monospace; font-size: 14px;
+    resize: none; outline: none; overflow-y: auto; line-height: 1.5;
+  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
 </style>
 </head>
 <body>
-  <div class="top">
-    <div class="label">Host:</div>
-    <input type="text" id="host" value="127.0.0.1">
-    <button id="btn">Ping</button>
+  <div class="glass controls">
+    <div class="input-group" style="flex: 1; min-width: 150px;">
+      <label>Target Host / IP</label>
+      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com">
+    </div>
+    <div class="input-group" style="width: 80px;">
+      <label>Count</label>
+      <input type="number" id="count" value="4" min="1" max="100">
+    </div>
+    <div class="input-group" style="width: 80px;">
+      <label>Size (B)</label>
+      <input type="number" id="size" value="32" min="1" max="65500">
+    </div>
+    <label class="checkbox-group">
+      <input type="checkbox" id="continuous">
+      <span style="font-size: 13px; font-weight: 500; color: var(--text-muted)">Continuous -t</span>
+    </label>
+    <button id="btnAction" class="btn btn-primary">Start Ping</button>
   </div>
-  <textarea id="out" readonly></textarea>
+  
+  <div class="glass terminal">
+    <div class="terminal-header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session</span>
+    </div>
+    <textarea id="out" readonly spellcheck="false"></textarea>
+  </div>
+
 <script>
   const hostInput = document.getElementById('host');
-  const btn = document.getElementById('btn');
+  const countInput = document.getElementById('count');
+  const sizeInput = document.getElementById('size');
+  const continuousCheck = document.getElementById('continuous');
+  const btnAction = document.getElementById('btnAction');
   const out = document.getElementById('out');
   
+  let pingInterval = null;
+  let isPinging = false;
+  let stats = { sent: 0, recv: 0, lost: 0, times: [] };
+  let currentHost = '';
+
+  continuousCheck.addEventListener('change', () => {
+    countInput.disabled = continuousCheck.checked;
+  });
+
   function append(text) {
       out.value += text;
       out.scrollTop = out.scrollHeight;
   }
-  
-  btn.onclick = () => {
-      const host = hostInput.value.trim() || '127.0.0.1';
-      out.value = "";
-      btn.disabled = true;
-      append(`Pinging ${host} with 32 bytes of data:\n\n`);
+
+  function startPing() {
+      currentHost = hostInput.value.trim() || '127.0.0.1';
+      const size = parseInt(sizeInput.value) || 32;
+      const count = parseInt(countInput.value) || 4;
+      const continuous = continuousCheck.checked;
       
-      let count = 0;
-      const interval = setInterval(() => {
-          if (count < 4) {
-              const time = Math.floor(Math.random() * 20) + 1;
-              append(`Reply from ${host}: bytes=32 time=${time}ms TTL=115\n`);
-              count++;
+      out.value = "";
+      append(`Pinging ${currentHost} with ${size} bytes of data:\n\n`);
+      
+      isPinging = true;
+      btnAction.textContent = 'Stop';
+      btnAction.className = 'btn btn-danger';
+      hostInput.disabled = true; sizeInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
+      
+      stats = { sent: 0, recv: 0, lost: 0, times: [] };
+      
+      pingInterval = setInterval(() => {
+          if (!continuous && stats.sent >= count) {
+              stopPing();
+              return;
+          }
+          
+          stats.sent++;
+          const success = Math.random() > 0.05; 
+          if (success) {
+              const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 15;
+              const time = Math.floor(baseTime + Math.random() * 20);
+              stats.recv++;
+              stats.times.push(time);
+              append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=115\n`);
           } else {
-              clearInterval(interval);
-              append(`\nPing statistics for ${host}:\n`);
-              append(`    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\n`);
-              btn.disabled = false;
+              stats.lost++;
+              append(`Request timed out.\n`);
           }
       }, 1000);
+  }
+  
+  function stopPing() {
+      if (!isPinging) return;
+      clearInterval(pingInterval);
+      isPinging = false;
+      btnAction.textContent = 'Start Ping';
+      btnAction.className = 'btn btn-primary';
+      hostInput.disabled = false; sizeInput.disabled = false; continuousCheck.disabled = false;
+      countInput.disabled = continuousCheck.checked;
+      
+      const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;
+      append(`\nPing statistics for ${currentHost}:\n`);
+      append(`    Packets: Sent = ${stats.sent}, Received = ${stats.recv}, Lost = ${stats.lost} (${lossPercent}% loss),\n`);
+      
+      if (stats.recv > 0) {
+          const min = Math.min(...stats.times);
+          const max = Math.max(...stats.times);
+          const avg = Math.round(stats.times.reduce((a, b) => a + b, 0) / stats.times.length);
+          append(`Approximate round trip times in milli-seconds:\n`);
+          append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`);
+      }
+  }
+
+  btnAction.onclick = () => {
+      if (isPinging) stopPing();
+      else startPing();
   };
 </script>
 </body>

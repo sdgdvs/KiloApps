@@ -1,13 +1,18 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 400
-#define H 300
+#define W 500
+#define H 400
 
 HWND hInput;
 HWND hBtn;
 HWND hOutput;
+HWND hStatic;
 HANDLE hThread = NULL;
+HANDLE hPingProcess = NULL;
+
+HBRUSH hbg;
+HBRUSH hinputBg;
 
 DWORD WINAPI PingThread(LPVOID param) {
     char host[256];
@@ -30,16 +35,16 @@ DWORD WINAPI PingThread(LPVOID param) {
     PROCESS_INFORMATION pi;
     if (CreateProcessA(NULL, cmd, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         CloseHandle(hWrite);
+        hPingProcess = pi.hProcess;
+        SetWindowTextA(hBtn, "Stop");
         
         char buf[512];
         DWORD bytesRead;
         while (ReadFile(hRead, buf, sizeof(buf) - 1, &bytesRead, NULL) && bytesRead > 0) {
             buf[bytesRead] = 0;
-            // Append to edit control
             int len = GetWindowTextLengthA(hOutput);
             SendMessageA(hOutput, EM_SETSEL, len, len);
             
-            // Replace \n with \r\n
             char formatBuf[1024];
             int j = 0;
             for (DWORD i = 0; i < bytesRead; i++) {
@@ -54,11 +59,12 @@ DWORD WINAPI PingThread(LPVOID param) {
         }
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
+        hPingProcess = NULL;
     } else {
         CloseHandle(hWrite);
     }
     CloseHandle(hRead);
-    EnableWindow(hBtn, TRUE);
+    SetWindowTextA(hBtn, "Ping");
     hThread = NULL;
     return 0;
 }
@@ -71,26 +77,52 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
-            if (!hFontMono) hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
+            hbg = CreateSolidBrush(RGB(15, 23, 42)); // #0f172a
+            hinputBg = CreateSolidBrush(RGB(30, 41, 59)); // #1e293b
             
-            CreateWindowEx(0, "STATIC", "Host:", WS_CHILD | WS_VISIBLE, 10, 12, 40, 20, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 10, W - 140, 22, hwnd, NULL, NULL, NULL);
-            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 80, 10, 60, 22, hwnd, (HMENU)1, NULL, NULL);
+            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            if (!hFontMono) hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
             
-            hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 10, 40, W - 35, H - 90, hwnd, NULL, NULL, NULL);
+            hStatic = CreateWindowEx(0, "STATIC", "Target Host:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 22, hwnd, NULL, NULL, NULL);
+            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 180, 24, hwnd, NULL, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 75, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+            
+            hOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 50, W - 30, H - 65, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
             break;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wParam;
+            if ((HWND)lParam == hStatic) {
+                SetTextColor(hdc, RGB(226, 232, 240)); // #e2e8f0
+                SetBkColor(hdc, RGB(15, 23, 42));
+                return (LRESULT)hbg;
+            } else if ((HWND)lParam == hOutput || (HWND)lParam == hInput) {
+                SetTextColor(hdc, (HWND)lParam == hOutput ? RGB(163, 190, 140) : RGB(226, 232, 240)); // Green for output, white for input
+                SetBkColor(hdc, RGB(30, 41, 59));
+                return (LRESULT)hinputBg;
+            }
+            break;
+        }
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, RGB(163, 190, 140));
+            SetBkColor(hdc, RGB(30, 41, 59));
+            return (LRESULT)hinputBg;
+        }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
                 if (!hThread) {
                     SetWindowTextA(hOutput, "");
-                    EnableWindow(hBtn, FALSE);
                     hThread = CreateThread(NULL, 0, PingThread, NULL, 0, NULL);
+                } else {
+                    // Stop pinging
+                    if (hPingProcess) {
+                        TerminateProcess(hPingProcess, 0);
+                    }
                 }
             }
             break;
@@ -98,12 +130,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hInput, 50, 10, nw - 120, 22, TRUE);
-            MoveWindow(hBtn, nw - 65, 10, 55, 22, TRUE);
-            MoveWindow(hOutput, 10, 40, nw - 20, nh - 50, TRUE);
+            MoveWindow(hInput, 100, 15, nw - 180, 24, TRUE);
+            MoveWindow(hBtn, nw - 75, 15, 60, 24, TRUE);
+            MoveWindow(hOutput, 15, 50, nw - 30, nh - 90, TRUE);
             break;
         }
         case WM_DESTROY:
+            DeleteObject(hbg);
+            DeleteObject(hinputBg);
             PostQuitMessage(0);
             break;
         default:
@@ -126,11 +160,13 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KPingApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = NULL;
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KPingApp", "KPing", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+        
+    SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)CreateSolidBrush(RGB(15, 23, 42)));
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
