@@ -18,7 +18,12 @@
   let p = { x: W/2, y: H-50 };
   let bullets = [];
   let enemies = [];
+  let stars = [];
+  for(let i=0; i<50; i++) {
+      stars.push({ x: Math.random() * W, y: Math.random() * H, speed: 1 + Math.random() * 2 });
+  }
   let score = 0;
+  let highScore = localStorage.getItem('kspace_highscore') || 0;
   let gameOver = false;
   let frameCount = 0;
   
@@ -35,9 +40,28 @@
   }
 
   function update() {
-      if (gameOver) return;
+      if (gameOver) {
+          if (keys['Enter']) {
+              gameOver = false;
+              score = 0;
+              enemies = [];
+              bullets = [];
+              p = { x: W/2, y: H-50 };
+          }
+          return;
+      }
+      
+      for(let s of stars) {
+          s.y += s.speed;
+          if (s.y > H) {
+              s.y = 0;
+              s.x = Math.random() * W;
+          }
+      }
       
       const speed = 4;
+      let baseEnemySpeed = 2 + (score / 200);
+      let spawnRate = Math.max(10, 30 - Math.floor(score / 100));
       if (keys['ArrowLeft'] || keys['a']) p.x -= speed;
       if (keys['ArrowRight'] || keys['d']) p.x += speed;
       if (keys['ArrowUp'] || keys['w']) p.y -= speed;
@@ -58,7 +82,7 @@
       }
       
       for (let i = enemies.length - 1; i >= 0; i--) {
-          enemies[i].y += 2;
+          enemies[i].y += baseEnemySpeed;
           
           if (p.x < enemies[i].x + 20 && p.x + 20 > enemies[i].x && p.y < enemies[i].y + 20 && p.y + 20 > enemies[i].y) {
               gameOver = true;
@@ -70,6 +94,10 @@
                   bullets.splice(j, 1);
                   hit = true;
                   score += 10;
+                  if (score > highScore) {
+                      highScore = score;
+                      localStorage.setItem('kspace_highscore', highScore);
+                  }
                   break;
               }
           }
@@ -81,13 +109,18 @@
           }
       }
       
-      if (frameCount % 30 === 0) spawnEnemy();
+      if (frameCount % spawnRate === 0) spawnEnemy();
       frameCount++;
   }
 
   function draw() {
       ctx.fillStyle = '#0a0a1e';
       ctx.fillRect(0, 0, W, H);
+      
+      ctx.fillStyle = '#c8c8c8';
+      for(let s of stars) {
+          ctx.fillRect(s.x, s.y, 2, 2);
+      }
       
       ctx.fillStyle = '#64c8ff';
       ctx.fillRect(p.x, p.y, 20, 20);
@@ -104,12 +137,14 @@
       
       ctx.fillStyle = '#fff';
       ctx.font = '16px monospace';
-      ctx.fillText(`Score: ${score}`, 10, 20);
+      ctx.fillText(`Score: ${score}  High: ${highScore}`, 10, 20);
       
       if (gameOver) {
           ctx.fillStyle = '#ff0000';
           ctx.font = '32px monospace';
           ctx.fillText('GAME OVER', W/2 - 85, H/2);
+          ctx.font = '16px monospace';
+          ctx.fillText('Press Enter to Restart', W/2 - 105, H/2 + 30);
       }
   }
 
