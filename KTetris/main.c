@@ -32,6 +32,7 @@ void save_high_score() {
     }
 }
 int game_over = 0;
+int is_paused = 0;
 int score = 0;
 int timer_speed = 500;
 
@@ -131,6 +132,7 @@ void InitGame() {
     score = 0;
     timer_speed = 500;
     game_over = 0;
+    is_paused = 0;
     next_piece = random_int(7);
     next_rot = 0;
     spawn_piece();
@@ -144,7 +146,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, TIMER_ID, 500, NULL);
             break;
         case WM_TIMER:
-            if (!game_over) {
+            if (!game_over && !is_paused) {
                 if (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
                     current_y++;
                 } else {
@@ -160,6 +162,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InitGame();
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (!game_over) {
+                if (wParam == 'P') {
+                    is_paused = !is_paused;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                if (is_paused) break;
+
                 if (wParam == VK_LEFT && !check_collision(current_piece, current_rot, current_x - 1, current_y)) current_x--;
                 if (wParam == VK_RIGHT && !check_collision(current_piece, current_rot, current_x + 1, current_y)) current_x++;
                 if (wParam == VK_DOWN && !check_collision(current_piece, current_rot, current_x, current_y + 1)) current_y++;
@@ -206,8 +215,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Draw current piece
-            if (!game_over) {
+            if (!game_over && !is_paused) {
                 unsigned short shape = tetrominos[current_piece][current_rot];
+                // Draw Ghost piece
+                int ghost_y = current_y;
+                while (!check_collision(current_piece, current_rot, current_x, ghost_y + 1)) {
+                    ghost_y++;
+                }
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (shape & (1 << (15 - (y * 4 + x)))) {
+                            if (ghost_y + y >= 0) {
+                                RECT r = { (current_x + x) * CELL_SIZE + 1, (ghost_y + y) * CELL_SIZE + 1, (current_x + x + 1) * CELL_SIZE - 1, (ghost_y + y + 1) * CELL_SIZE - 1 };
+                                FrameRect(memDC, &r, brushes[current_piece + 1]);
+                            }
+                        }
+                    }
+                }
+
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (shape & (1 << (15 - (y * 4 + x)))) {
@@ -219,10 +244,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
-            } else {
+            } else if (game_over) {
                 SetTextColor(memDC, RGB(255, 0, 0));
                 SetBkMode(memDC, TRANSPARENT);
                 TextOutA(memDC, 20, H * CELL_SIZE / 2, "GAME OVER", 9);
+            } else if (is_paused) {
+                SetTextColor(memDC, RGB(255, 255, 0));
+                SetBkMode(memDC, TRANSPARENT);
+                TextOutA(memDC, 20, H * CELL_SIZE / 2, "PAUSED", 6);
             }
             
             // Draw UI panel

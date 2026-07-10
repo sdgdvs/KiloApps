@@ -27,7 +27,7 @@
   ];
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
-  let pc, rot, cx, cy, gameOver = false, score = 0;
+  let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0;
   let nextPc, nextRot;
   let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
 
@@ -81,6 +81,7 @@
   function init() {
       grid = Array(H).fill().map(() => Array(W).fill(0));
       gameOver = false;
+      isPaused = false;
       score = 0;
       dropInterval = 500;
       nextPc = Math.floor(Math.random() * 7);
@@ -91,12 +92,19 @@
   document.addEventListener('keydown', e => {
       if (gameOver && e.key === 'Enter') init();
       if (gameOver) return;
+      if (e.key.toLowerCase() === 'p') { isPaused = !isPaused; return; }
+      if (isPaused) return;
+
       if (e.key === 'ArrowLeft' && !checkCol(pc, rot, cx - 1, cy)) cx--;
       if (e.key === 'ArrowRight' && !checkCol(pc, rot, cx + 1, cy)) cx++;
       if (e.key === 'ArrowDown' && !checkCol(pc, rot, cx, cy + 1)) cy++;
       if (e.key === 'ArrowUp') {
           let nr = (rot + 1) % 4;
           if (!checkCol(pc, nr, cx, cy)) rot = nr;
+      }
+      if (e.key === ' ') {
+          while (!checkCol(pc, rot, cx, cy + 1)) cy++;
+          lock(); spawn();
       }
       draw();
   });
@@ -114,8 +122,25 @@
           }
       }
 
-      if (!gameOver) {
+      if (!gameOver && !isPaused) {
+          // Draw Ghost piece
+          let ghost_y = cy;
+          while (!checkCol(pc, rot, cx, ghost_y + 1)) {
+              ghost_y++;
+          }
           let shape = tetrominos[pc][rot];
+          ctx.strokeStyle = colors[pc + 1];
+          ctx.lineWidth = 1;
+          for (let i = 0; i < 4; i++) {
+              for (let j = 0; j < 4; j++) {
+                  if (shape & (1 << (15 - (i * 4 + j)))) {
+                      if (ghost_y + i >= 0) {
+                          ctx.strokeRect((cx + j) * CELL + 1.5, (ghost_y + i) * CELL + 1.5, CELL - 3, CELL - 3);
+                      }
+                  }
+              }
+          }
+          
           ctx.fillStyle = colors[pc + 1];
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
@@ -126,10 +151,14 @@
                   }
               }
           }
-      } else {
+      } else if (gameOver) {
           ctx.fillStyle = 'red';
           ctx.font = '20px monospace';
           ctx.fillText('GAME OVER', 50, 200);
+      } else if (isPaused) {
+          ctx.fillStyle = 'yellow';
+          ctx.font = '20px monospace';
+          ctx.fillText('PAUSED', 65, 200);
       }
       
       ctx.strokeStyle = '#333';
@@ -164,16 +193,17 @@
   function update(time = 0) {
       const deltaTime = time - lastTime;
       lastTime = time;
-      dropCounter += deltaTime;
+      if (!isPaused) dropCounter += deltaTime;
       
       if (dropCounter > dropInterval) {
-          if (!gameOver) {
+          if (!gameOver && !isPaused) {
               if (!checkCol(pc, rot, cx, cy + 1)) cy++;
               else { lock(); spawn(); }
               draw();
           }
           dropCounter = 0;
       }
+      if (isPaused) draw();
       requestAnimationFrame(update);
   }
 
