@@ -6,6 +6,7 @@
 
 HWND hHex, hDec, hBin;
 BOOL updating = FALSE;
+HBRUSH hBrushBg;
 
 unsigned int parseHex(const char* s) {
     unsigned int res = 0;
@@ -106,6 +107,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, RGB(148, 163, 184));
+            SetBkColor(hdc, RGB(15, 23, 42));
+            return (LRESULT)hBrushBg;
+        }
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, RGB(248, 250, 252));
+            SetBkColor(hdc, RGB(30, 41, 59));
+            static HBRUSH hEditBrush = NULL;
+            if (!hEditBrush) hEditBrush = CreateSolidBrush(RGB(30, 41, 59));
+            return (LRESULT)hEditBrush;
+        }
         case WM_DESTROY:
             PostQuitMessage(0);
             break;
@@ -129,7 +144,8 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KHexApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    hBrushBg = CreateSolidBrush(RGB(15, 23, 42));
+    wc.hbrBackground = hBrushBg;
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KHexApp", "KHex", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,

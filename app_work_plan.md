@@ -1,13 +1,13 @@
 # App Work Plan
 
-**Target App:** (none — awaiting next agent)
-**Status:** Ready for new assignment
-**Current Phase:** —
+**Target App:** KHex
+**Status:** Polished
+**Current Phase:** Done
 
 ## Completed Apps (Do Not Redo)
 
 ### Polished
-KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont
+KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont
 
 ### Feature-Expanded
 KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw
@@ -20,4 +20,4 @@ KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
 
 ## Priority Queue (Never Touched)
 Select from these for polish/expansion next:
-KHex, KImage, KMail, KMandel, KPad, KPing, KRogue, KScript, KSnake, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KTetris, KType
+KImage, KMail, KMandel, KPad, KPing, KRogue, KScript, KSnake, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KTetris, KType
