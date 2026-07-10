@@ -53,14 +53,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
-        case WM_CTLCOLORSTATIC: {
-            if ((HWND)lParam == hSample) {
-                HDC hdcStatic = (HDC)wParam;
-                SetTextColor(hdcStatic, RGB(0, 0, 0));
-                SetBkColor(hdcStatic, RGB(255, 255, 255));
-                return (LRESULT)GetStockObject(WHITE_BRUSH);
-            }
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdcStatic = (HDC)wParam;
+            SetTextColor(hdcStatic, RGB(224, 224, 224));
+            SetBkColor(hdcStatic, RGB(30, 30, 30));
+            static HBRUSH hBrush = NULL;
+            if (!hBrush) hBrush = CreateSolidBrush(RGB(30, 30, 30));
+            return (LRESULT)hBrush;
         }
         case WM_DESTROY:
             if (hCurrentFont) DeleteObject(hCurrentFont);
@@ -86,7 +86,7 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KFontApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(18, 18, 18));
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
