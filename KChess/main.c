@@ -122,13 +122,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int pType = p > 6 ? p - 6 : p;
                             
                             int pathClear = 1;
-                            int stepX = dx == 0 ? 0 : dx / adx;
-                            int stepY = dy == 0 ? 0 : dy / ady;
-                            int cx = selX + stepX;
-                            int cy = selY + stepY;
-                            while (cx != tx || cy != ty) {
-                                if (board[cy][cx] != 0) { pathClear = 0; break; }
-                                cx += stepX; cy += stepY;
+                            if (adx == ady || adx == 0 || ady == 0) {
+                                int stepX = dx == 0 ? 0 : dx / adx;
+                                int stepY = dy == 0 ? 0 : dy / ady;
+                                int cx = selX + stepX;
+                                int cy = selY + stepY;
+                                while (cx != tx || cy != ty) {
+                                    if (board[cy][cx] != 0) { pathClear = 0; break; }
+                                    cx += stepX; cy += stepY;
+                                }
                             }
                             
                             if (pType == 1) { // Pawn

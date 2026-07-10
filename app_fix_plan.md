@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KChess
+**Target App:** KClock
 **Status:** In Progress
 
 ## Workflow
@@ -37,6 +37,7 @@
 - **KCalc**: Fixed M+ and M- evaluation bug in kcalc.html to format the expression before evaluating. Fixed VK_OEM_PLUS keyboard input in main.c so '=' types '=' instead of '+'.
 - **KChart**: Fixed requestAnimationFrame leak on multiple randomizations in kchart.html. Fixed GDI resource leak where memBM was deleted while still selected in main.c.
 - **KChat & KChatServer**: Fixed native socket resource leak in KChatServer's accept loop. Fixed socket leak on `gethostbyname` failure and improper reconnect logic in KChat native. Verified HTML web chat connection workflow.
+- **KChess**: Fixed infinite loop / array out-of-bounds in main.c path checking for Knight moves. Verified web logic is safe.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KCalendar.
+All apps need systematic testing. Continue alphabetically from KClock.
