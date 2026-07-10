@@ -436,6 +436,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (WSAGETSELECTEVENT(lParam) == FD_ACCEPT) {
                 SOCKET client = accept(s, NULL, NULL);
                 if (client != INVALID_SOCKET) {
+                    int found = 0;
                     for (int i=0; i<MAX_CLIENTS; i++) {
                         if (clients[i].s == INVALID_SOCKET) {
                             clients[i].s = client;
@@ -459,9 +460,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 my_strcpy(m + my_strlen(m), motd);
                                 SendRaw(client, m, 0);
                             }
+                            found = 1;
                             break;
                         }
                     }
+                    if (!found) closesocket(client);
                 }
             } else if (WSAGETSELECTEVENT(lParam) == FD_READ) {
                 for (int i=0; i<MAX_CLIENTS; i++) {

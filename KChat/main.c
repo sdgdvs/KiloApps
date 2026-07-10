@@ -34,7 +34,10 @@ void Log(const char* msg) {
     int len = my_strlen(logBuf);
     int mlen = my_strlen(msg);
     if (len + mlen + 5 > sizeof(logBuf)) {
-        my_strcpy(logBuf, logBuf + (len / 2));
+        int cut = len / 2;
+        while (cut < len && logBuf[cut] != '\n') cut++;
+        if (cut < len) cut++;
+        my_strcpy(logBuf, logBuf + cut);
         len = my_strlen(logBuf);
     }
     my_strcpy(logBuf + len, msg);
@@ -82,6 +85,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (s != INVALID_SOCKET) {
                     closesocket(s);
                     s = INVALID_SOCKET;
+                    SetWindowTextA(hBtn, "Connect");
+                    EnableWindow(hSend, FALSE);
+                    Log("Disconnected.");
+                    break;
                 }
                 
                 char ip[64], portStr[16];
@@ -98,6 +105,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 struct hostent *he = gethostbyname(ip);
                 if (!he) {
                     Log("Invalid IP/Host.");
+                    closesocket(s);
+                    s = INVALID_SOCKET;
                     break;
                 }
                 

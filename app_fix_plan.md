@@ -21,8 +21,8 @@
 
 ---
 
-**Target App:** KChat
-**Status:** Ready for next agent
+**Target App:** KChess
+**Status:** In Progress
 
 ## Workflow
 1. Pick the next untested app alphabetically.
@@ -36,6 +36,7 @@
 - **KBBS**: Fixed ANSI 'T' (scroll down) sequence to shift visible area rather than top of buffer in HTML. Fixed native scrolling behavior where mouse wheel changed scrollbar but not view; fixed out-of-bounds array bug when native scrollback hit limit.
 - **KCalc**: Fixed M+ and M- evaluation bug in kcalc.html to format the expression before evaluating. Fixed VK_OEM_PLUS keyboard input in main.c so '=' types '=' instead of '+'.
 - **KChart**: Fixed requestAnimationFrame leak on multiple randomizations in kchart.html. Fixed GDI resource leak where memBM was deleted while still selected in main.c.
+- **KChat & KChatServer**: Fixed native socket resource leak in KChatServer's accept loop. Fixed socket leak on `gethostbyname` failure and improper reconnect logic in KChat native. Verified HTML web chat connection workflow.
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KCalendar.
