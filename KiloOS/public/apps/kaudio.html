@@ -134,6 +134,7 @@
   function stop(i) {
       if (activeOscs[i]) {
           let { osc, gain } = activeOscs[i];
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
           osc.stop(ctx.currentTime + 0.1);
           delete activeOscs[i];
@@ -146,9 +147,11 @@
       if (idx !== -1 && !e.repeat) play(idx);
       
       if (e.key === 'ArrowUp') {
+          e.preventDefault();
           waveSelect.selectedIndex = (waveSelect.selectedIndex - 1 + waveSelect.options.length) % waveSelect.options.length;
       }
       if (e.key === 'ArrowDown') {
+          e.preventDefault();
           waveSelect.selectedIndex = (waveSelect.selectedIndex + 1) % waveSelect.options.length;
       }
   });

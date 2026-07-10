@@ -83,7 +83,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
-            SelectObject(memDC, hbm);
+            HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
             
             HBRUSH bg = CreateSolidBrush(RGB(15, 23, 42)); // Slate 900
             RECT fullRc = {0, 0, W, H};
@@ -137,6 +137,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(black);
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBm);
             DeleteObject(hbm);
             DeleteDC(memDC);
             EndPaint(hwnd, &ps);
