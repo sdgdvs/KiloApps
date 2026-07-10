@@ -900,30 +900,28 @@ function App() {
       
       {startOpen && (
         <div className="start-menu">
-          <div className="start-search-bar" style={{padding: '10px', borderBottom: '1px solid var(--border-color)', background: 'rgba(255,255,255,0.05)'}}>
-            <input 
-              type="text" 
-              placeholder="Search apps..." 
-              value={startSearch} 
-              onChange={e => setStartSearch(e.target.value)} 
-              style={{width: '100%', padding: '6px 12px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.1)', color: 'var(--text-main)', outline: 'none'}} 
-              autoFocus 
-            />
-          </div>
+        <div className="start-search-container">
+          <input 
+            type="text" 
+            className="start-search"
+            placeholder="Search apps..." 
+            value={startSearch} 
+            onChange={e => setStartSearch(e.target.value)} 
+            autoFocus 
+          />
+        </div>
           <div className="start-columns">
-            <div className="start-apps" style={{overflowY: 'auto', height: '100%', padding: '10px 0'}}>
+            <div className="start-apps">
               {pinnedAppsIds.length > 0 && !startSearch && (
-                <div style={{marginBottom: '10px'}}>
-                  <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
-                    Pinned Apps
-                  </div>
+                <div className="start-group">
+                  <div className="start-group-title">Pinned Apps</div>
                   {pinnedAppsIds.map(appId => {
                     const app = APPS.find(a => a.id === appId);
                     if (!app) return null;
                     return (
-                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
-                        <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                        <span style={{fontSize: '14px'}}>{app.title}</span>
+                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                        <img src={app.icon} alt={app.title} className="start-item-icon" />
+                        <span className="start-item-label">{app.title}</span>
                       </div>
                     );
                   })}
@@ -934,14 +932,14 @@ function App() {
                 const folderApps = APPS.filter(a => a.folder === folder.id && a.title.toLowerCase().includes(startSearch.toLowerCase()));
                 if (folderApps.length === 0) return null;
                 return (
-                  <div key={folder.id} style={{marginBottom: '10px'}}>
-                    <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
+                  <div key={folder.id} className="start-group">
+                    <div className="start-group-title">
                       {folder.title}
                     </div>
                     {folderApps.map(app => (
-                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
-                        <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                        <span style={{fontSize: '14px'}}>{app.title}</span>
+                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                        <img src={app.icon} alt={app.title} className="start-item-icon" />
+                        <span className="start-item-label">{app.title}</span>
                       </div>
                     ))}
                   </div>
@@ -949,14 +947,14 @@ function App() {
               })}
               
               {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).length > 0 && (
-                <div style={{marginBottom: '10px'}}>
-                  <div style={{fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--text-muted)', padding: '4px 12px', fontWeight: 'bold'}}>
+                <div className="start-group">
+                  <div className="start-group-title">
                     Applications
                   </div>
                   {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).map(app => (
-                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }} style={{display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px'}}>
-                      <img src={app.icon} alt={app.title} style={{width:'24px', height:'24px', imageRendering: 'pixelated'}} />
-                      <span style={{fontSize: '14px'}}>{app.title}</span>
+                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                      <img src={app.icon} alt={app.title} className="start-item-icon" />
+                      <span className="start-item-label">{app.title}</span>
                     </div>
                   ))}
                 </div>

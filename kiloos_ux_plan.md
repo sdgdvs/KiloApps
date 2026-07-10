@@ -36,19 +36,13 @@
 
 ## Current Status
 - Implemented Animation Refinements for window transitions.
-- Implemented Mobile Friendliness (responsive design) media queries.
-- Need to identify new priorities for the next turn.
-
 ## Priorities
 
-### 1. Start Menu Polish
-- Improve the start menu open/close animation.
-- Improve spacing and alignment inside the start menu.
-
-### 2. Taskbar Enhancements
+### 1. Taskbar Enhancements
 - Refine taskbar overflow handling and active app indicators.
 
 ## Completed Items
+- Start Menu Polish: Improved start menu open animation by using `@keyframes` on mount, and replaced inline spacing/alignment styles with proper CSS classes.
 - Window Management: Added a subtle dimming effect (`filter: brightness(0.85)`) to inactive windows to better highlight the active window.
 - Start Menu: Enhanced search bar styling with glassmorphism and improved hover states for items.
 - Taskbar: Added missing system tray icons next to the clock.

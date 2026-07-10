@@ -265,6 +265,11 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   background: rgba(255,255,255,0.05);
 }
 
+@keyframes startMenuOpen {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .start-menu {
   position: absolute;
   bottom: 50px;
@@ -279,7 +284,8 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   flex-direction: column;
   z-index: 10001;
   overflow: hidden;
-  overflow: hidden;
+  transform-origin: bottom left;
+  animation: startMenuOpen 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .start-search-container {
@@ -324,6 +330,21 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 .start-apps {
   flex: 1;
   padding: 10px 0;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.start-group {
+  margin-bottom: 10px;
+}
+
+.start-group-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  padding: 4px 16px;
+  font-weight: 600;
 }
 
 .start-system {
@@ -361,19 +382,29 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 }
 
 .start-item {
-  padding: 10px 12px;
+  padding: 8px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 14px;
   border-radius: 6px;
-  margin: 4px 8px;
+  margin: 2px 8px;
   transition: all 0.15s ease;
 }
 .start-item:hover {
   background: rgba(255,255,255,0.08);
   color: var(--text-main);
+}
+
+.start-item-icon {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+.start-item-label {
+  font-size: 14px;
 }
 
 .taskbar-items {
