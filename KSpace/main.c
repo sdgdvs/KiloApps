@@ -11,12 +11,15 @@ long _ftol2(float f) { return (long)f; }
 #define MAX_ENEMIES 10
 #define MAX_STARS 50
 
-typedef struct { float x, y, active; } Ent;
+typedef struct { float x, y, active, dx, dy, type; } Ent;
 typedef struct { float x, y, speed; } Star;
 
-Ent p = { W/2.0f, H - 50.0f, 1.0f };
+Ent p = { W/2.0f, H - 50.0f, 1.0f, 0, 0, 0 };
 Ent b[MAX_BULLETS] = {0};
 Ent e[MAX_ENEMIES] = {0};
+#define MAX_POWERUPS 3
+Ent pu[MAX_POWERUPS] = {0};
+int spreadTimer = 0;
 Star stars[MAX_STARS] = {0};
 int score = 0;
 int highScore = 0;
@@ -59,12 +62,18 @@ void SpawnEnemy() {
 }
 
 void Shoot() {
+    int shots = (spreadTimer > 0) ? 3 : 1;
+    float dxs[] = {0.0f, -2.0f, 2.0f};
+    int spawned = 0;
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (!b[i].active) {
             b[i].active = 1.0f;
             b[i].x = p.x + 8.0f;
             b[i].y = p.y;
-            break;
+            b[i].dx = dxs[spawned];
+            b[i].dy = -8.0f;
+            spawned++;
+            if(spawned >= shots) break;
         }
     }
 }
@@ -76,6 +85,8 @@ void Update() {
             score = 0;
             for(int i=0; i<MAX_ENEMIES; i++) e[i].active = 0;
             for(int i=0; i<MAX_BULLETS; i++) b[i].active = 0;
+            for(int i=0; i<MAX_POWERUPS; i++) pu[i].active = 0;
+            spreadTimer = 0;
             p.x = W/2.0f; p.y = H - 50.0f;
         }
         return;
@@ -110,8 +121,9 @@ void Update() {
     
     for (int i = 0; i < MAX_BULLETS; i++) {
         if (b[i].active) {
-            b[i].y -= 8.0f;
-            if (b[i].y < 0) b[i].active = 0.0f;
+            b[i].y += b[i].dy;
+            b[i].x += b[i].dx;
+            if (b[i].y < 0 || b[i].x < 0 || b[i].x > W) b[i].active = 0.0f;
         }
     }
     
@@ -135,11 +147,32 @@ void Update() {
                         highScore = score;
                         SaveHighScore();
                     }
+                    if ((rnd() % 100) < 10) {
+                        for(int k=0; k<MAX_POWERUPS; k++) {
+                            if(!pu[k].active) {
+                                pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
+                                break;
+                            }
+                        }
+                    }
                     break;
                 }
             }
         }
     }
+    
+    for (int i=0; i<MAX_POWERUPS; i++) {
+        if (pu[i].active) {
+            pu[i].y += pu[i].dy;
+            if (pu[i].y > H) pu[i].active = 0.0f;
+            if (p.x < pu[i].x + 15 && p.x + 20 > pu[i].x && p.y < pu[i].y + 15 && p.y + 20 > pu[i].y) {
+                pu[i].active = 0.0f;
+                spreadTimer = 300;
+                score += 50;
+            }
+        }
+    }
+    if (spreadTimer > 0) spreadTimer--;
     
     if (frameCount % spawnRate == 0) SpawnEnemy();
     frameCount++;
@@ -206,6 +239,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             DeleteObject(ebr);
+            
+            // Draw powerups
+            HBRUSH pubr = CreateSolidBrush(RGB(50, 255, 50));
+            for (int i = 0; i < MAX_POWERUPS; i++) {
+                if (pu[i].active) {
+                    RECT pr = {(int)pu[i].x, (int)pu[i].y, (int)pu[i].x + 15, (int)pu[i].y + 15};
+                    FillRect(memDC, &pr, pubr);
+                }
+            }
+            DeleteObject(pubr);
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));

@@ -22,6 +22,8 @@
   for(let i=0; i<50; i++) {
       stars.push({ x: Math.random() * W, y: Math.random() * H, speed: 1 + Math.random() * 2 });
   }
+  let powerups = [];
+  let spreadTimer = 0;
   let score = 0;
   let highScore = localStorage.getItem('kspace_highscore') || 0;
   let gameOver = false;
@@ -36,7 +38,11 @@
   }
 
   function shoot() {
-      bullets.push({ x: p.x + 8, y: p.y });
+      let shots = spreadTimer > 0 ? 3 : 1;
+      let dxs = [0, -2, 2];
+      for(let i=0; i<shots; i++) {
+          bullets.push({ x: p.x + 8, y: p.y, dx: dxs[i], dy: -8 });
+      }
   }
 
   function update() {
@@ -46,6 +52,8 @@
               score = 0;
               enemies = [];
               bullets = [];
+              powerups = [];
+              spreadTimer = 0;
               p = { x: W/2, y: H-50 };
           }
           return;
@@ -77,8 +85,9 @@
       }
       
       for (let i = bullets.length - 1; i >= 0; i--) {
-          bullets[i].y -= 8;
-          if (bullets[i].y < 0) bullets.splice(i, 1);
+          bullets[i].y += bullets[i].dy;
+          bullets[i].x += bullets[i].dx;
+          if (bullets[i].y < 0 || bullets[i].x < 0 || bullets[i].x > W) bullets.splice(i, 1);
       }
       
       for (let i = enemies.length - 1; i >= 0; i--) {
@@ -98,6 +107,9 @@
                       highScore = score;
                       localStorage.setItem('kspace_highscore', highScore);
                   }
+                  if (Math.random() < 0.1) {
+                      powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2});
+                  }
                   break;
               }
           }
@@ -108,6 +120,20 @@
               enemies.splice(i, 1);
           }
       }
+      
+      for (let i = powerups.length - 1; i >= 0; i--) {
+          powerups[i].y += powerups[i].dy;
+          if (p.x < powerups[i].x + 15 && p.x + 20 > powerups[i].x && p.y < powerups[i].y + 15 && p.y + 20 > powerups[i].y) {
+              powerups.splice(i, 1);
+              spreadTimer = 300;
+              score += 50;
+              continue;
+          }
+          if (powerups[i].y > H) {
+              powerups.splice(i, 1);
+          }
+      }
+      if (spreadTimer > 0) spreadTimer--;
       
       if (frameCount % spawnRate === 0) spawnEnemy();
       frameCount++;
@@ -133,6 +159,11 @@
       ctx.fillStyle = '#ff3232';
       for (let e of enemies) {
           ctx.fillRect(e.x, e.y, 20, 20);
+      }
+      
+      ctx.fillStyle = '#32ff32';
+      for (let pu of powerups) {
+          ctx.fillRect(pu.x, pu.y, 15, 15);
       }
       
       ctx.fillStyle = '#fff';

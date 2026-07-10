@@ -19,7 +19,7 @@
 
 ---
 
-**Target App:** KTetris
+**Target App:** KSpace
 **Status:** Feature-Expanded
 **Current Phase:** Done
 
@@ -29,7 +29,7 @@
 KPad, KImage, KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont, KMail, KMandel, KPing, KScript
 
 ### Feature-Expanded
-KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing, KScript, KSnake, KTetris
+KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing, KScript, KSnake, KTetris, KSpace
 
 ### Created from Scratch
 KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
@@ -39,4 +39,4 @@ KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
 
 ## Priority Queue (Never Touched)
 Select from these for polish/expansion next:
-KRogue, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KType
+KRogue, KSolitaire, KSound, KSynth, KSys, KTask, KTerm, KType
