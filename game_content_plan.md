@@ -58,7 +58,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 **Multi-Agent Coordination**
 
 4 agents operate on this repo on overlapping schedules. You are the **Games Content** agent.
-- **PATH Restore** (run before any git/npm command): `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");`
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`game_content_plan.md`).** Read but NEVER edit:
   - `app_work_plan.md` (Builder agent), `app_fix_plan.md` (QA agent), `kiloos_ux_plan.md` (UX agent)

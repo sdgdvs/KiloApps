@@ -3,7 +3,6 @@
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
 **Multi-Agent System:** 4 agents operate on this repo on overlapping schedules. You are the **Quality & Build Verification** agent.
-- **PATH Restore** (run before any git/npm command): `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");`
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`app_fix_plan.md`).** Read but NEVER edit:
   - `app_work_plan.md` (Builder agent), `kiloos_ux_plan.md` (UX agent), `game_content_plan.md` (Games agent)

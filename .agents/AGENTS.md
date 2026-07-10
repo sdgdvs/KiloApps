@@ -2,11 +2,12 @@
 
 ## Environment Setup
 
-- **Terminal Environment Path:** When operating in this workspace, the default terminal environment `Path` variable may be truncated or corrupted, rendering standard utilities like `git` and `npm` unrecognizable. Before running any `git`, `npm`, or similar system commands, you MUST prepend the following to your command to restore the PATH: `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");`.
+- **`git`, `node`, and `npm` are available on PATH** via shims in `%APPDATA%\Antigravity\bin\`. No manual PATH restoration is needed.
+- **Fallback** (only if a command is not found): `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");`
 
 ## Commit & Deploy Protocol
 
-- **Committing Changes:** On the completion of each agent turn or task, you must automatically commit and push all changes to the GitHub repository using the restored PATH above, so that the remote build servers can pick up the deployment.
+- **Committing Changes:** On the completion of each agent turn or task, you must automatically commit and push all changes to the GitHub repository so that the remote build servers can pick up the deployment.
 - **Verify Deployment:** After pushing, briefly check whether the GitHub Actions workflow passes. The CI/CD pipeline builds KiloOS and deploys to Firebase Hosting on every push to `main`. If the build fails, investigate and fix before moving on.
 - **Version Bumping:** When making functional changes to KiloOS, bump the patch version in `KiloOS/package.json`.
 

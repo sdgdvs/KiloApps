@@ -176,8 +176,6 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
       setPos({ x: newX, y: newY });
     }
   };
-    }
-  };
 
   const handleResizeUp = (e) => {
     if (resizing) {
@@ -736,7 +734,7 @@ function App() {
     setZIndexCounter(z => z + 1);
     setOpenApps([...openApps, newApp]);
     setActiveAppId(newApp.instanceId);
-  };
+  }, [openApps, zIndexCounter, cerberusBlinded]);
 
   const closeApp = (instanceId) => {
     setOpenApps(prev => prev.filter(a => a.instanceId !== instanceId));
