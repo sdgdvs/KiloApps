@@ -3,46 +3,83 @@
 <head>
 <title>KMemory (Patience)</title>
 <style>
-  body { margin: 0; background-color: #1e963c; display: flex; justify-content: center; align-items: center; height: 100vh; user-select: none; font-family: sans-serif; }
-  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 380px; height: 380px; }
+  body { margin: 0; background-color: #1e963c; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; font-family: sans-serif; color: white;}
+  #ui { display: flex; justify-content: space-between; width: 380px; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
+  .grid { display: grid; gap: 10px; }
+  .grid.easy { grid-template-columns: repeat(4, 1fr); width: 380px; height: 380px; }
+  .grid.hard { grid-template-columns: repeat(6, 1fr); width: 570px; height: 380px; }
   .card { background: #3264c8; border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #000; }
   .card.flipped { background: #fff; box-shadow: inset 0 0 0 1px #ccc; cursor: default; }
   .card.matched { background: transparent; box-shadow: none; cursor: default; color: transparent; }
+  .controls { margin-top: 15px; }
+  button { padding: 5px 10px; font-size: 16px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 4px; color: #333; }
+  button:hover { background: #fff; }
 </style>
 </head>
 <body>
-<div class="grid" id="grid"></div>
+<div id="ui">
+  <div>Moves: <span id="moves">0</span></div>
+  <div>Best: <span id="best">-</span></div>
+</div>
+<div class="grid easy" id="grid"></div>
+<div class="controls">
+  <button onclick="setDifficulty('easy')">Easy (4x4)</button>
+  <button onclick="setDifficulty('hard')">Hard (6x4)</button>
+</div>
 <script>
   const grid = document.getElementById('grid');
+  const movesEl = document.getElementById('moves');
+  const bestEl = document.getElementById('best');
+  
   let cards = [];
   let flipped = [];
   let matched = [];
   let firstFlip = -1;
   let secondFlip = -1;
   let matches = 0;
+  let moves = 0;
   let lock = false;
+  let diff = 'easy'; // easy=16, hard=24
+  
+  function getBestKey() { return 'kmemory_best_' + diff; }
+  function updateBest() {
+      let b = localStorage.getItem(getBestKey());
+      bestEl.textContent = b ? b : '-';
+  }
+
+  function setDifficulty(d) {
+      diff = d;
+      grid.className = 'grid ' + d;
+      document.getElementById('ui').style.width = d === 'easy' ? '380px' : '570px';
+      init();
+  }
 
   function init() {
       cards = [];
-      for (let i = 0; i < 16; i++) {
+      let numCards = diff === 'easy' ? 16 : 24;
+      for (let i = 0; i < numCards; i++) {
           cards.push(Math.floor(i / 2));
           flipped[i] = false;
           matched[i] = false;
       }
-      for (let i = 15; i > 0; i--) {
+      for (let i = numCards - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [cards[i], cards[j]] = [cards[j], cards[i]];
       }
       firstFlip = -1;
       secondFlip = -1;
       matches = 0;
+      moves = 0;
+      movesEl.textContent = moves;
       lock = false;
+      updateBest();
       render();
   }
 
   function render() {
       grid.innerHTML = '';
-      for (let i = 0; i < 16; i++) {
+      let numCards = diff === 'easy' ? 16 : 24;
+      for (let i = 0; i < numCards; i++) {
           const c = document.createElement('div');
           c.className = 'card';
           if (matched[i]) {
@@ -61,14 +98,20 @@
                   firstFlip = i;
               } else {
                   secondFlip = i;
+                  moves++;
+                  movesEl.textContent = moves;
                   if (cards[firstFlip] === cards[secondFlip]) {
                       matched[firstFlip] = true;
                       matched[secondFlip] = true;
                       firstFlip = -1;
                       secondFlip = -1;
                       matches++;
-                      if (matches === 8) {
-                          setTimeout(() => { alert("You won!"); init(); }, 100);
+                      if (matches === numCards / 2) {
+                          let b = localStorage.getItem(getBestKey());
+                          if (!b || moves < parseInt(b)) {
+                              localStorage.setItem(getBestKey(), moves);
+                          }
+                          setTimeout(() => { alert("You won in " + moves + " moves!"); updateBest(); init(); }, 100);
                       }
                       render();
                   } else {

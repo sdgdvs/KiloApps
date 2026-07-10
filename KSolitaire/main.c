@@ -1,17 +1,27 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <stdio.h>
+#include <string.h>
 
-#define W 400
-#define H 400
-#define ROWS 4
-#define COLS 4
+#define ID_EASY 1001
+#define ID_HARD 1002
 
-int cards[16];
-int flipped[16] = {0};
-int matched[16] = {0};
+int W = 400;
+int H = 400;
+int ROWS = 4;
+int COLS = 4;
+
+int cards[36];
+int flipped[36] = {0};
+int matched[36] = {0};
 int firstFlip = -1;
 int secondFlip = -1;
 int matches = 0;
+int moves = 0;
+
+int best_easy = -1;
+int best_hard = -1;
+int is_hard = 0;
 
 // simple pseudo-random generator to avoid CRT
 unsigned int seed = 12345;
@@ -20,13 +30,32 @@ unsigned int rnd() {
     return seed;
 }
 
+void LoadScores() {
+    FILE *f = fopen("kmemory.dat", "rb");
+    if (f) {
+        fread(&best_easy, sizeof(int), 1, f);
+        fread(&best_hard, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
+void SaveScores() {
+    FILE *f = fopen("kmemory.dat", "wb");
+    if (f) {
+        fwrite(&best_easy, sizeof(int), 1, f);
+        fwrite(&best_hard, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
 void Shuffle() {
-    for (int i = 0; i < 16; i++) {
+    int numCards = ROWS * COLS;
+    for (int i = 0; i < numCards; i++) {
         cards[i] = i / 2;
         flipped[i] = 0;
         matched[i] = 0;
     }
-    for (int i = 15; i > 0; i--) {
+    for (int i = numCards - 1; i > 0; i--) {
         int j = rnd() % (i + 1);
         int temp = cards[i];
         cards[i] = cards[j];
@@ -35,6 +64,21 @@ void Shuffle() {
     firstFlip = -1;
     secondFlip = -1;
     matches = 0;
+    moves = 0;
+}
+
+void SetDifficulty(HWND hwnd, int hard) {
+    is_hard = hard;
+    if (hard) {
+        ROWS = 4; COLS = 6; W = 600; H = 400;
+    } else {
+        ROWS = 4; COLS = 4; W = 400; H = 400;
+    }
+    RECT rc = {0, 0, W, H + 40}; // extra for status bar text
+    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
+    SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
+    Shuffle();
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 void DrawCard(HDC hdc, int idx, int x, int y, int w, int h) {
@@ -66,16 +110,34 @@ void DrawCard(HDC hdc, int idx, int x, int y, int w, int h) {
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-        case WM_CREATE:
+        case WM_CREATE: {
+            HMENU hMenu = CreateMenu();
+            HMENU hSubMenu = CreatePopupMenu();
+            AppendMenu(hSubMenu, MF_STRING, ID_EASY, "Easy (4x4)");
+            AppendMenu(hSubMenu, MF_STRING, ID_HARD, "Hard (6x4)");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
+            SetMenu(hwnd, hMenu);
+
+            LoadScores();
             seed = GetTickCount();
-            Shuffle();
+            SetDifficulty(hwnd, 0); // start easy
+            break;
+        }
+        case WM_COMMAND:
+            if (LOWORD(wParam) == ID_EASY) {
+                SetDifficulty(hwnd, 0);
+            } else if (LOWORD(wParam) == ID_HARD) {
+                SetDifficulty(hwnd, 1);
+            }
             break;
         case WM_LBUTTONDOWN: {
             if (secondFlip != -1) return 0; // wait for timer
             
             int x = LOWORD(lParam);
-            int y = HIWORD(lParam);
+            int y = HIWORD(lParam) - 40; // Adjust for status area
             
+            if (y < 0) return 0;
+
             int cw = W / COLS;
             int ch = H / ROWS;
             int col = x / cw;
@@ -89,14 +151,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         firstFlip = idx;
                     } else {
                         secondFlip = idx;
+                        moves++;
                         if (cards[firstFlip] == cards[secondFlip]) {
                             matched[firstFlip] = 1;
                             matched[secondFlip] = 1;
                             firstFlip = -1;
                             secondFlip = -1;
                             matches++;
-                            if (matches == 8) {
-                                MessageBoxA(hwnd, "You won!", "KMemory", MB_OK);
+                            if (matches == (ROWS * COLS) / 2) {
+                                InvalidateRect(hwnd, NULL, FALSE);
+                                UpdateWindow(hwnd);
+                                
+                                int is_new_best = 0;
+                                if (is_hard) {
+                                    if (best_hard == -1 || moves < best_hard) { best_hard = moves; is_new_best = 1; }
+                                } else {
+                                    if (best_easy == -1 || moves < best_easy) { best_easy = moves; is_new_best = 1; }
+                                }
+                                if (is_new_best) SaveScores();
+                                
+                                char msgBuf[256];
+                                sprintf(msgBuf, "You won in %d moves!", moves);
+                                MessageBoxA(hwnd, msgBuf, "KMemory", MB_OK);
                                 Shuffle();
                             }
                         } else {
@@ -122,10 +198,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
+            HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H + 40);
             SelectObject(memDC, hbm);
             
-            RECT rc = {0, 0, W, H};
+            // Draw status area
+            RECT statusRc = {0, 0, W, 40};
+            HBRUSH statusBg = CreateSolidBrush(RGB(20, 20, 20));
+            FillRect(memDC, &statusRc, statusBg);
+            DeleteObject(statusBg);
+            
+            SetBkMode(memDC, TRANSPARENT);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            char statusText[256];
+            int best = is_hard ? best_hard : best_easy;
+            if (best == -1)
+                sprintf(statusText, "Moves: %d   Best: -", moves);
+            else
+                sprintf(statusText, "Moves: %d   Best: %d", moves, best);
+            TextOutA(memDC, 10, 10, statusText, strlen(statusText));
+
+            // Draw table
+            RECT rc = {0, 40, W, H + 40};
             HBRUSH bg = CreateSolidBrush(RGB(30, 150, 60)); // Green table
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
@@ -134,11 +227,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int ch = H / ROWS;
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
-                    DrawCard(memDC, r * COLS + c, c * cw + 5, r * ch + 5, cw - 10, ch - 10);
+                    DrawCard(memDC, r * COLS + c, c * cw + 5, r * ch + 40 + 5, cw - 10, ch - 10);
                 }
             }
             
-            BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, W, H + 40, memDC, 0, 0, SRCCOPY);
             DeleteObject(hbm);
             DeleteDC(memDC);
             EndPaint(hwnd, &ps);
@@ -163,7 +256,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KSolitaireApp", "KMemory", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W + 16, H + 39, NULL, NULL, hInstance, NULL);
+        CW_USEDEFAULT, CW_USEDEFAULT, 400 + 16, 440 + 59, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
