@@ -1,6 +1,6 @@
 # App Bug Fix Plan
 
-**Target App:** KChart
+**Target App:** KChat
 **Status:** Ready for next agent
 
 ## Workflow
@@ -14,6 +14,7 @@
 - **KAudio**: Fixed Web Audio API envelope bug in kaudio.html and prevented arrow key scrolling. Fixed GDI resource leak (HBITMAP) in main.c.
 - **KBBS**: Fixed ANSI 'T' (scroll down) sequence to shift visible area rather than top of buffer in HTML. Fixed native scrolling behavior where mouse wheel changed scrollbar but not view; fixed out-of-bounds array bug when native scrollback hit limit.
 - **KCalc**: Fixed M+ and M- evaluation bug in kcalc.html to format the expression before evaluating. Fixed VK_OEM_PLUS keyboard input in main.c so '=' types '=' instead of '+'.
+- **KChart**: Fixed requestAnimationFrame leak on multiple randomizations in kchart.html. Fixed GDI resource leak where memBM was deleted while still selected in main.c.
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KCalendar.

@@ -133,6 +133,7 @@
       }
   }
   
+  let animating = false;
   function update() {
       let changed = false;
       for (let i = 0; i < 5; i++) {
@@ -146,15 +147,22 @@
               changed = true;
           }
       }
-      if (changed) draw();
-      requestAnimationFrame(update);
+      if (changed) {
+          draw();
+          requestAnimationFrame(update);
+      } else {
+          animating = false;
+      }
   }
   
   btnRand.onclick = () => {
       for (let i = 0; i < 5; i++) {
           target[i] = 5 + Math.floor(Math.random() * 95);
       }
-      update();
+      if (!animating) {
+          animating = true;
+          update();
+      }
   };
   
   draw();

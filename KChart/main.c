@@ -66,7 +66,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Double buffer
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
-            SelectObject(memDC, memBM);
+            HBITMAP oldBM = SelectObject(memDC, memBM);
             
             HBRUSH bg = CreateSolidBrush(RGB(9, 9, 11));
             RECT full = {0, 0, W, H};
@@ -115,6 +115,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hFont);
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBM);
             DeleteObject(memBM);
             DeleteDC(memDC);
             
