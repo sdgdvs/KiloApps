@@ -1,16 +1,16 @@
 # App Work Plan
 
-**Target App:** KMandel
+**Target App:** KPad
 **Status:** Polished and Feature-Expanded
 **Current Phase:** Done
 
 ## Completed Apps (Do Not Redo)
 
 ### Polished
-KImage, KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont, KMail, KMandel
+KPad, KImage, KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont, KMail, KMandel
 
 ### Feature-Expanded
-KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel
+KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel
 
 ### Created from Scratch
 KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
@@ -20,4 +20,4 @@ KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
 
 ## Priority Queue (Never Touched)
 Select from these for polish/expansion next:
-KPad, KPing, KRogue, KScript, KSnake, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KTetris, KType
+KPing, KRogue, KScript, KSnake, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KTetris, KType
