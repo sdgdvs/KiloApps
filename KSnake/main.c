@@ -11,10 +11,14 @@ struct Point snake[400];
 int snake_len = 3;
 int dir_x = 1, dir_y = 0;
 struct Point food = { 10, 10 };
-int game_over = 0;
+int game_state = 0; // 0 = Menu, 1 = Playing, 2 = Game Over
+int difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 int score = 0;
 int high_score = 0;
 int current_speed = 150;
+int base_speed = 150;
+int score_mult = 10;
+
 
 void InitGame() {
     snake_len = 3;
@@ -22,9 +26,14 @@ void InitGame() {
     snake[1].x = 4; snake[1].y = 5;
     snake[2].x = 3; snake[2].y = 5;
     dir_x = 1; dir_y = 0;
-    game_over = 0;
+    
+    if (difficulty == 0) { base_speed = 200; score_mult = 5; }
+    else if (difficulty == 1) { base_speed = 150; score_mult = 10; }
+    else { base_speed = 100; score_mult = 20; }
+    
+    current_speed = base_speed;
+    game_state = 1;
     score = 0;
-    current_speed = 150;
 }
 
 unsigned int rng_state = 12345;
@@ -41,11 +50,10 @@ void PlaceFood() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
-            InitGame();
-            SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+            // don't start timer yet, wait in menu
             break;
         case WM_TIMER: {
-            if (game_over) break;
+            if (game_state != 1) break;
             
             // Move body
             for(int i = snake_len - 1; i > 0; i--) {
@@ -58,13 +66,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Collision with walls
             if (snake[0].x < 0 || snake[0].x >= GRID_WIDTH || 
                 snake[0].y < 0 || snake[0].y >= GRID_HEIGHT) {
-                game_over = 1;
+                game_state = 2;
             }
 
             // Collision with self
             for(int i = 1; i < snake_len; i++) {
                 if (snake[0].x == snake[i].x && snake[0].y == snake[i].y) {
-                    game_over = 1;
+                    game_state = 2;
                 }
             }
 
@@ -74,9 +82,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     snake[snake_len] = snake[snake_len-1]; // grow
                     snake_len++;
                 }
-                score += 10;
+                score += score_mult;
                 if (score > high_score) high_score = score;
-                if (current_speed > 50) current_speed -= 2;
+                if (current_speed > 30) current_speed -= 2;
                 SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                 PlaceFood();
             }
@@ -85,10 +93,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (game_over && wParam == VK_RETURN) {
-                InitGame();
-                SetTimer(hwnd, TIMER_ID, current_speed, NULL);
-            } else if (!game_over) {
+            if (game_state == 0) {
+                if (wParam == '1') { difficulty = 0; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
+                else if (wParam == '2') { difficulty = 1; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
+                else if (wParam == '3') { difficulty = 2; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 2 && wParam == VK_RETURN) {
+                game_state = 0;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (game_state == 1) {
                 if (wParam == VK_UP && dir_y != 1) { dir_x = 0; dir_y = -1; }
                 if (wParam == VK_DOWN && dir_y != -1) { dir_x = 0; dir_y = 1; }
                 if (wParam == VK_LEFT && dir_x != 1) { dir_x = -1; dir_y = 0; }
@@ -104,11 +117,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &ps.rcPaint, bg);
             DeleteObject(bg);
 
-            if (game_over) {
+            if (game_state == 0) {
+                SetTextColor(hdc, RGB(255, 255, 255));
+                SetBkMode(hdc, TRANSPARENT);
+                TextOutA(hdc, 80, 50, "KSNAKE", 6);
+                TextOutA(hdc, 40, 100, "Select Difficulty:", 18);
+                TextOutA(hdc, 40, 130, "1 - Easy", 8);
+                TextOutA(hdc, 40, 150, "2 - Medium", 10);
+                TextOutA(hdc, 40, 170, "3 - Hard", 8);
+            } else if (game_state == 2) {
                 SetTextColor(hdc, RGB(255, 0, 0));
                 SetBkMode(hdc, TRANSPARENT);
-                TextOutA(hdc, 50, 100, "GAME OVER", 9);
-                TextOutA(hdc, 30, 130, "Press ENTER to restart", 22);
+                TextOutA(hdc, 100, 100, "GAME OVER", 9);
+                TextOutA(hdc, 60, 130, "Press ENTER to return", 21);
             } else {
                 HBRUSH snakeBrush = CreateSolidBrush(RGB(0, 255, 0));
                 for(int i = 0; i < snake_len; i++) {
@@ -125,11 +146,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(foodBrush);
             }
 
-            char score_text[64];
-            wsprintf(score_text, "Score: %d  High: %d", score, high_score);
-            SetTextColor(hdc, RGB(255, 255, 255));
-            SetBkMode(hdc, TRANSPARENT);
-            TextOutA(hdc, 5, 5, score_text, lstrlenA(score_text));
+            if (game_state != 0) {
+                char score_text[64];
+                wsprintf(score_text, "Score: %d  High: %d", score, high_score);
+                SetTextColor(hdc, RGB(255, 255, 255));
+                SetBkMode(hdc, TRANSPARENT);
+                TextOutA(hdc, 5, 5, score_text, lstrlenA(score_text));
+            }
 
             EndPaint(hwnd, &ps);
             break;
