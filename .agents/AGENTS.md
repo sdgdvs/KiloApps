@@ -12,17 +12,18 @@
 
 ## Multi-Agent Coordination (CRITICAL)
 
-Multiple agents operate on this codebase on overlapping schedules. To prevent merge conflicts and data loss:
+Multiple agents operate on this codebase on overlapping schedules, potentially from different computers. To prevent merge conflicts and data loss:
 
 1. **Always `git pull` first.** Before reading or editing any file, run `git pull` to ensure you have the latest version. Other agents may have pushed changes since your last turn.
-2. **Minimize shared-file edits.** The files `KiloOS/src/App.jsx` and `KiloOS/src/index.css` are edited by multiple agents and are high-conflict. When editing these files:
+2. **Minimize shared-file edits.** The files `KiloOS/src/App.jsx` and `KiloOS/src/index.css` are owned by the Shell & UX agent. When other agents need to edit App.jsx (e.g., to register a new app):
    - Pull immediately before editing.
-   - Make surgical, minimal changes — do not rewrite large blocks.
+   - Make surgical, minimal changes — ONLY add entries to the APPS array.
    - Commit and push immediately after editing, before doing other work.
-3. **Own your plan file.** Each scheduled agent should only modify its own plan file:
-   - `app_polish_plan.md` — Polish/expansion agent only.
-   - `app_fix_plan.md` — Bug-fix/maintenance agent only.
-   - `new_app_plan.md` — New app development agent only.
+3. **Own your plan file.** Each agent should only modify its own plan file:
+   - `app_work_plan.md` — App Builder agent only.
+   - `app_fix_plan.md` — Quality & Build agent only.
+   - `kiloos_ux_plan.md` — Shell & UX agent only.
+   - `game_content_plan.md` — Game Content agent only.
    - If you need to check another agent's plan (e.g., to avoid working on the same app), read it but do not edit it.
 4. **Check for conflicts after push.** If `git push` fails due to a conflict, run `git pull --rebase`, resolve any conflicts conservatively (prefer the remote version for code you didn't write), then push again.
 
@@ -37,8 +38,8 @@ Multiple agents operate on this codebase on overlapping schedules. To prevent me
 - After modifying `App.jsx` or `index.css`, run `npm run build` inside `KiloOS/` to verify the build succeeds before committing.
 - After modifying a native app's `.c` file, run its `build.bat` to verify compilation.
 
-## ARG / Easter Egg Documentation
+## Logging Discipline
 
-- Any hidden behavior, easter eggs, or narrative elements added to the codebase **must** be documented in a dedicated manifest file (e.g., `arg_plan.md` or similar).
-- The manifest must list: what was added, which files were modified, how to trigger it, and any side effects (animations, console output, fake errors, etc.).
-- Do not add hidden features that could be mistaken for bugs (e.g., random screen glitches, unresponsive UI elements) without clear documentation.
+- Keep plan files concise. A few lines per completed item is sufficient.
+- Do NOT duplicate file contents into log files.
+- Do NOT create growing log files that append data every turn. Track status, not history.
