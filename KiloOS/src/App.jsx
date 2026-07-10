@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.36';
+const MICROS_VERSION = '0.3.37';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -1018,7 +1018,18 @@ function App() {
             <div className="calendar-flyout-weekday">{new Date().toLocaleDateString([], { weekday: 'long' })}</div>
           </div>
         )}
-        <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr} onClick={(e) => { e.stopPropagation(); playClickAudio(); setCalendarOpen(!calendarOpen); setStartOpen(false); }}>{time}</div>
+        <div className="system-tray">
+          <div className="tray-icon" title="Network Connected" onClick={(e) => { e.stopPropagation(); playClickAudio(); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+          </div>
+          <div className="tray-icon" title="Volume: 100%" onClick={(e) => { e.stopPropagation(); playClickAudio(); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+          </div>
+          <div className="tray-icon" title="Battery: 100%" onClick={(e) => { e.stopPropagation(); playClickAudio(); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="23" y1="13" x2="23" y2="11"></line></svg>
+          </div>
+          <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr} onClick={(e) => { e.stopPropagation(); playClickAudio(); setCalendarOpen(!calendarOpen); setStartOpen(false); }}>{time}</div>
+        </div>
       </div>
 
       {modal && (

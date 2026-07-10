@@ -508,14 +508,39 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   animation: taskbarItemIn 0.2s ease forwards;
 }
 
+.system-tray {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  border-left: 1px solid var(--border-color);
+  padding-left: 10px;
+}
+
+.tray-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 4px;
+}
+
+.tray-icon:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-main);
+}
+
 .clock-tray {
   color: var(--text-muted);
   height: 100%;
-  padding: 0 20px;
+  padding: 0 15px;
   display: flex;
   align-items: center;
   font-size: 13px;
-  border-left: 1px solid var(--border-color);
   transition: color 0.3s;
 }
 .clock-tray.update-pulse {
