@@ -83,7 +83,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)
 - [x] KSnake (Added high scores and progressive difficulty speed-up to both EXE and HTML)
-- [ ] KTetris
+- [x] KTetris (Added next piece preview and high scores to both EXE and HTML, added progressive speed to HTML)
 - [ ] KSolitaire
 - [ ] KSpace
 - [ ] KMines

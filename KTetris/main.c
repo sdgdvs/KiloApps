@@ -8,6 +8,29 @@
 
 int grid[H][W];
 int current_piece, current_rot, current_x, current_y;
+int next_piece, next_rot;
+int high_score = 0;
+
+void load_high_score() {
+    HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesRead;
+        ReadFile(hFile, &high_score, sizeof(int), &bytesRead, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void save_high_score() {
+    if (score > high_score) {
+        high_score = score;
+        HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD bytesWritten;
+            WriteFile(hFile, &high_score, sizeof(int), &bytesWritten, NULL);
+            CloseHandle(hFile);
+        }
+    }
+}
 int game_over = 0;
 int score = 0;
 int timer_speed = 500;
@@ -88,12 +111,15 @@ void lock_piece() {
 }
 
 void spawn_piece() {
-    current_piece = random_int(7);
-    current_rot = 0;
+    current_piece = next_piece;
+    current_rot = next_rot;
     current_x = W / 2 - 2;
     current_y = -2;
+    next_piece = random_int(7);
+    next_rot = 0;
     if (check_collision(current_piece, current_rot, current_x, current_y + 1)) {
         game_over = 1;
+        save_high_score();
     }
 }
 
@@ -105,12 +131,15 @@ void InitGame() {
     score = 0;
     timer_speed = 500;
     game_over = 0;
+    next_piece = random_int(7);
+    next_rot = 0;
     spawn_piece();
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
+            load_high_score();
             InitGame();
             SetTimer(hwnd, TIMER_ID, 500, NULL);
             break;
@@ -202,6 +231,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char score_str[32];
             wsprintfA(score_str, "SCORE: %d", score);
             TextOutA(memDC, W * CELL_SIZE + 10, 20, score_str, lstrlenA(score_str));
+            
+            char hi_str[32];
+            wsprintfA(hi_str, "HI: %d", high_score);
+            TextOutA(memDC, W * CELL_SIZE + 10, 40, hi_str, lstrlenA(hi_str));
+            
+            TextOutA(memDC, W * CELL_SIZE + 10, 70, "NEXT:", 5);
+            if (!game_over) {
+                unsigned short next_shape = tetrominos[next_piece][next_rot];
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (next_shape & (1 << (15 - (y * 4 + x)))) {
+                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 90 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 90 + (y + 1) * CELL_SIZE - 1 };
+                            FillRect(memDC, &r, brushes[next_piece + 1]);
+                        }
+                    }
+                }
+            }
             
             HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
             HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);

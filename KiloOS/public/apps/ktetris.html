@@ -8,7 +8,7 @@
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="200" height="400"></canvas>
+<canvas id="gameCanvas" width="300" height="400"></canvas>
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -28,6 +28,8 @@
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
   let pc, rot, cx, cy, gameOver = false, score = 0;
+  let nextPc, nextRot;
+  let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
 
   function checkCol(p, r, x, y) {
       let shape = tetrominos[p][r];
@@ -43,9 +45,17 @@
   }
 
   function spawn() {
-      pc = Math.floor(Math.random() * 7);
-      rot = 0; cx = 3; cy = -2;
-      if (checkCol(pc, rot, cx, cy + 1)) gameOver = true;
+      pc = nextPc;
+      rot = nextRot; cx = 3; cy = -2;
+      nextPc = Math.floor(Math.random() * 7);
+      nextRot = 0;
+      if (checkCol(pc, rot, cx, cy + 1)) {
+          gameOver = true;
+          if (score > highScore) {
+              highScore = score;
+              localStorage.setItem('ktetris_hiscore', highScore);
+          }
+      }
   }
 
   function lock() {
@@ -62,6 +72,7 @@
               grid.splice(y, 1);
               grid.unshift(Array(W).fill(0));
               score += 100;
+              dropInterval = Math.max(50, 500 - Math.floor(score / 100) * 10);
               y++;
           }
       }
@@ -71,6 +82,9 @@
       grid = Array(H).fill().map(() => Array(W).fill(0));
       gameOver = false;
       score = 0;
+      dropInterval = 500;
+      nextPc = Math.floor(Math.random() * 7);
+      nextRot = 0;
       spawn();
   }
 
@@ -117,17 +131,54 @@
           ctx.font = '20px monospace';
           ctx.fillText('GAME OVER', 50, 200);
       }
+      
+      ctx.strokeStyle = '#333';
+      ctx.beginPath();
+      ctx.moveTo(W * CELL, 0);
+      ctx.lineTo(W * CELL, H * CELL);
+      ctx.stroke();
+
+      ctx.fillStyle = 'white';
+      ctx.font = '12px monospace';
+      ctx.fillText('SCORE: ' + score, 210, 20);
+      ctx.fillText('HI: ' + highScore, 210, 40);
+      ctx.fillText('NEXT:', 210, 70);
+      
+      if (!gameOver) {
+          let nextShape = tetrominos[nextPc][nextRot];
+          ctx.fillStyle = colors[nextPc + 1];
+          for (let i = 0; i < 4; i++) {
+              for (let j = 0; j < 4; j++) {
+                  if (nextShape & (1 << (15 - (i * 4 + j)))) {
+                      ctx.fillRect(210 + j * CELL + 1, 90 + i * CELL + 1, CELL - 2, CELL - 2);
+                  }
+              }
+          }
+      }
   }
 
-  setInterval(() => {
-      if (!gameOver) {
-          if (!checkCol(pc, rot, cx, cy + 1)) cy++;
-          else { lock(); spawn(); }
-          draw();
+  let lastTime = 0;
+  let dropCounter = 0;
+  let dropInterval = 500;
+
+  function update(time = 0) {
+      const deltaTime = time - lastTime;
+      lastTime = time;
+      dropCounter += deltaTime;
+      
+      if (dropCounter > dropInterval) {
+          if (!gameOver) {
+              if (!checkCol(pc, rot, cx, cy + 1)) cy++;
+              else { lock(); spawn(); }
+              draw();
+          }
+          dropCounter = 0;
       }
-  }, 500);
+      requestAnimationFrame(update);
+  }
 
   init();
+  update();
 </script>
 </body>
 </html>
