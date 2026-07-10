@@ -602,7 +602,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   min-width: 250px;
   min-height: 200px;
   overflow: visible;
-  transition: width 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), left 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), border-radius 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: width 0.15s ease, height 0.15s ease, left 0.15s ease, top 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease, transform 0.15s ease, border-radius 0.15s ease, filter 0.15s ease;
 }
 
 .xp-window:not(.active):not(.minimized) {
@@ -968,3 +968,40 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 .arg-corrupted-glitch {
   animation: arg-glitch-anim 0.3s cubic-bezier(.25, .46, .45, .94) both;
 }
+
+/* Phase 4: Responsive Design (Mobile Friendliness) */
+@media (max-width: 600px) {
+  .desktop {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 10px;
+    padding: 10px;
+  }
+  .desktop-icon {
+    width: 60px;
+  }
+  .icon-img {
+    width: 36px;
+    height: 36px;
+    margin-top: 4px;
+    border-radius: 8px;
+  }
+  .icon-label {
+    font-size: 11px;
+  }
+  .start-menu {
+    width: calc(100% - 20px);
+    left: 10px;
+    bottom: 50px;
+  }
+  .start-columns {
+    flex-direction: column;
+  }
+  .start-system {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+}
+
