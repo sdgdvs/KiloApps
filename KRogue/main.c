@@ -26,6 +26,8 @@
 #define C_GOLEM RGB(180,180,200)
 #define C_LICH RGB(255,255,0)
 #define C_SHOPKEEPER RGB(255,215,0)
+#define C_SKELETON RGB(220, 220, 220)
+#define C_DEMON RGB(200, 0, 50)
 
 #define C_POTION RGB(255,50,255)
 #define C_WEAPON RGB(50,255,255)
@@ -256,28 +258,32 @@ void spawn_monster(int x, int y) {
             }
             
             int tier = rand_range(1, max_tier);
-            int m = rand_range(0, 3);
+            int m = rand_range(0, 4);
             
             if(tier == 1) {
                 if(m == 0) { e->ch = 'r'; e->fg = C_RAT; str_cpy(e->name, "Giant Rat"); e->hp = e->max_hp = 5 + g.dlevel; e->atk = 2; e->def = 1; e->xp = 2; e->behavior = B_NORMAL; }
                 else if(m == 1) { e->ch = 'b'; e->fg = C_BAT; str_cpy(e->name, "Giant Bat"); e->hp = e->max_hp = 3 + g.dlevel; e->atk = 1; e->def = 1; e->xp = 3; e->behavior = B_FAST; }
                 else if(m == 2) { e->ch = 's'; e->fg = C_SLIME; str_cpy(e->name, "Slime"); e->hp = e->max_hp = 10 + g.dlevel; e->atk = 2; e->def = 3; e->xp = 3; e->behavior = B_SLUGGISH; e->special_ability = ABILITY_SPLIT; }
-                else { e->ch = 'g'; e->fg = C_GOBLIN; str_cpy(e->name, "Goblin"); e->hp = e->max_hp = 6 + g.dlevel; e->atk = 3; e->def = 1; e->xp = 2; e->behavior = B_COWARD; }
+                else if(m == 3) { e->ch = 'g'; e->fg = C_GOBLIN; str_cpy(e->name, "Goblin"); e->hp = e->max_hp = 6 + g.dlevel; e->atk = 3; e->def = 1; e->xp = 2; e->behavior = B_COWARD; }
+                else { e->ch = 'x'; e->fg = C_SKELETON; str_cpy(e->name, "Skeleton"); e->hp = e->max_hp = 8 + g.dlevel; e->atk = 3; e->def = 1; e->xp = 3; e->behavior = B_NORMAL; }
             } else if(tier == 2) {
                 if(m == 0) { e->ch = 'o'; e->fg = C_ORC; str_cpy(e->name, "Orc"); e->hp = e->max_hp = 12 + g.dlevel*2; e->atk = 4; e->def = 2; e->xp = 5; e->behavior = B_NORMAL; }
                 else if(m == 1) { e->ch = 'S'; e->fg = C_SPIDER; str_cpy(e->name, "Giant Spider"); e->hp = e->max_hp = 10 + g.dlevel*2; e->atk = 4; e->def = 1; e->xp = 6; e->behavior = B_FAST; }
                 else if(m == 2) { e->ch = 'z'; e->fg = C_ZOMBIE; str_cpy(e->name, "Zombie"); e->hp = e->max_hp = 25 + g.dlevel*2; e->atk = 5; e->def = 1; e->xp = 8; e->behavior = B_SLUGGISH; }
-                else { e->ch = 'k'; e->fg = C_KOBOLD; str_cpy(e->name, "Kobold"); e->hp = e->max_hp = 8 + g.dlevel*2; e->atk = 3; e->def = 1; e->xp = 4; e->behavior = B_COWARD; }
+                else if(m == 3) { e->ch = 'k'; e->fg = C_KOBOLD; str_cpy(e->name, "Kobold"); e->hp = e->max_hp = 8 + g.dlevel*2; e->atk = 3; e->def = 1; e->xp = 4; e->behavior = B_COWARD; }
+                else { e->ch = 'c'; e->fg = C_GOBLIN; str_cpy(e->name, "Centipede"); e->hp = e->max_hp = 12 + g.dlevel*2; e->atk = 4; e->def = 2; e->xp = 5; e->behavior = B_ERRATIC; }
             } else if(tier == 3) {
                 if(m == 0) { e->ch = 'T'; e->fg = C_TROLL; str_cpy(e->name, "Cave Troll"); e->hp = e->max_hp = 30 + g.dlevel*3; e->atk = 8; e->def = 4; e->xp = 15; e->behavior = B_NORMAL; }
                 else if(m == 1) { e->ch = 'M'; e->fg = C_MINOTAUR; str_cpy(e->name, "Minotaur"); e->hp = e->max_hp = 25 + g.dlevel*3; e->atk = 10; e->def = 3; e->xp = 20; e->behavior = B_FAST; }
                 else if(m == 2) { e->ch = 'W'; e->fg = C_WRAITH; str_cpy(e->name, "Wraith"); e->hp = e->max_hp = 20 + g.dlevel*3; e->atk = 9; e->def = 5; e->xp = 18; e->behavior = B_ERRATIC; }
-                else { e->ch = 'e'; e->fg = C_ELF; str_cpy(e->name, "Dark Elf"); e->hp = e->max_hp = 20 + g.dlevel*3; e->atk = 12; e->def = 3; e->xp = 16; e->behavior = B_SMART; }
+                else if(m == 3) { e->ch = 'e'; e->fg = C_ELF; str_cpy(e->name, "Dark Elf"); e->hp = e->max_hp = 20 + g.dlevel*3; e->atk = 12; e->def = 3; e->xp = 16; e->behavior = B_SMART; }
+                else { e->ch = 'y'; e->fg = C_SKELETON; str_cpy(e->name, "Gargoyle"); e->hp = e->max_hp = 35 + g.dlevel*3; e->atk = 7; e->def = 8; e->xp = 16; e->behavior = B_SLUGGISH; }
             } else {
                 if(m == 0) { e->ch = 'D'; e->fg = C_DRAGON; str_cpy(e->name, "Red Dragon"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 15; e->def = 8; e->xp = 50; e->behavior = B_NORMAL; e->special_ability = ABILITY_BREATHE_FIRE; }
                 else if(m == 1) { e->ch = 'V'; e->fg = C_VAMPIRE; str_cpy(e->name, "Vampire"); e->hp = e->max_hp = 45 + g.dlevel*5; e->atk = 14; e->def = 6; e->xp = 45; e->behavior = B_FAST; }
                 else if(m == 2) { e->ch = 'G'; e->fg = C_GOLEM; str_cpy(e->name, "Stone Golem"); e->hp = e->max_hp = 80 + g.dlevel*5; e->atk = 10; e->def = 15; e->xp = 60; e->behavior = B_SLUGGISH; }
-                else { e->ch = 'L'; e->fg = C_LICH; str_cpy(e->name, "Lich"); e->hp = e->max_hp = 40 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 80; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else if(m == 3) { e->ch = 'L'; e->fg = C_LICH; str_cpy(e->name, "Lich"); e->hp = e->max_hp = 40 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 80; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else { e->ch = 'd'; e->fg = C_DEMON; str_cpy(e->name, "Demon"); e->hp = e->max_hp = 50 + g.dlevel*5; e->atk = 18; e->def = 10; e->xp = 70; e->behavior = B_FAST; e->special_ability = ABILITY_BREATHE_FIRE; }
             }
             break;
         }
@@ -314,9 +320,10 @@ void generate_random_item(Item* it) {
         else str_cpy(it->name, "Kiteshield");
     } else if (r < 98) {
         it->ch = '='; it->fg = RGB(255,215,0); it->type = TYPE_RING;
-        it->subtype = rand_range(0, 1);
+        it->subtype = rand_range(0, 2);
         if(it->subtype == 0) { str_cpy(it->name, "Ring of Strength"); it->val = 2 + g.dlevel/2; }
-        else { str_cpy(it->name, "Ring of Health"); it->val = 10 + g.dlevel * 5; }
+        else if(it->subtype == 1) { str_cpy(it->name, "Ring of Health"); it->val = 10 + g.dlevel * 5; }
+        else { str_cpy(it->name, "Amulet of Life"); it->val = 20 + g.dlevel * 5; it->ch = '"'; }
     } else {
         it->ch = '?'; it->fg = RGB(200, 100, 255); it->type = TYPE_SPELLBOOK;
         it->subtype = rand_range(0, 2);
@@ -564,7 +571,7 @@ void calc_stats(Entity* e) {
         
         if(g.equip_ring.active) {
             if(g.equip_ring.subtype == 0) eff_str += g.equip_ring.val;
-            if(g.equip_ring.subtype == 1) bonus_hp += g.equip_ring.val;
+            if(g.equip_ring.subtype == 1 || g.equip_ring.subtype == 2) bonus_hp += g.equip_ring.val;
         }
 
         e->max_hp = 10 + (e->tou * 2) + (e->level * 2) + bonus_hp;
@@ -1175,7 +1182,7 @@ void draw_game(HDC hdc) {
         if(g.equip_weapon.active) { wsprintfA(buf, "1. Weapon: %s (+%d ATK)", g.equip_weapon.name, g.equip_weapon.val); TextOutA(memDC, 20, y, buf, str_len(buf)); y += char_h; }
         if(g.equip_armor.active) { wsprintfA(buf, "2. Armor: %s (+%d DEF)", g.equip_armor.name, g.equip_armor.val); TextOutA(memDC, 20, y, buf, str_len(buf)); y += char_h; }
         if(g.equip_shield.active) { wsprintfA(buf, "3. Shield: %s (+%d DEF)", g.equip_shield.name, g.equip_shield.val); TextOutA(memDC, 20, y, buf, str_len(buf)); y += char_h; }
-        if(g.equip_ring.active) { wsprintfA(buf, "4. Ring: %s", g.equip_ring.name); TextOutA(memDC, 20, y, buf, str_len(buf)); y += char_h; }
+        if(g.equip_ring.active) { wsprintfA(buf, "4. Ring/Amulet: %s", g.equip_ring.name); TextOutA(memDC, 20, y, buf, str_len(buf)); y += char_h; }
         y += char_h;
         
         for(int i=0; i<MAX_INVENTORY; i++) {
