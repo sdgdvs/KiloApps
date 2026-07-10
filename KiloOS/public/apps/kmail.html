@@ -1,77 +1,328 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>KMail</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; height: 100vh; }
-  .list { width: 33%; border-right: 1px solid #ccc; background: #fff; overflow-y: auto; }
-  .item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
-  .item:hover { background: #e0f0ff; }
-  .item.selected { background: #0078d7; color: #fff; }
-  .item .subject { font-weight: bold; }
-  .item .sender { font-size: 12px; color: #666; }
-  .item.selected .sender { color: #cce4f7; }
+  :root {
+    --bg-main: #0f172a;
+    --bg-glass: rgba(30, 41, 59, 0.7);
+    --border: rgba(255, 255, 255, 0.1);
+    --text-primary: #f8fafc;
+    --text-sec: #94a3b8;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --danger: #ef4444;
+  }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  /* Sidebar */
+  .sidebar {
+    width: 200px;
+    background: var(--bg-glass);
+    border-right: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+  }
+  .compose-btn {
+    margin: 0 15px 20px 15px;
+    padding: 10px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .compose-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .folder {
+    padding: 10px 20px;
+    cursor: pointer;
+    color: var(--text-sec);
+    transition: background 0.2s, color 0.2s;
+  }
+  .folder:hover, .folder.active {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+  }
+  /* Email List */
+  .list {
+    width: 300px;
+    background: rgba(15, 23, 42, 0.8);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .item {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .item:hover { background: rgba(255,255,255,0.03); }
+  .item.selected { background: rgba(59, 130, 246, 0.2); border-left: 3px solid var(--accent); }
+  .item.unread .subject { font-weight: 700; color: #fff; }
+  .item.unread::after {
+    content: '';
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+  .subject { font-weight: 500; margin-bottom: 4px; font-size: 14px; }
+  .sender { font-size: 12px; color: var(--text-sec); }
   
-  .pane { flex: 1; padding: 20px; display: flex; flex-direction: column; background: #fff; }
-  .pane-header { padding-bottom: 15px; border-bottom: 1px solid #eee; margin-bottom: 15px; }
-  .pane-subject { font-size: 20px; font-weight: bold; margin: 0 0 5px 0; }
-  .pane-sender { font-size: 14px; color: #666; margin: 0; }
-  .pane-body { flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 14px; line-height: 1.5; }
+  /* Pane */
+  .pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(15, 23, 42, 0.95);
+    position: relative;
+  }
+  .pane-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .pane-subject { font-size: 22px; font-weight: 600; margin: 0 0 10px 0; }
+  .pane-sender { font-size: 14px; color: var(--text-sec); margin: 0; }
+  .pane-actions button {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 5px;
+    transition: 0.2s;
+  }
+  .pane-actions button:hover { background: rgba(255,255,255,0.2); }
+  .pane-actions .del-btn:hover { background: var(--danger); }
+  .pane-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #cbd5e1;
+  }
+  
+  /* Compose Modal */
+  .modal {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
+  .compose-box {
+    background: #1e293b;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .compose-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+  }
+  .compose-header span { cursor: pointer; color: var(--text-sec); }
+  .compose-header span:hover { color: white; }
+  .compose-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+  .compose-body input, .compose-body textarea {
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--border);
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: inherit;
+  }
+  .compose-body textarea { height: 150px; resize: none; }
+  .compose-footer { padding: 15px; text-align: right; border-top: 1px solid var(--border); }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  
+  #empty-state { display: flex; flex: 1; align-items: center; justify-content: center; color: var(--text-sec); flex-direction: column; }
+  #empty-state h3 { margin-bottom: 5px; }
 </style>
 </head>
 <body>
-<div class="list" id="list"></div>
-<div class="pane">
-  <div class="pane-header">
-    <h2 class="pane-subject" id="p-sub">Select an email to read...</h2>
-    <p class="pane-sender" id="p-sen"></p>
-  </div>
-  <div class="pane-body" id="p-body"></div>
-</div>
-<script>
-  const emails = [
-    {
-      subject: "Welcome to KiloOS",
-      sender: "sysadmin@kilo.os",
-      body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment. We have installed several micro-apps for your convenience.\n\nEnjoy your stay!\n- SysAdmin"
-    },
-    {
-      subject: "Meeting at 3PM",
-      sender: "boss@kilo.os",
-      body: "Don't forget our meeting at 3PM in the conference room. We need to discuss the Q3 roadmap.\n\nRegards,\nBoss"
-    },
-    {
-      subject: "URGENT: Server down",
-      sender: "alerts@kilo.os",
-      body: "The primary database server is unresponsive. Please investigate immediately. This is not a drill."
-    },
-    {
-      subject: "Newsletter #42",
-      sender: "news@kilo.os",
-      body: "Here is your weekly digest of what's new in the world of retro computing..."
-    }
-  ];
 
-  const list = document.getElementById('list');
-  const pSub = document.getElementById('p-sub');
-  const pSen = document.getElementById('p-sen');
-  const pBody = document.getElementById('p-body');
+<div class="sidebar">
+  <button class="compose-btn" onclick="openCompose()">New Message</button>
+  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
+  <div class="folder" onclick="switchFolder('sent')" id="f-sent">Sent</div>
+  <div class="folder" onclick="switchFolder('trash')" id="f-trash">Trash</div>
+</div>
+
+<div class="list" id="list"></div>
+
+<div class="pane" id="pane">
+  <div id="empty-state">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+    <h3>No message selected</h3>
+    <p>Select an email from the list to read</p>
+  </div>
+  <div id="content-state" style="display: none; height: 100%; flex-direction: column;">
+    <div class="pane-header">
+      <div>
+        <h2 class="pane-subject" id="p-sub"></h2>
+        <p class="pane-sender" id="p-sen"></p>
+      </div>
+      <div class="pane-actions">
+        <button onclick="replyEmail()">Reply</button>
+        <button class="del-btn" onclick="deleteEmail()">Delete</button>
+      </div>
+    </div>
+    <div class="pane-body" id="p-body"></div>
+  </div>
+</div>
+
+<div class="modal" id="compose-modal">
+  <div class="compose-box">
+    <div class="compose-header">
+      New Message
+      <span onclick="closeCompose()">✕</span>
+    </div>
+    <div class="compose-body">
+      <input type="text" id="c-to" placeholder="To" />
+      <input type="text" id="c-sub" placeholder="Subject" />
+      <textarea id="c-body" placeholder="Write your message here..."></textarea>
+    </div>
+    <div class="compose-footer">
+      <button class="compose-btn" style="margin:0" onclick="sendEmail()">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let emails = [
+    { id: 1, folder: 'inbox', subject: "Welcome to KiloOS", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment. We have installed several micro-apps for your convenience.\n\nEnjoy your stay!\n- SysAdmin", unread: true },
+    { id: 2, folder: 'inbox', subject: "Meeting at 3PM", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM in the conference room. We need to discuss the Q3 roadmap.\n\nRegards,\nBoss", unread: false },
+    { id: 3, folder: 'inbox', subject: "URGENT: Server down", sender: "alerts@kilo.os", body: "The primary database server is unresponsive. Please investigate immediately. This is not a drill.", unread: true },
+    { id: 4, folder: 'inbox', subject: "Newsletter #42", sender: "news@kilo.os", body: "Here is your weekly digest of what's new in the world of retro computing...", unread: false },
+    { id: 5, folder: 'sent', subject: "Re: Meeting at 3PM", sender: "me@kilo.os", body: "I'll be there.\n\n- Me", unread: false }
+  ];
+  
+  let currentFolder = 'inbox';
+  let selectedId = null;
+  let nextId = 6;
 
   function renderList() {
-      list.innerHTML = '';
-      emails.forEach((em, idx) => {
-          let d = document.createElement('div');
-          d.className = 'item';
-          d.innerHTML = `<div class="subject">${em.subject}</div><div class="sender">${em.sender}</div>`;
-          d.onclick = () => {
-              document.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
-              d.classList.add('selected');
-              pSub.textContent = em.subject;
-              pSen.textContent = `From: ${em.sender}`;
-              pBody.textContent = em.body;
-          };
-          list.appendChild(d);
-      });
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    const filtered = emails.filter(e => e.folder === currentFolder);
+    
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="padding: 20px; color: #64748b; text-align: center; font-size: 14px;">Folder is empty</div>';
+    }
+
+    filtered.forEach(em => {
+      let d = document.createElement('div');
+      d.className = `item ${em.unread ? 'unread' : ''} ${selectedId === em.id ? 'selected' : ''}`;
+      d.innerHTML = `<div class="subject">${em.subject}</div><div class="sender">${em.folder==='sent' ? 'To: '+em.sender : em.sender}</div>`;
+      d.onclick = () => selectEmail(em.id);
+      list.appendChild(d);
+    });
+  }
+
+  function selectEmail(id) {
+    selectedId = id;
+    let em = emails.find(e => e.id === id);
+    if(em && em.unread) {
+      em.unread = false;
+    }
+    renderList();
+    
+    if(em) {
+      document.getElementById('empty-state').style.display = 'none';
+      document.getElementById('content-state').style.display = 'flex';
+      document.getElementById('p-sub').textContent = em.subject;
+      document.getElementById('p-sen').textContent = em.folder==='sent' ? `To: ${em.sender}` : `From: ${em.sender}`;
+      document.getElementById('p-body').textContent = em.body;
+    } else {
+      document.getElementById('empty-state').style.display = 'flex';
+      document.getElementById('content-state').style.display = 'none';
+    }
+  }
+
+  function switchFolder(folder) {
+    currentFolder = folder;
+    selectedId = null;
+    document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+    document.getElementById(`f-${folder}`).classList.add('active');
+    renderList();
+    selectEmail(null);
+  }
+
+  function deleteEmail() {
+    if(!selectedId) return;
+    let em = emails.find(e => e.id === selectedId);
+    if(em.folder === 'trash') {
+      emails = emails.filter(e => e.id !== selectedId);
+    } else {
+      em.folder = 'trash';
+    }
+    selectedId = null;
+    renderList();
+    selectEmail(null);
+  }
+
+  function openCompose() {
+    document.getElementById('c-to').value = '';
+    document.getElementById('c-sub').value = '';
+    document.getElementById('c-body').value = '';
+    document.getElementById('compose-modal').classList.add('active');
+  }
+  function closeCompose() {
+    document.getElementById('compose-modal').classList.remove('active');
+  }
+  function sendEmail() {
+    let to = document.getElementById('c-to').value || 'unknown@kilo.os';
+    let sub = document.getElementById('c-sub').value || 'No Subject';
+    let body = document.getElementById('c-body').value;
+    
+    emails.unshift({
+      id: nextId++, folder: 'sent', subject: sub, sender: to, body: body, unread: false
+    });
+    closeCompose();
+    if(currentFolder === 'sent') renderList();
+  }
+  function replyEmail() {
+    let em = emails.find(e => e.id === selectedId);
+    if(!em) return;
+    openCompose();
+    document.getElementById('c-to').value = em.folder === 'sent' ? em.sender : em.sender;
+    document.getElementById('c-sub').value = em.subject.startsWith('Re:') ? em.subject : 'Re: ' + em.subject;
+    document.getElementById('c-body').value = `\n\n--- Original Message ---\n${em.body}`;
+    document.getElementById('c-body').focus();
   }
 
   renderList();
