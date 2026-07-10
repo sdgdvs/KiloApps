@@ -2,32 +2,81 @@
 <html>
 <head>
 <title>KDB</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #fff; padding: 10px; height: 100vh; box-sizing: border-box; }
+  :root {
+    --bg-color: hsl(210, 15%, 12%);
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --primary: hsl(200, 85%, 60%);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-main: #ffffff;
+    --text-muted: #aaaaaa;
+  }
+  body { 
+    margin: 0; font-family: "Inter", sans-serif; background-color: var(--bg-color); 
+    padding: 20px; height: 100vh; box-sizing: border-box; color: var(--text-main);
+  }
+  .container {
+    background: var(--card-bg);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+  }
+  .header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--primary); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; }
-  th { background-color: #f0f0f0; }
-  tr:nth-child(even) { background-color: #fafafa; }
-  tr:hover { background-color: #e0f0ff; }
+  th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
+  th { 
+    background-color: rgba(255,255,255,0.02); 
+    color: var(--text-muted); 
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+  tr { transition: background-color 0.2s ease; }
+  tr:hover { background-color: rgba(255, 255, 255, 0.08); }
+  tr:last-child td { border-bottom: none; }
+  td { color: #e0e0e0; }
+  .tag {
+    background: rgba(255,255,255,0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
 </style>
 </head>
 <body>
-<table>
-  <thead>
-    <tr>
-      <th style="width: 50px;">ID</th>
-      <th style="width: 150px;">Name</th>
-      <th style="width: 120px;">Department</th>
-      <th style="width: 120px;">Role</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td>101</td><td>Alice Smith</td><td>Engineering</td><td>Developer</td></tr>
-    <tr><td>102</td><td>Bob Johnson</td><td>Marketing</td><td>Designer</td></tr>
-    <tr><td>103</td><td>Charlie Davis</td><td>Sales</td><td>Executive</td></tr>
-    <tr><td>104</td><td>Diana Prince</td><td>Engineering</td><td>Lead</td></tr>
-    <tr><td>105</td><td>Evan Wright</td><td>HR</td><td>Manager</td></tr>
-  </tbody>
-</table>
+<div class="container">
+  <div class="header">
+    <h2>Employee Database</h2>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 60px;">ID</th>
+        <th>Name</th>
+        <th>Department</th>
+        <th>Role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td></tr>
+      <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td></tr>
+      <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td></tr>
+      <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td></tr>
+      <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td></tr>
+    </tbody>
+  </table>
+</div>
 </body>
 </html>

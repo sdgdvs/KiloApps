@@ -7,7 +7,7 @@
 ## Completed Apps (Do Not Redo)
 
 ### Polished
-KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong
+KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB
 
 ### Feature-Expanded
 KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess
@@ -21,4 +21,4 @@ KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
 
 ## Priority Queue (Never Touched)
 Select from these for polish/expansion next:
-KDB, KDraw, KFont, KHex, KImage, KMail, KMandel, KPad, KPing, KRogue, KScript, KSnake, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KTetris, KType
+KDraw, KFont, KHex, KImage, KMail, KMandel, KPad, KPing, KRogue, KScript, KSnake, KSolitaire, KSound, KSpace, KSynth, KSys, KTask, KTerm, KTetris, KType

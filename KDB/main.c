@@ -23,6 +23,10 @@ void InitListView(HWND hwnd) {
         
     SendMessage(hListView, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
     
+    SendMessage(hListView, LVM_SETTEXTCOLOR, 0, (LPARAM)RGB(255, 255, 255));
+    SendMessage(hListView, LVM_SETTEXTBKCOLOR, 0, (LPARAM)RGB(35, 40, 45));
+    SendMessage(hListView, LVM_SETBKCOLOR, 0, (LPARAM)RGB(26, 32, 38));
+    
     HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -91,7 +95,7 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KDBApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.hbrBackground = CreateSolidBrush(RGB(26, 32, 38));
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database", WS_OVERLAPPEDWINDOW,
