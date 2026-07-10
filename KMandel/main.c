@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <math.h>
 
 #define W 400
 #define H 400
@@ -10,14 +11,36 @@ HBITMAP hBitmap = NULL;
 DWORD* pixels = NULL;
 int bmpW = 0, bmpH = 0;
 
+double minRe = -2.0, maxRe = 1.0;
+double minIm = -1.2, maxIm = 1.2;
+unsigned int max_iter = 100;
+int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
+
+void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsigned char* g, unsigned char* b) {
+    if (t == 0) { // Fire
+        *r = (unsigned char)((n * 255) / iter);
+        *g = (unsigned char)((n * n * 255) / (iter * iter));
+        *b = (unsigned char)((n * 128) / iter);
+    } else if (t == 1) { // Ocean
+        *r = (unsigned char)((n * 128) / iter);
+        *g = (unsigned char)((n * n * 255) / (iter * iter));
+        *b = (unsigned char)((n * 255) / iter);
+    } else if (t == 2) { // Cyberpunk
+        double f = (double)n / iter;
+        *r = (unsigned char)(sin(f * 3.14159) * 255);
+        *g = (unsigned char)(sin(f * 3.14159 * 2) * 128);
+        *b = (unsigned char)(cos(f * 3.14159) * 255);
+    } else { // BW
+        unsigned char v = ((n % 20) > 10) ? 255 : 0;
+        *r = v; *g = v; *b = v;
+    }
+}
+
 void RenderMandelbrot(int width, int height) {
-    if (!pixels) return;
+    if (!pixels || width <= 0 || height <= 0) return;
     
-    double minRe = -2.0, maxRe = 1.0;
-    double minIm = -1.2, maxIm = 1.2;
     double re_factor = (maxRe - minRe) / (width - 1);
     double im_factor = (maxIm - minIm) / (height - 1);
-    unsigned int max_iter = 100;
     
     for (int y = 0; y < height; ++y) {
         double c_im = maxIm - y * im_factor;
@@ -38,10 +61,8 @@ void RenderMandelbrot(int width, int height) {
             if (isInside) {
                 pixels[y * width + x] = 0; // Black
             } else {
-                // Smooth coloring based on iteration count
-                unsigned char r = (unsigned char)((n * 255) / max_iter);
-                unsigned char g = (unsigned char)((n * n * 255) / (max_iter * max_iter));
-                unsigned char b = (unsigned char)((n * 128) / max_iter);
+                unsigned char r, g, b;
+                GetColors(n, max_iter, theme, &r, &g, &b);
                 pixels[y * width + x] = (r << 16) | (g << 8) | b;
             }
         }
@@ -70,6 +91,34 @@ void ResizeBitmap(HWND hwnd, int width, int height) {
     if (pixels) RenderMandelbrot(width, height);
 }
 
+void Zoom(double factor, int mouseX, int mouseY) {
+    if (bmpW <= 0 || bmpH <= 0) return;
+    
+    double re_factor = (maxRe - minRe) / (bmpW - 1);
+    double im_factor = (maxIm - minIm) / (bmpH - 1);
+    
+    double centerRe = minRe + mouseX * re_factor;
+    double centerIm = maxIm - mouseY * im_factor;
+    
+    double newWRe = (maxRe - minRe) * factor;
+    double newWIm = (maxIm - minIm) * factor;
+    
+    minRe = centerRe - ((double)mouseX / bmpW) * newWRe;
+    maxRe = minRe + newWRe;
+    
+    maxIm = centerIm + ((double)mouseY / bmpH) * newWIm;
+    minIm = maxIm - newWIm;
+    
+    double zoomLevel = 3.0 / newWRe;
+    unsigned int needed_iter = (unsigned int)(100 * pow(zoomLevel, 0.2));
+    if (needed_iter > max_iter && zoomLevel > 5.0) {
+        max_iter = needed_iter;
+        if (max_iter > 2000) max_iter = 2000;
+    }
+    
+    RenderMandelbrot(bmpW, bmpH);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_SIZE: {
@@ -77,6 +126,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             ResizeBitmap(hwnd, nw, nh);
             InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        case WM_LBUTTONDOWN: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            Zoom(0.5, x, y); // Zoom in
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        case WM_RBUTTONDOWN: {
+            int x = LOWORD(lParam);
+            int y = HIWORD(lParam);
+            Zoom(2.0, x, y); // Zoom out
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        case WM_KEYDOWN: {
+            if (wParam == 'R') {
+                minRe = -2.0; maxRe = 1.0;
+                minIm = -1.2; maxIm = 1.2;
+                max_iter = 100;
+                RenderMandelbrot(bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'T') {
+                theme = (theme + 1) % 4;
+                RenderMandelbrot(bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
         }
         case WM_PAINT: {
@@ -111,11 +188,14 @@ void* __cdecl memset(void* dest, int c, size_t count) {
     return dest;
 }
 
-// Convert double to float for basic math if needed but MSVC handles double natively well enough.
 #pragma function(floor)
 double __cdecl floor(double x) {
     return (double)((int)x);
 }
+
+// Since we use sin and cos now, we just link against standard math functions (which msvcrt provides).
+// The linker options in build.bat should handle it (no special libs needed for basic math if not using /NODEFAULTLIB fully, 
+// wait, build.bat has /NODEFAULTLIB! Let's check how build.bat is defined).
 
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -127,7 +207,7 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - LClick: In, RClick: Out, R: Reset, T: Theme", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

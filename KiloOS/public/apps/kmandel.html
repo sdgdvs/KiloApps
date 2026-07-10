@@ -1,35 +1,212 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
 <title>KMandel</title>
 <style>
-  body { margin: 0; background-color: black; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-  canvas { width: 100%; height: 100%; object-fit: contain; }
+  :root {
+    --bg-color: #0f172a;
+    --panel-bg: rgba(15, 23, 42, 0.7);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --text-color: #f8fafc;
+    --primary: #3b82f6;
+    --primary-hover: #60a5fa;
+  }
+  body {
+    margin: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  #canvas-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+  }
+  #canvas-container:active {
+    cursor: grabbing;
+  }
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--panel-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 200px;
+    pointer-events: auto;
+    user-select: none;
+  }
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .control-group label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+  }
+  .value-display {
+    font-family: monospace;
+    font-size: 13px;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+    word-break: break-all;
+  }
+  button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+  .row {
+    display: flex;
+    gap: 8px;
+  }
+  .row button {
+    flex: 1;
+  }
+  .loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--panel-bg);
+    backdrop-filter: blur(8px);
+    padding: 12px 24px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    font-size: 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .loading.active {
+    opacity: 1;
+  }
 </style>
 </head>
 <body>
-  <canvas id="c"></canvas>
-<script>
-  const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d');
-  
-  function render() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      canvas.width = w;
-      canvas.height = h;
+  <div id="canvas-container">
+    <canvas id="c"></canvas>
+    <div class="loading" id="loading">Rendering...</div>
+    <div class="controls">
+      <div class="control-group">
+        <label>Zoom Level</label>
+        <div class="value-display" id="zoom-disp">1.0x</div>
+      </div>
+      <div class="control-group">
+        <label>Iterations</label>
+        <div class="value-display" id="iter-disp">100</div>
+      </div>
+      <div class="row">
+        <button id="btn-zoom-in">+</button>
+        <button id="btn-zoom-out">-</button>
+      </div>
+      <button id="btn-theme">Toggle Theme</button>
+      <button id="btn-reset">Reset View</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const zoomDisp = document.getElementById('zoom-disp');
+    const iterDisp = document.getElementById('iter-disp');
+    const loading = document.getElementById('loading');
+    
+    // Viewport state
+    let minRe = -2.0, maxRe = 1.0;
+    let minIm = -1.2, maxIm = 1.2;
+    let max_iter = 100;
+    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
+    let isRendering = false;
+    let renderRequested = false;
+
+    // Interaction state
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let startMinRe, startMaxRe, startMinIm, startMaxIm;
+    
+    function updateDisplays() {
+      const wRe = maxRe - minRe;
+      const baseW = 3.0;
+      const zoom = (baseW / wRe);
+      let zoomStr = zoom < 1000 ? zoom.toFixed(1) : (zoom < 1000000 ? (zoom/1000).toFixed(1) + 'k' : (zoom/1000000).toFixed(1) + 'M');
+      zoomDisp.textContent = zoomStr + 'x';
+      iterDisp.textContent = max_iter;
       
-      const imgData = ctx.createImageData(w, h);
+      const needed_iter = Math.floor(100 * Math.pow(zoom, 0.2));
+      if (needed_iter > max_iter && zoom > 5) {
+          max_iter = Math.min(needed_iter, 2000);
+      }
+    }
+
+    function getColors(n, iter, t) {
+      if (t === 0) { // Fire
+        return [
+          Math.floor((n * 255) / iter),
+          Math.floor((n * n * 255) / (iter * iter)),
+          Math.floor((n * 128) / iter)
+        ];
+      } else if (t === 1) { // Ocean
+        return [
+          Math.floor((n * 128) / iter),
+          Math.floor((n * n * 255) / (iter * iter)),
+          Math.floor((n * 255) / iter)
+        ];
+      } else if (t === 2) { // Cyberpunk
+        let f = n / iter;
+        return [
+          Math.floor(Math.sin(f * Math.PI) * 255),
+          Math.floor(Math.sin(f * Math.PI * 2) * 128),
+          Math.floor(Math.cos(f * Math.PI) * 255)
+        ];
+      } else { // BW
+        let f = (n % 20) > 10 ? 255 : 0;
+        return [f, f, f];
+      }
+    }
+
+    function renderBlock(w, h, startY, endY, imgData) {
       const data = imgData.data;
-      
-      const minRe = -2.0, maxRe = 1.0;
-      const minIm = -1.2, maxIm = 1.2;
       const re_factor = (maxRe - minRe) / (w - 1);
       const im_factor = (maxIm - minIm) / (h - 1);
-      const max_iter = 100;
       
-      let idx = 0;
-      for (let y = 0; y < h; ++y) {
+      let idx = startY * w * 4;
+      for (let y = startY; y < endY; ++y) {
           const c_im = maxIm - y * im_factor;
           for (let x = 0; x < w; ++x) {
               const c_re = minRe + x * re_factor;
@@ -48,28 +225,151 @@
               }
               
               if (isInside) {
-                  data[idx++] = 0;
-                  data[idx++] = 0;
-                  data[idx++] = 0;
-                  data[idx++] = 255;
+                  data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
               } else {
-                  data[idx++] = Math.floor((n * 255) / max_iter);
-                  data[idx++] = Math.floor((n * n * 255) / (max_iter * max_iter));
-                  data[idx++] = Math.floor((n * 128) / max_iter);
-                  data[idx++] = 255;
+                  const [r, g, b] = getColors(n, max_iter, theme);
+                  data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
               }
           }
       }
-      ctx.putImageData(imgData, 0, 0);
-  }
-  
-  let t = null;
-  window.onresize = () => {
-      if (t) clearTimeout(t);
-      t = setTimeout(render, 100);
-  };
-  
-  render();
-</script>
+    }
+
+    function requestRender() {
+        if (isRendering) {
+            renderRequested = true;
+            return;
+        }
+        isRendering = true;
+        renderRequested = false;
+        loading.classList.add('active');
+        
+        requestAnimationFrame(() => {
+            setTimeout(performRender, 10);
+        });
+    }
+
+    function performRender() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+      }
+      
+      updateDisplays();
+      
+      const imgData = ctx.createImageData(w, h);
+      
+      const chunks = 4;
+      const chunkH = Math.ceil(h / chunks);
+      
+      let currentChunk = 0;
+      
+      function renderNextChunk() {
+          const startY = currentChunk * chunkH;
+          const endY = Math.min(h, startY + chunkH);
+          
+          if (startY < h) {
+              renderBlock(w, h, startY, endY, imgData);
+              currentChunk++;
+              setTimeout(renderNextChunk, 0);
+          } else {
+              ctx.putImageData(imgData, 0, 0);
+              loading.classList.remove('active');
+              isRendering = false;
+              if (renderRequested) requestRender();
+          }
+      }
+      
+      renderNextChunk();
+    }
+    
+    function zoom(factor, centerX, centerY) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const re_factor = (maxRe - minRe) / (w - 1);
+        const im_factor = (maxIm - minIm) / (h - 1);
+        
+        const centerRe = minRe + centerX * re_factor;
+        const centerIm = maxIm - centerY * im_factor;
+        
+        const newWRe = (maxRe - minRe) * factor;
+        const newWIm = (maxIm - minIm) * factor;
+        
+        minRe = centerRe - (centerX / w) * newWRe;
+        maxRe = minRe + newWRe;
+        
+        maxIm = centerIm + (centerY / h) * newWIm;
+        minIm = maxIm - newWIm;
+        
+        requestRender();
+    }
+
+    window.addEventListener('resize', () => requestRender());
+    
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        minRe = -2.0; maxRe = 1.0;
+        minIm = -1.2; maxIm = 1.2;
+        max_iter = 100;
+        requestRender();
+    });
+    
+    document.getElementById('btn-theme').addEventListener('click', () => {
+        theme = (theme + 1) % 4;
+        requestRender();
+    });
+    
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+        zoom(0.5, window.innerWidth/2, window.innerHeight/2);
+    });
+    
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+        zoom(2.0, window.innerWidth/2, window.innerHeight/2);
+    });
+
+    const container = document.getElementById('canvas-container');
+    
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY > 0 ? 1.5 : 1/1.5;
+        zoom(factor, e.clientX, e.clientY);
+    });
+    
+    container.addEventListener('pointerdown', (e) => {
+        if (e.target !== canvas) return;
+        isDragging = true;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        startMinRe = minRe; startMaxRe = maxRe;
+        startMinIm = minIm; startMaxIm = maxIm;
+        container.setPointerCapture(e.pointerId);
+    });
+    
+    container.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - dragStartX;
+        const dy = e.clientY - dragStartY;
+        
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const re_factor = (startMaxRe - startMinRe) / (w - 1);
+        const im_factor = (startMaxIm - startMinIm) / (h - 1);
+        
+        minRe = startMinRe - dx * re_factor;
+        maxRe = startMaxRe - dx * re_factor;
+        
+        minIm = startMinIm + dy * im_factor;
+        maxIm = startMaxIm + dy * im_factor;
+        
+        requestRender();
+    });
+    
+    container.addEventListener('pointerup', (e) => {
+        isDragging = false;
+        container.releasePointerCapture(e.pointerId);
+    });
+
+    requestRender();
+  </script>
 </body>
 </html>
