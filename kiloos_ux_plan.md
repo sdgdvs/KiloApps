@@ -38,10 +38,11 @@
 - Implemented Animation Refinements for window transitions.
 ## Priorities
 
-### 1. Taskbar Enhancements
-- Refine taskbar overflow handling and active app indicators.
+### 1. Start Menu Polish
+- Improve start menu layout and app folder navigation.
 
 ## Completed Items
+- Taskbar Enhancements: Added horizontal scrolling support on wheel and improved the active app indicator with a glowing bottom border and `flex-shrink: 0` to prevent unreadable tabs.
 - Start Menu Polish: Improved start menu open animation by using `@keyframes` on mount, and replaced inline spacing/alignment styles with proper CSS classes.
 - Window Management: Added a subtle dimming effect (`filter: brightness(0.85)`) to inactive windows to better highlight the active window.
 - Start Menu: Enhanced search bar styling with glassmorphism and improved hover states for items.
