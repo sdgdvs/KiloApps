@@ -4,11 +4,11 @@
 <title>KSynth</title>
 <style>
   body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; height: 100vh; overflow: hidden; }
-  .row { display: flex; align-items: center; margin-bottom: 15px; }
-  .label { margin-right: 10px; width: 80px; }
+  .row { display: flex; align-items: center; margin-bottom: 10px; }
+  .label { margin-right: 10px; width: 80px; font-size: 14px; }
   select, input[type="text"] { width: 120px; padding: 3px; font-family: "Segoe UI", sans-serif; border: 1px solid #ccc; }
   input[type="text"] { font-family: "Consolas", monospace; }
-  button { padding: 5px 15px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; margin-left: 90px; width: 100px;}
+  button { padding: 5px 15px; cursor: pointer; border: 1px solid #ccc; background: #e0e0e0; margin-left: 90px; width: 100px; margin-top: 10px;}
   button:hover { background: #d0d0d0; }
 </style>
 </head>
@@ -24,6 +24,22 @@
   <div class="row">
     <div class="label">Freq (Hz):</div>
     <input type="text" id="freq" value="440">
+  </div>
+  <div class="row">
+    <div class="label">Attack (s):</div>
+    <input type="text" id="attack" value="0.1">
+  </div>
+  <div class="row">
+    <div class="label">Decay (s):</div>
+    <input type="text" id="decay" value="0.2">
+  </div>
+  <div class="row">
+    <div class="label">Sustain:</div>
+    <input type="text" id="sustain" value="0.5">
+  </div>
+  <div class="row">
+    <div class="label">Release (s):</div>
+    <input type="text" id="release" value="0.5">
   </div>
   <div class="row">
     <button id="btnPlay">Play Tone</button>
@@ -44,20 +60,30 @@
       if (freq > 20000) freq = 20000;
       freqIn.value = freq;
       
+      let a = parseFloat(document.getElementById('attack').value) || 0;
+      let d = parseFloat(document.getElementById('decay').value) || 0;
+      let s = parseFloat(document.getElementById('sustain').value) || 0;
+      let r = parseFloat(document.getElementById('release').value) || 0;
+      if (a < 0) a = 0; if (d < 0) d = 0; if (s < 0) s = 0; if (s > 1) s = 1; if (r < 0) r = 0;
+      
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
       osc.type = wave.value;
       osc.frequency.value = freq;
       
-      gain.gain.setValueAtTime(0.5, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+      let now = ctx.currentTime;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(1.0, now + a);
+      gain.gain.linearRampToValueAtTime(s, now + a + d);
+      gain.gain.setValueAtTime(s, now + a + d + 0.5);
+      gain.gain.linearRampToValueAtTime(0.001, now + a + d + 0.5 + r);
       
       osc.connect(gain);
       gain.connect(ctx.destination);
       
-      osc.start();
-      osc.stop(ctx.currentTime + 1.0);
+      osc.start(now);
+      osc.stop(now + a + d + 0.5 + r);
   };
 </script>
 </body>

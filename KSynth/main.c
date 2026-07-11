@@ -2,27 +2,52 @@
 #include <windows.h>
 #include <mmsystem.h>
 
-#define W 300
-#define H 200
+#define W 320
+#define H 300
 
-HWND hCombo, hBtnPlay, hFreq;
+HWND hCombo, hBtnPlay, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWAVEOUT hWaveOut;
 WAVEHDR waveHdr;
 
 #define SAMPLE_RATE 44100
-#define DURATION 1 // 1 second
-short buffer[SAMPLE_RATE * DURATION];
+#define MAX_DURATION 5
+short buffer[SAMPLE_RATE * MAX_DURATION];
 
 int _fltused = 0;
 
-void GenerateWave(int type, int freq) {
+double parse_float(const char* s) {
+    double res = 0.0;
+    int dec = 0;
+    double frac = 1.0;
+    while (*s) {
+        if (*s == '.') { dec = 1; }
+        else if (*s >= '0' && *s <= '9') {
+            if (dec) {
+                frac *= 0.1;
+                res += (*s - '0') * frac;
+            } else {
+                res = res * 10.0 + (*s - '0');
+            }
+        }
+        s++;
+    }
+    return res;
+}
+
+void GenerateWave(int type, int freq, double attack, double decay, double sustain, double release) {
     double phase = 0.0;
     double phaseInc = (double)freq / SAMPLE_RATE;
     
-    for (int i = 0; i < SAMPLE_RATE * DURATION; i++) {
+    double sustain_time = 0.5;
+    double total_time = attack + decay + sustain_time + release;
+    if (total_time > 5.0) total_time = 5.0;
+    
+    int total_samples = (int)(total_time * SAMPLE_RATE);
+    
+    for (int i = 0; i < total_samples; i++) {
         double val = 0.0;
         
-        if (type == 0) { // Sine (Parabolic approximation)
+        if (type == 0) { // Sine
             double t = phase;
             if (t < 0.5) {
                 double x = t * 2.0;
@@ -37,21 +62,40 @@ void GenerateWave(int type, int freq) {
             val = (phase * 2.0) - 1.0;
         }
         
-        buffer[i] = (short)(val * 8000.0); // Volume scaling
+        double t = (double)i / SAMPLE_RATE;
+        double env = 0.0;
+        if (t < attack) {
+            if (attack > 0) env = t / attack;
+        } else if (t < attack + decay) {
+            if (decay > 0) env = 1.0 - (1.0 - sustain) * ((t - attack) / decay);
+            else env = sustain;
+        } else if (t < attack + decay + sustain_time) {
+            env = sustain;
+        } else if (t < attack + decay + sustain_time + release) {
+            if (release > 0) env = sustain * (1.0 - ((t - attack - decay - sustain_time) / release));
+            else env = 0.0;
+        }
+        
+        buffer[i] = (short)(val * env * 16000.0);
         
         phase += phaseInc;
         if (phase >= 1.0) phase -= 1.0;
     }
+    
+    for (int i = total_samples; i < SAMPLE_RATE * MAX_DURATION; i++) {
+        buffer[i] = 0;
+    }
+    waveHdr.dwBufferLength = total_samples * sizeof(short);
 }
 
 void PlayTone() {
     int sel = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
     if (sel == CB_ERR) sel = 0;
     
-    char freqBuf[32];
-    GetWindowTextA(hFreq, freqBuf, 32);
+    char buf[32];
+    GetWindowTextA(hFreq, buf, 32);
     int freq = 0;
-    char* p = freqBuf;
+    char* p = buf;
     while (*p) {
         if (*p >= '0' && *p <= '9') freq = freq * 10 + (*p - '0');
         p++;
@@ -59,7 +103,17 @@ void PlayTone() {
     if (freq < 20) freq = 440;
     if (freq > 20000) freq = 20000;
     
-    GenerateWave(sel, freq);
+    GetWindowTextA(hAttack, buf, 32); double attack = parse_float(buf);
+    GetWindowTextA(hDecay, buf, 32); double decay = parse_float(buf);
+    GetWindowTextA(hSustain, buf, 32); double sustain = parse_float(buf);
+    GetWindowTextA(hRelease, buf, 32); double release = parse_float(buf);
+    
+    if (attack < 0) attack = 0;
+    if (decay < 0) decay = 0;
+    if (sustain < 0) sustain = 0; if (sustain > 1) sustain = 1;
+    if (release < 0) release = 0;
+    
+    GenerateWave(sel, freq, attack, decay, sustain, release);
     
     WAVEFORMATEX wfx = {0};
     wfx.wFormatTag = WAVE_FORMAT_PCM;
@@ -69,9 +123,15 @@ void PlayTone() {
     wfx.nBlockAlign = (wfx.nChannels * wfx.wBitsPerSample) / 8;
     wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
     
+    if (hWaveOut) {
+        waveOutReset(hWaveOut);
+        waveOutUnprepareHeader(hWaveOut, &waveHdr, sizeof(WAVEHDR));
+        waveOutClose(hWaveOut);
+        hWaveOut = NULL;
+    }
+    
     if (waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL) == MMSYSERR_NOERROR) {
         waveHdr.lpData = (LPSTR)buffer;
-        waveHdr.dwBufferLength = sizeof(buffer);
         waveHdr.dwBytesRecorded = 0;
         waveHdr.dwUser = 0;
         waveHdr.dwFlags = 0;
@@ -102,7 +162,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "STATIC", "Freq (Hz):", WS_CHILD | WS_VISIBLE, 10, 45, 80, 20, hwnd, NULL, NULL, NULL);
             hFreq = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "440", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_NUMBER, 100, 42, 60, 22, hwnd, NULL, NULL, NULL);
             
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Tone", WS_CHILD | WS_VISIBLE, 100, 80, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Attack(s):", WS_CHILD | WS_VISIBLE, 10, 75, 80, 20, hwnd, NULL, NULL, NULL);
+            hAttack = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.1", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 72, 60, 22, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "Decay(s):", WS_CHILD | WS_VISIBLE, 10, 105, 80, 20, hwnd, NULL, NULL, NULL);
+            hDecay = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.2", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 102, 60, 22, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "Sustain(0-1):", WS_CHILD | WS_VISIBLE, 10, 135, 80, 20, hwnd, NULL, NULL, NULL);
+            hSustain = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.5", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 132, 60, 22, hwnd, NULL, NULL, NULL);
+
+            CreateWindowEx(0, "STATIC", "Release(s):", WS_CHILD | WS_VISIBLE, 10, 165, 80, 20, hwnd, NULL, NULL, NULL);
+            hRelease = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.5", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 162, 60, 22, hwnd, NULL, NULL, NULL);
+            
+            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Tone", WS_CHILD | WS_VISIBLE, 100, 200, 100, 30, hwnd, (HMENU)1, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
@@ -157,3 +229,4 @@ void MainEntry() {
     }
     ExitProcess(0);
 }
+
