@@ -4,32 +4,37 @@
 <title>KMemory (Patience)</title>
 <style>
   body { margin: 0; background-color: #1e963c; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; font-family: sans-serif; color: white;}
-  #ui { display: flex; justify-content: space-between; width: 380px; margin-bottom: 10px; font-weight: bold; font-size: 18px; }
+  #ui { display: flex; justify-content: space-between; width: 380px; margin-bottom: 10px; font-weight: bold; font-size: 16px; }
   .grid { display: grid; gap: 10px; }
   .grid.easy { grid-template-columns: repeat(4, 1fr); width: 380px; height: 380px; }
   .grid.hard { grid-template-columns: repeat(6, 1fr); width: 570px; height: 380px; }
+  .grid.expert { grid-template-columns: repeat(8, 1fr); width: 760px; height: 380px; }
   .card { background: #3264c8; border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #000; }
   .card.flipped { background: #fff; box-shadow: inset 0 0 0 1px #ccc; cursor: default; }
   .card.matched { background: transparent; box-shadow: none; cursor: default; color: transparent; }
-  .controls { margin-top: 15px; }
+  .controls { margin-top: 15px; display: flex; gap: 10px; }
   button { padding: 5px 10px; font-size: 16px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 4px; color: #333; }
   button:hover { background: #fff; }
 </style>
 </head>
 <body>
 <div id="ui">
+  <div>Time: <span id="time">0</span>s</div>
   <div>Moves: <span id="moves">0</span></div>
-  <div>Best: <span id="best">-</span></div>
+  <div>Best (Moves): <span id="best">-</span></div>
 </div>
 <div class="grid easy" id="grid"></div>
 <div class="controls">
   <button onclick="setDifficulty('easy')">Easy (4x4)</button>
   <button onclick="setDifficulty('hard')">Hard (6x4)</button>
+  <button onclick="setDifficulty('expert')">Expert (8x4)</button>
+  <button onclick="init()">Restart</button>
 </div>
 <script>
   const grid = document.getElementById('grid');
   const movesEl = document.getElementById('moves');
   const bestEl = document.getElementById('best');
+  const timeEl = document.getElementById('time');
   
   let cards = [];
   let flipped = [];
@@ -39,7 +44,10 @@
   let matches = 0;
   let moves = 0;
   let lock = false;
-  let diff = 'easy'; // easy=16, hard=24
+  let diff = 'easy'; // easy=16, hard=24, expert=32
+  let timer = null;
+  let elapsed = 0;
+  let playing = false;
   
   function getBestKey() { return 'kmemory_best_' + diff; }
   function updateBest() {
@@ -50,13 +58,34 @@
   function setDifficulty(d) {
       diff = d;
       grid.className = 'grid ' + d;
-      document.getElementById('ui').style.width = d === 'easy' ? '380px' : '570px';
+      if (d === 'easy') document.getElementById('ui').style.width = '380px';
+      else if (d === 'hard') document.getElementById('ui').style.width = '570px';
+      else document.getElementById('ui').style.width = '760px';
       init();
   }
 
+  function startTimer() {
+      if (!playing) {
+          playing = true;
+          timer = setInterval(() => {
+              elapsed++;
+              timeEl.textContent = elapsed;
+          }, 1000);
+      }
+  }
+
+  function stopTimer() {
+      playing = false;
+      if (timer) clearInterval(timer);
+      timer = null;
+  }
+
   function init() {
+      stopTimer();
+      elapsed = 0;
+      timeEl.textContent = elapsed;
       cards = [];
-      let numCards = diff === 'easy' ? 16 : 24;
+      let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
       for (let i = 0; i < numCards; i++) {
           cards.push(Math.floor(i / 2));
           flipped[i] = false;
@@ -78,7 +107,7 @@
 
   function render() {
       grid.innerHTML = '';
-      let numCards = diff === 'easy' ? 16 : 24;
+      let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
       for (let i = 0; i < numCards; i++) {
           const c = document.createElement('div');
           c.className = 'card';
@@ -91,6 +120,7 @@
           
           c.onclick = () => {
               if (lock || flipped[i] || matched[i]) return;
+              startTimer();
               flipped[i] = true;
               render();
               
@@ -107,11 +137,12 @@
                       secondFlip = -1;
                       matches++;
                       if (matches === numCards / 2) {
+                          stopTimer();
                           let b = localStorage.getItem(getBestKey());
                           if (!b || moves < parseInt(b)) {
                               localStorage.setItem(getBestKey(), moves);
                           }
-                          setTimeout(() => { alert("You won in " + moves + " moves!"); updateBest(); init(); }, 100);
+                          setTimeout(() => { alert("You won in " + moves + " moves and " + elapsed + " seconds!"); updateBest(); init(); }, 100);
                       }
                       render();
                   } else {

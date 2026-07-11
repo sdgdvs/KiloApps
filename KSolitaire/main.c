@@ -5,6 +5,8 @@
 
 #define ID_EASY 1001
 #define ID_HARD 1002
+#define ID_EXPERT 1003
+#define ID_RESTART 1004
 
 int W = 400;
 int H = 400;
@@ -21,7 +23,11 @@ int moves = 0;
 
 int best_easy = -1;
 int best_hard = -1;
-int is_hard = 0;
+int best_expert = -1;
+int is_hard = 0; // 0=easy, 1=hard, 2=expert
+int start_time = 0;
+int elapsed_time = 0;
+int timer_running = 0;
 
 // simple pseudo-random generator to avoid CRT
 unsigned int seed = 12345;
@@ -35,6 +41,7 @@ void LoadScores() {
     if (f) {
         fread(&best_easy, sizeof(int), 1, f);
         fread(&best_hard, sizeof(int), 1, f);
+        fread(&best_expert, sizeof(int), 1, f);
         fclose(f);
     }
 }
@@ -44,6 +51,7 @@ void SaveScores() {
     if (f) {
         fwrite(&best_easy, sizeof(int), 1, f);
         fwrite(&best_hard, sizeof(int), 1, f);
+        fwrite(&best_expert, sizeof(int), 1, f);
         fclose(f);
     }
 }
@@ -65,11 +73,15 @@ void Shuffle() {
     secondFlip = -1;
     matches = 0;
     moves = 0;
+    elapsed_time = 0;
+    timer_running = 0;
 }
 
 void SetDifficulty(HWND hwnd, int hard) {
     is_hard = hard;
-    if (hard) {
+    if (hard == 2) {
+        ROWS = 4; COLS = 8; W = 800; H = 400;
+    } else if (hard == 1) {
         ROWS = 4; COLS = 6; W = 600; H = 400;
     } else {
         ROWS = 4; COLS = 4; W = 400; H = 400;
@@ -78,6 +90,8 @@ void SetDifficulty(HWND hwnd, int hard) {
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
     SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
     Shuffle();
+    if (timer_running) KillTimer(hwnd, 2);
+    timer_running = 0;
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -115,7 +129,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hSubMenu = CreatePopupMenu();
             AppendMenu(hSubMenu, MF_STRING, ID_EASY, "Easy (4x4)");
             AppendMenu(hSubMenu, MF_STRING, ID_HARD, "Hard (6x4)");
-            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
+            AppendMenu(hSubMenu, MF_STRING, ID_EXPERT, "Expert (8x4)");
+            AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hSubMenu, MF_STRING, ID_RESTART, "Restart");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             SetMenu(hwnd, hMenu);
 
             LoadScores();
@@ -128,6 +145,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 0);
             } else if (LOWORD(wParam) == ID_HARD) {
                 SetDifficulty(hwnd, 1);
+            } else if (LOWORD(wParam) == ID_EXPERT) {
+                SetDifficulty(hwnd, 2);
+            } else if (LOWORD(wParam) == ID_RESTART) {
+                SetDifficulty(hwnd, is_hard);
             }
             break;
         case WM_LBUTTONDOWN: {
@@ -146,6 +167,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (col >= 0 && col < COLS && row >= 0 && row < ROWS) {
                 int idx = row * COLS + col;
                 if (!matched[idx] && !flipped[idx]) {
+                    if (!timer_running) {
+                        start_time = GetTickCount();
+                        timer_running = 1;
+                        SetTimer(hwnd, 2, 1000, NULL);
+                    }
                     flipped[idx] = 1;
                     if (firstFlip == -1) {
                         firstFlip = idx;
@@ -159,11 +185,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             secondFlip = -1;
                             matches++;
                             if (matches == (ROWS * COLS) / 2) {
+                                if (timer_running) {
+                                    KillTimer(hwnd, 2);
+                                    timer_running = 0;
+                                }
                                 InvalidateRect(hwnd, NULL, FALSE);
                                 UpdateWindow(hwnd);
                                 
                                 int is_new_best = 0;
-                                if (is_hard) {
+                                if (is_hard == 2) {
+                                    if (best_expert == -1 || moves < best_expert) { best_expert = moves; is_new_best = 1; }
+                                } else if (is_hard == 1) {
                                     if (best_hard == -1 || moves < best_hard) { best_hard = moves; is_new_best = 1; }
                                 } else {
                                     if (best_easy == -1 || moves < best_easy) { best_easy = moves; is_new_best = 1; }
@@ -171,7 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if (is_new_best) SaveScores();
                                 
                                 char msgBuf[256];
-                                sprintf(msgBuf, "You won in %d moves!", moves);
+                                sprintf(msgBuf, "You won in %d moves and %d seconds!", moves, elapsed_time);
                                 MessageBoxA(hwnd, msgBuf, "KMemory", MB_OK);
                                 Shuffle();
                             }
@@ -192,6 +224,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 firstFlip = -1;
                 secondFlip = -1;
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 2) {
+                elapsed_time = (GetTickCount() - start_time) / 1000;
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_PAINT: {
@@ -210,11 +245,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
             char statusText[256];
-            int best = is_hard ? best_hard : best_easy;
+            int best = (is_hard == 2) ? best_expert : (is_hard == 1 ? best_hard : best_easy);
             if (best == -1)
-                sprintf(statusText, "Moves: %d   Best: -", moves);
+                sprintf(statusText, "Time: %ds   Moves: %d   Best: -", elapsed_time, moves);
             else
-                sprintf(statusText, "Moves: %d   Best: %d", moves, best);
+                sprintf(statusText, "Time: %ds   Moves: %d   Best: %d", elapsed_time, moves, best);
             TextOutA(memDC, 10, 10, statusText, strlen(statusText));
 
             // Draw table
