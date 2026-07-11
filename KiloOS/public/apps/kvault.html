@@ -13,6 +13,8 @@
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
             --primary-accent: #6C5CE7;
+            --danger-accent: #ff4757;
+            --input-bg: rgba(0, 0, 0, 0.2);
         }
 
         body, html {
@@ -39,17 +41,25 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
         }
 
         .header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .header h1 {
             margin: 0;
             font-size: 24px;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .content {
@@ -63,31 +73,472 @@
             background-color: var(--primary-accent);
             color: white;
             border: none;
-            padding: 12px 24px;
+            padding: 10px 20px;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-family: 'Inter', sans-serif;
+            font-weight: 500;
             cursor: pointer;
-            transition: opacity 0.2s;
+            transition: all 0.2s;
         }
 
         .btn:hover {
             opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        .btn.danger {
+            background-color: var(--danger-accent);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        input[type="text"], input[type="password"], textarea {
+            background-color: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary-accent);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .secret-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .secret-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .secret-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 500;
+        }
+        
+        .secret-item-value {
+            background: var(--input-bg);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            display: none;
+        }
+        
+        .secret-item-value.visible {
+            display: block;
+        }
+
+        .secret-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+        
+        .secret-actions button {
+            flex: 1;
+            padding: 6px;
+            font-size: 12px;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-accent);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>KVault</h1>
+            <h1>🔒 KVault</h1>
+            <div id="auth-controls" style="display:none;">
+                <button class="btn" onclick="lockVault()">Lock Vault</button>
+            </div>
         </div>
-        <div class="content" id="app-content">
-            <p style="text-align: center; opacity: 0.7;">Secure Encrypted Vault initialized.</p>
+        
+        <div class="content">
+            <!-- Setup / Login View -->
+            <div id="view-auth" class="view-section active">
+                <div class="card" style="max-width: 400px; margin: 0 auto; width: 100%;">
+                    <h2 id="auth-title" style="margin-top:0;">Unlock Vault</h2>
+                    <p id="auth-desc" style="opacity:0.7; font-size:14px;">Enter your master password to decrypt your vault.</p>
+                    <div class="input-group">
+                        <input type="password" id="master-password" placeholder="Master Password" onkeyup="if(event.key === 'Enter') handleAuth()">
+                    </div>
+                    <button class="btn" style="width: 100%" onclick="handleAuth()" id="auth-btn">Unlock</button>
+                    <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:12px;">Incorrect password.</p>
+                </div>
+            </div>
+
+            <!-- Main Vault View -->
+            <div id="view-vault" class="view-section">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 16px;">
+                    <h2>Your Secrets</h2>
+                    <button class="btn" onclick="showAddSecret()">+ Add Secret</button>
+                </div>
+                
+                <div class="secret-list" id="secret-list">
+                    <!-- Secrets injected here -->
+                </div>
+                
+                <div id="empty-state" style="text-align:center; padding: 40px; opacity:0.5;">
+                    <p>No secrets found. Add one to get started.</p>
+                </div>
+            </div>
+            
+            <!-- Add Secret View -->
+            <div id="view-add" class="view-section">
+                <div class="card" style="max-width: 500px; margin: 0 auto; width: 100%;">
+                    <h2 style="margin-top:0;">Add New Secret</h2>
+                    <div class="input-group">
+                        <label>Title / Identifier</label>
+                        <input type="text" id="new-secret-title" placeholder="e.g. Github Password">
+                    </div>
+                    <div class="input-group">
+                        <label>Secret Value</label>
+                        <textarea id="new-secret-value" placeholder="Enter password, token, or secure note"></textarea>
+                    </div>
+                    <div style="display:flex; gap:12px; margin-top: 24px;">
+                        <button class="btn" style="flex:1" onclick="saveNewSecret()">Save Secret</button>
+                        <button class="btn" style="flex:1; background:transparent; border:1px solid var(--glass-border);" onclick="showVault()">Cancel</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
+    <div class="notification" id="notification">Action successful</div>
+
     <script>
-        console.log("KVault initialized.");
+        // Core State
+        let masterKey = null;
+        let vaultData = [];
+        
+        // --- Cryptography Utilities (Web Crypto API) ---
+        
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey(
+                "raw",
+                enc.encode(password),
+                { name: "PBKDF2" },
+                false,
+                ["deriveBits", "deriveKey"]
+            );
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptData(text, key) {
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const enc = new TextEncoder();
+            const encrypted = await window.crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                enc.encode(text)
+            );
+            return {
+                iv: Array.from(iv),
+                data: Array.from(new Uint8Array(encrypted))
+            };
+        }
+
+        async function decryptData(encryptedObj, key) {
+            try {
+                const decrypted = await window.crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: new Uint8Array(encryptedObj.iv) },
+                    key,
+                    new Uint8Array(encryptedObj.data)
+                );
+                const dec = new TextDecoder();
+                return dec.decode(decrypted);
+            } catch (e) {
+                return null; // Decryption failed (wrong key or tampered data)
+            }
+        }
+        
+        // --- Vault Operations ---
+        
+        const STORAGE_KEY = 'kvault_data';
+        
+        function initAuthView() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                document.getElementById('auth-title').innerText = "Unlock Vault";
+                document.getElementById('auth-desc').innerText = "Enter your master password to decrypt.";
+                document.getElementById('auth-btn').innerText = "Unlock";
+            } else {
+                document.getElementById('auth-title').innerText = "Setup Vault";
+                document.getElementById('auth-desc').innerText = "Create a master password. Do not lose it!";
+                document.getElementById('auth-btn').innerText = "Initialize";
+            }
+        }
+        
+        async function handleAuth() {
+            const pwd = document.getElementById('master-password').value;
+            if (!pwd) return;
+            
+            const stored = localStorage.getItem(STORAGE_KEY);
+            document.getElementById('auth-error').style.display = 'none';
+            
+            if (stored) {
+                // Unlock
+                try {
+                    const parsed = JSON.parse(stored);
+                    const salt = new Uint8Array(parsed.salt);
+                    const key = await deriveKey(pwd, salt);
+                    
+                    const testDecrypt = await decryptData(parsed.vault, key);
+                    if (testDecrypt === null) {
+                        document.getElementById('auth-error').style.display = 'block';
+                        return;
+                    }
+                    
+                    masterKey = key;
+                    vaultData = JSON.parse(testDecrypt);
+                    document.getElementById('master-password').value = '';
+                    showVault();
+                    showNotification("Vault unlocked");
+                } catch (e) {
+                    console.error(e);
+                    document.getElementById('auth-error').style.display = 'block';
+                }
+            } else {
+                // Setup new
+                const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                masterKey = await deriveKey(pwd, salt);
+                vaultData = [];
+                await saveVaultToStorage(salt);
+                document.getElementById('master-password').value = '';
+                showVault();
+                showNotification("Vault initialized");
+            }
+        }
+        
+        async function saveVaultToStorage(salt = null) {
+            if (!masterKey) return;
+            
+            let storedSalt;
+            if (salt) {
+                storedSalt = salt;
+            } else {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    storedSalt = new Uint8Array(JSON.parse(stored).salt);
+                }
+            }
+            
+            const vaultStr = JSON.stringify(vaultData);
+            const encryptedVault = await encryptData(vaultStr, masterKey);
+            
+            const payload = {
+                salt: Array.from(storedSalt),
+                vault: encryptedVault
+            };
+            
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        }
+        
+        function lockVault() {
+            masterKey = null;
+            vaultData = [];
+            switchView('view-auth');
+            document.getElementById('auth-controls').style.display = 'none';
+            initAuthView();
+            showNotification("Vault locked");
+        }
+        
+        // --- UI Flow ---
+        
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+        
+        function showVault() {
+            switchView('view-vault');
+            document.getElementById('auth-controls').style.display = 'block';
+            renderSecrets();
+        }
+        
+        function showAddSecret() {
+            switchView('view-add');
+            document.getElementById('new-secret-title').value = '';
+            document.getElementById('new-secret-value').value = '';
+            document.getElementById('new-secret-title').focus();
+        }
+        
+        async function saveNewSecret() {
+            const title = document.getElementById('new-secret-title').value.trim();
+            const value = document.getElementById('new-secret-value').value.trim();
+            
+            if (!title || !value) {
+                showNotification("Title and Value required");
+                return;
+            }
+            
+            vaultData.push({
+                id: Date.now().toString(),
+                title: title,
+                value: value,
+                created: new Date().toISOString()
+            });
+            
+            await saveVaultToStorage();
+            showVault();
+            showNotification("Secret saved");
+        }
+        
+        async function deleteSecret(id) {
+            if(confirm("Delete this secret permanently?")) {
+                vaultData = vaultData.filter(s => s.id !== id);
+                await saveVaultToStorage();
+                renderSecrets();
+                showNotification("Secret deleted");
+            }
+        }
+        
+        function toggleSecretValue(id) {
+            const el = document.getElementById('secret-val-' + id);
+            const btn = document.getElementById('secret-btn-toggle-' + id);
+            if (el.classList.contains('visible')) {
+                el.classList.remove('visible');
+                btn.innerText = 'Show';
+            } else {
+                el.classList.add('visible');
+                btn.innerText = 'Hide';
+            }
+        }
+        
+        function copySecret(val) {
+            navigator.clipboard.writeText(val).then(() => {
+                showNotification("Copied to clipboard!");
+            }).catch(() => {
+                showNotification("Failed to copy");
+            });
+        }
+        
+        function renderSecrets() {
+            const list = document.getElementById('secret-list');
+            const empty = document.getElementById('empty-state');
+            
+            list.innerHTML = '';
+            if (vaultData.length === 0) {
+                empty.style.display = 'block';
+                list.style.display = 'none';
+            } else {
+                empty.style.display = 'none';
+                list.style.display = 'grid';
+                
+                vaultData.forEach(secret => {
+                    const item = document.createElement('div');
+                    item.className = 'secret-item';
+                    
+                    const safeTitle = secret.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    
+                    item.innerHTML = `
+                        <div class="secret-item-header">
+                            <span>${safeTitle}</span>
+                        </div>
+                        <div class="secret-item-value" id="secret-val-${secret.id}"></div>
+                        <div class="secret-actions">
+                            <button class="btn" style="background:transparent; border:1px solid var(--glass-border);" id="secret-btn-toggle-${secret.id}">Show</button>
+                            <button class="btn" style="background:var(--primary-accent);" id="secret-btn-copy-${secret.id}">Copy</button>
+                            <button class="btn danger" id="secret-btn-delete-${secret.id}">Del</button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                    
+                    document.getElementById(`secret-val-${secret.id}`).textContent = secret.value;
+                    
+                    document.getElementById(`secret-btn-toggle-${secret.id}`).onclick = () => toggleSecretValue(secret.id);
+                    document.getElementById(`secret-btn-copy-${secret.id}`).onclick = () => copySecret(secret.value);
+                    document.getElementById(`secret-btn-delete-${secret.id}`).onclick = () => deleteSecret(secret.id);
+                });
+            }
+        }
+        
+        function showNotification(msg) {
+            const notif = document.getElementById('notification');
+            notif.innerText = msg;
+            notif.style.opacity = '1';
+            setTimeout(() => {
+                notif.style.opacity = '0';
+            }, 3000);
+        }
+        
+        // Init
+        initAuthView();
+
     </script>
 </body>
 </html>
