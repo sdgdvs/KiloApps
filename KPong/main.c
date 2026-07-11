@@ -11,8 +11,6 @@
 
 int p1_y = H / 2 - PAD_H / 2;
 int p2_y = H / 2 - PAD_H / 2;
-int ball_x = W / 2 - BALL_SIZE / 2;
-int ball_y = H / 2 - BALL_SIZE / 2;
 int ball_dx = 5;
 int ball_dy = 3;
 int p1_score = 0;
@@ -22,6 +20,7 @@ void ResetBall() {
     ball_x = W / 2 - BALL_SIZE / 2;
     ball_y = H / 2 - BALL_SIZE / 2;
     ball_dx = (ball_dx > 0) ? -5 : 5;
+    ball_dy = (ball_dy > 0) ? 3 : -3;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -47,22 +46,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ball_y += ball_dy;
 
             // Top/bottom collisions
-            if (ball_y < 0) { ball_y = 0; ball_dy = -ball_dy; }
-            if (ball_y > H - BALL_SIZE) { ball_y = H - BALL_SIZE; ball_dy = -ball_dy; }
+            if (ball_y < 0) { ball_y = 0; ball_dy = -ball_dy; MessageBeep(0xFFFFFFFF); }
+            if (ball_y > H - BALL_SIZE) { ball_y = H - BALL_SIZE; ball_dy = -ball_dy; MessageBeep(0xFFFFFFFF); }
 
             // Paddle collisions
             if (ball_x < 20 + PAD_W && ball_y + BALL_SIZE > p1_y && ball_y < p1_y + PAD_H) {
                 ball_x = 20 + PAD_W;
                 ball_dx = -ball_dx;
+                if (ball_dx < 15 && ball_dx > -15) { ball_dx = ball_dx > 0 ? ball_dx + 1 : ball_dx - 1; }
+                if (ball_dy < 15 && ball_dy > -15) { ball_dy = ball_dy > 0 ? ball_dy + 1 : ball_dy - 1; }
+                MessageBeep(0xFFFFFFFF);
             }
             if (ball_x + BALL_SIZE > W - 20 - PAD_W && ball_y + BALL_SIZE > p2_y && ball_y < p2_y + PAD_H) {
                 ball_x = W - 20 - PAD_W - BALL_SIZE;
                 ball_dx = -ball_dx;
+                if (ball_dx < 15 && ball_dx > -15) { ball_dx = ball_dx > 0 ? ball_dx + 1 : ball_dx - 1; }
+                if (ball_dy < 15 && ball_dy > -15) { ball_dy = ball_dy > 0 ? ball_dy + 1 : ball_dy - 1; }
+                MessageBeep(0xFFFFFFFF);
             }
 
             // Scoring
-            if (ball_x < 0) { p2_score++; ResetBall(); }
-            if (ball_x > W) { p1_score++; ResetBall(); }
+            if (ball_x < 0) { p2_score++; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
+            if (ball_x > W) { p1_score++; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
 
             InvalidateRect(hwnd, NULL, FALSE);
             break;

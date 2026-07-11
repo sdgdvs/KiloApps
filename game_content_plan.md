@@ -101,7 +101,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSolitaire (Added moves counter, high score tracking, and Easy/Hard difficulty modes to both EXE and HTML)
 - [x] KSpace (Added starfield background, progressive difficulty spawn/speed, high scores, restart to both EXE and HTML)
 - [x] KMines (Added best time tracking, timer, and sound effects to both EXE and HTML)
-- [ ] KPong
+- [x] KPong (Added progressive ball speed and Web Audio/MessageBeep sound effects on paddle hit and scoring to both EXE and HTML)
 - [ ] KMaze
 - [ ] KPac
 - [ ] KChess

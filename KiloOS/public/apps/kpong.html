@@ -48,6 +48,22 @@
   <canvas id="gameCanvas" width="400" height="300"></canvas>
 </div>
 <script>
+  let audioCtx = null;
+  function playSound(freq, type) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = type === 'score' ? 'sawtooth' : 'sine';
+      osc.start();
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + (type === 'score' ? 0.5 : 0.1));
+      osc.stop(audioCtx.currentTime + 0.5);
+  }
+
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   
@@ -66,7 +82,8 @@
   function reset() {
       bx = W/2 - BALL_SIZE/2;
       by = H/2 - BALL_SIZE/2;
-      bdx = bdx > 0 ? -5 : 5;
+      bdx = (bdx > 0) ? -5 : 5;
+      bdy = (bdy > 0) ? 3 : -3;
   }
 
   function update() {
@@ -82,18 +99,22 @@
 
       bx += bdx; by += bdy;
 
-      if (by < 0) { by = 0; bdy = -bdy; }
-      if (by > H - BALL_SIZE) { by = H - BALL_SIZE; bdy = -bdy; }
+      if (by < 0) { by = 0; bdy = -bdy; playSound(800, 'hit'); }
+      if (by > H - BALL_SIZE) { by = H - BALL_SIZE; bdy = -bdy; playSound(800, 'hit'); }
 
       if (bx < 20 + PAD_W && by + BALL_SIZE > p1y && by < p1y + PAD_H) {
           bx = 20 + PAD_W; bdx = -bdx;
+          bdx *= 1.1; bdy *= 1.1;
+          playSound(600, 'hit');
       }
       if (bx + BALL_SIZE > W - 20 - PAD_W && by + BALL_SIZE > p2y && by < p2y + PAD_H) {
           bx = W - 20 - PAD_W - BALL_SIZE; bdx = -bdx;
+          bdx *= 1.1; bdy *= 1.1;
+          playSound(600, 'hit');
       }
 
-      if (bx < 0) { s2++; reset(); document.getElementById('s2').innerText = s2; }
-      if (bx > W) { s1++; reset(); document.getElementById('s1').innerText = s1; }
+      if (bx < 0) { s2++; playSound(200, 'score'); reset(); document.getElementById('s2').innerText = s2; }
+      if (bx > W) { s1++; playSound(200, 'score'); reset(); document.getElementById('s1').innerText = s1; }
   }
 
   function draw() {
