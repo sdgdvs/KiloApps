@@ -51,7 +51,10 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
       System Monitor
     </h1>
-    <button onclick="refresh()">Refresh Tasks</button>
+    <div style="display:flex; gap: 8px;">
+      <input type="text" id="searchInput" placeholder="Filter tasks..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px;" oninput="renderTasks()">
+      <button onclick="refresh()">Refresh Tasks</button>
+    </div>
   </div>
   
   <div class="dashboard">
@@ -101,17 +104,28 @@
       setTimeout(refresh, 50); // slight delay to let it close
     }
 
+    let allTasks = [];
+
     window.addEventListener('message', (e) => {
       if (e.data.type === 'OS_LIST_TASKS_DONE') {
+        allTasks = e.data.tasks;
+        renderTasks();
+      }
+    });
+
+    function renderTasks() {
         const list = document.getElementById('tasklist');
         list.innerHTML = '';
         
-        if (e.data.tasks.length === 0) {
-          list.innerHTML = '<div class="empty-state">No running applications.</div>';
+        const filterText = (document.getElementById('searchInput')?.value || '').toLowerCase();
+        const filteredTasks = allTasks.filter(t => t.title.toLowerCase().includes(filterText) || t.id.toLowerCase().includes(filterText));
+
+        if (filteredTasks.length === 0) {
+          list.innerHTML = '<div class="empty-state">No tasks match.</div>';
           return;
         }
         
-        e.data.tasks.forEach(task => {
+        filteredTasks.forEach(task => {
           const card = document.createElement('div');
           card.className = 'task-card';
           
@@ -124,8 +138,7 @@
           `;
           list.appendChild(card);
         });
-      }
-    });
+    }
 
     // Initial load
     setTimeout(refresh, 100);
