@@ -170,7 +170,7 @@
       let vfs = getVFS();
 
       if (cmd === 'help') {
-          print("Commands: help, ver, clear, dir, cd, type");
+          print("Commands: help, ver, clear, dir, cd, type, echo, mkdir");
       } else if (cmd === 'cerberus') {
           if (args[1] === 'status') {
               print("[CERBERUS WATCHDOG]");
@@ -262,16 +262,64 @@
                   print("ERROR: File not found.");
               }
           }
+      } else if (cmd === 'echo') {
+          print(cmdStr.substring(cmdStr.toLowerCase().indexOf('echo') + 4).trim());
+      } else if (cmd === 'mkdir') {
+          if (args[1] && vfs) {
+              let target = resolvePath(args[1]);
+              let parts = target.split('/').filter(Boolean);
+              let name = parts.pop();
+              let parentPath = '/' + parts.join('/');
+              let parent = vfs.getNode(parentPath);
+              if (parent && parent.type === 'dir') {
+                  if (parent.children[name]) {
+                      print("ERROR: Directory already exists.");
+                  } else {
+                      parent.children[name] = { type: 'dir', name: name, children: {} };
+                      print("Directory created.");
+                  }
+              } else {
+                  print("ERROR: Parent directory not found.");
+              }
+          } else if (!vfs) {
+              print("ERROR: VFS not available.");
+          }
       } else if (cmdStr.trim().length > 0) {
           print("ERROR: Bad command or file name.");
       }
   }
 
+  const history = [];
+  let historyPos = 0;
+
   input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-          execute(input.value);
+          const val = input.value;
+          if (val) {
+              history.push(val);
+              historyPos = history.length;
+          }
+          execute(val);
           input.value = '';
           updateCursor();
+      } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (historyPos > 0) {
+              historyPos--;
+              input.value = history[historyPos];
+              updateCursor();
+          }
+      } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (historyPos < history.length - 1) {
+              historyPos++;
+              input.value = history[historyPos];
+              updateCursor();
+          } else if (historyPos === history.length - 1) {
+              historyPos++;
+              input.value = '';
+              updateCursor();
+          }
       }
   });
   

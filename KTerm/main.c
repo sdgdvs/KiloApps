@@ -9,6 +9,11 @@ HWND hOut, hIn;
 WNDPROC oldEditProc;
 char currentDir[MAX_PATH];
 
+#define MAX_HISTORY 20
+char history[MAX_HISTORY][256];
+int history_count = 0;
+int history_pos = 0;
+
 void AppendOutput(const char* text) {
     int len = GetWindowTextLength(hOut);
     SendMessage(hOut, EM_SETSEL, len, len);
@@ -28,6 +33,8 @@ void ProcessCommand(const char* cmd) {
         AppendOutput("  clear - Clear screen");
         AppendOutput("  dir   - List files");
         AppendOutput("  cd    - Change directory");
+        AppendOutput("  echo  - Print text");
+        AppendOutput("  mkdir - Create directory");
     } else if (lstrcmpiA(cmd, "ver") == 0) {
         AppendOutput("KiloOS Native v1.0");
     } else if (lstrcmpiA(cmd, "clear") == 0 || lstrcmpiA(cmd, "cls") == 0) {
@@ -51,18 +58,56 @@ void ProcessCommand(const char* cmd) {
                 AppendOutput("Directory not found.");
             }
         }
+    } else if (cmd[0] == 'e' && cmd[1] == 'c' && cmd[2] == 'h' && cmd[3] == 'o' && cmd[4] == ' ') {
+        AppendOutput(cmd + 5);
+    } else if (cmd[0] == 'm' && cmd[1] == 'k' && cmd[2] == 'd' && cmd[3] == 'i' && cmd[4] == 'r' && cmd[5] == ' ') {
+        if (CreateDirectoryA(cmd + 6, NULL)) {
+            AppendOutput("Directory created.");
+        } else {
+            AppendOutput("Failed to create directory.");
+        }
     } else if (lstrlenA(cmd) > 0) {
         AppendOutput("Bad command or file name.");
     }
 }
 
 LRESULT CALLBACK EditProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
-        char buf[256];
-        GetWindowTextA(hIn, buf, sizeof(buf));
-        ProcessCommand(buf);
-        SetWindowTextA(hIn, "");
-        return 0; // Prevent beep
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_RETURN) {
+            char buf[256];
+            GetWindowTextA(hIn, buf, sizeof(buf));
+            ProcessCommand(buf);
+            
+            if (buf[0]) {
+                if (history_count < MAX_HISTORY) {
+                    lstrcpyA(history[history_count++], buf);
+                } else {
+                    for (int i = 0; i < MAX_HISTORY - 1; i++) lstrcpyA(history[i], history[i+1]);
+                    lstrcpyA(history[MAX_HISTORY - 1], buf);
+                }
+            }
+            history_pos = history_count;
+            
+            SetWindowTextA(hIn, "");
+            return 0; // Prevent beep
+        } else if (wParam == VK_UP) {
+            if (history_pos > 0) {
+                history_pos--;
+                SetWindowTextA(hIn, history[history_pos]);
+                SendMessage(hIn, EM_SETSEL, 256, 256);
+            }
+            return 0;
+        } else if (wParam == VK_DOWN) {
+            if (history_pos < history_count - 1) {
+                history_pos++;
+                SetWindowTextA(hIn, history[history_pos]);
+                SendMessage(hIn, EM_SETSEL, 256, 256);
+            } else if (history_pos == history_count - 1) {
+                history_pos++;
+                SetWindowTextA(hIn, "");
+            }
+            return 0;
+        }
     }
     return CallWindowProc(oldEditProc, hwnd, msg, wParam, lParam);
 }
