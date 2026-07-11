@@ -1,28 +1,149 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #0f0;
-      font-family: monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-    a { color: #fff; text-decoration: none; border: 1px solid #0f0; padding: 10px; margin-top: 20px; }
-    a:hover { background: #0f0; color: #000; }
-  </style>
+    <title>KRogue Web</title>
+    <style>
+        body { margin: 0; padding: 0; background: #000; color: #fff; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+        #game { white-space: pre; font-size: 20px; line-height: 20px; }
+        .wall { color: #888; }
+        .floor { color: #555; }
+        .player { color: #fff; font-weight: bold; }
+        .monster { color: #f00; }
+    </style>
 </head>
 <body>
-  <h2>KRogue is a Native Executable!</h2>
-  <p>To experience the full ADOM-style terminal rendering,</p>
-  <p>please download and run the executable.</p>
-  <a href="/exe/KApps.zip" target="_top" download>Download KApps.zip</a>
+    <div id="game"></div>
+    <script>
+        const W = 40;
+        const H = 20;
+        let map = [];
+        let player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1 };
+        let monsters = [];
+        let state = 0; // 0=menu, 1=play, 2=dead
+        let difficulty = 0;
+        let diffStr = ["Normal", "Hard", "Nightmare"];
+        
+        function initMap() {
+            map = [];
+            monsters = [];
+            for (let y = 0; y < H; y++) {
+                map[y] = [];
+                for (let x = 0; x < W; x++) {
+                    map[y][x] = (x===0 || y===0 || x===W-1 || y===H-1) ? '#' : '.';
+                }
+            }
+            player.x = 2; player.y = 2; player.hp = player.max_hp;
+            for (let i = 0; i < 5 + difficulty*2; i++) {
+                monsters.push({
+                    x: Math.floor(Math.random()*(W-4))+2,
+                    y: Math.floor(Math.random()*(H-4))+2,
+                    hp: 5 * (difficulty + 1),
+                    max_hp: 5 * (difficulty + 1),
+                    ch: 'r'
+                });
+            }
+        }
+        
+        function render() {
+            let out = "";
+            if (state === 0) {
+                out += "KRogue Web\n\n";
+                out += "Difficulty: " + diffStr[difficulty] + " (Press D to change)\n\n";
+                out += "Press ENTER to start\n";
+                out += "Press L to load game\n";
+            } else if (state === 1) {
+                for (let y = 0; y < H; y++) {
+                    for (let x = 0; x < W; x++) {
+                        if (x === player.x && y === player.y) out += "<span class='player'>@</span>";
+                        else {
+                            let m = monsters.find(m => m.x === x && m.y === y);
+                            if (m) out += "<span class='monster'>" + m.ch + "</span>";
+                            else out += map[y][x] === '#' ? "<span class='wall'>#</span>" : "<span class='floor'>.</span>";
+                        }
+                    }
+                    out += "\n";
+                }
+                out += `\nHP: ${player.hp}/${player.max_hp}  Level: ${player.level}  XP: ${player.xp}  Diff: ${diffStr[difficulty]}\n`;
+                out += "Arrows: Move, S: Save, L: Load\n";
+            } else if (state === 2) {
+                out += "You died.\nPress R to restart.";
+            }
+            document.getElementById('game').innerHTML = out;
+        }
+        
+        function saveGame() {
+            localStorage.setItem('krogue_save', JSON.stringify({ player, monsters, map, difficulty }));
+            alert("Game Saved!");
+        }
+        
+        function loadGame() {
+            let s = localStorage.getItem('krogue_save');
+            if (s) {
+                let d = JSON.parse(s);
+                player = d.player;
+                monsters = d.monsters;
+                map = d.map;
+                difficulty = d.difficulty;
+                state = 1;
+                render();
+            } else {
+                alert("No save found.");
+            }
+        }
+        
+        window.addEventListener('keydown', e => {
+            if (state === 0) {
+                if (e.key === 'd' || e.key === 'D') difficulty = (difficulty + 1) % 3;
+                if (e.key === 'Enter') { state = 1; initMap(); }
+                if (e.key === 'l' || e.key === 'L') loadGame();
+                render();
+            } else if (state === 1) {
+                let dx = 0, dy = 0;
+                if (e.key === 'ArrowUp') dy = -1;
+                if (e.key === 'ArrowDown') dy = 1;
+                if (e.key === 'ArrowLeft') dx = -1;
+                if (e.key === 'ArrowRight') dx = 1;
+                if (e.key === 's' || e.key === 'S') saveGame();
+                if (e.key === 'l' || e.key === 'L') loadGame();
+                
+                if (dx !== 0 || dy !== 0) {
+                    let nx = player.x + dx, ny = player.y + dy;
+                    if (map[ny][nx] !== '#') {
+                        let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
+                        if (mIdx >= 0) {
+                            monsters[mIdx].hp -= 2 + player.level;
+                            if (monsters[mIdx].hp <= 0) {
+                                monsters.splice(mIdx, 1);
+                                player.xp += 5;
+                                if (player.xp >= player.level * 10) {
+                                    player.level++; player.max_hp += 5; player.hp = player.max_hp;
+                                }
+                            }
+                        } else {
+                            player.x = nx; player.y = ny;
+                        }
+                    }
+                    // monster turn
+                    monsters.forEach(m => {
+                        if (Math.random() < 0.5) {
+                            let mdx = Math.sign(player.x - m.x);
+                            let mdy = Math.sign(player.y - m.y);
+                            if (m.x + mdx === player.x && m.y + mdy === player.y) {
+                                player.hp -= (1 + difficulty);
+                                if (player.hp <= 0) state = 2;
+                            } else if (map[m.y + mdy][m.x + mdx] !== '#') {
+                                m.x += mdx; m.y += mdy;
+                            }
+                        }
+                    });
+                }
+                render();
+            } else if (state === 2) {
+                if (e.key === 'r' || e.key === 'R') { state = 0; render(); }
+            }
+        });
+        
+        render();
+    </script>
 </body>
 </html>

@@ -148,6 +148,7 @@ typedef struct {
     int known_spells[MAX_SPELLS];
     int active_spell;
     Entity* active_shopkeeper;
+    int difficulty; // 0=Normal, 1=Hard, 2=Nightmare
 } GameState;
 
 GameState g;
@@ -284,6 +285,12 @@ void spawn_monster(int x, int y) {
                 else if(m == 2) { e->ch = 'G'; e->fg = C_GOLEM; str_cpy(e->name, "Stone Golem"); e->hp = e->max_hp = 80 + g.dlevel*5; e->atk = 10; e->def = 15; e->xp = 60; e->behavior = B_SLUGGISH; }
                 else if(m == 3) { e->ch = 'L'; e->fg = C_LICH; str_cpy(e->name, "Lich"); e->hp = e->max_hp = 40 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 80; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
                 else { e->ch = 'd'; e->fg = C_DEMON; str_cpy(e->name, "Demon"); e->hp = e->max_hp = 50 + g.dlevel*5; e->atk = 18; e->def = 10; e->xp = 70; e->behavior = B_FAST; e->special_ability = ABILITY_BREATHE_FIRE; }
+            }
+            
+            if(e->behavior != B_SHOPKEEPER) {
+                if(g.difficulty == 1) { e->max_hp = e->max_hp * 3 / 2; e->atk = e->atk * 3 / 2; }
+                else if(g.difficulty == 2) { e->max_hp = e->max_hp * 2; e->atk = e->atk * 2; e->def = e->def * 3 / 2; }
+                e->hp = e->max_hp;
             }
             break;
         }
@@ -448,6 +455,9 @@ void generate_map() {
                 e->ch = '&'; e->fg = RGB(255, 0, 255); str_cpy(e->name, "Chaos God Andor Drakon");
                 e->hp = e->max_hp = 500; e->atk = 35; e->def = 25; e->xp = 5000;
                 e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON;
+                if(g.difficulty == 1) { e->max_hp = 750; e->atk = 50; }
+                else if(g.difficulty == 2) { e->max_hp = 1000; e->atk = 75; e->def = 40; }
+                e->hp = e->max_hp;
                 break;
             }
         }
@@ -496,6 +506,7 @@ void init_game() {
     g.state = 4; // Character creation
     g.char_race = RACE_HUMAN;
     g.char_class = CLASS_FIGHTER;
+    g.difficulty = 0;
 }
 
 void finalize_character() {
@@ -1205,7 +1216,10 @@ void draw_game(HDC hdc) {
         wsprintfA(buf, "Class: %s (Press C to change)", g.char_class == CLASS_FIGHTER ? "Fighter" : (g.char_class == CLASS_ROGUE ? "Rogue" : "Wizard"));
         TextOutA(memDC, 20, 80, buf, str_len(buf));
         
-        TextOutA(memDC, 20, 120, "Press ENTER to begin your journey...", 36);
+        wsprintfA(buf, "Difficulty: %s (Press D to change)", g.difficulty == 0 ? "Normal" : (g.difficulty == 1 ? "Hard" : "Nightmare"));
+        TextOutA(memDC, 20, 100, buf, str_len(buf));
+        
+        TextOutA(memDC, 20, 140, "Press ENTER to begin your journey...", 36);
     } else if(g.state == 5) { // char sheet
         SetTextColor(memDC, RGB(255,255,255));
         SetBkColor(memDC, RGB(0,0,0));
@@ -1507,6 +1521,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if(g.state == 4) { // create char
                 if(wParam == 'R') g.char_race = (g.char_race + 1) % 3;
                 else if(wParam == 'C') g.char_class = (g.char_class + 1) % 3;
+                else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
                 else if(wParam == VK_RETURN) finalize_character();
             } else if(g.state == 5) { // char sheet
                 if(wParam == VK_ESCAPE || wParam == 'C') g.state = 0;
