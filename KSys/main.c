@@ -77,7 +77,33 @@ void UpdateInfo() {
     strcatA(buf, "Total Page File: ");
     formatInt((DWORD)(mem.ullTotalPageFile >> 20), numBuf);
     strcatA(buf, numBuf);
-    strcatA(buf, " MB\r\n");
+    strcatA(buf, " MB\r\n\r\n");
+    
+    ULARGE_INTEGER freeBytesAvailableToCaller;
+    ULARGE_INTEGER totalNumberOfBytes;
+    ULARGE_INTEGER totalNumberOfFreeBytes;
+    if (GetDiskFreeSpaceExA("C:\\", &freeBytesAvailableToCaller, &totalNumberOfBytes, &totalNumberOfFreeBytes)) {
+        strcatA(buf, "--- Disk Information (C:\\) ---\r\n\r\n");
+        strcatA(buf, "Total Space: ");
+        formatInt((DWORD)(totalNumberOfBytes.QuadPart >> 20), numBuf);
+        strcatA(buf, numBuf);
+        strcatA(buf, " MB\r\n");
+        
+        strcatA(buf, "Free Space: ");
+        formatInt((DWORD)(totalNumberOfFreeBytes.QuadPart >> 20), numBuf);
+        strcatA(buf, numBuf);
+        strcatA(buf, " MB\r\n\r\n");
+    }
+    
+    strcatA(buf, "--- System Uptime ---\r\n\r\n");
+    DWORD ticks = GetTickCount();
+    DWORD hours = ticks / 3600000;
+    DWORD mins = (ticks / 60000) % 60;
+    DWORD secs = (ticks / 1000) % 60;
+    strcatA(buf, "Uptime: ");
+    formatInt(hours, numBuf); strcatA(buf, numBuf); strcatA(buf, "h ");
+    formatInt(mins, numBuf); strcatA(buf, numBuf); strcatA(buf, "m ");
+    formatInt(secs, numBuf); strcatA(buf, numBuf); strcatA(buf, "s\r\n");
     
     SetWindowTextA(hOutput, buf);
 }

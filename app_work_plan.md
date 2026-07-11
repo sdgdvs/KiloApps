@@ -19,7 +19,7 @@
 
 ---
 
-**Target App:** KTask
+**Target App:** KSys
 **Status:** Feature-Expanded
 **Current Phase:** Done
 
@@ -29,7 +29,7 @@
 KPad, KImage, KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont, KMail, KMandel, KPing, KScript
 
 ### Feature-Expanded
-KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing, KScript, KSnake, KTetris, KSpace, KType, KSolitaire, KTerm, KSynth, KSound, KTask
+KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing, KScript, KSnake, KTetris, KSpace, KType, KSolitaire, KTerm, KSynth, KSound, KTask, KSys
 
 ### Created from Scratch
 KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
@@ -39,4 +39,4 @@ KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
 
 ## Priority Queue (Never Touched)
 Select from these for polish/expansion next:
-KRogue, KSys
+KRogue

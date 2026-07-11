@@ -12,26 +12,52 @@
 <script>
   const out = document.getElementById('out');
   
-  function update() {
+  async function update() {
       let info = "--- System Information ---\n\n";
       
       const cores = navigator.hardwareConcurrency || "Unknown";
       info += `Processor Cores: ${cores}\n`;
       info += `Platform: ${navigator.platform}\n`;
+      info += `Language: ${navigator.language}\n`;
       info += `User Agent:\n${navigator.userAgent}\n\n`;
       
       info += "--- Memory Information ---\n\n";
       
       if (navigator.deviceMemory) {
-          info += `Device Memory: ~${navigator.deviceMemory} GB\n`;
+          info += `Device Memory: ~${navigator.deviceMemory} GB\n\n`;
       } else {
-          info += `Device Memory: Restricted by Browser\n`;
+          info += `Device Memory: Restricted by Browser\n\n`;
       }
       
+      info += "--- Network Information ---\n\n";
+      if (navigator.connection) {
+          info += `Type: ${navigator.connection.effectiveType || "Unknown"}\n`;
+          info += `Downlink: ${navigator.connection.downlink || 0} Mbps\n`;
+          info += `RTT: ${navigator.connection.rtt || 0} ms\n\n`;
+      } else {
+          info += "Network Information: Restricted by Browser\n\n";
+      }
+
+      info += "--- Storage Information ---\n\n";
+      if (navigator.storage && navigator.storage.estimate) {
+          try {
+              const estimate = await navigator.storage.estimate();
+              const totalMB = Math.round(estimate.quota / (1024 * 1024));
+              const usedMB = Math.round(estimate.usage / (1024 * 1024));
+              info += `Estimated Quota: ${totalMB} MB\n`;
+              info += `Estimated Usage: ${usedMB} MB\n\n`;
+          } catch(e) {
+              info += "Storage Estimate Failed\n\n";
+          }
+      } else {
+          info += "Storage Information: Restricted by Browser\n\n";
+      }
+
       out.value = info;
   }
   
   update();
+  setInterval(update, 1000);
 </script>
 </body>
 </html>
