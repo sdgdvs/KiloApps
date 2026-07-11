@@ -7,9 +7,9 @@
 
 HMIDIOUT hMidi = NULL;
 
-const char* notes[] = { "C", "D", "E", "F", "G", "A", "B", "C2" };
-int pitches[] = { 60, 62, 64, 65, 67, 69, 71, 72 };
-HWND hBtns[8];
+const char* notes[] = { "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C2" };
+int pitches[] = { 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72 };
+HWND hBtns[13];
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -20,9 +20,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 midiOutShortMsg(hMidi, 0x000000C0);
             }
             
-            HFONT hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
-            int btnW = W / 8;
-            for (int i = 0; i < 8; i++) {
+            HFONT hFont = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            int btnW = W / 13;
+            for (int i = 0; i < 13; i++) {
                 hBtns[i] = CreateWindowEx(0, "BUTTON", notes[i], WS_CHILD | WS_VISIBLE, i * btnW, 0, btnW, H - 40, hwnd, (HMENU)(i + 1), NULL, NULL);
                 SendMessage(hBtns[i], WM_SETFONT, (WPARAM)hFont, TRUE);
             }
@@ -30,7 +30,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
-            if (id >= 1 && id <= 8) {
+            if (id >= 1 && id <= 13) {
                 if (hMidi) {
                     int pitch = pitches[id - 1];
                     // Note on, channel 0, velocity 100
@@ -43,8 +43,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            int btnW = nw / 8;
-            for (int i = 0; i < 8; i++) {
+            int btnW = nw / 13;
+            for (int i = 0; i < 13; i++) {
                 MoveWindow(hBtns[i], i * btnW, 0, btnW, nh, TRUE);
             }
             break;
