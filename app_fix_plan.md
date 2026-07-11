@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KClock
+**Target App:** KContacts
 **Status:** In Progress
 
 ## Workflow
@@ -39,6 +39,7 @@
 - **KChat & KChatServer**: Fixed native socket resource leak in KChatServer's accept loop. Fixed socket leak on `gethostbyname` failure and improper reconnect logic in KChat native. Verified HTML web chat connection workflow.
 - **KChess**: Fixed infinite loop / array out-of-bounds in main.c path checking for Knight moves. Verified web logic is safe.
 - **KClock**: Fixed implicit global event bug in kclock.html tab switching. Fixed GDI resource leak (HFONT) in main.c by storing and deleting hFont and hFontMono on destroy.
+- **KColor**: Verified kcolor.html logic. Fixed GDI resource leak (HFONT) in main.c by destroying it on WM_DESTROY.
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KClock.

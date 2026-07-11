@@ -10,6 +10,7 @@ HWND hLabelR, hLabelG, hLabelB;
 HWND hColorBox;
 int r = 100, g = 150, b = 200;
 HBRUSH colorBrush;
+HFONT hFont;
 
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     SendMessage(child, WM_SETFONT, hFont, TRUE);
@@ -19,7 +20,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "R:", WS_CHILD | WS_VISIBLE, 10, 15, 20, 20, hwnd, NULL, NULL, NULL);
             hScrollR = CreateWindowEx(0, "SCROLLBAR", "", WS_CHILD | WS_VISIBLE | SBS_HORZ, 35, 15, 120, 20, hwnd, (HMENU)1, NULL, NULL);
@@ -98,6 +99,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY:
             if (colorBrush) DeleteObject(colorBrush);
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;
         default:
