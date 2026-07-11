@@ -87,12 +87,25 @@
   ];
   let currentLevel = 0;
   let keysHeld = 0;
-  // Deep clone so map resets don't persist
   let map = JSON.parse(JSON.stringify(maps[currentLevel]));
+  
+  let gameState = 0; // 0: Start, 1: Play, 2: Win
+  let startTime = 0;
+  let endTime = 0;
+  let bestTime = localStorage.getItem('kmaze_best') ? parseFloat(localStorage.getItem('kmaze_best')) : 9999.9;
   
   function nextLevel() {
       currentLevel++;
-      if (currentLevel >= maps.length) currentLevel = 0;
+      if (currentLevel >= maps.length) {
+          gameState = 2;
+          endTime = Date.now();
+          let elapsed = (endTime - startTime) / 1000;
+          if (elapsed < bestTime) {
+              bestTime = elapsed;
+              localStorage.setItem('kmaze_best', bestTime);
+          }
+          return;
+      }
       map = JSON.parse(JSON.stringify(maps[currentLevel]));
       keysHeld = 0;
       pX = 1.5; pY = 1.5;
@@ -105,10 +118,21 @@
   let planeX = 0.0, planeY = 0.66;
   
   const keys = {};
-  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (e.key === 'Enter') {
+          if (gameState === 0 || gameState === 2) {
+              gameState = 1;
+              startTime = Date.now();
+              currentLevel = -1;
+              nextLevel();
+          }
+      }
+  });
   document.addEventListener('keyup', e => keys[e.key] = false);
 
   function update() {
+      if (gameState !== 1) return;
       const moveSpeed = 0.1;
       const rotSpeed = 0.05;
       
@@ -223,8 +247,22 @@
       // Draw UI
       ctx.fillStyle = 'white';
       ctx.font = '12px monospace';
-      ctx.fillText("Keys: " + keysHeld, 10, 20);
-      ctx.fillText("Level: " + (currentLevel+1), 10, 35);
+      if (gameState === 0) {
+          ctx.fillText("KMAZE", W/2 - 20, H/2 - 20);
+          ctx.fillText("Press ENTER to start", W/2 - 70, H/2 + 10);
+      } else if (gameState === 2) {
+          let elapsed = (endTime - startTime) / 1000;
+          ctx.fillText("You Escaped!", W/2 - 40, H/2 - 20);
+          ctx.fillText("Time: " + elapsed.toFixed(1) + "s", W/2 - 40, H/2);
+          ctx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
+          ctx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 40);
+      } else {
+          let elapsed = (Date.now() - startTime) / 1000;
+          ctx.fillText("Keys: " + keysHeld, 10, 20);
+          ctx.fillText("Level: " + (currentLevel+1), 10, 35);
+          ctx.fillText("Time: " + elapsed.toFixed(1), 10, 50);
+          if (bestTime < 9999) ctx.fillText("Best: " + bestTime.toFixed(1), 10, 65);
+      }
   }
 
   setInterval(() => {

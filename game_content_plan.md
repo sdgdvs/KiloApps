@@ -102,7 +102,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSpace (Added starfield background, progressive difficulty spawn/speed, high scores, restart to both EXE and HTML)
 - [x] KMines (Added best time tracking, timer, and sound effects to both EXE and HTML)
 - [x] KPong (Added progressive ball speed and Web Audio/MessageBeep sound effects on paddle hit and scoring to both EXE and HTML)
-- [ ] KMaze
+- [x] KMaze (Added start screen, win screen, best time tracking and elapsed time display to both EXE and HTML)
 - [ ] KPac
 - [ ] KChess
 - [ ] Create New Game

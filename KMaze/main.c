@@ -13,7 +13,7 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 const int W = 320;
 const int H = 240;
 
-int map1[10][10] = {
+const int orig_map1[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,0,0,1,0,0,1},
     {1,0,1,1,0,0,1,0,0,1},
@@ -26,7 +26,7 @@ int map1[10][10] = {
     {1,1,1,1,1,1,1,1,1,1}
 };
 
-int map2[12][12] = {
+const int orig_map2[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,0,1,0,0,0,0,0,1},
     {1,0,1,1,0,1,0,1,1,1,0,1},
@@ -41,7 +41,7 @@ int map2[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
-int map3[15][15] = {
+const int orig_map3[15][15] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,1,1,0,1},
@@ -59,7 +59,7 @@ int map3[15][15] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
-int map4[10][10] = {
+const int orig_map4[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,0,0,1,3,0,1},
     {1,1,1,1,1,0,1,1,0,1},
@@ -72,7 +72,7 @@ int map4[10][10] = {
     {1,1,1,1,1,1,1,1,1,1}
 };
 
-int map5[12][12] = {
+const int orig_map5[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1},
     {1,0,0,0,1,0,0,0,0,0,3,1},
     {1,0,1,0,1,0,1,1,1,1,1,1},
@@ -87,8 +87,44 @@ int map5[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
+
+int map1[10][10];
+int map2[12][12];
+int map3[15][15];
+int map4[10][10];
+int map5[12][12];
+
+void ResetMaps() {
+    memcpy(map1, orig_map1, sizeof(map1));
+    memcpy(map2, orig_map2, sizeof(map2));
+    memcpy(map3, orig_map3, sizeof(map3));
+    memcpy(map4, orig_map4, sizeof(map4));
+    memcpy(map5, orig_map5, sizeof(map5));
+}
+
 int currentLevel = 0;
 int keysHeld = 0;
+
+int gameState = 0; // 0=start, 1=play, 2=win
+DWORD startTime = 0;
+DWORD endTime = 0;
+float bestTime = 9999.9f;
+
+void LoadBest() {
+    FILE* f = fopen("kmaze_score.dat", "rb");
+    if (f) {
+        fread(&bestTime, sizeof(float), 1, f);
+        fclose(f);
+    }
+}
+void SaveBest() {
+    FILE* f = fopen("kmaze_score.dat", "wb");
+    if (f) {
+        fwrite(&bestTime, sizeof(float), 1, f);
+        fclose(f);
+    }
+}
+
 
 int GetMapValue(int x, int y) {
     if (x < 0 || y < 0) return 1;
@@ -120,6 +156,7 @@ void SetMapValue(int x, int y, int v) {
 }
 
 float pX = 1.5f, pY = 1.5f;
+void InitGame() { LoadBest(); ResetMaps(); }
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
 
