@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 2
-**Status:** In Progress (Phase 1 Scaffold Complete)
+**Phase:** 3
+**Status:** In Progress (Phase 2 core Web Crypto functionality implemented)
 
 ## App Lifecycle (14 phases per app)
 
