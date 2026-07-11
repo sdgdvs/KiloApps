@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KContacts
+**Target App:** KConverter
 **Status:** In Progress
 
 ## Workflow
@@ -40,6 +40,7 @@
 - **KChess**: Fixed infinite loop / array out-of-bounds in main.c path checking for Knight moves. Verified web logic is safe.
 - **KClock**: Fixed implicit global event bug in kclock.html tab switching. Fixed GDI resource leak (HFONT) in main.c by storing and deleting hFont and hFontMono on destroy.
 - **KColor**: Verified kcolor.html logic. Fixed GDI resource leak (HFONT) in main.c by destroying it on WM_DESTROY.
+- **KContacts**: Fixed `toLowerCase` undefined bug in `kcontacts.html` search filter. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KClock.
+All apps need systematic testing. Continue alphabetically from KConverter.

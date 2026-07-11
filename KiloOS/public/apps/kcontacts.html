@@ -187,11 +187,13 @@
     function renderList(filter = '') {
       contactList.innerHTML = '';
       contacts.forEach((c, i) => {
-        if (c.name.toLowerCase().includes(filter.toLowerCase()) || c.email.toLowerCase().includes(filter.toLowerCase())) {
+        const nameMatch = (c.name || '').toLowerCase().includes(filter.toLowerCase());
+        const emailMatch = (c.email || '').toLowerCase().includes(filter.toLowerCase());
+        if (nameMatch || emailMatch) {
           const div = document.createElement('div');
           div.className = 'contact-item' + (i === currentEditIndex ? ' active' : '');
           div.innerHTML = `<div class="contact-item-name">${c.name || 'Unnamed Contact'}</div>
-                           <div class="contact-item-sub">${c.email}</div>`;
+                           <div class="contact-item-sub">${c.email || ''}</div>`;
           div.onclick = () => selectContact(i);
           contactList.appendChild(div);
         }

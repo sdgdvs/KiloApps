@@ -8,6 +8,7 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #pragma function(memset)
 
 HWND hList, hEdit;
+HFONT hFont;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -18,7 +19,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)"Alice Smith");
             SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)"Bob Jones");
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
@@ -32,6 +33,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
     }
