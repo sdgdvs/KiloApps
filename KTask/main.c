@@ -8,7 +8,9 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 }
 
 HWND hListBox;
+HWND hSearchBox;
 HWND hBtnRefresh, hBtnEndTask;
+
 
 void my_itoa(int num, char* str) {
     int i = 0;
@@ -47,14 +49,36 @@ void my_strcat(char* dest, const char* src) {
     *dest = 0;
 }
 
+int my_stristr(const char* haystack, const char* needle) {
+    if (!*needle) return 1;
+    for (int i = 0; haystack[i]; i++) {
+        int j = 0;
+        while (haystack[i+j] && needle[j]) {
+            char c1 = haystack[i+j];
+            char c2 = needle[j];
+            if (c1 >= 'A' && c1 <= 'Z') c1 += 32;
+            if (c2 >= 'A' && c2 <= 'Z') c2 += 32;
+            if (c1 != c2) break;
+            j++;
+        }
+        if (!needle[j]) return 1;
+    }
+    return 0;
+}
+
 void RefreshList() {
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    char filter[256] = {0};
+    if (hSearchBox) GetWindowTextA(hSearchBox, filter, sizeof(filter));
+
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot != INVALID_HANDLE_VALUE) {
         PROCESSENTRY32 pe32;
         pe32.dwSize = sizeof(PROCESSENTRY32);
         if (Process32First(hSnapshot, &pe32)) {
             do {
+                if (filter[0] && !my_stristr(pe32.szExeFile, filter)) continue;
+
                 char buf[MAX_PATH + 32] = {0};
                 char pidStr[16] = {0};
                 my_itoa(pe32.th32ProcessID, pidStr);
@@ -74,8 +98,10 @@ void RefreshList() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 10, 260, 200, hwnd, NULL, NULL, NULL);
+            hSearchBox = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 260, 25, hwnd, (HMENU)3, NULL, NULL);
+            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 260, 165, hwnd, NULL, NULL, NULL);
             HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+            SendMessageA(hSearchBox, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
 
             hBtnRefresh = CreateWindowA("BUTTON", "Refresh", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 220, 100, 25, hwnd, (HMENU)1, NULL, NULL);
@@ -89,7 +115,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
-            if (id == 1) { // Refresh
+            int code = HIWORD(wParam);
+            if (id == 3 && code == EN_CHANGE) {
+                RefreshList();
+            } else if (id == 1) { // Refresh
                 RefreshList();
             } else if (id == 2) { // End Task
                 int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);

@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KConverter
+**Target App:** KDictionary
 **Status:** In Progress
 
 ## Workflow
@@ -41,6 +41,7 @@
 - **KClock**: Fixed implicit global event bug in kclock.html tab switching. Fixed GDI resource leak (HFONT) in main.c by storing and deleting hFont and hFontMono on destroy.
 - **KColor**: Verified kcolor.html logic. Fixed GDI resource leak (HFONT) in main.c by destroying it on WM_DESTROY.
 - **KContacts**: Fixed `toLowerCase` undefined bug in `kcontacts.html` search filter. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+- **KConverter**: Verified kconverter.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KConverter.
+All apps need systematic testing. Continue alphabetically from KDictionary.

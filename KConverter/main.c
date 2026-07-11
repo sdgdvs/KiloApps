@@ -15,6 +15,7 @@ sprintf_t m_sprintf;
 atof_t m_atof;
 
 HWND hInput, hOutput, hFrom, hTo;
+HFONT hFont;
 char buffer[256];
 
 double GetFactor(int index) {
@@ -70,7 +71,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFrom, CB_SETCURSEL, 0, 0);
             SendMessageA(hTo, CB_SETCURSEL, 0, 0);
             
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hFrom, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hTo, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -84,6 +85,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
     }
