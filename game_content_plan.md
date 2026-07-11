@@ -100,7 +100,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KTetris (Added next piece preview and high scores to both EXE and HTML, added progressive speed to HTML)
 - [x] KSolitaire (Added moves counter, high score tracking, and Easy/Hard difficulty modes to both EXE and HTML)
 - [x] KSpace (Added starfield background, progressive difficulty spawn/speed, high scores, restart to both EXE and HTML)
-- [ ] KMines
+- [x] KMines (Added best time tracking, timer, and sound effects to both EXE and HTML)
 - [ ] KPong
 - [ ] KMaze
 - [ ] KPac

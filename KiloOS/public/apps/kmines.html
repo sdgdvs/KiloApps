@@ -51,9 +51,10 @@
 <body>
   <div class="game-container">
     <div class="toolbar">
-      <div class="counter" id="flag-count">010</div>
+      <div class="counter" id="flag-count" title="Mines">010</div>
       <button class="face-btn" id="face" onclick="init()">🙂</button>
-      <div class="counter" id="time-count">000</div>
+      <div class="counter" id="time-count" title="Time">000</div>
+      <div class="counter" id="best-count" title="Best Time" style="color:var(--warning);">999</div>
     </div>
     <div class="board" id="board" oncontextmenu="return false;"></div>
   </div>
@@ -68,6 +69,22 @@
     let flags = 0;
     let time = 0;
     let timer = null;
+    let bestTime = localStorage.getItem('kmines_bestTime') || 999;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(freq, duration, type='sine') {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
 
     function formatNumber(num) {
       return num.toString().padStart(3, '0');
@@ -79,10 +96,12 @@
       initialized = false;
       flags = 0;
       time = 0;
+      bestTime = localStorage.getItem('kmines_bestTime') || 999;
       clearInterval(timer);
       document.getElementById('face').innerText = '🙂';
       document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
       document.getElementById('time-count').innerText = formatNumber(time);
+      document.getElementById('best-count').innerText = formatNumber(bestTime);
       render();
     }
 
@@ -158,19 +177,27 @@
       if (!(grid[r][c] & 4)) {
         reveal(r, c);
         if (gameOver) {
+          playSound(150, 0.5, 'sawtooth');
           clearInterval(timer);
           for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
           document.getElementById('face').innerText = '😵';
           render();
         } else if (checkWin()) {
+          playSound(800, 0.5, 'square');
           gameOver = true;
           clearInterval(timer);
+          if (time < bestTime) {
+            bestTime = time;
+            localStorage.setItem('kmines_bestTime', bestTime);
+            document.getElementById('best-count').innerText = formatNumber(bestTime);
+          }
           document.getElementById('face').innerText = '😎';
           flags = MINES;
           document.getElementById('flag-count').innerText = formatNumber(0);
           for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4; // flag all
           render();
         } else {
+          playSound(400, 0.1, 'sine');
           render();
         }
       }
@@ -182,9 +209,11 @@
         if (grid[r][c] & 4) {
           grid[r][c] ^= 4; // remove flag
           flags--;
+          playSound(600, 0.1, 'triangle');
         } else {
           grid[r][c] |= 4; // add flag
           flags++;
+          playSound(800, 0.1, 'triangle');
         }
         document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
         render();
