@@ -32,8 +32,8 @@
 </head>
 <body>
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('clock')">Clock</div>
-    <div class="tab" onclick="switchTab('stopwatch')">Stopwatch</div>
+    <div class="tab active" onclick="switchTab(event, 'clock')">Clock</div>
+    <div class="tab" onclick="switchTab(event, 'stopwatch')">Stopwatch</div>
   </div>
 
   <div id="tab-clock" class="content active">
@@ -50,10 +50,10 @@
   </div>
 
   <script>
-    function switchTab(id) {
+    function switchTab(e, id) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
+      e.currentTarget.classList.add('active');
       document.getElementById('tab-' + id).classList.add('active');
     }
 

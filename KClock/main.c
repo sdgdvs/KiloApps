@@ -13,6 +13,7 @@ DWORD startTime = 0;
 DWORD elapsed = 0;
 int isRunning = 0;
 int lapCount = 0;
+HFONT hFont, hFontMono;
 
 void FormatTime(DWORD ms, char* buf) {
     int centis = (ms % 1000) / 10;
@@ -44,7 +45,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00.00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 10, 160, 40, hwnd, NULL, NULL, NULL);
-            HFONT hFont = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFont = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 60, 50, 25, hwnd, (HMENU)1, NULL, NULL);
@@ -53,7 +54,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 60, 50, 25, hwnd, (HMENU)3, NULL, NULL);
             
             hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 95, 215, 140, hwnd, NULL, NULL, NULL);
-            HFONT hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFontMono = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFontMono, TRUE);
             
             SetTimer(hwnd, 1, 15, NULL); // Roughly 60fps update
@@ -98,6 +99,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            if (hFont) DeleteObject(hFont);
+            if (hFontMono) DeleteObject(hFontMono);
             PostQuitMessage(0);
             return 0;
     }
