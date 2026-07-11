@@ -31,9 +31,9 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** (none — awaiting first assignment)
-**Phase:** —
-**Status:** Ready
+**App:** KVault
+**Phase:** 1
+**Status:** In Progress
 
 ## App Lifecycle (14 phases per app)
 
