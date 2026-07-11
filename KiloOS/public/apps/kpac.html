@@ -41,6 +41,21 @@
   let score, gameOver, dotCount, frameCount;
   let level = 1;
   let frightTimer = 0;
+  let highScore = localStorage.getItem('kpac_highscore') || 0;
+  
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playSound(freq, dur, type='square') {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
+      osc.stop(audioCtx.currentTime + dur);
+  }
   
   const keys = {};
   document.addEventListener('keydown', e => keys[e.key] = true);
@@ -112,12 +127,14 @@
           if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
               px = nx; py = ny;
               if (map[py][px] === 2 || map[py][px] === 3) {
-                  if (map[py][px] === 3) { score += 40; frightTimer = 50; }
-                  else { score += 10; }
+                  if (map[py][px] === 3) { score += 40; frightTimer = 50; playSound(300, 0.3, 'sawtooth'); }
+                  else { score += 10; playSound(600, 0.05, 'square'); }
+                  if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
                   map[py][px] = 0;
                   dotCount--;
                   if (dotCount === 0) {
                       level++;
+                      playSound(800, 0.5, 'sine');
                       init(true);
                   }
               }
@@ -128,8 +145,11 @@
           if (px === g.x && py === g.y) {
               if (frightTimer > 0) {
                   score += 200;
+                  if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
+                  playSound(800, 0.1, 'triangle');
                   g.x = 7; g.y = 6; // send to center
               } else {
+                  playSound(200, 0.5, 'sawtooth');
                   gameOver = 1;
               }
           }
@@ -169,7 +189,7 @@
       
       ctx.fillStyle = '#fff';
       ctx.font = '12px monospace';
-      ctx.fillText(`Lvl: ${level} Score: ${score}`, 5, 15);
+      ctx.fillText(`Lvl: ${level} Score: ${score} HI: ${highScore}`, 5, 15);
       
       if (gameOver) {
           ctx.fillStyle = gameOver === 1 ? '#ff0000' : '#00ff00';

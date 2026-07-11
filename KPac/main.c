@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <stdio.h>
 
 #define W 300
 #define H 300
@@ -39,11 +40,27 @@ int ndx = 0, ndy = 0;
 typedef struct { int x; int y; COLORREF c; } Ghost;
 Ghost ghosts[4];
 int score = 0;
+int highScore = 0;
 int gameOver = 0;
 int dotCount = 0;
 int frameCount = 0;
 int level = 1;
 int frightTimer = 0;
+
+void LoadHighScore() {
+    FILE *f = fopen("kpac_hi.dat", "rb");
+    if (f) {
+        fread(&highScore, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+void SaveHighScore() {
+    FILE *f = fopen("kpac_hi.dat", "wb");
+    if (f) {
+        fwrite(&highScore, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
 
 void Init(int keepScore) {
     if (!keepScore) { score = 0; level = 1; }
@@ -107,8 +124,9 @@ void Update() {
             px = nx;
             py = ny;
             if (map[py][px] == 2 || map[py][px] == 3) {
-                if (map[py][px] == 3) { score += 40; frightTimer = 50; }
+                if (map[py][px] == 3) { score += 40; frightTimer = 50; MessageBeep(MB_OK); }
                 else { score += 10; }
+                if (score > highScore) highScore = score;
                 map[py][px] = 0;
                 dotCount--;
                 if (dotCount == 0) {
@@ -123,9 +141,13 @@ void Update() {
         if (px == ghosts[i].x && py == ghosts[i].y) {
             if (frightTimer > 0) {
                 score += 200;
+                if (score > highScore) highScore = score;
+                MessageBeep(MB_ICONASTERISK);
                 ghosts[i].x = 7; ghosts[i].y = 6;
             } else {
                 gameOver = 1;
+                SaveHighScore();
+                MessageBeep(MB_ICONHAND);
             }
         }
     }
@@ -136,6 +158,7 @@ void Update() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
+            LoadHighScore();
             for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) initialMap[r][c] = map[r][c];
             Init(0);
             randSeed = GetTickCount();
@@ -201,7 +224,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
             char sstr[64];
-            wsprintfA(sstr, "Lvl: %d Score: %d", level, score);
+            wsprintfA(sstr, "Lvl: %d Score: %d HI: %d", level, score, highScore);
             TextOutA(memDC, 5, 5, sstr, lstrlenA(sstr));
             
             if (gameOver) {
