@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KDictionary
+**Target App:** KDraw
 **Status:** In Progress
 
 ## Workflow
@@ -42,6 +42,8 @@
 - **KColor**: Verified kcolor.html logic. Fixed GDI resource leak (HFONT) in main.c by destroying it on WM_DESTROY.
 - **KContacts**: Fixed `toLowerCase` undefined bug in `kcontacts.html` search filter. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KConverter**: Verified kconverter.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+- **KDB**: Verified kdb.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KDictionary.
+All apps need systematic testing. Continue alphabetically from KDraw.
+

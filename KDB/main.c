@@ -6,6 +6,7 @@
 #define H 400
 
 HWND hListView;
+HFONT hFont;
 
 const char* headers[] = {"ID", "Name", "Department", "Role"};
 const char* data[][4] = {
@@ -27,7 +28,7 @@ void InitListView(HWND hwnd) {
     SendMessage(hListView, LVM_SETTEXTBKCOLOR, 0, (LPARAM)RGB(35, 40, 45));
     SendMessage(hListView, LVM_SETBKCOLOR, 0, (LPARAM)RGB(26, 32, 38));
     
-    HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+    hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
     SendMessage(hListView, WM_SETFONT, (WPARAM)hFont, TRUE);
 
     LVCOLUMNA lvc;
@@ -73,6 +74,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;
         default:
