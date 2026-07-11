@@ -35,13 +35,15 @@
 ---
 
 ## Current Status
-- Implemented Animation Refinements for window transitions.
+- Implemented app folder navigation in the start menu to clean up the app list.
+
 ## Priorities
 
-### 1. Start Menu Polish
-- Improve start menu layout and app folder navigation.
+### 1. Window Management Polish
+- Consider adding minimize/maximize animations for windows.
 
 ## Completed Items
+- Start Menu Polish: Implemented dynamic folder navigation within the start menu to prevent the app list from becoming an unreadable, infinitely scrolling dump. Added 'Back' button and folder drilling.
 - Taskbar Enhancements: Added horizontal scrolling support on wheel and improved the active app indicator with a glowing bottom border and `flex-shrink: 0` to prevent unreadable tabs.
 - Start Menu Polish: Improved start menu open animation by using `@keyframes` on mount, and replaced inline spacing/alignment styles with proper CSS classes.
 - Window Management: Added a subtle dimming effect (`filter: brightness(0.85)`) to inactive windows to better highlight the active window.

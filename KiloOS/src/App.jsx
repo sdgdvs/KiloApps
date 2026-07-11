@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.42';
+const MICROS_VERSION = '0.3.43';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -439,6 +439,7 @@ function App() {
   const [clockPulse, setClockPulse] = useState(false);
   const [startOpen, setStartOpen] = useState(false);
   const [startSearch, setStartSearch] = useState('');
+  const [startFolder, setStartFolder] = useState(null);
   const [activeAppId, setActiveAppId] = useState(null);
   const [cerberusBlinded, setCerberusBlinded] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -497,6 +498,7 @@ function App() {
     if (e.target.closest('.desktop-icon') || e.target.closest('.xp-window') || e.target.closest('.taskbar') || e.target.closest('.start-menu') || e.target.closest('.context-menu')) return;
     
     setStartOpen(false);
+    setStartFolder(null);
     setSelectedIcons([]);
     setContextMenu(null);
     setCalendarOpen(false);
@@ -532,6 +534,7 @@ function App() {
 
   const handleDesktopClick = () => {
     setStartOpen(false);
+    setStartFolder(null);
     setContextMenu(null);
     setCalendarOpen(false);
   };
@@ -717,6 +720,7 @@ function App() {
       console.log("%c[SYSTEM] Visual anomaly detected.", "color: red; font-size: 8px;");
     }
     setStartOpen(false);
+    setStartFolder(null);
     const existing = openApps.find(a => a.id === appDef.id && a.url === appDef.url);
     if (existing) {
       focusApp(existing.instanceId);
@@ -748,6 +752,7 @@ function App() {
 
   const toggleMinimize = (instanceId) => {
     setStartOpen(false);
+    setStartFolder(null);
     setOpenApps(apps => apps.map(a => a.instanceId === instanceId ? { ...a, minimized: !a.minimized } : a));
     focusApp(instanceId);
   };
@@ -912,52 +917,70 @@ function App() {
         </div>
           <div className="start-columns">
             <div className="start-apps">
-              {pinnedAppsIds.length > 0 && !startSearch && (
+              {startSearch ? (
                 <div className="start-group">
-                  <div className="start-group-title">Pinned Apps</div>
-                  {pinnedAppsIds.map(appId => {
-                    const app = APPS.find(a => a.id === appId);
-                    if (!app) return null;
-                    return (
-                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
-                        <img src={app.icon} alt={app.title} className="start-item-icon" />
-                        <span className="start-item-label">{app.title}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {FOLDERS.map(folder => {
-                const folderApps = APPS.filter(a => a.folder === folder.id && a.title.toLowerCase().includes(startSearch.toLowerCase()));
-                if (folderApps.length === 0) return null;
-                return (
-                  <div key={folder.id} className="start-group">
-                    <div className="start-group-title">
-                      {folder.title}
-                    </div>
-                    {folderApps.map(app => (
-                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
-                        <img src={app.icon} alt={app.title} className="start-item-icon" />
-                        <span className="start-item-label">{app.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-              
-              {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).length > 0 && (
-                <div className="start-group">
-                  <div className="start-group-title">
-                    Applications
-                  </div>
-                  {APPS.filter(a => !a.folder && a.title.toLowerCase().includes(startSearch.toLowerCase())).map(app => (
-                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                  <div className="start-group-title">Search Results</div>
+                  {APPS.filter(a => a.title.toLowerCase().includes(startSearch.toLowerCase())).map(app => (
+                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); setStartFolder(null); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
                       <img src={app.icon} alt={app.title} className="start-item-icon" />
                       <span className="start-item-label">{app.title}</span>
                     </div>
                   ))}
                 </div>
+              ) : startFolder ? (
+                <div className="start-group">
+                  <div className="start-item" onClick={() => setStartFolder(null)} style={{background: 'rgba(255,255,255,0.05)', marginBottom: '8px'}}>
+                    <span className="start-item-label" style={{fontWeight: '600'}}>← Back</span>
+                  </div>
+                  <div className="start-group-title">{FOLDERS.find(f => f.id === startFolder)?.title}</div>
+                  {APPS.filter(a => a.folder === startFolder).map(app => (
+                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); setStartFolder(null); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                      <img src={app.icon} alt={app.title} className="start-item-icon" />
+                      <span className="start-item-label">{app.title}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {pinnedAppsIds.length > 0 && (
+                    <div className="start-group">
+                      <div className="start-group-title">Pinned Apps</div>
+                      {pinnedAppsIds.map(appId => {
+                        const app = APPS.find(a => a.id === appId);
+                        if (!app) return null;
+                        return (
+                          <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                            <img src={app.icon} alt={app.title} className="start-item-icon" />
+                            <span className="start-item-label">{app.title}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <div className="start-group">
+                    <div className="start-group-title">Folders</div>
+                    {FOLDERS.map(folder => (
+                      <div key={folder.id} className="start-item" onClick={() => setStartFolder(folder.id)}>
+                        <img src={folder.icon} alt={folder.title} className="start-item-icon" />
+                        <span className="start-item-label">{folder.title}</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft: 'auto', opacity: 0.5}}><polyline points="9 18 15 12 9 6"></polyline></svg>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {APPS.filter(a => !a.folder).length > 0 && (
+                    <div className="start-group">
+                      <div className="start-group-title">Applications</div>
+                      {APPS.filter(a => !a.folder).map(app => (
+                        <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                          <img src={app.icon} alt={app.title} className="start-item-icon" />
+                          <span className="start-item-label">{app.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="start-system">
@@ -994,7 +1017,7 @@ function App() {
       )}
       
       <div className="taskbar">
-        <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => { playClickAudio(); setStartOpen(!startOpen); setStartSearch(''); }}>start</div>
+        <div className={`start-button ${startOpen ? 'open' : ''}`} onClick={() => { playClickAudio(); setStartOpen(!startOpen); if (startOpen) setStartFolder(null); setStartSearch(''); }}>start</div>
         <div className="taskbar-items" onWheel={(e) => {
           if (e.deltaY !== 0) {
             e.currentTarget.scrollLeft += e.deltaY;
@@ -1028,7 +1051,7 @@ function App() {
           <div className="tray-icon" title="Battery: 100%" onClick={(e) => { e.stopPropagation(); playClickAudio(); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="6" width="18" height="12" rx="2" ry="2"></rect><line x1="23" y1="13" x2="23" y2="11"></line></svg>
           </div>
-          <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr} onClick={(e) => { e.stopPropagation(); playClickAudio(); setCalendarOpen(!calendarOpen); setStartOpen(false); }}>{time}</div>
+          <div className={`clock-tray ${clockPulse ? 'update-pulse' : ''}`} title={dateStr} onClick={(e) => { e.stopPropagation(); playClickAudio(); setCalendarOpen(!calendarOpen); setStartOpen(false); setStartFolder(null); }}>{time}</div>
         </div>
       </div>
 
