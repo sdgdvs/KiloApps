@@ -25,6 +25,7 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
    - `app_fix_plan.md` — Quality & Build agent only.
    - `kiloos_ux_plan.md` — Shell & UX agent only.
    - `game_content_plan.md` — Game Content agent only.
+   - `new_app_plan.md` — App Creator & Deep Expander agent only.
    - If you need to check another agent's plan (e.g., to avoid working on the same app), read it but do not edit it.
 4. **Check for conflicts after push.** If `git push` fails due to a conflict, run `git pull --rebase`, resolve any conflicts conservatively (prefer the remote version for code you didn't write), then push again.
 
