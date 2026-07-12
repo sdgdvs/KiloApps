@@ -84,6 +84,7 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
     <div class="row">
         <input type="text" id="input" onkeypress="if(event.key==='Enter') send()" disabled>
         <button id="btnSend" onclick="send()" disabled>Send</button>
+        <button id="btnClear" onclick="clearLog()">Clear</button>
     </div>
 
     <script>
@@ -278,6 +279,10 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
                 ws.send(inputEl.value);
             }
             inputEl.value = '';
+        }
+
+        function clearLog() {
+            logEl.textContent = '';
         }
     </script>
 </body>

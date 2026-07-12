@@ -19,7 +19,7 @@ void my_memset(void* dest, int c, size_t count) {
 #pragma optimize("", on)
 
 SOCKET s = INVALID_SOCKET;
-HWND hLog, hIp, hPort, hBtn, hInput, hSend;
+HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear;
 char logBuf[16384] = "";
 
 void my_strcpy(char* d, const char* s) { while (*s) *d++ = *s++; *d = 0; }
@@ -59,8 +59,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 10, 40, 360, 220, hwnd, 0, 0, 0);
             
-            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 10, 270, 290, 24, hwnd, 0, 0, 0);
-            hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_DISABLED, 310, 270, 60, 24, hwnd, (HMENU)101, 0, 0);
+            hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 10, 270, 230, 24, hwnd, 0, 0, 0);
+            hSend = CreateWindowA("BUTTON", "Send", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON|WS_DISABLED, 245, 270, 60, 24, hwnd, (HMENU)101, 0, 0);
+            hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 310, 270, 60, 24, hwnd, (HMENU)102, 0, 0);
             
             HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hIp, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -69,7 +70,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hLog, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hSend, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hClear, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+
             Log("Welcome to KChat! Connect to a server to begin.");
             Log("Commands: /nick <name>, /join <#room>");
             break;
@@ -127,6 +130,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     send(s, buf, my_strlen(buf), 0);
                     SetWindowTextA(hInput, "");
                 }
+            } else if (LOWORD(wParam) == 102) { // Clear
+                logBuf[0] = '\0';
+                SetWindowTextA(hLog, "");
             }
             break;
         }
