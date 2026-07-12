@@ -8,13 +8,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
         :root {
-            --bg-color: #121212;
+            --bg-color: #0f0f13;
             --text-color: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-hover: rgba(255, 255, 255, 0.08);
             --primary-accent: #6C5CE7;
+            --primary-hover: #5b4dd1;
             --danger-accent: #ff4757;
-            --input-bg: rgba(0, 0, 0, 0.2);
+            --danger-hover: #e8414f;
+            --input-bg: rgba(0, 0, 0, 0.3);
+            --success-color: #2ed573;
         }
 
         body, html {
@@ -23,6 +27,8 @@
             height: 100%;
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
+            background-image: radial-gradient(circle at top left, rgba(108, 92, 231, 0.15), transparent 40%),
+                              radial-gradient(circle at bottom right, rgba(108, 92, 231, 0.05), transparent 40%);
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -34,175 +40,290 @@
             width: 100%;
             height: 100%;
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            padding: 24px;
+            padding: 30px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            position: relative;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 12px;
+            margin-bottom: 30px;
+            padding-bottom: 16px;
             border-bottom: 1px solid var(--glass-border);
+            animation: slideDown 0.4s ease-out;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            letter-spacing: -0.5px;
         }
 
         .content {
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
         }
 
         .btn {
             background-color: var(--primary-accent);
             color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 24px;
+            border-radius: 10px;
             font-size: 14px;
             font-family: 'Inter', sans-serif;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
         }
 
         .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
         }
         
         .btn.danger {
             background-color: var(--danger-accent);
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
+        }
+        
+        .btn.danger:hover {
+            background-color: var(--danger-hover);
+            box-shadow: 0 6px 16px rgba(255, 71, 87, 0.3);
+        }
+
+        .btn.secondary {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            box-shadow: none;
+        }
+
+        .btn.secondary:hover {
+            background: var(--glass-hover);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-bottom: 16px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
         .input-group label {
-            font-size: 14px;
-            opacity: 0.8;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 0.3px;
         }
 
         input[type="text"], input[type="password"], textarea {
             background-color: var(--input-bg);
             border: 1px solid var(--glass-border);
             color: white;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             font-family: 'Inter', sans-serif;
-            font-size: 14px;
+            font-size: 15px;
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
         input:focus, textarea:focus {
             border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
         }
         
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
+            line-height: 1.5;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .view-section {
             display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .view-section.active {
             display: flex;
             flex-direction: column;
+            opacity: 1;
+            animation: fadeIn 0.4s ease forwards;
         }
 
         .secret-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            overflow-y: auto;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding-bottom: 20px;
         }
 
         .secret-item {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            animation: slideUp 0.4s ease backwards;
+        }
+        
+        .secret-item:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.2);
         }
         
         .secret-item-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 16px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 10px;
         }
         
         .secret-item-value {
             background: var(--input-bg);
-            padding: 8px;
-            border-radius: 4px;
-            font-family: monospace;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', Courier, monospace;
             word-break: break-all;
             display: none;
+            font-size: 14px;
+            line-height: 1.4;
+            color: rgba(255,255,255,0.9);
+            border: 1px solid rgba(0,0,0,0.2);
         }
         
         .secret-item-value.visible {
             display: block;
+            animation: fadeIn 0.2s ease;
         }
 
         .secret-actions {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             margin-top: auto;
         }
         
         .secret-actions button {
             flex: 1;
-            padding: 6px;
-            font-size: 12px;
+            padding: 8px;
+            font-size: 13px;
         }
         
         .notification {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) translateY(20px);
             background: var(--primary-accent);
             color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 12px 24px;
+            border-radius: 30px;
             font-size: 14px;
+            font-weight: 500;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             pointer-events: none;
+            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.error {
+            background: var(--danger-accent);
+            box-shadow: 0 8px 24px rgba(255, 71, 87, 0.4);
+        }
+        
+        .notification.success {
+            background: var(--success-color);
+            box-shadow: 0 8px 24px rgba(46, 213, 115, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            opacity: 0.5;
+            background: rgba(0,0,0,0.1);
+            border-radius: 16px;
+            border: 1px dashed var(--glass-border);
+            animation: fadeIn 0.4s ease;
+        }
+        
+        #empty-state p {
+            font-size: 16px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -218,48 +339,55 @@
         <div class="content">
             <!-- Setup / Login View -->
             <div id="view-auth" class="view-section active">
-                <div class="card" style="max-width: 400px; margin: 0 auto; width: 100%;">
-                    <h2 id="auth-title" style="margin-top:0;">Unlock Vault</h2>
-                    <p id="auth-desc" style="opacity:0.7; font-size:14px;">Enter your master password to decrypt your vault.</p>
+                <div class="card" style="max-width: 420px; margin: 40px auto 0; width: 100%;">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <h2 id="auth-title" style="margin:0 0 8px 0; font-size: 24px;">Unlock Vault</h2>
+                        <p id="auth-desc" style="margin:0; opacity:0.7; font-size:14px; line-height: 1.5;">Enter your master password to decrypt your vault.</p>
+                    </div>
                     <div class="input-group">
                         <input type="password" id="master-password" placeholder="Master Password" onkeyup="if(event.key === 'Enter') handleAuth()">
                     </div>
-                    <button class="btn" style="width: 100%" onclick="handleAuth()" id="auth-btn">Unlock</button>
-                    <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:12px;">Incorrect password.</p>
+                    <button class="btn" style="width: 100%; margin-top: 10px; padding: 14px;" onclick="handleAuth()" id="auth-btn">Unlock Vault</button>
+                    <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:16px; text-align: center; font-weight: 500;">Incorrect password. Please try again.</p>
                 </div>
             </div>
 
             <!-- Main Vault View -->
             <div id="view-vault" class="view-section">
-                <div style="display:flex; justify-content:space-between; margin-bottom: 16px;">
-                    <h2>Your Secrets</h2>
-                    <button class="btn" onclick="showAddSecret()">+ Add Secret</button>
+                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 24px;">
+                    <h2 style="margin:0; font-weight: 600;">Your Secrets</h2>
+                    <button class="btn" onclick="showAddSecret()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add Secret
+                    </button>
                 </div>
                 
                 <div class="secret-list" id="secret-list">
                     <!-- Secrets injected here -->
                 </div>
                 
-                <div id="empty-state" style="text-align:center; padding: 40px; opacity:0.5;">
-                    <p>No secrets found. Add one to get started.</p>
+                <div id="empty-state">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5; margin-bottom: 16px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <p>Your vault is empty.</p>
+                    <button class="btn secondary" onclick="showAddSecret()">Create your first secret</button>
                 </div>
             </div>
             
             <!-- Add Secret View -->
             <div id="view-add" class="view-section">
-                <div class="card" style="max-width: 500px; margin: 0 auto; width: 100%;">
-                    <h2 style="margin-top:0;">Add New Secret</h2>
+                <div class="card" style="max-width: 500px; margin: 20px auto; width: 100%;">
+                    <h2 style="margin:0 0 24px 0;">Add New Secret</h2>
                     <div class="input-group">
                         <label>Title / Identifier</label>
-                        <input type="text" id="new-secret-title" placeholder="e.g. Github Password">
+                        <input type="text" id="new-secret-title" placeholder="e.g. Github Password or API Key">
                     </div>
                     <div class="input-group">
                         <label>Secret Value</label>
-                        <textarea id="new-secret-value" placeholder="Enter password, token, or secure note"></textarea>
+                        <textarea id="new-secret-value" placeholder="Enter password, token, or secure note here..."></textarea>
                     </div>
-                    <div style="display:flex; gap:12px; margin-top: 24px;">
-                        <button class="btn" style="flex:1" onclick="saveNewSecret()">Save Secret</button>
-                        <button class="btn" style="flex:1; background:transparent; border:1px solid var(--glass-border);" onclick="showVault()">Cancel</button>
+                    <div style="display:flex; gap:16px; margin-top: 30px;">
+                        <button class="btn secondary" style="flex:1" onclick="showVault()">Cancel</button>
+                        <button class="btn" style="flex:1" onclick="saveNewSecret()">Save to Vault</button>
                     </div>
                 </div>
             </div>
@@ -442,7 +570,7 @@
             const value = document.getElementById('new-secret-value').value.trim();
             
             if (!title || !value) {
-                showNotification("Title and Value required");
+                showNotification("Both Title and Value are required", "error");
                 return;
             }
             
@@ -472,7 +600,7 @@
             const btn = document.getElementById('secret-btn-toggle-' + id);
             if (el.classList.contains('visible')) {
                 el.classList.remove('visible');
-                btn.innerText = 'Show';
+                btn.innerText = 'Reveal';
             } else {
                 el.classList.add('visible');
                 btn.innerText = 'Hide';
@@ -499,9 +627,10 @@
                 empty.style.display = 'none';
                 list.style.display = 'grid';
                 
-                vaultData.forEach(secret => {
+                    vaultData.forEach((secret, index) => {
                     const item = document.createElement('div');
                     item.className = 'secret-item';
+                    item.style.animationDelay = `${index * 0.05}s`;
                     
                     const safeTitle = secret.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     
@@ -511,9 +640,9 @@
                         </div>
                         <div class="secret-item-value" id="secret-val-${secret.id}"></div>
                         <div class="secret-actions">
-                            <button class="btn" style="background:transparent; border:1px solid var(--glass-border);" id="secret-btn-toggle-${secret.id}">Show</button>
-                            <button class="btn" style="background:var(--primary-accent);" id="secret-btn-copy-${secret.id}">Copy</button>
-                            <button class="btn danger" id="secret-btn-delete-${secret.id}">Del</button>
+                            <button class="btn secondary" id="secret-btn-toggle-${secret.id}">Reveal</button>
+                            <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-copy-${secret.id}">Copy</button>
+                            <button class="btn danger" id="secret-btn-delete-${secret.id}">Delete</button>
                         </div>
                     `;
                     list.appendChild(item);
@@ -527,12 +656,16 @@
             }
         }
         
-        function showNotification(msg) {
+        function showNotification(msg, type='success') {
             const notif = document.getElementById('notification');
             notif.innerText = msg;
-            notif.style.opacity = '1';
-            setTimeout(() => {
-                notif.style.opacity = '0';
+            notif.className = `notification show ${type}`;
+            
+            // Clear existing timeout if any
+            if (window.notifTimeout) clearTimeout(window.notifTimeout);
+            
+            window.notifTimeout = setTimeout(() => {
+                notif.classList.remove('show');
             }, 3000);
         }
         
