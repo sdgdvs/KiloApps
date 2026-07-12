@@ -108,4 +108,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] Create New Game (KBreakout created for both EXE and Web, registered in App.jsx)
 
 **Loop 2**
-- [ ] KMines
+- [x] KMines (Added difficulty levels: Easy/Medium/Hard to both EXE and HTML)
+- [ ] KRogue
