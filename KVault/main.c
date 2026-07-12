@@ -22,6 +22,7 @@
 #define ID_BTN_COPY_DATA 115
 #define ID_BTN_CLEAR_CLIP 116
 #define ID_COMBO_THEME 117
+#define ID_BTN_HELP 118
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -240,6 +241,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnClearClip = CreateWindowA("BUTTON", "Clear Clip", WS_VISIBLE | WS_CHILD | BS_FLAT, 290, 355, 85, 25, hwnd, (HMENU)ID_BTN_CLEAR_CLIP, NULL, NULL);
             SendMessage(hBtnClearClip, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            HWND hBtnHelp = CreateWindowA("BUTTON", "Help", WS_VISIBLE | WS_CHILD | BS_FLAT, 385, 355, 85, 25, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             srand(GetTickCount());
             DragAcceptFiles(hwnd, TRUE);
             break;
@@ -385,6 +389,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CloseClipboard();
                     MessageBoxA(hwnd, "Clipboard cleared.", "KVault", MB_OK | MB_ICONINFORMATION);
                 }
+            } else if (LOWORD(wParam) == ID_BTN_HELP) {
+                MessageBoxA(hwnd, 
+                    "KVault Help & Tutorial\n\n"
+                    "1. Master Password: Used to encrypt/decrypt data. It is NOT stored.\n"
+                    "2. Encryption: Uses an XOR cipher for this native version (for AES use the Web version).\n"
+                    "3. Auto-Lock: Automatically clears fields and clipboard after inactivity.\n"
+                    "4. Shortcuts: Ctrl+S saves, Ctrl+L locks instantly.\n"
+                    "5. Drag & Drop: Drop a file to load its contents.\n"
+                    "6. Clear Clip: Click this after copying passwords to protect against clipboard snooping.",
+                    "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
                 GetDlgItemTextA(hwnd, ID_EDIT_FIND, findText, 256);

@@ -325,25 +325,46 @@
             font-size: 16px;
             margin-bottom: 20px;
         }
+        
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 2000;
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content {
+            background: var(--bg-color); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 30px; max-width: 500px; width: 90%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-height: 80vh; overflow-y: auto;
+        }
+        .modal-content h3 { margin-top: 0; }
+        .modal-content p { line-height: 1.5; font-size: 14px; opacity: 0.9; }
+        .modal-content ul { font-size: 14px; line-height: 1.6; padding-left: 20px; opacity: 0.9; }
+        .close-modal { margin-top: 20px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🔒 KVault</h1>
-            <div id="auth-controls" style="display:none; align-items:center; gap:10px;">
-                <select id="theme-select" onchange="updateTheme()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
-                    <option value="dark">Dark Theme</option>
-                    <option value="light">Light Theme</option>
-                    <option value="neon">Neon Theme</option>
-                </select>
-                <select id="auto-lock-select" onchange="updateAutoLock()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
-                    <option value="60000">Lock: 1 min</option>
-                    <option value="300000">Lock: 5 min</option>
-                    <option value="900000">Lock: 15 min</option>
-                    <option value="0">Lock: Never</option>
-                </select>
-                <button class="btn" onclick="lockVault()">Lock Vault</button>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="showHelp()">Help</button>
+                <div id="auth-controls" style="display:none; align-items:center; gap:10px;">
+                    <select id="theme-select" onchange="updateTheme()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+                        <option value="dark">Dark Theme</option>
+                        <option value="light">Light Theme</option>
+                        <option value="neon">Neon Theme</option>
+                    </select>
+                    <select id="auto-lock-select" onchange="updateAutoLock()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+                        <option value="60000">Lock: 1 min</option>
+                        <option value="300000">Lock: 5 min</option>
+                        <option value="900000">Lock: 15 min</option>
+                        <option value="0">Lock: Never</option>
+                    </select>
+                    <button class="btn" onclick="lockVault()">Lock Vault</button>
+                </div>
             </div>
         </div>
         
@@ -434,12 +455,38 @@
     
     <div class="notification" id="notification">Action successful</div>
 
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal-content">
+            <h3>📖 KVault Help & Tutorial</h3>
+            <p>Welcome to KVault! Your secure, client-side encrypted password manager and secure note storage.</p>
+            <ul>
+                <li><strong>Encryption:</strong> Uses AES-GCM 256-bit encryption. Your data is encrypted with a master password that is NEVER stored. If you lose it, your data cannot be recovered.</li>
+                <li><strong>Auto-Lock:</strong> Set a timeout to automatically lock your vault when you are away.</li>
+                <li><strong>Shortcuts:</strong> <code>Ctrl+S</code> saves the vault or current secret, <code>Ctrl+L</code> locks the vault instantly.</li>
+                <li><strong>Import/Export:</strong> Backup your vault to a JSON file. You can drag & drop a backup file onto the screen to load it.</li>
+                <li><strong>Clipboard Security:</strong> Use the "Clear Clipboard" (trash icon) to wipe sensitive data after pasting it.</li>
+            </ul>
+            <button class="btn close-modal" onclick="closeHelp()">Got it</button>
+        </div>
+    </div>
+
     <script>
         // Core State
         let masterKey = null;
         let vaultData = [];
         let autoLockTimeout = 60000;
         let idleTimer = null;
+
+        function showHelp() {
+            const modal = document.getElementById('help-modal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+        function closeHelp() {
+            const modal = document.getElementById('help-modal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
 
         // Theme Support
         const themes = {
