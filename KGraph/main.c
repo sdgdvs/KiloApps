@@ -93,6 +93,7 @@ double evaluate(const char* e, double x) {
 }
 
 HWND hInput, hPlotBtn;
+HFONT hFont;
 char current_expr[256] = "x*x";
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -101,7 +102,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "x*x", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 200, 24, hwnd, NULL, NULL, NULL);
             hPlotBtn = CreateWindowA("BUTTON", "Plot", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 60, 24, hwnd, (HMENU)1001, NULL, NULL);
             
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hPlotBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
@@ -176,6 +177,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
     }

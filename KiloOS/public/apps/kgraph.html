@@ -202,13 +202,14 @@
       const safeExpr = expr.replace(/[^a-zA-Z0-9\.\+\-\*\/\(\) \bMath\.]/g, '');
       
       try {
-        for (let px = 0; px <= w; px += 2) { // Step by 2 pixels for performance
-          const x = (px / w) * (2 * RANGE_X) - RANGE_X;
-          
-          // Evaluate function
           // We use a safe-ish constructor
           const func = new Function('x', 'return ' + safeExpr + ';');
-          const y = func(x);
+          
+          for (let px = 0; px <= w; px += 2) { // Step by 2 pixels for performance
+            const x = (px / w) * (2 * RANGE_X) - RANGE_X;
+            
+            // Evaluate function
+            const y = func(x);
           
           if (isNaN(y) || !isFinite(y)) {
             first = true;

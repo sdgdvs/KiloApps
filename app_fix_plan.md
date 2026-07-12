@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KGraph
+**Target App:** KHex
 **Status:** Next
 
 ## Workflow
@@ -31,6 +31,7 @@
 4. Update this file with results.
 
 ## Tested Apps
+- **KGraph**: Fixed performance and memory issue in kgraph.html by moving `new Function` constructor out of the drawing loop. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KCalendar**: Fixed month-wrapping bug in kcalendar.html where changing months on the 31st skipped a month. Checked main.c (no issues found).
 - **KAudio**: Fixed Web Audio API envelope bug in kaudio.html and prevented arrow key scrolling. Fixed GDI resource leak (HBITMAP) in main.c.
 - **KBBS**: Fixed ANSI 'T' (scroll down) sequence to shift visible area rather than top of buffer in HTML. Fixed native scrolling behavior where mouse wheel changed scrollbar but not view; fixed out-of-bounds array bug when native scrollback hit limit.
@@ -48,5 +49,5 @@
 - **KFont**: Verified kfont.html font preview logic. Fixed GDI resource leaks (HFONT and HBRUSH) in main.c on WM_DESTROY.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KGraph.
+All apps need systematic testing. Continue alphabetically from KHex.
 
