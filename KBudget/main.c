@@ -19,6 +19,7 @@ typedef struct {
 
 Transaction transactions[MAX_TRANSACTIONS];
 int num_transactions = 0;
+int editing_index = -1;
 
 HWND hMainWnd;
 HWND hList;
@@ -142,7 +143,8 @@ void UpdateUI() {
             transactions[i].is_income ? "+" : "-", currency_symbol, transactions[i].amount, 
             transactions[i].category);
         
-        SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buf);
+        int listIdx = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buf);
+        SendMessage(hList, LB_SETITEMDATA, listIdx, (LPARAM)i);
     }
     
     char sumBuf[128];
@@ -159,28 +161,46 @@ void UpdateUI() {
 INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_INITDIALOG:
-            SetDlgItemText(hwndDlg, IDC_TYPE_EDIT, "0");
-            SetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, "0.00");
-            SetDlgItemText(hwndDlg, IDC_CAT_EDIT, "Food");
-            SetDlgItemText(hwndDlg, IDC_DESC_EDIT, "Lunch");
-            SetDlgItemText(hwndDlg, IDC_DATE_EDIT, "2026-07-12");
+            if (editing_index >= 0) {
+                Transaction *t = &transactions[editing_index];
+                char typeStr[32], amtStr[32];
+                snprintf(typeStr, sizeof(typeStr), "%d", t->is_income);
+                snprintf(amtStr, sizeof(amtStr), "%.2f", t->amount);
+                SetDlgItemText(hwndDlg, IDC_TYPE_EDIT, typeStr);
+                SetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, amtStr);
+                SetDlgItemText(hwndDlg, IDC_CAT_EDIT, t->category);
+                SetDlgItemText(hwndDlg, IDC_DESC_EDIT, t->description);
+                SetDlgItemText(hwndDlg, IDC_DATE_EDIT, t->date);
+            } else {
+                SetDlgItemText(hwndDlg, IDC_TYPE_EDIT, "0");
+                SetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, "0.00");
+                SetDlgItemText(hwndDlg, IDC_CAT_EDIT, "Food");
+                SetDlgItemText(hwndDlg, IDC_DESC_EDIT, "Lunch");
+                SetDlgItemText(hwndDlg, IDC_DATE_EDIT, "2026-07-12");
+            }
             return TRUE;
             
         case WM_COMMAND:
             if (LOWORD(wParam) == IDOK) {
-                if (num_transactions < MAX_TRANSACTIONS) {
+                if (editing_index >= 0 || num_transactions < MAX_TRANSACTIONS) {
                     char typeStr[32], amtStr[32];
                     GetDlgItemText(hwndDlg, IDC_TYPE_EDIT, typeStr, sizeof(typeStr));
                     GetDlgItemText(hwndDlg, IDC_AMOUNT_EDIT, amtStr, sizeof(amtStr));
                     
-                    Transaction *t = &transactions[num_transactions];
+                    Transaction *t;
+                    if (editing_index >= 0) {
+                        t = &transactions[editing_index];
+                    } else {
+                        t = &transactions[num_transactions];
+                        num_transactions++;
+                    }
+                    
                     t->is_income = atoi(typeStr);
                     t->amount = atof(amtStr);
                     GetDlgItemText(hwndDlg, IDC_CAT_EDIT, t->category, sizeof(t->category));
                     GetDlgItemText(hwndDlg, IDC_DESC_EDIT, t->description, sizeof(t->description));
                     GetDlgItemText(hwndDlg, IDC_DATE_EDIT, t->date, sizeof(t->date));
                     
-                    num_transactions++;
                     SaveData();
                     UpdateUI();
                 }
@@ -323,12 +343,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
             hBtnAdd = CreateWindow("BUTTON", "+ New Transaction", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 120, 150, 30, hwnd, (HMENU)1, NULL, NULL);
+            HWND hBtnEdit = CreateWindow("BUTTON", "Edit Selected", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 160, 150, 30, hwnd, (HMENU)6, NULL, NULL);
+            HWND hBtnDel = CreateWindow("BUTTON", "Delete Selected", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 200, 150, 30, hwnd, (HMENU)7, NULL, NULL);
             HWND hBtnImp = CreateWindow("BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 160, 150, 30, hwnd, (HMENU)2, NULL, NULL);
+                20, 240, 150, 30, hwnd, (HMENU)2, NULL, NULL);
             HWND hBtnExp = CreateWindow("BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 200, 150, 30, hwnd, (HMENU)3, NULL, NULL);
+                20, 280, 150, 30, hwnd, (HMENU)3, NULL, NULL);
             hBtnSettings = CreateWindow("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 240, 150, 30, hwnd, (HMENU)5, NULL, NULL);
+                20, 320, 150, 30, hwnd, (HMENU)5, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 250, 20, 500, 25, hwnd, (HMENU)4, NULL, NULL);
@@ -340,6 +364,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hLblIncome, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblExpense, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnImp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -375,7 +401,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == 4) {
                 UpdateUI();
             } else if (LOWORD(wParam) == 1) {
+                editing_index = -1;
                 DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADD_TRANSACTION), hwnd, AddDialogProc);
+            } else if (LOWORD(wParam) == 6) {
+                int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    editing_index = SendMessage(hList, LB_GETITEMDATA, sel, 0);
+                    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADD_TRANSACTION), hwnd, AddDialogProc);
+                } else {
+                    MessageBoxA(hwnd, "Please select a transaction to edit.", "Notice", MB_OK);
+                }
+            } else if (LOWORD(wParam) == 7) {
+                int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    int idx = SendMessage(hList, LB_GETITEMDATA, sel, 0);
+                    if (MessageBoxA(hwnd, "Are you sure you want to delete this transaction?", "Confirm Delete", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                        for (int i = idx; i < num_transactions - 1; i++) {
+                            transactions[i] = transactions[i + 1];
+                        }
+                        num_transactions--;
+                        SaveData();
+                        UpdateUI();
+                    }
+                } else {
+                    MessageBoxA(hwnd, "Please select a transaction to delete.", "Notice", MB_OK);
+                }
             } else if (LOWORD(wParam) == 2) {
                 ImportCSV(hwnd);
             } else if (LOWORD(wParam) == 3) {

@@ -261,17 +261,22 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        .delete-btn {
+        .delete-btn, .edit-btn {
             background: transparent;
             color: #64748b;
             border: none;
             cursor: pointer;
-            margin-left: 1rem;
+            margin-left: 0.5rem;
             transition: color 0.2s;
+            font-size: 1.1rem;
         }
 
         .delete-btn:hover {
             color: var(--danger-color);
+        }
+        
+        .edit-btn:hover {
+            color: var(--primary-color);
         }
 
         .transaction-right {
@@ -427,6 +432,7 @@
         // State
         let transactions = JSON.parse(localStorage.getItem('kbudget_transactions')) || [];
         let currencySymbol = localStorage.getItem('kbudget_currency') || '$';
+        let editingTransactionId = null;
         
         const expenseCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Health', 'Other'];
         const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gift', 'Other'];
@@ -453,15 +459,33 @@
         }
 
         // Functions
-        function openModal() {
+        function openModal(id = null) {
             modal.classList.add('active');
-            dateInput.valueAsDate = new Date();
             amountLabel.textContent = `Amount (${currencySymbol})`;
+            if (id) {
+                editingTransactionId = id;
+                const t = transactions.find(x => x.id === id);
+                if (t) {
+                    typeSelect.value = t.type;
+                    updateCategories();
+                    document.getElementById('amount').value = t.amount;
+                    categorySelect.value = t.category;
+                    document.getElementById('date').value = t.date;
+                    document.getElementById('description').value = t.description;
+                    document.querySelector('#modal h2').textContent = 'Edit Transaction';
+                }
+            } else {
+                editingTransactionId = null;
+                dateInput.valueAsDate = new Date();
+                document.querySelector('#modal h2').textContent = 'Add Transaction';
+            }
         }
 
         function closeModal() {
             modal.classList.remove('active');
             form.reset();
+            editingTransactionId = null;
+            document.querySelector('#modal h2').textContent = 'Add Transaction';
             updateCategories();
         }
 
@@ -495,7 +519,7 @@
             e.preventDefault();
             
             const transaction = {
-                id: Date.now().toString(),
+                id: editingTransactionId || Date.now().toString(),
                 type: typeSelect.value,
                 amount: parseFloat(document.getElementById('amount').value),
                 category: categorySelect.value,
@@ -503,7 +527,15 @@
                 description: document.getElementById('description').value || categorySelect.value
             };
 
-            transactions.push(transaction);
+            if (editingTransactionId) {
+                const index = transactions.findIndex(t => t.id === editingTransactionId);
+                if (index !== -1) {
+                    transactions[index] = transaction;
+                }
+                editingTransactionId = null;
+            } else {
+                transactions.push(transaction);
+            }
             
             // Sort by date (newest first)
             transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -662,6 +694,7 @@
                         </div>
                         <div class="transaction-right">
                             <span class="transaction-amount ${amountClass}">${sign}${formatCurrency(t.amount)}</span>
+                            <button class="edit-btn" onclick="openModal('${t.id}')" title="Edit">✎</button>
                             <button class="delete-btn" onclick="deleteTransaction('${t.id}')" title="Delete">✕</button>
                         </div>
                     `;
