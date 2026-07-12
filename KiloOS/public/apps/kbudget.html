@@ -286,42 +286,15 @@
 
         #chart-container {
             width: 100%;
-            height: 150px;
+            height: 220px;
             margin-top: 1rem;
             background: rgba(255, 255, 255, 0.02);
             border-radius: 8px;
             border: 1px solid var(--glass-border);
             display: flex;
-            align-items: flex-end;
-            padding: 10px;
-            gap: 5px;
-        }
-
-        .chart-bar-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
+            justify-content: center;
             align-items: center;
-            height: 100%;
-            gap: 5px;
-        }
-
-        .chart-bar {
-            width: 100%;
-            border-radius: 4px 4px 0 0;
-            transition: height 0.3s ease;
-            min-height: 2px;
-        }
-
-        .chart-label {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            width: 100%;
-            text-align: center;
+            padding: 10px;
         }
     </style>
 </head>
@@ -355,7 +328,7 @@
             </div>
             <h3 style="font-size: 1rem; margin-top: 1.5rem; color: #cbd5e1; font-weight: 500;">Expenses by Category</h3>
             <div id="chart-container">
-                <!-- Bars will be generated here -->
+                <canvas id="pie-chart" width="200" height="200"></canvas>
             </div>
         </aside>
         
@@ -707,53 +680,54 @@
         }
 
         function renderChart(categoryTotals, totalExpense) {
-            chartContainer.innerHTML = '';
+            const canvas = document.getElementById('pie-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             if (totalExpense === 0) {
-                chartContainer.innerHTML = '<div style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; align-self: center;">No expenses to chart</div>';
+                ctx.fillStyle = '#64748b';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '12px Inter';
+                ctx.fillText('No expenses to chart', canvas.width/2, canvas.height/2);
                 return;
             }
 
-            // Find max for scaling
-            let maxVal = 0;
-            const validCategories = [];
+            const colors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
+            let startAngle = -0.5 * Math.PI;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 10;
             
+            let colorIdx = 0;
             for (const [cat, val] of Object.entries(categoryTotals)) {
                 if (val > 0) {
-                    if (val > maxVal) maxVal = val;
-                    validCategories.push({cat, val});
+                    const sliceAngle = (val / totalExpense) * 2 * Math.PI;
+                    ctx.beginPath();
+                    ctx.moveTo(centerX, centerY);
+                    ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                    ctx.closePath();
+                    ctx.fillStyle = colors[colorIdx % colors.length];
+                    ctx.fill();
+                    
+                    const midAngle = startAngle + sliceAngle / 2;
+                    const labelX = centerX + Math.cos(midAngle) * (radius * 0.7);
+                    const labelY = centerY + Math.sin(midAngle) * (radius * 0.7);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.font = 'bold 10px Inter';
+                    const percentage = Math.round((val / totalExpense) * 100) + '%';
+                    if (val / totalExpense > 0.05) {
+                        ctx.fillText(cat.substring(0,3), labelX, labelY - 6);
+                        ctx.fillText(percentage, labelX, labelY + 6);
+                    }
+                    
+                    startAngle += sliceAngle;
+                    colorIdx++;
                 }
             }
-
-            // Create bars
-            validCategories.forEach(item => {
-                const percentage = (item.val / maxVal) * 100;
-                
-                const wrapper = document.createElement('div');
-                wrapper.className = 'chart-bar-wrapper';
-                wrapper.title = `${item.cat}: ${currencySymbol}${item.val.toFixed(2)}`;
-                
-                const bar = document.createElement('div');
-                bar.className = 'chart-bar';
-                // Use a nice color (danger color for expense)
-                bar.style.backgroundColor = 'var(--danger-color)';
-                bar.style.opacity = '0.8';
-                bar.style.height = '0%';
-                
-                // Animate bar height
-                setTimeout(() => {
-                    bar.style.height = `${percentage}%`;
-                }, 50);
-
-                const label = document.createElement('div');
-                label.className = 'chart-label';
-                // Abbreviate label if needed
-                label.textContent = item.cat.substring(0, 3);
-
-                wrapper.appendChild(bar);
-                wrapper.appendChild(label);
-                chartContainer.appendChild(wrapper);
-            });
         }
 
         // Event Listeners

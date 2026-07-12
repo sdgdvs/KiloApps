@@ -5,6 +5,7 @@
 #include <commdlg.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 #include "resource.h"
 
 #define MAX_TRANSACTIONS 1000
@@ -156,6 +157,7 @@ void UpdateUI() {
     
     snprintf(sumBuf, sizeof(sumBuf), "Expenses: -%s%.2f", currency_symbol, total_expense);
     SetWindowText(hLblExpense, sumBuf);
+    InvalidateRect(hMainWnd, NULL, TRUE);
 }
 
 INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -435,6 +437,90 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             break;
             
+        case WM_PAINT:
+            {
+                PAINTSTRUCT ps;
+                HDC hdc = BeginPaint(hwnd, &ps);
+                
+                double total_expense = 0;
+                double categoryTotals[10] = {0};
+                const char* cats[] = {"Food", "Transport", "Utilities", "Entertainment", "Shopping", "Health", "Other"};
+                int num_cats = 7;
+                
+                for (int i = 0; i < num_transactions; i++) {
+                    if (!transactions[i].is_income) {
+                        total_expense += transactions[i].amount;
+                        int found = 0;
+                        for (int c = 0; c < num_cats; c++) {
+                            if (strcmp(transactions[i].category, cats[c]) == 0) {
+                                categoryTotals[c] += transactions[i].amount;
+                                found = 1;
+                                break;
+                            }
+                        }
+                        if (!found) categoryTotals[6] += transactions[i].amount;
+                    }
+                }
+                
+                int cx = 110;
+                int cy = 450;
+                int r = 60;
+                
+                SelectObject(hdc, hFont);
+                SetTextColor(hdc, RGB(248, 250, 252));
+                SetBkMode(hdc, TRANSPARENT);
+                TextOut(hdc, cx - 70, cy - r - 25, "Expenses by Category", 20);
+                
+                if (total_expense > 0) {
+                    COLORREF colors[] = {RGB(239, 68, 68), RGB(249, 115, 22), RGB(245, 158, 11), RGB(234, 179, 8), RGB(132, 204, 22), RGB(34, 197, 94), RGB(59, 130, 246)};
+                    
+                    double start_angle = -1.57079632679; // -90 degrees
+                    for (int c = 0; c < num_cats; c++) {
+                        if (categoryTotals[c] > 0) {
+                            if (categoryTotals[c] >= total_expense) {
+                                HBRUSH hBrush = CreateSolidBrush(colors[c % 7]);
+                                HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+                                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+                                HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+                                Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+                                SelectObject(hdc, hOldBrush);
+                                SelectObject(hdc, hOldPen);
+                                DeleteObject(hBrush);
+                                DeleteObject(hPen);
+                                break;
+                            }
+                            double slice_angle = (categoryTotals[c] / total_expense) * 2.0 * 3.1415926535;
+                            double end_angle = start_angle - slice_angle;
+                            
+                            int x1 = cx + (int)(r * cos(start_angle));
+                            int y1 = cy + (int)(r * sin(start_angle));
+                            int x2 = cx + (int)(r * cos(end_angle));
+                            int y2 = cy + (int)(r * sin(end_angle));
+                            
+                            HBRUSH hBrush = CreateSolidBrush(colors[c % 7]);
+                            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+                            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+                            HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+                            
+                            Pie(hdc, cx - r, cy - r, cx + r, cy + r, x1, y1, x2, y2);
+                            
+                            SelectObject(hdc, hOldBrush);
+                            SelectObject(hdc, hOldPen);
+                            DeleteObject(hBrush);
+                            DeleteObject(hPen);
+                            
+                            start_angle = end_angle;
+                        }
+                    }
+                } else {
+                    SetTextColor(hdc, RGB(100, 116, 139));
+                    TextOut(hdc, cx - 40, cy - 10, "No expenses", 11);
+                }
+                
+                EndPaint(hwnd, &ps);
+            }
+            return 0;
+            
         case WM_DESTROY:
             SaveData();
             DeleteObject(hbgBrush);
@@ -458,7 +544,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     hMainWnd = CreateWindowEx(
         0, CLASS_NAME, "KBudget",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 400,
+        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
         NULL, NULL, hInstance, NULL
     );
     
