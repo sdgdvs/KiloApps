@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>KJournal</title>
+<style>
+  body { margin: 0; background: #fdf6e3; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #333; }
+  .sidebar { width: 200px; background: #eee8d5; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
+  .main { flex: 1; display: flex; flex-direction: column; padding: 10px; }
+  .date-picker { padding: 10px; border-bottom: 1px solid #ccc; }
+  .date-picker input { width: 100%; box-sizing: border-box; padding: 5px; font-size: 14px; }
+  .entry-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+  .entry-item { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; font-size: 14px; }
+  .entry-item:hover { background: #e8e2d0; }
+  .entry-item.active { background: #fdf6e3; font-weight: bold; border-left: 4px solid #b58900; }
+  textarea { flex: 1; width: 100%; box-sizing: border-box; background: transparent; border: none; padding: 10px; font-size: 16px; font-family: 'Segoe UI', sans-serif; resize: none; outline: none; line-height: 1.5; }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-bottom: 10px; }
+  h2 { margin: 0; font-size: 18px; color: #b58900; }
+  button { background: #b58900; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer; }
+  button:hover { background: #cb4b16; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+    <div class="date-picker">
+        <input type="date" id="dateInput">
+    </div>
+    <ul class="entry-list" id="entryList"></ul>
+</div>
+<div class="main">
+    <div class="toolbar">
+        <h2 id="currentDateDisplay">Select a Date</h2>
+        <button id="saveBtn">Save Entry</button>
+    </div>
+    <textarea id="journalArea" placeholder="Write your thoughts here..."></textarea>
+</div>
+<script>
+  const dateInput = document.getElementById('dateInput');
+  const entryList = document.getElementById('entryList');
+  const journalArea = document.getElementById('journalArea');
+  const currentDateDisplay = document.getElementById('currentDateDisplay');
+  const saveBtn = document.getElementById('saveBtn');
+  
+  let entries = {};
+  try {
+      let saved = localStorage.getItem('kjournal_data');
+      if (saved) entries = JSON.parse(saved);
+  } catch (e) {
+      entries = {};
+  }
+
+  // Init date
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.value = today;
+
+  function renderList() {
+      entryList.innerHTML = '';
+      const sortedDates = Object.keys(entries).sort((a,b) => b.localeCompare(a));
+      sortedDates.forEach(date => {
+          let li = document.createElement('li');
+          li.className = 'entry-item' + (date === dateInput.value ? ' active' : '');
+          li.innerText = date;
+          li.onclick = () => {
+              dateInput.value = date;
+              loadEntry();
+              renderList();
+          };
+          entryList.appendChild(li);
+      });
+  }
+
+  function loadEntry() {
+      const date = dateInput.value;
+      currentDateDisplay.innerText = date || "Select a Date";
+      if (date && entries[date]) {
+          journalArea.value = entries[date];
+      } else {
+          journalArea.value = "";
+      }
+      renderList();
+  }
+
+  saveBtn.addEventListener('click', () => {
+      const date = dateInput.value;
+      if (!date) return;
+      const text = journalArea.value.trim();
+      if (text) {
+          entries[date] = text;
+      } else {
+          delete entries[date]; // Remove empty entries
+      }
+      localStorage.setItem('kjournal_data', JSON.stringify(entries));
+      renderList();
+  });
+
+  dateInput.addEventListener('change', () => {
+      loadEntry();
+  });
+
+  // initial load
+  loadEntry();
+</script>
+</body>
+</html>

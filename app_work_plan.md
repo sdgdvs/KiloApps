@@ -19,8 +19,8 @@
 
 ---
 
-**Target App:** KRogue
-**Status:** Feature-Expanded
+**Target App:** KJournal
+**Status:** Created from Scratch
 **Current Phase:** Done
 
 ## Completed Apps (Do Not Redo)
@@ -32,7 +32,7 @@ KPad, KImage, KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KCloc
 KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing, KScript, KSnake, KTetris, KSpace, KType, KSolitaire, KTerm, KSynth, KSound, KTask, KSys, KRogue
 
 ### Created from Scratch
-KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
+KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase, KJournal
 
 ## Unfinished Work (Pick Up First)
 (none)
