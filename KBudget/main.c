@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <shlobj.h>
 #include "resource.h"
 
 #define MAX_TRANSACTIONS 1000
@@ -23,6 +24,48 @@ HWND hLblTotal, hLblIncome, hLblExpense;
 
 HBRUSH hbgBrush;
 HFONT hFont;
+
+void SaveData() {
+    char appDataPath[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath))) {
+        char dirPath[MAX_PATH];
+        snprintf(dirPath, sizeof(dirPath), "%s\\KBudget", appDataPath);
+        CreateDirectoryA(dirPath, NULL);
+        
+        char filePath[MAX_PATH];
+        snprintf(filePath, sizeof(filePath), "%s\\kbudget.dat", dirPath);
+        
+        HANDLE hFile = CreateFileA(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD bytesWritten;
+            WriteFile(hFile, &num_transactions, sizeof(int), &bytesWritten, NULL);
+            if (num_transactions > 0) {
+                WriteFile(hFile, transactions, sizeof(Transaction) * num_transactions, &bytesWritten, NULL);
+            }
+            CloseHandle(hFile);
+        }
+    }
+}
+
+void LoadData() {
+    char appDataPath[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath))) {
+        char filePath[MAX_PATH];
+        snprintf(filePath, sizeof(filePath), "%s\\KBudget\\kbudget.dat", appDataPath);
+        
+        HANDLE hFile = CreateFileA(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD bytesRead;
+            ReadFile(hFile, &num_transactions, sizeof(int), &bytesRead, NULL);
+            if (num_transactions < 0 || num_transactions > MAX_TRANSACTIONS) {
+                num_transactions = 0;
+            } else if (num_transactions > 0) {
+                ReadFile(hFile, transactions, sizeof(Transaction) * num_transactions, &bytesRead, NULL);
+            }
+            CloseHandle(hFile);
+        }
+    }
+}
 
 void UpdateUI() {
     double total_income = 0;
@@ -82,6 +125,7 @@ INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                     GetDlgItemText(hwndDlg, IDC_DATE_EDIT, t->date, sizeof(t->date));
                     
                     num_transactions++;
+                    SaveData();
                     UpdateUI();
                 }
                 EndDialog(hwndDlg, IDOK);
@@ -123,6 +167,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            LoadData();
             UpdateUI();
             return 0;
             
@@ -151,6 +196,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             break;
             
         case WM_DESTROY:
+            SaveData();
             DeleteObject(hbgBrush);
             DeleteObject(hFont);
             PostQuitMessage(0);
