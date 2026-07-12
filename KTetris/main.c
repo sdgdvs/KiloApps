@@ -9,6 +9,8 @@
 int grid[H][W];
 int current_piece, current_rot, current_x, current_y;
 int next_piece, next_rot;
+int hold_piece = -1;
+int hold_used = 0;
 int high_score = 0;
 
 void load_high_score() {
@@ -105,6 +107,11 @@ void lock_piece() {
             y++; // check same line again
         }
     }
+    if (lines_cleared > 0) {
+        Beep(1000 + lines_cleared * 200, 100);
+    } else {
+        Beep(500, 50);
+    }
     score += lines_cleared * 100;
     int new_speed = 500 - (score / 100) * 10;
     if (new_speed < 50) new_speed = 50;
@@ -118,8 +125,10 @@ void spawn_piece() {
     current_y = -2;
     next_piece = random_int(7);
     next_rot = 0;
+    hold_used = 0;
     if (check_collision(current_piece, current_rot, current_x, current_y + 1)) {
         game_over = 1;
+        Beep(200, 500);
         save_high_score();
     }
 }
@@ -133,6 +142,8 @@ void InitGame() {
     timer_speed = 500;
     game_over = 0;
     is_paused = 0;
+    hold_piece = -1;
+    hold_used = 0;
     next_piece = random_int(7);
     next_rot = 0;
     spawn_piece();
@@ -175,6 +186,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == VK_UP) {
                     int next_rot = (current_rot + 1) % 4;
                     if (!check_collision(current_piece, next_rot, current_x, current_y)) current_rot = next_rot;
+                }
+                if (wParam == 'C' || wParam == VK_SHIFT) {
+                    if (!hold_used) {
+                        if (hold_piece == -1) {
+                            hold_piece = current_piece;
+                            spawn_piece();
+                        } else {
+                            int temp = current_piece;
+                            current_piece = hold_piece;
+                            hold_piece = temp;
+                            current_rot = 0;
+                            current_x = W / 2 - 2;
+                            current_y = -2;
+                        }
+                        hold_used = 1;
+                    }
                 }
                 if (wParam == VK_SPACE) {
                     while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
@@ -273,6 +300,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (next_shape & (1 << (15 - (y * 4 + x)))) {
                             RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 90 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 90 + (y + 1) * CELL_SIZE - 1 };
                             FillRect(memDC, &r, brushes[next_piece + 1]);
+                        }
+                    }
+                }
+            }
+            
+            TextOutA(memDC, W * CELL_SIZE + 10, 140, "HOLD:", 5);
+            if (hold_piece != -1) {
+                unsigned short hold_shape = tetrominos[hold_piece][0];
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (hold_shape & (1 << (15 - (y * 4 + x)))) {
+                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 160 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 160 + (y + 1) * CELL_SIZE - 1 };
+                            FillRect(memDC, &r, brushes[hold_piece + 1]);
                         }
                     }
                 }

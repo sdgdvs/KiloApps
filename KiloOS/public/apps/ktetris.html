@@ -10,6 +10,20 @@
 <body>
 <canvas id="gameCanvas" width="300" height="400"></canvas>
 <script>
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playSound(freq, type, dur) {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      let osc = audioCtx.createOscillator();
+      let gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
+      osc.stop(audioCtx.currentTime + dur);
+  }
+
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   const CELL = 20;
@@ -29,6 +43,7 @@
   let grid = Array(H).fill().map(() => Array(W).fill(0));
   let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0;
   let nextPc, nextRot;
+  let holdPc = -1, holdUsed = false;
   let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
 
   function checkCol(p, r, x, y) {
@@ -49,8 +64,10 @@
       rot = nextRot; cx = 3; cy = -2;
       nextPc = Math.floor(Math.random() * 7);
       nextRot = 0;
+      holdUsed = false;
       if (checkCol(pc, rot, cx, cy + 1)) {
           gameOver = true;
+          playSound(200, 'square', 0.5);
           if (score > highScore) {
               highScore = score;
               localStorage.setItem('ktetris_hiscore', highScore);
@@ -67,15 +84,20 @@
               }
           }
       }
+      let linesCleared = 0;
       for (let y = H - 1; y >= 0; y--) {
           if (grid[y].every(c => c > 0)) {
               grid.splice(y, 1);
               grid.unshift(Array(W).fill(0));
-              score += 100;
-              dropInterval = Math.max(50, 500 - Math.floor(score / 100) * 10);
+              linesCleared++;
               y++;
           }
       }
+      if (linesCleared > 0) playSound(1000 + linesCleared * 200, 'square', 0.1);
+      else playSound(500, 'square', 0.05);
+      
+      score += linesCleared * 100;
+      dropInterval = Math.max(50, 500 - Math.floor(score / 100) * 10);
   }
 
   function init() {
@@ -86,6 +108,8 @@
       dropInterval = 500;
       nextPc = Math.floor(Math.random() * 7);
       nextRot = 0;
+      holdPc = -1;
+      holdUsed = false;
       spawn();
   }
 
@@ -101,6 +125,21 @@
       if (e.key === 'ArrowUp') {
           let nr = (rot + 1) % 4;
           if (!checkCol(pc, nr, cx, cy)) rot = nr;
+      }
+      if (e.key === 'c' || e.key === 'C' || e.key === 'Shift') {
+          if (!holdUsed) {
+              if (holdPc === -1) {
+                  holdPc = pc;
+                  spawn();
+              } else {
+                  let temp = pc;
+                  pc = holdPc;
+                  holdPc = temp;
+                  rot = 0; cx = 3; cy = -2;
+              }
+              holdUsed = true;
+              draw();
+          }
       }
       if (e.key === ' ') {
           while (!checkCol(pc, rot, cx, cy + 1)) cy++;
@@ -180,6 +219,19 @@
               for (let j = 0; j < 4; j++) {
                   if (nextShape & (1 << (15 - (i * 4 + j)))) {
                       ctx.fillRect(210 + j * CELL + 1, 90 + i * CELL + 1, CELL - 2, CELL - 2);
+                  }
+              }
+          }
+      }
+
+      ctx.fillText('HOLD:', 210, 190);
+      if (holdPc !== -1) {
+          let holdShape = tetrominos[holdPc][0];
+          ctx.fillStyle = colors[holdPc + 1];
+          for (let i = 0; i < 4; i++) {
+              for (let j = 0; j < 4; j++) {
+                  if (holdShape & (1 << (15 - (i * 4 + j)))) {
+                      ctx.fillRect(210 + j * CELL + 1, 210 + i * CELL + 1, CELL - 2, CELL - 2);
                   }
               }
           }
