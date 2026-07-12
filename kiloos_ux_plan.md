@@ -45,6 +45,7 @@
 - Ensure all app icons and labels fit well.
 
 ## Completed Items
+- Window Management Polish: Added smooth entrance animations for windows and updated Taskbar clock interactions. Added active interaction states to the Start Menu button.
 - Theme Consistency: Centralized desktop icon styling in `index.css`, removed duplicate/inline hover states, adjusted sizing, and added subtle drop-shadows to ensure all app icons and labels fit well.
 - Theme Consistency: Improved desktop icon labels to use standard `Inter` weight 400 with a better text-shadow and background on hover/select. Removed inline styles from `folder-content` icons in `App.jsx` to inherit the robust `index.css` classes.
 - Window Management Polish: Updated window control buttons (minimize, maximize, close) to a macOS-style stoplight design with standard hover states, replacing the raw text symbols with more consistent styling.
