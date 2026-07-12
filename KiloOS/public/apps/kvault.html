@@ -370,6 +370,10 @@
                         <input type="text" id="search-input" placeholder="Search..." onkeyup="filterSecrets()" style="padding: 10px 14px; width: 140px; font-size: 14px; margin-right: 5px;">
                         <button class="btn secondary" onclick="importVault()">Import</button>
                         <button class="btn secondary" onclick="exportVault()">Export</button>
+                        <button class="btn secondary" onclick="copyVaultBackup()" title="Copy Backup to Clipboard">Copy</button>
+                        <button class="btn danger" style="padding: 12px; background: rgba(255, 71, 87, 0.2); border-color: rgba(255, 71, 87, 0.3); color: #ff4757; box-shadow: none;" onclick="clearAppClipboard()" title="Clear Clipboard">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="9" y1="14" x2="15" y2="14"></line><line x1="12" y1="11" x2="12" y2="17"></line></svg>
+                        </button>
                         <button class="btn" onclick="showAddSecret()">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Add Secret
@@ -392,6 +396,15 @@
             <div id="view-add" class="view-section">
                 <div class="card" style="max-width: 500px; margin: 20px auto; width: 100%;">
                     <h2 style="margin:0 0 24px 0;">Add New Secret</h2>
+                    <div class="input-group">
+                        <label>Category</label>
+                        <select id="new-secret-category" style="background-color: var(--input-bg); border: 1px solid var(--glass-border); color: white; padding: 14px; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 15px; outline: none;">
+                            <option value="General">General</option>
+                            <option value="Login">Login</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Note">Secure Note</option>
+                        </select>
+                    </div>
                     <div class="input-group">
                         <label>Title / Identifier</label>
                         <input type="text" id="new-secret-title" placeholder="e.g. Github Password or API Key">
@@ -661,6 +674,7 @@
             switchView('view-add');
             document.getElementById('new-secret-title').value = '';
             document.getElementById('new-secret-value').value = '';
+            document.getElementById('new-secret-category').value = 'General';
             document.getElementById('new-secret-title').focus();
         }
         
@@ -680,6 +694,7 @@
         async function saveNewSecret() {
             const title = document.getElementById('new-secret-title').value.trim();
             const value = document.getElementById('new-secret-value').value.trim();
+            const category = document.getElementById('new-secret-category').value;
             
             if (!title || !value) {
                 showNotification("Both Title and Value are required", "error");
@@ -690,6 +705,7 @@
                 id: Date.now().toString(),
                 title: title,
                 value: value,
+                category: category,
                 created: new Date().toISOString()
             });
             
@@ -775,9 +791,11 @@
                     
                     const safeTitle = secret.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     
+                    const catBadge = secret.category ? `<span style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${secret.category}</span>` : '';
                     item.innerHTML = `
                         <div class="secret-item-header">
                             <span>${safeTitle}</span>
+                            ${catBadge}
                         </div>
                         <div class="secret-item-value" id="secret-val-${secret.id}"></div>
                         <div class="secret-actions">
@@ -814,6 +832,27 @@
             }, 3000);
         }
         
+        function copyVaultBackup() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                showNotification("Vault is empty", "error");
+                return;
+            }
+            navigator.clipboard.writeText(stored).then(() => {
+                showNotification("Backup copied to clipboard");
+            }).catch(() => {
+                showNotification("Failed to copy backup", "error");
+            });
+        }
+        
+        function clearAppClipboard() {
+            navigator.clipboard.writeText('').then(() => {
+                showNotification("Clipboard cleared successfully");
+            }).catch(() => {
+                showNotification("Failed to clear clipboard", "error");
+            });
+        }
+
         function exportVault() {
             const stored = localStorage.getItem(STORAGE_KEY);
             if (!stored) {

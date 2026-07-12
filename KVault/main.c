@@ -16,6 +16,10 @@
 #define ID_BTN_GENERATE 110
 #define ID_COMBO_TIMEOUT 111
 #define ID_STATIC_STRENGTH 112
+#define ID_COMBO_TEMPLATE 113
+#define ID_BTN_INSERT_TEMPLATE 114
+#define ID_BTN_COPY_DATA 115
+#define ID_BTN_CLEAR_CLIP 116
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -210,6 +214,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
             SendMessage(hBtnGen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 15, 355, 100, 100, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
+            SendMessage(hComboTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Login");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Finance");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Note");
+            SendMessage(hComboTpl, CB_SETCURSEL, 0, 0);
+            
+            HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT, 125, 355, 60, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
+            SendMessage(hBtnTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            HWND hBtnCopyData = CreateWindowA("BUTTON", "Copy Data", WS_VISIBLE | WS_CHILD | BS_FLAT, 195, 355, 85, 25, hwnd, (HMENU)ID_BTN_COPY_DATA, NULL, NULL);
+            SendMessage(hBtnCopyData, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            HWND hBtnClearClip = CreateWindowA("BUTTON", "Clear Clip", WS_VISIBLE | WS_CHILD | BS_FLAT, 290, 355, 85, 25, hwnd, (HMENU)ID_BTN_CLEAR_CLIP, NULL, NULL);
+            SendMessage(hBtnClearClip, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             srand(GetTickCount());
             break;
         }
@@ -281,6 +301,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveToFile(hwnd, hData);
             } else if (LOWORD(wParam) == ID_BTN_GENERATE) {
                 GeneratePassword(hData);
+            } else if (LOWORD(wParam) == ID_BTN_INSERT_TEMPLATE) {
+                int sel = SendMessage(GetDlgItem(hwnd, ID_COMBO_TEMPLATE), CB_GETCURSEL, 0, 0);
+                const char* tpl = "";
+                if (sel == 0) tpl = "\r\n--- Login ---\r\nURL: \r\nUsername: \r\nPassword: \r\n-------------\r\n";
+                else if (sel == 1) tpl = "\r\n--- Finance ---\r\nBank: \r\nAccount: \r\nRouting: \r\nPIN: \r\n---------------\r\n";
+                else if (sel == 2) tpl = "\r\n--- Secure Note ---\r\nTitle: \r\nNote: \r\n-------------------\r\n";
+                SendMessage(hData, EM_REPLACESEL, TRUE, (LPARAM)tpl);
+                SetFocus(hData);
+            } else if (LOWORD(wParam) == ID_BTN_COPY_DATA) {
+                int textLen = GetWindowTextLengthA(hData);
+                if (textLen > 0) {
+                    char* text = (char*)malloc(textLen + 1);
+                    GetWindowTextA(hData, text, textLen + 1);
+                    if (OpenClipboard(hwnd)) {
+                        EmptyClipboard();
+                        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, textLen + 1);
+                        memcpy(GlobalLock(hMem), text, textLen + 1);
+                        GlobalUnlock(hMem);
+                        SetClipboardData(CF_TEXT, hMem);
+                        CloseClipboard();
+                        MessageBoxA(hwnd, "Data copied to clipboard.", "KVault", MB_OK | MB_ICONINFORMATION);
+                    }
+                    free(text);
+                }
+            } else if (LOWORD(wParam) == ID_BTN_CLEAR_CLIP) {
+                if (OpenClipboard(hwnd)) {
+                    EmptyClipboard();
+                    CloseClipboard();
+                    MessageBoxA(hwnd, "Clipboard cleared.", "KVault", MB_OK | MB_ICONINFORMATION);
+                }
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
                 GetDlgItemTextA(hwnd, ID_EDIT_FIND, findText, 256);
@@ -357,7 +407,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     RegisterClassA(&wc);
     
-    HWND hwnd = CreateWindowA("KVaultClass", "KVault", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 600, 400, NULL, NULL, hInstance, NULL);
+    HWND hwnd = CreateWindowA("KVaultClass", "KVault", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 610, 435, NULL, NULL, hInstance, NULL);
     
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
