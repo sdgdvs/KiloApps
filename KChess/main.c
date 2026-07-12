@@ -199,6 +199,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 else if (dstP == 12) { gameOver = 1; winner = 1; }
                                 
                                 board[ty][tx] = board[selY][selX];
+                                if (pType == 1) {
+                                    if (isWhite && ty == 0) board[ty][tx] = 5;
+                                    else if (!isWhite && ty == 7) board[ty][tx] = 11;
+                                }
+                                
                                 board[selY][selX] = 0;
                                 selX = -1;
                                 selY = -1;
