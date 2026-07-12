@@ -15,6 +15,7 @@
 #define ID_BTN_FIND 109
 #define ID_BTN_GENERATE 110
 #define ID_COMBO_TIMEOUT 111
+#define ID_STATIC_STRENGTH 112
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -183,6 +184,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hPass = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_PASSWORD | ES_AUTOHSCROLL, 100, 60, 200, 25, hwnd, (HMENU)ID_EDIT_PASS, NULL, NULL);
             SendMessage(hPass, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            HWND hStrength = CreateWindowA("STATIC", "", WS_VISIBLE | WS_CHILD, 100, 85, 200, 15, hwnd, (HMENU)ID_STATIC_STRENGTH, NULL, NULL);
+            SendMessage(hStrength, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             HWND hBtnEnc = CreateWindowA("BUTTON", "Encrypt", WS_VISIBLE | WS_CHILD | BS_FLAT, 315, 60, 85, 25, hwnd, (HMENU)ID_BTN_ENCRYPT, NULL, NULL);
             HWND hBtnDec = CreateWindowA("BUTTON", "Decrypt", WS_VISIBLE | WS_CHILD | BS_FLAT, 410, 60, 85, 25, hwnd, (HMENU)ID_BTN_DECRYPT, NULL, NULL);
             HWND hBtnClr = CreateWindowA("BUTTON", "Clear", WS_VISIBLE | WS_CHILD | BS_FLAT, 505, 60, 75, 25, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
@@ -219,6 +223,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (textLen > 0 || passLen > 0) {
                             SetWindowTextA(hData, "");
                             SetWindowTextA(hPass, "");
+                            if (OpenClipboard(hwnd)) { EmptyClipboard(); CloseClipboard(); }
                             MessageBoxA(hwnd, "Vault locked due to inactivity.", "KVault", MB_OK | MB_ICONINFORMATION);
                         }
                         g_lastActivity = GetTickCount();
@@ -228,6 +233,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
+            if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == ID_EDIT_PASS) {
+                char pwd[256];
+                GetWindowTextA((HWND)lParam, pwd, 256);
+                int len = strlen(pwd);
+                if (len == 0) {
+                    SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "");
+                } else {
+                    int score = 0;
+                    int hasUpper = 0, hasNum = 0, hasSym = 0;
+                    for (int i = 0; i < len; i++) {
+                        if (pwd[i] >= 'A' && pwd[i] <= 'Z') hasUpper = 1;
+                        else if (pwd[i] >= '0' && pwd[i] <= '9') hasNum = 1;
+                        else if (!(pwd[i] >= 'a' && pwd[i] <= 'z')) hasSym = 1;
+                    }
+                    if (len > 4) score++;
+                    if (len >= 8) score++;
+                    if (len >= 12) score++;
+                    if (hasUpper) score++;
+                    if (hasNum) score++;
+                    if (hasSym) score++;
+                    
+                    if (score < 3) SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "Strength: Weak");
+                    else if (score < 5) SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "Strength: Medium");
+                    else SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "Strength: Strong");
+                    
+                    InvalidateRect(GetDlgItem(hwnd, ID_STATIC_STRENGTH), NULL, TRUE);
+                }
+            }
             if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == ID_COMBO_TIMEOUT) {
                 int sel = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
                 if (sel == 0) g_timeoutMs = 60000;
@@ -279,6 +312,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
+            HWND hStatic = (HWND)lParam;
+            if (GetDlgCtrlID(hStatic) == ID_STATIC_STRENGTH) {
+                char text[64];
+                GetWindowTextA(hStatic, text, 64);
+                if (strstr(text, "Weak")) SetTextColor(hdc, RGB(255, 71, 87));
+                else if (strstr(text, "Medium")) SetTextColor(hdc, RGB(255, 165, 2));
+                else if (strstr(text, "Strong")) SetTextColor(hdc, RGB(46, 213, 115));
+                else SetTextColor(hdc, RGB(240, 240, 245));
+                SetBkColor(hdc, RGB(15, 15, 19));
+                return (LRESULT)hbgBrush;
+            }
             SetTextColor(hdc, RGB(240, 240, 245));
             SetBkColor(hdc, RGB(15, 15, 19));
             return (LRESULT)hbgBrush;
@@ -330,6 +374,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 } else if (msg.wParam == 'L') {
                     SetWindowTextA(GetDlgItem(hwnd, ID_EDIT_DATA), "");
                     SetWindowTextA(GetDlgItem(hwnd, ID_EDIT_PASS), "");
+                    if (OpenClipboard(hwnd)) { EmptyClipboard(); CloseClipboard(); }
                     MessageBoxA(hwnd, "Vault locked (Ctrl+L).", "KVault", MB_OK | MB_ICONINFORMATION);
                     continue;
                 }

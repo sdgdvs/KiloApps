@@ -351,7 +351,11 @@
                         <p id="auth-desc" style="margin:0; opacity:0.7; font-size:14px; line-height: 1.5;">Enter your master password to decrypt your vault.</p>
                     </div>
                     <div class="input-group">
-                        <input type="password" id="master-password" placeholder="Master Password" onkeyup="if(event.key === 'Enter') handleAuth()">
+                        <input type="password" id="master-password" placeholder="Master Password" onkeyup="checkStrength(); if(event.key === 'Enter') handleAuth()">
+                        <div id="strength-bar-container" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; display: none;">
+                            <div id="strength-bar" style="height: 100%; width: 0%; background: var(--danger-accent); transition: all 0.3s;"></div>
+                        </div>
+                        <div id="strength-text" style="font-size: 12px; text-align: right; margin-top: 2px; color: rgba(255,255,255,0.5); display: none;"></div>
                     </div>
                     <button class="btn" style="width: 100%; margin-top: 10px; padding: 14px;" onclick="handleAuth()" id="auth-btn">Unlock Vault</button>
                     <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:16px; text-align: center; font-weight: 500;">Incorrect password. Please try again.</p>
@@ -541,6 +545,7 @@
                     masterKey = key;
                     vaultData = JSON.parse(testDecrypt);
                     document.getElementById('master-password').value = '';
+                    checkStrength();
                     showVault();
                     showNotification("Vault unlocked");
                 } catch (e) {
@@ -554,8 +559,50 @@
                 vaultData = [];
                 await saveVaultToStorage(salt);
                 document.getElementById('master-password').value = '';
+                checkStrength();
                 showVault();
                 showNotification("Vault initialized");
+            }
+        }
+
+        function checkStrength() {
+            const pwd = document.getElementById('master-password').value;
+            const container = document.getElementById('strength-bar-container');
+            const text = document.getElementById('strength-text');
+            const bar = document.getElementById('strength-bar');
+            
+            if (!pwd) {
+                if(container) container.style.display = 'none';
+                if(text) text.style.display = 'none';
+                return;
+            }
+            
+            container.style.display = 'block';
+            text.style.display = 'block';
+            
+            let score = 0;
+            if (pwd.length > 4) score += 1;
+            if (pwd.length >= 8) score += 1;
+            if (pwd.length >= 12) score += 1;
+            if (/[A-Z]/.test(pwd)) score += 1;
+            if (/[0-9]/.test(pwd)) score += 1;
+            if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
+            
+            if (score < 3) {
+                bar.style.width = '33%';
+                bar.style.background = 'var(--danger-accent)';
+                text.innerText = 'Weak';
+                text.style.color = 'var(--danger-accent)';
+            } else if (score < 5) {
+                bar.style.width = '66%';
+                bar.style.background = '#ffa502';
+                text.innerText = 'Medium';
+                text.style.color = '#ffa502';
+            } else {
+                bar.style.width = '100%';
+                bar.style.background = 'var(--success-color)';
+                text.innerText = 'Strong';
+                text.style.color = 'var(--success-color)';
             }
         }
         
@@ -586,10 +633,13 @@
         function lockVault() {
             masterKey = null;
             vaultData = [];
+            document.getElementById('master-password').value = '';
+            if (typeof checkStrength === 'function') checkStrength();
             switchView('view-auth');
             document.getElementById('auth-controls').style.display = 'none';
             initAuthView();
-            showNotification("Vault locked");
+            try { navigator.clipboard.writeText(''); } catch(e) {}
+            showNotification("Vault locked & clipboard cleared");
             resetIdleTimer();
         }
         
