@@ -82,7 +82,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
 | KMines     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
-| KRogue     | Tier 3          | Never Touched          | Needs Improvement | Web is a download stub (0.7KB). EXE is a 64KB full roguelike. |
+| KRogue     | Tier 2          | Never Touched          | Needs Improvement | Web upgraded to basic playable version. EXE is a full roguelike. |
 | KSnake     | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
 | KTetris    | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
 | KPong      | Tier 1          | Polished               | Needs Improvement | Full parity. |
@@ -109,4 +109,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 **Loop 2**
 - [x] KMines (Added difficulty levels: Easy/Medium/Hard to both EXE and HTML)
-- [ ] KRogue
+- [x] KRogue (Added Ice Storm spell & Teleport Trap to EXE, upgraded Web version toward Tier 2 with messages, stairs, gold, and varied enemies)
+- [ ] KSnake

@@ -126,6 +126,7 @@ typedef struct {
 #define S_MISSILE 0
 #define S_HEAL 1
 #define S_FIREBALL 2
+#define S_FREEZE 3
 
 typedef struct {
     Tile map[H][W];
@@ -333,10 +334,11 @@ void generate_random_item(Item* it) {
         else { str_cpy(it->name, "Amulet of Life"); it->val = 20 + g.dlevel * 5; it->ch = '"'; }
     } else {
         it->ch = '?'; it->fg = RGB(200, 100, 255); it->type = TYPE_SPELLBOOK;
-        it->subtype = rand_range(0, 2);
+        it->subtype = rand_range(0, 3);
         if(it->subtype == S_MISSILE) { str_cpy(it->name, "Spellbook of Magic Missile"); }
         else if(it->subtype == S_HEAL) { str_cpy(it->name, "Spellbook of Healing"); }
-        else { str_cpy(it->name, "Spellbook of Fireball"); }
+        else if(it->subtype == S_FIREBALL) { str_cpy(it->name, "Spellbook of Fireball"); }
+        else { str_cpy(it->name, "Spellbook of Ice Storm"); }
     }
 }
 
@@ -732,16 +734,25 @@ int process_status_effects(Entity* e) { // returns 1 if died
 void check_trap(Entity* e) {
     if(g.map[e->y][e->x].has_trap) {
         g.map[e->y][e->x].has_trap = 0;
-        int t = rand_range(0, 100) < 50 ? 0 : 1;
+        int t = rand_range(0, 2);
         char buf[100];
         if(t == 0) {
             e->status_effect = STATUS_POISON;
             e->status_duration = 10;
             wsprintfA(buf, "%s triggers a poison trap!", e->name);
-        } else {
+        } else if(t == 1) {
             e->status_effect = STATUS_ROOTED;
             e->status_duration = 5;
             wsprintfA(buf, "%s triggers a root trap!", e->name);
+        } else {
+            wsprintfA(buf, "%s triggers a teleport trap!", e->name);
+            int nx, ny;
+            do {
+                nx = rand_range(1, W-2);
+                ny = rand_range(1, H-2);
+            } while(!g.map[ny][nx].walkable || get_entity_at(nx, ny));
+            e->x = nx; e->y = ny;
+            if(e == get_player()) calc_fov_bresenham();
         }
         if(e == get_player() || (e->x >= 0 && g.map[e->y][e->x].visible)) add_msg(buf);
     }
@@ -1263,6 +1274,10 @@ void draw_game(HDC hdc) {
             TextOutA(memDC, 20, y, "c - Fireball (Cost: 8 MP)", 25);
             y += char_h;
         }
+        if(g.known_spells[S_FREEZE]) {
+            TextOutA(memDC, 20, y, "d - Ice Storm (Cost: 6 MP)", 26);
+            y += char_h;
+        }
     } else if(g.state == 8) { // message log
         SetTextColor(memDC, RGB(255,255,255));
         SetBkColor(memDC, RGB(0,0,0));
@@ -1440,6 +1455,28 @@ void fire_spell() {
                 }
             }
         }
+    } else if (g.active_spell == S_FREEZE) {
+        p->mp -= 6;
+        add_msg("You cast Ice Storm!");
+        
+        for(int dy=-1; dy<=1; dy++) {
+            for(int dx=-1; dx<=1; dx++) {
+                Entity* target = get_entity_at(g.target_x + dx, g.target_y + dy);
+                if(target && target != p) {
+                    int dmg = 10 + p->level * 2;
+                    target->hp -= dmg;
+                    target->status_effect = STATUS_ROOTED;
+                    target->status_duration = 5;
+                    char buf[100];
+                    wsprintfA(buf, "%s is frozen for %d dmg!", target->name, dmg);
+                    add_msg(buf);
+                    
+                    if(target->hp <= 0) {
+                        handle_death(target, p);
+                    }
+                }
+            }
+        }
     }
     
     monsters_turn();
@@ -1562,6 +1599,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         Entity* p = get_player();
                         g.target_x = p->x; g.target_y = p->y;
                         add_msg("Targeting Fireball... (Arrows to aim, Enter/F to fire)");
+                    } else {
+                        add_msg("Not enough MP!");
+                        g.state = 0;
+                    }
+                }
+                else if(wParam == 'D' && g.known_spells[S_FREEZE]) {
+                    if(get_player()->mp >= 6) {
+                        g.state = 3;
+                        g.targeting_mode = 1;
+                        g.active_spell = S_FREEZE;
+                        Entity* p = get_player();
+                        g.target_x = p->x; g.target_y = p->y;
+                        add_msg("Targeting Ice Storm... (Arrows to aim, Enter/F to fire)");
                     } else {
                         add_msg("Not enough MP!");
                         g.state = 0;
