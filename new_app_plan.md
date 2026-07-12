@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBudget
-**Phase:** 12
-**Status:** In Progress (Phase 12)
+**Phase:** 13
+**Status:** In Progress (Phase 13)
 
 *Phase 1 complete: Scaffolded KBudget directory, created basic kbudget.html UI, registered in App.jsx.*
 *Phase 2 complete: Implemented core KBudget features in web HTML including adding transactions, summary stats, categories, and simple bar chart.*
@@ -46,6 +46,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 *Phase 9 complete: Implemented Keyboard Shortcuts (Ctrl+N, Ctrl+F, Ctrl+S, Ctrl+O) for both web HTML and native C versions.*
 *Phase 10 complete: Implemented Edit and Delete Transaction functionality for both web HTML and native C versions.*
 *Phase 11 complete: Implemented Advanced Data Visualization (Pie Chart for expense distribution by category) for both web HTML and native C versions.*
+*Phase 12 complete: Implemented Sorting functionality (by Date and Amount, ascending/descending) for both web HTML and native C versions.*
 
 ## App Lifecycle (14 phases per app)
 
