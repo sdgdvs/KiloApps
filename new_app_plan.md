@@ -32,8 +32,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBudget
-**Phase:** 1
-**Status:** In Progress (Phase 1 Scaffold)
+**Phase:** 2
+**Status:** In Progress (Phase 2 Implement core web HTML)
+
+*Phase 1 complete: Scaffolded KBudget directory, created basic kbudget.html UI, registered in App.jsx.*
 
 ## App Lifecycle (14 phases per app)
 
