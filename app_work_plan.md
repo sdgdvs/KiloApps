@@ -23,20 +23,54 @@
 **Status:** Created from Scratch
 **Current Phase:** Done
 
-## Completed Apps (Do Not Redo)
+## Round-Robin Continuous Improvement Queue
+Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list.
 
-### Polished
-KPad, KImage, KHex, KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont, KMail, KMandel, KPing, KScript
-
-### Feature-Expanded
-KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing, KScript, KSnake, KTetris, KSpace, KType, KSolitaire, KTerm, KSynth, KSound, KTask, KSys, KRogue
-
-### Created from Scratch
-KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase, KJournal
-
-## Unfinished Work (Pick Up First)
-(none)
-
-## Priority Queue (Never Touched)
-Select from these for polish/expansion next:
-(none)
+- KPad
+- KImage
+- KHex
+- KCalc
+- KCalendar
+- KChart
+- KChess
+- KChat
+- KBBS
+- KAudio
+- KClock
+- KPong
+- KDB
+- KDraw
+- KFont
+- KMail
+- KMandel
+- KPing
+- KScript
+- KMaze
+- KMine
+- KPac
+- KNote
+- KPass
+- KMedia
+- KWrite
+- KNet
+- KZip
+- KPaint
+- KSnake
+- KTetris
+- KSpace
+- KType
+- KSolitaire
+- KTerm
+- KSynth
+- KSound
+- KTask
+- KSys
+- KRogue
+- KConverter
+- KTodo
+- KGraph
+- KTimer
+- KContacts
+- KRead
+- KBase
+- KJournal
