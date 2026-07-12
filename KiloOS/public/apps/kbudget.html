@@ -743,6 +743,33 @@
             if (e.target === settingsModal) closeSettingsModal();
         });
 
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey) {
+                switch(e.key.toLowerCase()) {
+                    case 'n':
+                        e.preventDefault();
+                        openModal();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('search-input').focus();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        exportCSV();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        importCSV();
+                        break;
+                }
+            } else if (e.key === 'Escape') {
+                closeModal();
+                closeSettingsModal();
+            }
+        });
+
         // Run
         init();
     </script>

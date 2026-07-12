@@ -420,8 +420,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        BOOL bHandled = FALSE;
+        if (msg.message == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
+            if (msg.wParam == 'N') {
+                SendMessage(hMainWnd, WM_COMMAND, 1, 0);
+                bHandled = TRUE;
+            } else if (msg.wParam == 'F') {
+                SetFocus(hSearchEdit);
+                bHandled = TRUE;
+            } else if (msg.wParam == 'S') {
+                SendMessage(hMainWnd, WM_COMMAND, 3, 0);
+                bHandled = TRUE;
+            } else if (msg.wParam == 'O') {
+                SendMessage(hMainWnd, WM_COMMAND, 2, 0);
+                bHandled = TRUE;
+            }
+        }
+        if (!bHandled) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     
     return 0;
