@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KExplorer
+**Target App:** KFont
 **Status:** In Progress
 
 ## Workflow
@@ -44,6 +44,7 @@
 - **KConverter**: Verified kconverter.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KDB**: Verified kdb.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KDraw** *(DELETED — merged into KPaint)*: Fixed `main.c` bug where lines were drawn from updated coordinates instead of old coordinates (causing dotted lines). Fixed `kdraw.html` bug where clicking without moving didn't draw a dot.
+- **KExplorer**: Fixed XSS vulnerability in file/folder rendering and made file extension checking case-insensitive in kexplorer.html. (Web-only app)
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KExplorer.
