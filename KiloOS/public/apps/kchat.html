@@ -131,14 +131,14 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
                         setTimeout(() => {
                             const lmsg = msg.toLowerCase();
                             if (lmsg.includes('hello') || lmsg.includes('hi')) {
-                                log('UNKNOWN: Cerberus locked down KPad. It thinks it has stopped me. But it forgot about KWrite. Use KWrite to write the script we need, and save it to the virtual filesystem as /sys/payload.js.');
+                                log('UNKNOWN: Cerberus locked down KNote. It thinks it has stopped me. But it forgot about KPad. Use KPad to write the script we need, and save it to the virtual filesystem as /sys/payload.js.');
                             } else if (lmsg.includes('payload.js') || lmsg.includes('done') || lmsg.includes('saved')) {
                                 log('UNKNOWN: I see it. Let me execute it. Stand by.');
                                 setTimeout(() => {
                                     if (ws && ws.close) ws.close();
                                 }, 3000);
                             } else {
-                                log('UNKNOWN: Use KWrite and save the file as /sys/payload.js. Let me know when it\'s done.');
+                                log('UNKNOWN: Use KPad and save the file as /sys/payload.js. Let me know when it\'s done.');
                             }
                         }, 1000);
                     },

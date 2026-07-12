@@ -11,7 +11,7 @@ Each KiloApp exists in two forms:
 Both versions should offer functional parity where feasible, though the native version may have deeper OS integration.
 
 ## Repository Layout
-- **Native Applications:** Subdirectories prefixed with 'K' (e.g., `KCalc`, `KWrite`, `KTetris`) contain minimal C/C++ or ASM based Windows applications. Each has its own `build.bat` and source files.
+- **Native Applications:** Subdirectories prefixed with 'K' (e.g., `KCalc`, `KPad`, `KTetris`) contain minimal C/C++ or ASM based Windows applications. Each has its own `build.bat` and source files.
 - **Web OS Environment (`KiloOS/`):** 
   - `src/App.jsx` — Main KiloOS shell (window manager, taskbar, start menu, app registry).
   - `src/index.css` — Global stylesheet for KiloOS chrome.
@@ -25,8 +25,8 @@ Both versions should offer functional parity where feasible, though the native v
 ## App Organization (Folders)
 Apps in KiloOS are categorized into 6 folders for desktop and start menu organization:
 - **System** — System tools (KSys, KTask, KClock, KTimer, KPass, KDB, etc.)
-- **Media** — Media & arts (KAudio, KMedia, KSound, KSynth, KImage, KDraw, KPaint, KFont, KColor, etc.)
-- **Office** — Productivity (KWrite, KPad, KNote, KCalc, KCalendar, KTodo, KChart, etc.)
+- **Media** — Media & arts (KAudio, KMedia, KSynth, KImage, KPaint, KFont, KColor, etc.)
+- **Office** — Productivity (KPad, KNote, KCalc, KCalendar, KTodo, KChart, etc.)
 - **Games** — Games (KChess, KMine, KMines, KPong, KSnake, KTetris, KSolitaire, KPac, KRogue, KSpace, KMaze, KMandel, etc.)
 - **Network** — Network tools (KNet, KPing, KMail, KChat, KBBS, KBBSProxy, etc.)
 - **Dev** — Development tools (KTerm, KHex, KScript, KType, KZip, etc.)

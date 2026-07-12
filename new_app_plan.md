@@ -19,8 +19,8 @@
 ## Deduplication Rules (CRITICAL — READ BEFORE EVERY NEW APP)
 
 Before creating any new app, check for overlap with the existing suite. The following categories are SATURATED — do NOT create more apps in these niches:
-- **Text/Code Editors:** KWrite, KPad, KNote, KScript — no more text editors or notepads.
-- **Drawing/Art:** KDraw, KPaint, KImage — no more paint or drawing apps.
+- **Text/Code Editors:** KPad, KNote, KScript — no more text editors or notepads. (KWrite was deleted as redundant with KPad.)
+- **Drawing/Art:** KPaint, KImage — no more paint or drawing apps. (KDraw was deleted as redundant with KPaint.)
 - **Calculators/Converters:** KCalc, KConverter, KBase — no more calculator or unit converter variants.
 - **Time/Clocks:** KClock, KTimer, KCalendar — no more clock or timer variants.
 - **Chat/Messaging:** KChat, KChatServer, KBBS, KMail — no more chat or email apps.

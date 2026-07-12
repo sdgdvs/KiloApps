@@ -4,7 +4,7 @@
 The project aims to return software development to the lightweight, compute-efficient philosophy of 1999. The goal is to produce extremely minimal, fast, and bloat-free applications, fighting against the excessive resource consumption of modern software. 
 
 ## High-Level Objectives
-- Maintain a suite of standalone, minimal native Windows applications (KTimer, KWrite, KZip, etc.). **Crucially, no individual kiloApp should exceed 999 kilobytes, even after polish and expansion.** (Note: The aggregated web platform at `kiloapps.web.app` and complete release `.zip` files are exempt from this limit and may exceed it as more apps are added).
+- Maintain a suite of standalone, minimal native Windows applications (KTimer, KPad, KZip, etc.). **Crucially, no individual kiloApp should exceed 999 kilobytes, even after polish and expansion.** (Note: The aggregated web platform at `kiloapps.web.app` and complete release `.zip` files are exempt from this limit and may exceed it as more apps are added).
 - Maintain a minimal web-based OS environment (`KiloOS`) that packages HTML5 apps into sub-150KB Windows executables using Crinkler.
 - Keep dependencies and framework overhead to an absolute minimum.
 
@@ -13,11 +13,11 @@ The project aims to return software development to the lightweight, compute-effi
 - **Web Environment:** `KiloOS` deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** Apps categorized into 6 folders: System, Media, Office, Games, Network, Dev.
 
-### Apps Polished (18)
-KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KDraw, KFont, KHex, KImage, KMail, KMandel, KPad, KPing
+### Apps Polished (17)
+KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KFont, KHex, KImage, KMail, KMandel, KPad, KPing
 
-### Apps Feature-Expanded (18)
-KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KWrite, KNet, KZip, KPaint, KClock, KChess, KDraw, KMail, KMandel, KPing
+### Apps Feature-Expanded (16)
+KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KNet, KZip, KPaint, KClock, KChess, KMail, KMandel, KPing
 
 ### Apps Created from Scratch (7)
 KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
