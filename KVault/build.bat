@@ -1,6 +1,7 @@
 @echo off
 echo Building KVault...
-gcc main.c -o KVault.exe -mwindows
+rc.exe /nologo app.rc
+cl.exe /nologo /O2 /W3 main.c app.res user32.lib gdi32.lib advapi32.lib /link /SUBSYSTEM:WINDOWS /OUT:KVault.exe
 if %errorlevel% neq 0 (
     echo Build failed.
     exit /b %errorlevel%
