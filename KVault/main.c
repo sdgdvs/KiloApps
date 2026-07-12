@@ -21,6 +21,7 @@
 #define ID_BTN_INSERT_TEMPLATE 114
 #define ID_BTN_COPY_DATA 115
 #define ID_BTN_CLEAR_CLIP 116
+#define ID_COMBO_THEME 117
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -29,6 +30,7 @@ HFONT hFont, hTitleFont;
 
 DWORD g_lastActivity = 0;
 int g_timeoutMs = 60000;
+int g_theme = 0;
 
 void EncryptData(HWND hTextEdit, HWND hPassEdit) {
     int textLen = GetWindowTextLengthA(hTextEdit);
@@ -181,6 +183,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"Never");
             SendMessage(hComboTimeout, CB_SETCURSEL, 0, 0);
             
+            HWND hComboTheme = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 495, 20, 85, 100, hwnd, (HMENU)ID_COMBO_THEME, NULL, NULL);
+            SendMessage(hComboTheme, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hComboTheme, CB_ADDSTRING, 0, (LPARAM)"Dark");
+            SendMessage(hComboTheme, CB_ADDSTRING, 0, (LPARAM)"Light");
+            SendMessage(hComboTheme, CB_ADDSTRING, 0, (LPARAM)"Neon");
+            SendMessage(hComboTheme, CB_SETCURSEL, 0, 0);
+            
             SetTimer(hwnd, 1, 1000, NULL);
             
             HWND hStat = CreateWindowA("STATIC", "Master Key:", WS_VISIBLE | WS_CHILD, 15, 62, 80, 25, hwnd, NULL, NULL, NULL);
@@ -316,6 +325,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (sel == 3) g_timeoutMs = 0;
                 g_lastActivity = GetTickCount();
             }
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == ID_COMBO_THEME) {
+                g_theme = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                DeleteObject(hbgBrush);
+                DeleteObject(hDarkBrush);
+                if (g_theme == 0) {
+                    hbgBrush = CreateSolidBrush(RGB(15, 15, 19));
+                    hDarkBrush = CreateSolidBrush(RGB(25, 25, 30));
+                } else if (g_theme == 1) {
+                    hbgBrush = CreateSolidBrush(RGB(240, 240, 245));
+                    hDarkBrush = CreateSolidBrush(RGB(255, 255, 255));
+                } else if (g_theme == 2) {
+                    hbgBrush = CreateSolidBrush(RGB(5, 5, 5));
+                    hDarkBrush = CreateSolidBrush(RGB(10, 15, 10));
+                }
+                SetClassLongPtrA(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hbgBrush);
+                InvalidateRect(hwnd, NULL, TRUE);
+                RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ALLCHILDREN);
+            }
             if (LOWORD(wParam) == ID_BTN_ENCRYPT) {
                 EncryptData(hData, hPass);
             } else if (LOWORD(wParam) == ID_BTN_DECRYPT) {
@@ -396,18 +423,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (strstr(text, "Weak")) SetTextColor(hdc, RGB(255, 71, 87));
                 else if (strstr(text, "Medium")) SetTextColor(hdc, RGB(255, 165, 2));
                 else if (strstr(text, "Strong")) SetTextColor(hdc, RGB(46, 213, 115));
-                else SetTextColor(hdc, RGB(240, 240, 245));
-                SetBkColor(hdc, RGB(15, 15, 19));
+                else SetTextColor(hdc, g_theme == 1 ? RGB(10, 10, 10) : (g_theme == 2 ? RGB(0, 255, 204) : RGB(240, 240, 245)));
+                SetBkColor(hdc, g_theme == 1 ? RGB(240, 240, 245) : (g_theme == 2 ? RGB(5, 5, 5) : RGB(15, 15, 19)));
                 return (LRESULT)hbgBrush;
             }
-            SetTextColor(hdc, RGB(240, 240, 245));
-            SetBkColor(hdc, RGB(15, 15, 19));
+            SetTextColor(hdc, g_theme == 1 ? RGB(10, 10, 10) : (g_theme == 2 ? RGB(0, 255, 204) : RGB(240, 240, 245)));
+            SetBkColor(hdc, g_theme == 1 ? RGB(240, 240, 245) : (g_theme == 2 ? RGB(5, 5, 5) : RGB(15, 15, 19)));
             return (LRESULT)hbgBrush;
         }
         case WM_CTLCOLOREDIT: {
             HDC hdc = (HDC)wParam;
-            SetTextColor(hdc, RGB(240, 240, 245));
-            SetBkColor(hdc, RGB(25, 25, 30));
+            SetTextColor(hdc, g_theme == 1 ? RGB(10, 10, 10) : (g_theme == 2 ? RGB(0, 255, 204) : RGB(240, 240, 245)));
+            SetBkColor(hdc, g_theme == 1 ? RGB(255, 255, 255) : (g_theme == 2 ? RGB(10, 15, 10) : RGB(25, 25, 30)));
             return (LRESULT)hDarkBrush;
         }
         case WM_DESTROY: {
