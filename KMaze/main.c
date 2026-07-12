@@ -217,19 +217,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
                 float oldDX = dX;
-                dX = dX * (float)cos(-rotSpeed) - dY * (float)sin(-rotSpeed);
-                dY = oldDX * (float)sin(-rotSpeed) + dY * (float)cos(-rotSpeed);
-                float oldPlaneX = planeX;
-                planeX = planeX * (float)cos(-rotSpeed) - planeY * (float)sin(-rotSpeed);
-                planeY = oldPlaneX * (float)sin(-rotSpeed) + planeY * (float)cos(-rotSpeed);
-            }
-            if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
-                float oldDX = dX;
                 dX = dX * (float)cos(rotSpeed) - dY * (float)sin(rotSpeed);
                 dY = oldDX * (float)sin(rotSpeed) + dY * (float)cos(rotSpeed);
                 float oldPlaneX = planeX;
                 planeX = planeX * (float)cos(rotSpeed) - planeY * (float)sin(rotSpeed);
                 planeY = oldPlaneX * (float)sin(rotSpeed) + planeY * (float)cos(rotSpeed);
+            }
+            if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
+                float oldDX = dX;
+                dX = dX * (float)cos(-rotSpeed) - dY * (float)sin(-rotSpeed);
+                dY = oldDX * (float)sin(-rotSpeed) + dY * (float)cos(-rotSpeed);
+                float oldPlaneX = planeX;
+                planeX = planeX * (float)cos(-rotSpeed) - planeY * (float)sin(-rotSpeed);
+                planeY = oldPlaneX * (float)sin(-rotSpeed) + planeY * (float)cos(-rotSpeed);
             }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
@@ -260,6 +260,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH k2 = CreateSolidBrush(RGB(204, 153, 0));
             HBRUSH d1 = CreateSolidBrush(RGB(0, 153, 255));
             HBRUSH d2 = CreateSolidBrush(RGB(0, 102, 204));
+            
+            HBRUSH w1s = CreateSolidBrush(RGB(170, 0, 0));
+            HBRUSH w2s = CreateSolidBrush(RGB(120, 0, 0));
+            HBRUSH e1s = CreateSolidBrush(RGB(0, 204, 0));
+            HBRUSH e2s = CreateSolidBrush(RGB(0, 153, 0));
+            HBRUSH k1s = CreateSolidBrush(RGB(204, 153, 0));
+            HBRUSH k2s = CreateSolidBrush(RGB(153, 102, 0));
+            HBRUSH d1s = CreateSolidBrush(RGB(0, 102, 204));
+            HBRUSH d2s = CreateSolidBrush(RGB(0, 51, 153));
             
             for (int x = 0; x < W; x++) {
                 float cameraX = 2 * x / (float)W - 1;
@@ -303,18 +312,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int drawEnd = lineHeight / 2 + H / 2;
                 if (drawEnd >= H) drawEnd = H - 1;
                 
+                float wallX;
+                if (side == 0) wallX = pY + perpWallDist * rayDY;
+                else           wallX = pX + perpWallDist * rayDX;
+                wallX -= floor(wallX);
+                int tex = ((int)(wallX * 8.0f)) % 2;
+                
                 RECT wallRc = {x, drawStart, x+1, drawEnd};
                 if (hit == 2) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? e2 : e1);
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? e2s : e2) : (tex ? e1s : e1));
                 } else if (hit == 3) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? k2 : k1);
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? k2s : k2) : (tex ? k1s : k1));
                 } else if (hit == 4) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? d2 : d1);
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? d2s : d2) : (tex ? d1s : d1));
                 } else {
-                    FillRect(hdcMem, &wallRc, side == 1 ? w2 : w1);
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? w2s : w2) : (tex ? w1s : w1));
                 }
             }
             DeleteObject(w1); DeleteObject(w2); DeleteObject(e1); DeleteObject(e2); DeleteObject(k1); DeleteObject(k2); DeleteObject(d1); DeleteObject(d2);
+            DeleteObject(w1s); DeleteObject(w2s); DeleteObject(e1s); DeleteObject(e2s); DeleteObject(k1s); DeleteObject(k2s); DeleteObject(d1s); DeleteObject(d2s);
             
             // Draw UI
             char uiText[64];

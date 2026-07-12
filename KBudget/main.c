@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <shlobj.h>
 #include <commdlg.h>
+#include <string.h>
+#include <ctype.h>
 #include "resource.h"
 
 #define MAX_TRANSACTIONS 1000
@@ -21,6 +23,7 @@ int num_transactions = 0;
 HWND hMainWnd;
 HWND hList;
 HWND hBtnAdd;
+HWND hSearchEdit;
 HWND hLblTotal, hLblIncome, hLblExpense;
 
 HBRUSH hbgBrush;
@@ -72,9 +75,27 @@ void UpdateUI() {
     double total_income = 0;
     double total_expense = 0;
     
+    char searchTerm[128] = {0};
+    if (hSearchEdit) {
+        GetWindowText(hSearchEdit, searchTerm, sizeof(searchTerm));
+    }
+    for(int i = 0; searchTerm[i]; i++) searchTerm[i] = tolower((unsigned char)searchTerm[i]);
+    
     SendMessage(hList, LB_RESETCONTENT, 0, 0);
     
     for (int i = 0; i < num_transactions; i++) {
+        char catLower[64], descLower[128];
+        strncpy(catLower, transactions[i].category, 64);
+        strncpy(descLower, transactions[i].description, 128);
+        for(int j = 0; catLower[j]; j++) catLower[j] = tolower((unsigned char)catLower[j]);
+        for(int j = 0; descLower[j]; j++) descLower[j] = tolower((unsigned char)descLower[j]);
+        
+        if (searchTerm[0] != '\0') {
+            if (strstr(catLower, searchTerm) == NULL && strstr(descLower, searchTerm) == NULL) {
+                continue;
+            }
+        }
+        
         if (transactions[i].is_income) {
             total_income += transactions[i].amount;
         } else {
@@ -252,9 +273,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HWND hBtnExp = CreateWindow("BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 200, 150, 30, hwnd, (HMENU)3, NULL, NULL);
                 
+            hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+                250, 20, 500, 25, hwnd, (HMENU)4, NULL, NULL);
             hList = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOTIFY,
-                250, 20, 500, 300, hwnd, NULL, NULL, NULL);
+                250, 50, 500, 270, hwnd, NULL, NULL, NULL);
             
+            SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblTotal, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblIncome, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblExpense, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -271,8 +295,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             {
                 int width = LOWORD(lParam);
                 int height = HIWORD(lParam);
+                if (hSearchEdit) {
+                    MoveWindow(hSearchEdit, 250, 20, width - 270, 25, TRUE);
+                }
                 if (hList) {
-                    MoveWindow(hList, 250, 20, width - 270, height - 40, TRUE);
+                    MoveWindow(hList, 250, 50, width - 270, height - 70, TRUE);
                 }
             }
             return 0;
@@ -286,7 +313,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
         case WM_COMMAND:
-            if (LOWORD(wParam) == 1) {
+            if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == 4) {
+                UpdateUI();
+            } else if (LOWORD(wParam) == 1) {
                 DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADD_TRANSACTION), hwnd, AddDialogProc);
             } else if (LOWORD(wParam) == 2) {
                 ImportCSV(hwnd);

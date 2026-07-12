@@ -355,6 +355,7 @@
         
         <section class="glass-panel">
             <h2>Transactions</h2>
+            <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="margin-bottom: 1rem;" oninput="render()">
             <div class="transaction-list" id="transaction-list">
                 <!-- Transactions injected via JS -->
             </div>
@@ -566,6 +567,12 @@
         }
 
         function render() {
+            const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase();
+            const filteredTransactions = transactions.filter(t => 
+                (t.description || '').toLowerCase().includes(searchTerm) || 
+                (t.category || '').toLowerCase().includes(searchTerm)
+            );
+
             // 1. Calculate Summary
             let income = 0;
             let expense = 0;
@@ -574,7 +581,7 @@
             const categoryTotals = {};
             expenseCategories.forEach(c => categoryTotals[c] = 0);
 
-            transactions.forEach(t => {
+            filteredTransactions.forEach(t => {
                 if (t.type === 'income') {
                     income += t.amount;
                 } else {
@@ -598,10 +605,14 @@
             // 2. Render List
             transactionList.innerHTML = '';
             
-            if (transactions.length === 0) {
-                transactionList.innerHTML = '<div class="empty-state">No transactions yet. Click + New Transaction to add one.</div>';
+            if (filteredTransactions.length === 0) {
+                if (transactions.length === 0) {
+                    transactionList.innerHTML = '<div class="empty-state">No transactions yet. Click + New Transaction to add one.</div>';
+                } else {
+                    transactionList.innerHTML = '<div class="empty-state">No transactions found matching your search.</div>';
+                }
             } else {
-                transactions.forEach(t => {
+                filteredTransactions.forEach(t => {
                     const isIncome = t.type === 'income';
                     const amountClass = isIncome ? 'text-success' : 'text-danger';
                     const sign = isIncome ? '+' : '-';

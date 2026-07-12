@@ -53,7 +53,8 @@
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
+      gain.gain.setValueAtTime(1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + dur);
       osc.stop(audioCtx.currentTime + dur);
   }
   

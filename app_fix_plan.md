@@ -49,6 +49,7 @@
 - **KFont**: Verified kfont.html font preview logic. Fixed GDI resource leaks (HFONT and HBRUSH) in main.c on WM_DESTROY.
 - **KHex**: Verified khex.html hex conversion logic. Fixed GDI resource leaks (HFONT, HBRUSH, HBRUSH) in main.c on WM_DESTROY.
 - **KImage**: Verified `kimage.html` rotation and filter logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+- **KPac**: Fixed TypeError in `kpac.html` Web Audio API where `exponentialRampToValueAtTime` was called on the `GainNode` instead of its `gain` AudioParam.
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KJournal.
 

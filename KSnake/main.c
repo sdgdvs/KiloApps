@@ -191,6 +191,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             if (game_state != 0) {
+                RECT clientRect;
+                GetClientRect(hwnd, &clientRect);
+                HBRUSH borderBrush = CreateSolidBrush(RGB(102, 102, 102));
+                FrameRect(hdc, &clientRect, borderBrush);
+                InflateRect(&clientRect, -1, -1);
+                FrameRect(hdc, &clientRect, borderBrush);
+                DeleteObject(borderBrush);
+                
                 char score_text[64];
                 wsprintf(score_text, "Score: %d  High: %d", score, high_score);
                 SetTextColor(hdc, RGB(255, 255, 255));

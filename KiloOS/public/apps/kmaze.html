@@ -168,19 +168,19 @@
 
       if (keys['ArrowRight'] || keys['d']) {
           let oldDX = dX;
-          dX = dX * Math.cos(-rotSpeed) - dY * Math.sin(-rotSpeed);
-          dY = oldDX * Math.sin(-rotSpeed) + dY * Math.cos(-rotSpeed);
-          let oldPlaneX = planeX;
-          planeX = planeX * Math.cos(-rotSpeed) - planeY * Math.sin(-rotSpeed);
-          planeY = oldPlaneX * Math.sin(-rotSpeed) + planeY * Math.cos(-rotSpeed);
-      }
-      if (keys['ArrowLeft'] || keys['a']) {
-          let oldDX = dX;
           dX = dX * Math.cos(rotSpeed) - dY * Math.sin(rotSpeed);
           dY = oldDX * Math.sin(rotSpeed) + dY * Math.cos(rotSpeed);
           let oldPlaneX = planeX;
           planeX = planeX * Math.cos(rotSpeed) - planeY * Math.sin(rotSpeed);
           planeY = oldPlaneX * Math.sin(rotSpeed) + planeY * Math.cos(rotSpeed);
+      }
+      if (keys['ArrowLeft'] || keys['a']) {
+          let oldDX = dX;
+          dX = dX * Math.cos(-rotSpeed) - dY * Math.sin(-rotSpeed);
+          dY = oldDX * Math.sin(-rotSpeed) + dY * Math.cos(-rotSpeed);
+          let oldPlaneX = planeX;
+          planeX = planeX * Math.cos(-rotSpeed) - planeY * Math.sin(-rotSpeed);
+          planeY = oldPlaneX * Math.sin(-rotSpeed) + planeY * Math.cos(-rotSpeed);
       }
   }
 
@@ -232,14 +232,20 @@
           let drawEnd = lineHeight / 2 + H / 2;
           if (drawEnd >= H) drawEnd = H - 1;
           
+          let wallX;
+          if (side === 0) wallX = pY + perpWallDist * rayDY;
+          else            wallX = pX + perpWallDist * rayDX;
+          wallX -= Math.floor(wallX);
+          let tex = Math.floor(wallX * 8) % 2;
+
           if (hit === 2) {
-              ctx.fillStyle = side === 1 ? '#00cc00' : '#00ff00';
+              ctx.fillStyle = side === 1 ? (tex ? '#009900' : '#00cc00') : (tex ? '#00cc00' : '#00ff00');
           } else if (hit === 3) {
-              ctx.fillStyle = side === 1 ? '#cc9900' : '#ffcc00';
+              ctx.fillStyle = side === 1 ? (tex ? '#996600' : '#cc9900') : (tex ? '#cc9900' : '#ffcc00');
           } else if (hit === 4) {
-              ctx.fillStyle = side === 1 ? '#0066cc' : '#0099ff';
+              ctx.fillStyle = side === 1 ? (tex ? '#003399' : '#0066cc') : (tex ? '#0066cc' : '#0099ff');
           } else {
-              ctx.fillStyle = side === 1 ? '#960000' : '#c80000';
+              ctx.fillStyle = side === 1 ? (tex ? '#770000' : '#960000') : (tex ? '#aa0000' : '#c80000');
           }
           ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
       }
