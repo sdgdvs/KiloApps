@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMail
+**Target App:** KMandel
 **Status:** Next
 
 ## Workflow
@@ -51,6 +51,8 @@
 - **KImage**: Verified `kimage.html` rotation and filter logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KPac**: Fixed TypeError in `kpac.html` Web Audio API where `exponentialRampToValueAtTime` was called on the `GainNode` instead of its `gain` AudioParam.
 - **KJournal**: Fixed UTC timezone bug in `kjournal.html` date logic. Removed redundant `renderList` call. Checked `main.c` (no issues found).
+- **KMail**: Fixed XSS vulnerability in `kmail.html` by safely creating DOM nodes for subject and sender. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KMail.
+All apps need systematic testing. Continue alphabetically from KMandel.
 

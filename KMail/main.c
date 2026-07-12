@@ -35,6 +35,7 @@ int currentFolder = 0; // 0=inbox, 1=sent, 2=trash
 int currentEmailId = -1;
 
 HBRUSH hbgMain, hbgList;
+HFONT hFont, hBold;
 COLORREF textCol = RGB(248, 250, 252);
 COLORREF bgMainCol = RGB(15, 23, 42);
 COLORREF bgListCol = RGB(30, 41, 59);
@@ -77,8 +78,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbgMain = CreateSolidBrush(bgMainCol);
             hbgList = CreateSolidBrush(bgListCol);
 
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            HFONT hBold = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hBold = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hBtnCompose = CreateWindowEx(0, "BUTTON", "Compose", WS_CHILD | WS_VISIBLE, 10, 10, 100, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
             SendMessage(hBtnCompose, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -191,6 +192,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             DeleteObject(hbgMain);
             DeleteObject(hbgList);
+            DeleteObject(hFont);
+            DeleteObject(hBold);
             PostQuitMessage(0);
             break;
         default:

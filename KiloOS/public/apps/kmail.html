@@ -247,7 +247,18 @@
     filtered.forEach(em => {
       let d = document.createElement('div');
       d.className = `item ${em.unread ? 'unread' : ''} ${selectedId === em.id ? 'selected' : ''}`;
-      d.innerHTML = `<div class="subject">${em.subject}</div><div class="sender">${em.folder==='sent' ? 'To: '+em.sender : em.sender}</div>`;
+      
+      let subjDiv = document.createElement('div');
+      subjDiv.className = 'subject';
+      subjDiv.textContent = em.subject;
+      
+      let senderDiv = document.createElement('div');
+      senderDiv.className = 'sender';
+      senderDiv.textContent = em.folder === 'sent' ? 'To: ' + em.sender : em.sender;
+      
+      d.appendChild(subjDiv);
+      d.appendChild(senderDiv);
+      
       d.onclick = () => selectEmail(em.id);
       list.appendChild(d);
     });
