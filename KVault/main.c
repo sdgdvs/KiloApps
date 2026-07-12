@@ -323,6 +323,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     while (GetMessage(&msg, NULL, 0, 0)) {
         if (msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) {
             g_lastActivity = GetTickCount();
+            if (msg.message == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
+                if (msg.wParam == 'S') {
+                    SendMessage(hwnd, WM_COMMAND, ID_BTN_SAVE, 0);
+                    continue;
+                } else if (msg.wParam == 'L') {
+                    SetWindowTextA(GetDlgItem(hwnd, ID_EDIT_DATA), "");
+                    SetWindowTextA(GetDlgItem(hwnd, ID_EDIT_PASS), "");
+                    MessageBoxA(hwnd, "Vault locked (Ctrl+L).", "KVault", MB_OK | MB_ICONINFORMATION);
+                    continue;
+                }
+            }
         }
         if (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST) {
             g_lastActivity = GetTickCount();
