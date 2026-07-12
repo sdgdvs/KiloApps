@@ -28,6 +28,31 @@ const char* pieceChars[] = {
 int selX = -1;
 int selY = -1;
 int whiteTurn = 1;
+int gameOver = 0;
+int winner = 0; // 1 = White, 2 = Black
+
+void ResetGame() {
+    int initialBoard[8][8] = {
+        {10, 8, 9, 11, 12, 9, 8, 10},
+        {7,  7, 7,  7,  7, 7, 7,  7},
+        {0,  0, 0,  0,  0, 0, 0,  0},
+        {0,  0, 0,  0,  0, 0, 0,  0},
+        {0,  0, 0,  0,  0, 0, 0,  0},
+        {0,  0, 0,  0,  0, 0, 0,  0},
+        {1,  1, 1,  1,  1, 1, 1,  1},
+        {4,  2, 3,  5,  6, 3, 2,  4}
+    };
+    for(int y=0; y<8; y++) {
+        for(int x=0; x<8; x++) {
+            board[y][x] = initialBoard[y][x];
+        }
+    }
+    selX = -1;
+    selY = -1;
+    whiteTurn = 1;
+    gameOver = 0;
+    winner = 0;
+}
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -73,10 +98,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             oldFont = SelectObject(hdc, sFont);
             SetTextColor(hdc, RGB(255, 255, 255));
             
-            if (whiteTurn) {
-                DrawTextA(hdc, "White's Turn", -1, &statusRc, DT_LEFT);
+            if (gameOver) {
+                if (winner == 1) DrawTextA(hdc, "White Wins! Press 'R' to Restart", -1, &statusRc, DT_LEFT);
+                else DrawTextA(hdc, "Black Wins! Press 'R' to Restart", -1, &statusRc, DT_LEFT);
             } else {
-                DrawTextA(hdc, "Black's Turn", -1, &statusRc, DT_LEFT);
+                if (whiteTurn) {
+                    DrawTextA(hdc, "White's Turn", -1, &statusRc, DT_LEFT);
+                } else {
+                    DrawTextA(hdc, "Black's Turn", -1, &statusRc, DT_LEFT);
+                }
             }
             SelectObject(hdc, oldFont);
             DeleteObject(sFont);
@@ -84,7 +114,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EndPaint(hwnd, &ps);
             break;
         }
+        case WM_KEYDOWN: {
+            if (wParam == 'R') {
+                ResetGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            break;
+        }
         case WM_LBUTTONDOWN: {
+            if (gameOver) break;
+            
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
             
@@ -156,11 +195,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                             
                             if (valid) {
+                                if (dstP == 6) { gameOver = 1; winner = 2; }
+                                else if (dstP == 12) { gameOver = 1; winner = 1; }
+                                
                                 board[ty][tx] = board[selY][selX];
                                 board[selY][selX] = 0;
                                 selX = -1;
                                 selY = -1;
                                 whiteTurn = !whiteTurn;
+                                MessageBeep(MB_OK);
                             }
                         }
                     }

@@ -104,6 +104,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPong (Added progressive ball speed and Web Audio/MessageBeep sound effects on paddle hit and scoring to both EXE and HTML)
 - [x] KMaze (Added start screen, win screen, best time tracking and elapsed time display to both EXE and HTML)
 - [x] KPac (Added high score tracking and sound effects to both EXE and HTML)
-- [ ] KChess
+- [x] KChess (Added King capture check/game over screen, 'R' to restart, and sound effects to both EXE and HTML)
 - [ ] Create New Game
 
