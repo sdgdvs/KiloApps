@@ -2,6 +2,9 @@
 #include <windows.h>
 #include <commctrl.h>
 
+#define ID_MONTHCAL 1000
+#define ID_BTN_TODAY 1001
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -12,18 +15,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             HWND hMonthCal = CreateWindowEx(0, MONTHCAL_CLASS, "",
                 WS_BORDER | WS_CHILD | WS_VISIBLE | MCS_DAYSTATE,
-                0, 0, 0, 0, hwnd, NULL, GetModuleHandle(NULL), NULL);
+                0, 0, 0, 0, hwnd, (HMENU)ID_MONTHCAL, GetModuleHandle(NULL), NULL);
+
+            HWND hBtnToday = CreateWindowEx(0, "BUTTON", "Go to Today",
+                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                0, 0, 0, 0, hwnd, (HMENU)ID_BTN_TODAY, GetModuleHandle(NULL), NULL);
 
             // Get required size for the month calendar
             RECT rc;
             SendMessage(hMonthCal, MCM_GETMINREQRECT, 0, (LPARAM)&rc);
             
-            // Adjust the window size to fit the calendar exactly
-            RECT winRc = {0, 0, rc.right, rc.bottom};
+            int btnHeight = 30;
+            // Adjust the window size to fit the calendar exactly + button
+            RECT winRc = {0, 0, rc.right, rc.bottom + btnHeight};
             AdjustWindowRect(&winRc, GetWindowLong(hwnd, GWL_STYLE), FALSE);
             
             SetWindowPos(hwnd, NULL, 0, 0, winRc.right - winRc.left, winRc.bottom - winRc.top, SWP_NOMOVE | SWP_NOZORDER);
             SetWindowPos(hMonthCal, NULL, 0, 0, rc.right, rc.bottom, SWP_NOMOVE | SWP_NOZORDER);
+            SetWindowPos(hBtnToday, NULL, 0, rc.bottom, rc.right, btnHeight, SWP_NOMOVE | SWP_NOZORDER);
 
             // Apply dark theme colors
             SendMessage(hMonthCal, MCM_SETCOLOR, MCSC_BACKGROUND, RGB(15, 23, 42));
@@ -34,6 +43,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hMonthCal, MCM_SETCOLOR, MCSC_TRAILINGTEXT, RGB(100, 116, 139));
             break;
         }
+        case WM_COMMAND:
+            if (LOWORD(wParam) == ID_BTN_TODAY) {
+                SYSTEMTIME st;
+                GetLocalTime(&st);
+                HWND hMonthCal = GetDlgItem(hwnd, ID_MONTHCAL);
+                SendMessage(hMonthCal, MCM_SETCURSEL, 0, (LPARAM)&st);
+            }
+            break;
         case WM_DESTROY:
             PostQuitMessage(0);
             break;

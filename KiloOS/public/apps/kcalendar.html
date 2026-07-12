@@ -31,7 +31,10 @@
 <body>
 <div class="header">
   <button id="prevBtn">&lt;</button>
-  <h2 id="monthYear">Month Year</h2>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <h2 id="monthYear">Month Year</h2>
+    <span id="todayBtn" style="font-size: 12px; cursor: pointer; color: var(--accent); margin-top: 2px;">Go to Today</span>
+  </div>
   <button id="nextBtn">&gt;</button>
 </div>
 <div class="calendar">
@@ -119,6 +122,11 @@
   };
   document.getElementById('nextBtn').onclick = () => {
       currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar();
+  };
+  document.getElementById('todayBtn').onclick = () => {
+      currentDate = new Date();
+      currentDate.setDate(1);
       renderCalendar();
   };
 
