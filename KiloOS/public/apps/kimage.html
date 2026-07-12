@@ -147,6 +147,11 @@
       <button id="btnSepia">Sepia</button>
       <button id="btnReset">Reset</button>
     </div>
+    <div class="toolbar-group" id="zoomTools" style="display:none;">
+      <button id="btnZoomIn" title="Zoom In">+</button>
+      <button id="btnZoomOut" title="Zoom Out">-</button>
+      <button id="btnZoomReset" title="Reset Zoom">1:1</button>
+    </div>
     <div class="title" id="title">No image selected</div>
   </div>
   
@@ -174,7 +179,8 @@
       flipH: 1,
       flipV: 1,
       filter: 'none',
-      originalData: null
+      originalData: null,
+      zoom: 1
     };
 
     const ui = {
@@ -187,7 +193,8 @@
       emptyState: document.getElementById('emptyState'),
       canvasContainer: document.getElementById('canvasContainer'),
       editTools: document.getElementById('editTools'),
-      filterTools: document.getElementById('filterTools')
+      filterTools: document.getElementById('filterTools'),
+      zoomTools: document.getElementById('zoomTools')
     };
 
     ui.btnOpen.onclick = () => ui.fileInput.click();
@@ -204,6 +211,7 @@
           state.flipH = 1;
           state.flipV = 1;
           state.filter = 'none';
+          state.zoom = 1;
           ui.title.textContent = file.name;
           
           ui.emptyState.style.display = 'none';
@@ -211,6 +219,8 @@
           ui.btnSave.style.display = 'flex';
           ui.editTools.style.display = 'flex';
           ui.filterTools.style.display = 'flex';
+          ui.zoomTools.style.display = 'flex';
+          ui.canvas.style = '';
           
           render();
           
@@ -248,6 +258,7 @@
       ui.ctx.restore();
       
       applyFilter();
+      updateZoom();
     }
 
     function applyFilter() {
@@ -276,6 +287,20 @@
       }
       ui.ctx.putImageData(imgData, 0, 0);
     }
+    
+    function updateZoom() {
+      if (state.zoom === 1) {
+        ui.canvas.style.width = '';
+        ui.canvas.style.height = '';
+        ui.canvas.style.maxWidth = '';
+        ui.canvas.style.maxHeight = '';
+      } else {
+        ui.canvas.style.width = (ui.canvas.width * state.zoom) + 'px';
+        ui.canvas.style.height = (ui.canvas.height * state.zoom) + 'px';
+        ui.canvas.style.maxWidth = 'none';
+        ui.canvas.style.maxHeight = 'none';
+      }
+    }
 
     document.getElementById('btnRotateL').onclick = () => { state.angle -= 90; render(); };
     document.getElementById('btnRotateR').onclick = () => { state.angle += 90; render(); };
@@ -288,6 +313,10 @@
     document.getElementById('btnReset').onclick = () => { 
       state.angle = 0; state.flipH = 1; state.flipV = 1; state.filter = 'none'; render(); 
     };
+    
+    document.getElementById('btnZoomIn').onclick = () => { state.zoom *= 1.25; updateZoom(); };
+    document.getElementById('btnZoomOut').onclick = () => { state.zoom /= 1.25; updateZoom(); };
+    document.getElementById('btnZoomReset').onclick = () => { state.zoom = 1; updateZoom(); };
 
     ui.btnSave.onclick = () => {
       if (!state.image) return;

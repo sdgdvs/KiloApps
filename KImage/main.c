@@ -6,9 +6,13 @@
 #define H 500
 
 HWND hBtnOpen;
+HWND hBtnZoomIn;
+HWND hBtnZoomOut;
+HWND hBtnZoomReset;
 HBITMAP hBmp = NULL;
 int bmpW = 0;
 int bmpH = 0;
+float g_zoom = 1.0f;
 
 void OpenFileDlg(HWND hwnd) {
     OPENFILENAMEA ofn = {0};
@@ -31,6 +35,7 @@ void OpenFileDlg(HWND hwnd) {
             GetObject(hBmp, sizeof(bm), &bm);
             bmpW = bm.bmWidth;
             bmpH = bm.bmHeight;
+            g_zoom = 1.0f;
             SetWindowTextA(hwnd, szFile);
         } else {
             MessageBoxA(hwnd, "Failed to load bitmap.", "Error", MB_OK);
@@ -48,11 +53,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE,
                 10, 10, 100, 30, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnZoomIn = CreateWindowEx(0, "BUTTON", "+",
+                WS_CHILD | WS_VISIBLE,
+                120, 10, 30, 30, hwnd, (HMENU)2, NULL, NULL);
+            SendMessage(hBtnZoomIn, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnZoomOut = CreateWindowEx(0, "BUTTON", "-",
+                WS_CHILD | WS_VISIBLE,
+                160, 10, 30, 30, hwnd, (HMENU)3, NULL, NULL);
+            SendMessage(hBtnZoomOut, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnZoomReset = CreateWindowEx(0, "BUTTON", "1:1",
+                WS_CHILD | WS_VISIBLE,
+                200, 10, 40, 30, hwnd, (HMENU)4, NULL, NULL);
+            SendMessage(hBtnZoomReset, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
                 OpenFileDlg(hwnd);
+            } else if (LOWORD(wParam) == 2) {
+                g_zoom *= 1.25f;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 3) {
+                g_zoom /= 1.25f;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 4) {
+                g_zoom = 1.0f;
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         }
@@ -73,15 +102,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int canvasW = rc.right - rc.left;
                 int canvasH = rc.bottom - rc.top - 50;
                 
-                if (drawW > canvasW || drawH > canvasH) {
-                    float ratio = (float)drawW / (float)drawH;
-                    if (canvasW / ratio <= canvasH) {
-                        drawW = canvasW;
-                        drawH = (int)(canvasW / ratio);
-                    } else {
-                        drawH = canvasH;
-                        drawW = (int)(canvasH * ratio);
+                if (g_zoom == 1.0f) {
+                    if (drawW > canvasW || drawH > canvasH) {
+                        float ratio = (float)drawW / (float)drawH;
+                        if (canvasW / ratio <= canvasH) {
+                            drawW = canvasW;
+                            drawH = (int)(canvasW / ratio);
+                        } else {
+                            drawH = canvasH;
+                            drawW = (int)(canvasH * ratio);
+                        }
                     }
+                } else {
+                    drawW = (int)(drawW * g_zoom);
+                    drawH = (int)(drawH * g_zoom);
                 }
                 
                 int x = (canvasW - drawW) / 2;
