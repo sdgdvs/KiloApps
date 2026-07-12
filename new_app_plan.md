@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 10
-**Status:** In Progress (Phase 9 Keyboard shortcuts Ctrl+S and Ctrl+L added to both Native and Web)
+**Phase:** 11
+**Status:** In Progress (Phase 10 Added password strength meter and cleared clipboard on lock for both Native and Web)
 
 ## App Lifecycle (14 phases per app)
 
