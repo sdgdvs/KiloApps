@@ -22,16 +22,22 @@ int MyRand() {
 }
 
 HWND hBtnRandomize;
+HWND hBtnToggle;
+int isLineChart = 0;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             randSeed = GetTickCount();
-            hBtnRandomize = CreateWindowEx(0, "BUTTON", "Randomize Data",
+            hBtnRandomize = CreateWindowEx(0, "BUTTON", "Randomize",
                 WS_CHILD | WS_VISIBLE,
-                W / 2 - 60, H - 70, 120, 24, hwnd, (HMENU)1, NULL, NULL);
+                W / 2 - 110, H - 70, 100, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnToggle = CreateWindowEx(0, "BUTTON", "Toggle Type",
+                WS_CHILD | WS_VISIBLE,
+                W / 2 + 10, H - 70, 100, 24, hwnd, (HMENU)2, NULL, NULL);
             HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hFont, TRUE);
             SetTimer(hwnd, 1, 16, NULL); // Animation timer
             break;
         }
@@ -56,6 +62,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int i = 0; i < 5; i++) {
                     target[i] = 10 + (MyRand() % 90); // 10 to 100
                 }
+            } else if (LOWORD(wParam) == 2) {
+                isLineChart = !isLineChart;
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         }
@@ -95,20 +104,53 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int barW = 30;
             int spacing = (chartW - (5 * barW)) / 6;
             
-            for (int i = 0; i < 5; i++) {
-                int bw = barW;
-                int bh = (values[i] * chartH) / 100;
-                int bx = chartX + spacing + i * (barW + spacing);
-                int by = chartY + chartH - bh;
-                
-                RECT br = { bx, by, bx + bw, chartY + chartH - 1 };
-                HBRUSH brBrush = CreateSolidBrush(colors[i]);
-                FillRect(memDC, &br, brBrush);
-                DeleteObject(brBrush);
-                
-                // Draw label
-                RECT lr = { bx - 10, chartY + chartH + 5, bx + bw + 10, chartY + chartH + 25 };
-                DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
+            if (!isLineChart) {
+                for (int i = 0; i < 5; i++) {
+                    int bw = barW;
+                    int bh = (values[i] * chartH) / 100;
+                    int bx = chartX + spacing + i * (barW + spacing);
+                    int by = chartY + chartH - bh;
+                    
+                    RECT br = { bx, by, bx + bw, chartY + chartH - 1 };
+                    HBRUSH brBrush = CreateSolidBrush(colors[i]);
+                    FillRect(memDC, &br, brBrush);
+                    DeleteObject(brBrush);
+                    
+                    // Draw label
+                    RECT lr = { bx - 10, chartY + chartH + 5, bx + bw + 10, chartY + chartH + 25 };
+                    DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
+                }
+            } else {
+                int prevX = 0, prevY = 0;
+                for (int i = 0; i < 5; i++) {
+                    int bw = barW;
+                    int bh = (values[i] * chartH) / 100;
+                    int bx = chartX + spacing + i * (barW + spacing) + bw / 2;
+                    int by = chartY + chartH - bh;
+                    
+                    if (i > 0) {
+                        HPEN linePen = CreatePen(PS_SOLID, 2, RGB(20, 184, 166)); // Teal line
+                        HGDIOBJ oldLinePen = SelectObject(memDC, linePen);
+                        MoveToEx(memDC, prevX, prevY, NULL);
+                        LineTo(memDC, bx, by);
+                        SelectObject(memDC, oldLinePen);
+                        DeleteObject(linePen);
+                    }
+                    prevX = bx; prevY = by;
+                    
+                    HBRUSH ptBrush = CreateSolidBrush(colors[i]);
+                    HGDIOBJ oldBrush = SelectObject(memDC, ptBrush);
+                    HPEN noPen = CreatePen(PS_NULL, 0, 0);
+                    HGDIOBJ oldP = SelectObject(memDC, noPen);
+                    Ellipse(memDC, bx - 6, by - 6, bx + 6, by + 6);
+                    SelectObject(memDC, oldBrush);
+                    SelectObject(memDC, oldP);
+                    DeleteObject(ptBrush);
+                    DeleteObject(noPen);
+                    
+                    RECT lr = { bx - 20, chartY + chartH + 5, bx + 20, chartY + chartH + 25 };
+                    DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
+                }
             }
             
             SelectObject(memDC, oldFont);

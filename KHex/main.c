@@ -7,6 +7,8 @@
 HWND hHex, hDec, hBin, hOct;
 BOOL updating = FALSE;
 HBRUSH hBrushBg;
+HFONT hFont;
+HBRUSH hEditBrush;
 
 unsigned int parseHex(const char* s) {
     unsigned int res = 0;
@@ -112,7 +114,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "Hex:", WS_CHILD | WS_VISIBLE, 10, 15, 30, 20, hwnd, NULL, NULL, NULL);
             hHex = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 15, W - 80, 22, hwnd, (HMENU)1, NULL, NULL);
@@ -146,11 +148,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, RGB(248, 250, 252));
             SetBkColor(hdc, RGB(30, 41, 59));
-            static HBRUSH hEditBrush = NULL;
             if (!hEditBrush) hEditBrush = CreateSolidBrush(RGB(30, 41, 59));
             return (LRESULT)hEditBrush;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
+            if (hEditBrush) DeleteObject(hEditBrush);
+            if (hBrushBg) DeleteObject(hBrushBg);
             PostQuitMessage(0);
             break;
         default:
