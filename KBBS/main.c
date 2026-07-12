@@ -106,8 +106,10 @@ unsigned char telSBData[64];
 int telSBLen = 0;
 
 SOCKET sock = INVALID_SOCKET;
-HWND hMain, hHost, hPort, hBtn, hCombo, hStatus;
+HWND hMain, hHost, hPort, hBtn, hCombo, hEcho, hStatus;
 HFONT hTermFont;
+int bytesRx = 0;
+int bytesTx = 0;
 
 struct BBS { const char* name; const char* host; int port; };
 struct BBS bbsList[] = {
@@ -508,8 +510,16 @@ void ProcessTelnetByte(unsigned char ch) {
     }
 }
 
+const char* lastStatus = "Disconnected";
+void UpdateStatus(void) {
+    char buf[128];
+    wsprintfA(buf, "%s | RX: %d B | TX: %d B", lastStatus, bytesRx, bytesTx);
+    SetWindowTextA(hStatus, buf);
+}
+
 void SetStatusText(const char* text) {
-    SetWindowTextA(hStatus, text);
+    lastStatus = text;
+    UpdateStatus();
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -538,10 +548,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 dpiScale(342), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)100, 0, 0);
 
             hCombo = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
-                dpiScale(428), dpiScale(4), dpiScale(200), dpiScale(400), hwnd, (HMENU)101, 0, 0);
+                dpiScale(428), dpiScale(4), dpiScale(150), dpiScale(400), hwnd, (HMENU)101, 0, 0);
+            
+            hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+                dpiScale(582), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
 
             /* Status bar */
-            hStatus = CreateWindowA("STATIC", "Disconnected", WS_CHILD | WS_VISIBLE | SS_LEFT,
+            hStatus = CreateWindowA("STATIC", "Disconnected | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
                 dpiScale(5), dpiScale(30 + TERM_ROWS * 16 + 4), dpiScale(640), dpiScale(18), hwnd, 0, 0, 0);
 
             /* Set fonts */
@@ -549,6 +562,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             /* Populate BBS list */
@@ -608,6 +622,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ansiState = STATE_NORMAL;
                 ansiParamLen = 0;
                 telState = TEL_STATE_NORMAL;
+                bytesRx = 0;
+                bytesTx = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
                 RECT cr;
                 GetClientRect(hwnd, &cr);
@@ -642,6 +658,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int ret = recv(sock, (char*)buf, sizeof(buf), 0);
                 if (ret > 0) {
                     int i;
+                    bytesRx += ret;
+                    UpdateStatus();
                     for (i = 0; i < ret; i++) {
                         ProcessTelnetByte(buf[i]);
                     }
@@ -786,6 +804,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char ch = (char)wParam;
                 scrollOffset = 0;
                 send(sock, &ch, 1, 0);
+                bytesTx += 1;
+                UpdateStatus();
+                if (SendMessageA(hEcho, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                    ProcessTelnetByte((unsigned char)ch);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
             }
             return 0;
         }
@@ -825,6 +849,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (seq && seqLen > 0) {
                 send(sock, seq, seqLen, 0);
+                bytesTx += seqLen;
+                UpdateStatus();
                 return 0;
             }
             break;

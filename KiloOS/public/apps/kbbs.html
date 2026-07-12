@@ -62,6 +62,9 @@
         <input type="text" id="host" placeholder="" value="" disabled title="EXE only feature. Select a BBS from the dropdown.">
         <span>Port:</span>
         <input type="text" id="port" value="23" disabled title="EXE only feature">
+        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
+            <input type="checkbox" id="localEcho"> Echo
+        </label>
         <button id="btnConn" onclick="toggleConnect()">Connect</button>
         <select id="bbsSelect"></select>
     </div>
@@ -80,7 +83,11 @@
     const COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
     const canvas = document.getElementById('terminal');
     const ctx = canvas.getContext('2d');
-    let ws = null, bytesRx = 0;
+    let ws = null, bytesRx = 0, bytesTx = 0;
+
+    function updateBytes() {
+        document.getElementById('bytesInfo').textContent = 'RX: ' + bytesRx + ' B | TX: ' + bytesTx + ' B';
+    }
 
     // ─── ANSI Color Palette (Modern Vibrant) ───
     const COLORS = [
@@ -307,7 +314,8 @@
         initScreen();
         render();
         setStatus('connecting', 'Connecting to ' + url + '...');
-        bytesRx = 0;
+        bytesRx = 0; bytesTx = 0;
+        updateBytes();
 
         try {
             ws = new WebSocket(url);
@@ -327,7 +335,7 @@
                     text = e.data;
                 }
                 bytesRx += text.length;
-                document.getElementById('bytesInfo').textContent = bytesRx + ' bytes';
+                updateBytes();
                 processData(text);
             };
             ws.onclose = () => {
@@ -383,6 +391,8 @@
             default:
                 if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
                     ws.send(e.key);
+                    bytesTx += 1; updateBytes();
+                    if (document.getElementById('localEcho').checked) processData(e.key);
                     e.preventDefault();
                     return;
                 }
@@ -390,13 +400,21 @@
                     const code = e.key.toUpperCase().charCodeAt(0) - 64;
                     if (code >= 0 && code <= 31) {
                         ws.send(String.fromCharCode(code));
+                        bytesTx += 1; updateBytes();
+                        if (document.getElementById('localEcho').checked) processData(String.fromCharCode(code));
                         e.preventDefault();
                         return;
                     }
                 }
                 return;
         }
-        if (seq) { ws.send(seq); e.preventDefault(); scrollOffset = 0; render(); }
+        if (seq) { 
+            ws.send(seq); 
+            bytesTx += seq.length; updateBytes();
+            e.preventDefault(); 
+            scrollOffset = 0; 
+            render(); 
+        }
     });
     
     canvas.addEventListener('wheel', (e) => {
