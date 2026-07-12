@@ -39,7 +39,6 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KClock
 - KPong
 - KDB
-- KDraw
 - KFont
 - KMail
 - KMandel
@@ -51,7 +50,6 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KNote
 - KPass
 - KMedia
-- KWrite
 - KNet
 - KZip
 - KPaint
@@ -62,7 +60,6 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KSolitaire
 - KTerm
 - KSynth
-- KSound
 - KTask
 - KSys
 - KRogue
