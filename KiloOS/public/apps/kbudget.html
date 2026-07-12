@@ -5,24 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KBudget</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
         :root {
             --bg-color: #0f172a;
             --text-color: #f8fafc;
             --glass-bg: rgba(30, 41, 59, 0.7);
             --glass-border: rgba(255, 255, 255, 0.1);
             --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
             --success-color: #10b981;
             --danger-color: #ef4444;
+            --input-bg: rgba(15, 23, 42, 0.5);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             height: 100vh;
@@ -39,6 +43,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            z-index: 10;
         }
 
         .header h1 {
@@ -46,12 +51,27 @@
             font-weight: 600;
         }
 
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+        }
+
         .main-content {
             flex: 1;
             padding: 2rem;
             overflow-y: auto;
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 300px 1fr;
             gap: 2rem;
         }
 
@@ -61,6 +81,14 @@
             border-radius: 12px;
             padding: 1.5rem;
             backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .glass-panel h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
         }
 
         .summary-card {
@@ -69,12 +97,14 @@
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.05);
             margin-bottom: 1rem;
+            border: 1px solid var(--glass-border);
         }
 
         .summary-card h3 {
             font-size: 0.875rem;
             color: #94a3b8;
             margin-bottom: 0.5rem;
+            font-weight: 500;
         }
 
         .summary-card p {
@@ -86,37 +116,484 @@
         .text-danger { color: var(--danger-color); }
         .text-primary { color: var(--primary-color); }
 
+        .transaction-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .transaction-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .transaction-desc {
+            font-weight: 500;
+        }
+
+        .transaction-meta {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .transaction-category {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #94a3b8;
+            padding: 3rem 1rem;
+            font-style: italic;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-color);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #cbd5e1;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 0.75rem;
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .delete-btn {
+            background: transparent;
+            color: #64748b;
+            border: none;
+            cursor: pointer;
+            margin-left: 1rem;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .transaction-right {
+            display: flex;
+            align-items: center;
+        }
+
+        #chart-container {
+            width: 100%;
+            height: 150px;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: flex-end;
+            padding: 10px;
+            gap: 5px;
+        }
+
+        .chart-bar-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            height: 100%;
+            gap: 5px;
+        }
+
+        .chart-bar {
+            width: 100%;
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+            min-height: 2px;
+        }
+
+        .chart-label {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <h1>KBudget</h1>
-        <button style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">+ New Transaction</button>
+        <button class="btn" onclick="openModal()">+ New Transaction</button>
     </header>
+    
     <main class="main-content">
         <aside class="glass-panel">
             <h2>Summary</h2>
-            <div style="margin-top: 1.5rem;">
+            <div>
                 <div class="summary-card">
                     <h3>Total Balance</h3>
-                    <p class="text-primary">$0.00</p>
+                    <p class="text-primary" id="total-balance">$0.00</p>
                 </div>
                 <div class="summary-card">
                     <h3>Income</h3>
-                    <p class="text-success">+$0.00</p>
+                    <p class="text-success" id="total-income">+$0.00</p>
                 </div>
                 <div class="summary-card">
                     <h3>Expenses</h3>
-                    <p class="text-danger">-$0.00</p>
+                    <p class="text-danger" id="total-expense">-$0.00</p>
                 </div>
             </div>
+            <h3 style="font-size: 1rem; margin-top: 1.5rem; color: #cbd5e1; font-weight: 500;">Expenses by Category</h3>
+            <div id="chart-container">
+                <!-- Bars will be generated here -->
+            </div>
         </aside>
+        
         <section class="glass-panel">
-            <h2>Recent Transactions</h2>
-            <div style="margin-top: 1.5rem; text-align: center; color: #94a3b8; padding: 2rem;">
-                No transactions yet.
+            <h2>Transactions</h2>
+            <div class="transaction-list" id="transaction-list">
+                <!-- Transactions injected via JS -->
             </div>
         </section>
     </main>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h2>Add Transaction</h2>
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select id="type" class="form-control" required onchange="updateCategories()">
+                        <option value="expense">Expense</option>
+                        <option value="income">Income</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Amount ($)</label>
+                    <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required placeholder="0.00">
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" class="form-control" required>
+                        <!-- Options filled by JS -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description (Optional)</label>
+                    <input type="text" id="description" class="form-control" placeholder="What was this for?">
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let transactions = JSON.parse(localStorage.getItem('kbudget_transactions')) || [];
+        
+        const expenseCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Health', 'Other'];
+        const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gift', 'Other'];
+
+        // DOM Elements
+        const modal = document.getElementById('modal');
+        const form = document.getElementById('transaction-form');
+        const typeSelect = document.getElementById('type');
+        const categorySelect = document.getElementById('category');
+        const dateInput = document.getElementById('date');
+        const transactionList = document.getElementById('transaction-list');
+        const chartContainer = document.getElementById('chart-container');
+
+        // Init
+        function init() {
+            // Set default date to today
+            dateInput.valueAsDate = new Date();
+            updateCategories();
+            render();
+        }
+
+        // Functions
+        function openModal() {
+            modal.classList.add('active');
+            dateInput.valueAsDate = new Date();
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            form.reset();
+            updateCategories();
+        }
+
+        function updateCategories() {
+            const isExpense = typeSelect.value === 'expense';
+            const categories = isExpense ? expenseCategories : incomeCategories;
+            
+            categorySelect.innerHTML = '';
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categorySelect.appendChild(option);
+            });
+        }
+
+        function saveTransactions() {
+            localStorage.setItem('kbudget_transactions', JSON.stringify(transactions));
+        }
+
+        function addTransaction(e) {
+            e.preventDefault();
+            
+            const transaction = {
+                id: Date.now().toString(),
+                type: typeSelect.value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: categorySelect.value,
+                date: document.getElementById('date').value,
+                description: document.getElementById('description').value || categorySelect.value
+            };
+
+            transactions.push(transaction);
+            
+            // Sort by date (newest first)
+            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            saveTransactions();
+            render();
+            closeModal();
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveTransactions();
+            render();
+        }
+
+        function formatCurrency(amount) {
+            return '$' + amount.toFixed(2);
+        }
+
+        function formatDate(dateString) {
+            const options = { month: 'short', day: 'numeric', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        function render() {
+            // 1. Calculate Summary
+            let income = 0;
+            let expense = 0;
+            
+            // Category totals for chart
+            const categoryTotals = {};
+            expenseCategories.forEach(c => categoryTotals[c] = 0);
+
+            transactions.forEach(t => {
+                if (t.type === 'income') {
+                    income += t.amount;
+                } else {
+                    expense += t.amount;
+                    if (categoryTotals[t.category] !== undefined) {
+                        categoryTotals[t.category] += t.amount;
+                    } else {
+                        categoryTotals['Other'] += t.amount;
+                    }
+                }
+            });
+
+            const balance = income - expense;
+
+            document.getElementById('total-balance').textContent = formatCurrency(balance);
+            document.getElementById('total-balance').className = balance >= 0 ? 'text-primary' : 'text-danger';
+            
+            document.getElementById('total-income').textContent = '+' + formatCurrency(income);
+            document.getElementById('total-expense').textContent = '-' + formatCurrency(expense);
+
+            // 2. Render List
+            transactionList.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                transactionList.innerHTML = '<div class="empty-state">No transactions yet. Click + New Transaction to add one.</div>';
+            } else {
+                transactions.forEach(t => {
+                    const isIncome = t.type === 'income';
+                    const amountClass = isIncome ? 'text-success' : 'text-danger';
+                    const sign = isIncome ? '+' : '-';
+                    
+                    const el = document.createElement('div');
+                    el.className = 'transaction-item';
+                    el.innerHTML = `
+                        <div class="transaction-info">
+                            <span class="transaction-desc">${t.description}</span>
+                            <div class="transaction-meta">
+                                <span class="transaction-category">${t.category}</span>
+                                <span>${formatDate(t.date)}</span>
+                            </div>
+                        </div>
+                        <div class="transaction-right">
+                            <span class="transaction-amount ${amountClass}">${sign}${formatCurrency(t.amount)}</span>
+                            <button class="delete-btn" onclick="deleteTransaction('${t.id}')" title="Delete">✕</button>
+                        </div>
+                    `;
+                    transactionList.appendChild(el);
+                });
+            }
+
+            // 3. Render Chart
+            renderChart(categoryTotals, expense);
+        }
+
+        function renderChart(categoryTotals, totalExpense) {
+            chartContainer.innerHTML = '';
+            
+            if (totalExpense === 0) {
+                chartContainer.innerHTML = '<div style="width: 100%; text-align: center; color: #64748b; font-size: 0.8rem; align-self: center;">No expenses to chart</div>';
+                return;
+            }
+
+            // Find max for scaling
+            let maxVal = 0;
+            const validCategories = [];
+            
+            for (const [cat, val] of Object.entries(categoryTotals)) {
+                if (val > 0) {
+                    if (val > maxVal) maxVal = val;
+                    validCategories.push({cat, val});
+                }
+            }
+
+            // Create bars
+            validCategories.forEach(item => {
+                const percentage = (item.val / maxVal) * 100;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'chart-bar-wrapper';
+                wrapper.title = `${item.cat}: $${item.val.toFixed(2)}`;
+                
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                // Use a nice color (danger color for expense)
+                bar.style.backgroundColor = 'var(--danger-color)';
+                bar.style.opacity = '0.8';
+                
+                // Give it a tiny delay to animate in theoretically (though inline it just renders)
+                bar.style.height = `${percentage}%`;
+
+                const label = document.createElement('div');
+                label.className = 'chart-label';
+                // Abbreviate label if needed
+                label.textContent = item.cat.substring(0, 3);
+
+                wrapper.appendChild(bar);
+                wrapper.appendChild(label);
+                chartContainer.appendChild(wrapper);
+            });
+        }
+
+        // Event Listeners
+        form.addEventListener('submit', addTransaction);
+        
+        // Close modal on click outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Run
+        init();
+    </script>
 </body>
 </html>
