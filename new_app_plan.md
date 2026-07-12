@@ -31,9 +31,9 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** (None)
+**App:** KBudget
 **Phase:** 1
-**Status:** Ready to select a new app
+**Status:** In Progress (Phase 1 Scaffold)
 
 ## App Lifecycle (14 phases per app)
 

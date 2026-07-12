@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KBudget</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 1rem 2rem;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .summary-card {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 1rem;
+        }
+
+        .summary-card h3 {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card p {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .text-success { color: var(--success-color); }
+        .text-danger { color: var(--danger-color); }
+        .text-primary { color: var(--primary-color); }
+
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>KBudget</h1>
+        <button style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">+ New Transaction</button>
+    </header>
+    <main class="main-content">
+        <aside class="glass-panel">
+            <h2>Summary</h2>
+            <div style="margin-top: 1.5rem;">
+                <div class="summary-card">
+                    <h3>Total Balance</h3>
+                    <p class="text-primary">$0.00</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Income</h3>
+                    <p class="text-success">+$0.00</p>
+                </div>
+                <div class="summary-card">
+                    <h3>Expenses</h3>
+                    <p class="text-danger">-$0.00</p>
+                </div>
+            </div>
+        </aside>
+        <section class="glass-panel">
+            <h2>Recent Transactions</h2>
+            <div style="margin-top: 1.5rem; text-align: center; color: #94a3b8; padding: 2rem;">
+                No transactions yet.
+            </div>
+        </section>
+    </main>
+</body>
+</html>
