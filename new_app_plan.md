@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 4
-**Status:** In Progress (Phase 3 native C Win32 core functionality completed)
+**Phase:** 5
+**Status:** In Progress (Phase 4 UI polish for web and native completed)
 
 ## App Lifecycle (14 phases per app)
 
