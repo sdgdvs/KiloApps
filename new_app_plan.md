@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 3
-**Status:** In Progress (Phase 2 core Web Crypto functionality implemented)
+**Phase:** 4
+**Status:** In Progress (Phase 3 native C Win32 core functionality completed)
 
 ## App Lifecycle (14 phases per app)
 
