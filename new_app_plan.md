@@ -31,9 +31,9 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KVault
-**Phase:** 14
-**Status:** In Progress (Phase 13 Added visual themes (Dark, Light, Neon) to both Native and Web versions)
+**App:** (None)
+**Phase:** 1
+**Status:** Ready to select a new app
 
 ## App Lifecycle (14 phases per app)
 
@@ -65,7 +65,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. Pick a new app and start over.
 
 ## Completed Apps
-(none yet)
+- KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
