@@ -13,6 +13,7 @@
 #define ID_BTN_SAVE 107
 #define ID_EDIT_FIND 108
 #define ID_BTN_FIND 109
+#define ID_BTN_GENERATE 110
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -64,6 +65,28 @@ void DecryptData(HWND hTextEdit, HWND hPassEdit) {
     free(plainOut);
     free(hexText);
     free(pass);
+}
+
+void GeneratePassword(HWND hTextEdit) {
+    const char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+    int len = 16;
+    char pass[17];
+    for (int i = 0; i < len; i++) {
+        pass[i] = chars[rand() % (sizeof(chars) - 1)];
+    }
+    pass[len] = '\0';
+    
+    int textLen = GetWindowTextLengthA(hTextEdit);
+    char* newText = (char*)malloc(textLen + len + 3);
+    if (textLen > 0) {
+        GetWindowTextA(hTextEdit, newText, textLen + 1);
+        strcat(newText, "\r\n");
+        strcat(newText, pass);
+    } else {
+        strcpy(newText, pass);
+    }
+    SetWindowTextA(hTextEdit, newText);
+    free(newText);
 }
 
 void LoadFromFile(HWND hwnd, HWND hTextEdit) {
@@ -163,7 +186,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hFindEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             HWND hBtnFind = CreateWindowA("BUTTON", "Find", WS_VISIBLE | WS_CHILD | BS_FLAT, 400, 320, 80, 25, hwnd, (HMENU)ID_BTN_FIND, NULL, NULL);
             SendMessage(hBtnFind, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
+            SendMessage(hBtnGen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            srand(GetTickCount());
             break;
         }
         case WM_COMMAND: {
@@ -177,6 +203,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadFromFile(hwnd, hData);
             } else if (LOWORD(wParam) == ID_BTN_SAVE) {
                 SaveToFile(hwnd, hData);
+            } else if (LOWORD(wParam) == ID_BTN_GENERATE) {
+                GeneratePassword(hData);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
                 GetDlgItemTextA(hwnd, ID_EDIT_FIND, findText, 256);

@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 7
-**Status:** In Progress (Phase 6 Search/filtering for secrets added to both Native and Web)
+**Phase:** 8
+**Status:** In Progress (Phase 7 Password generator utility added to both Native and Web)
 
 ## App Lifecycle (14 phases per app)
 

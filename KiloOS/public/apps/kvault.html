@@ -388,7 +388,12 @@
                     </div>
                     <div class="input-group">
                         <label>Secret Value</label>
-                        <textarea id="new-secret-value" placeholder="Enter password, token, or secure note here..."></textarea>
+                        <div style="display:flex; gap:10px;">
+                            <textarea id="new-secret-value" placeholder="Enter password, token, or secure note here..." style="flex:1;"></textarea>
+                            <button class="btn secondary" style="align-self: flex-start; padding: 14px;" onclick="generatePassword()" title="Generate Password">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                            </button>
+                        </div>
                     </div>
                     <div style="display:flex; gap:16px; margin-top: 30px;">
                         <button class="btn secondary" style="flex:1" onclick="showVault()">Cancel</button>
@@ -568,6 +573,19 @@
             document.getElementById('new-secret-title').value = '';
             document.getElementById('new-secret-value').value = '';
             document.getElementById('new-secret-title').focus();
+        }
+        
+        function generatePassword() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+            let pass = "";
+            const length = 16;
+            const randomValues = new Uint32Array(length);
+            window.crypto.getRandomValues(randomValues);
+            for (let i = 0; i < length; i++) {
+                pass += chars[randomValues[i] % chars.length];
+            }
+            document.getElementById('new-secret-value').value = pass;
+            showNotification("Strong password generated");
         }
         
         async function saveNewSecret() {
