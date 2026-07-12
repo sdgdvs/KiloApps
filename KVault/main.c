@@ -14,11 +14,15 @@
 #define ID_EDIT_FIND 108
 #define ID_BTN_FIND 109
 #define ID_BTN_GENERATE 110
+#define ID_COMBO_TIMEOUT 111
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
 HBRUSH hDarkBrush;
 HFONT hFont, hTitleFont;
+
+DWORD g_lastActivity = 0;
+int g_timeoutMs = 60000;
 
 void EncryptData(HWND hTextEdit, HWND hPassEdit) {
     int textLen = GetWindowTextLengthA(hTextEdit);
@@ -160,6 +164,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hTitle = CreateWindowA("STATIC", "KVault - Secure Storage", WS_VISIBLE | WS_CHILD, 15, 15, 300, 30, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hTitleFont, TRUE);
             
+            HWND hStatTimeout = CreateWindowA("STATIC", "Auto-lock:", WS_VISIBLE | WS_CHILD, 320, 22, 70, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hStatTimeout, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            HWND hComboTimeout = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 395, 20, 90, 100, hwnd, (HMENU)ID_COMBO_TIMEOUT, NULL, NULL);
+            SendMessage(hComboTimeout, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"1 min");
+            SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"5 min");
+            SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"15 min");
+            SendMessage(hComboTimeout, CB_ADDSTRING, 0, (LPARAM)"Never");
+            SendMessage(hComboTimeout, CB_SETCURSEL, 0, 0);
+            
+            SetTimer(hwnd, 1, 1000, NULL);
+            
             HWND hStat = CreateWindowA("STATIC", "Master Key:", WS_VISIBLE | WS_CHILD, 15, 62, 80, 25, hwnd, NULL, NULL, NULL);
             SendMessage(hStat, WM_SETFONT, (WPARAM)hFont, TRUE);
             
@@ -192,7 +209,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             srand(GetTickCount());
             break;
         }
+        case WM_TIMER: {
+            if (wParam == 1) {
+                if (g_timeoutMs > 0) {
+                    DWORD idle = GetTickCount() - g_lastActivity;
+                    if (idle > (DWORD)g_timeoutMs) {
+                        int textLen = GetWindowTextLengthA(hData);
+                        int passLen = GetWindowTextLengthA(hPass);
+                        if (textLen > 0 || passLen > 0) {
+                            SetWindowTextA(hData, "");
+                            SetWindowTextA(hPass, "");
+                            MessageBoxA(hwnd, "Vault locked due to inactivity.", "KVault", MB_OK | MB_ICONINFORMATION);
+                        }
+                        g_lastActivity = GetTickCount();
+                    }
+                }
+            }
+            break;
+        }
         case WM_COMMAND: {
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == ID_COMBO_TIMEOUT) {
+                int sel = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                if (sel == 0) g_timeoutMs = 60000;
+                else if (sel == 1) g_timeoutMs = 300000;
+                else if (sel == 2) g_timeoutMs = 900000;
+                else if (sel == 3) g_timeoutMs = 0;
+                g_lastActivity = GetTickCount();
+            }
             if (LOWORD(wParam) == ID_BTN_ENCRYPT) {
                 EncryptData(hData, hPass);
             } else if (LOWORD(wParam) == ID_BTN_DECRYPT) {
@@ -275,8 +318,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
     
+    g_lastActivity = GetTickCount();
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
+        if (msg.message >= WM_KEYFIRST && msg.message <= WM_KEYLAST) {
+            g_lastActivity = GetTickCount();
+        }
+        if (msg.message >= WM_MOUSEFIRST && msg.message <= WM_MOUSELAST) {
+            g_lastActivity = GetTickCount();
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }

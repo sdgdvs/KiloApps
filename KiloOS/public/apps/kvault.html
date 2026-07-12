@@ -331,7 +331,13 @@
     <div class="container">
         <div class="header">
             <h1>🔒 KVault</h1>
-            <div id="auth-controls" style="display:none;">
+            <div id="auth-controls" style="display:none; align-items:center; gap:10px;">
+                <select id="auto-lock-select" onchange="updateAutoLock()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:white; padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+                    <option value="60000">Lock: 1 min</option>
+                    <option value="300000">Lock: 5 min</option>
+                    <option value="900000">Lock: 15 min</option>
+                    <option value="0">Lock: Never</option>
+                </select>
                 <button class="btn" onclick="lockVault()">Lock Vault</button>
             </div>
         </div>
@@ -410,6 +416,30 @@
         // Core State
         let masterKey = null;
         let vaultData = [];
+        let autoLockTimeout = 60000;
+        let idleTimer = null;
+
+        function updateAutoLock() {
+            autoLockTimeout = parseInt(document.getElementById('auto-lock-select').value);
+            localStorage.setItem('kvault_autolock', autoLockTimeout);
+            resetIdleTimer();
+        }
+
+        function resetIdleTimer() {
+            if (idleTimer) clearTimeout(idleTimer);
+            if (autoLockTimeout > 0 && masterKey) {
+                idleTimer = setTimeout(() => {
+                    if (masterKey) {
+                        lockVault();
+                        showNotification("Vault auto-locked due to inactivity", "error");
+                    }
+                }, autoLockTimeout);
+            }
+        }
+
+        ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer);
+        });
         
         // --- Cryptography Utilities (Web Crypto API) ---
         
@@ -469,6 +499,13 @@
         const STORAGE_KEY = 'kvault_data';
         
         function initAuthView() {
+            const savedAutoLock = localStorage.getItem('kvault_autolock');
+            if (savedAutoLock !== null) {
+                autoLockTimeout = parseInt(savedAutoLock);
+                const sel = document.getElementById('auto-lock-select');
+                if (sel) sel.value = autoLockTimeout;
+            }
+            
             const stored = localStorage.getItem(STORAGE_KEY);
             if (stored) {
                 document.getElementById('auth-title').innerText = "Unlock Vault";
@@ -553,6 +590,7 @@
             document.getElementById('auth-controls').style.display = 'none';
             initAuthView();
             showNotification("Vault locked");
+            resetIdleTimer();
         }
         
         // --- UI Flow ---
@@ -564,8 +602,9 @@
         
         function showVault() {
             switchView('view-vault');
-            document.getElementById('auth-controls').style.display = 'block';
+            document.getElementById('auth-controls').style.display = 'flex';
             renderSecrets();
+            resetIdleTimer();
         }
         
         function showAddSecret() {
