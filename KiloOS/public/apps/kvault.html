@@ -356,7 +356,8 @@
             <div id="view-vault" class="view-section">
                 <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 24px;">
                     <h2 style="margin:0; font-weight: 600;">Your Secrets</h2>
-                    <div style="display:flex; gap: 10px;">
+                    <div style="display:flex; gap: 10px; align-items: center;">
+                        <input type="text" id="search-input" placeholder="Search..." onkeyup="filterSecrets()" style="padding: 10px 14px; width: 140px; font-size: 14px; margin-right: 5px;">
                         <button class="btn secondary" onclick="importVault()">Import</button>
                         <button class="btn secondary" onclick="exportVault()">Export</button>
                         <button class="btn" onclick="showAddSecret()">
@@ -619,6 +620,33 @@
             });
         }
         
+        function filterSecrets() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const items = document.querySelectorAll('.secret-item');
+            let visibleCount = 0;
+            
+            items.forEach(item => {
+                const title = item.querySelector('.secret-item-header span').innerText.toLowerCase();
+                if (title.includes(query)) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            const empty = document.getElementById('empty-state');
+            if (vaultData.length > 0) {
+                if (visibleCount === 0) {
+                    empty.style.display = 'block';
+                    empty.querySelector('p').innerText = 'No secrets match your search.';
+                    empty.querySelector('button').style.display = 'none';
+                } else {
+                    empty.style.display = 'none';
+                }
+            }
+        }
+
         function renderSecrets() {
             const list = document.getElementById('secret-list');
             const empty = document.getElementById('empty-state');
@@ -626,6 +654,8 @@
             list.innerHTML = '';
             if (vaultData.length === 0) {
                 empty.style.display = 'block';
+                empty.querySelector('p').innerText = 'Your vault is empty.';
+                empty.querySelector('button').style.display = 'inline-flex';
                 list.style.display = 'none';
             } else {
                 empty.style.display = 'none';
@@ -657,6 +687,10 @@
                     document.getElementById(`secret-btn-copy-${secret.id}`).onclick = () => copySecret(secret.value);
                     document.getElementById(`secret-btn-delete-${secret.id}`).onclick = () => deleteSecret(secret.id);
                 });
+                
+                if (document.getElementById('search-input')) {
+                    filterSecrets();
+                }
             }
         }
         

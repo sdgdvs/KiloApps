@@ -11,6 +11,8 @@
 #define ID_EDIT_DATA 105
 #define ID_BTN_LOAD 106
 #define ID_BTN_SAVE 107
+#define ID_EDIT_FIND 108
+#define ID_BTN_FIND 109
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -157,6 +159,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            HWND hFindEdit = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL, 240, 320, 150, 25, hwnd, (HMENU)ID_EDIT_FIND, NULL, NULL);
+            SendMessage(hFindEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hBtnFind = CreateWindowA("BUTTON", "Find", WS_VISIBLE | WS_CHILD | BS_FLAT, 400, 320, 80, 25, hwnd, (HMENU)ID_BTN_FIND, NULL, NULL);
+            SendMessage(hBtnFind, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             break;
         }
         case WM_COMMAND: {
@@ -170,6 +177,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadFromFile(hwnd, hData);
             } else if (LOWORD(wParam) == ID_BTN_SAVE) {
                 SaveToFile(hwnd, hData);
+            } else if (LOWORD(wParam) == ID_BTN_FIND) {
+                char findText[256];
+                GetDlgItemTextA(hwnd, ID_EDIT_FIND, findText, 256);
+                if (strlen(findText) > 0) {
+                    int textLen = GetWindowTextLengthA(hData);
+                    char* text = (char*)malloc(textLen + 1);
+                    GetWindowTextA(hData, text, textLen + 1);
+                    
+                    DWORD startSel = 0, endSel = 0;
+                    SendMessage(hData, EM_GETSEL, (WPARAM)&startSel, (LPARAM)&endSel);
+                    
+                    char* pos = strstr(text + endSel, findText);
+                    if (!pos && endSel > 0) {
+                        pos = strstr(text, findText);
+                    }
+                    
+                    if (pos) {
+                        int index = (int)(pos - text);
+                        SendMessage(hData, EM_SETSEL, index, index + strlen(findText));
+                        SendMessage(hData, EM_SCROLLCARET, 0, 0);
+                        SetFocus(hData);
+                    } else {
+                        MessageBoxA(hwnd, "Text not found.", "Find", MB_OK | MB_ICONINFORMATION);
+                    }
+                    free(text);
+                }
             }
             break;
         }
