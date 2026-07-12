@@ -30,6 +30,7 @@ typedef double (__cdecl *log10_t)(double);
 typedef double (__cdecl *sqrt_t)(double);
 typedef double (__cdecl *exp_t)(double);
 typedef double (__cdecl *pow_t)(double, double);
+typedef double (__cdecl *fmod_t)(double, double);
 
 sprintf_t m_sprintf;
 atof_t m_atof;
@@ -41,6 +42,7 @@ log10_t m_log10;
 sqrt_t m_sqrt;
 exp_t m_exp;
 pow_t m_pow;
+fmod_t m_fmod;
 
 #define PI 3.14159265358979323846
 #define E  2.71828182845904523536
@@ -114,6 +116,7 @@ void DoCalculate() {
         }
     }
     else if (operator == '^') res = m_pow(operand1, operand2);
+    else if (operator == '%') res = m_fmod(operand1, operand2);
     
     operand1 = res;
     FormatDisplay(res);
@@ -154,13 +157,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             m_sqrt = (sqrt_t)GetProcAddress(hMsvcrt, "sqrt");
             m_exp = (exp_t)GetProcAddress(hMsvcrt, "exp");
             m_pow = (pow_t)GetProcAddress(hMsvcrt, "pow");
+            m_fmod = (fmod_t)GetProcAddress(hMsvcrt, "fmod");
 
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 10, 285, 28, hwnd, NULL, NULL, NULL);
             HFONT hFont = CreateFontA(24, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             char labels[35][6] = {
-                "MC",  "MR",  "M+",  "M-",  "",
+                "MC",  "MR",  "M+",  "M-",  "mod",
                 "sin", "cos", "tan", "pi", "C",
                 "ln",  "log", "sqr", "e",  "<",
                 "exp", "7",   "8",   "9",  "/",
@@ -169,7 +173,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 "1/x", "0",   ".",   "=",  "+"
             };
             int ids[35] = {
-                2001, 2002, 2003, 2004, 0,
+                2001, 2002, 2003, 2004, '%',
                 1001, 1002, 1003, 1010, 'C',
                 1004, 1005, 1006, 1011, '<',
                 1007, '7',  '8',  '9',  '/',
@@ -197,7 +201,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 isNewOperand = 1;
             } else if (id == '<') {
                 Backspace();
-            } else if (id == '+' || id == '-' || id == '*' || id == '/' || id == '^') {
+            } else if (id == '+' || id == '-' || id == '*' || id == '/' || id == '^' || id == '%') {
                 if (!isNewOperand && operator) DoCalculate(); // Chaining operators
                 operand1 = m_atof(displayBuffer);
                 operator = id;
@@ -252,6 +256,7 @@ void __stdcall MainEntry() {
             if (key >= '0' && key <= '9') {
                 if (!(GetKeyState(VK_SHIFT) & 0x8000)) cmd = key;
                 else if (key == '8') cmd = '*';
+                else if (key == '5') cmd = '%';
             }
             else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) cmd = key - VK_NUMPAD0 + '0';
             else if (key == VK_ADD) cmd = '+';
