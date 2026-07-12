@@ -173,6 +173,8 @@
         <div onclick="document.execCommand('paste')"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
         <div class="divider"></div>
         <div onclick="document.getElementById('editor').select()"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
+        <div class="divider"></div>
+        <div onclick="insertDateTime()"><span>Time/Date</span><span class="shortcut">F5</span></div>
       </div>
     </div>
     <div class="menu-item">View
@@ -269,6 +271,18 @@
       editor.setAttribute('wrap', wordWrap ? 'soft' : 'off');
     }
     
+    function insertDateTime() {
+      const dt = new Date();
+      const pad = (n) => n.toString().padStart(2, '0');
+      const formatted = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, start) + formatted + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + formatted.length;
+      checkInput();
+      updateStatus();
+    }
+    
     function checkInput() {
       const val = editor.value.toLowerCase();
       if (val.includes('script')) {
@@ -349,6 +363,7 @@
       if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveVFS(); }
       if (e.ctrlKey && e.key === 't') { e.preventDefault(); newTab(); }
       if (e.altKey && e.key === 'z') { e.preventDefault(); toggleWordWrap(); }
+      if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
     });
 
     async function openVFS() {
