@@ -128,8 +128,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int y = HIWORD(lParam);
                 MoveToEx(hdcMem, lastX, lastY, NULL);
                 LineTo(hdcMem, x, y);
-                lastX = x;
-                lastY = y;
                 
                 HDC hdc = GetDC(hwnd);
                 HPEN old = (HPEN)SelectObject(hdc, currentPen);
@@ -137,6 +135,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LineTo(hdc, x, y);
                 SelectObject(hdc, old);
                 ReleaseDC(hwnd, hdc);
+                
+                lastX = x;
+                lastY = y;
             }
             break;
         case WM_LBUTTONUP:

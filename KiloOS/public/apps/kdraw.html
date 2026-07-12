@@ -186,6 +186,16 @@
       const pos = getPos(e);
       lastX = pos.x;
       lastY = pos.y;
+      
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = currentSize;
+      ctx.strokeStyle = currentColor;
+      
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(lastX, lastY);
+      ctx.stroke();
   }
 
   function endPos() {

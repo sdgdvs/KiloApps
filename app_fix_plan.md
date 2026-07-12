@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KDraw
+**Target App:** KExplorer
 **Status:** In Progress
 
 ## Workflow
@@ -43,7 +43,8 @@
 - **KContacts**: Fixed `toLowerCase` undefined bug in `kcontacts.html` search filter. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KConverter**: Verified kconverter.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KDB**: Verified kdb.html logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+- **KDraw**: Fixed `main.c` bug where lines were drawn from updated coordinates instead of old coordinates (causing dotted lines). Fixed `kdraw.html` bug where clicking without moving didn't draw a dot.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KDraw.
+All apps need systematic testing. Continue alphabetically from KExplorer.
 
