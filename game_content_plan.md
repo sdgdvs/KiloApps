@@ -110,4 +110,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 **Loop 2**
 - [x] KMines (Added difficulty levels: Easy/Medium/Hard to both EXE and HTML)
 - [x] KRogue (Added Ice Storm spell & Teleport Trap to EXE, upgraded Web version toward Tier 2 with messages, stairs, gold, and varied enemies)
-- [ ] KSnake
+- [x] KSnake (Added randomly placed obstacles based on difficulty and sound effects to both EXE and HTML)

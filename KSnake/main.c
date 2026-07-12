@@ -11,6 +11,8 @@ struct Point snake[400];
 int snake_len = 3;
 int dir_x = 1, dir_y = 0;
 struct Point food = { 10, 10 };
+struct Point obstacles[50];
+int num_obstacles = 0;
 int game_state = 0; // 0 = Menu, 1 = Playing, 2 = Game Over
 int difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 int score = 0;
@@ -34,6 +36,18 @@ void InitGame() {
     current_speed = base_speed;
     game_state = 1;
     score = 0;
+    
+    num_obstacles = difficulty * 10;
+    for(int i=0; i<num_obstacles; i++) {
+        int ok = 0;
+        while(!ok) {
+            obstacles[i].x = random_int(GRID_WIDTH);
+            obstacles[i].y = random_int(GRID_HEIGHT);
+            ok = 1;
+            if (obstacles[i].y == 5 && (obstacles[i].x >= 2 && obstacles[i].x <= 6)) ok = 0;
+        }
+    }
+    PlaceFood();
 }
 
 unsigned int rng_state = 12345;
@@ -43,8 +57,18 @@ int random_int(int max) {
 }
 
 void PlaceFood() {
-    food.x = random_int(GRID_WIDTH);
-    food.y = random_int(GRID_HEIGHT);
+    int ok = 0;
+    while(!ok) {
+        food.x = random_int(GRID_WIDTH);
+        food.y = random_int(GRID_HEIGHT);
+        ok = 1;
+        for(int i=0; i<num_obstacles; i++) {
+            if (food.x == obstacles[i].x && food.y == obstacles[i].y) ok = 0;
+        }
+        for(int i=0; i<snake_len; i++) {
+            if (food.x == snake[i].x && food.y == snake[i].y) ok = 0;
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -76,8 +100,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            // Collision with obstacles
+            for(int i = 0; i < num_obstacles; i++) {
+                if (snake[0].x == obstacles[i].x && snake[0].y == obstacles[i].y) {
+                    game_state = 2;
+                }
+            }
+            
+            if (game_state == 2) {
+                MessageBeep(MB_ICONHAND);
+            }
+
             // Eat food
             if (snake[0].x == food.x && snake[0].y == food.y) {
+                MessageBeep(MB_OK);
                 if (snake_len < 400) {
                     snake[snake_len] = snake[snake_len-1]; // grow
                     snake_len++;
@@ -144,6 +180,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             (food.x + 1) * CELL_SIZE - 1, (food.y + 1) * CELL_SIZE - 1 };
                 FillRect(hdc, &fr, foodBrush);
                 DeleteObject(foodBrush);
+
+                HBRUSH obsBrush = CreateSolidBrush(RGB(100, 100, 100));
+                for(int i = 0; i < num_obstacles; i++) {
+                    RECT or = { obstacles[i].x * CELL_SIZE, obstacles[i].y * CELL_SIZE, 
+                                (obstacles[i].x + 1) * CELL_SIZE - 1, (obstacles[i].y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &or, obsBrush);
+                }
+                DeleteObject(obsBrush);
             }
 
             if (game_state != 0) {
