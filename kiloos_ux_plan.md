@@ -35,14 +35,18 @@
 ---
 
 ## Current Status
-- Implemented app folder navigation in the start menu to clean up the app list.
+- Glassmorphism isolated to prefers-reduced-motion media query.
+- Improved window minimize animation.
 
 ## Priorities
 
-### 1. Window Management Polish
-- Consider adding minimize/maximize animations for windows.
+### 1. Theme Consistency
+- Address any remaining spacing and typography issues.
+- Ensure all app icons and labels fit well.
 
 ## Completed Items
+- Window Management Polish: Improved minimize animations to scale down smoother towards the taskbar.
+- Theme Consistency: Ensured glassmorphism (backdrop-filter) is only applied inside the `prefers-reduced-motion: no-preference` media query for performance and accessibility.
 - Start Menu Polish: Implemented dynamic folder navigation within the start menu to prevent the app list from becoming an unreadable, infinitely scrolling dump. Added 'Back' button and folder drilling.
 - Taskbar Enhancements: Added horizontal scrolling support on wheel and improved the active app indicator with a glowing bottom border and `flex-shrink: 0` to prevent unreadable tabs.
 - Start Menu Polish: Improved start menu open animation by using `@keyframes` on mount, and replaced inline spacing/alignment styles with proper CSS classes.

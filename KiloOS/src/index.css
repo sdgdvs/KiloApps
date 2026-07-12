@@ -106,7 +106,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 
 .login-box {
   background: rgba(30, 35, 40, 0.4);
-  backdrop-filter: blur(15px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   padding: 40px;
@@ -276,7 +275,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   left: 10px;
   width: 450px;
   background: rgba(30, 35, 40, 0.85);
-  backdrop-filter: blur(15px);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1), 0 15px 40px rgba(0,0,0,0.6);
@@ -305,7 +303,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   font-size: 14px;
   outline: none;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-  backdrop-filter: blur(10px);
 }
 
 .start-search:hover {
@@ -458,8 +455,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   left: 50%;
   transform: translateX(-50%) translateY(5px);
   background: rgba(15, 20, 25, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   padding: 8px 12px;
   border-radius: 6px;
@@ -498,8 +493,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 
 .notification-toast {
   background: rgba(15, 20, 25, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-left: 3px solid var(--primary);
   border-radius: 6px;
@@ -601,8 +594,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   flex-direction: column;
   align-items: center;
   box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   z-index: 10000;
   animation: taskbarItemIn 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
@@ -656,7 +647,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 .resize-handle.sw { bottom: -3px; left: -3px; width: 10px; height: 10px; cursor: sw-resize; z-index: 100; }
 .xp-window.minimized {
   opacity: 0;
-  transform: scale(0.5) translateY(50vh);
+  transform: scale(0.6) translateY(40vh);
   pointer-events: none;
 }
 .xp-window.active {
@@ -797,7 +788,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(4px);
   z-index: 100000;
   display: flex;
   align-items: center;
@@ -896,7 +886,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   }
   
   /* Glassmorphism */
-  .taskbar {
+  .taskbar, .taskbar-preview, .notification-toast, .calendar-flyout {
     background: hsla(210, 15%, 20%, 0.75);
     backdrop-filter: blur(10px);
   }
@@ -904,9 +894,17 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
     background: hsla(210, 15%, 12%, 0.85);
     backdrop-filter: blur(10px);
   }
-  .start-menu {
-    background: hsla(210, 15%, 20%, 0.85);
-    backdrop-filter: blur(10px);
+  .start-menu, .start-search {
+    backdrop-filter: blur(15px);
+  }
+  .login-box {
+    backdrop-filter: blur(15px);
+  }
+  .os-modal-overlay {
+    backdrop-filter: blur(4px);
+  }
+  .context-menu {
+    backdrop-filter: blur(20px);
   }
 }
 
@@ -939,8 +937,6 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 .context-menu {
   position: absolute;
   background: rgba(15, 20, 25, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
