@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.45';
+const MICROS_VERSION = '0.3.46';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
 
@@ -287,11 +287,11 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
         </div>
         <div className="xp-controls">
           {app.exeUrl && (
-            <a href={app.exeUrl} download className="xp-btn" title="Download KApps.zip" onClick={e => e.stopPropagation()} style={{textDecoration:'none', color:'white', background:'linear-gradient(to bottom, #77a2df, #3b73c4)', marginRight:'5px'}}>↓</a>
+            <a href={app.exeUrl} download className="xp-btn xp-btn-dl" title="Download KApps.zip" onClick={e => e.stopPropagation()}>↓</a>
           )}
-          <div className="xp-btn" onClick={(e) => { e.stopPropagation(); onMinimize(); }}>_</div>
-          <div className="xp-btn" onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}>☐</div>
-          <div className="xp-btn xp-btn-close" onClick={(e) => { e.stopPropagation(); onClose(); }}>X</div>
+          <div className="xp-btn xp-btn-min" onClick={(e) => { e.stopPropagation(); onMinimize(); }} title="Minimize">−</div>
+          <div className="xp-btn xp-btn-max" onClick={(e) => { e.stopPropagation(); toggleMaximize(); }} title="Maximize">□</div>
+          <div className="xp-btn xp-btn-close" onClick={(e) => { e.stopPropagation(); onClose(); }} title="Close">×</div>
         </div>
       </div>
       <div className="xp-content">
@@ -314,8 +314,8 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
                   onClick={(e) => { e.stopPropagation(); }}
                   onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
                 >
-                  <img src={child.icon} alt={child.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated'}} />
-                  <div className="icon-label" style={{color: 'var(--text-main)', textAlign: 'center', marginTop: '4px'}}>{child.title}</div>
+                  <img src={child.icon} alt={child.title} style={{width:'32px', height:'32px', imageRendering: 'pixelated', marginTop: '4px'}} />
+                  <div className="icon-label">{child.title}</div>
                 </div>
               ))
             )}

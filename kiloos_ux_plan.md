@@ -45,6 +45,8 @@
 - Ensure all app icons and labels fit well.
 
 ## Completed Items
+- Theme Consistency: Improved desktop icon labels to use standard `Inter` weight 400 with a better text-shadow and background on hover/select. Removed inline styles from `folder-content` icons in `App.jsx` to inherit the robust `index.css` classes.
+- Window Management Polish: Updated window control buttons (minimize, maximize, close) to a macOS-style stoplight design with standard hover states, replacing the raw text symbols with more consistent styling.
 - Window Management Polish: Improved minimize animations to scale down smoother towards the taskbar.
 - Theme Consistency: Ensured glassmorphism (backdrop-filter) is only applied inside the `prefers-reduced-motion: no-preference` media query for performance and accessibility.
 - Start Menu Polish: Implemented dynamic folder navigation within the start menu to prevent the app list from becoming an unreadable, infinitely scrolling dump. Added 'Back' button and folder drilling.
