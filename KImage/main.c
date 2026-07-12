@@ -47,7 +47,8 @@ void OpenFileDlg(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            static HFONT hFont = NULL;
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hBtnOpen = CreateWindowEx(0, "BUTTON", "Open Bitmap",
                 WS_CHILD | WS_VISIBLE,
@@ -68,6 +69,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE,
                 200, 10, 40, 30, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hBtnZoomReset, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)hFont);
             break;
         }
         case WM_COMMAND: {
@@ -140,10 +142,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(brush);
             return 1;
         }
-        case WM_DESTROY:
+        case WM_DESTROY: {
             if (hBmp) DeleteObject(hBmp);
+            HFONT hFont = (HFONT)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;
+        }
         default:
             return DefWindowProc(hwnd, msg, wParam, lParam);
     }

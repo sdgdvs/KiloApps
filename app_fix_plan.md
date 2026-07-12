@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KImage
+**Target App:** KJournal
 **Status:** Next
 
 ## Workflow
@@ -48,6 +48,7 @@
 - **KExplorer**: Fixed XSS vulnerability in file/folder rendering and made file extension checking case-insensitive in kexplorer.html. (Web-only app)
 - **KFont**: Verified kfont.html font preview logic. Fixed GDI resource leaks (HFONT and HBRUSH) in main.c on WM_DESTROY.
 - **KHex**: Verified khex.html hex conversion logic. Fixed GDI resource leaks (HFONT, HBRUSH, HBRUSH) in main.c on WM_DESTROY.
+- **KImage**: Verified `kimage.html` rotation and filter logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KHex.
+All apps need systematic testing. Continue alphabetically from KJournal.
 
