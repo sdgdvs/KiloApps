@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <commdlg.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,6 +9,8 @@
 #define ID_BTN_CLEAR 103
 #define ID_EDIT_PASS 104
 #define ID_EDIT_DATA 105
+#define ID_BTN_LOAD 106
+#define ID_BTN_SAVE 107
 
 HWND hPass, hData;
 HBRUSH hbgBrush;
@@ -61,6 +64,66 @@ void DecryptData(HWND hTextEdit, HWND hPassEdit) {
     free(pass);
 }
 
+void LoadFromFile(HWND hwnd, HWND hTextEdit) {
+    OPENFILENAMEA ofn;
+    char szFile[260] = {0};
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    
+    if (GetOpenFileNameA(&ofn) == TRUE) {
+        HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD fileSize = GetFileSize(hFile, NULL);
+            if (fileSize > 0) {
+                char* buffer = (char*)malloc(fileSize + 1);
+                DWORD bytesRead;
+                if (ReadFile(hFile, buffer, fileSize, &bytesRead, NULL)) {
+                    buffer[bytesRead] = '\0';
+                    SetWindowTextA(hTextEdit, buffer);
+                }
+                free(buffer);
+            } else {
+                SetWindowTextA(hTextEdit, "");
+            }
+            CloseHandle(hFile);
+        }
+    }
+}
+
+void SaveToFile(HWND hwnd, HWND hTextEdit) {
+    OPENFILENAMEA ofn;
+    char szFile[260] = {0};
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_OVERWRITEPROMPT;
+    
+    if (GetSaveFileNameA(&ofn) == TRUE) {
+        HANDLE hFile = CreateFileA(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            int textLen = GetWindowTextLengthA(hTextEdit);
+            if (textLen > 0) {
+                char* buffer = (char*)malloc(textLen + 1);
+                GetWindowTextA(hTextEdit, buffer, textLen + 1);
+                DWORD bytesWritten;
+                WriteFile(hFile, buffer, textLen, &bytesWritten, NULL);
+                free(buffer);
+            }
+            CloseHandle(hFile);
+        }
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
@@ -86,8 +149,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnDec, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnClr, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hData = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, 15, 100, 565, 250, hwnd, (HMENU)ID_EDIT_DATA, NULL, NULL);
+            hData = CreateWindowA("EDIT", "", WS_VISIBLE | WS_CHILD | WS_BORDER | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, 15, 100, 565, 210, hwnd, (HMENU)ID_EDIT_DATA, NULL, NULL);
             SendMessage(hData, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            HWND hBtnLoad = CreateWindowA("BUTTON", "Load File", WS_VISIBLE | WS_CHILD | BS_FLAT, 15, 320, 100, 25, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            HWND hBtnSave = CreateWindowA("BUTTON", "Save File", WS_VISIBLE | WS_CHILD | BS_FLAT, 125, 320, 100, 25, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             break;
         }
@@ -98,6 +166,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DecryptData(hData, hPass);
             } else if (LOWORD(wParam) == ID_BTN_CLEAR) {
                 SetWindowTextA(hData, "");
+            } else if (LOWORD(wParam) == ID_BTN_LOAD) {
+                LoadFromFile(hwnd, hData);
+            } else if (LOWORD(wParam) == ID_BTN_SAVE) {
+                SaveToFile(hwnd, hData);
             }
             break;
         }

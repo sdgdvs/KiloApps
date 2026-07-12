@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 5
-**Status:** In Progress (Phase 4 UI polish for web and native completed)
+**Phase:** 6
+**Status:** In Progress (Phase 5 File I/O added to Native, Export/Import added to Web)
 
 ## App Lifecycle (14 phases per app)
 

@@ -356,10 +356,14 @@
             <div id="view-vault" class="view-section">
                 <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 24px;">
                     <h2 style="margin:0; font-weight: 600;">Your Secrets</h2>
-                    <button class="btn" onclick="showAddSecret()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Add Secret
-                    </button>
+                    <div style="display:flex; gap: 10px;">
+                        <button class="btn secondary" onclick="importVault()">Import</button>
+                        <button class="btn secondary" onclick="exportVault()">Export</button>
+                        <button class="btn" onclick="showAddSecret()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Add Secret
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="secret-list" id="secret-list">
@@ -667,6 +671,49 @@
             window.notifTimeout = setTimeout(() => {
                 notif.classList.remove('show');
             }, 3000);
+        }
+        
+        function exportVault() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                showNotification("Vault is empty", "error");
+                return;
+            }
+            const blob = new Blob([stored], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "kvault_backup.json";
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification("Vault exported");
+        }
+
+        function importVault() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".json,application/json";
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.salt && data.vault) {
+                            localStorage.setItem(STORAGE_KEY, ev.target.result);
+                            lockVault();
+                            showNotification("Vault imported successfully. Please unlock.");
+                        } else {
+                            showNotification("Invalid vault file", "error");
+                        }
+                    } catch (err) {
+                        showNotification("Error parsing file", "error");
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
         }
         
         // Init
