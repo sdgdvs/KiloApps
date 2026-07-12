@@ -1,0 +1,21 @@
+#include <windows.h>
+#include "resource.h"
+
+IDD_ADD_TRANSACTION DIALOGEX 0, 0, 200, 150
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Add Transaction"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Type (0=Expense, 1=Income):", IDC_STATIC, 10, 10, 100, 8
+    EDITTEXT        IDC_TYPE_EDIT, 115, 8, 75, 14, ES_AUTOHSCROLL
+    LTEXT           "Amount:", IDC_STATIC, 10, 30, 100, 8
+    EDITTEXT        IDC_AMOUNT_EDIT, 115, 28, 75, 14, ES_AUTOHSCROLL
+    LTEXT           "Category:", IDC_STATIC, 10, 50, 100, 8
+    EDITTEXT        IDC_CAT_EDIT, 115, 48, 75, 14, ES_AUTOHSCROLL
+    LTEXT           "Description:", IDC_STATIC, 10, 70, 100, 8
+    EDITTEXT        IDC_DESC_EDIT, 115, 68, 75, 14, ES_AUTOHSCROLL
+    LTEXT           "Date (YYYY-MM-DD):", IDC_STATIC, 10, 90, 100, 8
+    EDITTEXT        IDC_DATE_EDIT, 115, 88, 75, 14, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Save", IDOK, 90, 120, 50, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 145, 120, 50, 14
+END
