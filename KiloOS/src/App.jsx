@@ -76,7 +76,8 @@ const APPS = [
   { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 500, h: 400, folder: 'system' },
   { id: 'kclock', title: 'Clock & Alarms', url: '/apps/kclock.html', exeUrl: null, icon: '/assets/icons/kclock.ico', w: 300, h: 300, folder: 'accessories' },
   { id: 'kbrowser', title: 'Internet Explorer', url: '/apps/kbrowser.html', exeUrl: null, icon: '/assets/icons/kbrowser.ico', w: 800, h: 600, folder: 'internet' },
-  { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 600, h: 800, folder: 'System' }
+  { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 600, h: 800, folder: 'System' },
+  { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 500, h: 600, folder: 'Office' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
