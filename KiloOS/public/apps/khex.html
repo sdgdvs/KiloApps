@@ -111,11 +111,16 @@
       <div class="label">Binary</div>
       <input type="text" id="bin" value="0" autocomplete="off" spellcheck="false">
     </div>
+    <div class="row">
+      <div class="label">Octal</div>
+      <input type="text" id="oct" value="0" autocomplete="off" spellcheck="false">
+    </div>
   </div>
 <script>
   const hex = document.getElementById('hex');
   const dec = document.getElementById('dec');
   const bin = document.getElementById('bin');
+  const oct = document.getElementById('oct');
   
   let updating = false;
   
@@ -137,6 +142,8 @@
               val = parseInt(dec.value.replace(/[^0-9]/g, ''), 10) || 0;
           } else if (source === bin) {
               val = parseInt(bin.value.replace(/[^01]/g, ''), 2) || 0;
+          } else if (source === oct) {
+              val = parseInt(oct.value.replace(/[^0-7]/g, ''), 8) || 0;
           }
       } catch(e) {}
       
@@ -155,6 +162,10 @@
           bin.value = val.toString(2);
           triggerAnimation(bin);
       }
+      if (source !== oct) {
+          oct.value = val.toString(8);
+          triggerAnimation(oct);
+      }
       
       updating = false;
   }
@@ -162,9 +173,10 @@
   hex.addEventListener('input', () => updateFrom(hex));
   dec.addEventListener('input', () => updateFrom(dec));
   bin.addEventListener('input', () => updateFrom(bin));
+  oct.addEventListener('input', () => updateFrom(oct));
   
   // Select all text on focus for quick replacing
-  [hex, dec, bin].forEach(el => {
+  [hex, dec, bin, oct].forEach(el => {
     el.addEventListener('focus', function() {
       this.select();
     });

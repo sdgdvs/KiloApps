@@ -4,7 +4,7 @@
 #define W 300
 #define H 200
 
-HWND hHex, hDec, hBin;
+HWND hHex, hDec, hBin, hOct;
 BOOL updating = FALSE;
 HBRUSH hBrushBg;
 
@@ -39,6 +39,16 @@ unsigned int parseBin(const char* s) {
     return res;
 }
 
+unsigned int parseOct(const char* s) {
+    unsigned int res = 0;
+    while (*s) {
+        res <<= 3;
+        if (*s >= '0' && *s <= '7') res += *s - '0';
+        s++;
+    }
+    return res;
+}
+
 void fmtHex(unsigned int v, char* s) { wsprintfA(s, "%X", v); }
 void fmtDec(unsigned int v, char* s) { wsprintfA(s, "%u", v); }
 void fmtBin(unsigned int v, char* s) {
@@ -48,6 +58,19 @@ void fmtBin(unsigned int v, char* s) {
     while (v > 0) {
         tmp[i++] = (v & 1) ? '1' : '0';
         v >>= 1;
+    }
+    int j = 0;
+    while (i > 0) s[j++] = tmp[--i];
+    s[j] = 0;
+}
+
+void fmtOct(unsigned int v, char* s) {
+    if (v == 0) { s[0] = '0'; s[1] = 0; return; }
+    char tmp[33];
+    int i = 0;
+    while (v > 0) {
+        tmp[i++] = (v & 7) + '0';
+        v >>= 3;
     }
     int j = 0;
     while (i > 0) s[j++] = tmp[--i];
@@ -65,15 +88,18 @@ void UpdateFields(HWND hSrc) {
     if (hSrc == hHex) val = parseHex(buf);
     else if (hSrc == hDec) val = parseDec(buf);
     else if (hSrc == hBin) val = parseBin(buf);
+    else if (hSrc == hOct) val = parseOct(buf);
     
-    char hex[64], dec[64], bin[64];
+    char hex[64], dec[64], bin[64], oct[64];
     fmtHex(val, hex);
     fmtDec(val, dec);
     fmtBin(val, bin);
+    fmtOct(val, oct);
     
     if (hSrc != hHex) SetWindowTextA(hHex, hex);
     if (hSrc != hDec) SetWindowTextA(hDec, dec);
     if (hSrc != hBin) SetWindowTextA(hBin, bin);
+    if (hSrc != hOct) SetWindowTextA(hOct, oct);
     
     updating = FALSE;
 }
@@ -96,6 +122,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             CreateWindowEx(0, "STATIC", "Bin:", WS_CHILD | WS_VISIBLE, 10, 75, 30, 20, hwnd, NULL, NULL, NULL);
             hBin = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 75, W - 80, 22, hwnd, (HMENU)3, NULL, NULL);
+            
+            CreateWindowEx(0, "STATIC", "Oct:", WS_CHILD | WS_VISIBLE, 10, 105, 30, 20, hwnd, NULL, NULL, NULL);
+            hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 105, W - 80, 22, hwnd, (HMENU)4, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;

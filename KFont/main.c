@@ -6,6 +6,8 @@
 
 HWND hList, hSample;
 HFONT hCurrentFont = NULL;
+HFONT hFont = NULL;
+HBRUSH hBrush = NULL;
 
 int CALLBACK EnumFontFamExProc(const LOGFONT *lpelfe, const TEXTMETRIC *lpntme, DWORD FontType, LPARAM lParam) {
     SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)lpelfe->lfFaceName);
@@ -20,7 +22,7 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
             hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT, 10, 30, 150, 220, hwnd, (HMENU)1, NULL, NULL);
@@ -58,12 +60,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdcStatic = (HDC)wParam;
             SetTextColor(hdcStatic, RGB(224, 224, 224));
             SetBkColor(hdcStatic, RGB(30, 30, 30));
-            static HBRUSH hBrush = NULL;
             if (!hBrush) hBrush = CreateSolidBrush(RGB(30, 30, 30));
             return (LRESULT)hBrush;
         }
         case WM_DESTROY:
             if (hCurrentFont) DeleteObject(hCurrentFont);
+            if (hFont) DeleteObject(hFont);
+            if (hBrush) DeleteObject(hBrush);
             PostQuitMessage(0);
             break;
         default:
