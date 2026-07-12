@@ -32,14 +32,15 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBudget
-**Phase:** 6
-**Status:** In Progress (Phase 6)
+**Phase:** 7
+**Status:** In Progress (Phase 7)
 
 *Phase 1 complete: Scaffolded KBudget directory, created basic kbudget.html UI, registered in App.jsx.*
 *Phase 2 complete: Implemented core KBudget features in web HTML including adding transactions, summary stats, categories, and simple bar chart.*
 *Phase 3 complete: Created native C version with basic functionality matching the web version.*
 *Phase 4 complete: Polished both versions adding animations/hover states to web and standard font/dynamic resizing to native.*
 *Phase 5 complete: Implemented true Data Persistence (save/load functionality) using CreateFile/WriteFile/ReadFile for native C version, while verifying localStorage in web version.*
+*Phase 6 complete: Implemented Import/Export functionality (CSV format) for both web HTML and native C versions.*
 
 ## App Lifecycle (14 phases per app)
 

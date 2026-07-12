@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <shlobj.h>
+#include <commdlg.h>
 #include "resource.h"
 
 #define MAX_TRANSACTIONS 1000
@@ -140,6 +141,95 @@ INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
     return FALSE;
 }
 
+void ExportCSV(HWND hwnd) {
+    OPENFILENAMEA ofn;
+    char szFile[MAX_PATH] = "kbudget_export.csv";
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrDefExt = "csv";
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+    if (GetSaveFileNameA(&ofn)) {
+        FILE *f = fopen(szFile, "w");
+        if (f) {
+            fprintf(f, "is_income,amount,category,date,description\n");
+            for (int i = 0; i < num_transactions; i++) {
+                char cat[64], date[32], desc[128];
+                strncpy(cat, transactions[i].category, 64);
+                strncpy(date, transactions[i].date, 32);
+                strncpy(desc, transactions[i].description, 128);
+                for(int j=0; cat[j]; j++) if(cat[j]==',') cat[j]=' ';
+                for(int j=0; date[j]; j++) if(date[j]==',') date[j]=' ';
+                for(int j=0; desc[j]; j++) if(desc[j]==',') desc[j]=' ';
+                
+                fprintf(f, "%d,%.2f,%s,%s,%s\n", 
+                    transactions[i].is_income, 
+                    transactions[i].amount, 
+                    cat, 
+                    date, 
+                    desc);
+            }
+            fclose(f);
+            MessageBoxA(hwnd, "Export successful!", "Success", MB_OK);
+        }
+    }
+}
+
+void ImportCSV(HWND hwnd) {
+    OPENFILENAMEA ofn;
+    char szFile[MAX_PATH] = "";
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn)) {
+        FILE *f = fopen(szFile, "r");
+        if (f) {
+            char line[512];
+            fgets(line, sizeof(line), f); // skip header
+            int imported = 0;
+            while (fgets(line, sizeof(line), f) && num_transactions < MAX_TRANSACTIONS) {
+                int is_inc = 0;
+                double amt = 0;
+                char cat[64] = {0}, date[32] = {0}, desc[128] = {0};
+                
+                int parsed = sscanf(line, "%d,%lf,%63[^,],%31[^,],%127[^\r\n]", &is_inc, &amt, cat, date, desc);
+                if (parsed >= 4) {
+                    if (parsed == 4) desc[0] = '\0';
+                    Transaction t = {0};
+                    t.is_income = is_inc;
+                    t.amount = amt;
+                    strncpy(t.category, cat, sizeof(t.category)-1);
+                    strncpy(t.date, date, sizeof(t.date)-1);
+                    strncpy(t.description, desc, sizeof(t.description)-1);
+                    transactions[num_transactions++] = t;
+                    imported++;
+                }
+            }
+            fclose(f);
+            if (imported > 0) {
+                SaveData();
+                UpdateUI();
+                char msg[64];
+                snprintf(msg, sizeof(msg), "Imported %d transactions!", imported);
+                MessageBoxA(hwnd, msg, "Success", MB_OK);
+            } else {
+                MessageBoxA(hwnd, "No valid transactions found.", "Import Failed", MB_OK | MB_ICONWARNING);
+            }
+        }
+    }
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch(uMsg) {
         case WM_CREATE:
@@ -157,6 +247,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
             hBtnAdd = CreateWindow("BUTTON", "+ New Transaction", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 120, 150, 30, hwnd, (HMENU)1, NULL, NULL);
+            HWND hBtnImp = CreateWindow("BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 160, 150, 30, hwnd, (HMENU)2, NULL, NULL);
+            HWND hBtnExp = CreateWindow("BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 200, 150, 30, hwnd, (HMENU)3, NULL, NULL);
                 
             hList = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOTIFY,
                 250, 20, 500, 300, hwnd, NULL, NULL, NULL);
@@ -165,6 +259,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hLblIncome, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblExpense, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnImp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LoadData();
@@ -192,6 +288,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_COMMAND:
             if (LOWORD(wParam) == 1) {
                 DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADD_TRANSACTION), hwnd, AddDialogProc);
+            } else if (LOWORD(wParam) == 2) {
+                ImportCSV(hwnd);
+            } else if (LOWORD(wParam) == 3) {
+                ExportCSV(hwnd);
             }
             break;
             
