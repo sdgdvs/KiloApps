@@ -66,7 +66,8 @@ const APPS = [
   { id: 'ksettings', title: 'Settings', url: '/apps/ksettings.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 600, h: 500, folder: 'System' },
   { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 650, h: 500, folder: 'System' },
   { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 600, h: 600, folder: 'System' },
-  { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 700, folder: 'Office' }
+  { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 700, folder: 'Office' },
+  { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpong.ico', w: 430, h: 460, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
