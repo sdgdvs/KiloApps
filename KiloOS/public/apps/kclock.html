@@ -34,6 +34,7 @@
   <div class="tabs">
     <div class="tab active" onclick="switchTab(event, 'clock')">Clock</div>
     <div class="tab" onclick="switchTab(event, 'stopwatch')">Stopwatch</div>
+    <div class="tab" onclick="switchTab(event, 'timer')">Timer</div>
   </div>
 
   <div id="tab-clock" class="content active">
@@ -45,7 +46,20 @@
     <div class="digital-clock" id="stopwatch-display">00:00.00</div>
     <div class="btn-row">
       <button onclick="toggleStopwatch()" id="sw-btn" class="primary">Start</button>
+      <button onclick="lapStopwatch()">Lap</button>
       <button onclick="resetStopwatch()">Reset</button>
+    </div>
+    <div id="lap-list" style="margin-top:20px; width:100%; max-height:150px; overflow-y:auto; font-family:'JetBrains Mono', monospace; font-size:13px; color:#aaa; text-align:center;"></div>
+  </div>
+
+  <div id="tab-timer" class="content">
+    <div class="digital-clock" id="timer-display">00:00</div>
+    <div style="margin-top:10px;">
+      <input type="number" id="timer-mins" value="5" min="1" max="99" style="width:50px; background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:5px; padding:5px; text-align:center; font-family:'Inter', sans-serif;"> min
+    </div>
+    <div class="btn-row">
+      <button onclick="toggleTimer()" id="tm-btn" class="primary">Start</button>
+      <button onclick="resetTimer()">Reset</button>
     </div>
   </div>
 
@@ -71,6 +85,7 @@
     let swElapsed = 0;
     let swInterval = null;
     let swRunning = false;
+    let swLapCount = 0;
 
     function formatSw(ms) {
       const totalSeconds = Math.floor(ms / 1000);
@@ -101,13 +116,89 @@
       }
     }
 
+    function lapStopwatch() {
+      if (swRunning) {
+        swLapCount++;
+        const current = Date.now() - swStart + swElapsed;
+        const div = document.createElement('div');
+        div.innerText = `Lap ${swLapCount}:\u00A0\u00A0${formatSw(current)}`;
+        document.getElementById('lap-list').prepend(div);
+      }
+    }
+
     function resetStopwatch() {
       swRunning = false;
       clearInterval(swInterval);
       swElapsed = 0;
+      swLapCount = 0;
+      document.getElementById('lap-list').innerHTML = '';
       updateSwDisplay();
       document.getElementById('sw-btn').innerText = 'Start';
       document.getElementById('sw-btn').classList.add('primary');
+    }
+
+    // Timer Logic
+    let tmStart = 0;
+    let tmDuration = 0;
+    let tmRemaining = 0;
+    let tmInterval = null;
+    let tmRunning = false;
+
+    function formatTm(ms) {
+      if (ms < 0) ms = 0;
+      const totalSeconds = Math.ceil(ms / 1000);
+      const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    function updateTmDisplay() {
+      const current = tmRunning ? tmDuration - (Date.now() - tmStart) : tmRemaining;
+      if (current <= 0 && tmRunning) {
+        clearInterval(tmInterval);
+        tmRunning = false;
+        document.getElementById('timer-display').innerText = "00:00";
+        document.getElementById('tm-btn').innerText = 'Start';
+        document.getElementById('tm-btn').classList.add('primary');
+        alert("Timer Finished!");
+      } else {
+        document.getElementById('timer-display').innerText = formatTm(current);
+      }
+    }
+
+    function toggleTimer() {
+      if (tmRunning) {
+        tmRemaining = tmDuration - (Date.now() - tmStart);
+        clearInterval(tmInterval);
+        tmRunning = false;
+        document.getElementById('tm-btn').innerText = 'Resume';
+        document.getElementById('tm-btn').classList.add('primary');
+      } else {
+        if (tmRemaining === 0) {
+          const mins = parseInt(document.getElementById('timer-mins').value) || 0;
+          let useMins = mins > 0 ? mins : 5;
+          tmDuration = useMins * 60000;
+          tmRemaining = tmDuration;
+        } else {
+          tmDuration = tmRemaining;
+        }
+        if (tmDuration > 0) {
+          tmStart = Date.now();
+          tmInterval = setInterval(updateTmDisplay, 50);
+          tmRunning = true;
+          document.getElementById('tm-btn').innerText = 'Pause';
+          document.getElementById('tm-btn').classList.remove('primary');
+        }
+      }
+    }
+
+    function resetTimer() {
+      tmRunning = false;
+      clearInterval(tmInterval);
+      tmRemaining = 0;
+      document.getElementById('timer-display').innerText = "00:00";
+      document.getElementById('tm-btn').innerText = 'Start';
+      document.getElementById('tm-btn').classList.add('primary');
     }
   </script>
 </body>
