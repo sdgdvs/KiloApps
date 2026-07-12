@@ -70,6 +70,7 @@
 <div class="synth-container">
   <div class="controls">
     <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">KAudio<span style="color:#0ea5e9">.</span></div>
+    <div id="octaveDisplay" style="font-size: 13px; font-weight: 500; color: #94a3b8; margin: 0 16px;">Octave: 0 (L/R)</div>
     <select id="waveType" class="waveform-select">
       <option value="square">Square Wave</option>
       <option value="sine">Sine Wave</option>
@@ -90,9 +91,11 @@
   
   const keyEls = [];
   const activeOscs = {};
+  let octaveShift = 0;
   
   const waveSelect = document.getElementById('waveType');
   const keysContainer = document.getElementById('keys');
+  const octaveDisplay = document.getElementById('octaveDisplay');
   
   for (let i = 0; i < binds.length; i++) {
       let el = document.createElement('div');
@@ -119,7 +122,7 @@
       let gain = ctx.createGain();
       
       osc.type = waveSelect.value;
-      osc.frequency.value = freqs[i];
+      osc.frequency.value = freqs[i] * Math.pow(2, octaveShift);
       
       gain.gain.setValueAtTime(0.1, ctx.currentTime);
       
@@ -153,6 +156,22 @@
       if (e.key === 'ArrowDown') {
           e.preventDefault();
           waveSelect.selectedIndex = (waveSelect.selectedIndex + 1) % waveSelect.options.length;
+      }
+      if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          if (octaveShift > -4) {
+              for (let i = 0; i < binds.length; i++) stop(i);
+              octaveShift--;
+              octaveDisplay.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+          }
+      }
+      if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          if (octaveShift < 4) {
+              for (let i = 0; i < binds.length; i++) stop(i);
+              octaveShift++;
+              octaveDisplay.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+          }
       }
   });
 

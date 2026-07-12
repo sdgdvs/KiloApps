@@ -12,10 +12,14 @@ int notes[NUM_KEYS] = {60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72};
 char binds[NUM_KEYS] = {'A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K'};
 int is_black[NUM_KEYS] = {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0};
 int instrument = 0;
+int octaveShift = 0;
 
 void PlayNote(int index, int on) {
     if (hMidi) {
-        DWORD msg = on ? (0x007F0090 | (notes[index] << 8)) : (0x00000080 | (notes[index] << 8));
+        int actualNote = notes[index] + octaveShift * 12;
+        if (actualNote < 0) actualNote = 0;
+        if (actualNote > 127) actualNote = 127;
+        DWORD msg = on ? (0x007F0090 | (actualNote << 8)) : (0x00000080 | (actualNote << 8));
         midiOutShortMsg(hMidi, msg);
     }
 }
@@ -40,6 +44,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 instrument = (instrument + 127) % 128;
                 midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
                 InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (wParam == VK_LEFT) {
+                if (octaveShift > -4) {
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                    octaveShift--;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                break;
+            }
+            if (wParam == VK_RIGHT) {
+                if (octaveShift < 4) {
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                    octaveShift++;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
                 break;
             }
             for (int i = 0; i < NUM_KEYS; i++) {
@@ -128,7 +148,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetTextColor(memDC, RGB(255, 255, 255));
             char instText[64];
-            wsprintfA(instText, "Instrument: %d (Up/Down)", instrument);
+            wsprintfA(instText, "Inst: %d (Up/Dn) | Octave: %+d (L/R)", instrument, octaveShift);
             TextOutA(memDC, 10, 0, instText, lstrlenA(instText));
             
             DeleteObject(white);
