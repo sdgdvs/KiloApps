@@ -22,6 +22,7 @@ HWND hBtnAdd;
 HWND hLblTotal, hLblIncome, hLblExpense;
 
 HBRUSH hbgBrush;
+HFONT hFont;
 
 void UpdateUI() {
     double total_income = 0;
@@ -99,6 +100,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch(uMsg) {
         case WM_CREATE:
             hbgBrush = CreateSolidBrush(RGB(15, 23, 42)); // dark blue background #0f172a
+            hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+                               DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             
             hLblTotal = CreateWindow("STATIC", "Total Balance: $0.00", WS_CHILD | WS_VISIBLE,
                 20, 20, 200, 20, hwnd, NULL, NULL, NULL);
@@ -113,7 +117,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hList = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOTIFY,
                 250, 20, 500, 300, hwnd, NULL, NULL, NULL);
             
+            SendMessage(hLblTotal, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hLblIncome, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hLblExpense, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             UpdateUI();
+            return 0;
+            
+        case WM_SIZE:
+            {
+                int width = LOWORD(lParam);
+                int height = HIWORD(lParam);
+                if (hList) {
+                    MoveWindow(hList, 250, 20, width - 270, height - 40, TRUE);
+                }
+            }
             return 0;
             
         case WM_CTLCOLORSTATIC:
@@ -132,6 +152,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
         case WM_DESTROY:
             DeleteObject(hbgBrush);
+            DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
     }

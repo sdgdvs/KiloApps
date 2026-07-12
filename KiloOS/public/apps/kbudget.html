@@ -132,6 +132,13 @@
             padding: 1rem;
             border-radius: 8px;
             border: 1px solid var(--glass-border);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .transaction-item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .transaction-info {
@@ -178,14 +185,18 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(5px);
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
             z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
         .modal-overlay.active {
-            display: flex;
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .modal {
@@ -196,6 +207,12 @@
             max-width: 400px;
             padding: 2rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
         }
 
         .modal h2 {
@@ -569,9 +586,12 @@
                 // Use a nice color (danger color for expense)
                 bar.style.backgroundColor = 'var(--danger-color)';
                 bar.style.opacity = '0.8';
+                bar.style.height = '0%';
                 
-                // Give it a tiny delay to animate in theoretically (though inline it just renders)
-                bar.style.height = `${percentage}%`;
+                // Animate bar height
+                setTimeout(() => {
+                    bar.style.height = `${percentage}%`;
+                }, 50);
 
                 const label = document.createElement('div');
                 label.className = 'chart-label';

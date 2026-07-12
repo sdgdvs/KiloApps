@@ -32,12 +32,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBudget
-**Phase:** 4
-**Status:** In Progress (Phase 4 Polish both versions)
+**Phase:** 5
+**Status:** In Progress (Phase 5)
 
 *Phase 1 complete: Scaffolded KBudget directory, created basic kbudget.html UI, registered in App.jsx.*
 *Phase 2 complete: Implemented core KBudget features in web HTML including adding transactions, summary stats, categories, and simple bar chart.*
 *Phase 3 complete: Created native C version with basic functionality matching the web version.*
+*Phase 4 complete: Polished both versions adding animations/hover states to web and standard font/dynamic resizing to native.*
 
 ## App Lifecycle (14 phases per app)
 
