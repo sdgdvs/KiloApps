@@ -324,6 +324,7 @@
     <header class="header">
         <h1>KBudget</h1>
         <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" style="color: white" onclick="openSettingsModal()">Settings</button>
             <button class="btn btn-outline" style="color: white" onclick="importCSV()">Import CSV</button>
             <button class="btn btn-outline" style="color: white" onclick="exportCSV()">Export CSV</button>
             <button class="btn" onclick="openModal()">+ New Transaction</button>
@@ -376,7 +377,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="amount">Amount ($)</label>
+                    <label for="amount" id="amount-label">Amount ($)</label>
                     <input type="number" id="amount" class="form-control" step="0.01" min="0.01" required placeholder="0.00">
                 </div>
 
@@ -405,9 +406,27 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <h2>Settings</h2>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="currency-symbol">Currency Symbol</label>
+                    <input type="text" id="currency-symbol" class="form-control" required placeholder="$">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-outline" onclick="closeSettingsModal()">Cancel</button>
+                    <button type="submit" class="btn">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // State
         let transactions = JSON.parse(localStorage.getItem('kbudget_transactions')) || [];
+        let currencySymbol = localStorage.getItem('kbudget_currency') || '$';
         
         const expenseCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Health', 'Other'];
         const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gift', 'Other'];
@@ -420,6 +439,10 @@
         const dateInput = document.getElementById('date');
         const transactionList = document.getElementById('transaction-list');
         const chartContainer = document.getElementById('chart-container');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsForm = document.getElementById('settings-form');
+        const currencyInput = document.getElementById('currency-symbol');
+        const amountLabel = document.getElementById('amount-label');
 
         // Init
         function init() {
@@ -433,12 +456,22 @@
         function openModal() {
             modal.classList.add('active');
             dateInput.valueAsDate = new Date();
+            amountLabel.textContent = `Amount (${currencySymbol})`;
         }
 
         function closeModal() {
             modal.classList.remove('active');
             form.reset();
             updateCategories();
+        }
+
+        function openSettingsModal() {
+            settingsModal.classList.add('active');
+            currencyInput.value = currencySymbol;
+        }
+
+        function closeSettingsModal() {
+            settingsModal.classList.remove('active');
         }
 
         function updateCategories() {
@@ -558,7 +591,7 @@
         }
 
         function formatCurrency(amount) {
-            return '$' + amount.toFixed(2);
+            return currencySymbol + amount.toFixed(2);
         }
 
         function formatDate(dateString) {
@@ -665,7 +698,7 @@
                 
                 const wrapper = document.createElement('div');
                 wrapper.className = 'chart-bar-wrapper';
-                wrapper.title = `${item.cat}: $${item.val.toFixed(2)}`;
+                wrapper.title = `${item.cat}: ${currencySymbol}${item.val.toFixed(2)}`;
                 
                 const bar = document.createElement('div');
                 bar.className = 'chart-bar';
@@ -693,9 +726,21 @@
         // Event Listeners
         form.addEventListener('submit', addTransaction);
         
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            currencySymbol = currencyInput.value;
+            localStorage.setItem('kbudget_currency', currencySymbol);
+            closeSettingsModal();
+            render();
+        });
+        
         // Close modal on click outside
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
+        });
+
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeSettingsModal();
         });
 
         // Run

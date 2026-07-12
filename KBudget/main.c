@@ -23,11 +23,14 @@ int num_transactions = 0;
 HWND hMainWnd;
 HWND hList;
 HWND hBtnAdd;
+HWND hBtnSettings;
 HWND hSearchEdit;
 HWND hLblTotal, hLblIncome, hLblExpense;
 
 HBRUSH hbgBrush;
 HFONT hFont;
+
+char currency_symbol[8] = "$";
 
 void SaveData() {
     char appDataPath[MAX_PATH];
@@ -71,6 +74,37 @@ void LoadData() {
     }
 }
 
+void SaveSettings() {
+    char appDataPath[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath))) {
+        char dirPath[MAX_PATH];
+        snprintf(dirPath, sizeof(dirPath), "%s\\KBudget", appDataPath);
+        CreateDirectoryA(dirPath, NULL);
+        char filePath[MAX_PATH];
+        snprintf(filePath, sizeof(filePath), "%s\\kbudget_settings.dat", dirPath);
+        HANDLE hFile = CreateFileA(filePath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD bytesWritten;
+            WriteFile(hFile, currency_symbol, sizeof(currency_symbol), &bytesWritten, NULL);
+            CloseHandle(hFile);
+        }
+    }
+}
+
+void LoadSettings() {
+    char appDataPath[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath))) {
+        char filePath[MAX_PATH];
+        snprintf(filePath, sizeof(filePath), "%s\\KBudget\\kbudget_settings.dat", appDataPath);
+        HANDLE hFile = CreateFileA(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD bytesRead;
+            ReadFile(hFile, currency_symbol, sizeof(currency_symbol), &bytesRead, NULL);
+            CloseHandle(hFile);
+        }
+    }
+}
+
 void UpdateUI() {
     double total_income = 0;
     double total_expense = 0;
@@ -103,22 +137,22 @@ void UpdateUI() {
         }
         
         char buf[256];
-        snprintf(buf, sizeof(buf), "%s | %s | %s%.2f | %s", 
+        snprintf(buf, sizeof(buf), "%s | %s | %s%s%.2f | %s", 
             transactions[i].date, transactions[i].description, 
-            transactions[i].is_income ? "+" : "-", transactions[i].amount, 
+            transactions[i].is_income ? "+" : "-", currency_symbol, transactions[i].amount, 
             transactions[i].category);
         
         SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buf);
     }
     
     char sumBuf[128];
-    snprintf(sumBuf, sizeof(sumBuf), "Total Balance: $%.2f", total_income - total_expense);
+    snprintf(sumBuf, sizeof(sumBuf), "Total Balance: %s%.2f", currency_symbol, total_income - total_expense);
     SetWindowText(hLblTotal, sumBuf);
     
-    snprintf(sumBuf, sizeof(sumBuf), "Income: +$%.2f", total_income);
+    snprintf(sumBuf, sizeof(sumBuf), "Income: +%s%.2f", currency_symbol, total_income);
     SetWindowText(hLblIncome, sumBuf);
     
-    snprintf(sumBuf, sizeof(sumBuf), "Expenses: -$%.2f", total_expense);
+    snprintf(sumBuf, sizeof(sumBuf), "Expenses: -%s%.2f", currency_symbol, total_expense);
     SetWindowText(hLblExpense, sumBuf);
 }
 
@@ -154,6 +188,27 @@ INT_PTR CALLBACK AddDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                 return TRUE;
             }
             else if (LOWORD(wParam) == IDCANCEL) {
+                EndDialog(hwndDlg, IDCANCEL);
+                return TRUE;
+            }
+            break;
+    }
+    return FALSE;
+}
+
+INT_PTR CALLBACK SettingsDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_INITDIALOG:
+            SetDlgItemText(hwndDlg, IDC_CURRENCY_EDIT, currency_symbol);
+            return TRUE;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDOK) {
+                GetDlgItemText(hwndDlg, IDC_CURRENCY_EDIT, currency_symbol, sizeof(currency_symbol));
+                SaveSettings();
+                UpdateUI();
+                EndDialog(hwndDlg, IDOK);
+                return TRUE;
+            } else if (LOWORD(wParam) == IDCANCEL) {
                 EndDialog(hwndDlg, IDCANCEL);
                 return TRUE;
             }
@@ -272,6 +327,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 20, 160, 150, 30, hwnd, (HMENU)2, NULL, NULL);
             HWND hBtnExp = CreateWindow("BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 200, 150, 30, hwnd, (HMENU)3, NULL, NULL);
+            hBtnSettings = CreateWindow("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 240, 150, 30, hwnd, (HMENU)5, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 250, 20, 500, 25, hwnd, (HMENU)4, NULL, NULL);
@@ -285,9 +342,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnImp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LoadData();
+            LoadSettings();
             UpdateUI();
             return 0;
             
@@ -321,6 +380,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ImportCSV(hwnd);
             } else if (LOWORD(wParam) == 3) {
                 ExportCSV(hwnd);
+            } else if (LOWORD(wParam) == 5) {
+                DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SETTINGS), hwnd, SettingsDialogProc);
             }
             break;
             
