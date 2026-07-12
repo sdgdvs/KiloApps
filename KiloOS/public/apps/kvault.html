@@ -916,6 +916,48 @@
             }
         });
 
+        // Drag and Drop Vault Import
+        document.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const container = document.querySelector('.container');
+            if(container) container.style.borderColor = 'var(--primary-accent)';
+        });
+
+        document.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const container = document.querySelector('.container');
+            if(container) container.style.borderColor = 'var(--glass-border)';
+        });
+
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const container = document.querySelector('.container');
+            if(container) container.style.borderColor = 'var(--glass-border)';
+            
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        if (data.salt && data.vault) {
+                            localStorage.setItem(STORAGE_KEY, ev.target.result);
+                            lockVault();
+                            showNotification("Vault dropped & imported. Please unlock.");
+                        } else {
+                            showNotification("Invalid vault file", "error");
+                        }
+                    } catch (err) {
+                        showNotification("Error parsing dropped file", "error");
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+
         // Init
         initAuthView();
 

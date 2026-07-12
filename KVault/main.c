@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <shellapi.h>
 
 #define ID_BTN_ENCRYPT 101
 #define ID_BTN_DECRYPT 102
@@ -231,6 +232,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnClearClip, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             srand(GetTickCount());
+            DragAcceptFiles(hwnd, TRUE);
+            break;
+        }
+        case WM_DROPFILES: {
+            HDROP hDrop = (HDROP)wParam;
+            char szFile[260];
+            if (DragQueryFileA(hDrop, 0, szFile, sizeof(szFile))) {
+                HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD fileSize = GetFileSize(hFile, NULL);
+                    if (fileSize > 0) {
+                        char* buffer = (char*)malloc(fileSize + 1);
+                        DWORD bytesRead;
+                        if (ReadFile(hFile, buffer, fileSize, &bytesRead, NULL)) {
+                            buffer[bytesRead] = '\0';
+                            SetWindowTextA(hData, buffer);
+                        }
+                        free(buffer);
+                    } else {
+                        SetWindowTextA(hData, "");
+                    }
+                    CloseHandle(hFile);
+                    MessageBoxA(hwnd, "File dropped and loaded.", "KVault", MB_OK | MB_ICONINFORMATION);
+                }
+            }
+            DragFinish(hDrop);
             break;
         }
         case WM_TIMER: {

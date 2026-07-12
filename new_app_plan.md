@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KVault
-**Phase:** 12
-**Status:** In Progress (Phase 11 Added Categories/Templates support and Clipboard Utility buttons to both Native and Web)
+**Phase:** 13
+**Status:** In Progress (Phase 12 Added drag-and-drop file support to import vaults in both Native and Web)
 
 ## App Lifecycle (14 phases per app)
 
