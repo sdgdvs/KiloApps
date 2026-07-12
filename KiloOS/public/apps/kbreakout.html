@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { background: #14141e; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
+canvas { background: #1a1a24; border: 2px solid #33c; border-radius: 4px; box-shadow: 0 0 10px rgba(51,51,204,0.5); }
+#ui { position: absolute; top: 10px; left: 10px; z-index: 10; font-size: 16px; text-shadow: 1px 1px 0 #000; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="ui">Score: <span id="sc">0</span> &nbsp; High: <span id="hi">0</span></div>
+<canvas id="c" width="400" height="400"></canvas>
+<script>
+const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+let w = cvs.width, h = cvs.height;
+let pad_w = 60, pad_h = 10, pad_x = w/2 - pad_w/2;
+let ball_x = w/2, ball_y = h-50, ball_size = 8, ball_dx = 0, ball_dy = 0;
+let state = 0; // 0=start, 1=play, 2=gameover
+let score = 0, high_score = parseInt(localStorage.getItem('kbreakout_hi')||'0');
+document.getElementById('hi').innerText = high_score;
+let diff = 0, speed = 3;
+let keys = {};
+const ROWS = 5, COLS = 10, BR_W = w/COLS, BR_H = 20;
+let bricks = [];
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playTone(f, type, dur) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    let osc = audioCtx.createOscillator();
+    let gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+}
+
+function initLevel() {
+    bricks = [];
+    for(let r=0; r<ROWS; r++) {
+        let row = [];
+        for(let c=0; c<COLS; c++) row.push(1);
+        bricks.push(row);
+    }
+    pad_x = w/2 - pad_w/2;
+    ball_x = w/2;
+    ball_y = h-50;
+    ball_dx = speed * (Math.random()>0.5?1:-1);
+    ball_dy = -speed;
+}
+
+window.onkeydown = e => keys[e.key] = 1;
+window.onkeyup = e => {
+    keys[e.key] = 0;
+    if(state !== 1) {
+        if(e.key === 'Enter') { diff = 0; speed = 3; score = 0; pad_w = 60; initLevel(); state = 1; }
+        if(e.key === ' ') { diff = 1; speed = 5; score = 0; pad_w = 40; initLevel(); state = 1; }
+    }
+};
+
+cvs.onmousemove = e => {
+    if(state === 1) {
+        let rect = cvs.getBoundingClientRect();
+        pad_x = e.clientX - rect.left - pad_w/2;
+        if(pad_x < 0) pad_x = 0;
+        if(pad_x > w - pad_w) pad_x = w - pad_w;
+    }
+};
+
+function loop() {
+    requestAnimationFrame(loop);
+    ctx.clearRect(0,0,w,h);
+    
+    if(state === 1) {
+        if(keys['ArrowLeft']) pad_x -= 6;
+        if(keys['ArrowRight']) pad_x += 6;
+        if(pad_x < 0) pad_x = 0;
+        if(pad_x > w - pad_w) pad_x = w - pad_w;
+        
+        ball_x += ball_dx;
+        ball_y += ball_dy;
+        
+        if(ball_x < 0) { ball_x = 0; ball_dx = -ball_dx; }
+        if(ball_x > w - ball_size) { ball_x = w - ball_size; ball_dx = -ball_dx; }
+        if(ball_y < 0) { ball_y = 0; ball_dy = -ball_dy; }
+        
+        if(ball_y + ball_size > h - 30 && ball_y < h - 30 + pad_h && ball_x + ball_size > pad_x && ball_x < pad_x + pad_w) {
+            ball_y = h - 30 - ball_size;
+            ball_dy = -ball_dy;
+            let hit = (ball_x + ball_size/2) - (pad_x + pad_w/2);
+            ball_dx = hit * 0.2;
+            if(Math.abs(ball_dx) < 1) ball_dx = ball_dx > 0 ? 1 : -1;
+            playTone(400, 'square', 0.1);
+        }
+        
+        if(ball_y > h) {
+            state = 2;
+            playTone(150, 'sawtooth', 0.5);
+            if(score > high_score) { high_score = score; localStorage.setItem('kbreakout_hi', high_score); document.getElementById('hi').innerText = high_score; }
+        }
+        
+        let bLeft = 0;
+        for(let r=0; r<ROWS; r++) {
+            for(let c=0; c<COLS; c++) {
+                if(bricks[r][c]) {
+                    bLeft++;
+                    let bx = c * BR_W, by = r * BR_H + 40;
+                    if(ball_x + ball_size > bx && ball_x < bx + BR_W && ball_y + ball_size > by && ball_y < by + BR_H) {
+                        bricks[r][c] = 0;
+                        ball_dy = -ball_dy;
+                        score += 10 + diff * 10;
+                        playTone(600, 'square', 0.05);
+                    }
+                    ctx.fillStyle = `rgb(${200-r*30},${100+c*15},${50+r*20})`;
+                    ctx.fillRect(bx+1, by+1, BR_W-2, BR_H-2);
+                }
+            }
+        }
+        
+        if(bLeft === 0) {
+            speed += 0.5;
+            initLevel();
+        }
+    }
+    
+    ctx.fillStyle = '#3cf';
+    if(state !== 0) ctx.fillRect(pad_x, h-30, pad_w, pad_h);
+    
+    ctx.fillStyle = '#fff';
+    if(state !== 0) ctx.fillRect(ball_x, ball_y, ball_size, ball_size);
+    
+    document.getElementById('sc').innerText = score;
+    
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px monospace';
+    if(state === 0) {
+        ctx.fillText('KBreakout', w/2, h/2 - 20);
+        ctx.font = '14px monospace';
+        ctx.fillText('Press ENTER for Easy', w/2, h/2 + 20);
+        ctx.fillText('Press SPACE for Hard', w/2, h/2 + 40);
+    } else if(state === 2) {
+        ctx.fillText('GAME OVER', w/2, h/2 - 20);
+        ctx.font = '14px monospace';
+        ctx.fillText('Press ENTER for Easy', w/2, h/2 + 20);
+        ctx.fillText('Press SPACE for Hard', w/2, h/2 + 40);
+    }
+}
+loop();
+</script>
+</body>
+</html>

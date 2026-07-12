@@ -91,7 +91,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSpace     | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
 | KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
 | KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. |
-
+| KBreakout  | Tier 1          | Never Touched          | Needs Improvement | Full parity, native and web. |
 ## Progress Log
 
 **Loop 1**
@@ -105,5 +105,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KMaze (Added start screen, win screen, best time tracking and elapsed time display to both EXE and HTML)
 - [x] KPac (Added high score tracking and sound effects to both EXE and HTML)
 - [x] KChess (Added King capture check/game over screen, 'R' to restart, and sound effects to both EXE and HTML)
-- [ ] Create New Game
+- [x] Create New Game (KBreakout created for both EXE and Web, registered in App.jsx)
 
+**Loop 2**
+- [ ] KMines
