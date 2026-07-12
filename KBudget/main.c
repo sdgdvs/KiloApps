@@ -27,6 +27,7 @@ HWND hList;
 HWND hBtnAdd;
 HWND hBtnSettings;
 HWND hSearchEdit;
+HWND hSortCombo;
 HWND hLblTotal, hLblIncome, hLblExpense;
 
 HBRUSH hbgBrush;
@@ -107,6 +108,32 @@ void LoadSettings() {
     }
 }
 
+int compare_indices(const void *a, const void *b) {
+    int idxA = *(int*)a;
+    int idxB = *(int*)b;
+    int sortType = 0;
+    if (hSortCombo) {
+        sortType = SendMessage(hSortCombo, CB_GETCURSEL, 0, 0);
+    }
+    Transaction *tA = &transactions[idxA];
+    Transaction *tB = &transactions[idxB];
+    
+    if (sortType == 0) { // Date Newest
+        return strcmp(tB->date, tA->date);
+    } else if (sortType == 1) { // Date Oldest
+        return strcmp(tA->date, tB->date);
+    } else if (sortType == 2) { // Amount Highest
+        if (tB->amount > tA->amount) return 1;
+        if (tB->amount < tA->amount) return -1;
+        return 0;
+    } else if (sortType == 3) { // Amount Lowest
+        if (tA->amount > tB->amount) return 1;
+        if (tA->amount < tB->amount) return -1;
+        return 0;
+    }
+    return 0;
+}
+
 void UpdateUI() {
     double total_income = 0;
     double total_expense = 0;
@@ -118,6 +145,9 @@ void UpdateUI() {
     for(int i = 0; searchTerm[i]; i++) searchTerm[i] = tolower((unsigned char)searchTerm[i]);
     
     SendMessage(hList, LB_RESETCONTENT, 0, 0);
+    
+    int *filtered = (int*)malloc(num_transactions * sizeof(int));
+    int filtered_count = 0;
     
     for (int i = 0; i < num_transactions; i++) {
         char catLower[64], descLower[128];
@@ -138,6 +168,13 @@ void UpdateUI() {
             total_expense += transactions[i].amount;
         }
         
+        filtered[filtered_count++] = i;
+    }
+    
+    qsort(filtered, filtered_count, sizeof(int), compare_indices);
+    
+    for (int k = 0; k < filtered_count; k++) {
+        int i = filtered[k];
         char buf[256];
         snprintf(buf, sizeof(buf), "%s | %s | %s%s%.2f | %s", 
             transactions[i].date, transactions[i].description, 
@@ -147,6 +184,8 @@ void UpdateUI() {
         int listIdx = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buf);
         SendMessage(hList, LB_SETITEMDATA, listIdx, (LPARAM)i);
     }
+    
+    free(filtered);
     
     char sumBuf[128];
     snprintf(sumBuf, sizeof(sumBuf), "Total Balance: %s%.2f", currency_symbol, total_income - total_expense);
@@ -357,11 +396,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 20, 320, 150, 30, hwnd, (HMENU)5, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                250, 20, 500, 25, hwnd, (HMENU)4, NULL, NULL);
+                250, 20, 340, 25, hwnd, (HMENU)4, NULL, NULL);
+            hSortCombo = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
+                600, 20, 150, 150, hwnd, (HMENU)8, NULL, NULL);
+                
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Date (Newest)");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Date (Oldest)");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Amount (Highest)");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Amount (Lowest)");
+            SendMessage(hSortCombo, CB_SETCURSEL, 0, 0);
+
             hList = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOTIFY,
                 250, 50, 500, 270, hwnd, NULL, NULL, NULL);
             
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hSortCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblTotal, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblIncome, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblExpense, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -383,7 +432,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int width = LOWORD(lParam);
                 int height = HIWORD(lParam);
                 if (hSearchEdit) {
-                    MoveWindow(hSearchEdit, 250, 20, width - 270, 25, TRUE);
+                    MoveWindow(hSearchEdit, 250, 20, width - 430, 25, TRUE);
+                }
+                if (hSortCombo) {
+                    MoveWindow(hSortCombo, width - 170, 20, 150, 150, TRUE);
                 }
                 if (hList) {
                     MoveWindow(hList, 250, 50, width - 270, height - 70, TRUE);
@@ -400,7 +452,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
         case WM_COMMAND:
-            if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == 4) {
+            if ((HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == 4) || (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == 8)) {
                 UpdateUI();
             } else if (LOWORD(wParam) == 1) {
                 editing_index = -1;

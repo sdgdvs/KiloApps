@@ -334,7 +334,15 @@
         
         <section class="glass-panel">
             <h2>Transactions</h2>
-            <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="margin-bottom: 1rem;" oninput="render()">
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+                <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="flex: 1; margin-bottom: 0;" oninput="render()">
+                <select id="sort-select" class="form-control" style="width: auto; margin-bottom: 0;" onchange="render()">
+                    <option value="date-desc">Date (Newest First)</option>
+                    <option value="date-asc">Date (Oldest First)</option>
+                    <option value="amount-desc">Amount (Highest First)</option>
+                    <option value="amount-asc">Amount (Lowest First)</option>
+                </select>
+            </div>
             <div class="transaction-list" id="transaction-list">
                 <!-- Transactions injected via JS -->
             </div>
@@ -606,10 +614,24 @@
 
         function render() {
             const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase();
-            const filteredTransactions = transactions.filter(t => 
+            let filteredTransactions = transactions.filter(t => 
                 (t.description || '').toLowerCase().includes(searchTerm) || 
                 (t.category || '').toLowerCase().includes(searchTerm)
             );
+
+            const sortOption = document.getElementById('sort-select')?.value || 'date-desc';
+            filteredTransactions.sort((a, b) => {
+                if (sortOption === 'date-desc') {
+                    return new Date(b.date) - new Date(a.date);
+                } else if (sortOption === 'date-asc') {
+                    return new Date(a.date) - new Date(b.date);
+                } else if (sortOption === 'amount-desc') {
+                    return b.amount - a.amount;
+                } else if (sortOption === 'amount-asc') {
+                    return a.amount - b.amount;
+                }
+                return 0;
+            });
 
             // 1. Calculate Summary
             let income = 0;
