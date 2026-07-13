@@ -26,7 +26,6 @@
 ## Round-Robin Continuous Improvement Queue
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list.
 
-- KPass
 - KMedia
 - KNet
 - KZip
@@ -71,3 +70,4 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KMine
 - KPac
 - KNote
+- KPass

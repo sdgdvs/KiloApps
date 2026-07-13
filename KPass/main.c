@@ -7,7 +7,7 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 }
 #pragma function(memset)
 
-HWND hDisplay, hBtnGen, hUpper, hLower, hNum, hSym, hLen;
+HWND hDisplay, hBtnGen, hBtnCopy, hUpper, hLower, hNum, hSym, hLen;
 HFONT hFont, hBtnFont;
 HBRUSH hBgBrush;
 
@@ -18,6 +18,20 @@ int my_atoi(const char* str) {
 }
 int my_strlen(const char* s) { int l=0; while(*s++) l++; return l; }
 void my_strcpy(char* d, const char* s) { while(*s) *d++ = *s++; *d = 0; }
+
+void CopyToClipboard(HWND hwnd, const char* text) {
+    if(OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, my_strlen(text) + 1);
+        if(hMem) {
+            char* ptr = (char*)GlobalLock(hMem);
+            my_strcpy(ptr, text);
+            GlobalUnlock(hMem);
+            SetClipboardData(CF_TEXT, hMem);
+        }
+        CloseClipboard();
+    }
+}
 
 void GeneratePassword() {
     char pool[200] = {0};
@@ -58,18 +72,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hNum, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hSym, BM_SETCHECK, BST_CHECKED, 0);
             
-            hBtnGen = CreateWindowA("BUTTON", "Generate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 140, 100, 30, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnGen = CreateWindowA("BUTTON", "Generate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 30, 140, 100, 30, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnCopy = CreateWindowA("BUTTON", "Copy", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 150, 140, 100, 30, hwnd, (HMENU)1002, NULL, NULL);
             
             hBgBrush = CreateSolidBrush(RGB(20, 20, 20));
             hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
             hBtnFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hBtnGen, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessageA(hBtnCopy, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             break;
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1001) {
                 GeneratePassword();
+            } else if (LOWORD(wParam) == 1002) {
+                char pwd[65];
+                GetWindowTextA(hDisplay, pwd, 65);
+                CopyToClipboard(hwnd, pwd);
             }
             break;
         }

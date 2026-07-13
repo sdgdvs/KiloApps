@@ -138,7 +138,10 @@
         <input type="text" id="labelInput" placeholder="Label (e.g. Email)">
         <button id="btnSave">Save</button>
       </div>
-      <button class="primary" id="btnGen">Generate</button>
+      <div class="control-row" style="margin-top: 10px;">
+        <button class="primary" id="btnGen" style="flex: 1;">Generate</button>
+        <button class="primary" id="btnCopy" style="flex: 1; background: #3498db; border-color: #3498db;">Copy</button>
+      </div>
     </div>
   </div>
   
@@ -155,6 +158,7 @@
     const contentVault = document.getElementById('contentVault');
     const pwdDisplay = document.getElementById('pwdDisplay');
     const btnGen = document.getElementById('btnGen');
+    const btnCopy = document.getElementById('btnCopy');
     const btnSave = document.getElementById('btnSave');
     const labelInput = document.getElementById('labelInput');
     const vaultList = document.getElementById('vaultList');
@@ -208,6 +212,16 @@
     }
 
     btnGen.addEventListener('click', generate);
+
+    btnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(pwdDisplay.innerText).then(() => {
+            const oldText = btnCopy.innerText;
+            btnCopy.innerText = 'Copied!';
+            setTimeout(() => btnCopy.innerText = oldText, 2000);
+        }).catch(() => {
+            alert("Failed to copy password.");
+        });
+    });
 
     btnSave.addEventListener('click', () => {
         const label = labelInput.value.trim();
