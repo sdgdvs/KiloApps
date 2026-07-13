@@ -31,7 +31,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-*(None - pick a new app next turn)*
+**App:** KHabit
+**Phase:** 1
+**Status:** In Progress (Phase 1)
+
+*(Phase 1 just starting)*
 
 ## App Lifecycle (14 phases per app)
 

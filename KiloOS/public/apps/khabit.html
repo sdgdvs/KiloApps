@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KHabit Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            --accent-color: #6366f1;
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: radial-gradient(circle at top right, #1f1f2e, #121212);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 800px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 600px;
+        }
+
+        header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .header-actions button:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+        }
+
+        main {
+            padding: 30px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .habit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .habit-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .habit-card:hover {
+            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .habit-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .habit-info p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .habit-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        .day-check {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid var(--glass-border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .day-check.completed {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .day-check:hover:not(.completed) {
+            border-color: var(--accent-color);
+        }
+
+        footer {
+            padding: 15px 30px;
+            border-top: 1px solid var(--glass-border);
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>KHabit</h1>
+            <div class="header-actions">
+                <button id="add-habit-btn">+ New Habit</button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="habit-list" id="habit-list">
+                <!-- Sample Habit -->
+                <div class="habit-card">
+                    <div class="habit-info">
+                        <h3>Read 20 pages</h3>
+                        <p>Daily reading goal</p>
+                    </div>
+                    <div class="habit-actions">
+                        <div class="checkbox-container">
+                            <div class="day-check completed" title="Monday">M</div>
+                            <div class="day-check completed" title="Tuesday">T</div>
+                            <div class="day-check" title="Wednesday">W</div>
+                            <div class="day-check" title="Thursday">T</div>
+                            <div class="day-check" title="Friday">F</div>
+                            <div class="day-check" title="Saturday">S</div>
+                            <div class="day-check" title="Sunday">S</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="habit-card">
+                    <div class="habit-info">
+                        <h3>Workout</h3>
+                        <p>30 mins of exercise</p>
+                    </div>
+                    <div class="habit-actions">
+                        <div class="checkbox-container">
+                            <div class="day-check completed" title="Monday">M</div>
+                            <div class="day-check" title="Tuesday">T</div>
+                            <div class="day-check completed" title="Wednesday">W</div>
+                            <div class="day-check" title="Thursday">T</div>
+                            <div class="day-check" title="Friday">F</div>
+                            <div class="day-check" title="Saturday">S</div>
+                            <div class="day-check" title="Sunday">S</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            KHabit Tracker &copy; 2026 KiloOS
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const addBtn = document.getElementById('add-habit-btn');
+            
+            addBtn.addEventListener('click', () => {
+                alert('Add Habit feature coming soon!');
+            });
+            
+            const checks = document.querySelectorAll('.day-check');
+            checks.forEach(check => {
+                check.addEventListener('click', (e) => {
+                    e.target.classList.toggle('completed');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
