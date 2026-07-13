@@ -12,6 +12,7 @@
 #define ID_BTN_DELETE 105
 #define ID_BTN_IMPORT 106
 #define ID_BTN_EXPORT 107
+#define ID_BTN_HELP 112
 #define ID_COMBO_SORT 109
 #define ID_SEARCH_EDIT 110
 
@@ -218,8 +219,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Highest Streak");
 
             HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New Habit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       370, 20, 100, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+                                       365, 20, 95, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hHelp = CreateWindowEx(0, "BUTTON", "?", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                        465, 20, 25, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hSearchLabel = CreateWindowEx(0, "STATIC", "Search:", WS_CHILD | WS_VISIBLE,
                                                20, 145, 60, 20, hwnd, NULL, NULL, NULL);
@@ -480,6 +485,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     hwnd, NULL, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL
                 );
                 ShowWindow(hSettingsWnd, SW_SHOW);
+            } else if (wmId == ID_BTN_HELP && wmEvent == BN_CLICKED) {
+                MessageBox(hwnd, "KHabit Guide:\n\n"
+                                 "Tracking: Select a habit and click 'Check Off' (or press Space) to log daily progress.\n"
+                                 "Categories: Group habits by Health, Work, Personal, or Other.\n"
+                                 "Shortcuts:\n"
+                                 "  Ctrl+N: New Habit\n"
+                                 "  Up/Down: Select Habit\n"
+                                 "  Space: Toggle Checkmark\n"
+                                 "  Delete: Delete Habit\n"
+                                 "Data: Use Import/Export to manage your habit lists.\n\n"
+                                 "Build your streak by completing habits on consecutive days!", 
+                                 "Help / Tutorial", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_BTN_IMPORT && wmEvent == BN_CLICKED) {
                 OPENFILENAME ofn;
                 char szFile[260] = "";

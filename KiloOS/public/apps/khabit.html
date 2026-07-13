@@ -511,6 +511,7 @@
                     <option value="alpha" style="background: var(--bg-color);">Alphabetical</option>
                     <option value="streak" style="background: var(--bg-color);">Highest Streak</option>
                 </select>
+                <button id="help-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Help">?</button>
                 <button id="settings-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Settings">⚙️</button>
                 <button id="import-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Import JSON">Import</button>
                 <button id="export-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Export JSON">Export</button>
@@ -540,6 +541,28 @@
         <footer>
             KHabit Tracker &copy; 2026 KiloOS
         </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal">
+            <h2>KHabit Guide</h2>
+            <div style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;">
+                <p><strong>Tracking:</strong> Click the checkmark to log your daily progress. Completing a habit on consecutive days builds your streak!</p>
+                <p style="margin-top: 10px;"><strong>Categorization:</strong> Group habits by Health, Work, Personal, or Other.</p>
+                <p style="margin-top: 10px;"><strong>Shortcuts:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 5px;">
+                    <li><code>Ctrl+N</code> - New Habit</li>
+                    <li><code>Up/Down</code> - Select Habit</li>
+                    <li><code>Space</code> - Toggle Checkmark</li>
+                    <li><code>Delete</code> - Delete Habit</li>
+                </ul>
+                <p style="margin-top: 10px;"><strong>Data:</strong> Use Import/Export to save your habits as a CSV file and transfer them across devices.</p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="close-help-btn">Close</button>
+            </div>
+        </div>
     </div>
 
     <!-- Settings Modal -->
@@ -599,11 +622,14 @@
         const habitListEl = document.getElementById('habit-list');
         const searchInput = document.getElementById('search-input');
         const addBtn = document.getElementById('add-habit-btn');
+        const helpBtn = document.getElementById('help-btn');
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
         const settingsBtn = document.getElementById('settings-btn');
         const sortSelect = document.getElementById('sort-select');
         const modal = document.getElementById('add-modal');
+        const helpModal = document.getElementById('help-modal');
+        const closeHelpBtn = document.getElementById('close-help-btn');
         const settingsModal = document.getElementById('settings-modal');
         const closeSettingsBtn = document.getElementById('close-settings-btn');
         const cancelBtn = document.getElementById('cancel-habit-btn');
@@ -946,6 +972,18 @@
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
+        });
+
+        helpBtn.addEventListener('click', () => {
+            helpModal.classList.add('active');
+        });
+
+        closeHelpBtn.addEventListener('click', () => {
+            helpModal.classList.remove('active');
+        });
+
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.classList.remove('active');
         });
 
         importBtn.addEventListener('click', () => {
