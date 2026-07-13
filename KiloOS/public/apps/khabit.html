@@ -494,6 +494,7 @@
         <header>
             <h1>KHabit</h1>
             <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="search" id="search-input" placeholder="Search habits..." style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); padding: 8px 12px; border-radius: 8px; outline: none; font-family: 'Inter', sans-serif; width: 150px;" autocomplete="off">
                 <select id="sort-select" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); padding: 8px; border-radius: 8px; outline: none; cursor: pointer; font-family: 'Inter', sans-serif;">
                     <option value="none" style="background: var(--bg-color);">Sort</option>
                     <option value="alpha" style="background: var(--bg-color);">Alphabetical</option>
@@ -576,6 +577,7 @@
 
         // DOM Elements
         const habitListEl = document.getElementById('habit-list');
+        const searchInput = document.getElementById('search-input');
         const addBtn = document.getElementById('add-habit-btn');
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
@@ -711,19 +713,22 @@
 
             habitListEl.innerHTML = '';
             
-            if (habits.length === 0) {
-                habitListEl.innerHTML = \`
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            const filteredHabits = habits.filter(h => h.name.toLowerCase().includes(searchTerm));
+
+            if (filteredHabits.length === 0) {
+                habitListEl.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">🌱</div>
-                        <p>No habits yet. Plant a seed by creating a new habit!</p>
+                        <p>${habits.length === 0 ? 'No habits yet. Plant a seed by creating a new habit!' : 'No habits match your search.'}</p>
                     </div>
-                \`;
+                `;
                 return;
             }
 
             const today = getTodayStr();
 
-            habits.forEach(habit => {
+            filteredHabits.forEach(habit => {
                 const streak = calculateStreak(habit.completions);
                 const isCompletedToday = habit.completions.includes(today);
 
@@ -903,6 +908,11 @@
         sortSelect.addEventListener('change', () => {
             sortHabits();
             saveHabits();
+            renderHabits();
+        });
+
+        searchInput.addEventListener('input', () => {
+            selectedHabitIndex = -1;
             renderHabits();
         });
 

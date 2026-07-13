@@ -13,6 +13,7 @@
 #define ID_BTN_IMPORT 106
 #define ID_BTN_EXPORT 107
 #define ID_COMBO_SORT 109
+#define ID_SEARCH_EDIT 110
 
 typedef struct {
     char name[128];
@@ -98,12 +99,25 @@ void SortHabits() {
     }
 }
 
-HWND hList, hEdit;
+HWND hList, hEdit, hSearchEdit;
 
 void UpdateList() {
+    char searchStr[128] = {0};
+    if (hSearchEdit) {
+        GetWindowText(hSearchEdit, searchStr, sizeof(searchStr));
+    }
+    for (int i=0; i<strlen(searchStr); i++) searchStr[i] = tolower(searchStr[i]);
+
     SendMessage(hList, LB_RESETCONTENT, 0, 0);
     int today = GetDaysSinceEpoch();
     for (int i = 0; i < habitCount; i++) {
+        char lowerName[128];
+        strcpy(lowerName, habits[i].name);
+        for (int j=0; j<strlen(lowerName); j++) lowerName[j] = tolower(lowerName[j]);
+        if (strlen(searchStr) > 0 && strstr(lowerName, searchStr) == NULL) {
+            continue;
+        }
+
         char buffer[256];
         char status[16];
         if (habits[i].last_check_day == today) {
@@ -112,7 +126,9 @@ void UpdateList() {
             strcpy(status, "[   ]");
         }
         sprintf(buffer, "%s  %s (Streak: %d)", status, habits[i].name, habits[i].streak);
-        SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buffer);
+        
+        int lbIdx = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buffer);
+        SendMessage(hList, LB_SETITEMDATA, lbIdx, i);
     }
     if (hMainWnd) {
         InvalidateRect(hMainWnd, NULL, TRUE);
@@ -183,8 +199,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                        370, 20, 100, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            HWND hSearchLabel = CreateWindowEx(0, "STATIC", "Search:", WS_CHILD | WS_VISIBLE,
+                                               20, 145, 60, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hSearchLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hSearchEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+                                         80, 140, 390, 28, hwnd, (HMENU)ID_SEARCH_EDIT, NULL, NULL);
+            SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS,
-                                   20, 140, 450, 240, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
+                                   20, 175, 450, 205, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hCheck = CreateWindowEx(0, "BUTTON", "Check Off", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -334,7 +358,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
-            if (wmId == ID_COMBO_SORT && wmEvent == CBN_SELCHANGE) {
+            if (wmId == ID_SEARCH_EDIT && wmEvent == EN_CHANGE) {
+                UpdateList();
+            } else if (wmId == ID_COMBO_SORT && wmEvent == CBN_SELCHANGE) {
                 current_sort_index = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
                 SaveSettings();
                 SortHabits();
@@ -358,27 +384,35 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wmId == ID_BTN_CHECK && wmEvent == BN_CLICKED) {
                 int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR) {
+                    int original_idx = SendMessage(hList, LB_GETITEMDATA, sel, 0);
                     int today = GetDaysSinceEpoch();
-                    if (habits[sel].last_check_day != today) {
-                        if (today - habits[sel].last_check_day == 1) {
-                            habits[sel].streak++;
+                    if (habits[original_idx].last_check_day != today) {
+                        if (today - habits[original_idx].last_check_day == 1) {
+                            habits[original_idx].streak++;
                         } else {
-                            habits[sel].streak = 1;
+                            habits[original_idx].streak = 1;
                         }
-                        habits[sel].last_check_day = today;
+                        habits[original_idx].last_check_day = today;
                     } else {
                         // Undo check off
-                        habits[sel].last_check_day = 0; // rough undo
-                        if(habits[sel].streak > 0) habits[sel].streak--;
+                        habits[original_idx].last_check_day = 0; // rough undo
+                        if(habits[original_idx].streak > 0) habits[original_idx].streak--;
                     }
                     SaveHabits();
                     UpdateList();
-                    SendMessage(hList, LB_SETCURSEL, sel, 0);
+                    // Try to re-select
+                    for (int k=0; k<SendMessage(hList, LB_GETCOUNT, 0, 0); k++) {
+                        if (SendMessage(hList, LB_GETITEMDATA, k, 0) == original_idx) {
+                            SendMessage(hList, LB_SETCURSEL, k, 0);
+                            break;
+                        }
+                    }
                 }
             } else if (wmId == ID_BTN_DELETE && wmEvent == BN_CLICKED) {
                 int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR) {
-                    for (int i = sel; i < habitCount - 1; i++) {
+                    int original_idx = SendMessage(hList, LB_GETITEMDATA, sel, 0);
+                    for (int i = original_idx; i < habitCount - 1; i++) {
                         habits[i] = habits[i + 1];
                     }
                     habitCount--;
@@ -503,7 +537,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     bHandled = TRUE;
                 }
             } else if (msg.wParam == VK_UP || msg.wParam == VK_DOWN) {
-                if (GetFocus() != hList && GetFocus() != hEdit) {
+                if (GetFocus() != hList && GetFocus() != hEdit && GetFocus() != hSearchEdit) {
                     SetFocus(hList);
                 }
             }
