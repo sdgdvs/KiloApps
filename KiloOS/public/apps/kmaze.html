@@ -17,56 +17,56 @@
   const maps = [
     [
       [1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,1,0,0,1],
+      [1,0,0,5,0,0,1,5,0,1],
       [1,0,1,1,0,0,1,0,0,1],
-      [1,0,0,1,0,0,0,0,0,1],
+      [1,5,0,1,0,0,0,0,0,1],
       [1,0,0,1,1,1,1,0,0,1],
-      [1,0,0,0,0,0,0,0,0,1],
+      [1,0,0,0,0,0,0,0,5,1],
       [1,1,0,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,1,0,1],
+      [1,0,0,0,5,0,0,1,0,1],
       [1,0,0,0,0,0,0,2,0,1],
       [1,1,1,1,1,1,1,1,1,1]
     ],
     [
       [1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,1,0,0,0,0,0,1],
+      [1,0,5,0,0,1,0,0,0,5,0,1],
       [1,0,1,1,0,1,0,1,1,1,0,1],
       [1,0,1,0,0,0,0,0,0,1,0,1],
       [1,0,1,0,1,1,1,1,0,1,0,1],
-      [1,0,0,0,1,0,0,1,0,1,0,1],
+      [1,5,0,0,1,0,0,1,5,1,0,1],
       [1,1,1,0,1,0,1,1,0,1,0,1],
       [1,0,0,0,1,0,0,0,0,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,0,1],
-      [1,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,5,1],
+      [1,0,5,0,0,0,0,0,0,1,0,1],
       [1,1,1,1,1,1,1,1,0,1,2,1],
       [1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,0,0,5,0,0,0,0,0,0,5,0,0,1],
       [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
-      [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,5,0,0,0,0,0,0,0,0,1,0,1],
       [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
-      [1,0,1,0,1,0,0,0,0,0,1,0,1,0,1],
+      [1,0,1,0,1,0,5,0,0,0,1,0,1,0,1],
       [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
-      [1,0,1,0,1,0,1,2,1,0,1,0,1,0,1],
+      [1,0,1,0,1,0,1,2,1,0,1,0,1,5,1],
       [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
       [1,0,1,0,1,0,0,0,1,0,1,0,1,0,1],
-      [1,0,1,0,1,1,1,1,1,0,1,0,1,0,1],
-      [1,0,1,0,0,0,0,0,0,0,1,0,1,0,1],
+      [1,5,1,0,1,1,1,1,1,0,1,0,1,0,1],
+      [1,0,1,0,0,5,0,0,0,0,1,0,1,0,1],
       [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,0,0,0,0,0,5,0,0,0,0,1,0,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
     ],
     [
       [1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,1,3,0,1],
+      [1,0,0,5,0,0,1,3,0,1],
       [1,1,1,1,1,0,1,1,0,1],
-      [1,0,0,0,1,0,0,0,0,1],
+      [1,5,0,0,1,0,0,0,0,1],
       [1,0,1,0,1,1,1,1,1,1],
-      [1,0,1,0,0,0,0,0,4,1],
+      [1,0,1,0,0,0,5,0,4,1],
       [1,0,1,1,1,1,1,0,1,1],
-      [1,0,0,0,0,0,1,0,2,1],
+      [1,0,5,0,0,0,1,0,2,1],
       [1,1,1,1,1,1,1,1,1,1],
       [1,1,1,1,1,1,1,1,1,1]
     ],
@@ -93,6 +93,7 @@
   let startTime = 0;
   let endTime = 0;
   let bestTime = localStorage.getItem('kmaze_best') ? parseFloat(localStorage.getItem('kmaze_best')) : 9999.9;
+  let score = 0;
   
   function nextLevel() {
       currentLevel++;
@@ -141,6 +142,7 @@
               gameState = 1;
               startTime = Date.now();
               currentLevel = -1;
+              score = 0;
               nextLevel();
           }
       }
@@ -149,12 +151,14 @@
 
   function update() {
       if (gameState !== 1) return;
-      const moveSpeed = 0.1;
+      let moveSpeed = 0.1;
       const rotSpeed = 0.05;
+      
+      if (keys['Shift']) moveSpeed = 0.2;
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if (val === 0 || val === 2 || val === 3) return true;
+          if (val === 0 || val === 2 || val === 3 || val === 5) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
@@ -183,6 +187,10 @@
       } else if (curVal === 2) {
           playTone(800, 'square', 0.2);
           nextLevel();
+      } else if (curVal === 5) {
+          score += 100;
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(500, 'square', 0.1);
       }
 
       if (keys['ArrowRight'] || keys['d']) {
@@ -263,6 +271,8 @@
               ctx.fillStyle = side === 1 ? (tex ? '#996600' : '#cc9900') : (tex ? '#cc9900' : '#ffcc00');
           } else if (hit === 4) {
               ctx.fillStyle = side === 1 ? (tex ? '#003399' : '#0066cc') : (tex ? '#0066cc' : '#0099ff');
+          } else if (hit === 5) {
+              ctx.fillStyle = side === 1 ? (tex ? '#994c00' : '#cc6600') : (tex ? '#cc6600' : '#ff8000');
           } else {
               ctx.fillStyle = side === 1 ? (tex ? '#770000' : '#960000') : (tex ? '#aa0000' : '#c80000');
           }
@@ -278,12 +288,12 @@
       } else if (gameState === 2) {
           let elapsed = (endTime - startTime) / 1000;
           ctx.fillText("You Escaped!", W/2 - 40, H/2 - 20);
-          ctx.fillText("Time: " + elapsed.toFixed(1) + "s", W/2 - 40, H/2);
+          ctx.fillText("Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 70, H/2);
           ctx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
           ctx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 40);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
-          ctx.fillText("Keys: " + keysHeld, 10, 20);
+          ctx.fillText("Score: " + score + " Keys: " + keysHeld, 10, 20);
           ctx.fillText("Level: " + (currentLevel+1), 10, 35);
           ctx.fillText("Time: " + elapsed.toFixed(1), 10, 50);
           if (bestTime < 9999) ctx.fillText("Best: " + bestTime.toFixed(1), 10, 65);
@@ -301,6 +311,7 @@
                   else if (v === 2) ctx.fillStyle = '#0f0';
                   else if (v === 3) ctx.fillStyle = '#ff0';
                   else if (v === 4) ctx.fillStyle = '#00f';
+                  else if (v === 5) ctx.fillStyle = '#f80';
                   else ctx.fillStyle = '#222';
                   ctx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
               }

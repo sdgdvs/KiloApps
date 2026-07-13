@@ -15,59 +15,59 @@ const int H = 240;
 
 const int orig_map1[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
-    {1,0,0,0,0,0,1,0,0,1},
+    {1,0,0,5,0,0,1,5,0,1},
     {1,0,1,1,0,0,1,0,0,1},
-    {1,0,0,1,0,0,0,0,0,1},
+    {1,5,0,1,0,0,0,0,0,1},
     {1,0,0,1,1,1,1,0,0,1},
-    {1,0,0,0,0,0,0,0,0,1},
+    {1,0,0,0,0,0,0,0,5,1},
     {1,1,0,1,1,1,1,1,0,1},
-    {1,0,0,0,0,0,0,1,0,1},
+    {1,0,0,0,5,0,0,1,0,1},
     {1,0,0,0,0,0,0,2,0,1},
     {1,1,1,1,1,1,1,1,1,1}
 };
 
 const int orig_map2[12][12] = {
     {1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,0,0,0,0,1,0,0,0,0,0,1},
+    {1,0,5,0,0,1,0,0,0,5,0,1},
     {1,0,1,1,0,1,0,1,1,1,0,1},
     {1,0,1,0,0,0,0,0,0,1,0,1},
     {1,0,1,0,1,1,1,1,0,1,0,1},
-    {1,0,0,0,1,0,0,1,0,1,0,1},
+    {1,5,0,0,1,0,0,1,5,1,0,1},
     {1,1,1,0,1,0,1,1,0,1,0,1},
     {1,0,0,0,1,0,0,0,0,0,0,1},
-    {1,0,1,1,1,1,1,1,1,1,0,1},
-    {1,0,0,0,0,0,0,0,0,1,0,1},
+    {1,0,1,1,1,1,1,1,1,1,5,1},
+    {1,0,5,0,0,0,0,0,0,1,0,1},
     {1,1,1,1,1,1,1,1,0,1,2,1},
     {1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
 const int orig_map3[15][15] = {
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {1,0,0,0,5,0,0,0,0,0,0,5,0,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,1,1,0,1},
-    {1,0,1,0,0,0,0,0,0,0,0,0,1,0,1},
+    {1,0,1,5,0,0,0,0,0,0,0,0,1,0,1},
     {1,0,1,0,1,1,1,1,1,1,1,0,1,0,1},
-    {1,0,1,0,1,0,0,0,0,0,1,0,1,0,1},
+    {1,0,1,0,1,0,5,0,0,0,1,0,1,0,1},
     {1,0,1,0,1,0,1,1,1,0,1,0,1,0,1},
-    {1,0,1,0,1,0,1,2,1,0,1,0,1,0,1},
+    {1,0,1,0,1,0,1,2,1,0,1,0,1,5,1},
     {1,0,1,0,1,0,1,0,1,0,1,0,1,0,1},
     {1,0,1,0,1,0,0,0,1,0,1,0,1,0,1},
-    {1,0,1,0,1,1,1,1,1,0,1,0,1,0,1},
-    {1,0,1,0,0,0,0,0,0,0,1,0,1,0,1},
+    {1,5,1,0,1,1,1,1,1,0,1,0,1,0,1},
+    {1,0,1,0,0,5,0,0,0,0,1,0,1,0,1},
     {1,0,1,1,1,1,1,1,1,1,1,0,1,0,1},
-    {1,0,0,0,0,0,0,0,0,0,0,0,1,0,1},
+    {1,0,0,0,0,0,0,5,0,0,0,0,1,0,1},
     {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
 };
 
 const int orig_map4[10][10] = {
     {1,1,1,1,1,1,1,1,1,1},
-    {1,0,0,0,0,0,1,3,0,1},
+    {1,0,0,5,0,0,1,3,0,1},
     {1,1,1,1,1,0,1,1,0,1},
-    {1,0,0,0,1,0,0,0,0,1},
+    {1,5,0,0,1,0,0,0,0,1},
     {1,0,1,0,1,1,1,1,1,1},
-    {1,0,1,0,0,0,0,0,4,1},
+    {1,0,1,0,0,0,5,0,4,1},
     {1,0,1,1,1,1,1,0,1,1},
-    {1,0,0,0,0,0,1,0,2,1},
+    {1,0,5,0,0,0,1,0,2,1},
     {1,1,1,1,1,1,1,1,1,1},
     {1,1,1,1,1,1,1,1,1,1}
 };
@@ -109,6 +109,7 @@ int gameState = 0; // 0=start, 1=play, 2=win
 DWORD startTime = 0;
 DWORD endTime = 0;
 float bestTime = 9999.9f;
+int score = 0;
 
 void LoadBest() {
     FILE* f = fopen("kmaze_score.dat", "rb");
@@ -196,7 +197,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             int TryMove(int x, int y) {
                 int val = GetMapValue(x, y);
-                if (val == 0 || val == 2 || val == 3) return 1;
+                if (val == 0 || val == 2 || val == 3 || val == 5) return 1;
                 if (val == 4) {
                     if (keysHeld > 0) {
                         keysHeld--;
@@ -213,6 +214,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     gameState = 1;
                     startTime = GetTickCount();
                     currentLevel = -1;
+                    score = 0;
                     ResetMaps();
                     NextLevel();
                 }
@@ -222,6 +224,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
+            if (GetAsyncKeyState(VK_SHIFT) & 0x8000) {
+                moveSpeed = 0.2f;
+            }
             if (GetAsyncKeyState(VK_UP) & 0x8000) {
                 if (TryMove((int)(pX + dX * moveSpeed), (int)pY)) pX += dX * moveSpeed;
                 if (TryMove((int)pX, (int)(pY + dY * moveSpeed))) pY += dY * moveSpeed;
@@ -239,6 +244,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (curVal == 2) {
                 MessageBeep(MB_ICONASTERISK);
                 NextLevel();
+            } else if (curVal == 5) {
+                score += 100;
+                SetMapValue((int)pX, (int)pY, 0);
+                MessageBeep(MB_OK);
             }
 
             if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
@@ -286,6 +295,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH k2 = CreateSolidBrush(RGB(204, 153, 0));
             HBRUSH d1 = CreateSolidBrush(RGB(0, 153, 255));
             HBRUSH d2 = CreateSolidBrush(RGB(0, 102, 204));
+            HBRUSH c1 = CreateSolidBrush(RGB(255, 128, 0));
+            HBRUSH c2 = CreateSolidBrush(RGB(204, 102, 0));
             
             HBRUSH w1s = CreateSolidBrush(RGB(170, 0, 0));
             HBRUSH w2s = CreateSolidBrush(RGB(120, 0, 0));
@@ -295,6 +306,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH k2s = CreateSolidBrush(RGB(153, 102, 0));
             HBRUSH d1s = CreateSolidBrush(RGB(0, 102, 204));
             HBRUSH d2s = CreateSolidBrush(RGB(0, 51, 153));
+            HBRUSH c1s = CreateSolidBrush(RGB(204, 102, 0));
+            HBRUSH c2s = CreateSolidBrush(RGB(153, 76, 0));
             
             for (int x = 0; x < W; x++) {
                 float cameraX = 2 * x / (float)W - 1;
@@ -351,12 +364,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? k2s : k2) : (tex ? k1s : k1));
                 } else if (hit == 4) {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? d2s : d2) : (tex ? d1s : d1));
+                } else if (hit == 5) {
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? c2s : c2) : (tex ? c1s : c1));
                 } else {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? w2s : w2) : (tex ? w1s : w1));
                 }
             }
-            DeleteObject(w1); DeleteObject(w2); DeleteObject(e1); DeleteObject(e2); DeleteObject(k1); DeleteObject(k2); DeleteObject(d1); DeleteObject(d2);
-            DeleteObject(w1s); DeleteObject(w2s); DeleteObject(e1s); DeleteObject(e2s); DeleteObject(k1s); DeleteObject(k2s); DeleteObject(d1s); DeleteObject(d2s);
+            DeleteObject(w1); DeleteObject(w2); DeleteObject(e1); DeleteObject(e2); DeleteObject(k1); DeleteObject(k2); DeleteObject(d1); DeleteObject(d2); DeleteObject(c1); DeleteObject(c2);
+            DeleteObject(w1s); DeleteObject(w2s); DeleteObject(e1s); DeleteObject(e2s); DeleteObject(k1s); DeleteObject(k2s); DeleteObject(d1s); DeleteObject(d2s); DeleteObject(c1s); DeleteObject(c2s);
             
             // Draw UI
             char uiText[128];
@@ -364,10 +379,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 sprintf(uiText, "KMAZE - Press ENTER to start");
             } else if (gameState == 2) {
                 float elapsed = (endTime - startTime) / 1000.0f;
-                sprintf(uiText, "You Escaped! Time: %.1fs  Best: %.1fs (ENTER to restart)", elapsed, bestTime);
+                sprintf(uiText, "You Escaped! Score: %d Time: %.1fs (ENTER restart)", score, elapsed);
             } else {
                 float elapsed = (GetTickCount() - startTime) / 1000.0f;
-                sprintf(uiText, "Keys: %d  Level: %d  Time: %.1f  Best: %.1f", keysHeld, currentLevel + 1, elapsed, (bestTime < 9999.0f) ? bestTime : 0.0f);
+                sprintf(uiText, "Score: %d  Keys: %d  Lvl: %d  Time: %.1f", score, keysHeld, currentLevel + 1, elapsed);
             }
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(255, 255, 255));
@@ -390,6 +405,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HBRUSH mDoor = CreateSolidBrush(RGB(0, 0, 255));
                     HBRUSH mFloor = CreateSolidBrush(RGB(34, 34, 34));
                     HBRUSH mPlayer = CreateSolidBrush(RGB(255, 0, 0));
+                    HBRUSH mCoin = CreateSolidBrush(RGB(255, 128, 0));
                     
                     for (int i = 0; i < mmW; i++) {
                         for (int j = 0; j < mmH; j++) {
@@ -399,6 +415,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (v == 2) b = mExit;
                             else if (v == 3) b = mKey;
                             else if (v == 4) b = mDoor;
+                            else if (v == 5) b = mCoin;
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
                             FillRect(hdcMem, &mr, b);
@@ -407,7 +424,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT mr = {mmX + (int)pX*mmS, mmY + (int)pY*mmS, mmX + (int)pX*mmS + mmS, mmY + (int)pY*mmS + mmS};
                     FillRect(hdcMem, &mr, mPlayer);
                     
-                    DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer);
+                    DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer); DeleteObject(mCoin);
                 }
             }
 
