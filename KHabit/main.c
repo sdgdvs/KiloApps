@@ -19,6 +19,7 @@ typedef struct {
     char name[128];
     int streak;
     int last_check_day;
+    char category[32];
 } Habit;
 
 Habit habits[MAX_HABITS];
@@ -58,9 +59,20 @@ void LoadHabits() {
     FILE *f = fopen("habits.dat", "r");
     if (!f) return;
     habitCount = 0;
-    while (fscanf(f, "%127[^|]|%d|%d\n", habits[habitCount].name, &habits[habitCount].streak, &habits[habitCount].last_check_day) == 3) {
-        habitCount++;
-        if (habitCount >= MAX_HABITS) break;
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char name[128] = {0};
+        int streak = 0, last = 0;
+        char cat[32] = "Other";
+        int n = sscanf(line, "%127[^|]|%d|%d|%31[^\n]", name, &streak, &last, cat);
+        if (n >= 3) {
+            strcpy(habits[habitCount].name, name);
+            habits[habitCount].streak = streak;
+            habits[habitCount].last_check_day = last;
+            strcpy(habits[habitCount].category, cat);
+            habitCount++;
+            if (habitCount >= MAX_HABITS) break;
+        }
     }
     fclose(f);
 }
@@ -69,7 +81,7 @@ void SaveHabits() {
     FILE *f = fopen("habits.dat", "w");
     if (!f) return;
     for (int i = 0; i < habitCount; i++) {
-        fprintf(f, "%s|%d|%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day);
+        fprintf(f, "%s|%d|%d|%s\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category);
     }
     fclose(f);
 }
@@ -125,7 +137,7 @@ void UpdateList() {
         } else {
             strcpy(status, "[   ]");
         }
-        sprintf(buffer, "%s  %s (Streak: %d)", status, habits[i].name, habits[i].streak);
+        sprintf(buffer, "%s [%s] %s (Streak: %d)", status, habits[i].category, habits[i].name, habits[i].streak);
         
         int lbIdx = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buffer);
         SendMessage(hList, LB_SETITEMDATA, lbIdx, i);
@@ -185,8 +197,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hFont = CreateFont(18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                   20, 20, 230, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
+                                   20, 20, 140, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+#define ID_COMBO_CAT 111
+            HWND hCatCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
+                                             165, 20, 90, 150, hwnd, (HMENU)ID_COMBO_CAT, NULL, NULL);
+            SendMessage(hCatCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Health");
+            SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Work");
+            SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Personal");
+            SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Other");
+            SendMessage(hCatCombo, CB_SETCURSEL, 3, 0);
 
             HWND hSortCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
                                              260, 20, 100, 150, hwnd, (HMENU)ID_COMBO_SORT, NULL, NULL);
@@ -374,6 +396,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         strcpy(habits[habitCount].name, text);
                         habits[habitCount].streak = 0;
                         habits[habitCount].last_check_day = 0;
+                        
+                        HWND hCatCombo = GetDlgItem(hwnd, ID_COMBO_CAT);
+                        int selCat = SendMessage(hCatCombo, CB_GETCURSEL, 0, 0);
+                        if(selCat == CB_ERR) selCat = 3;
+                        char catText[32];
+                        SendMessage(hCatCombo, CB_GETLBTEXT, selCat, (LPARAM)catText);
+                        strcpy(habits[habitCount].category, catText);
+
                         habitCount++;
                         SortHabits();
                         SaveHabits();
@@ -437,7 +467,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     FILE *f = fopen(ofn.lpstrFile, "w");
                     if (f) {
                         for (int i = 0; i < habitCount; i++) {
-                            fprintf(f, "%s,%d,%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day);
+                            fprintf(f, "%s,%d,%d,%s\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category);
                         }
                         fclose(f);
                         MessageBox(hwnd, "Export successful!", "Success", MB_OK);
@@ -468,9 +498,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     FILE *f = fopen(ofn.lpstrFile, "r");
                     if (f) {
                         habitCount = 0;
-                        while (fscanf(f, "%127[^,],%d,%d\n", habits[habitCount].name, &habits[habitCount].streak, &habits[habitCount].last_check_day) == 3) {
-                            habitCount++;
-                            if (habitCount >= MAX_HABITS) break;
+                        char line[256];
+                        while (fgets(line, sizeof(line), f)) {
+                            char name[128] = {0};
+                            int streak = 0, last = 0;
+                            char cat[32] = "Other";
+                            int n = sscanf(line, "%127[^,],%d,%d,%31[^\n]", name, &streak, &last, cat);
+                            if (n >= 3) {
+                                strcpy(habits[habitCount].name, name);
+                                habits[habitCount].streak = streak;
+                                habits[habitCount].last_check_day = last;
+                                strcpy(habits[habitCount].category, cat);
+                                habitCount++;
+                                if (habitCount >= MAX_HABITS) break;
+                            }
                         }
                         fclose(f);
                         SortHabits();

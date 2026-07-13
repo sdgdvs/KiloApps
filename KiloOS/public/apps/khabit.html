@@ -168,6 +168,17 @@
             line-height: 1.4;
         }
 
+        .category-tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            margin-left: 8px;
+            vertical-align: middle;
+            font-weight: 500;
+        }
+
         .habit-actions {
             display: flex;
             align-items: center;
@@ -562,6 +573,15 @@
                 <label for="habit-desc">Description (Optional)</label>
                 <input type="text" id="habit-desc" placeholder="e.g. Daily reading goal" autocomplete="off">
             </div>
+            <div class="input-group">
+                <label for="habit-category">Category</label>
+                <select id="habit-category" style="width: 100%; padding: 12px 16px; border-radius: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); color: white; font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: all 0.3s; cursor: pointer;">
+                    <option value="Health" style="background: #1e1b2e;">Health</option>
+                    <option value="Work" style="background: #1e1b2e;">Work</option>
+                    <option value="Personal" style="background: #1e1b2e;">Personal</option>
+                    <option value="Other" selected style="background: #1e1b2e;">Other</option>
+                </select>
+            </div>
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancel-habit-btn">Cancel</button>
                 <button id="save-habit-btn">Save Habit</button>
@@ -590,6 +610,7 @@
         const saveBtn = document.getElementById('save-habit-btn');
         const nameInput = document.getElementById('habit-name');
         const descInput = document.getElementById('habit-desc');
+        const catInput = document.getElementById('habit-category');
 
         // Utils
         const getTodayStr = () => {
@@ -734,15 +755,12 @@
 
                 const card = document.createElement('div');
                 card.className = 'habit-card';
-                card.innerHTML = \`
+                card.innerHTML = `
                     <div class="habit-info">
-                        <h3>\${habit.name}</h3>
-                        \${habit.description ? \`<p>\${habit.description}</p>\` : ''}
+                        <h3>${habit.name} <span class="category-tag">${habit.category || 'Other'}</span></h3>
+                        ${habit.description ? `<p>${habit.description}</p>` : ''}
                     </div>
                     <div class="habit-actions">
-                        <div class="streak-info \${streak > 0 ? 'active' : ''}" title="Current Streak">
-                            <span class="streak-icon">\${streak >= 3 ? '🔥' : '⭐'}</span>
-                            <span>\${streak}</span>
                         </div>
                         <button class="check-btn \${isCompletedToday ? 'completed' : ''}" data-id="\${habit.id}" title="\${isCompletedToday ? 'Completed today!' : 'Mark as complete'}">
                             <span>✔</span>
@@ -813,11 +831,12 @@
             renderHabits();
         };
 
-        const addHabit = (name, description) => {
+        const addHabit = (name, description, category) => {
             habits.push({
                 id: generateId(),
                 name,
                 description,
+                category: category || 'Other',
                 completions: []
             });
             saveHabits();
@@ -834,6 +853,7 @@
         const openModal = () => {
             nameInput.value = '';
             descInput.value = '';
+            if (catInput) catInput.value = 'Other';
             nameInput.style.borderColor = 'var(--glass-border)';
             modal.classList.add('active');
             setTimeout(() => nameInput.focus(), 50);
@@ -963,8 +983,9 @@
         saveBtn.addEventListener('click', () => {
             const name = nameInput.value.trim();
             const desc = descInput.value.trim();
+            const cat = catInput ? catInput.value : 'Other';
             if (name) {
-                addHabit(name, desc);
+                addHabit(name, desc, cat);
                 closeModal();
             } else {
                 nameInput.style.borderColor = 'var(--danger-color)';
