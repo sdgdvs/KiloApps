@@ -190,9 +190,9 @@
       } else if (t === 2) { // Cyberpunk
         let f = n / iter;
         return [
-          Math.floor(Math.sin(f * Math.PI) * 255),
-          Math.floor(Math.sin(f * Math.PI * 2) * 128),
-          Math.floor(Math.cos(f * Math.PI) * 255)
+          Math.max(0, Math.floor(Math.sin(f * Math.PI) * 255)),
+          Math.max(0, Math.floor(Math.sin(f * Math.PI * 2) * 128)),
+          Math.max(0, Math.floor(Math.cos(f * Math.PI) * 255))
         ];
       } else { // BW
         let f = (n % 20) > 10 ? 255 : 0;
@@ -201,6 +201,7 @@
     }
 
     function renderBlock(w, h, startY, endY, imgData) {
+      if (w <= 1 || h <= 1) return;
       const data = imgData.data;
       const re_factor = (maxRe - minRe) / (w - 1);
       const im_factor = (maxIm - minIm) / (h - 1);

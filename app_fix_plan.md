@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KMandel
+**Target App:** KNotes
 **Status:** Next
 
 ## Workflow
@@ -52,7 +52,8 @@
 - **KPac**: Fixed TypeError in `kpac.html` Web Audio API where `exponentialRampToValueAtTime` was called on the `GainNode` instead of its `gain` AudioParam.
 - **KJournal**: Fixed UTC timezone bug in `kjournal.html` date logic. Removed redundant `renderList` call. Checked `main.c` (no issues found).
 - **KMail**: Fixed XSS vulnerability in `kmail.html` by safely creating DOM nodes for subject and sender. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+- **KMandel**: Fixed negative color calculation bug in Cyberpunk theme that caused visual artifacts. Added bounds checking to prevent division by zero on zero/1x1 resize.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KMandel.
+All apps need systematic testing. Continue alphabetically from KNotes.
 

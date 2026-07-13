@@ -27,9 +27,12 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
         *b = (unsigned char)((n * 255) / iter);
     } else if (t == 2) { // Cyberpunk
         double f = (double)n / iter;
-        *r = (unsigned char)(sin(f * 3.14159) * 255);
-        *g = (unsigned char)(sin(f * 3.14159 * 2) * 128);
-        *b = (unsigned char)(cos(f * 3.14159) * 255);
+        double vr = sin(f * 3.14159) * 255;
+        double vg = sin(f * 3.14159 * 2) * 128;
+        double vb = cos(f * 3.14159) * 255;
+        *r = (unsigned char)(vr < 0 ? 0 : (vr > 255 ? 255 : vr));
+        *g = (unsigned char)(vg < 0 ? 0 : (vg > 255 ? 255 : vg));
+        *b = (unsigned char)(vb < 0 ? 0 : (vb > 255 ? 255 : vb));
     } else { // BW
         unsigned char v = ((n % 20) > 10) ? 255 : 0;
         *r = v; *g = v; *b = v;
@@ -37,7 +40,7 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
 }
 
 void RenderMandelbrot(int width, int height) {
-    if (!pixels || width <= 0 || height <= 0) return;
+    if (!pixels || width <= 1 || height <= 1) return;
     
     double re_factor = (maxRe - minRe) / (width - 1);
     double im_factor = (maxIm - minIm) / (height - 1);
