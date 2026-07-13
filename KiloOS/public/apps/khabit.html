@@ -493,7 +493,12 @@
     <div class="app-container">
         <header>
             <h1>KHabit</h1>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="sort-select" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); padding: 8px; border-radius: 8px; outline: none; cursor: pointer; font-family: 'Inter', sans-serif;">
+                    <option value="none" style="background: var(--bg-color);">Sort</option>
+                    <option value="alpha" style="background: var(--bg-color);">Alphabetical</option>
+                    <option value="streak" style="background: var(--bg-color);">Highest Streak</option>
+                </select>
                 <button id="settings-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Settings">⚙️</button>
                 <button id="import-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Import JSON">Import</button>
                 <button id="export-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Export JSON">Export</button>
@@ -575,6 +580,7 @@
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
         const settingsBtn = document.getElementById('settings-btn');
+        const sortSelect = document.getElementById('sort-select');
         const modal = document.getElementById('add-modal');
         const settingsModal = document.getElementById('settings-modal');
         const closeSettingsBtn = document.getElementById('close-settings-btn');
@@ -880,6 +886,26 @@
         });
 
         // Event Listeners
+        
+        const savedSort = sessionStorage.getItem('khabit_sort') || 'none';
+        sortSelect.value = savedSort;
+
+        const sortHabits = () => {
+            const val = sortSelect.value;
+            sessionStorage.setItem('khabit_sort', val);
+            if (val === 'alpha') {
+                habits.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (val === 'streak') {
+                habits.sort((a, b) => calculateStreak(b.completions) - calculateStreak(a.completions));
+            }
+        };
+
+        sortSelect.addEventListener('change', () => {
+            sortHabits();
+            saveHabits();
+            renderHabits();
+        });
+
         addBtn.addEventListener('click', openModal);
 
         exportBtn.addEventListener('click', () => {
@@ -981,6 +1007,7 @@
         // Init
         applyColor(currentColor);
         loadHabits();
+        sortHabits();
         renderHabits();
     </script>
 </body>

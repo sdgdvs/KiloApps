@@ -32,8 +32,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHabit
-**Phase:** 9
-**Status:** In Progress (Phase 9)
+**Phase:** 10
+**Status:** In Progress (Phase 10)
 
 - Phase 1 completed: Scaffolded KHabit folder, web UI skeleton, C native skeleton, and registered in App.jsx.
 - Phase 2 completed: Implemented core web functionality (habit tracking, streaks, localStorage).
@@ -43,6 +43,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 6 completed: Added Settings Modal/Dialog for custom accent colors with persistence (localStorage/file) and UI highlighting.
 - Phase 7 completed: Added Data Visualization/Dashboard UI (daily progress bar and 7-day completion history) to both versions.
 - Phase 8 completed: Added Keyboard Shortcuts to both versions (Ctrl+N for new habit, Up/Down for selection, Space for check/uncheck, Delete for removal).
+- Phase 9 completed: Implemented Sorting functionality (Alphabetical, Highest Streak) in both web and native versions.
 
 ## App Lifecycle (14 phases per app)
 

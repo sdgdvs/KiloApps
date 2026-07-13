@@ -12,6 +12,7 @@
 #define ID_BTN_DELETE 105
 #define ID_BTN_IMPORT 106
 #define ID_BTN_EXPORT 107
+#define ID_COMBO_SORT 109
 
 typedef struct {
     char name[128];
@@ -23,14 +24,18 @@ Habit habits[MAX_HABITS];
 int habitCount = 0;
 
 int current_color_index = 0;
+int current_sort_index = 0;
 COLORREF accentColors[4] = { RGB(139, 92, 246), RGB(249, 115, 22), RGB(59, 130, 246), RGB(16, 185, 129) };
 HWND hMainWnd;
 
 void LoadSettings() {
     FILE *f = fopen("khabit_settings.dat", "r");
     if (f) {
-        fscanf(f, "%d", &current_color_index);
+        if (fscanf(f, "%d %d", &current_color_index, &current_sort_index) < 2) {
+            // default already handled
+        }
         if (current_color_index < 0 || current_color_index > 3) current_color_index = 0;
+        if (current_sort_index < 0 || current_sort_index > 2) current_sort_index = 0;
         fclose(f);
     }
 }
@@ -38,7 +43,7 @@ void LoadSettings() {
 void SaveSettings() {
     FILE *f = fopen("khabit_settings.dat", "w");
     if (f) {
-        fprintf(f, "%d\n", current_color_index);
+        fprintf(f, "%d %d\n", current_color_index, current_sort_index);
         fclose(f);
     }
 }
@@ -74,6 +79,22 @@ void CheckStreaks() {
         if (today - habits[i].last_check_day > 1 && habits[i].streak > 0) {
             habits[i].streak = 0;
         }
+    }
+}
+
+int CompareAlpha(const void *a, const void *b) {
+    return _stricmp(((Habit*)a)->name, ((Habit*)b)->name);
+}
+
+int CompareStreak(const void *a, const void *b) {
+    return ((Habit*)b)->streak - ((Habit*)a)->streak;
+}
+
+void SortHabits() {
+    if (current_sort_index == 1) {
+        qsort(habits, habitCount, sizeof(Habit), CompareAlpha);
+    } else if (current_sort_index == 2) {
+        qsort(habits, habitCount, sizeof(Habit), CompareStreak);
     }
 }
 
@@ -148,8 +169,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hFont = CreateFont(18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                   20, 20, 340, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
+                                   20, 20, 230, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hSortCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
+                                             260, 20, 100, 150, hwnd, (HMENU)ID_COMBO_SORT, NULL, NULL);
+            SendMessage(hSortCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Sort...");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Alphabetical");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Highest Streak");
 
             HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New Habit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                        370, 20, 100, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
@@ -182,8 +210,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hMainWnd = hwnd;
             LoadSettings();
+            SendMessage(GetDlgItem(hwnd, ID_COMBO_SORT), CB_SETCURSEL, current_sort_index, 0);
             LoadHabits();
             CheckStreaks();
+            SortHabits();
             UpdateList();
             return 0;
         }
@@ -304,7 +334,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
-            if (wmId == ID_BTN_ADD && wmEvent == BN_CLICKED) {
+            if (wmId == ID_COMBO_SORT && wmEvent == CBN_SELCHANGE) {
+                current_sort_index = SendMessage((HWND)lParam, CB_GETCURSEL, 0, 0);
+                SaveSettings();
+                SortHabits();
+                SaveHabits();
+                UpdateList();
+            } else if (wmId == ID_BTN_ADD && wmEvent == BN_CLICKED) {
                 if (habitCount < MAX_HABITS) {
                     char text[128];
                     GetWindowText(hEdit, text, sizeof(text));
@@ -313,6 +349,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         habits[habitCount].streak = 0;
                         habits[habitCount].last_check_day = 0;
                         habitCount++;
+                        SortHabits();
                         SaveHabits();
                         UpdateList();
                         SetWindowText(hEdit, "");
@@ -402,6 +439,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             if (habitCount >= MAX_HABITS) break;
                         }
                         fclose(f);
+                        SortHabits();
                         SaveHabits();
                         UpdateList();
                         MessageBox(hwnd, "Import successful!", "Success", MB_OK);
