@@ -92,6 +92,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
 | KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. |
 | KBreakout  | Tier 1          | Never Touched          | Needs Improvement | Full parity, native and web. |
+| K2048      | Tier 1          | Never Touched          | Needs Improvement | Full parity, native and web. |
 ## Progress Log
 
 **Loop 1**
@@ -119,3 +120,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPac (Added 3 lives system with visual display to both EXE and HTML)
 - [x] KChess (Added visual valid move indicators to both EXE and HTML)
 - [x] KBreakout (Added 3 lives system instead of instant game over to both EXE and HTML)
+- [x] Create New Game (K2048 created for both EXE and Web, registered in App.jsx)
+
+**Loop 3**
+- Pending
