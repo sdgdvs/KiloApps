@@ -6,6 +6,7 @@
 
 HWND hEdit, hList, hBtnNew, hBtnDel;
 HBRUSH bgBrush, sidebarBrush;
+HFONT hFont;
 
 #define ID_FILE_OPEN 9001
 #define ID_FILE_SAVE 9002
@@ -102,7 +103,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             bgBrush = CreateSolidBrush(RGB(255, 255, 150));
             sidebarBrush = CreateSolidBrush(RGB(224, 224, 160));
             
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Comic Sans MS");
             if (!hFont) hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 0, 30, 100, H-30, hwnd, (HMENU)ID_LIST, NULL, NULL);
@@ -186,6 +187,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SaveNotes();
             DeleteObject(bgBrush);
             DeleteObject(sidebarBrush);
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;
         default:

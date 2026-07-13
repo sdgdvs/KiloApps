@@ -31,6 +31,7 @@
 4. Update this file with results.
 
 ## Tested Apps
+- **KNotes**: Fixed note title extraction bug in `knote.html` to split correctly on `\n`. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KGraph**: Fixed performance and memory issue in kgraph.html by moving `new Function` constructor out of the drawing loop. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KCalendar**: Fixed month-wrapping bug in kcalendar.html where changing months on the 31st skipped a month. Checked main.c (no issues found).
 - **KAudio**: Fixed Web Audio API envelope bug in kaudio.html and prevented arrow key scrolling. Fixed GDI resource leak (HBITMAP) in main.c.
@@ -55,5 +56,5 @@
 - **KMandel**: Fixed negative color calculation bug in Cyberpunk theme that caused visual artifacts. Added bounds checking to prevent division by zero on zero/1x1 resize.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KNotes.
+All apps need systematic testing. Continue alphabetically from KPad.
 

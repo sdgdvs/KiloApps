@@ -59,7 +59,7 @@
       notes.forEach((note, i) => {
           let li = document.createElement('li');
           li.className = 'note-item' + (i === activeIndex ? ' active' : '');
-          let title = note.text.trim().split('\\n')[0];
+          let title = note.text.trim().split('\n')[0];
           li.innerText = title ? title : 'Empty Note';
           li.onclick = () => { activeIndex = i; loadActive(); };
           noteList.appendChild(li);
