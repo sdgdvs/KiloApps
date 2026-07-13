@@ -424,15 +424,16 @@
         cardContainer.addEventListener('click', flipCard);
 
         document.addEventListener('keydown', (e) => {
-            // Only toggle on space if not typing in an input
-            if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            // Do not fire shortcuts if user is typing in an input or textarea
+            const activeTag = document.activeElement ? document.activeElement.tagName : '';
+            if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+
+            if (e.code === 'Space' || e.code === 'Enter') {
                 e.preventDefault();
                 flipCard();
-            }
-            if (e.code === 'ArrowRight' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            } else if (e.code === 'ArrowRight') {
                 if (!btnNext.disabled) btnNext.click();
-            }
-            if (e.code === 'ArrowLeft' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            } else if (e.code === 'ArrowLeft') {
                 if (!btnPrev.disabled) btnPrev.click();
             }
         });

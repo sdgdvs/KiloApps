@@ -126,8 +126,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        int handled = 0;
+        if (msg.message == WM_KEYDOWN && GetActiveWindow() == g_hwnd) {
+            if (msg.wParam == VK_SPACE || msg.wParam == VK_RETURN) {
+                SendMessage(g_hwnd, WM_COMMAND, ID_BTN_FLIP, 0);
+                handled = 1;
+            } else if (msg.wParam == VK_LEFT) {
+                SendMessage(g_hwnd, WM_COMMAND, ID_BTN_PREV, 0);
+                handled = 1;
+            } else if (msg.wParam == VK_RIGHT) {
+                SendMessage(g_hwnd, WM_COMMAND, ID_BTN_NEXT, 0);
+                handled = 1;
+            }
+        }
+        if (!handled) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
 
     DeleteObject(hbgBrush);
