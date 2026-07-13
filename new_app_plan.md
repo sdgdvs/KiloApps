@@ -31,23 +31,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KHabit
-**Phase:** 14
-**Status:** In Progress (Phase 14)
+**App:** [To be decided]
+**Phase:** 1
+**Status:** Planning
 
-- Phase 1 completed: Scaffolded KHabit folder, web UI skeleton, C native skeleton, and registered in App.jsx.
-- Phase 2 completed: Implemented core web functionality (habit tracking, streaks, localStorage).
-- Phase 3 completed: Implemented native C Win32 API app with tracking, checking, and streaks.
-- Phase 4 completed: Polished both versions: dark-mode glassmorphic aesthetic for web with fire streak animations, dark theme and better layout for native.
-- Phase 5 completed: Implemented JSON/CSV Import and Export functionality for data portability.
-- Phase 6 completed: Added Settings Modal/Dialog for custom accent colors with persistence (localStorage/file) and UI highlighting.
-- Phase 7 completed: Added Data Visualization/Dashboard UI (daily progress bar and 7-day completion history) to both versions.
-- Phase 8 completed: Added Keyboard Shortcuts to both versions (Ctrl+N for new habit, Up/Down for selection, Space for check/uncheck, Delete for removal).
-- Phase 9 completed: Implemented Sorting functionality (Alphabetical, Highest Streak) in both web and native versions.
-- Phase 10 completed: Added Search/Filter functionality to dynamically filter the habit list in both versions.
-- Phase 11 completed: Implemented Multi-item management (Categories/Tags) functionality in both versions.
-- Phase 12 completed: Implemented Help System / Tutorial Modal in both web and native versions.
-- Phase 13 completed: Implemented Goal Customisation (Target Streaks) and Mastered indication in both web and native versions.
+- Phase 1: 
 
 ## App Lifecycle (14 phases per app)
 
@@ -81,6 +69,7 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. Pick
 ## Completed Apps
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KBudget (Phase 14 completed: Added Print Report support to both versions)
+- KHabit (Phase 14 completed: Added Detailed Statistics modal to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
