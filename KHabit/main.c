@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <commdlg.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -9,6 +10,8 @@
 #define ID_BTN_ADD 103
 #define ID_BTN_CHECK 104
 #define ID_BTN_DELETE 105
+#define ID_BTN_IMPORT 106
+#define ID_BTN_EXPORT 107
 
 typedef struct {
     char name[128];
@@ -102,6 +105,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                        150, 395, 120, 35, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
             SendMessage(hDel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            HWND hImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                          280, 395, 80, 35, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            SendMessage(hImport, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                          370, 395, 80, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            SendMessage(hExport, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             LoadHabits();
             CheckStreaks();
             UpdateList();
@@ -178,6 +189,58 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     habitCount--;
                     SaveHabits();
                     UpdateList();
+                }
+            } else if (wmId == ID_BTN_EXPORT && wmEvent == BN_CLICKED) {
+                OPENFILENAME ofn;
+                char szFile[260] = "khabit_export.csv";
+                ZeroMemory(&ofn, sizeof(ofn));
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = szFile;
+                ofn.nMaxFile = sizeof(szFile);
+                ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+                ofn.nFilterIndex = 1;
+                ofn.lpstrFileTitle = NULL;
+                ofn.nMaxFileTitle = 0;
+                ofn.lpstrInitialDir = NULL;
+                ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+                if (GetSaveFileName(&ofn) == TRUE) {
+                    FILE *f = fopen(ofn.lpstrFile, "w");
+                    if (f) {
+                        for (int i = 0; i < habitCount; i++) {
+                            fprintf(f, "%s,%d,%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day);
+                        }
+                        fclose(f);
+                        MessageBox(hwnd, "Export successful!", "Success", MB_OK);
+                    }
+                }
+            } else if (wmId == ID_BTN_IMPORT && wmEvent == BN_CLICKED) {
+                OPENFILENAME ofn;
+                char szFile[260] = "";
+                ZeroMemory(&ofn, sizeof(ofn));
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = szFile;
+                ofn.nMaxFile = sizeof(szFile);
+                ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+                ofn.nFilterIndex = 1;
+                ofn.lpstrFileTitle = NULL;
+                ofn.nMaxFileTitle = 0;
+                ofn.lpstrInitialDir = NULL;
+                ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                if (GetOpenFileName(&ofn) == TRUE) {
+                    FILE *f = fopen(ofn.lpstrFile, "r");
+                    if (f) {
+                        habitCount = 0;
+                        while (fscanf(f, "%127[^,],%d,%d\n", habits[habitCount].name, &habits[habitCount].streak, &habits[habitCount].last_check_day) == 3) {
+                            habitCount++;
+                            if (habitCount >= MAX_HABITS) break;
+                        }
+                        fclose(f);
+                        SaveHabits();
+                        UpdateList();
+                        MessageBox(hwnd, "Import successful!", "Success", MB_OK);
+                    }
                 }
             }
             return 0;

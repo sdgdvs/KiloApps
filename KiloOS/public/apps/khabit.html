@@ -408,7 +408,11 @@
     <div class="app-container">
         <header>
             <h1>KHabit</h1>
-            <button id="add-habit-btn">+ New Habit</button>
+            <div style="display: flex; gap: 8px;">
+                <button id="import-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Import JSON">Import</button>
+                <button id="export-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Export JSON">Export</button>
+                <button id="add-habit-btn">+ New Habit</button>
+            </div>
         </header>
         
         <main>
@@ -449,6 +453,8 @@
         // DOM Elements
         const habitListEl = document.getElementById('habit-list');
         const addBtn = document.getElementById('add-habit-btn');
+        const importBtn = document.getElementById('import-btn');
+        const exportBtn = document.getElementById('export-btn');
         const modal = document.getElementById('add-modal');
         const cancelBtn = document.getElementById('cancel-habit-btn');
         const saveBtn = document.getElementById('save-habit-btn');
@@ -638,6 +644,44 @@
 
         // Event Listeners
         addBtn.addEventListener('click', openModal);
+
+        exportBtn.addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(habits, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "khabit_export.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        });
+
+        importBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'application/json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.readAsText(file, 'UTF-8');
+                reader.onload = readerEvent => {
+                    try {
+                        const parsed = JSON.parse(readerEvent.target.result);
+                        if (Array.isArray(parsed)) {
+                            habits = parsed;
+                            saveHabits();
+                            renderHabits();
+                            alert("Import successful!");
+                        } else {
+                            alert("Invalid format: expected array.");
+                        }
+                    } catch (err) {
+                        alert("Error parsing JSON file.");
+                    }
+                };
+            };
+            input.click();
+        });
         cancelBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();

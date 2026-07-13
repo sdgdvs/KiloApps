@@ -10,7 +10,7 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-cl.exe /nologo /O2 /W3 /DNDEBUG /MD %SRC% app.res user32.lib gdi32.lib advapi32.lib shell32.lib /link /SUBSYSTEM:WINDOWS /OUT:%APP_NAME%.exe
+cl.exe /nologo /O2 /W3 /DNDEBUG /MD %SRC% app.res user32.lib gdi32.lib advapi32.lib shell32.lib comdlg32.lib /link /SUBSYSTEM:WINDOWS /OUT:%APP_NAME%.exe
 if %errorlevel% neq 0 (
     echo Compilation failed.
     exit /b %errorlevel%
