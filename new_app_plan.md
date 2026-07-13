@@ -32,10 +32,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHabit
-**Phase:** 2
-**Status:** In Progress (Phase 2)
+**Phase:** 3
+**Status:** In Progress (Phase 3)
 
 - Phase 1 completed: Scaffolded KHabit folder, web UI skeleton, C native skeleton, and registered in App.jsx.
+- Phase 2 completed: Implemented core web functionality (habit tracking, streaks, localStorage).
 
 ## App Lifecycle (14 phases per app)
 
