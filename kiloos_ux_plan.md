@@ -43,10 +43,11 @@
 ## Priorities
 
 ### 1. General Polish
-- Review and refine app folder iconography and layout.
-- Look into start menu search speed and results display.
+- Review application window constraints to prevent windows from opening out of bounds or becoming unreachable.
 
 ## Completed Items
+- Start Menu Polish: Replaced real-time filtering with a memoized `useMemo` search to improve performance. Added a "No matching apps found" state, and enhanced the search results UI to display app categories alongside titles for better context.
+- App Folder Polish: Added click-to-select states for icons rendered inside folders to match the desktop behavior. Replaced the flat yellow SVG folder icon with a premium 3D glassmorphic blue gradient design.
 - App Folder Layout Polish: Refactored `.folder-content` from inline flexbox styles to a CSS grid matching the desktop environment, and improved the `.folder-empty` state visual rendering for empty folders.
 - Window Management Polish: Added visual snap-to-edge highlights (transparent glassmorphic overlays) when dragging windows to the screen edges, giving users immediate feedback on where the window will snap upon release.
 - Theme Consistency: Fixed broken desktop icon selected state styling by unifying `.icon-img` with `.desktop-icon img` across `index.css`.

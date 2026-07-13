@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.49';
+const MICROS_VERSION = '0.3.53';
 
-const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
+const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 
 const FOLDERS = [
   { id: 'System', title: 'System Tools', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
@@ -77,6 +77,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
   const [pos, setPos] = useState({ x: app.x, y: app.y });
   const [size, setSize] = useState({ w: app.w, h: app.h });
   const [dragging, setDragging] = useState(false);
+  const [selectedIcons, setSelectedIcons] = useState([]);
   const [resizing, setResizing] = useState(false);
   const [snapState, setSnapState] = useState(null); // null, 'left', 'right', 'maximized'
   const [snapPreview, setSnapPreview] = useState(null);
@@ -307,7 +308,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
         {/* Transparent overlay while dragging to prevent iframe from stealing mouse */}
         {dragging && <div style={{position:'absolute', top:0, left:0, right:0, bottom:0, zIndex:10}} />}
         {app.isFolder ? (
-          <div className="folder-content">
+          <div className="folder-content" onClick={() => setSelectedIcons([])}>
             {APPS.filter(a => a.folder === app.id).length === 0 ? (
               <div className="folder-empty">
                 <img src={app.icon} alt="Empty Folder" />
@@ -317,9 +318,9 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
               APPS.filter(a => a.folder === app.id).map(child => (
                 <div 
                   key={child.id} 
-                  className="desktop-icon" 
+                  className={`desktop-icon ${selectedIcons.includes(child.id) ? 'selected' : ''}`} 
                   title={child.isFolder ? 'System Folder' : 'Application'}
-                  onClick={(e) => { e.stopPropagation(); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedIcons([child.id]); }}
                   onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
                 >
                   <img src={child.icon} alt={child.title} />
@@ -446,6 +447,15 @@ function App() {
   const [activeAppId, setActiveAppId] = useState(null);
   const [cerberusBlinded, setCerberusBlinded] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+
+  const searchResults = useMemo(() => {
+    if (!startSearch) return [];
+    const lowerSearch = startSearch.toLowerCase();
+    return APPS.filter(a => 
+      a.title.toLowerCase().includes(lowerSearch) || 
+      (a.folder && a.folder.toLowerCase().includes(lowerSearch))
+    );
+  }, [startSearch]);
 
   const animationsEnabled = vfs['/.sys_settings_animations'] !== 'false';
   const toggleAnimations = () => {
@@ -923,12 +933,21 @@ function App() {
               {startSearch ? (
                 <div className="start-group">
                   <div className="start-group-title">Search Results</div>
-                  {APPS.filter(a => a.title.toLowerCase().includes(startSearch.toLowerCase())).map(app => (
-                    <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); setStartFolder(null); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
-                      <img src={app.icon} alt={app.title} className="start-item-icon" />
-                      <span className="start-item-label">{app.title}</span>
+                  {searchResults.length === 0 ? (
+                    <div style={{padding: '15px 20px', color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', textAlign: 'center'}}>
+                      No matching apps found.
                     </div>
-                  ))}
+                  ) : (
+                    searchResults.map(app => (
+                      <div key={app.id} className="start-item" onClick={() => { setStartOpen(false); setStartFolder(null); openApp(app); }} onContextMenu={(e) => { e.stopPropagation(); playClickAudio(); e.preventDefault(); setContextMenu({ type: 'start_app', id: app.id, x: e.clientX, y: e.clientY }); }}>
+                        <img src={app.icon} alt={app.title} className="start-item-icon" />
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '2px'}}>
+                          <span className="start-item-label">{app.title}</span>
+                          <span style={{fontSize: '11px', color: 'var(--text-muted)'}}>{app.folder || 'System'}</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               ) : startFolder ? (
                 <div className="start-group">
