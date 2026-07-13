@@ -95,14 +95,14 @@
             width: 100%;
             max-width: 600px;
             height: 350px;
-            perspective: 1000px;
+            perspective: 1200px;
         }
 
         .flashcard {
             width: 100%;
             height: 100%;
             position: relative;
-            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             transform-style: preserve-3d;
             cursor: pointer;
         }
@@ -126,6 +126,12 @@
             background: rgba(22, 27, 34, 0.8);
             border: 1px solid rgba(255,255,255,0.05);
             backdrop-filter: blur(10px);
+            transition: box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .flashcard:hover .flashcard-face {
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.15);
         }
 
         .flashcard-front {
@@ -248,7 +254,7 @@
         }
 
         .modal-content h2 { margin: 0; font-size: 1.2rem; color: #fff; }
-        .modal-content label { font-size: 0.9rem; color: #8b949e; font-weight: 600; margin-bottom: -8px;}
+        .modal-content label { font-size: 0.9rem; color: #8b949e; font-weight: 600; margin-bottom: 4px; margin-top: 8px; }
         
         .modal-content input, .modal-content textarea {
             background: rgba(255,255,255,0.05);
@@ -278,6 +284,15 @@
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.4s;
         }
     </style>
 </head>
@@ -377,6 +392,10 @@
         const flipCard = () => {
             if (deck.length > 0) {
                 flashcard.classList.toggle('is-flipped');
+            } else {
+                cardContainer.classList.remove('shake');
+                void cardContainer.offsetWidth; // trigger reflow
+                cardContainer.classList.add('shake');
             }
         };
 

@@ -26,7 +26,8 @@ int deckCount = 0;
 int currentIndex = 0;
 int isFlipped = 0;
 
-HWND hLblCard, hLblInfo, hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd;
+HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd;
+HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
 
@@ -35,27 +36,15 @@ INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 
 void UpdateCardDisplay() {
     if (deckCount == 0) {
-        SetWindowText(hLblCard, "Deck is empty\n\nClick 'Add Card' to begin.");
-        SetWindowText(hLblInfo, "0/0");
         EnableWindow(hBtnPrev, FALSE);
         EnableWindow(hBtnNext, FALSE);
         EnableWindow(hBtnFlip, FALSE);
-        return;
-    }
-
-    EnableWindow(hBtnFlip, TRUE);
-    EnableWindow(hBtnPrev, currentIndex > 0);
-    EnableWindow(hBtnNext, currentIndex < deckCount - 1);
-
-    char info[32];
-    sprintf(info, "Card %d/%d", currentIndex + 1, deckCount);
-    SetWindowText(hLblInfo, info);
-
-    if (isFlipped) {
-        SetWindowText(hLblCard, deck[currentIndex].back);
     } else {
-        SetWindowText(hLblCard, deck[currentIndex].front);
+        EnableWindow(hBtnFlip, TRUE);
+        EnableWindow(hBtnPrev, currentIndex > 0);
+        EnableWindow(hBtnNext, currentIndex < deckCount - 1);
     }
+    if (g_hwnd) InvalidateRect(g_hwnd, NULL, FALSE);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
@@ -96,6 +85,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
         return 0;
     }
 
+    g_hwnd = hwnd;
     ShowWindow(hwnd, nCmdShow);
     UpdateCardDisplay();
 
@@ -126,12 +116,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnAdd = CreateWindow("BUTTON", "+ Add Card", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                    460, 10, 100, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
 
-            hLblInfo = CreateWindow("STATIC", "1/1", WS_CHILD | WS_VISIBLE | SS_LEFT,
-                                    20, 15, 100, 20, hwnd, (HMENU)ID_LBL_INFO, NULL, NULL);
-
-            hLblCard = CreateWindow("STATIC", "Card Content", WS_CHILD | WS_VISIBLE | SS_CENTER,
-                                    50, 60, 480, 240, hwnd, (HMENU)ID_LBL_CARD, NULL, NULL);
-
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
 
@@ -142,26 +126,68 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                     350, 320, 80, 30, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
 
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessage(hLblInfo, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessage(hLblCard, WM_SETFONT, (WPARAM)hCardFont, TRUE);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnFlip, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             break;
         }
-        case WM_CTLCOLORSTATIC: {
-            HDC hdcStatic = (HDC)wParam;
-            HWND hStatic = (HWND)lParam;
-            if (hStatic == hLblCard) {
-                SetTextColor(hdcStatic, RGB(201, 209, 217));
-                SetBkColor(hdcStatic, RGB(22, 27, 34));
-                return (INT_PTR)hCardBrush;
+        case WM_ERASEBKGND:
+            return 1;
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rcClient;
+            GetClientRect(hwnd, &rcClient);
+
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HBITMAP hbmMem = CreateCompatibleBitmap(hdc, rcClient.right, rcClient.bottom);
+            HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
+
+            FillRect(hdcMem, &rcClient, hbgBrush);
+
+            RECT rcCard = { 50, 60, rcClient.right - 50, 300 };
+            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(48, 54, 61));
+            HPEN hOldPen = (HPEN)SelectObject(hdcMem, hPen);
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, hCardBrush);
+            RoundRect(hdcMem, rcCard.left, rcCard.top, rcCard.right, rcCard.bottom, 20, 20);
+
+            SetBkMode(hdcMem, TRANSPARENT);
+            SetTextColor(hdcMem, RGB(139, 148, 158));
+            SelectObject(hdcMem, hFont);
+            char info[32];
+            if (deckCount == 0) {
+                strcpy(info, "0/0");
             } else {
-                SetTextColor(hdcStatic, RGB(139, 148, 158));
-                SetBkColor(hdcStatic, RGB(13, 17, 23));
-                return (INT_PTR)hbgBrush;
+                sprintf(info, "Card %d/%d", currentIndex + 1, deckCount);
             }
+            RECT rcInfo = { rcCard.left + 20, rcCard.top + 20, rcCard.right - 20, rcCard.top + 40 };
+            DrawText(hdcMem, info, -1, &rcInfo, DT_LEFT | DT_TOP | DT_SINGLELINE);
+
+            SetTextColor(hdcMem, RGB(201, 209, 217));
+            SelectObject(hdcMem, hCardFont);
+            RECT rcText = { rcCard.left + 20, rcCard.top + 60, rcCard.right - 20, rcCard.bottom - 20 };
+            
+            const char* textToDraw = "";
+            if (deckCount == 0) {
+                textToDraw = "Deck is empty\n\nClick 'Add Card' to begin.";
+            } else {
+                textToDraw = isFlipped ? deck[currentIndex].back : deck[currentIndex].front;
+            }
+            
+            DrawText(hdcMem, textToDraw, -1, &rcText, DT_CENTER | DT_VCENTER | DT_WORDBREAK);
+
+            SelectObject(hdcMem, hOldBrush);
+            SelectObject(hdcMem, hOldPen);
+            DeleteObject(hPen);
+
+            BitBlt(hdc, 0, 0, rcClient.right, rcClient.bottom, hdcMem, 0, 0, SRCCOPY);
+
+            SelectObject(hdcMem, hbmOld);
+            DeleteObject(hbmMem);
+            DeleteDC(hdcMem);
+            EndPaint(hwnd, &ps);
+            break;
         }
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
