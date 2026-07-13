@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KQuarantine
+**Target App:** KRead
 **Status:** Next
 
 ## Workflow
@@ -59,6 +59,7 @@
 - **KPad**: Fixed literal newlines in alert dialog in kpad.html. Fixed GDI resource leak (`HFONT`) in main.c.
 - **KPing**: Verified `kping.html` web logic. Fixed GDI resource leak (`HFONT`, `HFONT`) in `main.c` on WM_DESTROY.
 - **KPong**: Fixed missing variable declarations (`ball_x`, `ball_y`) in `main.c`. Added window `blur` listener in `kpong.html` to prevent keys getting stuck on tab switch.
+- **KQuarantine**: Fixed XSS vulnerability in terminal log input rendering in `kquarantine.html`.
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KQuarantine.

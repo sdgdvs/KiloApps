@@ -58,7 +58,7 @@
       if (e.key === 'Enter') {
         const val = input.value.trim();
         if (!val) return;
-        log(`SECURE&gt; ${val}`);
+        log(`SECURE&gt; ${val.replace(/</g, '&lt;').replace(/>/g, '&gt;')}`);
         input.value = '';
         
         setTimeout(() => {
