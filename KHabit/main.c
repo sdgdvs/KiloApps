@@ -62,42 +62,44 @@ void UpdateList() {
         char buffer[256];
         char status[16];
         if (habits[i].last_check_day == today) {
-            strcpy(status, "[DONE]");
+            strcpy(status, "[ \xDF ]"); // some kind of check symbol
         } else {
-            strcpy(status, "[TODO]");
+            strcpy(status, "[   ]");
         }
-        sprintf(buffer, "%s %s (Streak: %d)", status, habits[i].name, habits[i].streak);
+        sprintf(buffer, "%s  %s (Streak: %d)", status, habits[i].name, habits[i].streak);
         SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buffer);
     }
 }
 
 HBRUSH hbgBrush;
+HBRUSH hListBrush;
 HFONT hFont;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
-            hbgBrush = CreateSolidBrush(RGB(30, 30, 30));
-            hFont = CreateFont(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            hbgBrush = CreateSolidBrush(RGB(24, 24, 28));
+            hListBrush = CreateSolidBrush(RGB(32, 32, 36));
+            hFont = CreateFont(18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                   10, 10, 300, 24, hwnd, (HMENU)ID_EDIT, NULL, NULL);
+                                   20, 20, 340, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            HWND hAdd = CreateWindowEx(0, "BUTTON", "Add Habit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       320, 10, 100, 24, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+            HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New Habit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                       370, 20, 100, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL,
-                                   10, 44, 410, 300, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
+                                   20, 60, 450, 320, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hCheck = CreateWindowEx(0, "BUTTON", "Check Off", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                         10, 354, 100, 30, hwnd, (HMENU)ID_BTN_CHECK, NULL, NULL);
+                                         20, 395, 120, 35, hwnd, (HMENU)ID_BTN_CHECK, NULL, NULL);
             SendMessage(hCheck, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hDel = CreateWindowEx(0, "BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       120, 354, 100, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+                                       150, 395, 120, 35, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
             SendMessage(hDel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             LoadHabits();
@@ -105,18 +107,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             UpdateList();
             return 0;
         }
-        case WM_CTLCOLORLISTBOX:
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdc = (HDC)wParam;
+            SetBkColor(hdc, RGB(32, 32, 36));
+            SetTextColor(hdc, RGB(240, 240, 240));
+            return (LRESULT)hListBrush;
+        }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
-            SetBkColor(hdc, RGB(40, 40, 40));
-            SetTextColor(hdc, RGB(220, 220, 220));
-            return (LRESULT)CreateSolidBrush(RGB(40, 40, 40));
+            SetBkColor(hdc, RGB(24, 24, 28));
+            SetTextColor(hdc, RGB(240, 240, 240));
+            return (LRESULT)hbgBrush;
         }
         case WM_CTLCOLOREDIT: {
             HDC hdc = (HDC)wParam;
-            SetBkColor(hdc, RGB(50, 50, 50));
+            SetBkColor(hdc, RGB(45, 45, 50));
             SetTextColor(hdc, RGB(255, 255, 255));
-            return (LRESULT)CreateSolidBrush(RGB(50, 50, 50));
+            return (LRESULT)CreateSolidBrush(RGB(45, 45, 50));
         }
         case WM_ERASEBKGND: {
             HDC hdc = (HDC)wParam;
@@ -153,10 +160,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             habits[sel].streak = 1;
                         }
                         habits[sel].last_check_day = today;
-                        SaveHabits();
-                        UpdateList();
-                        SendMessage(hList, LB_SETCURSEL, sel, 0);
+                    } else {
+                        // Undo check off
+                        habits[sel].last_check_day = 0; // rough undo
+                        if(habits[sel].streak > 0) habits[sel].streak--;
                     }
+                    SaveHabits();
+                    UpdateList();
+                    SendMessage(hList, LB_SETCURSEL, sel, 0);
                 }
             } else if (wmId == ID_BTN_DELETE && wmEvent == BN_CLICKED) {
                 int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
@@ -173,6 +184,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
         case WM_DESTROY:
             DeleteObject(hbgBrush);
+            DeleteObject(hListBrush);
             DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
@@ -191,8 +203,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KHabit Tracker", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 450, 440,
+        0, CLASS_NAME, "KHabit Tracker", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT, 506, 490,
         NULL, NULL, hInstance, NULL
     );
 
