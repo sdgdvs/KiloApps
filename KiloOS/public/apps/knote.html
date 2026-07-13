@@ -25,6 +25,7 @@
     <div class="toolbar">
         <button id="delBtn">Delete Note</button>
     </div>
+    <div id="statusBar" style="padding: 5px; background: #e0e0a0; border-top: 1px solid #ccc; font-size: 13px; font-weight: bold; border-bottom: 1px solid #ccc; white-space: pre-wrap;">  Words: 0 | Chars: 0</div>
     <textarea id="noteArea" spellcheck="false"></textarea>
 </div>
 <script>
@@ -32,6 +33,7 @@
   const newBtn = document.getElementById('newBtn');
   const delBtn = document.getElementById('delBtn');
   const noteList = document.getElementById('noteList');
+  const statusBar = document.getElementById('statusBar');
   
   let notes = [];
   try {
@@ -48,6 +50,13 @@
   
   if (notes.length === 0) notes.push({ text: "" });
   let activeIndex = 0;
+  
+  function updateStats() {
+      let text = noteArea.value;
+      let chars = text.length;
+      let words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+      statusBar.innerText = `  Words: ${words} | Chars: ${chars}`;
+  }
   
   function save() {
       localStorage.setItem('knote_data_multi', JSON.stringify(notes));
@@ -70,12 +79,14 @@
       if (notes.length === 0) notes.push({ text: "" });
       if (activeIndex >= notes.length) activeIndex = notes.length - 1;
       noteArea.value = notes[activeIndex].text;
+      updateStats();
       renderList();
       noteArea.focus();
   }
   
   noteArea.addEventListener('input', () => {
       notes[activeIndex].text = noteArea.value;
+      updateStats();
       save();
   });
   

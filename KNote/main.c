@@ -4,7 +4,7 @@
 #define W 400
 #define H 300
 
-HWND hEdit, hList, hBtnNew, hBtnDel;
+HWND hEdit, hList, hBtnNew, hBtnDel, hStatus;
 HBRUSH bgBrush, sidebarBrush;
 HFONT hFont;
 
@@ -70,6 +70,28 @@ void SaveNotes() {
     }
 }
 
+void UpdateStats() {
+    int len = GetWindowTextLengthA(hEdit);
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    if (buf) {
+        GetWindowTextA(hEdit, buf, len + 1);
+        int words = 0, chars = len;
+        int inWord = 0;
+        for (int i = 0; i < len; i++) {
+            if (buf[i] == ' ' || buf[i] == '\n' || buf[i] == '\r' || buf[i] == '\t') {
+                inWord = 0;
+            } else if (!inWord) {
+                inWord = 1;
+                words++;
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, buf);
+        char stat[64];
+        wsprintfA(stat, "  Words: %d | Chars: %d", words, chars);
+        SetWindowTextA(hStatus, stat);
+    }
+}
+
 void RefreshList() {
     SendMessage(hList, LB_RESETCONTENT, 0, 0);
     for(int i=0; i<numNotes; i++) {
@@ -85,6 +107,7 @@ void RefreshList() {
     if (activeNote >= 0) {
         SendMessage(hList, LB_SETCURSEL, activeNote, 0);
         SetWindowTextA(hEdit, notes[activeNote]);
+        UpdateStats();
     }
 }
 
@@ -112,13 +135,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hEdit = CreateWindowEx(0, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL,
-                100, 0, W-100, H, hwnd, NULL, NULL, NULL);
+                100, 0, W-100, H-20, hwnd, NULL, NULL, NULL);
+                
+            hStatus = CreateWindowEx(0, "STATIC", "  Words: 0 | Chars: 0",
+                WS_CHILD | WS_VISIBLE,
+                100, H-20, W-100, 20, hwnd, (HMENU)9007, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             HFONT hSys = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
             SendMessage(hList, WM_SETFONT, (WPARAM)hSys, TRUE);
             SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hSys, TRUE);
             SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hSys, TRUE);
+            SendMessage(hStatus, WM_SETFONT, (WPARAM)hSys, TRUE);
             
             LoadNotes();
             activeNote = 0;
@@ -162,12 +190,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetWindowTextA(hEdit, notes[activeNote]);
                 }
             }
+            else if ((HWND)lParam == hEdit && HIWORD(wParam) == EN_CHANGE) {
+                UpdateStats();
+            }
             break;
         }
         case WM_CTLCOLOREDIT: {
             HDC hdc = (HDC)wParam;
             SetBkColor(hdc, RGB(255, 255, 150));
             return (LRESULT)bgBrush;
+        }
+        case WM_CTLCOLORSTATIC: {
+            if ((HWND)lParam == hStatus) {
+                HDC hdc = (HDC)wParam;
+                SetBkColor(hdc, RGB(224, 224, 160));
+                return (LRESULT)sidebarBrush;
+            }
+            return DefWindowProc(hwnd, msg, wParam, lParam);
         }
         case WM_CTLCOLORLISTBOX: {
             HDC hdc = (HDC)wParam;
@@ -180,7 +219,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnNew, 0, 0, 50, 30, TRUE);
             MoveWindow(hBtnDel, 50, 0, 50, 30, TRUE);
             MoveWindow(hList, 0, 30, 100, nh-30, TRUE);
-            MoveWindow(hEdit, 100, 0, nw-100, nh, TRUE);
+            MoveWindow(hStatus, 100, nh-20, nw-100, 20, TRUE);
+            MoveWindow(hEdit, 100, 0, nw-100, nh-20, TRUE);
             break;
         }
         case WM_DESTROY:
