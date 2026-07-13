@@ -113,3 +113,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSnake (Added randomly placed obstacles based on difficulty and sound effects to both EXE and HTML)
 - [x] KTetris (Added Hold piece feature and sound effects to both EXE and HTML)
 - [x] KPong (Added win condition (11 points), game over state, restart mechanic, and hit particles (web) to both EXE and HTML)
+- [x] KMaze (Added minimap and sound effects to both EXE and HTML)
+- [x] KSolitaire (Added initial preview phase and sound effects to both EXE and HTML)

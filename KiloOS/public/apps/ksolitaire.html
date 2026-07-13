@@ -49,6 +49,22 @@
   let elapsed = 0;
   let playing = false;
   
+  let audioCtx;
+  function playTone(freq, type, duration) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      let osc = audioCtx.createOscillator();
+      let gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+  }
+  
   function getBestKey() { return 'kmemory_best_' + diff; }
   function updateBest() {
       let b = localStorage.getItem(getBestKey());
@@ -88,7 +104,7 @@
       let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
       for (let i = 0; i < numCards; i++) {
           cards.push(Math.floor(i / 2));
-          flipped[i] = false;
+          flipped[i] = true;
           matched[i] = false;
       }
       for (let i = numCards - 1; i > 0; i--) {
@@ -100,9 +116,16 @@
       matches = 0;
       moves = 0;
       movesEl.textContent = moves;
-      lock = false;
+      lock = true;
       updateBest();
       render();
+      
+      let previewTime = diff === 'expert' ? 1000 : (diff === 'hard' ? 2000 : 3000);
+      setTimeout(() => {
+          for (let i = 0; i < numCards; i++) flipped[i] = false;
+          lock = false;
+          render();
+      }, previewTime);
   }
 
   function render() {
@@ -122,6 +145,7 @@
               if (lock || flipped[i] || matched[i]) return;
               startTimer();
               flipped[i] = true;
+              playTone(600, 'square', 0.1);
               render();
               
               if (firstFlip === -1) {
@@ -136,6 +160,7 @@
                       firstFlip = -1;
                       secondFlip = -1;
                       matches++;
+                      playTone(800, 'square', 0.2);
                       if (matches === numCards / 2) {
                           stopTimer();
                           let b = localStorage.getItem(getBestKey());
@@ -147,6 +172,7 @@
                       render();
                   } else {
                       lock = true;
+                      playTone(400, 'square', 0.1);
                       setTimeout(() => {
                           flipped[firstFlip] = false;
                           flipped[secondFlip] = false;

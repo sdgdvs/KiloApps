@@ -163,7 +163,16 @@ float planeX = 0.0f, planeY = 0.66f;
 void NextLevel() {
     keysHeld = 0;
     currentLevel++;
-    if (currentLevel > 4) currentLevel = 0;
+    if (currentLevel > 4) {
+        gameState = 2;
+        endTime = GetTickCount();
+        float elapsed = (endTime - startTime) / 1000.0f;
+        if (elapsed < bestTime) {
+            bestTime = elapsed;
+            SaveBest();
+        }
+        return;
+    }
     
     // Copy default maps back if we wanted strict reset, but this is simple version so we won't fully deep copy here for Native unless needed.
     // For simplicity, Native C will just let blocks stay erased if you die or loop around.
@@ -192,12 +201,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (keysHeld > 0) {
                         keysHeld--;
                         SetMapValue(x, y, 0);
+                        MessageBeep(MB_ICONEXCLAMATION);
                         return 1;
                     }
                 }
                 return 0;
             }
             
+            if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
+                if (gameState == 0 || gameState == 2) {
+                    gameState = 1;
+                    startTime = GetTickCount();
+                    currentLevel = -1;
+                    ResetMaps();
+                    NextLevel();
+                }
+            }
+            if (gameState != 1) {
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
             if (GetAsyncKeyState(VK_UP) & 0x8000) {
                 if (TryMove((int)(pX + dX * moveSpeed), (int)pY)) pX += dX * moveSpeed;
                 if (TryMove((int)pX, (int)(pY + dY * moveSpeed))) pY += dY * moveSpeed;
@@ -211,7 +235,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (curVal == 3) {
                 keysHeld++;
                 SetMapValue((int)pX, (int)pY, 0);
+                MessageBeep(MB_OK);
             } else if (curVal == 2) {
+                MessageBeep(MB_ICONASTERISK);
                 NextLevel();
             }
 
@@ -333,11 +359,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(w1s); DeleteObject(w2s); DeleteObject(e1s); DeleteObject(e2s); DeleteObject(k1s); DeleteObject(k2s); DeleteObject(d1s); DeleteObject(d2s);
             
             // Draw UI
-            char uiText[64];
-            sprintf(uiText, "Keys: %d  Level: %d", keysHeld, currentLevel + 1);
+            char uiText[128];
+            if (gameState == 0) {
+                sprintf(uiText, "KMAZE - Press ENTER to start");
+            } else if (gameState == 2) {
+                float elapsed = (endTime - startTime) / 1000.0f;
+                sprintf(uiText, "You Escaped! Time: %.1fs  Best: %.1fs (ENTER to restart)", elapsed, bestTime);
+            } else {
+                float elapsed = (GetTickCount() - startTime) / 1000.0f;
+                sprintf(uiText, "Keys: %d  Level: %d  Time: %.1f  Best: %.1f", keysHeld, currentLevel + 1, elapsed, (bestTime < 9999.0f) ? bestTime : 0.0f);
+            }
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(255, 255, 255));
             TextOutA(hdcMem, 10, 10, uiText, lstrlenA(uiText));
+
+            // Minimap
+            if (gameState == 1) {
+                int mmW = 0, mmH = 0;
+                if (currentLevel == 0 || currentLevel == 3) { mmW = 10; mmH = 10; }
+                else if (currentLevel == 1 || currentLevel == 4) { mmW = 12; mmH = 12; }
+                else if (currentLevel == 2) { mmW = 15; mmH = 15; }
+                
+                if (mmW > 0) {
+                    int mmS = 5;
+                    int mmX = W - 10 - mmW * mmS;
+                    int mmY = 10;
+                    HBRUSH mWall = CreateSolidBrush(RGB(153, 153, 153));
+                    HBRUSH mExit = CreateSolidBrush(RGB(0, 255, 0));
+                    HBRUSH mKey = CreateSolidBrush(RGB(255, 255, 0));
+                    HBRUSH mDoor = CreateSolidBrush(RGB(0, 0, 255));
+                    HBRUSH mFloor = CreateSolidBrush(RGB(34, 34, 34));
+                    HBRUSH mPlayer = CreateSolidBrush(RGB(255, 0, 0));
+                    
+                    for (int i = 0; i < mmW; i++) {
+                        for (int j = 0; j < mmH; j++) {
+                            int v = GetMapValue(i, j);
+                            HBRUSH b = mFloor;
+                            if (v == 1) b = mWall;
+                            else if (v == 2) b = mExit;
+                            else if (v == 3) b = mKey;
+                            else if (v == 4) b = mDoor;
+                            
+                            RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
+                            FillRect(hdcMem, &mr, b);
+                        }
+                    }
+                    RECT mr = {mmX + (int)pX*mmS, mmY + (int)pY*mmS, mmX + (int)pX*mmS + mmS, mmY + (int)pY*mmS + mmS};
+                    FillRect(hdcMem, &mr, mPlayer);
+                    
+                    DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer);
+                }
+            }
 
             StretchBlt(hdc, 0, 0, 640, 480, hdcMem, 0, 0, W, H, SRCCOPY);
             EndPaint(hwnd, &ps);

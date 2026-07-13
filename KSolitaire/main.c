@@ -28,6 +28,7 @@ int is_hard = 0; // 0=easy, 1=hard, 2=expert
 int start_time = 0;
 int elapsed_time = 0;
 int timer_running = 0;
+int is_previewing = 0;
 
 // simple pseudo-random generator to avoid CRT
 unsigned int seed = 12345;
@@ -56,7 +57,7 @@ void SaveScores() {
     }
 }
 
-void Shuffle() {
+void Shuffle(HWND hwnd) {
     int numCards = ROWS * COLS;
     for (int i = 0; i < numCards; i++) {
         cards[i] = i / 2;
@@ -75,6 +76,13 @@ void Shuffle() {
     moves = 0;
     elapsed_time = 0;
     timer_running = 0;
+    
+    if (hwnd) {
+        is_previewing = 1;
+        for (int i = 0; i < numCards; i++) flipped[i] = 1;
+        SetTimer(hwnd, 3, (is_hard == 2 ? 1000 : (is_hard == 1 ? 2000 : 3000)), NULL);
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
 }
 
 void SetDifficulty(HWND hwnd, int hard) {
@@ -89,10 +97,8 @@ void SetDifficulty(HWND hwnd, int hard) {
     RECT rc = {0, 0, W, H + 40}; // extra for status bar text
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
     SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
-    Shuffle();
     if (timer_running) KillTimer(hwnd, 2);
-    timer_running = 0;
-    InvalidateRect(hwnd, NULL, TRUE);
+    Shuffle(hwnd);
 }
 
 void DrawCard(HDC hdc, int idx, int x, int y, int w, int h) {
@@ -152,6 +158,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_LBUTTONDOWN: {
+            if (is_previewing) return 0;
             if (secondFlip != -1) return 0; // wait for timer
             
             int x = LOWORD(lParam);
@@ -173,6 +180,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetTimer(hwnd, 2, 1000, NULL);
                     }
                     flipped[idx] = 1;
+                    MessageBeep(MB_OK);
                     if (firstFlip == -1) {
                         firstFlip = idx;
                     } else {
@@ -184,6 +192,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             firstFlip = -1;
                             secondFlip = -1;
                             matches++;
+                            MessageBeep(MB_ICONASTERISK);
                             if (matches == (ROWS * COLS) / 2) {
                                 if (timer_running) {
                                     KillTimer(hwnd, 2);
@@ -205,10 +214,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 char msgBuf[256];
                                 sprintf(msgBuf, "You won in %d moves and %d seconds!", moves, elapsed_time);
                                 MessageBoxA(hwnd, msgBuf, "KMemory", MB_OK);
-                                Shuffle();
+                                Shuffle(hwnd);
                             }
                         } else {
                             SetTimer(hwnd, 1, 1000, NULL);
+                            MessageBeep(MB_ICONHAND);
                         }
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -217,7 +227,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_TIMER:
-            if (wParam == 1) {
+            if (wParam == 3) {
+                KillTimer(hwnd, 3);
+                is_previewing = 0;
+                int numCards = ROWS * COLS;
+                for (int i = 0; i < numCards; i++) flipped[i] = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 flipped[firstFlip] = 0;
                 flipped[secondFlip] = 0;

@@ -117,6 +117,22 @@
   let dX = 1.0, dY = 0.0;
   let planeX = 0.0, planeY = 0.66;
   
+  let audioCtx;
+  function playTone(freq, type, duration) {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      let osc = audioCtx.createOscillator();
+      let gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+  }
+  
   const keys = {};
   document.addEventListener('keydown', e => {
       keys[e.key] = true;
@@ -143,6 +159,7 @@
               if (keysHeld > 0) {
                   keysHeld--;
                   map[Math.floor(mx)][Math.floor(my)] = 0;
+                  playTone(400, 'square', 0.1);
                   return true;
               }
           }
@@ -162,7 +179,9 @@
       if (curVal === 3) {
           keysHeld++;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(600, 'square', 0.1);
       } else if (curVal === 2) {
+          playTone(800, 'square', 0.2);
           nextLevel();
       }
 
@@ -268,6 +287,26 @@
           ctx.fillText("Level: " + (currentLevel+1), 10, 35);
           ctx.fillText("Time: " + elapsed.toFixed(1), 10, 50);
           if (bestTime < 9999) ctx.fillText("Best: " + bestTime.toFixed(1), 10, 65);
+          
+          // Minimap
+          const mmS = 5;
+          const mmW = map.length;
+          const mmH = map[0].length;
+          const mmX = W - 10 - mmW * mmS;
+          const mmY = 10;
+          for (let i = 0; i < mmW; i++) {
+              for (let j = 0; j < mmH; j++) {
+                  let v = map[i][j];
+                  if (v === 1) ctx.fillStyle = '#999';
+                  else if (v === 2) ctx.fillStyle = '#0f0';
+                  else if (v === 3) ctx.fillStyle = '#ff0';
+                  else if (v === 4) ctx.fillStyle = '#00f';
+                  else ctx.fillStyle = '#222';
+                  ctx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
+              }
+          }
+          ctx.fillStyle = '#f00';
+          ctx.fillRect(mmX + Math.floor(pX) * mmS, mmY + Math.floor(pY) * mmS, mmS, mmS);
       }
   }
 
