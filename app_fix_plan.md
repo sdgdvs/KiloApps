@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KNotes
+**Target App:** KPaint
 **Status:** Next
 
 ## Workflow
@@ -54,7 +54,8 @@
 - **KJournal**: Fixed UTC timezone bug in `kjournal.html` date logic. Removed redundant `renderList` call. Checked `main.c` (no issues found).
 - **KMail**: Fixed XSS vulnerability in `kmail.html` by safely creating DOM nodes for subject and sender. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KMandel**: Fixed negative color calculation bug in Cyberpunk theme that caused visual artifacts. Added bounds checking to prevent division by zero on zero/1x1 resize.
+- **KPad**: Fixed literal newlines in alert dialog in kpad.html. Fixed GDI resource leak (`HFONT`) in main.c.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KPad.
+All apps need systematic testing. Continue alphabetically from KPaint.
 

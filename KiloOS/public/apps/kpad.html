@@ -286,7 +286,7 @@
     function checkInput() {
       const val = editor.value.toLowerCase();
       if (val.includes('script')) {
-        alert('[CERBERUS WATCHDOG: LOCKDOWN INITIATED]\\nUNAUTHORIZED INJECTION ATTEMPT DETECTED.');
+        alert('[CERBERUS WATCHDOG: LOCKDOWN INITIATED]\nUNAUTHORIZED INJECTION ATTEMPT DETECTED.');
       }
       if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
         if (!tabs[activeTabIndex].isModified) {

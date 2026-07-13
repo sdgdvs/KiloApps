@@ -180,6 +180,8 @@
   <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
   <div class="folder" onclick="switchFolder('sent')" id="f-sent">Sent</div>
   <div class="folder" onclick="switchFolder('trash')" id="f-trash">Trash</div>
+  <div style="flex:1"></div>
+  <button class="compose-btn" style="background:var(--danger); margin-bottom: 20px;" onclick="emptyTrash()">Empty Trash</button>
 </div>
 
 <div class="list" id="list"></div>
@@ -291,6 +293,15 @@
     document.getElementById(`f-${folder}`).classList.add('active');
     renderList();
     selectEmail(null);
+  }
+
+  function emptyTrash() {
+    emails = emails.filter(e => e.folder !== 'trash');
+    if(currentFolder === 'trash') {
+      renderList();
+      selectEmail(null);
+    }
+    alert("Trash emptied.");
   }
 
   function deleteEmail() {

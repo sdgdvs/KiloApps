@@ -10,8 +10,9 @@
 #define ID_EMAIL_LIST 102
 #define ID_BTN_COMPOSE 103
 #define ID_BTN_DELETE 104
+#define ID_BTN_EMPTY_TRASH 105
 
-HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete;
+HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash;
 
 typedef struct {
     int id;
@@ -93,6 +94,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFolders, LB_ADDSTRING, 0, (LPARAM)"Trash");
             SendMessage(hFolders, LB_SETCURSEL, 0, 0);
 
+            hBtnEmptyTrash = CreateWindowEx(0, "BUTTON", "Empty Trash", WS_CHILD | WS_VISIBLE, 10, H - 40, 100, 30, hwnd, (HMENU)ID_BTN_EMPTY_TRASH, NULL, NULL);
+            SendMessage(hBtnEmptyTrash, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hEmails = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL,
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT,
                 120, 50, 200, H - 100, hwnd, (HMENU)ID_EMAIL_LIST, NULL, NULL);
@@ -145,6 +149,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectEmail(-1);
                 }
             }
+            else if (LOWORD(wParam) == ID_BTN_EMPTY_TRASH) {
+                for(int i = 0; i < num_emails; i++) {
+                    if(emails[i].folder == 2) {
+                        emails[i].folder = 99; // hidden
+                    }
+                }
+                if(currentFolder == 2) {
+                    RefreshEmailList();
+                    SelectEmail(-1);
+                }
+                MessageBox(hwnd, "Trash emptied.", "KMail", MB_OK);
+            }
             else if (LOWORD(wParam) == ID_BTN_COMPOSE) {
                 // simple compose simulation
                 if(num_emails < 100) {
@@ -164,7 +180,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hFolders, 10, 50, 100, nh - 60, TRUE);
+            MoveWindow(hFolders, 10, 50, 100, nh - 100, TRUE);
+            MoveWindow(hBtnEmptyTrash, 10, nh - 40, 100, 30, TRUE);
             MoveWindow(hEmails, 120, 50, 200, nh - 60, TRUE);
             MoveWindow(hBtnDelete, nw - 110, 10, 90, 30, TRUE);
             MoveWindow(hTitle, 330, 50, nw - 340, 40, TRUE);
