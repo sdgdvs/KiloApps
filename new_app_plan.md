@@ -31,23 +31,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KBudget
-**Phase:** 14
-**Status:** In Progress (Phase 14)
-
-*Phase 1 complete: Scaffolded KBudget directory, created basic kbudget.html UI, registered in App.jsx.*
-*Phase 2 complete: Implemented core KBudget features in web HTML including adding transactions, summary stats, categories, and simple bar chart.*
-*Phase 3 complete: Created native C version with basic functionality matching the web version.*
-*Phase 4 complete: Polished both versions adding animations/hover states to web and standard font/dynamic resizing to native.*
-*Phase 5 complete: Implemented true Data Persistence (save/load functionality) using CreateFile/WriteFile/ReadFile for native C version, while verifying localStorage in web version.*
-*Phase 6 complete: Implemented Import/Export functionality (CSV format) for both web HTML and native C versions.*
-*Phase 7 complete: Implemented Search and filtering functionality by description or category for both web HTML and native C versions.*
-*Phase 8 complete: Implemented Settings/Preferences (Currency Customization) for both web HTML and native C versions.*
-*Phase 9 complete: Implemented Keyboard Shortcuts (Ctrl+N, Ctrl+F, Ctrl+S, Ctrl+O) for both web HTML and native C versions.*
-*Phase 10 complete: Implemented Edit and Delete Transaction functionality for both web HTML and native C versions.*
-*Phase 11 complete: Implemented Advanced Data Visualization (Pie Chart for expense distribution by category) for both web HTML and native C versions.*
-*Phase 12 complete: Implemented Sorting functionality (by Date and Amount, ascending/descending) for both web HTML and native C versions.*
-*Phase 13 complete: Implemented Pagination (20 transactions per page) for both web HTML and native C versions.*
+*(None - pick a new app next turn)*
 
 ## App Lifecycle (14 phases per app)
 
@@ -80,6 +64,7 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. Pick
 
 ## Completed Apps
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)
+- KBudget (Phase 14 completed: Added Print Report support to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 

@@ -296,6 +296,16 @@
             align-items: center;
             padding: 10px;
         }
+
+        @media print {
+            body { background: white; color: black; height: auto; overflow: visible; }
+            .header, aside.glass-panel, #pagination-controls, .transaction-right button, .modal-overlay { display: none !important; }
+            .main-content { display: block; padding: 0; }
+            .glass-panel { background: none; border: none; padding: 0; }
+            .transaction-item { break-inside: avoid; border: 1px solid #ccc; background: none; color: black; margin-bottom: 0.5rem; }
+            .transaction-amount, .text-success, .text-danger, .text-primary { color: black !important; }
+            section.glass-panel > div:first-of-type { display: none; }
+        }
     </style>
 </head>
 <body>
@@ -305,6 +315,7 @@
             <button class="btn btn-outline" style="color: white" onclick="openSettingsModal()">Settings</button>
             <button class="btn btn-outline" style="color: white" onclick="importCSV()">Import CSV</button>
             <button class="btn btn-outline" style="color: white" onclick="exportCSV()">Export CSV</button>
+            <button class="btn btn-outline" style="color: white" onclick="window.print()">Print</button>
             <button class="btn" onclick="openModal()">+ New Transaction</button>
         </div>
     </header>

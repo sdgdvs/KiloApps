@@ -387,6 +387,27 @@ void ImportCSV(HWND hwnd) {
     }
 }
 
+void PrintReport(HWND hwnd) {
+    char tempPath[MAX_PATH];
+    char filePath[MAX_PATH];
+    GetTempPathA(MAX_PATH, tempPath);
+    snprintf(filePath, MAX_PATH, "%skbudget_print.html", tempPath);
+    FILE *f = fopen(filePath, "w");
+    if (f) {
+        fprintf(f, "<html><head><title>KBudget Report</title><style>body{font-family:sans-serif;} table{width:100%%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>");
+        fprintf(f, "<h2>KBudget Transaction Report</h2>");
+        fprintf(f, "<table><tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th></tr>");
+        for (int i = 0; i < num_transactions; i++) {
+            fprintf(f, "<tr><td>%s</td><td>%s</td><td>%s</td><td>%s%s%.2f</td></tr>",
+                transactions[i].date, transactions[i].description, transactions[i].category,
+                transactions[i].is_income ? "+" : "-", currency_symbol, transactions[i].amount);
+        }
+        fprintf(f, "</table><script>window.print();</script></body></html>");
+        fclose(f);
+        ShellExecuteA(hwnd, "open", filePath, NULL, NULL, SW_SHOWNORMAL);
+    }
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch(uMsg) {
         case WM_CREATE:
@@ -414,6 +435,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 20, 280, 150, 30, hwnd, (HMENU)3, NULL, NULL);
             hBtnSettings = CreateWindow("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 20, 320, 150, 30, hwnd, (HMENU)5, NULL, NULL);
+            HWND hBtnPrint = CreateWindow("BUTTON", "Print", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 360, 150, 30, hwnd, (HMENU)11, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
                 250, 20, 340, 25, hwnd, (HMENU)4, NULL, NULL);
@@ -447,6 +470,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnImp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnPrint, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblPage, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -534,6 +558,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == 10) {
                 current_page++;
                 UpdateUI();
+            } else if (LOWORD(wParam) == 11) {
+                PrintReport(hwnd);
             }
             break;
             
