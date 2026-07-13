@@ -153,7 +153,8 @@
             <div class="panel-header">Input</div>
             <textarea id="exprInput" spellcheck="false" placeholder="Enter script here...
 Variables: a = 10
-Math: a * 2 + 5"></textarea>
+Math: a * 2 + 5
+print a % 3"></textarea>
         </div>
         <div class="panel">
             <div class="panel-header">Output</div>
@@ -167,7 +168,7 @@ Math: a * 2 + 5"></textarea>
     const btnRun = document.getElementById('btnRun');
     const outputArea = document.getElementById('outputArea');
 
-    exprInput.value = "a = 10\nb = 20\na * b + 5";
+    exprInput.value = "a = 10\nb = 20\nprint a * b + 5\nprint a % 3";
 
     function runParser(str) {
         let vars = new Array(26).fill(0);
@@ -204,12 +205,13 @@ Math: a * 2 + 5"></textarea>
         
         const parseTerm = () => {
             let val = parseFactor();
-            while (peek() === '*' || peek() === '/') {
+            while (peek() === '*' || peek() === '/' || peek() === '%') {
                 let op = peek();
                 advance();
                 let nextVal = parseFactor();
                 if (op === '*') val *= nextVal;
-                else if (nextVal !== 0) val = Math.floor(val / nextVal);
+                else if (op === '/') { if (nextVal !== 0) val = Math.floor(val / nextVal); }
+                else if (op === '%') { if (nextVal !== 0) val = val % nextVal; }
             }
             return val;
         };
@@ -234,6 +236,17 @@ Math: a * 2 + 5"></textarea>
             let isAssign = false;
             let varIdx = -1;
             let startIdx = idx;
+            
+            if (str.substring(idx, idx + 5) === "print") {
+                let after = str[idx + 5];
+                if (after === ' ' || after === '\t' || after === '(' || after === undefined || after === '\r' || after === '\n' || after === ';') {
+                    idx += 5;
+                    let val = parseExpr();
+                    outStr += `Print: ${val}\n`;
+                    lastVal = val;
+                    continue;
+                }
+            }
             let c = peek();
             if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                 let vIdx = c.toUpperCase().charCodeAt(0) - 65;

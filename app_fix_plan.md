@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KPass
+**Target App:** KPing
 **Status:** Next
 
 ## Workflow
@@ -31,6 +31,7 @@
 4. Update this file with results.
 
 ## Tested Apps
+- **KPass**: Fixed XSS vulnerability in `kpass.html` vault item rendering by using `textContent`. Fixed GDI resource leaks (`HFONT`, `HBRUSH`) in `main.c` on `WM_DESTROY` and `WM_CTLCOLORSTATIC`.
 - **KPaint**: Fixed touch coordinate bug in `kpaint.html` where clientX=0 was falsy. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY, and fixed clicking without moving not drawing a dot.
 - **KNotes**: Fixed note title extraction bug in `knote.html` to split correctly on `\n`. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KGraph**: Fixed performance and memory issue in kgraph.html by moving `new Function` constructor out of the drawing loop. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
@@ -58,5 +59,5 @@
 - **KPad**: Fixed literal newlines in alert dialog in kpad.html. Fixed GDI resource leak (`HFONT`) in main.c.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KPaint.
+All apps need systematic testing. Continue alphabetically from KPing.
 

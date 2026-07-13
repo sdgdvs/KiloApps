@@ -43,12 +43,13 @@ int ParseFactor(const char** p) {
 
 int ParseTerm(const char** p) {
     int val = ParseFactor(p);
-    while (**p == '*' || **p == '/') {
+    while (**p == '*' || **p == '/' || **p == '%') {
         char op = **p;
         (*p)++;
         int nextVal = ParseFactor(p);
         if (op == '*') val *= nextVal;
-        else if (nextVal != 0) val /= nextVal;
+        else if (op == '/') { if (nextVal != 0) val /= nextVal; }
+        else if (op == '%') { if (nextVal != 0) val %= nextVal; }
     }
     return val;
 }
@@ -108,6 +109,22 @@ void RunScript() {
         if (!*p) break;
         
         const char* q = p;
+        if (q[0] == 'p' && q[1] == 'r' && q[2] == 'i' && q[3] == 'n' && q[4] == 't') {
+            char after = q[5];
+            if (after == ' ' || after == '\t' || after == '(' || after == '\0' || after == '\r' || after == '\n' || after == ';') {
+                p += 5;
+                int val = ParseExpr(&p);
+                char vstr[32];
+                IntToStr(val, vstr);
+                int l = StrLen(outStr);
+                if (l < sizeof(outStr) - 64) {
+                    wsprintfA(outStr + l, "Print: %s\r\n", vstr);
+                }
+                lastVal = val;
+                continue;
+            }
+        }
+        
         int isAssign = 0;
         int varIdx = -1;
         if ((*q >= 'a' && *q <= 'z') || (*q >= 'A' && *q <= 'Z')) {
@@ -153,7 +170,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
             HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             
-            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\na * b + 5",
+            hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
                 10, 44, (W - 30) / 2, H - 95, hwnd, NULL, NULL, NULL);
             SendMessage(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);

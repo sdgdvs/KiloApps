@@ -232,11 +232,13 @@
             div.className = 'vault-item';
             div.innerHTML = `
                 <div>
-                    <div class="vault-label">${item.label}</div>
-                    <div class="vault-pass">${item.pass}</div>
+                    <div class="vault-label"></div>
+                    <div class="vault-pass"></div>
                 </div>
                 <button onclick="deleteItem(${index})">X</button>
             `;
+            div.querySelector('.vault-label').textContent = item.label;
+            div.querySelector('.vault-pass').textContent = item.pass;
             vaultList.appendChild(div);
         });
     }

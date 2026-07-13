@@ -8,6 +8,8 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 #pragma function(memset)
 
 HWND hDisplay, hBtnGen, hUpper, hLower, hNum, hSym, hLen;
+HFONT hFont, hBtnFont;
+HBRUSH hBgBrush;
 
 int my_atoi(const char* str) {
     int res = 0;
@@ -58,9 +60,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hBtnGen = CreateWindowA("BUTTON", "Generate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 140, 100, 30, hwnd, (HMENU)1001, NULL, NULL);
             
-            HFONT hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
+            hBgBrush = CreateSolidBrush(RGB(20, 20, 20));
+            hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HFONT hBtnFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            hBtnFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hBtnGen, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             break;
         }
@@ -74,9 +77,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = (HDC)wParam;
             SetBkColor(hdc, RGB(20, 20, 20));
             SetTextColor(hdc, RGB(231, 76, 60)); // Red-ish for KPass
-            return (LRESULT)CreateSolidBrush(RGB(20, 20, 20));
+            return (LRESULT)hBgBrush;
         }
         case WM_DESTROY:
+            if (hBgBrush) DeleteObject(hBgBrush);
+            if (hFont) DeleteObject(hFont);
+            if (hBtnFont) DeleteObject(hBtnFont);
             PostQuitMessage(0);
             return 0;
     }
