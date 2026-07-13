@@ -69,7 +69,8 @@ const APPS = [
   { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 700, folder: 'Office' },
   { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpong.ico', w: 430, h: 460, folder: 'Games' },
   { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: null, icon: '/assets/icons/knote.ico', w: 800, h: 600, folder: 'Office' },
-  { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 800, h: 600, folder: 'Office' }
+  { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 800, h: 600, folder: 'Office' },
+  { id: 'kflash', title: 'KFlash', url: '/apps/kflash.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/knote.ico', w: 600, h: 500, folder: 'Office' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
