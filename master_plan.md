@@ -4,72 +4,71 @@
 The project aims to return software development to the lightweight, compute-efficient philosophy of 1999. The goal is to produce extremely minimal, fast, and bloat-free applications, fighting against the excessive resource consumption of modern software. 
 
 ## High-Level Objectives
-- Maintain a suite of standalone, minimal native Windows applications (KTimer, KPad, KZip, etc.). **Crucially, no individual kiloApp should exceed 999 kilobytes, even after polish and expansion.** (Note: The aggregated web platform at `kiloapps.web.app` and complete release `.zip` files are exempt from this limit and may exceed it as more apps are added).
+- Maintain a suite of standalone, minimal native Windows applications. **No individual kiloApp should exceed 999 kilobytes.** (The aggregated web platform at `kiloapps.web.app` and release `.zip` files are exempt.)
 - Maintain a minimal web-based OS environment (`KiloOS`) that packages HTML5 apps into sub-150KB Windows executables using Crinkler.
 - Keep dependencies and framework overhead to an absolute minimum.
 
-## Current State (as of 2026-07-10)
-- **Native Apps:** 50+ native Windows applications in individual subdirectories.
-- **Web Environment:** `KiloOS` deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
-- **Desktop Organization:** Apps categorized into 6 folders: System, Media, Office, Games, Network, Dev.
+## Current State (as of 2026-07-13)
+- **Total Apps:** 56 native Windows applications in individual subdirectories.
+- **KiloOS Version:** 0.3.52
+- **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
+- **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
+- **Redundant apps deleted:** KWrite (merged into KPad), KDraw (merged into KPaint).
 
-### Apps Polished (17)
-KCalc, KCalendar, KChart, KChess, KChat, KBBS, KAudio, KClock, KPong, KDB, KFont, KHex, KImage, KMail, KMandel, KPad, KPing
+### New Apps Created with Deep Expansion (3, through Phase 14)
+KVault (encrypted text storage), KBudget (expense tracker), KHabit (habit tracker with streaks)
 
-### Apps Feature-Expanded (16)
-KPad, KImage, KMaze, KMine, KPac, KNote, KPass, KMedia, KNet, KZip, KPaint, KClock, KChess, KMail, KMandel, KPing
+### All Existing Apps Polished + Feature-Expanded
+The Builder agent completed a full pass of all ~45 existing apps. It has transitioned to a **round-robin continuous improvement** model, cycling through every app adding one new feature per turn.
 
-### Apps Created from Scratch (7)
-KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase
+### Games: 11 games, Loop 2 nearly complete
+KBreakout created. Loop 1 (all 10 games) complete. Loop 2: 9 of 10 done (KChess remaining).
 
-### Games Content-Improved (3)
-KRogue (new enemies + Amulet), KSnake (high scores + progressive difficulty), KTetris (next piece + high scores + progressive speed)
+### QA: 23 apps tested and fixed
+Systematic alphabetical pass through KPad. Common bug pattern: **GDI resource leaks** in native C apps (HFONT, HBRUSH, HBITMAP not freed on WM_DESTROY). Also found XSS vulnerabilities, logic bugs, and memory issues.
 
-### KiloOS Shell/UX Improvements
-- Window dimming for inactive windows
-- Start menu glassmorphism and hover polish
-- System tray icons (network, volume, battery)
-- Window transition animation refinements
-- Mobile responsive design (media queries)
-
-### QA Tested & Fixed (4)
-KAudio (Web Audio envelope + GDI leak), KBBS (ANSI scroll + scrollbar + bounds), KCalc (M+/M- eval + keyboard), KCalendar (month-wrapping)
+### KiloOS Shell/UX: 15 improvements delivered
+Window management (dimming, snap-to-edge previews, drag feedback, minimize animation), start menu (folder navigation, glassmorphic polish, animations), taskbar (scrolling, system tray), responsive design, theme consistency.
 
 ## Milestones
 
 ### Completed ✅
-1. Initial ecosystem with 50+ apps committed and KiloOS web shell deployed.
-2. CI/CD pipeline established (GitHub Actions → Firebase Hosting).
-3. Desktop folder organization system implemented.
-4. First round of app polish (KCalc, KBBS, KAudio, KConverter) — July 7.
+1. Initial ecosystem with 50+ apps — July 7.
+2. CI/CD pipeline (GitHub Actions → Firebase) — July 7.
+3. Desktop folder organization — July 7.
+4. First polish round (KCalc, KBBS, KAudio) — July 7.
 5. KiloOS design overhaul (start menu, taskbar) — July 7.
 6. Agent fleet optimization (7 agents → 4, admin bloat eliminated) — July 9.
-7. Systematic polish/expansion pass: 18 apps polished, 18 expanded — July 10.
+7. Full polish/expansion pass of all existing apps — July 10-11.
+8. 5th agent added (App Creator & Deep Expander) — July 11.
+9. 3 new apps created through full 14-phase lifecycle — July 11-13.
+10. Games Loop 1 complete + KBreakout created + Loop 2 nearly done — July 13.
 
 ### Active 🔄
-8. Continue polish/expansion pass: 12 apps remaining (KRogue → KType).
-9. Continue QA testing pass: ~46 apps remaining after KCalendar.
-10. Game content improvements: 7 of 10 games remaining in Loop 1.
-11. KiloOS Shell/UX polish: start menu animation, taskbar refinement.
+11. Builder: Round-robin feature additions across all apps (perpetual).
+12. Creator: 4th new app in progress (choosing next app).
+13. QA: Systematic testing, currently at KPing (~33 apps remaining).
+14. Games: Loop 2 completion (KChess), then Loop 3 or new game.
+15. Shell/UX: Window management animation polish, general refinements.
 
 ### Upcoming 📋
-12. Build pipeline improvements: automated size-limit checks, CI artifact upload.
-13. Establish automated testing or build-verification for native apps.
-14. Consider new micro-apps once all existing apps are polished.
+16. Build pipeline improvements: automated size-limit checks, CI artifact upload.
+17. Automated testing or build-verification for native apps.
+18. Approach commercial-grade quality for key apps (leverage 999KB budget fully).
 
-## Active Agent Fleet
-| Agent | Schedule | Plan File | Model |
-|---|---|---|---|
-| App Builder | Every 2h | `app_work_plan.md` | Gemini 3.1 Pro High |
-| Quality & Build | Every 3h | `app_fix_plan.md` | Gemini 3.1 Pro Low |
-| Shell & UX | Every 6h | `kiloos_ux_plan.md` | Gemini 3.1 Pro High |
-| Game Content | ??? | `game_content_plan.md` | ??? |
-| Director | Every 3 days | (this review) | Claude Opus 4.6 |
+## Active Agent Fleet (2 computers, 2 accounts)
+
+| Agent | Computer | Schedule | Plan File | Model |
+|---|---|---|---|---|
+| App Builder | Other | Every 2h | `app_work_plan.md` | Gemini 3.1 Pro High |
+| Quality & Build | Other | Every 3h | `app_fix_plan.md` | Gemini 3.1 Pro Low |
+| Shell & UX | Other | Every 6h | `kiloos_ux_plan.md` | Gemini 3.1 Pro High |
+| Game Content | Other | ~2h | `game_content_plan.md` | Gemini 3.1 Pro High |
+| App Creator | This | Every 1h | `new_app_plan.md` | Gemini 3.1 Pro High |
+| Director | This | Every 3 days | (reviews) | Claude Opus 4.6 |
 
 ## Agent Workflow Rules
-- **Continuous Deployment & Versioning:** On the completion of each agent turn, you must:
-  1. Build/update the `kiloapps.web.app` assets as applicable for your changes.
-  2. Bump/update the `kiloapps.web.app` version number.
-  3. Commit and push all changes to GitHub. This triggers the GitHub Actions pipeline to automatically deploy the changes to `kiloapps.web.app`.
-- **Coordination:** See `.agents/AGENTS.md` for multi-agent conflict-avoidance rules. Always `git pull` before editing shared files.
-- **Documentation:** Keep your own plan file updated with current status after each turn.
+- **Continuous Deployment:** Commit and push after every turn. CI/CD auto-deploys.
+- **Coordination:** See `.agents/AGENTS.md`. Always `git pull` first. Own your plan file only.
+- **Subagent Delegation:** Agents should dispatch subagents for coding work to keep orchestrator context clean.
+- **Documentation:** Keep plan files concise and current.
