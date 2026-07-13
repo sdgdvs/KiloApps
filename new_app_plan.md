@@ -32,14 +32,15 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHabit
-**Phase:** 6
-**Status:** In Progress (Phase 6)
+**Phase:** 7
+**Status:** In Progress (Phase 7)
 
 - Phase 1 completed: Scaffolded KHabit folder, web UI skeleton, C native skeleton, and registered in App.jsx.
 - Phase 2 completed: Implemented core web functionality (habit tracking, streaks, localStorage).
 - Phase 3 completed: Implemented native C Win32 API app with tracking, checking, and streaks.
 - Phase 4 completed: Polished both versions: dark-mode glassmorphic aesthetic for web with fire streak animations, dark theme and better layout for native.
 - Phase 5 completed: Implemented JSON/CSV Import and Export functionality for data portability.
+- Phase 6 completed: Added Settings Modal/Dialog for custom accent colors with persistence (localStorage/file) and UI highlighting.
 
 ## App Lifecycle (14 phases per app)
 
