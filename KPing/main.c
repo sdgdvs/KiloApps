@@ -17,6 +17,8 @@ HANDLE hPingProcess = NULL;
 
 HBRUSH hbg;
 HBRUSH hinputBg;
+HFONT hFont;
+HFONT hFontMono;
 
 DWORD WINAPI PingThread(LPVOID param) {
     char host[256];
@@ -102,8 +104,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbg = CreateSolidBrush(RGB(15, 23, 42)); // #0f172a
             hinputBg = CreateSolidBrush(RGB(30, 41, 59)); // #1e293b
             
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            HFONT hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             if (!hFontMono) hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
             
             hStatic = CreateWindowEx(0, "STATIC", "Target Host:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 22, hwnd, NULL, NULL, NULL);
@@ -168,6 +170,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             DeleteObject(hbg);
             DeleteObject(hinputBg);
+            if (hFont) DeleteObject(hFont);
+            if (hFontMono) DeleteObject(hFontMono);
             PostQuitMessage(0);
             break;
         default:

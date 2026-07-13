@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KPing
+**Target App:** KPong
 **Status:** Next
 
 ## Workflow
@@ -57,7 +57,8 @@
 - **KMail**: Fixed XSS vulnerability in `kmail.html` by safely creating DOM nodes for subject and sender. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KMandel**: Fixed negative color calculation bug in Cyberpunk theme that caused visual artifacts. Added bounds checking to prevent division by zero on zero/1x1 resize.
 - **KPad**: Fixed literal newlines in alert dialog in kpad.html. Fixed GDI resource leak (`HFONT`) in main.c.
+- **KPing**: Verified `kping.html` web logic. Fixed GDI resource leak (`HFONT`, `HFONT`) in `main.c` on WM_DESTROY.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KPing.
+All apps need systematic testing. Continue alphabetically from KPong.
 
