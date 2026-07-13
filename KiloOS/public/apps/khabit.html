@@ -605,6 +605,15 @@
                     <option value="Other" selected style="background: #1e1b2e;">Other</option>
                 </select>
             </div>
+            <div class="input-group">
+                <label for="habit-target">Target Streak</label>
+                <select id="habit-target" style="width: 100%; padding: 12px 16px; border-radius: 10px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); color: white; font-family: 'Inter', sans-serif; font-size: 1rem; outline: none; transition: all 0.3s; cursor: pointer;">
+                    <option value="0" style="background: #1e1b2e;">None</option>
+                    <option value="7" style="background: #1e1b2e;">7 Days</option>
+                    <option value="30" style="background: #1e1b2e;">30 Days</option>
+                    <option value="90" style="background: #1e1b2e;">90 Days</option>
+                </select>
+            </div>
             <div class="modal-actions">
                 <button class="btn-cancel" id="cancel-habit-btn">Cancel</button>
                 <button id="save-habit-btn">Save Habit</button>
@@ -637,6 +646,7 @@
         const nameInput = document.getElementById('habit-name');
         const descInput = document.getElementById('habit-desc');
         const catInput = document.getElementById('habit-category');
+        const targetInput = document.getElementById('habit-target');
 
         // Utils
         const getTodayStr = () => {
@@ -696,6 +706,7 @@
                         id: generateId(),
                         name: "Read 20 pages",
                         description: "Daily reading goal",
+                        targetStreak: 30,
                         completions: []
                     }
                 ];
@@ -778,20 +789,37 @@
             filteredHabits.forEach(habit => {
                 const streak = calculateStreak(habit.completions);
                 const isCompletedToday = habit.completions.includes(today);
+                const target = habit.targetStreak || 0;
+                
+                let streakText = streak.toString();
+                let masteredHtml = '';
+                if (target > 0) {
+                    streakText += ` / ${target}`;
+                    if (streak >= target) {
+                        masteredHtml = `<span style="color: #fbbf24; font-weight: bold; margin-left: 10px;">🌟 Mastered!</span>`;
+                    }
+                }
 
                 const card = document.createElement('div');
                 card.className = 'habit-card';
+                if (target > 0 && streak >= target) {
+                    card.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+                    card.style.boxShadow = '0 0 10px rgba(251, 191, 36, 0.1)';
+                }
                 card.innerHTML = `
                     <div class="habit-info">
-                        <h3>${habit.name} <span class="category-tag">${habit.category || 'Other'}</span></h3>
+                        <h3>${habit.name} <span class="category-tag">${habit.category || 'Other'}</span>${masteredHtml}</h3>
                         ${habit.description ? `<p>${habit.description}</p>` : ''}
                     </div>
                     <div class="habit-actions">
+                        <div class="streak-info ${streak > 0 ? 'active' : ''}" title="Current Streak">
+                            <span class="streak-icon">🔥</span>
+                            <span>${streakText}</span>
                         </div>
-                        <button class="check-btn \${isCompletedToday ? 'completed' : ''}" data-id="\${habit.id}" title="\${isCompletedToday ? 'Completed today!' : 'Mark as complete'}">
+                        <button class="check-btn ${isCompletedToday ? 'completed' : ''}" data-id="${habit.id}" title="${isCompletedToday ? 'Completed today!' : 'Mark as complete'}">
                             <span>✔</span>
                         </button>
-                        <button class="delete-btn" data-id="\${habit.id}" title="Delete Habit">
+                        <button class="delete-btn" data-id="${habit.id}" title="Delete Habit">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -857,12 +885,13 @@
             renderHabits();
         };
 
-        const addHabit = (name, description, category) => {
+        const addHabit = (name, description, category, targetStreak) => {
             habits.push({
                 id: generateId(),
                 name,
                 description,
                 category: category || 'Other',
+                targetStreak: targetStreak || 0,
                 completions: []
             });
             saveHabits();
@@ -880,6 +909,7 @@
             nameInput.value = '';
             descInput.value = '';
             if (catInput) catInput.value = 'Other';
+            if (targetInput) targetInput.value = '0';
             nameInput.style.borderColor = 'var(--glass-border)';
             modal.classList.add('active');
             setTimeout(() => nameInput.focus(), 50);
@@ -1022,8 +1052,9 @@
             const name = nameInput.value.trim();
             const desc = descInput.value.trim();
             const cat = catInput ? catInput.value : 'Other';
+            const target = targetInput ? parseInt(targetInput.value) : 0;
             if (name) {
-                addHabit(name, desc, cat);
+                addHabit(name, desc, cat, target);
                 closeModal();
             } else {
                 nameInput.style.borderColor = 'var(--danger-color)';

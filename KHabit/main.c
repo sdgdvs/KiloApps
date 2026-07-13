@@ -21,6 +21,7 @@ typedef struct {
     int streak;
     int last_check_day;
     char category[32];
+    int target_streak;
 } Habit;
 
 Habit habits[MAX_HABITS];
@@ -63,14 +64,15 @@ void LoadHabits() {
     char line[256];
     while (fgets(line, sizeof(line), f)) {
         char name[128] = {0};
-        int streak = 0, last = 0;
+        int streak = 0, last = 0, target_streak = 0;
         char cat[32] = "Other";
-        int n = sscanf(line, "%127[^|]|%d|%d|%31[^\n]", name, &streak, &last, cat);
-        if (n >= 3) {
+        int n = sscanf(line, "%127[^|]|%d|%d|%31[^|]|%d", name, &streak, &last, cat, &target_streak);
+        if (n >= 4) {
             strcpy(habits[habitCount].name, name);
             habits[habitCount].streak = streak;
             habits[habitCount].last_check_day = last;
             strcpy(habits[habitCount].category, cat);
+            habits[habitCount].target_streak = target_streak;
             habitCount++;
             if (habitCount >= MAX_HABITS) break;
         }
@@ -82,7 +84,7 @@ void SaveHabits() {
     FILE *f = fopen("habits.dat", "w");
     if (!f) return;
     for (int i = 0; i < habitCount; i++) {
-        fprintf(f, "%s|%d|%d|%s\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category);
+        fprintf(f, "%s|%d|%d|%s|%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category, habits[i].target_streak);
     }
     fclose(f);
 }
@@ -134,11 +136,18 @@ void UpdateList() {
         char buffer[256];
         char status[16];
         if (habits[i].last_check_day == today) {
-            strcpy(status, "[ \xDF ]"); // some kind of check symbol
+            strcpy(status, "[ \xDF ]");
         } else {
             strcpy(status, "[   ]");
         }
-        sprintf(buffer, "%s [%s] %s (Streak: %d)", status, habits[i].category, habits[i].name, habits[i].streak);
+        
+        if (habits[i].target_streak > 0 && habits[i].streak >= habits[i].target_streak) {
+            sprintf(buffer, "%s [\x02Mastered\x02] %s (Streak: %d/%d)", status, habits[i].name, habits[i].streak, habits[i].target_streak);
+        } else if (habits[i].target_streak > 0) {
+            sprintf(buffer, "%s [%s] %s (Streak: %d/%d)", status, habits[i].category, habits[i].name, habits[i].streak, habits[i].target_streak);
+        } else {
+            sprintf(buffer, "%s [%s] %s (Streak: %d)", status, habits[i].category, habits[i].name, habits[i].streak);
+        }
         
         int lbIdx = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buffer);
         SendMessage(hList, LB_SETITEMDATA, lbIdx, i);
@@ -198,12 +207,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hFont = CreateFont(18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                   20, 20, 140, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
+                                   20, 20, 120, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
 #define ID_COMBO_CAT 111
             HWND hCatCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
-                                             165, 20, 90, 150, hwnd, (HMENU)ID_COMBO_CAT, NULL, NULL);
+                                             145, 20, 80, 150, hwnd, (HMENU)ID_COMBO_CAT, NULL, NULL);
             SendMessage(hCatCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Health");
             SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Work");
@@ -211,19 +220,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessage(hCatCombo, CB_SETCURSEL, 3, 0);
 
+#define ID_COMBO_TARGET 114
+            HWND hTargetCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
+                                             230, 20, 60, 150, hwnd, (HMENU)ID_COMBO_TARGET, NULL, NULL);
+            SendMessage(hTargetCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hTargetCombo, CB_ADDSTRING, 0, (LPARAM)"0");
+            SendMessage(hTargetCombo, CB_ADDSTRING, 0, (LPARAM)"7");
+            SendMessage(hTargetCombo, CB_ADDSTRING, 0, (LPARAM)"30");
+            SendMessage(hTargetCombo, CB_ADDSTRING, 0, (LPARAM)"90");
+            SendMessage(hTargetCombo, CB_SETCURSEL, 0, 0);
+
             HWND hSortCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
-                                             260, 20, 100, 150, hwnd, (HMENU)ID_COMBO_SORT, NULL, NULL);
+                                             295, 20, 80, 150, hwnd, (HMENU)ID_COMBO_SORT, NULL, NULL);
             SendMessage(hSortCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Sort...");
-            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Alphabetical");
-            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Highest Streak");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"A-Z");
+            SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Streak");
 
-            HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New Habit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       365, 20, 95, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+            HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                       380, 20, 60, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hHelp = CreateWindowEx(0, "BUTTON", "?", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                        465, 20, 25, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+                                        445, 20, 25, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hSearchLabel = CreateWindowEx(0, "STATIC", "Search:", WS_CHILD | WS_VISIBLE,
@@ -294,12 +313,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             HBRUSH hBrush;
             COLORREF textCol;
+            int is_mastered = 0;
+            if (strstr(text, "[\x02Mastered\x02]") != NULL) {
+                is_mastered = 1;
+                // remove the markers for clean display
+                char *m1 = strstr(text, "\x02");
+                if (m1) {
+                    char *m2 = strstr(m1 + 1, "\x02");
+                    if (m2) {
+                        memmove(m1, m1 + 1, m2 - m1 - 1);
+                        memmove(m1 + (m2 - m1 - 1), m2 + 1, strlen(m2 + 1) + 1);
+                    }
+                }
+            }
+
             if (dis->itemState & ODS_SELECTED) {
                 hBrush = CreateSolidBrush(accentColors[current_color_index]);
                 textCol = RGB(255, 255, 255);
             } else {
                 hBrush = CreateSolidBrush(RGB(32, 32, 36));
-                textCol = RGB(240, 240, 240);
+                if (is_mastered) {
+                    textCol = RGB(251, 191, 36); // Golden color
+                } else {
+                    textCol = RGB(240, 240, 240);
+                }
             }
             FillRect(dis->hDC, &dis->rcItem, hBrush);
             DeleteObject(hBrush);
@@ -409,6 +446,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         SendMessage(hCatCombo, CB_GETLBTEXT, selCat, (LPARAM)catText);
                         strcpy(habits[habitCount].category, catText);
 
+                        HWND hTargetCombo = GetDlgItem(hwnd, ID_COMBO_TARGET);
+                        int selTarget = SendMessage(hTargetCombo, CB_GETCURSEL, 0, 0);
+                        int target_streak = 0;
+                        if (selTarget == 1) target_streak = 7;
+                        else if (selTarget == 2) target_streak = 30;
+                        else if (selTarget == 3) target_streak = 90;
+                        habits[habitCount].target_streak = target_streak;
+
                         habitCount++;
                         SortHabits();
                         SaveHabits();
@@ -472,7 +517,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     FILE *f = fopen(ofn.lpstrFile, "w");
                     if (f) {
                         for (int i = 0; i < habitCount; i++) {
-                            fprintf(f, "%s,%d,%d,%s\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category);
+                            fprintf(f, "%s,%d,%d,%s,%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category, habits[i].target_streak);
                         }
                         fclose(f);
                         MessageBox(hwnd, "Export successful!", "Success", MB_OK);
@@ -518,14 +563,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         char line[256];
                         while (fgets(line, sizeof(line), f)) {
                             char name[128] = {0};
-                            int streak = 0, last = 0;
+                            int streak = 0, last = 0, target_streak = 0;
                             char cat[32] = "Other";
-                            int n = sscanf(line, "%127[^,],%d,%d,%31[^\n]", name, &streak, &last, cat);
-                            if (n >= 3) {
+                            int n = sscanf(line, "%127[^,],%d,%d,%31[^,],%d", name, &streak, &last, cat, &target_streak);
+                            if (n >= 4) {
                                 strcpy(habits[habitCount].name, name);
                                 habits[habitCount].streak = streak;
                                 habits[habitCount].last_check_day = last;
                                 strcpy(habits[habitCount].category, cat);
+                                habits[habitCount].target_streak = target_streak;
                                 habitCount++;
                                 if (habitCount >= MAX_HABITS) break;
                             }
