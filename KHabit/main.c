@@ -449,8 +449,31 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     MSG msg = { };
     while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        BOOL bHandled = FALSE;
+        if (msg.message == WM_KEYDOWN) {
+            if (msg.wParam == 'N' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+                SetFocus(hEdit);
+                bHandled = TRUE;
+            } else if (msg.wParam == VK_SPACE) {
+                if (GetFocus() == hList || GetFocus() == hwnd) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CHECK, BN_CLICKED), 0);
+                    bHandled = TRUE;
+                }
+            } else if (msg.wParam == VK_DELETE) {
+                if (GetFocus() == hList || GetFocus() == hwnd) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DELETE, BN_CLICKED), 0);
+                    bHandled = TRUE;
+                }
+            } else if (msg.wParam == VK_UP || msg.wParam == VK_DOWN) {
+                if (GetFocus() != hList && GetFocus() != hEdit) {
+                    SetFocus(hList);
+                }
+            }
+        }
+        if (!bHandled) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     return 0;
 }

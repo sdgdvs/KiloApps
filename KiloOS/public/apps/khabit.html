@@ -139,14 +139,14 @@
             transition: opacity 0.3s;
         }
 
-        .habit-card:hover {
+        .habit-card:hover, .habit-card.selected {
             transform: translateX(6px);
             background: var(--card-hover-bg);
             border-color: rgba(255,255,255,0.15);
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
-        .habit-card:hover::before {
+        .habit-card:hover::before, .habit-card.selected::before {
             opacity: 1;
         }
 
@@ -566,6 +566,7 @@
     <script>
         // State
         let habits = [];
+        let selectedHabitIndex = -1;
         const STORAGE_KEY = 'khabit_data';
 
         // DOM Elements
@@ -764,6 +765,24 @@
                     }
                 });
             });
+
+            if (habits.length > 0) {
+                if (selectedHabitIndex >= habits.length) selectedHabitIndex = habits.length - 1;
+                updateSelection();
+            } else {
+                selectedHabitIndex = -1;
+            }
+        };
+
+        const updateSelection = () => {
+            const cards = document.querySelectorAll('.habit-card');
+            cards.forEach((card, index) => {
+                if (index === selectedHabitIndex) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
         };
 
         const toggleHabit = (id) => {
@@ -922,6 +941,41 @@
         });
         descInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') saveBtn.click();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (modal.classList.contains('active') || settingsModal.classList.contains('active')) {
+                return;
+            }
+            if (e.ctrlKey && e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                openModal();
+                return;
+            }
+            const cards = document.querySelectorAll('.habit-card');
+            if (cards.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedHabitIndex = (selectedHabitIndex + 1) % cards.length;
+                updateSelection();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedHabitIndex = (selectedHabitIndex - 1 + cards.length) % cards.length;
+                updateSelection();
+            } else if (e.key === ' ') {
+                if (selectedHabitIndex >= 0 && selectedHabitIndex < cards.length) {
+                    e.preventDefault();
+                    const btn = cards[selectedHabitIndex].querySelector('.check-btn');
+                    if (btn) btn.click();
+                }
+            } else if (e.key === 'Delete') {
+                if (selectedHabitIndex >= 0 && selectedHabitIndex < cards.length) {
+                    e.preventDefault();
+                    const btn = cards[selectedHabitIndex].querySelector('.delete-btn');
+                    if (btn) btn.click();
+                }
+            }
         });
 
         // Init
