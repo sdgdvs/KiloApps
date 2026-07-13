@@ -32,11 +32,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFlash
-**Phase:** 3
+**Phase:** 4
 **Status:** In Progress
 
 - Phase 1: Scaffolded web HTML skeleton and registered in App.jsx.
 - Phase 2: Implemented core web HTML functionality (add cards, study mode, flip, next/prev, progress).
+- Phase 3: Created native C version (`main.c`, `build.bat`, `app.rc`) with functional parity to web.
 
 ## App Lifecycle (14 phases per app)
 
