@@ -37,14 +37,16 @@
 ## Current Status
 - Glassmorphism isolated to prefers-reduced-motion media query.
 - Improved window minimize animation.
+- Fixed desktop icon selected state styling and added window drag visual feedback.
 
 ## Priorities
 
-### 1. Theme Consistency
-- Address any remaining spacing and typography issues.
-- Ensure all app icons and labels fit well.
+### 1. Window Management Polish
+- Consider adding snap-to-edge highlights or transparent overlays when dragging windows to the edges.
 
 ## Completed Items
+- Theme Consistency: Fixed broken desktop icon selected state styling by unifying `.icon-img` with `.desktop-icon img` across `index.css`.
+- Window Management Polish: Added visual feedback when dragging windows by lowering opacity to `0.85` via `.xp-window.dragging` class to improve responsiveness feel.
 - Window Management Polish: Added smooth entrance animations for windows and updated Taskbar clock interactions. Added active interaction states to the Start Menu button.
 - Theme Consistency: Centralized desktop icon styling in `index.css`, removed duplicate/inline hover states, adjusted sizing, and added subtle drop-shadows to ensure all app icons and labels fit well.
 - Theme Consistency: Improved desktop icon labels to use standard `Inter` weight 400 with a better text-shadow and background on hover/select. Removed inline styles from `folder-content` icons in `App.jsx` to inherit the robust `index.css` classes.

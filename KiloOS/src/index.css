@@ -673,6 +673,10 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   border-color: rgba(255, 255, 255, 0.25);
   z-index: 1000 !important; /* Ensure it stays on top visually during transition */
 }
+.xp-window.dragging {
+  opacity: 0.85;
+  transition: none;
+}
 .xp-window.maximized {
   border-radius: 0;
   border: none;
@@ -893,7 +897,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 }
 
 /* Phase 2: Transitions */
-.login-btn, .start-button, .start-item, .shutdown-btn, .taskbar-item, .xp-btn, .desktop-icon .icon-img, .os-modal-buttons button {
+.login-btn, .start-button, .start-item, .shutdown-btn, .taskbar-item, .xp-btn, .desktop-icon img, .os-modal-buttons button {
   transition: all 0.15s ease;
 }
 
@@ -960,10 +964,10 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
 }
 
 /* Phase 3: Selection and Context Menu */
-.desktop-icon.selected .icon-img {
+.desktop-icon.selected img {
   background: rgba(255, 255, 255, 0.1);
-  border-color: var(--primary);
-  box-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 150, 255, 0.4);
 }
 
 .desktop-icon.selected .icon-label {
@@ -1047,7 +1051,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   .desktop-icon {
     width: 60px;
   }
-  .icon-img {
+  .desktop-icon img {
     width: 36px;
     height: 36px;
     margin-top: 4px;
