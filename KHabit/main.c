@@ -93,6 +93,9 @@ void UpdateList() {
         sprintf(buffer, "%s  %s (Streak: %d)", status, habits[i].name, habits[i].streak);
         SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)buffer);
     }
+    if (hMainWnd) {
+        InvalidateRect(hMainWnd, NULL, TRUE);
+    }
 }
 
 HBRUSH hbgBrush;
@@ -153,7 +156,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS,
-                                   20, 60, 450, 320, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
+                                   20, 140, 450, 240, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hCheck = CreateWindowEx(0, "BUTTON", "Check Off", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -228,6 +231,68 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(dis->hDC, hFont);
             DrawText(dis->hDC, text, -1, &rcText, DT_SINGLELINE | DT_VCENTER);
             return 1;
+        }
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            
+            RECT rcDash = {20, 60, 470, 130};
+            FillRect(hdc, &rcDash, hListBrush);
+            
+            int total = habitCount;
+            int completedToday = 0;
+            int today = GetDaysSinceEpoch();
+            for(int i=0; i<total; i++) {
+                if(habits[i].last_check_day == today) completedToday++;
+            }
+            
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, RGB(240, 240, 240));
+            SelectObject(hdc, hFont);
+            
+            char progText[64];
+            sprintf(progText, "Daily Progress: %d / %d", completedToday, total);
+            RECT rcText = {35, 65, 200, 85};
+            DrawText(hdc, progText, -1, &rcText, DT_SINGLELINE | DT_VCENTER);
+            
+            RECT rcBarBg = {35, 95, 255, 105};
+            HBRUSH hBarBg = CreateSolidBrush(RGB(60, 60, 65));
+            FillRect(hdc, &rcBarBg, hBarBg);
+            DeleteObject(hBarBg);
+            
+            if (total > 0 && completedToday > 0) {
+                RECT rcBarFill = {35, 95, 35 + (220 * completedToday / total), 105};
+                HBRUSH hBarFill = CreateSolidBrush(accentColors[current_color_index]);
+                FillRect(hdc, &rcBarFill, hBarFill);
+                DeleteObject(hBarFill);
+            }
+            
+            for(int d=6; d>=0; d--) {
+                int checkDay = today - d;
+                int complOnDay = 0;
+                for(int i=0; i<total; i++) {
+                    if (checkDay <= habits[i].last_check_day && checkDay > habits[i].last_check_day - habits[i].streak) {
+                        complOnDay++;
+                    }
+                }
+                
+                int startX = 300 + (6 - d) * 22;
+                RECT rcHistBg = {startX, 70, startX + 12, 115};
+                HBRUSH hHistBg = CreateSolidBrush(RGB(60, 60, 65));
+                FillRect(hdc, &rcHistBg, hHistBg);
+                DeleteObject(hHistBg);
+                
+                if (total > 0 && complOnDay > 0) {
+                    int h = 45 * complOnDay / total;
+                    RECT rcHistFill = {startX, 115 - h, startX + 12, 115};
+                    HBRUSH hHistFill = CreateSolidBrush(accentColors[current_color_index]);
+                    FillRect(hdc, &rcHistFill, hHistFill);
+                    DeleteObject(hHistFill);
+                }
+            }
+            
+            EndPaint(hwnd, &ps);
+            return 0;
         }
         case WM_ERASEBKGND: {
             HDC hdc = (HDC)wParam;
