@@ -683,6 +683,26 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   resize: none;
 }
 
+.snap-preview {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid var(--primary);
+  pointer-events: none;
+  z-index: 9999;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 0 20px rgba(33, 150, 243, 0.2);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .snap-preview {
+    backdrop-filter: blur(2px);
+  }
+}
+
+.snap-preview.left { top: 0; left: 0; width: 50%; height: calc(100% - 40px); border-left: none; border-top: none; border-bottom: none; border-radius: 0 8px 8px 0; }
+.snap-preview.right { top: 0; left: 50%; width: 50%; height: calc(100% - 40px); border-right: none; border-top: none; border-bottom: none; border-radius: 8px 0 0 8px; }
+.snap-preview.maximized { top: 0; left: 0; width: 100%; height: calc(100% - 40px); border: none; border-bottom: 2px solid var(--primary); border-radius: 0; }
+
 .xp-titlebar {
   background: var(--card-bg);
   height: 36px;

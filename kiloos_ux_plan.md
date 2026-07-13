@@ -38,13 +38,16 @@
 - Glassmorphism isolated to prefers-reduced-motion media query.
 - Improved window minimize animation.
 - Fixed desktop icon selected state styling and added window drag visual feedback.
+- Added visual snap-to-edge transparent overlays when dragging windows.
 
 ## Priorities
 
-### 1. Window Management Polish
-- Consider adding snap-to-edge highlights or transparent overlays when dragging windows to the edges.
+### 1. General Polish
+- Review and refine app folder iconography and layout.
+- Look into start menu search speed and results display.
 
 ## Completed Items
+- Window Management Polish: Added visual snap-to-edge highlights (transparent glassmorphic overlays) when dragging windows to the screen edges, giving users immediate feedback on where the window will snap upon release.
 - Theme Consistency: Fixed broken desktop icon selected state styling by unifying `.icon-img` with `.desktop-icon img` across `index.css`.
 - Window Management Polish: Added visual feedback when dragging windows by lowering opacity to `0.85` via `.xp-window.dragging` class to improve responsiveness feel.
 - Window Management Polish: Added smooth entrance animations for windows and updated Taskbar clock interactions. Added active interaction states to the Start Menu button.

@@ -78,6 +78,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
   const [dragging, setDragging] = useState(false);
   const [resizing, setResizing] = useState(false);
   const [snapState, setSnapState] = useState(null); // null, 'left', 'right', 'maximized'
+  const [snapPreview, setSnapPreview] = useState(null);
   const offset = useRef({ x: 0, y: 0 });
   const resizeOffset = useRef({ w: 0, h: 0 });
   const iframeRef = useRef(null);
@@ -106,11 +107,16 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
     if (dragging) {
       let newY = Math.max(0, e.clientY - offset.current.y);
       setPos({ x: e.clientX - offset.current.x, y: newY });
+      if (e.clientX < 20) setSnapPreview('left');
+      else if (e.clientX > window.innerWidth - 20) setSnapPreview('right');
+      else if (e.clientY < 10) setSnapPreview('maximized');
+      else setSnapPreview(null);
     }
   };
 
   const handlePointerUp = (e) => {
     setDragging(false);
+    setSnapPreview(null);
     e.target.releasePointerCapture(e.pointerId);
     
     if (e.clientX < 20) {
@@ -337,6 +343,9 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
           />
         )}
       </div>
+      {snapPreview && (
+        <div className={`snap-preview ${snapPreview}`} />
+      )}
       {/* Resize Handle */}
       {snapState !== 'maximized' && snapState !== 'left' && snapState !== 'right' && (
         <div 
