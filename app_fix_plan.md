@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KPaint
+**Target App:** KPass
 **Status:** Next
 
 ## Workflow
@@ -31,6 +31,7 @@
 4. Update this file with results.
 
 ## Tested Apps
+- **KPaint**: Fixed touch coordinate bug in `kpaint.html` where clientX=0 was falsy. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY, and fixed clicking without moving not drawing a dot.
 - **KNotes**: Fixed note title extraction bug in `knote.html` to split correctly on `\n`. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KGraph**: Fixed performance and memory issue in kgraph.html by moving `new Function` constructor out of the drawing loop. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KCalendar**: Fixed month-wrapping bug in kcalendar.html where changing months on the 31st skipped a month. Checked main.c (no issues found).

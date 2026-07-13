@@ -21,6 +21,7 @@ int curSize = 2;
 
 HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnEraser;
 HWND hBtnSize1, hBtnSize5, hBtnSave, hBtnClear;
+HFONT hFont = NULL;
 
 void UpdatePen() {
     if (hPen) DeleteObject(hPen);
@@ -91,7 +92,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             UpdatePen();
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hBtnBlack = CreateWindowA("BUTTON", "Black", WS_CHILD | WS_VISIBLE, 5, 5, 70, 25, hwnd, (HMENU)101, NULL, NULL);
             hBtnRed = CreateWindowA("BUTTON", "Red", WS_CHILD | WS_VISIBLE, 5, 35, 70, 25, hwnd, (HMENU)102, NULL, NULL);
@@ -160,7 +161,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 isPainting = 1;
                 lastX = x;
                 lastY = y;
+                HDC hdc = GetDC(hwnd);
+                SelectObject(hdc, hPen);
+                MoveToEx(hdc, x + 80, y, NULL);
+                LineTo(hdc, x + 80, y);
+                ReleaseDC(hwnd, hdc);
                 MoveToEx(hdcMem, x, y, NULL);
+                LineTo(hdcMem, x, y);
             }
             break;
         }
@@ -202,6 +209,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hPen) DeleteObject(hPen);
             if (hdcMem) DeleteDC(hdcMem);
             if (hbmCanvas) DeleteObject(hbmCanvas);
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
     }
