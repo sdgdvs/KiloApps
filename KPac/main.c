@@ -46,6 +46,7 @@ int dotCount = 0;
 int frameCount = 0;
 int level = 1;
 int frightTimer = 0;
+int lives = 3;
 
 void LoadHighScore() {
     FILE *f = fopen("kpac_hi.dat", "rb");
@@ -63,7 +64,7 @@ void SaveHighScore() {
 }
 
 void Init(int keepScore) {
-    if (!keepScore) { score = 0; level = 1; }
+    if (!keepScore) { score = 0; level = 1; lives = 3; }
     gameOver = 0;
     dotCount = 0;
     for (int r = 0; r < ROWS; r++) {
@@ -145,9 +146,21 @@ void Update() {
                 MessageBeep(MB_ICONASTERISK);
                 ghosts[i].x = 7; ghosts[i].y = 6;
             } else {
-                gameOver = 1;
-                SaveHighScore();
+                lives--;
                 MessageBeep(MB_ICONHAND);
+                if (lives <= 0) {
+                    gameOver = 1;
+                    SaveHighScore();
+                } else {
+                    px = 7; py = 12;
+                    pdx = 0; pdy = 0;
+                    ndx = 0; ndy = 0;
+                    ghosts[0].x = 7; ghosts[0].y = 6;
+                    ghosts[1].x = 6; ghosts[1].y = 7;
+                    ghosts[2].x = 8; ghosts[2].y = 7;
+                    ghosts[3].x = 7; ghosts[3].y = 7;
+                }
+                break;
             }
         }
     }
@@ -224,7 +237,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
             char sstr[64];
-            wsprintfA(sstr, "Lvl: %d Score: %d HI: %d", level, score, highScore);
+            wsprintfA(sstr, "Lv:%d Sc:%d HI:%d Lvs:%d", level, score, highScore, lives);
             TextOutA(memDC, 5, 5, sstr, lstrlenA(sstr));
             
             if (gameOver) {

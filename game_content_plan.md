@@ -116,3 +116,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KMaze (Added minimap and sound effects to both EXE and HTML)
 - [x] KSolitaire (Added initial preview phase and sound effects to both EXE and HTML)
 - [x] KSpace (Added tracking enemies and shield powerups to both EXE and HTML)
+- [x] KPac (Added 3 lives system with visual display to both EXE and HTML)

@@ -42,6 +42,7 @@
   let level = 1;
   let frightTimer = 0;
   let highScore = localStorage.getItem('kpac_highscore') || 0;
+  let lives = 3;
   
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, dur, type='square') {
@@ -73,7 +74,7 @@
           {x: 7, y: 7, color: '#ffb852'}
       ];
       frightTimer = 0;
-      if (!keepScore) { score = 0; level = 1; }
+      if (!keepScore) { score = 0; level = 1; lives = 3; }
       gameOver = 0; dotCount = 0; frameCount = 0;
       
       for (let r = 0; r < ROWS; r++) {
@@ -151,7 +152,18 @@
                   g.x = 7; g.y = 6; // send to center
               } else {
                   playSound(200, 0.5, 'sawtooth');
-                  gameOver = 1;
+                  lives--;
+                  if (lives <= 0) {
+                      gameOver = 1;
+                  } else {
+                      px = 7; py = 12;
+                      pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+                      ghosts[0] = {x: 7, y: 6, color: '#ff0000'};
+                      ghosts[1] = {x: 6, y: 7, color: '#ffb8ff'};
+                      ghosts[2] = {x: 8, y: 7, color: '#00ffff'};
+                      ghosts[3] = {x: 7, y: 7, color: '#ffb852'};
+                  }
+                  break;
               }
           }
       }
@@ -190,7 +202,7 @@
       
       ctx.fillStyle = '#fff';
       ctx.font = '12px monospace';
-      ctx.fillText(`Lvl: ${level} Score: ${score} HI: ${highScore}`, 5, 15);
+      ctx.fillText(`Lv: ${level} Sc: ${score} HI: ${highScore} Lvs: ${lives}`, 5, 15);
       
       if (gameOver) {
           ctx.fillStyle = gameOver === 1 ? '#ff0000' : '#00ff00';
