@@ -47,6 +47,7 @@
 - Look into start menu search speed and results display.
 
 ## Completed Items
+- App Folder Layout Polish: Refactored `.folder-content` from inline flexbox styles to a CSS grid matching the desktop environment, and improved the `.folder-empty` state visual rendering for empty folders.
 - Window Management Polish: Added visual snap-to-edge highlights (transparent glassmorphic overlays) when dragging windows to the screen edges, giving users immediate feedback on where the window will snap upon release.
 - Theme Consistency: Fixed broken desktop icon selected state styling by unifying `.icon-img` with `.desktop-icon img` across `index.css`.
 - Window Management Polish: Added visual feedback when dragging windows by lowering opacity to `0.85` via `.xp-window.dragging` class to improve responsiveness feel.

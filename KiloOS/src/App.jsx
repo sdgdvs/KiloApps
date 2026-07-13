@@ -306,11 +306,11 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
         {/* Transparent overlay while dragging to prevent iframe from stealing mouse */}
         {dragging && <div style={{position:'absolute', top:0, left:0, right:0, bottom:0, zIndex:10}} />}
         {app.isFolder ? (
-          <div className="folder-content" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px', alignContent: 'flex-start', overflowY: 'auto', width: '100%', height: '100%', background: 'var(--bg-color)' }}>
+          <div className="folder-content">
             {APPS.filter(a => a.folder === app.id).length === 0 ? (
-              <div style={{width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', opacity: 0.3}}>
-                <img src={app.icon} alt="Empty Folder" style={{width: '64px', height: '64px', imageRendering: 'pixelated', marginBottom: '10px'}} />
-                <div style={{fontSize: '14px', userSelect: 'none'}}>Folder is empty</div>
+              <div className="folder-empty">
+                <img src={app.icon} alt="Empty Folder" />
+                <div>Folder is empty</div>
               </div>
             ) : (
               APPS.filter(a => a.folder === app.id).map(child => (
@@ -318,7 +318,6 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
                   key={child.id} 
                   className="desktop-icon" 
                   title={child.isFolder ? 'System Folder' : 'Application'}
-                  style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                   onClick={(e) => { e.stopPropagation(); }}
                   onDoubleClick={(e) => { e.stopPropagation(); window.dispatchEvent(new CustomEvent('os-launch-app', { detail: { appId: child.id, path: '' } })); }}
                 >
