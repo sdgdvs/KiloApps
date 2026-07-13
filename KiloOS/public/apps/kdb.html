@@ -15,6 +15,7 @@
   body { 
     margin: 0; font-family: "Inter", sans-serif; background-color: var(--bg-color); 
     padding: 20px; height: 100vh; box-sizing: border-box; color: var(--text-main);
+    display: flex; flex-direction: column;
   }
   .container {
     background: var(--card-bg);
@@ -23,6 +24,9 @@
     border: 1px solid var(--border-color);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
   }
   .header {
     padding: 15px 20px;
@@ -31,8 +35,31 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
   }
-  .header h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--primary); }
+  .header h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--primary); white-space: nowrap; }
+  .search-box {
+    flex-grow: 1;
+    max-width: 300px;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.05);
+    color: var(--text-main);
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  .table-container {
+    overflow-y: auto;
+    flex-grow: 1;
+  }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
   th { 
@@ -42,6 +69,9 @@
     text-transform: uppercase;
     font-size: 12px;
     letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(10px);
   }
   tr { transition: background-color 0.2s ease; }
   tr:hover { background-color: rgba(255, 255, 255, 0.08); }
@@ -59,24 +89,53 @@
 <div class="container">
   <div class="header">
     <h2>Employee Database</h2>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Search employees..." onkeyup="filterTable()">
+    </div>
   </div>
-  <table>
-    <thead>
-      <tr>
-        <th style="width: 60px;">ID</th>
-        <th>Name</th>
-        <th>Department</th>
-        <th>Role</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td></tr>
-      <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td></tr>
-      <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td></tr>
-      <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td></tr>
-      <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td></tr>
-    </tbody>
-  </table>
+  <div class="table-container">
+    <table id="empTable">
+      <thead>
+        <tr>
+          <th style="width: 60px;">ID</th>
+          <th>Name</th>
+          <th>Department</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td></tr>
+        <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td></tr>
+        <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td></tr>
+        <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td></tr>
+        <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td></tr>
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<script>
+function filterTable() {
+  const input = document.getElementById("searchInput");
+  const filter = input.value.toLowerCase();
+  const table = document.getElementById("empTable");
+  const tr = table.getElementsByTagName("tr");
+
+  for (let i = 1; i < tr.length; i++) { // Skip header row
+    let showRow = false;
+    const tds = tr[i].getElementsByTagName("td");
+    for (let j = 0; j < tds.length; j++) {
+      if (tds[j]) {
+        const textValue = tds[j].textContent || tds[j].innerText;
+        if (textValue.toLowerCase().indexOf(filter) > -1) {
+          showRow = true;
+          break;
+        }
+      }
+    }
+    tr[i].style.display = showRow ? "" : "none";
+  }
+}
+</script>
 </body>
 </html>
