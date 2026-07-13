@@ -22,6 +22,27 @@ typedef struct {
 Habit habits[MAX_HABITS];
 int habitCount = 0;
 
+int current_color_index = 0;
+COLORREF accentColors[4] = { RGB(139, 92, 246), RGB(249, 115, 22), RGB(59, 130, 246), RGB(16, 185, 129) };
+HWND hMainWnd;
+
+void LoadSettings() {
+    FILE *f = fopen("khabit_settings.dat", "r");
+    if (f) {
+        fscanf(f, "%d", &current_color_index);
+        if (current_color_index < 0 || current_color_index > 3) current_color_index = 0;
+        fclose(f);
+    }
+}
+
+void SaveSettings() {
+    FILE *f = fopen("khabit_settings.dat", "w");
+    if (f) {
+        fprintf(f, "%d\n", current_color_index);
+        fclose(f);
+    }
+}
+
 int GetDaysSinceEpoch() {
     time_t t = time(NULL);
     return (int)(t / (60 * 60 * 24));
@@ -78,6 +99,44 @@ HBRUSH hbgBrush;
 HBRUSH hListBrush;
 HFONT hFont;
 
+LRESULT CALLBACK SettingsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_CREATE: {
+            HWND hLabel = CreateWindowEx(0, "STATIC", "Select Accent Color:", WS_CHILD | WS_VISIBLE, 20, 20, 200, 20, hwnd, NULL, NULL, NULL);
+            SendMessage(hLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE, 20, 45, 150, 150, hwnd, (HMENU)1, NULL, NULL);
+            SendMessage(hCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Purple");
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Orange");
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Blue");
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Green");
+            SendMessage(hCombo, CB_SETCURSEL, current_color_index, 0);
+            HWND hSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 80, 80, 30, hwnd, (HMENU)2, NULL, NULL);
+            SendMessage(hSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            return 0;
+        }
+        case WM_CTLCOLORSTATIC: {
+            HDC hdc = (HDC)wParam;
+            SetBkMode(hdc, TRANSPARENT);
+            return (LRESULT)GetSysColorBrush(COLOR_BTNFACE);
+        }
+        case WM_COMMAND:
+            if (LOWORD(wParam) == 2) {
+                HWND hCombo = GetDlgItem(hwnd, 1);
+                current_color_index = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                SaveSettings();
+                InvalidateRect(hMainWnd, NULL, TRUE);
+                UpdateWindow(hMainWnd);
+                DestroyWindow(hwnd);
+            }
+            return 0;
+        case WM_CLOSE:
+            DestroyWindow(hwnd);
+            return 0;
+    }
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE: {
@@ -93,26 +152,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                        370, 20, 100, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL,
+            hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS,
                                    20, 60, 450, 320, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hCheck = CreateWindowEx(0, "BUTTON", "Check Off", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                         20, 395, 120, 35, hwnd, (HMENU)ID_BTN_CHECK, NULL, NULL);
+                                         20, 395, 90, 35, hwnd, (HMENU)ID_BTN_CHECK, NULL, NULL);
             SendMessage(hCheck, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hDel = CreateWindowEx(0, "BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       150, 395, 120, 35, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+                                       120, 395, 80, 35, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
             SendMessage(hDel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                          280, 395, 80, 35, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+                                          210, 395, 80, 35, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
             SendMessage(hImport, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                          370, 395, 80, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+                                          300, 395, 80, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
             SendMessage(hExport, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+#define ID_BTN_SETTINGS 108
+            HWND hSettings = CreateWindowEx(0, "BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                          390, 395, 80, 35, hwnd, (HMENU)ID_BTN_SETTINGS, NULL, NULL);
+            SendMessage(hSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hMainWnd = hwnd;
+            LoadSettings();
             LoadHabits();
             CheckStreaks();
             UpdateList();
@@ -135,6 +201,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetBkColor(hdc, RGB(45, 45, 50));
             SetTextColor(hdc, RGB(255, 255, 255));
             return (LRESULT)CreateSolidBrush(RGB(45, 45, 50));
+        }
+        case WM_DRAWITEM: {
+            DRAWITEMSTRUCT *dis = (DRAWITEMSTRUCT *)lParam;
+            if (dis->itemID == -1) return 0;
+            char text[256];
+            SendMessage(dis->hwndItem, LB_GETTEXT, dis->itemID, (LPARAM)text);
+            
+            HBRUSH hBrush;
+            COLORREF textCol;
+            if (dis->itemState & ODS_SELECTED) {
+                hBrush = CreateSolidBrush(accentColors[current_color_index]);
+                textCol = RGB(255, 255, 255);
+            } else {
+                hBrush = CreateSolidBrush(RGB(32, 32, 36));
+                textCol = RGB(240, 240, 240);
+            }
+            FillRect(dis->hDC, &dis->rcItem, hBrush);
+            DeleteObject(hBrush);
+            
+            SetBkMode(dis->hDC, TRANSPARENT);
+            SetTextColor(dis->hDC, textCol);
+            
+            RECT rcText = dis->rcItem;
+            rcText.left += 5;
+            SelectObject(dis->hDC, hFont);
+            DrawText(dis->hDC, text, -1, &rcText, DT_SINGLELINE | DT_VCENTER);
+            return 1;
         }
         case WM_ERASEBKGND: {
             HDC hdc = (HDC)wParam;
@@ -214,6 +307,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         MessageBox(hwnd, "Export successful!", "Success", MB_OK);
                     }
                 }
+            } else if (wmId == ID_BTN_SETTINGS && wmEvent == BN_CLICKED) {
+                HWND hSettingsWnd = CreateWindowEx(
+                    0, "KHabitSettingsClass", "Settings", WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME,
+                    CW_USEDEFAULT, CW_USEDEFAULT, 220, 180,
+                    hwnd, NULL, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL
+                );
+                ShowWindow(hSettingsWnd, SW_SHOW);
             } else if (wmId == ID_BTN_IMPORT && wmEvent == BN_CLICKED) {
                 OPENFILENAME ofn;
                 char szFile[260] = "";
@@ -264,6 +364,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpszClassName = CLASS_NAME;
 
     RegisterClass(&wc);
+
+    WNDCLASS wcSet = { };
+    wcSet.lpfnWndProc = SettingsProc;
+    wcSet.hInstance = hInstance;
+    wcSet.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wcSet.lpszClassName = "KHabitSettingsClass";
+    RegisterClass(&wcSet);
 
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KHabit Tracker", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,

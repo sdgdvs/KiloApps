@@ -409,6 +409,7 @@
         <header>
             <h1>KHabit</h1>
             <div style="display: flex; gap: 8px;">
+                <button id="settings-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Settings">⚙️</button>
                 <button id="import-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Import JSON">Import</button>
                 <button id="export-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Export JSON">Export</button>
                 <button id="add-habit-btn">+ New Habit</button>
@@ -424,6 +425,25 @@
         <footer>
             KHabit Tracker &copy; 2026 KiloOS
         </footer>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <h2>Settings</h2>
+            <div class="input-group">
+                <label>Accent Color</label>
+                <div style="display: flex; gap: 15px; margin-top: 10px;" id="color-options">
+                    <div class="color-circle" data-color="purple" style="background: #8b5cf6; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;"></div>
+                    <div class="color-circle" data-color="orange" style="background: #f97316; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;"></div>
+                    <div class="color-circle" data-color="blue" style="background: #3b82f6; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;"></div>
+                    <div class="color-circle" data-color="green" style="background: #10b981; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="close-settings-btn">Close</button>
+            </div>
+        </div>
     </div>
 
     <!-- Add Habit Modal -->
@@ -455,7 +475,10 @@
         const addBtn = document.getElementById('add-habit-btn');
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
+        const settingsBtn = document.getElementById('settings-btn');
         const modal = document.getElementById('add-modal');
+        const settingsModal = document.getElementById('settings-modal');
+        const closeSettingsBtn = document.getElementById('close-settings-btn');
         const cancelBtn = document.getElementById('cancel-habit-btn');
         const saveBtn = document.getElementById('save-habit-btn');
         const nameInput = document.getElementById('habit-name');
@@ -642,6 +665,53 @@
             modal.classList.remove('active');
         };
 
+        // Color Settings Logic
+        const colors = {
+            purple: { main: '#8b5cf6', hover: '#7c3aed' },
+            orange: { main: '#f97316', hover: '#ea580c' },
+            blue: { main: '#3b82f6', hover: '#2563eb' },
+            green: { main: '#10b981', hover: '#059669' }
+        };
+
+        let currentColor = localStorage.getItem('khabit_color') || 'purple';
+
+        const applyColor = (colorKey) => {
+            const c = colors[colorKey] || colors.purple;
+            document.documentElement.style.setProperty('--accent-color', c.main);
+            document.documentElement.style.setProperty('--accent-hover', c.hover);
+            
+            document.querySelectorAll('.color-circle').forEach(el => {
+                if (el.dataset.color === colorKey) {
+                    el.style.borderColor = 'white';
+                    el.style.transform = 'scale(1.15)';
+                } else {
+                    el.style.borderColor = 'transparent';
+                    el.style.transform = 'scale(1)';
+                }
+            });
+        };
+
+        document.querySelectorAll('.color-circle').forEach(el => {
+            el.addEventListener('click', () => {
+                const c = el.dataset.color;
+                currentColor = c;
+                localStorage.setItem('khabit_color', c);
+                applyColor(c);
+            });
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            settingsModal.classList.add('active');
+        });
+        
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsModal.classList.remove('active');
+        });
+        
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) settingsModal.classList.remove('active');
+        });
+
         // Event Listeners
         addBtn.addEventListener('click', openModal);
 
@@ -707,6 +777,7 @@
         });
 
         // Init
+        applyColor(currentColor);
         loadHabits();
         renderHabits();
     </script>
