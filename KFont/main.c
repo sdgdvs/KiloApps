@@ -4,8 +4,9 @@
 #define W 400
 #define H 300
 
-HWND hList, hSample;
+HWND hList, hSizeList, hSample;
 HFONT hCurrentFont = NULL;
+int currentSize = 24;
 HFONT hFont = NULL;
 HBRUSH hBrush = NULL;
 
@@ -25,7 +26,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "System Fonts:", WS_CHILD | WS_VISIBLE, 10, 10, 150, 20, hwnd, NULL, NULL, NULL);
-            hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT, 10, 30, 150, 220, hwnd, (HMENU)1, NULL, NULL);
+            hList = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_SORT, 10, 30, 150, 160, hwnd, (HMENU)1, NULL, NULL);
+            
+            CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 10, 200, 150, 20, hwnd, NULL, NULL, NULL);
+            hSizeList = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 220, 150, 200, hwnd, (HMENU)2, NULL, NULL);
+            const char* sizes[] = {"12", "16", "24", "32", "48", "64"};
+            for (int i = 0; i < 6; i++) {
+                SendMessage(hSizeList, CB_ADDSTRING, 0, (LPARAM)sizes[i]);
+            }
+            SendMessage(hSizeList, CB_SETCURSEL, 2, 0);
             
             hSample = CreateWindowEx(WS_EX_CLIENTEDGE, "STATIC", "The quick brown fox jumps over the lazy dog.\n\n0123456789\n\nAa Bb Cc Dd Ee Ff", WS_CHILD | WS_VISIBLE | SS_CENTER, 170, 30, 200, 220, hwnd, NULL, NULL, NULL);
             
@@ -42,14 +51,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == 1 && HIWORD(wParam) == LBN_SELCHANGE) {
+            if ((LOWORD(wParam) == 1 && HIWORD(wParam) == LBN_SELCHANGE) ||
+                (LOWORD(wParam) == 2 && HIWORD(wParam) == CBN_SELCHANGE)) {
                 int sel = SendMessage(hList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR) {
                     char fontName[64];
                     SendMessage(hList, LB_GETTEXT, sel, (LPARAM)fontName);
                     
+                    int sizeSel = SendMessage(hSizeList, CB_GETCURSEL, 0, 0);
+                    if (sizeSel != CB_ERR) {
+                        char sizeStr[16];
+                        SendMessage(hSizeList, CB_GETLBTEXT, sizeSel, (LPARAM)sizeStr);
+                        currentSize = 0;
+                        for (int i = 0; sizeStr[i]; i++) currentSize = currentSize * 10 + (sizeStr[i] - '0');
+                    }
+                    
                     if (hCurrentFont) DeleteObject(hCurrentFont);
-                    hCurrentFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, fontName);
+                    hCurrentFont = CreateFontA(currentSize, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, fontName);
                     SendMessage(hSample, WM_SETFONT, (WPARAM)hCurrentFont, TRUE);
                 }
             }

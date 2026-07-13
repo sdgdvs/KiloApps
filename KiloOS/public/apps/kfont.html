@@ -29,6 +29,15 @@
       <option value="Trebuchet MS">Trebuchet MS</option>
       <option value="Verdana">Verdana</option>
     </select>
+    <div class="label" style="margin-top: 10px;">Size:</div>
+    <select id="sizeList" style="flex: none; margin-bottom: auto;">
+      <option value="12px">12</option>
+      <option value="16px">16</option>
+      <option value="24px" selected>24</option>
+      <option value="32px">32</option>
+      <option value="48px">48</option>
+      <option value="64px">64</option>
+    </select>
   </div>
   <div class="sample-container">
     <div id="sample">
@@ -39,14 +48,19 @@
   </div>
 <script>
   const fontList = document.getElementById('fontList');
+  const sizeList = document.getElementById('sizeList');
   const sample = document.getElementById('sample');
   
-  fontList.onchange = () => {
+  const updateFont = () => {
       sample.style.fontFamily = `"${fontList.value}", sans-serif`;
+      sample.style.fontSize = sizeList.value;
   };
   
+  fontList.onchange = updateFont;
+  sizeList.onchange = updateFont;
+  
   // Trigger initial
-  fontList.onchange();
+  updateFont();
 </script>
 </body>
 </html>
