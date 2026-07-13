@@ -15,6 +15,8 @@ double minRe = -2.0, maxRe = 1.0;
 double minIm = -1.2, maxIm = 1.2;
 unsigned int max_iter = 100;
 int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
+int isJulia = 0;
+double juliaCRe = 0.0, juliaCIm = 0.0;
 
 void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsigned char* g, unsigned char* b) {
     if (t == 0) { // Fire
@@ -46,10 +48,12 @@ void RenderMandelbrot(int width, int height) {
     double im_factor = (maxIm - minIm) / (height - 1);
     
     for (int y = 0; y < height; ++y) {
-        double c_im = maxIm - y * im_factor;
+        double c_im_view = maxIm - y * im_factor;
         for (int x = 0; x < width; ++x) {
-            double c_re = minRe + x * re_factor;
-            double Z_re = c_re, Z_im = c_im;
+            double c_re_view = minRe + x * re_factor;
+            double c_re = isJulia ? juliaCRe : c_re_view;
+            double c_im = isJulia ? juliaCIm : c_im_view;
+            double Z_re = c_re_view, Z_im = c_im_view;
             int isInside = 1;
             unsigned int n = 0;
             for (n = 0; n < max_iter; ++n) {
@@ -147,13 +151,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == 'R') {
-                minRe = -2.0; maxRe = 1.0;
-                minIm = -1.2; maxIm = 1.2;
+                if (isJulia) {
+                    minRe = -2.0; maxRe = 2.0;
+                    minIm = -2.0; maxIm = 2.0;
+                } else {
+                    minRe = -2.0; maxRe = 1.0;
+                    minIm = -1.2; maxIm = 1.2;
+                }
                 max_iter = 100;
                 RenderMandelbrot(bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T') {
                 theme = (theme + 1) % 4;
+                RenderMandelbrot(bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'J') {
+                if (!isJulia) {
+                    isJulia = 1;
+                    juliaCRe = minRe + (maxRe - minRe) / 2.0;
+                    juliaCIm = minIm + (maxIm - minIm) / 2.0;
+                    minRe = -2.0; maxRe = 2.0;
+                    minIm = -2.0; maxIm = 2.0;
+                } else {
+                    isJulia = 0;
+                    minRe = -2.0; maxRe = 1.0;
+                    minIm = -1.2; maxIm = 1.2;
+                }
+                max_iter = 100;
                 RenderMandelbrot(bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -210,7 +234,7 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - LClick: In, RClick: Out, R: Reset, T: Theme", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - LClick: In, RClick: Out, R: Reset, T: Theme, J: Julia", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

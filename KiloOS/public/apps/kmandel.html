@@ -136,6 +136,7 @@
         <button id="btn-zoom-out">-</button>
       </div>
       <button id="btn-theme">Toggle Theme</button>
+      <button id="btn-julia">Toggle Julia</button>
       <button id="btn-reset">Reset View</button>
     </div>
   </div>
@@ -154,6 +155,9 @@
     let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
     let isRendering = false;
     let renderRequested = false;
+
+    let isJulia = false;
+    let juliaCRe = 0.0, juliaCIm = 0.0;
 
     // Interaction state
     let isDragging = false;
@@ -208,10 +212,12 @@
       
       let idx = startY * w * 4;
       for (let y = startY; y < endY; ++y) {
-          const c_im = maxIm - y * im_factor;
+          const c_im_view = maxIm - y * im_factor;
           for (let x = 0; x < w; ++x) {
-              const c_re = minRe + x * re_factor;
-              let Z_re = c_re, Z_im = c_im;
+              const c_re_view = minRe + x * re_factor;
+              let c_re = isJulia ? juliaCRe : c_re_view;
+              let c_im = isJulia ? juliaCIm : c_im_view;
+              let Z_re = c_re_view, Z_im = c_im_view;
               let isInside = true;
               let n = 0;
               
@@ -309,8 +315,31 @@
     window.addEventListener('resize', () => requestRender());
     
     document.getElementById('btn-reset').addEventListener('click', () => {
-        minRe = -2.0; maxRe = 1.0;
-        minIm = -1.2; maxIm = 1.2;
+        if (isJulia) {
+            minRe = -2.0; maxRe = 2.0;
+            minIm = -2.0; maxIm = 2.0;
+        } else {
+            minRe = -2.0; maxRe = 1.0;
+            minIm = -1.2; maxIm = 1.2;
+        }
+        max_iter = 100;
+        requestRender();
+    });
+    
+    document.getElementById('btn-julia').addEventListener('click', () => {
+        if (!isJulia) {
+            isJulia = true;
+            juliaCRe = minRe + (maxRe - minRe) / 2.0;
+            juliaCIm = minIm + (maxIm - minIm) / 2.0;
+            minRe = -2.0; maxRe = 2.0;
+            minIm = -2.0; maxIm = 2.0;
+            document.getElementById('btn-julia').textContent = 'Mandelbrot Mode';
+        } else {
+            isJulia = false;
+            minRe = -2.0; maxRe = 1.0;
+            minIm = -1.2; maxIm = 1.2;
+            document.getElementById('btn-julia').textContent = 'Toggle Julia';
+        }
         max_iter = 100;
         requestRender();
     });
