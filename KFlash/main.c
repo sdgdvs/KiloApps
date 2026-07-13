@@ -16,6 +16,16 @@
 #define IDC_ADD     203
 #define IDC_CANCEL  204
 
+#define ID_BTN_EDIT 107
+#define ID_BTN_DELETE 108
+
+// Dialog Edit Card IDs
+#define IDD_EDITCARD 210
+#define IDC_EDIT_FRONT 211
+#define IDC_EDIT_BACK 212
+#define IDC_EDIT_SAVE 213
+#define IDC_EDIT_CANCEL 214
+
 typedef struct {
     char front[256];
     char back[256];
@@ -26,13 +36,14 @@ int deckCount = 0;
 int currentIndex = 0;
 int isFlipped = 0;
 
-HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd;
+HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete;
 HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void LoadDeck() {
     FILE *f = fopen("kflash_data.bin", "rb");
@@ -63,8 +74,12 @@ void UpdateCardDisplay() {
         EnableWindow(hBtnPrev, FALSE);
         EnableWindow(hBtnNext, FALSE);
         EnableWindow(hBtnFlip, FALSE);
+        EnableWindow(hBtnEdit, FALSE);
+        EnableWindow(hBtnDelete, FALSE);
     } else {
         EnableWindow(hBtnFlip, TRUE);
+        EnableWindow(hBtnEdit, TRUE);
+        EnableWindow(hBtnDelete, TRUE);
         EnableWindow(hBtnPrev, currentIndex > 0);
         EnableWindow(hBtnNext, currentIndex < deckCount - 1);
     }
@@ -135,6 +150,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hBtnAdd = CreateWindow("BUTTON", "+ Add Card", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                    460, 10, 100, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+                                   
+            hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   260, 10, 80, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
+                                   
+            hBtnDelete = CreateWindow("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   350, 10, 100, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
 
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
@@ -146,6 +167,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                     350, 320, 80, 30, hwnd, (HMENU)ID_BTN_NEXT, NULL, NULL);
 
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnDelete, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnFlip, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -236,6 +259,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADDCARD), hwnd, AddCardProc);
                     UpdateCardDisplay();
                     break;
+                case ID_BTN_EDIT:
+                    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_EDITCARD), hwnd, EditCardProc);
+                    UpdateCardDisplay();
+                    break;
+                case ID_BTN_DELETE:
+                    if (deckCount > 0) {
+                        if (MessageBox(hwnd, "Are you sure you want to delete this card?", "Confirm Delete", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+                            for (int i = currentIndex; i < deckCount - 1; i++) {
+                                deck[i] = deck[i + 1];
+                            }
+                            deckCount--;
+                            if (currentIndex >= deckCount && currentIndex > 0) {
+                                currentIndex = deckCount - 1;
+                            }
+                            isFlipped = 0;
+                            SaveDeck();
+                            UpdateCardDisplay();
+                        }
+                    }
+                    break;
             }
             break;
         }
@@ -264,6 +307,31 @@ INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 return (INT_PTR)TRUE;
             }
             else if (LOWORD(wParam) == IDC_CANCEL || LOWORD(wParam) == IDCANCEL) {
+                EndDialog(hwndDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+            break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_INITDIALOG:
+            SetDlgItemText(hwndDlg, IDC_EDIT_FRONT, deck[currentIndex].front);
+            SetDlgItemText(hwndDlg, IDC_EDIT_BACK, deck[currentIndex].back);
+            return (INT_PTR)TRUE;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDC_EDIT_SAVE) {
+                GetDlgItemText(hwndDlg, IDC_EDIT_FRONT, deck[currentIndex].front, 255);
+                GetDlgItemText(hwndDlg, IDC_EDIT_BACK, deck[currentIndex].back, 255);
+                if (strlen(deck[currentIndex].front) > 0 && strlen(deck[currentIndex].back) > 0) {
+                    SaveDeck();
+                }
+                EndDialog(hwndDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+            else if (LOWORD(wParam) == IDC_EDIT_CANCEL || LOWORD(wParam) == IDCANCEL) {
                 EndDialog(hwndDlg, LOWORD(wParam));
                 return (INT_PTR)TRUE;
             }
