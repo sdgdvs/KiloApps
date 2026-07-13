@@ -34,6 +34,30 @@ HFONT hFont, hCardFont;
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+void LoadDeck() {
+    FILE *f = fopen("kflash_data.bin", "rb");
+    if (f) {
+        fread(&deckCount, sizeof(int), 1, f);
+        fread(deck, sizeof(FlashCard), deckCount, f);
+        fclose(f);
+    } else {
+        strcpy(deck[0].front, "What is KiloOS?");
+        strcpy(deck[0].back, "An advanced, multi-agent operating system environment.");
+        strcpy(deck[1].front, "What does the 'K' stand for?");
+        strcpy(deck[1].back, "Kilo!");
+        deckCount = 2;
+    }
+}
+
+void SaveDeck() {
+    FILE *f = fopen("kflash_data.bin", "wb");
+    if (f) {
+        fwrite(&deckCount, sizeof(int), 1, f);
+        fwrite(deck, sizeof(FlashCard), deckCount, f);
+        fclose(f);
+    }
+}
+
 void UpdateCardDisplay() {
     if (deckCount == 0) {
         EnableWindow(hBtnPrev, FALSE);
@@ -62,12 +86,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     hbgBrush = CreateSolidBrush(RGB(13, 17, 23));
     hCardBrush = CreateSolidBrush(RGB(22, 27, 34));
 
-    // Initial deck
-    strcpy(deck[0].front, "What is KiloOS?");
-    strcpy(deck[0].back, "An advanced, multi-agent operating system environment.");
-    strcpy(deck[1].front, "What does the 'K' stand for?");
-    strcpy(deck[1].back, "Kilo!");
-    deckCount = 2;
+    // Load deck
+    LoadDeck();
 
     HWND hwnd = CreateWindowEx(
         0,
@@ -237,6 +257,7 @@ INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                     GetDlgItemText(hwndDlg, IDC_BACK, deck[deckCount].back, 255);
                     if (strlen(deck[deckCount].front) > 0 && strlen(deck[deckCount].back) > 0) {
                         deckCount++;
+                        SaveDeck();
                     }
                 }
                 EndDialog(hwndDlg, LOWORD(wParam));

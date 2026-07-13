@@ -356,10 +356,26 @@
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         
-        let deck = [
-            { front: "What is KiloOS?", back: "An advanced, multi-agent operating system environment." },
-            { front: "What does the 'K' stand for?", back: "Kilo!" }
-        ];
+        let deck = [];
+        try {
+            const saved = localStorage.getItem('kflash_deck');
+            if (saved) {
+                deck = JSON.parse(saved);
+            }
+        } catch (e) {
+            console.error(e);
+        }
+        
+        if (deck.length === 0) {
+            deck = [
+                { front: "What is KiloOS?", back: "An advanced, multi-agent operating system environment." },
+                { front: "What does the 'K' stand for?", back: "Kilo!" }
+            ];
+        }
+
+        function saveDeck() {
+            localStorage.setItem('kflash_deck', JSON.stringify(deck));
+        }
         let currentIndex = 0;
 
         const cardFront = document.getElementById('cardFront');
@@ -454,6 +470,7 @@
             const back = newBackInput.value.trim();
             if (front && back) {
                 deck.push({ front, back });
+                saveDeck();
                 newFrontInput.value = '';
                 newBackInput.value = '';
                 modal.classList.remove('active');
