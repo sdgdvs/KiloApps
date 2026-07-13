@@ -31,11 +31,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** [To be decided]
-**Phase:** 1
-**Status:** Planning
+**App:** KFlash
+**Phase:** 2
+**Status:** In Progress
 
-- Phase 1: 
+- Phase 1: Scaffolded web HTML skeleton and registered in App.jsx.
 
 ## App Lifecycle (14 phases per app)
 
