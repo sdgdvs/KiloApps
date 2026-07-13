@@ -335,8 +335,8 @@
         <section class="glass-panel">
             <h2>Transactions</h2>
             <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
-                <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="flex: 1; margin-bottom: 0;" oninput="render()">
-                <select id="sort-select" class="form-control" style="width: auto; margin-bottom: 0;" onchange="render()">
+                <input type="text" id="search-input" class="form-control" placeholder="Search by description or category..." style="flex: 1; margin-bottom: 0;" oninput="currentPage = 1; render()">
+                <select id="sort-select" class="form-control" style="width: auto; margin-bottom: 0;" onchange="currentPage = 1; render()">
                     <option value="date-desc">Date (Newest First)</option>
                     <option value="date-asc">Date (Oldest First)</option>
                     <option value="amount-desc">Amount (Highest First)</option>
@@ -345,6 +345,11 @@
             </div>
             <div class="transaction-list" id="transaction-list">
                 <!-- Transactions injected via JS -->
+            </div>
+            <div id="pagination-controls" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <button class="btn btn-outline" style="color: white; opacity: 0.5; cursor: not-allowed;" id="prev-page-btn" onclick="changePage(-1)" disabled>Previous Page</button>
+                <span id="page-indicator" style="color: #94a3b8; font-size: 0.9rem;">Page 1 of 1</span>
+                <button class="btn btn-outline" style="color: white; opacity: 0.5; cursor: not-allowed;" id="next-page-btn" onclick="changePage(1)" disabled>Next Page</button>
             </div>
         </section>
     </main>
@@ -414,6 +419,8 @@
         let transactions = JSON.parse(localStorage.getItem('kbudget_transactions')) || [];
         let currencySymbol = localStorage.getItem('kbudget_currency') || '$';
         let editingTransactionId = null;
+        let currentPage = 1;
+        const itemsPerPage = 20;
         
         const expenseCategories = ['Food', 'Transport', 'Utilities', 'Entertainment', 'Shopping', 'Health', 'Other'];
         const incomeCategories = ['Salary', 'Freelance', 'Investments', 'Gift', 'Other'];
@@ -460,6 +467,11 @@
                 dateInput.valueAsDate = new Date();
                 document.querySelector('#modal h2').textContent = 'Add Transaction';
             }
+        }
+
+        function changePage(delta) {
+            currentPage += delta;
+            render();
         }
 
         function closeModal() {
@@ -662,6 +674,22 @@
             document.getElementById('total-income').textContent = '+' + formatCurrency(income);
             document.getElementById('total-expense').textContent = '-' + formatCurrency(expense);
 
+            const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / itemsPerPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+            
+            document.getElementById('page-indicator').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-page-btn').disabled = currentPage === 1;
+            document.getElementById('prev-page-btn').style.opacity = currentPage === 1 ? '0.5' : '1';
+            document.getElementById('prev-page-btn').style.cursor = currentPage === 1 ? 'not-allowed' : 'pointer';
+            document.getElementById('next-page-btn').disabled = currentPage === totalPages;
+            document.getElementById('next-page-btn').style.opacity = currentPage === totalPages ? '0.5' : '1';
+            document.getElementById('next-page-btn').style.cursor = currentPage === totalPages ? 'not-allowed' : 'pointer';
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const paginatedTransactions = filteredTransactions.slice(startIdx, endIdx);
+
             // 2. Render List
             transactionList.innerHTML = '';
             
@@ -672,7 +700,7 @@
                     transactionList.innerHTML = '<div class="empty-state">No transactions found matching your search.</div>';
                 }
             } else {
-                filteredTransactions.forEach(t => {
+                paginatedTransactions.forEach(t => {
                     const isIncome = t.type === 'income';
                     const amountClass = isIncome ? 'text-success' : 'text-danger';
                     const sign = isIncome ? '+' : '-';

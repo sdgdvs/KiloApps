@@ -21,6 +21,8 @@ typedef struct {
 Transaction transactions[MAX_TRANSACTIONS];
 int num_transactions = 0;
 int editing_index = -1;
+int current_page = 1;
+const int items_per_page = 20;
 
 HWND hMainWnd;
 HWND hList;
@@ -29,6 +31,7 @@ HWND hBtnSettings;
 HWND hSearchEdit;
 HWND hSortCombo;
 HWND hLblTotal, hLblIncome, hLblExpense;
+HWND hBtnPrev, hBtnNext, hLblPage;
 
 HBRUSH hbgBrush;
 HFONT hFont;
@@ -173,7 +176,24 @@ void UpdateUI() {
     
     qsort(filtered, filtered_count, sizeof(int), compare_indices);
     
-    for (int k = 0; k < filtered_count; k++) {
+    int total_pages = filtered_count / items_per_page;
+    if (filtered_count % items_per_page != 0 || total_pages == 0) total_pages++;
+    
+    if (current_page > total_pages) current_page = total_pages;
+    if (current_page < 1) current_page = 1;
+    
+    char pageBuf[32];
+    snprintf(pageBuf, sizeof(pageBuf), "Page %d of %d", current_page, total_pages);
+    if (hLblPage) SetWindowText(hLblPage, pageBuf);
+    
+    if (hBtnPrev) EnableWindow(hBtnPrev, current_page > 1);
+    if (hBtnNext) EnableWindow(hBtnNext, current_page < total_pages);
+
+    int start_idx = (current_page - 1) * items_per_page;
+    int end_idx = start_idx + items_per_page;
+    if (end_idx > filtered_count) end_idx = filtered_count;
+    
+    for (int k = start_idx; k < end_idx; k++) {
         int i = filtered[k];
         char buf[256];
         snprintf(buf, sizeof(buf), "%s | %s | %s%s%.2f | %s", 
@@ -408,6 +428,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hList = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOTIFY,
                 250, 50, 500, 270, hwnd, NULL, NULL, NULL);
+                
+            hBtnPrev = CreateWindow("BUTTON", "Prev Page", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                250, 330, 100, 30, hwnd, (HMENU)9, NULL, NULL);
+            hLblPage = CreateWindow("STATIC", "Page 1 of 1", WS_CHILD | WS_VISIBLE | SS_CENTER,
+                360, 335, 120, 20, hwnd, NULL, NULL, NULL);
+            hBtnNext = CreateWindow("BUTTON", "Next Page", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                490, 330, 100, 30, hwnd, (HMENU)10, NULL, NULL);
             
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hSortCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -421,6 +448,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnExp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hLblPage, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LoadData();
             LoadSettings();
@@ -438,7 +468,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     MoveWindow(hSortCombo, width - 170, 20, 150, 150, TRUE);
                 }
                 if (hList) {
-                    MoveWindow(hList, 250, 50, width - 270, height - 70, TRUE);
+                    MoveWindow(hList, 250, 50, width - 270, height - 110, TRUE);
+                }
+                if (hBtnPrev) {
+                    MoveWindow(hBtnPrev, 250, height - 50, 100, 30, TRUE);
+                }
+                if (hLblPage) {
+                    MoveWindow(hLblPage, 360, height - 45, 120, 20, TRUE);
+                }
+                if (hBtnNext) {
+                    MoveWindow(hBtnNext, 490, height - 50, 100, 30, TRUE);
                 }
             }
             return 0;
@@ -453,6 +492,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
         case WM_COMMAND:
             if ((HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == 4) || (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == 8)) {
+                current_page = 1;
                 UpdateUI();
             } else if (LOWORD(wParam) == 1) {
                 editing_index = -1;
@@ -486,6 +526,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ExportCSV(hwnd);
             } else if (LOWORD(wParam) == 5) {
                 DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SETTINGS), hwnd, SettingsDialogProc);
+            } else if (LOWORD(wParam) == 9) {
+                if (current_page > 1) {
+                    current_page--;
+                    UpdateUI();
+                }
+            } else if (LOWORD(wParam) == 10) {
+                current_page++;
+                UpdateUI();
             }
             break;
             
