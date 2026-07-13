@@ -11,10 +11,30 @@
 int grid[MAX_ROWS][MAX_COLS];
 int state[MAX_ROWS][MAX_COLS]; // 0=hidden, 1=revealed, 2=flagged
 int gameOver = 0;
+int flagsPlaced = 0;
+int timeElapsed = 0;
+int firstClick = 1;
 
 int cols = 10;
 int rows = 10;
 int totalMines = 15;
+
+void UpdateTitle(HWND hwnd) {
+    if (!hwnd) return;
+    if (gameOver == 2) {
+        char buf[64];
+        wsprintfA(buf, "KMine - YOU WIN! Time: %ds", timeElapsed);
+        SetWindowTextA(hwnd, buf);
+    } else if (gameOver == 1) {
+        char buf[64];
+        wsprintfA(buf, "KMine - GAME OVER! Time: %ds", timeElapsed);
+        SetWindowTextA(hwnd, buf);
+    } else {
+        char buf[64];
+        wsprintfA(buf, "KMine - Mines: %d | Time: %ds", totalMines - flagsPlaced, timeElapsed);
+        SetWindowTextA(hwnd, buf);
+    }
+}
 
 #define IDM_BEGINNER 1001
 #define IDM_INTERMEDIATE 1002
@@ -27,9 +47,14 @@ int MyRand() {
     return (unsigned int)(randSeed / 65536) % 32768;
 }
 
-void InitGame() {
+void InitGame(HWND hwnd) {
     randSeed = GetTickCount();
     gameOver = 0;
+    flagsPlaced = 0;
+    timeElapsed = 0;
+    firstClick = 1;
+    if (hwnd) KillTimer(hwnd, 1);
+    UpdateTitle(hwnd);
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
             grid[y][x] = 0;
@@ -85,6 +110,20 @@ void Reveal(int x, int y) {
     }
 }
 
+void CheckWin(HWND hwnd) {
+    int unrevealed = 0;
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x++) {
+            if (state[y][x] != 1) unrevealed++;
+        }
+    }
+    if (unrevealed == totalMines) {
+        gameOver = 2; // Win
+        KillTimer(hwnd, 1);
+        UpdateTitle(hwnd);
+    }
+}
+
 void SetDifficulty(HWND hwnd, int c, int r, int m) {
     cols = c;
     rows = r;
@@ -92,7 +131,7 @@ void SetDifficulty(HWND hwnd, int c, int r, int m) {
     RECT rc = {0, 0, cols * CELL, rows * CELL};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, TRUE);
     SetWindowPos(hwnd, NULL, 0, 0, rc.right - rc.left, rc.bottom - rc.top, SWP_NOMOVE | SWP_NOZORDER);
-    InitGame();
+    InitGame(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -117,15 +156,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 30, 16, 99);
             }
             break;
+        case WM_TIMER:
+            if (!gameOver) {
+                timeElapsed++;
+                UpdateTitle(hwnd);
+            }
+            break;
         case WM_LBUTTONDOWN: {
             if (gameOver) {
-                InitGame();
+                InitGame(hwnd);
                 InvalidateRect(hwnd, NULL, FALSE);
                 break;
+            }
+            if (firstClick) {
+                firstClick = 0;
+                SetTimer(hwnd, 1, 1000, NULL);
             }
             int x = LOWORD(lParam) / CELL;
             int y = HIWORD(lParam) / CELL;
             Reveal(x, y);
+            if (gameOver == 1) {
+                KillTimer(hwnd, 1);
+                UpdateTitle(hwnd);
+            } else {
+                CheckWin(hwnd);
+            }
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -134,7 +189,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = LOWORD(lParam) / CELL;
             int y = HIWORD(lParam) / CELL;
             if (x >= 0 && x < cols && y >= 0 && y < rows && state[y][x] != 1) {
-                state[y][x] = (state[y][x] == 0) ? 2 : 0;
+                if (state[y][x] == 0) {
+                    state[y][x] = 2;
+                    flagsPlaced++;
+                } else {
+                    state[y][x] = 0;
+                    flagsPlaced--;
+                }
+                UpdateTitle(hwnd);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;

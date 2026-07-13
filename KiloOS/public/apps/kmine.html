@@ -15,6 +15,7 @@
     <option value="2">Expert</option>
   </select>
   <button onclick="initGame()">Restart</button>
+  <span id="status" style="margin-left: 10px; font-family: monospace; font-weight: bold;"></span>
 </div>
 <canvas id="cvs" width="200" height="200"></canvas>
 <script>
@@ -27,7 +28,57 @@
   let totalMines = 15;
   let grid = [];
   let state = [];
-  let gameOver = false;
+  let gameOver = 0; // 0: playing, 1: lost, 2: won
+  let flags = 0;
+  let timeElapsed = 0;
+  let timerInterval = null;
+  let firstClick = true;
+  
+  function updateStatus() {
+      const statusEl = document.getElementById('status');
+      if (gameOver === 2) {
+          statusEl.innerText = `YOU WIN! Time: ${timeElapsed}s`;
+          statusEl.style.color = "green";
+      } else if (gameOver === 1) {
+          statusEl.innerText = `GAME OVER! Time: ${timeElapsed}s`;
+          statusEl.style.color = "red";
+      } else {
+          statusEl.innerText = `Mines: ${totalMines - flags} | Time: ${timeElapsed}s`;
+          statusEl.style.color = "black";
+      }
+  }
+  
+  function startTimer() {
+      if (!timerInterval) {
+          timerInterval = setInterval(() => {
+              if (gameOver === 0) {
+                  timeElapsed++;
+                  updateStatus();
+              }
+          }, 1000);
+      }
+  }
+  
+  function stopTimer() {
+      if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+      }
+  }
+  
+  function checkWin() {
+      let unrevealed = 0;
+      for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+              if (state[y][x] !== 1) unrevealed++;
+          }
+      }
+      if (unrevealed === totalMines) {
+          gameOver = 2; // Win
+          stopTimer();
+          updateStatus();
+      }
+  }
   
   function changeDiff() {
       const val = document.getElementById('diff').value;
@@ -40,7 +91,12 @@
   }
   
   function initGame() {
-      gameOver = false;
+      gameOver = 0;
+      flags = 0;
+      timeElapsed = 0;
+      firstClick = true;
+      stopTimer();
+      updateStatus();
       grid = Array.from({length: rows}, () => Array(cols).fill(0));
       state = Array.from({length: rows}, () => Array(cols).fill(0));
       
@@ -77,7 +133,9 @@
       if (x < 0 || x >= cols || y < 0 || y >= rows || state[y][x] !== 0) return;
       state[y][x] = 1;
       if (grid[y][x] === 9) {
-          gameOver = true;
+          gameOver = 1;
+          stopTimer();
+          updateStatus();
           for (let i=0; i<rows; i++) {
               for (let j=0; j<cols; j++) {
                   if (grid[i][j] === 9) state[i][j] = 1;
@@ -143,7 +201,7 @@
   }
   
   cvs.addEventListener('mousedown', (e) => {
-      if (gameOver) {
+      if (gameOver !== 0) {
           initGame();
           return;
       }
@@ -151,11 +209,26 @@
       let x = Math.floor((e.clientX - rect.left) / CELL);
       let y = Math.floor((e.clientY - rect.top) / CELL);
       
+      if (firstClick) {
+          firstClick = false;
+          startTimer();
+      }
+      
       if (e.button === 0) {
           reveal(x, y);
+          if (gameOver === 0) {
+              checkWin();
+          }
       } else if (e.button === 2) {
           if (x >= 0 && x < cols && y >= 0 && y < rows && state[y][x] !== 1) {
-              state[y][x] = (state[y][x] === 0) ? 2 : 0;
+              if (state[y][x] === 0) {
+                  state[y][x] = 2;
+                  flags++;
+              } else {
+                  state[y][x] = 0;
+                  flags--;
+              }
+              updateStatus();
           }
       }
       draw();
