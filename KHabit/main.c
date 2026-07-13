@@ -238,11 +238,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Streak");
 
             HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       380, 20, 60, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+                                       380, 20, 55, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+#define ID_BTN_STATS 115
+            HWND hStats = CreateWindowEx(0, "BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                       440, 20, 50, 28, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
+            SendMessage(hStats, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             HWND hHelp = CreateWindowEx(0, "BUTTON", "?", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                        445, 20, 25, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+                                        495, 20, 25, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hSearchLabel = CreateWindowEx(0, "STATIC", "Search:", WS_CHILD | WS_VISIBLE,
@@ -250,11 +255,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hSearchLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hSearchEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                         80, 140, 390, 28, hwnd, (HMENU)ID_SEARCH_EDIT, NULL, NULL);
+                                         80, 140, 440, 28, hwnd, (HMENU)ID_SEARCH_EDIT, NULL, NULL);
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS,
-                                   20, 175, 450, 205, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
+                                   20, 175, 500, 205, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hCheck = CreateWindowEx(0, "BUTTON", "Check Off", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
@@ -354,7 +359,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            RECT rcDash = {20, 60, 470, 130};
+            RECT rcDash = {20, 60, 500, 130};
             FillRect(hdc, &rcDash, hListBrush);
             
             int total = habitCount;
@@ -523,6 +528,62 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         MessageBox(hwnd, "Export successful!", "Success", MB_OK);
                     }
                 }
+            } else if (wmId == ID_BTN_STATS && wmEvent == BN_CLICKED) {
+                int totalActive = habitCount;
+                int totalMastered = 0;
+                int longestStreak = 0;
+                
+                struct {
+                    char name[32];
+                    int total_streak;
+                    int count;
+                } cats[10] = {0};
+                int num_cats = 0;
+
+                for (int i = 0; i < habitCount; i++) {
+                    if (habits[i].target_streak > 0 && habits[i].streak >= habits[i].target_streak) {
+                        totalMastered++;
+                    }
+                    if (habits[i].streak > longestStreak) {
+                        longestStreak = habits[i].streak;
+                    }
+                    
+                    int found = -1;
+                    for (int j = 0; j < num_cats; j++) {
+                        if (strcmp(cats[j].name, habits[i].category) == 0) {
+                            found = j; break;
+                        }
+                    }
+                    if (found == -1 && num_cats < 10) {
+                        strcpy(cats[num_cats].name, habits[i].category);
+                        cats[num_cats].total_streak = habits[i].streak;
+                        cats[num_cats].count = 1;
+                        num_cats++;
+                    } else if (found != -1) {
+                        cats[found].total_streak += habits[i].streak;
+                        cats[found].count++;
+                    }
+                }
+                
+                char mostConsistent[32] = "None";
+                float highestAvg = -1.0f;
+                for (int i = 0; i < num_cats; i++) {
+                    float avg = (float)cats[i].total_streak / cats[i].count;
+                    if (avg > highestAvg) {
+                        highestAvg = avg;
+                        strcpy(mostConsistent, cats[i].name);
+                    }
+                }
+                
+                char statsStr[512];
+                sprintf(statsStr, 
+                        "Total Active Habits: %d\n"
+                        "Total Mastered Habits: %d\n"
+                        "Longest Active Streak: %d\n"
+                        "Most Consistent Category: %s (%.1f avg streak)",
+                        totalActive, totalMastered, longestStreak, mostConsistent, highestAvg >= 0 ? highestAvg : 0.0f);
+                        
+                MessageBox(hwnd, statsStr, "Detailed Statistics", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_BTN_SETTINGS && wmEvent == BN_CLICKED) {
                 HWND hSettingsWnd = CreateWindowEx(
                     0, "KHabitSettingsClass", "Settings", WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME,
@@ -615,7 +676,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KHabit Tracker", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 506, 490,
+        CW_USEDEFAULT, CW_USEDEFAULT, 550, 490,
         NULL, NULL, hInstance, NULL
     );
 

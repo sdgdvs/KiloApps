@@ -511,6 +511,7 @@
                     <option value="alpha" style="background: var(--bg-color);">Alphabetical</option>
                     <option value="streak" style="background: var(--bg-color);">Highest Streak</option>
                 </select>
+                <button id="stats-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Statistics">📊</button>
                 <button id="help-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Help">?</button>
                 <button id="settings-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Settings">⚙️</button>
                 <button id="import-btn" style="background: rgba(255,255,255,0.1); box-shadow: none;" title="Import JSON">Import</button>
@@ -561,6 +562,18 @@
             </div>
             <div class="modal-actions">
                 <button class="btn-cancel" id="close-help-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal-overlay" id="stats-modal">
+        <div class="modal">
+            <h2>Statistics</h2>
+            <div id="stats-content" style="font-size: 0.95rem; color: var(--text-secondary); line-height: 1.8; margin-bottom: 20px;">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="close-stats-btn">Close</button>
             </div>
         </div>
     </div>
@@ -631,12 +644,16 @@
         const habitListEl = document.getElementById('habit-list');
         const searchInput = document.getElementById('search-input');
         const addBtn = document.getElementById('add-habit-btn');
+        const statsBtn = document.getElementById('stats-btn');
         const helpBtn = document.getElementById('help-btn');
         const importBtn = document.getElementById('import-btn');
         const exportBtn = document.getElementById('export-btn');
         const settingsBtn = document.getElementById('settings-btn');
         const sortSelect = document.getElementById('sort-select');
         const modal = document.getElementById('add-modal');
+        const statsModal = document.getElementById('stats-modal');
+        const closeStatsBtn = document.getElementById('close-stats-btn');
+        const statsContent = document.getElementById('stats-content');
         const helpModal = document.getElementById('help-modal');
         const closeHelpBtn = document.getElementById('close-help-btn');
         const settingsModal = document.getElementById('settings-modal');
@@ -1002,6 +1019,57 @@
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
+        });
+
+        statsBtn.addEventListener('click', () => {
+            let totalActive = habits.length;
+            let totalMastered = 0;
+            let longestStreak = 0;
+            let categoryStreaks = {};
+            let categoryCounts = {};
+
+            habits.forEach(h => {
+                let streak = calculateStreak(h.completions);
+                if (h.targetStreak > 0 && streak >= h.targetStreak) {
+                    totalMastered++;
+                }
+                if (streak > longestStreak) {
+                    longestStreak = streak;
+                }
+                let cat = h.category || 'Other';
+                if (!categoryStreaks[cat]) {
+                    categoryStreaks[cat] = 0;
+                    categoryCounts[cat] = 0;
+                }
+                categoryStreaks[cat] += streak;
+                categoryCounts[cat]++;
+            });
+
+            let mostConsistentCat = "None";
+            let highestAvg = -1;
+            for (let cat in categoryStreaks) {
+                let avg = categoryStreaks[cat] / categoryCounts[cat];
+                if (avg > highestAvg) {
+                    highestAvg = avg;
+                    mostConsistentCat = cat;
+                }
+            }
+
+            statsContent.innerHTML = `
+                <p><strong>Total Active Habits:</strong> ${totalActive}</p>
+                <p><strong>Total Mastered Habits:</strong> ${totalMastered}</p>
+                <p><strong>Longest Active Streak:</strong> ${longestStreak}</p>
+                <p><strong>Most Consistent Category:</strong> ${mostConsistentCat} (${highestAvg >= 0 ? highestAvg.toFixed(1) : 0} avg streak)</p>
+            `;
+            statsModal.classList.add('active');
+        });
+
+        closeStatsBtn.addEventListener('click', () => {
+            statsModal.classList.remove('active');
+        });
+
+        statsModal.addEventListener('click', (e) => {
+            if (e.target === statsModal) statsModal.classList.remove('active');
         });
 
         helpBtn.addEventListener('click', () => {
