@@ -93,6 +93,7 @@
   const keys = {};
   document.addEventListener('keydown', e => keys[e.key] = true);
   document.addEventListener('keyup', e => keys[e.key] = false);
+  window.addEventListener('blur', () => { for(let k in keys) keys[k] = false; });
 
   function reset() {
       bx = W/2 - BALL_SIZE/2;

@@ -11,6 +11,8 @@
 
 int p1_y = H / 2 - PAD_H / 2;
 int p2_y = H / 2 - PAD_H / 2;
+int ball_x = W / 2 - BALL_SIZE / 2;
+int ball_y = H / 2 - BALL_SIZE / 2;
 int ball_dx = 5;
 int ball_dy = 3;
 int p1_score = 0;
