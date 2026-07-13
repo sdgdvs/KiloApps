@@ -74,6 +74,7 @@
   let bx = W/2 - BALL_SIZE/2, by = H/2 - BALL_SIZE/2;
   let bdx = 5, bdy = 3;
   let s1 = 0, s2 = 0;
+  let rally = 0;
   let gameOver = false;
   let particles = [];
   
@@ -103,7 +104,7 @@
   function update() {
       if (gameOver) {
           if (keys['r'] || keys['R']) {
-              s1 = 0; s2 = 0;
+              s1 = 0; s2 = 0; rally = 0;
               document.getElementById('s1').innerText = s1;
               document.getElementById('s2').innerText = s2;
               gameOver = false;
@@ -137,18 +138,20 @@
       if (bx < 20 + PAD_W && by + BALL_SIZE > p1y && by < p1y + PAD_H) {
           bx = 20 + PAD_W; bdx = -bdx;
           bdx *= 1.1; bdy *= 1.1;
+          rally++;
           createParticles(bx, by + BALL_SIZE/2, 'hsl(200, 85%, 60%)');
           playSound(600, 'hit');
       }
       if (bx + BALL_SIZE > W - 20 - PAD_W && by + BALL_SIZE > p2y && by < p2y + PAD_H) {
           bx = W - 20 - PAD_W - BALL_SIZE; bdx = -bdx;
           bdx *= 1.1; bdy *= 1.1;
+          rally++;
           createParticles(bx + BALL_SIZE, by + BALL_SIZE/2, 'hsl(300, 85%, 60%)');
           playSound(600, 'hit');
       }
 
-      if (bx < 0) { s2++; playSound(200, 'score'); reset(); document.getElementById('s2').innerText = s2; if (s2 >= 11) gameOver = true; }
-      if (bx > W) { s1++; playSound(200, 'score'); reset(); document.getElementById('s1').innerText = s1; if (s1 >= 11) gameOver = true; }
+      if (bx < 0) { s2++; rally = 0; playSound(200, 'score'); reset(); document.getElementById('s2').innerText = s2; if (s2 >= 11) gameOver = true; }
+      if (bx > W) { s1++; rally = 0; playSound(200, 'score'); reset(); document.getElementById('s1').innerText = s1; if (s1 >= 11) gameOver = true; }
   }
 
   function draw() {
@@ -195,6 +198,11 @@
       
       // Reset shadow for next frame
       ctx.shadowBlur = 0;
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.font = '14px Inter';
+      ctx.textAlign = 'center';
+      ctx.fillText("RALLY: " + rally, W/2, 20);
 
       if (gameOver) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';

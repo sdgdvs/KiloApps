@@ -15,6 +15,7 @@ int ball_dx = 5;
 int ball_dy = 3;
 int p1_score = 0;
 int p2_score = 0;
+int rally = 0;
 int game_over = 0;
 
 void ResetBall() {
@@ -34,6 +35,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (GetAsyncKeyState('R') & 0x8000) {
                     p1_score = 0;
                     p2_score = 0;
+                    rally = 0;
                     game_over = 0;
                     ResetBall();
                 }
@@ -65,6 +67,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (ball_x < 20 + PAD_W && ball_y + BALL_SIZE > p1_y && ball_y < p1_y + PAD_H) {
                 ball_x = 20 + PAD_W;
                 ball_dx = -ball_dx;
+                rally++;
                 if (ball_dx < 15 && ball_dx > -15) { ball_dx = ball_dx > 0 ? ball_dx + 1 : ball_dx - 1; }
                 if (ball_dy < 15 && ball_dy > -15) { ball_dy = ball_dy > 0 ? ball_dy + 1 : ball_dy - 1; }
                 MessageBeep(0xFFFFFFFF);
@@ -72,14 +75,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (ball_x + BALL_SIZE > W - 20 - PAD_W && ball_y + BALL_SIZE > p2_y && ball_y < p2_y + PAD_H) {
                 ball_x = W - 20 - PAD_W - BALL_SIZE;
                 ball_dx = -ball_dx;
+                rally++;
                 if (ball_dx < 15 && ball_dx > -15) { ball_dx = ball_dx > 0 ? ball_dx + 1 : ball_dx - 1; }
                 if (ball_dy < 15 && ball_dy > -15) { ball_dy = ball_dy > 0 ? ball_dy + 1 : ball_dy - 1; }
                 MessageBeep(0xFFFFFFFF);
             }
 
             // Scoring
-            if (ball_x < 0) { p2_score++; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
-            if (ball_x > W) { p1_score++; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
+            if (ball_x < 0) { p2_score++; rally = 0; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
+            if (ball_x > W) { p1_score++; rally = 0; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
 
             if (p1_score >= 11 || p2_score >= 11) {
                 game_over = 1;
@@ -124,6 +128,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 255, 255));
             SetBkMode(memDC, TRANSPARENT);
             TextOutA(memDC, W / 2 - 20, 10, scoreStr, lstrlenA(scoreStr));
+            
+            char rallyStr[32];
+            wsprintfA(rallyStr, "RALLY: %d", rally);
+            SetTextColor(memDC, RGB(180, 180, 180));
+            TextOutA(memDC, W / 2 - 35, 30, rallyStr, lstrlenA(rallyStr));
             
             if (game_over) {
                 char* winStr = p1_score >= 11 ? "P1 WINS!" : "P2 WINS!";
