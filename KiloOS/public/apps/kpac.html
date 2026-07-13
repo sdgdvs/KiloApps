@@ -43,6 +43,7 @@
   let frightTimer = 0;
   let highScore = localStorage.getItem('kpac_highscore') || 0;
   let lives = 3;
+  let paused = false;
   
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, dur, type='square') {
@@ -60,7 +61,10 @@
   }
   
   const keys = {};
-  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if ((e.key === 'p' || e.key === 'P') && !gameOver) paused = !paused;
+  });
   document.addEventListener('keyup', e => keys[e.key] = false);
 
   function init(keepScore) {
@@ -76,6 +80,7 @@
       frightTimer = 0;
       if (!keepScore) { score = 0; level = 1; lives = 3; }
       gameOver = 0; dotCount = 0; frameCount = 0;
+      paused = false;
       
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
@@ -89,6 +94,7 @@
           if (keys['Enter']) init(false);
           return;
       }
+      if (paused) return;
       
       if (keys['ArrowLeft'] || keys['a']) { ndx = -1; ndy = 0; }
       if (keys['ArrowRight'] || keys['d']) { ndx = 1; ndy = 0; }
@@ -207,6 +213,9 @@
       if (gameOver) {
           ctx.fillStyle = gameOver === 1 ? '#ff0000' : '#00ff00';
           ctx.fillText(gameOver === 1 ? 'GAME OVER' : 'YOU WIN!', 120, 150);
+      } else if (paused) {
+          ctx.fillStyle = '#ffff00';
+          ctx.fillText('PAUSED', 130, 150);
       }
   }
 

@@ -47,6 +47,7 @@ int frameCount = 0;
 int level = 1;
 int frightTimer = 0;
 int lives = 3;
+int paused = 0;
 
 void LoadHighScore() {
     FILE *f = fopen("kpac_hi.dat", "rb");
@@ -66,6 +67,7 @@ void SaveHighScore() {
 void Init(int keepScore) {
     if (!keepScore) { score = 0; level = 1; lives = 3; }
     gameOver = 0;
+    paused = 0;
     dotCount = 0;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
@@ -84,7 +86,7 @@ void Init(int keepScore) {
 }
 
 void Update() {
-    if (gameOver) return;
+    if (gameOver || paused) return;
     
     // Ghost basic logic (random move)
     if (frightTimer > 0) frightTimer--;
@@ -183,6 +185,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_UP) { ndx = 0; ndy = -1; }
             if (wParam == VK_DOWN) { ndx = 0; ndy = 1; }
             if (wParam == VK_RETURN && gameOver) Init(0);
+            if (wParam == 'P' && !gameOver) paused = !paused;
             break;
         case WM_TIMER:
             Update();
@@ -243,6 +246,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameOver) {
                 SetTextColor(memDC, gameOver == 1 ? RGB(255,0,0) : RGB(0,255,0));
                 TextOutA(memDC, W/2 - 50, H/2 - 10, gameOver == 1 ? "GAME OVER" : "YOU WIN!", 9);
+            } else if (paused) {
+                SetTextColor(memDC, RGB(255, 255, 0));
+                TextOutA(memDC, W/2 - 30, H/2 - 10, "PAUSED", 6);
             }
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
