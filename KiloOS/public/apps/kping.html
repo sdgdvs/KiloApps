@@ -94,6 +94,10 @@
       <label>Size (B)</label>
       <input type="number" id="size" value="32" min="1" max="65500">
     </div>
+    <div class="input-group" style="width: 70px;">
+      <label>TTL</label>
+      <input type="number" id="ttl" value="115" min="1" max="255">
+    </div>
     <label class="checkbox-group">
       <input type="checkbox" id="continuous">
       <span style="font-size: 13px; font-weight: 500; color: var(--text-muted)">Continuous -t</span>
@@ -115,6 +119,7 @@
   const hostInput = document.getElementById('host');
   const countInput = document.getElementById('count');
   const sizeInput = document.getElementById('size');
+  const ttlInput = document.getElementById('ttl');
   const continuousCheck = document.getElementById('continuous');
   const btnAction = document.getElementById('btnAction');
   const out = document.getElementById('out');
@@ -137,6 +142,7 @@
       currentHost = hostInput.value.trim() || '127.0.0.1';
       const size = parseInt(sizeInput.value) || 32;
       const count = parseInt(countInput.value) || 4;
+      const ttl = parseInt(ttlInput.value) || 115;
       const continuous = continuousCheck.checked;
       
       out.value = "";
@@ -145,7 +151,7 @@
       isPinging = true;
       btnAction.textContent = 'Stop';
       btnAction.className = 'btn btn-danger';
-      hostInput.disabled = true; sizeInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
+      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
       
       stats = { sent: 0, recv: 0, lost: 0, times: [] };
       
@@ -162,7 +168,7 @@
               const time = Math.floor(baseTime + Math.random() * 20);
               stats.recv++;
               stats.times.push(time);
-              append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=115\n`);
+              append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`);
           } else {
               stats.lost++;
               append(`Request timed out.\n`);
@@ -176,7 +182,7 @@
       isPinging = false;
       btnAction.textContent = 'Start Ping';
       btnAction.className = 'btn btn-primary';
-      hostInput.disabled = false; sizeInput.disabled = false; continuousCheck.disabled = false;
+      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false;
       countInput.disabled = continuousCheck.checked;
       
       const lossPercent = Math.round((stats.lost / stats.sent) * 100) || 0;

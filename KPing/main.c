@@ -8,6 +8,10 @@ HWND hInput;
 HWND hBtn;
 HWND hOutput;
 HWND hStatic;
+HWND hStaticCount, hInputCount;
+HWND hStaticSize, hInputSize;
+HWND hStaticTTL, hInputTTL;
+HWND hCheckCont;
 HANDLE hThread = NULL;
 HANDLE hPingProcess = NULL;
 
@@ -18,8 +22,26 @@ DWORD WINAPI PingThread(LPVOID param) {
     char host[256];
     GetWindowTextA(hInput, host, 256);
     
+    char countStr[32] = "4";
+    GetWindowTextA(hInputCount, countStr, 32);
+    if (countStr[0] == 0) lstrcpyA(countStr, "4");
+    
+    char sizeStr[32] = "32";
+    GetWindowTextA(hInputSize, sizeStr, 32);
+    if (sizeStr[0] == 0) lstrcpyA(sizeStr, "32");
+    
+    char ttlStr[32] = "115";
+    GetWindowTextA(hInputTTL, ttlStr, 32);
+    if (ttlStr[0] == 0) lstrcpyA(ttlStr, "115");
+    
+    BOOL continuous = SendMessage(hCheckCont, BM_GETCHECK, 0, 0) == BST_CHECKED;
+    
     char cmd[512];
-    wsprintfA(cmd, "ping.exe %s", host);
+    if (continuous) {
+        wsprintfA(cmd, "ping.exe %s -t -l %s -i %s", host, sizeStr, ttlStr);
+    } else {
+        wsprintfA(cmd, "ping.exe %s -n %s -l %s -i %s", host, countStr, sizeStr, ttlStr);
+    }
     
     SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
     HANDLE hRead, hWrite;
@@ -88,7 +110,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 180, 24, hwnd, NULL, NULL, NULL);
             hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 75, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
             
-            hOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 50, W - 30, H - 65, hwnd, NULL, NULL, NULL);
+            hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 45, 50, 22, hwnd, NULL, NULL, NULL);
+            hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, 65, 45, 50, 24, hwnd, NULL, NULL, NULL);
+            hStaticSize = CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 125, 45, 40, 22, hwnd, NULL, NULL, NULL);
+            hInputSize = CreateWindowEx(0, "EDIT", "32", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, 165, 45, 50, 24, hwnd, NULL, NULL, NULL);
+            hStaticTTL = CreateWindowEx(0, "STATIC", "TTL:", WS_CHILD | WS_VISIBLE, 225, 45, 30, 22, hwnd, NULL, NULL, NULL);
+            hInputTTL = CreateWindowEx(0, "EDIT", "115", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, 260, 45, 40, 24, hwnd, NULL, NULL, NULL);
+            hCheckCont = CreateWindowEx(0, "BUTTON", "Continuous", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX, 310, 45, 100, 22, hwnd, NULL, NULL, NULL);
+            
+            hOutput = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_READONLY, 15, 75, W - 30, H - 120, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             SendMessage(hOutput, WM_SETFONT, (WPARAM)hFontMono, TRUE);
@@ -96,11 +126,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdc = (HDC)wParam;
-            if ((HWND)lParam == hStatic) {
+            if ((HWND)lParam == hStatic || (HWND)lParam == hStaticCount || (HWND)lParam == hStaticSize || (HWND)lParam == hStaticTTL || (HWND)lParam == hCheckCont) {
                 SetTextColor(hdc, RGB(226, 232, 240)); // #e2e8f0
                 SetBkColor(hdc, RGB(15, 23, 42));
                 return (LRESULT)hbg;
-            } else if ((HWND)lParam == hOutput || (HWND)lParam == hInput) {
+            } else if ((HWND)lParam == hOutput || (HWND)lParam == hInput || (HWND)lParam == hInputCount || (HWND)lParam == hInputSize || (HWND)lParam == hInputTTL) {
                 SetTextColor(hdc, (HWND)lParam == hOutput ? RGB(163, 190, 140) : RGB(226, 232, 240)); // Green for output, white for input
                 SetBkColor(hdc, RGB(30, 41, 59));
                 return (LRESULT)hinputBg;
@@ -132,7 +162,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             MoveWindow(hInput, 100, 15, nw - 180, 24, TRUE);
             MoveWindow(hBtn, nw - 75, 15, 60, 24, TRUE);
-            MoveWindow(hOutput, 15, 50, nw - 30, nh - 90, TRUE);
+            MoveWindow(hOutput, 15, 75, nw - 30, nh - 120, TRUE);
             break;
         }
         case WM_DESTROY:
