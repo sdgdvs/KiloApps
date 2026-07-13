@@ -19,6 +19,7 @@ int high_score = 0;
 int state = 0; // 0=start, 1=play, 2=gameover
 int diff = 0; // 0=Easy, 1=Hard
 int speed = 3;
+int lives = 3;
 
 #define ROWS 5
 #define COLS 10
@@ -94,9 +95,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // Bottom collision
                 if (ball_y > H) {
-                    SaveHighScore();
-                    state = 2; // Game Over
-                    MessageBeep(MB_ICONEXCLAMATION);
+                    lives--;
+                    if (lives <= 0) {
+                        SaveHighScore();
+                        state = 2; // Game Over
+                        MessageBeep(MB_ICONEXCLAMATION);
+                    } else {
+                        pad_x = W / 2 - pad_w / 2;
+                        ball_x = W / 2;
+                        ball_y = H - 50;
+                        ball_dx = speed * (GetTickCount() % 2 == 0 ? 1 : -1);
+                        ball_dy = -speed;
+                        MessageBeep(MB_ICONASTERISK);
+                    }
                 }
 
                 // Bricks collision
@@ -127,10 +138,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             out_loops:;
             } else if (state == 0 || state == 2) {
                 if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
-                    diff = 0; speed = 3; score = 0; InitLevel(); state = 1; pad_w = 60;
+                    diff = 0; speed = 3; score = 0; lives = 3; InitLevel(); state = 1; pad_w = 60;
                 }
                 if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-                    diff = 1; speed = 5; score = 0; InitLevel(); state = 1; pad_w = 40;
+                    diff = 1; speed = 5; score = 0; lives = 3; InitLevel(); state = 1; pad_w = 40;
                 }
             }
             InvalidateRect(hwnd, NULL, FALSE);
@@ -192,7 +203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             char sStr[64];
-            wsprintfA(sStr, "Score: %d  High: %d", score, high_score);
+            wsprintfA(sStr, "Score: %d  High: %d  Lives: %d", score, high_score, lives);
             TextOutA(memDC, 10, 10, sStr, lstrlenA(sStr));
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);

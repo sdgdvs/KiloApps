@@ -72,6 +72,57 @@
       osc.stop(audioCtx.currentTime + 0.1);
   }
 
+  function isValidMove(sx, sy, tx, ty) {
+      if (sx === tx && sy === ty) return false;
+      let p = board[sy][sx];
+      if (p === 0) return false;
+      let isWhite = p <= 6;
+      let dstP = board[ty][tx];
+      let dstIsWhite = dstP <= 6;
+      if (dstP !== 0 && isWhite === dstIsWhite) return false;
+
+      let dx = tx - sx;
+      let dy = ty - sy;
+      let adx = Math.abs(dx);
+      let ady = Math.abs(dy);
+      let pType = p > 6 ? p - 6 : p;
+
+      let checkPath = () => {
+          let stepX = dx === 0 ? 0 : dx / adx;
+          let stepY = dy === 0 ? 0 : dy / ady;
+          let cx = sx + stepX;
+          let cy = sy + stepY;
+          while (cx !== tx || cy !== ty) {
+              if (board[cy][cx] !== 0) return false;
+              cx += stepX; cy += stepY;
+          }
+          return true;
+      };
+
+      if (pType === 1) { // Pawn
+          if (isWhite) {
+              if (dx === 0 && dy === -1 && dstP === 0) return true;
+              if (dx === 0 && dy === -2 && sy === 6 && dstP === 0 && board[5][tx] === 0) return true;
+              if (adx === 1 && dy === -1 && dstP !== 0) return true;
+          } else {
+              if (dx === 0 && dy === 1 && dstP === 0) return true;
+              if (dx === 0 && dy === 2 && sy === 1 && dstP === 0 && board[2][tx] === 0) return true;
+              if (adx === 1 && dy === 1 && dstP !== 0) return true;
+          }
+      } else if (pType === 2) { // Knight
+          if ((adx === 1 && ady === 2) || (adx === 2 && ady === 1)) return true;
+      } else if (pType === 3) { // Bishop
+          if (adx === ady && checkPath()) return true;
+      } else if (pType === 4) { // Rook
+          if ((adx === 0 || ady === 0) && checkPath()) return true;
+      } else if (pType === 5) { // Queen
+          if ((adx === ady || adx === 0 || ady === 0) && checkPath()) return true;
+      } else if (pType === 6) { // King
+          if (adx <= 1 && ady <= 1) return true;
+      }
+      return false;
+  }
+
   function resetGame() {
       board = [
           [10, 8, 9, 11, 12, 9, 8, 10],
@@ -118,6 +169,13 @@
               }
               
               ctx.fillRect(px, py, TS, TS);
+
+              if (selX !== -1 && isValidMove(selX, selY, x, y)) {
+                  ctx.fillStyle = "rgba(134, 239, 172, 0.6)";
+                  ctx.beginPath();
+                  ctx.arc(px + TS / 2, py + TS / 2, 10, 0, Math.PI * 2);
+                  ctx.fill();
+              }
 
               let p = board[y][x];
               if (p !== 0) {
@@ -172,51 +230,11 @@
                       selX = tx;
                       selY = ty;
                   } else {
-                      let valid = false;
-                      let dx = tx - selX;
-                      let dy = ty - selY;
-                      let adx = Math.abs(dx);
-                      let ady = Math.abs(dy);
-                      let pType = p > 6 ? p - 6 : p;
-                      
-                      let checkPath = () => {
-                          let stepX = dx === 0 ? 0 : dx / adx;
-                          let stepY = dy === 0 ? 0 : dy / ady;
-                          let cx = selX + stepX;
-                          let cy = selY + stepY;
-                          while (cx !== tx || cy !== ty) {
-                              if (board[cy][cx] !== 0) return false;
-                              cx += stepX; cy += stepY;
-                          }
-                          return true;
-                      };
-                      
-                      if (pType === 1) { // Pawn
-                          if (isWhite) {
-                              if (dx === 0 && dy === -1 && dstP === 0) valid = true;
-                              if (dx === 0 && dy === -2 && selY === 6 && dstP === 0 && board[5][tx] === 0) valid = true;
-                              if (adx === 1 && dy === -1 && dstP !== 0) valid = true;
-                          } else {
-                              if (dx === 0 && dy === 1 && dstP === 0) valid = true;
-                              if (dx === 0 && dy === 2 && selY === 1 && dstP === 0 && board[2][tx] === 0) valid = true;
-                              if (adx === 1 && dy === 1 && dstP !== 0) valid = true;
-                          }
-                      } else if (pType === 2) { // Knight
-                          if ((adx === 1 && ady === 2) || (adx === 2 && ady === 1)) valid = true;
-                      } else if (pType === 3) { // Bishop
-                          if (adx === ady && checkPath()) valid = true;
-                      } else if (pType === 4) { // Rook
-                          if ((adx === 0 || ady === 0) && checkPath()) valid = true;
-                      } else if (pType === 5) { // Queen
-                          if ((adx === ady || adx === 0 || ady === 0) && checkPath()) valid = true;
-                      } else if (pType === 6) { // King
-                          if (adx <= 1 && ady <= 1) valid = true;
-                      }
-                      
-                      if (valid) {
+                      if (isValidMove(selX, selY, tx, ty)) {
                           if (dstP === 6) { gameOver = true; winner = 2; }
                           else if (dstP === 12) { gameOver = true; winner = 1; }
                           
+                          let pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
                           board[ty][tx] = board[selY][selX];
                           if (pType === 1) {
                               if (isWhite && ty === 0) board[ty][tx] = 5;

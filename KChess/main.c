@@ -31,6 +31,57 @@ int whiteTurn = 1;
 int gameOver = 0;
 int winner = 0; // 1 = White, 2 = Black
 
+int IsValidMove(int sx, int sy, int tx, int ty) {
+    if (sx == tx && sy == ty) return 0;
+    int p = board[sy][sx];
+    if (p == 0) return 0;
+    int isWhite = p <= 6;
+    int dstP = board[ty][tx];
+    int dstIsWhite = dstP <= 6;
+    if (dstP != 0 && isWhite == dstIsWhite) return 0;
+
+    int dx = tx - sx;
+    int dy = ty - sy;
+    int adx = abs(dx);
+    int ady = abs(dy);
+    int pType = p > 6 ? p - 6 : p;
+
+    int pathClear = 1;
+    if (adx == ady || adx == 0 || ady == 0) {
+        int stepX = dx == 0 ? 0 : dx / adx;
+        int stepY = dy == 0 ? 0 : dy / ady;
+        int cx = sx + stepX;
+        int cy = sy + stepY;
+        while (cx != tx || cy != ty) {
+            if (board[cy][cx] != 0) { pathClear = 0; break; }
+            cx += stepX; cy += stepY;
+        }
+    }
+
+    if (pType == 1) { // Pawn
+        if (isWhite) {
+            if (dx == 0 && dy == -1 && dstP == 0) return 1;
+            if (dx == 0 && dy == -2 && sy == 6 && dstP == 0 && board[5][tx] == 0) return 1;
+            if (adx == 1 && dy == -1 && dstP != 0) return 1;
+        } else {
+            if (dx == 0 && dy == 1 && dstP == 0) return 1;
+            if (dx == 0 && dy == 2 && sy == 1 && dstP == 0 && board[2][tx] == 0) return 1;
+            if (adx == 1 && dy == 1 && dstP != 0) return 1;
+        }
+    } else if (pType == 2) { // Knight
+        if ((adx == 1 && ady == 2) || (adx == 2 && ady == 1)) return 1;
+    } else if (pType == 3) { // Bishop
+        if (adx == ady && pathClear) return 1;
+    } else if (pType == 4) { // Rook
+        if ((adx == 0 || ady == 0) && pathClear) return 1;
+    } else if (pType == 5) { // Queen
+        if ((adx == ady || adx == 0 || ady == 0) && pathClear) return 1;
+    } else if (pType == 6) { // King
+        if (adx <= 1 && ady <= 1) return 1;
+    }
+    return 0;
+}
+
 void ResetGame() {
     int initialBoard[8][8] = {
         {10, 8, 9, 11, 12, 9, 8, 10},
@@ -79,6 +130,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     FillRect(hdc, &rc, brush);
                     DeleteObject(brush);
+                    
+                    if (selX != -1 && IsValidMove(selX, selY, x, y)) {
+                        HBRUSH dotBrush = CreateSolidBrush(RGB(134, 239, 172)); // green-300
+                        HGDIOBJ oldBrush = SelectObject(hdc, dotBrush);
+                        HPEN oldPen = SelectObject(hdc, GetStockObject(NULL_PEN));
+                        Ellipse(hdc, rc.left + 15, rc.top + 15, rc.right - 15, rc.bottom - 15);
+                        SelectObject(hdc, oldPen);
+                        SelectObject(hdc, oldBrush);
+                        DeleteObject(dotBrush);
+                    }
                     
                     int p = board[y][x];
                     if (p != 0) {
@@ -153,51 +214,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             selX = tx;
                             selY = ty;
                         } else {
-                            int valid = 0;
-                            int dx = tx - selX;
-                            int dy = ty - selY;
-                            int adx = abs(dx);
-                            int ady = abs(dy);
-                            int pType = p > 6 ? p - 6 : p;
-                            
-                            int pathClear = 1;
-                            if (adx == ady || adx == 0 || ady == 0) {
-                                int stepX = dx == 0 ? 0 : dx / adx;
-                                int stepY = dy == 0 ? 0 : dy / ady;
-                                int cx = selX + stepX;
-                                int cy = selY + stepY;
-                                while (cx != tx || cy != ty) {
-                                    if (board[cy][cx] != 0) { pathClear = 0; break; }
-                                    cx += stepX; cy += stepY;
-                                }
-                            }
-                            
-                            if (pType == 1) { // Pawn
-                                if (isWhite) {
-                                    if (dx == 0 && dy == -1 && dstP == 0) valid = 1;
-                                    if (dx == 0 && dy == -2 && selY == 6 && dstP == 0 && board[5][tx] == 0) valid = 1;
-                                    if (adx == 1 && dy == -1 && dstP != 0) valid = 1;
-                                } else {
-                                    if (dx == 0 && dy == 1 && dstP == 0) valid = 1;
-                                    if (dx == 0 && dy == 2 && selY == 1 && dstP == 0 && board[2][tx] == 0) valid = 1;
-                                    if (adx == 1 && dy == 1 && dstP != 0) valid = 1;
-                                }
-                            } else if (pType == 2) { // Knight
-                                if ((adx == 1 && ady == 2) || (adx == 2 && ady == 1)) valid = 1;
-                            } else if (pType == 3) { // Bishop
-                                if (adx == ady && pathClear) valid = 1;
-                            } else if (pType == 4) { // Rook
-                                if ((adx == 0 || ady == 0) && pathClear) valid = 1;
-                            } else if (pType == 5) { // Queen
-                                if ((adx == ady || adx == 0 || ady == 0) && pathClear) valid = 1;
-                            } else if (pType == 6) { // King
-                                if (adx <= 1 && ady <= 1) valid = 1;
-                            }
-                            
-                            if (valid) {
+                            if (IsValidMove(selX, selY, tx, ty)) {
                                 if (dstP == 6) { gameOver = 1; winner = 2; }
                                 else if (dstP == 12) { gameOver = 1; winner = 1; }
                                 
+                                int pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
                                 board[ty][tx] = board[selY][selX];
                                 if (pType == 1) {
                                     if (isWhite && ty == 0) board[ty][tx] = 5;
