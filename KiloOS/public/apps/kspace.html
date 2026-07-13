@@ -28,13 +28,14 @@
   let highScore = localStorage.getItem('kspace_highscore') || 0;
   let gameOver = false;
   let frameCount = 0;
+  let shieldActive = false;
   
   const keys = {};
   document.addEventListener('keydown', e => keys[e.key] = true);
   document.addEventListener('keyup', e => keys[e.key] = false);
 
   function spawnEnemy() {
-      enemies.push({ x: Math.random() * (W - 20), y: -20 });
+      enemies.push({ x: Math.random() * (W - 20), y: -20, type: Math.floor(Math.random() * 2) });
   }
 
   function shoot() {
@@ -54,6 +55,7 @@
               bullets = [];
               powerups = [];
               spreadTimer = 0;
+              shieldActive = false;
               p = { x: W/2, y: H-50 };
           }
           return;
@@ -91,11 +93,25 @@
       }
       
       for (let i = enemies.length - 1; i >= 0; i--) {
-          enemies[i].y += baseEnemySpeed;
-          
-          if (p.x < enemies[i].x + 20 && p.x + 20 > enemies[i].x && p.y < enemies[i].y + 20 && p.y + 20 > enemies[i].y) {
-              gameOver = true;
+          if (enemies[i].type === 0) {
+              enemies[i].y += baseEnemySpeed;
+          } else {
+              enemies[i].y += baseEnemySpeed * 0.75;
+              if (enemies[i].x < p.x) enemies[i].x += baseEnemySpeed * 0.5;
+              if (enemies[i].x > p.x) enemies[i].x -= baseEnemySpeed * 0.5;
           }
+          
+          let removed = false;
+          if (p.x < enemies[i].x + 20 && p.x + 20 > enemies[i].x && p.y < enemies[i].y + 20 && p.y + 20 > enemies[i].y) {
+              if (shieldActive) {
+                  shieldActive = false;
+                  enemies.splice(i, 1);
+                  removed = true;
+              } else {
+                  gameOver = true;
+              }
+          }
+          if (removed) continue;
           
           let hit = false;
           for (let j = bullets.length - 1; j >= 0; j--) {
@@ -108,7 +124,7 @@
                       localStorage.setItem('kspace_highscore', highScore);
                   }
                   if (Math.random() < 0.1) {
-                      powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2});
+                      powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2, type: Math.floor(Math.random() * 2)});
                   }
                   break;
               }
@@ -124,8 +140,12 @@
       for (let i = powerups.length - 1; i >= 0; i--) {
           powerups[i].y += powerups[i].dy;
           if (p.x < powerups[i].x + 15 && p.x + 20 > powerups[i].x && p.y < powerups[i].y + 15 && p.y + 20 > powerups[i].y) {
+              if (powerups[i].type === 0) {
+                  spreadTimer = 300;
+              } else {
+                  shieldActive = true;
+              }
               powerups.splice(i, 1);
-              spreadTimer = 300;
               score += 50;
               continue;
           }
@@ -151,18 +171,24 @@
       ctx.fillStyle = '#64c8ff';
       ctx.fillRect(p.x, p.y, 20, 20);
       
+      if (shieldActive) {
+          ctx.strokeStyle = '#32c8ff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(p.x - 4, p.y - 4, 28, 28);
+      }
+      
       ctx.fillStyle = '#ffff64';
       for (let b of bullets) {
           ctx.fillRect(b.x, b.y, 4, 10);
       }
       
-      ctx.fillStyle = '#ff3232';
       for (let e of enemies) {
+          ctx.fillStyle = e.type === 0 ? '#ff3232' : '#ff9632';
           ctx.fillRect(e.x, e.y, 20, 20);
       }
       
-      ctx.fillStyle = '#32ff32';
       for (let pu of powerups) {
+          ctx.fillStyle = pu.type === 0 ? '#32ff32' : '#32c8ff';
           ctx.fillRect(pu.x, pu.y, 15, 15);
       }
       

@@ -25,6 +25,7 @@ int score = 0;
 int highScore = 0;
 int gameOver = 0;
 int frameCount = 0;
+int shieldActive = 0;
 
 unsigned int seed = 999;
 unsigned int rnd() {
@@ -56,6 +57,7 @@ void SpawnEnemy() {
             e[i].active = 1.0f;
             e[i].x = (float)(rnd() % (W - 20));
             e[i].y = -20.0f;
+            e[i].type = (float)(rnd() % 2);
             break;
         }
     }
@@ -87,6 +89,7 @@ void Update() {
             for(int i=0; i<MAX_BULLETS; i++) b[i].active = 0;
             for(int i=0; i<MAX_POWERUPS; i++) pu[i].active = 0;
             spreadTimer = 0;
+            shieldActive = 0;
             p.x = W/2.0f; p.y = H - 50.0f;
         }
         return;
@@ -129,12 +132,23 @@ void Update() {
     
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (e[i].active) {
-            e[i].y += baseEnemySpeed;
+            if (e[i].type == 0) {
+                e[i].y += baseEnemySpeed;
+            } else {
+                e[i].y += baseEnemySpeed * 0.75f;
+                if (e[i].x < p.x) e[i].x += baseEnemySpeed * 0.5f;
+                if (e[i].x > p.x) e[i].x -= baseEnemySpeed * 0.5f;
+            }
             if (e[i].y > H) e[i].active = 0.0f;
             
             // Player collision
             if (p.x < e[i].x + 20 && p.x + 20 > e[i].x && p.y < e[i].y + 20 && p.y + 20 > e[i].y) {
-                gameOver = 1;
+                if (shieldActive) {
+                    shieldActive = 0;
+                    e[i].active = 0.0f;
+                } else {
+                    gameOver = 1;
+                }
             }
             
             // Bullet collision
@@ -151,6 +165,7 @@ void Update() {
                         for(int k=0; k<MAX_POWERUPS; k++) {
                             if(!pu[k].active) {
                                 pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
+                                pu[k].type = (float)(rnd() % 2);
                                 break;
                             }
                         }
@@ -167,7 +182,11 @@ void Update() {
             if (pu[i].y > H) pu[i].active = 0.0f;
             if (p.x < pu[i].x + 15 && p.x + 20 > pu[i].x && p.y < pu[i].y + 15 && p.y + 20 > pu[i].y) {
                 pu[i].active = 0.0f;
-                spreadTimer = 300;
+                if (pu[i].type == 0.0f) {
+                    spreadTimer = 300;
+                } else {
+                    shieldActive = 1;
+                }
                 score += 50;
             }
         }
@@ -220,6 +239,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &pr, pbr);
             DeleteObject(pbr);
             
+            if (shieldActive) {
+                HBRUSH sbr = CreateSolidBrush(RGB(50, 200, 255));
+                RECT sr = {(int)p.x - 4, (int)p.y - 4, (int)p.x + 24, (int)p.y + 24};
+                FrameRect(memDC, &sr, sbr);
+                DeleteObject(sbr);
+            }
+            
             // Draw bullets
             HBRUSH bbr = CreateSolidBrush(RGB(255, 255, 100));
             for (int i = 0; i < MAX_BULLETS; i++) {
@@ -231,24 +257,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(bbr);
             
             // Draw enemies
-            HBRUSH ebr = CreateSolidBrush(RGB(255, 50, 50));
+            HBRUSH ebr1 = CreateSolidBrush(RGB(255, 50, 50));
+            HBRUSH ebr2 = CreateSolidBrush(RGB(255, 150, 50));
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (e[i].active) {
                     RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + 20, (int)e[i].y + 20};
-                    FillRect(memDC, &er, ebr);
+                    FillRect(memDC, &er, e[i].type == 0.0f ? ebr1 : ebr2);
                 }
             }
-            DeleteObject(ebr);
+            DeleteObject(ebr1);
+            DeleteObject(ebr2);
             
             // Draw powerups
-            HBRUSH pubr = CreateSolidBrush(RGB(50, 255, 50));
+            HBRUSH pubr1 = CreateSolidBrush(RGB(50, 255, 50));
+            HBRUSH pubr2 = CreateSolidBrush(RGB(50, 200, 255));
             for (int i = 0; i < MAX_POWERUPS; i++) {
                 if (pu[i].active) {
                     RECT pr = {(int)pu[i].x, (int)pu[i].y, (int)pu[i].x + 15, (int)pu[i].y + 15};
-                    FillRect(memDC, &pr, pubr);
+                    FillRect(memDC, &pr, pu[i].type == 0.0f ? pubr1 : pubr2);
                 }
             }
-            DeleteObject(pubr);
+            DeleteObject(pubr1);
+            DeleteObject(pubr2);
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));

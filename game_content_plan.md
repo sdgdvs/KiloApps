@@ -115,3 +115,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPong (Added win condition (11 points), game over state, restart mechanic, and hit particles (web) to both EXE and HTML)
 - [x] KMaze (Added minimap and sound effects to both EXE and HTML)
 - [x] KSolitaire (Added initial preview phase and sound effects to both EXE and HTML)
+- [x] KSpace (Added tracking enemies and shield powerups to both EXE and HTML)
