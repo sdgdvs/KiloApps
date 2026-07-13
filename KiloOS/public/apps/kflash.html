@@ -94,7 +94,7 @@
         .flashcard-container {
             width: 100%;
             max-width: 600px;
-            height: 400px;
+            height: 350px;
             perspective: 1000px;
         }
 
@@ -143,6 +143,10 @@
             font-size: 2rem;
             font-weight: 700;
             line-height: 1.4;
+            max-height: 80%;
+            overflow-y: auto;
+            word-wrap: break-word;
+            width: 100%;
         }
 
         .card-hint {
@@ -169,6 +173,8 @@
             background: #58a6ff;
             width: 0%;
             transition: width 0.3s ease;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
         }
 
         .footer {
@@ -213,6 +219,66 @@
             bottom: -50px;
             right: -50px;
         }
+
+        .modal {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #161b22;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .modal-content h2 { margin: 0; font-size: 1.2rem; color: #fff; }
+        .modal-content label { font-size: 0.9rem; color: #8b949e; font-weight: 600; margin-bottom: -8px;}
+        
+        .modal-content input, .modal-content textarea {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+        }
+        
+        .modal-content input:focus, .modal-content textarea:focus {
+            outline: none;
+            border-color: #58a6ff;
+            background: rgba(255,255,255,0.08);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
     </style>
 </head>
 <body>
@@ -225,8 +291,7 @@
         <div class="header">
             <h1>KFlash</h1>
             <div class="controls">
-                <button class="btn">Edit Deck</button>
-                <button class="btn btn-primary">+ New Deck</button>
+                <button class="btn btn-primary" id="btnAddCard">+ Add Card</button>
             </div>
         </div>
 
@@ -234,56 +299,159 @@
             <div class="flashcard-container" id="cardContainer">
                 <div class="flashcard" id="flashcard">
                     <div class="flashcard-face flashcard-front">
-                        <div class="deck-info">Sample Deck • Card 1/1</div>
+                        <div class="deck-info">Card 1/1</div>
                         <div class="card-content" id="cardFront">What is KiloOS?</div>
                         <div class="card-hint">Click or press Space to flip</div>
-                        <div class="progress-bar" style="width: 10%;"></div>
+                        <div class="progress-bar" style="width: 0%;"></div>
                     </div>
                     <div class="flashcard-face flashcard-back">
-                        <div class="deck-info">Sample Deck • Card 1/1</div>
+                        <div class="deck-info">Card 1/1</div>
                         <div class="card-content" id="cardBack">An advanced, multi-agent operating system environment.</div>
                         <div class="card-hint">Click or press Space to flip back</div>
-                        <div class="progress-bar" style="width: 10%;"></div>
+                        <div class="progress-bar" style="width: 0%;"></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <button class="btn" id="btnPrev">← Prev</button>
-            <button class="btn" id="btnNext">Next →</button>
+            <button class="btn" id="btnPrev" disabled>← Prev</button>
+            <button class="btn" id="btnNext" disabled>Next →</button>
+        </div>
+    </div>
+
+    <!-- Add Card Modal -->
+    <div class="modal" id="addCardModal">
+        <div class="modal-content">
+            <h2>Add New Card</h2>
+            <label for="newFront">Front Text</label>
+            <textarea id="newFront" rows="2" placeholder="e.g. What is the capital of France?"></textarea>
+            <label for="newBack">Back Text</label>
+            <textarea id="newBack" rows="2" placeholder="e.g. Paris"></textarea>
+            <div class="modal-actions">
+                <button class="btn" id="btnCancelAdd">Cancel</button>
+                <button class="btn btn-primary" id="btnSaveCard">Save</button>
+            </div>
         </div>
     </div>
 
     <script>
         const flashcard = document.getElementById('flashcard');
         const cardContainer = document.getElementById('cardContainer');
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
         
+        let deck = [
+            { front: "What is KiloOS?", back: "An advanced, multi-agent operating system environment." },
+            { front: "What does the 'K' stand for?", back: "Kilo!" }
+        ];
+        let currentIndex = 0;
+
+        const cardFront = document.getElementById('cardFront');
+        const cardBack = document.getElementById('cardBack');
+        const deckInfos = document.querySelectorAll('.deck-info');
+        const progressBars = document.querySelectorAll('.progress-bar');
+
+        function renderCard() {
+            if (deck.length === 0) {
+                cardFront.textContent = "Deck is empty";
+                cardBack.textContent = "Add some cards to begin";
+                deckInfos.forEach(el => el.textContent = `0/0`);
+                progressBars.forEach(el => el.style.width = `0%`);
+                btnPrev.disabled = true;
+                btnNext.disabled = true;
+                return;
+            }
+            const card = deck[currentIndex];
+            cardFront.textContent = card.front;
+            cardBack.textContent = card.back;
+            deckInfos.forEach(el => el.textContent = `Card ${currentIndex + 1}/${deck.length}`);
+            
+            const pct = ((currentIndex + 1) / deck.length) * 100;
+            progressBars.forEach(el => el.style.width = `${pct}%`);
+
+            btnPrev.disabled = currentIndex === 0;
+            btnNext.disabled = currentIndex === deck.length - 1;
+        }
+
         const flipCard = () => {
-            flashcard.classList.toggle('is-flipped');
+            if (deck.length > 0) {
+                flashcard.classList.toggle('is-flipped');
+            }
         };
 
         cardContainer.addEventListener('click', flipCard);
 
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
+            // Only toggle on space if not typing in an input
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
                 e.preventDefault();
                 flipCard();
             }
+            if (e.code === 'ArrowRight' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (!btnNext.disabled) btnNext.click();
+            }
+            if (e.code === 'ArrowLeft' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                if (!btnPrev.disabled) btnPrev.click();
+            }
         });
 
-        // Scaffolded buttons logic
-        document.getElementById('btnPrev').addEventListener('click', (e) => {
+        btnPrev.addEventListener('click', (e) => {
             e.stopPropagation();
-            // TODO: Implement previous card logic
-            console.log("Prev card");
+            if (currentIndex > 0) {
+                currentIndex--;
+                flashcard.classList.remove('is-flipped');
+                setTimeout(renderCard, 150);
+            }
         });
 
-        document.getElementById('btnNext').addEventListener('click', (e) => {
+        btnNext.addEventListener('click', (e) => {
             e.stopPropagation();
-            // TODO: Implement next card logic
-            console.log("Next card");
+            if (currentIndex < deck.length - 1) {
+                currentIndex++;
+                flashcard.classList.remove('is-flipped');
+                setTimeout(renderCard, 150);
+            }
         });
+
+        // Modal Logic
+        const modal = document.getElementById('addCardModal');
+        const newFrontInput = document.getElementById('newFront');
+        const newBackInput = document.getElementById('newBack');
+
+        document.getElementById('btnAddCard').addEventListener('click', () => {
+            modal.classList.add('active');
+            newFrontInput.focus();
+        });
+
+        document.getElementById('btnCancelAdd').addEventListener('click', () => {
+            modal.classList.remove('active');
+            newFrontInput.value = '';
+            newBackInput.value = '';
+        });
+
+        document.getElementById('btnSaveCard').addEventListener('click', () => {
+            const front = newFrontInput.value.trim();
+            const back = newBackInput.value.trim();
+            if (front && back) {
+                deck.push({ front, back });
+                newFrontInput.value = '';
+                newBackInput.value = '';
+                modal.classList.remove('active');
+                
+                // If it was empty, make sure we show the first card
+                if (deck.length === 1) {
+                    currentIndex = 0;
+                } else if (currentIndex === deck.length - 2) {
+                    // Optional: auto-advance to new card or just update progress
+                }
+                
+                renderCard();
+            }
+        });
+
+        // Init
+        renderCard();
     </script>
 </body>
 </html>
