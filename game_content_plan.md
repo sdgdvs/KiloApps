@@ -112,3 +112,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Added Ice Storm spell & Teleport Trap to EXE, upgraded Web version toward Tier 2 with messages, stairs, gold, and varied enemies)
 - [x] KSnake (Added randomly placed obstacles based on difficulty and sound effects to both EXE and HTML)
 - [x] KTetris (Added Hold piece feature and sound effects to both EXE and HTML)
+- [x] KPong (Added win condition (11 points), game over state, restart mechanic, and hit particles (web) to both EXE and HTML)

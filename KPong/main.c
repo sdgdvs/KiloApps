@@ -15,6 +15,7 @@ int ball_dx = 5;
 int ball_dy = 3;
 int p1_score = 0;
 int p2_score = 0;
+int game_over = 0;
 
 void ResetBall() {
     ball_x = W / 2 - BALL_SIZE / 2;
@@ -29,6 +30,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, TIMER_ID, 30, NULL);
             break;
         case WM_TIMER:
+            if (game_over) {
+                if (GetAsyncKeyState('R') & 0x8000) {
+                    p1_score = 0;
+                    p2_score = 0;
+                    game_over = 0;
+                    ResetBall();
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
             // Input
             if (GetAsyncKeyState(VK_UP) & 0x8000) p1_y -= 6;
             if (GetAsyncKeyState(VK_DOWN) & 0x8000) p1_y += 6;
@@ -69,6 +81,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (ball_x < 0) { p2_score++; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
             if (ball_x > W) { p1_score++; MessageBeep(MB_ICONEXCLAMATION); ResetBall(); }
 
+            if (p1_score >= 11 || p2_score >= 11) {
+                game_over = 1;
+            }
+
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_PAINT: {
@@ -108,6 +124,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 255, 255));
             SetBkMode(memDC, TRANSPARENT);
             TextOutA(memDC, W / 2 - 20, 10, scoreStr, lstrlenA(scoreStr));
+            
+            if (game_over) {
+                char* winStr = p1_score >= 11 ? "P1 WINS!" : "P2 WINS!";
+                TextOutA(memDC, W / 2 - 30, H / 2 - 20, winStr, lstrlenA(winStr));
+                char* restartStr = "Press 'R' to Restart";
+                TextOutA(memDC, W / 2 - 60, H / 2 + 10, restartStr, lstrlenA(restartStr));
+            }
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
