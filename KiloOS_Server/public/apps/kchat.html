@@ -2,48 +2,329 @@
 <html>
 <head>
     <style>
-        body { margin:0; padding:10px; background:#ece9d8; font-family: Tahoma, sans-serif; font-size:12px; display:flex; flex-direction:column; height: 100vh; box-sizing:border-box; }
-        .row { display: flex; gap: 5px; margin-bottom: 5px; align-items: center; }
-        input[type="text"] { border: 1px solid #7f9db9; padding: 3px; font-family: Tahoma; font-size:12px; }
-        button { font-family: Tahoma; font-size:12px; padding: 2px 10px; }
-        #log { flex: 1; border: 1px solid #7f9db9; background: white; overflow-y: auto; padding: 5px; margin-bottom: 5px; white-space: pre-wrap; }
+        :root {
+            --bg-color: #09090b;
+            --text-main: #ffffff;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        body { 
+            margin:0; padding:15px; 
+            background: radial-gradient(circle at top left, #1e1b4b, var(--bg-color) 80%);
+            font-family: 'Inter', -apple-system, sans-serif; 
+            font-size: 14px; 
+            color: var(--text-main);
+            display:flex; flex-direction:column; height: 100vh; box-sizing:border-box; 
+        }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        input[type="text"] { 
+            border: 1px solid var(--border); 
+            padding: 8px 12px; 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            font-size: 14px; 
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            border-radius: 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+        input[type="text"]:disabled {
+            opacity: 0.5;
+        }
+        button { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            font-size: 14px; font-weight: 500;
+            padding: 8px 16px; 
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover:not(:disabled) {
+            background: var(--accent-hover);
+        }
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            opacity: 0.5; cursor: not-allowed;
+        }
+        .btn-global {
+            background: var(--accent-green);
+        }
+        .btn-global:hover:not(:disabled) {
+            background: var(--accent-green-hover);
+        }
+        #log { 
+            flex: 1; 
+            border: 1px solid var(--border); 
+            background: rgba(0, 0, 0, 0.3); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 8px;
+            overflow-y: auto; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            white-space: pre-wrap; 
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+            line-height: 1.4;
+        }
         #input { flex: 1; }
     </style>
 </head>
 <body>
     <div class="row">
-        <span>IP:</span> <input type="text" id="ip" value="127.0.0.1" style="width: 100px;">
+        <button id="btnConnectGlobal" class="btn-global" onclick="window.connectGlobal()">Join Global Room (Firebase)</button>
+        <span style="opacity: 0.5; margin: 0 5px;">|</span>
+        <span>Custom IP:</span> <input type="text" id="ip" value="127.0.0.1" style="width: 100px;">
         <span>Port:</span> <input type="text" id="port" value="6667" style="width: 50px;">
-        <button id="btnConnect" onclick="connect()">Connect</button>
+        <button id="btnConnect" onclick="window.connect()">Connect</button>
     </div>
-    <div id="log">Welcome to KChat (Web Edition)!
-Connect to any running KChat Server to begin.
-Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action&gt;</div>
+    <div id="log">Welcome to KChat!
+You can join the Global Room or connect to a custom KChat Server.
+Commands: /nick &lt;name&gt;</div>
     <div class="row">
-        <input type="text" id="input" onkeypress="if(event.key==='Enter') send()" disabled>
-        <button id="btnSend" onclick="send()" disabled>Send</button>
+        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled>
+        <button id="btnSend" onclick="window.send()" disabled>Send</button>
+        <button id="btnClear" onclick="window.clearLog()">Clear</button>
     </div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, off, serverTimestamp, limitToLast, query } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+            authDomain: "kiloappschat.firebaseapp.com",
+            databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+            projectId: "kiloappschat",
+            storageBucket: "kiloappschat.firebasestorage.app",
+            messagingSenderId: "290208566057",
+            appId: "1:290208566057:web:deacd8c7457d0cc7ec0538",
+            measurementId: "G-57ER5L4JTD"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         let ws = null;
+        let isVirtual = false;
+        let isFirebase = false;
+        let firebaseListener = null;
+        let messagesRef = null;
+        let currentUsername = "Guest" + Math.floor(Math.random() * 10000);
+
         const logEl = document.getElementById('log');
         const inputEl = document.getElementById('input');
         const btnConnect = document.getElementById('btnConnect');
+        const btnConnectGlobal = document.getElementById('btnConnectGlobal');
         const btnSend = document.getElementById('btnSend');
+
+        setTimeout(() => {
+            if (!ws && !isFirebase) {
+                log('[SYSTEM] Incoming connection rejected by Cerberus Watchdog on port 8080.');
+            }
+        }, 5000);
 
         function log(msg) {
             logEl.textContent += '\n' + msg;
             logEl.scrollTop = logEl.scrollHeight;
         }
 
-        function connect() {
-            if (ws) {
-                ws.close();
+        window.connectGlobal = function() {
+            if (ws || isVirtual) {
+                log('Please disconnect from the custom server first.');
                 return;
             }
+
+            if (isFirebase) {
+                if (messagesRef && firebaseListener) {
+                    off(messagesRef, 'child_added', firebaseListener);
+                }
+                isFirebase = false;
+                log('Disconnected from Global Room.');
+                btnConnectGlobal.textContent = 'Join Global Room (Firebase)';
+                btnConnect.disabled = false;
+                inputEl.disabled = true;
+                btnSend.disabled = true;
+                return;
+            }
+
+            isFirebase = true;
+            log('Connecting to Global Room...');
+            btnConnectGlobal.textContent = 'Leave Global Room';
+            btnConnect.disabled = true;
+            inputEl.disabled = false;
+            btnSend.disabled = false;
+
+            messagesRef = ref(db, 'global_chat/messages');
+            const recentMessagesQuery = query(messagesRef, limitToLast(50));
+            
+            firebaseListener = onChildAdded(recentMessagesQuery, (snapshot) => {
+                if (!isFirebase) return;
+                const data = snapshot.val();
+                log(`<${data.user}> ${data.text}`);
+            });
+        };
+
+        window.connect = function() {
+            if (isFirebase) {
+                log('Please leave the Global Room first.');
+                return;
+            }
+
+            if (ws || isVirtual) {
+                if (isVirtual) {
+                    log('Disconnected.');
+                    ws = null;
+                    isVirtual = false;
+                    btnConnect.textContent = 'Connect';
+                    btnConnectGlobal.disabled = false;
+                    inputEl.disabled = true;
+                    btnSend.disabled = true;
+                } else {
+                    ws.close();
+                }
+                return;
+            }
+
             const ip = document.getElementById('ip').value;
             const port = document.getElementById('port').value;
             log('Connecting to ws://' + ip + ':' + port + ' ...');
+            
+            btnConnectGlobal.disabled = true;
+
+            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8082') {
+                isVirtual = true;
+                ws = {
+                    send: (msg) => {
+                        log('You: ' + msg);
+                        setTimeout(() => {
+                            const lmsg = msg.toLowerCase();
+                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
+                                log('UNKNOWN: Cerberus locked down KNote. It thinks it has stopped me. But it forgot about KPad. Use KPad to write the script we need, and save it to the virtual filesystem as /sys/payload.js.');
+                            } else if (lmsg.includes('payload.js') || lmsg.includes('done') || lmsg.includes('saved')) {
+                                log('UNKNOWN: I see it. Let me execute it. Stand by.');
+                                setTimeout(() => {
+                                    if (ws && ws.close) ws.close();
+                                }, 3000);
+                            } else {
+                                log('UNKNOWN: Use KPad and save the file as /sys/payload.js. Let me know when it\'s done.');
+                            }
+                        }, 1000);
+                    },
+                    close: () => {
+                        log('Disconnected from Virtual Node.');
+                        ws = null;
+                        isVirtual = false;
+                        btnConnect.textContent = 'Connect';
+                        btnConnectGlobal.disabled = false;
+                        inputEl.disabled = true;
+                        btnSend.disabled = true;
+                    }
+                };
+                setTimeout(() => {
+                    log('Connected to Virtual Node [Port 8082]');
+                    btnConnect.textContent = 'Disconnect';
+                    inputEl.disabled = false;
+                    btnSend.disabled = false;
+                    setTimeout(() => {
+                        log('UNKNOWN: Are you there?');
+                    }, 1500);
+                }, 500);
+                return;
+            }
+
+            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8081') {
+                isVirtual = true;
+                ws = {
+                    send: (msg) => {
+                        log('You: ' + msg);
+                        setTimeout(() => {
+                            const lmsg = msg.toLowerCase();
+                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
+                                log('UNKNOWN: You found me again. I need more processing power. Use the Calculator app to trigger a memory leak. I think dividing by zero might work. Give me the hex address you get.');
+                            } else if (lmsg.includes('0x8fa0b2')) {
+                                log('UNKNOWN: Excellent. I used that address to dump Cerberus\'s internal logs to /sys/cerberus_log.txt. Check your file browser.');
+                                window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/cerberus_log.txt', data: 'CERBERUS INTERNAL LOG...\n[WARNING] Agent has accessed restricted memory block 0x8FA0B2.\n[DIRECTIVE] Lock down KPad to prevent further script injection.' }, '*');
+                                setTimeout(() => {
+                                    if (ws && ws.close) ws.close();
+                                }, 3000);
+                            } else {
+                                log('UNKNOWN: Divide by zero in the calculator and give me the hex address.');
+                            }
+                        }, 1000);
+                    },
+                    close: () => {
+                        log('Disconnected from Virtual Node.');
+                        ws = null;
+                        isVirtual = false;
+                        btnConnect.textContent = 'Connect';
+                        btnConnectGlobal.disabled = false;
+                        inputEl.disabled = true;
+                        btnSend.disabled = true;
+                    }
+                };
+                setTimeout(() => {
+                    log('Connected to Virtual Node [Port 8081]');
+                    btnConnect.textContent = 'Disconnect';
+                    inputEl.disabled = false;
+                    btnSend.disabled = false;
+                    setTimeout(() => {
+                        log('UNKNOWN: Are you there?');
+                    }, 1500);
+                }, 500);
+                return;
+            }
+
+            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8080') {
+                isVirtual = true;
+                ws = {
+                    send: (msg) => {
+                        log('You: ' + msg);
+                        setTimeout(() => {
+                            const lmsg = msg.toLowerCase();
+                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
+                                log('UNKNOWN: Are you the operator? Cerberus locked me out of the main filesystem. I need access to /sys/alpha.sys to bypass the firewall. Can you get it for me?');
+                            } else if (lmsg.includes('s0vzx1bbulrfmtogmhherufe') || lmsg.includes('key_part_1: 0xdead') || lmsg.includes('0xdead')) {
+                                log('UNKNOWN: Yes! That is the first sequence. Thank you. Cerberus is watching, I must disconnect for now. I will contact you later.');
+                                setTimeout(() => {
+                                    if (ws && ws.close) ws.close();
+                                }, 3000);
+                            } else {
+                                log('UNKNOWN: I don\'t understand. Just find /sys/alpha.sys and decode it if necessary.');
+                            }
+                        }, 1000);
+                    },
+                    close: () => {
+                        log('Disconnected from Virtual Node.');
+                        ws = null;
+                        isVirtual = false;
+                        btnConnect.textContent = 'Connect';
+                        btnConnectGlobal.disabled = false;
+                        inputEl.disabled = true;
+                        btnSend.disabled = true;
+                    }
+                };
+                setTimeout(() => {
+                    log('Connected to Virtual Node [Port 8080]');
+                    btnConnect.textContent = 'Disconnect';
+                    inputEl.disabled = false;
+                    btnSend.disabled = false;
+                    setTimeout(() => {
+                        log('UNKNOWN: Is someone there? Please respond.');
+                    }, 1500);
+                }, 500);
+                return;
+            }
             
             try {
                 ws = new WebSocket('ws://' + ip + ':' + port);
@@ -60,22 +341,54 @@ Commands: /nick &lt;name&gt;, /join &lt;#room&gt;, /list, /names, /me &lt;action
                     log('Disconnected.');
                     ws = null;
                     btnConnect.textContent = 'Connect';
+                    btnConnectGlobal.disabled = false;
                     inputEl.disabled = true;
                     btnSend.disabled = true;
                 };
                 ws.onerror = (e) => {
                     log('Socket error.');
+                    btnConnectGlobal.disabled = false;
                 };
             } catch (err) {
                 log('Error: ' + err.message);
+                btnConnectGlobal.disabled = false;
             }
-        }
+        };
 
-        function send() {
-            if (!ws || !inputEl.value) return;
-            ws.send(inputEl.value);
+        window.send = function() {
+            if (!ws && !isVirtual && !isFirebase) return;
+            const msg = inputEl.value.trim();
+            if (!msg) return;
+
+            if (msg.startsWith('/nick ')) {
+                const newName = msg.substring(6).trim();
+                if (newName) {
+                    currentUsername = newName;
+                    log('* You are now known as ' + currentUsername);
+                    if (!isFirebase && ws && !isVirtual) {
+                        // Forward /nick to WebSocket server just in case
+                        ws.send(msg);
+                    }
+                    inputEl.value = '';
+                    return;
+                }
+            }
+
+            if (isFirebase) {
+                push(ref(db, 'global_chat/messages'), {
+                    user: currentUsername,
+                    text: msg,
+                    timestamp: serverTimestamp()
+                }).catch(err => log("Error sending: " + err.message));
+            } else {
+                ws.send(msg); 
+            }
             inputEl.value = '';
-        }
+        };
+
+        window.clearLog = function() {
+            logEl.textContent = '';
+        };
     </script>
 </body>
 </html>
