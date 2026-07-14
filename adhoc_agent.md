@@ -28,3 +28,9 @@ Almost every KiloApp exists in two forms. When fixing a bug in an app's logic, t
 ## 6. Testing Your Changes
 - **Web changes:** You can test HTML files directly in a browser. If you modify KiloOS React files, `cd KiloOS` and run `npm run build` to verify it compiles.
 - **Native changes:** Run the `build.bat` in the specific app's folder to ensure your C code compiles without errors. (Note: MSVC `cl` might not be in your standard path, but ensure the code is syntactically correct).
+
+## 7. Agent Efficiency Tools (CRITICAL)
+- **`rg` (ripgrep), `fd`, and `uv` are installed globally.**
+- Always use `rg` to search for text across files instead of `grep` or `findstr`.
+- Always use `fd` to find files instead of `ls`, `dir`, or `Get-ChildItem`.
+- Always use `uv` for Python package management instead of `pip`.

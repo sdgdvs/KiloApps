@@ -2,7 +2,8 @@
 
 ## Environment Setup
 
-- **`git`, `node`, and `npm` are available on PATH** via shims in `%APPDATA%\Antigravity\bin\`. No manual PATH restoration is needed.
+- **`git`, `node`, `npm`, `rg` (ripgrep), `fd`, and `uv` are available on PATH**. The system PATH has been fixed globally. No manual PATH restoration is needed.
+- **Agent Efficiency Tools (CRITICAL):** When operating in this workspace, you MUST use `rg` (ripgrep) for searching file contents (it is magnitudes faster than grep/findstr). You MUST use `fd` for finding files (faster than dir/ls). You MUST use `uv` for any Python package management.
 - **Fallback** (only if a command is not found): `$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");`
 
 ## Commit & Deploy Protocol
