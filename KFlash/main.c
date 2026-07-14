@@ -48,6 +48,11 @@
 #define IDC_STATS_PROGRESS 226
 #define IDC_STATS_CLOSE 227
 
+#define ID_BTN_HELP 119
+#define IDD_HELP 230
+#define IDC_HELP_TEXT 231
+#define IDC_HELP_CLOSE 232
+
 typedef struct {
     char front[256];
     char back[256];
@@ -75,6 +80,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK StatsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK HelpProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void LoadDeck() {
     FILE *f = fopen("kflash_data.bin", "rb");
@@ -259,34 +265,38 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hEditSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnImport = CreateWindow("BUTTON", "Imp", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   130, 10, 40, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+                                   125, 10, 35, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
                                    
             hBtnExport = CreateWindow("BUTTON", "Exp", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   175, 10, 40, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+                                   165, 10, 35, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
 
             HWND hBtnLoadSample = CreateWindow("BUTTON", "Smpls", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   220, 10, 50, 30, hwnd, (HMENU)ID_BTN_LOAD_SAMPLE, NULL, NULL);
+                                   205, 10, 45, 30, hwnd, (HMENU)ID_BTN_LOAD_SAMPLE, NULL, NULL);
             SendMessage(hBtnLoadSample, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnPrint = CreateWindow("BUTTON", "Print", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   275, 10, 40, 30, hwnd, (HMENU)ID_BTN_PRINT, NULL, NULL);
+            hBtnPrint = CreateWindow("BUTTON", "Prt", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   255, 10, 35, 30, hwnd, (HMENU)ID_BTN_PRINT, NULL, NULL);
             SendMessage(hBtnPrint, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnShuffle = CreateWindow("BUTTON", "Shuff", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   320, 10, 50, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
+            hBtnShuffle = CreateWindow("BUTTON", "Shuf", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   295, 10, 40, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
 
             hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   375, 10, 45, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
+                                   340, 10, 40, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
                                    
             hBtnDelete = CreateWindow("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   425, 10, 45, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+                                   385, 10, 35, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
 
-            hBtnAdd = CreateWindow("BUTTON", "+ Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   475, 10, 55, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+            hBtnAdd = CreateWindow("BUTTON", "+Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   425, 10, 45, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
 
             HWND hBtnStats = CreateWindow("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   535, 10, 45, 30, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
+                                   475, 10, 45, 30, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
             SendMessage(hBtnStats, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hBtnHelp = CreateWindow("BUTTON", "?", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   525, 10, 25, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
@@ -452,6 +462,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     break;
                 case ID_BTN_STATS:
                     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_STATS), hwnd, StatsProc);
+                    break;
+                case ID_BTN_HELP:
+                    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_HELP), hwnd, HelpProc);
                     break;
                 case ID_BTN_ADD:
                     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADDCARD), hwnd, AddCardProc);
@@ -722,6 +735,27 @@ INT_PTR CALLBACK StatsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
         }
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_STATS_CLOSE || LOWORD(wParam) == IDCANCEL) {
+                EndDialog(hwndDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+            break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+INT_PTR CALLBACK HelpProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_INITDIALOG: {
+            SetDlgItemText(hwndDlg, IDC_HELP_TEXT, "KFlash Help & Shortcuts\r\n\r\n"
+                           "Card Basics\r\nUse '+Add' to create, 'Edit' to modify, 'Del' to remove.\r\n\r\n"
+                           "Import & Export\r\nExport to CSV. Import CSV/JSON decks.\r\n\r\n"
+                           "Review Mode\r\nUse Search bar to filter. Check 'Review Only' for cards needing review. Click 'Shuf' to shuffle.\r\n\r\n"
+                           "Spaced Repetition\r\nFlip a card and use 'Got It' or 'Needs Review' to track progress.\r\n\r\n"
+                           "Keyboard Shortcuts\r\n- Space/Enter: Flip card\r\n- Left/Right Arrows: Prev/Next card");
+            return (INT_PTR)TRUE;
+        }
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDC_HELP_CLOSE || LOWORD(wParam) == IDCANCEL) {
                 EndDialog(hwndDlg, LOWORD(wParam));
                 return (INT_PTR)TRUE;
             }

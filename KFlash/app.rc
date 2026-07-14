@@ -44,3 +44,12 @@ BEGIN
     CONTROL         "", 226, "msctls_progress32", WS_BORDER, 10, 95, 180, 15
     DEFPUSHBUTTON   "Close", 227, 75, 125, 50, 15
 END
+
+230 DIALOGEX 0, 0, 200, 150
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Help & Shortcuts"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "Help content goes here", 231, 10, 10, 180, 110, 0 /* SS_LEFT */
+    DEFPUSHBUTTON   "Close", 232, 75, 125, 50, 15
+END

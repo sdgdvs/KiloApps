@@ -48,40 +48,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KFlash
-**Phase:** 14
+**App:** KBBS (SyncTerm Parity Upgrade)
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1: Scaffolded web HTML skeleton and registered in App.jsx.
-- Phase 2: Implemented core web HTML functionality (add cards, study mode, flip, next/prev, progress).
-- Phase 3: Created native C version (`main.c`, `build.bat`, `app.rc`) with functional parity to web.
-- Phase 4: Polished aesthetic with 3D dramatic flip, hover effects, empty deck shake for web; added double-buffered drawing without flickering for native.
-- Phase 5: Implemented data persistence (localStorage for web, binary file I/O for native).
-- Phase 6: Implemented Card Management (Edit and Delete) in both web and native C versions.
-- Phase 7: Implemented Keyboard Shortcuts (Space/Enter to flip, Left/Right arrows to navigate) in both web and native C versions.
-- Phase 8: Implemented Deck Import/Export (JSON/CSV for web, CSV for native).
-- Phase 9: Implemented Deck Shuffling / Randomize Order in both web and native C versions.
-- Phase 10: Implemented Search/Filter functionality with dynamic result counts in both web and native C versions.
-- Phase 11: Implemented Print / Share Functionality in both web and native C versions.
-- Phase 12: Implemented Spaced Repetition / Study Marking (Got It/Needs Review, Status Indicator, Review Only Filter) in both web and native C versions.
-- Phase 13: Implemented Deck Statistics / Progress Dashboard in both web and native C versions.
+- Phase 1: Advanced Terminal Emulation & ANSI Rendering
+  - Implement full ANSI-BBS escape sequence support (blink, bold, high intensity backgrounds, 16-color PC palette).
+  - Add CP437 (DOS) font rendering with perfect block character mapping.
 
 ## Next Priority (Before New Apps)
 
-**App:** KBBS (SyncTerm Parity Upgrade)
-**Goal:** Upgrade KBBS features and stability to achieve parity with SyncTerm.
+**App:** Next
+**Goal:** Next
 
-- **Phase 1: Advanced Terminal Emulation & ANSI Rendering**
-  - Implement full ANSI-BBS escape sequence support (blink, bold, high intensity backgrounds, 16-color PC palette).
-  - Add CP437 (DOS) font rendering with perfect block character mapping.
-- **Phase 2: Dialing Directory & Phonebook**
-  - Create a robust dialing directory with saving/editing of favorite BBS systems, ports, and auto-login macros.
-- **Phase 3: File Transfers**
-  - Implement Zmodem and Xmodem protocols for downloading and uploading files directly within the web client.
-- **Phase 4: ANSI Music & Sound**
-  - Add support for ANSI music escape sequences and UI sound effects using Web Audio API.
-- **Phase 5: Macros & Key Mapping**
-  - Implement custom keyboard macros and accurate mapping for function keys (F1-F12), Page Up/Down, etc., to match standard terminal emulators.
 
 ## App Lifecycle (14 phases per app)
 
@@ -120,6 +99,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KFlash (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KBudget (Phase 14 completed: Added Print Report support to both versions)
 - KHabit (Phase 14 completed: Added Detailed Statistics modal to both versions)

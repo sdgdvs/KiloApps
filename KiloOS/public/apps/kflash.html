@@ -329,6 +329,7 @@
                 <input type="file" id="fileImport" accept=".json,.csv" style="display: none;">
                 <button class="btn" id="btnPrint">Print</button>
                 <button class="btn" id="btnStats">Stats</button>
+                <button class="btn" id="btnHelp" style="padding: 8px 12px; font-weight: bold; border-radius: 50%;">?</button>
                 <button class="btn btn-primary" id="btnEditCard" disabled>Edit</button>
                 <button class="btn btn-primary" style="background-color:#da3633; border-color:rgba(218,54,51,0.5)" id="btnDeleteCard" disabled>Delete</button>
                 <button class="btn" id="btnShuffle" disabled>Shuffle</button>
@@ -407,6 +408,26 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-primary" id="btnCloseStats">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content" style="width: 400px; max-height: 80vh; overflow-y: auto;">
+            <h2>Help & Shortcuts</h2>
+            <div style="color: #c9d1d9; font-size: 0.9rem; line-height: 1.5;">
+                <p><strong>Card Basics</strong><br/>Click the "+ Add Card" button to create a card. Use "Edit" to modify the current card, and "Delete" to remove it.</p>
+                <p><strong>Import & Export</strong><br/>Export your deck to a CSV file to share it or back it up. Import CSV/JSON decks to load new flashcards.</p>
+                <p><strong>Review Mode & Filtering</strong><br/>Use the Search bar to filter cards. Check "Review Only" to only see cards marked as needing review. Click "Shuffle" to randomize card order.</p>
+                <p><strong>Spaced Repetition</strong><br/>When you flip a card, use the "Got It ✓" or "Needs Review ↻" buttons to track your learning progress.</p>
+                <p><strong>Keyboard Shortcuts</strong><br/>
+                - <b>Space/Enter</b>: Flip card<br/>
+                - <b>Left/Right Arrows</b>: Prev/Next card<br/>
+                </p>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="btnCloseHelp">Close</button>
             </div>
         </div>
     </div>
@@ -1176,6 +1197,15 @@
 
         document.getElementById('btnCloseStats').addEventListener('click', () => {
             statsModal.classList.remove('active');
+        });
+
+        // Help Logic
+        const helpModal = document.getElementById('helpModal');
+        document.getElementById('btnHelp').addEventListener('click', () => {
+            helpModal.classList.add('active');
+        });
+        document.getElementById('btnCloseHelp').addEventListener('click', () => {
+            helpModal.classList.remove('active');
         });
 
         // Init
