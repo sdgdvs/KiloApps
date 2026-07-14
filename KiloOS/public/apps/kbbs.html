@@ -45,6 +45,8 @@
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 6px 100%; z-index: 2; pointer-events: none;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.8);
+            display: var(--crt-display, block);
         }
 
         /* Status bar */
@@ -65,6 +67,9 @@
         <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
             <input type="checkbox" id="localEcho"> Echo
         </label>
+        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
+            <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
+        </label>
         <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect</button>
         <button id="btnDir" onclick="showDialingDir()">Directory</button>
         <button id="btnMacros" onclick="showMacros()" style="margin-left:4px;">Macros</button>
@@ -77,11 +82,11 @@
             <canvas id="terminal" tabindex="0"></canvas>
         </div>
         <!-- Dialing Directory Modal -->
-        <div id="dialingDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center;">
-            <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                <div style="padding: 16px; border-bottom: 1px solid #27272a; font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+        <div id="dialingDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
                     <span>Dialing Directory</span>
-                    <button style="background: #27272a; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="closeDialingDir()">X</button>
+                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeDialingDir()">X</button>
                 </div>
                 <div style="flex: 1; display: flex; overflow: hidden;">
                     <div style="width: 250px; border-right: 1px solid #27272a; overflow-y: auto;" id="dirList"></div>
@@ -105,14 +110,14 @@
             </div>
         </div>
         <!-- Macros Modal -->
-        <div id="macrosDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center;">
-            <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                <div style="padding: 16px; border-bottom: 1px solid #27272a; font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+        <div id="macrosDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
                     <span>Macros (Alt + Key)</span>
-                    <button style="background: #27272a; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="closeMacros()">X</button>
+                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeMacros()">X</button>
                 </div>
                 <div style="flex: 1; display: flex; overflow: hidden;">
-                    <div style="width: 200px; border-right: 1px solid #27272a; overflow-y: auto;" id="macroList"></div>
+                    <div style="width: 200px; border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto;" id="macroList"></div>
                     <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
                         <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Key (e.g. L)</label><br><input type="text" id="macroKey" maxlength="1" style="width:50px; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; text-transform:uppercase;"></div>
                         <div style="flex:1; display:flex; flex-direction:column;">
@@ -136,6 +141,13 @@
     </div>
 
     <script>
+    function toggleCRT() {
+        const crt = document.getElementById('crtToggle').checked;
+        document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
+        document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
+    }
+    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); });
+
     // ─── Configuration ───
     const COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
     const canvas = document.getElementById('terminal');

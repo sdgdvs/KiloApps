@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBBS (SyncTerm Parity Upgrade)
-**Phase:** 6
+**Phase:** 7
 **Status:** In Progress
 
 - Phase 1 completed: Implemented Advanced Terminal Emulation & ANSI Rendering, including CP437 perfect block mapping and 16-color PC palette support in both web and native versions.
@@ -57,7 +57,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 3 completed: Implemented XMODEM file transfers (download/upload) with UI overlay in both web and native versions.
 - Phase 4 completed: Implemented ANSI Music (ESC [ M) parsing and sound effects in both web (Web Audio API) and native (Beep) versions.
 - Phase 5 completed: Implemented Macros & Key Mapping with custom persistent storage and UI dialog in both web and native versions.
-- Phase 6: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native.
+- Phase 6 completed: Polished both versions: dark-mode glassmorphic aesthetic + CRT scanline shader for web, refined dark theme and perfectly flicker-free double buffering for native.
+- Phase 7: Add user-configurable display settings (font size, blink rate, local echo toggle persistence).
 
 ## Next Priority (Before New Apps)
 

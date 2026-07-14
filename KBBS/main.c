@@ -1364,9 +1364,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
+            
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int cx = clientRect.right - clientRect.left;
+            int cy = clientRect.bottom - clientRect.top;
+
+            HDC winDC = CreateCompatibleDC(hdc);
+            HBITMAP winBmp = CreateCompatibleBitmap(hdc, cx, cy);
+            HBITMAP oldWinBmp = (HBITMAP)SelectObject(winDC, winBmp);
+
+            HBRUSH hBg = CreateSolidBrush(RGB(9, 9, 11));
+            FillRect(winDC, &clientRect, hBg);
+            DeleteObject(hBg);
+
             HDC memDC;
             HBITMAP memBmp, oldBmp;
             HFONT oldFont;
@@ -1474,38 +1490,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int drawH = clientRect.bottom - clientRect.top - termY - dpiScale(24);
             if (drawW < termW) drawW = termW;
             if (drawH < termH) drawH = termH;
-            SetStretchBltMode(hdc, COLORONCOLOR);
-            StretchBlt(hdc, termX, termY, drawW, drawH, memDC, 0, 0, termW, termH, SRCCOPY);
+            SetStretchBltMode(winDC, COLORONCOLOR);
+            StretchBlt(winDC, termX, termY, drawW, drawH, memDC, 0, 0, termW, termH, SRCCOPY);
 
             /* Draw transfer overlay if active */
             if (transferActive) {
                 HFONT uiFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
                     ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                     DEFAULT_PITCH | FF_SWISS, "Tahoma");
-                HFONT oldUIFont = (HFONT)SelectObject(hdc, uiFont);
+                HFONT oldUIFont = (HFONT)SelectObject(winDC, uiFont);
                 
                 RECT rOverlay = { clientRect.right/2 - dpiScale(120), clientRect.bottom/2 - dpiScale(40), clientRect.right/2 + dpiScale(120), clientRect.bottom/2 + dpiScale(40) };
-                HBRUSH br = CreateSolidBrush(RGB(20, 20, 30));
-                FillRect(hdc, &rOverlay, br);
+                HBRUSH br = CreateSolidBrush(RGB(24, 24, 27));
+                FillRect(winDC, &rOverlay, br);
                 DeleteObject(br);
                 
-                HPEN pen = CreatePen(PS_SOLID, 2, RGB(0, 200, 255));
-                HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-                MoveToEx(hdc, rOverlay.left, rOverlay.top, NULL); LineTo(hdc, rOverlay.right, rOverlay.top);
-                LineTo(hdc, rOverlay.right, rOverlay.bottom); LineTo(hdc, rOverlay.left, rOverlay.bottom); LineTo(hdc, rOverlay.left, rOverlay.top);
-                SelectObject(hdc, oldPen);
+                HPEN pen = CreatePen(PS_SOLID, 1, RGB(14, 165, 233));
+                HPEN oldPen = (HPEN)SelectObject(winDC, pen);
+                MoveToEx(winDC, rOverlay.left, rOverlay.top, NULL); LineTo(winDC, rOverlay.right, rOverlay.top);
+                LineTo(winDC, rOverlay.right, rOverlay.bottom); LineTo(winDC, rOverlay.left, rOverlay.bottom); LineTo(winDC, rOverlay.left, rOverlay.top);
+                SelectObject(winDC, oldPen);
                 DeleteObject(pen);
 
-                SetTextColor(hdc, RGB(255, 255, 255));
-                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(winDC, RGB(255, 255, 255));
+                SetBkMode(winDC, TRANSPARENT);
                 RECT rTitle = rOverlay; rTitle.top += dpiScale(15);
-                DrawTextA(hdc, transferActive == 1 ? "XMODEM DOWNLOAD" : "XMODEM UPLOAD", -1, &rTitle, DT_CENTER | DT_TOP);
+                DrawTextA(winDC, transferActive == 1 ? "XMODEM DOWNLOAD" : "XMODEM UPLOAD", -1, &rTitle, DT_CENTER | DT_TOP);
                 
                 RECT rMsg = rOverlay; rMsg.top += dpiScale(40);
-                SetTextColor(hdc, RGB(100, 255, 100));
-                DrawTextA(hdc, transferStatusMsg, -1, &rMsg, DT_CENTER | DT_TOP);
+                SetTextColor(winDC, RGB(16, 185, 129));
+                DrawTextA(winDC, transferStatusMsg, -1, &rMsg, DT_CENTER | DT_TOP);
                 
-                SelectObject(hdc, oldUIFont);
+                SelectObject(winDC, oldUIFont);
                 DeleteObject(uiFont);
             }
 
@@ -1513,6 +1529,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldBmp);
             DeleteObject(memBmp);
             DeleteDC(memDC);
+
+            BitBlt(hdc, 0, 0, cx, cy, winDC, 0, 0, SRCCOPY);
+
+            SelectObject(winDC, oldWinBmp);
+            DeleteObject(winBmp);
+            DeleteDC(winDC);
 
             EndPaint(hwnd, &ps);
             return 0;
