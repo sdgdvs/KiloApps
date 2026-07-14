@@ -147,7 +147,7 @@
       while (placed < MINES) {
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
-        if (grid[r][c] === 0 && (r !== firstR || c !== firstC)) {
+        if (grid[r][c] === 0 && (r < firstR - 1 || r > firstR + 1 || c < firstC - 1 || c > firstC + 1)) {
           grid[r][c] = 8; // Mine
           placed++;
         }
@@ -202,32 +202,61 @@
     function handleLeftClick(r, c) {
       if (gameOver) return;
       if (!initialized) placeMines(r, c);
-      if (!(grid[r][c] & 4)) {
-        reveal(r, c);
-        if (gameOver) {
-          playSound(150, 0.5, 'sawtooth');
-          clearInterval(timer);
-          for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
-          document.getElementById('face').innerText = '😵';
-          render();
-        } else if (checkWin()) {
-          playSound(800, 0.5, 'square');
-          gameOver = true;
-          clearInterval(timer);
-          if (time < bestTime) {
-            bestTime = time;
-            localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
-            document.getElementById('best-count').innerText = formatNumber(bestTime);
+      
+      if (grid[r][c] & 4) return; // Flagged
+
+      if (grid[r][c] & 2) {
+        // Chording
+        let flagged = 0;
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            let nr = r + i, nc = c + j;
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+              if (grid[nr][nc] & 4) flagged++;
+            }
           }
-          document.getElementById('face').innerText = '😎';
-          flags = MINES;
-          document.getElementById('flag-count').innerText = formatNumber(0);
-          for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4; // flag all
-          render();
-        } else {
-          playSound(400, 0.1, 'sine');
-          render();
         }
+        if (flagged === countMines(r, c)) {
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              let nr = r + i, nc = c + j;
+              if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                if (!(grid[nr][nc] & 4) && !(grid[nr][nc] & 2)) {
+                  reveal(nr, nc);
+                }
+              }
+            }
+          }
+        } else {
+          return;
+        }
+      } else {
+        reveal(r, c);
+      }
+
+      if (gameOver) {
+        playSound(150, 0.5, 'sawtooth');
+        clearInterval(timer);
+        for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
+        document.getElementById('face').innerText = '😵';
+        render();
+      } else if (checkWin()) {
+        playSound(800, 0.5, 'square');
+        gameOver = true;
+        clearInterval(timer);
+        if (time < bestTime) {
+          bestTime = time;
+          localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
+          document.getElementById('best-count').innerText = formatNumber(bestTime);
+        }
+        document.getElementById('face').innerText = '😎';
+        flags = MINES;
+        document.getElementById('flag-count').innerText = formatNumber(0);
+        for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4; // flag all
+        render();
+      } else {
+        playSound(400, 0.1, 'sine');
+        render();
       }
     }
 

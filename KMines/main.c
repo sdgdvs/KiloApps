@@ -70,8 +70,8 @@ void InitGame(int firstClickX, int firstClickY) {
         int r = my_rand() % rows;
         int c = my_rand() % cols;
         if ((grid[r][c] & CELL_MINE) == 0) {
-            // Avoid placing mine on first click
-            if (r != firstClickY || c != firstClickX) {
+            // Avoid placing mine on first click 3x3 area
+            if (r < firstClickY - 1 || r > firstClickY + 1 || c < firstClickX - 1 || c > firstClickX + 1) {
                 grid[r][c] |= CELL_MINE;
                 placed++;
             }
@@ -210,6 +210,57 @@ int CheckWin() {
     return (revealed == (rows * cols - mines));
 }
 
+void HandleReveal(HWND hwnd, int x, int y) {
+    if (gameOver || !initialized) return;
+    if (grid[y][x] & CELL_FLAGGED) return;
+
+    if (grid[y][x] & CELL_REVEALED) {
+        int flagged = 0;
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                int nr = y + i, nc = x + j;
+                if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                    if (grid[nr][nc] & CELL_FLAGGED) flagged++;
+                }
+            }
+        }
+        if (flagged == CountMines(y, x)) {
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    int nr = y + i, nc = x + j;
+                    if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                        if (!(grid[nr][nc] & CELL_FLAGGED) && !(grid[nr][nc] & CELL_REVEALED)) {
+                            Reveal(nr, nc);
+                        }
+                    }
+                }
+            }
+        } else {
+            return;
+        }
+    } else {
+        Reveal(y, x);
+    }
+
+    if (!gameOver) Beep(1000, 20);
+    InvalidateRect(hwnd, NULL, FALSE);
+    
+    if (gameOver) {
+        for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) if(grid[r][c]&CELL_MINE) grid[r][c]|=CELL_REVEALED;
+        InvalidateRect(hwnd, NULL, FALSE);
+        MessageBoxA(hwnd, "Boom! Click to restart.", "Game Over", MB_OK);
+    } else if (CheckWin()) {
+        gameOver = 1;
+        KillTimer(hwnd, 1);
+        Beep(1500, 300);
+        if (timeElapsed < bestTimes[currentDiff]) {
+            bestTimes[currentDiff] = timeElapsed;
+            SaveBest();
+        }
+        MessageBoxA(hwnd, "You Win! Click to restart.", "Congratulations", MB_OK);
+    }
+}
+
 void ResizeWindow(HWND hwnd) {
     RECT rcClient, rcWindow;
     GetClientRect(hwnd, &rcClient);
@@ -255,26 +306,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = (HIWORD(lParam) - HEADER_HEIGHT) / CELL_SIZE;
             if (x >= 0 && x < cols && y >= 0 && y < rows && HIWORD(lParam) >= HEADER_HEIGHT) {
                 if (!initialized) InitGame(x, y);
-                if (!(grid[y][x] & CELL_FLAGGED)) {
-                    Reveal(y, x);
-                    if (!gameOver) Beep(1000, 20);
-                    InvalidateRect(hwnd, NULL, FALSE);
-                    if (gameOver) {
-                        // Reveal all mines
-                        for(int r=0;r<rows;r++) for(int c=0;c<cols;c++) if(grid[r][c]&CELL_MINE) grid[r][c]|=CELL_REVEALED;
-                        InvalidateRect(hwnd, NULL, FALSE);
-                        MessageBoxA(hwnd, "Boom! Click to restart.", "Game Over", MB_OK);
-                    } else if (CheckWin()) {
-                        gameOver = 1;
-                        KillTimer(hwnd, 1);
-                        Beep(1500, 300);
-                        if (timeElapsed < bestTimes[currentDiff]) {
-                            bestTimes[currentDiff] = timeElapsed;
-                            SaveBest();
-                        }
-                        MessageBoxA(hwnd, "You Win! Click to restart.", "Congratulations", MB_OK);
-                    }
-                }
+                HandleReveal(hwnd, x, y);
             }
             break;
         }

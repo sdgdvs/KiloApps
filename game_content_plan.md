@@ -123,4 +123,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] Create New Game (K2048 created for both EXE and Web, registered in App.jsx)
 
 **Loop 3**
-- Pending
+- [x] KMines (Added chording feature for fast clearing and true first-click safety (3x3 empty space) to both EXE and HTML)
