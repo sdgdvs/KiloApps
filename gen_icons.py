@@ -680,3 +680,14 @@ save_ico('icons/kradio.ico', generate_radio())
 save_ico('icons/kgraph.ico', generate_graph())
 save_ico('icons/kvault.ico', generate_vault())
 save_ico('icons/kquarantine.ico', generate_quarantine())
+
+def generate_term():
+    img = new_img()
+    rect(img, 2, 4, 30, 28, (30, 30, 30)) # terminal background
+    rect(img, 2, 4, 30, 8, (200, 200, 200)) # title bar
+    rect(img, 26, 5, 28, 7, (255, 50, 50)) # close button
+    rect(img, 4, 12, 10, 14, (0, 255, 0)) # prompt
+    rect(img, 12, 12, 16, 14, (0, 255, 0)) # cursor
+    return img
+
+save_ico('icons/kterm.ico', generate_term())

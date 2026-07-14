@@ -56,3 +56,4 @@
   - Added generation logic for remaining missing icons (krogue, ktetris, kpong, kterm, kaudio, kcalendar, kmail, kimage, knet, kscript, kchart, knote, kpass, kping, khex, kmandel, ktimer, ksynth, ksys).
   - Executed gen_icons.py with uv, copied to public/assets/icons, confirmed all apps point to unique icons in App.jsx.
   - Audited App.jsx for new apps. No new apps without icons found. All icons are up to date and refined for visibility.
+  - Noticed gen_icons.py was missing procedural logic for kterm; added generate_term(), re-ran, and copied kterm.ico to public/assets/icons to refine it.
