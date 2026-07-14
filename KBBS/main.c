@@ -137,6 +137,7 @@ int bytesRx = 0;
 int bytesTx = 0;
 
 HWND hBtnCapture;
+HWND hBtnHelp;
 int captureActive = 0;
 char* captureBuffer = NULL;
 int captureLen = 0;
@@ -1101,6 +1102,15 @@ INT_PTR CALLBACK MacrosProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 void ClearScreen(void) {
 
+#define IDD_HELP 4000
+INT_PTR CALLBACK HelpProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_COMMAND && (LOWORD(wParam) == 1 || LOWORD(wParam) == 2)) {
+        EndDialog(hdlg, 1);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 #define IDD_SETTINGS 3000
 #define IDC_SET_FONT 3001
 #define IDC_SET_BLINK 3002
@@ -1678,6 +1688,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnCapture = CreateWindowA("BUTTON", "Cap: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(902), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)111, 0, 0);
 
+            hBtnHelp = CreateWindowA("BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(976), dpiScale(4), dpiScale(40), dpiScale(22), hwnd, (HMENU)112, 0, 0);
+
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Status bar */
@@ -1697,6 +1710,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             ClearScreen();
@@ -1895,6 +1909,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         captureLen = 0;
                     }
                 }
+            } else if (LOWORD(wParam) == 112) {
+                DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_HELP), hwnd, HelpProc, 0);
             }
             break;
         }

@@ -48,24 +48,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KBBS (SyncTerm Parity Upgrade)
-**Phase:** 14
+**App:** K2048 (Sliding tile puzzle)
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1 completed: Implemented Advanced Terminal Emulation & ANSI Rendering, including CP437 perfect block mapping and 16-color PC palette support in both web and native versions.
-- Phase 2 completed: Implemented robust Dialing Directory & Phonebook (Add, Edit, Delete, Connect) using localStorage (web) and local dat file (native).
-- Phase 3 completed: Implemented XMODEM file transfers (download/upload) with UI overlay in both web and native versions.
-- Phase 4 completed: Implemented ANSI Music (ESC [ M) parsing and sound effects in both web (Web Audio API) and native (Beep) versions.
-- Phase 5 completed: Implemented Macros & Key Mapping with custom persistent storage and UI dialog in both web and native versions.
-- Phase 6 completed: Polished both versions: dark-mode glassmorphic aesthetic + CRT scanline shader for web, refined dark theme and perfectly flicker-free double buffering for native.
-- Phase 7 completed: Added user-configurable display settings (font size, blink rate, local echo toggle persistence) to both web and native versions.
-- Phase 8 completed: Implemented scrollback buffer support with wheel and keyboard navigation (allow user to scroll up and view past terminal output) for both web and native versions.
-- Phase 9 completed: Implemented text selection and clipboard copy support for the terminal buffer in both web and native versions.
-- Phase 10 completed: Implemented ZMODEM file transfers (download/upload) to support faster and more reliable file transfers compared to XMODEM. Auto-detects ZRQINIT signature.
-- Phase 11 completed: Implemented local session capture logging (save terminal output to a text file) in both web and native versions.
-- Phase 12 completed: Implemented custom 16-color palette editing (allow users to redefine the standard ANSI colors) in both web and native versions.
-- Phase 13 completed: Implemented Baud Rate Emulation (retro speed toggle) with UI dropdown and queue-based rendering throttle in both web and native versions.
-- Phase 14: Implement ...
+- Phase 1: Scaffold `K2048/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 
 ## Next Priority (Before New Apps)
 
@@ -110,6 +97,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KBBS (Phase 14 completed: Added Help/Quick Reference System to both versions)
 - KFlash (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KBudget (Phase 14 completed: Added Print Report support to both versions)

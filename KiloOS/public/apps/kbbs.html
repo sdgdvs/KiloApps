@@ -79,6 +79,7 @@
         <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
         <button id="btnSettings" onclick="showSettings()" style="margin-left:4px;">Settings</button>
         <button id="btnCapture" onclick="toggleCapture()" style="margin-left:4px; background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
+        <button id="btnHelp" onclick="showHelp()" style="margin-left:4px; background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
     </div>
     <div class="main">
@@ -152,6 +153,17 @@
                 <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
                     <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Font Size (px)</label><br><input type="number" id="setFontSize" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
                     <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Blink Rate (ms)</label><br><input type="number" id="setBlinkRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                    <div>
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Baud Rate Emulation</label><br>
+                        <select id="setBaudRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; font-family:'Inter', sans-serif; font-size:13px;">
+                            <option value="0">Instant (Default)</option>
+                            <option value="14400">14400 bps</option>
+                            <option value="9600">9600 bps</option>
+                            <option value="2400">2400 bps</option>
+                            <option value="1200">1200 bps</option>
+                            <option value="300">300 bps</option>
+                        </select>
+                    </div>
                     <label style="color: #d4d4d8; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
                         <input type="checkbox" id="setLocalEcho"> Local Echo
                     </label>
@@ -164,6 +176,29 @@
                     </div>
                     <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-top: 8px;" onclick="saveSettings()">Save Settings</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <!-- Help Modal -->
+    <div id="helpModal" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+        <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 450px; max-width: 95%; max-height: 80%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                <span>Help / Quick Reference</span>
+                <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeHelp()">X</button>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; color: #e4e4e7; line-height: 1.5; font-size: 13px;">
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Dialing Directory:</strong> Save and quick-connect to your favorite BBSs.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">XMODEM / ZMODEM:</strong> Transfer files using classic protocols. Click DL to download from the BBS, UL to upload.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">ANSI Music:</strong> Fully supports ANSI-M music codes. Play tones directly from BBS games and menus.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Macros:</strong> Bind Alt+Key to string sequences. Use \r for Enter. Great for quick logins.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Display Settings:</strong> Adjust font size, blink rate, and the 16-color PC palette.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Scrollback:</strong> Use the scrollbar or Shift+PgUp/PgDn to view terminal history.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Copy/Paste:</strong> Click and drag to select text, then copy. Ctrl+V to paste into the terminal.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Session Capture:</strong> Toggle capture ON to save all incoming text to a local file.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Baud Rate Emulation:</strong> Simulate old modem speeds (e.g. 2400 bps) in Settings.</div>
+            </div>
+            <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
+                <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="closeHelp()">OK</button>
             </div>
         </div>
     </div>
@@ -180,11 +215,44 @@
     }
     document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); });
 
+    function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
+    function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
+
     // ─── Configuration ───
     let COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
     const canvas = document.getElementById('terminal');
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0, bytesTx = 0;
+    
+    let rxQueue = "";
+    let baudFraction = 0;
+    let lastBaudTime = Date.now();
+    setInterval(() => {
+        let now = Date.now();
+        let dt = now - lastBaudTime;
+        lastBaudTime = now;
+        if (dt > 1000) dt = 1000;
+        let baud = (typeof kbbsSettings !== 'undefined') ? (kbbsSettings.baudRate || 0) : 0;
+        if (baud === 0) {
+            if (rxQueue.length > 0) {
+                processData(rxQueue);
+                rxQueue = "";
+            }
+        } else {
+            let cps = baud / 10;
+            baudFraction += (cps * dt) / 1000;
+            let chars = Math.floor(baudFraction);
+            if (chars > 0 && rxQueue.length > 0) {
+                baudFraction -= chars;
+                let take = Math.min(chars, rxQueue.length);
+                let chunk = rxQueue.substring(0, take);
+                rxQueue = rxQueue.substring(take);
+                processData(chunk);
+            } else if (rxQueue.length === 0) {
+                baudFraction = 0;
+            }
+        }
+    }, 16);
 
     // ─── XMODEM State ───
     const XMODEM_SOH = 0x01, XMODEM_EOT = 0x04, XMODEM_ACK = 0x06;
@@ -1018,7 +1086,7 @@
                 }
                 bytesRx += text.length;
                 updateBytes();
-                processData(text);
+                rxQueue += text;
             };
             ws.onclose = () => {
                 setStatus('disconnected', 'Disconnected');
@@ -1487,7 +1555,7 @@
     updateBlinkInterval(500);
     
     // ─── Settings ───
-    let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false, palette: null };
+    let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false, palette: null, baudRate: 0 };
 
     function loadSettings() {
         const saved = localStorage.getItem('kbbs_display_settings');
@@ -1509,6 +1577,7 @@
         if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 8;
         kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
         if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
+        kbbsSettings.baudRate = parseInt(document.getElementById('setBaudRate').value) || 0;
         kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
         
         let newPalette = [];
@@ -1544,6 +1613,7 @@
     function showSettings() {
         document.getElementById('setFontSize').value = kbbsSettings.fontSize;
         document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs;
+        document.getElementById('setBaudRate').value = kbbsSettings.baudRate || 0;
         document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
         
         const pc = document.getElementById('paletteContainer');
