@@ -5,94 +5,182 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>K2048</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
         body {
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            background-color: #121212;
+            background: linear-gradient(135deg, #1f1c2c, #928DAB);
             color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            user-select: none;
         }
 
         .container {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(30, 30, 30, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             text-align: center;
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
+            position: relative;
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         h1 {
             margin: 0;
-            font-size: 2.5rem;
-            color: #f1c40f;
-            text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            font-size: 3rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            letter-spacing: 2px;
+        }
+
+        .score-container {
+            display: flex;
+            gap: 10px;
         }
 
         .score-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
             border-radius: 8px;
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .score-box span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #aaa;
+            margin-bottom: 2px;
         }
 
         .board {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            position: relative;
         }
 
         .cell {
             aspect-ratio: 1;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
+            border-radius: 8px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
-            font-weight: bold;
+            font-size: 2rem;
+            font-weight: 800;
             color: #fff;
+            transition: all 0.15s ease-in-out;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
         }
 
-        button {
-            background: rgba(255, 255, 255, 0.1);
+        .cell[data-value=""] {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .cell[data-value="2"] { background: rgba(238, 228, 218, 0.1); color: #ddd; }
+        .cell[data-value="4"] { background: rgba(237, 224, 200, 0.2); color: #eee; }
+        .cell[data-value="8"] { background: #f2b179; color: #fff; }
+        .cell[data-value="16"] { background: #f59563; color: #fff; }
+        .cell[data-value="32"] { background: #f67c5f; color: #fff; }
+        .cell[data-value="64"] { background: #f65e3b; color: #fff; }
+        .cell[data-value="128"] { background: #edcf72; color: #fff; box-shadow: 0 0 10px rgba(237, 207, 114, 0.5); font-size: 1.8rem; }
+        .cell[data-value="256"] { background: #edcc61; color: #fff; box-shadow: 0 0 15px rgba(237, 204, 97, 0.6); font-size: 1.8rem; }
+        .cell[data-value="512"] { background: #edc850; color: #fff; box-shadow: 0 0 20px rgba(237, 200, 80, 0.7); font-size: 1.8rem; }
+        .cell[data-value="1024"] { background: #edc53f; color: #fff; box-shadow: 0 0 25px rgba(237, 197, 63, 0.8); font-size: 1.5rem; }
+        .cell[data-value="2048"] { background: #edc22e; color: #fff; box-shadow: 0 0 30px rgba(237, 194, 46, 0.9); font-size: 1.5rem; }
+
+        .cell.new {
+            animation: appear 0.2s;
+        }
+
+        .cell.merged {
+            animation: pop 0.2s;
+        }
+
+        @keyframes appear {
+            0% { opacity: 0; transform: scale(0); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        button.new-game {
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
         }
 
-        button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.4);
+        button.new-game:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .game-over.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .game-over h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+        
+        .game-over button {
+            width: auto;
         }
     </style>
 </head>
@@ -100,25 +188,221 @@
     <div class="container">
         <div class="header">
             <h1>2048</h1>
-            <div class="score-box">Score: <span id="score">0</span></div>
+            <div class="score-container">
+                <div class="score-box">
+                    <span>Score</span>
+                    <div id="score">0</div>
+                </div>
+            </div>
         </div>
         <div class="board" id="board">
-            <!-- Cells will be generated by JS -->
+            <!-- Cells generated by JS -->
         </div>
-        <button onclick="initGame()">New Game</button>
+        <button class="new-game" onclick="initGame()">New Game</button>
+
+        <div class="game-over" id="game-over">
+            <h2>Game Over!</h2>
+            <button class="new-game" onclick="initGame()">Try Again</button>
+        </div>
     </div>
 
     <script>
-        const board = document.getElementById('board');
+        const boardEl = document.getElementById('board');
+        const scoreEl = document.getElementById('score');
+        const gameOverEl = document.getElementById('game-over');
+
+        let grid = [];
+        let score = 0;
+
+        // Initialize grid DOM
         for (let i = 0; i < 16; i++) {
             const cell = document.createElement('div');
             cell.classList.add('cell');
-            board.appendChild(cell);
+            cell.id = 'c' + i;
+            boardEl.appendChild(cell);
         }
 
         function initGame() {
-            // Skeleton logic
+            grid = Array(16).fill(0);
+            score = 0;
+            updateScore();
+            gameOverEl.classList.remove('active');
+            addRandomTile();
+            addRandomTile();
+            updateBoard();
         }
+
+        function addRandomTile() {
+            const emptyCells = [];
+            for (let i = 0; i < 16; i++) {
+                if (grid[i] === 0) emptyCells.push(i);
+            }
+            if (emptyCells.length > 0) {
+                const randomIdx = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                grid[randomIdx] = Math.random() < 0.9 ? 2 : 4;
+                const cell = document.getElementById('c' + randomIdx);
+                cell.classList.add('new');
+                setTimeout(() => cell.classList.remove('new'), 200);
+            }
+        }
+
+        function updateBoard() {
+            for (let i = 0; i < 16; i++) {
+                const cell = document.getElementById('c' + i);
+                const val = grid[i];
+                cell.textContent = val === 0 ? '' : val;
+                cell.setAttribute('data-value', val === 0 ? '' : val);
+            }
+        }
+
+        function updateScore() {
+            scoreEl.textContent = score;
+        }
+
+        function slideLine(line) {
+            // Remove zeros
+            let filtered = line.filter(val => val !== 0);
+            let result = [];
+            let i = 0;
+            while(i < filtered.length) {
+                if (i + 1 < filtered.length && filtered[i] === filtered[i+1]) {
+                    let merged = filtered[i] * 2;
+                    result.push(merged);
+                    score += merged;
+                    i += 2;
+                } else {
+                    result.push(filtered[i]);
+                    i++;
+                }
+            }
+            while(result.length < 4) {
+                result.push(0);
+            }
+            return result;
+        }
+
+        function moveLeft() {
+            let changed = false;
+            for (let i = 0; i < 4; i++) {
+                let row = [grid[i*4], grid[i*4+1], grid[i*4+2], grid[i*4+3]];
+                let newRow = slideLine(row);
+                for (let j = 0; j < 4; j++) {
+                    if(grid[i*4+j] !== newRow[j]) changed = true;
+                    grid[i*4+j] = newRow[j];
+                }
+            }
+            return changed;
+        }
+
+        function moveRight() {
+            let changed = false;
+            for (let i = 0; i < 4; i++) {
+                let row = [grid[i*4+3], grid[i*4+2], grid[i*4+1], grid[i*4]];
+                let newRow = slideLine(row);
+                for (let j = 0; j < 4; j++) {
+                    if(grid[i*4+(3-j)] !== newRow[j]) changed = true;
+                    grid[i*4+(3-j)] = newRow[j];
+                }
+            }
+            return changed;
+        }
+
+        function moveUp() {
+            let changed = false;
+            for (let j = 0; j < 4; j++) {
+                let col = [grid[j], grid[4+j], grid[8+j], grid[12+j]];
+                let newCol = slideLine(col);
+                for (let i = 0; i < 4; i++) {
+                    if(grid[i*4+j] !== newCol[i]) changed = true;
+                    grid[i*4+j] = newCol[i];
+                }
+            }
+            return changed;
+        }
+
+        function moveDown() {
+            let changed = false;
+            for (let j = 0; j < 4; j++) {
+                let col = [grid[12+j], grid[8+j], grid[4+j], grid[j]];
+                let newCol = slideLine(col);
+                for (let i = 0; i < 4; i++) {
+                    if(grid[(3-i)*4+j] !== newCol[i]) changed = true;
+                    grid[(3-i)*4+j] = newCol[i];
+                }
+            }
+            return changed;
+        }
+
+        function isGameOver() {
+            for (let i = 0; i < 16; i++) {
+                if (grid[i] === 0) return false;
+                if (i % 4 < 3 && grid[i] === grid[i+1]) return false;
+                if (i < 12 && grid[i] === grid[i+4]) return false;
+            }
+            return true;
+        }
+
+        function handleInput(dir) {
+            if (gameOverEl.classList.contains('active')) return;
+            
+            let changed = false;
+            if (dir === 'left') changed = moveLeft();
+            else if (dir === 'right') changed = moveRight();
+            else if (dir === 'up') changed = moveUp();
+            else if (dir === 'down') changed = moveDown();
+
+            if (changed) {
+                addRandomTile();
+                updateBoard();
+                updateScore();
+                if (isGameOver()) {
+                    setTimeout(() => gameOverEl.classList.add('active'), 500);
+                }
+            }
+        }
+
+        window.addEventListener('keydown', e => {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D"].indexOf(e.key) > -1) {
+                e.preventDefault();
+            }
+            
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleInput('left');
+            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') handleInput('right');
+            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') handleInput('up');
+            if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') handleInput('down');
+        });
+
+        // Touch support for swiping
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        boardEl.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+            touchStartY = e.changedTouches[0].screenY;
+        }, {passive: true});
+
+        boardEl.addEventListener('touchend', e => {
+            let touchEndX = e.changedTouches[0].screenX;
+            let touchEndY = e.changedTouches[0].screenY;
+            
+            let dx = touchEndX - touchStartX;
+            let dy = touchEndY - touchStartY;
+            
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (Math.abs(dx) > 30) {
+                    if (dx > 0) handleInput('right');
+                    else handleInput('left');
+                }
+            } else {
+                if (Math.abs(dy) > 30) {
+                    if (dy > 0) handleInput('down');
+                    else handleInput('up');
+                }
+            }
+        }, {passive: true});
+
+        // Start game on load
+        initGame();
     </script>
 </body>
 </html>
