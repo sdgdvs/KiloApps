@@ -22,6 +22,7 @@ int high_score = 0;
 int current_speed = 150;
 int base_speed = 150;
 int score_mult = 10;
+int wrap_mode = 0;
 
 
 void InitGame() {
@@ -110,9 +111,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             snake[0].y += dir_y;
 
             // Collision with walls
-            if (snake[0].x < 0 || snake[0].x >= GRID_WIDTH || 
-                snake[0].y < 0 || snake[0].y >= GRID_HEIGHT) {
-                game_state = 2;
+            if (wrap_mode) {
+                if (snake[0].x < 0) snake[0].x = GRID_WIDTH - 1;
+                else if (snake[0].x >= GRID_WIDTH) snake[0].x = 0;
+                
+                if (snake[0].y < 0) snake[0].y = GRID_HEIGHT - 1;
+                else if (snake[0].y >= GRID_HEIGHT) snake[0].y = 0;
+            } else {
+                if (snake[0].x < 0 || snake[0].x >= GRID_WIDTH || 
+                    snake[0].y < 0 || snake[0].y >= GRID_HEIGHT) {
+                    game_state = 2;
+                }
             }
 
             // Collision with self
@@ -177,6 +186,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '1') { difficulty = 0; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
                 else if (wParam == '2') { difficulty = 1; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
                 else if (wParam == '3') { difficulty = 2; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
+                else if (wParam == 'W') { wrap_mode = !wrap_mode; InvalidateRect(hwnd, NULL, TRUE); }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 2 && wParam == VK_RETURN) {
                 game_state = 0;
@@ -205,6 +215,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 40, 130, "1 - Easy", 8);
                 TextOutA(hdc, 40, 150, "2 - Medium", 10);
                 TextOutA(hdc, 40, 170, "3 - Hard", 8);
+                char wrap_text[32];
+                wsprintf(wrap_text, "W - Toggle Wrap: %s", wrap_mode ? "ON" : "OFF");
+                TextOutA(hdc, 40, 190, wrap_text, lstrlenA(wrap_text));
             } else if (game_state == 2) {
                 SetTextColor(hdc, RGB(255, 0, 0));
                 SetBkMode(hdc, TRANSPARENT);
