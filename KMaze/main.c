@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 void* __cdecl memset(void* p, int c, size_t sz) {
     char* pb = (char*)p;
@@ -94,6 +96,62 @@ int map3[15][15];
 int map4[10][10];
 int map5[12][12];
 
+int mapRandom[31][31];
+int curRandW = 15;
+int curRandH = 15;
+
+void GenerateMaze(int w, int h) {
+    for (int i=0; i<w; i++) for (int j=0; j<h; j++) mapRandom[i][j] = 1;
+    int stackX[1000], stackY[1000];
+    int stackPtr = 0;
+    
+    int cx = 1, cy = 1;
+    mapRandom[cx][cy] = 0;
+    stackX[stackPtr] = cx; stackY[stackPtr] = cy; stackPtr++;
+    
+    int farX = cx, farY = cy;
+    
+    while(stackPtr > 0) {
+        cx = stackX[stackPtr-1];
+        cy = stackY[stackPtr-1];
+        stackPtr--;
+        
+        int dirs[4][2] = {{0,-2}, {0,2}, {-2,0}, {2,0}};
+        for(int i=0; i<4; i++) {
+            int r = rand() % 4;
+            int tx = dirs[i][0]; int ty = dirs[i][1];
+            dirs[i][0] = dirs[r][0]; dirs[i][1] = dirs[r][1];
+            dirs[r][0] = tx; dirs[r][1] = ty;
+        }
+        
+        for(int i=0; i<4; i++) {
+            int nx = cx + dirs[i][0];
+            int ny = cy + dirs[i][1];
+            if (nx > 0 && nx < w-1 && ny > 0 && ny < h-1 && mapRandom[nx][ny] == 1) {
+                mapRandom[cx + dirs[i][0]/2][cy + dirs[i][1]/2] = 0;
+                mapRandom[nx][ny] = 0;
+                
+                stackX[stackPtr] = cx; stackY[stackPtr] = cy; stackPtr++;
+                stackX[stackPtr] = nx; stackY[stackPtr] = ny; stackPtr++;
+                
+                farX = nx; farY = ny;
+                break;
+            }
+        }
+    }
+    
+    for(int i=0; i<w*h/10; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 5;
+        }
+    }
+    mapRandom[farX][farY] = 2;
+    curRandW = w;
+    curRandH = h;
+}
+
 void ResetMaps() {
     memcpy(map1, orig_map1, sizeof(map1));
     memcpy(map2, orig_map2, sizeof(map2));
@@ -141,9 +199,12 @@ int GetMapValue(int x, int y) {
     } else if (currentLevel == 3) {
         if (x >= 10 || y >= 10) return 1;
         return map4[x][y];
-    } else {
+    } else if (currentLevel == 4) {
         if (x >= 12 || y >= 12) return 1;
         return map5[x][y];
+    } else {
+        if (x >= curRandW || y >= curRandH) return 1;
+        return mapRandom[x][y];
     }
 }
 
@@ -154,17 +215,18 @@ void SetMapValue(int x, int y, int v) {
     else if (currentLevel == 2 && x < 15 && y < 15) map3[x][y] = v;
     else if (currentLevel == 3 && x < 10 && y < 10) map4[x][y] = v;
     else if (currentLevel == 4 && x < 12 && y < 12) map5[x][y] = v;
+    else if (currentLevel >= 5 && x < curRandW && y < curRandH) mapRandom[x][y] = v;
 }
 
 float pX = 1.5f, pY = 1.5f;
-void InitGame() { LoadBest(); ResetMaps(); }
+void InitGame() { srand((unsigned int)GetTickCount()); LoadBest(); ResetMaps(); }
 float dX = 1.0f, dY = 0.0f;
 float planeX = 0.0f, planeY = 0.66f;
 
 void NextLevel() {
     keysHeld = 0;
     currentLevel++;
-    if (currentLevel > 4) {
+    if (currentLevel > 9) {
         gameState = 2;
         endTime = GetTickCount();
         float elapsed = (endTime - startTime) / 1000.0f;
@@ -173,6 +235,12 @@ void NextLevel() {
             SaveBest();
         }
         return;
+    }
+    
+    if (currentLevel >= 5) {
+        int s = 11 + (currentLevel - 5) * 4;
+        if (s > 31) s = 31;
+        GenerateMaze(s, s);
     }
     
     // Copy default maps back if we wanted strict reset, but this is simple version so we won't fully deep copy here for Native unless needed.
@@ -391,12 +459,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Minimap
             if (gameState == 1) {
                 int mmW = 0, mmH = 0;
-                if (currentLevel == 0 || currentLevel == 3) { mmW = 10; mmH = 10; }
+                if (currentLevel >= 5) { mmW = curRandW; mmH = curRandH; }
+                else if (currentLevel == 0 || currentLevel == 3) { mmW = 10; mmH = 10; }
                 else if (currentLevel == 1 || currentLevel == 4) { mmW = 12; mmH = 12; }
                 else if (currentLevel == 2) { mmW = 15; mmH = 15; }
                 
                 if (mmW > 0) {
                     int mmS = 5;
+                    if (mmW > 15) mmS = 4;
+                    if (mmW > 23) mmS = 3;
                     int mmX = W - 10 - mmW * mmS;
                     int mmY = 10;
                     HBRUSH mWall = CreateSolidBrush(RGB(153, 153, 153));

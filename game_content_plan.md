@@ -132,3 +132,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSnake (Added Golden Apple mechanic (bonus points, shrinks snake) to both EXE and HTML)
 - [x] KTetris (Added wall kicks and combo score multiplier to both EXE and HTML)
 - [x] KPong (Added paddle spin physics and dynamic shrinking paddles as rally increases to both EXE and HTML)
+- [x] KMaze (Added procedural maze generation extending the game from 5 to 10 levels to both EXE and HTML)
