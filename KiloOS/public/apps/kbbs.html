@@ -78,6 +78,7 @@
         <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1; margin-left:4px;">DL (ZM)</button>
         <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
         <button id="btnSettings" onclick="showSettings()" style="margin-left:4px;">Settings</button>
+        <button id="btnCapture" onclick="toggleCapture()" style="margin-left:4px; background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
     </div>
     <div class="main">
@@ -926,6 +927,11 @@
         }
 
         if (ansiState === 0) {
+            if (window.captureActive) {
+                if (code === 0x0D || code === 0x0A || code === 0x08 || code === 0x09 || code >= 0x20) {
+                    window.captureBuffer += (code >= 0x20) ? CP437[code] : ch;
+                }
+            }
             if (code === 0x1B) { ansiState = 1; ansiParams = ''; }
             else if (code === 0x0D) curX = 0;  // CR
             else if (code === 0x0A) { curY++; if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; } } // LF
@@ -1010,6 +1016,7 @@
                 setStatus('disconnected', 'Disconnected');
                 document.getElementById('btnConn').textContent = 'Connect';
                 ws = null;
+                if (window.captureActive) toggleCapture();
             };
             ws.onerror = () => {
                 setStatus('disconnected', 'Connection failed');
@@ -1018,6 +1025,39 @@
             setStatus('disconnected', 'Error: ' + err.message);
             ws = null;
         }
+    }
+
+    window.captureActive = false;
+    window.captureBuffer = "";
+    
+    function toggleCapture() {
+        window.captureActive = !window.captureActive;
+        const btn = document.getElementById('btnCapture');
+        if (window.captureActive) {
+            window.captureBuffer = "";
+            btn.textContent = "Capture: ON";
+            btn.style.background = "linear-gradient(180deg, #ef4444 0%, #dc2626 100%)";
+            btn.style.borderColor = "#b91c1c";
+        } else {
+            btn.textContent = "Capture: OFF";
+            btn.style.background = "linear-gradient(180deg, #52525b 0%, #3f3f46 100%)";
+            btn.style.borderColor = "#27272a";
+            promptSaveCapture();
+        }
+    }
+    
+    function promptSaveCapture() {
+        if (!window.captureBuffer) return;
+        if (confirm("Save captured session log to kbbs_capture.txt?")) {
+            let blob = new Blob([window.captureBuffer], {type: 'text/plain'});
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'kbbs_capture.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        window.captureBuffer = "";
     }
 
     function setStatus(state, text) {

@@ -135,6 +135,12 @@ HFONT hTermFont;
 int bytesRx = 0;
 int bytesTx = 0;
 
+HWND hBtnCapture;
+int captureActive = 0;
+char* captureBuffer = NULL;
+int captureLen = 0;
+int captureCapacity = 0;
+
 struct KBBS_SETTINGS {
     int fontSize;
     int blinkRateMs;
@@ -1313,6 +1319,29 @@ void ProcessCSI(char finalChar) {
 void ProcessByte(unsigned char ch) {
     switch (ansiState) {
         case STATE_NORMAL:
+            if (captureActive) {
+                if (ch == 0x0D || ch == 0x0A || ch == 0x08 || ch == 0x09 || ch >= 0x20) {
+                    if (!captureBuffer) {
+                        captureCapacity = 1048576;
+                        captureBuffer = (char*)GlobalAlloc(GPTR, captureCapacity);
+                    }
+                    if (captureBuffer) {
+                        if (captureLen >= captureCapacity - 1) {
+                            captureCapacity *= 2;
+                            char* newBuf = (char*)GlobalAlloc(GPTR, captureCapacity);
+                            if (newBuf) {
+                                my_memset(newBuf, 0, captureCapacity);
+                                for(int i=0; i<captureLen; i++) newBuf[i] = captureBuffer[i];
+                                GlobalFree(captureBuffer);
+                                captureBuffer = newBuf;
+                            }
+                        }
+                        if (captureLen < captureCapacity - 1) {
+                            captureBuffer[captureLen++] = ch;
+                        }
+                    }
+                }
+            }
             if (ch == 0x1B) {
                 ansiState = STATE_ESC;
             } else if (ch == '\r') {
@@ -1561,6 +1590,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSettings = CreateWindowA("BUTTON", "Set", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(862), dpiScale(4), dpiScale(36), dpiScale(22), hwnd, (HMENU)110, 0, 0);
 
+            hBtnCapture = CreateWindowA("BUTTON", "Cap: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(902), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)111, 0, 0);
+
             SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
 
             /* Status bar */
@@ -1579,6 +1611,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnZmUl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             ClearScreen();
@@ -1742,6 +1775,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 102) { /* Echo Checkbox */
                 kbbsSettings.localEcho = (SendMessageA(hEcho, BM_GETCHECK, 0, 0) == BST_CHECKED);
                 SaveSettings();
+            } else if (LOWORD(wParam) == 111) {
+                captureActive = !captureActive;
+                if (captureActive) {
+                    if (!captureBuffer) {
+                        captureCapacity = 1048576;
+                        captureBuffer = (char*)GlobalAlloc(GPTR, captureCapacity);
+                    }
+                    captureLen = 0;
+                    SetWindowTextA(hBtnCapture, "Cap: ON");
+                } else {
+                    SetWindowTextA(hBtnCapture, "Cap: OFF");
+                    if (captureLen > 0) {
+                        if (MessageBoxA(hwnd, "Save captured session log to kbbs_capture.txt?", "Save Capture", MB_YESNO) == IDYES) {
+                            OPENFILENAMEA ofn;
+                            char szFile[260] = "kbbs_capture.txt";
+                            my_memset(&ofn, 0, sizeof(ofn));
+                            ofn.lStructSize = sizeof(ofn);
+                            ofn.hwndOwner = hwnd;
+                            ofn.lpstrFile = szFile;
+                            ofn.nMaxFile = sizeof(szFile);
+                            ofn.lpstrFilter = "Text Files\0*.txt\0All Files\0*.*\0";
+                            ofn.nFilterIndex = 1;
+                            ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+                            if (GetSaveFileNameA(&ofn)) {
+                                HANDLE hf = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+                                if (hf != INVALID_HANDLE_VALUE) {
+                                    DWORD wr;
+                                    WriteFile(hf, captureBuffer, captureLen, &wr, NULL);
+                                    CloseHandle(hf);
+                                }
+                            }
+                        }
+                        captureLen = 0;
+                    }
+                }
             }
             break;
         }
@@ -1780,6 +1848,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 sock = INVALID_SOCKET;
                 EnableWindow(hBtn, TRUE);
                 SetWindowTextA(hBtn, "Connect");
+                if (captureActive) {
+                    SendMessageA(hwnd, WM_COMMAND, 111, 0);
+                }
             }
             break;
         }
