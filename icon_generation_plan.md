@@ -53,3 +53,5 @@
   - Executed gen_icons.py with uv, copied to public/assets/icons, and updated App.jsx paths.
   - Added generation logic for KRadio, KGraph, KVault, KQuarantine in Phase 5.
   - Executed gen_icons.py, copied to public/assets/icons, and updated App.jsx paths.
+  - Added generation logic for remaining missing icons (krogue, ktetris, kpong, kterm, kaudio, kcalendar, kmail, kimage, knet, kscript, kchart, knote, kpass, kping, khex, kmandel, ktimer, ksynth, ksys).
+  - Executed gen_icons.py with uv, copied to public/assets/icons, confirmed all apps point to unique icons in App.jsx.

@@ -130,9 +130,36 @@ int telSBLen = 0;
 SOCKET sock = INVALID_SOCKET;
 HWND hMain, hHost, hPort, hBtn, hCombo, hEcho, hStatus;
 HWND hBtnMacros;
+HWND hBtnSettings;
 HFONT hTermFont;
 int bytesRx = 0;
 int bytesTx = 0;
+
+struct KBBS_SETTINGS {
+    int fontSize;
+    int blinkRateMs;
+    int localEcho;
+};
+struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0 };
+
+void LoadSettings(void) {
+    HANDLE hFile = CreateFileA("kbbs_settings.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes;
+        ReadFile(hFile, &kbbsSettings, sizeof(kbbsSettings), &readBytes, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void SaveSettings(void) {
+    HANDLE hFile = CreateFileA("kbbs_settings.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &kbbsSettings, sizeof(kbbsSettings), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 
 struct MusicArgs {
     char data[1024];
@@ -754,6 +781,41 @@ INT_PTR CALLBACK MacrosProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void ClearScreen(void) {
+
+#define IDD_SETTINGS 3000
+#define IDC_SET_FONT 3001
+#define IDC_SET_BLINK 3002
+#define IDC_SET_ECHO 3003
+
+INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_INITDIALOG: {
+            char buf[16];
+            my_itoa(kbbsSettings.fontSize, buf); SetDlgItemTextA(hdlg, IDC_SET_FONT, buf);
+            my_itoa(kbbsSettings.blinkRateMs, buf); SetDlgItemTextA(hdlg, IDC_SET_BLINK, buf);
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_ECHO), BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
+            return TRUE;
+        }
+        case WM_COMMAND: {
+            int id = LOWORD(wParam);
+            if (id == 1) { // Save
+                char buf[16];
+                GetDlgItemTextA(hdlg, IDC_SET_FONT, buf, 16); kbbsSettings.fontSize = my_atoi(buf);
+                GetDlgItemTextA(hdlg, IDC_SET_BLINK, buf, 16); kbbsSettings.blinkRateMs = my_atoi(buf);
+                if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 8;
+                if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
+                kbbsSettings.localEcho = (SendMessageA(GetDlgItem(hdlg, IDC_SET_ECHO), BM_GETCHECK, 0, 0) == BST_CHECKED);
+                SaveSettings();
+                EndDialog(hdlg, 1);
+            } else if (id == 2) {
+                EndDialog(hdlg, 0);
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
     int r, c;
     for (r = 0; r < MAX_LINES; r++) {
         for (c = 0; c < TERM_COLS; c++) {
@@ -1157,12 +1219,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             unsigned int i;
-            SetTimer(hwnd, 1, 500, NULL);
+            LoadSettings();
+            if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 16;
+            if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 500;
+
+            SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
             HFONT hFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                 DEFAULT_PITCH | FF_SWISS, "Tahoma");
 
-            hTermFont = CreateFontA(dpiScale(16), dpiScale(8), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+            hTermFont = CreateFontA(dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY,
                 FIXED_PITCH | FF_MODERN, "Consolas");
 
@@ -1193,6 +1259,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
                 dpiScale(734), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
 
+            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(790), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, (HMENU)110, 0, 0);
+
+            SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
+
             /* Status bar */
             hStatus = CreateWindowA("STATIC", "Disconnected | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
                 dpiScale(5), dpiScale(30 + TERM_ROWS * 16 + 4), dpiScale(640), dpiScale(18), hwnd, 0, 0, 0);
@@ -1206,6 +1277,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hBtnXmDl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnXmUl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             ClearScreen();
@@ -1387,8 +1459,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP memBmp, oldBmp;
             HFONT oldFont;
             int termX = dpiScale(5), termY = dpiScale(30);
-            int termW = TERM_COLS * dpiScale(8);
-            int termH = TERM_ROWS * dpiScale(16);
+            int termW = TERM_COLS * dpiScale(kbbsSettings.fontSize / 2);
+            int termH = TERM_ROWS * dpiScale(kbbsSettings.fontSize);
             int r, c;
 
             memDC = CreateCompatibleDC(hdc);
@@ -1412,10 +1484,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(memDC, fgColor);
                     SetBkColor(memDC, bgColor);
                     
-                    int x = c * dpiScale(8);
-                    int y = r * dpiScale(16);
-                    int w = dpiScale(8);
-                    int h = dpiScale(16);
+                    int x = c * dpiScale(kbbsSettings.fontSize / 2);
+                    int y = r * dpiScale(kbbsSettings.fontSize);
+                    int w = dpiScale(kbbsSettings.fontSize / 2);
+                    int h = dpiScale(kbbsSettings.fontSize);
                     
                     if (raw == 0xDB) { /* Full block */
                         RECT rBlock = { x, y, x + w, y + h };
@@ -1477,10 +1549,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             /* Draw cursor block */
             if (scrollOffset == 0 && curX >= 0 && curX < TERM_COLS && curY >= 0 && curY < TERM_ROWS) {
                 RECT cursorRect;
-                cursorRect.left = curX * dpiScale(8);
-                cursorRect.top = curY * dpiScale(16) + dpiScale(14);
-                cursorRect.right = curX * dpiScale(8) + dpiScale(8);
-                cursorRect.bottom = curY * dpiScale(16) + dpiScale(16);
+                cursorRect.left = curX * dpiScale(kbbsSettings.fontSize / 2);
+                cursorRect.top = curY * dpiScale(kbbsSettings.fontSize) + dpiScale(kbbsSettings.fontSize - 2);
+                cursorRect.right = curX * dpiScale(kbbsSettings.fontSize / 2) + dpiScale(kbbsSettings.fontSize / 2);
+                cursorRect.bottom = curY * dpiScale(kbbsSettings.fontSize) + dpiScale(kbbsSettings.fontSize);
                 InvertRect(memDC, &cursorRect);
             }
 
@@ -1726,8 +1798,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
 
-    /* Terminal: 80*8=640 wide, 25*16=400 tall. Plus padding and bars. */
-    winW = dpiScale(820);
+    /* Terminal: plus padding and bars. */
+    winW = dpiScale(870);
     winH = dpiScale(550);
 
     LoadMacros();
