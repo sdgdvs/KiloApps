@@ -63,6 +63,23 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 9: Implemented Deck Shuffling / Randomize Order in both web and native C versions.
 - Phase 10: Implemented Search/Filter functionality with dynamic result counts in both web and native C versions.
 
+## Next Priority (Before New Apps)
+
+**App:** KBBS (SyncTerm Parity Upgrade)
+**Goal:** Upgrade KBBS features and stability to achieve parity with SyncTerm.
+
+- **Phase 1: Advanced Terminal Emulation & ANSI Rendering**
+  - Implement full ANSI-BBS escape sequence support (blink, bold, high intensity backgrounds, 16-color PC palette).
+  - Add CP437 (DOS) font rendering with perfect block character mapping.
+- **Phase 2: Dialing Directory & Phonebook**
+  - Create a robust dialing directory with saving/editing of favorite BBS systems, ports, and auto-login macros.
+- **Phase 3: File Transfers**
+  - Implement Zmodem and Xmodem protocols for downloading and uploading files directly within the web client.
+- **Phase 4: ANSI Music & Sound**
+  - Add support for ANSI music escape sequences and UI sound effects using Web Audio API.
+- **Phase 5: Macros & Key Mapping**
+  - Implement custom keyboard macros and accurate mapping for function keys (F1-F12), Page Up/Down, etc., to match standard terminal emulators.
+
 ## App Lifecycle (14 phases per app)
 
 ### Creation (Phases 1-4)
