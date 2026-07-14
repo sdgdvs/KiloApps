@@ -306,6 +306,9 @@
         <div class="header">
             <h1>KFlash</h1>
             <div class="controls">
+                <button class="btn" id="btnImport">Import</button>
+                <button class="btn" id="btnExport">Export</button>
+                <input type="file" id="fileImport" accept=".json,.csv" style="display: none;">
                 <button class="btn btn-primary" id="btnEditCard" disabled>Edit</button>
                 <button class="btn btn-primary" style="background-color:#da3633; border-color:rgba(218,54,51,0.5)" id="btnDeleteCard" disabled>Delete</button>
                 <button class="btn btn-primary" id="btnAddCard">+ Add Card</button>
@@ -525,6 +528,73 @@
                 
                 renderCard();
             }
+        });
+
+        // Import / Export Logic
+        const btnImport = document.getElementById('btnImport');
+        const btnExport = document.getElementById('btnExport');
+        const fileImport = document.getElementById('fileImport');
+
+        btnExport.addEventListener('click', () => {
+            if (deck.length === 0) return alert('Deck is empty!');
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(deck, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "kflash_deck.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        });
+
+        btnImport.addEventListener('click', () => {
+            fileImport.click();
+        });
+
+        fileImport.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let importedDeck = [];
+                    if (file.name.endsWith('.csv')) {
+                        const text = e.target.result;
+                        const lines = text.split('\n');
+                        for (let line of lines) {
+                            if (!line.trim()) continue;
+                            const parts = line.split(',');
+                            if (parts.length >= 2) {
+                                let front = parts[0].trim();
+                                let back = parts.slice(1).join(',').trim();
+                                if (front.startsWith('"') && front.endsWith('"')) front = front.substring(1, front.length - 1);
+                                if (back.startsWith('"') && back.endsWith('"')) back = back.substring(1, back.length - 1);
+                                importedDeck.push({front, back});
+                            }
+                        }
+                    } else {
+                        importedDeck = JSON.parse(e.target.result);
+                        if (!Array.isArray(importedDeck)) throw new Error("Invalid JSON format");
+                    }
+                    if (importedDeck.length > 0) {
+                        if (deck.length > 0) {
+                            if (confirm(`Imported ${importedDeck.length} cards. Replace current deck? (Cancel to append)`)) {
+                                deck = importedDeck;
+                            } else {
+                                deck = deck.concat(importedDeck);
+                            }
+                        } else {
+                            deck = importedDeck;
+                        }
+                        saveDeck();
+                        currentIndex = 0;
+                        renderCard();
+                    }
+                } catch (err) {
+                    alert("Failed to import: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            fileImport.value = '';
         });
 
         // Init

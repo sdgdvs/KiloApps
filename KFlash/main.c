@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>
+#include <commdlg.h>
+#include <string.h>
 
 #define ID_BTN_PREV 101
 #define ID_BTN_NEXT 102
@@ -18,6 +20,8 @@
 
 #define ID_BTN_EDIT 107
 #define ID_BTN_DELETE 108
+#define ID_BTN_IMPORT 109
+#define ID_BTN_EXPORT 110
 
 // Dialog Edit Card IDs
 #define IDD_EDITCARD 210
@@ -36,7 +40,7 @@ int deckCount = 0;
 int currentIndex = 0;
 int isFlipped = 0;
 
-HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete;
+HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport;
 HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
@@ -76,10 +80,12 @@ void UpdateCardDisplay() {
         EnableWindow(hBtnFlip, FALSE);
         EnableWindow(hBtnEdit, FALSE);
         EnableWindow(hBtnDelete, FALSE);
+        EnableWindow(hBtnExport, FALSE);
     } else {
         EnableWindow(hBtnFlip, TRUE);
         EnableWindow(hBtnEdit, TRUE);
         EnableWindow(hBtnDelete, TRUE);
+        EnableWindow(hBtnExport, TRUE);
         EnableWindow(hBtnPrev, currentIndex > 0);
         EnableWindow(hBtnNext, currentIndex < deckCount - 1);
     }
@@ -171,6 +177,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                    
             hBtnDelete = CreateWindow("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                    350, 10, 100, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+                                   
+            hBtnImport = CreateWindow("BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   10, 10, 70, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+                                   
+            hBtnExport = CreateWindow("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   90, 10, 70, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
 
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
@@ -187,6 +199,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnFlip, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             break;
         }
@@ -294,6 +308,80 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                     }
                     break;
+                case ID_BTN_IMPORT: {
+                    OPENFILENAME ofn;
+                    char szFile[260];
+                    ZeroMemory(&ofn, sizeof(ofn));
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = hwnd;
+                    ofn.lpstrFile = szFile;
+                    ofn.lpstrFile[0] = '\0';
+                    ofn.nMaxFile = sizeof(szFile);
+                    ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+                    ofn.nFilterIndex = 1;
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                    if (GetOpenFileName(&ofn) == TRUE) {
+                        FILE* f = fopen(szFile, "r");
+                        if (f) {
+                            int replace = 1;
+                            if (deckCount > 0) {
+                                replace = (MessageBox(hwnd, "Replace current deck? (No to append)", "Import", MB_YESNO | MB_ICONQUESTION) == IDYES);
+                            }
+                            if (replace) deckCount = 0;
+                            char line[1024];
+                            while (fgets(line, sizeof(line), f) && deckCount < 100) {
+                                char* comma = strchr(line, ',');
+                                if (comma) {
+                                    *comma = '\0';
+                                    char* front = line;
+                                    char* back = comma + 1;
+                                    char* nl = strchr(back, '\n');
+                                    if (nl) *nl = '\0';
+                                    if(front[0]=='\"') { front++; front[strlen(front)-1]='\0'; }
+                                    if(back[0]=='\"') { back++; back[strlen(back)-1]='\0'; }
+                                    strncpy(deck[deckCount].front, front, 255);
+                                    deck[deckCount].front[255] = '\0';
+                                    strncpy(deck[deckCount].back, back, 255);
+                                    deck[deckCount].back[255] = '\0';
+                                    deckCount++;
+                                }
+                            }
+                            fclose(f);
+                            SaveDeck();
+                            currentIndex = 0;
+                            isFlipped = 0;
+                            UpdateCardDisplay();
+                        } else {
+                            MessageBox(hwnd, "Failed to open file", "Error", MB_OK | MB_ICONERROR);
+                        }
+                    }
+                    break;
+                }
+                case ID_BTN_EXPORT: {
+                    OPENFILENAME ofn;
+                    char szFile[260] = "deck.csv";
+                    ZeroMemory(&ofn, sizeof(ofn));
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = hwnd;
+                    ofn.lpstrFile = szFile;
+                    ofn.nMaxFile = sizeof(szFile);
+                    ofn.lpstrFilter = "CSV Files\0*.csv\0All Files\0*.*\0";
+                    ofn.nFilterIndex = 1;
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+                    if (GetSaveFileName(&ofn) == TRUE) {
+                        FILE* f = fopen(szFile, "w");
+                        if (f) {
+                            for (int i = 0; i < deckCount; i++) {
+                                fprintf(f, "\"%s\",\"%s\"\n", deck[i].front, deck[i].back);
+                            }
+                            fclose(f);
+                            MessageBox(hwnd, "Export successful", "Export", MB_OK | MB_ICONINFORMATION);
+                        } else {
+                            MessageBox(hwnd, "Failed to save file", "Error", MB_OK | MB_ICONERROR);
+                        }
+                    }
+                    break;
+                }
             }
             break;
         }
