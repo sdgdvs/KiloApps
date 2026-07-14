@@ -11,7 +11,7 @@ long _ftol2(float f) { return (long)f; }
 #define MAX_ENEMIES 10
 #define MAX_STARS 50
 
-typedef struct { float x, y, active, dx, dy, type; } Ent;
+typedef struct { float x, y, active, dx, dy, type; int hp; } Ent;
 typedef struct { float x, y, speed; } Star;
 
 Ent p = { W/2.0f, H - 50.0f, 1.0f, 0, 0, 0 };
@@ -57,7 +57,9 @@ void SpawnEnemy() {
             e[i].active = 1.0f;
             e[i].x = (float)(rnd() % (W - 20));
             e[i].y = -20.0f;
-            e[i].type = (float)(rnd() % 2);
+            int t = rnd() % 3;
+            e[i].type = (float)t;
+            e[i].hp = (t == 2) ? 5 : 1;
             break;
         }
     }
@@ -132,12 +134,14 @@ void Update() {
     
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (e[i].active) {
-            if (e[i].type == 0) {
+            if (e[i].type == 0.0f) {
                 e[i].y += baseEnemySpeed;
-            } else {
+            } else if (e[i].type == 1.0f) {
                 e[i].y += baseEnemySpeed * 0.75f;
                 if (e[i].x < p.x) e[i].x += baseEnemySpeed * 0.5f;
                 if (e[i].x > p.x) e[i].x -= baseEnemySpeed * 0.5f;
+            } else {
+                e[i].y += baseEnemySpeed * 0.4f;
             }
             if (e[i].y > H) e[i].active = 0.0f;
             
@@ -155,18 +159,21 @@ void Update() {
             for (int j = 0; j < MAX_BULLETS; j++) {
                 if (b[j].active && b[j].x < e[i].x + 20 && b[j].x + 4 > e[i].x && b[j].y < e[i].y + 20 && b[j].y + 10 > e[i].y) {
                     b[j].active = 0.0f;
-                    e[i].active = 0.0f;
-                    score += 10;
-                    if (score > highScore) {
-                        highScore = score;
-                        SaveHighScore();
-                    }
-                    if ((rnd() % 100) < 10) {
-                        for(int k=0; k<MAX_POWERUPS; k++) {
-                            if(!pu[k].active) {
-                                pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
-                                pu[k].type = (float)(rnd() % 2);
-                                break;
+                    e[i].hp--;
+                    if (e[i].hp <= 0) {
+                        e[i].active = 0.0f;
+                        score += (e[i].type == 2.0f) ? 50 : 10;
+                        if (score > highScore) {
+                            highScore = score;
+                            SaveHighScore();
+                        }
+                        if ((rnd() % 100) < 10) {
+                            for(int k=0; k<MAX_POWERUPS; k++) {
+                                if(!pu[k].active) {
+                                    pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
+                                    pu[k].type = (float)(rnd() % 2);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -259,14 +266,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw enemies
             HBRUSH ebr1 = CreateSolidBrush(RGB(255, 50, 50));
             HBRUSH ebr2 = CreateSolidBrush(RGB(255, 150, 50));
+            HBRUSH ebr3 = CreateSolidBrush(RGB(160, 32, 240));
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (e[i].active) {
                     RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + 20, (int)e[i].y + 20};
-                    FillRect(memDC, &er, e[i].type == 0.0f ? ebr1 : ebr2);
+                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : ebr3);
+                    FillRect(memDC, &er, br);
                 }
             }
             DeleteObject(ebr1);
             DeleteObject(ebr2);
+            DeleteObject(ebr3);
             
             // Draw powerups
             HBRUSH pubr1 = CreateSolidBrush(RGB(50, 255, 50));

@@ -10,6 +10,7 @@ struct Point { int x; int y; };
 struct Point snake[400];
 int snake_len = 3;
 int dir_x = 1, dir_y = 0;
+int last_dir_x = 1, last_dir_y = 0;
 struct Point food = { 10, 10 };
 struct Point special_food = { -1, -1 };
 int special_food_timer = 0;
@@ -31,6 +32,7 @@ void InitGame() {
     snake[1].x = 4; snake[1].y = 5;
     snake[2].x = 3; snake[2].y = 5;
     dir_x = 1; dir_y = 0;
+    last_dir_x = 1; last_dir_y = 0;
     
     if (difficulty == 0) { base_speed = 200; score_mult = 5; }
     else if (difficulty == 1) { base_speed = 150; score_mult = 10; }
@@ -101,6 +103,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER: {
             if (game_state != 1) break;
+            
+            last_dir_x = dir_x;
+            last_dir_y = dir_y;
             
             // Move body
             for(int i = snake_len - 1; i > 0; i--) {
@@ -192,10 +197,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 game_state = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 1) {
-                if (wParam == VK_UP && dir_y != 1) { dir_x = 0; dir_y = -1; }
-                if (wParam == VK_DOWN && dir_y != -1) { dir_x = 0; dir_y = 1; }
-                if (wParam == VK_LEFT && dir_x != 1) { dir_x = -1; dir_y = 0; }
-                if (wParam == VK_RIGHT && dir_x != -1) { dir_x = 1; dir_y = 0; }
+                if (wParam == VK_UP && last_dir_y != 1) { dir_x = 0; dir_y = -1; }
+                if (wParam == VK_DOWN && last_dir_y != -1) { dir_x = 0; dir_y = 1; }
+                if (wParam == VK_LEFT && last_dir_x != 1) { dir_x = -1; dir_y = 0; }
+                if (wParam == VK_RIGHT && last_dir_x != -1) { dir_x = 1; dir_y = 0; }
             }
             break;
         }

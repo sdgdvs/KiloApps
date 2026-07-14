@@ -35,7 +35,8 @@
   document.addEventListener('keyup', e => keys[e.key] = false);
 
   function spawnEnemy() {
-      enemies.push({ x: Math.random() * (W - 20), y: -20, type: Math.floor(Math.random() * 2) });
+      let type = Math.floor(Math.random() * 3);
+      enemies.push({ x: Math.random() * (W - 20), y: -20, type: type, hp: type === 2 ? 5 : 1 });
   }
 
   function shoot() {
@@ -95,10 +96,12 @@
       for (let i = enemies.length - 1; i >= 0; i--) {
           if (enemies[i].type === 0) {
               enemies[i].y += baseEnemySpeed;
-          } else {
+          } else if (enemies[i].type === 1) {
               enemies[i].y += baseEnemySpeed * 0.75;
               if (enemies[i].x < p.x) enemies[i].x += baseEnemySpeed * 0.5;
               if (enemies[i].x > p.x) enemies[i].x -= baseEnemySpeed * 0.5;
+          } else {
+              enemies[i].y += baseEnemySpeed * 0.4;
           }
           
           let removed = false;
@@ -117,20 +120,21 @@
           for (let j = bullets.length - 1; j >= 0; j--) {
               if (bullets[j].x < enemies[i].x + 20 && bullets[j].x + 4 > enemies[i].x && bullets[j].y < enemies[i].y + 20 && bullets[j].y + 10 > enemies[i].y) {
                   bullets.splice(j, 1);
+                  enemies[i].hp--;
                   hit = true;
-                  score += 10;
-                  if (score > highScore) {
-                      highScore = score;
-                      localStorage.setItem('kspace_highscore', highScore);
-                  }
-                  if (Math.random() < 0.1) {
-                      powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2, type: Math.floor(Math.random() * 2)});
-                  }
                   break;
               }
           }
           
-          if (hit) {
+          if (hit && enemies[i].hp <= 0) {
+              score += enemies[i].type === 2 ? 50 : 10;
+              if (score > highScore) {
+                  highScore = score;
+                  localStorage.setItem('kspace_highscore', highScore);
+              }
+              if (Math.random() < 0.1) {
+                  powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2, type: Math.floor(Math.random() * 2)});
+              }
               enemies.splice(i, 1);
           } else if (enemies[i].y > H) {
               enemies.splice(i, 1);
@@ -183,7 +187,7 @@
       }
       
       for (let e of enemies) {
-          ctx.fillStyle = e.type === 0 ? '#ff3232' : '#ff9632';
+          ctx.fillStyle = e.type === 0 ? '#ff3232' : e.type === 1 ? '#ff9632' : '#a020f0';
           ctx.fillRect(e.x, e.y, 20, 20);
       }
       
