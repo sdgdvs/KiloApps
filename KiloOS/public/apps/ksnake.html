@@ -32,6 +32,8 @@
         const HEIGHT = 20;
 
         let snake, food, dir, gameState = 0; // 0=Menu, 1=Playing, 2=GameOver
+        let specialFood = null;
+        let specialFoodTimer = 0;
         let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
         let score = 0;
         let scoreMult = 10;
@@ -73,6 +75,8 @@
             gameState = 1;
             score = 0;
             
+            specialFood = null;
+            specialFoodTimer = 0;
             if (difficulty === 0) { currentSpeed = 200; scoreMult = 5; }
             else if (difficulty === 1) { currentSpeed = 150; scoreMult = 10; }
             else { currentSpeed = 100; scoreMult = 20; }
@@ -123,6 +127,21 @@
             }
         }
 
+        function placeSpecialFood() {
+            let ok = false;
+            while(!ok) {
+                specialFood = {
+                    x: Math.floor(Math.random() * WIDTH),
+                    y: Math.floor(Math.random() * HEIGHT)
+                };
+                ok = true;
+                if (obstacles.some(o => o.x === specialFood.x && o.y === specialFood.y)) ok = false;
+                if (snake.some(s => s.x === specialFood.x && s.y === specialFood.y)) ok = false;
+                if (specialFood.x === food.x && specialFood.y === food.y) ok = false;
+            }
+            specialFoodTimer = 40;
+        }
+
         function update() {
             if (gameState !== 1) return;
 
@@ -146,8 +165,29 @@
                 }
                 if (currentSpeed > 30) currentSpeed -= 2;
                 placeFood();
+                if (!specialFood && Math.random() < 0.2) {
+                    placeSpecialFood();
+                }
             } else {
                 snake.pop();
+            }
+
+            if (specialFoodTimer > 0) {
+                specialFoodTimer--;
+                if (specialFoodTimer === 0) specialFood = null;
+            }
+
+            if (specialFood && head.x === specialFood.x && head.y === specialFood.y) {
+                playSound('eat');
+                score += scoreMult * 5;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('ksnakeHighScore', highScore);
+                }
+                for (let i = 0; i < 3 && snake.length > 3; i++) {
+                    snake.pop();
+                }
+                specialFood = null;
             }
         }
 
@@ -162,6 +202,11 @@
 
             ctx.fillStyle = '#f00';
             ctx.fillRect(food.x * CELL, food.y * CELL, CELL - 1, CELL - 1);
+            
+            if (specialFood) {
+                ctx.fillStyle = '#ffd700';
+                ctx.fillRect(specialFood.x * CELL, specialFood.y * CELL, CELL - 1, CELL - 1);
+            }
             
             ctx.fillStyle = '#666';
             for (let o of obstacles) {

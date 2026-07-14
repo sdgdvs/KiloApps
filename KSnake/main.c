@@ -11,6 +11,8 @@ struct Point snake[400];
 int snake_len = 3;
 int dir_x = 1, dir_y = 0;
 struct Point food = { 10, 10 };
+struct Point special_food = { -1, -1 };
+int special_food_timer = 0;
 struct Point obstacles[50];
 int num_obstacles = 0;
 int game_state = 0; // 0 = Menu, 1 = Playing, 2 = Game Over
@@ -36,6 +38,9 @@ void InitGame() {
     current_speed = base_speed;
     game_state = 1;
     score = 0;
+    special_food.x = -1;
+    special_food.y = -1;
+    special_food_timer = 0;
     
     num_obstacles = difficulty * 10;
     for(int i=0; i<num_obstacles; i++) {
@@ -69,6 +74,23 @@ void PlaceFood() {
             if (food.x == snake[i].x && food.y == snake[i].y) ok = 0;
         }
     }
+}
+
+void PlaceSpecialFood() {
+    int ok = 0;
+    while(!ok) {
+        special_food.x = random_int(GRID_WIDTH);
+        special_food.y = random_int(GRID_HEIGHT);
+        ok = 1;
+        for(int i=0; i<num_obstacles; i++) {
+            if (special_food.x == obstacles[i].x && special_food.y == obstacles[i].y) ok = 0;
+        }
+        for(int i=0; i<snake_len; i++) {
+            if (special_food.x == snake[i].x && special_food.y == snake[i].y) ok = 0;
+        }
+        if (special_food.x == food.x && special_food.y == food.y) ok = 0;
+    }
+    special_food_timer = 40;
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -123,6 +145,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (current_speed > 30) current_speed -= 2;
                 SetTimer(hwnd, TIMER_ID, current_speed, NULL);
                 PlaceFood();
+                
+                if (special_food.x == -1 && random_int(100) < 20) {
+                    PlaceSpecialFood();
+                }
+            }
+
+            if (special_food_timer > 0) {
+                special_food_timer--;
+                if (special_food_timer == 0) {
+                    special_food.x = -1;
+                    special_food.y = -1;
+                }
+            }
+
+            if (special_food.x != -1 && snake[0].x == special_food.x && snake[0].y == special_food.y) {
+                MessageBeep(MB_ICONASTERISK);
+                score += score_mult * 5;
+                if (score > high_score) high_score = score;
+                snake_len -= 3;
+                if (snake_len < 3) snake_len = 3;
+                special_food.x = -1;
+                special_food.y = -1;
             }
 
             InvalidateRect(hwnd, NULL, TRUE);
@@ -180,6 +224,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             (food.x + 1) * CELL_SIZE - 1, (food.y + 1) * CELL_SIZE - 1 };
                 FillRect(hdc, &fr, foodBrush);
                 DeleteObject(foodBrush);
+
+                if (special_food.x != -1) {
+                    HBRUSH sFoodBrush = CreateSolidBrush(RGB(255, 215, 0));
+                    RECT sfr = { special_food.x * CELL_SIZE, special_food.y * CELL_SIZE, 
+                                 (special_food.x + 1) * CELL_SIZE - 1, (special_food.y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &sfr, sFoodBrush);
+                    DeleteObject(sFoodBrush);
+                }
 
                 HBRUSH obsBrush = CreateSolidBrush(RGB(100, 100, 100));
                 for(int i = 0; i < num_obstacles; i++) {
