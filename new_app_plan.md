@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFlash
-**Phase:** 10
+**Phase:** 11
 **Status:** In Progress
 
 - Phase 1: Scaffolded web HTML skeleton and registered in App.jsx.
@@ -61,6 +61,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 7: Implemented Keyboard Shortcuts (Space/Enter to flip, Left/Right arrows to navigate) in both web and native C versions.
 - Phase 8: Implemented Deck Import/Export (JSON/CSV for web, CSV for native).
 - Phase 9: Implemented Deck Shuffling / Randomize Order in both web and native C versions.
+- Phase 10: Implemented Search/Filter functionality with dynamic result counts in both web and native C versions.
 
 ## App Lifecycle (14 phases per app)
 
