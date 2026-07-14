@@ -38,6 +38,7 @@ int is_paused = 0;
 int score = 0;
 int lines = 0;
 int level = 1;
+int combo = 0;
 int timer_speed = 500;
 
 const unsigned short tetrominos[7][4] = {
@@ -128,13 +129,15 @@ void lock_piece() {
         }
     }
     if (lines_cleared > 0) {
-        Beep(1000 + lines_cleared * 200, 100);
+        combo++;
+        Beep(1000 + lines_cleared * 200 + combo * 100, 100);
     } else {
+        combo = 0;
         Beep(500, 50);
     }
     lines += lines_cleared;
     level = (lines / 10) + 1;
-    score += lines_cleared * 100 * level;
+    score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
     int new_speed = 500 - (level - 1) * 30;
     if (new_speed < 50) new_speed = 50;
     timer_speed = new_speed;
@@ -163,6 +166,7 @@ void InitGame() {
     score = 0;
     lines = 0;
     level = 1;
+    combo = 0;
     timer_speed = 500;
     bag_index = 7;
     game_over = 0;
@@ -210,7 +214,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == VK_DOWN && !check_collision(current_piece, current_rot, current_x, current_y + 1)) current_y++;
                 if (wParam == VK_UP) {
                     int next_rot = (current_rot + 1) % 4;
-                    if (!check_collision(current_piece, next_rot, current_x, current_y)) current_rot = next_rot;
+                    if (!check_collision(current_piece, next_rot, current_x, current_y)) {
+                        current_rot = next_rot;
+                    } else if (!check_collision(current_piece, next_rot, current_x - 1, current_y)) {
+                        current_x--; current_rot = next_rot;
+                    } else if (!check_collision(current_piece, next_rot, current_x + 1, current_y)) {
+                        current_x++; current_rot = next_rot;
+                    } else if (current_piece == 0 && !check_collision(current_piece, next_rot, current_x - 2, current_y)) {
+                        current_x -= 2; current_rot = next_rot;
+                    } else if (current_piece == 0 && !check_collision(current_piece, next_rot, current_x + 2, current_y)) {
+                        current_x += 2; current_rot = next_rot;
+                    }
                 }
                 if (wParam == 'C' || wParam == VK_SHIFT) {
                     if (!hold_used) {
@@ -325,26 +339,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(lines_str, "LINES: %d", lines);
             TextOutA(memDC, W * CELL_SIZE + 10, 80, lines_str, lstrlenA(lines_str));
             
-            TextOutA(memDC, W * CELL_SIZE + 10, 110, "NEXT:", 5);
+            if (combo > 1) {
+                SetTextColor(memDC, RGB(255, 100, 100));
+                char combo_str[32];
+                wsprintfA(combo_str, "COMBO x%d!", combo);
+                TextOutA(memDC, W * CELL_SIZE + 10, 100, combo_str, lstrlenA(combo_str));
+                SetTextColor(memDC, RGB(255, 255, 255));
+            }
+            
+            TextOutA(memDC, W * CELL_SIZE + 10, 120, "NEXT:", 5);
             if (!game_over) {
                 unsigned short next_shape = tetrominos[next_piece][next_rot];
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (next_shape & (1 << (15 - (y * 4 + x)))) {
-                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 130 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 130 + (y + 1) * CELL_SIZE - 1 };
+                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 140 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 140 + (y + 1) * CELL_SIZE - 1 };
                             FillRect(memDC, &r, brushes[next_piece + 1]);
                         }
                     }
                 }
             }
             
-            TextOutA(memDC, W * CELL_SIZE + 10, 180, "HOLD:", 5);
+            TextOutA(memDC, W * CELL_SIZE + 10, 230, "HOLD:", 5);
             if (hold_piece != -1) {
                 unsigned short hold_shape = tetrominos[hold_piece][0];
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (hold_shape & (1 << (15 - (y * 4 + x)))) {
-                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 200 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 200 + (y + 1) * CELL_SIZE - 1 };
+                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 250 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 250 + (y + 1) * CELL_SIZE - 1 };
                             FillRect(memDC, &r, brushes[hold_piece + 1]);
                         }
                     }

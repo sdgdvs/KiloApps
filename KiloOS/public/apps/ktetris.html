@@ -41,7 +41,7 @@
   ];
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
-  let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0, lines = 0, level = 1;
+  let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0, lines = 0, level = 1, combo = 0;
   let nextPc, nextRot;
   let holdPc = -1, holdUsed = false;
   let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
@@ -105,12 +105,17 @@
               y++;
           }
       }
-      if (linesCleared > 0) playSound(1000 + linesCleared * 200, 'square', 0.1);
-      else playSound(500, 'square', 0.05);
+      if (linesCleared > 0) {
+          combo++;
+          playSound(1000 + linesCleared * 200 + combo * 100, 'square', 0.1);
+      } else {
+          combo = 0;
+          playSound(500, 'square', 0.05);
+      }
       
       lines += linesCleared;
       level = Math.floor(lines / 10) + 1;
-      score += linesCleared * 100 * level;
+      score += linesCleared * 100 * level * (combo > 0 ? combo : 1);
       dropInterval = Math.max(50, 500 - (level - 1) * 30);
   }
 
@@ -121,6 +126,7 @@
       score = 0;
       lines = 0;
       level = 1;
+      combo = 0;
       dropInterval = 500;
       bag = [];
       nextPc = getNextPc();
@@ -141,7 +147,17 @@
       if (e.key === 'ArrowDown' && !checkCol(pc, rot, cx, cy + 1)) cy++;
       if (e.key === 'ArrowUp') {
           let nr = (rot + 1) % 4;
-          if (!checkCol(pc, nr, cx, cy)) rot = nr;
+          if (!checkCol(pc, nr, cx, cy)) {
+              rot = nr;
+          } else if (!checkCol(pc, nr, cx - 1, cy)) {
+              cx--; rot = nr;
+          } else if (!checkCol(pc, nr, cx + 1, cy)) {
+              cx++; rot = nr;
+          } else if (pc === 0 && !checkCol(pc, nr, cx - 2, cy)) {
+              cx -= 2; rot = nr;
+          } else if (pc === 0 && !checkCol(pc, nr, cx + 2, cy)) {
+              cx += 2; rot = nr;
+          }
       }
       if (e.key === 'c' || e.key === 'C' || e.key === 'Shift') {
           if (!holdUsed) {
@@ -229,7 +245,14 @@
       ctx.fillText('HI: ' + highScore, 210, 40);
       ctx.fillText('LEVEL: ' + level, 210, 60);
       ctx.fillText('LINES: ' + lines, 210, 80);
-      ctx.fillText('NEXT:', 210, 110);
+      
+      if (combo > 1) {
+          ctx.fillStyle = '#ff6464';
+          ctx.fillText('COMBO x' + combo + '!', 210, 100);
+          ctx.fillStyle = 'white';
+      }
+
+      ctx.fillText('NEXT:', 210, 120);
       
       if (!gameOver) {
           let nextShape = tetrominos[nextPc][nextRot];
@@ -237,20 +260,20 @@
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (nextShape & (1 << (15 - (i * 4 + j)))) {
-                      ctx.fillRect(210 + j * CELL + 1, 130 + i * CELL + 1, CELL - 2, CELL - 2);
+                      ctx.fillRect(210 + j * CELL + 1, 140 + i * CELL + 1, CELL - 2, CELL - 2);
                   }
               }
           }
       }
 
-      ctx.fillText('HOLD:', 210, 230);
+      ctx.fillText('HOLD:', 210, 240);
       if (holdPc !== -1) {
           let holdShape = tetrominos[holdPc][0];
           ctx.fillStyle = colors[holdPc + 1];
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (holdShape & (1 << (15 - (i * 4 + j)))) {
-                      ctx.fillRect(210 + j * CELL + 1, 250 + i * CELL + 1, CELL - 2, CELL - 2);
+                      ctx.fillRect(210 + j * CELL + 1, 260 + i * CELL + 1, CELL - 2, CELL - 2);
                   }
               }
           }

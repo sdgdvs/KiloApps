@@ -130,3 +130,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KMines (Added chording feature for fast clearing and true first-click safety (3x3 empty space) to both EXE and HTML)
 - [x] KRogue (Added Magic Shrine feature to both EXE and Web, added Orc and Cave Troll enemies to Web)
 - [x] KSnake (Added Golden Apple mechanic (bonus points, shrinks snake) to both EXE and HTML)
+- [x] KTetris (Added wall kicks and combo score multiplier to both EXE and HTML)
