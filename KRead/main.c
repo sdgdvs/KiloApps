@@ -8,6 +8,8 @@ void* __cdecl memset(void* p, int c, size_t sz) {
 }
 #pragma function(memset)
 
+HFONT hFont;
+HBRUSH hBrush;
 HWND hEdit;
 
 void OpenFileAndLoad(HWND hwnd) {
@@ -58,7 +60,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Use File -> Open to read a text file.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             
-            HFONT hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_ROMAN, "Georgia");
+            hFont = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_ROMAN, "Georgia");
+            hBrush = CreateSolidBrush(RGB(250, 250, 250));
             SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
         }
@@ -75,9 +78,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = (HDC)wParam;
             SetBkColor(hdc, RGB(250, 250, 250));
             SetTextColor(hdc, RGB(30, 30, 30));
-            return (LRESULT)CreateSolidBrush(RGB(250, 250, 250));
+            return (LRESULT)hBrush;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
+            if (hBrush) DeleteObject(hBrush);
             PostQuitMessage(0);
             return 0;
     }

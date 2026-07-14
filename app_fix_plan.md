@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KRead
+**Target App:** KRogue
 **Status:** Next
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -79,6 +79,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KPing**: Verified `kping.html` web logic. Fixed GDI resource leak (`HFONT`, `HFONT`) in `main.c` on WM_DESTROY.
 - **KPong**: Fixed missing variable declarations (`ball_x`, `ball_y`) in `main.c`. Added window `blur` listener in `kpong.html` to prevent keys getting stuck on tab switch.
 - **KQuarantine**: Fixed XSS vulnerability in terminal log input rendering in `kquarantine.html`.
+- **KRead**: Fixed file input `change` event bug in `kread.html` when re-selecting the same file. Fixed GDI resource leaks (`HFONT`, `HBRUSH`) in `main.c` on `WM_DESTROY` and `WM_CTLCOLOREDIT`.
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KQuarantine.
