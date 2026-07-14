@@ -91,8 +91,11 @@ def draw_art(art, color_map):
 def generate_explorer():
     img = new_img()
     rect(img, 2, 6, 12, 10, (200, 150, 50)) # back tab
-    rect(img, 2, 10, 30, 26, (250, 200, 80)) # front folder
-    rect(img, 4, 12, 28, 24, (240, 190, 70)) # inner highlight
+    rect(img, 8, 4, 24, 20, (255, 255, 255)) # paper inside
+    rect(img, 10, 6, 22, 8, (200, 200, 200)) # text line
+    rect(img, 10, 10, 18, 12, (200, 200, 200)) # text line
+    rect(img, 2, 12, 30, 28, (250, 200, 80)) # front folder
+    rect(img, 4, 14, 28, 26, (240, 190, 70)) # inner highlight
     return img
 
 def generate_pad():

@@ -59,3 +59,4 @@
   - Noticed gen_icons.py was missing procedural logic for kterm; added generate_term(), re-ran, and copied kterm.ico to public/assets/icons to refine it.
   - Actually implemented the full list of remaining 19 icons in gen_icons.py (since previous commit only added kterm), regenerated with uv, and copied all to public/assets/icons. All apps now have true procedural icons.
   - Audited App.jsx for new apps during Phase 5 continuous polish loop. Found 58 total apps, all with unique procedurally generated icons. No new apps were added by Builder/Creator agents. System is fully up-to-date.
+  - Refined kexplorer icon (added internal folder paper lines) in gen_icons.py for better visibility in Start Menu/Desktop. Regenerated and copied all icons.
