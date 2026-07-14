@@ -99,7 +99,7 @@ Commands: /nick &lt;name&gt;</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-        import { getDatabase, ref, push, onChildAdded, off, serverTimestamp, limitToLast, query } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+        import { getDatabase, ref, push, onChildAdded, onValue, off, serverTimestamp, limitToLast, query } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
@@ -135,9 +135,22 @@ Commands: /nick &lt;name&gt;</div>
         }, 5000);
 
         function log(msg) {
+            const lines = logEl.textContent.split('\n');
+            if (lines.length > 200) {
+                logEl.textContent = lines.slice(lines.length - 150).join('\n');
+            }
             logEl.textContent += '\n' + msg;
             logEl.scrollTop = logEl.scrollHeight;
         }
+
+        const connectedRef = ref(db, ".info/connected");
+        let isConnectedToFirebase = false;
+        onValue(connectedRef, (snap) => {
+            isConnectedToFirebase = snap.val();
+            if (isConnectedToFirebase && isFirebase) {
+                log('* Connected to Global Room.');
+            }
+        });
 
         window.connectGlobal = function() {
             if (ws || isVirtual) {
@@ -171,7 +184,14 @@ Commands: /nick &lt;name&gt;</div>
             firebaseListener = onChildAdded(recentMessagesQuery, (snapshot) => {
                 if (!isFirebase) return;
                 const data = snapshot.val();
-                log(`<${data.user}> ${data.text}`);
+                
+                let d = new Date();
+                if (typeof data.timestamp === 'number') {
+                    d = new Date(data.timestamp);
+                }
+                const timeStr = `[${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}] `;
+                
+                log(`${timeStr}<${data.user}> ${data.text}`);
             });
         };
 
