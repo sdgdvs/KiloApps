@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <commdlg.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define ID_BTN_PREV 101
 #define ID_BTN_NEXT 102
@@ -22,6 +24,7 @@
 #define ID_BTN_DELETE 108
 #define ID_BTN_IMPORT 109
 #define ID_BTN_EXPORT 110
+#define ID_BTN_SHUFFLE 111
 
 // Dialog Edit Card IDs
 #define IDD_EDITCARD 210
@@ -40,7 +43,7 @@ int deckCount = 0;
 int currentIndex = 0;
 int isFlipped = 0;
 
-HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport;
+HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle;
 HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
@@ -81,11 +84,13 @@ void UpdateCardDisplay() {
         EnableWindow(hBtnEdit, FALSE);
         EnableWindow(hBtnDelete, FALSE);
         EnableWindow(hBtnExport, FALSE);
+        EnableWindow(hBtnShuffle, FALSE);
     } else {
         EnableWindow(hBtnFlip, TRUE);
         EnableWindow(hBtnEdit, TRUE);
         EnableWindow(hBtnDelete, TRUE);
         EnableWindow(hBtnExport, TRUE);
+        EnableWindow(hBtnShuffle, deckCount > 1);
         EnableWindow(hBtnPrev, currentIndex > 0);
         EnableWindow(hBtnNext, currentIndex < deckCount - 1);
     }
@@ -108,6 +113,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     hCardBrush = CreateSolidBrush(RGB(22, 27, 34));
 
     // Load deck
+    srand((unsigned int)time(NULL));
     LoadDeck();
 
     HWND hwnd = CreateWindowEx(
@@ -184,6 +190,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hBtnExport = CreateWindow("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                    90, 10, 70, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
 
+            hBtnShuffle = CreateWindow("BUTTON", "Shuffle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   170, 10, 80, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
+
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
 
@@ -201,6 +210,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnShuffle, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             break;
         }
@@ -382,6 +392,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     break;
                 }
+                case ID_BTN_SHUFFLE:
+                    if (deckCount > 1) {
+                        for (int i = deckCount - 1; i > 0; i--) {
+                            int j = rand() % (i + 1);
+                            FlashCard temp = deck[i];
+                            deck[i] = deck[j];
+                            deck[j] = temp;
+                        }
+                        currentIndex = 0;
+                        isFlipped = 0;
+                        SaveDeck();
+                        UpdateCardDisplay();
+                    }
+                    break;
             }
             break;
         }

@@ -311,6 +311,7 @@
                 <input type="file" id="fileImport" accept=".json,.csv" style="display: none;">
                 <button class="btn btn-primary" id="btnEditCard" disabled>Edit</button>
                 <button class="btn btn-primary" style="background-color:#da3633; border-color:rgba(218,54,51,0.5)" id="btnDeleteCard" disabled>Delete</button>
+                <button class="btn" id="btnShuffle" disabled>Shuffle</button>
                 <button class="btn btn-primary" id="btnAddCard">+ Add Card</button>
             </div>
         </div>
@@ -398,10 +399,12 @@
                 btnNext.disabled = true;
                 document.getElementById('btnEditCard').disabled = true;
                 document.getElementById('btnDeleteCard').disabled = true;
+                document.getElementById('btnShuffle').disabled = true;
                 return;
             }
             document.getElementById('btnEditCard').disabled = false;
             document.getElementById('btnDeleteCard').disabled = false;
+            document.getElementById('btnShuffle').disabled = deck.length <= 1;
             const card = deck[currentIndex];
             cardFront.textContent = card.front;
             cardBack.textContent = card.back;
@@ -456,6 +459,20 @@
                 currentIndex++;
                 flashcard.classList.remove('is-flipped');
                 setTimeout(renderCard, 150);
+            }
+        });
+
+        const btnShuffle = document.getElementById('btnShuffle');
+        btnShuffle.addEventListener('click', () => {
+            if (deck.length > 1) {
+                for (let i = deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [deck[i], deck[j]] = [deck[j], deck[i]];
+                }
+                saveDeck();
+                currentIndex = 0;
+                flashcard.classList.remove('is-flipped');
+                renderCard();
             }
         });
 
