@@ -14,9 +14,16 @@
 </head>
 <body>
 <div class="bar">
-  <button id="btnBack" disabled>&lt;</button>
-  <button id="btnForward" disabled>&gt;</button>
+  <button id="btnBack" title="Back" disabled>&lt;</button>
+  <button id="btnForward" title="Forward" disabled>&gt;</button>
   <input type="text" id="urlInput" value="http://example.com" />
+  <select id="bookmarks" style="padding: 5px; font-size: 14px; border: 1px solid #ccc; max-width: 120px;">
+    <option value="">Bookmarks...</option>
+    <option value="http://example.com">Example</option>
+    <option value="https://news.ycombinator.com">Hacker News</option>
+    <option value="https://lite.cnn.com">CNN Lite</option>
+    <option value="scan">NetScan</option>
+  </select>
   <button id="btnGo">Go</button>
 </div>
 <textarea id="contentArea" readonly></textarea>
@@ -89,6 +96,15 @@
       if (historyIdx < history.length - 1) {
           historyIdx++;
           fetchUrl(history[historyIdx], false);
+      }
+  };
+
+  const bookmarks = document.getElementById('bookmarks');
+  bookmarks.onchange = () => {
+      if (bookmarks.value) {
+          urlInput.value = bookmarks.value;
+          fetchUrl(bookmarks.value, true);
+          bookmarks.value = "";
       }
   };
 </script>

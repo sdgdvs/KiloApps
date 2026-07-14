@@ -8,6 +8,7 @@
 HWND hBtnBack;
 HWND hBtnForward;
 HWND hUrlEdit;
+HWND hBookmarks;
 HWND hGoBtn;
 HWND hContentEdit;
 
@@ -119,8 +120,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hUrlEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "http://example.com",
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                85, 10, W - 175, 24, hwnd, NULL, NULL, NULL);
+                85, 10, W - 280, 24, hwnd, NULL, NULL, NULL);
             SendMessage(hUrlEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hBookmarks = CreateWindowEx(0, "COMBOBOX", "",
+                WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL,
+                W - 190, 10, 105, 150, hwnd, (HMENU)4, NULL, NULL);
+            SendMessage(hBookmarks, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"Bookmarks...");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"http://example.com");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"https://news.ycombinator.com");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"https://lite.cnn.com");
+            SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
             
             hGoBtn = CreateWindowEx(0, "BUTTON", "Go",
                 WS_CHILD | WS_VISIBLE,
@@ -134,7 +145,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == 1) {
+            if (LOWORD(wParam) == 4 && HIWORD(wParam) == CBN_SELCHANGE) {
+                int idx = SendMessage(hBookmarks, CB_GETCURSEL, 0, 0);
+                if (idx > 0) {
+                    char buf[256];
+                    SendMessage(hBookmarks, CB_GETLBTEXT, idx, (LPARAM)buf);
+                    SetWindowTextA(hUrlEdit, buf);
+                    FetchUrl(hwnd, TRUE);
+                }
+                SendMessage(hBookmarks, CB_SETCURSEL, 0, 0);
+            } else if (LOWORD(wParam) == 1) {
                 FetchUrl(hwnd, TRUE);
             } else if (LOWORD(wParam) == 2) { // Back
                 if (historyIdx > 0) {
@@ -156,7 +176,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             MoveWindow(hBtnBack, 10, 10, 30, 24, TRUE);
             MoveWindow(hBtnForward, 45, 10, 30, 24, TRUE);
-            MoveWindow(hUrlEdit, 85, 10, nw - 175, 24, TRUE);
+            MoveWindow(hUrlEdit, 85, 10, nw - 280, 24, TRUE);
+            MoveWindow(hBookmarks, nw - 190, 10, 105, 150, TRUE);
             MoveWindow(hGoBtn, nw - 80, 10, 60, 24, TRUE);
             MoveWindow(hContentEdit, 10, 44, nw - 20, nh - 55, TRUE);
             break;
