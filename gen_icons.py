@@ -520,3 +520,110 @@ save_ico('icons/ktodo.ico', generate_todo())
 save_ico('icons/kmedia.ico', generate_media())
 save_ico('icons/kcolor.ico', generate_color())
 
+def generate_breakout():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (20, 20, 20)) # background
+    # bricks
+    for x in range(4, 28, 6):
+        rect(img, x, 4, x+4, 6, (255, 100, 100))
+        rect(img, x, 8, x+4, 10, (100, 255, 100))
+        rect(img, x, 12, x+4, 14, (100, 100, 255))
+    # paddle
+    rect(img, 12, 26, 20, 28, (200, 200, 200))
+    # ball
+    rect(img, 15, 22, 17, 24, (255, 255, 0))
+    return img
+
+def generate_2048():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (187, 173, 160)) # background
+    for y in range(4, 28, 6):
+        for x in range(4, 28, 6):
+            rect(img, x, y, x+4, y+4, (205, 193, 180)) # empty cells
+    # filled cells
+    rect(img, 4, 10, 8, 14, (237, 224, 200)) # 2
+    rect(img, 10, 16, 14, 20, (242, 177, 121)) # 8
+    rect(img, 16, 10, 20, 14, (245, 149, 99)) # 16
+    rect(img, 22, 22, 26, 26, (237, 204, 97)) # 2048
+    return img
+
+def generate_solitaire():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (0, 128, 0)) # felt background
+    # card 1
+    rect(img, 6, 6, 16, 20, (255, 255, 255))
+    rect(img, 10, 10, 12, 12, (255, 0, 0)) # diamond
+    # card 2
+    rect(img, 12, 12, 22, 26, (255, 255, 255))
+    rect(img, 16, 16, 18, 18, (0, 0, 0)) # spade
+    return img
+
+def generate_space():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (10, 10, 30)) # space
+    # stars
+    rect(img, 6, 6, 6, 6, (255, 255, 255))
+    rect(img, 24, 10, 24, 10, (255, 255, 255))
+    rect(img, 10, 20, 10, 20, (255, 255, 255))
+    # ship
+    rect(img, 14, 20, 18, 26, (200, 200, 200))
+    rect(img, 16, 16, 16, 19, (255, 100, 100)) # nose
+    # wings
+    rect(img, 10, 24, 13, 26, (150, 150, 150))
+    rect(img, 19, 24, 22, 26, (150, 150, 150))
+    # flame
+    rect(img, 15, 27, 17, 29, (255, 150, 0))
+    return img
+
+def generate_pac():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (0, 0, 0)) # background
+    circle(img, 16, 16, 10, (255, 255, 0)) # body
+    # mouth
+    for y in range(16, 26):
+        for x in range(16, 28):
+            if (x - 16) >= (y - 16) and (x - 16) >= -(y - 16):
+                if 0 <= y < 32 and 0 <= x < 32:
+                    img[y][x] = (0, 0, 0)
+    # eye
+    circle(img, 16, 10, 2, (0, 0, 0))
+    # pellet
+    circle(img, 26, 16, 2, (255, 255, 255))
+    return img
+
+def generate_chess():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (100, 150, 200)) # background
+    # pawn
+    circle(img, 16, 10, 4, (255, 255, 255))
+    rect(img, 14, 14, 18, 16, (255, 255, 255))
+    rect(img, 12, 17, 20, 20, (255, 255, 255))
+    rect(img, 14, 20, 18, 24, (255, 255, 255))
+    rect(img, 10, 25, 22, 28, (255, 255, 255))
+    return img
+
+def generate_maze():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (0, 0, 0)) # background
+    # walls
+    for y in range(4, 28, 4):
+        for x in range(4, 28, 4):
+            rect(img, x, 4, x+2, 28, (0, 0, 255))
+            rect(img, 4, y, 28, y+2, (0, 0, 255))
+    # carve paths
+    rect(img, 6, 4, 8, 8, (0, 0, 0))
+    rect(img, 10, 8, 16, 10, (0, 0, 0))
+    rect(img, 20, 12, 22, 20, (0, 0, 0))
+    # player / goal
+    rect(img, 6, 6, 8, 8, (255, 255, 0))
+    rect(img, 22, 22, 24, 24, (255, 0, 0))
+    return img
+
+# Phase 4 Icons
+save_ico('icons/kbreakout.ico', generate_breakout())
+save_ico('icons/k2048.ico', generate_2048())
+save_ico('icons/ksolitaire.ico', generate_solitaire())
+save_ico('icons/kspace.ico', generate_space())
+save_ico('icons/kpac.ico', generate_pac())
+save_ico('icons/kchess.ico', generate_chess())
+save_ico('icons/kmaze.ico', generate_maze())

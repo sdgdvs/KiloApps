@@ -15,6 +15,7 @@
 #define STATE_NORMAL 0
 #define STATE_ESC    1
 #define STATE_CSI    2
+#define STATE_MUSIC  3
 
 #define TELNET_IAC   0xFF
 #define TELNET_WILL  0xFB
@@ -118,6 +119,8 @@ int blinkState = 1;
 int ansiState = STATE_NORMAL;
 char ansiParams[64];
 int ansiParamLen = 0;
+char ansiMusicBuf[1024];
+int ansiMusicLen = 0;
 
 int telState = TEL_STATE_NORMAL;
 unsigned char telSBOption = 0;
@@ -129,6 +132,112 @@ HWND hMain, hHost, hPort, hBtn, hCombo, hEcho, hStatus;
 HFONT hTermFont;
 int bytesRx = 0;
 int bytesTx = 0;
+
+struct MusicArgs {
+    char data[1024];
+};
+
+int GetFreq(const char* noteStr, int octave) {
+    int baseFreqs[] = {
+        26163, 27718, 29366, 31113, 32963, 34923,
+        36999, 39200, 41530, 44000, 46616, 49388
+    };
+    int base = 0;
+    char n = noteStr[0];
+    if (n == 'c' || n == 'C') base = 0;
+    else if (n == 'd' || n == 'D') base = 2;
+    else if (n == 'e' || n == 'E') base = 4;
+    else if (n == 'f' || n == 'F') base = 5;
+    else if (n == 'g' || n == 'G') base = 7;
+    else if (n == 'a' || n == 'A') base = 9;
+    else if (n == 'b' || n == 'B') base = 11;
+
+    if (noteStr[1] == '+' || noteStr[1] == '#') base++;
+    else if (noteStr[1] == '-') base--;
+
+    if (base < 0) { base += 12; octave--; }
+    else if (base > 11) { base -= 12; octave++; }
+    
+    int f = baseFreqs[base];
+    while (octave > 4) { f *= 2; octave--; }
+    while (octave < 4) { f /= 2; octave++; }
+    return f / 100;
+}
+
+DWORD WINAPI MusicThread(LPVOID lpParam) {
+    struct MusicArgs* args = (struct MusicArgs*)lpParam;
+    char* str = args->data;
+    int octave = 4, tempo = 120, length = 4;
+    int p = 0;
+    while (str[p]) {
+        char c = str[p++];
+        if (c >= 'a' && c <= 'z') c -= 32;
+        if (c == 'O') {
+            int val = 0;
+            while (str[p] >= '0' && str[p] <= '9') val = val * 10 + (str[p++] - '0');
+            if (val > 0) octave = val;
+        } else if (c == 'T') {
+            int val = 0;
+            while (str[p] >= '0' && str[p] <= '9') val = val * 10 + (str[p++] - '0');
+            if (val > 0) tempo = val;
+        } else if (c == 'L') {
+            int val = 0;
+            while (str[p] >= '0' && str[p] <= '9') val = val * 10 + (str[p++] - '0');
+            if (val > 0) length = val;
+        } else if ((c >= 'A' && c <= 'G') || c == 'P') {
+            char note[3] = {c, 0, 0};
+            if (str[p] == '+' || str[p] == '#' || str[p] == '-') note[1] = str[p++];
+            int curLen = length;
+            if (str[p] >= '0' && str[p] <= '9') {
+                curLen = 0;
+                while (str[p] >= '0' && str[p] <= '9') curLen = curLen * 10 + (str[p++] - '0');
+            }
+            int dots = 0;
+            while (str[p] == '.') { dots++; p++; }
+            int durMs = (60000 / tempo) * 4 / (curLen ? curLen : 4);
+            int i;
+            for (i=0; i<dots; i++) durMs += durMs / 2;
+            if (c != 'P') {
+                int freq = GetFreq(note, octave);
+                Beep(freq, durMs);
+            } else {
+                Sleep(durMs);
+            }
+        } else if (c == 'M') {
+            if (str[p]) p++;
+        } else if (c == '<') {
+            if (octave > 0) octave--;
+        } else if (c == '>') {
+            if (octave < 6) octave++;
+        }
+    }
+    GlobalFree(args);
+    return 0;
+}
+
+void PlayANSI(const char* str) {
+    struct MusicArgs* args = (struct MusicArgs*)GlobalAlloc(GPTR, sizeof(struct MusicArgs));
+    if (args) {
+        my_strcpy(args->data, str);
+        CreateThread(NULL, 0, MusicThread, args, 0, NULL);
+    }
+}
+
+void PlayChime(int type) {
+    if (type == 1) { /* connect */
+        CreateThread(NULL, 0, MusicThread, NULL, 0, NULL); // Hack: avoid using this just call Beep in new thread? No.
+    }
+}
+// wait let's write a proper PlayChimeThread
+DWORD WINAPI ChimeThread(LPVOID lpParam) {
+    int type = (int)(INT_PTR)lpParam;
+    if (type == 1) { Beep(523, 100); Beep(659, 100); Beep(784, 200); }
+    else if (type == 2) { Beep(784, 100); Beep(1046, 200); }
+    return 0;
+}
+void PlayChimeAsync(int type) {
+    CreateThread(NULL, 0, ChimeThread, (LPVOID)(INT_PTR)type, 0, NULL);
+}
 
 /* Transfer state */
 #define XMODEM_SOH 0x01
@@ -157,6 +266,11 @@ void EndTransfer(const char* msg) {
     transferActive = 0;
     SetStatusText(msg);
     InvalidateRect(hMain, NULL, FALSE);
+    
+    // Check if Complete
+    int i = 0, isComp = 0;
+    while(msg[i]) { if (msg[i] == 'C' && msg[i+1] == 'o' && msg[i+2] == 'm') isComp = 1; i++; }
+    if (isComp) PlayChimeAsync(2);
 }
 
 void ProcessTransferByte(unsigned char ch) {
@@ -592,6 +706,10 @@ void ProcessCSI(char finalChar) {
         case 'm': /* SGR */
             ProcessSGR(params, count);
             break;
+        case 'M': /* ANSI Music */
+            ansiState = STATE_MUSIC;
+            ansiMusicLen = 0;
+            break;
         case 'H': /* CUP - cursor position */
         case 'f':
             curY = (count >= 1 && params[0] > 0) ? params[0] - 1 : 0;
@@ -733,9 +851,24 @@ void ProcessByte(unsigned char ch) {
             } else if (ch >= 0x40 && ch <= 0x7E) {
                 ansiParams[ansiParamLen] = 0;
                 ProcessCSI((char)ch);
-                ansiState = STATE_NORMAL;
+                if (ansiState != STATE_MUSIC) ansiState = STATE_NORMAL;
             } else {
                 ansiState = STATE_NORMAL;
+            }
+            break;
+        case STATE_MUSIC:
+            if (ch == 0x0E) { /* Ctrl+N */
+                ansiMusicBuf[ansiMusicLen] = 0;
+                PlayANSI(ansiMusicBuf);
+                ansiState = STATE_NORMAL;
+            } else if (ch == 0x1B) {
+                ansiMusicBuf[ansiMusicLen] = 0;
+                PlayANSI(ansiMusicBuf);
+                ansiState = STATE_ESC;
+            } else {
+                if (ansiMusicLen < (int)(sizeof(ansiMusicBuf) - 1)) {
+                    ansiMusicBuf[ansiMusicLen++] = (char)ch;
+                }
             }
             break;
     }
@@ -1042,6 +1175,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetStatusText("Connected");
                 EnableWindow(hBtn, TRUE);
                 SetWindowTextA(hBtn, "Reconnect");
+                PlayChimeAsync(1);
             } else if (WSAGETSELECTEVENT(lParam) == FD_READ) {
                 unsigned char buf[2048];
                 int ret = recv(sock, (char*)buf, sizeof(buf), 0);

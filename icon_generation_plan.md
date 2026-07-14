@@ -41,7 +41,7 @@
 
 ## Progress Log
 
-- **Status:** Phase 3 (Completed), Starting Phase 4
+- **Status:** Phase 4 (Completed), Starting Phase 5
 - **Log:**
   - Audited App.jsx for missing or reused icons.
   - Added `circle` and `draw_art` drawing helpers to `gen_icons.py`.
@@ -49,3 +49,5 @@
   - Executed gen_icons.py, copied to public/assets/icons, and updated App.jsx paths.
   - Added generation logic for Office & Media icons (kbudget, khabit, kflash, kjournal, kread, ktodo, kmedia, kcolor).
   - Executed gen_icons.py with uv, copied icons to public/assets/icons, and updated App.jsx paths.
+  - Added generation logic for Game icons (kbreakout, k2048, ksolitaire, kspace, kpac, kchess, kmaze).
+  - Executed gen_icons.py with uv, copied to public/assets/icons, and updated App.jsx paths.

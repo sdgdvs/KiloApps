@@ -68,11 +68,11 @@ const APPS = [
   { id: 'ktaskmgr', title: 'Task Manager', url: '/apps/ktaskmgr.html', exeUrl: null, icon: '/assets/icons/ktaskmgr.ico', w: 650, h: 500, folder: 'System' },
   { id: 'kvault', title: 'KVault', url: '/apps/kvault.html', exeUrl: null, icon: '/assets/icons/ksys.ico', w: 600, h: 600, folder: 'System' },
   { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kjournal.ico', w: 600, h: 700, folder: 'Office' },
-  { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kpong.ico', w: 430, h: 460, folder: 'Games' },
+  { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kbreakout.ico', w: 430, h: 460, folder: 'Games' },
   { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: null, icon: '/assets/icons/kbudget.ico', w: 800, h: 600, folder: 'Office' },
   { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/khabit.ico', w: 800, h: 600, folder: 'Office' },
   { id: 'kflash', title: 'KFlash', url: '/apps/kflash.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kflash.ico', w: 600, h: 500, folder: 'Office' },
-  { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksys.ico', w: 380, h: 480, folder: 'Games' }
+  { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/k2048.ico', w: 380, h: 480, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
