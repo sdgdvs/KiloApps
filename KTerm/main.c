@@ -28,15 +28,33 @@ void ProcessCommand(const char* cmd) {
 
     if (lstrcmpiA(cmd, "help") == 0) {
         AppendOutput("KTerm Commands:");
-        AppendOutput("  help  - Show this message");
-        AppendOutput("  ver   - Show OS version");
-        AppendOutput("  clear - Clear screen");
-        AppendOutput("  dir   - List files");
-        AppendOutput("  cd    - Change directory");
-        AppendOutput("  echo  - Print text");
-        AppendOutput("  mkdir - Create directory");
+        AppendOutput("  help   - Show this message");
+        AppendOutput("  ver    - Show OS version");
+        AppendOutput("  clear  - Clear screen");
+        AppendOutput("  dir    - List files");
+        AppendOutput("  cd     - Change directory");
+        AppendOutput("  echo   - Print text");
+        AppendOutput("  mkdir  - Create directory");
+        AppendOutput("  type   - Read file");
+        AppendOutput("  date   - Show date");
+        AppendOutput("  time   - Show time");
+        AppendOutput("  whoami - Current user");
     } else if (lstrcmpiA(cmd, "ver") == 0) {
         AppendOutput("KiloOS Native v1.0");
+    } else if (lstrcmpiA(cmd, "date") == 0) {
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+        char buf[64];
+        wsprintfA(buf, "%04d-%02d-%02d", st.wYear, st.wMonth, st.wDay);
+        AppendOutput(buf);
+    } else if (lstrcmpiA(cmd, "time") == 0) {
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+        char buf[64];
+        wsprintfA(buf, "%02d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
+        AppendOutput(buf);
+    } else if (lstrcmpiA(cmd, "whoami") == 0) {
+        AppendOutput("kilo_user");
     } else if (lstrcmpiA(cmd, "clear") == 0 || lstrcmpiA(cmd, "cls") == 0) {
         SetWindowTextA(hOut, "");
     } else if (lstrcmpiA(cmd, "dir") == 0) {
@@ -65,6 +83,25 @@ void ProcessCommand(const char* cmd) {
             AppendOutput("Directory created.");
         } else {
             AppendOutput("Failed to create directory.");
+        }
+    } else if (cmd[0] == 't' && cmd[1] == 'y' && cmd[2] == 'p' && cmd[3] == 'e' && cmd[4] == ' ') {
+        HANDLE hFile = CreateFileA(cmd + 5, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD fileSize = GetFileSize(hFile, NULL);
+            if (fileSize != INVALID_FILE_SIZE && fileSize > 0) {
+                if (fileSize > 4096) fileSize = 4096;
+                char* buffer = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, fileSize + 1);
+                if (buffer) {
+                    DWORD bytesRead;
+                    if (ReadFile(hFile, buffer, fileSize, &bytesRead, NULL)) {
+                        AppendOutput(buffer);
+                    }
+                    HeapFree(GetProcessHeap(), 0, buffer);
+                }
+            }
+            CloseHandle(hFile);
+        } else {
+            AppendOutput("File not found or cannot be opened.");
         }
     } else if (lstrlenA(cmd) > 0) {
         AppendOutput("Bad command or file name.");

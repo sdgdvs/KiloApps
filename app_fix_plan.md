@@ -86,6 +86,8 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KSolitaire**: Verified `ksolitaire.html` logic. Fixed GDI resource leak (HBITMAP) in `main.c` on `WM_PAINT`.
 - **KSpace**: Verified `kspace.html` logic. Fixed GDI resource leak (HBITMAP) in `main.c` on `WM_PAINT`.
 
+- **KSynth**: Verified `ksynth.html` web logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KSynth.
+All apps need systematic testing. Continue alphabetically from KSys.
 

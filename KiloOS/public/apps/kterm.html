@@ -170,7 +170,7 @@
       let vfs = getVFS();
 
       if (cmd === 'help') {
-          print("Commands: help, ver, clear, dir, cd, type, echo, mkdir");
+          print("Commands: help, ver, clear, dir, cd, type, echo, mkdir, date, time, whoami");
       } else if (cmd === 'cerberus') {
           if (args[1] === 'status') {
               print("[CERBERUS WATCHDOG]");
@@ -225,6 +225,14 @@
           }
       } else if (cmd === 'ver') {
           print("KiloOS Web v1.1");
+      } else if (cmd === 'date') {
+          let d = new Date();
+          print(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
+      } else if (cmd === 'time') {
+          let d = new Date();
+          print(String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0'));
+      } else if (cmd === 'whoami') {
+          print("kilo_user");
       } else if (cmd === 'clear' || cmd === 'cls') {
           output.innerHTML = '';
       } else if (cmd === 'dir' || cmd === 'ls') {

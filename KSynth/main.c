@@ -148,9 +148,10 @@ BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    static HFONT hFont = NULL;
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             CreateWindowEx(0, "STATIC", "Waveform:", WS_CHILD | WS_VISIBLE, 10, 15, 80, 20, hwnd, NULL, NULL, NULL);
             hCombo = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST, 100, 12, 120, 100, hwnd, NULL, NULL, NULL);
@@ -191,6 +192,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 waveOutUnprepareHeader(hWaveOut, &waveHdr, sizeof(WAVEHDR));
                 waveOutClose(hWaveOut);
             }
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;
         default:
