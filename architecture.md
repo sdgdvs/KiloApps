@@ -28,7 +28,7 @@ Apps in KiloOS are categorized into 6 folders for desktop and start menu organiz
 - **Media** — Media & arts (KAudio, KMedia, KSynth, KImage, KPaint, KFont, KColor, etc.)
 - **Office** — Productivity (KPad, KNote, KCalc, KCalendar, KTodo, KChart, etc.)
 - **Games** — Games (KChess, KMine, KMines, KPong, KSnake, KTetris, KSolitaire, KPac, KRogue, KSpace, KMaze, KMandel, etc.)
-- **Network** — Network tools (KNet, KPing, KMail, KChat, KBBS, KBBSProxy, etc.)
+- **Network** — Network tools (KNet, KPing, KMail, KChat, KBBS, etc.)
 - **Dev** — Development tools (KTerm, KHex, KScript, KType, KZip, etc.)
 
 New apps must specify a `folder` property in the `APPS` array in `App.jsx`. See `KiloOS/app_integration_guide.md` for details.

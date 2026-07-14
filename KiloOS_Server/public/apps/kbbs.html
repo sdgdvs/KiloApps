@@ -270,7 +270,7 @@
         if (host.startsWith('ws://') || host.startsWith('wss://')) {
             url = host;
         } else {
-            url = 'ws://localhost:8080/?host=' + encodeURIComponent(host) + '&port=' + encodeURIComponent(port || '23');
+            url = 'wss://proxy-us.ftelnet.ca:2083/' + encodeURIComponent(host) + '/' + encodeURIComponent(port || '23');
         }
 
         initScreen();
@@ -451,8 +451,8 @@
         '\x1B[1;32m  ► \x1B[0;37mSelect a BBS from the dropdown menu above',
         '\x1B[1;32m  ► \x1B[0;37mOr enter a WebSocket address (ws://host:port)',
         '',
-        '\x1B[0;36m  Raw telnet connections are routed through the KBBSProxy.',
-        '\x1B[0;36m  Make sure to run KBBSProxy/run.bat before connecting.',
+        '\x1B[0;36m  Raw telnet connections are routed via fTelnetProxy.',
+        '\x1B[0;36m  No local proxy setup is required.',
         '',
         '\x1B[0;90m  ─────────────────────────────────────────────────────────────────────────────'
     ];
