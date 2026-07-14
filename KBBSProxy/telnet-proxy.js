@@ -44,13 +44,34 @@ wss.on('connection', (ws, req) => {
         // but raw telnet just sends data.
     });
 
+    let idleTimer;
+    const IDLE_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+    function resetIdleTimer() {
+        if (idleTimer) clearTimeout(idleTimer);
+        idleTimer = setTimeout(() => {
+            console.log(`[PROXY] Idle timeout reached for ${host}:${port}, disconnecting...`);
+            if (ws.readyState === ws.OPEN) {
+                ws.close(1000, 'Idle timeout');
+            }
+            if (!tcpSocket.destroyed) {
+                tcpSocket.destroy();
+            }
+        }, IDLE_TIMEOUT_MS);
+    }
+
+    // Start the timer immediately upon connection
+    resetIdleTimer();
+
     tcpSocket.on('data', (data) => {
+        resetIdleTimer();
         if (ws.readyState === ws.OPEN) {
             ws.send(data);
         }
     });
 
     tcpSocket.on('close', () => {
+        if (idleTimer) clearTimeout(idleTimer);
         console.log(`[PROXY] Disconnected from ${host}:${port}`);
         if (ws.readyState === ws.OPEN) {
             ws.close();
@@ -58,6 +79,7 @@ wss.on('connection', (ws, req) => {
     });
 
     tcpSocket.on('error', (err) => {
+        if (idleTimer) clearTimeout(idleTimer);
         console.error(`[PROXY] TCP Error (${host}:${port}):`, err.message);
         if (ws.readyState === ws.OPEN) {
             ws.close(1011, 'TCP Connection Error');
@@ -65,12 +87,14 @@ wss.on('connection', (ws, req) => {
     });
 
     ws.on('message', (message) => {
+        resetIdleTimer();
         if (!tcpSocket.destroyed) {
             tcpSocket.write(message);
         }
     });
 
     ws.on('close', () => {
+        if (idleTimer) clearTimeout(idleTimer);
         console.log(`[PROXY] WebSocket closed by client`);
         if (!tcpSocket.destroyed) {
             tcpSocket.destroy();
@@ -78,6 +102,7 @@ wss.on('connection', (ws, req) => {
     });
 
     ws.on('error', (err) => {
+        if (idleTimer) clearTimeout(idleTimer);
         console.error(`[PROXY] WebSocket Error:`, err.message);
         if (!tcpSocket.destroyed) {
             tcpSocket.destroy();
