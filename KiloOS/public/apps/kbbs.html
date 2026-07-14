@@ -80,7 +80,12 @@
     </div>
     <div class="main">
         <div class="term-wrap">
-            <canvas id="terminal" tabindex="0"></canvas>
+            <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative;">
+                <canvas id="terminal" tabindex="0" style="flex: 1;"></canvas>
+                <div id="scrollContainer" style="width: 16px; height: 100%; overflow-y: scroll; background: #09090b; border-left: 1px solid #27272a; z-index: 3; display: none;" onscroll="handleScroll(event)">
+                    <div id="scrollSpacer" style="height: 100px;"></div>
+                </div>
+            </div>
         </div>
         <!-- Dialing Directory Modal -->
         <div id="dialingDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
@@ -537,11 +542,47 @@
         }
     }
 
+    function updateScrollbar() {
+        const sc = document.getElementById('scrollContainer');
+        const sp = document.getElementById('scrollSpacer');
+        if (screen.length <= ROWS) {
+            sc.style.display = 'none';
+            return;
+        }
+        sc.style.display = 'block';
+        const itemH = 20; // arbitrary height per row
+        sp.style.height = (screen.length * itemH) + 'px';
+        
+        // Prevent recursive loop by ignoring if it's programmatic scroll
+        if (!window.isScrollingProgrammatically) {
+            window.isScrollingProgrammatically = true;
+            sc.scrollTop = (screen.length - ROWS - scrollOffset) * itemH;
+            setTimeout(() => window.isScrollingProgrammatically = false, 10);
+        }
+    }
+
+    function handleScroll(e) {
+        if (window.isScrollingProgrammatically) return;
+        const sc = e.target;
+        const itemH = 20;
+        let visibleTopRow = Math.round(sc.scrollTop / itemH);
+        visibleTopRow = Math.max(0, Math.min(visibleTopRow, screen.length - ROWS));
+        
+        scrollOffset = screen.length - ROWS - visibleTopRow;
+        render();
+    }
+
     function scrollUp() {
         let row = [];
         for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
         screen.push(row);
-        if (screen.length > MAX_LINES) screen.shift();
+        if (screen.length > MAX_LINES) {
+            screen.shift();
+        } else {
+            // When lines are added but we aren't at max, if we are scrolled up, we should stay at the same relative position (which means scrollOffset should increase)
+            // But usually we just let scrollOffset remain same, so the view stays pinned to the bottom.
+        }
+        updateScrollbar();
     }
 
     function putChar(ch) {
@@ -709,7 +750,10 @@
 
     function processData(data) {
         for (let i = 0; i < data.length; i++) feedByte(data[i]);
-        if (data.length > 0) scrollOffset = 0;
+        if (data.length > 0) {
+            scrollOffset = 0;
+            updateScrollbar();
+        }
         render();
     }
 
@@ -789,8 +833,12 @@
             case 'ArrowLeft': seq = '\x1B[D'; break;
             case 'Home': seq = '\x1B[H'; break;
             case 'End': seq = '\x1B[F'; break;
-            case 'PageUp': seq = '\x1B[5~'; break;
-            case 'PageDown': seq = '\x1B[6~'; break;
+            case 'PageUp': 
+                if (e.shiftKey) { scrollOffset = Math.min(scrollOffset + Math.floor(ROWS/2), Math.max(0, screen.length - ROWS)); e.preventDefault(); updateScrollbar(); render(); return; }
+                seq = '\x1B[5~'; break;
+            case 'PageDown': 
+                if (e.shiftKey) { scrollOffset = Math.max(0, scrollOffset - Math.floor(ROWS/2)); e.preventDefault(); updateScrollbar(); render(); return; }
+                seq = '\x1B[6~'; break;
             case 'Delete': seq = '\x1B[3~'; break;
             case 'Insert': seq = '\x1B[2~'; break;
             case 'Escape': seq = '\x1B'; break;
@@ -858,10 +906,11 @@
     
     canvas.addEventListener('wheel', (e) => {
         if (e.deltaY < 0) {
-            scrollOffset = Math.min(scrollOffset + 3, screen.length - ROWS);
+            scrollOffset = Math.min(scrollOffset + 3, Math.max(0, screen.length - ROWS));
         } else {
             scrollOffset = Math.max(0, scrollOffset - 3);
         }
+        updateScrollbar();
         render();
     }, {passive: true});
 

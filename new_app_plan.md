@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBBS (SyncTerm Parity Upgrade)
-**Phase:** 8
+**Phase:** 9
 **Status:** In Progress
 
 - Phase 1 completed: Implemented Advanced Terminal Emulation & ANSI Rendering, including CP437 perfect block mapping and 16-color PC palette support in both web and native versions.
@@ -59,7 +59,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 5 completed: Implemented Macros & Key Mapping with custom persistent storage and UI dialog in both web and native versions.
 - Phase 6 completed: Polished both versions: dark-mode glassmorphic aesthetic + CRT scanline shader for web, refined dark theme and perfectly flicker-free double buffering for native.
 - Phase 7 completed: Added user-configurable display settings (font size, blink rate, local echo toggle persistence) to both web and native versions.
-- Phase 8: Implement scrollback buffer support (allow user to scroll up and view past terminal output) for both web and native versions.
+- Phase 8 completed: Implemented scrollback buffer support with wheel and keyboard navigation (allow user to scroll up and view past terminal output) for both web and native versions.
+- Phase 9: Implement text selection and clipboard copy support for the terminal buffer in both web and native versions.
 
 ## Next Priority (Before New Apps)
 

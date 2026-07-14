@@ -1727,8 +1727,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case VK_DELETE: seq = "\x1B[3~"; seqLen = 4; break;
                 case VK_HOME:   seq = "\x1B[H"; seqLen = 3; break;
                 case VK_END:    seq = "\x1B[F"; seqLen = 3; break;
-                case VK_PRIOR:  seq = "\x1B[5~"; seqLen = 4; break;
-                case VK_NEXT:   seq = "\x1B[6~"; seqLen = 4; break;
+                case VK_PRIOR:
+                    if (GetKeyState(VK_SHIFT) & 0x8000) {
+                        scrollOffset += TERM_ROWS / 2;
+                        if (scrollOffset > activeTop) scrollOffset = activeTop;
+                        SCROLLINFO si; si.cbSize = sizeof(si); si.fMask = SIF_POS; si.nPos = activeTop - scrollOffset;
+                        SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                    seq = "\x1B[5~"; seqLen = 4; break;
+                case VK_NEXT:
+                    if (GetKeyState(VK_SHIFT) & 0x8000) {
+                        scrollOffset -= TERM_ROWS / 2;
+                        if (scrollOffset < 0) scrollOffset = 0;
+                        SCROLLINFO si; si.cbSize = sizeof(si); si.fMask = SIF_POS; si.nPos = activeTop - scrollOffset;
+                        SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                        return 0;
+                    }
+                    seq = "\x1B[6~"; seqLen = 4; break;
                 case VK_F1:     seq = "\x1BOP"; seqLen = 3; break;
                 case VK_F2:     seq = "\x1BOQ"; seqLen = 3; break;
                 case VK_F3:     seq = "\x1BOR"; seqLen = 3; break;
