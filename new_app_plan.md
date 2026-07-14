@@ -49,10 +49,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** K2048 (Sliding tile puzzle)
-**Phase:** 1
+**Phase:** 2
 **Status:** In Progress
 
-- Phase 1: Scaffold `K2048/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 1: Scaffold `K2048/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED: Scaffolded K2048 web HTML and registered app)
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 
 ## Next Priority (Before New Apps)
 
