@@ -49,11 +49,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** K2048 (Sliding tile puzzle)
-**Phase:** 2
+**Phase:** 3
 **Status:** In Progress
 
 - Phase 1: Scaffold `K2048/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED: Scaffolded K2048 web HTML and registered app)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED: Implemented web K2048 game logic, style, and mechanics)
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 
 ## Next Priority (Before New Apps)
 
