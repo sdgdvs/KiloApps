@@ -41,7 +41,9 @@
 
 ## Progress Log
 
-- **Status:** Phase 1 (Completed), Starting Phase 2
+- **Status:** Phase 2 (Completed), Starting Phase 3
 - **Log:**
   - Audited App.jsx for missing or reused icons.
-  - Added `circle` and `line` drawing helpers to `gen_icons.py`.
+  - Added `circle` and `draw_art` drawing helpers to `gen_icons.py`.
+  - Added generation logic for System & Dev icons (ktaskmgr, ksettings, kbase, kdb, ktype, kzip, kfont, kcontacts, kconverter).
+  - Executed gen_icons.py, copied to public/assets/icons, and updated App.jsx paths.
