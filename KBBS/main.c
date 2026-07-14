@@ -142,14 +142,43 @@ char* captureBuffer = NULL;
 int captureLen = 0;
 int captureCapacity = 0;
 
+char* rxBuffer = NULL;
+int rxBufLen = 0;
+int rxBufCapacity = 0;
+
+void EnqueueRx(unsigned char* buf, int len) {
+    if (!rxBuffer) {
+        rxBufCapacity = 1048576;
+        rxBuffer = (char*)GlobalAlloc(GPTR, rxBufCapacity);
+    }
+    if (rxBuffer) {
+        if (rxBufLen + len > rxBufCapacity) {
+            rxBufCapacity = (rxBufLen + len) * 2;
+            char* newBuf = (char*)GlobalAlloc(GPTR, rxBufCapacity);
+            if (newBuf) {
+                int i;
+                for (i=0; i<rxBufLen; i++) newBuf[i] = rxBuffer[i];
+                GlobalFree(rxBuffer);
+                rxBuffer = newBuf;
+            } else {
+                return;
+            }
+        }
+        int i;
+        for (i=0; i<len; i++) rxBuffer[rxBufLen + i] = buf[i];
+        rxBufLen += len;
+    }
+}
+
 struct KBBS_SETTINGS {
     int fontSize;
     int blinkRateMs;
     int localEcho;
     int usePalette;
     COLORREF palette[16];
+    int baudRate;
 };
-struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0, 0, {0} };
+struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0, 0, {0}, 0 };
 
 void LoadSettings(void) {
     HANDLE hFile = CreateFileA("kbbs_settings.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
@@ -1076,6 +1105,7 @@ void ClearScreen(void) {
 #define IDC_SET_FONT 3001
 #define IDC_SET_BLINK 3002
 #define IDC_SET_ECHO 3003
+#define IDC_SET_BAUD 3006
 
 INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -1084,6 +1114,22 @@ INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam)
             my_itoa(kbbsSettings.fontSize, buf); SetDlgItemTextA(hdlg, IDC_SET_FONT, buf);
             my_itoa(kbbsSettings.blinkRateMs, buf); SetDlgItemTextA(hdlg, IDC_SET_BLINK, buf);
             SendMessageA(GetDlgItem(hdlg, IDC_SET_ECHO), BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
+
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_ADDSTRING, 0, (LPARAM)"Instant (Default)");
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_ADDSTRING, 0, (LPARAM)"14400 bps");
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_ADDSTRING, 0, (LPARAM)"9600 bps");
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_ADDSTRING, 0, (LPARAM)"2400 bps");
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_ADDSTRING, 0, (LPARAM)"1200 bps");
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_ADDSTRING, 0, (LPARAM)"300 bps");
+            
+            int selBaud = 0;
+            if (kbbsSettings.baudRate == 14400) selBaud = 1;
+            else if (kbbsSettings.baudRate == 9600) selBaud = 2;
+            else if (kbbsSettings.baudRate == 2400) selBaud = 3;
+            else if (kbbsSettings.baudRate == 1200) selBaud = 4;
+            else if (kbbsSettings.baudRate == 300) selBaud = 5;
+            SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_SETCURSEL, selBaud, 0);
+
             return TRUE;
         }
         case WM_COMMAND: {
@@ -1096,6 +1142,14 @@ INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
                 kbbsSettings.localEcho = (SendMessageA(GetDlgItem(hdlg, IDC_SET_ECHO), BM_GETCHECK, 0, 0) == BST_CHECKED);
                 
+                int selBaud = (int)SendMessageA(GetDlgItem(hdlg, IDC_SET_BAUD), CB_GETCURSEL, 0, 0);
+                if (selBaud == 1) kbbsSettings.baudRate = 14400;
+                else if (selBaud == 2) kbbsSettings.baudRate = 9600;
+                else if (selBaud == 3) kbbsSettings.baudRate = 2400;
+                else if (selBaud == 4) kbbsSettings.baudRate = 1200;
+                else if (selBaud == 5) kbbsSettings.baudRate = 300;
+                else kbbsSettings.baudRate = 0;
+
                 int i;
                 for(i=0; i<16; i++) ansiColors[i] = kbbsSettings.palette[i];
                 
@@ -1576,6 +1630,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 500;
 
             SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
+            SetTimer(hwnd, 2, 16, NULL);
             HFONT hFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                 DEFAULT_PITCH | FF_SWISS, "Tahoma");
@@ -1864,13 +1919,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 unsigned char buf[2048];
                 int ret = recv(sock, (char*)buf, sizeof(buf), 0);
                 if (ret > 0) {
-                    int i;
                     bytesRx += ret;
                     UpdateStatus();
-                    for (i = 0; i < ret; i++) {
-                        ProcessTelnetByte(buf[i]);
-                    }
-                    InvalidateRect(hwnd, NULL, FALSE);
+                    EnqueueRx(buf, ret);
                 }
             } else if (WSAGETSELECTEVENT(lParam) == FD_CLOSE) {
                 SetStatusText("Disconnected");
@@ -2075,6 +2126,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) {
                 blinkState = !blinkState;
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 2) {
+                if (kbbsSettings.baudRate <= 0) {
+                    if (rxBufLen > 0) {
+                        int i;
+                        for (i = 0; i < rxBufLen; i++) ProcessTelnetByte((unsigned char)rxBuffer[i]);
+                        rxBufLen = 0;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
+                } else {
+                    static DWORD lastTime = 0;
+                    DWORD now = GetTickCount();
+                    if (lastTime == 0) lastTime = now;
+                    DWORD dt = now - lastTime;
+                    lastTime = now;
+                    if (dt > 1000) dt = 1000;
+                    
+                    static float baudFrac = 0.0f;
+                    float cps = (float)kbbsSettings.baudRate / 10.0f;
+                    baudFrac += (cps * dt) / 1000.0f;
+                    int charsToProcess = (int)baudFrac;
+                    
+                    if (charsToProcess > 0 && rxBufLen > 0) {
+                        baudFrac -= charsToProcess;
+                        int take = charsToProcess;
+                        if (take > rxBufLen) take = rxBufLen;
+                        
+                        int i;
+                        for (i = 0; i < take; i++) {
+                            ProcessTelnetByte((unsigned char)rxBuffer[i]);
+                        }
+                        
+                        int remain = rxBufLen - take;
+                        if (remain > 0) {
+                            for (i = 0; i < remain; i++) rxBuffer[i] = rxBuffer[take + i];
+                        }
+                        rxBufLen = remain;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    } else if (rxBufLen == 0) {
+                        baudFrac = 0.0f;
+                    }
+                }
             }
             return 0;
         }

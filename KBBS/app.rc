@@ -38,7 +38,7 @@ BEGIN
     PUSHBUTTON      "Close", 2, 215, 175, 75, 16
 END
 
-3000 DIALOGEX 0, 0, 180, 120
+3000 DIALOGEX 0, 0, 180, 140
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Display Settings"
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
@@ -47,10 +47,11 @@ BEGIN
     EDITTEXT        3001, 80, 10, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Blink Rate (ms):", -1, 10, 32, 60, 8
     EDITTEXT        3002, 80, 30, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
-    AUTOCHECKBOX    "Local Echo", 3003, 10, 50, 60, 10
-    PUSHBUTTON      "Edit Palette Colors...", 3004, 10, 70, 75, 14
-    PUSHBUTTON      "Reset Palette", 3005, 90, 70, 60, 14
-    DEFPUSHBUTTON   "Save", 1, 30, 95, 50, 14
-    PUSHBUTTON      "Cancel", 2, 100, 95, 50, 14
+    LTEXT           "Baud Rate:", -1, 10, 52, 60, 8
+    COMBOBOX        3006, 80, 50, 70, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX    "Local Echo", 3003, 10, 70, 60, 10
+    PUSHBUTTON      "Edit Palette Colors...", 3004, 10, 90, 75, 14
+    PUSHBUTTON      "Reset Palette", 3005, 90, 90, 60, 14
+    DEFPUSHBUTTON   "Save", 1, 30, 115, 50, 14
+    PUSHBUTTON      "Cancel", 2, 100, 115, 50, 14
 END
-
