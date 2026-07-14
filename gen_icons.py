@@ -627,3 +627,56 @@ save_ico('icons/kspace.ico', generate_space())
 save_ico('icons/kpac.ico', generate_pac())
 save_ico('icons/kchess.ico', generate_chess())
 save_ico('icons/kmaze.ico', generate_maze())
+
+def generate_radio():
+    img = new_img()
+    rect(img, 4, 8, 28, 26, (150, 100, 50)) # wood case
+    rect(img, 6, 12, 16, 22, (50, 50, 50)) # speaker grill
+    for x in range(6, 16, 2):
+        rect(img, x, 12, x, 22, (0, 0, 0)) # lines
+    circle(img, 22, 16, 4, (200, 200, 200)) # dial
+    rect(img, 16, 2, 18, 8, (100, 100, 100)) # antenna
+    return img
+
+def generate_graph():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (255, 255, 255))
+    # Edges
+    line(img, 8, 8, 24, 12, (100, 100, 100))
+    line(img, 24, 12, 16, 24, (100, 100, 100))
+    line(img, 16, 24, 8, 8, (100, 100, 100))
+    # Nodes
+    circle(img, 8, 8, 3, (0, 0, 255))
+    circle(img, 24, 12, 3, (0, 0, 255))
+    circle(img, 16, 24, 3, (0, 0, 255))
+    return img
+
+def generate_vault():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (100, 100, 100)) # metal safe
+    rect(img, 4, 4, 28, 28, (80, 80, 80)) # door
+    circle(img, 16, 16, 6, (150, 150, 150)) # dial
+    circle(img, 16, 16, 4, (50, 50, 50)) # inner dial
+    rect(img, 15, 10, 17, 12, (255, 0, 0)) # notch
+    # hinge
+    rect(img, 4, 8, 6, 12, (50, 50, 50))
+    rect(img, 4, 20, 6, 24, (50, 50, 50))
+    return img
+
+def generate_quarantine():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (0, 0, 0))
+    # biohazard symbol (approximate with circles)
+    circle(img, 16, 16, 10, (255, 255, 0))
+    circle(img, 16, 16, 8, (0, 0, 0))
+    circle(img, 10, 10, 4, (255, 255, 0))
+    circle(img, 22, 10, 4, (255, 255, 0))
+    circle(img, 16, 22, 4, (255, 255, 0))
+    circle(img, 16, 16, 2, (255, 255, 0))
+    return img
+
+# Phase 5 Icons
+save_ico('icons/kradio.ico', generate_radio())
+save_ico('icons/kgraph.ico', generate_graph())
+save_ico('icons/kvault.ico', generate_vault())
+save_ico('icons/kquarantine.ico', generate_quarantine())

@@ -51,3 +51,5 @@
   - Executed gen_icons.py with uv, copied icons to public/assets/icons, and updated App.jsx paths.
   - Added generation logic for Game icons (kbreakout, k2048, ksolitaire, kspace, kpac, kchess, kmaze).
   - Executed gen_icons.py with uv, copied to public/assets/icons, and updated App.jsx paths.
+  - Added generation logic for KRadio, KGraph, KVault, KQuarantine in Phase 5.
+  - Executed gen_icons.py, copied to public/assets/icons, and updated App.jsx paths.
