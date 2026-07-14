@@ -250,7 +250,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H + 40);
-            SelectObject(memDC, hbm);
+            HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
             
             // Draw status area
             RECT statusRc = {0, 0, W, 40};
@@ -283,6 +283,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             BitBlt(hdc, 0, 0, W, H + 40, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBm);
             DeleteObject(hbm);
             DeleteDC(memDC);
             EndPaint(hwnd, &ps);

@@ -225,7 +225,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
-            SelectObject(memDC, hbm);
+            HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
             
             HBRUSH bg = CreateSolidBrush(RGB(10, 10, 30));
             RECT rc = {0, 0, W, H};
@@ -247,10 +247,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(pbr);
             
             if (shieldActive) {
-                HBRUSH sbr = CreateSolidBrush(RGB(50, 200, 255));
-                RECT sr = {(int)p.x - 4, (int)p.y - 4, (int)p.x + 24, (int)p.y + 24};
-                FrameRect(memDC, &sr, sbr);
-                DeleteObject(sbr);
+                HBRUSH sbr2 = CreateSolidBrush(RGB(50, 200, 255));
+                RECT sr2 = {(int)p.x - 4, (int)p.y - 4, (int)p.x + 24, (int)p.y + 24};
+                FrameRect(memDC, &sr2, sbr2);
+                DeleteObject(sbr2);
             }
             
             // Draw bullets
@@ -303,6 +303,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBm);
             DeleteObject(hbm);
             DeleteDC(memDC);
             EndPaint(hwnd, &ps);

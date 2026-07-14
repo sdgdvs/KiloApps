@@ -83,7 +83,9 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KRogue**: Fixed turn logic in `krogue.html` where pressing wait `.` skipped both player and monster turns. Verified native `main.c` logic.
 - **KScript**: Fixed negative integer division in `kscript.html` using `Math.trunc`. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KSnake**: Fixed suicide bug (self-intersection on rapid keypresses) and prevented arrow keys from scrolling the page in `ksnake.html`. Fixed suicide bug by adding `last_dir_x/y` checks in `main.c`.
+- **KSolitaire**: Verified `ksolitaire.html` logic. Fixed GDI resource leak (HBITMAP) in `main.c` on `WM_PAINT`.
+- **KSpace**: Verified `kspace.html` logic. Fixed GDI resource leak (HBITMAP) in `main.c` on `WM_PAINT`.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KSnake.
+All apps need systematic testing. Continue alphabetically from KSynth.
 
