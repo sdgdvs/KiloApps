@@ -60,4 +60,5 @@
   - Actually implemented the full list of remaining 19 icons in gen_icons.py (since previous commit only added kterm), regenerated with uv, and copied all to public/assets/icons. All apps now have true procedural icons.
   - Audited App.jsx for new apps during Phase 5 continuous polish loop. Found 58 total apps, all with unique procedurally generated icons. No new apps were added by Builder/Creator agents. System is fully up-to-date.
   - Refined kexplorer icon (added internal folder paper lines) in gen_icons.py for better visibility in Start Menu/Desktop. Regenerated and copied all icons.
+  - Refined kpad and kcalc icons in gen_icons.py for better visibility (added red margin to kpad, orange right column to kcalc). Regenerated and copied all icons.
   - Refined kchat icon (added overlapping speech bubbles) in gen_icons.py for a more premium look. Regenerated and copied all icons.

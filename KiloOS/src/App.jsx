@@ -3,7 +3,13 @@ import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
 const MICROS_VERSION = '0.3.57';
 
+<<<<<<< Updated upstream
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
+=======
+const MICROS_VERSION = '0.3.10';
+
+const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
+>>>>>>> Stashed changes
 
 const FOLDERS = [
   { id: 'System', title: 'System Tools', icon: FOLDER_ICON, isFolder: true, w: 450, h: 350 },
@@ -567,7 +573,11 @@ function App() {
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
+<<<<<<< Updated upstream
       const newTime = (now.getMinutes() === 33 && !cerberusBlinded)
+=======
+      const newTime = now.getMinutes() === 33 
+>>>>>>> Stashed changes
         ? "CERBERUS: SCANNING MEMORY" 
         : now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         
