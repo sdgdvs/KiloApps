@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.53';
+const MICROS_VERSION = '0.3.54';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 
@@ -76,7 +76,7 @@ const APPS = [
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
   const [pos, setPos] = useState({ x: app.x, y: app.y });
-  const [size, setSize] = useState({ w: app.w, h: app.h });
+  const [size, setSize] = useState({ w: Math.min(app.w, window.innerWidth - 20), h: Math.min(app.h, window.innerHeight - 60) });
   const [dragging, setDragging] = useState(false);
   const [selectedIcons, setSelectedIcons] = useState([]);
   const [resizing, setResizing] = useState(false);
@@ -109,7 +109,10 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
   const handlePointerMove = (e) => {
     if (dragging) {
       let newY = Math.max(0, e.clientY - offset.current.y);
-      setPos({ x: e.clientX - offset.current.x, y: newY });
+      let newX = e.clientX - offset.current.x;
+      newX = Math.max(-size.w + 60, Math.min(window.innerWidth - 60, newX));
+      newY = Math.min(window.innerHeight - 60, newY);
+      setPos({ x: newX, y: newY });
       if (e.clientX < 20) setSnapPreview('left');
       else if (e.clientX > window.innerWidth - 20) setSnapPreview('right');
       else if (e.clientY < 10) setSnapPreview('maximized');
@@ -196,7 +199,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
         if (newY < 0) newY = 0;
         if (newY > window.innerHeight - 60) newY = Math.max(0, window.innerHeight - 60);
         if (newX > window.innerWidth - 60) newX = window.innerWidth - 60;
-        if (newX < -app.w + 60) newX = -app.w + 60;
+        if (newX < -size.w + 60) newX = -size.w + 60;
         
         if (newX !== p.x || newY !== p.y) return { x: newX, y: newY };
         return p;
@@ -205,7 +208,7 @@ function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModa
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [app.w]);
+  }, [size.w]);
 
   // Handle postMessage from iframe
   useEffect(() => {
