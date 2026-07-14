@@ -21,3 +21,20 @@ BEGIN
     DEFPUSHBUTTON   "Connect", 1, 135, 175, 75, 16
     PUSHBUTTON      "Cancel", 2, 215, 175, 75, 16
 END
+
+2000 DIALOGEX 0, 0, 300, 200
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Macros (Alt + Key)"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    LISTBOX         2001, 5, 5, 120, 190, LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Key (e.g. L):", -1, 135, 10, 50, 8
+    EDITTEXT        2002, 190, 8, 20, 14, ES_AUTOHSCROLL | ES_UPPERCASE
+    LTEXT           "Sequence (use \\r):", -1, 135, 28, 100, 8
+    EDITTEXT        2003, 135, 40, 155, 60, ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL
+    PUSHBUTTON      "Save", 2006, 135, 110, 50, 14
+    PUSHBUTTON      "New", 2007, 190, 110, 50, 14
+    PUSHBUTTON      "Delete", 2008, 245, 110, 45, 14
+    PUSHBUTTON      "Close", 2, 215, 175, 75, 16
+END
+

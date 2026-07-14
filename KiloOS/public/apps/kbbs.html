@@ -67,6 +67,7 @@
         </label>
         <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect</button>
         <button id="btnDir" onclick="showDialingDir()">Directory</button>
+        <button id="btnMacros" onclick="showMacros()" style="margin-left:4px;">Macros</button>
         <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:8px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
@@ -100,6 +101,30 @@
                 </div>
                 <div style="padding: 16px; border-top: 1px solid #27272a; display: flex; justify-content: flex-end; gap: 8px;">
                     <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="connectSelected()">Connect</button>
+                </div>
+            </div>
+        </div>
+        <!-- Macros Modal -->
+        <div id="macrosDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid #27272a; font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                    <span>Macros (Alt + Key)</span>
+                    <button style="background: #27272a; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="closeMacros()">X</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <div style="width: 200px; border-right: 1px solid #27272a; overflow-y: auto;" id="macroList"></div>
+                    <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Key (e.g. L)</label><br><input type="text" id="macroKey" maxlength="1" style="width:50px; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; text-transform:uppercase;"></div>
+                        <div style="flex:1; display:flex; flex-direction:column;">
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">String Sequence (use \r for enter)</label>
+                            <textarea id="macroString" style="flex:1; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; resize:none; font-family:monospace;"></textarea>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveMacro()">Save</button>
+                            <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteMacro()">Delete</button>
+                            <button style="background:#27272a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:auto;" onclick="newMacro()">New</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -756,6 +781,24 @@
             case 'F11': seq = '\x1B[23~'; break;
             case 'F12': seq = '\x1B[24~'; break;
             default:
+                if (e.altKey && e.key.length === 1) {
+                    const k = e.key.toUpperCase();
+                    if ((k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9')) {
+                        const mac = dynMacros.find(m => m.key === k);
+                        if (mac) {
+                            const translated = mac.str.replace(/\\r/g, '\r')
+                                                      .replace(/\\n/g, '\n')
+                                                      .replace(/\\t/g, '\t')
+                                                      .replace(/\\e/g, '\x1B');
+                            ws.send(translated);
+                            bytesTx += translated.length; updateBytes();
+                            e.preventDefault();
+                            scrollOffset = 0;
+                            render();
+                            return;
+                        }
+                    }
+                }
                 if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
                     ws.send(e.key);
                     bytesTx += 1; updateBytes();
@@ -911,8 +954,106 @@
         canvas.focus();
     }
 
+    // ─── Macros ───
+    let dynMacros = [];
+    let selectedMacroIndex = -1;
+
+    function loadMacros() {
+        const saved = localStorage.getItem('kbbs_macros');
+        if (saved) {
+            try { dynMacros = JSON.parse(saved); } catch(e) { dynMacros = []; }
+        } else {
+            dynMacros = [];
+        }
+    }
+
+    function saveMacros() {
+        localStorage.setItem('kbbs_macros', JSON.stringify(dynMacros));
+    }
+
+    function renderMacroList() {
+        const lst = document.getElementById('macroList');
+        lst.innerHTML = '';
+        dynMacros.forEach((m, i) => {
+            const div = document.createElement('div');
+            div.textContent = 'Alt + ' + m.key;
+            div.style.padding = '10px 16px';
+            div.style.cursor = 'pointer';
+            div.style.borderBottom = '1px solid #27272a';
+            div.style.color = (i === selectedMacroIndex) ? '#fff' : '#a1a1aa';
+            div.style.background = (i === selectedMacroIndex) ? '#0ea5e9' : 'transparent';
+            div.onmouseover = () => { if (i !== selectedMacroIndex) div.style.background = '#27272a'; };
+            div.onmouseout = () => { if (i !== selectedMacroIndex) div.style.background = 'transparent'; };
+            div.onclick = () => selectMacro(i);
+            lst.appendChild(div);
+        });
+    }
+
+    function selectMacro(idx) {
+        selectedMacroIndex = idx;
+        renderMacroList();
+        if (idx >= 0 && idx < dynMacros.length) {
+            const m = dynMacros[idx];
+            document.getElementById('macroKey').value = m.key || '';
+            document.getElementById('macroString').value = m.str || '';
+        }
+    }
+
+    function newMacro() {
+        selectedMacroIndex = -1;
+        renderMacroList();
+        document.getElementById('macroKey').value = '';
+        document.getElementById('macroString').value = '';
+    }
+
+    function saveMacro() {
+        let key = document.getElementById('macroKey').value.trim().toUpperCase();
+        const str = document.getElementById('macroString').value;
+        if (!key || key.length !== 1) return;
+        if (!((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))) return;
+
+        const entry = { key, str };
+        if (selectedMacroIndex >= 0) {
+            dynMacros[selectedMacroIndex] = entry;
+        } else {
+            const existing = dynMacros.findIndex(m => m.key === key);
+            if (existing >= 0) {
+                dynMacros[existing] = entry;
+                selectedMacroIndex = existing;
+            } else {
+                dynMacros.push(entry);
+                selectedMacroIndex = dynMacros.length - 1;
+            }
+        }
+        saveMacros();
+        renderMacroList();
+    }
+
+    function deleteMacro() {
+        if (selectedMacroIndex >= 0) {
+            dynMacros.splice(selectedMacroIndex, 1);
+            selectedMacroIndex = -1;
+            saveMacros();
+            renderMacroList();
+        }
+    }
+
+    function showMacros() {
+        document.getElementById('macrosDir').style.display = 'flex';
+        loadMacros();
+        if (selectedMacroIndex < 0 && dynMacros.length > 0) selectedMacroIndex = 0;
+        renderMacroList();
+        selectMacro(selectedMacroIndex);
+    }
+    
+    function closeMacros() {
+        document.getElementById('macrosDir').style.display = 'none';
+        canvas.focus();
+    }
+
     // ─── Init ───
     initScreen();
+    loadMacros();
     // No more bbsSelect render
     // Welcome message
     const welcome = [

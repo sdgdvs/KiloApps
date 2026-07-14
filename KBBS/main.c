@@ -129,6 +129,7 @@ int telSBLen = 0;
 
 SOCKET sock = INVALID_SOCKET;
 HWND hMain, hHost, hPort, hBtn, hCombo, hEcho, hStatus;
+HWND hBtnMacros;
 HFONT hTermFont;
 int bytesRx = 0;
 int bytesTx = 0;
@@ -592,6 +593,166 @@ INT_PTR CALLBACK DialDirProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) 
     return FALSE;
 }
 
+#define IDD_MACROS   2000
+#define IDC_MACRO_LIST 2001
+#define IDC_MACRO_KEY  2002
+#define IDC_MACRO_STR  2003
+#define IDC_MACRO_SAVE 2006
+#define IDC_MACRO_NEW  2007
+#define IDC_MACRO_DEL  2008
+
+struct MACRO_ENTRY {
+    char key;
+    char str[1024];
+};
+
+struct MACRO_ENTRY dynMacros[MAX_BBS];
+int numMacros = 0;
+int selectedMacroIdx = -1;
+
+void LoadMacros(void) {
+    HANDLE hFile = CreateFileA("kbbs_macros.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    numMacros = 0;
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes;
+        char buf[8192];
+        if (ReadFile(hFile, buf, sizeof(buf)-1, &readBytes, NULL)) {
+            buf[readBytes] = 0;
+            char* line = buf;
+            while (*line && numMacros < MAX_BBS) {
+                char* next = line;
+                while (*next && *next != '\n' && *next != '\r') next++;
+                char term = *next;
+                *next = 0;
+                if (line[0]) {
+                    char* p1 = line;
+                    char* p2 = p1; while(*p2 && *p2 != '|') p2++; if (*p2) { *p2++ = 0; }
+                    
+                    if (*p1 && *p2) {
+                        dynMacros[numMacros].key = p1[0];
+                        my_strcpy(dynMacros[numMacros].str, p2);
+                        numMacros++;
+                    }
+                }
+                line = next;
+                if (term == '\r' && *(line+1) == '\n') line += 2;
+                else if (term != 0) line++;
+            }
+        }
+        CloseHandle(hFile);
+    }
+}
+
+void SaveMacros(void) {
+    HANDLE hFile = CreateFileA("kbbs_macros.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        int i;
+        char buf[2048];
+        DWORD written;
+        for (i = 0; i < numMacros; i++) {
+            char kStr[2] = {dynMacros[i].key, 0};
+            my_strcpy(buf, kStr);
+            my_strcpy(buf + my_strlen(buf), "|");
+            my_strcpy(buf + my_strlen(buf), dynMacros[i].str);
+            my_strcpy(buf + my_strlen(buf), "\r\n");
+            WriteFile(hFile, buf, (DWORD)my_strlen(buf), &written, NULL);
+        }
+        CloseHandle(hFile);
+    }
+}
+
+void UpdateMacroListUI(HWND hList) {
+    SendMessageA(hList, LB_RESETCONTENT, 0, 0);
+    int i;
+    for (i = 0; i < numMacros; i++) {
+        char item[128];
+        wsprintfA(item, "Alt + %c", dynMacros[i].key);
+        SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)item);
+    }
+}
+
+INT_PTR CALLBACK MacrosProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_INITDIALOG: {
+            HWND hList = GetDlgItem(hdlg, IDC_MACRO_LIST);
+            LoadMacros();
+            UpdateMacroListUI(hList);
+            selectedMacroIdx = 0;
+            if (numMacros > 0) {
+                SendMessageA(hList, LB_SETCURSEL, selectedMacroIdx, 0);
+                char kStr[2] = {dynMacros[0].key, 0};
+                SetDlgItemTextA(hdlg, IDC_MACRO_KEY, kStr);
+                SetDlgItemTextA(hdlg, IDC_MACRO_STR, dynMacros[0].str);
+            }
+            return TRUE;
+        }
+        case WM_COMMAND: {
+            int id = LOWORD(wParam);
+            int code = HIWORD(wParam);
+            if (id == IDC_MACRO_LIST && code == LBN_SELCHANGE) {
+                int sel = (int)SendMessageA(GetDlgItem(hdlg, IDC_MACRO_LIST), LB_GETCURSEL, 0, 0);
+                if (sel >= 0 && sel < numMacros) {
+                    selectedMacroIdx = sel;
+                    char kStr[2] = {dynMacros[sel].key, 0};
+                    SetDlgItemTextA(hdlg, IDC_MACRO_KEY, kStr);
+                    SetDlgItemTextA(hdlg, IDC_MACRO_STR, dynMacros[sel].str);
+                }
+            } else if (id == IDC_MACRO_NEW) {
+                selectedMacroIdx = -1;
+                SendMessageA(GetDlgItem(hdlg, IDC_MACRO_LIST), LB_SETCURSEL, (WPARAM)-1, 0);
+                SetDlgItemTextA(hdlg, IDC_MACRO_KEY, "");
+                SetDlgItemTextA(hdlg, IDC_MACRO_STR, "");
+            } else if (id == IDC_MACRO_SAVE) {
+                char keyBuf[16], strBuf[1024];
+                GetDlgItemTextA(hdlg, IDC_MACRO_KEY, keyBuf, 16);
+                GetDlgItemTextA(hdlg, IDC_MACRO_STR, strBuf, 1024);
+                char k = keyBuf[0];
+                if (k >= 'a' && k <= 'z') k -= 32;
+                if ((k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9')) {
+                    int target = selectedMacroIdx;
+                    if (target < 0) {
+                        int i;
+                        int exists = -1;
+                        for(i=0; i<numMacros; i++) {
+                            if (dynMacros[i].key == k) { exists = i; break; }
+                        }
+                        if (exists >= 0) target = exists;
+                        else {
+                            target = numMacros;
+                            if (numMacros < MAX_BBS) numMacros++;
+                            else target = MAX_BBS - 1;
+                        }
+                    }
+                    dynMacros[target].key = k;
+                    my_strcpy(dynMacros[target].str, strBuf);
+                    
+                    HWND hList = GetDlgItem(hdlg, IDC_MACRO_LIST);
+                    UpdateMacroListUI(hList);
+                    SendMessageA(hList, LB_SETCURSEL, target, 0);
+                    selectedMacroIdx = target;
+                    SaveMacros();
+                }
+            } else if (id == IDC_MACRO_DEL) {
+                if (selectedMacroIdx >= 0 && selectedMacroIdx < numMacros) {
+                    int i;
+                    for (i = selectedMacroIdx; i < numMacros - 1; i++) {
+                        dynMacros[i] = dynMacros[i+1];
+                    }
+                    numMacros--;
+                    selectedMacroIdx = -1;
+                    HWND hList = GetDlgItem(hdlg, IDC_MACRO_LIST);
+                    UpdateMacroListUI(hList);
+                    SaveMacros();
+                }
+            } else if (id == 2) {
+                EndDialog(hdlg, -1);
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
 void ClearScreen(void) {
     int r, c;
     for (r = 0; r < MAX_LINES; r++) {
@@ -1020,14 +1181,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hCombo = CreateWindowA("BUTTON", "Directory", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                 dpiScale(428), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)101, 0, 0);
 
+            hBtnMacros = CreateWindowA("BUTTON", "Macros", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(502), dpiScale(4), dpiScale(60), dpiScale(22), hwnd, (HMENU)109, 0, 0);
+
             hBtnXmDl = CreateWindowA("BUTTON", "DL (XMODEM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(502), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)103, 0, 0);
+                dpiScale(566), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)103, 0, 0);
 
             hBtnXmUl = CreateWindowA("BUTTON", "UL (XMODEM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(586), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)104, 0, 0);
+                dpiScale(650), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)104, 0, 0);
             
             hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                dpiScale(670), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
+                dpiScale(734), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
 
             /* Status bar */
             hStatus = CreateWindowA("STATIC", "Disconnected | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -1038,6 +1202,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnMacros, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnXmDl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtnXmUl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -1112,6 +1277,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetWindowTextA(hPort, portBuf);
                     SendMessage(hwnd, WM_COMMAND, 100, 0);
                 }
+            } else if (LOWORD(wParam) == 109) {
+                DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_MACROS), hwnd, MacrosProc, 0);
             } else if (LOWORD(wParam) == 103) {
                 /* XMODEM DL */
                 if (sock != INVALID_SOCKET && !transferActive) {
@@ -1447,6 +1614,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case VK_BACK:   seq = "\x08"; seqLen = 1; break;
                 case VK_RETURN: seq = "\r\n"; seqLen = 2; break;
                 case VK_TAB:    seq = "\t"; seqLen = 1; break;
+                case VK_INSERT: seq = "\x1B[2~"; seqLen = 4; break;
                 case VK_DELETE: seq = "\x1B[3~"; seqLen = 4; break;
                 case VK_HOME:   seq = "\x1B[H"; seqLen = 3; break;
                 case VK_END:    seq = "\x1B[F"; seqLen = 3; break;
@@ -1472,6 +1640,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
             break;
+        }
+        case WM_SYSKEYDOWN: {
+            if (sock != INVALID_SOCKET) {
+                if ((wParam >= 'A' && wParam <= 'Z') || (wParam >= '0' && wParam <= '9')) {
+                    char k = (char)wParam;
+                    int i;
+                    for (i = 0; i < numMacros; i++) {
+                        if (dynMacros[i].key == k) {
+                            char translated[1024];
+                            int t = 0;
+                            int j = 0;
+                            while(dynMacros[i].str[j] && t < 1023) {
+                                if (dynMacros[i].str[j] == '\\') {
+                                    j++;
+                                    if (dynMacros[i].str[j] == 0) break;
+                                    if (dynMacros[i].str[j] == 'r') translated[t++] = '\r';
+                                    else if (dynMacros[i].str[j] == 'n') translated[t++] = '\n';
+                                    else if (dynMacros[i].str[j] == 't') translated[t++] = '\t';
+                                    else if (dynMacros[i].str[j] == 'e') translated[t++] = '\x1B';
+                                    else translated[t++] = dynMacros[i].str[j];
+                                    j++;
+                                } else {
+                                    translated[t++] = dynMacros[i].str[j++];
+                                }
+                            }
+                            if (t > 0) {
+                                send(sock, translated, t, 0);
+                                bytesTx += t;
+                                UpdateStatus();
+                            }
+                            return 0; // Handled, stop processing
+                        }
+                    }
+                }
+            }
+            break; // Let DefWindowProc handle it
         }
         case WM_DESTROY:
             if (sock != INVALID_SOCKET) closesocket(sock);
@@ -1501,8 +1705,10 @@ void __stdcall MainEntry() {
     RegisterClassA(&wc);
 
     /* Terminal: 80*8=640 wide, 25*16=400 tall. Plus padding and bars. */
-    winW = dpiScale(650);
+    winW = dpiScale(820);
     winH = dpiScale(550);
+
+    LoadMacros();
 
     hMain = CreateWindowExA(0, "KBBSClass", "KBBS",
         WS_OVERLAPPEDWINDOW | WS_VSCROLL,
