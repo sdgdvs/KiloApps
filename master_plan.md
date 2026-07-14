@@ -45,16 +45,16 @@ Window management (dimming, snap-to-edge previews, drag feedback, minimize anima
 10. Games Loop 1 complete + KBreakout created + Loop 2 nearly done — July 13.
 
 ### Active 🔄
-11. Builder: Round-robin feature additions across all apps (perpetual).
-12. Creator: 4th new app in progress (choosing next app).
+11. **🎮 PRIORITY: Expand game library** — Creator agent pivoting to games-first after KFlash. Target: 19 new game titles with deep 14-phase expansion each.
+12. Builder: Round-robin feature additions across all apps (perpetual).
 13. QA: Systematic testing, currently at KPing (~33 apps remaining).
-14. Games: Loop 2 completion (KChess), then Loop 3 or new game.
+14. Games agent: Loop 2 completion, then Loop 3 with deeper content passes.
 15. Shell/UX: Window management animation polish, general refinements.
 
 ### Upcoming 📋
-16. Build pipeline improvements: automated size-limit checks, CI artifact upload.
-17. Automated testing or build-verification for native apps.
-18. Approach commercial-grade quality for key apps (leverage 999KB budget fully).
+16. Approach commercial-grade quality for key games (leverage 999KB budget fully).
+17. Build pipeline improvements: automated size-limit checks, CI artifact upload.
+18. Automated testing or build-verification for native apps.
 
 ## Active Agent Fleet (2 computers, 2 accounts)
 

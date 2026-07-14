@@ -16,14 +16,31 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
 
+## Director Priority: GAMES FIRST (as of 2026-07-13)
+
+After the current app (KFlash) completes Phase 14, **prioritize creating and deeply expanding GAMES**. The user wants a rich, diverse game library approaching commercial quality. Alternate: create 2-3 games, then 1 utility, then repeat.
+
+When creating games, think about what makes them **deeply replayable**:
+- Multiple game modes (classic, timed, endless, puzzle)
+- Progressive difficulty that adapts to skill
+- High score tables with multiple categories
+- Sound effects and visual feedback (particles, screen shake, combos)
+- Unlockable content or achievements
+- Multiple levels, maps, or boards
+- AI opponents with adjustable difficulty
+- Multiplayer (local 2-player where appropriate)
+- Tutorial/how-to-play screen
+- Statistics tracking (games played, win rate, streaks)
+
 ## Deduplication Rules (CRITICAL — READ BEFORE EVERY NEW APP)
 
 Before creating any new app, check for overlap with the existing suite. The following categories are SATURATED — do NOT create more apps in these niches:
-- **Text/Code Editors:** KPad, KNote, KScript — no more text editors or notepads. (KWrite was deleted as redundant with KPad.)
-- **Drawing/Art:** KPaint, KImage — no more paint or drawing apps. (KDraw was deleted as redundant with KPaint.)
+- **Text/Code Editors:** KPad, KNote, KScript — no more text editors or notepads.
+- **Drawing/Art:** KPaint, KImage — no more paint or drawing apps.
 - **Calculators/Converters:** KCalc, KConverter, KBase — no more calculator or unit converter variants.
 - **Time/Clocks:** KClock, KTimer, KCalendar — no more clock or timer variants.
 - **Chat/Messaging:** KChat, KChatServer, KBBS, KMail — no more chat or email apps.
+- **Existing Games:** KBreakout, KChess, KMaze, KMines, KPac, KPong, KRogue, KSnake, KSolitaire, KSpace, KTetris — do NOT recreate these genres.
 
 When choosing a new app, ask: "Does this do something fundamentally different from every existing app?" If the answer is no, pick something else.
 
@@ -53,7 +70,21 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - **Phase 4:** Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native.
 
 ### Deep Expansion (Phases 5-14)
-Each expansion phase adds ONE substantial feature to BOTH web and native versions. Target near-commercial quality. Examples of expansion features:
+Each expansion phase adds ONE substantial feature to BOTH web and native versions. Target near-commercial quality.
+
+**For Games, prioritize these expansion features:**
+- Additional game modes (timed, endless, puzzle, campaign)
+- AI opponent improvements (smarter, adjustable difficulty)
+- Sound effects (Web Audio API for web, Beep()/PlaySound for native)
+- Visual polish (particle effects, animations, screen shake, combo counters)
+- High score system with multiple categories
+- Level/map generation or progression
+- Power-ups, special abilities, or items
+- Statistics tracking (games played, win rate, best streaks)
+- Tutorial / how-to-play overlay
+- Local 2-player mode where appropriate
+
+**For Utilities, prioritize these expansion features:**
 - Data persistence (localStorage for web, file I/O for native)
 - Import/export functionality
 - Search and filtering
@@ -61,14 +92,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 - Keyboard shortcuts / accessibility
 - Settings panel / user preferences
 - Multiple views or modes
-- Print or share functionality
-- Drag-and-drop interactions
-- Data visualization or charts
-- Advanced algorithms or processing
-- Multi-item management (tabs, lists, collections)
-- Responsive layout improvements
 - Help/tutorial system
-- Performance optimization for large datasets
 
 ### Completion
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. Pick a new app and start over.
@@ -80,6 +104,32 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. Pick
 
 ## Possible Future Apps (pick from here or invent your own)
 
-**Utilities:** KPomodoro (focus timer with work/break cycles), KBudget (expense tracker with categories and charts), KFlash (flashcard study app with spaced repetition), KBookmark (bookmark manager with folders and tags), KHash (file/text hasher — MD5/SHA/CRC), KRSS (RSS feed reader), KClip (clipboard history manager), KRecipe (recipe organizer), KHabit (habit tracker with streaks), KFit (workout log), KVault (encrypted text storage), KDiff (text diff/compare tool)
+### 🎮 GAMES (PRIORITY — create these first)
+- **K2048** — Sliding tile puzzle. Merge tiles to reach 2048. Multiple grid sizes (4x4, 5x5, 6x6). Undo move. Best score tracking.
+- **KSudoku** — Logic puzzle. Generate puzzles at Easy/Medium/Hard/Expert. Pencil marks. Hint system. Timer. Validate button.
+- **KConnect4** — Two-player (or vs AI) drop-disc game. AI with minimax. Win streak tracking. Animated disc drops.
+- **KHangman** — Word guessing. Multiple word categories (animals, countries, science). Animated hangman drawing. Win/loss stats.
+- **KSimon** — Memory pattern game. Colored button sequences with sounds. Progressive speed increase. Longest streak tracking.
+- **KAsteroids** — Space shooter. Wrap-around screen. Ship thrust physics. Progressive waves. UFO bonus targets. Particle explosions.
+- **KFreecell** — Card solitaire variant. Full Freecell rules. Undo stack. Auto-complete. Win statistics.
+- **KMatch3** — Gem/candy matching. Grid-based match-3 with cascades and combos. Level progression. Score multipliers.
+- **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
+- **KGo** — Abstract strategy board game. 9x9, 13x13, 19x19 boards. Territory scoring. Simple AI. Capture visualization.
+- **KDarts** — Dartboard game. 301/501 scoring. Cricket mode. Aim-and-throw mechanic. Stats per player.
+- **KTowers** — Tower of Hanoi. Multiple difficulties (3-8 discs). Move counter. Optimal solution hint. Animated disc movement.
+- **KMemory** — Card memory matching. Multiple themes. Timed mode. Pair count options (8-32 pairs). Best time tracking.
+- **KTrivia** — Quiz game. Multiple categories. Multiple choice. Score tracking. Timed rounds.
+- **KReversi** — Othello/Reversi board game. AI with adjustable strength. Disc flip animations. Score display.
+- **KCheckers** — Classic checkers with king promotion. AI opponent. Force-jump rules. Move highlighting.
+- **KBattleship** — Naval combat. Place ships, call shots. Simple AI opponent. Hit/miss animations.
+- **KLightsOut** — Logic puzzle. Toggle lights in a grid. Multiple board sizes. Level progression. Move counter.
+- **KPinball** — Simplified pinball. Flipper physics. Bumpers and targets. Score multipliers. Ball launcher.
 
-**Games:** K2048 (sliding tile puzzle), KSudoku (logic puzzle generator/solver), KBreakout (brick breaker), KConnect4 (connect four), KHangman (word guessing), KSimon (memory pattern game), KAsteroids (space shooter), KFreecell (card solitaire variant), KMatch3 (gem matching), KWords (word search), KGo (board game)
+### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
+- **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
+- **KBookmark** — Bookmark manager with folders, tags, search.
+- **KHash** — File/text hasher (MD5, SHA-1, SHA-256, CRC32).
+- **KRSS** — RSS feed reader with folder organization.
+- **KClip** — Clipboard history manager with pinning and search.
+- **KRecipe** — Recipe organizer with ingredients, steps, categories.
+- **KDiff** — Text diff/compare tool with side-by-side view.
