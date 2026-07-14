@@ -266,11 +266,15 @@
         const port = document.getElementById('port').value.trim();
         if (!host) return;
 
+        // IMPORTANT: Once you deploy KBBSProxy to Cloud Run, replace this URL with your .run.app URL
+        // Example: const PROXY_URL = 'wss://kbbs-proxy-abcdef123-uc.a.run.app';
+        const PROXY_URL = 'ws://localhost:8080';
+
         let url;
         if (host.startsWith('ws://') || host.startsWith('wss://')) {
             url = host;
         } else {
-            url = 'wss://proxy-us.ftelnet.ca:2083/' + encodeURIComponent(host) + '/' + encodeURIComponent(port || '23');
+            url = `${PROXY_URL}/?host=${encodeURIComponent(host)}&port=${encodeURIComponent(port || '23')}`;
         }
 
         initScreen();
@@ -451,8 +455,8 @@
         '\x1B[1;32m  ► \x1B[0;37mSelect a BBS from the dropdown menu above',
         '\x1B[1;32m  ► \x1B[0;37mOr enter a WebSocket address (ws://host:port)',
         '',
-        '\x1B[0;36m  Raw telnet connections are routed via fTelnetProxy.',
-        '\x1B[0;36m  No local proxy setup is required.',
+        '\x1B[0;36m  Raw telnet connections are routed via your dedicated KBBSProxy.',
+        '\x1B[0;36m  Local connections require KBBSProxy to be running locally.',
         '',
         '\x1B[0;90m  ─────────────────────────────────────────────────────────────────────────────'
     ];
