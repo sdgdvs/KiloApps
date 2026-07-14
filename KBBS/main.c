@@ -130,6 +130,129 @@ HFONT hTermFont;
 int bytesRx = 0;
 int bytesTx = 0;
 
+/* Transfer state */
+#define XMODEM_SOH 0x01
+#define XMODEM_EOT 0x04
+#define XMODEM_ACK 0x06
+#define XMODEM_NAK 0x15
+#define XMODEM_CAN 0x18
+#define XMODEM_SUB 0x1A
+
+int transferActive = 0; /* 1=XmodemDL, 2=XmodemUL */
+int transferState = 0;
+HANDLE hTransferFile = INVALID_HANDLE_VALUE;
+int transferBlockNum = 1;
+int transferByteCount = 0;
+unsigned char transferBuf[132];
+int transferBytesTotal = 0;
+char transferStatusMsg[128] = "";
+
+HWND hBtnXmDl, hBtnXmUl;
+
+void EndTransfer(const char* msg) {
+    if (hTransferFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTransferFile);
+        hTransferFile = INVALID_HANDLE_VALUE;
+    }
+    transferActive = 0;
+    SetStatusText(msg);
+    InvalidateRect(hMain, NULL, FALSE);
+}
+
+void ProcessTransferByte(unsigned char ch) {
+    if (transferActive == 1) { /* Xmodem DL */
+        if (transferState == 0) { /* Wait for SOH, EOT, or CAN */
+            if (ch == XMODEM_SOH) {
+                transferState = 1;
+                transferByteCount = 0;
+                transferBuf[transferByteCount++] = ch;
+            } else if (ch == XMODEM_EOT) {
+                unsigned char ack = XMODEM_ACK;
+                send(sock, (char*)&ack, 1, 0);
+                EndTransfer("Download Complete");
+            } else if (ch == XMODEM_CAN) {
+                EndTransfer("Download Cancelled by Host");
+            }
+        } else if (transferState == 1) { /* Reading block */
+            transferBuf[transferByteCount++] = ch;
+            if (transferByteCount == 132) {
+                int blk = transferBuf[1];
+                int inv = transferBuf[2];
+                if (blk == (255 - inv) && blk == (transferBlockNum & 0xFF)) {
+                    unsigned char csum = 0;
+                    for (int i = 3; i < 131; i++) csum += transferBuf[i];
+                    if (csum == transferBuf[131]) {
+                        DWORD written;
+                        WriteFile(hTransferFile, transferBuf + 3, 128, &written, NULL);
+                        transferBytesTotal += 128;
+                        wsprintfA(transferStatusMsg, "Downloading... %d bytes", transferBytesTotal);
+                        transferBlockNum++;
+                        unsigned char ack = XMODEM_ACK;
+                        send(sock, (char*)&ack, 1, 0);
+                        transferState = 0;
+                        InvalidateRect(hMain, NULL, FALSE);
+                        return;
+                    }
+                }
+                /* Error or bad csum */
+                unsigned char nak = XMODEM_NAK;
+                send(sock, (char*)&nak, 1, 0);
+                transferState = 0;
+            }
+        }
+    } else if (transferActive == 2) { /* Xmodem UL */
+        if (transferState == 0) { /* Wait for NAK to start */
+            if (ch == XMODEM_NAK || ch == 'C') {
+                transferState = 1; /* Sending */
+                goto send_block;
+            } else if (ch == XMODEM_CAN) {
+                EndTransfer("Upload Cancelled");
+            }
+        } else if (transferState == 1) { /* Wait for ACK/NAK */
+            if (ch == XMODEM_ACK) {
+                transferBlockNum++;
+send_block:
+                {
+                    unsigned char buf[132];
+                    buf[0] = XMODEM_SOH;
+                    buf[1] = transferBlockNum & 0xFF;
+                    buf[2] = 255 - buf[1];
+                    DWORD readBytes = 0;
+                    ReadFile(hTransferFile, buf + 3, 128, &readBytes, NULL);
+                    if (readBytes == 0) { /* EOF */
+                        unsigned char eot = XMODEM_EOT;
+                        send(sock, (char*)&eot, 1, 0);
+                        transferState = 2; /* Wait for EOT ACK */
+                        return;
+                    }
+                    for (DWORD i = readBytes; i < 128; i++) buf[3 + i] = XMODEM_SUB;
+                    unsigned char csum = 0;
+                    for (int i = 3; i < 131; i++) csum += buf[i];
+                    buf[131] = csum;
+                    /* Send over telnet (escape 0xFF) */
+                    for (int i = 0; i < 132; i++) {
+                        send(sock, (char*)&buf[i], 1, 0);
+                        if (buf[i] == 0xFF) send(sock, (char*)&buf[i], 1, 0);
+                    }
+                    transferBytesTotal += readBytes;
+                    wsprintfA(transferStatusMsg, "Uploading... %d bytes", transferBytesTotal);
+                    InvalidateRect(hMain, NULL, FALSE);
+                }
+            } else if (ch == XMODEM_NAK) {
+                /* Resend */
+                SetFilePointer(hTransferFile, -128, NULL, FILE_CURRENT);
+                goto send_block;
+            } else if (ch == XMODEM_CAN) {
+                EndTransfer("Upload Cancelled");
+            }
+        } else if (transferState == 2) {
+            if (ch == XMODEM_ACK) {
+                EndTransfer("Upload Complete");
+            }
+        }
+    }
+}
+
 struct BBS { const char* name; const char* host; int port; };
 struct BBS bbsList[] = {
     {"20 For Beers", "20forbeers.com", 1337},
@@ -661,7 +784,8 @@ void ProcessTelnetByte(unsigned char ch) {
             if (ch == TELNET_IAC) {
                 telState = TEL_STATE_IAC;
             } else {
-                ProcessByte(ch);
+                if (transferActive) ProcessTransferByte(ch);
+                else ProcessByte(ch);
             }
             break;
         case TEL_STATE_IAC:
@@ -670,7 +794,11 @@ void ProcessTelnetByte(unsigned char ch) {
             else if (ch == TELNET_DO) { telState = TEL_STATE_DO; }
             else if (ch == TELNET_DONT) { telState = TEL_STATE_DONT; }
             else if (ch == TELNET_SB) { telState = TEL_STATE_SB; }
-            else if (ch == TELNET_IAC) { ProcessByte(ch); telState = TEL_STATE_NORMAL; }
+            else if (ch == TELNET_IAC) { 
+                if (transferActive) ProcessTransferByte(TELNET_IAC);
+                else ProcessByte(TELNET_IAC); 
+                telState = TEL_STATE_NORMAL; 
+            }
             else { telState = TEL_STATE_NORMAL; }
             break;
         case TEL_STATE_WILL:
@@ -757,10 +885,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 dpiScale(342), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)100, 0, 0);
 
             hCombo = CreateWindowA("BUTTON", "Directory", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                dpiScale(428), dpiScale(4), dpiScale(100), dpiScale(22), hwnd, (HMENU)101, 0, 0);
+                dpiScale(428), dpiScale(4), dpiScale(70), dpiScale(22), hwnd, (HMENU)101, 0, 0);
+
+            hBtnXmDl = CreateWindowA("BUTTON", "DL (XMODEM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(502), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)103, 0, 0);
+
+            hBtnXmUl = CreateWindowA("BUTTON", "UL (XMODEM)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                dpiScale(586), dpiScale(4), dpiScale(80), dpiScale(22), hwnd, (HMENU)104, 0, 0);
             
             hEcho = CreateWindowA("BUTTON", "Echo", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                dpiScale(582), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
+                dpiScale(670), dpiScale(4), dpiScale(52), dpiScale(22), hwnd, (HMENU)102, 0, 0);
 
             /* Status bar */
             hStatus = CreateWindowA("STATIC", "Disconnected | RX: 0 B | TX: 0 B", WS_CHILD | WS_VISIBLE | SS_LEFT,
@@ -771,6 +905,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnXmDl, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hBtnXmUl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
 
@@ -842,6 +978,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     my_itoa(dynBbsList[res].port, portBuf);
                     SetWindowTextA(hPort, portBuf);
                     SendMessage(hwnd, WM_COMMAND, 100, 0);
+                }
+            } else if (LOWORD(wParam) == 103) {
+                /* XMODEM DL */
+                if (sock != INVALID_SOCKET && !transferActive) {
+                    OPENFILENAMEA ofn = {0};
+                    char szFile[260] = {0};
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = hwnd;
+                    ofn.lpstrFile = szFile;
+                    ofn.nMaxFile = sizeof(szFile);
+                    ofn.lpstrFilter = "All Files\0*.*\0";
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+                    if (GetSaveFileNameA(&ofn)) {
+                        hTransferFile = CreateFileA(ofn.lpstrFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                        if (hTransferFile != INVALID_HANDLE_VALUE) {
+                            transferActive = 1;
+                            transferState = 0;
+                            transferBlockNum = 1;
+                            transferBytesTotal = 0;
+                            wsprintfA(transferStatusMsg, "Waiting for host...");
+                            unsigned char nak = XMODEM_NAK;
+                            send(sock, (char*)&nak, 1, 0);
+                            InvalidateRect(hwnd, NULL, FALSE);
+                        }
+                    }
+                }
+            } else if (LOWORD(wParam) == 104) {
+                /* XMODEM UL */
+                if (sock != INVALID_SOCKET && !transferActive) {
+                    OPENFILENAMEA ofn = {0};
+                    char szFile[260] = {0};
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = hwnd;
+                    ofn.lpstrFile = szFile;
+                    ofn.nMaxFile = sizeof(szFile);
+                    ofn.lpstrFilter = "All Files\0*.*\0";
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                    if (GetOpenFileNameA(&ofn)) {
+                        hTransferFile = CreateFileA(ofn.lpstrFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                        if (hTransferFile != INVALID_HANDLE_VALUE) {
+                            transferActive = 2;
+                            transferState = 0;
+                            transferBlockNum = 1;
+                            transferBytesTotal = 0;
+                            wsprintfA(transferStatusMsg, "Waiting for NAK...");
+                            InvalidateRect(hwnd, NULL, FALSE);
+                        }
+                    }
                 }
             }
             break;
@@ -991,6 +1175,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (drawH < termH) drawH = termH;
             SetStretchBltMode(hdc, COLORONCOLOR);
             StretchBlt(hdc, termX, termY, drawW, drawH, memDC, 0, 0, termW, termH, SRCCOPY);
+
+            /* Draw transfer overlay if active */
+            if (transferActive) {
+                HFONT uiFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                    ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                    DEFAULT_PITCH | FF_SWISS, "Tahoma");
+                HFONT oldUIFont = (HFONT)SelectObject(hdc, uiFont);
+                
+                RECT rOverlay = { clientRect.right/2 - dpiScale(120), clientRect.bottom/2 - dpiScale(40), clientRect.right/2 + dpiScale(120), clientRect.bottom/2 + dpiScale(40) };
+                HBRUSH br = CreateSolidBrush(RGB(20, 20, 30));
+                FillRect(hdc, &rOverlay, br);
+                DeleteObject(br);
+                
+                HPEN pen = CreatePen(PS_SOLID, 2, RGB(0, 200, 255));
+                HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+                MoveToEx(hdc, rOverlay.left, rOverlay.top, NULL); LineTo(hdc, rOverlay.right, rOverlay.top);
+                LineTo(hdc, rOverlay.right, rOverlay.bottom); LineTo(hdc, rOverlay.left, rOverlay.bottom); LineTo(hdc, rOverlay.left, rOverlay.top);
+                SelectObject(hdc, oldPen);
+                DeleteObject(pen);
+
+                SetTextColor(hdc, RGB(255, 255, 255));
+                SetBkMode(hdc, TRANSPARENT);
+                RECT rTitle = rOverlay; rTitle.top += dpiScale(15);
+                DrawTextA(hdc, transferActive == 1 ? "XMODEM DOWNLOAD" : "XMODEM UPLOAD", -1, &rTitle, DT_CENTER | DT_TOP);
+                
+                RECT rMsg = rOverlay; rMsg.top += dpiScale(40);
+                SetTextColor(hdc, RGB(100, 255, 100));
+                DrawTextA(hdc, transferStatusMsg, -1, &rMsg, DT_CENTER | DT_TOP);
+                
+                SelectObject(hdc, oldUIFont);
+                DeleteObject(uiFont);
+            }
 
             SelectObject(memDC, oldFont);
             SelectObject(memDC, oldBmp);

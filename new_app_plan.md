@@ -49,12 +49,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KBBS (SyncTerm Parity Upgrade)
-**Phase:** 3
+**Phase:** 4
 **Status:** In Progress
 
 - Phase 1 completed: Implemented Advanced Terminal Emulation & ANSI Rendering, including CP437 perfect block mapping and 16-color PC palette support in both web and native versions.
 - Phase 2 completed: Implemented robust Dialing Directory & Phonebook (Add, Edit, Delete, Connect) using localStorage (web) and local dat file (native).
-- Phase 3: Implement next deep expansion feature (e.g., proper Telnet options negotiation, ZMODEM file transfers, or local/remote echo toggles).
+- Phase 3 completed: Implemented XMODEM file transfers (download/upload) with UI overlay in both web and native versions.
+- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native.
 
 ## Next Priority (Before New Apps)
 

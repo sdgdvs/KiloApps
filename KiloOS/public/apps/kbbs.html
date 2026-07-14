@@ -67,6 +67,9 @@
         </label>
         <button id="btnConn" onclick="toggleConnect()">Connect</button>
         <button id="btnDir" onclick="showDialingDir()">Directory</button>
+        <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:8px;">DL (XM)</button>
+        <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
+        <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
     </div>
     <div class="main">
         <div class="term-wrap">
@@ -113,6 +116,183 @@
     const canvas = document.getElementById('terminal');
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0, bytesTx = 0;
+
+    // ─── XMODEM State ───
+    const XMODEM_SOH = 0x01, XMODEM_EOT = 0x04, XMODEM_ACK = 0x06;
+    const XMODEM_NAK = 0x15, XMODEM_CAN = 0x18, XMODEM_SUB = 0x1A;
+    let xmodemActive = 0, xmodemState = 0, xmodemBlockNum = 1;
+    let xmodemData = [], xmodemBlockBuf = [];
+    let uploadData = null, uploadOffset = 0;
+    let transferStatusEl = null;
+
+    function updateTransferUI(text) {
+        if(!transferStatusEl) {
+            transferStatusEl = document.createElement('div');
+            transferStatusEl.style.position = 'absolute';
+            transferStatusEl.style.top = '50%';
+            transferStatusEl.style.left = '50%';
+            transferStatusEl.style.transform = 'translate(-50%, -50%)';
+            transferStatusEl.style.background = '#18181b';
+            transferStatusEl.style.border = '2px solid #0ea5e9';
+            transferStatusEl.style.padding = '20px';
+            transferStatusEl.style.color = '#fff';
+            transferStatusEl.style.zIndex = '100';
+            transferStatusEl.style.borderRadius = '8px';
+            transferStatusEl.style.textAlign = 'center';
+            transferStatusEl.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+            document.querySelector('.term-wrap').appendChild(transferStatusEl);
+        }
+        transferStatusEl.innerHTML = `<strong>XMODEM ${xmodemActive===1?'DOWNLOAD':'UPLOAD'}</strong><br><br><span style="color:#10b981">${text}</span>`;
+    }
+
+    function endTransfer(msg) {
+        if (transferStatusEl) {
+            transferStatusEl.innerHTML = `<strong>XMODEM</strong><br><br><span style="color:#ef4444">${msg}</span>`;
+            setTimeout(() => {
+                if(transferStatusEl) transferStatusEl.remove();
+                transferStatusEl = null;
+            }, 2000);
+        }
+        xmodemActive = 0;
+    }
+
+    function startTransfer(type) {
+        if (!ws || ws.readyState !== 1) { alert("Connect first"); return; }
+        if (xmodemActive) return;
+        xmodemActive = type;
+        xmodemState = 0;
+        xmodemBlockNum = 1;
+        xmodemData = [];
+        xmodemBlockBuf = [];
+        
+        if (type === 1) {
+            updateTransferUI("Waiting for host to start...");
+            ws.send(new Uint8Array([XMODEM_NAK]));
+            bytesTx++; updateBytes();
+        } else if (type === 2) {
+            document.getElementById('fileUpload').click();
+        }
+    }
+
+    function handleFileUpload(e) {
+        if (!e.target.files.length) { endTransfer("Cancelled"); return; }
+        let file = e.target.files[0];
+        let reader = new FileReader();
+        reader.onload = function(evt) {
+            uploadData = new Uint8Array(evt.target.result);
+            uploadOffset = 0;
+            updateTransferUI("Waiting for NAK...");
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    }
+
+    function saveFile(dataArray) {
+        let blob = new Blob([new Uint8Array(dataArray)]);
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'downloaded_file.bin';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function sendXmodemBlock() {
+        let buf = new Uint8Array(132);
+        buf[0] = XMODEM_SOH;
+        buf[1] = xmodemBlockNum & 0xFF;
+        buf[2] = 255 - buf[1];
+        let len = Math.min(128, uploadData.length - uploadOffset);
+        if (len <= 0 && uploadOffset >= uploadData.length) {
+            ws.send(new Uint8Array([XMODEM_EOT]));
+            bytesTx++; updateBytes();
+            xmodemState = 2;
+            return;
+        }
+        for (let i=0; i<len; i++) buf[3+i] = uploadData[uploadOffset+i];
+        for (let i=len; i<128; i++) buf[3+i] = XMODEM_SUB;
+        let csum = 0;
+        for (let i=3; i<131; i++) csum += buf[i];
+        buf[131] = csum & 0xFF;
+        
+        // Over WS telnet proxy, we might need to escape 0xFF
+        // But our proxy just takes raw WS bytes and passes them.
+        // Wait, KBBSProxy natively forwards bytes. If it does telnet escaping,
+        // it might expect US to escape 0xFF in binary. 
+        // Let's escape 0xFF just in case it passes through telnet.
+        let out = [];
+        for (let i=0; i<132; i++) {
+            out.push(buf[i]);
+            if (buf[i] === 0xFF) out.push(0xFF);
+        }
+        ws.send(new Uint8Array(out));
+        bytesTx += out.length; updateBytes();
+        uploadOffset += len;
+        updateTransferUI(`Uploading... ${uploadOffset} / ${uploadData.length} bytes`);
+    }
+
+    function processTransferByte(code) {
+        if (xmodemActive === 1) { // DL
+            if (xmodemState === 0) {
+                if (code === XMODEM_SOH) {
+                    xmodemState = 1;
+                    xmodemBlockBuf = [code];
+                } else if (code === XMODEM_EOT) {
+                    ws.send(new Uint8Array([XMODEM_ACK]));
+                    bytesTx++; updateBytes();
+                    saveFile(xmodemData);
+                    endTransfer("Download Complete");
+                } else if (code === XMODEM_CAN) {
+                    endTransfer("Cancelled by host");
+                }
+            } else if (xmodemState === 1) {
+                xmodemBlockBuf.push(code);
+                if (xmodemBlockBuf.length === 132) {
+                    let blk = xmodemBlockBuf[1];
+                    let inv = xmodemBlockBuf[2];
+                    if (blk === (255 - inv) && blk === (xmodemBlockNum & 0xFF)) {
+                        let csum = 0;
+                        for (let i=3; i<131; i++) csum += xmodemBlockBuf[i];
+                        if ((csum & 0xFF) === xmodemBlockBuf[131]) {
+                            for (let i=3; i<131; i++) xmodemData.push(xmodemBlockBuf[i]);
+                            xmodemBlockNum++;
+                            ws.send(new Uint8Array([XMODEM_ACK]));
+                            bytesTx++; updateBytes();
+                            updateTransferUI(`Downloading... ${xmodemData.length} bytes`);
+                            xmodemState = 0;
+                            return;
+                        }
+                    }
+                    ws.send(new Uint8Array([XMODEM_NAK]));
+                    bytesTx++; updateBytes();
+                    xmodemState = 0;
+                }
+            }
+        } else if (xmodemActive === 2) { // UL
+            if (xmodemState === 0) {
+                if (code === XMODEM_NAK || code === 0x43) {
+                    xmodemState = 1;
+                    sendXmodemBlock();
+                } else if (code === XMODEM_CAN) {
+                    endTransfer("Upload Cancelled");
+                }
+            } else if (xmodemState === 1) {
+                if (code === XMODEM_ACK) {
+                    xmodemBlockNum++;
+                    sendXmodemBlock();
+                } else if (code === XMODEM_NAK) {
+                    uploadOffset = Math.max(0, uploadOffset - 128);
+                    sendXmodemBlock();
+                } else if (code === XMODEM_CAN) {
+                    endTransfer("Upload Cancelled");
+                }
+            } else if (xmodemState === 2) {
+                if (code === XMODEM_ACK) {
+                    endTransfer("Upload Complete");
+                }
+            }
+        }
+    }
 
     function updateBytes() {
         document.getElementById('bytesInfo').textContent = 'RX: ' + bytesRx + ' B | TX: ' + bytesTx + ' B';
@@ -322,7 +502,34 @@
     }
 
     function feedByte(ch) {
-        const code = ch.charCodeAt(0);
+        const code = ch.charCodeAt(0) & 0xFF;
+
+        if (ansiState === 10) {
+            // Telnet: after IAC
+            if (code >= 251 && code <= 254) ansiState = 11; // WILL/WONT/DO/DONT
+            else if (code === 0xFF) { 
+                ansiState = 0; // Escaped 0xFF data
+                if (xmodemActive) { processTransferByte(0xFF); return; }
+                putChar(String.fromCharCode(0xFF));
+            } else {
+                ansiState = 0;
+            }
+            return;
+        } else if (ansiState === 11) {
+            ansiState = 0;
+            return;
+        }
+
+        if (code === 0xFF) { 
+            ansiState = 10; 
+            return; 
+        }
+
+        if (xmodemActive) {
+            processTransferByte(code);
+            return;
+        }
+
         if (ansiState === 0) {
             if (code === 0x1B) { ansiState = 1; ansiParams = ''; }
             else if (code === 0x0D) curX = 0;  // CR
@@ -331,8 +538,6 @@
             else if (code === 0x09) { curX = Math.min(COLS - 1, (Math.floor(curX / 8) + 1) * 8); } // TAB
             else if (code === 0x07) { /* BEL - ignore */ }
             else if (code >= 0x20) putChar(ch);
-            // Handle telnet IAC sequences
-            else if (code === 0xFF) { ansiState = 10; } // IAC
         } else if (ansiState === 1) {
             if (ch === '[') ansiState = 2;
             else if (ch === ']') ansiState = 3; // OSC - eat until BEL/ST
@@ -348,13 +553,6 @@
         } else if (ansiState === 4) {
             // After ESC in OSC
             ansiState = 0; // ST = ESC \ ends OSC
-        } else if (ansiState === 10) {
-            // Telnet: after IAC, eat command byte
-            if (code >= 251 && code <= 254) ansiState = 11; // WILL/WONT/DO/DONT - need option byte
-            else ansiState = 0;
-        } else if (ansiState === 11) {
-            // Telnet: option byte after WILL/WONT/DO/DONT
-            ansiState = 0;
         }
     }
 
