@@ -5,12 +5,12 @@
 #define W 400
 #define H 300
 #define PAD_W 10
-#define PAD_H 50
 #define BALL_SIZE 10
 #define TIMER_ID 1
 
-int p1_y = H / 2 - PAD_H / 2;
-int p2_y = H / 2 - PAD_H / 2;
+int pad_h = 50;
+int p1_y = H / 2 - 25;
+int p2_y = H / 2 - 25;
 int ball_x = W / 2 - BALL_SIZE / 2;
 int ball_y = H / 2 - BALL_SIZE / 2;
 int ball_dx = 5;
@@ -45,17 +45,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
+            // Dynamic paddle size
+            pad_h = 50 - (rally * 2);
+            if (pad_h < 20) pad_h = 20;
+
             // Input
             if (GetAsyncKeyState(VK_UP) & 0x8000) p1_y -= 6;
             if (GetAsyncKeyState(VK_DOWN) & 0x8000) p1_y += 6;
             if (p1_y < 0) p1_y = 0;
-            if (p1_y > H - PAD_H) p1_y = H - PAD_H;
+            if (p1_y > H - pad_h) p1_y = H - pad_h;
 
             // AI (simple)
-            if (ball_y > p2_y + PAD_H / 2 + 10) p2_y += 4;
-            if (ball_y < p2_y + PAD_H / 2 - 10) p2_y -= 4;
+            if (ball_y > p2_y + pad_h / 2 + 10) p2_y += 4;
+            if (ball_y < p2_y + pad_h / 2 - 10) p2_y -= 4;
             if (p2_y < 0) p2_y = 0;
-            if (p2_y > H - PAD_H) p2_y = H - PAD_H;
+            if (p2_y > H - pad_h) p2_y = H - pad_h;
 
             // Ball logic
             ball_x += ball_dx;
@@ -66,20 +70,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (ball_y > H - BALL_SIZE) { ball_y = H - BALL_SIZE; ball_dy = -ball_dy; MessageBeep(0xFFFFFFFF); }
 
             // Paddle collisions
-            if (ball_x < 20 + PAD_W && ball_y + BALL_SIZE > p1_y && ball_y < p1_y + PAD_H) {
+            if (ball_x < 20 + PAD_W && ball_y + BALL_SIZE > p1_y && ball_y < p1_y + pad_h) {
                 ball_x = 20 + PAD_W;
                 ball_dx = -ball_dx;
                 rally++;
+                float hit_pos = (float)((ball_y + BALL_SIZE/2.0f) - (p1_y + pad_h/2.0f)) / (pad_h/2.0f);
+                ball_dy += (int)(hit_pos * 5.0f);
+                if (ball_dy > 10) ball_dy = 10;
+                if (ball_dy < -10) ball_dy = -10;
                 if (ball_dx < 15 && ball_dx > -15) { ball_dx = ball_dx > 0 ? ball_dx + 1 : ball_dx - 1; }
-                if (ball_dy < 15 && ball_dy > -15) { ball_dy = ball_dy > 0 ? ball_dy + 1 : ball_dy - 1; }
                 MessageBeep(0xFFFFFFFF);
             }
-            if (ball_x + BALL_SIZE > W - 20 - PAD_W && ball_y + BALL_SIZE > p2_y && ball_y < p2_y + PAD_H) {
+            if (ball_x + BALL_SIZE > W - 20 - PAD_W && ball_y + BALL_SIZE > p2_y && ball_y < p2_y + pad_h) {
                 ball_x = W - 20 - PAD_W - BALL_SIZE;
                 ball_dx = -ball_dx;
                 rally++;
+                float hit_pos = (float)((ball_y + BALL_SIZE/2.0f) - (p2_y + pad_h/2.0f)) / (pad_h/2.0f);
+                ball_dy += (int)(hit_pos * 5.0f);
+                if (ball_dy > 10) ball_dy = 10;
+                if (ball_dy < -10) ball_dy = -10;
                 if (ball_dx < 15 && ball_dx > -15) { ball_dx = ball_dx > 0 ? ball_dx + 1 : ball_dx - 1; }
-                if (ball_dy < 15 && ball_dy > -15) { ball_dy = ball_dy > 0 ? ball_dy + 1 : ball_dy - 1; }
                 MessageBeep(0xFFFFFFFF);
             }
 
@@ -111,8 +121,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH ball_brush = CreateSolidBrush(RGB(255, 255, 255));
             
             // Draw paddles
-            RECT r1 = { 20, p1_y, 20 + PAD_W, p1_y + PAD_H };
-            RECT r2 = { W - 20 - PAD_W, p2_y, W - 20, p2_y + PAD_H };
+            RECT r1 = { 20, p1_y, 20 + PAD_W, p1_y + pad_h };
+            RECT r2 = { W - 20 - PAD_W, p2_y, W - 20, p2_y + pad_h };
             FillRect(memDC, &r1, p1_brush);
             FillRect(memDC, &r2, p2_brush);
             

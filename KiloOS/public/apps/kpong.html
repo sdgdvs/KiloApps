@@ -68,9 +68,10 @@
   const ctx = canvas.getContext('2d');
   
   const W = 400, H = 300;
-  const PAD_W = 10, PAD_H = 50, BALL_SIZE = 10;
+  const PAD_W = 10, BALL_SIZE = 10;
   
-  let p1y = H/2 - PAD_H/2, p2y = H/2 - PAD_H/2;
+  let padH = 50;
+  let p1y = H/2 - padH/2, p2y = H/2 - padH/2;
   let bx = W/2 - BALL_SIZE/2, by = H/2 - BALL_SIZE/2;
   let bdx = 5, bdy = 3;
   let s1 = 0, s2 = 0;
@@ -114,15 +115,18 @@
           return;
       }
 
+      padH = 50 - (rally * 2);
+      if (padH < 20) padH = 20;
+
       if (keys['ArrowUp'] || keys['w']) p1y -= 6;
       if (keys['ArrowDown'] || keys['s']) p1y += 6;
       if (p1y < 0) p1y = 0;
-      if (p1y > H - PAD_H) p1y = H - PAD_H;
+      if (p1y > H - padH) p1y = H - padH;
 
-      if (by > p2y + PAD_H/2 + 10) p2y += 4;
-      if (by < p2y + PAD_H/2 - 10) p2y -= 4;
+      if (by > p2y + padH/2 + 10) p2y += 4;
+      if (by < p2y + padH/2 - 10) p2y -= 4;
       if (p2y < 0) p2y = 0;
-      if (p2y > H - PAD_H) p2y = H - PAD_H;
+      if (p2y > H - padH) p2y = H - padH;
 
       bx += bdx; by += bdy;
 
@@ -136,16 +140,24 @@
       if (by < 0) { by = 0; bdy = -bdy; playSound(800, 'hit'); }
       if (by > H - BALL_SIZE) { by = H - BALL_SIZE; bdy = -bdy; playSound(800, 'hit'); }
 
-      if (bx < 20 + PAD_W && by + BALL_SIZE > p1y && by < p1y + PAD_H) {
+      if (bx < 20 + PAD_W && by + BALL_SIZE > p1y && by < p1y + padH) {
           bx = 20 + PAD_W; bdx = -bdx;
-          bdx *= 1.1; bdy *= 1.1;
+          let hitPos = ((by + BALL_SIZE/2) - (p1y + padH/2)) / (padH/2);
+          bdy += hitPos * 5.0;
+          if (bdy > 10) bdy = 10;
+          if (bdy < -10) bdy = -10;
+          bdx *= 1.1;
           rally++;
           createParticles(bx, by + BALL_SIZE/2, 'hsl(200, 85%, 60%)');
           playSound(600, 'hit');
       }
-      if (bx + BALL_SIZE > W - 20 - PAD_W && by + BALL_SIZE > p2y && by < p2y + PAD_H) {
+      if (bx + BALL_SIZE > W - 20 - PAD_W && by + BALL_SIZE > p2y && by < p2y + padH) {
           bx = W - 20 - PAD_W - BALL_SIZE; bdx = -bdx;
-          bdx *= 1.1; bdy *= 1.1;
+          let hitPos = ((by + BALL_SIZE/2) - (p2y + padH/2)) / (padH/2);
+          bdy += hitPos * 5.0;
+          if (bdy > 10) bdy = 10;
+          if (bdy < -10) bdy = -10;
+          bdx *= 1.1;
           rally++;
           createParticles(bx + BALL_SIZE, by + BALL_SIZE/2, 'hsl(300, 85%, 60%)');
           playSound(600, 'hit');
@@ -172,12 +184,12 @@
       ctx.shadowBlur = 15;
       ctx.shadowColor = 'hsl(200, 85%, 60%)';
       ctx.fillStyle = 'hsl(200, 85%, 60%)';
-      ctx.fillRect(20, p1y, PAD_W, PAD_H);
+      ctx.fillRect(20, p1y, PAD_W, padH);
       
       // P2 Paddle (Magenta glow)
       ctx.shadowColor = 'hsl(300, 85%, 60%)';
       ctx.fillStyle = 'hsl(300, 85%, 60%)';
-      ctx.fillRect(W - 20 - PAD_W, p2y, PAD_W, PAD_H);
+      ctx.fillRect(W - 20 - PAD_W, p2y, PAD_W, padH);
       
       // Ball (White glow)
       ctx.shadowColor = 'white';
