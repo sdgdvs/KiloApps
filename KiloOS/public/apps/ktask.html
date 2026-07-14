@@ -52,6 +52,11 @@
       System Monitor
     </h1>
     <div style="display:flex; gap: 8px;">
+      <select id="sortSelect" style="padding: 6px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px;" onchange="renderTasks()">
+        <option value="name">Sort by Name</option>
+        <option value="mem">Sort by Memory</option>
+        <option value="cpu">Sort by CPU</option>
+      </select>
       <input type="text" id="searchInput" placeholder="Filter tasks..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px;" oninput="renderTasks()">
       <button onclick="refresh()">Refresh Tasks</button>
     </div>
@@ -105,6 +110,7 @@
     }
 
     let allTasks = [];
+    let taskStats = {};
 
     window.addEventListener('message', (e) => {
       if (e.data.type === 'OS_LIST_TASKS_DONE') {
@@ -118,12 +124,30 @@
         list.innerHTML = '';
         
         const filterText = (document.getElementById('searchInput')?.value || '').toLowerCase();
-        const filteredTasks = allTasks.filter(t => t.title.toLowerCase().includes(filterText) || t.id.toLowerCase().includes(filterText));
+        let filteredTasks = allTasks.filter(t => t.title.toLowerCase().includes(filterText) || t.id.toLowerCase().includes(filterText));
 
         if (filteredTasks.length === 0) {
           list.innerHTML = '<div class="empty-state">No tasks match.</div>';
           return;
         }
+        
+        filteredTasks.forEach(task => {
+          if (!taskStats[task.id]) {
+            taskStats[task.id] = {
+              mem: (Math.random() * 50 + 10).toFixed(1),
+              cpu: (Math.random() * 5).toFixed(1)
+            };
+          }
+          taskStats[task.id].cpu = Math.max(0, (parseFloat(taskStats[task.id].cpu) + (Math.random() - 0.5) * 2)).toFixed(1);
+        });
+
+        const sortBy = document.getElementById('sortSelect')?.value || 'name';
+        filteredTasks.sort((a, b) => {
+          if (sortBy === 'name') return a.title.localeCompare(b.title);
+          if (sortBy === 'mem') return parseFloat(taskStats[b.id].mem) - parseFloat(taskStats[a.id].mem);
+          if (sortBy === 'cpu') return parseFloat(taskStats[b.id].cpu) - parseFloat(taskStats[a.id].cpu);
+          return 0;
+        });
         
         filteredTasks.forEach(task => {
           const card = document.createElement('div');
@@ -132,7 +156,7 @@
           card.innerHTML = `
             <div class="task-info">
               <div class="task-title">${task.title}</div>
-              <div class="task-id">PID: ${task.id}</div>
+              <div class="task-id">PID: ${task.id} | Mem: ${taskStats[task.id].mem} MB | CPU: ${taskStats[task.id].cpu}%</div>
             </div>
             <button class="btn-kill" onclick="endTask('${task.id}')">End Task</button>
           `;

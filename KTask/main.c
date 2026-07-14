@@ -79,13 +79,22 @@ void RefreshList() {
             do {
                 if (filter[0] && !my_stristr(pe32.szExeFile, filter)) continue;
 
-                char buf[MAX_PATH + 32] = {0};
+                char buf[MAX_PATH + 128] = {0};
                 char pidStr[16] = {0};
+                char thrStr[16] = {0};
+                char priStr[16] = {0};
                 my_itoa(pe32.th32ProcessID, pidStr);
+                my_itoa(pe32.cntThreads, thrStr);
+                my_itoa(pe32.pcPriClassBase, priStr);
                 my_strcpy(buf, "[");
                 my_strcat(buf, pidStr);
                 my_strcat(buf, "] ");
                 my_strcat(buf, pe32.szExeFile);
+                my_strcat(buf, " (T:");
+                my_strcat(buf, thrStr);
+                my_strcat(buf, " P:");
+                my_strcat(buf, priStr);
+                my_strcat(buf, ")");
                 
                 int index = SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)buf);
                 SendMessageA(hListBox, LB_SETITEMDATA, index, (LPARAM)pe32.th32ProcessID);
@@ -98,14 +107,14 @@ void RefreshList() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hSearchBox = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 260, 25, hwnd, (HMENU)3, NULL, NULL);
-            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 260, 165, hwnd, NULL, NULL, NULL);
+            hSearchBox = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 360, 25, hwnd, (HMENU)3, NULL, NULL);
+            hListBox = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT, 10, 45, 360, 165, hwnd, NULL, NULL, NULL);
             HFONT hFont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
             SendMessageA(hSearchBox, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
 
             hBtnRefresh = CreateWindowA("BUTTON", "Refresh", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 220, 100, 25, hwnd, (HMENU)1, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 220, 100, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 270, 220, 100, 25, hwnd, (HMENU)2, NULL, NULL);
             
             SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)hFont, FALSE);
@@ -153,7 +162,7 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 280, 255};
+    RECT rc = {0, 0, 380, 255};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
