@@ -19,6 +19,10 @@ HWND hTitle;
 HWND hBtnOpen;
 HWND hBtnPlay;
 HWND hBtnStop;
+HWND hBtnPrev;
+HWND hBtnNext;
+HWND hBtnRem;
+HWND hBtnClear;
 HWND hListBox;
 
 char currentFile[MAX_PATH] = {0};
@@ -86,22 +90,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hBtnOpen = CreateWindowEx(0, "BUTTON", "Add",
                 WS_CHILD | WS_VISIBLE,
-                10, 50, 90, 30, hwnd, (HMENU)1, NULL, NULL);
+                10, 50, 65, 30, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play",
                 WS_CHILD | WS_VISIBLE,
-                110, 50, 90, 30, hwnd, (HMENU)2, NULL, NULL);
+                80, 50, 65, 30, hwnd, (HMENU)2, NULL, NULL);
             SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnStop = CreateWindowEx(0, "BUTTON", "Stop",
                 WS_CHILD | WS_VISIBLE,
-                210, 50, 90, 30, hwnd, (HMENU)3, NULL, NULL);
+                150, 50, 65, 30, hwnd, (HMENU)3, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear",
+                WS_CHILD | WS_VISIBLE,
+                220, 50, 65, 30, hwnd, (HMENU)8, NULL, NULL);
+            SendMessage(hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnPrev = CreateWindowEx(0, "BUTTON", "Prev",
+                WS_CHILD | WS_VISIBLE,
+                10, 90, 65, 30, hwnd, (HMENU)5, NULL, NULL);
+            SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnNext = CreateWindowEx(0, "BUTTON", "Next",
+                WS_CHILD | WS_VISIBLE,
+                80, 90, 65, 30, hwnd, (HMENU)6, NULL, NULL);
+            SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnRem = CreateWindowEx(0, "BUTTON", "Remove",
+                WS_CHILD | WS_VISIBLE,
+                150, 90, 65, 30, hwnd, (HMENU)7, NULL, NULL);
+            SendMessage(hBtnRem, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | WS_HSCROLL,
-                10, 90, W - 36, 210, hwnd, (HMENU)4, NULL, NULL);
+                10, 130, W - 36, 170, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             break;
@@ -113,6 +137,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlaySelectedTrack();
             } else if (LOWORD(wParam) == 3) {
                 mciSendStringA("stop myMedia", NULL, 0, NULL);
+            } else if (LOWORD(wParam) == 5) {
+                int idx = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                if (idx > 0) {
+                    SendMessage(hListBox, LB_SETCURSEL, idx - 1, 0);
+                    PlaySelectedTrack();
+                }
+            } else if (LOWORD(wParam) == 6) {
+                int idx = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                int count = SendMessage(hListBox, LB_GETCOUNT, 0, 0);
+                if (idx != LB_ERR && idx < count - 1) {
+                    SendMessage(hListBox, LB_SETCURSEL, idx + 1, 0);
+                    PlaySelectedTrack();
+                }
+            } else if (LOWORD(wParam) == 7) {
+                int idx = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                if (idx != LB_ERR) {
+                    SendMessage(hListBox, LB_DELETESTRING, idx, 0);
+                    mciSendStringA("stop myMedia", NULL, 0, NULL);
+                    SetWindowTextA(hTitle, "No file selected");
+                }
+            } else if (LOWORD(wParam) == 8) {
+                SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
+                mciSendStringA("stop myMedia", NULL, 0, NULL);
+                SetWindowTextA(hTitle, "No file selected");
             } else if (LOWORD(wParam) == 4 && HIWORD(wParam) == LBN_DBLCLK) {
                 PlaySelectedTrack();
             }
