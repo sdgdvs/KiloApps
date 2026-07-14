@@ -38,6 +38,16 @@
 #define IDC_EDIT_SAVE 213
 #define IDC_EDIT_CANCEL 214
 
+#define ID_BTN_STATS 118
+#define IDD_STATS 220
+#define IDC_STATS_TOTAL 221
+#define IDC_STATS_KNOWN 222
+#define IDC_STATS_REVIEW 223
+#define IDC_STATS_UNSTUDIED 224
+#define IDC_STATS_MASTERY 225
+#define IDC_STATS_PROGRESS 226
+#define IDC_STATS_CLOSE 227
+
 typedef struct {
     char front[256];
     char back[256];
@@ -64,6 +74,7 @@ HFONT hFont, hCardFont;
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK StatsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void LoadDeck() {
     FILE *f = fopen("kflash_data.bin", "rb");
@@ -175,6 +186,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     hbgBrush = CreateSolidBrush(RGB(13, 17, 23));
     hCardBrush = CreateSolidBrush(RGB(22, 27, 34));
 
+    INITCOMMONCONTROLSEX icex;
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC = ICC_PROGRESS_CLASS;
+    InitCommonControlsEx(&icex);
+
     // Load deck
     srand((unsigned int)time(NULL));
     LoadDeck();
@@ -267,6 +283,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hBtnAdd = CreateWindow("BUTTON", "+ Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                    475, 10, 55, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+
+            HWND hBtnStats = CreateWindow("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   535, 10, 45, 30, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
+            SendMessage(hBtnStats, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
@@ -429,6 +449,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         }
                         UpdateCardDisplay();
                     }
+                    break;
+                case ID_BTN_STATS:
+                    DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_STATS), hwnd, StatsProc);
                     break;
                 case ID_BTN_ADD:
                     DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_ADDCARD), hwnd, AddCardProc);
@@ -662,6 +685,43 @@ INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
                 return (INT_PTR)TRUE;
             }
             else if (LOWORD(wParam) == IDC_EDIT_CANCEL || LOWORD(wParam) == IDCANCEL) {
+                EndDialog(hwndDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+            break;
+    }
+    return (INT_PTR)FALSE;
+}
+
+INT_PTR CALLBACK StatsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_INITDIALOG: {
+            int total = deckCount;
+            int known = 0, review = 0, unstudied = 0;
+            for (int i = 0; i < total; i++) {
+                if (deck[i].status == 1) known++;
+                else if (deck[i].status == 2) review++;
+                else unstudied++;
+            }
+            float mastery = total > 0 ? ((float)known / total) * 100.0f : 0.0f;
+            
+            char buf[32];
+            sprintf(buf, "%d", total);
+            SetDlgItemText(hwndDlg, IDC_STATS_TOTAL, buf);
+            sprintf(buf, "%d", known);
+            SetDlgItemText(hwndDlg, IDC_STATS_KNOWN, buf);
+            sprintf(buf, "%d", review);
+            SetDlgItemText(hwndDlg, IDC_STATS_REVIEW, buf);
+            sprintf(buf, "%d", unstudied);
+            SetDlgItemText(hwndDlg, IDC_STATS_UNSTUDIED, buf);
+            sprintf(buf, "%.1f%%", mastery);
+            SetDlgItemText(hwndDlg, IDC_STATS_MASTERY, buf);
+            
+            SendDlgItemMessage(hwndDlg, IDC_STATS_PROGRESS, PBM_SETPOS, (WPARAM)(int)mastery, 0);
+            return (INT_PTR)TRUE;
+        }
+        case WM_COMMAND:
+            if (LOWORD(wParam) == IDC_STATS_CLOSE || LOWORD(wParam) == IDCANCEL) {
                 EndDialog(hwndDlg, LOWORD(wParam));
                 return (INT_PTR)TRUE;
             }

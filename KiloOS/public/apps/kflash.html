@@ -328,6 +328,7 @@
                 <button class="btn" id="btnExport">Export</button>
                 <input type="file" id="fileImport" accept=".json,.csv" style="display: none;">
                 <button class="btn" id="btnPrint">Print</button>
+                <button class="btn" id="btnStats">Stats</button>
                 <button class="btn btn-primary" id="btnEditCard" disabled>Edit</button>
                 <button class="btn btn-primary" style="background-color:#da3633; border-color:rgba(218,54,51,0.5)" id="btnDeleteCard" disabled>Delete</button>
                 <button class="btn" id="btnShuffle" disabled>Shuffle</button>
@@ -390,6 +391,22 @@
             <div class="modal-actions">
                 <button class="btn" id="btnCancelLoad">Cancel</button>
                 <button class="btn btn-primary" id="btnConfirmLoad">Load</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal" id="statsModal">
+        <div class="modal-content" style="width: 320px;">
+            <h2>Deck Statistics</h2>
+            <div id="statsContent" style="color: #c9d1d9; line-height: 1.6; font-size: 1rem;">
+                <!-- Stats will be inserted here -->
+            </div>
+            <div style="margin-top: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; height: 10px; overflow: hidden;">
+                <div id="statsProgressBar" style="height: 100%; width: 0%; background: #2ea043; transition: width 0.5s ease;"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="btnCloseStats">Close</button>
             </div>
         </div>
     </div>
@@ -1122,6 +1139,43 @@
                 renderCard();
             }
             loadSampleModal.classList.remove('active');
+        });
+
+        // Stats Logic
+        const statsModal = document.getElementById('statsModal');
+        const btnStats = document.getElementById('btnStats');
+        const statsContent = document.getElementById('statsContent');
+        const statsProgressBar = document.getElementById('statsProgressBar');
+
+        btnStats.addEventListener('click', () => {
+            const total = deck.length;
+            let known = 0;
+            let review = 0;
+            let unstudied = 0;
+
+            deck.forEach(card => {
+                if (card.status === 'known') known++;
+                else if (card.status === 'review') review++;
+                else unstudied++;
+            });
+
+            const mastery = total > 0 ? ((known / total) * 100).toFixed(1) : 0;
+
+            statsContent.innerHTML = `
+                <div style="display: flex; justify-content: space-between;"><span>Total Cards:</span> <strong>${total}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Got It (Known):</span> <strong style="color: #3fb950;">${known}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Needs Review:</span> <strong style="color: #d29922;">${review}</strong></div>
+                <div style="display: flex; justify-content: space-between;"><span>Unstudied:</span> <strong>${unstudied}</strong></div>
+                <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 10px 0;">
+                <div style="display: flex; justify-content: space-between; font-size: 1.1rem;"><span>Mastery:</span> <strong style="color: #58a6ff;">${mastery}%</strong></div>
+            `;
+            statsProgressBar.style.width = `${mastery}%`;
+
+            statsModal.classList.add('active');
+        });
+
+        document.getElementById('btnCloseStats').addEventListener('click', () => {
+            statsModal.classList.remove('active');
         });
 
         // Init

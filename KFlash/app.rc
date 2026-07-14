@@ -25,3 +25,22 @@ BEGIN
     DEFPUSHBUTTON   "Save", 213, 90, 130, 45, 15
     PUSHBUTTON      "Cancel", 214, 145, 130, 45, 15
 END
+
+220 DIALOGEX 0, 0, 200, 150
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Deck Statistics"
+FONT 9, "Segoe UI", 400, 0, 0x1
+BEGIN
+    LTEXT           "Total Cards:", -1, 10, 10, 80, 10
+    LTEXT           "0", 221, 100, 10, 80, 10
+    LTEXT           "Got It (Known):", -1, 10, 25, 80, 10
+    LTEXT           "0", 222, 100, 25, 80, 10
+    LTEXT           "Needs Review:", -1, 10, 40, 80, 10
+    LTEXT           "0", 223, 100, 40, 80, 10
+    LTEXT           "Unstudied:", -1, 10, 55, 80, 10
+    LTEXT           "0", 224, 100, 55, 80, 10
+    LTEXT           "Mastery:", -1, 10, 80, 80, 10
+    LTEXT           "0%", 225, 100, 80, 80, 10
+    CONTROL         "", 226, "msctls_progress32", WS_BORDER, 10, 95, 180, 15
+    DEFPUSHBUTTON   "Close", 227, 75, 125, 50, 15
+END
