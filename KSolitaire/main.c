@@ -7,6 +7,9 @@
 #define ID_HARD 1002
 #define ID_EXPERT 1003
 #define ID_RESTART 1004
+#define ID_THEME_LETTERS 1010
+#define ID_THEME_NUMBERS 1011
+#define ID_THEME_SYMBOLS 1012
 
 int W = 400;
 int H = 400;
@@ -25,6 +28,7 @@ int best_easy = -1;
 int best_hard = -1;
 int best_expert = -1;
 int is_hard = 0; // 0=easy, 1=hard, 2=expert
+int theme = 0; // 0=letters, 1=numbers, 2=symbols
 int start_time = 0;
 int elapsed_time = 0;
 int timer_running = 0;
@@ -121,10 +125,18 @@ void DrawCard(HDC hdc, int idx, int x, int y, int w, int h) {
         DeleteObject(bg);
         DrawEdge(hdc, &r, BDR_SUNKENOUTER, BF_RECT);
         
-        char text[2] = {'A' + cards[idx], 0};
+        char text[8] = {0};
+        if (theme == 0) {
+            text[0] = 'A' + cards[idx];
+        } else if (theme == 1) {
+            sprintf(text, "%d", cards[idx] + 1);
+        } else {
+            char sym[] = "!@#$%^&*+=?~OX<>";
+            text[0] = sym[cards[idx]];
+        }
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, RGB(0, 0, 0));
-        TextOutA(hdc, x + w / 2 - 4, y + h / 2 - 8, text, 1);
+        TextOutA(hdc, x + w / 2 - 4, y + h / 2 - 8, text, strlen(text));
     }
 }
 
@@ -139,6 +151,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hSubMenu, MF_STRING, ID_RESTART, "Restart");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
+            
+            HMENU hThemeMenu = CreatePopupMenu();
+            AppendMenu(hThemeMenu, MF_STRING, ID_THEME_LETTERS, "Letters");
+            AppendMenu(hThemeMenu, MF_STRING, ID_THEME_NUMBERS, "Numbers");
+            AppendMenu(hThemeMenu, MF_STRING, ID_THEME_SYMBOLS, "Symbols");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hThemeMenu, "Theme");
+            
             SetMenu(hwnd, hMenu);
 
             LoadScores();
@@ -155,6 +174,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 2);
             } else if (LOWORD(wParam) == ID_RESTART) {
                 SetDifficulty(hwnd, is_hard);
+            } else if (LOWORD(wParam) == ID_THEME_LETTERS) {
+                theme = 0; SetDifficulty(hwnd, is_hard);
+            } else if (LOWORD(wParam) == ID_THEME_NUMBERS) {
+                theme = 1; SetDifficulty(hwnd, is_hard);
+            } else if (LOWORD(wParam) == ID_THEME_SYMBOLS) {
+                theme = 2; SetDifficulty(hwnd, is_hard);
             }
             break;
         case WM_LBUTTONDOWN: {

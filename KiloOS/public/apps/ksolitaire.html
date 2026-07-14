@@ -25,6 +25,11 @@
 </div>
 <div class="grid easy" id="grid"></div>
 <div class="controls">
+  <select id="themeSelect" onchange="setTheme(this.value)" style="padding: 5px; font-size: 16px; border-radius: 4px;">
+    <option value="letters">Letters</option>
+    <option value="numbers">Numbers</option>
+    <option value="symbols">Symbols</option>
+  </select>
   <button onclick="setDifficulty('easy')">Easy (4x4)</button>
   <button onclick="setDifficulty('hard')">Hard (6x4)</button>
   <button onclick="setDifficulty('expert')">Expert (8x4)</button>
@@ -45,6 +50,12 @@
   let moves = 0;
   let lock = false;
   let diff = 'easy'; // easy=16, hard=24, expert=32
+  let currentTheme = 'letters';
+  const themes = {
+      letters: (c) => String.fromCharCode(65 + c),
+      numbers: (c) => (c + 1).toString(),
+      symbols: (c) => "!@#$%^&*+=?~OX<>"[c]
+  };
   let timer = null;
   let elapsed = 0;
   let playing = false;
@@ -77,6 +88,11 @@
       if (d === 'easy') document.getElementById('ui').style.width = '380px';
       else if (d === 'hard') document.getElementById('ui').style.width = '570px';
       else document.getElementById('ui').style.width = '760px';
+      init();
+  }
+
+  function setTheme(t) {
+      currentTheme = t;
       init();
   }
 
@@ -138,7 +154,7 @@
               c.classList.add('matched');
           } else if (flipped[i]) {
               c.classList.add('flipped');
-              c.textContent = String.fromCharCode(65 + cards[i]);
+              c.textContent = themes[currentTheme](cards[i]);
           }
           
           c.onclick = () => {
