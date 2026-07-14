@@ -19,6 +19,8 @@
       <option value="sine">Sine</option>
       <option value="square">Square</option>
       <option value="sawtooth">Sawtooth</option>
+      <option value="triangle">Triangle</option>
+      <option value="noise">Noise</option>
     </select>
   </div>
   <div class="row">
@@ -44,6 +46,10 @@
   <div class="row">
     <button id="btnPlay">Play Tone</button>
   </div>
+  <div style="font-size: 12px; margin-top: 15px; color: #555;">
+    Play Keyboard: A=C4, W=C#4, S=D4, E=D#4, D=E4, F=F4...<br>
+    T=F#4, G=G4, Y=G#4, H=A4, U=A#4, J=B4, K=C5
+  </div>
 <script>
   const wave = document.getElementById('wave');
   const freqIn = document.getElementById('freq');
@@ -66,25 +72,50 @@
       let r = parseFloat(document.getElementById('release').value) || 0;
       if (a < 0) a = 0; if (d < 0) d = 0; if (s < 0) s = 0; if (s > 1) s = 1; if (r < 0) r = 0;
       
-      const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      
-      osc.type = wave.value;
-      osc.frequency.value = freq;
-      
       let now = ctx.currentTime;
+      
       gain.gain.setValueAtTime(0, now);
       gain.gain.linearRampToValueAtTime(1.0, now + a);
       gain.gain.linearRampToValueAtTime(s, now + a + d);
       gain.gain.setValueAtTime(s, now + a + d + 0.5);
       gain.gain.linearRampToValueAtTime(0.001, now + a + d + 0.5 + r);
       
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.start(now);
-      osc.stop(now + a + d + 0.5 + r);
+      if (wave.value === 'noise') {
+          const bufferSize = ctx.sampleRate * (a + d + 0.5 + r + 0.1);
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+          noise.connect(gain);
+          gain.connect(ctx.destination);
+          noise.start(now);
+          noise.stop(now + a + d + 0.5 + r);
+      } else {
+          const osc = ctx.createOscillator();
+          osc.type = wave.value;
+          osc.frequency.value = freq;
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + a + d + 0.5 + r);
+      }
   };
+  
+  document.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      if (e.target.tagName === 'INPUT') return;
+      const keyMap = {
+          'a': 261.63, 'w': 277.18, 's': 293.66, 'e': 311.13, 'd': 329.63, 'f': 349.23,
+          't': 369.99, 'g': 392.00, 'y': 415.30, 'h': 440.00, 'u': 466.16, 'j': 493.88, 'k': 523.25
+      };
+      let k = e.key.toLowerCase();
+      if (keyMap[k]) {
+          freqIn.value = Math.round(keyMap[k]);
+          btnPlay.click();
+      }
+  });
 </script>
 </body>
 </html>

@@ -1,9 +1,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <mmsystem.h>
+#include <stdlib.h>
 
 #define W 320
-#define H 300
+#define H 340
 
 HWND hCombo, hBtnPlay, hFreq, hAttack, hDecay, hSustain, hRelease;
 HWAVEOUT hWaveOut;
@@ -60,6 +61,13 @@ void GenerateWave(int type, int freq, double attack, double decay, double sustai
             val = (phase < 0.5) ? 0.5 : -0.5;
         } else if (type == 2) { // Sawtooth
             val = (phase * 2.0) - 1.0;
+        } else if (type == 3) { // Triangle
+            double t = phase;
+            if (t < 0.25) val = t * 4.0;
+            else if (t < 0.75) val = 1.0 - (t - 0.25) * 4.0;
+            else val = -1.0 + (t - 0.75) * 4.0;
+        } else if (type == 4) { // Noise
+            val = ((double)rand() / RAND_MAX) * 2.0 - 1.0;
         }
         
         double t = (double)i / SAMPLE_RATE;
@@ -158,6 +166,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Sine");
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Square");
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Sawtooth");
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Triangle");
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)"Noise");
             SendMessage(hCombo, CB_SETCURSEL, 0, 0);
             
             CreateWindowEx(0, "STATIC", "Freq (Hz):", WS_CHILD | WS_VISIBLE, 10, 45, 80, 20, hwnd, NULL, NULL, NULL);
@@ -176,6 +186,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hRelease = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0.5", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 100, 162, 60, 22, hwnd, NULL, NULL, NULL);
             
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play Tone", WS_CHILD | WS_VISIBLE, 100, 200, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+            
+            CreateWindowEx(0, "STATIC", "Play Keyboard: A=C4, W=C#4, S=D4, E=D#4,\nD=E4, F=F4, T=F#4, G=G4, Y=G#4, H=A4, U=A#4, J=B4, K=C5", WS_CHILD | WS_VISIBLE, 10, 240, 300, 40, hwnd, NULL, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;
@@ -226,6 +238,22 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        if (msg.message == WM_KEYDOWN && !(msg.lParam & 0x40000000)) {
+            double noteMap[256] = {0};
+            noteMap['A'] = 261.63; noteMap['W'] = 277.18; noteMap['S'] = 293.66;
+            noteMap['E'] = 311.13; noteMap['D'] = 329.63; noteMap['F'] = 349.23;
+            noteMap['T'] = 369.99; noteMap['G'] = 392.00; noteMap['Y'] = 415.30;
+            noteMap['H'] = 440.00; noteMap['U'] = 466.16; noteMap['J'] = 493.88;
+            noteMap['K'] = 523.25;
+            WPARAM key = msg.wParam;
+            if (key < 256 && noteMap[key] > 0) {
+                char buf[32];
+                wsprintfA(buf, "%d", (int)(noteMap[key] + 0.5));
+                SetWindowTextA(hFreq, buf);
+                PlayTone();
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
