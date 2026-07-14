@@ -111,6 +111,7 @@ typedef struct {
 #define TYPE_RING 5
 #define TYPE_SPELLBOOK 6
 #define TYPE_GOLD 7
+#define TYPE_SHRINE 8
 
 #define W_SWORD 0
 #define W_HAMMER 1
@@ -495,6 +496,16 @@ void generate_map() {
             if(g.map[y][x].ch == '.' && g.map[y][x].walkable) {
                 if(rand_range(0, 100) < 3) {
                     g.map[y][x].has_trap = 1;
+                } else if(rand_range(0, 100) < 1) {
+                    for(int i=0; i<MAX_ITEMS; i++) {
+                        if(!g.items[i].active) {
+                            Item* it = &g.items[i];
+                            it->active = 1; it->x = x; it->y = y;
+                            it->ch = '^'; it->fg = RGB(0, 255, 255); it->type = TYPE_SHRINE;
+                            str_cpy(it->name, "Magic Shrine");
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -946,6 +957,19 @@ void move_player(int dx, int dy) {
                 char buf[100];
                 wsprintfA(buf, "You pick up %d gold pieces.", it->val);
                 add_msg(buf);
+            } else if(it->type == TYPE_SHRINE) {
+                it->active = 0;
+                int buff = rand_range(0, 2);
+                if(buff == 0) {
+                    p->max_hp += 10; p->hp = p->max_hp;
+                    add_msg("The shrine glows! You feel much healthier!");
+                } else if(buff == 1) {
+                    gain_xp(p, 50);
+                    add_msg("The shrine glows! You feel wiser!");
+                } else {
+                    p->str += 2; calc_stats(p);
+                    add_msg("The shrine glows! You feel stronger!");
+                }
             } else {
                 char buf[100];
                 wsprintfA(buf, "You see a %s here. Press 'g' to pick up.", it->name);

@@ -11,8 +11,11 @@
         .monster-r { color: #d90; }
         .monster-b { color: #c60; }
         .monster-z { color: #3a5; }
+        .monster-o { color: #0f0; }
+        .monster-T { color: #0b0; }
         .stairs { color: #ff0; font-weight: bold; }
         .gold { color: #fd0; }
+        .shrine { color: #0ff; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -53,6 +56,12 @@
             items.push({ x: W-3, y: H-3, ch: '>', type: 'stairs' });
             map[H-3][W-3] = '.';
 
+            if (Math.random() < 0.25) {
+                let sx, sy;
+                do { sx = Math.floor(Math.random()*(W-4))+2; sy = Math.floor(Math.random()*(H-4))+2; } while(map[sy][sx] === '#');
+                items.push({ x: sx, y: sy, ch: '^', type: 'shrine' });
+            }
+
             for (let i = 0; i < 5 + difficulty*2 + dlevel; i++) {
                 let mx, my;
                 do {
@@ -62,8 +71,10 @@
                 
                 let r = Math.random();
                 let type = 'r', hp = 5, name = 'Giant Rat';
-                if (dlevel > 1 && r < 0.3) { type = 'b'; hp = 3; name = 'Giant Bat'; }
-                else if (dlevel > 2 && r > 0.7) { type = 'z'; hp = 15; name = 'Zombie'; }
+                if (dlevel > 1 && r < 0.2) { type = 'b'; hp = 3; name = 'Giant Bat'; }
+                else if (dlevel > 2 && r > 0.4 && r < 0.6) { type = 'o'; hp = 10; name = 'Orc'; }
+                else if (dlevel > 3 && r > 0.6 && r < 0.8) { type = 'z'; hp = 15; name = 'Zombie'; }
+                else if (dlevel > 4 && r > 0.8) { type = 'T'; hp = 25; name = 'Cave Troll'; }
                 
                 hp = Math.floor(hp * (1 + difficulty * 0.5));
                 monsters.push({
@@ -91,6 +102,7 @@
                                 if (it) {
                                     if (it.type === 'stairs') out += "<span class='stairs'>></span>";
                                     else if (it.type === 'gold') out += "<span class='gold'>*</span>";
+                                    else if (it.type === 'shrine') out += "<span class='shrine'>^</span>";
                                 } else {
                                     out += map[y][x] === '#' ? "<span class='wall'>#</span>" : "<span class='floor'>.</span>";
                                 }
@@ -188,6 +200,16 @@
                                     player.gold += it.amount;
                                     addMsg(`You pick up ${it.amount} gold.`);
                                     items.splice(itIdx, 1);
+                                } else if (it.type === 'shrine') {
+                                    let buff = Math.floor(Math.random()*3);
+                                    if (buff === 0) { player.max_hp += 10; player.hp = player.max_hp; addMsg("Shrine glows! Health increased!"); }
+                                    else if (buff === 1) { player.xp += 50; addMsg("Shrine glows! You feel wiser!"); }
+                                    else { player.level++; player.max_hp += 5; player.hp = player.max_hp; addMsg("Shrine glows! You grew stronger!"); }
+                                    items.splice(itIdx, 1);
+                                    if (player.xp >= player.level * 10) {
+                                        player.level++; player.max_hp += 5; player.hp = player.max_hp;
+                                        addMsg(`Welcome to level ${player.level}!`);
+                                    }
                                 }
                             }
                         }
