@@ -75,6 +75,8 @@
         <button id="btnMacros" onclick="showMacros()" style="margin-left:4px;">Macros</button>
         <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:8px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
+        <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1; margin-left:4px;">DL (ZM)</button>
+        <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
         <button id="btnSettings" onclick="showSettings()" style="margin-left:4px;">Settings</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
     </div>
@@ -184,6 +186,13 @@
     let uploadData = null, uploadOffset = 0;
     let transferStatusEl = null;
 
+    // ─── ZMODEM State ───
+    let zmState = 'IDLE', zmExpectedData = '';
+    let zmDlBuf = [], zmDlEscaped = false, zmDlHdrBuf = '', zmDlBin32 = false, zmDlDataType = 0, zmDlCrcBuf = [];
+    let zmUlData = null, zmUlName = "", zmUlOffset = 0;
+    let zmFileName = "", zmFileSize = 0;
+    let sigBuf = [0,0,0,0,0,0];
+
     function updateTransferUI(text) {
         if(!transferStatusEl) {
             transferStatusEl = document.createElement('div');
@@ -201,12 +210,14 @@
             transferStatusEl.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
             document.querySelector('.term-wrap').appendChild(transferStatusEl);
         }
-        transferStatusEl.innerHTML = `<strong>XMODEM ${xmodemActive===1?'DOWNLOAD':'UPLOAD'}</strong><br><br><span style="color:#10b981">${text}</span>`;
+        let proto = xmodemActive >= 3 ? 'ZMODEM' : 'XMODEM';
+        let dir = (xmodemActive === 1 || xmodemActive === 3) ? 'DOWNLOAD' : 'UPLOAD';
+        transferStatusEl.innerHTML = `<strong>${proto} ${dir}</strong><br><br><span style="color:#10b981">${text}</span>`;
     }
 
     function endTransfer(msg) {
         if (transferStatusEl) {
-            transferStatusEl.innerHTML = `<strong>XMODEM</strong><br><br><span style="color:#ef4444">${msg}</span>`;
+            transferStatusEl.innerHTML = `<strong>${xmodemActive >= 3 ? 'ZMODEM' : 'XMODEM'}</strong><br><br><span style="color:#ef4444">${msg}</span>`;
             setTimeout(() => {
                 if(transferStatusEl) transferStatusEl.remove();
                 transferStatusEl = null;
@@ -231,6 +242,12 @@
             bytesTx++; updateBytes();
         } else if (type === 2) {
             document.getElementById('fileUpload').click();
+        } else if (type === 3) {
+            updateTransferUI("Starting ZMODEM DL...");
+            zmState = 'IDLE'; zmExpectedData = '';
+            zmodemSendHex(1, 0); // ZRINIT
+        } else if (type === 4) {
+            document.getElementById('fileUpload').click();
         }
     }
 
@@ -241,7 +258,16 @@
         reader.onload = function(evt) {
             uploadData = new Uint8Array(evt.target.result);
             uploadOffset = 0;
-            updateTransferUI("Waiting for NAK...");
+            if (xmodemActive === 2) {
+                updateTransferUI("Waiting for NAK...");
+            } else if (xmodemActive === 4) {
+                zmUlData = uploadData;
+                zmUlName = file.name;
+                zmUlOffset = 0;
+                zmState = 'WAIT_ZRINIT';
+                updateTransferUI("Sending ZRQINIT...");
+                zmodemSendHex(0, 0); // ZRQINIT
+            }
         };
         reader.readAsArrayBuffer(file);
         e.target.value = '';
@@ -289,6 +315,111 @@
         bytesTx += out.length; updateBytes();
         uploadOffset += len;
         updateTransferUI(`Uploading... ${uploadOffset} / ${uploadData.length} bytes`);
+    }
+
+    function zmodemUpdateCrc(crc, c) {
+        crc ^= (c << 8);
+        for (let i = 0; i < 8; i++) {
+            if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+            else crc = crc << 1;
+        }
+        return crc & 0xFFFF;
+    }
+    function wsSendEscaped(arr) {
+        let out = [];
+        for (let i=0; i<arr.length; i++) { out.push(arr[i]); if (arr[i] === 0xFF) out.push(0xFF); }
+        ws.send(new Uint8Array(out)); bytesTx += out.length; updateBytes();
+    }
+    function zmodemSendHex(type, flags) {
+        let f0 = flags & 0xff, f1 = (flags >> 8) & 0xff, f2 = (flags >> 16) & 0xff, f3 = (flags >> 24) & 0xff;
+        let crc = 0;
+        crc = zmodemUpdateCrc(crc, type); crc = zmodemUpdateCrc(crc, f0); crc = zmodemUpdateCrc(crc, f1);
+        crc = zmodemUpdateCrc(crc, f2); crc = zmodemUpdateCrc(crc, f3); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
+        let hex = (n) => n.toString(16).padStart(2, '0');
+        let str = '**\x18B' + hex(type) + hex(f0) + hex(f1) + hex(f2) + hex(f3) + hex((crc>>8)&0xff) + hex(crc&0xff) + '\r\n\x11';
+        let out = []; for(let i=0; i<str.length; i++) out.push(str.charCodeAt(i));
+        wsSendEscaped(out);
+    }
+    function zmodemEscape(buf) {
+        let out = [];
+        for(let i=0; i<buf.length; i++) {
+            let c = buf[i];
+            if (c === 0x18 || c === 0x10 || c === 0x11 || c === 0x13 || c === 0x0D || c === 0x8D || c === 0x90 || c === 0x91 || c === 0x93) {
+                out.push(0x18);
+                if (c === 0x0D) out.push(0x4D); else if (c === 0x8D) out.push(0xCD); else out.push(c ^ 0x40);
+            } else out.push(c);
+        }
+        return out;
+    }
+    function zmodemMakeBinHeader(type, flags) {
+        let f0 = flags & 0xff, f1 = (flags >> 8) & 0xff, f2 = (flags >> 16) & 0xff, f3 = (flags >> 24) & 0xff;
+        let crc = 0;
+        crc = zmodemUpdateCrc(crc, type); crc = zmodemUpdateCrc(crc, f0); crc = zmodemUpdateCrc(crc, f1);
+        crc = zmodemUpdateCrc(crc, f2); crc = zmodemUpdateCrc(crc, f3); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
+        let esc = zmodemEscape([type, f0, f1, f2, f3, (crc>>8)&0xff, crc&0xff]);
+        return [0x2A, 0x18, 0x41].concat(esc);
+    }
+    function zmodemSendDataPacket(hdrBytes, data, endType) {
+        let escData = zmodemEscape(data);
+        let crc = 0;
+        for(let i=0; i<data.length; i++) crc = zmodemUpdateCrc(crc, data[i]);
+        crc = zmodemUpdateCrc(crc, endType); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
+        let escCrc = zmodemEscape([(crc>>8)&0xff, crc&0xff]);
+        let out = hdrBytes.concat(escData);
+        out.push(0x18); out.push(endType); out = out.concat(escCrc);
+        wsSendEscaped(out);
+    }
+    function handleZmodemHeader(type, f0, f1, f2, f3) {
+        if (xmodemActive === 3) { // DL
+            if (type === 0) { zmodemSendHex(1, 0); } // ZRINIT
+            else if (type === 4) { zmExpectedData = 'FILE'; zmState = 'DATA_READ'; zmDlBuf = []; } // ZFILE
+            else if (type === 10) { zmExpectedData = 'DATA'; zmState = 'DATA_READ'; zmDlBuf = []; } // ZDATA
+            else if (type === 11) { zmodemSendHex(1, 0); } // ZEOF -> ZRINIT
+            else if (type === 8) { // ZFIN
+                zmodemSendHex(8, 0); wsSendEscaped([0x4F, 0x4F]);
+                saveFile(xmodemData); endTransfer("Complete");
+            }
+        } else if (xmodemActive === 4) { // UL
+            let offset = f0 | (f1<<8) | (f2<<16) | (f3<<24);
+            if (type === 1) { // ZRINIT
+                if (zmState === 'WAIT_ZRINIT') {
+                    zmState = 'WAIT_ZRPOS';
+                    let hdr = zmodemMakeBinHeader(4, 0);
+                    let payload = [];
+                    for(let i=0; i<zmUlName.length; i++) payload.push(zmUlName.charCodeAt(i));
+                    payload.push(0);
+                    let sizeStr = zmUlData.length.toString();
+                    for(let i=0; i<sizeStr.length; i++) payload.push(sizeStr.charCodeAt(i));
+                    payload.push(0);
+                    zmodemSendDataPacket(hdr, payload, 0x6B); // ZCRCW
+                } else if (zmState === 'WAIT_FIN_ACK') {
+                    zmState = 'DONE'; endTransfer("Complete");
+                }
+            } else if (type === 9) { // ZRPOS
+                if (zmState === 'WAIT_ZRPOS' || zmState === 'SENDING_DATA') {
+                    zmUlOffset = offset; zmState = 'SENDING_DATA';
+                    wsSendEscaped(zmodemMakeBinHeader(10, zmUlOffset));
+                    sendZmodemUlChunks();
+                }
+            } else if (type === 3) { // ZACK
+                if (zmState === 'WAIT_ACK') { zmState = 'SENDING_DATA'; sendZmodemUlChunks(); }
+            } else if (type === 8) { // ZFIN
+                wsSendEscaped([0x4F, 0x4F]); endTransfer("Complete");
+            }
+        }
+    }
+    function sendZmodemUlChunks() {
+        if (xmodemActive !== 4) return;
+        if (zmUlOffset >= zmUlData.length) {
+            zmodemSendHex(11, zmUlOffset); zmState = 'WAIT_ZRINIT'; return;
+        }
+        let chunk = zmUlData.slice(zmUlOffset, zmUlOffset + 1024);
+        zmUlOffset += chunk.length;
+        let endType = (zmUlOffset >= zmUlData.length) ? 0x6B : 0x69; // ZCRCW or ZCRCG
+        if (endType === 0x6B) zmState = 'WAIT_ACK';
+        zmodemSendDataPacket([], chunk, endType);
+        updateTransferUI(`Uploading... ${zmUlOffset} / ${zmUlData.length} bytes`);
+        if (endType === 0x69) setTimeout(sendZmodemUlChunks, 10);
     }
 
     function processTransferByte(code) {
@@ -350,6 +481,53 @@
                 if (code === XMODEM_ACK) {
                     endTransfer("Upload Complete");
                 }
+            }
+        } else if (xmodemActive === 3 || xmodemActive === 4) {
+            if (code === 0x11 || code === 0x13 || code === 0x91 || code === 0x93) return; // ignore XON/XOFF
+            if (code === 0x18) { zmDlEscaped = true; return; }
+            if (zmDlEscaped) {
+                zmDlEscaped = false;
+                if (code === 0x4D || code === 0xcd) code = 0x0d;
+                else if (code === 0x8d) code = 0x8d;
+                else if (code === 0x42) { zmState = 'HEX_HEADER'; zmDlHdrBuf = ''; return; } // B
+                else if (code === 0x41 || code === 0x43) { zmState = 'BIN_HEADER'; zmDlHdrBuf = []; zmDlBin32 = (code===0x43); return; } // A/C
+                else if (code >= 0x68 && code <= 0x6B) { zmDlDataType = code; zmState = 'DATA_CRC'; zmDlCrcBuf = []; return; }
+                else code = code ^ 0x40; // unescape
+            }
+            if (zmState === 'HEX_HEADER') {
+                zmDlHdrBuf += String.fromCharCode(code);
+                if (zmDlHdrBuf.length === 14) {
+                    let type = parseInt(zmDlHdrBuf.substr(0,2), 16), f0 = parseInt(zmDlHdrBuf.substr(2,2), 16), f1 = parseInt(zmDlHdrBuf.substr(4,2), 16);
+                    let f2 = parseInt(zmDlHdrBuf.substr(6,2), 16), f3 = parseInt(zmDlHdrBuf.substr(8,2), 16);
+                    zmState = 'IDLE'; handleZmodemHeader(type, f0, f1, f2, f3);
+                }
+            } else if (zmState === 'BIN_HEADER') {
+                zmDlHdrBuf.push(code);
+                if (zmDlHdrBuf.length === (zmDlBin32 ? 9 : 7)) {
+                    let type = zmDlHdrBuf[0], f0 = zmDlHdrBuf[1], f1 = zmDlHdrBuf[2], f2 = zmDlHdrBuf[3], f3 = zmDlHdrBuf[4];
+                    zmState = 'IDLE'; handleZmodemHeader(type, f0, f1, f2, f3);
+                }
+            } else if (zmState === 'DATA_CRC') {
+                zmDlCrcBuf.push(code);
+                if (zmDlCrcBuf.length === (zmDlBin32 ? 4 : 2)) {
+                    if (zmExpectedData === 'FILE') {
+                        let fileEnd = zmDlBuf.indexOf(0);
+                        if (fileEnd !== -1) {
+                            zmFileName = String.fromCharCode.apply(null, zmDlBuf.slice(0, fileEnd));
+                            let rest = String.fromCharCode.apply(null, zmDlBuf.slice(fileEnd+1));
+                            zmFileSize = parseInt(rest.split(' ')[0]) || 0;
+                        }
+                        zmExpectedData = ''; zmState = 'IDLE'; zmDlBuf = []; zmodemSendHex(9, 0); // ZRPOS 0
+                    } else if (zmExpectedData === 'DATA') {
+                        for(let i=0; i<zmDlBuf.length; i++) xmodemData.push(zmDlBuf[i]);
+                        zmDlBuf = [];
+                        updateTransferUI(`Downloading... ${xmodemData.length} / ${zmFileSize} bytes`);
+                        if (zmDlDataType === 0x6B) zmodemSendHex(3, xmodemData.length); // ZACK
+                        zmState = 'IDLE';
+                    } else zmState = 'IDLE';
+                }
+            } else if (zmState === 'DATA_READ') {
+                zmDlBuf.push(code);
             }
         }
     }
@@ -721,6 +899,11 @@
         if (code === 0xFF) { 
             ansiState = 10; 
             return; 
+        }
+        
+        sigBuf.shift(); sigBuf.push(code);
+        if (sigBuf[0]===0x2A && sigBuf[1]===0x2A && sigBuf[2]===0x18 && sigBuf[3]===0x42 && sigBuf[4]===0x30 && sigBuf[5]===0x30) {
+            if (!xmodemActive) { startTransfer(3); return; }
         }
 
         if (xmodemActive) {
