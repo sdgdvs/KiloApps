@@ -26,7 +26,7 @@
   .color:hover { transform: scale(1.05); }
   .color.active { border-color: var(--primary); box-shadow: 0 0 10px rgba(33, 150, 243, 0.4); transform: scale(1.1); }
   
-  .shape-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .shape-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .shape-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 6px; padding: 5px; cursor: pointer; text-align: center; font-size: 12px; transition: all 0.2s ease; }
   .shape-btn:hover { background: rgba(255,255,255,0.1); }
   .shape-btn.active { background: var(--primary); color: #111; border-color: var(--primary); }
@@ -56,6 +56,7 @@
         <div class="shape-btn active" id="tool-freehand" onclick="setTool('freehand')">Draw</div>
         <div class="shape-btn" id="tool-line" onclick="setTool('line')">Line</div>
         <div class="shape-btn" id="tool-rect" onclick="setTool('rect')">Rect</div>
+        <div class="shape-btn" id="tool-ellipse" onclick="setTool('ellipse')">Ellipse</div>
       </div>
     </div>
 
@@ -209,6 +210,13 @@
           ctx.stroke();
         } else if (currentTool === 'rect') {
           ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        } else if (currentTool === 'ellipse') {
+          const rx = Math.abs(pos.x - startX) / 2;
+          const ry = Math.abs(pos.y - startY) / 2;
+          const cx = startX + (pos.x - startX) / 2;
+          const cy = startY + (pos.y - startY) / 2;
+          ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
+          ctx.stroke();
         }
         // Clear preview
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
@@ -247,6 +255,13 @@
           pctx.stroke();
         } else if (currentTool === 'rect') {
           pctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
+        } else if (currentTool === 'ellipse') {
+          const rx = Math.abs(pos.x - startX) / 2;
+          const ry = Math.abs(pos.y - startY) / 2;
+          const cx = startX + (pos.x - startX) / 2;
+          const cy = startY + (pos.y - startY) / 2;
+          pctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
+          pctx.stroke();
         }
       }
     }
