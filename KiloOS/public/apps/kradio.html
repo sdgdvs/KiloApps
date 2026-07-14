@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>KRadio</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0f172a; /* slate-900 */
+            color: #f8fafc; /* slate-50 */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        .container {
+            background: #1e293b; /* slate-800 */
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0 0 16px 0;
+            font-size: 24px;
+            color: #38bdf8; /* sky-400 */
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #0ea5e9; /* sky-500 */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0284c7; /* sky-600 */
+        }
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+        #status {
+            font-size: 14px;
+            color: #94a3b8; /* slate-400 */
+            margin-top: 10px;
+        }
+        /* Custom Audio Player */
+        audio {
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+        audio::-webkit-media-controls-panel {
+            background-color: #334155;
+        }
+        audio::-webkit-media-controls-play-button,
+        audio::-webkit-media-controls-mute-button {
+            background-color: #94a3b8;
+            border-radius: 50%;
+        }
+        audio::-webkit-media-controls-current-time-display,
+        audio::-webkit-media-controls-time-remaining-display {
+            color: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KRadio</h1>
+        <input type="text" id="stationUrl" value="https://radio.erb.pw/public/subspace" placeholder="Enter stream URL">
+        <div class="controls">
+            <button id="playBtn">Play</button>
+            <button id="stopBtn">Stop</button>
+        </div>
+        <audio id="audioPlayer" controls volume="0.5"></audio>
+        <div id="status">Ready. Click Play to tune in.</div>
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const stationUrl = document.getElementById('stationUrl');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+
+        let isPlaying = false;
+
+        // Auto-play attempt on load
+        window.onload = () => {
+            loadStream();
+            // Browsers usually block autoplay unless user has interacted, 
+            // but we try anyway, and if it fails, they can click Play.
+            playStream();
+        };
+
+        function loadStream() {
+            audioPlayer.src = stationUrl.value;
+            audioPlayer.load();
+        }
+
+        function playStream() {
+            if (audioPlayer.src !== stationUrl.value) {
+                loadStream();
+            }
+            const playPromise = audioPlayer.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    status.textContent = 'Playing: ' + stationUrl.value;
+                    isPlaying = true;
+                }).catch(error => {
+                    status.textContent = 'Autoplay blocked or error. Click Play.';
+                    console.log('Playback error:', error);
+                });
+            }
+        }
+
+        function stopStream() {
+            audioPlayer.pause();
+            audioPlayer.src = ''; // Clear source to actually stop downloading the stream
+            status.textContent = 'Stopped.';
+            isPlaying = false;
+        }
+
+        playBtn.addEventListener('click', playStream);
+        stopBtn.addEventListener('click', stopStream);
+
+        // Update status on events
+        audioPlayer.addEventListener('playing', () => {
+            status.textContent = 'Playing stream...';
+        });
+        
+        audioPlayer.addEventListener('waiting', () => {
+            status.textContent = 'Buffering...';
+        });
+
+        audioPlayer.addEventListener('error', (e) => {
+            status.textContent = 'Error loading stream.';
+        });
+    </script>
+</body>
+</html>
