@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <stdio.h>
 #include <commdlg.h>
 #include <string.h>
@@ -28,6 +29,7 @@
 #define ID_BTN_SHUFFLE 111
 #define ID_BTN_LOAD_SAMPLE 112
 #define ID_EDIT_SEARCH 113
+#define ID_BTN_PRINT 114
 
 // Dialog Edit Card IDs
 #define IDD_EDITCARD 210
@@ -48,7 +50,7 @@ int isFlipped = 0;
 int filteredIndices[100];
 int filteredCount = 0;
 
-HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle, hEditSearch;
+HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle, hEditSearch, hBtnPrint;
 HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
@@ -228,17 +230,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                    220, 10, 50, 30, hwnd, (HMENU)ID_BTN_LOAD_SAMPLE, NULL, NULL);
             SendMessage(hBtnLoadSample, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hBtnPrint = CreateWindow("BUTTON", "Print", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   275, 10, 40, 30, hwnd, (HMENU)ID_BTN_PRINT, NULL, NULL);
+            SendMessage(hBtnPrint, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             hBtnShuffle = CreateWindow("BUTTON", "Shuff", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   275, 10, 50, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
+                                   320, 10, 50, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
 
             hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   330, 10, 45, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
+                                   375, 10, 45, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
                                    
             hBtnDelete = CreateWindow("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   380, 10, 45, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+                                   425, 10, 45, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
 
             hBtnAdd = CreateWindow("BUTTON", "+ Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   430, 10, 55, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+                                   475, 10, 55, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
 
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
@@ -502,6 +508,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     break;
                 }
+                case ID_BTN_PRINT:
+                    if (deckCount > 0) {
+                        FILE *f = fopen("kflash_print_temp.html", "w");
+                        if (f) {
+                            fprintf(f, "<html><head><title>KFlash Deck</title><style>body{font-family:sans-serif;} .card{border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:8px; page-break-inside:avoid;} .front{font-weight:bold;} </style></head><body>");
+                            fprintf(f, "<h2>Flashcard Deck</h2>");
+                            for(int i=0; i<deckCount; i++) {
+                                fprintf(f, "<div class='card'><div class='front'>Q: %s</div><div class='back'>A: %s</div></div>", deck[i].front, deck[i].back);
+                            }
+                            fprintf(f, "<script>window.print();</script></body></html>");
+                            fclose(f);
+                            ShellExecute(NULL, "open", "kflash_print_temp.html", NULL, NULL, SW_SHOWNORMAL);
+                        } else {
+                            MessageBox(hwnd, "Failed to create print file.", "Error", MB_OK | MB_ICONERROR);
+                        }
+                    }
+                    break;
                 case ID_BTN_SHUFFLE:
                     if (deckCount > 1) {
                         for (int i = deckCount - 1; i > 0; i--) {
