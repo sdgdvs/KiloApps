@@ -66,12 +66,41 @@
             <input type="checkbox" id="localEcho"> Echo
         </label>
         <button id="btnConn" onclick="toggleConnect()">Connect</button>
-        <select id="bbsSelect"></select>
+        <button id="btnDir" onclick="showDialingDir()">Directory</button>
     </div>
     <div class="main">
         <div class="term-wrap">
             <canvas id="terminal" tabindex="0"></canvas>
         </div>
+        <!-- Dialing Directory Modal -->
+        <div id="dialingDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: #18181b; border: 1px solid #27272a; border-radius: 8px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid #27272a; font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                    <span>Dialing Directory</span>
+                    <button style="background: #27272a; color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer;" onclick="closeDialingDir()">X</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <div style="width: 250px; border-right: 1px solid #27272a; overflow-y: auto;" id="dirList"></div>
+                    <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Name</label><br><input type="text" id="dirName" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Host (IP/Domain)</label><br><input type="text" id="dirHost" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                        <div style="display:flex; gap:8px;">
+                            <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Port</label><br><input type="number" id="dirPort" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Connection Type</label><br><select id="dirType" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"><option value="telnet">Telnet</option><option value="ws">WebSocket</option></select></div>
+                        </div>
+                        <div style="margin-top:auto; display:flex; gap:8px;">
+                            <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveEntry()">Save</button>
+                            <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteEntry()">Delete</button>
+                            <button style="background:#27272a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:auto;" onclick="newEntry()">New</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 16px; border-top: 1px solid #27272a; display: flex; justify-content: flex-end; gap: 8px;">
+                    <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="connectSelected()">Connect</button>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
     <div class="status-bar">
         <span id="statusInfo">Ready — Select a BBS or enter an address</span>
@@ -469,65 +498,126 @@
     }, {passive: true});
 
     // ─── BBS Directory ───
-    const BBS_LIST = [
-        { cat: '🎮 Gaming', name: '20 For Beers', host: '20forbeers.com', port: 1337, ws: false },
-        { cat: '🎮 Gaming', name: 'Mutiny BBS', host: 'mutinybbs.com', port: 23, ws: false },
-        { cat: '🎮 Gaming', name: 'Borderline BBS', host: 'borderlinebbs.dyndns.org', port: 9023, ws: false },
-        { cat: '🎮 Gaming', name: 'Dreamline BBS', host: 'din.asciiattic.com', port: 23, ws: false },
-        { cat: '🎮 Gaming', name: 'Bottomless Abyss', host: 'bbs.bottomlessabyss.net', port: 2323, ws: false },
-        { cat: '🎮 Gaming', name: 'Dark Realms', host: 'bbs.darkrealms.ca', port: 23, ws: false },
-        { cat: '🎮 Gaming', name: 'Throwback BBS', host: 'bbs.throwbackbbs.com', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Vertrauen', host: 'vert.synchro.net', port: 11235, ws: true },
-        { cat: '💬 Social', name: 'Electronic Chicken', host: 'bbs.electronicchicken.com', port: 8080, ws: true },
-        { cat: '💬 Social', name: 'Capitol City Online', host: 'capitolcityonline.net', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Agency BBS', host: 'bbs.agency', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Xibalba', host: 'xibalba.l33t.codes', port: 44510, ws: false },
-        { cat: '💬 Social', name: 'Black Flag', host: 'blackflag.acid.org', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Absinthe', host: 'bbs.absinthe.ws', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Broken Bubble', host: 'bbs.thebrokenbubble.com', port: 23, ws: false },
-        { cat: '📁 Files', name: 'Titanic BBS', host: 'ttb.rgbbs.info', port: 23, ws: false },
-        { cat: '📁 Files', name: "Al's Geek Lab", host: 'bbs.alsgeeklab.com', port: 2323, ws: false },
-        { cat: '📁 Files', name: 'Retrocampus BBS', host: 'bbs.retrocampus.com', port: 23, ws: false },
-        { cat: '📁 Files', name: 'Air & Wave BBS', host: 'bbs.airandwave.net', port: 2323, ws: false },
-        { cat: '📁 Files', name: 'BBS NZ', host: 'bbs.nz', port: 23, ws: false },
-        { cat: '🎨 Art', name: 'Blocktronics HQ', host: 'blocktronics.org', port: 23, ws: false },
-        { cat: '🎨 Art', name: 'The Keep', host: 'bbs.thekeep.net', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: '13th Leader', host: '13leader.net', port: 8023, ws: false },
-        { cat: '🖥️ Retro', name: '8-Bit Boyz', host: 'bbs.8bitboyz.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: 'Particles BBS', host: 'particlesbbs.dyndns.org', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: '300 Baud', host: '300baud.dynu.net', port: 2525, ws: false },
-        { cat: '🖥️ Retro', name: 'Fozztexx', host: 'bbs.fozztexx.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: 'Clutch BBS', host: 'clutchbbs.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: 'End of the Line', host: 'bbs.endofthelinebbs.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: '20 For Beers', host: '20forbeers.com', port: 1337, ws: false }
+    const DEFAULT_BBS_LIST = [
+        { cat: '🎮 Gaming', name: '20 For Beers', host: '20forbeers.com', port: 1337, type: 'telnet' },
+        { cat: '🎮 Gaming', name: 'Mutiny BBS', host: 'mutinybbs.com', port: 23, type: 'telnet' },
+        { cat: '🎮 Gaming', name: 'Borderline BBS', host: 'borderlinebbs.dyndns.org', port: 9023, type: 'telnet' },
+        { cat: '💬 Social', name: 'Vertrauen', host: 'vert.synchro.net', port: 11235, type: 'ws' },
+        { cat: '💬 Social', name: 'Electronic Chicken', host: 'bbs.electronicchicken.com', port: 8080, type: 'ws' },
+        { cat: '📁 Files', name: 'Titanic BBS', host: 'ttb.rgbbs.info', port: 23, type: 'telnet' },
+        { cat: '🎨 Art', name: 'Blocktronics HQ', host: 'blocktronics.org', port: 23, type: 'telnet' },
+        { cat: '🖥️ Retro', name: '13th Leader', host: '13leader.net', port: 8023, type: 'telnet' }
     ];
 
-    function connectTo(host, port, isWs) {
-        document.getElementById('host').value = isWs ? 'ws://' + host + ':' + port : host;
-        document.getElementById('port').value = port;
-        if (ws) ws.close();
-        setTimeout(() => toggleConnect(), 100);
+    let dynBbsList = [];
+    let selectedIndex = -1;
+
+    function loadDirectory() {
+        const saved = localStorage.getItem('kbbs_directory');
+        if (saved) {
+            try { dynBbsList = JSON.parse(saved); } catch(e) { dynBbsList = DEFAULT_BBS_LIST.slice(); }
+        } else {
+            dynBbsList = DEFAULT_BBS_LIST.slice();
+        }
     }
 
-    function renderBBSList() {
-        const sel = document.getElementById('bbsSelect');
-        sel.innerHTML = '<option value="">-- Select BBS --</option>';
-        BBS_LIST.forEach((bbs, i) => {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = bbs.name;
-            sel.appendChild(opt);
+    function saveDirectory() {
+        localStorage.setItem('kbbs_directory', JSON.stringify(dynBbsList));
+    }
+
+    function renderDirList() {
+        const lst = document.getElementById('dirList');
+        lst.innerHTML = '';
+        dynBbsList.forEach((bbs, i) => {
+            const div = document.createElement('div');
+            div.textContent = bbs.name;
+            div.style.padding = '10px 16px';
+            div.style.cursor = 'pointer';
+            div.style.borderBottom = '1px solid #27272a';
+            div.style.color = (i === selectedIndex) ? '#fff' : '#a1a1aa';
+            div.style.background = (i === selectedIndex) ? '#0ea5e9' : 'transparent';
+            div.onmouseover = () => { if (i !== selectedIndex) div.style.background = '#27272a'; };
+            div.onmouseout = () => { if (i !== selectedIndex) div.style.background = 'transparent'; };
+            div.onclick = () => selectEntry(i);
+            lst.appendChild(div);
         });
-        sel.addEventListener('change', () => {
-            if (sel.value === '') return;
-            const bbs = BBS_LIST[sel.value];
-            connectTo(bbs.host, bbs.port, bbs.ws);
-        });
+    }
+
+    function selectEntry(idx) {
+        selectedIndex = idx;
+        renderDirList();
+        if (idx >= 0 && idx < dynBbsList.length) {
+            const bbs = dynBbsList[idx];
+            document.getElementById('dirName').value = bbs.name || '';
+            document.getElementById('dirHost').value = bbs.host || '';
+            document.getElementById('dirPort').value = bbs.port || 23;
+            document.getElementById('dirType').value = bbs.type || (bbs.ws ? 'ws' : 'telnet');
+        }
+    }
+
+    function newEntry() {
+        selectedIndex = -1;
+        renderDirList();
+        document.getElementById('dirName').value = 'New BBS';
+        document.getElementById('dirHost').value = '';
+        document.getElementById('dirPort').value = '23';
+        document.getElementById('dirType').value = 'telnet';
+    }
+
+    function saveEntry() {
+        const name = document.getElementById('dirName').value.trim();
+        const host = document.getElementById('dirHost').value.trim();
+        const port = parseInt(document.getElementById('dirPort').value) || 23;
+        const type = document.getElementById('dirType').value;
+        if (!name || !host) return;
+
+        const entry = { name, host, port, type };
+        if (selectedIndex >= 0) {
+            dynBbsList[selectedIndex] = entry;
+        } else {
+            dynBbsList.push(entry);
+            selectedIndex = dynBbsList.length - 1;
+        }
+        saveDirectory();
+        renderDirList();
+    }
+
+    function deleteEntry() {
+        if (selectedIndex >= 0) {
+            dynBbsList.splice(selectedIndex, 1);
+            selectedIndex = -1;
+            saveDirectory();
+            renderDirList();
+        }
+    }
+
+    function connectSelected() {
+        const name = document.getElementById('dirName').value.trim();
+        const host = document.getElementById('dirHost').value.trim();
+        const port = parseInt(document.getElementById('dirPort').value) || 23;
+        const type = document.getElementById('dirType').value;
+        if (host) {
+            closeDialingDir();
+            connectTo(host, port, type === 'ws');
+        }
+    }
+
+    function showDialingDir() {
+        document.getElementById('dialingDir').style.display = 'flex';
+        loadDirectory();
+        if (selectedIndex < 0 && dynBbsList.length > 0) selectedIndex = 0;
+        renderDirList();
+        selectEntry(selectedIndex);
+    }
+    
+    function closeDialingDir() {
+        document.getElementById('dialingDir').style.display = 'none';
+        canvas.focus();
     }
 
     // ─── Init ───
     initScreen();
-    renderBBSList();
+    // No more bbsSelect render
     // Welcome message
     const welcome = [
         '\x1B[1;36m╔══════════════════════════════════════════════════════════════════════════════╗',
@@ -539,8 +629,8 @@
         '║\x1B[0;37m  Minimalist BBS Terminal Client                      v1.0 — Web Edition   \x1B[1;36m║',
         '╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m',
         '',
-        '\x1B[1;32m  ► \x1B[0;37mSelect a BBS from the dropdown menu above',
-        '\x1B[1;32m  ► \x1B[0;37mOr enter a WebSocket address (ws://host:port)',
+        '\x1B[1;32m  ► \x1B[0;37mClick "Directory" to browse and manage your favorite BBS systems',
+        '\x1B[1;32m  ► \x1B[0;37mOr enter an address manually and click Connect',
         '',
         '\x1B[0;36m  Raw telnet connections are routed via your dedicated KBBSProxy.',
         '\x1B[0;36m  Local connections require KBBSProxy to be running locally.',
