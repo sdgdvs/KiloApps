@@ -17,10 +17,18 @@ int numWords = 30;
 int score = 0;
 int lives = 3;
 
-int activeWordIdx = 0;
-int wordY = 0;
-int wordX = 150;
-int matchLen = 0;
+#define MAX_WORDS 5
+typedef struct {
+    int active;
+    int wordIdx;
+    int y;
+    int x;
+    int matchLen;
+} FallingWord;
+
+FallingWord fWords[MAX_WORDS];
+int targetWord = -1;
+int combo = 0;
 
 int randSeed = 12345;
 int MyRand() {
@@ -45,24 +53,43 @@ void IntToStr(int val, char* buf) {
 }
 
 void SpawnWord() {
-    activeWordIdx = MyRand() % numWords;
-    wordY = -20;
-    wordX = 50 + (MyRand() % 200);
-    matchLen = 0;
+    int i;
+    for (i = 0; i < MAX_WORDS; i++) {
+        if (!fWords[i].active) {
+            fWords[i].active = 1;
+            fWords[i].wordIdx = MyRand() % numWords;
+            fWords[i].y = -20;
+            fWords[i].x = 20 + (MyRand() % 250);
+            fWords[i].matchLen = 0;
+            return;
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             randSeed = GetTickCount();
+            memset(fWords, 0, sizeof(fWords));
             SpawnWord();
             SetTimer(hwnd, 1, 30, NULL);
             break;
         case WM_TIMER: {
             if (lives > 0) {
-                wordY += 2 + (score / 50);
-                if (wordY > H) {
-                    lives--;
+                int i;
+                int speed = 2 + (score / 100);
+                for (i = 0; i < MAX_WORDS; i++) {
+                    if (fWords[i].active) {
+                        fWords[i].y += speed;
+                        if (fWords[i].y > H) {
+                            fWords[i].active = 0;
+                            lives--;
+                            if (targetWord == i) targetWord = -1;
+                            combo = 0;
+                        }
+                    }
+                }
+                if ((MyRand() % 100) < (2 + score / 200)) {
                     SpawnWord();
                 }
             }
@@ -74,19 +101,60 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // Restart
                 lives = 3;
                 score = 0;
+                combo = 0;
+                memset(fWords, 0, sizeof(fWords));
+                targetWord = -1;
                 SpawnWord();
             } else {
                 char c = (char)wParam;
-                const char* cur = words[activeWordIdx];
-                if (c == cur[matchLen]) {
-                    matchLen++;
-                    if (matchLen == StrLen(cur)) {
-                        score += 10;
-                        SpawnWord();
+                if (c >= 'A' && c <= 'Z') c += 32;
+                if (c >= 'a' && c <= 'z') {
+                    if (targetWord != -1 && fWords[targetWord].active) {
+                        const char* cur = words[fWords[targetWord].wordIdx];
+                        if (c == cur[fWords[targetWord].matchLen]) {
+                            fWords[targetWord].matchLen++;
+                            combo++;
+                            if (fWords[targetWord].matchLen == StrLen(cur)) {
+                                score += 10 + combo;
+                                fWords[targetWord].active = 0;
+                                targetWord = -1;
+                            }
+                        } else {
+                            combo = 0;
+                            score -= 2;
+                            if (score < 0) score = 0;
+                        }
+                    } else {
+                        int i;
+                        int found = -1;
+                        int highestY = -1000;
+                        for (i = 0; i < MAX_WORDS; i++) {
+                            if (fWords[i].active) {
+                                const char* w = words[fWords[i].wordIdx];
+                                if (w[0] == c && fWords[i].matchLen == 0) {
+                                    if (fWords[i].y > highestY) {
+                                        highestY = fWords[i].y;
+                                        found = i;
+                                    }
+                                }
+                            }
+                        }
+                        if (found != -1) {
+                            targetWord = found;
+                            fWords[targetWord].matchLen = 1;
+                            combo++;
+                            const char* cur = words[fWords[targetWord].wordIdx];
+                            if (fWords[targetWord].matchLen == StrLen(cur)) {
+                                score += 10 + combo;
+                                fWords[targetWord].active = 0;
+                                targetWord = -1;
+                            }
+                        } else {
+                            combo = 0;
+                            score -= 2;
+                            if (score < 0) score = 0;
+                        }
                     }
-                } else if (c >= 'a' && c <= 'z') {
-                    score -= 2;
-                    if (score < 0) score = 0;
                 }
             }
             InvalidateRect(hwnd, NULL, TRUE);
@@ -112,17 +180,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             
             if (lives > 0) {
-                const char* cur = words[activeWordIdx];
-                int totalLen = StrLen(cur);
-                
-                // Draw unmatched part
-                SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, wordX, wordY, cur, totalLen);
-                
-                // Draw matched part in green
-                if (matchLen > 0) {
-                    SetTextColor(memDC, RGB(100, 255, 100));
-                    TextOutA(memDC, wordX, wordY, cur, matchLen);
+                int i;
+                for (i = 0; i < MAX_WORDS; i++) {
+                    if (fWords[i].active) {
+                        const char* cur = words[fWords[i].wordIdx];
+                        int totalLen = StrLen(cur);
+                        int mLen = fWords[i].matchLen;
+                        
+                        SetTextColor(memDC, (targetWord == i) ? RGB(255, 255, 100) : RGB(255, 255, 255));
+                        TextOutA(memDC, fWords[i].x, fWords[i].y, cur, totalLen);
+                        
+                        if (mLen > 0) {
+                            SetTextColor(memDC, RGB(100, 255, 100));
+                            TextOutA(memDC, fWords[i].x, fWords[i].y, cur, mLen);
+                        }
+                    }
                 }
             } else {
                 SetTextColor(memDC, RGB(255, 100, 100));
@@ -133,8 +205,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             char sBuf[32];
             char lBuf[32];
+            char cBuf[32];
             IntToStr(score, sBuf);
             IntToStr(lives, lBuf);
+            IntToStr(combo, cBuf);
             
             SetTextColor(memDC, RGB(200, 200, 200));
             TextOutA(memDC, 10, 10, "Score: ", 7);
@@ -142,6 +216,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             TextOutA(memDC, 10, 40, "Lives: ", 7);
             TextOutA(memDC, 80, 40, lBuf, StrLen(lBuf));
+
+            TextOutA(memDC, 10, 70, "Combo: ", 7);
+            TextOutA(memDC, 80, 70, cBuf, StrLen(cBuf));
             
             SelectObject(memDC, oldFont);
             DeleteObject(hFont);

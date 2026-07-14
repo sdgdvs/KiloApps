@@ -24,16 +24,26 @@
   
   let score = 0;
   let lives = 3;
-  let activeWord = "";
-  let wordY = 0;
-  let wordX = 150;
-  let matchLen = 0;
+  
+  const MAX_WORDS = 5;
+  let fWords = [];
+  for (let i = 0; i < MAX_WORDS; i++) {
+      fWords.push({ active: false, word: "", y: 0, x: 0, matchLen: 0 });
+  }
+  let targetWord = -1;
+  let combo = 0;
   
   function spawnWord() {
-      activeWord = words[Math.floor(Math.random() * words.length)];
-      wordY = -20;
-      wordX = 50 + Math.random() * 200;
-      matchLen = 0;
+      for (let i = 0; i < MAX_WORDS; i++) {
+          if (!fWords[i].active) {
+              fWords[i].active = true;
+              fWords[i].word = words[Math.floor(Math.random() * words.length)];
+              fWords[i].y = -20;
+              fWords[i].x = 20 + Math.random() * 250;
+              fWords[i].matchLen = 0;
+              return;
+          }
+      }
   }
   
   spawnWord();
@@ -45,15 +55,19 @@
       ctx.textBaseline = "top";
       
       if (lives > 0) {
-          let matched = activeWord.substring(0, matchLen);
-          let unmatched = activeWord.substring(matchLen);
-          
-          ctx.fillStyle = "rgb(100, 255, 100)";
-          ctx.fillText(matched, wordX, wordY);
-          
-          let mWidth = ctx.measureText(matched).width;
-          ctx.fillStyle = "rgb(255, 255, 255)";
-          ctx.fillText(unmatched, wordX + mWidth, wordY);
+          for (let i = 0; i < MAX_WORDS; i++) {
+              if (fWords[i].active) {
+                  let matched = fWords[i].word.substring(0, fWords[i].matchLen);
+                  let unmatched = fWords[i].word.substring(fWords[i].matchLen);
+                  
+                  ctx.fillStyle = "rgb(100, 255, 100)";
+                  ctx.fillText(matched, fWords[i].x, fWords[i].y);
+                  
+                  let mWidth = ctx.measureText(matched).width;
+                  ctx.fillStyle = (targetWord === i) ? "rgb(255, 255, 100)" : "rgb(255, 255, 255)";
+                  ctx.fillText(unmatched, fWords[i].x + mWidth, fWords[i].y);
+              }
+          }
       } else {
           ctx.textAlign = "center";
           ctx.fillStyle = "rgb(255, 100, 100)";
@@ -66,13 +80,24 @@
       ctx.fillStyle = "rgb(200, 200, 200)";
       ctx.fillText("Score: " + score, 10, 10);
       ctx.fillText("Lives: " + lives, 10, 40);
+      ctx.fillText("Combo: " + combo, 10, 70);
   }
   
   function update() {
       if (lives > 0) {
-          wordY += 2 + Math.floor(score / 50);
-          if (wordY > cvs.height) {
-              lives--;
+          let speed = 2 + Math.floor(score / 100);
+          for (let i = 0; i < MAX_WORDS; i++) {
+              if (fWords[i].active) {
+                  fWords[i].y += speed;
+                  if (fWords[i].y > cvs.height) {
+                      fWords[i].active = false;
+                      lives--;
+                      if (targetWord === i) targetWord = -1;
+                      combo = 0;
+                  }
+              }
+          }
+          if (Math.random() < (0.02 + score / 20000)) {
               spawnWord();
           }
       }
@@ -83,19 +108,52 @@
       if (lives <= 0) {
           lives = 3;
           score = 0;
+          combo = 0;
+          targetWord = -1;
+          for (let i = 0; i < MAX_WORDS; i++) fWords[i].active = false;
           spawnWord();
       } else {
-          let c = e.key;
-          if (c.length === 1) { // Ignore meta keys
-              if (c === activeWord[matchLen]) {
-                  matchLen++;
-                  if (matchLen === activeWord.length) {
-                      score += 10;
-                      spawnWord();
+          let c = e.key.toLowerCase();
+          if (c.length === 1 && c >= 'a' && c <= 'z') {
+              if (targetWord !== -1 && fWords[targetWord].active) {
+                  if (c === fWords[targetWord].word[fWords[targetWord].matchLen]) {
+                      fWords[targetWord].matchLen++;
+                      combo++;
+                      if (fWords[targetWord].matchLen === fWords[targetWord].word.length) {
+                          score += 10 + combo;
+                          fWords[targetWord].active = false;
+                          targetWord = -1;
+                      }
+                  } else {
+                      combo = 0;
+                      score -= 2;
+                      if (score < 0) score = 0;
                   }
-              } else if (c >= 'a' && c <= 'z') {
-                  score -= 2;
-                  if (score < 0) score = 0;
+              } else {
+                  let found = -1;
+                  let highestY = -1000;
+                  for (let i = 0; i < MAX_WORDS; i++) {
+                      if (fWords[i].active && fWords[i].word[0] === c && fWords[i].matchLen === 0) {
+                          if (fWords[i].y > highestY) {
+                              highestY = fWords[i].y;
+                              found = i;
+                          }
+                      }
+                  }
+                  if (found !== -1) {
+                      targetWord = found;
+                      fWords[targetWord].matchLen = 1;
+                      combo++;
+                      if (fWords[targetWord].matchLen === fWords[targetWord].word.length) {
+                          score += 10 + combo;
+                          fWords[targetWord].active = false;
+                          targetWord = -1;
+                      }
+                  } else {
+                      combo = 0;
+                      score -= 2;
+                      if (score < 0) score = 0;
+                  }
               }
           }
       }
