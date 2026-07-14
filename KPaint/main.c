@@ -21,8 +21,11 @@ int curSize = 2;
 
 HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnEraser;
 HWND hBtnSize1, hBtnSize5, hBtnSave, hBtnClear;
+HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse;
 HFONT hFont = NULL;
 
+int currentTool = 0; // 0=Freehand, 1=Line, 2=Rect, 3=Ellipse
+int startX = 0, startY = 0;
 void UpdatePen() {
     if (hPen) DeleteObject(hPen);
     hPen = CreatePen(PS_SOLID, curSize, curColor);
@@ -106,6 +109,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnClear = CreateWindowA("BUTTON", "Clear", WS_CHILD | WS_VISIBLE, 5, 235, 70, 25, hwnd, (HMENU)301, NULL, NULL);
             hBtnSave = CreateWindowA("BUTTON", "Save BMP", WS_CHILD | WS_VISIBLE, 5, 265, 70, 25, hwnd, (HMENU)302, NULL, NULL);
             
+            hBtnFreehand = CreateWindowA("BUTTON", "Draw", WS_CHILD | WS_VISIBLE, 5, 305, 70, 25, hwnd, (HMENU)401, NULL, NULL);
+            hBtnLine = CreateWindowA("BUTTON", "Line", WS_CHILD | WS_VISIBLE, 5, 335, 70, 25, hwnd, (HMENU)402, NULL, NULL);
+            hBtnRect = CreateWindowA("BUTTON", "Rect", WS_CHILD | WS_VISIBLE, 5, 365, 70, 25, hwnd, (HMENU)403, NULL, NULL);
+            hBtnEllipse = CreateWindowA("BUTTON", "Ellipse", WS_CHILD | WS_VISIBLE, 5, 395, 70, 25, hwnd, (HMENU)404, NULL, NULL);
+            
             SendMessage(hBtnBlack, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnRed, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnGreen, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -115,6 +123,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnSize5, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnClear, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnFreehand, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnLine, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnRect, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnEllipse, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
         }
         case WM_COMMAND: {
@@ -152,44 +164,96 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             }
+            
+            if (id == 401) currentTool = 0;
+            if (id == 402) currentTool = 1;
+            if (id == 403) currentTool = 2;
+            if (id == 404) currentTool = 3;
             break;
         }
         case WM_LBUTTONDOWN: {
-            int x = LOWORD(lParam) - 80;
-            int y = HIWORD(lParam);
+            int x = (short)LOWORD(lParam) - 80;
+            int y = (short)HIWORD(lParam);
             if (x >= 0) {
                 isPainting = 1;
-                lastX = x;
-                lastY = y;
-                HDC hdc = GetDC(hwnd);
-                SelectObject(hdc, hPen);
-                MoveToEx(hdc, x + 80, y, NULL);
-                LineTo(hdc, x + 80, y);
-                ReleaseDC(hwnd, hdc);
-                MoveToEx(hdcMem, x, y, NULL);
-                LineTo(hdcMem, x, y);
+                startX = x; startY = y;
+                lastX = x; lastY = y;
+                if (currentTool == 0) {
+                    HDC hdc = GetDC(hwnd);
+                    SelectObject(hdc, hPen);
+                    MoveToEx(hdc, x + 80, y, NULL);
+                    LineTo(hdc, x + 80, y);
+                    ReleaseDC(hwnd, hdc);
+                    MoveToEx(hdcMem, x, y, NULL);
+                    LineTo(hdcMem, x, y);
+                } else {
+                    HDC hdc = GetDC(hwnd);
+                    SetROP2(hdc, R2_NOTXORPEN);
+                    SelectObject(hdc, hPen);
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 80, startY, NULL); LineTo(hdc, x + 80, y); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 80, startY, x + 80, y); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 80, startY, x + 80, y); }
+                    ReleaseDC(hwnd, hdc);
+                }
             }
             break;
         }
         case WM_MOUSEMOVE: {
-            int x = LOWORD(lParam) - 80;
-            int y = HIWORD(lParam);
+            int x = (short)LOWORD(lParam) - 80;
+            int y = (short)HIWORD(lParam);
             if (isPainting && x >= 0) {
                 HDC hdc = GetDC(hwnd);
-                SelectObject(hdc, hPen);
-                MoveToEx(hdc, lastX + 80, lastY, NULL);
-                LineTo(hdc, x + 80, y);
+                if (currentTool == 0) {
+                    SelectObject(hdc, hPen);
+                    MoveToEx(hdc, lastX + 80, lastY, NULL);
+                    LineTo(hdc, x + 80, y);
+                    LineTo(hdcMem, x, y);
+                } else {
+                    SetROP2(hdc, R2_NOTXORPEN);
+                    SelectObject(hdc, hPen);
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    // Undraw previous
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 80, startY, NULL); LineTo(hdc, lastX + 80, lastY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 80, startY, lastX + 80, lastY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 80, startY, lastX + 80, lastY); }
+                    // Draw new
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 80, startY, NULL); LineTo(hdc, x + 80, y); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 80, startY, x + 80, y); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 80, startY, x + 80, y); }
+                }
                 ReleaseDC(hwnd, hdc);
-
-                LineTo(hdcMem, x, y);
-                
                 lastX = x;
                 lastY = y;
             }
             break;
         }
         case WM_LBUTTONUP: {
-            isPainting = 0;
+            if (isPainting) {
+                int x = (short)LOWORD(lParam) - 80;
+                int y = (short)HIWORD(lParam);
+                if (currentTool != 0) {
+                    HDC hdc = GetDC(hwnd);
+                    SetROP2(hdc, R2_NOTXORPEN);
+                    SelectObject(hdc, hPen);
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    // Undraw last
+                    if (currentTool == 1) { MoveToEx(hdc, startX + 80, startY, NULL); LineTo(hdc, lastX + 80, lastY); }
+                    else if (currentTool == 2) { Rectangle(hdc, startX + 80, startY, lastX + 80, lastY); }
+                    else if (currentTool == 3) { Ellipse(hdc, startX + 80, startY, lastX + 80, lastY); }
+                    ReleaseDC(hwnd, hdc);
+
+                    // Draw permanently
+                    SelectObject(hdcMem, hPen);
+                    SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+                    if (currentTool == 1) { MoveToEx(hdcMem, startX, startY, NULL); LineTo(hdcMem, x, y); }
+                    else if (currentTool == 2) { Rectangle(hdcMem, startX, startY, x, y); }
+                    else if (currentTool == 3) { Ellipse(hdcMem, startX, startY, x, y); }
+                    
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                isPainting = 0;
+            }
             break;
         }
         case WM_PAINT: {

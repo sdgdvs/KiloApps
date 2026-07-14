@@ -157,58 +157,61 @@
                 render();
             } else if (state === 1) {
                 let dx = 0, dy = 0;
-                if (e.key === 'ArrowUp') dy = -1;
-                if (e.key === 'ArrowDown') dy = 1;
-                if (e.key === 'ArrowLeft') dx = -1;
-                if (e.key === 'ArrowRight') dx = 1;
-                if (e.key === '.') { dx = 0; dy = 0; } // Wait
+                let turnTaken = false;
+                if (e.key === 'ArrowUp') { dy = -1; turnTaken = true; }
+                if (e.key === 'ArrowDown') { dy = 1; turnTaken = true; }
+                if (e.key === 'ArrowLeft') { dx = -1; turnTaken = true; }
+                if (e.key === 'ArrowRight') { dx = 1; turnTaken = true; }
+                if (e.key === '.') turnTaken = true; // Wait
                 if (e.key === 's' || e.key === 'S') saveGame();
                 if (e.key === 'l' || e.key === 'L') loadGame();
                 
-                if (dx !== 0 || dy !== 0) {
-                    let nx = player.x + dx, ny = player.y + dy;
-                    if (nx>=0 && ny>=0 && nx<W && ny<H && map[ny][nx] !== '#') {
-                        let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
-                        if (mIdx >= 0) {
-                            let dmg = 2 + player.level;
-                            monsters[mIdx].hp -= dmg;
-                            addMsg(`You hit ${monsters[mIdx].name} for ${dmg}.`);
-                            if (monsters[mIdx].hp <= 0) {
-                                addMsg(`${monsters[mIdx].name} dies!`);
-                                if (Math.random() < 0.3) {
-                                    items.push({ x: monsters[mIdx].x, y: monsters[mIdx].y, type: 'gold', amount: Math.floor(Math.random()*10)+5 });
-                                }
-                                player.xp += 5;
-                                monsters.splice(mIdx, 1);
-                                if (player.xp >= player.level * 10) {
-                                    player.level++; player.max_hp += 5; player.hp = player.max_hp;
-                                    addMsg(`Welcome to level ${player.level}!`);
-                                }
-                            }
-                        } else {
-                            player.x = nx; player.y = ny;
-                            let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
-                            if (itIdx >= 0) {
-                                let it = items[itIdx];
-                                if (it.type === 'stairs') {
-                                    dlevel++;
-                                    addMsg(`You descend to level ${dlevel}...`);
-                                    initMap();
-                                    render();
-                                    return;
-                                } else if (it.type === 'gold') {
-                                    player.gold += it.amount;
-                                    addMsg(`You pick up ${it.amount} gold.`);
-                                    items.splice(itIdx, 1);
-                                } else if (it.type === 'shrine') {
-                                    let buff = Math.floor(Math.random()*3);
-                                    if (buff === 0) { player.max_hp += 10; player.hp = player.max_hp; addMsg("Shrine glows! Health increased!"); }
-                                    else if (buff === 1) { player.xp += 50; addMsg("Shrine glows! You feel wiser!"); }
-                                    else { player.level++; player.max_hp += 5; player.hp = player.max_hp; addMsg("Shrine glows! You grew stronger!"); }
-                                    items.splice(itIdx, 1);
+                if (turnTaken) {
+                    if (dx !== 0 || dy !== 0) {
+                        let nx = player.x + dx, ny = player.y + dy;
+                        if (nx>=0 && ny>=0 && nx<W && ny<H && map[ny][nx] !== '#') {
+                            let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
+                            if (mIdx >= 0) {
+                                let dmg = 2 + player.level;
+                                monsters[mIdx].hp -= dmg;
+                                addMsg(`You hit ${monsters[mIdx].name} for ${dmg}.`);
+                                if (monsters[mIdx].hp <= 0) {
+                                    addMsg(`${monsters[mIdx].name} dies!`);
+                                    if (Math.random() < 0.3) {
+                                        items.push({ x: monsters[mIdx].x, y: monsters[mIdx].y, type: 'gold', amount: Math.floor(Math.random()*10)+5 });
+                                    }
+                                    player.xp += 5;
+                                    monsters.splice(mIdx, 1);
                                     if (player.xp >= player.level * 10) {
                                         player.level++; player.max_hp += 5; player.hp = player.max_hp;
                                         addMsg(`Welcome to level ${player.level}!`);
+                                    }
+                                }
+                            } else {
+                                player.x = nx; player.y = ny;
+                                let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
+                                if (itIdx >= 0) {
+                                    let it = items[itIdx];
+                                    if (it.type === 'stairs') {
+                                        dlevel++;
+                                        addMsg(`You descend to level ${dlevel}...`);
+                                        initMap();
+                                        render();
+                                        return;
+                                    } else if (it.type === 'gold') {
+                                        player.gold += it.amount;
+                                        addMsg(`You pick up ${it.amount} gold.`);
+                                        items.splice(itIdx, 1);
+                                    } else if (it.type === 'shrine') {
+                                        let buff = Math.floor(Math.random()*3);
+                                        if (buff === 0) { player.max_hp += 10; player.hp = player.max_hp; addMsg("Shrine glows! Health increased!"); }
+                                        else if (buff === 1) { player.xp += 50; addMsg("Shrine glows! You feel wiser!"); }
+                                        else { player.level++; player.max_hp += 5; player.hp = player.max_hp; addMsg("Shrine glows! You grew stronger!"); }
+                                        items.splice(itIdx, 1);
+                                        if (player.xp >= player.level * 10) {
+                                            player.level++; player.max_hp += 5; player.hp = player.max_hp;
+                                            addMsg(`Welcome to level ${player.level}!`);
+                                        }
                                     }
                                 }
                             }
