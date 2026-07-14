@@ -17,6 +17,7 @@
 <div class="controls">
   <button id="btnOpen">Open .kza</button>
   <button id="btnAdd">Add File...</button>
+  <button id="btnRemove">Remove</button>
   <button id="btnPack">Pack to .kza</button>
   <button id="btnExtract">Extract All</button>
 </div>
@@ -24,10 +25,12 @@
   const fileList = document.getElementById('fileList');
   const btnOpen = document.getElementById('btnOpen');
   const btnAdd = document.getElementById('btnAdd');
+  const btnRemove = document.getElementById('btnRemove');
   const btnPack = document.getElementById('btnPack');
   const btnExtract = document.getElementById('btnExtract');
   
   let files = [];
+  let selectedIndex = -1;
   
   let currentReqId = 0;
   const callbacks = {};
@@ -53,6 +56,13 @@
       files.forEach((f, idx) => {
           const div = document.createElement('div');
           div.className = 'listbox-item';
+          if (idx === selectedIndex) {
+              div.style.backgroundColor = '#cce8ff';
+          }
+          div.onclick = () => {
+              selectedIndex = idx;
+              renderFiles();
+          };
           
           const nameSpan = document.createElement('span');
           nameSpan.textContent = f.name;
@@ -67,6 +77,14 @@
       });
   }
   
+  btnRemove.onclick = () => {
+      if (selectedIndex >= 0 && selectedIndex < files.length) {
+          files.splice(selectedIndex, 1);
+          selectedIndex = -1;
+          renderFiles();
+      }
+  };
+
   btnOpen.onclick = async () => {
       const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
       if (res.path) {
@@ -76,6 +94,7 @@
                   // VFS data is base64 string, so we need to atob it to get JSON
                   const jsonStr = atob(readRes.data.split(',')[1] || readRes.data);
                   files = JSON.parse(jsonStr);
+                  selectedIndex = -1;
                   renderFiles();
               } catch(e) {
                   alert("Failed to parse archive!");
@@ -91,6 +110,7 @@
           if (readRes.data) {
               const filename = res.path.split('/').pop();
               files.push({ name: filename, data: readRes.data });
+              selectedIndex = -1;
               renderFiles();
           }
       }

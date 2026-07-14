@@ -6,7 +6,7 @@
 #define H 320
 
 HWND hListBox;
-HWND hBtnOpen, hBtnAdd, hBtnPack, hBtnExtract;
+HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtract;
 
 #define MAX_FILES 50
 typedef struct {
@@ -131,13 +131,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 10, W - 35, H - 90, hwnd, NULL, NULL, NULL);
             SendMessage(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE, 10, H - 70, 80, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File...", WS_CHILD | WS_VISIBLE, 100, H - 70, 90, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack to .kza", WS_CHILD | WS_VISIBLE, 200, H - 70, 90, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtnExtract = CreateWindowEx(0, "BUTTON", "Extract All", WS_CHILD | WS_VISIBLE, 300, H - 70, 80, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE, 10, H - 70, 75, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE, 90, H - 70, 65, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE, 160, H - 70, 65, 24, hwnd, (HMENU)5, NULL, NULL);
+            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack .kza", WS_CHILD | WS_VISIBLE, 230, H - 70, 75, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnExtract = CreateWindowEx(0, "BUTTON", "Extract", WS_CHILD | WS_VISIBLE, 310, H - 70, 65, 24, hwnd, (HMENU)4, NULL, NULL);
 
             SendMessage(hBtnOpen, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnRemove, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPack, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExtract, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
@@ -180,6 +182,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (id == 4) { // Extract All
                 ExtractAll();
+            } else if (id == 5) { // Remove
+                int sel = SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR && sel < numFiles) {
+                    HeapFree(GetProcessHeap(), 0, archive[sel].data);
+                    for(int i = sel; i < numFiles - 1; i++) {
+                        archive[i] = archive[i+1];
+                    }
+                    numFiles--;
+                    SendMessage(hListBox, LB_DELETESTRING, sel, 0);
+                }
             }
             break;
         }
@@ -187,10 +199,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
             MoveWindow(hListBox, 10, 10, nw - 20, nh - 50, TRUE);
-            MoveWindow(hBtnOpen, 10, nh - 35, 80, 24, TRUE);
-            MoveWindow(hBtnAdd, 100, nh - 35, 90, 24, TRUE);
-            MoveWindow(hBtnPack, 200, nh - 35, 90, 24, TRUE);
-            MoveWindow(hBtnExtract, 300, nh - 35, 80, 24, TRUE);
+            MoveWindow(hBtnOpen, 10, nh - 35, 75, 24, TRUE);
+            MoveWindow(hBtnAdd, 90, nh - 35, 65, 24, TRUE);
+            MoveWindow(hBtnRemove, 160, nh - 35, 65, 24, TRUE);
+            MoveWindow(hBtnPack, 230, nh - 35, 75, 24, TRUE);
+            MoveWindow(hBtnExtract, 310, nh - 35, 65, 24, TRUE);
             break;
         }
         case WM_DESTROY:
