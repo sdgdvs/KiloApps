@@ -77,12 +77,13 @@ int dpiScale(int x) {
 }
 
 /* 16-color ANSI palette (COLORREF is BGR) */
-COLORREF ansiColors[16] = {
+COLORREF defaultAnsiColors[16] = {
     0x000000, 0x0000AA, 0x00AA00, 0x0055AA,  /* black, red, green, brown */
     0xAA0000, 0xAA00AA, 0xAAAA00, 0xAAAAAA,  /* blue, magenta, cyan, light gray */
     0x555555, 0x5555FF, 0x55FF55, 0x55FFFF,  /* dark gray, bright red, bright green, bright yellow */
     0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF   /* bright blue, bright magenta, bright cyan, white */
 };
+COLORREF ansiColors[16] = {0};
 
 const WCHAR cp437[256] = {
     0x0020, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, 0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
@@ -145,8 +146,10 @@ struct KBBS_SETTINGS {
     int fontSize;
     int blinkRateMs;
     int localEcho;
+    int usePalette;
+    COLORREF palette[16];
 };
-struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0 };
+struct KBBS_SETTINGS kbbsSettings = { 16, 500, 0, 0, {0} };
 
 void LoadSettings(void) {
     HANDLE hFile = CreateFileA("kbbs_settings.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
@@ -154,6 +157,13 @@ void LoadSettings(void) {
         DWORD readBytes;
         ReadFile(hFile, &kbbsSettings, sizeof(kbbsSettings), &readBytes, NULL);
         CloseHandle(hFile);
+    }
+    int i;
+    for (i = 0; i < 16; i++) {
+        if (!kbbsSettings.usePalette) {
+            kbbsSettings.palette[i] = defaultAnsiColors[i];
+        }
+        ansiColors[i] = kbbsSettings.palette[i];
     }
 }
 
@@ -1085,10 +1095,30 @@ INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 8;
                 if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
                 kbbsSettings.localEcho = (SendMessageA(GetDlgItem(hdlg, IDC_SET_ECHO), BM_GETCHECK, 0, 0) == BST_CHECKED);
+                
+                int i;
+                for(i=0; i<16; i++) ansiColors[i] = kbbsSettings.palette[i];
+                
                 SaveSettings();
                 EndDialog(hdlg, 1);
             } else if (id == 2) {
                 EndDialog(hdlg, 0);
+            } else if (id == 3004) {
+                CHOOSECOLORA cc;
+                my_memset(&cc, 0, sizeof(cc));
+                cc.lStructSize = sizeof(cc);
+                cc.hwndOwner = hdlg;
+                cc.lpCustColors = kbbsSettings.palette;
+                cc.Flags = CC_ANYCOLOR | CC_FULLOPEN | CC_RGBINIT;
+                cc.rgbResult = kbbsSettings.palette[0];
+                if (ChooseColorA(&cc)) {
+                    kbbsSettings.usePalette = 1;
+                }
+            } else if (id == 3005) {
+                int i;
+                for (i = 0; i < 16; i++) kbbsSettings.palette[i] = defaultAnsiColors[i];
+                kbbsSettings.usePalette = 1;
+                MessageBoxA(hdlg, "Palette reset to defaults.", "Reset", MB_OK);
             }
             return TRUE;
         }

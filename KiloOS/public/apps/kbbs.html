@@ -155,6 +155,13 @@
                     <label style="color: #d4d4d8; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
                         <input type="checkbox" id="setLocalEcho"> Local Echo
                     </label>
+                    <div style="margin-top:8px;">
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+                            Palette
+                            <button onclick="resetPalette()" style="background:transparent; border:none; color:#0ea5e9; font-size:11px; cursor:pointer; text-decoration:underline;">Reset</button>
+                        </label>
+                        <div id="paletteContainer" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;"></div>
+                    </div>
                     <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-top: 8px;" onclick="saveSettings()">Save Settings</button>
                 </div>
             </div>
@@ -538,12 +545,13 @@
     }
 
     // ─── ANSI Color Palette (16-color PC palette) ───
-    const COLORS = [
+    const DEFAULT_COLORS = [
         '#000000', '#aa0000', '#00aa00', '#aa5500', // 0-3: Black, Red, Green, Brown
         '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa', // 4-7: Blue, Magenta, Cyan, Light Gray
         '#555555', '#ff5555', '#55ff55', '#ffff55', // 8-11: Bright variants
         '#5555ff', '#ff55ff', '#55ffff', '#ffffff'  // 12-15: Bright variants
     ];
+    let COLORS = [...DEFAULT_COLORS];
 
     // ─── CP437 to Unicode Map ───
     const CP437 = [
@@ -1479,12 +1487,15 @@
     updateBlinkInterval(500);
     
     // ─── Settings ───
-    let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false };
+    let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false, palette: null };
 
     function loadSettings() {
         const saved = localStorage.getItem('kbbs_display_settings');
         if (saved) {
             try { kbbsSettings = { ...kbbsSettings, ...JSON.parse(saved) }; } catch(e){}
+        }
+        if (kbbsSettings.palette && kbbsSettings.palette.length === 16) {
+            COLORS = [...kbbsSettings.palette];
         }
         document.getElementById('localEcho').checked = kbbsSettings.localEcho;
         CELL_H = kbbsSettings.fontSize || 16;
@@ -1500,6 +1511,16 @@
         if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
         kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
         
+        let newPalette = [];
+        for (let i = 0; i < 16; i++) {
+            let pInput = document.getElementById('pal_' + i);
+            if (pInput) newPalette.push(pInput.value);
+        }
+        if (newPalette.length === 16) {
+            kbbsSettings.palette = newPalette;
+            COLORS = [...newPalette];
+        }
+
         document.getElementById('localEcho').checked = kbbsSettings.localEcho;
         CELL_H = kbbsSettings.fontSize;
         CELL_W = Math.max(1, Math.floor(CELL_H / 2));
@@ -1510,10 +1531,42 @@
         closeSettings();
     }
 
+    function resetPalette() {
+        kbbsSettings.palette = [...DEFAULT_COLORS];
+        COLORS = [...DEFAULT_COLORS];
+        for (let i = 0; i < 16; i++) {
+            let pInput = document.getElementById('pal_' + i);
+            if (pInput) pInput.value = COLORS[i];
+        }
+        render();
+    }
+
     function showSettings() {
         document.getElementById('setFontSize').value = kbbsSettings.fontSize;
         document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs;
         document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
+        
+        const pc = document.getElementById('paletteContainer');
+        pc.innerHTML = '';
+        for(let i=0; i<16; i++) {
+            const input = document.createElement('input');
+            input.type = 'color';
+            input.id = 'pal_' + i;
+            input.value = COLORS[i];
+            input.style.width = '24px';
+            input.style.height = '24px';
+            input.style.padding = '0';
+            input.style.border = 'none';
+            input.style.borderRadius = '2px';
+            input.style.cursor = 'pointer';
+            input.title = 'Color ' + i;
+            input.addEventListener('input', (e) => {
+                COLORS[i] = e.target.value;
+                render();
+            });
+            pc.appendChild(input);
+        }
+        
         document.getElementById('settingsModal').style.display = 'flex';
     }
 

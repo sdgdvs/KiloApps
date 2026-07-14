@@ -48,7 +48,9 @@ BEGIN
     LTEXT           "Blink Rate (ms):", -1, 10, 32, 60, 8
     EDITTEXT        3002, 80, 30, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
     AUTOCHECKBOX    "Local Echo", 3003, 10, 50, 60, 10
-    DEFPUSHBUTTON   "Save", 1, 30, 90, 50, 14
-    PUSHBUTTON      "Cancel", 2, 100, 90, 50, 14
+    PUSHBUTTON      "Edit Palette Colors...", 3004, 10, 70, 75, 14
+    PUSHBUTTON      "Reset Palette", 3005, 90, 70, 60, 14
+    DEFPUSHBUTTON   "Save", 1, 30, 95, 50, 14
+    PUSHBUTTON      "Cancel", 2, 100, 95, 50, 14
 END
 
