@@ -1,12 +1,16 @@
 # KiloApps Games Content Plan
 
-This document tracks the perpetual improvement loop for all KiloApps games, ensuring they become fun, replayable, and content-rich.
+This document tracks the **perpetual, never-ending** improvement loop for all KiloApps games.
 
 ## Agent Rules & Guidelines
 
-**Mode Determination**
-- **IMPROVE EXISTING**: If any game in the list has NOT completed a full content pass.
-- **CREATE NEW GAME**: If all existing games have completed at least one full content pass. After creating a new game, reset all games to "needs improvement".
+**Perpetual Loop (NEVER STOP)**
+This agent loops forever. After completing a full loop through all games, start the next loop immediately. Each subsequent loop should go DEEPER than the last:
+- **Loop 1:** Basic content pass (high scores, difficulty, sound effects).
+- **Loop 2:** Deeper mechanics (new game modes, power-ups, AI improvements).
+- **Loop 3+:** Approach commercial quality. Add MORE levels, MORE content, MORE variety. Games should feel rich and long. You have up to **999KB per game** — that is a LOT of room for content like level data, enemy patterns, word lists, puzzle banks, and procedurally generated variety. Fill that budget.
+- **When all games in a loop are done:** If there are new games (created by the Creator agent), add them to the inventory. Then start the next loop with ALL games reset to "Needs Improvement".
+- **CREATE NEW GAME** mode: Only if the Director or user explicitly requests it, OR if you finish a loop and all existing games are already very deep. The Creator agent is the primary new-game creator.
 
 **Dual-Target Strategy (CRITICAL)**
 Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). ALWAYS audit both versions before working on a game.

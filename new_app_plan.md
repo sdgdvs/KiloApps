@@ -94,8 +94,8 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 - Multiple views or modes
 - Help/tutorial system
 
-### Completion
-After Phase 14, mark the app as COMPLETE and move it to the Completed list. Pick a new app and start over.
+### Completion (NEVER STOP — immediately start the next app)
+After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)

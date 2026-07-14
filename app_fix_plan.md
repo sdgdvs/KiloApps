@@ -24,11 +24,30 @@
 **Target App:** KRead
 **Status:** Next
 
-## Workflow
+## Perpetual Workflow (NEVER STOP — loop forever)
+
+### Pass 1: Bug Fixes (alphabetical)
 1. Pick the next untested app alphabetically.
 2. Test web (.html) and native (build.bat) versions.
 3. Log bugs found, fix them, verify.
 4. Update this file with results.
+
+### Pass 2: Deeper Quality (after Pass 1 completes)
+When all apps have been tested in Pass 1, start over from the top with deeper checks:
+- Edge case handling (empty inputs, very long strings, rapid clicking, resize behavior)
+- Accessibility (keyboard navigation, focus management, ARIA labels on web)
+- Error handling (what happens when localStorage is full, file I/O fails, network disconnects)
+- Code quality (remove dead code, consolidate duplicate logic, optimize hot paths)
+- Cross-browser issues in web versions
+
+### Pass 3+: Continuous Improvement (after Pass 2 completes)
+Start over again. By now other agents have added new features and new apps. There will always be new bugs to find. On each subsequent pass, focus on:
+- Regression testing (did new features break old ones?)
+- Performance (slow renders, memory leaks, unnecessary repaints)
+- Security (XSS, injection, unsafe eval)
+- Testing newly created apps that didn't exist during previous passes
+
+**This agent NEVER runs out of work. After each pass, start the next pass.**
 
 ## Tested Apps
 - **KPass**: Fixed XSS vulnerability in `kpass.html` vault item rendering by using `textContent`. Fixed GDI resource leaks (`HFONT`, `HBRUSH`) in `main.c` on `WM_DESTROY` and `WM_CTLCOLORSTATIC`.

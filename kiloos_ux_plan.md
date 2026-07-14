@@ -40,9 +40,18 @@
 - Fixed desktop icon selected state styling and added window drag visual feedback.
 - Added visual snap-to-edge transparent overlays when dragging windows.
 
-## Priorities
+## Priorities (NEVER STOP — always find the next improvement)
 
-### 1. General Polish
+This agent runs perpetually. After completing the current priority list, identify NEW priorities by reviewing the current state of App.jsx and index.css. There is always more to improve. Cycle through these categories endlessly:
+- **Window Management:** Dragging, resizing, z-order, minimize/maximize/restore, snap-to-edge, cascade, tile
+- **Start Menu:** Layout, search, animations, folder navigation, recent apps
+- **Taskbar:** Overflow handling, app previews, grouping, system tray, clock
+- **Theme & Visuals:** Dark mode consistency, glassmorphism, spacing, typography, hover/focus states
+- **Performance:** Reduce re-renders, optimize CSS, lazy-load app iframes, bundle size
+- **Responsiveness:** Mobile/tablet layouts, touch interactions, screen size adaptation
+- **Accessibility:** Keyboard navigation, focus management, screen reader support, contrast
+
+### Current Focus
 - Review application window constraints to prevent windows from opening out of bounds or becoming unreachable.
 
 ## Completed Items
