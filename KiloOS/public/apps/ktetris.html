@@ -41,10 +41,22 @@
   ];
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
-  let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0;
+  let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0, lines = 0, level = 1;
   let nextPc, nextRot;
   let holdPc = -1, holdUsed = false;
   let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
+
+  let bag = [];
+  function getNextPc() {
+      if (bag.length === 0) {
+          bag = [0, 1, 2, 3, 4, 5, 6];
+          for (let i = bag.length - 1; i > 0; i--) {
+              let j = Math.floor(Math.random() * (i + 1));
+              [bag[i], bag[j]] = [bag[j], bag[i]];
+          }
+      }
+      return bag.pop();
+  }
 
   function checkCol(p, r, x, y) {
       let shape = tetrominos[p][r];
@@ -62,7 +74,7 @@
   function spawn() {
       pc = nextPc;
       rot = nextRot; cx = 3; cy = -2;
-      nextPc = Math.floor(Math.random() * 7);
+      nextPc = getNextPc();
       nextRot = 0;
       holdUsed = false;
       if (checkCol(pc, rot, cx, cy + 1)) {
@@ -96,8 +108,10 @@
       if (linesCleared > 0) playSound(1000 + linesCleared * 200, 'square', 0.1);
       else playSound(500, 'square', 0.05);
       
-      score += linesCleared * 100;
-      dropInterval = Math.max(50, 500 - Math.floor(score / 100) * 10);
+      lines += linesCleared;
+      level = Math.floor(lines / 10) + 1;
+      score += linesCleared * 100 * level;
+      dropInterval = Math.max(50, 500 - (level - 1) * 30);
   }
 
   function init() {
@@ -105,8 +119,11 @@
       gameOver = false;
       isPaused = false;
       score = 0;
+      lines = 0;
+      level = 1;
       dropInterval = 500;
-      nextPc = Math.floor(Math.random() * 7);
+      bag = [];
+      nextPc = getNextPc();
       nextRot = 0;
       holdPc = -1;
       holdUsed = false;
@@ -210,7 +227,9 @@
       ctx.font = '12px monospace';
       ctx.fillText('SCORE: ' + score, 210, 20);
       ctx.fillText('HI: ' + highScore, 210, 40);
-      ctx.fillText('NEXT:', 210, 70);
+      ctx.fillText('LEVEL: ' + level, 210, 60);
+      ctx.fillText('LINES: ' + lines, 210, 80);
+      ctx.fillText('NEXT:', 210, 110);
       
       if (!gameOver) {
           let nextShape = tetrominos[nextPc][nextRot];
@@ -218,20 +237,20 @@
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (nextShape & (1 << (15 - (i * 4 + j)))) {
-                      ctx.fillRect(210 + j * CELL + 1, 90 + i * CELL + 1, CELL - 2, CELL - 2);
+                      ctx.fillRect(210 + j * CELL + 1, 130 + i * CELL + 1, CELL - 2, CELL - 2);
                   }
               }
           }
       }
 
-      ctx.fillText('HOLD:', 210, 190);
+      ctx.fillText('HOLD:', 210, 230);
       if (holdPc !== -1) {
           let holdShape = tetrominos[holdPc][0];
           ctx.fillStyle = colors[holdPc + 1];
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (holdShape & (1 << (15 - (i * 4 + j)))) {
-                      ctx.fillRect(210 + j * CELL + 1, 210 + i * CELL + 1, CELL - 2, CELL - 2);
+                      ctx.fillRect(210 + j * CELL + 1, 250 + i * CELL + 1, CELL - 2, CELL - 2);
                   }
               }
           }

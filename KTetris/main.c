@@ -36,6 +36,8 @@ void save_high_score() {
 int game_over = 0;
 int is_paused = 0;
 int score = 0;
+int lines = 0;
+int level = 1;
 int timer_speed = 500;
 
 const unsigned short tetrominos[7][4] = {
@@ -63,6 +65,24 @@ unsigned int rng_state = 12345;
 int random_int(int max) {
     rng_state = rng_state * 1103515245 + 12345;
     return ((rng_state >> 16) & 0x7FFF) % max;
+}
+
+int bag[7];
+int bag_index = 7;
+void fill_bag() {
+    for (int i = 0; i < 7; i++) bag[i] = i;
+    for (int i = 6; i > 0; i--) {
+        int j = random_int(i + 1);
+        int temp = bag[i];
+        bag[i] = bag[j];
+        bag[j] = temp;
+    }
+    bag_index = 0;
+}
+
+int get_next_pc() {
+    if (bag_index >= 7) fill_bag();
+    return bag[bag_index++];
 }
 
 int check_collision(int p, int rot, int px, int py) {
@@ -112,8 +132,10 @@ void lock_piece() {
     } else {
         Beep(500, 50);
     }
-    score += lines_cleared * 100;
-    int new_speed = 500 - (score / 100) * 10;
+    lines += lines_cleared;
+    level = (lines / 10) + 1;
+    score += lines_cleared * 100 * level;
+    int new_speed = 500 - (level - 1) * 30;
     if (new_speed < 50) new_speed = 50;
     timer_speed = new_speed;
 }
@@ -123,7 +145,7 @@ void spawn_piece() {
     current_rot = next_rot;
     current_x = W / 2 - 2;
     current_y = -2;
-    next_piece = random_int(7);
+    next_piece = get_next_pc();
     next_rot = 0;
     hold_used = 0;
     if (check_collision(current_piece, current_rot, current_x, current_y + 1)) {
@@ -139,12 +161,15 @@ void InitGame() {
         for (int x = 0; x < W; x++)
             grid[y][x] = 0;
     score = 0;
+    lines = 0;
+    level = 1;
     timer_speed = 500;
+    bag_index = 7;
     game_over = 0;
     is_paused = 0;
     hold_piece = -1;
     hold_used = 0;
-    next_piece = random_int(7);
+    next_piece = get_next_pc();
     next_rot = 0;
     spawn_piece();
 }
@@ -292,26 +317,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(hi_str, "HI: %d", high_score);
             TextOutA(memDC, W * CELL_SIZE + 10, 40, hi_str, lstrlenA(hi_str));
             
-            TextOutA(memDC, W * CELL_SIZE + 10, 70, "NEXT:", 5);
+            char level_str[32];
+            wsprintfA(level_str, "LEVEL: %d", level);
+            TextOutA(memDC, W * CELL_SIZE + 10, 60, level_str, lstrlenA(level_str));
+            
+            char lines_str[32];
+            wsprintfA(lines_str, "LINES: %d", lines);
+            TextOutA(memDC, W * CELL_SIZE + 10, 80, lines_str, lstrlenA(lines_str));
+            
+            TextOutA(memDC, W * CELL_SIZE + 10, 110, "NEXT:", 5);
             if (!game_over) {
                 unsigned short next_shape = tetrominos[next_piece][next_rot];
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (next_shape & (1 << (15 - (y * 4 + x)))) {
-                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 90 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 90 + (y + 1) * CELL_SIZE - 1 };
+                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 130 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 130 + (y + 1) * CELL_SIZE - 1 };
                             FillRect(memDC, &r, brushes[next_piece + 1]);
                         }
                     }
                 }
             }
             
-            TextOutA(memDC, W * CELL_SIZE + 10, 140, "HOLD:", 5);
+            TextOutA(memDC, W * CELL_SIZE + 10, 180, "HOLD:", 5);
             if (hold_piece != -1) {
                 unsigned short hold_shape = tetrominos[hold_piece][0];
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (hold_shape & (1 << (15 - (y * 4 + x)))) {
-                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 160 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 160 + (y + 1) * CELL_SIZE - 1 };
+                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 200 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 200 + (y + 1) * CELL_SIZE - 1 };
                             FillRect(memDC, &r, brushes[hold_piece + 1]);
                         }
                     }
