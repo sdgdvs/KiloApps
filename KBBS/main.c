@@ -1399,6 +1399,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
+                }
+            } else if (LOWORD(wParam) == 110) { /* Settings */
+                if (DialogBoxParamA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(IDD_SETTINGS), hwnd, SettingsProc, 0)) {
+                    KillTimer(hwnd, 1);
+                    SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
+                    SendMessageA(hEcho, BM_SETCHECK, kbbsSettings.localEcho ? BST_CHECKED : BST_UNCHECKED, 0);
+                    if (hTermFont) DeleteObject(hTermFont);
+                    hTermFont = CreateFontA(dpiScale(kbbsSettings.fontSize), dpiScale(kbbsSettings.fontSize / 2), 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+                        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, NONANTIALIASED_QUALITY,
+                        FIXED_PITCH | FF_MODERN, "Consolas");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (LOWORD(wParam) == 102) { /* Echo Checkbox */
+                kbbsSettings.localEcho = (SendMessageA(hEcho, BM_GETCHECK, 0, 0) == BST_CHECKED);
+                SaveSettings();
             }
             break;
         }

@@ -75,6 +75,7 @@
         <button id="btnMacros" onclick="showMacros()" style="margin-left:4px;">Macros</button>
         <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:8px;">DL (XM)</button>
         <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
+        <button id="btnSettings" onclick="showSettings()" style="margin-left:4px;">Settings</button>
         <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
     </div>
     <div class="main">
@@ -133,7 +134,23 @@
                 </div>
             </div>
         </div>
-    </div>
+        <!-- Settings Modal -->
+        <div id="settingsModal" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 300px; max-width: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                    <span>Display Settings</span>
+                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeSettings()">X</button>
+                </div>
+                <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Font Size (px)</label><br><input type="number" id="setFontSize" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                    <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Blink Rate (ms)</label><br><input type="number" id="setBlinkRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                    <label style="color: #d4d4d8; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="setLocalEcho"> Local Echo
+                    </label>
+                    <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-top: 8px;" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="status-bar">
         <span id="statusInfo">Ready — Select a BBS or enter an address</span>
@@ -146,10 +163,10 @@
         document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
         document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
     }
-    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); });
+    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); });
 
     // ─── Configuration ───
-    const COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
+    let COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
     const canvas = document.getElementById('terminal');
     const ctx = canvas.getContext('2d');
     let ws = null, bytesRx = 0, bytesTx = 0;
@@ -1096,10 +1113,65 @@
 
     // Cursor and text blink
     window.blinkToggle = true;
-    setInterval(() => { 
-        window.blinkToggle = !window.blinkToggle;
-        if (document.hasFocus()) render(); 
-    }, 500);
+    let blinkInterval = null;
+    function updateBlinkInterval(rate) {
+        if (blinkInterval) clearInterval(blinkInterval);
+        blinkInterval = setInterval(() => { 
+            window.blinkToggle = !window.blinkToggle;
+            if (document.hasFocus()) render(); 
+        }, rate || 500);
+    }
+    updateBlinkInterval(500);
+    
+    // ─── Settings ───
+    let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false };
+
+    function loadSettings() {
+        const saved = localStorage.getItem('kbbs_display_settings');
+        if (saved) {
+            try { kbbsSettings = { ...kbbsSettings, ...JSON.parse(saved) }; } catch(e){}
+        }
+        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
+        CELL_H = kbbsSettings.fontSize || 16;
+        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
+        updateBlinkInterval(kbbsSettings.blinkRateMs || 500);
+        resizeCanvas();
+    }
+
+    function saveSettings() {
+        kbbsSettings.fontSize = parseInt(document.getElementById('setFontSize').value) || 16;
+        if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 8;
+        kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
+        if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
+        kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
+        
+        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
+        CELL_H = kbbsSettings.fontSize;
+        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
+        
+        localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
+        updateBlinkInterval(kbbsSettings.blinkRateMs);
+        resizeCanvas();
+        closeSettings();
+    }
+
+    function showSettings() {
+        document.getElementById('setFontSize').value = kbbsSettings.fontSize;
+        document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs;
+        document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsModal').style.display = 'none';
+        canvas.focus();
+    }
+    
+    document.getElementById('localEcho').addEventListener('change', (e) => {
+        kbbsSettings.localEcho = e.target.checked;
+        localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
+    });
+
     </script>
 </body>
 </html>
