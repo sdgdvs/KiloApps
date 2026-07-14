@@ -306,6 +306,8 @@
         <div class="header">
             <h1>KFlash</h1>
             <div class="controls">
+                <input type="text" id="searchBar" placeholder="Search..." style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif;">
+                <button class="btn" id="btnLoadSample">Load Sample</button>
                 <button class="btn" id="btnImport">Import</button>
                 <button class="btn" id="btnExport">Export</button>
                 <input type="file" id="fileImport" accept=".json,.csv" style="display: none;">
@@ -356,7 +358,363 @@
         </div>
     </div>
 
+    <!-- Load Sample Modal -->
+    <div class="modal" id="loadSampleModal">
+        <div class="modal-content">
+            <h2>Load Sample Pack</h2>
+            <label for="samplePackSelect">Select a sample pack to load:</label>
+            <select id="samplePackSelect" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 10px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 1rem;">
+                <!-- Options populated dynamically -->
+            </select>
+            <div class="modal-actions">
+                <button class="btn" id="btnCancelLoad">Cancel</button>
+                <button class="btn btn-primary" id="btnConfirmLoad">Load</button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const SAMPLE_PACKS = {
+"Algebra 101": [
+  {"front": "Variable", "back": "A symbol, usually a letter, used to represent an unknown or changeable number."},
+  {"front": "Constant", "back": "A fixed value that does not change."},
+  {"front": "Coefficient", "back": "A number multiplied by a variable (e.g., in 4x, 4 is the coefficient)."},
+  {"front": "Term", "back": "A single mathematical expression separated by + or - signs."},
+  {"front": "Expression", "back": "A combination of variables, numbers, and operations, without an equals sign."},
+  {"front": "Equation", "back": "A mathematical statement that two expressions are equal (contains an = sign)."},
+  {"front": "Polynomial", "back": "An expression consisting of variables and coefficients, with non-negative integer exponents."},
+  {"front": "Monomial", "back": "A polynomial with exactly one term."},
+  {"front": "Binomial", "back": "A polynomial with exactly two terms."},
+  {"front": "Trinomial", "back": "A polynomial with exactly three terms."},
+  {"front": "Degree of a Polynomial", "back": "The highest exponent of the variable in the polynomial."},
+  {"front": "Linear Equation", "back": "An equation that forms a straight line when graphed. Its highest degree is 1."},
+  {"front": "Quadratic Equation", "back": "An equation where the highest exponent of the variable is 2 (e.g., ax^2 + bx + c = 0)."},
+  {"front": "Factor", "back": "Numbers or expressions that you multiply together to get another number or expression."},
+  {"front": "Distributive Property", "back": "a(b + c) = ab + ac"},
+  {"front": "Commutative Property of Addition", "back": "a + b = b + a"},
+  {"front": "Commutative Property of Multiplication", "back": "a * b = b * a"},
+  {"front": "Associative Property of Addition", "back": "(a + b) + c = a + (b + c)"},
+  {"front": "Associative Property of Multiplication", "back": "(a * b) * c = a * (b * c)"},
+  {"front": "Identity Property of Addition", "back": "a + 0 = a"},
+  {"front": "Identity Property of Multiplication", "back": "a * 1 = a"},
+  {"front": "Inverse Property of Addition", "back": "a + (-a) = 0"},
+  {"front": "Inverse Property of Multiplication", "back": "a * (1/a) = 1 (where a is not 0)"},
+  {"front": "Zero Product Property", "back": "If ab = 0, then a = 0 or b = 0 (or both)."},
+  {"front": "Absolute Value", "back": "The distance of a number from zero on a number line, always non-negative."},
+  {"front": "Inequality", "back": "A mathematical sentence that compares two unequal expressions using <, >, <=, or >=."},
+  {"front": "Slope (m)", "back": "The steepness of a line, calculated as 'rise over run' or (y2 - y1) / (x2 - x1)."},
+  {"front": "Y-intercept (b)", "back": "The point where a line crosses the y-axis (where x = 0)."},
+  {"front": "X-intercept", "back": "The point where a line crosses the x-axis (where y = 0)."},
+  {"front": "Slope-Intercept Form", "back": "y = mx + b"},
+  {"front": "Point-Slope Form", "back": "y - y1 = m(x - x1)"},
+  {"front": "Standard Form of a Linear Equation", "back": "Ax + By = C"},
+  {"front": "System of Equations", "back": "A set of two or more equations with the same variables."},
+  {"front": "Solution to a System", "back": "The point or set of points that satisfy all equations in the system simultaneously."},
+  {"front": "Substitution Method", "back": "Solving a system by solving one equation for a variable and substituting that expression into the other equation."},
+  {"front": "Elimination Method", "back": "Solving a system by adding or subtracting equations to eliminate a variable."},
+  {"front": "Function", "back": "A relation where each input has exactly one output."},
+  {"front": "Domain", "back": "The set of all possible input values (x-values) for a function."},
+  {"front": "Range", "back": "The set of all possible output values (y-values) for a function."},
+  {"front": "Vertical Line Test", "back": "A test to determine if a graph represents a function: if any vertical line intersects the graph more than once, it's not a function."},
+  {"front": "Exponent", "back": "A number that says how many times to use the base in a multiplication."},
+  {"front": "Base", "back": "The number that gets multiplied when using an exponent."},
+  {"front": "Product Rule of Exponents", "back": "x^a * x^b = x^(a+b)"},
+  {"front": "Quotient Rule of Exponents", "back": "(x^a) / (x^b) = x^(a-b)"},
+  {"front": "Power of a Power Rule", "back": "(x^a)^b = x^(a*b)"},
+  {"front": "Negative Exponent Rule", "back": "x^(-a) = 1 / x^a"},
+  {"front": "Zero Exponent Rule", "back": "x^0 = 1 (where x is not 0)"},
+  {"front": "Radical", "back": "An expression that has a square root, cube root, etc."},
+  {"front": "Radicand", "back": "The number or expression under the radical sign."},
+  {"front": "Quadratic Formula", "back": "x = [-b \u00b1 \u221a(b^2 - 4ac)] / 2a"}
+]
+,
+"Basic Science": [
+  {"front": "What is the powerhouse of the cell?", "back": "Mitochondria"},
+  {"front": "What is the chemical symbol for water?", "back": "H2O"},
+  {"front": "What planet is known as the Red Planet?", "back": "Mars"},
+  {"front": "What is the hardest natural substance on Earth?", "back": "Diamond"},
+  {"front": "What gas do plants absorb from the atmosphere?", "back": "Carbon Dioxide (CO2)"},
+  {"front": "What is the speed of light in a vacuum?", "back": "Approximately 299,792 kilometers per second (or 3x10^8 m/s)"},
+  {"front": "What force keeps planets in orbit around the Sun?", "back": "Gravity"}
+]
+,
+"Chemistry 101": [
+  {"front": "What is the atomic number of Hydrogen?", "back": "1"},
+  {"front": "What does pH measure?", "back": "The acidity or alkalinity of a solution"},
+  {"front": "What is the chemical formula for table salt?", "back": "NaCl (Sodium Chloride)"},
+  {"front": "What are the three main subatomic particles?", "back": "Protons, neutrons, and electrons"},
+  {"front": "What type of bond involves sharing electrons?", "back": "Covalent bond"},
+  {"front": "Who is credited with creating the periodic table?", "back": "Dmitri Mendeleev"},
+  {"front": "What is a cation?", "back": "A positively charged ion"}
+]
+,
+"French Basics": [
+  {"front": "Hello", "back": "Bonjour"},
+  {"front": "Goodbye", "back": "Au revoir"},
+  {"front": "Please", "back": "S'il vous plaît"},
+  {"front": "Thank you", "back": "Merci"},
+  {"front": "You're welcome", "back": "De rien"},
+  {"front": "Yes", "back": "Oui"},
+  {"front": "No", "back": "Non"},
+  {"front": "Excuse me", "back": "Excusez-moi"},
+  {"front": "I'm sorry", "back": "Je suis désolé(e)"},
+  {"front": "Good evening", "back": "Bonsoir"},
+  {"front": "Good night", "back": "Bonne nuit"},
+  {"front": "How are you?", "back": "Comment allez-vous ? / Ça va ?"},
+  {"front": "Very well", "back": "Très bien"},
+  {"front": "What is your name?", "back": "Comment vous appelez-vous ?"},
+  {"front": "My name is...", "back": "Je m'appelle..."},
+  {"front": "Nice to meet you", "back": "Enchanté(e)"},
+  {"front": "Where are you from?", "back": "D'où venez-vous ?"},
+  {"front": "I am from...", "back": "Je viens de..."},
+  {"front": "Do you speak English?", "back": "Parlez-vous anglais ?"},
+  {"front": "I don't understand", "back": "Je ne comprends pas"},
+  {"front": "Can you repeat that?", "back": "Pouvez-vous répéter ?"},
+  {"front": "Speak slowly, please", "back": "Parlez lentement, s'il vous plaît"},
+  {"front": "Water", "back": "Eau"},
+  {"front": "Food", "back": "Nourriture"},
+  {"front": "Bathroom", "back": "Toilettes"},
+  {"front": "Where is the bathroom?", "back": "Où sont les toilettes ?"},
+  {"front": "How much does it cost?", "back": "Combien ça coûte ?"},
+  {"front": "Check, please", "back": "L'addition, s'il vous plaît"},
+  {"front": "One", "back": "Un"},
+  {"front": "Two", "back": "Deux"},
+  {"front": "Three", "back": "Trois"},
+  {"front": "Four", "back": "Quatre"},
+  {"front": "Five", "back": "Cinq"},
+  {"front": "Six", "back": "Six"},
+  {"front": "Seven", "back": "Sept"},
+  {"front": "Eight", "back": "Huit"},
+  {"front": "Nine", "back": "Neuf"},
+  {"front": "Ten", "back": "Dix"},
+  {"front": "Monday", "back": "Lundi"},
+  {"front": "Tuesday", "back": "Mardi"},
+  {"front": "Wednesday", "back": "Mercredi"},
+  {"front": "Thursday", "back": "Jeudi"},
+  {"front": "Friday", "back": "Vendredi"},
+  {"front": "Saturday", "back": "Samedi"},
+  {"front": "Sunday", "back": "Dimanche"},
+  {"front": "Today", "back": "Aujourd'hui"},
+  {"front": "Tomorrow", "back": "Demain"},
+  {"front": "Yesterday", "back": "Hier"},
+  {"front": "Friend", "back": "Ami / Amie"}
+]
+,
+"Geography Capitals": [
+  {"front": "United States of America", "back": "Washington, D.C."},
+  {"front": "Canada", "back": "Ottawa"},
+  {"front": "Mexico", "back": "Mexico City"},
+  {"front": "United Kingdom", "back": "London"},
+  {"front": "France", "back": "Paris"},
+  {"front": "Germany", "back": "Berlin"},
+  {"front": "Italy", "back": "Rome"},
+  {"front": "Spain", "back": "Madrid"},
+  {"front": "Russia", "back": "Moscow"},
+  {"front": "China", "back": "Beijing"},
+  {"front": "Japan", "back": "Tokyo"},
+  {"front": "South Korea", "back": "Seoul"},
+  {"front": "India", "back": "New Delhi"},
+  {"front": "Australia", "back": "Canberra"},
+  {"front": "New Zealand", "back": "Wellington"},
+  {"front": "Brazil", "back": "Brasilia"},
+  {"front": "Argentina", "back": "Buenos Aires"},
+  {"front": "Chile", "back": "Santiago"},
+  {"front": "Colombia", "back": "Bogotá"},
+  {"front": "Peru", "back": "Lima"},
+  {"front": "Egypt", "back": "Cairo"},
+  {"front": "South Africa", "back": "Pretoria (executive), Cape Town (legislative), Bloemfontein (judicial)"},
+  {"front": "Nigeria", "back": "Abuja"},
+  {"front": "Kenya", "back": "Nairobi"},
+  {"front": "Ethiopia", "back": "Addis Ababa"},
+  {"front": "Saudi Arabia", "back": "Riyadh"},
+  {"front": "Iran", "back": "Tehran"},
+  {"front": "Turkey", "back": "Ankara"},
+  {"front": "Israel", "back": "Jerusalem"},
+  {"front": "Thailand", "back": "Bangkok"},
+  {"front": "Vietnam", "back": "Hanoi"},
+  {"front": "Indonesia", "back": "Jakarta"},
+  {"front": "Philippines", "back": "Manila"},
+  {"front": "Malaysia", "back": "Kuala Lumpur"},
+  {"front": "Singapore", "back": "Singapore (City-state)"},
+  {"front": "Pakistan", "back": "Islamabad"},
+  {"front": "Bangladesh", "back": "Dhaka"},
+  {"front": "Afghanistan", "back": "Kabul"},
+  {"front": "Iraq", "back": "Baghdad"},
+  {"front": "Syria", "back": "Damascus"},
+  {"front": "Greece", "back": "Athens"},
+  {"front": "Sweden", "back": "Stockholm"},
+  {"front": "Norway", "back": "Oslo"},
+  {"front": "Denmark", "back": "Copenhagen"},
+  {"front": "Finland", "back": "Helsinki"},
+  {"front": "Poland", "back": "Warsaw"},
+  {"front": "Ukraine", "back": "Kyiv (Kiev)"},
+  {"front": "Cuba", "back": "Havana"},
+  {"front": "Venezuela", "back": "Caracas"},
+  {"front": "Switzerland", "back": "Bern"}
+]
+,
+"Spanish Basics": [
+  {"front": "Hello", "back": "Hola"},
+  {"front": "Goodbye", "back": "Adiós"},
+  {"front": "Please", "back": "Por favor"},
+  {"front": "Thank you", "back": "Gracias"},
+  {"front": "You're welcome", "back": "De nada"},
+  {"front": "Yes", "back": "Sí"},
+  {"front": "No", "back": "No"},
+  {"front": "Excuse me", "back": "Perdón / Disculpe"},
+  {"front": "I'm sorry", "back": "Lo siento"},
+  {"front": "Good morning", "back": "Buenos días"},
+  {"front": "Good afternoon", "back": "Buenas tardes"},
+  {"front": "Good night", "back": "Buenas noches"},
+  {"front": "How are you?", "back": "¿Cómo estás?"},
+  {"front": "Very well", "back": "Muy bien"},
+  {"front": "What is your name?", "back": "¿Cómo te llamas?"},
+  {"front": "My name is...", "back": "Me llamo..."},
+  {"front": "Nice to meet you", "back": "Mucho gusto"},
+  {"front": "Where are you from?", "back": "¿De dónde eres?"},
+  {"front": "I am from...", "back": "Soy de..."},
+  {"front": "Do you speak English?", "back": "¿Hablas inglés?"},
+  {"front": "I don't understand", "back": "No entiendo"},
+  {"front": "Can you repeat that?", "back": "¿Puedes repetir eso?"},
+  {"front": "Speak slowly, please", "back": "Habla despacio, por favor"},
+  {"front": "Water", "back": "Agua"},
+  {"front": "Food", "back": "Comida"},
+  {"front": "Bathroom", "back": "Baño"},
+  {"front": "Where is the bathroom?", "back": "¿Dónde está el baño?"},
+  {"front": "How much does it cost?", "back": "¿Cuánto cuesta?"},
+  {"front": "Check, please", "back": "La cuenta, por favor"},
+  {"front": "One", "back": "Uno"},
+  {"front": "Two", "back": "Dos"},
+  {"front": "Three", "back": "Tres"},
+  {"front": "Four", "back": "Cuatro"},
+  {"front": "Five", "back": "Cinco"},
+  {"front": "Six", "back": "Seis"},
+  {"front": "Seven", "back": "Siete"},
+  {"front": "Eight", "back": "Ocho"},
+  {"front": "Nine", "back": "Nueve"},
+  {"front": "Ten", "back": "Diez"},
+  {"front": "Monday", "back": "Lunes"},
+  {"front": "Tuesday", "back": "Martes"},
+  {"front": "Wednesday", "back": "Miércoles"},
+  {"front": "Thursday", "back": "Jueves"},
+  {"front": "Friday", "back": "Viernes"},
+  {"front": "Saturday", "back": "Sábado"},
+  {"front": "Sunday", "back": "Domingo"},
+  {"front": "Today", "back": "Hoy"},
+  {"front": "Tomorrow", "back": "Mañana"},
+  {"front": "Yesterday", "back": "Ayer"},
+  {"front": "Friend", "back": "Amigo / Amiga"}
+]
+,
+"US History": [
+  {"front": "Who was the first President of the United States?", "back": "George Washington."},
+  {"front": "When was the Declaration of Independence signed?", "back": "July 4, 1776."},
+  {"front": "Who was the primary author of the Declaration of Independence?", "back": "Thomas Jefferson."},
+  {"front": "What was the first governing document of the US before the Constitution?", "back": "The Articles of Confederation."},
+  {"front": "In what year was the U.S. Constitution written?", "back": "1787."},
+  {"front": "What are the first 10 amendments to the Constitution called?", "back": "The Bill of Rights."},
+  {"front": "What does the First Amendment protect?", "back": "Freedom of speech, religion, press, assembly, and petition."},
+  {"front": "What territory did the US buy from France in 1803?", "back": "The Louisiana Territory (Louisiana Purchase)."},
+  {"front": "Who did Thomas Jefferson send to explore the Louisiana Territory?", "back": "Lewis and Clark."},
+  {"front": "What war was fought between the US and Britain in the early 1800s?", "back": "The War of 1812."},
+  {"front": "Who wrote the Star-Spangled Banner?", "back": "Francis Scott Key."},
+  {"front": "What was the Monroe Doctrine?", "back": "A U.S. policy opposing European colonialism in the Americas (1823)."},
+  {"front": "What was the forced relocation of Native Americans in the 1830s called?", "back": "The Trail of Tears."},
+  {"front": "What belief drove the westward expansion of the US in the 19th century?", "back": "Manifest Destiny."},
+  {"front": "What war occurred from 1846 to 1848 over western territories?", "back": "The Mexican-American War."},
+  {"front": "When did the American Civil War take place?", "back": "1861 to 1865."},
+  {"front": "Who was President during the Civil War?", "back": "Abraham Lincoln."},
+  {"front": "What document freed the slaves in the Confederate states?", "back": "The Emancipation Proclamation (1863)."},
+  {"front": "Which amendment abolished slavery in the US?", "back": "The 13th Amendment."},
+  {"front": "Who assassinated Abraham Lincoln?", "back": "John Wilkes Booth."},
+  {"front": "What period followed the Civil War for rebuilding the South?", "back": "Reconstruction."},
+  {"front": "What invention is Alexander Graham Bell famous for?", "back": "The telephone (1876)."},
+  {"front": "What invention is Thomas Edison most famous for?", "back": "The practical incandescent light bulb."},
+  {"front": "What was the Transcontinental Railroad?", "back": "A railroad line linking the eastern U.S. to the western U.S., completed in 1869."},
+  {"front": "What war occurred in 1898 resulting in the US acquiring Puerto Rico and Guam?", "back": "The Spanish-American War."},
+  {"front": "Who was the 26th President known for trust-busting and national parks?", "back": "Theodore Roosevelt."},
+  {"front": "What major engineering project did the US complete in Central America in 1914?", "back": "The Panama Canal."},
+  {"front": "When did the US enter World War I?", "back": "1917."},
+  {"front": "Who was President during World War I?", "back": "Woodrow Wilson."},
+  {"front": "Which amendment gave women the right to vote (women's suffrage)?", "back": "The 19th Amendment (1920)."},
+  {"front": "What was Prohibition?", "back": "The nationwide constitutional ban on the production, importation, transportation, and sale of alcoholic beverages (1920-1933)."},
+  {"front": "What event triggered the Great Depression in 1929?", "back": "The Stock Market Crash (Black Tuesday)."},
+  {"front": "Who was President during the Great Depression and World War II?", "back": "Franklin D. Roosevelt (FDR)."},
+  {"front": "What was the set of programs introduced by FDR to combat the Great Depression?", "back": "The New Deal."},
+  {"front": "What event brought the US into World War II?", "back": "The Japanese attack on Pearl Harbor on December 7, 1941."},
+  {"front": "Who was the Supreme Commander of Allied Forces in Europe during WWII?", "back": "Dwight D. Eisenhower."},
+  {"front": "Which President made the decision to drop atomic bombs on Japan?", "back": "Harry S. Truman."},
+  {"front": "What international peacekeeping organization was formed after WWII?", "back": "The United Nations."},
+  {"front": "What was the Cold War?", "back": "A state of political and military tension between the US and the Soviet Union without direct armed conflict."},
+  {"front": "What war did the US fight in the early 1950s to stop the spread of communism?", "back": "The Korean War."},
+  {"front": "What major movement sought equality for African Americans in the 1950s and 60s?", "back": "The Civil Rights Movement."},
+  {"front": "Who gave the famous 'I Have a Dream' speech?", "back": "Martin Luther King Jr."},
+  {"front": "Who was assassinated in Dallas, Texas on November 22, 1963?", "back": "President John F. Kennedy."},
+  {"front": "What war caused major protests and divisions in the US during the 1960s and 70s?", "back": "The Vietnam War."},
+  {"front": "Who was the first person to walk on the moon?", "back": "Neil Armstrong (Apollo 11, 1969)."},
+  {"front": "What scandal led to the resignation of President Richard Nixon?", "back": "The Watergate scandal."},
+  {"front": "Who was the first female Supreme Court Justice?", "back": "Sandra Day O'Connor."},
+  {"front": "What terrorist attack occurred on September 11, 2001?", "back": "Al-Qaeda terrorists hijacked planes and crashed them into the World Trade Center, the Pentagon, and a field in Pennsylvania."},
+  {"front": "Who was the first African American President of the United States?", "back": "Barack Obama (elected in 2008)."},
+  {"front": "What is the capital of the United States?", "back": "Washington, D.C."}
+]
+,
+"World History": [
+  {"front": "Ancient Egypt: What is a pharaoh?", "back": "A ruler of ancient Egypt, often considered a god on earth."},
+  {"front": "Ancient Egypt: What is the purpose of the pyramids?", "back": "Tombs for the pharaohs and their queens."},
+  {"front": "Mesopotamia: What is the Code of Hammurabi?", "back": "One of the oldest deciphered writings of significant length in the world, a code of law from ancient Babylon."},
+  {"front": "Mesopotamia: What writing system did the Sumerians invent?", "back": "Cuneiform."},
+  {"front": "Ancient Greece: Who is the 'Father of History'?", "back": "Herodotus."},
+  {"front": "Ancient Greece: What was the primary form of government in Athens?", "back": "Direct democracy."},
+  {"front": "Ancient Greece: Who was the king of Macedon that conquered much of the known world?", "back": "Alexander the Great."},
+  {"front": "Ancient Rome: Who was the first Roman Emperor?", "back": "Augustus (Octavian)."},
+  {"front": "Ancient Rome: What event marked the fall of the Roman Republic?", "back": "Julius Caesar crossing the Rubicon in 49 BC and his subsequent assassination."},
+  {"front": "Ancient Rome: When did the Western Roman Empire fall?", "back": "476 AD."},
+  {"front": "Middle Ages: What was feudalism?", "back": "A social system in medieval Europe where nobility held lands from the Crown in exchange for military service, and vassals were in turn tenants of the nobles."},
+  {"front": "Middle Ages: What was the Magna Carta?", "back": "A document signed by King John of England in 1215 that limited the king's powers and protected barons' rights."},
+  {"front": "Middle Ages: Who was Charlemagne?", "back": "King of the Franks who united most of Western Europe during the early Middle Ages."},
+  {"front": "Middle Ages: What were the Crusades?", "back": "A series of religious wars sanctioned by the Latin Church in the medieval period."},
+  {"front": "Renaissance: Where did the Renaissance begin?", "back": "Florence, Italy."},
+  {"front": "Renaissance: Who painted the Mona Lisa?", "back": "Leonardo da Vinci."},
+  {"front": "Renaissance: What did Johannes Gutenberg invent around 1440?", "back": "The printing press with movable type."},
+  {"front": "Age of Discovery: Who was the first explorer to circumnavigate the globe?", "back": "Ferdinand Magellan (his expedition completed it)."},
+  {"front": "Age of Discovery: In what year did Christopher Columbus reach the Americas?", "back": "1492."},
+  {"front": "Reformation: Who started the Protestant Reformation?", "back": "Martin Luther by pinning his Ninety-five Theses to the door of the Castle Church in Wittenberg in 1517."},
+  {"front": "Reformation: Who broke England away from the Catholic Church?", "back": "King Henry VIII."},
+  {"front": "Enlightenment: What did John Locke argue?", "back": "People have natural rights to life, liberty, and property."},
+  {"front": "Enlightenment: What was the central idea of Montesquieu?", "back": "Separation of powers in government."},
+  {"front": "French Revolution: When did the French Revolution begin?", "back": "1789 with the storming of the Bastille."},
+  {"front": "French Revolution: Who was the king executed during the French Revolution?", "back": "Louis XVI."},
+  {"front": "Napoleonic Era: At what battle was Napoleon finally defeated?", "back": "The Battle of Waterloo in 1815."},
+  {"front": "Industrial Revolution: Where did the Industrial Revolution begin?", "back": "Great Britain."},
+  {"front": "Industrial Revolution: What was a key invention by James Watt?", "back": "The improved steam engine."},
+  {"front": "19th Century: Who wrote 'The Communist Manifesto'?", "back": "Karl Marx and Friedrich Engels."},
+  {"front": "19th Century: What was the Meiji Restoration?", "back": "An event that restored practical imperial rule to the Empire of Japan in 1868 under Emperor Meiji, leading to modernization."},
+  {"front": "World War I: What event triggered WWI?", "back": "The assassination of Archduke Franz Ferdinand of Austria in 1914."},
+  {"front": "World War I: Who were the Central Powers?", "back": "Germany, Austria-Hungary, the Ottoman Empire, and Bulgaria."},
+  {"front": "World War I: What treaty officially ended the war between Germany and the Allied Powers?", "back": "The Treaty of Versailles (1919)."},
+  {"front": "Russian Revolution: Who led the Bolshevik Revolution in 1917?", "back": "Vladimir Lenin."},
+  {"front": "Russian Revolution: Who was the last Tsar of Russia?", "back": "Nicholas II."},
+  {"front": "Between the Wars: What was the Great Depression?", "back": "A severe worldwide economic depression that took place mostly during the 1930s, beginning in the United States."},
+  {"front": "World War II: When did WWII begin?", "back": "September 1, 1939, when Germany invaded Poland."},
+  {"front": "World War II: Who were the main Axis Powers?", "back": "Germany, Italy, and Japan."},
+  {"front": "World War II: What was D-Day?", "back": "The Allied invasion of Normandy, France on June 6, 1944."},
+  {"front": "World War II: When were atomic bombs dropped on Japan?", "back": "August 1945 (Hiroshima and Nagasaki)."},
+  {"front": "Cold War: What was the Cold War?", "back": "A period of geopolitical tension between the Soviet Union and the United States and their respective allies after WWII."},
+  {"front": "Cold War: What was the Marshall Plan?", "back": "A U.S. program providing aid to Western Europe following the devastation of World War II."},
+  {"front": "Cold War: What was the Cuban Missile Crisis?", "back": "A 13-day confrontation in 1962 between the U.S. and the Soviet Union concerning American ballistic missile deployment in Italy and Turkey with consequent Soviet ballistic missile deployment in Cuba."},
+  {"front": "Cold War: When did the Berlin Wall fall?", "back": "1989."},
+  {"front": "Post-Cold War: When did the Soviet Union collapse?", "back": "1991."},
+  {"front": "Decolonization: Who led India to independence from British rule?", "back": "Mahatma Gandhi."},
+  {"front": "Decolonization: When did the majority of African nations gain independence?", "back": "The 1950s and 1960s."},
+  {"front": "20th Century China: Who led the Chinese Communist Revolution?", "back": "Mao Zedong."},
+  {"front": "Apartheid: Who was the first black head of state in South Africa?", "back": "Nelson Mandela, elected in 1994."},
+  {"front": "Modern Era: What is the significance of September 11, 2001?", "back": "Terrorist attacks carried out by al-Qaeda against the United States, prompting the Global War on Terrorism."}
+]
+,
+};
+
+
         const flashcard = document.getElementById('flashcard');
         const cardContainer = document.getElementById('cardContainer');
         const btnPrev = document.getElementById('btnPrev');
@@ -374,8 +732,11 @@
         
         if (deck.length === 0) {
             deck = [
-                { front: "What is KiloOS?", back: "An advanced, multi-agent operating system environment." },
-                { front: "What does the 'K' stand for?", back: "Kilo!" }
+                { front: "Welcome to KFlash!", back: "This is a quick tutorial. Press Space or click the card to flip it." },
+                { front: "Navigating Cards", back: "Use the Next and Prev buttons, or the Left/Right arrow keys on your keyboard." },
+                { front: "Adding Cards", back: "Click the '+ Add Card' button in the top right to add a new flashcard to your deck." },
+                { front: "Editing and Deleting", back: "Use the 'Edit' and 'Delete' buttons to modify the currently displayed card." },
+                { front: "Import, Export & Samples", back: "Use 'Export' to save your deck to a file, 'Import' to load one, or 'Load Sample' to try pre-made decks!" }
             ];
         }
 
@@ -383,6 +744,18 @@
             localStorage.setItem('kflash_deck', JSON.stringify(deck));
         }
         let currentIndex = 0;
+        let searchQuery = "";
+        let filteredIndices = [];
+
+        function updateFilteredIndices() {
+            filteredIndices = [];
+            const query = searchQuery.toLowerCase();
+            for (let i = 0; i < deck.length; i++) {
+                if (!query || deck[i].front.toLowerCase().includes(query) || deck[i].back.toLowerCase().includes(query)) {
+                    filteredIndices.push(i);
+                }
+            }
+        }
 
         const cardFront = document.getElementById('cardFront');
         const cardBack = document.getElementById('cardBack');
@@ -390,9 +763,12 @@
         const progressBars = document.querySelectorAll('.progress-bar');
 
         function renderCard() {
-            if (deck.length === 0) {
-                cardFront.textContent = "Deck is empty";
-                cardBack.textContent = "Add some cards to begin";
+            updateFilteredIndices();
+            const displayedCount = filteredIndices.length;
+            
+            if (displayedCount === 0) {
+                cardFront.textContent = searchQuery ? "No matches found" : "Deck is empty";
+                cardBack.textContent = searchQuery ? "Try a different search" : "Add some cards to begin";
                 deckInfos.forEach(el => el.textContent = `0/0`);
                 progressBars.forEach(el => el.style.width = `0%`);
                 btnPrev.disabled = true;
@@ -402,20 +778,32 @@
                 document.getElementById('btnShuffle').disabled = true;
                 return;
             }
+
+            if (currentIndex >= displayedCount) currentIndex = Math.max(0, displayedCount - 1);
+
             document.getElementById('btnEditCard').disabled = false;
             document.getElementById('btnDeleteCard').disabled = false;
-            document.getElementById('btnShuffle').disabled = deck.length <= 1;
-            const card = deck[currentIndex];
+            document.getElementById('btnShuffle').disabled = displayedCount <= 1;
+            
+            const realIndex = filteredIndices[currentIndex];
+            const card = deck[realIndex];
             cardFront.textContent = card.front;
             cardBack.textContent = card.back;
-            deckInfos.forEach(el => el.textContent = `Card ${currentIndex + 1}/${deck.length}`);
+            deckInfos.forEach(el => el.textContent = `Card ${currentIndex + 1}/${displayedCount}`);
             
-            const pct = ((currentIndex + 1) / deck.length) * 100;
+            const pct = ((currentIndex + 1) / displayedCount) * 100;
             progressBars.forEach(el => el.style.width = `${pct}%`);
 
             btnPrev.disabled = currentIndex === 0;
-            btnNext.disabled = currentIndex === deck.length - 1;
+            btnNext.disabled = currentIndex === displayedCount - 1;
         }
+
+        document.getElementById('searchBar').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            currentIndex = 0;
+            flashcard.classList.remove('is-flipped');
+            renderCard();
+        });
 
         const flipCard = () => {
             if (deck.length > 0) {
@@ -455,7 +843,7 @@
 
         btnNext.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (currentIndex < deck.length - 1) {
+            if (currentIndex < filteredIndices.length - 1) {
                 currentIndex++;
                 flashcard.classList.remove('is-flipped');
                 setTimeout(renderCard, 150);
@@ -493,22 +881,20 @@
         });
 
         document.getElementById('btnEditCard').addEventListener('click', () => {
-            if (deck.length === 0) return;
-            editingIndex = currentIndex;
+            if (filteredIndices.length === 0) return;
+            editingIndex = filteredIndices[currentIndex];
             modalTitle.textContent = 'Edit Card';
-            newFrontInput.value = deck[currentIndex].front;
-            newBackInput.value = deck[currentIndex].back;
+            newFrontInput.value = deck[editingIndex].front;
+            newBackInput.value = deck[editingIndex].back;
             modal.classList.add('active');
             newFrontInput.focus();
         });
 
         document.getElementById('btnDeleteCard').addEventListener('click', () => {
-            if (deck.length === 0) return;
+            if (filteredIndices.length === 0) return;
             if (confirm('Are you sure you want to delete this card?')) {
-                deck.splice(currentIndex, 1);
-                if (currentIndex >= deck.length && currentIndex > 0) {
-                    currentIndex = deck.length - 1;
-                }
+                deck.splice(filteredIndices[currentIndex], 1);
+                // The renderCard function handles adjusting currentIndex
                 flashcard.classList.remove('is-flipped');
                 saveDeck();
                 renderCard();
@@ -614,8 +1000,54 @@
             fileImport.value = '';
         });
 
+        // Load Sample Pack Logic
+        const loadSampleModal = document.getElementById('loadSampleModal');
+        const samplePackSelect = document.getElementById('samplePackSelect');
+
+        document.getElementById('btnLoadSample').addEventListener('click', () => {
+            samplePackSelect.innerHTML = '';
+            if (typeof SAMPLE_PACKS !== 'undefined') {
+                for (const packName in SAMPLE_PACKS) {
+                    const opt = document.createElement('option');
+                    opt.value = packName;
+                    opt.textContent = packName + ' (' + SAMPLE_PACKS[packName].length + ' cards)';
+                    samplePackSelect.appendChild(opt);
+                }
+            } else {
+                const opt = document.createElement('option');
+                opt.textContent = 'No sample packs available';
+                samplePackSelect.appendChild(opt);
+            }
+            loadSampleModal.classList.add('active');
+        });
+
+        document.getElementById('btnCancelLoad').addEventListener('click', () => {
+            loadSampleModal.classList.remove('active');
+        });
+
+        document.getElementById('btnConfirmLoad').addEventListener('click', () => {
+            const packName = samplePackSelect.value;
+            if (packName && typeof SAMPLE_PACKS !== 'undefined' && SAMPLE_PACKS[packName]) {
+                const importedDeck = SAMPLE_PACKS[packName];
+                if (deck.length > 0) {
+                    if (confirm(`Load '${packName}' (${importedDeck.length} cards)? Replace current deck? (Cancel to append)`)) {
+                        deck = [...importedDeck];
+                    } else {
+                        deck = deck.concat(importedDeck);
+                    }
+                } else {
+                    deck = [...importedDeck];
+                }
+                saveDeck();
+                currentIndex = 0;
+                renderCard();
+            }
+            loadSampleModal.classList.remove('active');
+        });
+
         // Init
         renderCard();
     </script>
 </body>
 </html>
+

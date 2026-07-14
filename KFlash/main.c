@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <ctype.h>
 
 #define ID_BTN_PREV 101
 #define ID_BTN_NEXT 102
@@ -25,6 +26,8 @@
 #define ID_BTN_IMPORT 109
 #define ID_BTN_EXPORT 110
 #define ID_BTN_SHUFFLE 111
+#define ID_BTN_LOAD_SAMPLE 112
+#define ID_EDIT_SEARCH 113
 
 // Dialog Edit Card IDs
 #define IDD_EDITCARD 210
@@ -42,8 +45,10 @@ FlashCard deck[100];
 int deckCount = 0;
 int currentIndex = 0;
 int isFlipped = 0;
+int filteredIndices[100];
+int filteredCount = 0;
 
-HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle;
+HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle, hEditSearch;
 HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
@@ -59,11 +64,17 @@ void LoadDeck() {
         fread(deck, sizeof(FlashCard), deckCount, f);
         fclose(f);
     } else {
-        strcpy(deck[0].front, "What is KiloOS?");
-        strcpy(deck[0].back, "An advanced, multi-agent operating system environment.");
-        strcpy(deck[1].front, "What does the 'K' stand for?");
-        strcpy(deck[1].back, "Kilo!");
-        deckCount = 2;
+        strcpy(deck[0].front, "Welcome to KFlash!");
+        strcpy(deck[0].back, "This is a quick tutorial. Press Space or click the card to flip it.");
+        strcpy(deck[1].front, "Navigating Cards");
+        strcpy(deck[1].back, "Use the Next and Prev buttons, or the Left/Right arrow keys on your keyboard.");
+        strcpy(deck[2].front, "Adding Cards");
+        strcpy(deck[2].back, "Click the '+ Add Card' button in the top right to add a new flashcard to your deck.");
+        strcpy(deck[3].front, "Editing and Deleting");
+        strcpy(deck[3].back, "Use the 'Edit' and 'Delete' buttons to modify the currently displayed card.");
+        strcpy(deck[4].front, "Import, Export & Samples");
+        strcpy(deck[4].back, "Use 'Export' to save your deck to a file, 'Import' to load one, or 'Load Sample' to try pre-made decks!");
+        deckCount = 5;
     }
 }
 
@@ -76,8 +87,36 @@ void SaveDeck() {
     }
 }
 
+void UpdateFilteredIndices() {
+    char query[256] = "";
+    if (hEditSearch) {
+        GetWindowText(hEditSearch, query, 255);
+    }
+    for (int i = 0; i < strlen(query); i++) query[i] = tolower(query[i]);
+    
+    filteredCount = 0;
+    for (int i = 0; i < deckCount; i++) {
+        if (strlen(query) == 0) {
+            filteredIndices[filteredCount++] = i;
+        } else {
+            char f[256], b[256];
+            strcpy(f, deck[i].front);
+            strcpy(b, deck[i].back);
+            for(int j=0; j<strlen(f); j++) f[j] = tolower(f[j]);
+            for(int j=0; j<strlen(b); j++) b[j] = tolower(b[j]);
+            if (strstr(f, query) || strstr(b, query)) {
+                filteredIndices[filteredCount++] = i;
+            }
+        }
+    }
+}
+
 void UpdateCardDisplay() {
-    if (deckCount == 0) {
+    UpdateFilteredIndices();
+    if (currentIndex >= filteredCount && filteredCount > 0) currentIndex = filteredCount - 1;
+    if (currentIndex < 0 && filteredCount > 0) currentIndex = 0;
+
+    if (filteredCount == 0) {
         EnableWindow(hBtnPrev, FALSE);
         EnableWindow(hBtnNext, FALSE);
         EnableWindow(hBtnFlip, FALSE);
@@ -90,9 +129,9 @@ void UpdateCardDisplay() {
         EnableWindow(hBtnEdit, TRUE);
         EnableWindow(hBtnDelete, TRUE);
         EnableWindow(hBtnExport, TRUE);
-        EnableWindow(hBtnShuffle, deckCount > 1);
+        EnableWindow(hBtnShuffle, filteredCount > 1);
         EnableWindow(hBtnPrev, currentIndex > 0);
-        EnableWindow(hBtnNext, currentIndex < deckCount - 1);
+        EnableWindow(hBtnNext, currentIndex < filteredCount - 1);
     }
     if (g_hwnd) InvalidateRect(g_hwnd, NULL, FALSE);
 }
@@ -175,23 +214,31 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                DEFAULT_PITCH | FF_SWISS, "Segoe UI");
 
-            hBtnAdd = CreateWindow("BUTTON", "+ Add Card", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   460, 10, 100, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
-                                   
-            hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   260, 10, 80, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
-                                   
-            hBtnDelete = CreateWindow("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   350, 10, 100, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
-                                   
-            hBtnImport = CreateWindow("BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   10, 10, 70, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-                                   
-            hBtnExport = CreateWindow("BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   90, 10, 70, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            hEditSearch = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+                                   10, 10, 110, 30, hwnd, (HMENU)ID_EDIT_SEARCH, NULL, NULL);
+            SendMessage(hEditSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnShuffle = CreateWindow("BUTTON", "Shuffle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                   170, 10, 80, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
+            hBtnImport = CreateWindow("BUTTON", "Imp", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   130, 10, 40, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+                                   
+            hBtnExport = CreateWindow("BUTTON", "Exp", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   175, 10, 40, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+
+            HWND hBtnLoadSample = CreateWindow("BUTTON", "Smpls", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   220, 10, 50, 30, hwnd, (HMENU)ID_BTN_LOAD_SAMPLE, NULL, NULL);
+            SendMessage(hBtnLoadSample, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnShuffle = CreateWindow("BUTTON", "Shuff", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   275, 10, 50, 30, hwnd, (HMENU)ID_BTN_SHUFFLE, NULL, NULL);
+
+            hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   330, 10, 45, 30, hwnd, (HMENU)ID_BTN_EDIT, NULL, NULL);
+                                   
+            hBtnDelete = CreateWindow("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   380, 10, 45, 30, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+
+            hBtnAdd = CreateWindow("BUTTON", "+ Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   430, 10, 55, 30, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
 
             hBtnPrev = CreateWindow("BUTTON", "<- Prev", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                     150, 320, 80, 30, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
@@ -238,10 +285,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetTextColor(hdcMem, RGB(139, 148, 158));
             SelectObject(hdcMem, hFont);
             char info[32];
-            if (deckCount == 0) {
+            if (filteredCount == 0) {
                 strcpy(info, "0/0");
             } else {
-                sprintf(info, "Card %d/%d", currentIndex + 1, deckCount);
+                sprintf(info, "Card %d/%d", currentIndex + 1, filteredCount);
             }
             RECT rcInfo = { rcCard.left + 20, rcCard.top + 20, rcCard.right - 20, rcCard.top + 40 };
             DrawText(hdcMem, info, -1, &rcInfo, DT_LEFT | DT_TOP | DT_SINGLELINE);
@@ -251,10 +298,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             RECT rcText = { rcCard.left + 20, rcCard.top + 60, rcCard.right - 20, rcCard.bottom - 20 };
             
             const char* textToDraw = "";
-            if (deckCount == 0) {
-                textToDraw = "Deck is empty\n\nClick 'Add Card' to begin.";
+            if (filteredCount == 0) {
+                char query[256] = "";
+                if (hEditSearch) GetWindowText(hEditSearch, query, 255);
+                if (strlen(query) > 0) {
+                    textToDraw = "No matches found\n\nTry a different search.";
+                } else {
+                    textToDraw = "Deck is empty\n\nClick 'Add Card' to begin.";
+                }
             } else {
-                textToDraw = isFlipped ? deck[currentIndex].back : deck[currentIndex].front;
+                int realIndex = filteredIndices[currentIndex];
+                textToDraw = isFlipped ? deck[realIndex].back : deck[realIndex].front;
             }
             
             DrawText(hdcMem, textToDraw, -1, &rcText, DT_CENTER | DT_VCENTER | DT_WORDBREAK);
@@ -273,6 +327,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         }
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
+            
+            if (HIWORD(wParam) == EN_CHANGE && wmId == ID_EDIT_SEARCH) {
+                currentIndex = 0;
+                isFlipped = 0;
+                UpdateCardDisplay();
+                break;
+            }
+            
             switch (wmId) {
                 case ID_BTN_PREV:
                     if (currentIndex > 0) {
@@ -282,14 +344,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     break;
                 case ID_BTN_NEXT:
-                    if (currentIndex < deckCount - 1) {
+                    if (currentIndex < filteredCount - 1) {
                         currentIndex++;
                         isFlipped = 0;
                         UpdateCardDisplay();
                     }
                     break;
                 case ID_BTN_FLIP:
-                    if (deckCount > 0) {
+                    if (filteredCount > 0) {
                         isFlipped = !isFlipped;
                         UpdateCardDisplay();
                     }
@@ -303,15 +365,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     UpdateCardDisplay();
                     break;
                 case ID_BTN_DELETE:
-                    if (deckCount > 0) {
+                    if (filteredCount > 0) {
                         if (MessageBox(hwnd, "Are you sure you want to delete this card?", "Confirm Delete", MB_YESNO | MB_ICONQUESTION) == IDYES) {
-                            for (int i = currentIndex; i < deckCount - 1; i++) {
+                            int realIndex = filteredIndices[currentIndex];
+                            for (int i = realIndex; i < deckCount - 1; i++) {
                                 deck[i] = deck[i + 1];
                             }
                             deckCount--;
-                            if (currentIndex >= deckCount && currentIndex > 0) {
-                                currentIndex = deckCount - 1;
-                            }
                             isFlipped = 0;
                             SaveDeck();
                             UpdateCardDisplay();
@@ -336,6 +396,56 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             int replace = 1;
                             if (deckCount > 0) {
                                 replace = (MessageBox(hwnd, "Replace current deck? (No to append)", "Import", MB_YESNO | MB_ICONQUESTION) == IDYES);
+                            }
+                            if (replace) deckCount = 0;
+                            char line[1024];
+                            while (fgets(line, sizeof(line), f) && deckCount < 100) {
+                                char* comma = strchr(line, ',');
+                                if (comma) {
+                                    *comma = '\0';
+                                    char* front = line;
+                                    char* back = comma + 1;
+                                    char* nl = strchr(back, '\n');
+                                    if (nl) *nl = '\0';
+                                    if(front[0]=='\"') { front++; front[strlen(front)-1]='\0'; }
+                                    if(back[0]=='\"') { back++; back[strlen(back)-1]='\0'; }
+                                    strncpy(deck[deckCount].front, front, 255);
+                                    deck[deckCount].front[255] = '\0';
+                                    strncpy(deck[deckCount].back, back, 255);
+                                    deck[deckCount].back[255] = '\0';
+                                    deckCount++;
+                                }
+                            }
+                            fclose(f);
+                            SaveDeck();
+                            currentIndex = 0;
+                            isFlipped = 0;
+                            UpdateCardDisplay();
+                        } else {
+                            MessageBox(hwnd, "Failed to open file", "Error", MB_OK | MB_ICONERROR);
+                        }
+                    }
+                    break;
+                }
+                case ID_BTN_LOAD_SAMPLE: {
+                    OPENFILENAME ofn;
+                    char szFile[260];
+                    ZeroMemory(&ofn, sizeof(ofn));
+                    ofn.lStructSize = sizeof(ofn);
+                    ofn.hwndOwner = hwnd;
+                    ofn.lpstrFile = szFile;
+                    ofn.lpstrFile[0] = '\0';
+                    ofn.nMaxFile = sizeof(szFile);
+                    ofn.lpstrFilter = "CSV Files\0*.csv\0";
+                    ofn.nFilterIndex = 1;
+                    ofn.lpstrInitialDir = ".\\SamplePacks";
+                    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                    if (GetOpenFileName(&ofn) == TRUE) {
+                        FILE* f = fopen(szFile, "r");
+                        if (f) {
+                            int replace = 1;
+                            if (deckCount > 0) {
+                                replace = (MessageBox(hwnd, "Replace current deck? (No to append)", "Load Sample", MB_YESNO | MB_ICONQUESTION) == IDYES);
                             }
                             if (replace) deckCount = 0;
                             char line[1024];
@@ -443,16 +553,17 @@ INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
 }
 
 INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    int realIndex = filteredIndices[currentIndex];
     switch (uMsg) {
         case WM_INITDIALOG:
-            SetDlgItemText(hwndDlg, IDC_EDIT_FRONT, deck[currentIndex].front);
-            SetDlgItemText(hwndDlg, IDC_EDIT_BACK, deck[currentIndex].back);
+            SetDlgItemText(hwndDlg, IDC_EDIT_FRONT, deck[realIndex].front);
+            SetDlgItemText(hwndDlg, IDC_EDIT_BACK, deck[realIndex].back);
             return (INT_PTR)TRUE;
         case WM_COMMAND:
             if (LOWORD(wParam) == IDC_EDIT_SAVE) {
-                GetDlgItemText(hwndDlg, IDC_EDIT_FRONT, deck[currentIndex].front, 255);
-                GetDlgItemText(hwndDlg, IDC_EDIT_BACK, deck[currentIndex].back, 255);
-                if (strlen(deck[currentIndex].front) > 0 && strlen(deck[currentIndex].back) > 0) {
+                GetDlgItemText(hwndDlg, IDC_EDIT_FRONT, deck[realIndex].front, 255);
+                GetDlgItemText(hwndDlg, IDC_EDIT_BACK, deck[realIndex].back, 255);
+                if (strlen(deck[realIndex].front) > 0 && strlen(deck[realIndex].back) > 0) {
                     SaveDeck();
                 }
                 EndDialog(hwndDlg, LOWORD(wParam));
