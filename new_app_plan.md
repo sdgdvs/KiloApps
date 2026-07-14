@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFlash
-**Phase:** 12
+**Phase:** 13
 **Status:** In Progress
 
 - Phase 1: Scaffolded web HTML skeleton and registered in App.jsx.
@@ -63,6 +63,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 9: Implemented Deck Shuffling / Randomize Order in both web and native C versions.
 - Phase 10: Implemented Search/Filter functionality with dynamic result counts in both web and native C versions.
 - Phase 11: Implemented Print / Share Functionality in both web and native C versions.
+- Phase 12: Implemented Spaced Repetition / Study Marking (Got It/Needs Review, Status Indicator, Review Only Filter) in both web and native C versions.
 
 ## Next Priority (Before New Apps)
 

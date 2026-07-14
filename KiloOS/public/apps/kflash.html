@@ -320,6 +320,9 @@
             <h1>KFlash</h1>
             <div class="controls">
                 <input type="text" id="searchBar" placeholder="Search..." style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 8px 12px; border-radius: 6px; font-family: 'Inter', sans-serif;">
+                <label style="display:flex; align-items:center; gap:5px; cursor:pointer; font-size: 0.9rem; margin-right: 10px;">
+                    <input type="checkbox" id="chkReviewOnly" style="accent-color:#58a6ff; transform: scale(1.2);"> Review Only
+                </label>
                 <button class="btn" id="btnLoadSample">Load Sample</button>
                 <button class="btn" id="btnImport">Import</button>
                 <button class="btn" id="btnExport">Export</button>
@@ -353,6 +356,10 @@
 
         <div class="footer">
             <button class="btn" id="btnPrev" disabled>← Prev</button>
+            <div id="studyControls" style="display:none; gap:10px;">
+                <button class="btn btn-primary" style="background-color:#2ea043;" id="btnGotIt">Got It ✓</button>
+                <button class="btn btn-primary" style="background-color:#d29922;" id="btnNeedsReview">Needs Review ↻</button>
+            </div>
             <button class="btn" id="btnNext" disabled>Next →</button>
         </div>
     </div>
@@ -764,8 +771,11 @@
         function updateFilteredIndices() {
             filteredIndices = [];
             const query = searchQuery.toLowerCase();
+            const reviewOnly = document.getElementById('chkReviewOnly').checked;
             for (let i = 0; i < deck.length; i++) {
-                if (!query || deck[i].front.toLowerCase().includes(query) || deck[i].back.toLowerCase().includes(query)) {
+                let matchesSearch = !query || deck[i].front.toLowerCase().includes(query) || deck[i].back.toLowerCase().includes(query);
+                let matchesReview = !reviewOnly || deck[i].status === 'review';
+                if (matchesSearch && matchesReview) {
                     filteredIndices.push(i);
                 }
             }
@@ -803,7 +813,12 @@
             const card = deck[realIndex];
             cardFront.textContent = card.front;
             cardBack.textContent = card.back;
-            deckInfos.forEach(el => el.textContent = `Card ${currentIndex + 1}/${displayedCount}`);
+            
+            let statusIndicator = "";
+            if (card.status === 'known') statusIndicator = " <span style='color:#3fb950;'>✓ Known</span>";
+            else if (card.status === 'review') statusIndicator = " <span style='color:#d29922;'>↻ Review</span>";
+            
+            deckInfos.forEach(el => el.innerHTML = `Card ${currentIndex + 1}/${displayedCount}${statusIndicator}`);
             
             const pct = ((currentIndex + 1) / displayedCount) * 100;
             progressBars.forEach(el => el.style.width = `${pct}%`);
@@ -811,6 +826,13 @@
             btnPrev.disabled = currentIndex === 0;
             btnNext.disabled = currentIndex === displayedCount - 1;
         }
+
+        document.getElementById('chkReviewOnly').addEventListener('change', () => {
+            currentIndex = 0;
+            flashcard.classList.remove('is-flipped');
+            document.getElementById('studyControls').style.display = 'none';
+            renderCard();
+        });
 
         document.getElementById('searchBar').addEventListener('input', (e) => {
             searchQuery = e.target.value;
@@ -822,6 +844,8 @@
         const flipCard = () => {
             if (deck.length > 0) {
                 flashcard.classList.toggle('is-flipped');
+                const isFlipped = flashcard.classList.contains('is-flipped');
+                document.getElementById('studyControls').style.display = isFlipped ? 'flex' : 'none';
             } else {
                 cardContainer.classList.remove('shake');
                 void cardContainer.offsetWidth; // trigger reflow
@@ -851,6 +875,7 @@
             if (currentIndex > 0) {
                 currentIndex--;
                 flashcard.classList.remove('is-flipped');
+                document.getElementById('studyControls').style.display = 'none';
                 setTimeout(renderCard, 150);
             }
         });
@@ -860,7 +885,32 @@
             if (currentIndex < filteredIndices.length - 1) {
                 currentIndex++;
                 flashcard.classList.remove('is-flipped');
+                document.getElementById('studyControls').style.display = 'none';
                 setTimeout(renderCard, 150);
+            }
+        });
+
+        document.getElementById('btnGotIt').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (filteredIndices.length > 0) {
+                const realIndex = filteredIndices[currentIndex];
+                deck[realIndex].status = 'known';
+                saveDeck();
+                renderCard();
+                if (!btnNext.disabled) btnNext.click();
+                else { flashcard.classList.remove('is-flipped'); document.getElementById('studyControls').style.display = 'none'; }
+            }
+        });
+
+        document.getElementById('btnNeedsReview').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (filteredIndices.length > 0) {
+                const realIndex = filteredIndices[currentIndex];
+                deck[realIndex].status = 'review';
+                saveDeck();
+                renderCard();
+                if (!btnNext.disabled) btnNext.click();
+                else { flashcard.classList.remove('is-flipped'); document.getElementById('studyControls').style.display = 'none'; }
             }
         });
 

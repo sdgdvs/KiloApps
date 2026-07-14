@@ -41,6 +41,7 @@
 typedef struct {
     char front[256];
     char back[256];
+    int status;
 } FlashCard;
 
 FlashCard deck[100];
@@ -48,9 +49,14 @@ int deckCount = 0;
 int currentIndex = 0;
 int isFlipped = 0;
 int filteredIndices[100];
+#define ID_CHK_REVIEW 115
+#define ID_BTN_GOTIT  116
+#define ID_BTN_REVIEW 117
+
 int filteredCount = 0;
 
 HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle, hEditSearch, hBtnPrint;
+HWND hChkReview, hBtnGotIt, hBtnReview;
 HWND g_hwnd;
 HBRUSH hbgBrush, hCardBrush;
 HFONT hFont, hCardFont;
@@ -96,8 +102,15 @@ void UpdateFilteredIndices() {
     }
     for (int i = 0; i < strlen(query); i++) query[i] = tolower(query[i]);
     
+    int reviewOnly = 0;
+    if (hChkReview && SendMessage(hChkReview, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+        reviewOnly = 1;
+    }
+    
     filteredCount = 0;
     for (int i = 0; i < deckCount; i++) {
+        if (reviewOnly && deck[i].status != 2) continue;
+
         if (strlen(query) == 0) {
             filteredIndices[filteredCount++] = i;
         } else {
@@ -126,6 +139,8 @@ void UpdateCardDisplay() {
         EnableWindow(hBtnDelete, FALSE);
         EnableWindow(hBtnExport, FALSE);
         EnableWindow(hBtnShuffle, FALSE);
+        if (hBtnGotIt) ShowWindow(hBtnGotIt, SW_HIDE);
+        if (hBtnReview) ShowWindow(hBtnReview, SW_HIDE);
     } else {
         EnableWindow(hBtnFlip, TRUE);
         EnableWindow(hBtnEdit, TRUE);
@@ -134,6 +149,13 @@ void UpdateCardDisplay() {
         EnableWindow(hBtnShuffle, filteredCount > 1);
         EnableWindow(hBtnPrev, currentIndex > 0);
         EnableWindow(hBtnNext, currentIndex < filteredCount - 1);
+        if (isFlipped) {
+            if (hBtnGotIt) ShowWindow(hBtnGotIt, SW_SHOW);
+            if (hBtnReview) ShowWindow(hBtnReview, SW_SHOW);
+        } else {
+            if (hBtnGotIt) ShowWindow(hBtnGotIt, SW_HIDE);
+            if (hBtnReview) ShowWindow(hBtnReview, SW_HIDE);
+        }
     }
     if (g_hwnd) InvalidateRect(g_hwnd, NULL, FALSE);
 }
@@ -265,6 +287,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnShuffle, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hChkReview = CreateWindow("BUTTON", "Review Only", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+                                   10, 45, 100, 20, hwnd, (HMENU)ID_CHK_REVIEW, NULL, NULL);
+            SendMessage(hChkReview, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnGotIt = CreateWindow("BUTTON", "Got It", WS_CHILD | BS_PUSHBUTTON,
+                                   150, 360, 100, 30, hwnd, (HMENU)ID_BTN_GOTIT, NULL, NULL);
+            SendMessage(hBtnGotIt, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnReview = CreateWindow("BUTTON", "Needs Review", WS_CHILD | BS_PUSHBUTTON,
+                                   330, 360, 110, 30, hwnd, (HMENU)ID_BTN_REVIEW, NULL, NULL);
+            SendMessage(hBtnReview, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             break;
         }
         case WM_ERASEBKGND:
@@ -290,11 +324,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(139, 148, 158));
             SelectObject(hdcMem, hFont);
-            char info[32];
+            char info[64];
             if (filteredCount == 0) {
                 strcpy(info, "0/0");
             } else {
-                sprintf(info, "Card %d/%d", currentIndex + 1, filteredCount);
+                int st = deck[filteredIndices[currentIndex]].status;
+                sprintf(info, "Card %d/%d %s", currentIndex + 1, filteredCount, st == 1 ? "[Known]" : (st == 2 ? "[Review]" : ""));
             }
             RECT rcInfo = { rcCard.left + 20, rcCard.top + 20, rcCard.right - 20, rcCard.top + 40 };
             DrawText(hdcMem, info, -1, &rcInfo, DT_LEFT | DT_TOP | DT_SINGLELINE);
@@ -341,6 +376,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 break;
             }
             
+            if (HIWORD(wParam) == BN_CLICKED && wmId == ID_CHK_REVIEW) {
+                currentIndex = 0;
+                isFlipped = 0;
+                UpdateCardDisplay();
+                break;
+            }
+            
             switch (wmId) {
                 case ID_BTN_PREV:
                     if (currentIndex > 0) {
@@ -359,6 +401,32 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 case ID_BTN_FLIP:
                     if (filteredCount > 0) {
                         isFlipped = !isFlipped;
+                        UpdateCardDisplay();
+                    }
+                    break;
+                case ID_BTN_GOTIT:
+                    if (filteredCount > 0) {
+                        deck[filteredIndices[currentIndex]].status = 1;
+                        SaveDeck();
+                        if (currentIndex < filteredCount - 1) {
+                            currentIndex++;
+                            isFlipped = 0;
+                        } else {
+                            isFlipped = 0;
+                        }
+                        UpdateCardDisplay();
+                    }
+                    break;
+                case ID_BTN_REVIEW:
+                    if (filteredCount > 0) {
+                        deck[filteredIndices[currentIndex]].status = 2;
+                        SaveDeck();
+                        if (currentIndex < filteredCount - 1) {
+                            currentIndex++;
+                            isFlipped = 0;
+                        } else {
+                            isFlipped = 0;
+                        }
                         UpdateCardDisplay();
                     }
                     break;
@@ -558,6 +626,7 @@ INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
                 if (deckCount < 100) {
                     GetDlgItemText(hwndDlg, IDC_FRONT, deck[deckCount].front, 255);
                     GetDlgItemText(hwndDlg, IDC_BACK, deck[deckCount].back, 255);
+                    deck[deckCount].status = 0;
                     if (strlen(deck[deckCount].front) > 0 && strlen(deck[deckCount].back) > 0) {
                         deckCount++;
                         SaveDeck();
