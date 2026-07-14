@@ -57,3 +57,4 @@
   - Executed gen_icons.py with uv, copied to public/assets/icons, confirmed all apps point to unique icons in App.jsx.
   - Audited App.jsx for new apps. No new apps without icons found. All icons are up to date and refined for visibility.
   - Noticed gen_icons.py was missing procedural logic for kterm; added generate_term(), re-ran, and copied kterm.ico to public/assets/icons to refine it.
+  - Actually implemented the full list of remaining 19 icons in gen_icons.py (since previous commit only added kterm), regenerated with uv, and copied all to public/assets/icons. All apps now have true procedural icons.
