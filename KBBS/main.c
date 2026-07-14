@@ -1215,6 +1215,25 @@ void SetStatusText(const char* text) {
     UpdateStatus();
 }
 
+int selStartAbsR = -1, selStartC = -1;
+int selEndAbsR = -1, selEndC = -1;
+int selDragging = 0;
+
+int IsSelected(int r, int c) {
+    if (selStartAbsR == -1) return 0;
+    int r1 = selStartAbsR, c1 = selStartC;
+    int r2 = selEndAbsR, c2 = selEndC;
+    if (r1 > r2 || (r1 == r2 && c1 > c2)) {
+        r1 = selEndAbsR; c1 = selEndC;
+        r2 = selStartAbsR; c2 = selStartC;
+    }
+    if (r < r1 || r > r2) return 0;
+    if (r == r1 && r == r2) return c >= c1 && c <= c2;
+    if (r == r1) return c >= c1;
+    if (r == r2) return c <= c2;
+    return 1;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -1496,6 +1515,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     COLORREF fgColor = ansiColors[screen[viewTop + r][c].fg & 0x0F];
                     COLORREF bgColor = ansiColors[screen[viewTop + r][c].bg & 0x0F];
                     
+                    if (IsSelected(viewTop + r, c)) {
+                        COLORREF tmp = fgColor;
+                        fgColor = bgColor;
+                        bgColor = tmp;
+                    }
+                    
                     SetTextColor(memDC, fgColor);
                     SetBkColor(memDC, bgColor);
                     
@@ -1691,6 +1716,92 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_LBUTTONDOWN: {
             SetFocus(hwnd);
+            int viewTop = activeTop - scrollOffset;
+            int mouseX = (short)LOWORD(lParam);
+            int mouseY = (short)HIWORD(lParam);
+            int termX = dpiScale(5), termY = dpiScale(30);
+            int cellW = dpiScale(kbbsSettings.fontSize / 2);
+            int cellH = dpiScale(kbbsSettings.fontSize);
+            int c = (mouseX - termX) / cellW;
+            int r = (mouseY - termY) / cellH;
+            if (mouseX >= termX && mouseY >= termY && c >= 0 && c < TERM_COLS && r >= 0 && r < TERM_ROWS) {
+                selStartAbsR = viewTop + r;
+                selStartC = c;
+                selEndAbsR = selStartAbsR;
+                selEndC = c;
+                selDragging = 1;
+                SetCapture(hwnd);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else {
+                selStartAbsR = -1;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        case WM_MOUSEMOVE: {
+            if (selDragging && GetCapture() == hwnd) {
+                int viewTop = activeTop - scrollOffset;
+                int mouseX = (short)LOWORD(lParam);
+                int mouseY = (short)HIWORD(lParam);
+                int termX = dpiScale(5), termY = dpiScale(30);
+                int cellW = dpiScale(kbbsSettings.fontSize / 2);
+                int cellH = dpiScale(kbbsSettings.fontSize);
+                int c = (mouseX - termX) / cellW;
+                int r = (mouseY - termY) / cellH;
+                if (c < 0) c = 0; if (c >= TERM_COLS) c = TERM_COLS - 1;
+                if (r < 0) r = 0; if (r >= TERM_ROWS) r = TERM_ROWS - 1;
+                selEndAbsR = viewTop + r;
+                selEndC = c;
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+        case WM_LBUTTONUP: {
+            if (selDragging && GetCapture() == hwnd) {
+                ReleaseCapture();
+                selDragging = 0;
+                if (selStartAbsR == selEndAbsR && selStartC == selEndC) {
+                    selStartAbsR = -1; /* click to clear */
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (selStartAbsR != -1) {
+                    int r1 = selStartAbsR, c1 = selStartC;
+                    int r2 = selEndAbsR, c2 = selEndC;
+                    if (r1 > r2 || (r1 == r2 && c1 > c2)) {
+                        r1 = selEndAbsR; c1 = selEndC;
+                        r2 = selStartAbsR; c2 = selStartC;
+                    }
+                    int maxLen = (r2 - r1 + 1) * (TERM_COLS + 2) + 1;
+                    WCHAR* wbuf = (WCHAR*)GlobalAlloc(GPTR, maxLen * sizeof(WCHAR));
+                    if (wbuf) {
+                        int p = 0;
+                        for (int r = r1; r <= r2; r++) {
+                            int sc = (r == r1) ? c1 : 0;
+                            int ec = (r == r2) ? c2 : TERM_COLS - 1;
+                            for (int c = sc; c <= ec; c++) {
+                                if (r >= 0 && r < MAX_LINES && c >= 0 && c < TERM_COLS) {
+                                    unsigned char raw = (unsigned char)screen[r][c].ch;
+                                    WCHAR wch = cp437[raw];
+                                    wbuf[p++] = (wch == 0) ? L' ' : wch;
+                                }
+                            }
+                            if (r < r2) { wbuf[p++] = L'\r'; wbuf[p++] = L'\n'; }
+                        }
+                        wbuf[p] = 0;
+                        if (OpenClipboard(hwnd)) {
+                            EmptyClipboard();
+                            HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, (p + 1) * sizeof(WCHAR));
+                            if (hMem) {
+                                WCHAR* dest = (WCHAR*)GlobalLock(hMem);
+                                int i; for (i=0; i<=p; i++) dest[i] = wbuf[i];
+                                GlobalUnlock(hMem);
+                                SetClipboardData(CF_UNICODETEXT, hMem);
+                            }
+                            CloseClipboard();
+                        }
+                        GlobalFree(wbuf);
+                    }
+                }
+            }
             return 0;
         }
         case WM_CHAR: {

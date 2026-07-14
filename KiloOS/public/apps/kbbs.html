@@ -475,6 +475,25 @@
     let scrollOffset = 0;
     const MAX_LINES = 1000;
 
+    let selStart = null;
+    let selEnd = null;
+    let selDragging = false;
+
+    function isSelected(r, c) {
+        if (!selStart || !selEnd) return false;
+        let r1 = selStart.r, c1 = selStart.c;
+        let r2 = selEnd.r, c2 = selEnd.c;
+        if (r1 > r2 || (r1 === r2 && c1 > c2)) {
+            r1 = selEnd.r; c1 = selEnd.c;
+            r2 = selStart.r; c2 = selStart.c;
+        }
+        if (r < r1 || r > r2) return false;
+        if (r === r1 && r === r2) return c >= c1 && c <= c2;
+        if (r === r1) return c >= c1;
+        if (r === r2) return c <= c2;
+        return true;
+    }
+
     function initScreen() {
         screen = [];
         for (let r = 0; r < ROWS; r++) {
@@ -510,11 +529,12 @@
                 const x = c * CELL_W;
                 const y = r * CELL_H;
                 
-                ctx.fillStyle = COLORS[cell.bg] || COLORS[0];
+                const selected = isSelected(startRow + r, c);
+                ctx.fillStyle = selected ? (COLORS[cell.fg] || COLORS[7]) : (COLORS[cell.bg] || COLORS[0]);
                 ctx.fillRect(x, y, CELL_W, CELL_H);
                 
                 if (!cell.blink || window.blinkToggle) {
-                    ctx.fillStyle = COLORS[cell.fg] || COLORS[7];
+                    ctx.fillStyle = selected ? (COLORS[cell.bg] || COLORS[0]) : (COLORS[cell.fg] || COLORS[7]);
                     const code = cell.ch.charCodeAt(0);
                     // Perfect block mappings
                     if (code === 0x2588) { ctx.fillRect(x, y, CELL_W, CELL_H); }
@@ -913,6 +933,69 @@
         updateScrollbar();
         render();
     }, {passive: true});
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        const c = Math.floor(x / CELL_W);
+        const r = Math.floor(y / CELL_H);
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+            const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
+            selStart = { r: startRow + r, c: c };
+            selEnd = { r: startRow + r, c: c };
+            selDragging = true;
+            render();
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (selDragging) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            const c = Math.max(0, Math.min(COLS - 1, Math.floor(x / CELL_W)));
+            const r = Math.max(0, Math.min(ROWS - 1, Math.floor(y / CELL_H)));
+            const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
+            selEnd = { r: startRow + r, c: c };
+            render();
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (selDragging) {
+            selDragging = false;
+            if (selStart.r === selEnd.r && selStart.c === selEnd.c) {
+                selStart = null;
+                selEnd = null;
+                render();
+            } else {
+                let r1 = selStart.r, c1 = selStart.c;
+                let r2 = selEnd.r, c2 = selEnd.c;
+                if (r1 > r2 || (r1 === r2 && c1 > c2)) {
+                    r1 = selEnd.r; c1 = selEnd.c;
+                    r2 = selStart.r; c2 = selStart.c;
+                }
+                let text = "";
+                for (let r = r1; r <= r2; r++) {
+                    let sc = (r === r1) ? c1 : 0;
+                    let ec = (r === r2) ? c2 : COLS - 1;
+                    for (let c = sc; c <= ec; c++) {
+                        if (r < screen.length && c < COLS) {
+                            let ch = screen[r][c].ch;
+                            text += (ch === '\0' || ch === '\u00A0') ? ' ' : ch;
+                        }
+                    }
+                    if (r < r2) text += "\n";
+                }
+                navigator.clipboard.writeText(text).catch(()=>{});
+            }
+        }
+    });
 
     // ─── BBS Directory ───
     const DEFAULT_BBS_LIST = [
