@@ -41,5 +41,7 @@
 
 ## Progress Log
 
-- **Status:** Phase 1 (Not started)
+- **Status:** Phase 1 (Completed), Starting Phase 2
 - **Log:**
+  - Audited App.jsx for missing or reused icons.
+  - Added `circle` and `line` drawing helpers to `gen_icons.py`.

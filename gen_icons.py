@@ -54,6 +54,40 @@ def rect(img, x1, y1, x2, y2, color):
             if 0 <= y < 32 and 0 <= x < 32:
                 img[y][x] = color
 
+def circle(img, cx, cy, r, color):
+    for y in range(32):
+        for x in range(32):
+            if (x - cx)**2 + (y - cy)**2 <= r**2:
+                img[y][x] = color
+
+def line(img, x0, y0, x1, y1, color):
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    sx = 1 if x0 < x1 else -1
+    sy = 1 if y0 < y1 else -1
+    err = dx - dy
+    while True:
+        if 0 <= y0 < 32 and 0 <= x0 < 32:
+            img[y0][x0] = color
+        if x0 == x1 and y0 == y1:
+            break
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x0 += sx
+        if e2 < dx:
+            err += dx
+            y0 += sy
+
+def draw_art(art, color_map):
+    img = new_img()
+    for y, row in enumerate(art):
+        for x, char in enumerate(row):
+            if char in color_map:
+                if 0 <= y < 32 and 0 <= x < 32:
+                    img[y][x] = color_map[char]
+    return img
+
 def generate_explorer():
     img = new_img()
     rect(img, 2, 6, 12, 10, (200, 150, 50)) # back tab
@@ -169,6 +203,108 @@ def generate_snake():
     rect(img, 8, 8, 10, 10, (255, 0, 0)) # food
     return img
 
+def generate_settings():
+    img = new_img()
+    circle(img, 15, 15, 12, (150, 150, 150))
+    circle(img, 15, 15, 6, (0, 0, 0, 0)) # transparent center
+    # Teeth
+    rect(img, 13, 1, 17, 3, (150, 150, 150))
+    rect(img, 13, 27, 17, 29, (150, 150, 150))
+    rect(img, 1, 13, 3, 17, (150, 150, 150))
+    rect(img, 27, 13, 29, 17, (150, 150, 150))
+    return img
+
+def generate_taskmgr():
+    img = new_img()
+    rect(img, 2, 4, 30, 28, (50, 50, 50)) # monitor
+    rect(img, 4, 6, 28, 26, (0, 0, 0)) # screen
+    for y in range(16, 24, 2):
+        rect(img, 6, y, 10, y+1, (0, 255, 0))
+        rect(img, 12, y-4, 16, y-3, (0, 255, 0))
+        rect(img, 18, y-8, 22, y-7, (0, 255, 0))
+    return img
+
+def generate_db():
+    img = new_img()
+    for y_offset in [2, 10, 18]:
+        rect(img, 6, y_offset+4, 26, y_offset+10, (100, 100, 200))
+        rect(img, 8, y_offset+2, 24, y_offset+4, (150, 150, 250))
+    return img
+
+def generate_type():
+    img = new_img()
+    rect(img, 2, 10, 30, 26, (200, 200, 200))
+    for y in [12, 16, 20]:
+        for x in range(4, 28, 4):
+            rect(img, x, y, x+2, y+2, (100, 100, 100))
+    rect(img, 10, 24, 22, 24, (100, 100, 100))
+    return img
+
+def generate_zip():
+    art = [
+        "   YYYYYY   ",
+        "   Y    Y   ",
+        "   Y    Y   ",
+        "   YYYYYY   ",
+        "    YYYY    ",
+        "     YY     ",
+        "    Z  Z    ",
+        "     ZZ     ",
+        "    Z  Z    ",
+        "     ZZ     ",
+        "    Z  Z    ",
+    ]
+    color_map = {'Y': (200, 200, 50), 'Z': (150, 150, 150)}
+    img = new_img()
+    for y, row in enumerate(art):
+        for x, char in enumerate(row):
+            if char in color_map:
+                rect(img, x*2+4, y*2+4, x*2+5, y*2+5, color_map[char])
+    return img
+
+def generate_font():
+    art = [
+        "     AA     ",
+        "    A  A    ",
+        "   A    A   ",
+        "  AAAAAAAA  ",
+        " A        A ",
+        "AAA      AAA",
+    ]
+    color_map = {'A': (0, 0, 0)}
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (255, 255, 255))
+    for y, row in enumerate(art):
+        for x, char in enumerate(row):
+            if char in color_map:
+                rect(img, x*2+4, y*2+10, x*2+5, y*2+11, color_map[char])
+    return img
+
+def generate_contacts():
+    img = new_img()
+    rect(img, 4, 2, 24, 30, (200, 150, 100))
+    rect(img, 24, 6, 28, 10, (255, 200, 150))
+    rect(img, 24, 14, 28, 18, (255, 150, 100))
+    circle(img, 14, 12, 4, (50, 50, 50))
+    rect(img, 8, 20, 20, 30, (50, 50, 50))
+    return img
+
+def generate_converter():
+    img = new_img()
+    rect(img, 4, 8, 20, 12, (50, 200, 50))
+    rect(img, 20, 4, 24, 16, (50, 200, 50))
+    rect(img, 4, 20, 20, 24, (50, 50, 200))
+    rect(img, 8, 16, 12, 28, (50, 50, 200))
+    return img
+
+def generate_base():
+    img = new_img()
+    rect(img, 2, 2, 30, 30, (50, 50, 50))
+    rect(img, 4, 4, 28, 20, (0, 0, 0))
+    rect(img, 6, 6, 10, 8, (0, 255, 0))
+    circle(img, 15, 25, 4, (150, 150, 150))
+    return img
+
 os.makedirs('icons', exist_ok=True)
 save_ico('icons/kexplorer.ico', generate_explorer())
 save_ico('icons/kpad.ico', generate_pad())
@@ -181,4 +317,15 @@ save_ico('icons/kchat.ico', generate_chat())
 save_ico('icons/kchatserver.ico', generate_server())
 save_ico('icons/kbbs.ico', generate_bbs())
 save_ico('icons/ksnake.ico', generate_snake())
+
+# Phase 2 Icons
+save_ico('icons/ksettings.ico', generate_settings())
+save_ico('icons/ktaskmgr.ico', generate_taskmgr())
+save_ico('icons/kdb.ico', generate_db())
+save_ico('icons/ktype.ico', generate_type())
+save_ico('icons/kzip.ico', generate_zip())
+save_ico('icons/kfont.ico', generate_font())
+save_ico('icons/kcontacts.ico', generate_contacts())
+save_ico('icons/kconverter.ico', generate_converter())
+save_ico('icons/kbase.ico', generate_base())
 
