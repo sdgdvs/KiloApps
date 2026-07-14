@@ -102,8 +102,9 @@ def generate_pad():
     img = new_img()
     rect(img, 4, 2, 26, 30, (230, 230, 250)) # paper
     rect(img, 2, 2, 6, 30, (100, 100, 200)) # binding
+    rect(img, 10, 2, 10, 30, (255, 100, 100)) # red margin
     for y in range(6, 28, 4):
-        rect(img, 8, y, 22, y, (150, 150, 150)) # lines
+        rect(img, 12, y, 24, y, (150, 150, 200)) # lines
     return img
 
 def generate_calc():
@@ -112,7 +113,8 @@ def generate_calc():
     rect(img, 6, 4, 26, 10, (220, 240, 220)) # screen
     for y in range(14, 28, 4):
         for x in range(6, 26, 5):
-            rect(img, x, y, x+3, y+2, (100, 100, 100)) # buttons
+            color = (255, 150, 50) if x == 21 else (100, 100, 100)
+            rect(img, x, y, x+3, y+2, color) # buttons
     return img
 
 def generate_paint():
@@ -161,11 +163,16 @@ def generate_task():
 
 def generate_chat():
     img = new_img()
-    rect(img, 4, 6, 28, 22, (200, 200, 255)) # bubble
-    rect(img, 8, 22, 12, 26, (200, 200, 255)) # tail
-    rect(img, 10, 14, 12, 14, (0, 0, 0)) # dots
-    rect(img, 16, 14, 18, 14, (0, 0, 0))
-    rect(img, 22, 14, 24, 14, (0, 0, 0))
+    # Back bubble
+    rect(img, 10, 4, 30, 20, (150, 220, 150)) 
+    rect(img, 24, 20, 28, 24, (150, 220, 150))
+    # Front bubble
+    rect(img, 2, 12, 22, 28, (100, 150, 255))
+    rect(img, 6, 28, 10, 32, (100, 150, 255))
+    # Dots on front
+    rect(img, 6, 19, 8, 21, (255, 255, 255))
+    rect(img, 11, 19, 13, 21, (255, 255, 255))
+    rect(img, 16, 19, 18, 21, (255, 255, 255))
     return img
 
 def generate_server():
