@@ -210,7 +210,7 @@ print a % 3"></textarea>
                 advance();
                 let nextVal = parseFactor();
                 if (op === '*') val *= nextVal;
-                else if (op === '/') { if (nextVal !== 0) val = Math.floor(val / nextVal); }
+                else if (op === '/') { if (nextVal !== 0) val = Math.trunc(val / nextVal); }
                 else if (op === '%') { if (nextVal !== 0) val = val % nextVal; }
             }
             return val;

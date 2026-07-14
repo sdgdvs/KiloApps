@@ -163,12 +163,13 @@ void RunScript() {
 }
 
 HBRUSH hbrBg;
+HFONT hFont;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hbrBg = CreateSolidBrush(RGB(30, 30, 30));
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             
             hInput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "a = 10\r\nb = 20\r\nprint a * b + 5\r\nprint a % 3",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN,
@@ -216,6 +217,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            DeleteObject(hFont);
             DeleteObject(hbrBg);
             PostQuitMessage(0);
             break;

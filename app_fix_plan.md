@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KScript
+**Target App:** None
 **Status:** Next
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -81,6 +81,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KQuarantine**: Fixed XSS vulnerability in terminal log input rendering in `kquarantine.html`.
 - **KRead**: Fixed file input `change` event bug in `kread.html` when re-selecting the same file. Fixed GDI resource leaks (`HFONT`, `HBRUSH`) in `main.c` on `WM_DESTROY` and `WM_CTLCOLOREDIT`.
 - **KRogue**: Fixed turn logic in `krogue.html` where pressing wait `.` skipped both player and monster turns. Verified native `main.c` logic.
+- **KScript**: Fixed negative integer division in `kscript.html` using `Math.trunc`. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically from KScript.
