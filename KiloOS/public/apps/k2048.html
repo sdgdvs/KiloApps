@@ -90,7 +90,7 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(var(--grid-size, 4), 1fr);
             gap: 3%;
             width: 100%;
             height: 100%;
@@ -112,8 +112,8 @@
 
         .tile {
             position: absolute;
-            width: 22.75%;
-            height: 22.75%;
+            width: var(--tile-size, 22.75%);
+            height: var(--tile-size, 22.75%);
             border-radius: 8px;
             display: flex;
             justify-content: center;
@@ -191,6 +191,24 @@
             border-color: rgba(255, 255, 255, 0.5);
             box-shadow: 0 0 15px rgba(255,255,255,0.1);
         }
+        
+        .size-controls {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        
+        button.size-btn {
+            padding: 8px 0;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        
+        button.size-btn.active {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
 
         .game-over {
             position: absolute;
@@ -245,6 +263,12 @@
                 </div>
             </div>
         </div>
+        <div class="size-controls">
+            <button class="btn size-btn" onclick="setGridSize(3, this)">3x3</button>
+            <button class="btn size-btn active" onclick="setGridSize(4, this)">4x4</button>
+            <button class="btn size-btn" onclick="setGridSize(5, this)">5x5</button>
+            <button class="btn size-btn" onclick="setGridSize(6, this)">6x6</button>
+        </div>
         <div class="board-container">
             <div class="grid" id="grid-bg">
                 <!-- 16 empty cells -->
@@ -271,7 +295,9 @@
         const bestScoreEl = document.getElementById('best-score');
         const gameOverEl = document.getElementById('game-over');
 
-        for (let i = 0; i < 16; i++) {
+        let gridSize = 4;
+
+        for (let i = 0; i < gridSize * gridSize; i++) {
             const cell = document.createElement('div');
             cell.classList.add('grid-cell');
             gridBg.appendChild(cell);
@@ -279,7 +305,7 @@
 
         let grid = [];
         let score = 0;
-        let bestScore = parseInt(localStorage.getItem('k2048_best_score')) || 0;
+        let bestScore = parseInt(localStorage.getItem('k2048_best_score_4')) || parseInt(localStorage.getItem('k2048_best_score')) || 0;
         let isGameOverState = false;
         let isAnimating = false;
         let tileIdCounter = 0;
@@ -288,8 +314,36 @@
         // Represents a tile: {id, val, x, y, el}
         let tiles = [];
 
+        function setGridSize(size, btnEl) {
+            if (isAnimating) return;
+            gridSize = size;
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+
+            bestScore = parseInt(localStorage.getItem('k2048_best_score_' + gridSize)) || 0;
+            if (gridSize === 4 && bestScore === 0) {
+                bestScore = parseInt(localStorage.getItem('k2048_best_score')) || 0;
+            }
+
+            let tileWidth = (100 - (gridSize - 1) * 3) / gridSize;
+            let translationPct = (tileWidth + 3) / tileWidth * 100;
+            
+            document.documentElement.style.setProperty('--grid-size', gridSize);
+            document.documentElement.style.setProperty('--tile-size', tileWidth + '%');
+            document.documentElement.style.setProperty('--translate-pct', translationPct + '%');
+            
+            gridBg.innerHTML = '';
+            for (let i = 0; i < gridSize * gridSize; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('grid-cell');
+                gridBg.appendChild(cell);
+            }
+            
+            initGame();
+        }
+
         function initGame() {
-            grid = Array(16).fill(null);
+            grid = Array(gridSize * gridSize).fill(null);
             tiles.forEach(t => t.el.remove());
             tiles = [];
             score = 0;
@@ -305,7 +359,7 @@
         function createTileEl(tile, isNew) {
             const el = document.createElement('div');
             el.className = `tile val-${tile.val} ${isNew ? 'new' : ''}`;
-            el.style.transform = `translate(calc(${tile.x} * 113.1868%), calc(${tile.y} * 113.1868%))`;
+            el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
             
             const inner = document.createElement('div');
             inner.className = 'tile-inner';
@@ -321,7 +375,7 @@
         }
 
         function updateTileEl(tile, isMerged) {
-            tile.el.style.transform = `translate(calc(${tile.x} * 113.1868%), calc(${tile.y} * 113.1868%))`;
+            tile.el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
             tile.el.className = `tile val-${tile.val} ${isMerged ? 'merged' : ''}`;
             tile.el.firstChild.textContent = tile.val;
             if (isMerged) {
@@ -331,7 +385,7 @@
 
         function addRandomTile() {
             const emptyCells = [];
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < gridSize * gridSize; i++) {
                 if (grid[i] === null) emptyCells.push(i);
             }
             if (emptyCells.length > 0) {
@@ -340,8 +394,8 @@
                 const tile = {
                     id: tileIdCounter++,
                     val: val,
-                    x: randomIdx % 4,
-                    y: Math.floor(randomIdx / 4)
+                    x: randomIdx % gridSize,
+                    y: Math.floor(randomIdx / gridSize)
                 };
                 grid[randomIdx] = tile;
                 tiles.push(tile);
@@ -352,7 +406,10 @@
         function updateScore() {
             if (score > bestScore) {
                 bestScore = score;
-                localStorage.setItem('k2048_best_score', bestScore);
+                localStorage.setItem('k2048_best_score_' + gridSize, bestScore);
+                if (gridSize === 4) {
+                    localStorage.setItem('k2048_best_score', bestScore); // Backwards compat
+                }
             }
             scoreEl.textContent = score;
             bestScoreEl.textContent = bestScore;
@@ -377,7 +434,7 @@
                     i++;
                 }
             }
-            while(result.length < 4) {
+            while(result.length < gridSize) {
                 result.push(null);
             }
             return result;
@@ -387,11 +444,11 @@
             let changed = false;
             let tilesToRemove = [];
             
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < gridSize; i++) {
                 let line = getLine(i);
                 let newLine = slideLine(line);
                 
-                for (let j = 0; j < 4; j++) {
+                for (let j = 0; j < gridSize; j++) {
                     const tile = newLine[j];
                     if (tile) {
                         if (tile.x !== setLine(i, j)[0] || tile.y !== setLine(i, j)[1] || tile.mergePartner) {
@@ -407,7 +464,7 @@
                             let partner = tile.mergePartner;
                             partner.x = tile.x;
                             partner.y = tile.y;
-                            partner.el.style.transform = `translate(calc(${partner.x} * 113.1868%), calc(${partner.y} * 113.1868%))`;
+                            partner.el.style.transform = `translate(calc(${partner.x} * var(--translate-pct, 113.1868%)), calc(${partner.y} * var(--translate-pct, 113.1868%)))`;
                             partner.el.style.zIndex = 1;
                             tilesToRemove.push(partner);
                             
@@ -416,9 +473,9 @@
                         } else if (oldX !== tile.x || oldY !== tile.y) {
                             updateTileEl(tile, false);
                         }
-                        grid[tile.y * 4 + tile.x] = tile;
+                        grid[tile.y * gridSize + tile.x] = tile;
                     } else {
-                        grid[setLine(i, j)[1] * 4 + setLine(i, j)[0]] = null;
+                        grid[setLine(i, j)[1] * gridSize + setLine(i, j)[0]] = null;
                     }
                 }
             }
@@ -437,37 +494,37 @@
 
         function moveLeft() {
             return processMovement(
-                i => [grid[i*4], grid[i*4+1], grid[i*4+2], grid[i*4+3]],
+                i => Array.from({length: gridSize}, (_, k) => grid[i * gridSize + k]),
                 (i, j) => [j, i]
             );
         }
 
         function moveRight() {
             return processMovement(
-                i => [grid[i*4+3], grid[i*4+2], grid[i*4+1], grid[i*4]],
-                (i, j) => [3-j, i]
+                i => Array.from({length: gridSize}, (_, k) => grid[i * gridSize + (gridSize - 1 - k)]),
+                (i, j) => [gridSize - 1 - j, i]
             );
         }
 
         function moveUp() {
             return processMovement(
-                j => [grid[j], grid[4+j], grid[8+j], grid[12+j]],
+                j => Array.from({length: gridSize}, (_, k) => grid[k * gridSize + j]),
                 (j, i) => [j, i]
             );
         }
 
         function moveDown() {
             return processMovement(
-                j => [grid[12+j], grid[8+j], grid[4+j], grid[j]],
-                (j, i) => [j, 3-i]
+                j => Array.from({length: gridSize}, (_, k) => grid[(gridSize - 1 - k) * gridSize + j]),
+                (j, i) => [j, gridSize - 1 - i]
             );
         }
 
         function isGameOver() {
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < gridSize * gridSize; i++) {
                 if (grid[i] === null) return false;
-                if (i % 4 < 3 && grid[i+1] !== null && grid[i].val === grid[i+1].val) return false;
-                if (i < 12 && grid[i+4] !== null && grid[i].val === grid[i+4].val) return false;
+                if (i % gridSize < gridSize - 1 && grid[i+1] !== null && grid[i].val === grid[i+1].val) return false;
+                if (i < gridSize * gridSize - gridSize && grid[i+gridSize] !== null && grid[i].val === grid[i+gridSize].val) return false;
             }
             return true;
         }
@@ -492,7 +549,7 @@
             tiles.forEach(t => t.el.remove());
             tiles = [];
             
-            for (let i = 0; i < 16; i++) {
+            for (let i = 0; i < gridSize * gridSize; i++) {
                 if (grid[i] !== null) {
                     let t = grid[i];
                     tiles.push(t);

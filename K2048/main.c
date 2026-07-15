@@ -26,12 +26,12 @@ void* __cdecl memmove(void* dest, const void* src, size_t sz) {
     return dest;
 }
 
-#define CELL_SIZE 80
+#define MAX_GRID 6
 #define HEADER_HEIGHT 60
 #define MARGIN 10
-#define GRID_SIZE 4
 
-int grid[GRID_SIZE][GRID_SIZE];
+int grid_size = 4;
+int grid[MAX_GRID][MAX_GRID];
 int score = 0;
 int bestScore = 0;
 int gameOver = 0;
@@ -42,7 +42,7 @@ static unsigned int seed = 0;
 
 #define MAX_HISTORY 50
 typedef struct {
-    int grid[GRID_SIZE][GRID_SIZE];
+    int grid[MAX_GRID][MAX_GRID];
     int score;
 } HistoryState;
 
@@ -55,7 +55,12 @@ int my_rand() {
 }
 
 void LoadBest() {
-    HANDLE hFile = CreateFileA("k2048_score.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    char filename[32];
+    wsprintfA(filename, "k2048_score_%d.dat", grid_size);
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE && grid_size == 4) {
+        hFile = CreateFileA("k2048_score.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    }
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[64] = {0};
         DWORD bytesRead;
@@ -70,7 +75,9 @@ void LoadBest() {
 }
 
 void SaveBest() {
-    HANDLE hFile = CreateFileA("k2048_score.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    char filename[32];
+    wsprintfA(filename, "k2048_score_%d.dat", grid_size);
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[64];
         int temp = bestScore;
@@ -91,16 +98,16 @@ void SaveBest() {
 
 void AddRandomTile() {
     int emptyCount = 0;
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) emptyCount++;
         }
     }
     if (emptyCount == 0) return;
     int target = my_rand() % emptyCount;
     emptyCount = 0;
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) {
                 if (emptyCount == target) {
                     grid[i][j] = (my_rand() % 10 == 0) ? 4 : 2;
@@ -126,18 +133,18 @@ void InitGame() {
 }
 
 int CheckGameOver() {
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) return 0;
-            if (i < GRID_SIZE - 1 && grid[i][j] == grid[i+1][j]) return 0;
-            if (j < GRID_SIZE - 1 && grid[i][j] == grid[i][j+1]) return 0;
+            if (i < grid_size - 1 && grid[i][j] == grid[i+1][j]) return 0;
+            if (j < grid_size - 1 && grid[i][j] == grid[i][j+1]) return 0;
         }
     }
     return 1;
 }
 
-void DrawCell(HDC hdc, int x, int y, int val) {
-    RECT r = { x, y, x + CELL_SIZE - 8, y + CELL_SIZE - 8 };
+void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
+    RECT r = { x, y, x + cell_size - 8, y + cell_size - 8 };
     
     int rCol = 200, gCol = 200, bCol = 200;
     int txtCol = 0x000000;
@@ -175,7 +182,9 @@ void DrawCell(HDC hdc, int x, int y, int val) {
         while(rlen > 0) buf[len++] = rev[--rlen];
         buf[len] = 0;
 
-        HFONT hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+        int fontSize = cell_size / 3;
+        if (fontSize < 12) fontSize = 12;
+        HFONT hFont = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
             CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
         HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
         DrawTextA(hdc, buf, -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -204,30 +213,36 @@ void DrawBoard(HDC hdc) {
     DeleteObject(hFontTitle);
 
     char scoreBuf[128];
-    wsprintfA(scoreBuf, "Score: %d   Best: %d   [U] Undo", score, bestScore);
+    wsprintfA(scoreBuf, "Score: %d   Best: %d", score, bestScore);
     
     HFONT hFontText = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
         CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
     oldFont = (HFONT)SelectObject(hdc, hFontText);
     
-    RECT scoreRect = { 200, MARGIN, MARGIN + GRID_SIZE*CELL_SIZE, HEADER_HEIGHT };
+    int cell_size = 320 / grid_size;
+    RECT scoreRect = { 200, MARGIN, MARGIN + grid_size*cell_size, HEADER_HEIGHT / 2 + MARGIN };
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
-    RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + GRID_SIZE*CELL_SIZE + 8, HEADER_HEIGHT + GRID_SIZE*CELL_SIZE + 8 };
+    char helpBuf[128];
+    wsprintfA(helpBuf, "Size(3-6) [U]ndo");
+    RECT helpRect = { 200, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
+    DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+
+    RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + grid_size*cell_size + 8, HEADER_HEIGHT + grid_size*cell_size + 8 };
     HBRUSH boardBrush = CreateSolidBrush(RGB(187, 173, 160));
     FillRect(hdc, &boardBg, boardBrush);
     DeleteObject(boardBrush);
 
-    for (int i = 0; i < GRID_SIZE; i++) {
-        for (int j = 0; j < GRID_SIZE; j++) {
-            DrawCell(hdc, MARGIN + 8 + j*CELL_SIZE, HEADER_HEIGHT + 8 + i*CELL_SIZE, grid[i][j]);
+    for (int i = 0; i < grid_size; i++) {
+        for (int j = 0; j < grid_size; j++) {
+            DrawCell(hdc, MARGIN + 8 + j*cell_size, HEADER_HEIGHT + 8 + i*cell_size, grid[i][j], cell_size);
         }
     }
 
     if (gameOver || win) {
         HBRUSH overlay = CreateSolidBrush(gameOver ? RGB(238,228,218) : RGB(237,194,46));
         // Pseudo-transparency is hard in basic GDI, we just draw a solid rect in the middle
-        RECT msgRect = { MARGIN + 20, HEADER_HEIGHT + 100, MARGIN + GRID_SIZE*CELL_SIZE - 12, HEADER_HEIGHT + 200 };
+        RECT msgRect = { MARGIN + 20, HEADER_HEIGHT + 100, MARGIN + grid_size*cell_size - 12, HEADER_HEIGHT + 200 };
         FillRect(hdc, &msgRect, overlay);
         DeleteObject(overlay);
         SetTextColor(hdc, gameOver ? RGB(119,110,101) : RGB(255,255,255));
@@ -241,19 +256,19 @@ int Move(int dx, int dy) {
     if (gameOver || win) return 0;
     int moved = 0;
 
-    int tempGrid[GRID_SIZE][GRID_SIZE];
+    int tempGrid[MAX_GRID][MAX_GRID];
     int tempScore = score;
     memcpy(tempGrid, grid, sizeof(grid));
     
-    int startI = (dy == 1) ? GRID_SIZE - 1 : 0;
-    int endI = (dy == 1) ? -1 : GRID_SIZE;
+    int startI = (dy == 1) ? grid_size - 1 : 0;
+    int endI = (dy == 1) ? -1 : grid_size;
     int stepI = (dy == 1) ? -1 : 1;
     
-    int startJ = (dx == 1) ? GRID_SIZE - 1 : 0;
-    int endJ = (dx == 1) ? -1 : GRID_SIZE;
+    int startJ = (dx == 1) ? grid_size - 1 : 0;
+    int endJ = (dx == 1) ? -1 : grid_size;
     int stepJ = (dx == 1) ? -1 : 1;
     
-    int merged[GRID_SIZE][GRID_SIZE] = {0};
+    int merged[MAX_GRID][MAX_GRID] = {0};
 
     for (int i = startI; i != endI; i += stepI) {
         for (int j = startJ; j != endJ; j += stepJ) {
@@ -263,7 +278,7 @@ int Move(int dx, int dy) {
                 while (1) {
                     int ni = ci + dy;
                     int nj = cj + dx;
-                    if (ni < 0 || ni >= GRID_SIZE || nj < 0 || nj >= GRID_SIZE) break;
+                    if (ni < 0 || ni >= grid_size || nj < 0 || nj >= grid_size) break;
                     if (grid[ni][nj] == 0) {
                         grid[ni][nj] = grid[ci][cj];
                         grid[ci][cj] = 0;
@@ -323,7 +338,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_ERASEBKGND:
             return 1; // Prevent background clear to fix flickering
         case WM_KEYDOWN:
-            if (wParam == 'R' || wParam == 'r') {
+            if (wParam >= '3' && wParam <= '6') {
+                grid_size = wParam - '0';
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'R' || wParam == 'r') {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
@@ -393,8 +412,8 @@ int WINAPI MainEntry() {
     
     RegisterClassA(&wc);
     
-    int winWidth = MARGIN * 2 + GRID_SIZE * CELL_SIZE + 8 + 16;
-    int winHeight = HEADER_HEIGHT + MARGIN + GRID_SIZE * CELL_SIZE + 8 + 39;
+    int winWidth = MARGIN * 2 + 4 * 80 + 8 + 16;
+    int winHeight = HEADER_HEIGHT + MARGIN + 4 * 80 + 8 + 39;
 
     HWND hwnd = CreateWindowExA(
         0,
