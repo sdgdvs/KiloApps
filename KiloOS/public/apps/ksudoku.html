@@ -103,6 +103,22 @@
             background: var(--glass-active);
         }
 
+        select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            outline: none;
+        }
+
+        select option {
+            background: var(--bg-color);
+            color: var(--text-main);
+        }
+
         .main-content {
             flex: 1;
             display: flex;
@@ -241,6 +257,11 @@
             <div id="score">Score: 0</div>
         </div>
         <div class="controls">
+            <select id="sel-difficulty">
+                <option value="30">Easy</option>
+                <option value="40" selected>Medium</option>
+                <option value="50">Hard</option>
+            </select>
             <button id="btn-new">New Game</button>
             <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
@@ -360,11 +381,9 @@
             }, 1000);
             
             // Remove cells to create puzzle
-            let difficulty = 40; // cells to keep
-            let totalCells = 81;
+            let difficultySelect = document.getElementById('sel-difficulty');
+            let removal = difficultySelect ? parseInt(difficultySelect.value) : 40;
             board = JSON.parse(JSON.stringify(grid));
-            
-            let removal = totalCells - difficulty;
             while(removal > 0) {
                 let r = Math.floor(Math.random() * 9);
                 let c = Math.floor(Math.random() * 9);

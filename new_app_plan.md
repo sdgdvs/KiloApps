@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSudoku (Logic puzzle)
-**Phase:** 7
+**Phase:** 8
 **Status:** In Progress
 
 - Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
@@ -58,7 +58,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native. (COMPLETED - Polished HTML UI with animations/hover effects, polished C native UI with MessageBeep and exact text centering)
 - Phase 5: Deep Expansion 1 - Add Pencil Marks / Notes feature to both versions. (COMPLETED - Added Notes toggle and 3x3 mini-grid rendering for pencil marks)
 - Phase 6: Deep Expansion 2 - Add a Timer and Score system. (COMPLETED - Added timer, score logic, correct placement bonuses and error penalties to both versions)
-- Phase 7: Deep Expansion 3 - Level selection / Difficulty generation.
+- Phase 7: Deep Expansion 3 - Level selection / Difficulty generation. (COMPLETED - Added Easy/Medium/Hard selection affecting hole count in generation for both versions)
+- Phase 8: Deep Expansion 4 - Add a basic solving aid / hint system.
 
 
 ## Next Priority (Before New Apps)

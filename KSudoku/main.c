@@ -37,7 +37,7 @@ void ShuffleArray(int* arr, int len) {
     }
 }
 
-void GenerateBoard() {
+void GenerateBoard(int removal) {
     int base[9][9] = {
         {1,2,3, 4,5,6, 7,8,9},
         {4,5,6, 7,8,9, 1,2,3},
@@ -83,8 +83,6 @@ void GenerateBoard() {
         }
     }
     
-    int difficulty = 40;
-    int removal = 81 - difficulty;
     while(removal > 0) {
         int r = rand() % 9;
         int c = rand() % 9;
@@ -127,10 +125,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
-            GenerateBoard();
-            hBtnNew = CreateWindowA("BUTTON", "New Game", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 100, 30, hwnd, (HMENU)1, NULL, NULL);
-            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 10, 100, 30, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 230, 10, 100, 30, hwnd, (HMENU)2, NULL, NULL);
+            GenerateBoard(40);
+            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 90, 100, hwnd, (HMENU)4, NULL, NULL);
+            SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
+            SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
+            SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
+            SendMessageA(hComboDifficulty, CB_SETCURSEL, 1, 0);
+            hBtnNew = CreateWindowA("BUTTON", "New Game", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 100, 30, hwnd, (HMENU)1, NULL, NULL);
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 100, 30, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 10, 100, 30, hwnd, (HMENU)2, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -145,7 +148,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) { // New Game
-                GenerateBoard();
+                HWND hCombo = GetDlgItem(hwnd, 4);
+                int sel = SendMessageA(hCombo, CB_GETCURSEL, 0, 0);
+                int removal = 40;
+                if(sel == 0) removal = 30;
+                else if(sel == 2) removal = 50;
+                GenerateBoard(removal);
                 sel_r = -1; sel_c = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 3) { // Toggle Notes
