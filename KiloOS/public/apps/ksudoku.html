@@ -68,6 +68,15 @@
             letter-spacing: -0.025em;
         }
 
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--accent);
+        }
+
         .controls {
             display: flex;
             justify-content: space-between;
@@ -227,6 +236,10 @@
         <header>
             <h1>KSudoku</h1>
         </header>
+        <div class="info-bar">
+            <div id="timer">Time: 00:00</div>
+            <div id="score">Score: 0</div>
+        </div>
         <div class="controls">
             <button id="btn-new">New Game</button>
             <button id="btn-notes">Notes: OFF</button>
@@ -265,6 +278,11 @@
         let notesMode = false;
         let selectedCell = null;
         let cells = []; // Array of length 81
+        
+        let timerInterval = null;
+        let elapsedTime = 0;
+        let score = 0;
+        let awarded = [];
 
         // Base solved board
         const baseSolution = [
@@ -327,6 +345,19 @@
             
             // Save solution
             solution = JSON.parse(JSON.stringify(grid));
+            
+            awarded = Array(9).fill().map(() => Array(9).fill(false));
+            elapsedTime = 0;
+            score = 0;
+            if (timerInterval) clearInterval(timerInterval);
+            document.getElementById('timer').textContent = `Time: 00:00`;
+            document.getElementById('score').textContent = `Score: 0`;
+            timerInterval = setInterval(() => {
+                elapsedTime++;
+                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                let s = (elapsedTime % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `Time: ${m}:${s}`;
+            }, 1000);
             
             // Remove cells to create puzzle
             let difficulty = 40; // cells to keep
@@ -456,8 +487,18 @@
                     cell.classList.remove('flash-error');
                     void cell.offsetWidth; // trigger reflow
                     cell.classList.add('flash-error');
+                    score = Math.max(0, score - 50);
+                    document.getElementById('score').textContent = `Score: ${score}`;
                 }
                 board[selectedCell.r][selectedCell.c] = num;
+                
+                if (num === solution[selectedCell.r][selectedCell.c]) {
+                    if (!awarded[selectedCell.r][selectedCell.c]) {
+                        awarded[selectedCell.r][selectedCell.c] = true;
+                        score += 100;
+                        document.getElementById('score').textContent = `Score: ${score}`;
+                    }
+                }
             }
             renderCell(selectedCell.r, selectedCell.c);
             cell.classList.remove('error');
@@ -480,9 +521,19 @@
             }
             
             if (correct) {
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                let timeBonus = Math.max(0, 3000 - elapsedTime * 2);
+                score += timeBonus;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                
                 boardEl.classList.add('board-win');
                 setTimeout(() => {
-                    alert('Congratulations! You solved the puzzle!');
+                    let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                    let s = (elapsedTime % 60).toString().padStart(2, '0');
+                    alert(`Congratulations! You solved the puzzle!\nTime: ${m}:${s}\nScore: ${score}`);
                     boardEl.classList.remove('board-win');
                 }, 3000);
             }
@@ -537,6 +588,7 @@
         });
         
         btnValidate.addEventListener('click', () => {
+            let errorCount = 0;
             for(let r=0; r<9; r++) {
                 for(let c=0; c<9; c++) {
                     let idx = r * 9 + c;
@@ -544,11 +596,16 @@
                     if (!cell.classList.contains('fixed')) {
                         if (board[r][c] !== 0 && board[r][c] !== solution[r][c]) {
                             cell.classList.add('error');
+                            errorCount++;
                         } else {
                             cell.classList.remove('error');
                         }
                     }
                 }
+            }
+            if (errorCount > 0) {
+                score = Math.max(0, score - errorCount * 20);
+                document.getElementById('score').textContent = `Score: ${score}`;
             }
         });
 

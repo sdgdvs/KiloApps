@@ -21,6 +21,10 @@ int sel_r = -1, sel_c = -1;
 int error_cells[9][9];
 int notes[9][9][10];
 int notesMode = 0;
+int elapsedTime = 0;
+int score = 0;
+int awarded[9][9];
+int timerActive = 0;
 HWND hBtnNew, hBtnNotes, hBtnValidate;
 HFONT hFont, hFontSmall;
 
@@ -91,17 +95,32 @@ void GenerateBoard() {
         }
     }
     
-    for(int r=0; r<9; r++)
-        for(int c=0; c<9; c++)
-            for(int i=0; i<10; i++)
+    for(int r=0; r<9; r++) {
+        for(int c=0; c<9; c++) {
+            for(int i=0; i<10; i++) {
                 notes[r][c][i] = 0;
+            }
+            awarded[r][c] = 0;
+        }
+    }
+    elapsedTime = 0;
+    score = 0;
+    timerActive = 1;
 }
 
 void CheckWin(HWND hwnd) {
     for(int r=0; r<9; r++)
         for(int c=0; c<9; c++)
             if(board[r][c] != solution[r][c]) return;
-    MessageBoxA(hwnd, "Congratulations! You solved the puzzle!", "KSudoku", MB_OK);
+            
+    timerActive = 0;
+    int timeBonus = 3000 - elapsedTime * 2;
+    if(timeBonus < 0) timeBonus = 0;
+    score += timeBonus;
+    
+    char msg[128];
+    sprintf(msg, "Congratulations! You solved the puzzle!\nTime: %02d:%02d\nScore: %d", elapsedTime/60, elapsedTime%60, score);
+    MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -114,6 +133,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 230, 10, 100, 30, hwnd, (HMENU)2, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            SetTimer(hwnd, 1, 1000, NULL);
+            break;
+        }
+        case WM_TIMER: {
+            if(timerActive) {
+                elapsedTime++;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
         }
         case WM_COMMAND: {
@@ -125,14 +152,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 notesMode = !notesMode;
                 SetWindowTextA(hBtnNotes, notesMode ? "Notes: ON" : "Notes: OFF");
             } else if (LOWORD(wParam) == 2) { // Validate
+                int errorCount = 0;
                 for(int r=0; r<9; r++) {
                     for(int c=0; c<9; c++) {
                         if (!fixed[r][c] && board[r][c] != 0 && board[r][c] != solution[r][c]) {
                             error_cells[r][c] = 1;
+                            errorCount++;
                         } else {
                             error_cells[r][c] = 0;
                         }
                     }
+                }
+                if (errorCount > 0) {
+                    score -= errorCount * 20;
+                    if (score < 0) score = 0;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -170,9 +203,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         
                         if(invalid) {
                             MessageBeep(MB_ICONWARNING);
+                            score -= 50;
+                            if (score < 0) score = 0;
                         }
                         board[sel_r][sel_c] = num;
                         error_cells[sel_r][sel_c] = 0;
+                        if (num == solution[sel_r][sel_c]) {
+                            if (!awarded[sel_r][sel_c]) {
+                                awarded[sel_r][sel_c] = 1;
+                                score += 100;
+                            }
+                        }
                         CheckWin(hwnd);
                     }
                 }
@@ -191,7 +232,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            int start_x = 40, start_y = 60, cell_sz = 40;
+            int start_x = 40, start_y = 80, cell_sz = 40;
             if(x >= start_x && x < start_x + 9*cell_sz && y >= start_y && y < start_y + 9*cell_sz) {
                 sel_c = (x - start_x) / cell_sz;
                 sel_r = (y - start_y) / cell_sz;
@@ -212,16 +253,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &clientRect, hbg);
             DeleteObject(hbg);
             
-            int start_x = 40, start_y = 60, cell_sz = 40;
+            HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, COLOR_MUTABLE_TEXT);
+            char info[64];
+            sprintf(info, "Time: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
+            TextOutA(hdc, 40, 50, info, strlen(info));
+            
+            int start_x = 40, start_y = 80, cell_sz = 40;
             
             // Determine highlight value
             int highlight_val = 0;
             if(sel_r >= 0 && sel_c >= 0 && board[sel_r][sel_c] != 0) {
                 highlight_val = board[sel_r][sel_c];
             }
-            
-            HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
-            SetBkMode(hdc, TRANSPARENT);
             
             // Draw cells
             for(int r=0; r<9; r++) {
@@ -300,6 +345,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             DeleteObject(hFont);
             DeleteObject(hFontSmall);
             PostQuitMessage(0);
@@ -320,7 +366,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     RegisterClassA(&wc);
     
     // Calculate required window size
-    RECT rc = {0, 0, 440, 460}; 
+    RECT rc = {0, 0, 440, 480}; 
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX), FALSE);
     
     HWND hwnd = CreateWindowA("KSudokuClass", "KSudoku", WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX),
