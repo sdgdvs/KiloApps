@@ -62,6 +62,11 @@ typedef struct {
 HistoryState history[MAX_HISTORY];
 int historyCount = 0;
 
+int stats_gamesPlayed = 0;
+int stats_tilesMerged = 0;
+int stats_highestTile = 0;
+int stats_timePlayed = 0;
+
 int my_rand() {
     seed = seed * 214013 + 2531011;
     return (seed >> 16) & 0x7FFF;
@@ -100,6 +105,18 @@ void LoadTheme() {
     if (theme < 0 || theme > 2) theme = 1;
 }
 
+void LoadStats() {
+    HANDLE hFile = CreateFileA("k2048_stats.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesRead;
+        ReadFile(hFile, &stats_gamesPlayed, sizeof(int), &bytesRead, NULL);
+        ReadFile(hFile, &stats_tilesMerged, sizeof(int), &bytesRead, NULL);
+        ReadFile(hFile, &stats_highestTile, sizeof(int), &bytesRead, NULL);
+        ReadFile(hFile, &stats_timePlayed, sizeof(int), &bytesRead, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void SaveBest() {
     char filename[32];
     wsprintfA(filename, "k2048_score_%d.dat", grid_size);
@@ -134,6 +151,18 @@ void SaveTheme() {
     }
 }
 
+void SaveStats() {
+    HANDLE hFile = CreateFileA("k2048_stats.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten;
+        WriteFile(hFile, &stats_gamesPlayed, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, &stats_tilesMerged, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, &stats_highestTile, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, &stats_timePlayed, sizeof(int), &bytesWritten, NULL);
+        CloseHandle(hFile);
+    }
+}
+
 void AddRandomTile() {
     int emptyCount = 0;
     for (int i = 0; i < grid_size; i++) {
@@ -152,6 +181,10 @@ void AddRandomTile() {
                         grid[i][j] = -1;
                     } else {
                         grid[i][j] = (my_rand() % 10 == 0) ? 4 : 2;
+                        if (grid[i][j] > stats_highestTile) {
+                            stats_highestTile = grid[i][j];
+                            SaveStats();
+                        }
                     }
                     return;
                 }
@@ -328,7 +361,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size [M]ode [O]bs [P]lay [U]ndo");
+    wsprintfA(helpBuf, "Size [M]ode [O]bs [P]lay [U]ndo [I]nfo");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -398,6 +431,10 @@ int Move(int dx, int dy) {
                         grid[ni][nj] *= 2;
                         grid[ci][cj] = 0;
                         score += grid[ni][nj];
+                        stats_tilesMerged++;
+                        if (grid[ni][nj] > stats_highestTile) {
+                            stats_highestTile = grid[ni][nj];
+                        }
                         if (score > bestScore) {
                             bestScore = score;
                             SaveBest();
@@ -419,10 +456,12 @@ int Move(int dx, int dy) {
     
     if (moved) {
         moveCount++;
-        if (timeAttackEnabled && !gameStarted) {
+        if (!gameStarted) {
             gameStarted = 1;
-            SetTimer(mainHwnd, 1, 1000, NULL);
-            timerActive = 1;
+            if (timeAttackEnabled) {
+                SetTimer(mainHwnd, 1, 1000, NULL);
+                timerActive = 1;
+            }
         }
 
         if (historyCount < MAX_HISTORY) {
@@ -437,8 +476,11 @@ int Move(int dx, int dy) {
 
         MessageBeep(MB_OK); // simple sound effect
         AddRandomTile();
+        SaveStats();
         if (CheckGameOver()) {
             gameOver = 1;
+            stats_gamesPlayed++;
+            SaveStats();
             if (timerActive) { KillTimer(mainHwnd, 1); timerActive = 0; }
             SaveBest();
         }
@@ -451,18 +493,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             mainHwnd = hwnd;
             LoadTheme();
+            LoadStats();
             InitGame();
+            SetTimer(hwnd, 3, 1000, NULL);
             return 0;
         case WM_ERASEBKGND:
             return 1; // Prevent background clear to fix flickering
         case WM_TIMER:
-            if (wParam == 1) {
+            if (wParam == 3) {
+                if (!gameOver && gameStarted && !win) {
+                    stats_timePlayed++;
+                    if (stats_timePlayed % 10 == 0) SaveStats();
+                }
+                return 0;
+            } else if (wParam == 1) {
                 timeRemaining--;
                 if (timeRemaining <= 0) {
                     KillTimer(hwnd, 1);
                     timerActive = 0;
                     gameOver = 1;
                     timeOut = 1;
+                    stats_gamesPlayed++;
+                    SaveStats();
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 2) {
@@ -510,6 +562,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 theme = (theme + 1) % 3;
                 SaveTheme();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'I' || wParam == 'i') {
+                char statsBuf[256];
+                wsprintfA(statsBuf, "Games Played: %d\nTiles Merged: %d\nHighest Tile: %d\nTime Played: %dm %ds", 
+                    stats_gamesPlayed, stats_tilesMerged, stats_highestTile, stats_timePlayed / 60, stats_timePlayed % 60);
+                MessageBoxA(hwnd, statsBuf, "Statistics", MB_OK | MB_ICONINFORMATION);
             } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
                 if (historyCount > 0) {
                     historyCount--;

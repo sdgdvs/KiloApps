@@ -260,6 +260,7 @@
             display: flex;
             gap: 10px;
             width: 100%;
+            flex-wrap: wrap;
         }
 
         button.btn {
@@ -379,7 +380,14 @@
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn">Time: Off</button>
             <button class="btn" onclick="toggleAutoPlay()" id="ap-btn">Auto: Off</button>
             <button class="btn" onclick="toggleObstacles()" id="obs-btn">Obs: Off</button>
+            <button class="btn" onclick="showStats()">Stats</button>
             <button class="btn" onclick="undoMove()">Undo</button>
+        </div>
+
+        <div class="game-over" id="stats-modal">
+            <h2>Statistics</h2>
+            <div id="stats-content" style="color:white; font-size:1.2rem; margin-bottom:20px; text-align:left; line-height:1.5;"></div>
+            <button class="btn" onclick="closeStats()" style="width: auto;">Close</button>
         </div>
 
         <div class="game-over" id="game-over">
@@ -395,6 +403,22 @@
         const bestScoreEl = document.getElementById('best-score');
         const gameOverEl = document.getElementById('game-over');
         const themeSelect = document.getElementById('theme-select');
+
+        let stats = JSON.parse(localStorage.getItem('k2048_stats')) || { gamesPlayed: 0, tilesMerged: 0, highestTile: 0, timePlayed: 0 };
+        function saveStats() { localStorage.setItem('k2048_stats', JSON.stringify(stats)); }
+        function showStats() {
+            let s = `Games Played: ${stats.gamesPlayed}<br>Tiles Merged: ${stats.tilesMerged}<br>Highest Tile: ${stats.highestTile}<br>Time Played: ${Math.floor(stats.timePlayed / 60)}m ${stats.timePlayed % 60}s`;
+            document.getElementById('stats-content').innerHTML = s;
+            document.getElementById('stats-modal').classList.add('active');
+        }
+        function closeStats() { document.getElementById('stats-modal').classList.remove('active'); }
+
+        setInterval(() => {
+            if (!isGameOverState && gameStarted && !isAnimating) {
+                stats.timePlayed++;
+                if (stats.timePlayed % 10 === 0) saveStats();
+            }
+        }, 1000);
 
         function setTheme(themeName) {
             document.body.className = themeName === 'default' ? '' : `theme-${themeName}`;
@@ -559,6 +583,10 @@
                     x: randomIdx % gridSize,
                     y: Math.floor(randomIdx / gridSize)
                 };
+                if (val > stats.highestTile && val !== -1) {
+                    stats.highestTile = val;
+                    saveStats();
+                }
                 grid[randomIdx] = tile;
                 tiles.push(tile);
                 createTileEl(tile, true);
@@ -590,6 +618,8 @@
                     };
                     result.push(mergedTile);
                     score += mergedTile.val;
+                    stats.tilesMerged++;
+                    if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
                     i += 2;
                 } else {
                     result.push(filtered[i]);
@@ -733,18 +763,22 @@
 
             if (changed) {
                 moveCount++;
-                if (timeAttackEnabled && !gameStarted) {
+                if (!gameStarted) {
                     gameStarted = true;
-                    timerInterval = setInterval(() => {
-                        timeRemaining--;
-                        document.getElementById('timer-display').textContent = timeRemaining + "s";
-                        if (timeRemaining <= 0) {
-                            clearInterval(timerInterval);
-                            isGameOverState = true;
-                            gameOverEl.querySelector('h2').textContent = "Time's Up!";
-                            gameOverEl.classList.add('active');
-                        }
-                    }, 1000);
+                    if (timeAttackEnabled) {
+                        timerInterval = setInterval(() => {
+                            timeRemaining--;
+                            document.getElementById('timer-display').textContent = timeRemaining + "s";
+                            if (timeRemaining <= 0) {
+                                clearInterval(timerInterval);
+                                isGameOverState = true;
+                                stats.gamesPlayed++;
+                                saveStats();
+                                gameOverEl.querySelector('h2').textContent = "Time's Up!";
+                                gameOverEl.classList.add('active');
+                            }
+                        }, 1000);
+                    }
                 }
                 historyStack.push(preState);
                 if (historyStack.length > 50) historyStack.shift();
@@ -753,8 +787,11 @@
                 setTimeout(() => {
                     addRandomTile();
                     isAnimating = false;
+                    saveStats();
                     if (isGameOver()) {
                         isGameOverState = true;
+                        stats.gamesPlayed++;
+                        saveStats();
                         gameOverEl.querySelector('h2').textContent = "Game Over!";
                         clearInterval(timerInterval);
                         setTimeout(() => gameOverEl.classList.add('active'), 500);
