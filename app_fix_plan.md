@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** None
+**Target App:** KTerminal
 **Status:** Next
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -88,7 +88,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 
 - **KSynth**: Verified `ksynth.html` web logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
 - **KSys**: Verified `ksys.html` web logic. Fixed GDI resource leak (`HFONT`) in `main.c` on WM_DESTROY.
+- **KTask**: Fixed XSS vulnerability in `ktask.html` by using `textContent` for task rendering. Verified `main.c` (no issues found).
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically from KTask.
-
+All apps need systematic testing. Continue alphabetically after KTask.
