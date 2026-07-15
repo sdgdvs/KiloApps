@@ -62,6 +62,71 @@ void SaveStats() {
     }
 }
 
+typedef struct {
+    int board[9][9];
+    int solution[9][9];
+    int fixed[9][9];
+    int notes[9][9][10];
+    int elapsedTime;
+    int score;
+    int awarded[9][9];
+    int currentDiffIdx;
+    int gameActive;
+} GameState;
+
+int LoadGameState() {
+    FILE *f = fopen("ksudoku_save.dat", "rb");
+    if(!f) return 0;
+    GameState state;
+    if(fread(&state, sizeof(GameState), 1, f) == 1 && state.gameActive) {
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                board[r][c] = state.board[r][c];
+                solution[r][c] = state.solution[r][c];
+                fixed[r][c] = state.fixed[r][c];
+                awarded[r][c] = state.awarded[r][c];
+                error_cells[r][c] = 0;
+                for(int i=0; i<10; i++) notes[r][c][i] = state.notes[r][c][i];
+            }
+        }
+        elapsedTime = state.elapsedTime;
+        score = state.score;
+        currentDiffIdx = state.currentDiffIdx;
+        gameActive = 1;
+        timerActive = 1;
+        fclose(f);
+        return 1;
+    }
+    fclose(f);
+    return 0;
+}
+
+void SaveGameState() {
+    if (!gameActive) {
+        remove("ksudoku_save.dat");
+        return;
+    }
+    FILE *f = fopen("ksudoku_save.dat", "wb");
+    if (f) {
+        GameState state;
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                state.board[r][c] = board[r][c];
+                state.solution[r][c] = solution[r][c];
+                state.fixed[r][c] = fixed[r][c];
+                state.awarded[r][c] = awarded[r][c];
+                for(int i=0; i<10; i++) state.notes[r][c][i] = notes[r][c][i];
+            }
+        }
+        state.elapsedTime = elapsedTime;
+        state.score = score;
+        state.currentDiffIdx = currentDiffIdx;
+        state.gameActive = gameActive;
+        fwrite(&state, sizeof(GameState), 1, f);
+        fclose(f);
+    }
+}
+
 void ShuffleArray(int* arr, int len) {
     for (int i = len - 1; i > 0; i--) {
         int j = rand() % (i + 1);
@@ -139,6 +204,7 @@ void GenerateBoard(int removal) {
     score = 0;
     timerActive = 1;
     gameActive = 1;
+    SaveGameState();
 }
 
 void CheckWin(HWND hwnd) {
@@ -153,6 +219,7 @@ void CheckWin(HWND hwnd) {
     
     if (gameActive) {
         gameActive = 0;
+        SaveGameState(); // clear save
         stats[currentDiffIdx].won++;
         if (stats[currentDiffIdx].bestTime == -1 || elapsedTime < stats[currentDiffIdx].bestTime) 
             stats[currentDiffIdx].bestTime = elapsedTime;
@@ -171,15 +238,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
             LoadStats();
-            currentDiffIdx = 1;
-            stats[currentDiffIdx].played++;
-            SaveStats();
-            GenerateBoard(40);
+            if(!LoadGameState()) {
+                currentDiffIdx = 1;
+                stats[currentDiffIdx].played++;
+                SaveStats();
+                GenerateBoard(40);
+            }
             HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 90, 100, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
-            SendMessageA(hComboDifficulty, CB_SETCURSEL, 1, 0);
+            SendMessageA(hComboDifficulty, CB_SETCURSEL, currentDiffIdx, 0);
             hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 50, 30, hwnd, (HMENU)1, NULL, NULL);
             HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 165, 10, 50, 30, hwnd, (HMENU)6, NULL, NULL);
             hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 85, 30, hwnd, (HMENU)3, NULL, NULL);
@@ -193,6 +262,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             if(timerActive) {
                 elapsedTime++;
+                SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -243,6 +313,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     score -= errorCount * 20;
                     if (score < 0) score = 0;
                 }
+                SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 5) { // Hint
                 if (sel_r >= 0 && sel_c >= 0 && !fixed[sel_r][sel_c]) {
@@ -255,6 +326,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         CheckWin(hwnd);
                     }
                 }
+                SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Set focus back to main window so keyboard works
@@ -314,6 +386,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if(wParam == 'N') {
                 SendMessageA(hwnd, WM_COMMAND, 3, 0);
             }
+            SaveGameState();
             InvalidateRect(hwnd, NULL, TRUE);
             break;
         }

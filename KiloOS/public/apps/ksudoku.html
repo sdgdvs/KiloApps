@@ -342,6 +342,8 @@
         let elapsedTime = 0;
         let score = 0;
         let awarded = [];
+        let originalBoard = [];
+
         
         let stats = JSON.parse(localStorage.getItem('ksudoku_stats')) || {
             30: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
@@ -350,6 +352,55 @@
         };
         let currentDifficulty = 40;
         let gameActive = false;
+
+        function saveGameState() {
+            if (!gameActive) {
+                localStorage.removeItem('ksudoku_save');
+                return;
+            }
+            const state = {
+                board, solution, notes, elapsedTime, score, currentDifficulty, awarded, originalBoard
+            };
+            localStorage.setItem('ksudoku_save', JSON.stringify(state));
+        }
+
+        function loadGameState() {
+            const saved = localStorage.getItem('ksudoku_save');
+            if (!saved) return false;
+            try {
+                const state = JSON.parse(saved);
+                board = state.board;
+                solution = state.solution;
+                notes = state.notes;
+                elapsedTime = state.elapsedTime;
+                score = state.score;
+                currentDifficulty = state.currentDifficulty;
+                awarded = state.awarded;
+                originalBoard = state.originalBoard;
+                gameActive = true;
+                
+                let sel = document.getElementById('sel-difficulty');
+                if(sel) sel.value = currentDifficulty;
+                
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    elapsedTime++;
+                    let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                    let s = (elapsedTime % 60).toString().padStart(2, '0');
+                    document.getElementById('timer').textContent = `Time: ${m}:${s}`;
+                    saveGameState();
+                }, 1000);
+                
+                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                let s = (elapsedTime % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `Time: ${m}:${s}`;
+                document.getElementById('score').textContent = `Score: ${score}`;
+                
+                return true;
+            } catch(e) {
+                return false;
+            }
+        }
 
         function saveStats() {
             localStorage.setItem('ksudoku_stats', JSON.stringify(stats));
@@ -446,6 +497,7 @@
                 let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
                 let s = (elapsedTime % 60).toString().padStart(2, '0');
                 document.getElementById('timer').textContent = `Time: ${m}:${s}`;
+                saveGameState();
             }, 1000);
             
             // Remove cells to create puzzle
@@ -467,7 +519,9 @@
                 }
             }
             
+            originalBoard = JSON.parse(JSON.stringify(board));
             notes = Array(9).fill().map(() => Array(9).fill().map(() => Array(10).fill(false)));
+            saveGameState();
         }
 
         function renderCell(r, c) {
@@ -504,7 +558,7 @@
                     let c = (b % 3) * 3 + (i % 3);
                     let cell = document.createElement('div');
                     cell.className = 'cell';
-                    if (board[r][c] !== 0) {
+                    if (originalBoard[r][c] !== 0) {
                         cell.classList.add('fixed');
                     }
                     cell.dataset.r = r;
@@ -596,6 +650,7 @@
             renderCell(selectedCell.r, selectedCell.c);
             cell.classList.remove('error');
             updateHighlights();
+            saveGameState();
             checkWin();
         }
         
@@ -624,6 +679,7 @@
                 
                 if (gameActive) {
                     gameActive = false;
+                    saveGameState(); // this will clear the save
                     stats[currentDifficulty].won++;
                     if (elapsedTime < stats[currentDifficulty].bestTime) stats[currentDifficulty].bestTime = elapsedTime;
                     if (score > stats[currentDifficulty].bestScore) stats[currentDifficulty].bestScore = score;
@@ -711,6 +767,7 @@
                 score = Math.max(0, score - errorCount * 20);
                 document.getElementById('score').textContent = `Score: ${score}`;
             }
+            saveGameState();
         });
 
         btnHint.addEventListener('click', () => {
@@ -730,12 +787,15 @@
                 renderCell(r, c);
                 cell.classList.remove('error', 'flash-error');
                 updateHighlights();
+                saveGameState();
                 checkWin();
             }
         });
 
         // Initialize
-        generateBoard();
+        if (!loadGameState()) {
+            generateBoard();
+        }
         initUI();
     </script>
 </body>
