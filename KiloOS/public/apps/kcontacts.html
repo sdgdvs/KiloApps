@@ -23,8 +23,11 @@
   .search-bar {
     padding: 10px;
     border-bottom: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .search-bar input {
+  .search-bar input, .search-bar select {
     width: 100%;
     padding: 8px;
     background: #2a2a2a;
@@ -43,9 +46,16 @@
     border-bottom: 1px solid #2a2a2a;
     cursor: pointer;
     transition: background 0.2s;
+    display: flex;
+    flex-direction: column;
   }
   .contact-item:hover, .contact-item.active {
     background: #2c3e50;
+  }
+  .contact-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   .contact-item-name {
     font-weight: bold;
@@ -55,7 +65,19 @@
     font-size: 12px;
     color: #888;
     margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
   }
+  .badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    background: #444;
+    color: #fff;
+  }
+  .badge.Work { background: #d35400; }
+  .badge.Personal { background: #27ae60; }
+  .badge.Family { background: #8e44ad; }
   
   .details-panel {
     flex: 1;
@@ -97,12 +119,17 @@
     flex-direction: column;
     gap: 5px;
   }
+  .form-group.row {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
   .form-group label {
     font-size: 12px;
     color: #aaa;
     font-weight: bold;
   }
-  .form-group input, .form-group textarea {
+  .form-group input[type="text"], .form-group textarea, .form-group select {
     padding: 10px;
     background: #111;
     border: 1px solid #444;
@@ -130,6 +157,14 @@
   <div class="sidebar">
     <div class="search-bar">
       <input type="text" id="searchInput" placeholder="Search contacts...">
+      <select id="filterCategory">
+        <option value="All">All Categories</option>
+        <option value="Favorites">★ Favorites Only</option>
+        <option value="Work">Work</option>
+        <option value="Personal">Personal</option>
+        <option value="Family">Family</option>
+        <option value="Other">Other</option>
+      </select>
     </div>
     <div class="contact-list" id="contactList">
       <!-- Contact items -->
@@ -148,9 +183,22 @@
     </div>
     
     <div class="form-area" id="formArea">
+      <div class="form-group row">
+        <input type="checkbox" id="inpFav">
+        <label for="inpFav" style="font-size: 14px; color: #fff;">Favorite Contact ★</label>
+      </div>
       <div class="form-group">
         <label>Name</label>
         <input type="text" id="inpName" placeholder="Full Name">
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="inpCategory">
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Family">Family</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -169,6 +217,7 @@
 
   <script>
     const searchInput = document.getElementById('searchInput');
+    const filterCategory = document.getElementById('filterCategory');
     const contactList = document.getElementById('contactList');
     const btnNew = document.getElementById('btnNew');
     const btnSave = document.getElementById('btnSave');
@@ -180,20 +229,42 @@
     const inpEmail = document.getElementById('inpEmail');
     const inpPhone = document.getElementById('inpPhone');
     const inpNotes = document.getElementById('inpNotes');
+    const inpCategory = document.getElementById('inpCategory');
+    const inpFav = document.getElementById('inpFav');
 
     let contacts = JSON.parse(localStorage.getItem('kcontacts_data') || '[]');
+    if (contacts.length === 0) {
+      contacts.push({name: "Alice Smith", phone: "555-1234", email: "alice@example.com", category: "Work", fav: false});
+      contacts.push({name: "Bob Jones", phone: "555-5678", email: "bob@example.com", category: "Personal", fav: true});
+    }
+    
     let currentEditIndex = -1;
 
-    function renderList(filter = '') {
+    function renderList() {
+      const search = searchInput.value.toLowerCase();
+      const catFilter = filterCategory.value;
+      
       contactList.innerHTML = '';
       contacts.forEach((c, i) => {
-        const nameMatch = (c.name || '').toLowerCase().includes(filter.toLowerCase());
-        const emailMatch = (c.email || '').toLowerCase().includes(filter.toLowerCase());
-        if (nameMatch || emailMatch) {
+        const nameMatch = (c.name || '').toLowerCase().includes(search);
+        const emailMatch = (c.email || '').toLowerCase().includes(search);
+        
+        let catMatch = true;
+        if (catFilter === 'Favorites') catMatch = c.fav === true;
+        else if (catFilter !== 'All') catMatch = c.category === catFilter;
+        
+        if ((nameMatch || emailMatch) && catMatch) {
           const div = document.createElement('div');
           div.className = 'contact-item' + (i === currentEditIndex ? ' active' : '');
-          div.innerHTML = `<div class="contact-item-name">${c.name || 'Unnamed Contact'}</div>
-                           <div class="contact-item-sub">${c.email || ''}</div>`;
+          div.innerHTML = `
+            <div class="contact-item-header">
+              <span class="contact-item-name">${c.name || 'Unnamed Contact'} ${c.fav ? '★' : ''}</span>
+              <span class="badge ${c.category || 'Other'}">${c.category || 'Other'}</span>
+            </div>
+            <div class="contact-item-sub">
+              <span>${c.email || ''}</span>
+            </div>
+          `;
           div.onclick = () => selectContact(i);
           contactList.appendChild(div);
         }
@@ -203,16 +274,18 @@
     function selectContact(index) {
       currentEditIndex = index;
       const c = contacts[index];
-      inpName.value = c.name;
-      inpEmail.value = c.email;
-      inpPhone.value = c.phone;
-      inpNotes.value = c.notes;
+      inpName.value = c.name || '';
+      inpEmail.value = c.email || '';
+      inpPhone.value = c.phone || '';
+      inpNotes.value = c.notes || '';
+      inpCategory.value = c.category || 'Other';
+      inpFav.checked = !!c.fav;
       
       emptyState.style.display = 'none';
       formArea.style.display = 'flex';
       btnSave.style.display = 'block';
       btnDel.style.display = 'block';
-      renderList(searchInput.value);
+      renderList();
     }
 
     btnNew.onclick = () => {
@@ -221,12 +294,14 @@
       inpEmail.value = '';
       inpPhone.value = '';
       inpNotes.value = '';
+      inpCategory.value = 'Other';
+      inpFav.checked = false;
       
       emptyState.style.display = 'none';
       formArea.style.display = 'flex';
       btnSave.style.display = 'block';
       btnDel.style.display = 'none';
-      renderList(searchInput.value);
+      renderList();
     };
 
     btnSave.onclick = () => {
@@ -234,7 +309,9 @@
         name: inpName.value.trim(),
         email: inpEmail.value.trim(),
         phone: inpPhone.value.trim(),
-        notes: inpNotes.value.trim()
+        notes: inpNotes.value.trim(),
+        category: inpCategory.value,
+        fav: inpFav.checked
       };
       
       if (!c.name) {
@@ -251,7 +328,7 @@
       
       localStorage.setItem('kcontacts_data', JSON.stringify(contacts));
       btnDel.style.display = 'block';
-      renderList(searchInput.value);
+      renderList();
     };
 
     btnDel.onclick = () => {
@@ -264,13 +341,12 @@
         formArea.style.display = 'none';
         btnSave.style.display = 'none';
         btnDel.style.display = 'none';
-        renderList(searchInput.value);
+        renderList();
       }
     };
 
-    searchInput.oninput = () => {
-      renderList(searchInput.value);
-    };
+    searchInput.oninput = renderList;
+    filterCategory.onchange = renderList;
 
     renderList();
   </script>
