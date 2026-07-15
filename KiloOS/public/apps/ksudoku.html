@@ -245,6 +245,30 @@
         .board-win {
             animation: winPulse 1s ease-in-out 3;
         }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            width: 80%;
+            max-width: 400px;
+        }
+        .modal-content h2 { margin-top: 0; }
+        .modal-close { margin-top: 20px; width: 100%; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 0.9rem; }
+        .stat-diff { margin-top: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; font-weight: bold; color: var(--accent); }
     </style>
 </head>
 <body>
@@ -263,6 +287,7 @@
                 <option value="50">Hard</option>
             </select>
             <button id="btn-new">New Game</button>
+            <button id="btn-stats">Stats</button>
             <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
             <button id="btn-hint">Hint</button>
@@ -287,13 +312,24 @@
         </div>
     </div>
     
+    <div id="stats-modal" class="modal">
+        <div class="modal-content">
+            <h2>Statistics</h2>
+            <div id="stats-body"></div>
+            <button class="modal-close" id="btn-close-stats">Close</button>
+        </div>
+    </div>
+    
     <script>
         const boardEl = document.getElementById('board');
         const numpadEl = document.getElementById('numpad');
         const btnNew = document.getElementById('btn-new');
+        const btnStats = document.getElementById('btn-stats');
         const btnNotes = document.getElementById('btn-notes');
         const btnValidate = document.getElementById('btn-validate');
         const btnHint = document.getElementById('btn-hint');
+        const statsModal = document.getElementById('stats-modal');
+        const btnCloseStats = document.getElementById('btn-close-stats');
         
         let board = [];
         let solution = [];
@@ -306,6 +342,36 @@
         let elapsedTime = 0;
         let score = 0;
         let awarded = [];
+        
+        let stats = JSON.parse(localStorage.getItem('ksudoku_stats')) || {
+            30: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+            40: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+            50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 }
+        };
+        let currentDifficulty = 40;
+        let gameActive = false;
+
+        function saveStats() {
+            localStorage.setItem('ksudoku_stats', JSON.stringify(stats));
+        }
+
+        function showStats() {
+            const diffs = { 30: 'Easy', 40: 'Medium', 50: 'Hard' };
+            let html = '';
+            for (let d of [30, 40, 50]) {
+                let s = stats[d];
+                let rate = s.played > 0 ? Math.round((s.won / s.played) * 100) : 0;
+                let bt = s.bestTime === Infinity ? '--:--' : `${Math.floor(s.bestTime/60).toString().padStart(2, '0')}:${(s.bestTime%60).toString().padStart(2, '0')}`;
+                html += `<div class="stat-diff">${diffs[d]}</div>
+                <div class="stat-grid">
+                    <div>Played: ${s.played}</div><div>Won: ${s.won}</div>
+                    <div>Win Rate: ${rate}%</div><div>Best Score: ${s.bestScore}</div>
+                    <div>Best Time: ${bt}</div>
+                </div>`;
+            }
+            document.getElementById('stats-body').innerHTML = html;
+            statsModal.style.display = 'flex';
+        }
 
         // Base solved board
         const baseSolution = [
@@ -385,6 +451,12 @@
             // Remove cells to create puzzle
             let difficultySelect = document.getElementById('sel-difficulty');
             let removal = difficultySelect ? parseInt(difficultySelect.value) : 40;
+            currentDifficulty = removal;
+            
+            stats[currentDifficulty].played++;
+            saveStats();
+            gameActive = true;
+
             board = JSON.parse(JSON.stringify(grid));
             while(removal > 0) {
                 let r = Math.floor(Math.random() * 9);
@@ -550,6 +622,14 @@
                 score += timeBonus;
                 document.getElementById('score').textContent = `Score: ${score}`;
                 
+                if (gameActive) {
+                    gameActive = false;
+                    stats[currentDifficulty].won++;
+                    if (elapsedTime < stats[currentDifficulty].bestTime) stats[currentDifficulty].bestTime = elapsedTime;
+                    if (score > stats[currentDifficulty].bestScore) stats[currentDifficulty].bestScore = score;
+                    saveStats();
+                }
+                
                 boardEl.classList.add('board-win');
                 setTimeout(() => {
                     let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
@@ -595,6 +675,9 @@
             selectedCell = null;
             updateHighlights();
         });
+        
+        btnStats.addEventListener('click', showStats);
+        btnCloseStats.addEventListener('click', () => statsModal.style.display = 'none');
         
         btnNotes.addEventListener('click', () => {
             notesMode = !notesMode;

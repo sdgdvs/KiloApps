@@ -28,6 +28,40 @@ int timerActive = 0;
 HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint;
 HFONT hFont, hFontSmall;
 
+typedef struct {
+    int played;
+    int won;
+    int bestTime;
+    int bestScore;
+} DifficultyStats;
+
+DifficultyStats stats[3] = {0}; // 0: Easy (30), 1: Medium (40), 2: Hard (50)
+int currentDiffIdx = 1;
+int gameActive = 0;
+
+void LoadStats() {
+    FILE *f = fopen("ksudoku_stats.dat", "rb");
+    if(f) {
+        fread(stats, sizeof(DifficultyStats), 3, f);
+        fclose(f);
+    } else {
+        for(int i=0; i<3; i++) {
+            stats[i].played = 0;
+            stats[i].won = 0;
+            stats[i].bestTime = -1;
+            stats[i].bestScore = 0;
+        }
+    }
+}
+
+void SaveStats() {
+    FILE *f = fopen("ksudoku_stats.dat", "wb");
+    if(f) {
+        fwrite(stats, sizeof(DifficultyStats), 3, f);
+        fclose(f);
+    }
+}
+
 void ShuffleArray(int* arr, int len) {
     for (int i = len - 1; i > 0; i--) {
         int j = rand() % (i + 1);
@@ -104,6 +138,7 @@ void GenerateBoard(int removal) {
     elapsedTime = 0;
     score = 0;
     timerActive = 1;
+    gameActive = 1;
 }
 
 void CheckWin(HWND hwnd) {
@@ -116,7 +151,17 @@ void CheckWin(HWND hwnd) {
     if(timeBonus < 0) timeBonus = 0;
     score += timeBonus;
     
-    char msg[128];
+    if (gameActive) {
+        gameActive = 0;
+        stats[currentDiffIdx].won++;
+        if (stats[currentDiffIdx].bestTime == -1 || elapsedTime < stats[currentDiffIdx].bestTime) 
+            stats[currentDiffIdx].bestTime = elapsedTime;
+        if (score > stats[currentDiffIdx].bestScore) 
+            stats[currentDiffIdx].bestScore = score;
+        SaveStats();
+    }
+    
+    char msg[256];
     sprintf(msg, "Congratulations! You solved the puzzle!\nTime: %02d:%02d\nScore: %d", elapsedTime/60, elapsedTime%60, score);
     MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
 }
@@ -125,16 +170,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
+            LoadStats();
+            currentDiffIdx = 1;
+            stats[currentDiffIdx].played++;
+            SaveStats();
             GenerateBoard(40);
             HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 90, 100, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessageA(hComboDifficulty, CB_SETCURSEL, 1, 0);
-            hBtnNew = CreateWindowA("BUTTON", "New Game", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 80, 30, hwnd, (HMENU)1, NULL, NULL);
-            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 10, 85, 30, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 10, 70, 30, hwnd, (HMENU)2, NULL, NULL);
-            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 10, 60, 30, hwnd, (HMENU)5, NULL, NULL);
+            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 50, 30, hwnd, (HMENU)1, NULL, NULL);
+            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 165, 10, 50, 30, hwnd, (HMENU)6, NULL, NULL);
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 85, 30, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 10, 60, 30, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -152,11 +202,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HWND hCombo = GetDlgItem(hwnd, 4);
                 int sel = SendMessageA(hCombo, CB_GETCURSEL, 0, 0);
                 int removal = 40;
-                if(sel == 0) removal = 30;
-                else if(sel == 2) removal = 50;
+                currentDiffIdx = 1;
+                if(sel == 0) { removal = 30; currentDiffIdx = 0; }
+                else if(sel == 2) { removal = 50; currentDiffIdx = 2; }
+                stats[currentDiffIdx].played++;
+                SaveStats();
                 GenerateBoard(removal);
                 sel_r = -1; sel_c = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 6) { // Stats
+                char msg[512] = "";
+                const char* diffs[] = {"Easy", "Medium", "Hard"};
+                for(int i=0; i<3; i++) {
+                    int rate = stats[i].played > 0 ? (stats[i].won * 100) / stats[i].played : 0;
+                    char bt[32];
+                    if(stats[i].bestTime == -1) sprintf(bt, "--:--");
+                    else sprintf(bt, "%02d:%02d", stats[i].bestTime/60, stats[i].bestTime%60);
+                    char buf[128];
+                    sprintf(buf, "[%s]\nPlayed: %d | Won: %d | Win Rate: %d%%\nBest Time: %s | Best Score: %d\n\n", 
+                            diffs[i], stats[i].played, stats[i].won, rate, bt, stats[i].bestScore);
+                    strcat(msg, buf);
+                }
+                MessageBoxA(hwnd, msg, "Statistics", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == 3) { // Toggle Notes
                 notesMode = !notesMode;
                 SetWindowTextA(hBtnNotes, notesMode ? "Notes: ON" : "Notes: OFF");
