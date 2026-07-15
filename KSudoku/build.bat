@@ -6,6 +6,10 @@ if exist "%VC_DIR%\vcvarsall.bat" (
     echo Visual Studio build environment not found.
     exit /b 1
 )
-
-cl.exe /O2 /W3 /Fe:KSudoku.exe main.c user32.lib
-del main.obj
+if exist app.rc ( rc /fo app.res app.rc )
+if exist app.res (
+    cl.exe /O1 /Os /GS- /Gy /Fe:KSudoku.exe main.c app.res kernel32.lib user32.lib gdi32.lib advapi32.lib comdlg32.lib shell32.lib winmm.lib ws2_32.lib comctl32.lib
+) else (
+    cl.exe /O1 /Os /GS- /Gy /Fe:KSudoku.exe main.c kernel32.lib user32.lib gdi32.lib advapi32.lib comdlg32.lib shell32.lib winmm.lib ws2_32.lib comctl32.lib
+)
+del main.obj app.res
