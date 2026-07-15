@@ -53,6 +53,24 @@
           info += "Storage Information: Restricted by Browser\n\n";
       }
 
+      info += "--- Display Information ---\n\n";
+      info += `Screen Resolution: ${window.screen.width}x${window.screen.height}\n`;
+      info += `Color Depth: ${window.screen.colorDepth} bits\n`;
+      info += `Pixel Ratio: ${window.devicePixelRatio}\n\n`;
+
+      info += "--- Power Status ---\n\n";
+      if (navigator.getBattery) {
+          try {
+              const battery = await navigator.getBattery();
+              info += `Charging: ${battery.charging ? "Yes" : "No"}\n`;
+              info += `Battery Level: ${Math.round(battery.level * 100)}%\n\n`;
+          } catch(e) {
+              info += "Power Status: Unavailable\n\n";
+          }
+      } else {
+          info += "Power Status: Unsupported by Browser\n\n";
+      }
+
       out.value = info;
   }
   

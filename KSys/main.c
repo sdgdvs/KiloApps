@@ -103,7 +103,39 @@ void UpdateInfo() {
     strcatA(buf, "Uptime: ");
     formatInt(hours, numBuf); strcatA(buf, numBuf); strcatA(buf, "h ");
     formatInt(mins, numBuf); strcatA(buf, numBuf); strcatA(buf, "m ");
-    formatInt(secs, numBuf); strcatA(buf, numBuf); strcatA(buf, "s\r\n");
+    formatInt(secs, numBuf); strcatA(buf, numBuf); strcatA(buf, "s\r\n\r\n");
+
+    HDC hdc = GetDC(NULL);
+    if (hdc) {
+        int sw = GetDeviceCaps(hdc, HORZRES);
+        int sh = GetDeviceCaps(hdc, VERTRES);
+        int bpp = GetDeviceCaps(hdc, BITSPIXEL);
+        int hz = GetDeviceCaps(hdc, VREFRESH);
+        ReleaseDC(NULL, hdc);
+        
+        strcatA(buf, "--- Display Information ---\r\n\r\n");
+        strcatA(buf, "Resolution: "); formatInt(sw, numBuf); strcatA(buf, numBuf); strcatA(buf, "x");
+        formatInt(sh, numBuf); strcatA(buf, numBuf); strcatA(buf, "\r\n");
+        strcatA(buf, "Color Depth: "); formatInt(bpp, numBuf); strcatA(buf, numBuf); strcatA(buf, " bits\r\n");
+        strcatA(buf, "Refresh Rate: "); formatInt(hz, numBuf); strcatA(buf, numBuf); strcatA(buf, " Hz\r\n\r\n");
+    }
+
+    SYSTEM_POWER_STATUS sps;
+    if (GetSystemPowerStatus(&sps)) {
+        strcatA(buf, "--- Power Status ---\r\n\r\n");
+        strcatA(buf, "AC Line Status: ");
+        if (sps.ACLineStatus == 1) strcatA(buf, "Online\r\n");
+        else if (sps.ACLineStatus == 0) strcatA(buf, "Offline (Battery)\r\n");
+        else strcatA(buf, "Unknown\r\n");
+        
+        strcatA(buf, "Battery Life: ");
+        if (sps.BatteryLifePercent != 255) {
+            formatInt(sps.BatteryLifePercent, numBuf); strcatA(buf, numBuf); strcatA(buf, "%\r\n");
+        } else {
+            strcatA(buf, "Unknown\r\n");
+        }
+        strcatA(buf, "\r\n");
+    }
     
     SetWindowTextA(hOutput, buf);
 }

@@ -155,11 +155,12 @@
           
           card.innerHTML = `
             <div class="task-info">
-              <div class="task-title">${task.title}</div>
+              <div class="task-title"></div>
               <div class="task-id">PID: ${task.id} | Mem: ${taskStats[task.id].mem} MB | CPU: ${taskStats[task.id].cpu}%</div>
             </div>
             <button class="btn-kill" onclick="endTask('${task.id}')">End Task</button>
           `;
+          card.querySelector('.task-title').textContent = task.title;
           list.appendChild(card);
         });
     }
