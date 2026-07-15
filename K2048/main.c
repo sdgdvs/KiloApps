@@ -107,7 +107,7 @@ int CheckGameOver() {
 }
 
 void DrawCell(HDC hdc, int x, int y, int val) {
-    RECT r = { x, y, x + CELL_SIZE - 4, y + CELL_SIZE - 4 };
+    RECT r = { x, y, x + CELL_SIZE - 8, y + CELL_SIZE - 8 };
     
     int rCol = 200, gCol = 200, bCol = 200;
     int txtCol = 0x000000;
@@ -183,21 +183,21 @@ void DrawBoard(HDC hdc) {
     RECT scoreRect = { 200, MARGIN, MARGIN + GRID_SIZE*CELL_SIZE, HEADER_HEIGHT };
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
-    RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + GRID_SIZE*CELL_SIZE, HEADER_HEIGHT + GRID_SIZE*CELL_SIZE };
+    RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + GRID_SIZE*CELL_SIZE + 8, HEADER_HEIGHT + GRID_SIZE*CELL_SIZE + 8 };
     HBRUSH boardBrush = CreateSolidBrush(RGB(187, 173, 160));
     FillRect(hdc, &boardBg, boardBrush);
     DeleteObject(boardBrush);
 
     for (int i = 0; i < GRID_SIZE; i++) {
         for (int j = 0; j < GRID_SIZE; j++) {
-            DrawCell(hdc, MARGIN + 4 + j*CELL_SIZE, HEADER_HEIGHT + 4 + i*CELL_SIZE, grid[i][j]);
+            DrawCell(hdc, MARGIN + 8 + j*CELL_SIZE, HEADER_HEIGHT + 8 + i*CELL_SIZE, grid[i][j]);
         }
     }
 
     if (gameOver || win) {
         HBRUSH overlay = CreateSolidBrush(gameOver ? RGB(238,228,218) : RGB(237,194,46));
-        // Pseudo-transparency is hard in basic GDI, we just draw solid over with some alpha-like attempt if possible, but we'll just draw a solid rect in the middle
-        RECT msgRect = { MARGIN + 20, HEADER_HEIGHT + 100, MARGIN + GRID_SIZE*CELL_SIZE - 20, HEADER_HEIGHT + 200 };
+        // Pseudo-transparency is hard in basic GDI, we just draw a solid rect in the middle
+        RECT msgRect = { MARGIN + 20, HEADER_HEIGHT + 100, MARGIN + GRID_SIZE*CELL_SIZE - 12, HEADER_HEIGHT + 200 };
         FillRect(hdc, &msgRect, overlay);
         DeleteObject(overlay);
         SetTextColor(hdc, gameOver ? RGB(119,110,101) : RGB(255,255,255));
@@ -273,6 +273,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             mainHwnd = hwnd;
             InitGame();
             return 0;
+        case WM_ERASEBKGND:
+            return 1; // Prevent background clear to fix flickering
         case WM_KEYDOWN:
             if (wParam == 'R' || wParam == 'r') {
                 InitGame();
@@ -335,8 +337,8 @@ int WINAPI MainEntry() {
     
     RegisterClassA(&wc);
     
-    int winWidth = MARGIN * 2 + GRID_SIZE * CELL_SIZE + 16;
-    int winHeight = HEADER_HEIGHT + MARGIN + GRID_SIZE * CELL_SIZE + 39;
+    int winWidth = MARGIN * 2 + GRID_SIZE * CELL_SIZE + 8 + 16;
+    int winHeight = HEADER_HEIGHT + MARGIN + GRID_SIZE * CELL_SIZE + 8 + 39;
 
     HWND hwnd = CreateWindowExA(
         0,
