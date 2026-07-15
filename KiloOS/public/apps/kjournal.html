@@ -9,6 +9,8 @@
   .date-picker { padding: 10px; border-bottom: 1px solid #ccc; }
   .date-picker input { width: 100%; box-sizing: border-box; padding: 5px; font-size: 14px; }
   .entry-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
+  .search-box { padding: 10px; border-bottom: 1px solid #ccc; background: #e8e2d0; }
+  .search-box input { width: 100%; box-sizing: border-box; padding: 5px; font-size: 14px; }
   .entry-item { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; font-size: 14px; }
   .entry-item:hover { background: #e8e2d0; }
   .entry-item.active { background: #fdf6e3; font-weight: bold; border-left: 4px solid #b58900; }
@@ -23,6 +25,9 @@
 <div class="sidebar">
     <div class="date-picker">
         <input type="date" id="dateInput">
+    </div>
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search entries...">
     </div>
     <ul class="entry-list" id="entryList"></ul>
 </div>
@@ -39,6 +44,7 @@
   const journalArea = document.getElementById('journalArea');
   const currentDateDisplay = document.getElementById('currentDateDisplay');
   const saveBtn = document.getElementById('saveBtn');
+  const searchInput = document.getElementById('searchInput');
   
   let entries = {};
   try {
@@ -55,7 +61,13 @@
 
   function renderList() {
       entryList.innerHTML = '';
-      const sortedDates = Object.keys(entries).sort((a,b) => b.localeCompare(a));
+      let sortedDates = Object.keys(entries).sort((a,b) => b.localeCompare(a));
+      
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      if (searchTerm) {
+          sortedDates = sortedDates.filter(date => entries[date].toLowerCase().includes(searchTerm));
+      }
+
       sortedDates.forEach(date => {
           let li = document.createElement('li');
           li.className = 'entry-item' + (date === dateInput.value ? ' active' : '');
@@ -94,6 +106,10 @@
 
   dateInput.addEventListener('change', () => {
       loadEntry();
+  });
+
+  searchInput.addEventListener('input', () => {
+      renderList();
   });
 
   // initial load
