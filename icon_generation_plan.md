@@ -62,4 +62,4 @@
   - Refined kexplorer icon (added internal folder paper lines) in gen_icons.py for better visibility in Start Menu/Desktop. Regenerated and copied all icons.
   - Refined kpad and kcalc icons in gen_icons.py for better visibility (added red margin to kpad, orange right column to kcalc). Regenerated and copied all icons.
   - Refined kchat icon (added overlapping speech bubbles) in gen_icons.py for a more premium look. Regenerated and copied all icons.
-  - Refined kclock icon in gen_icons.py to be circular with tick marks instead of rectangular. Regenerated and copied all icons.
+  - Refined kclock (added tick marks and red second hand) and ktaskmgr (added distinct line graph colors) icons in gen_icons.py for better visibility. Regenerated and copied all icons.  - Refined kclock icon in gen_icons.py to be circular with tick marks instead of rectangular. Regenerated and copied all icons.
