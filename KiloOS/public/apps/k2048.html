@@ -235,6 +235,7 @@
         .val-512 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.8rem; }
         .val-1024 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
         .val-2048 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val--1 .tile-inner { background: #555; color: #fff; box-shadow: none; }
 
         .tile.new .tile-inner {
             animation: appear 200ms ease;
@@ -377,6 +378,7 @@
             <button class="btn" onclick="initGame()">New Game</button>
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn">Time: Off</button>
             <button class="btn" onclick="toggleAutoPlay()" id="ap-btn">Auto: Off</button>
+            <button class="btn" onclick="toggleObstacles()" id="obs-btn">Obs: Off</button>
             <button class="btn" onclick="undoMove()">Undo</button>
         </div>
 
@@ -426,6 +428,15 @@
 
         let autoPlayEnabled = false;
         let autoPlayInterval = null;
+
+        let obstaclesEnabled = false;
+        let moveCount = 0;
+
+        function toggleObstacles() {
+            obstaclesEnabled = !obstaclesEnabled;
+            document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
+            initGame();
+        }
 
         function toggleAutoPlay() {
             autoPlayEnabled = !autoPlayEnabled;
@@ -492,6 +503,7 @@
             isAnimating = false;
             historyStack = [];
             gameStarted = false;
+            moveCount = 0;
             timeRemaining = 60;
             clearInterval(timerInterval);
             if (timeAttackEnabled) {
@@ -510,7 +522,7 @@
             
             const inner = document.createElement('div');
             inner.className = 'tile-inner';
-            inner.textContent = tile.val;
+            inner.textContent = tile.val === -1 ? 'X' : tile.val;
             el.appendChild(inner);
             
             tilesContainer.appendChild(el);
@@ -524,7 +536,7 @@
         function updateTileEl(tile, isMerged) {
             tile.el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
             tile.el.className = `tile val-${tile.val} ${isMerged ? 'merged' : ''}`;
-            tile.el.firstChild.textContent = tile.val;
+            tile.el.firstChild.textContent = tile.val === -1 ? 'X' : tile.val;
             if (isMerged) {
                 setTimeout(() => tile.el.classList.remove('merged'), 200);
             }
@@ -537,7 +549,10 @@
             }
             if (emptyCells.length > 0) {
                 const randomIdx = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                const val = Math.random() < 0.9 ? 2 : 4;
+                let val = Math.random() < 0.9 ? 2 : 4;
+                if (obstaclesEnabled && moveCount > 0 && moveCount % 5 === 0) {
+                    val = -1;
+                }
                 const tile = {
                     id: tileIdCounter++,
                     val: val,
@@ -567,7 +582,7 @@
             let result = [];
             let i = 0;
             while(i < filtered.length) {
-                if (i + 1 < filtered.length && filtered[i].val === filtered[i+1].val) {
+                if (i + 1 < filtered.length && filtered[i].val === filtered[i+1].val && filtered[i].val !== -1) {
                     let mergedTile = {
                         ...filtered[i],
                         val: filtered[i].val * 2,
@@ -670,8 +685,8 @@
         function isGameOver() {
             for (let i = 0; i < gridSize * gridSize; i++) {
                 if (grid[i] === null) return false;
-                if (i % gridSize < gridSize - 1 && grid[i+1] !== null && grid[i].val === grid[i+1].val) return false;
-                if (i < gridSize * gridSize - gridSize && grid[i+gridSize] !== null && grid[i].val === grid[i+gridSize].val) return false;
+                if (i % gridSize < gridSize - 1 && grid[i+1] !== null && grid[i].val === grid[i+1].val && grid[i].val !== -1) return false;
+                if (i < gridSize * gridSize - gridSize && grid[i+gridSize] !== null && grid[i].val === grid[i+gridSize].val && grid[i].val !== -1) return false;
             }
             return true;
         }
@@ -717,6 +732,7 @@
             else if (dir === 'down') changed = moveDown();
 
             if (changed) {
+                moveCount++;
                 if (timeAttackEnabled && !gameStarted) {
                     gameStarted = true;
                     timerInterval = setInterval(() => {

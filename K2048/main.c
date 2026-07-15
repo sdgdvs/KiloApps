@@ -50,6 +50,9 @@ int timerActive = 0;
 int autoPlayEnabled = 0;
 int autoPlayTimerActive = 0;
 
+int obstaclesEnabled = 0;
+int moveCount = 0;
+
 #define MAX_HISTORY 50
 typedef struct {
     int grid[MAX_GRID][MAX_GRID];
@@ -145,7 +148,11 @@ void AddRandomTile() {
         for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) {
                 if (emptyCount == target) {
-                    grid[i][j] = (my_rand() % 10 == 0) ? 4 : 2;
+                    if (obstaclesEnabled && moveCount > 0 && moveCount % 5 == 0) {
+                        grid[i][j] = -1;
+                    } else {
+                        grid[i][j] = (my_rand() % 10 == 0) ? 4 : 2;
+                    }
                     return;
                 }
                 emptyCount++;
@@ -163,6 +170,7 @@ void InitGame() {
     hasWon = 0;
     historyCount = 0;
     gameStarted = 0;
+    moveCount = 0;
     timeRemaining = 60;
     if (timerActive) {
         KillTimer(mainHwnd, 1);
@@ -178,8 +186,8 @@ int CheckGameOver() {
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) return 0;
-            if (i < grid_size - 1 && grid[i][j] == grid[i+1][j]) return 0;
-            if (j < grid_size - 1 && grid[i][j] == grid[i][j+1]) return 0;
+            if (i < grid_size - 1 && grid[i][j] == grid[i+1][j] && grid[i][j] != -1) return 0;
+            if (j < grid_size - 1 && grid[i][j] == grid[i][j+1] && grid[i][j] != -1) return 0;
         }
     }
     return 1;
@@ -204,6 +212,7 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
         else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
         else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
+        if (val == -1) { rCol=85; gCol=85; bCol=85; txtCol=0xFFFFFF; }
         if (val == 0) { rCol = 40; gCol = 40; bCol = 40; }
     } else if (theme == 1) { // Classic
         if (val == 2) { rCol=238; gCol=228; bCol=218; txtCol=RGB(119,110,101); }
@@ -218,6 +227,7 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
         else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
         else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
+        if (val == -1) { rCol=85; gCol=85; bCol=85; txtCol=0xFFFFFF; }
         if (val == 0) { rCol = 204; gCol = 192; bCol = 179; }
     } else { // Pastel
         if (val == 2) { rCol=225; gCol=190; bCol=231; txtCol=RGB(74,20,140); }
@@ -232,6 +242,7 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         else if (val == 1024) { rCol=240; gCol=244; bCol=195; txtCol=RGB(74,20,140); }
         else if (val == 2048) { rCol=255; gCol=249; bCol=196; txtCol=RGB(74,20,140); }
         else if (val > 2048) { rCol=150; gCol=150; bCol=150; txtCol=RGB(74,20,140); }
+        if (val == -1) { rCol=100; gCol=100; bCol=100; txtCol=0xFFFFFF; }
         if (val == 0) { rCol = 255; gCol = 255; bCol = 255; }
     }
 
@@ -239,17 +250,22 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
     FillRect(hdc, &r, bg);
     DeleteObject(bg);
 
-    if (val > 0) {
+    if (val != 0) {
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, txtCol);
         char buf[16];
-        int temp = val;
-        int len = 0;
-        char rev[16];
-        int rlen = 0;
-        while(temp > 0) { rev[rlen++] = '0' + (temp % 10); temp /= 10; }
-        while(rlen > 0) buf[len++] = rev[--rlen];
-        buf[len] = 0;
+        if (val == -1) {
+            buf[0] = 'X';
+            buf[1] = 0;
+        } else {
+            int temp = val;
+            int len = 0;
+            char rev[16];
+            int rlen = 0;
+            while(temp > 0) { rev[rlen++] = '0' + (temp % 10); temp /= 10; }
+            while(rlen > 0) buf[len++] = rev[--rlen];
+            buf[len] = 0;
+        }
 
         int fontSize = cell_size / 3;
         if (fontSize < 12) fontSize = 12;
@@ -312,7 +328,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size(3-6) [M]ode [P]lay [U]ndo [T]heme");
+    wsprintfA(helpBuf, "Size [M]ode [O]bs [P]lay [U]ndo");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -378,7 +394,7 @@ int Move(int dx, int dy) {
                         ci = ni;
                         cj = nj;
                         moved = 1;
-                    } else if (grid[ni][nj] == grid[ci][cj] && !merged[ni][nj]) {
+                    } else if (grid[ni][nj] == grid[ci][cj] && !merged[ni][nj] && grid[ni][nj] != -1) {
                         grid[ni][nj] *= 2;
                         grid[ci][cj] = 0;
                         score += grid[ni][nj];
@@ -402,6 +418,7 @@ int Move(int dx, int dy) {
     }
     
     if (moved) {
+        moveCount++;
         if (timeAttackEnabled && !gameStarted) {
             gameStarted = 1;
             SetTimer(mainHwnd, 1, 1000, NULL);
@@ -485,6 +502,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     KillTimer(hwnd, 2);
                     autoPlayTimerActive = 0;
                 }
+            } else if (wParam == 'O' || wParam == 'o') {
+                obstaclesEnabled = !obstaclesEnabled;
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'T' || wParam == 't') {
                 theme = (theme + 1) % 3;
                 SaveTheme();
