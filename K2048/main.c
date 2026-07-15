@@ -47,6 +47,8 @@ int timeRemaining = 60;
 int gameStarted = 0;
 int timerActive = 0;
 
+int ruleset = 0; // 0=Classic, 1=Fibonacci
+
 int autoPlayEnabled = 0;
 int autoPlayTimerActive = 0;
 
@@ -74,9 +76,13 @@ int my_rand() {
 
 void LoadBest() {
     char filename[32];
-    wsprintfA(filename, "k2048_score_%d.dat", grid_size);
+    if (ruleset == 1) {
+        wsprintfA(filename, "k2048_score_%d_fib.dat", grid_size);
+    } else {
+        wsprintfA(filename, "k2048_score_%d.dat", grid_size);
+    }
     HANDLE hFile = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE && grid_size == 4) {
+    if (hFile == INVALID_HANDLE_VALUE && grid_size == 4 && ruleset == 0) {
         hFile = CreateFileA("k2048_score.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     }
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -119,7 +125,11 @@ void LoadStats() {
 
 void SaveBest() {
     char filename[32];
-    wsprintfA(filename, "k2048_score_%d.dat", grid_size);
+    if (ruleset == 1) {
+        wsprintfA(filename, "k2048_score_%d_fib.dat", grid_size);
+    } else {
+        wsprintfA(filename, "k2048_score_%d.dat", grid_size);
+    }
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[64];
@@ -180,7 +190,7 @@ void AddRandomTile() {
                     if (obstaclesEnabled && moveCount > 0 && moveCount % 5 == 0) {
                         grid[i][j] = -1;
                     } else {
-                        grid[i][j] = (my_rand() % 10 == 0) ? 4 : 2;
+                        grid[i][j] = (ruleset == 1) ? 1 : ((my_rand() % 10 == 0) ? 4 : 2);
                         if (grid[i][j] > stats_highestTile) {
                             stats_highestTile = grid[i][j];
                             SaveStats();
@@ -215,12 +225,33 @@ void InitGame() {
     LoadBest();
 }
 
+int GetMergeResult(int a, int b) {
+    if (a == -1 || b == -1) return 0;
+    if (ruleset == 1) {
+        if (a == 1 && b == 1) return 2;
+        int fibs[] = {1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025};
+        int idxA = -1, idxB = -1;
+        for (int i = 0; i < 24; i++) {
+            if (fibs[i] == a) idxA = i;
+            if (fibs[i] == b) idxB = i;
+        }
+        if (idxA >= 0 && idxB >= 0) {
+            int diff = idxA - idxB;
+            if (diff == 1 || diff == -1) return a + b;
+        }
+        return 0;
+    } else {
+        if (a == b) return a * 2;
+        return 0;
+    }
+}
+
 int CheckGameOver() {
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
             if (grid[i][j] == 0) return 0;
-            if (i < grid_size - 1 && grid[i][j] == grid[i+1][j] && grid[i][j] != -1) return 0;
-            if (j < grid_size - 1 && grid[i][j] == grid[i][j+1] && grid[i][j] != -1) return 0;
+            if (i < grid_size - 1 && GetMergeResult(grid[i][j], grid[i+1][j]) > 0) return 0;
+            if (j < grid_size - 1 && GetMergeResult(grid[i][j], grid[i][j+1]) > 0) return 0;
         }
     }
     return 1;
@@ -232,6 +263,21 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
     int rCol = 200, gCol = 200, bCol = 200;
     int txtCol = 0x000000;
     
+    int originalVal = val;
+    if (ruleset == 1 && val > 0) {
+        if (val == 1) val = 2;
+        else if (val == 3) val = 4;
+        else if (val == 5) val = 8;
+        else if (val == 13) val = 16;
+        else if (val == 21) val = 32;
+        else if (val == 34) val = 64;
+        else if (val == 55) val = 128;
+        else if (val == 89) val = 256;
+        else if (val == 144) val = 512;
+        else if (val == 233) val = 1024;
+        else if (val >= 377) val = 2048;
+    }
+
     if (theme == 0) { // Dark
         if (val == 2) { rCol=60; gCol=60; bCol=70; txtCol=0xdddddd; }
         else if (val == 4) { rCol=80; gCol=80; bCol=90; txtCol=0xeeeeee; }
@@ -283,15 +329,15 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
     FillRect(hdc, &r, bg);
     DeleteObject(bg);
 
-    if (val != 0) {
+    if (originalVal != 0) {
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, txtCol);
         char buf[16];
-        if (val == -1) {
+        if (originalVal == -1) {
             buf[0] = 'X';
             buf[1] = 0;
         } else {
-            int temp = val;
+            int temp = originalVal;
             int len = 0;
             char rev[16];
             int rlen = 0;
@@ -361,7 +407,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size [M]ode [O]bs [P]lay [U]ndo [I]nfo");
+    wsprintfA(helpBuf, "Size [M]ode [O]bs [F]ib [P]lay [U]ndo [I]nfo");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -427,8 +473,8 @@ int Move(int dx, int dy) {
                         ci = ni;
                         cj = nj;
                         moved = 1;
-                    } else if (grid[ni][nj] == grid[ci][cj] && !merged[ni][nj] && grid[ni][nj] != -1) {
-                        grid[ni][nj] *= 2;
+                    } else if (GetMergeResult(grid[ci][cj], grid[ni][nj]) > 0 && !merged[ni][nj]) {
+                        grid[ni][nj] = GetMergeResult(grid[ci][cj], grid[ni][nj]);
                         grid[ci][cj] = 0;
                         score += grid[ni][nj];
                         stats_tilesMerged++;
@@ -556,6 +602,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (wParam == 'O' || wParam == 'o') {
                 obstaclesEnabled = !obstaclesEnabled;
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'F' || wParam == 'f') {
+                ruleset = !ruleset;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'T' || wParam == 't') {

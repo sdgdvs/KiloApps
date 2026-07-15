@@ -235,6 +235,22 @@
         .val-512 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.8rem; }
         .val-1024 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
         .val-2048 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val-1 .tile-inner { background: var(--t2-bg); color: var(--t2-c); box-shadow: var(--t2-sh); }
+        .val-3 .tile-inner { background: var(--t4-bg); color: var(--t4-c); box-shadow: var(--t4-sh); }
+        .val-5 .tile-inner { background: var(--t8-bg); color: var(--t8-c); box-shadow: var(--t8-sh); }
+        .val-13 .tile-inner { background: var(--t16-bg); color: var(--t16-c); box-shadow: var(--t16-sh); }
+        .val-21 .tile-inner { background: var(--t32-bg); color: var(--t32-c); box-shadow: var(--t32-sh); }
+        .val-34 .tile-inner { background: var(--t64-bg); color: var(--t64-c); box-shadow: var(--t64-sh); }
+        .val-55 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.8rem; }
+        .val-89 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.8rem; }
+        .val-144 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.5rem; }
+        .val-233 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
+        .val-377 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val-610 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val-987 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val-1597 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
+        .val-2584 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
+        .val-4181 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
         .val--1 .tile-inner { background: #555; color: #fff; box-shadow: none; }
 
         .tile.new .tile-inner {
@@ -344,6 +360,10 @@
             <div style="display: flex; align-items: center; gap: 10px;">
                 <h1>2048</h1>
                 <div id="timer-display" style="font-size: 1.5rem; font-weight: bold; color: #ff5555; display: none;">60s</div>
+                <select id="ruleset-select" onchange="setRuleset(this.value)" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
+                    <option value="classic">Classic</option>
+                    <option value="fibonacci">Fibonacci</option>
+                </select>
                 <select id="theme-select" onchange="setTheme(this.value)" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
                     <option value="default">Dark</option>
                     <option value="classic">Classic</option>
@@ -439,7 +459,18 @@
 
         let grid = [];
         let score = 0;
+        let ruleset = 'classic';
         let bestScore = parseInt(localStorage.getItem('k2048_best_score_4')) || parseInt(localStorage.getItem('k2048_best_score')) || 0;
+        
+        function setRuleset(r) {
+            ruleset = r;
+            bestScore = parseInt(localStorage.getItem('k2048_best_score_' + gridSize + (ruleset === 'fibonacci' ? '_fib' : ''))) || 0;
+            if (gridSize === 4 && ruleset === 'classic' && bestScore === 0) {
+                bestScore = parseInt(localStorage.getItem('k2048_best_score')) || 0;
+            }
+            initGame();
+        }
+
         let isGameOverState = false;
         let isAnimating = false;
         let tileIdCounter = 0;
@@ -496,8 +527,8 @@
             document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
             if (btnEl) btnEl.classList.add('active');
 
-            bestScore = parseInt(localStorage.getItem('k2048_best_score_' + gridSize)) || 0;
-            if (gridSize === 4 && bestScore === 0) {
+            bestScore = parseInt(localStorage.getItem('k2048_best_score_' + gridSize + (ruleset === 'fibonacci' ? '_fib' : ''))) || 0;
+            if (gridSize === 4 && ruleset === 'classic' && bestScore === 0) {
                 bestScore = parseInt(localStorage.getItem('k2048_best_score')) || 0;
             }
 
@@ -574,6 +605,7 @@
             if (emptyCells.length > 0) {
                 const randomIdx = emptyCells[Math.floor(Math.random() * emptyCells.length)];
                 let val = Math.random() < 0.9 ? 2 : 4;
+                if (ruleset === 'fibonacci') val = 1;
                 if (obstaclesEnabled && moveCount > 0 && moveCount % 5 === 0) {
                     val = -1;
                 }
@@ -594,10 +626,11 @@
         }
 
         function updateScore() {
+            let key = 'k2048_best_score_' + gridSize + (ruleset === 'fibonacci' ? '_fib' : '');
             if (score > bestScore) {
                 bestScore = score;
-                localStorage.setItem('k2048_best_score_' + gridSize, bestScore);
-                if (gridSize === 4) {
+                localStorage.setItem(key, bestScore);
+                if (gridSize === 4 && ruleset === 'classic') {
                     localStorage.setItem('k2048_best_score', bestScore); // Backwards compat
                 }
             }
@@ -605,26 +638,44 @@
             bestScoreEl.textContent = bestScore;
         }
 
+        function getMergeResult(a, b) {
+            if (a === -1 || b === -1) return 0;
+            if (ruleset === 'fibonacci') {
+                if (a === 1 && b === 1) return 2;
+                const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
+                let i = fibs.indexOf(a);
+                let j = fibs.indexOf(b);
+                if (i >= 0 && j >= 0 && Math.abs(i - j) === 1) return a + b;
+                return 0;
+            } else {
+                if (a === b) return a * 2;
+                return 0;
+            }
+        }
+
         function slideLine(lineTiles) {
             let filtered = lineTiles.filter(t => t !== null);
             let result = [];
             let i = 0;
             while(i < filtered.length) {
-                if (i + 1 < filtered.length && filtered[i].val === filtered[i+1].val && filtered[i].val !== -1) {
-                    let mergedTile = {
-                        ...filtered[i],
-                        val: filtered[i].val * 2,
-                        mergePartner: filtered[i+1]
-                    };
-                    result.push(mergedTile);
-                    score += mergedTile.val;
-                    stats.tilesMerged++;
-                    if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
-                    i += 2;
-                } else {
-                    result.push(filtered[i]);
-                    i++;
+                if (i + 1 < filtered.length && filtered[i].val !== -1 && filtered[i+1].val !== -1) {
+                    let mergeResult = getMergeResult(filtered[i].val, filtered[i+1].val);
+                    if (mergeResult > 0) {
+                        let mergedTile = {
+                            ...filtered[i],
+                            val: mergeResult,
+                            mergePartner: filtered[i+1]
+                        };
+                        result.push(mergedTile);
+                        score += mergedTile.val;
+                        stats.tilesMerged++;
+                        if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
+                        i += 2;
+                        continue;
+                    }
                 }
+                result.push(filtered[i]);
+                i++;
             }
             while(result.length < gridSize) {
                 result.push(null);
@@ -715,8 +766,8 @@
         function isGameOver() {
             for (let i = 0; i < gridSize * gridSize; i++) {
                 if (grid[i] === null) return false;
-                if (i % gridSize < gridSize - 1 && grid[i+1] !== null && grid[i].val === grid[i+1].val && grid[i].val !== -1) return false;
-                if (i < gridSize * gridSize - gridSize && grid[i+gridSize] !== null && grid[i].val === grid[i+gridSize].val && grid[i].val !== -1) return false;
+                if (i % gridSize < gridSize - 1 && grid[i+1] !== null && getMergeResult(grid[i].val, grid[i+1].val) > 0) return false;
+                if (i < gridSize * gridSize - gridSize && grid[i+gridSize] !== null && getMergeResult(grid[i].val, grid[i+gridSize].val) > 0) return false;
             }
             return true;
         }
