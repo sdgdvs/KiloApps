@@ -19,8 +19,10 @@ int solution[9][9];
 int fixed[9][9];
 int sel_r = -1, sel_c = -1;
 int error_cells[9][9];
-HWND hBtnNew, hBtnValidate;
-HFONT hFont;
+int notes[9][9][10];
+int notesMode = 0;
+HWND hBtnNew, hBtnNotes, hBtnValidate;
+HFONT hFont, hFontSmall;
 
 void ShuffleArray(int* arr, int len) {
     for (int i = len - 1; i > 0; i--) {
@@ -88,6 +90,11 @@ void GenerateBoard() {
             removal--;
         }
     }
+    
+    for(int r=0; r<9; r++)
+        for(int c=0; c<9; c++)
+            for(int i=0; i<10; i++)
+                notes[r][c][i] = 0;
 }
 
 void CheckWin(HWND hwnd) {
@@ -103,8 +110,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             srand((unsigned int)time(NULL));
             GenerateBoard();
             hBtnNew = CreateWindowA("BUTTON", "New Game", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 100, 30, hwnd, (HMENU)1, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 10, 100, 30, hwnd, (HMENU)2, NULL, NULL);
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 10, 100, 30, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 230, 10, 100, 30, hwnd, (HMENU)2, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             break;
         }
         case WM_COMMAND: {
@@ -112,6 +121,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GenerateBoard();
                 sel_r = -1; sel_c = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 3) { // Toggle Notes
+                notesMode = !notesMode;
+                SetWindowTextA(hBtnNotes, notesMode ? "Notes: ON" : "Notes: OFF");
             } else if (LOWORD(wParam) == 2) { // Validate
                 for(int r=0; r<9; r++) {
                     for(int c=0; c<9; c++) {
@@ -139,30 +151,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(wParam >= '1' && wParam <= '9') {
                 if(!fixed[sel_r][sel_c]) {
                     int num = wParam - '0';
-                    int invalid = 0;
-                    for(int i=0; i<9; i++) {
-                        if(i != sel_c && board[sel_r][i] == num) invalid = 1;
-                        if(i != sel_r && board[i][sel_c] == num) invalid = 1;
-                    }
-                    int br = (sel_r/3)*3, bc = (sel_c/3)*3;
-                    for(int r=0; r<3; r++) {
-                        for(int c=0; c<3; c++) {
-                            if((br+r != sel_r || bc+c != sel_c) && board[br+r][bc+c] == num) invalid = 1;
+                    if (notesMode) {
+                        if (board[sel_r][sel_c] == 0) {
+                            notes[sel_r][sel_c][num] = !notes[sel_r][sel_c][num];
                         }
+                    } else {
+                        int invalid = 0;
+                        for(int i=0; i<9; i++) {
+                            if(i != sel_c && board[sel_r][i] == num) invalid = 1;
+                            if(i != sel_r && board[i][sel_c] == num) invalid = 1;
+                        }
+                        int br = (sel_r/3)*3, bc = (sel_c/3)*3;
+                        for(int r=0; r<3; r++) {
+                            for(int c=0; c<3; c++) {
+                                if((br+r != sel_r || bc+c != sel_c) && board[br+r][bc+c] == num) invalid = 1;
+                            }
+                        }
+                        
+                        if(invalid) {
+                            MessageBeep(MB_ICONWARNING);
+                        }
+                        board[sel_r][sel_c] = num;
+                        error_cells[sel_r][sel_c] = 0;
+                        CheckWin(hwnd);
                     }
-                    
-                    if(invalid) {
-                        MessageBeep(MB_ICONWARNING);
-                    }
-                    board[sel_r][sel_c] = num;
-                    error_cells[sel_r][sel_c] = 0;
-                    CheckWin(hwnd);
                 }
             } else if(wParam == VK_BACK || wParam == VK_DELETE || wParam == '0') {
                 if(!fixed[sel_r][sel_c]) {
                     board[sel_r][sel_c] = 0;
                     error_cells[sel_r][sel_c] = 0;
+                    for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
                 }
+            } else if(wParam == 'N') {
+                SendMessageA(hwnd, WM_COMMAND, 3, 0);
             }
             InvalidateRect(hwnd, NULL, TRUE);
             break;
@@ -231,6 +252,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT textRc = rc;
                         textRc.top += 2; // Visually center the Arial font
                         DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                    } else {
+                        int hasNotes = 0;
+                        for(int i=1; i<=9; i++) if(notes[r][c][i]) hasNotes = 1;
+                        if(hasNotes) {
+                            HFONT oldFnt = (HFONT)SelectObject(hdc, hFontSmall);
+                            SetTextColor(hdc, RGB(148, 163, 184));
+                            for(int i=1; i<=9; i++) {
+                                if(notes[r][c][i]) {
+                                    int sub_r = (i-1) / 3;
+                                    int sub_c = (i-1) % 3;
+                                    RECT textRc = rc;
+                                    textRc.left += sub_c * (cell_sz / 3);
+                                    textRc.right = textRc.left + (cell_sz / 3);
+                                    textRc.top += sub_r * (cell_sz / 3);
+                                    textRc.bottom = textRc.top + (cell_sz / 3);
+                                    
+                                    char buf[2];
+                                    sprintf(buf, "%d", i);
+                                    DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                                }
+                            }
+                            SelectObject(hdc, oldFnt);
+                        }
                     }
                 }
             }
@@ -257,6 +301,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY:
             DeleteObject(hFont);
+            DeleteObject(hFontSmall);
             PostQuitMessage(0);
             break;
         default:

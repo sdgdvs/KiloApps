@@ -178,6 +178,32 @@
             grid-column: span 2;
         }
 
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            font-size: 0.6rem;
+        }
+
+        .note-item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            line-height: 1;
+            font-weight: 400;
+        }
+
+        .note-active {
+            color: var(--text-muted);
+        }
+
+        .note-inactive {
+            color: transparent;
+        }
+
         @keyframes flashRed {
             0% { background-color: var(--error); color: white; }
             100% { background-color: var(--cell-bg); }
@@ -203,6 +229,7 @@
         </header>
         <div class="controls">
             <button id="btn-new">New Game</button>
+            <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
         </div>
         <div class="main-content">
@@ -229,10 +256,13 @@
         const boardEl = document.getElementById('board');
         const numpadEl = document.getElementById('numpad');
         const btnNew = document.getElementById('btn-new');
+        const btnNotes = document.getElementById('btn-notes');
         const btnValidate = document.getElementById('btn-validate');
         
         let board = [];
         let solution = [];
+        let notes = [];
+        let notesMode = false;
         let selectedCell = null;
         let cells = []; // Array of length 81
 
@@ -312,6 +342,30 @@
                     removal--;
                 }
             }
+            
+            notes = Array(9).fill().map(() => Array(9).fill().map(() => Array(10).fill(false)));
+        }
+
+        function renderCell(r, c) {
+            let cell = cells[r * 9 + c];
+            cell.innerHTML = '';
+            if (board[r][c] !== 0) {
+                cell.textContent = board[r][c];
+            } else {
+                let hasNotes = false;
+                for(let i=1; i<=9; i++) if (notes[r][c][i]) hasNotes = true;
+                if (hasNotes) {
+                    let grid = document.createElement('div');
+                    grid.className = 'notes-grid';
+                    for (let i = 1; i <= 9; i++) {
+                        let div = document.createElement('div');
+                        div.className = 'note-item ' + (notes[r][c][i] ? 'note-active' : 'note-inactive');
+                        div.textContent = i;
+                        grid.appendChild(div);
+                    }
+                    cell.appendChild(grid);
+                }
+            }
         }
 
         function initUI() {
@@ -327,7 +381,6 @@
                     let cell = document.createElement('div');
                     cell.className = 'cell';
                     if (board[r][c] !== 0) {
-                        cell.textContent = board[r][c];
                         cell.classList.add('fixed');
                     }
                     cell.dataset.r = r;
@@ -336,6 +389,7 @@
                     cell.addEventListener('click', () => selectCell(r, c));
                     block.appendChild(cell);
                     cells[r * 9 + c] = cell;
+                    renderCell(r, c);
                 }
                 boardEl.appendChild(block);
             }
@@ -364,8 +418,7 @@
         function updateHighlights() {
             let val = null;
             if (selectedCell) {
-                let idx = selectedCell.r * 9 + selectedCell.c;
-                val = cells[idx].textContent;
+                val = board[selectedCell.r][selectedCell.c];
             }
             
             cells.forEach(cell => {
@@ -378,7 +431,7 @@
                 } else if (selectedCell && (cr === selectedCell.r || cc === selectedCell.c || 
                            (Math.floor(cr/3) === Math.floor(selectedCell.r/3) && Math.floor(cc/3) === Math.floor(selectedCell.c/3)))) {
                     cell.classList.add('highlight');
-                } else if (val && cell.textContent === val && val !== '') {
+                } else if (val && board[cr][cc] === val && val !== 0) {
                     cell.classList.add('highlight');
                 }
             });
@@ -386,12 +439,17 @@
         
         function inputNumber(num) {
             if (!selectedCell) return;
-            let idx = selectedCell.r * 9 + selectedCell.c;
-            let cell = cells[idx];
+            let cell = cells[selectedCell.r * 9 + selectedCell.c];
             if (cell.classList.contains('fixed')) return;
             
+            if (notesMode && num !== 0) {
+                if (board[selectedCell.r][selectedCell.c] !== 0) return; // Can't add notes if there's a big number
+                notes[selectedCell.r][selectedCell.c][num] = !notes[selectedCell.r][selectedCell.c][num];
+                renderCell(selectedCell.r, selectedCell.c);
+                return;
+            }
+            
             if (num === 0) {
-                cell.textContent = '';
                 board[selectedCell.r][selectedCell.c] = 0;
             } else {
                 if (!isValidPlacement(selectedCell.r, selectedCell.c, num)) {
@@ -399,9 +457,9 @@
                     void cell.offsetWidth; // trigger reflow
                     cell.classList.add('flash-error');
                 }
-                cell.textContent = num;
                 board[selectedCell.r][selectedCell.c] = num;
             }
+            renderCell(selectedCell.r, selectedCell.c);
             cell.classList.remove('error');
             updateHighlights();
             checkWin();
@@ -438,7 +496,9 @@
         });
         
         window.addEventListener('keydown', (e) => {
-            if (e.key >= '1' && e.key <= '9') {
+            if (e.key === 'n' || e.key === 'N') {
+                btnNotes.click();
+            } else if (e.key >= '1' && e.key <= '9') {
                 inputNumber(parseInt(e.key));
             } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
                 inputNumber(0);
@@ -462,6 +522,18 @@
             initUI();
             selectedCell = null;
             updateHighlights();
+        });
+        
+        btnNotes.addEventListener('click', () => {
+            notesMode = !notesMode;
+            btnNotes.textContent = notesMode ? 'Notes: ON' : 'Notes: OFF';
+            if (notesMode) {
+                btnNotes.style.backgroundColor = 'var(--accent)';
+                btnNotes.style.color = '#fff';
+            } else {
+                btnNotes.style.backgroundColor = '';
+                btnNotes.style.color = '';
+            }
         });
         
         btnValidate.addEventListener('click', () => {
