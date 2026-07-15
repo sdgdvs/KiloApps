@@ -26,7 +26,7 @@ int my_rand() {
 }
 
 void LoadBest() {
-    HANDLE hFile = CreateFileA("k2048_score.txt", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA("k2048_score.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[64] = {0};
         DWORD bytesRead;
@@ -41,7 +41,7 @@ void LoadBest() {
 }
 
 void SaveBest() {
-    HANDLE hFile = CreateFileA("k2048_score.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA("k2048_score.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         char buf[64];
         int temp = bestScore;
@@ -240,7 +240,10 @@ int Move(int dx, int dy) {
                         grid[ni][nj] *= 2;
                         grid[ci][cj] = 0;
                         score += grid[ni][nj];
-                        if (score > bestScore) bestScore = score;
+                        if (score > bestScore) {
+                            bestScore = score;
+                            SaveBest();
+                        }
                         merged[ni][nj] = 1;
                         moved = 1;
                         if (grid[ni][nj] == 2048 && !hasWon) {

@@ -233,6 +233,10 @@
                     <span>Score</span>
                     <div id="score">0</div>
                 </div>
+                <div class="score-box">
+                    <span>Best</span>
+                    <div id="best-score">0</div>
+                </div>
             </div>
         </div>
         <div class="board-container">
@@ -255,6 +259,7 @@
         const gridBg = document.getElementById('grid-bg');
         const tilesContainer = document.getElementById('tiles-container');
         const scoreEl = document.getElementById('score');
+        const bestScoreEl = document.getElementById('best-score');
         const gameOverEl = document.getElementById('game-over');
 
         for (let i = 0; i < 16; i++) {
@@ -265,6 +270,7 @@
 
         let grid = [];
         let score = 0;
+        let bestScore = parseInt(localStorage.getItem('k2048_best_score')) || 0;
         let isGameOverState = false;
         let isAnimating = false;
         let tileIdCounter = 0;
@@ -333,7 +339,12 @@
         }
 
         function updateScore() {
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('k2048_best_score', bestScore);
+            }
             scoreEl.textContent = score;
+            bestScoreEl.textContent = bestScore;
         }
 
         function slideLine(lineTiles) {
