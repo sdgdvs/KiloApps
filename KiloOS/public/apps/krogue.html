@@ -16,6 +16,7 @@
         .stairs { color: #ff0; font-weight: bold; }
         .gold { color: #fd0; }
         .shrine { color: #0ff; font-weight: bold; }
+        .food { color: #a52; }
     </style>
 </head>
 <body>
@@ -24,7 +25,7 @@
         const W = 40;
         const H = 20;
         let map = [];
-        let player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0 };
+        let player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
         let monsters = [];
         let items = [];
         let msgs = ["Welcome to KRogue!", "Find the stairs '>'. Defeat evil."];
@@ -60,6 +61,12 @@
                 let sx, sy;
                 do { sx = Math.floor(Math.random()*(W-4))+2; sy = Math.floor(Math.random()*(H-4))+2; } while(map[sy][sx] === '#');
                 items.push({ x: sx, y: sy, ch: '^', type: 'shrine' });
+            }
+            
+            for(let f = 0; f < 3; f++) {
+                let fx, fy;
+                do { fx = Math.floor(Math.random()*(W-4))+2; fy = Math.floor(Math.random()*(H-4))+2; } while(map[fy][fx] === '#');
+                items.push({ x: fx, y: fy, ch: '%', type: 'food' });
             }
 
             for (let i = 0; i < 5 + difficulty*2 + dlevel; i++) {
@@ -103,6 +110,7 @@
                                     if (it.type === 'stairs') out += "<span class='stairs'>></span>";
                                     else if (it.type === 'gold') out += "<span class='gold'>*</span>";
                                     else if (it.type === 'shrine') out += "<span class='shrine'>^</span>";
+                                    else if (it.type === 'food') out += "<span class='food'>%</span>";
                                 } else {
                                     out += map[y][x] === '#' ? "<span class='wall'>#</span>" : "<span class='floor'>.</span>";
                                 }
@@ -111,7 +119,7 @@
                     }
                     out += "\n";
                 }
-                out += `\nHP: ${player.hp}/${player.max_hp}  Level: ${player.level}  XP: ${player.xp}  Gold: ${player.gold}  DLVL: ${dlevel}\n`;
+                out += `\nHP: ${player.hp}/${player.max_hp}  Level: ${player.level}  XP: ${player.xp}  Gold: ${player.gold}  DLVL: ${dlevel}  Food: ${player.hunger}\n`;
                 for (let i = 0; i < msgs.length; i++) {
                     out += msgs[i] + "\n";
                 }
@@ -149,7 +157,7 @@
                 if (e.key === 'd' || e.key === 'D') difficulty = (difficulty + 1) % 3;
                 if (e.key === 'Enter') { 
                     state = 1; dlevel = 1; 
-                    player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0 };
+                    player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
                     msgs = ["Welcome to KRogue!", "Find the stairs '>'. Defeat evil."];
                     initMap(); 
                 }
@@ -212,9 +220,25 @@
                                             player.level++; player.max_hp += 5; player.hp = player.max_hp;
                                             addMsg(`Welcome to level ${player.level}!`);
                                         }
+                                    } else if (it.type === 'food') {
+                                        player.hunger += 100;
+                                        if (player.hunger > player.max_hunger) player.hunger = player.max_hunger;
+                                        addMsg("You eat a food ration.");
+                                        items.splice(itIdx, 1);
                                     }
                                 }
                             }
+                        }
+                    }
+                    
+                    if (player.hunger > 0) {
+                        player.hunger--;
+                    } else {
+                        player.hp--;
+                        if (Math.random() < 0.2) addMsg("You are starving!");
+                        if (player.hp <= 0) {
+                            addMsg("You starved to death.");
+                            state = 2;
                         }
                     }
                     

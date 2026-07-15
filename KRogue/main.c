@@ -102,6 +102,7 @@ typedef struct {
     int special_ability;
     int gold;
     Item shop_inventory[3];
+    int hunger;
 } Entity;
 
 #define TYPE_HEAL 1
@@ -112,6 +113,7 @@ typedef struct {
 #define TYPE_SPELLBOOK 6
 #define TYPE_GOLD 7
 #define TYPE_SHRINE 8
+#define TYPE_FOOD 9
 
 #define W_SWORD 0
 #define W_HAMMER 1
@@ -301,10 +303,14 @@ void spawn_monster(int x, int y) {
 
 void generate_random_item(Item* it) {
     int r = rand_range(0, 100);
-    if(r < 40) {
+    if(r < 25) {
         it->ch = '!'; it->fg = C_POTION; it->type = TYPE_HEAL;
         it->val = 15 + g.dlevel * 5;
         str_cpy(it->name, "Healing Potion");
+    } else if(r < 40) {
+        it->ch = '%'; it->fg = RGB(139, 69, 19); it->type = TYPE_FOOD;
+        it->val = 400;
+        str_cpy(it->name, "Food Ration");
     } else if(r < 70) {
         it->ch = '('; it->fg = C_WEAPON; it->type = TYPE_WEAPON;
         int w_type = rand_range(0, 3);
@@ -535,6 +541,7 @@ void finalize_character() {
     
     p->level = 1;
     p->xp = 0;
+    p->hunger = 1000;
     
     // Base attributes
     p->str = 10; p->dex = 10; p->tou = 10; p->int_stat = 10; p->wil = 10;
@@ -904,6 +911,15 @@ void monsters_turn() {
     do_monsters_turn(0);
     do_monsters_turn(1);
     process_status_effects(get_player());
+    
+    Entity* p = get_player();
+    if(p->hunger > 0) {
+        p->hunger--;
+    } else {
+        p->hp--;
+        if(rand_range(0, 100) < 20) add_msg("You are starving!");
+        if(p->hp <= 0) handle_death(p, NULL);
+    }
 }
 
 void move_player(int dx, int dy) {
@@ -1009,6 +1025,18 @@ void quaff_potion(int inv_idx) {
     if(p->hp > p->max_hp) p->hp = p->max_hp;
     char buf[100];
     wsprintfA(buf, "You drink %s. You feel better.", g.inventory[inv_idx].name);
+    add_msg(buf);
+    g.inventory[inv_idx].active = 0;
+    monsters_turn();
+}
+
+void eat_food(int inv_idx) {
+    if(!g.inventory[inv_idx].active || g.inventory[inv_idx].type != TYPE_FOOD) return;
+    Entity* p = get_player();
+    p->hunger += g.inventory[inv_idx].val;
+    if(p->hunger > 1000) p->hunger = 1000;
+    char buf[100];
+    wsprintfA(buf, "You eat the %s.", g.inventory[inv_idx].name);
     add_msg(buf);
     g.inventory[inv_idx].active = 0;
     monsters_turn();
@@ -1161,7 +1189,7 @@ void draw_game(HDC hdc) {
         if(g.equip_armor.active) eff_def += g.equip_armor.val;
         if(g.equip_shield.active) eff_def += g.equip_shield.val;
         
-        wsprintfA(buf, "HP:%d/%d MP:%d/%d ATK:%d DEF:%d LVL:%d XP:%d DLVL:%d GOLD:%d", p->hp, p->max_hp, p->mp, p->max_mp, eff_atk, eff_def, p->level, p->xp, g.dlevel, p->gold);
+        wsprintfA(buf, "HP:%d/%d MP:%d/%d ATK:%d DEF:%d LVL:%d XP:%d DLVL:%d GOLD:%d FD:%d", p->hp, p->max_hp, p->mp, p->max_mp, eff_atk, eff_def, p->level, p->xp, g.dlevel, p->gold, p->hunger);
         TextOutA(memDC, 0, H * char_h, buf, str_len(buf));
         
         char status_str[50] = "";
@@ -1268,6 +1296,7 @@ void draw_game(HDC hdc) {
         wsprintfA(buf, "Class: %s", p->class_id == CLASS_FIGHTER ? "Fighter" : (p->class_id == CLASS_ROGUE ? "Rogue" : "Wizard")); TextOutA(memDC, 20, 120, buf, str_len(buf));
         wsprintfA(buf, "Level: %d", p->level); TextOutA(memDC, 20, 140, buf, str_len(buf));
         wsprintfA(buf, "XP:    %d / %d", p->xp, p->level * 20); TextOutA(memDC, 20, 160, buf, str_len(buf));
+        wsprintfA(buf, "Food:  %d / 1000", p->hunger); TextOutA(memDC, 20, 180, buf, str_len(buf));
         
         wsprintfA(buf, "STR: %d", p->str); TextOutA(memDC, 20, 200, buf, str_len(buf));
         wsprintfA(buf, "DEX: %d", p->dex); TextOutA(memDC, 20, 220, buf, str_len(buf));
@@ -1561,6 +1590,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     int idx = wParam - 'A';
                     if(g.inventory[idx].active) {
                         if(g.inventory[idx].type == 1) quaff_potion(idx);
+                        else if(g.inventory[idx].type == TYPE_FOOD) eat_food(idx);
                         else if(g.inventory[idx].type == TYPE_SPELLBOOK) read_book(idx);
                         else equip_item(idx);
                     }
