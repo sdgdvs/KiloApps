@@ -139,8 +139,10 @@
     </div>
     <div class="controls">
       <button class="primary" id="swBtnStart">Start</button>
+      <button id="swBtnLap">Lap</button>
       <button id="swBtnReset">Reset</button>
     </div>
+    <div id="swLaps" style="margin-top: 20px; width: 240px; height: 120px; overflow-y: auto; background: #1a1a1a; border-radius: 8px; padding: 10px; font-family: 'Consolas', monospace; font-size: 14px; color: #aaa; box-sizing: border-box;"></div>
   </div>
   
   <!-- Timer Content -->
@@ -188,10 +190,13 @@
     let swStart = 0;
     let swElapsed = 0;
     let swInterval = null;
+    let lapCount = 0;
     const swDisplay = document.getElementById('swDisplay');
     const swBtnStart = document.getElementById('swBtnStart');
+    const swBtnLap = document.getElementById('swBtnLap');
     const swBtnReset = document.getElementById('swBtnReset');
     const swRing = document.getElementById('swRing');
+    const swLaps = document.getElementById('swLaps');
 
     function formatTime(ms) {
       let d = new Date(ms);
@@ -226,9 +231,22 @@
       }
     };
 
+    swBtnLap.onclick = () => {
+      if (!swInterval) return;
+      lapCount++;
+      let currentMs = swElapsed + performance.now() - swStart;
+      let lapDiv = document.createElement('div');
+      lapDiv.style.padding = "4px 0";
+      lapDiv.style.borderBottom = "1px solid #333";
+      lapDiv.innerText = `Lap ${lapCount}: ${formatTime(currentMs)}`;
+      swLaps.prepend(lapDiv);
+    };
+
     swBtnReset.onclick = () => {
       if (swInterval) { clearInterval(swInterval); swInterval = null; }
       swElapsed = 0;
+      lapCount = 0;
+      swLaps.innerHTML = "";
       swBtnStart.innerText = "Start";
       swBtnStart.classList.add("primary");
       updateSw();

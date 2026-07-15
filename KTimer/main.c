@@ -16,11 +16,13 @@ int sprintf(char* buf, const char* fmt, ...) {
     return ret;
 }
 
-HWND hDisplay, hBtnStart, hBtnReset;
+HWND hDisplay, hBtnStart, hBtnReset, hBtnLap, hListLaps;
 DWORD startTime = 0;
 DWORD elapsed = 0;
 int isRunning = 0;
 char timeBuf[32] = "00:00:00.000";
+int lapCount = 0;
+
 
 void UpdateDisplay() {
     DWORD current = elapsed;
@@ -41,14 +43,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hDisplay = CreateWindowExA(0, "STATIC", "00:00:00.000", WS_CHILD | WS_VISIBLE | SS_CENTER, 20, 20, 240, 50, hwnd, NULL, NULL, NULL);
-            hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 80, 100, 30, hwnd, (HMENU)1001, NULL, NULL);
-            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 160, 80, 100, 30, hwnd, (HMENU)1002, NULL, NULL);
+            hBtnStart = CreateWindowA("BUTTON", "Start", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 20, 80, 70, 30, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnLap = CreateWindowA("BUTTON", "Lap", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 105, 80, 70, 30, hwnd, (HMENU)1003, NULL, NULL);
+            hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 80, 70, 30, hwnd, (HMENU)1002, NULL, NULL);
+            hListLaps = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, 20, 120, 240, 170, hwnd, (HMENU)1004, NULL, NULL);
             
             HFONT hFont = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
             HFONT hBtnFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessageA(hBtnLap, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnReset, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessageA(hListLaps, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             
             SetTimer(hwnd, 1, 10, NULL);
             break;
@@ -67,8 +73,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 1002) {
                 isRunning = 0;
                 elapsed = 0;
+                lapCount = 0;
                 SetWindowTextA(hBtnStart, "Start");
+                SendMessageA(hListLaps, LB_RESETCONTENT, 0, 0);
                 UpdateDisplay();
+            } else if (LOWORD(wParam) == 1003) {
+                if (isRunning) {
+                    lapCount++;
+                    char lapBuf[64];
+                    sprintf(lapBuf, "Lap %d: %s", lapCount, timeBuf);
+                    SendMessageA(hListLaps, LB_ADDSTRING, 0, (LPARAM)lapBuf);
+                    int count = SendMessageA(hListLaps, LB_GETCOUNT, 0, 0);
+                    SendMessageA(hListLaps, LB_SETTOPINDEX, count - 1, 0);
+                }
             }
             break;
         }
@@ -100,7 +117,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(20, 20, 20));
 
     RegisterClassA(&wc);
-    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 170, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KTimerClass", "KTimer", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 300, 350, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
