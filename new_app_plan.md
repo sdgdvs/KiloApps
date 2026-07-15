@@ -49,11 +49,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSudoku (Logic puzzle)
-**Phase:** 2
+**Phase:** 3
 **Status:** In Progress
 
 - Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED - Implemented 9x9 grid, puzzle generator, numpad, and validation logic)
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 
 ## Next Priority (Before New Apps)
 
