@@ -49,13 +49,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** K2048 (Sliding tile puzzle)
-**Phase:** 4
+**Phase:** 5
 **Status:** In Progress
 
 - Phase 1: Scaffold `K2048/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED: Scaffolded K2048 web HTML and registered app)
 - Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED: Implemented web K2048 game logic, style, and mechanics)
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED: Implemented Win32 K2048 version and build.bat)
-- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native.
+- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native. (COMPLETED: Added CSS sliding animations and fixed layout to web, fixed native text centering and rendering)
+- Phase 5: Deep Expansion (Add new modes or features)
 
 ## Next Priority (Before New Apps)
 
