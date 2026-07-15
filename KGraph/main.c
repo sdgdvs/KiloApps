@@ -92,25 +92,73 @@ double evaluate(const char* e, double x) {
     return expr();
 }
 
-HWND hInput, hPlotBtn;
+HWND hInput, hPlotBtn, hZoomIn, hZoomOut;
 HFONT hFont;
 char current_expr[256] = "x*x";
+double view_scale = 10.0;
+double view_cx = 0.0;
+double view_cy = 0.0;
+int is_dragging = 0;
+POINT last_mouse;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "x*x", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 10, 10, 200, 24, hwnd, NULL, NULL, NULL);
             hPlotBtn = CreateWindowA("BUTTON", "Plot", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 60, 24, hwnd, (HMENU)1001, NULL, NULL);
+            hZoomIn = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 290, 10, 30, 24, hwnd, (HMENU)1002, NULL, NULL);
+            hZoomOut = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 10, 30, 24, hwnd, (HMENU)1003, NULL, NULL);
             
             hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hPlotBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hZoomIn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hZoomOut, WM_SETFONT, (WPARAM)hFont, TRUE);
             break;
         }
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1001) {
                 GetWindowTextA(hInput, current_expr, 255);
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 1002) {
+                view_scale *= 0.75;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 1003) {
+                view_scale *= 1.3333;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            break;
+        }
+        case WM_LBUTTONDOWN: {
+            if (HIWORD(lParam) > 40) {
+                is_dragging = 1;
+                last_mouse.x = LOWORD(lParam);
+                last_mouse.y = HIWORD(lParam);
+                SetCapture(hwnd);
+            }
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            if (is_dragging) {
+                int mx = LOWORD(lParam);
+                int my = HIWORD(lParam);
+                RECT rect; GetClientRect(hwnd, &rect);
+                int w = rect.right - rect.left;
+                int h = rect.bottom - 40;
+                if (w > 0 && h > 0) {
+                    view_cx -= (double)(mx - last_mouse.x) / w * (2.0 * view_scale);
+                    view_cy += (double)(my - last_mouse.y) / h * (2.0 * view_scale);
+                    last_mouse.x = mx;
+                    last_mouse.y = my;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            break;
+        }
+        case WM_LBUTTONUP: {
+            if (is_dragging) {
+                is_dragging = 0;
+                ReleaseCapture();
             }
             break;
         }
@@ -136,7 +184,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HPEN axisPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
             HPEN plotPen = CreatePen(PS_SOLID, 2, RGB(90, 139, 212));
             
-            // Grid
+            // Static Grid Background
             SelectObject(hdc, gridPen);
             for(int i = -10; i <= 10; i++) {
                 int px = cx + (i * w / 20);
@@ -150,22 +198,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Axes
             SelectObject(hdc, axisPen);
-            MoveToEx(hdc, cx, rect.top, NULL); LineTo(hdc, cx, rect.bottom);
-            MoveToEx(hdc, rect.left, cy, NULL); LineTo(hdc, rect.right, cy);
+            int axis_x = rect.left + (int)((0.0 - (view_cx - view_scale)) / (2.0 * view_scale) * w);
+            int axis_y = rect.top + (int)(h - (0.0 - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+            if (axis_x >= rect.left && axis_x <= rect.right) {
+                MoveToEx(hdc, axis_x, rect.top, NULL); LineTo(hdc, axis_x, rect.bottom);
+            }
+            if (axis_y >= rect.top && axis_y <= rect.bottom) {
+                MoveToEx(hdc, rect.left, axis_y, NULL); LineTo(hdc, rect.right, axis_y);
+            }
             
             // Plot
             SelectObject(hdc, plotPen);
             int first = 1;
             for(int px = 0; px <= w; px += 2) {
-                double x = ((double)px / w) * 20.0 - 10.0;
+                double x = view_cx - view_scale + ((double)px / w) * (2.0 * view_scale);
                 double y = evaluate(current_expr, x);
-                int py = cy - (int)((y / 10.0) * (h / 2));
+                int py = rect.top + (int)(h - (y - (view_cy - view_scale)) / (2.0 * view_scale) * h);
                 
-                if (first) {
-                    MoveToEx(hdc, rect.left + px, py, NULL);
-                    first = 0;
+                if (py > -10000 && py < 10000) {
+                    if (first) {
+                        MoveToEx(hdc, rect.left + px, py, NULL);
+                        first = 0;
+                    } else {
+                        LineTo(hdc, rect.left + px, py);
+                    }
                 } else {
-                    LineTo(hdc, rect.left + px, py);
+                    first = 1;
                 }
             }
             
