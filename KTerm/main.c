@@ -22,7 +22,7 @@ void AppendOutput(const char* text) {
 }
 
 void ProcessCommand(const char* cmd) {
-    char fullCmd[512];
+    char fullCmd[1024];
     wsprintfA(fullCmd, "%s> %s", currentDir, cmd);
     AppendOutput(fullCmd);
 
@@ -59,7 +59,7 @@ void ProcessCommand(const char* cmd) {
         SetWindowTextA(hOut, "");
     } else if (lstrcmpiA(cmd, "dir") == 0) {
         WIN32_FIND_DATAA fd;
-        char search[MAX_PATH];
+        char search[MAX_PATH + 10];
         wsprintfA(search, "%s\\*", currentDir);
         HANDLE hFind = FindFirstFileA(search, &fd);
         if (hFind != INVALID_HANDLE_VALUE) {

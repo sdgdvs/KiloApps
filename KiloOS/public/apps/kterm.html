@@ -277,6 +277,10 @@
               let target = resolvePath(args[1]);
               let parts = target.split('/').filter(Boolean);
               let name = parts.pop();
+              if (!name) {
+                  print("ERROR: Invalid directory name.");
+                  return;
+              }
               let parentPath = '/' + parts.join('/');
               let parent = vfs.getNode(parentPath);
               if (parent && parent.type === 'dir') {
