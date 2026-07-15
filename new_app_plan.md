@@ -48,24 +48,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** K2048 (Sliding tile puzzle)
-**Phase:** 14
+**App:** KSudoku (Logic puzzle)
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1: Scaffold `K2048/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED: Scaffolded K2048 web HTML and registered app)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED: Implemented web K2048 game logic, style, and mechanics)
-- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED: Implemented Win32 K2048 version and build.bat)
-- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native. (COMPLETED: Added CSS sliding animations and fixed layout to web, fixed native text centering and rendering)
-- Phase 5: Deep Expansion (Add new modes or features) (COMPLETED: Added persistent high score tracking to both web and native versions)
-- Phase 6: Deep Expansion 2 (COMPLETED: Added undo functionality and history stack to both versions)
-- Phase 7: Deep Expansion 3 (COMPLETED: Added configurable grid sizes 3x3 to 6x6 to both web and native versions)
-- Phase 8: Deep Expansion 4 (COMPLETED: Implemented customizable themes (Dark, Classic, Pastel) with persistent storage in both versions)
-- Phase 9: Deep Expansion 5 (COMPLETED: Implemented Time Attack Mode in both web and native versions)
-- Phase 10: Deep Expansion 6 (COMPLETED: Implemented Auto-Play AI with toggle button in both web and native versions)
-- Phase 11: Deep Expansion 7 (COMPLETED: Implemented Obstacle Tiles Mode with spawn logic and unmergeable tiles in both versions)
-- Phase 12: Deep Expansion 8 (COMPLETED: Added detailed lifetime stats tracking to both web and native versions)
-- Phase 13: Deep Expansion 9 (COMPLETED: Implemented Fibonacci Ruleset Mode with dynamic merging, spawning, and high score tracking in both versions)
-- Phase 14: Deep Expansion 10 (COMPLETED: Added Comprehensive Help / Manual System with hotkeys list to both web and native versions)
+- Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 
 ## Next Priority (Before New Apps)
 
