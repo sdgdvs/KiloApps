@@ -140,6 +140,11 @@
       <button id="btnRotateR" title="Rotate Right">↷</button>
       <button id="btnFlipH" title="Flip Horizontal">↔</button>
       <button id="btnFlipV" title="Flip Vertical">↕</button>
+      <button id="btnDraw" title="Toggle Draw Mode">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+        Draw
+      </button>
+      <input type="color" id="drawColor" value="#ff0000" style="width:24px;height:24px;padding:0;border:none;background:transparent;cursor:pointer;">
     </div>
     <div class="toolbar-group" id="filterTools" style="display:none;">
       <button id="btnGray">Grayscale</button>
@@ -180,7 +185,9 @@
       flipV: 1,
       filter: 'none',
       originalData: null,
-      zoom: 1
+      zoom: 1,
+      drawMode: false,
+      isDrawing: false
     };
 
     const ui = {
@@ -194,7 +201,9 @@
       canvasContainer: document.getElementById('canvasContainer'),
       editTools: document.getElementById('editTools'),
       filterTools: document.getElementById('filterTools'),
-      zoomTools: document.getElementById('zoomTools')
+      zoomTools: document.getElementById('zoomTools'),
+      btnDraw: document.getElementById('btnDraw'),
+      drawColor: document.getElementById('drawColor')
     };
 
     ui.btnOpen.onclick = () => ui.fileInput.click();
@@ -212,6 +221,10 @@
           state.flipV = 1;
           state.filter = 'none';
           state.zoom = 1;
+          state.drawMode = false;
+          state.isDrawing = false;
+          ui.btnDraw.classList.remove('primary');
+          ui.canvas.style.cursor = 'default';
           ui.title.textContent = file.name;
           
           ui.emptyState.style.display = 'none';
@@ -301,6 +314,54 @@
         ui.canvas.style.maxHeight = 'none';
       }
     }
+
+    ui.btnDraw.onclick = () => {
+      state.drawMode = !state.drawMode;
+      ui.btnDraw.classList.toggle('primary', state.drawMode);
+      ui.canvas.style.cursor = state.drawMode ? 'crosshair' : 'default';
+    };
+
+    ui.canvas.onmousedown = (e) => {
+      if (!state.drawMode) return;
+      state.isDrawing = true;
+      const rect = ui.canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (ui.canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (ui.canvas.height / rect.height);
+      ui.ctx.beginPath();
+      ui.ctx.moveTo(x, y);
+      ui.ctx.strokeStyle = ui.drawColor.value;
+      ui.ctx.lineWidth = 3;
+      ui.ctx.lineCap = 'round';
+      ui.ctx.lineJoin = 'round';
+    };
+
+    ui.canvas.onmousemove = (e) => {
+      if (!state.isDrawing || !state.drawMode) return;
+      const rect = ui.canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (ui.canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (ui.canvas.height / rect.height);
+      ui.ctx.lineTo(x, y);
+      ui.ctx.stroke();
+    };
+
+    const bakeDrawing = () => {
+      if (!state.isDrawing) return;
+      state.isDrawing = false;
+      const dataURL = ui.canvas.toDataURL();
+      const newImg = new Image();
+      newImg.onload = () => {
+          state.image = newImg;
+          state.angle = 0;
+          state.flipH = 1;
+          state.flipV = 1;
+          state.filter = 'none'; // reset filter since it's baked
+          state.originalData = ui.ctx.getImageData(0, 0, ui.canvas.width, ui.canvas.height);
+      };
+      newImg.src = dataURL;
+    };
+
+    ui.canvas.onmouseup = bakeDrawing;
+    ui.canvas.onmouseleave = bakeDrawing;
 
     document.getElementById('btnRotateL').onclick = () => { state.angle -= 90; render(); };
     document.getElementById('btnRotateR').onclick = () => { state.angle += 90; render(); };

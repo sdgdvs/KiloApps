@@ -13,6 +13,11 @@ HBITMAP hBmp = NULL;
 int bmpW = 0;
 int bmpH = 0;
 float g_zoom = 1.0f;
+HWND hBtnDraw;
+int g_drawMode = 0;
+int g_isDrawing = 0;
+POINT g_lastPt;
+HPEN g_hPen = NULL;
 
 void OpenFileDlg(HWND hwnd) {
     OPENFILENAMEA ofn = {0};
@@ -69,6 +74,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_CHILD | WS_VISIBLE,
                 200, 10, 40, 30, hwnd, (HMENU)4, NULL, NULL);
             SendMessage(hBtnZoomReset, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw",
+                WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX | BS_PUSHLIKE,
+                250, 10, 60, 30, hwnd, (HMENU)5, NULL, NULL);
+            SendMessage(hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE);
+            g_hPen = CreatePen(PS_SOLID, 3, RGB(255, 0, 0));
+
             SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)hFont);
             break;
         }
@@ -84,6 +96,66 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 4) {
                 g_zoom = 1.0f;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 5) {
+                g_drawMode = SendMessage(hBtnDraw, BM_GETCHECK, 0, 0) == BST_CHECKED;
+            }
+            break;
+        }
+        case WM_LBUTTONDOWN:
+        case WM_MOUSEMOVE:
+        case WM_LBUTTONUP: {
+            if (g_drawMode && hBmp) {
+                int mx = (short)LOWORD(lParam);
+                int my = (short)HIWORD(lParam);
+                RECT rc;
+                GetClientRect(hwnd, &rc);
+                int drawW = bmpW, drawH = bmpH;
+                int canvasW = rc.right - rc.left;
+                int canvasH = rc.bottom - rc.top - 50;
+                
+                if (g_zoom == 1.0f) {
+                    if (drawW > canvasW || drawH > canvasH) {
+                        float ratio = (float)drawW / (float)drawH;
+                        if (canvasW / ratio <= canvasH) {
+                            drawW = canvasW;
+                            drawH = (int)(canvasW / ratio);
+                        } else {
+                            drawH = canvasH;
+                            drawW = (int)(canvasH * ratio);
+                        }
+                    }
+                } else {
+                    drawW = (int)(drawW * g_zoom);
+                    drawH = (int)(drawH * g_zoom);
+                }
+                
+                int x = (canvasW - drawW) / 2;
+                int y = 50 + (canvasH - drawH) / 2;
+                
+                int ix = (mx - x) * bmpW / drawW;
+                int iy = (my - y) * bmpH / drawH;
+                
+                if (msg == WM_LBUTTONDOWN) {
+                    g_isDrawing = 1;
+                    g_lastPt.x = ix;
+                    g_lastPt.y = iy;
+                    SetCapture(hwnd);
+                } else if (msg == WM_MOUSEMOVE && g_isDrawing) {
+                    HDC hdcMem = CreateCompatibleDC(NULL);
+                    HGDIOBJ oldBmp = SelectObject(hdcMem, hBmp);
+                    HGDIOBJ oldPen = SelectObject(hdcMem, g_hPen);
+                    MoveToEx(hdcMem, g_lastPt.x, g_lastPt.y, NULL);
+                    LineTo(hdcMem, ix, iy);
+                    SelectObject(hdcMem, oldPen);
+                    SelectObject(hdcMem, oldBmp);
+                    DeleteDC(hdcMem);
+                    g_lastPt.x = ix;
+                    g_lastPt.y = iy;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else if (msg == WM_LBUTTONUP) {
+                    g_isDrawing = 0;
+                    ReleaseCapture();
+                }
             }
             break;
         }
@@ -144,6 +216,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY: {
             if (hBmp) DeleteObject(hBmp);
+            if (g_hPen) DeleteObject(g_hPen);
             HFONT hFont = (HFONT)GetWindowLongPtr(hwnd, GWLP_USERDATA);
             if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);

@@ -19,14 +19,13 @@
 
 ---
 
-**Target App:** KPad
-**Status:** Feature Expansion (Added Find functionality to web and native)
+**Target App:** KImage
+**Status:** Feature Expansion (Added Draw mode to web and native)
 **Current Phase:** Done
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
 
-- KImage
 - KHex
 - KCalc
 - KCalendar
@@ -70,5 +69,5 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KRead
 - KBase
 - KJournal
-
 - KPad
+- KImage
