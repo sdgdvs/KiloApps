@@ -39,6 +39,7 @@ int win = 0;
 int hasWon = 0;
 HWND mainHwnd = NULL;
 static unsigned int seed = 0;
+int theme = 1; // 0=Dark, 1=Classic, 2=Pastel
 
 #define MAX_HISTORY 50
 typedef struct {
@@ -74,6 +75,19 @@ void LoadBest() {
     }
 }
 
+void LoadTheme() {
+    HANDLE hFile = CreateFileA("k2048_theme.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[16] = {0};
+        DWORD bytesRead;
+        if (ReadFile(hFile, buf, sizeof(buf)-1, &bytesRead, NULL)) {
+            theme = buf[0] - '0';
+        }
+        CloseHandle(hFile);
+    }
+    if (theme < 0 || theme > 2) theme = 1;
+}
+
 void SaveBest() {
     char filename[32];
     wsprintfA(filename, "k2048_score_%d.dat", grid_size);
@@ -92,6 +106,18 @@ void SaveBest() {
         buf[len] = 0;
         DWORD bytesWritten;
         WriteFile(hFile, buf, len, &bytesWritten, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void SaveTheme() {
+    HANDLE hFile = CreateFileA("k2048_theme.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char buf[2];
+        buf[0] = '0' + theme;
+        buf[1] = 0;
+        DWORD bytesWritten;
+        WriteFile(hFile, buf, 1, &bytesWritten, NULL);
         CloseHandle(hFile);
     }
 }
@@ -149,21 +175,48 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
     int rCol = 200, gCol = 200, bCol = 200;
     int txtCol = 0x000000;
     
-    if (val == 2) { rCol=238; gCol=228; bCol=218; }
-    else if (val == 4) { rCol=237; gCol=224; bCol=200; }
-    else if (val == 8) { rCol=242; gCol=177; bCol=121; txtCol=0xFFFFFF; }
-    else if (val == 16) { rCol=245; gCol=149; bCol=99; txtCol=0xFFFFFF; }
-    else if (val == 32) { rCol=246; gCol=124; bCol=95; txtCol=0xFFFFFF; }
-    else if (val == 64) { rCol=246; gCol=94; bCol=59; txtCol=0xFFFFFF; }
-    else if (val == 128) { rCol=237; gCol=207; bCol=114; txtCol=0xFFFFFF; }
-    else if (val == 256) { rCol=237; gCol=204; bCol=97; txtCol=0xFFFFFF; }
-    else if (val == 512) { rCol=237; gCol=200; bCol=80; txtCol=0xFFFFFF; }
-    else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
-    else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
-    else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
-    
-    if (val == 0) {
-        rCol = 204; gCol = 192; bCol = 179;
+    if (theme == 0) { // Dark
+        if (val == 2) { rCol=60; gCol=60; bCol=70; txtCol=0xdddddd; }
+        else if (val == 4) { rCol=80; gCol=80; bCol=90; txtCol=0xeeeeee; }
+        else if (val == 8) { rCol=242; gCol=177; bCol=121; txtCol=0xFFFFFF; }
+        else if (val == 16) { rCol=245; gCol=149; bCol=99; txtCol=0xFFFFFF; }
+        else if (val == 32) { rCol=246; gCol=124; bCol=95; txtCol=0xFFFFFF; }
+        else if (val == 64) { rCol=246; gCol=94; bCol=59; txtCol=0xFFFFFF; }
+        else if (val == 128) { rCol=237; gCol=207; bCol=114; txtCol=0xFFFFFF; }
+        else if (val == 256) { rCol=237; gCol=204; bCol=97; txtCol=0xFFFFFF; }
+        else if (val == 512) { rCol=237; gCol=200; bCol=80; txtCol=0xFFFFFF; }
+        else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
+        else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
+        else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
+        if (val == 0) { rCol = 40; gCol = 40; bCol = 40; }
+    } else if (theme == 1) { // Classic
+        if (val == 2) { rCol=238; gCol=228; bCol=218; txtCol=RGB(119,110,101); }
+        else if (val == 4) { rCol=237; gCol=224; bCol=200; txtCol=RGB(119,110,101); }
+        else if (val == 8) { rCol=242; gCol=177; bCol=121; txtCol=0xFFFFFF; }
+        else if (val == 16) { rCol=245; gCol=149; bCol=99; txtCol=0xFFFFFF; }
+        else if (val == 32) { rCol=246; gCol=124; bCol=95; txtCol=0xFFFFFF; }
+        else if (val == 64) { rCol=246; gCol=94; bCol=59; txtCol=0xFFFFFF; }
+        else if (val == 128) { rCol=237; gCol=207; bCol=114; txtCol=0xFFFFFF; }
+        else if (val == 256) { rCol=237; gCol=204; bCol=97; txtCol=0xFFFFFF; }
+        else if (val == 512) { rCol=237; gCol=200; bCol=80; txtCol=0xFFFFFF; }
+        else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
+        else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
+        else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
+        if (val == 0) { rCol = 204; gCol = 192; bCol = 179; }
+    } else { // Pastel
+        if (val == 2) { rCol=225; gCol=190; bCol=231; txtCol=RGB(74,20,140); }
+        else if (val == 4) { rCol=209; gCol=196; bCol=233; txtCol=RGB(74,20,140); }
+        else if (val == 8) { rCol=197; gCol=202; bCol=233; txtCol=RGB(74,20,140); }
+        else if (val == 16) { rCol=187; gCol=222; bCol=251; txtCol=RGB(74,20,140); }
+        else if (val == 32) { rCol=179; gCol=229; bCol=252; txtCol=RGB(74,20,140); }
+        else if (val == 64) { rCol=178; gCol=235; bCol=242; txtCol=RGB(74,20,140); }
+        else if (val == 128) { rCol=178; gCol=223; bCol=219; txtCol=RGB(74,20,140); }
+        else if (val == 256) { rCol=200; gCol=230; bCol=201; txtCol=RGB(74,20,140); }
+        else if (val == 512) { rCol=220; gCol=237; bCol=200; txtCol=RGB(74,20,140); }
+        else if (val == 1024) { rCol=240; gCol=244; bCol=195; txtCol=RGB(74,20,140); }
+        else if (val == 2048) { rCol=255; gCol=249; bCol=196; txtCol=RGB(74,20,140); }
+        else if (val > 2048) { rCol=150; gCol=150; bCol=150; txtCol=RGB(74,20,140); }
+        if (val == 0) { rCol = 255; gCol = 255; bCol = 255; }
     }
 
     HBRUSH bg = CreateSolidBrush(RGB(rCol, gCol, bCol));
@@ -195,13 +248,28 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
 
 void DrawBoard(HDC hdc) {
     RECT bgRect = {0, 0, 800, 600};
-    HBRUSH bgb = CreateSolidBrush(RGB(250, 248, 239));
+    
+    int bgR = 250, bgG = 248, bgB = 239;
+    int txtR = 119, txtG = 110, txtB = 101;
+    int boardR = 187, boardG = 173, boardB = 160;
+    
+    if (theme == 0) {
+        bgR = 30; bgG = 30; bgB = 30;
+        txtR = 255; txtG = 255; txtB = 255;
+        boardR = 20; boardG = 20; boardB = 20;
+    } else if (theme == 2) {
+        bgR = 252; bgG = 228; bgB = 236;
+        txtR = 74; txtG = 20; txtB = 140;
+        boardR = 248; boardG = 187; boardB = 208;
+    }
+
+    HBRUSH bgb = CreateSolidBrush(RGB(bgR, bgG, bgB));
     FillRect(hdc, &bgRect, bgb);
     DeleteObject(bgb);
 
     // Header
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, RGB(119, 110, 101));
+    SetTextColor(hdc, RGB(txtR, txtG, txtB));
     HFONT hFontTitle = CreateFontA(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
         CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
     HFONT oldFont = (HFONT)SelectObject(hdc, hFontTitle);
@@ -224,12 +292,12 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size(3-6) [U]ndo");
+    wsprintfA(helpBuf, "Size(3-6) [U]ndo [T]heme");
     RECT helpRect = { 200, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + grid_size*cell_size + 8, HEADER_HEIGHT + grid_size*cell_size + 8 };
-    HBRUSH boardBrush = CreateSolidBrush(RGB(187, 173, 160));
+    HBRUSH boardBrush = CreateSolidBrush(RGB(boardR, boardG, boardB));
     FillRect(hdc, &boardBg, boardBrush);
     DeleteObject(boardBrush);
 
@@ -333,6 +401,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch (uMsg) {
         case WM_CREATE:
             mainHwnd = hwnd;
+            LoadTheme();
             InitGame();
             return 0;
         case WM_ERASEBKGND:
@@ -344,6 +413,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'T' || wParam == 't') {
+                theme = (theme + 1) % 3;
+                SaveTheme();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
                 if (historyCount > 0) {

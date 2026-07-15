@@ -7,12 +7,99 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
+        :root {
+            --bg-color: linear-gradient(135deg, #1f1c2c, #928DAB);
+            --text-color: #ffffff;
+            --container-bg: rgba(30, 30, 30, 0.4);
+            --container-border: rgba(255, 255, 255, 0.1);
+            --container-shadow: rgba(0, 0, 0, 0.3);
+            --score-bg: rgba(0, 0, 0, 0.3);
+            --score-c: #aaa;
+            --board-bg: rgba(0, 0, 0, 0.3);
+            --cell-bg: rgba(255, 255, 255, 0.05);
+            --btn-bg: rgba(255, 255, 255, 0.15);
+            --btn-c: white;
+            --btn-border: rgba(255, 255, 255, 0.2);
+            --btn-hover: rgba(255, 255, 255, 0.25);
+            --title-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            
+            --t2-bg: rgba(238, 228, 218, 0.1); --t2-c: #ddd; --t2-sh: none;
+            --t4-bg: rgba(237, 224, 200, 0.2); --t4-c: #eee; --t4-sh: none;
+            --t8-bg: #f2b179; --t8-c: #fff; --t8-sh: none;
+            --t16-bg: #f59563; --t16-c: #fff; --t16-sh: none;
+            --t32-bg: #f67c5f; --t32-c: #fff; --t32-sh: none;
+            --t64-bg: #f65e3b; --t64-c: #fff; --t64-sh: none;
+            --t128-bg: #edcf72; --t128-c: #fff; --t128-sh: 0 0 10px rgba(237, 207, 114, 0.5);
+            --t256-bg: #edcc61; --t256-c: #fff; --t256-sh: 0 0 15px rgba(237, 204, 97, 0.6);
+            --t512-bg: #edc850; --t512-c: #fff; --t512-sh: 0 0 20px rgba(237, 200, 80, 0.7);
+            --t1024-bg: #edc53f; --t1024-c: #fff; --t1024-sh: 0 0 25px rgba(237, 197, 63, 0.8);
+            --t2048-bg: #edc22e; --t2048-c: #fff; --t2048-sh: 0 0 30px rgba(237, 194, 46, 0.9);
+        }
+
+        body.theme-classic {
+            --bg-color: #faf8ef;
+            --text-color: #776e65;
+            --container-bg: transparent;
+            --container-border: transparent;
+            --container-shadow: transparent;
+            --score-bg: #bbada0;
+            --score-c: #eee4da;
+            --board-bg: #bbada0;
+            --cell-bg: rgba(238, 228, 218, 0.35);
+            --btn-bg: #8f7a66;
+            --btn-c: #f9f6f2;
+            --btn-border: transparent;
+            --btn-hover: #9f8b77;
+            --title-shadow: none;
+            
+            --t2-bg: #eee4da; --t2-c: #776e65; --t2-sh: none;
+            --t4-bg: #ede0c8; --t4-c: #776e65; --t4-sh: none;
+            --t8-bg: #f2b179; --t8-c: #f9f6f2; --t8-sh: none;
+            --t16-bg: #f59563; --t16-c: #f9f6f2; --t16-sh: none;
+            --t32-bg: #f67c5f; --t32-c: #f9f6f2; --t32-sh: none;
+            --t64-bg: #f65e3b; --t64-c: #f9f6f2; --t64-sh: none;
+            --t128-bg: #edcf72; --t128-c: #f9f6f2; --t128-sh: 0 0 10px rgba(237, 207, 114, 0.5);
+            --t256-bg: #edcc61; --t256-c: #f9f6f2; --t256-sh: 0 0 15px rgba(237, 204, 97, 0.6);
+            --t512-bg: #edc850; --t512-c: #f9f6f2; --t512-sh: 0 0 20px rgba(237, 200, 80, 0.7);
+            --t1024-bg: #edc53f; --t1024-c: #f9f6f2; --t1024-sh: 0 0 25px rgba(237, 197, 63, 0.8);
+            --t2048-bg: #edc22e; --t2048-c: #f9f6f2; --t2048-sh: 0 0 30px rgba(237, 194, 46, 0.9);
+        }
+
+        body.theme-pastel {
+            --bg-color: #fce4ec;
+            --text-color: #4a148c;
+            --container-bg: rgba(255, 255, 255, 0.6);
+            --container-border: rgba(255, 255, 255, 0.5);
+            --container-shadow: 0 8px 32px rgba(244, 143, 177, 0.3);
+            --score-bg: rgba(244, 143, 177, 0.3);
+            --score-c: #6a1b9a;
+            --board-bg: #f8bbd0;
+            --cell-bg: rgba(255, 255, 255, 0.5);
+            --btn-bg: #f48fb1;
+            --btn-c: #fff;
+            --btn-border: #f06292;
+            --btn-hover: #f06292;
+            --title-shadow: 0 0 15px rgba(244, 143, 177, 0.5);
+            
+            --t2-bg: #e1bee7; --t2-c: #4a148c; --t2-sh: none;
+            --t4-bg: #d1c4e9; --t4-c: #4a148c; --t4-sh: none;
+            --t8-bg: #c5cae9; --t8-c: #4a148c; --t8-sh: none;
+            --t16-bg: #bbdefb; --t16-c: #4a148c; --t16-sh: none;
+            --t32-bg: #b3e5fc; --t32-c: #4a148c; --t32-sh: none;
+            --t64-bg: #b2ebf2; --t64-c: #4a148c; --t64-sh: none;
+            --t128-bg: #b2dfdb; --t128-c: #4a148c; --t128-sh: 0 0 10px rgba(178, 223, 219, 0.8);
+            --t256-bg: #c8e6c9; --t256-c: #4a148c; --t256-sh: 0 0 15px rgba(200, 230, 201, 0.8);
+            --t512-bg: #dcedc8; --t512-c: #4a148c; --t512-sh: 0 0 20px rgba(220, 237, 200, 0.8);
+            --t1024-bg: #f0f4c3; --t1024-c: #4a148c; --t1024-sh: 0 0 25px rgba(240, 244, 195, 0.8);
+            --t2048-bg: #fff9c4; --t2048-c: #4a148c; --t2048-sh: 0 0 30px rgba(255, 249, 196, 0.8);
+        }
+
         body {
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1f1c2c, #928DAB);
-            color: #ffffff;
+            background: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -23,13 +110,13 @@
         }
 
         .container {
-            background: rgba(30, 30, 30, 0.4);
+            background: var(--container-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--container-border);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            box-shadow: var(--container-shadow);
             text-align: center;
             width: 100%;
             max-width: 450px;
@@ -48,8 +135,8 @@
             margin: 0;
             font-size: 3rem;
             font-weight: 800;
-            color: #fff;
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            text-shadow: var(--title-shadow);
             letter-spacing: 2px;
         }
 
@@ -59,7 +146,8 @@
         }
 
         .score-box {
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--score-bg);
+            color: var(--text-color);
             padding: 8px 15px;
             border-radius: 8px;
             font-size: 1rem;
@@ -73,7 +161,7 @@
         .score-box span {
             font-size: 0.7rem;
             text-transform: uppercase;
-            color: #aaa;
+            color: var(--score-c);
             margin-bottom: 2px;
         }
 
@@ -81,7 +169,7 @@
             position: relative;
             width: 100%;
             aspect-ratio: 1;
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--board-bg);
             border-radius: 12px;
             padding: 2.5%;
             margin: 0 auto 25px auto;
@@ -97,7 +185,7 @@
         }
 
         .grid-cell {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--cell-bg);
             border-radius: 8px;
             width: 100%;
             height: 100%;
@@ -136,17 +224,17 @@
             transition: background 150ms, color 150ms, box-shadow 150ms;
         }
 
-        .val-2 .tile-inner { background: rgba(238, 228, 218, 0.1); color: #ddd; }
-        .val-4 .tile-inner { background: rgba(237, 224, 200, 0.2); color: #eee; }
-        .val-8 .tile-inner { background: #f2b179; color: #fff; }
-        .val-16 .tile-inner { background: #f59563; color: #fff; }
-        .val-32 .tile-inner { background: #f67c5f; color: #fff; }
-        .val-64 .tile-inner { background: #f65e3b; color: #fff; }
-        .val-128 .tile-inner { background: #edcf72; color: #fff; box-shadow: 0 0 10px rgba(237, 207, 114, 0.5); font-size: 1.8rem; }
-        .val-256 .tile-inner { background: #edcc61; color: #fff; box-shadow: 0 0 15px rgba(237, 204, 97, 0.6); font-size: 1.8rem; }
-        .val-512 .tile-inner { background: #edc850; color: #fff; box-shadow: 0 0 20px rgba(237, 200, 80, 0.7); font-size: 1.8rem; }
-        .val-1024 .tile-inner { background: #edc53f; color: #fff; box-shadow: 0 0 25px rgba(237, 197, 63, 0.8); font-size: 1.5rem; }
-        .val-2048 .tile-inner { background: #edc22e; color: #fff; box-shadow: 0 0 30px rgba(237, 194, 46, 0.9); font-size: 1.5rem; }
+        .val-2 .tile-inner { background: var(--t2-bg); color: var(--t2-c); box-shadow: var(--t2-sh); }
+        .val-4 .tile-inner { background: var(--t4-bg); color: var(--t4-c); box-shadow: var(--t4-sh); }
+        .val-8 .tile-inner { background: var(--t8-bg); color: var(--t8-c); box-shadow: var(--t8-sh); }
+        .val-16 .tile-inner { background: var(--t16-bg); color: var(--t16-c); box-shadow: var(--t16-sh); }
+        .val-32 .tile-inner { background: var(--t32-bg); color: var(--t32-c); box-shadow: var(--t32-sh); }
+        .val-64 .tile-inner { background: var(--t64-bg); color: var(--t64-c); box-shadow: var(--t64-sh); }
+        .val-128 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.8rem; }
+        .val-256 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.8rem; }
+        .val-512 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.8rem; }
+        .val-1024 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
+        .val-2048 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
 
         .tile.new .tile-inner {
             animation: appear 200ms ease;
@@ -174,9 +262,9 @@
         }
 
         button.btn {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: var(--btn-bg);
+            color: var(--btn-c);
+            border: 1px solid var(--btn-border);
             padding: 12px 24px;
             border-radius: 8px;
             font-size: 1.1rem;
@@ -187,7 +275,7 @@
         }
 
         button.btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: var(--btn-hover);
             border-color: rgba(255, 255, 255, 0.5);
             box-shadow: 0 0 15px rgba(255,255,255,0.1);
         }
@@ -251,7 +339,14 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>2048</h1>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h1>2048</h1>
+                <select id="theme-select" onchange="setTheme(this.value)" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
+                    <option value="default">Dark</option>
+                    <option value="classic">Classic</option>
+                    <option value="pastel">Pastel</option>
+                </select>
+            </div>
             <div class="score-container">
                 <div class="score-box">
                     <span>Score</span>
@@ -294,6 +389,16 @@
         const scoreEl = document.getElementById('score');
         const bestScoreEl = document.getElementById('best-score');
         const gameOverEl = document.getElementById('game-over');
+        const themeSelect = document.getElementById('theme-select');
+
+        function setTheme(themeName) {
+            document.body.className = themeName === 'default' ? '' : `theme-${themeName}`;
+            localStorage.setItem('k2048_theme', themeName);
+            themeSelect.value = themeName;
+        }
+        
+        let savedTheme = localStorage.getItem('k2048_theme') || 'default';
+        setTheme(savedTheme);
 
         let gridSize = 4;
 
