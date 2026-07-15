@@ -78,10 +78,13 @@
       tasks.forEach(task => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${task.title}</td>
-          <td style="font-family: monospace; color: #888;">${task.id.slice(0,8)}...</td>
-          <td style="text-align: right;"><button class="kill-btn" onclick="killTask('${task.id}')">End Task</button></td>
+          <td class="task-title-cell"></td>
+          <td class="task-id-cell" style="font-family: monospace; color: #888;"></td>
+          <td style="text-align: right;"><button class="kill-btn">End Task</button></td>
         `;
+        tr.querySelector('.task-title-cell').textContent = task.title;
+        tr.querySelector('.task-id-cell').textContent = task.id.slice(0,8) + '...';
+        tr.querySelector('.kill-btn').onclick = () => killTask(task.id);
         tbody.appendChild(tr);
       });
     }
