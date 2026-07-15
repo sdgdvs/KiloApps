@@ -49,10 +49,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSudoku (Logic puzzle)
-**Phase:** 1
+**Phase:** 2
 **Status:** In Progress
 
-- Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 
 ## Next Priority (Before New Apps)
 
