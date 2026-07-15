@@ -56,6 +56,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubMenu, MF_STRING, 1001, "Open File...");
             AppendMenuA(hSubMenu, MF_STRING, 1002, "Exit");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "File");
+            
+            HMENU hViewMenu = CreatePopupMenu();
+            AppendMenuA(hViewMenu, MF_STRING, 1003, "Statistics");
+            AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hViewMenu, "View");
+            
             SetMenu(hwnd, hMenu);
 
             hEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Use File -> Open to read a text file.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_WANTRETURN, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
@@ -72,6 +77,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1001) OpenFileAndLoad(hwnd);
             if (LOWORD(wParam) == 1002) PostQuitMessage(0);
+            if (LOWORD(wParam) == 1003) {
+                int len = GetWindowTextLengthA(hEdit);
+                if (len > 0) {
+                    char* text = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT, PAGE_READWRITE);
+                    if (text) {
+                        GetWindowTextA(hEdit, text, len + 1);
+                        int lines = 1, words = 0, chars = len;
+                        int inWord = 0;
+                        for (int i = 0; i < len; i++) {
+                            if (text[i] == '\n') lines++;
+                            if (text[i] == ' ' || text[i] == '\n' || text[i] == '\r' || text[i] == '\t') {
+                                inWord = 0;
+                            } else {
+                                if (!inWord) {
+                                    words++;
+                                    inWord = 1;
+                                }
+                            }
+                        }
+                        char msg[256];
+                        wsprintfA(msg, "Lines:\t%d\nWords:\t%d\nCharacters:\t%d", lines, words, chars);
+                        MessageBoxA(hwnd, msg, "Document Statistics", MB_OK | MB_ICONINFORMATION);
+                        VirtualFree(text, 0, MEM_RELEASE);
+                    }
+                } else {
+                    MessageBoxA(hwnd, "Document is empty.", "Document Statistics", MB_OK | MB_ICONINFORMATION);
+                }
+            }
             break;
         }
         case WM_CTLCOLOREDIT: {
