@@ -96,6 +96,7 @@
         <div class="tab active" onclick="setMode('length')">Length</div>
         <div class="tab" onclick="setMode('weight')">Weight</div>
         <div class="tab" onclick="setMode('temp')">Temp</div>
+        <div class="tab" onclick="setMode('data')">Data</div>
       </div>
 
       <div class="row">
@@ -135,6 +136,13 @@
         c: { name: 'Celsius' },
         f: { name: 'Fahrenheit' },
         k: { name: 'Kelvin' }
+      },
+      data: {
+        b: { name: 'Bytes', factor: 1 },
+        kb: { name: 'KB', factor: 1024 },
+        mb: { name: 'MB', factor: 1048576 },
+        gb: { name: 'GB', factor: 1073741824 },
+        tb: { name: 'TB', factor: 1099511627776 }
       }
     };
 
