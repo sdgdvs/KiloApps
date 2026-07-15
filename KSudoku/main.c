@@ -25,7 +25,7 @@ int elapsedTime = 0;
 int score = 0;
 int awarded[9][9];
 int timerActive = 0;
-HWND hBtnNew, hBtnNotes, hBtnValidate;
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint;
 HFONT hFont, hFontSmall;
 
 void ShuffleArray(int* arr, int len) {
@@ -131,9 +131,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessageA(hComboDifficulty, CB_SETCURSEL, 1, 0);
-            hBtnNew = CreateWindowA("BUTTON", "New Game", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 100, 30, hwnd, (HMENU)1, NULL, NULL);
-            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 100, 30, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 330, 10, 100, 30, hwnd, (HMENU)2, NULL, NULL);
+            hBtnNew = CreateWindowA("BUTTON", "New Game", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 80, 30, hwnd, (HMENU)1, NULL, NULL);
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 10, 85, 30, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 285, 10, 70, 30, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 360, 10, 60, 30, hwnd, (HMENU)5, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -174,6 +175,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (errorCount > 0) {
                     score -= errorCount * 20;
                     if (score < 0) score = 0;
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 5) { // Hint
+                if (sel_r >= 0 && sel_c >= 0 && !fixed[sel_r][sel_c]) {
+                    if (board[sel_r][sel_c] != solution[sel_r][sel_c]) {
+                        score -= 150;
+                        if (score < 0) score = 0;
+                        board[sel_r][sel_c] = solution[sel_r][sel_c];
+                        awarded[sel_r][sel_c] = 1;
+                        error_cells[sel_r][sel_c] = 0;
+                        CheckWin(hwnd);
+                    }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }

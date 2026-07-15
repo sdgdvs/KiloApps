@@ -265,6 +265,7 @@
             <button id="btn-new">New Game</button>
             <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
+            <button id="btn-hint">Hint</button>
         </div>
         <div class="main-content">
             <div class="sudoku-board" id="board">
@@ -292,6 +293,7 @@
         const btnNew = document.getElementById('btn-new');
         const btnNotes = document.getElementById('btn-notes');
         const btnValidate = document.getElementById('btn-validate');
+        const btnHint = document.getElementById('btn-hint');
         
         let board = [];
         let solution = [];
@@ -625,6 +627,27 @@
             if (errorCount > 0) {
                 score = Math.max(0, score - errorCount * 20);
                 document.getElementById('score').textContent = `Score: ${score}`;
+            }
+        });
+
+        btnHint.addEventListener('click', () => {
+            if (!selectedCell) return;
+            let r = selectedCell.r;
+            let c = selectedCell.c;
+            let cell = cells[r * 9 + c];
+            if (cell.classList.contains('fixed')) return;
+            
+            if (board[r][c] !== solution[r][c]) {
+                score = Math.max(0, score - 150);
+                document.getElementById('score').textContent = `Score: ${score}`;
+                
+                board[r][c] = solution[r][c];
+                awarded[r][c] = true; 
+                
+                renderCell(r, c);
+                cell.classList.remove('error', 'flash-error');
+                updateHighlights();
+                checkWin();
             }
         });
 
