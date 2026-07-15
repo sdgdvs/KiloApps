@@ -133,3 +133,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KTetris (Added wall kicks and combo score multiplier to both EXE and HTML)
 - [x] KPong (Added paddle spin physics and dynamic shrinking paddles as rally increases to both EXE and HTML)
 - [x] KMaze (Added procedural maze generation extending the game from 5 to 10 levels to both EXE and HTML)
+- [x] KSolitaire (Added score and streak mechanic instead of just moves to both EXE and HTML)
+- [x] KSpace (Added enemy bullets for Type 2 enemies to create bullet-hell mechanics to both EXE and HTML)

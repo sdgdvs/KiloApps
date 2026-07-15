@@ -7,6 +7,7 @@
 #define ID_HARD 1002
 #define ID_EXPERT 1003
 #define ID_RESTART 1004
+#define ID_PEEK 1005
 #define ID_THEME_LETTERS 1010
 #define ID_THEME_NUMBERS 1011
 #define ID_THEME_SYMBOLS 1012
@@ -23,6 +24,10 @@ int firstFlip = -1;
 int secondFlip = -1;
 int matches = 0;
 int moves = 0;
+int score = 0;
+int combo = 1;
+int score = 0;
+int streak = 1;
 
 int best_easy = -1;
 int best_hard = -1;
@@ -78,6 +83,8 @@ void Shuffle(HWND hwnd) {
     secondFlip = -1;
     matches = 0;
     moves = 0;
+    score = 0;
+    combo = 1;
     elapsed_time = 0;
     timer_running = 0;
     
@@ -149,6 +156,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hSubMenu, MF_STRING, ID_HARD, "Hard (6x4)");
             AppendMenu(hSubMenu, MF_STRING, ID_EXPERT, "Expert (8x4)");
             AppendMenu(hSubMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hSubMenu, MF_STRING, ID_PEEK, "Peek (+5 moves, -200 pts)");
             AppendMenu(hSubMenu, MF_STRING, ID_RESTART, "Restart");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Game");
             
@@ -172,6 +180,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 1);
             } else if (LOWORD(wParam) == ID_EXPERT) {
                 SetDifficulty(hwnd, 2);
+            } else if (LOWORD(wParam) == ID_PEEK) {
+                if (!is_previewing && firstFlip == -1) {
+                    moves += 5;
+                    score -= 200;
+                    if (score < 0) score = 0;
+                    combo = 1;
+                    int numCards = ROWS * COLS;
+                    for (int i = 0; i < numCards; i++) {
+                        if (!matched[i]) flipped[i] = 1;
+                    }
+                    is_previewing = 1;
+                    SetTimer(hwnd, 3, 1500, NULL);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    MessageBeep(MB_ICONASTERISK);
+                }
             } else if (LOWORD(wParam) == ID_RESTART) {
                 SetDifficulty(hwnd, is_hard);
             } else if (LOWORD(wParam) == ID_THEME_LETTERS) {
@@ -212,6 +235,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         secondFlip = idx;
                         moves++;
                         if (cards[firstFlip] == cards[secondFlip]) {
+                            score += 100 * combo;
+                            combo++;
                             matched[firstFlip] = 1;
                             matched[secondFlip] = 1;
                             firstFlip = -1;
@@ -228,20 +253,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 
                                 int is_new_best = 0;
                                 if (is_hard == 2) {
-                                    if (best_expert == -1 || moves < best_expert) { best_expert = moves; is_new_best = 1; }
+                                    if (best_expert == -1 || score > best_expert) { best_expert = score; is_new_best = 1; }
                                 } else if (is_hard == 1) {
-                                    if (best_hard == -1 || moves < best_hard) { best_hard = moves; is_new_best = 1; }
+                                    if (best_hard == -1 || score > best_hard) { best_hard = score; is_new_best = 1; }
                                 } else {
-                                    if (best_easy == -1 || moves < best_easy) { best_easy = moves; is_new_best = 1; }
+                                    if (best_easy == -1 || score > best_easy) { best_easy = score; is_new_best = 1; }
                                 }
                                 if (is_new_best) SaveScores();
                                 
                                 char msgBuf[256];
-                                sprintf(msgBuf, "You won in %d moves and %d seconds!", moves, elapsed_time);
+                                sprintf(msgBuf, "You won with score %d in %d moves and %d seconds!", score, moves, elapsed_time);
                                 MessageBoxA(hwnd, msgBuf, "KMemory", MB_OK);
                                 Shuffle(hwnd);
                             }
                         } else {
+                            combo = 1;
+                            score -= 10;
+                            if (score < 0) score = 0;
                             SetTimer(hwnd, 1, 1000, NULL);
                             MessageBeep(MB_ICONHAND);
                         }
@@ -288,9 +316,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char statusText[256];
             int best = (is_hard == 2) ? best_expert : (is_hard == 1 ? best_hard : best_easy);
             if (best == -1)
-                sprintf(statusText, "Time: %ds   Moves: %d   Best: -", elapsed_time, moves);
+                sprintf(statusText, "Time: %ds   Moves: %d   Score: %d (x%d)   Best: -", elapsed_time, moves, score, combo);
             else
-                sprintf(statusText, "Time: %ds   Moves: %d   Best: %d", elapsed_time, moves, best);
+                sprintf(statusText, "Time: %ds   Moves: %d   Score: %d (x%d)   Best: %d", elapsed_time, moves, score, combo, best);
             TextOutA(memDC, 10, 10, statusText, strlen(statusText));
 
             // Draw table

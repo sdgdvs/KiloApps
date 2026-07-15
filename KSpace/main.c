@@ -17,6 +17,8 @@ typedef struct { float x, y, speed; } Star;
 Ent p = { W/2.0f, H - 50.0f, 1.0f, 0, 0, 0 };
 Ent b[MAX_BULLETS] = {0};
 Ent e[MAX_ENEMIES] = {0};
+#define MAX_EBULLETS 20
+Ent eb[MAX_EBULLETS] = {0};
 #define MAX_POWERUPS 3
 Ent pu[MAX_POWERUPS] = {0};
 int spreadTimer = 0;
@@ -89,6 +91,7 @@ void Update() {
             score = 0;
             for(int i=0; i<MAX_ENEMIES; i++) e[i].active = 0;
             for(int i=0; i<MAX_BULLETS; i++) b[i].active = 0;
+            for(int i=0; i<MAX_EBULLETS; i++) eb[i].active = 0;
             for(int i=0; i<MAX_POWERUPS; i++) pu[i].active = 0;
             spreadTimer = 0;
             shieldActive = 0;
@@ -145,6 +148,18 @@ void Update() {
             }
             if (e[i].y > H) e[i].active = 0.0f;
             
+            if (e[i].type == 2.0f && (frameCount % 60 == 0) && (rnd() % 2 == 0)) {
+                for (int j = 0; j < MAX_EBULLETS; j++) {
+                    if (!eb[j].active) {
+                        eb[j].active = 1.0f;
+                        eb[j].x = e[i].x + 8.0f;
+                        eb[j].y = e[i].y + 20.0f;
+                        eb[j].dy = 4.0f;
+                        break;
+                    }
+                }
+            }
+            
             // Player collision
             if (p.x < e[i].x + 20 && p.x + 20 > e[i].x && p.y < e[i].y + 20 && p.y + 20 > e[i].y) {
                 if (shieldActive) {
@@ -178,6 +193,21 @@ void Update() {
                         }
                     }
                     break;
+                }
+            }
+        }
+    }
+    
+    for (int i = 0; i < MAX_EBULLETS; i++) {
+        if (eb[i].active) {
+            eb[i].y += eb[i].dy;
+            if (eb[i].y > H) eb[i].active = 0.0f;
+            if (p.x < eb[i].x + 4 && p.x + 20 > eb[i].x && p.y < eb[i].y + 10 && p.y + 20 > eb[i].y) {
+                eb[i].active = 0.0f;
+                if (shieldActive) {
+                    shieldActive = 0;
+                } else {
+                    gameOver = 1;
                 }
             }
         }
@@ -262,6 +292,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             DeleteObject(bbr);
+            
+            // Draw enemy bullets
+            HBRUSH ebbr = CreateSolidBrush(RGB(255, 100, 255));
+            for (int i = 0; i < MAX_EBULLETS; i++) {
+                if (eb[i].active) {
+                    RECT br = {(int)eb[i].x, (int)eb[i].y, (int)eb[i].x + 4, (int)eb[i].y + 10};
+                    FillRect(memDC, &br, ebbr);
+                }
+            }
+            DeleteObject(ebbr);
             
             // Draw enemies
             HBRUSH ebr1 = CreateSolidBrush(RGB(255, 50, 50));

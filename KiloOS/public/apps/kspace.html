@@ -17,6 +17,7 @@
   
   let p = { x: W/2, y: H-50 };
   let bullets = [];
+  let eBullets = [];
   let enemies = [];
   let stars = [];
   for(let i=0; i<50; i++) {
@@ -54,6 +55,7 @@
               score = 0;
               enemies = [];
               bullets = [];
+              eBullets = [];
               powerups = [];
               spreadTimer = 0;
               shieldActive = false;
@@ -104,6 +106,10 @@
               enemies[i].y += baseEnemySpeed * 0.4;
           }
           
+          if (enemies[i].type === 2 && (frameCount % 60 === 0) && Math.random() < 0.5) {
+              eBullets.push({ x: enemies[i].x + 8, y: enemies[i].y + 20, dy: 4 });
+          }
+          
           let removed = false;
           if (p.x < enemies[i].x + 20 && p.x + 20 > enemies[i].x && p.y < enemies[i].y + 20 && p.y + 20 > enemies[i].y) {
               if (shieldActive) {
@@ -138,6 +144,22 @@
               enemies.splice(i, 1);
           } else if (enemies[i].y > H) {
               enemies.splice(i, 1);
+          }
+      }
+      
+      for (let i = eBullets.length - 1; i >= 0; i--) {
+          eBullets[i].y += eBullets[i].dy;
+          if (eBullets[i].y > H) {
+              eBullets.splice(i, 1);
+              continue;
+          }
+          if (p.x < eBullets[i].x + 4 && p.x + 20 > eBullets[i].x && p.y < eBullets[i].y + 10 && p.y + 20 > eBullets[i].y) {
+              eBullets.splice(i, 1);
+              if (shieldActive) {
+                  shieldActive = false;
+              } else {
+                  gameOver = true;
+              }
           }
       }
       
@@ -184,6 +206,11 @@
       ctx.fillStyle = '#ffff64';
       for (let b of bullets) {
           ctx.fillRect(b.x, b.y, 4, 10);
+      }
+      
+      ctx.fillStyle = '#ff64ff';
+      for (let eb of eBullets) {
+          ctx.fillRect(eb.x, eb.y, 4, 10);
       }
       
       for (let e of enemies) {

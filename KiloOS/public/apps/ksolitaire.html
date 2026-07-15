@@ -4,7 +4,7 @@
 <title>KMemory (Patience)</title>
 <style>
   body { margin: 0; background-color: #1e963c; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; font-family: sans-serif; color: white;}
-  #ui { display: flex; justify-content: space-between; width: 380px; margin-bottom: 10px; font-weight: bold; font-size: 16px; }
+  #ui { display: flex; justify-content: space-between; width: 100%; max-width: 600px; margin-bottom: 10px; font-weight: bold; font-size: 14px; gap: 10px; }
   .grid { display: grid; gap: 10px; }
   .grid.easy { grid-template-columns: repeat(4, 1fr); width: 380px; height: 380px; }
   .grid.hard { grid-template-columns: repeat(6, 1fr); width: 570px; height: 380px; }
@@ -21,7 +21,9 @@
 <div id="ui">
   <div>Time: <span id="time">0</span>s</div>
   <div>Moves: <span id="moves">0</span></div>
-  <div>Best (Moves): <span id="best">-</span></div>
+  <div>Score: <span id="score">0</span></div>
+  <div>Combo: x<span id="combo">1</span></div>
+  <div>Best Score: <span id="best">-</span></div>
 </div>
 <div class="grid easy" id="grid"></div>
 <div class="controls">
@@ -33,11 +35,14 @@
   <button onclick="setDifficulty('easy')">Easy (4x4)</button>
   <button onclick="setDifficulty('hard')">Hard (6x4)</button>
   <button onclick="setDifficulty('expert')">Expert (8x4)</button>
+  <button onclick="peek()">Peek</button>
   <button onclick="init()">Restart</button>
 </div>
 <script>
   const grid = document.getElementById('grid');
   const movesEl = document.getElementById('moves');
+  const scoreEl = document.getElementById('score');
+  const comboEl = document.getElementById('combo');
   const bestEl = document.getElementById('best');
   const timeEl = document.getElementById('time');
   
@@ -48,6 +53,8 @@
   let secondFlip = -1;
   let matches = 0;
   let moves = 0;
+  let score = 0;
+  let combo = 1;
   let lock = false;
   let diff = 'easy'; // easy=16, hard=24, expert=32
   let currentTheme = 'letters';
@@ -76,10 +83,36 @@
       osc.stop(audioCtx.currentTime + duration);
   }
   
-  function getBestKey() { return 'kmemory_best_' + diff; }
+  function getBestKey() { return 'kmemory_bestscore_' + diff; }
   function updateBest() {
       let b = localStorage.getItem(getBestKey());
       bestEl.textContent = b ? b : '-';
+  }
+
+  function peek() {
+      if (lock || !playing) return;
+      lock = true;
+      moves += 5;
+      score = Math.max(0, score - 200);
+      combo = 1;
+      movesEl.textContent = moves;
+      scoreEl.textContent = score;
+      comboEl.textContent = combo;
+      let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
+      for (let i = 0; i < numCards; i++) {
+          if (!matched[i]) flipped[i] = true;
+      }
+      playTone(300, 'sine', 0.3);
+      render();
+      setTimeout(() => {
+          for (let i = 0; i < numCards; i++) {
+              if (!matched[i]) flipped[i] = false;
+          }
+          firstFlip = -1;
+          secondFlip = -1;
+          lock = false;
+          render();
+      }, 1500);
   }
 
   function setDifficulty(d) {
@@ -131,7 +164,11 @@
       secondFlip = -1;
       matches = 0;
       moves = 0;
+      score = 0;
+      combo = 1;
       movesEl.textContent = moves;
+      scoreEl.textContent = score;
+      comboEl.textContent = combo;
       lock = true;
       updateBest();
       render();
@@ -171,6 +208,10 @@
                   moves++;
                   movesEl.textContent = moves;
                   if (cards[firstFlip] === cards[secondFlip]) {
+                      score += 100 * combo;
+                      combo++;
+                      scoreEl.textContent = score;
+                      comboEl.textContent = combo;
                       matched[firstFlip] = true;
                       matched[secondFlip] = true;
                       firstFlip = -1;
@@ -180,13 +221,15 @@
                       if (matches === numCards / 2) {
                           stopTimer();
                           let b = localStorage.getItem(getBestKey());
-                          if (!b || moves < parseInt(b)) {
-                              localStorage.setItem(getBestKey(), moves);
+                          if (!b || score > parseInt(b)) {
+                              localStorage.setItem(getBestKey(), score);
                           }
-                          setTimeout(() => { alert("You won in " + moves + " moves and " + elapsed + " seconds!"); updateBest(); init(); }, 100);
+                          setTimeout(() => { alert("You won with score " + score + " in " + moves + " moves and " + elapsed + " seconds!"); updateBest(); init(); }, 100);
                       }
                       render();
                   } else {
+                      combo = 1;
+                      comboEl.textContent = combo;
                       lock = true;
                       playTone(400, 'square', 0.1);
                       setTimeout(() => {
