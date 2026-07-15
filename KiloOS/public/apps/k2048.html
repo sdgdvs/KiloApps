@@ -376,6 +376,7 @@
         <div class="controls">
             <button class="btn" onclick="initGame()">New Game</button>
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn">Time: Off</button>
+            <button class="btn" onclick="toggleAutoPlay()" id="ap-btn">Auto: Off</button>
             <button class="btn" onclick="undoMove()">Undo</button>
         </div>
 
@@ -422,6 +423,27 @@
         let timeRemaining = 60;
         let timerInterval = null;
         let gameStarted = false;
+
+        let autoPlayEnabled = false;
+        let autoPlayInterval = null;
+
+        function toggleAutoPlay() {
+            autoPlayEnabled = !autoPlayEnabled;
+            document.getElementById('ap-btn').textContent = autoPlayEnabled ? "Auto: On" : "Auto: Off";
+            if (autoPlayEnabled) {
+                autoPlayInterval = setInterval(() => {
+                    if (isGameOverState || isAnimating) return;
+                    const dirs = ['up', 'right', 'down', 'left'];
+                    dirs.sort(() => Math.random() - 0.5);
+                    for (let d of dirs) {
+                        if (handleInput(d)) break;
+                    }
+                }, 250);
+            } else {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+        }
 
         function toggleTimeAttack() {
             timeAttackEnabled = !timeAttackEnabled;
@@ -685,7 +707,7 @@
         }
 
         function handleInput(dir) {
-            if (isGameOverState || isAnimating) return;
+            if (isGameOverState || isAnimating) return false;
             
             let preState = cloneState();
             let changed = false;
@@ -723,12 +745,15 @@
                     }
                 }, 150);
             }
+            return changed;
         }
 
         window.addEventListener('keydown', e => {
             if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D"].indexOf(e.key) > -1) {
                 e.preventDefault();
             }
+
+            if (autoPlayEnabled) toggleAutoPlay();
 
             if (e.key === 'z' && e.ctrlKey) { undoMove(); return; }
             if (e.key.toLowerCase() === 'u') { undoMove(); return; }
@@ -745,6 +770,7 @@
         let touchStartY = 0;
         
         document.querySelector('.board-container').addEventListener('touchstart', e => {
+            if (autoPlayEnabled) toggleAutoPlay();
             if (isGameOverState) return;
             touchStartX = e.changedTouches[0].screenX;
             touchStartY = e.changedTouches[0].screenY;

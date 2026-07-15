@@ -47,6 +47,9 @@ int timeRemaining = 60;
 int gameStarted = 0;
 int timerActive = 0;
 
+int autoPlayEnabled = 0;
+int autoPlayTimerActive = 0;
+
 #define MAX_HISTORY 50
 typedef struct {
     int grid[MAX_GRID][MAX_GRID];
@@ -309,7 +312,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size(3-6) [M]ode [U]ndo [T]heme");
+    wsprintfA(helpBuf, "Size(3-6) [M]ode [P]lay [U]ndo [T]heme");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -445,6 +448,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     timeOut = 1;
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 2) {
+                if (!gameOver && !win) {
+                    int dirs[4][2] = {{-1,0}, {1,0}, {0,-1}, {0,1}};
+                    int startIdx = my_rand() % 4;
+                    int moved = 0;
+                    for (int i = 0; i < 4; i++) {
+                        int idx = (startIdx + i) % 4;
+                        if (Move(dirs[idx][0], dirs[idx][1])) {
+                            moved = 1;
+                            break;
+                        }
+                    }
+                    if (moved) InvalidateRect(hwnd, NULL, TRUE);
+                }
             }
             return 0;
         case WM_KEYDOWN:
@@ -459,6 +476,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'P' || wParam == 'p') {
+                autoPlayEnabled = !autoPlayEnabled;
+                if (autoPlayEnabled) {
+                    SetTimer(hwnd, 2, 250, NULL);
+                    autoPlayTimerActive = 1;
+                } else {
+                    KillTimer(hwnd, 2);
+                    autoPlayTimerActive = 0;
+                }
             } else if (wParam == 'T' || wParam == 't') {
                 theme = (theme + 1) % 3;
                 SaveTheme();
@@ -474,6 +500,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (!gameOver && !win) {
+                if (autoPlayEnabled) {
+                    autoPlayEnabled = 0;
+                    KillTimer(hwnd, 2);
+                    autoPlayTimerActive = 0;
+                }
                 int moved = 0;
                 if (wParam == VK_LEFT || wParam == 'A') moved = Move(-1, 0);
                 else if (wParam == VK_RIGHT || wParam == 'D') moved = Move(1, 0);
