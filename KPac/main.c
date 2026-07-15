@@ -48,6 +48,8 @@ int level = 1;
 int frightTimer = 0;
 int lives = 3;
 int paused = 0;
+int fruitActive = 0;
+int fruitTimer = 0;
 
 void LoadHighScore() {
     FILE *f = fopen("kpac_hi.dat", "rb");
@@ -83,6 +85,8 @@ void Init(int keepScore) {
     ghosts[2] = (Ghost){8, 7, RGB(0, 255, 255)};
     ghosts[3] = (Ghost){7, 7, RGB(255, 184, 82)};
     frightTimer = 0;
+    fruitActive = 0;
+    fruitTimer = 0;
 }
 
 void Update() {
@@ -97,10 +101,41 @@ void Update() {
     if (frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for(int i=0; i<4; i++) {
-            int d = MyRand() % 4;
-            if (map[ghosts[i].y + dirs[d][1]][ghosts[i].x + dirs[d][0]] != 1) {
-                ghosts[i].x += dirs[d][0];
-                ghosts[i].y += dirs[d][1];
+            if (i == 0 && frightTimer == 0) {
+                int best_d = -1;
+                int min_dist = 9999;
+                if (MyRand() % 100 < 20) {
+                    best_d = MyRand() % 4;
+                } else {
+                    for (int d=0; d<4; d++) {
+                        int nx = ghosts[i].x + dirs[d][0];
+                        int ny = ghosts[i].y + dirs[d][1];
+                        if (nx < 0) nx = COLS - 1;
+                        if (nx >= COLS) nx = 0;
+                        if (map[ny][nx] != 1) {
+                            int dist = abs(nx - px) + abs(ny - py);
+                            if (dist < min_dist) { min_dist = dist; best_d = d; }
+                        }
+                    }
+                }
+                if (best_d != -1) {
+                    int nx = ghosts[i].x + dirs[best_d][0];
+                    if (nx < 0) nx = COLS - 1;
+                    if (nx >= COLS) nx = 0;
+                    if (map[ghosts[i].y + dirs[best_d][1]][nx] != 1) {
+                        ghosts[i].x = nx;
+                        ghosts[i].y += dirs[best_d][1];
+                    }
+                }
+            } else {
+                int d = MyRand() % 4;
+                int nx = ghosts[i].x + dirs[d][0];
+                if (nx < 0) nx = COLS - 1;
+                if (nx >= COLS) nx = 0;
+                if (map[ghosts[i].y + dirs[d][1]][nx] != 1) {
+                    ghosts[i].x = nx;
+                    ghosts[i].y += dirs[d][1];
+                }
             }
             if (ghosts[i].x < 0) ghosts[i].x = COLS - 1;
             if (ghosts[i].x >= COLS) ghosts[i].x = 0;
@@ -164,6 +199,21 @@ void Update() {
                 }
                 break;
             }
+        }
+    }
+    
+    if (dotCount < 50 && fruitActive == 0 && fruitTimer == 0 && (MyRand() % 200 == 0)) {
+        fruitActive = 1;
+        fruitTimer = 100;
+    }
+    if (fruitActive) {
+        fruitTimer--;
+        if (fruitTimer <= 0) fruitActive = 0;
+        else if (px == 7 && py == 12) {
+            score += 500;
+            if (score > highScore) highScore = score;
+            fruitActive = 0;
+            MessageBeep(MB_ICONASTERISK);
         }
     }
     
@@ -235,6 +285,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT gr = {ghosts[i].x * TS + 2, ghosts[i].y * TS + 2, ghosts[i].x * TS + TS - 2, ghosts[i].y * TS + TS - 2};
                 FillRect(memDC, &gr, gBr);
                 DeleteObject(gBr);
+            }
+            
+            if (fruitActive) {
+                HBRUSH fBr = CreateSolidBrush(RGB(0, 255, 0));
+                RECT fr = {7 * TS + 4, 12 * TS + 4, 7 * TS + TS - 4, 12 * TS + TS - 4};
+                FillRect(memDC, &fr, fBr);
+                DeleteObject(fBr);
             }
             
             SetBkMode(memDC, TRANSPARENT);

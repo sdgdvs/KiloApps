@@ -44,6 +44,8 @@
   let highScore = localStorage.getItem('kpac_highscore') || 0;
   let lives = 3;
   let paused = false;
+  let fruitActive = 0;
+  let fruitTimer = 0;
   
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, dur, type='square') {
@@ -81,6 +83,8 @@
       if (!keepScore) { score = 0; level = 1; lives = 3; }
       gameOver = 0; dotCount = 0; frameCount = 0;
       paused = false;
+      fruitActive = 0;
+      fruitTimer = 0;
       
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
@@ -107,12 +111,41 @@
       if (frightTimer > 0) ghostSpeed *= 2;
       
       if (frameCount % ghostSpeed === 0) {
-          for (let g of ghosts) {
-              const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
-              const d = Math.floor(Math.random() * 4);
-              const nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
-              if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
-                  g.x = nx; g.y = ny;
+          const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
+          for (let i = 0; i < ghosts.length; i++) {
+              let g = ghosts[i];
+              if (i === 0 && frightTimer === 0) {
+                  let best_d = -1;
+                  let min_dist = 9999;
+                  if (Math.random() < 0.2) {
+                      best_d = Math.floor(Math.random() * 4);
+                  } else {
+                      for (let d = 0; d < 4; d++) {
+                          let nx = g.x + dirs[d][0], ny = g.y + dirs[d][1];
+                          if (nx < 0) nx = COLS - 1;
+                          if (nx >= COLS) nx = 0;
+                          if (ny >= 0 && ny < ROWS && map[ny][nx] !== 1) {
+                              let dist = Math.abs(nx - px) + Math.abs(ny - py);
+                              if (dist < min_dist) { min_dist = dist; best_d = d; }
+                          }
+                      }
+                  }
+                  if (best_d !== -1) {
+                      let nx = g.x + dirs[best_d][0];
+                      if (nx < 0) nx = COLS - 1;
+                      if (nx >= COLS) nx = 0;
+                      if (map[g.y + dirs[best_d][1]][nx] !== 1) {
+                          g.x = nx; g.y += dirs[best_d][1];
+                      }
+                  }
+              } else {
+                  const d = Math.floor(Math.random() * 4);
+                  let nx = g.x + dirs[d][0];
+                  if (nx < 0) nx = COLS - 1;
+                  if (nx >= COLS) nx = 0;
+                  if (map[g.y + dirs[d][1]][nx] !== 1) {
+                      g.x = nx; g.y += dirs[d][1];
+                  }
               }
               if (g.x < 0) g.x = COLS - 1;
               if (g.x >= COLS) g.x = 0;
@@ -174,6 +207,21 @@
           }
       }
       
+      if (dotCount < 50 && fruitActive === 0 && fruitTimer === 0 && Math.random() < 0.005) {
+          fruitActive = 1;
+          fruitTimer = 100;
+      }
+      if (fruitActive) {
+          fruitTimer--;
+          if (fruitTimer <= 0) fruitActive = 0;
+          else if (px === 7 && py === 12) {
+              score += 500;
+              if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
+              fruitActive = 0;
+              playSound(1000, 0.1, 'square');
+          }
+      }
+      
       frameCount++;
   }
 
@@ -204,6 +252,11 @@
       for (let g of ghosts) {
           ctx.fillStyle = frightTimer > 0 ? (Math.floor(frightTimer/2) % 2 === 0 ? '#0000ff' : '#ffffff') : g.color;
           ctx.fillRect(g.x * TS + 2, g.y * TS + 2, TS - 4, TS - 4);
+      }
+      
+      if (fruitActive) {
+          ctx.fillStyle = '#00ff00';
+          ctx.fillRect(7 * TS + 4, 12 * TS + 4, TS - 8, TS - 8);
       }
       
       ctx.fillStyle = '#fff';
