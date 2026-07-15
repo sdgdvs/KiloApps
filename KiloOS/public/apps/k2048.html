@@ -402,12 +402,33 @@
             <button class="btn" onclick="toggleObstacles()" id="obs-btn">Obs: Off</button>
             <button class="btn" onclick="showStats()">Stats</button>
             <button class="btn" onclick="undoMove()">Undo</button>
+            <button class="btn" onclick="showHelp()">Help</button>
         </div>
 
         <div class="game-over" id="stats-modal">
             <h2>Statistics</h2>
             <div id="stats-content" style="color:white; font-size:1.2rem; margin-bottom:20px; text-align:left; line-height:1.5;"></div>
             <button class="btn" onclick="closeStats()" style="width: auto;">Close</button>
+        </div>
+
+        <div class="game-over" id="help-modal">
+            <h2>How to Play</h2>
+            <div id="help-content" style="color:white; font-size:1rem; margin-bottom:20px; text-align:left; line-height:1.4; max-height: 60vh; overflow-y: auto; padding: 10px; width: 90%;">
+                <p><b>Controls:</b> Arrow keys, WASD, or swipe to move tiles.</p>
+                <p><b>Hotkeys:</b><br>
+                U / Ctrl+Z: Undo<br>
+                P: Auto-Play<br>
+                O: Toggle Obstacles<br>
+                F: Toggle Fibonacci Mode<br>
+                T: Change Theme<br>
+                I: Statistics<br>
+                M: Time Attack<br>
+                3, 4, 5, 6: Change Grid Size</p>
+                <p><b>Fibonacci Mode:</b> Merge adjacent Fibonacci numbers (1+1=2, 1+2=3, 2+3=5, etc.).</p>
+                <p><b>Obstacles:</b> Unmergeable blocks drop occasionally.</p>
+                <p><b>Time Attack:</b> You have 60 seconds. Game over when time runs out.</p>
+            </div>
+            <button class="btn" onclick="closeHelp()" style="width: auto;">Close</button>
         </div>
 
         <div class="game-over" id="game-over">
@@ -432,6 +453,9 @@
             document.getElementById('stats-modal').classList.add('active');
         }
         function closeStats() { document.getElementById('stats-modal').classList.remove('active'); }
+
+        function showHelp() { document.getElementById('help-modal').classList.add('active'); }
+        function closeHelp() { document.getElementById('help-modal').classList.remove('active'); }
 
         setInterval(() => {
             if (!isGameOverState && gameStarted && !isAnimating) {

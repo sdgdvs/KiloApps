@@ -65,7 +65,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 11: Deep Expansion 7 (COMPLETED: Implemented Obstacle Tiles Mode with spawn logic and unmergeable tiles in both versions)
 - Phase 12: Deep Expansion 8 (COMPLETED: Added detailed lifetime stats tracking to both web and native versions)
 - Phase 13: Deep Expansion 9 (COMPLETED: Implemented Fibonacci Ruleset Mode with dynamic merging, spawning, and high score tracking in both versions)
-- Phase 14: Deep Expansion 10
+- Phase 14: Deep Expansion 10 (COMPLETED: Added Comprehensive Help / Manual System with hotkeys list to both web and native versions)
 
 ## Next Priority (Before New Apps)
 
@@ -110,6 +110,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- K2048 (Phase 14 completed: Added Comprehensive Help / Manual System to both versions)
 - KBBS (Phase 14 completed: Added Help/Quick Reference System to both versions)
 - KFlash (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)

@@ -407,7 +407,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size [M]ode [O]bs [F]ib [P]lay [U]ndo [I]nfo");
+    wsprintfA(helpBuf, "[H]elp  [M]ode  [O]bs  [F]ib  [P]lay  [U]ndo  [I]nfo");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -617,6 +617,26 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 wsprintfA(statsBuf, "Games Played: %d\nTiles Merged: %d\nHighest Tile: %d\nTime Played: %dm %ds", 
                     stats_gamesPlayed, stats_tilesMerged, stats_highestTile, stats_timePlayed / 60, stats_timePlayed % 60);
                 MessageBoxA(hwnd, statsBuf, "Statistics", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == 'H' || wParam == 'h') {
+                char helpText[1024];
+                wsprintfA(helpText,
+                    "Controls: Arrow Keys or WASD to move tiles.\n\n"
+                    "Hotkeys:\n"
+                    "H: Help\n"
+                    "U / Ctrl+Z: Undo Move\n"
+                    "P: Auto-Play Toggle\n"
+                    "O: Obstacles Toggle\n"
+                    "F: Fibonacci Mode Toggle\n"
+                    "T: Change Theme (Dark/Classic/Pastel)\n"
+                    "I: View Statistics\n"
+                    "M: Time Attack Mode Toggle\n"
+                    "R: Restart Game\n"
+                    "3, 4, 5, 6: Change Grid Size\n\n"
+                    "Fibonacci Mode: Merge adjacent Fibonacci numbers (1+1=2, 1+2=3, 2+3=5, etc.).\n"
+                    "Obstacles: Unmergeable blocks (-1) drop occasionally.\n"
+                    "Time Attack: Get the highest score in 60 seconds."
+                );
+                MessageBoxA(hwnd, helpText, "How to Play", MB_OK | MB_ICONINFORMATION);
             } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
                 if (historyCount > 0) {
                     historyCount--;
