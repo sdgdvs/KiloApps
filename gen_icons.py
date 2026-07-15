@@ -145,11 +145,17 @@ def generate_mines():
 
 def generate_clock():
     img = new_img()
-    rect(img, 6, 4, 26, 28, (200, 180, 50)) # outer ring
-    rect(img, 8, 6, 24, 26, (255, 255, 255)) # face
+    circle(img, 16, 16, 13, (200, 180, 50)) # outer ring
+    circle(img, 16, 16, 11, (255, 255, 255)) # face
+    # tick marks
+    rect(img, 15, 4, 17, 6, (0, 0, 0)) # 12
+    rect(img, 15, 26, 17, 28, (0, 0, 0)) # 6
+    rect(img, 4, 15, 6, 17, (0, 0, 0)) # 9
+    rect(img, 26, 15, 28, 17, (0, 0, 0)) # 3
     rect(img, 15, 15, 17, 17, (0, 0, 0)) # center
-    rect(img, 15, 8, 17, 15, (0, 0, 0)) # hour hand
-    rect(img, 15, 15, 22, 17, (0, 0, 0)) # min hand
+    line(img, 16, 16, 16, 8, (0, 0, 0)) # hour hand
+    line(img, 16, 16, 24, 16, (0, 0, 0)) # min hand
+    line(img, 16, 16, 10, 22, (255, 0, 0)) # second hand
     return img
 
 def generate_task():
@@ -228,10 +234,14 @@ def generate_taskmgr():
     img = new_img()
     rect(img, 2, 4, 30, 28, (50, 50, 50)) # monitor
     rect(img, 4, 6, 28, 26, (0, 0, 0)) # screen
-    for y in range(16, 24, 2):
-        rect(img, 6, y, 10, y+1, (0, 255, 0))
-        rect(img, 12, y-4, 16, y-3, (0, 255, 0))
-        rect(img, 18, y-8, 22, y-7, (0, 255, 0))
+    for x in range(6, 28, 4):
+        rect(img, x, 6, x, 26, (0, 50, 0)) # grid lines vertical
+    for y in range(8, 26, 4):
+        rect(img, 4, y, 28, y, (0, 50, 0)) # grid lines horizontal
+    line(img, 4, 20, 10, 16, (0, 255, 0)) # line graph
+    line(img, 10, 16, 16, 18, (0, 255, 0))
+    line(img, 16, 18, 22, 10, (0, 255, 0))
+    line(img, 22, 10, 28, 14, (0, 255, 0))
     return img
 
 def generate_db():
