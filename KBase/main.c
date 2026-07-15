@@ -79,6 +79,91 @@ void DoSHA256() {
     HeapFree(GetProcessHeap(), 0, buf);
 }
 
+void DoUrlEncode() {
+    DWORD len = GetWindowTextLengthA(hInput);
+    if (len == 0) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    GetWindowTextA(hInput, buf, len + 1);
+    char* outBuf = (char*)HeapAlloc(GetProcessHeap(), 0, len * 3 + 1);
+    char* p = outBuf;
+    for (DWORD i = 0; i < len; i++) {
+        unsigned char c = buf[i];
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+            c == '-' || c == '_' || c == '.' || c == '~') {
+            *p++ = c;
+        } else {
+            p += wsprintfA(p, "%%%02X", c);
+        }
+    }
+    *p = 0;
+    SetWindowTextA(hOutput, outBuf);
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, outBuf);
+}
+
+void DoUrlDecode() {
+    DWORD len = GetWindowTextLengthA(hInput);
+    if (len == 0) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    GetWindowTextA(hInput, buf, len + 1);
+    char* outBuf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    char* p = outBuf;
+    for (DWORD i = 0; i < len; i++) {
+        if (buf[i] == '%' && i + 2 < len) {
+            char hex[3] = { buf[i+1], buf[i+2], 0 };
+            *p++ = (char)strtol(hex, NULL, 16);
+            i += 2;
+        } else if (buf[i] == '+') {
+            *p++ = ' ';
+        } else {
+            *p++ = buf[i];
+        }
+    }
+    *p = 0;
+    SetWindowTextA(hOutput, outBuf);
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, outBuf);
+}
+
+void DoHexEncode() {
+    DWORD len = GetWindowTextLengthA(hInput);
+    if (len == 0) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    GetWindowTextA(hInput, buf, len + 1);
+    char* outBuf = (char*)HeapAlloc(GetProcessHeap(), 0, len * 3 + 1);
+    char* p = outBuf;
+    for (DWORD i = 0; i < len; i++) {
+        if (i > 0) p += wsprintfA(p, " %02X", (unsigned char)buf[i]);
+        else p += wsprintfA(p, "%02X", (unsigned char)buf[i]);
+    }
+    *p = 0;
+    SetWindowTextA(hOutput, outBuf);
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, outBuf);
+}
+
+void DoHexDecode() {
+    DWORD len = GetWindowTextLengthA(hInput);
+    if (len == 0) return;
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    GetWindowTextA(hInput, buf, len + 1);
+    char* outBuf = (char*)HeapAlloc(GetProcessHeap(), 0, len + 1);
+    DWORD outLen = 0;
+    for (DWORD i = 0; i < len; i++) {
+        char c = buf[i];
+        if (c == ' ' || c == '\t' || c == '\r' || c == '\n') continue;
+        if (i + 1 < len) {
+            char hex[3] = { buf[i], buf[i+1], 0 };
+            outBuf[outLen++] = (char)strtol(hex, NULL, 16);
+            i++;
+        }
+    }
+    outBuf[outLen] = 0;
+    SetWindowTextA(hOutput, outBuf);
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, outBuf);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -88,17 +173,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 10, 360, 100, hwnd, NULL, NULL, NULL);
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, 0);
             
-            hBtnEnc = CreateWindowA("BUTTON", "B64 Encode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 120, 100, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnEnc = CreateWindowA("BUTTON", "B64 Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 120, 80, 25, hwnd, (HMENU)1, NULL, NULL);
             SendMessageA(hBtnEnc, WM_SETFONT, (WPARAM)hFont, 0);
             
-            hBtnDec = CreateWindowA("BUTTON", "B64 Decode", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 120, 100, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnDec = CreateWindowA("BUTTON", "B64 Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 120, 80, 25, hwnd, (HMENU)2, NULL, NULL);
             SendMessageA(hBtnDec, WM_SETFONT, (WPARAM)hFont, 0);
             
-            hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 230, 120, 100, 25, hwnd, (HMENU)3, NULL, NULL);
+            HWND hBtnUrlEnc = CreateWindowA("BUTTON", "URL Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 120, 80, 25, hwnd, (HMENU)4, NULL, NULL);
+            SendMessageA(hBtnUrlEnc, WM_SETFONT, (WPARAM)hFont, 0);
+
+            HWND hBtnUrlDec = CreateWindowA("BUTTON", "URL Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 120, 80, 25, hwnd, (HMENU)5, NULL, NULL);
+            SendMessageA(hBtnUrlDec, WM_SETFONT, (WPARAM)hFont, 0);
+
+            HWND hBtnHexEnc = CreateWindowA("BUTTON", "Hex Enc", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 155, 80, 25, hwnd, (HMENU)6, NULL, NULL);
+            SendMessageA(hBtnHexEnc, WM_SETFONT, (WPARAM)hFont, 0);
+
+            HWND hBtnHexDec = CreateWindowA("BUTTON", "Hex Dec", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 155, 80, 25, hwnd, (HMENU)7, NULL, NULL);
+            SendMessageA(hBtnHexDec, WM_SETFONT, (WPARAM)hFont, 0);
+            
+            hBtnHash = CreateWindowA("BUTTON", "SHA-256", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 155, 80, 25, hwnd, (HMENU)3, NULL, NULL);
             SendMessageA(hBtnHash, WM_SETFONT, (WPARAM)hFont, 0);
             
             hOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY,
-                10, 155, 360, 100, hwnd, NULL, NULL, NULL);
+                10, 190, 360, 100, hwnd, NULL, NULL, NULL);
             SendMessageA(hOutput, WM_SETFONT, (WPARAM)hFont, 0);
             break;
         }
@@ -107,6 +204,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 1) DoB64Encode();
             else if (id == 2) DoB64Decode();
             else if (id == 3) DoSHA256();
+            else if (id == 4) DoUrlEncode();
+            else if (id == 5) DoUrlDecode();
+            else if (id == 6) DoHexEncode();
+            else if (id == 7) DoHexDecode();
             break;
         }
         case WM_CTLCOLOREDIT:
@@ -135,7 +236,7 @@ void __stdcall MainEntry() {
     
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 380, 265};
+    RECT rc = {0, 0, 380, 300};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KBaseApp", "KBase", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX,

@@ -64,10 +64,14 @@
     <textarea id="inpText" placeholder="Enter text here..."></textarea>
   </div>
   
-  <div class="controls">
-    <button id="btnEncode">B64 Encode ▼</button>
-    <button id="btnDecode">B64 Decode ▼</button>
-    <button id="btnHash">SHA-256 ▼</button>
+  <div class="controls" style="flex-wrap: wrap;">
+    <button id="btnEncode">B64 Enc</button>
+    <button id="btnDecode">B64 Dec</button>
+    <button id="btnUrlEnc">URL Enc</button>
+    <button id="btnUrlDec">URL Dec</button>
+    <button id="btnHexEnc">Hex Enc</button>
+    <button id="btnHexDec">Hex Dec</button>
+    <button id="btnHash">SHA-256</button>
   </div>
   
   <div class="box">
@@ -80,6 +84,10 @@
     const outText = document.getElementById('outText');
     const btnEncode = document.getElementById('btnEncode');
     const btnDecode = document.getElementById('btnDecode');
+    const btnUrlEnc = document.getElementById('btnUrlEnc');
+    const btnUrlDec = document.getElementById('btnUrlDec');
+    const btnHexEnc = document.getElementById('btnHexEnc');
+    const btnHexDec = document.getElementById('btnHexDec');
     const btnHash = document.getElementById('btnHash');
 
     btnEncode.onclick = () => {
@@ -95,6 +103,45 @@
         outText.value = decodeURIComponent(escape(atob(inpText.value.trim())));
       } catch(e) {
         outText.value = "Error: Invalid Base64 input string.";
+      }
+    };
+
+    btnUrlEnc.onclick = () => {
+      try {
+        outText.value = encodeURIComponent(inpText.value);
+      } catch(e) {
+        outText.value = "Error: Could not encode URL.";
+      }
+    };
+
+    btnUrlDec.onclick = () => {
+      try {
+        outText.value = decodeURIComponent(inpText.value);
+      } catch(e) {
+        outText.value = "Error: Invalid URL encoding.";
+      }
+    };
+
+    btnHexEnc.onclick = () => {
+      try {
+        const arr = new TextEncoder().encode(inpText.value);
+        outText.value = Array.from(arr).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      } catch(e) {
+        outText.value = "Error: Could not encode hex.";
+      }
+    };
+
+    btnHexDec.onclick = () => {
+      try {
+        const hex = inpText.value.replace(/\s+/g, '');
+        if (hex.length % 2 !== 0) throw new Error();
+        const arr = new Uint8Array(hex.length / 2);
+        for(let i = 0; i < hex.length; i+=2) {
+          arr[i/2] = parseInt(hex.substring(i, i+2), 16);
+        }
+        outText.value = new TextDecoder().decode(arr);
+      } catch(e) {
+        outText.value = "Error: Invalid hex input.";
       }
     };
 
