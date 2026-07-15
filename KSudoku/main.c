@@ -25,8 +25,92 @@ int elapsedTime = 0;
 int score = 0;
 int awarded[9][9];
 int timerActive = 0;
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint;
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo;
 HFONT hFont, hFontSmall;
+
+typedef struct {
+    int board[9][9];
+    int notes[9][9][10];
+    int score;
+} ActionState;
+
+ActionState* undoStack = NULL;
+int undoCapacity = 0;
+int undoCount = 0;
+
+ActionState* redoStack = NULL;
+int redoCapacity = 0;
+int redoCount = 0;
+
+void PushState() {
+    if (undoCount == undoCapacity) {
+        undoCapacity = undoCapacity == 0 ? 16 : undoCapacity * 2;
+        undoStack = (ActionState*)realloc(undoStack, undoCapacity * sizeof(ActionState));
+    }
+    for(int r=0; r<9; r++) {
+        for(int c=0; c<9; c++) {
+            undoStack[undoCount].board[r][c] = board[r][c];
+            for(int i=0; i<10; i++) undoStack[undoCount].notes[r][c][i] = notes[r][c][i];
+        }
+    }
+    undoStack[undoCount].score = score;
+    undoCount++;
+    redoCount = 0;
+}
+
+void Undo() {
+    if (undoCount > 0) {
+        if (redoCount == redoCapacity) {
+            redoCapacity = redoCapacity == 0 ? 16 : redoCapacity * 2;
+            redoStack = (ActionState*)realloc(redoStack, redoCapacity * sizeof(ActionState));
+        }
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                redoStack[redoCount].board[r][c] = board[r][c];
+                for(int i=0; i<10; i++) redoStack[redoCount].notes[r][c][i] = notes[r][c][i];
+            }
+        }
+        redoStack[redoCount].score = score;
+        redoCount++;
+        
+        undoCount--;
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                board[r][c] = undoStack[undoCount].board[r][c];
+                for(int i=0; i<10; i++) notes[r][c][i] = undoStack[undoCount].notes[r][c][i];
+                error_cells[r][c] = 0;
+            }
+        }
+        score = undoStack[undoCount].score;
+    }
+}
+
+void Redo() {
+    if (redoCount > 0) {
+        if (undoCount == undoCapacity) {
+            undoCapacity = undoCapacity == 0 ? 16 : undoCapacity * 2;
+            undoStack = (ActionState*)realloc(undoStack, undoCapacity * sizeof(ActionState));
+        }
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                undoStack[undoCount].board[r][c] = board[r][c];
+                for(int i=0; i<10; i++) undoStack[undoCount].notes[r][c][i] = notes[r][c][i];
+            }
+        }
+        undoStack[undoCount].score = score;
+        undoCount++;
+        
+        redoCount--;
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                board[r][c] = redoStack[redoCount].board[r][c];
+                for(int i=0; i<10; i++) notes[r][c][i] = redoStack[redoCount].notes[r][c][i];
+                error_cells[r][c] = 0;
+            }
+        }
+        score = redoStack[redoCount].score;
+    }
+}
 
 typedef struct {
     int played;
@@ -94,6 +178,8 @@ int LoadGameState() {
         currentDiffIdx = state.currentDiffIdx;
         gameActive = 1;
         timerActive = 1;
+        undoCount = 0;
+        redoCount = 0;
         fclose(f);
         return 1;
     }
@@ -254,6 +340,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 85, 30, hwnd, (HMENU)3, NULL, NULL);
             hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 10, 60, 30, hwnd, (HMENU)2, NULL, NULL);
             hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 50, 30, hwnd, (HMENU)7, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 45, 50, 30, hwnd, (HMENU)8, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -277,6 +365,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if(sel == 2) { removal = 50; currentDiffIdx = 2; }
                 stats[currentDiffIdx].played++;
                 SaveStats();
+                undoCount = 0;
+                redoCount = 0;
                 GenerateBoard(removal);
                 sel_r = -1; sel_c = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -318,6 +408,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 5) { // Hint
                 if (sel_r >= 0 && sel_c >= 0 && !fixed[sel_r][sel_c]) {
                     if (board[sel_r][sel_c] != solution[sel_r][sel_c]) {
+                        PushState();
                         score -= 150;
                         if (score < 0) score = 0;
                         board[sel_r][sel_c] = solution[sel_r][sel_c];
@@ -326,6 +417,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         CheckWin(hwnd);
                     }
                 }
+                SaveGameState();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 7) { // Undo
+                Undo();
+                SaveGameState();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 8) { // Redo
+                Redo();
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -346,43 +445,61 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int num = wParam - '0';
                     if (notesMode) {
                         if (board[sel_r][sel_c] == 0) {
+                            PushState();
                             notes[sel_r][sel_c][num] = !notes[sel_r][sel_c][num];
                         }
                     } else {
-                        int invalid = 0;
-                        for(int i=0; i<9; i++) {
-                            if(i != sel_c && board[sel_r][i] == num) invalid = 1;
-                            if(i != sel_r && board[i][sel_c] == num) invalid = 1;
-                        }
-                        int br = (sel_r/3)*3, bc = (sel_c/3)*3;
-                        for(int r=0; r<3; r++) {
-                            for(int c=0; c<3; c++) {
-                                if((br+r != sel_r || bc+c != sel_c) && board[br+r][bc+c] == num) invalid = 1;
+                        if (board[sel_r][sel_c] != num) {
+                            PushState();
+                            int invalid = 0;
+                            for(int i=0; i<9; i++) {
+                                if(i != sel_c && board[sel_r][i] == num) invalid = 1;
+                                if(i != sel_r && board[i][sel_c] == num) invalid = 1;
                             }
-                        }
-                        
-                        if(invalid) {
-                            MessageBeep(MB_ICONWARNING);
-                            score -= 50;
-                            if (score < 0) score = 0;
-                        }
-                        board[sel_r][sel_c] = num;
-                        error_cells[sel_r][sel_c] = 0;
-                        if (num == solution[sel_r][sel_c]) {
-                            if (!awarded[sel_r][sel_c]) {
-                                awarded[sel_r][sel_c] = 1;
-                                score += 100;
+                            int br = (sel_r/3)*3, bc = (sel_c/3)*3;
+                            for(int r=0; r<3; r++) {
+                                for(int c=0; c<3; c++) {
+                                    if((br+r != sel_r || bc+c != sel_c) && board[br+r][bc+c] == num) invalid = 1;
+                                }
                             }
+                            
+                            if(invalid) {
+                                MessageBeep(MB_ICONWARNING);
+                                score -= 50;
+                                if (score < 0) score = 0;
+                            }
+                            board[sel_r][sel_c] = num;
+                            error_cells[sel_r][sel_c] = 0;
+                            if (num == solution[sel_r][sel_c]) {
+                                if (!awarded[sel_r][sel_c]) {
+                                    awarded[sel_r][sel_c] = 1;
+                                    score += 100;
+                                }
+                            }
+                            CheckWin(hwnd);
                         }
-                        CheckWin(hwnd);
                     }
                 }
             } else if(wParam == VK_BACK || wParam == VK_DELETE || wParam == '0') {
                 if(!fixed[sel_r][sel_c]) {
-                    board[sel_r][sel_c] = 0;
-                    error_cells[sel_r][sel_c] = 0;
-                    for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                    if (board[sel_r][sel_c] != 0) {
+                        PushState();
+                        board[sel_r][sel_c] = 0;
+                        error_cells[sel_r][sel_c] = 0;
+                        for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                    } else {
+                        int hasNotes = 0;
+                        for(int i=0; i<10; i++) if (notes[sel_r][sel_c][i]) hasNotes = 1;
+                        if (hasNotes) {
+                            PushState();
+                            for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                        }
+                    }
                 }
+            } else if(wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+                Undo();
+            } else if(wParam == 'Y' && (GetKeyState(VK_CONTROL) & 0x8000)) {
+                Redo();
             } else if(wParam == 'N') {
                 SendMessageA(hwnd, WM_COMMAND, 3, 0);
             }

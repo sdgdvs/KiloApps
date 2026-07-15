@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSudoku (Logic puzzle)
-**Phase:** 11
+**Phase:** 12
 **Status:** In Progress
 
 - Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
@@ -62,7 +62,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 8: Deep Expansion 4 - Add a basic solving aid / hint system. (COMPLETED - Added Hint button to both web and native versions with a -150 score penalty)
 - Phase 9: Deep Expansion 5 - Add statistics tracking (games played, win rate, best times/scores per difficulty). (COMPLETED - Added stats modal/messagebox, tracking metrics on win and games played on generation for both versions)
 - Phase 10: Deep Expansion 6 - Save/Load current game state. (COMPLETED - Added localStorage save to web and binary .dat save to native C)
-- Phase 11: Deep Expansion 7 - Next feature.
+- Phase 11: Deep Expansion 7 - Undo/Redo stack. (COMPLETED - Added Undo/Redo buttons and Ctrl+Z/Ctrl+Y shortcuts to both versions, using state history arrays)
+- Phase 12: Deep Expansion 8 - Next feature.
 
 
 ## Next Priority (Before New Apps)
