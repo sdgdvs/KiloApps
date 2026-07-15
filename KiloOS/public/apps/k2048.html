@@ -341,6 +341,7 @@
         <div class="header">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <h1>2048</h1>
+                <div id="timer-display" style="font-size: 1.5rem; font-weight: bold; color: #ff5555; display: none;">60s</div>
                 <select id="theme-select" onchange="setTheme(this.value)" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
                     <option value="default">Dark</option>
                     <option value="classic">Classic</option>
@@ -374,6 +375,7 @@
         </div>
         <div class="controls">
             <button class="btn" onclick="initGame()">New Game</button>
+            <button class="btn" onclick="toggleTimeAttack()" id="ta-btn">Time: Off</button>
             <button class="btn" onclick="undoMove()">Undo</button>
         </div>
 
@@ -415,6 +417,18 @@
         let isAnimating = false;
         let tileIdCounter = 0;
         let historyStack = [];
+        
+        let timeAttackEnabled = false;
+        let timeRemaining = 60;
+        let timerInterval = null;
+        let gameStarted = false;
+
+        function toggleTimeAttack() {
+            timeAttackEnabled = !timeAttackEnabled;
+            document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: 60s" : "Time: Off";
+            document.getElementById('timer-display').style.display = timeAttackEnabled ? "block" : "none";
+            initGame();
+        }
 
         // Represents a tile: {id, val, x, y, el}
         let tiles = [];
@@ -455,6 +469,12 @@
             isGameOverState = false;
             isAnimating = false;
             historyStack = [];
+            gameStarted = false;
+            timeRemaining = 60;
+            clearInterval(timerInterval);
+            if (timeAttackEnabled) {
+                document.getElementById('timer-display').textContent = timeRemaining + "s";
+            }
             updateScore();
             gameOverEl.classList.remove('active');
             addRandomTile();
@@ -675,6 +695,19 @@
             else if (dir === 'down') changed = moveDown();
 
             if (changed) {
+                if (timeAttackEnabled && !gameStarted) {
+                    gameStarted = true;
+                    timerInterval = setInterval(() => {
+                        timeRemaining--;
+                        document.getElementById('timer-display').textContent = timeRemaining + "s";
+                        if (timeRemaining <= 0) {
+                            clearInterval(timerInterval);
+                            isGameOverState = true;
+                            gameOverEl.querySelector('h2').textContent = "Time's Up!";
+                            gameOverEl.classList.add('active');
+                        }
+                    }, 1000);
+                }
                 historyStack.push(preState);
                 if (historyStack.length > 50) historyStack.shift();
                 updateScore();
@@ -684,6 +717,8 @@
                     isAnimating = false;
                     if (isGameOver()) {
                         isGameOverState = true;
+                        gameOverEl.querySelector('h2').textContent = "Game Over!";
+                        clearInterval(timerInterval);
                         setTimeout(() => gameOverEl.classList.add('active'), 500);
                     }
                 }, 150);

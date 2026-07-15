@@ -35,11 +35,17 @@ int grid[MAX_GRID][MAX_GRID];
 int score = 0;
 int bestScore = 0;
 int gameOver = 0;
+int timeOut = 0;
 int win = 0;
 int hasWon = 0;
 HWND mainHwnd = NULL;
 static unsigned int seed = 0;
 int theme = 1; // 0=Dark, 1=Classic, 2=Pastel
+
+int timeAttackEnabled = 0;
+int timeRemaining = 60;
+int gameStarted = 0;
+int timerActive = 0;
 
 #define MAX_HISTORY 50
 typedef struct {
@@ -149,9 +155,16 @@ void InitGame() {
     memset(grid, 0, sizeof(grid));
     score = 0;
     gameOver = 0;
+    timeOut = 0;
     win = 0;
     hasWon = 0;
     historyCount = 0;
+    gameStarted = 0;
+    timeRemaining = 60;
+    if (timerActive) {
+        KillTimer(mainHwnd, 1);
+        timerActive = 0;
+    }
     seed = GetTickCount();
     AddRandomTile();
     AddRandomTile();
@@ -281,19 +294,23 @@ void DrawBoard(HDC hdc) {
     DeleteObject(hFontTitle);
 
     char scoreBuf[128];
-    wsprintfA(scoreBuf, "Score: %d   Best: %d", score, bestScore);
+    if (timeAttackEnabled) {
+        wsprintfA(scoreBuf, "Score: %d  Best: %d  Time: %ds", score, bestScore, timeRemaining);
+    } else {
+        wsprintfA(scoreBuf, "Score: %d  Best: %d", score, bestScore);
+    }
     
     HFONT hFontText = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
         CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
     oldFont = (HFONT)SelectObject(hdc, hFontText);
     
     int cell_size = 320 / grid_size;
-    RECT scoreRect = { 200, MARGIN, MARGIN + grid_size*cell_size, HEADER_HEIGHT / 2 + MARGIN };
+    RECT scoreRect = { 150, MARGIN, MARGIN + grid_size*cell_size, HEADER_HEIGHT / 2 + MARGIN };
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "Size(3-6) [U]ndo [T]heme");
-    RECT helpRect = { 200, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
+    wsprintfA(helpBuf, "Size(3-6) [M]ode [U]ndo [T]heme");
+    RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + grid_size*cell_size + 8, HEADER_HEIGHT + grid_size*cell_size + 8 };
@@ -314,7 +331,12 @@ void DrawBoard(HDC hdc) {
         FillRect(hdc, &msgRect, overlay);
         DeleteObject(overlay);
         SetTextColor(hdc, gameOver ? RGB(119,110,101) : RGB(255,255,255));
-        DrawTextA(hdc, gameOver ? "Game Over! (Press R)" : "You Win! (Press R)", -1, &msgRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        char* msg = "You Win! (Press R)";
+        if (gameOver) {
+            msg = timeOut ? "Time's Up! (Press R)" : "Game Over! (Press R)";
+        }
+        DrawTextA(hdc, msg, -1, &msgRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
     SelectObject(hdc, oldFont);
     DeleteObject(hFontText);
@@ -377,6 +399,12 @@ int Move(int dx, int dy) {
     }
     
     if (moved) {
+        if (timeAttackEnabled && !gameStarted) {
+            gameStarted = 1;
+            SetTimer(mainHwnd, 1, 1000, NULL);
+            timerActive = 1;
+        }
+
         if (historyCount < MAX_HISTORY) {
             memcpy(&history[historyCount].grid, tempGrid, sizeof(tempGrid));
             history[historyCount].score = tempScore;
@@ -391,6 +419,7 @@ int Move(int dx, int dy) {
         AddRandomTile();
         if (CheckGameOver()) {
             gameOver = 1;
+            if (timerActive) { KillTimer(mainHwnd, 1); timerActive = 0; }
             SaveBest();
         }
     }
@@ -406,9 +435,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         case WM_ERASEBKGND:
             return 1; // Prevent background clear to fix flickering
+        case WM_TIMER:
+            if (wParam == 1) {
+                timeRemaining--;
+                if (timeRemaining <= 0) {
+                    KillTimer(hwnd, 1);
+                    timerActive = 0;
+                    gameOver = 1;
+                    timeOut = 1;
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            return 0;
         case WM_KEYDOWN:
             if (wParam >= '3' && wParam <= '6') {
                 grid_size = wParam - '0';
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'M' || wParam == 'm') {
+                timeAttackEnabled = !timeAttackEnabled;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'R' || wParam == 'r') {
@@ -424,6 +469,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     memcpy(grid, &history[historyCount].grid, sizeof(grid));
                     score = history[historyCount].score;
                     gameOver = 0;
+                    timeOut = 0;
                     win = 0;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
