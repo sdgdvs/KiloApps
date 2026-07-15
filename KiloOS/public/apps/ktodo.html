@@ -39,6 +39,29 @@
     gap: 8px;
     margin-bottom: 16px;
   }
+  .priority-select {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .priority-select option {
+    background: #1a1a1a;
+  }
+  .priority-badge {
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-right: 8px;
+  }
+  .priority-High { background: rgba(212, 90, 90, 0.3); color: #ff8888; }
+  .priority-Medium { background: rgba(212, 180, 90, 0.3); color: #ffcc66; }
+  .priority-Low { background: rgba(90, 212, 139, 0.3); color: #88ffaa; }
   input[type="text"] {
     flex: 1;
     background: rgba(0, 0, 0, 0.2);
@@ -135,6 +158,11 @@
   <div class="glass-panel">
     <div class="input-group">
       <input type="text" id="taskInput" placeholder="Add a new task..." onkeypress="handleKeyPress(event)">
+      <select id="prioritySelect" class="priority-select">
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
       <button class="add-btn" onclick="addTask()">Add</button>
     </div>
     <div class="todo-list" id="todoList">
@@ -158,8 +186,10 @@
         const item = document.createElement('div');
         item.className = `todo-item ${task.completed ? 'completed' : ''}`;
         
+        const prio = task.priority || 'Medium';
         item.innerHTML = `
           <input type="checkbox" class="todo-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
+          <span class="priority-badge priority-${prio}">${prio}</span>
           <span class="todo-text" onclick="toggleTask(${index})">${escapeHtml(task.text)}</span>
           <button class="delete-btn" onclick="deleteTask(${index})" title="Delete Task">×</button>
         `;
@@ -173,9 +203,11 @@
 
     function addTask() {
       const input = document.getElementById('taskInput');
+      const prioritySelect = document.getElementById('prioritySelect');
       const text = input.value.trim();
+      const priority = prioritySelect.value;
       if (text) {
-        tasks.unshift({ text, completed: false });
+        tasks.unshift({ text, completed: false, priority });
         input.value = '';
         saveTasks();
       }
