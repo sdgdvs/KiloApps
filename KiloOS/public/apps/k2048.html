@@ -167,7 +167,13 @@
             100% { transform: scale(1); }
         }
 
-        button.new-game {
+        .controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button.btn {
             background: rgba(255, 255, 255, 0.15);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -177,10 +183,10 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            width: 100%;
+            flex: 1;
         }
 
-        button.new-game:hover {
+        button.btn:hover {
             background: rgba(255, 255, 255, 0.25);
             border-color: rgba(255, 255, 255, 0.5);
             box-shadow: 0 0 15px rgba(255,255,255,0.1);
@@ -247,11 +253,14 @@
                 <!-- absolute positioned tiles -->
             </div>
         </div>
-        <button class="new-game" onclick="initGame()">New Game</button>
+        <div class="controls">
+            <button class="btn" onclick="initGame()">New Game</button>
+            <button class="btn" onclick="undoMove()">Undo</button>
+        </div>
 
         <div class="game-over" id="game-over">
             <h2>Game Over!</h2>
-            <button class="new-game" onclick="initGame()">Try Again</button>
+            <button class="btn" onclick="initGame()" style="width: auto;">Try Again</button>
         </div>
     </div>
 
@@ -274,6 +283,7 @@
         let isGameOverState = false;
         let isAnimating = false;
         let tileIdCounter = 0;
+        let historyStack = [];
 
         // Represents a tile: {id, val, x, y, el}
         let tiles = [];
@@ -285,6 +295,7 @@
             score = 0;
             isGameOverState = false;
             isAnimating = false;
+            historyStack = [];
             updateScore();
             gameOverEl.classList.remove('active');
             addRandomTile();
@@ -461,9 +472,40 @@
             return true;
         }
 
+        function cloneState() {
+            let clonedGrid = grid.map(tile => {
+                if (!tile) return null;
+                return { id: tile.id, val: tile.val, x: tile.x, y: tile.y };
+            });
+            return { grid: clonedGrid, score: score };
+        }
+
+        function undoMove() {
+            if (historyStack.length === 0 || isAnimating) return;
+            let lastState = historyStack.pop();
+            
+            grid = lastState.grid;
+            score = lastState.score;
+            isGameOverState = false;
+            gameOverEl.classList.remove('active');
+            
+            tiles.forEach(t => t.el.remove());
+            tiles = [];
+            
+            for (let i = 0; i < 16; i++) {
+                if (grid[i] !== null) {
+                    let t = grid[i];
+                    tiles.push(t);
+                    createTileEl(t, false);
+                }
+            }
+            updateScore();
+        }
+
         function handleInput(dir) {
             if (isGameOverState || isAnimating) return;
             
+            let preState = cloneState();
             let changed = false;
             if (dir === 'left') changed = moveLeft();
             else if (dir === 'right') changed = moveRight();
@@ -471,6 +513,8 @@
             else if (dir === 'down') changed = moveDown();
 
             if (changed) {
+                historyStack.push(preState);
+                if (historyStack.length > 50) historyStack.shift();
                 updateScore();
                 isAnimating = true;
                 setTimeout(() => {
@@ -488,6 +532,10 @@
             if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "w", "a", "s", "d", "W", "A", "S", "D"].indexOf(e.key) > -1) {
                 e.preventDefault();
             }
+
+            if (e.key === 'z' && e.ctrlKey) { undoMove(); return; }
+            if (e.key.toLowerCase() === 'u') { undoMove(); return; }
+
             if (isGameOverState) return;
             
             if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleInput('left');

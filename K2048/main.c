@@ -6,6 +6,26 @@ void* __cdecl memset(void* p, int c, size_t sz) {
     return p;
 }
 
+void* __cdecl memcpy(void* dest, const void* src, size_t sz) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (sz--) *d++ = *s++;
+    return dest;
+}
+
+void* __cdecl memmove(void* dest, const void* src, size_t sz) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    if (d < s) {
+        while (sz--) *d++ = *s++;
+    } else {
+        d += sz;
+        s += sz;
+        while (sz--) *--d = *--s;
+    }
+    return dest;
+}
+
 #define CELL_SIZE 80
 #define HEADER_HEIGHT 60
 #define MARGIN 10
@@ -19,6 +39,15 @@ int win = 0;
 int hasWon = 0;
 HWND mainHwnd = NULL;
 static unsigned int seed = 0;
+
+#define MAX_HISTORY 50
+typedef struct {
+    int grid[GRID_SIZE][GRID_SIZE];
+    int score;
+} HistoryState;
+
+HistoryState history[MAX_HISTORY];
+int historyCount = 0;
 
 int my_rand() {
     seed = seed * 214013 + 2531011;
@@ -89,6 +118,7 @@ void InitGame() {
     gameOver = 0;
     win = 0;
     hasWon = 0;
+    historyCount = 0;
     seed = GetTickCount();
     AddRandomTile();
     AddRandomTile();
@@ -173,8 +203,8 @@ void DrawBoard(HDC hdc) {
     SelectObject(hdc, oldFont);
     DeleteObject(hFontTitle);
 
-    char scoreBuf[64];
-    wsprintfA(scoreBuf, "Score: %d   Best: %d", score, bestScore);
+    char scoreBuf[128];
+    wsprintfA(scoreBuf, "Score: %d   Best: %d   [U] Undo", score, bestScore);
     
     HFONT hFontText = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
         CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
@@ -210,6 +240,10 @@ void DrawBoard(HDC hdc) {
 int Move(int dx, int dy) {
     if (gameOver || win) return 0;
     int moved = 0;
+
+    int tempGrid[GRID_SIZE][GRID_SIZE];
+    int tempScore = score;
+    memcpy(tempGrid, grid, sizeof(grid));
     
     int startI = (dy == 1) ? GRID_SIZE - 1 : 0;
     int endI = (dy == 1) ? -1 : GRID_SIZE;
@@ -260,6 +294,16 @@ int Move(int dx, int dy) {
     }
     
     if (moved) {
+        if (historyCount < MAX_HISTORY) {
+            memcpy(&history[historyCount].grid, tempGrid, sizeof(tempGrid));
+            history[historyCount].score = tempScore;
+            historyCount++;
+        } else {
+            memmove(&history[0], &history[1], sizeof(HistoryState) * (MAX_HISTORY - 1));
+            memcpy(&history[MAX_HISTORY - 1].grid, tempGrid, sizeof(tempGrid));
+            history[MAX_HISTORY - 1].score = tempScore;
+        }
+
         MessageBeep(MB_OK); // simple sound effect
         AddRandomTile();
         if (CheckGameOver()) {
@@ -282,6 +326,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wParam == 'R' || wParam == 'r') {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
+                if (historyCount > 0) {
+                    historyCount--;
+                    memcpy(grid, &history[historyCount].grid, sizeof(grid));
+                    score = history[historyCount].score;
+                    gameOver = 0;
+                    win = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (!gameOver && !win) {
                 int moved = 0;
                 if (wParam == VK_LEFT || wParam == 'A') moved = Move(-1, 0);
