@@ -5,11 +5,13 @@
 
 // Colors
 #define COLOR_BG RGB(15, 23, 42)
-#define COLOR_GRID RGB(248, 250, 252)
+#define COLOR_GRID_THICK RGB(248, 250, 252)
+#define COLOR_GRID_THIN RGB(51, 65, 85)
 #define COLOR_TEXT RGB(248, 250, 252)
-#define COLOR_FIXED_TEXT RGB(148, 163, 184)
-#define COLOR_SELECTED RGB(59, 130, 246)
-#define COLOR_HIGHLIGHT RGB(30, 58, 138)
+#define COLOR_FIXED_TEXT RGB(248, 250, 252)
+#define COLOR_MUTABLE_TEXT RGB(59, 130, 246)
+#define COLOR_SELECTED RGB(30, 64, 112)
+#define COLOR_HIGHLIGHT RGB(24, 44, 85)
 #define COLOR_ERROR RGB(239, 68, 68)
 
 int board[9][9];
@@ -136,7 +138,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if(wParam >= '1' && wParam <= '9') {
                 if(!fixed[sel_r][sel_c]) {
-                    board[sel_r][sel_c] = wParam - '0';
+                    int num = wParam - '0';
+                    int invalid = 0;
+                    for(int i=0; i<9; i++) {
+                        if(i != sel_c && board[sel_r][i] == num) invalid = 1;
+                        if(i != sel_r && board[i][sel_c] == num) invalid = 1;
+                    }
+                    int br = (sel_r/3)*3, bc = (sel_c/3)*3;
+                    for(int r=0; r<3; r++) {
+                        for(int c=0; c<3; c++) {
+                            if((br+r != sel_r || bc+c != sel_c) && board[br+r][bc+c] == num) invalid = 1;
+                        }
+                    }
+                    
+                    if(invalid) {
+                        MessageBeep(MB_ICONWARNING);
+                    }
+                    board[sel_r][sel_c] = num;
                     error_cells[sel_r][sel_c] = 0;
                     CheckWin(hwnd);
                 }
@@ -207,17 +225,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         char buf[2];
                         sprintf(buf, "%d", board[r][c]);
                         if(error_cells[r][c]) SetTextColor(hdc, COLOR_ERROR);
-                        else if(fixed[r][c]) SetTextColor(hdc, COLOR_TEXT); 
-                        else SetTextColor(hdc, RGB(59, 130, 246));
+                        else if(fixed[r][c]) SetTextColor(hdc, COLOR_FIXED_TEXT); 
+                        else SetTextColor(hdc, COLOR_MUTABLE_TEXT);
                         
-                        DrawTextA(hdc, buf, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        RECT textRc = rc;
+                        textRc.top += 2; // Visually center the Arial font
+                        DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     }
                 }
             }
             
             // Draw grid lines
             for(int i=0; i<=9; i++) {
-                HPEN hPen = CreatePen(PS_SOLID, (i % 3 == 0) ? 3 : 1, COLOR_GRID);
+                int thick = (i % 3 == 0);
+                HPEN hPen = CreatePen(PS_SOLID, thick ? 3 : 1, thick ? COLOR_GRID_THICK : COLOR_GRID_THIN);
                 HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
                 
                 MoveToEx(hdc, start_x + i*cell_sz, start_y, NULL);

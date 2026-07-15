@@ -130,7 +130,11 @@
             font-weight: 400;
             cursor: pointer;
             color: var(--accent);
-            transition: background 0.1s;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .cell:hover {
+            background: var(--glass-hover);
         }
 
         .cell.fixed {
@@ -163,10 +167,32 @@
             padding: 12px 0;
             font-size: 1.25rem;
             border-radius: 12px;
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .numpad button:active {
+            transform: scale(0.92);
         }
         
         .numpad button.clear {
             grid-column: span 2;
+        }
+
+        @keyframes flashRed {
+            0% { background-color: var(--error); color: white; }
+            100% { background-color: var(--cell-bg); }
+        }
+        .cell.flash-error {
+            animation: flashRed 0.6s ease-out;
+        }
+
+        @keyframes winPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1.02); box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .board-win {
+            animation: winPulse 1s ease-in-out 3;
         }
     </style>
 </head>
@@ -320,6 +346,21 @@
             updateHighlights();
         }
         
+        function isValidPlacement(r, c, num) {
+            for (let i = 0; i < 9; i++) {
+                if (i !== c && board[r][i] === num) return false;
+                if (i !== r && board[i][c] === num) return false;
+            }
+            let br = Math.floor(r / 3) * 3;
+            let bc = Math.floor(c / 3) * 3;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if ((br + i !== r || bc + j !== c) && board[br + i][bc + j] === num) return false;
+                }
+            }
+            return true;
+        }
+
         function updateHighlights() {
             let val = null;
             if (selectedCell) {
@@ -353,6 +394,11 @@
                 cell.textContent = '';
                 board[selectedCell.r][selectedCell.c] = 0;
             } else {
+                if (!isValidPlacement(selectedCell.r, selectedCell.c, num)) {
+                    cell.classList.remove('flash-error');
+                    void cell.offsetWidth; // trigger reflow
+                    cell.classList.add('flash-error');
+                }
                 cell.textContent = num;
                 board[selectedCell.r][selectedCell.c] = num;
             }
@@ -376,7 +422,11 @@
             }
             
             if (correct) {
-                setTimeout(() => alert('Congratulations! You solved the puzzle!'), 100);
+                boardEl.classList.add('board-win');
+                setTimeout(() => {
+                    alert('Congratulations! You solved the puzzle!');
+                    boardEl.classList.remove('board-win');
+                }, 3000);
             }
         }
 

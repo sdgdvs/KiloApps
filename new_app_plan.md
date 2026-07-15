@@ -49,13 +49,15 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSudoku (Logic puzzle)
-**Phase:** 4
+**Phase:** 5
 **Status:** In Progress
 
 - Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
 - Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED - Implemented 9x9 grid, puzzle generator, numpad, and validation logic)
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED - Built Win32 GUI, 9x9 grid, puzzle generator, and keyboard nav/input)
-- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native.
+- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native. (COMPLETED - Polished HTML UI with animations/hover effects, polished C native UI with MessageBeep and exact text centering)
+- Phase 5: Deep Expansion 1 - Add Pencil Marks / Notes feature to both versions.
+
 
 ## Next Priority (Before New Apps)
 
