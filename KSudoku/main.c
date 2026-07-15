@@ -4,15 +4,23 @@
 #include <stdio.h>
 
 // Colors
-#define COLOR_BG RGB(15, 23, 42)
-#define COLOR_GRID_THICK RGB(248, 250, 252)
-#define COLOR_GRID_THIN RGB(51, 65, 85)
-#define COLOR_TEXT RGB(248, 250, 252)
-#define COLOR_FIXED_TEXT RGB(248, 250, 252)
-#define COLOR_MUTABLE_TEXT RGB(59, 130, 246)
-#define COLOR_SELECTED RGB(30, 64, 112)
-#define COLOR_HIGHLIGHT RGB(24, 44, 85)
-#define COLOR_ERROR RGB(239, 68, 68)
+COLORREF themes[3][9] = {
+    // Classic Dark
+    { RGB(15, 23, 42), RGB(248, 250, 252), RGB(51, 65, 85), RGB(248, 250, 252), RGB(248, 250, 252), RGB(59, 130, 246), RGB(30, 64, 112), RGB(24, 44, 85), RGB(239, 68, 68) },
+    // Neon Blue
+    { RGB(0, 0, 0), RGB(0, 255, 255), RGB(0, 128, 128), RGB(224, 255, 255), RGB(224, 255, 255), RGB(0, 255, 255), RGB(0, 128, 128), RGB(0, 64, 64), RGB(255, 0, 0) },
+    // Crimson Red
+    { RGB(26, 5, 5), RGB(255, 100, 100), RGB(128, 20, 20), RGB(255, 240, 240), RGB(255, 240, 240), RGB(244, 63, 94), RGB(128, 20, 40), RGB(64, 10, 20), RGB(255, 0, 0) }
+};
+#define T_BG 0
+#define T_GRID_THICK 1
+#define T_GRID_THIN 2
+#define T_TEXT 3
+#define T_FIXED 4
+#define T_MUTABLE 5
+#define T_SEL 6
+#define T_HL 7
+#define T_ERR 8
 
 int board[9][9];
 int solution[9][9];
@@ -25,8 +33,23 @@ int elapsedTime = 0;
 int score = 0;
 int awarded[9][9];
 int timerActive = 0;
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo;
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings;
 HFONT hFont, hFontSmall;
+
+typedef struct {
+    int theme;
+    int highlightSame;
+} Prefs;
+Prefs prefs = {0, 1};
+
+void LoadPrefs() {
+    FILE *f = fopen("ksudoku_prefs.dat", "rb");
+    if(f) { fread(&prefs, sizeof(Prefs), 1, f); fclose(f); }
+}
+void SavePrefs() {
+    FILE *f = fopen("ksudoku_prefs.dat", "wb");
+    if(f) { fwrite(&prefs, sizeof(Prefs), 1, f); fclose(f); }
+}
 
 typedef struct {
     int board[9][9];
@@ -319,11 +342,47 @@ void CheckWin(HWND hwnd) {
     MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
 }
 
+HWND hSettingsWnd = NULL;
+LRESULT CALLBACK SettingsWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch(msg) {
+        case WM_CREATE: {
+            CreateWindowA("STATIC", "Theme:", WS_CHILD|WS_VISIBLE, 10, 10, 50, 20, hwnd, NULL, NULL, NULL);
+            HWND hCmb = CreateWindowA("COMBOBOX", "", WS_CHILD|WS_VISIBLE|CBS_DROPDOWNLIST, 70, 10, 120, 100, hwnd, (HMENU)1, NULL, NULL);
+            SendMessageA(hCmb, CB_ADDSTRING, 0, (LPARAM)"Classic Dark");
+            SendMessageA(hCmb, CB_ADDSTRING, 0, (LPARAM)"Neon Blue");
+            SendMessageA(hCmb, CB_ADDSTRING, 0, (LPARAM)"Crimson Red");
+            SendMessageA(hCmb, CB_SETCURSEL, prefs.theme, 0);
+            
+            CreateWindowA("BUTTON", "Highlight Same Numbers", WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, 10, 40, 180, 20, hwnd, (HMENU)2, NULL, NULL);
+            SendDlgItemMessageA(hwnd, 2, BM_SETCHECK, prefs.highlightSame ? BST_CHECKED : BST_UNCHECKED, 0);
+            
+            CreateWindowA("BUTTON", "Save & Close", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 50, 70, 100, 30, hwnd, (HMENU)3, NULL, NULL);
+            break;
+        }
+        case WM_COMMAND:
+            if(LOWORD(wParam) == 3) {
+                prefs.theme = SendDlgItemMessageA(hwnd, 1, CB_GETCURSEL, 0, 0);
+                prefs.highlightSame = SendDlgItemMessageA(hwnd, 2, BM_GETCHECK, 0, 0) == BST_CHECKED;
+                SavePrefs();
+                HWND hParent = GetWindow(hwnd, GW_OWNER);
+                InvalidateRect(hParent, NULL, TRUE);
+                DestroyWindow(hwnd);
+            }
+            break;
+        case WM_DESTROY:
+            hSettingsWnd = NULL;
+            break;
+        default: return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    return 0;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
             LoadStats();
+            LoadPrefs();
             if(!LoadGameState()) {
                 currentDiffIdx = 1;
                 stats[currentDiffIdx].played++;
@@ -342,6 +401,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
             hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 50, 30, hwnd, (HMENU)7, NULL, NULL);
             hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 45, 50, 30, hwnd, (HMENU)8, NULL, NULL);
+            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 45, 70, 30, hwnd, (HMENU)9, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -427,6 +487,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Redo();
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 9) { // Settings
+                if(!hSettingsWnd) {
+                    RECT rc; GetWindowRect(hwnd, &rc);
+                    hSettingsWnd = CreateWindowA("SettingsClass", "Settings", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
+                        rc.left + 50, rc.top + 50, 220, 150, hwnd, NULL, GetModuleHandle(NULL), NULL);
+                    ShowWindow(hSettingsWnd, SW_SHOW);
+                }
+                SetFocus(hSettingsWnd);
+                return 0; // Don't focus main yet
             }
             // Set focus back to main window so keyboard works
             SetFocus(hwnd);
@@ -527,13 +596,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Background
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
-            HBRUSH hbg = CreateSolidBrush(COLOR_BG);
+            HBRUSH hbg = CreateSolidBrush(themes[prefs.theme][T_BG]);
             FillRect(hdc, &clientRect, hbg);
             DeleteObject(hbg);
             
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, COLOR_MUTABLE_TEXT);
+            SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
             char info[64];
             sprintf(info, "Time: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
             TextOutA(hdc, 40, 50, info, strlen(info));
@@ -553,11 +622,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     HBRUSH cellBg = NULL;
                     if(r == sel_r && c == sel_c) {
-                        cellBg = CreateSolidBrush(COLOR_SELECTED);
+                        cellBg = CreateSolidBrush(themes[prefs.theme][T_SEL]);
                     } else if(sel_r >= 0 && (r == sel_r || c == sel_c || (r/3 == sel_r/3 && c/3 == sel_c/3))) {
-                        cellBg = CreateSolidBrush(COLOR_HIGHLIGHT);
-                    } else if(highlight_val && board[r][c] == highlight_val) {
-                        cellBg = CreateSolidBrush(COLOR_HIGHLIGHT);
+                        cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
+                    } else if(prefs.highlightSame && highlight_val && board[r][c] == highlight_val) {
+                        cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
                     }
                     
                     if(cellBg) {
@@ -568,9 +637,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if(board[r][c] != 0) {
                         char buf[2];
                         sprintf(buf, "%d", board[r][c]);
-                        if(error_cells[r][c]) SetTextColor(hdc, COLOR_ERROR);
-                        else if(fixed[r][c]) SetTextColor(hdc, COLOR_FIXED_TEXT); 
-                        else SetTextColor(hdc, COLOR_MUTABLE_TEXT);
+                        if(error_cells[r][c]) SetTextColor(hdc, themes[prefs.theme][T_ERR]);
+                        else if(fixed[r][c]) SetTextColor(hdc, themes[prefs.theme][T_FIXED]); 
+                        else SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
                         
                         RECT textRc = rc;
                         textRc.top += 2; // Visually center the Arial font
@@ -605,7 +674,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw grid lines
             for(int i=0; i<=9; i++) {
                 int thick = (i % 3 == 0);
-                HPEN hPen = CreatePen(PS_SOLID, thick ? 3 : 1, thick ? COLOR_GRID_THICK : COLOR_GRID_THIN);
+                HPEN hPen = CreatePen(PS_SOLID, thick ? 3 : 1, themes[prefs.theme][thick ? T_GRID_THICK : T_GRID_THIN]);
                 HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
                 
                 MoveToEx(hdc, start_x + i*cell_sz, start_y, NULL);
@@ -642,6 +711,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpszClassName = "KSudokuClass";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClassA(&wc);
+    
+    WNDCLASSA wcs = {0};
+    wcs.lpfnWndProc = SettingsWndProc;
+    wcs.hInstance = hInstance;
+    wcs.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcs.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wcs.lpszClassName = "SettingsClass";
+    RegisterClassA(&wcs);
     
     // Calculate required window size
     RECT rc = {0, 0, 440, 480}; 

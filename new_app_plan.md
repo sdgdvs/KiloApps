@@ -63,7 +63,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 9: Deep Expansion 5 - Add statistics tracking (games played, win rate, best times/scores per difficulty). (COMPLETED - Added stats modal/messagebox, tracking metrics on win and games played on generation for both versions)
 - Phase 10: Deep Expansion 6 - Save/Load current game state. (COMPLETED - Added localStorage save to web and binary .dat save to native C)
 - Phase 11: Deep Expansion 7 - Undo/Redo stack. (COMPLETED - Added Undo/Redo buttons and Ctrl+Z/Ctrl+Y shortcuts to both versions, using state history arrays)
-- Phase 12: Deep Expansion 8 - Next feature.
+- Phase 12: Deep Expansion 8 - Add Settings / Theme Engine. (COMPLETED - Added settings modal/window with 3 themes and highlight same number toggle to both versions)
+- Phase 13: Deep Expansion 9 - Next feature.
 
 
 ## Next Priority (Before New Apps)
