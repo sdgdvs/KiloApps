@@ -169,6 +169,28 @@ void SaveStats() {
     }
 }
 
+int dailyStreak = 0;
+int lastDailyDate = 0;
+int isDailyGame = 0;
+
+void LoadDailyStats() {
+    FILE* f = fopen("ksudoku_daily.dat", "rb");
+    if (f) {
+        fread(&dailyStreak, sizeof(int), 1, f);
+        fread(&lastDailyDate, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
+void SaveDailyStats() {
+    FILE* f = fopen("ksudoku_daily.dat", "wb");
+    if (f) {
+        fwrite(&dailyStreak, sizeof(int), 1, f);
+        fwrite(&lastDailyDate, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
+
 typedef struct {
     int board[9][9];
     int solution[9][9];
@@ -179,6 +201,7 @@ typedef struct {
     int awarded[9][9];
     int currentDiffIdx;
     int gameActive;
+    int isDailyGame;
 } GameState;
 
 int LoadGameState() {
@@ -200,6 +223,7 @@ int LoadGameState() {
         score = state.score;
         currentDiffIdx = state.currentDiffIdx;
         gameActive = 1;
+        isDailyGame = state.isDailyGame;
         timerActive = 1;
         undoCount = 0;
         redoCount = 0;
@@ -231,6 +255,7 @@ void SaveGameState() {
         state.score = score;
         state.currentDiffIdx = currentDiffIdx;
         state.gameActive = gameActive;
+        state.isDailyGame = isDailyGame;
         fwrite(&state, sizeof(GameState), 1, f);
         fclose(f);
     }
@@ -245,7 +270,16 @@ void ShuffleArray(int* arr, int len) {
     }
 }
 
-void GenerateBoard(int removal) {
+void GenerateBoard(int removal, int isDaily) {
+    isDailyGame = isDaily;
+    if (isDaily) {
+        time_t t = time(NULL);
+        struct tm* tm_info = localtime(&t);
+        int dateSeed = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
+        srand(dateSeed);
+    } else {
+        srand((unsigned int)time(NULL));
+    }
     int base[9][9] = {
         {1,2,3, 4,5,6, 7,8,9},
         {4,5,6, 7,8,9, 1,2,3},
@@ -329,12 +363,27 @@ void CheckWin(HWND hwnd) {
     if (gameActive) {
         gameActive = 0;
         SaveGameState(); // clear save
-        stats[currentDiffIdx].won++;
-        if (stats[currentDiffIdx].bestTime == -1 || elapsedTime < stats[currentDiffIdx].bestTime) 
-            stats[currentDiffIdx].bestTime = elapsedTime;
-        if (score > stats[currentDiffIdx].bestScore) 
-            stats[currentDiffIdx].bestScore = score;
-        SaveStats();
+        if (isDailyGame) {
+            time_t t = time(NULL);
+            struct tm* tm_info = localtime(&t);
+            int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
+            if (lastDailyDate != todayStr) {
+                t -= 86400; // roughly yesterday
+                struct tm* ytm = localtime(&t);
+                int yestStr = (ytm->tm_year + 1900) * 10000 + (ytm->tm_mon + 1) * 100 + ytm->tm_mday;
+                if (lastDailyDate == yestStr) dailyStreak++;
+                else dailyStreak = 1;
+                lastDailyDate = todayStr;
+                SaveDailyStats();
+            }
+        } else {
+            stats[currentDiffIdx].won++;
+            if (stats[currentDiffIdx].bestTime == -1 || elapsedTime < stats[currentDiffIdx].bestTime) 
+                stats[currentDiffIdx].bestTime = elapsedTime;
+            if (score > stats[currentDiffIdx].bestScore) 
+                stats[currentDiffIdx].bestScore = score;
+            SaveStats();
+        }
     }
     
     char msg[256];
@@ -382,23 +431,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
             LoadStats();
+            LoadDailyStats();
             LoadPrefs();
             if(!LoadGameState()) {
                 currentDiffIdx = 1;
                 stats[currentDiffIdx].played++;
                 SaveStats();
-                GenerateBoard(40);
+                GenerateBoard(40, 0);
             }
-            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 90, 100, hwnd, (HMENU)4, NULL, NULL);
+            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 75, 100, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessageA(hComboDifficulty, CB_SETCURSEL, currentDiffIdx, 0);
-            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 10, 50, 30, hwnd, (HMENU)1, NULL, NULL);
-            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 165, 10, 50, 30, hwnd, (HMENU)6, NULL, NULL);
-            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 85, 30, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 10, 60, 30, hwnd, (HMENU)2, NULL, NULL);
-            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 375, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
+            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 10, 45, 30, hwnd, (HMENU)1, NULL, NULL);
+            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 10, 45, 30, hwnd, (HMENU)10, NULL, NULL);
+            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 10, 45, 30, hwnd, (HMENU)6, NULL, NULL);
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 240, 10, 75, 30, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 320, 10, 55, 30, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 380, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
             hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 50, 30, hwnd, (HMENU)7, NULL, NULL);
             hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 45, 50, 30, hwnd, (HMENU)8, NULL, NULL);
             hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 45, 70, 30, hwnd, (HMENU)9, NULL, NULL);
@@ -427,11 +478,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveStats();
                 undoCount = 0;
                 redoCount = 0;
-                GenerateBoard(removal);
+                GenerateBoard(removal, 0);
                 sel_r = -1; sel_c = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 10) { // Daily Challenge
+                time_t t = time(NULL);
+                struct tm* tm_info = localtime(&t);
+                int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
+                if (lastDailyDate == todayStr) {
+                    MessageBoxA(hwnd, "You have already completed today's challenge!", "Daily Challenge", MB_OK | MB_ICONINFORMATION);
+                } else {
+                    currentDiffIdx = 1;
+                    undoCount = 0;
+                    redoCount = 0;
+                    GenerateBoard(40, 1);
+                    sel_r = -1; sel_c = -1;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (LOWORD(wParam) == 6) { // Stats
-                char msg[512] = "";
+                char msg[1024] = "";
+                time_t t = time(NULL);
+                struct tm* tm_info = localtime(&t);
+                int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
+                sprintf(msg, "[Daily Challenge]\nStreak: %d\nCompleted Today: %s\n\n", dailyStreak, (lastDailyDate == todayStr) ? "Yes" : "No");
+
                 const char* diffs[] = {"Easy", "Medium", "Hard"};
                 for(int i=0; i<3; i++) {
                     int rate = stats[i].played > 0 ? (stats[i].won * 100) / stats[i].played : 0;

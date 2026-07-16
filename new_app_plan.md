@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSudoku (Logic puzzle)
-**Phase:** 12
+**Phase:** 14
 **Status:** In Progress
 
 - Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
@@ -64,7 +64,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 10: Deep Expansion 6 - Save/Load current game state. (COMPLETED - Added localStorage save to web and binary .dat save to native C)
 - Phase 11: Deep Expansion 7 - Undo/Redo stack. (COMPLETED - Added Undo/Redo buttons and Ctrl+Z/Ctrl+Y shortcuts to both versions, using state history arrays)
 - Phase 12: Deep Expansion 8 - Add Settings / Theme Engine. (COMPLETED - Added settings modal/window with 3 themes and highlight same number toggle to both versions)
-- Phase 13: Deep Expansion 9 - Next feature.
+- Phase 13: Deep Expansion 9 - Add a Daily Challenge mode with a deterministic puzzle based on the date. (COMPLETED - Implemented LCG PRNG in JS, srand() with date seed in C, and streak tracking in both)
+- Phase 14: Deep Expansion 10 - Next feature.
 
 
 ## Next Priority (Before New Apps)

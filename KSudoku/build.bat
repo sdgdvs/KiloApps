@@ -1,7 +1,7 @@
 @echo off
-set "VC_DIR=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
-if exist "%VC_DIR%\vcvarsall.bat" (
-    call "%VC_DIR%\vcvarsall.bat" x64
+set "VC_DIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build"
+if exist "%VC_DIR%\vcvars32.bat" (
+    call "%VC_DIR%\vcvars32.bat"
 ) else (
     echo Visual Studio build environment not found.
     exit /b 1

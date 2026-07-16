@@ -323,7 +323,8 @@
                 <option value="40" selected>Medium</option>
                 <option value="50">Hard</option>
             </select>
-            <button id="btn-new">New Game</button>
+            <button id="btn-new">New</button>
+            <button id="btn-daily">Daily</button>
             <button id="btn-stats">Stats</button>
             <button id="btn-settings">Settings</button>
             <button id="btn-notes">Notes: OFF</button>
@@ -420,10 +421,17 @@
         let stats = JSON.parse(localStorage.getItem('ksudoku_stats')) || {
             30: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             40: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
-            50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 }
+            50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+            dailyStreak: 0,
+            lastDailyDate: 0
         };
+        if (stats.dailyStreak === undefined) {
+            stats.dailyStreak = 0;
+            stats.lastDailyDate = 0;
+        }
         let currentDifficulty = 40;
         let gameActive = false;
+        let isDailyGame = false;
 
         let settings = JSON.parse(localStorage.getItem('ksudoku_prefs')) || {
             theme: 'classic-dark',
@@ -448,7 +456,7 @@
                 return;
             }
             const state = {
-                board, solution, notes, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack
+                board, solution, notes, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack, isDailyGame
             };
             localStorage.setItem('ksudoku_save', JSON.stringify(state));
         }
@@ -469,6 +477,7 @@
                 undoStack = state.undoStack || [];
                 redoStack = state.redoStack || [];
                 gameActive = true;
+                isDailyGame = state.isDailyGame || false;
                 
                 let sel = document.getElementById('sel-difficulty');
                 if(sel) sel.value = currentDifficulty;
@@ -500,6 +509,17 @@
         function showStats() {
             const diffs = { 30: 'Easy', 40: 'Medium', 50: 'Hard' };
             let html = '';
+            
+            let dObj = new Date();
+            let todayStr = dObj.getFullYear() * 10000 + (dObj.getMonth() + 1) * 100 + dObj.getDate();
+            let completedToday = (stats.lastDailyDate === todayStr) ? 'Yes' : 'No';
+            
+            html += `<div class="stat-diff">Daily Challenge</div>
+            <div class="stat-grid">
+                <div>Current Streak: ${stats.dailyStreak}</div>
+                <div>Completed Today: ${completedToday}</div>
+            </div>`;
+            
             for (let d of [30, 40, 50]) {
                 let s = stats[d];
                 let rate = s.played > 0 ? Math.round((s.won / s.played) * 100) : 0;
@@ -581,20 +601,32 @@
             [9, 7, 8, 3, 1, 2, 6, 4, 5]
         ];
 
-        function shuffleArray(array) {
+        function shuffleArray(array, rng) {
             for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+                const j = Math.floor(rng() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
 
-        function generateBoard() {
+        function generateBoard(daily = false) {
+            isDailyGame = daily;
+            let rng = Math.random;
+            if (daily) {
+                let d = new Date();
+                let seedVal = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+                let currentSeed = seedVal;
+                rng = function() {
+                    currentSeed = (currentSeed * 1664525 + 1013904223) % 4294967296;
+                    return currentSeed / 4294967296;
+                };
+            }
+
             // Deep copy base solution
             let grid = JSON.parse(JSON.stringify(baseSolution));
             
             // Randomly swap numbers 1-9
             let nums = [1,2,3,4,5,6,7,8,9];
-            shuffleArray(nums);
+            shuffleArray(nums, rng);
             for(let r=0; r<9; r++) {
                 for(let c=0; c<9; c++) {
                     grid[r][c] = nums[grid[r][c]-1];
@@ -604,7 +636,7 @@
             // Randomly swap rows within 3x3 bands
             for(let band=0; band<3; band++) {
                 let rows = [0,1,2];
-                shuffleArray(rows);
+                shuffleArray(rows, rng);
                 let r0 = [...grid[band*3 + rows[0]]];
                 let r1 = [...grid[band*3 + rows[1]]];
                 let r2 = [...grid[band*3 + rows[2]]];
@@ -616,7 +648,7 @@
             // Randomly swap cols within 3x3 bands
             for(let band=0; band<3; band++) {
                 let cols = [0,1,2];
-                shuffleArray(cols);
+                shuffleArray(cols, rng);
                 for(let r=0; r<9; r++) {
                     let c0 = grid[r][band*3 + cols[0]];
                     let c1 = grid[r][band*3 + cols[1]];
@@ -646,17 +678,19 @@
             
             // Remove cells to create puzzle
             let difficultySelect = document.getElementById('sel-difficulty');
-            let removal = difficultySelect ? parseInt(difficultySelect.value) : 40;
-            currentDifficulty = removal;
+            let removal = daily ? 40 : (difficultySelect ? parseInt(difficultySelect.value) : 40);
+            currentDifficulty = daily ? 40 : removal;
             
-            stats[currentDifficulty].played++;
-            saveStats();
+            if (!daily) {
+                stats[currentDifficulty].played++;
+                saveStats();
+            }
             gameActive = true;
 
             board = JSON.parse(JSON.stringify(grid));
             while(removal > 0) {
-                let r = Math.floor(Math.random() * 9);
-                let c = Math.floor(Math.random() * 9);
+                let r = Math.floor(rng() * 9);
+                let c = Math.floor(rng() * 9);
                 if(board[r][c] !== 0) {
                     board[r][c] = 0;
                     removal--;
@@ -840,10 +874,28 @@
                 if (gameActive) {
                     gameActive = false;
                     saveGameState(); // this will clear the save
-                    stats[currentDifficulty].won++;
-                    if (elapsedTime < stats[currentDifficulty].bestTime) stats[currentDifficulty].bestTime = elapsedTime;
-                    if (score > stats[currentDifficulty].bestScore) stats[currentDifficulty].bestScore = score;
-                    saveStats();
+                    if (isDailyGame) {
+                        let d = new Date();
+                        let todayStr = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+                        if (stats.lastDailyDate !== todayStr) {
+                            let yesterday = new Date(d);
+                            yesterday.setDate(yesterday.getDate() - 1);
+                            let yestStr = yesterday.getFullYear() * 10000 + (yesterday.getMonth() + 1) * 100 + yesterday.getDate();
+                            
+                            if (stats.lastDailyDate === yestStr) {
+                                stats.dailyStreak++;
+                            } else {
+                                stats.dailyStreak = 1;
+                            }
+                            stats.lastDailyDate = todayStr;
+                            saveStats();
+                        }
+                    } else {
+                        stats[currentDifficulty].won++;
+                        if (elapsedTime < stats[currentDifficulty].bestTime) stats[currentDifficulty].bestTime = elapsedTime;
+                        if (score > stats[currentDifficulty].bestScore) stats[currentDifficulty].bestScore = score;
+                        saveStats();
+                    }
                 }
                 
                 boardEl.classList.add('board-win');
@@ -896,11 +948,27 @@
         });
         
         btnNew.addEventListener('click', () => {
-            generateBoard();
+            generateBoard(false);
             initUI();
             selectedCell = null;
             updateHighlights();
         });
+        
+        const btnDaily = document.getElementById('btn-daily');
+        if (btnDaily) {
+            btnDaily.addEventListener('click', () => {
+                let dObj = new Date();
+                let todayStr = dObj.getFullYear() * 10000 + (dObj.getMonth() + 1) * 100 + dObj.getDate();
+                if (stats.lastDailyDate === todayStr) {
+                    alert("You have already completed today's challenge!");
+                } else {
+                    generateBoard(true);
+                    initUI();
+                    selectedCell = null;
+                    updateHighlights();
+                }
+            });
+        }
         
         btnStats.addEventListener('click', showStats);
         btnCloseStats.addEventListener('click', () => statsModal.style.display = 'none');
