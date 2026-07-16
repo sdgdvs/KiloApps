@@ -2,9 +2,9 @@
 #include <windows.h>
 
 #define W 300
-#define H 200
+#define H 230
 
-HWND hHex, hDec, hBin, hOct;
+HWND hHex, hDec, hBin, hOct, hAscii;
 BOOL updating = FALSE;
 HBRUSH hBrushBg;
 HFONT hFont;
@@ -51,6 +51,17 @@ unsigned int parseOct(const char* s) {
     return res;
 }
 
+unsigned int parseAscii(const char* s) {
+    unsigned int res = 0;
+    int count = 0;
+    while (*s && count < 4) {
+        res = (res << 8) | (unsigned char)(*s);
+        s++;
+        count++;
+    }
+    return res;
+}
+
 void fmtHex(unsigned int v, char* s) { wsprintfA(s, "%X", v); }
 void fmtDec(unsigned int v, char* s) { wsprintfA(s, "%u", v); }
 void fmtBin(unsigned int v, char* s) {
@@ -79,6 +90,22 @@ void fmtOct(unsigned int v, char* s) {
     s[j] = 0;
 }
 
+void fmtAscii(unsigned int v, char* s) {
+    int i, j = 0;
+    int started = 0;
+    if (v == 0) { s[0] = '0'; s[1] = 0; return; }
+    for (i = 3; i >= 0; i--) {
+        unsigned char c = (v >> (i * 8)) & 0xFF;
+        if (c != 0) started = 1;
+        if (started) {
+            if (c >= 32 && c <= 126) s[j++] = c;
+            else s[j++] = '.';
+        }
+    }
+    s[j] = 0;
+    if (j == 0) { s[0] = '0'; s[1] = 0; }
+}
+
 void UpdateFields(HWND hSrc) {
     if (updating) return;
     updating = TRUE;
@@ -91,17 +118,20 @@ void UpdateFields(HWND hSrc) {
     else if (hSrc == hDec) val = parseDec(buf);
     else if (hSrc == hBin) val = parseBin(buf);
     else if (hSrc == hOct) val = parseOct(buf);
+    else if (hSrc == hAscii) val = parseAscii(buf);
     
-    char hex[64], dec[64], bin[64], oct[64];
+    char hex[64], dec[64], bin[64], oct[64], asc[64];
     fmtHex(val, hex);
     fmtDec(val, dec);
     fmtBin(val, bin);
     fmtOct(val, oct);
+    fmtAscii(val, asc);
     
     if (hSrc != hHex) SetWindowTextA(hHex, hex);
     if (hSrc != hDec) SetWindowTextA(hDec, dec);
     if (hSrc != hBin) SetWindowTextA(hBin, bin);
     if (hSrc != hOct) SetWindowTextA(hOct, oct);
+    if (hSrc != hAscii) SetWindowTextA(hAscii, asc);
     
     updating = FALSE;
 }
@@ -127,6 +157,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             CreateWindowEx(0, "STATIC", "Oct:", WS_CHILD | WS_VISIBLE, 10, 105, 30, 20, hwnd, NULL, NULL, NULL);
             hOct = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 105, W - 80, 22, hwnd, (HMENU)4, NULL, NULL);
+            
+            CreateWindowEx(0, "STATIC", "Asc:", WS_CHILD | WS_VISIBLE, 10, 135, 30, 20, hwnd, NULL, NULL, NULL);
+            hAscii = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "0", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 50, 135, W - 80, 22, hwnd, (HMENU)5, NULL, NULL);
             
             EnumChildWindows(hwnd, SetFontProc, (LPARAM)hFont);
             break;

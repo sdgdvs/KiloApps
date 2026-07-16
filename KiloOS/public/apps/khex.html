@@ -115,12 +115,17 @@
       <div class="label">Octal</div>
       <input type="text" id="oct" value="0" autocomplete="off" spellcheck="false">
     </div>
+    <div class="row">
+      <div class="label">ASCII</div>
+      <input type="text" id="asc" value="0" autocomplete="off" spellcheck="false">
+    </div>
   </div>
 <script>
   const hex = document.getElementById('hex');
   const dec = document.getElementById('dec');
   const bin = document.getElementById('bin');
   const oct = document.getElementById('oct');
+  const asc = document.getElementById('asc');
   
   let updating = false;
   
@@ -144,6 +149,15 @@
               val = parseInt(bin.value.replace(/[^01]/g, ''), 2) || 0;
           } else if (source === oct) {
               val = parseInt(oct.value.replace(/[^0-7]/g, ''), 8) || 0;
+          } else if (source === asc) {
+              let str = asc.value;
+              let cval = 0;
+              let cnt = 0;
+              for (let i = 0; i < str.length && cnt < 4; i++) {
+                  cval = (cval << 8) | (str.charCodeAt(i) & 0xFF);
+                  cnt++;
+              }
+              val = cval;
           }
       } catch(e) {}
       
@@ -166,6 +180,24 @@
           oct.value = val.toString(8);
           triggerAnimation(oct);
       }
+      if (source !== asc) {
+          if (val === 0) {
+              asc.value = "0";
+          } else {
+              let s = "";
+              let started = false;
+              for (let i = 3; i >= 0; i--) {
+                  let c = (val >>> (i * 8)) & 0xFF;
+                  if (c !== 0) started = true;
+                  if (started) {
+                      if (c >= 32 && c <= 126) s += String.fromCharCode(c);
+                      else s += ".";
+                  }
+              }
+              asc.value = s || "0";
+          }
+          triggerAnimation(asc);
+      }
       
       updating = false;
   }
@@ -174,9 +206,10 @@
   dec.addEventListener('input', () => updateFrom(dec));
   bin.addEventListener('input', () => updateFrom(bin));
   oct.addEventListener('input', () => updateFrom(oct));
+  asc.addEventListener('input', () => updateFrom(asc));
   
   // Select all text on focus for quick replacing
-  [hex, dec, bin, oct].forEach(el => {
+  [hex, dec, bin, oct, asc].forEach(el => {
     el.addEventListener('focus', function() {
       this.select();
     });
