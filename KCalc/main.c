@@ -31,6 +31,7 @@ typedef double (__cdecl *sqrt_t)(double);
 typedef double (__cdecl *exp_t)(double);
 typedef double (__cdecl *pow_t)(double, double);
 typedef double (__cdecl *fmod_t)(double, double);
+typedef int (__cdecl *rand_t)(void);
 
 sprintf_t m_sprintf;
 atof_t m_atof;
@@ -43,6 +44,7 @@ sqrt_t m_sqrt;
 exp_t m_exp;
 pow_t m_pow;
 fmod_t m_fmod;
+rand_t m_rand;
 
 #define PI 3.14159265358979323846
 #define E  2.71828182845904523536
@@ -137,6 +139,19 @@ void DoUnary(int type) {
     else if (type == 9) { if(val!=0) res = 1.0 / val; else res = 0; } // 1/x
     else if (type == 10) res = PI;
     else if (type == 11) res = E;
+    else if (type == 12) { // n!
+        if (val < 0) res = 0;
+        else {
+            int n = (int)val;
+            double f = 1;
+            for (int i = 2; i <= n; i++) f *= i;
+            res = f;
+        }
+    }
+    else if (type == 13) res = val < 0 ? -val : val; // abs
+    else if (type == 14) res = (double)m_rand() / 32767.0; // rand
+    else if (type == 15) res = val * val; // x^2
+    else if (type == 16) res = m_pow(10.0, val); // 10^x
 
     FormatDisplay(res);
     isNewOperand = 1;
@@ -158,31 +173,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             m_exp = (exp_t)GetProcAddress(hMsvcrt, "exp");
             m_pow = (pow_t)GetProcAddress(hMsvcrt, "pow");
             m_fmod = (fmod_t)GetProcAddress(hMsvcrt, "fmod");
+            m_rand = (rand_t)GetProcAddress(hMsvcrt, "rand");
 
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 10, 285, 28, hwnd, NULL, NULL, NULL);
             HFONT hFont = CreateFontA(24, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            char labels[35][6] = {
+            char labels[40][6] = {
                 "MC",  "MR",  "M+",  "M-",  "mod",
-                "sin", "cos", "tan", "pi", "C",
-                "ln",  "log", "sqr", "e",  "<",
-                "exp", "7",   "8",   "9",  "/",
-                "^",   "4",   "5",   "6",  "*",
-                "+/-", "1",   "2",   "3",  "-",
-                "1/x", "0",   ".",   "=",  "+"
+                "sin", "cos", "tan", "pi",  "C",
+                "ln",  "log", "sqr", "e",   "<",
+                "n!",  "abs", "rnd", "x^2", "10^x",
+                "exp", "7",   "8",   "9",   "/",
+                "^",   "4",   "5",   "6",   "*",
+                "+/-", "1",   "2",   "3",   "-",
+                "1/x", "0",   ".",   "=",   "+"
             };
-            int ids[35] = {
+            int ids[40] = {
                 2001, 2002, 2003, 2004, '%',
                 1001, 1002, 1003, 1010, 'C',
                 1004, 1005, 1006, 1011, '<',
+                1012, 1013, 1014, 1015, 1016,
                 1007, '7',  '8',  '9',  '/',
                 '^',  '4',  '5',  '6',  '*',
                 1008, '1',  '2',  '3',  '-',
                 1009, '0',  '.',  '=',  '+'
             };
 
-            for(int i=0; i<35; i++) {
+            for(int i=0; i<40; i++) {
                 int col = i % 5;
                 int row = i / 5;
                 if (ids[i]) CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10 + col * 57, 50 + row * 40, 52, 35, hwnd, (HMENU)ids[i], NULL, NULL);
@@ -209,7 +227,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == '=') {
                 DoCalculate();
                 operator = 0;
-            } else if (id >= 1001 && id <= 1011) {
+            } else if (id >= 1001 && id <= 1016) {
                 DoUnary(id - 1000);
             } else if (id == 2001) { // MC
                 memoryStore = 0.0;
@@ -242,8 +260,8 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
-    // Adjusted dimensions: 320x380
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 320, 380, NULL, NULL, wc.hInstance, NULL);
+    // Adjusted dimensions: 320x420 for extra row
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 320, 420, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

@@ -68,7 +68,7 @@
   .keys { 
     display: grid; 
     grid-template-columns: repeat(5, 1fr); 
-    grid-template-rows: repeat(7, 1fr);
+    grid-template-rows: repeat(8, 1fr);
     gap: 12px; 
     flex: 1; 
   }
@@ -167,8 +167,15 @@
       <button class="func" onclick="append('Math.tan(')">tan</button>
       <button class="operator" onclick="append('(')">(</button>
       <button class="operator" onclick="append(')')">)</button>
+
+      <!-- Row 2 (New) -->
+      <button class="func" onclick="append('fact(')">n!</button>
+      <button class="func" onclick="append('Math.abs(')">abs</button>
+      <button class="func" onclick="append('Math.random()')">rnd</button>
+      <button class="func" onclick="append('**2')">x²</button>
+      <button class="func" onclick="append('10**')">10ˣ</button>
       
-      <!-- Row 2 -->
+      <!-- Row 3 -->
       <button class="func" onclick="append('Math.log(')">ln</button>
       <button onclick="append('7')">7</button>
       <button onclick="append('8')">8</button>
@@ -209,6 +216,13 @@
     let expr = '';
     let memoryStore = 0.0;
     
+    function fact(n) {
+      if (n < 0) return NaN;
+      let f = 1;
+      for (let i = 2; i <= Math.floor(n); i++) f *= i;
+      return f;
+    }
+    
     function render() {
       let pretty = expr
         .replace(/Math\.sin\(/g, 'sin(')
@@ -216,6 +230,8 @@
         .replace(/Math\.tan\(/g, 'tan(')
         .replace(/Math\.log10\(/g, 'log(')
         .replace(/Math\.log\(/g, 'ln(')
+        .replace(/Math\.abs\(/g, 'abs(')
+        .replace(/Math\.random\(\)/g, 'rnd')
         .replace(/Math\.sqrt\(/g, '√(')
         .replace(/Math\.exp\(/g, 'e^(')
         .replace(/Math\.PI/g, 'π')
@@ -259,7 +275,7 @@
     function backspace() { 
       if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
       
-      const funcs = ['Math.sin(', 'Math.cos(', 'Math.tan(', 'Math.log10(', 'Math.log(', 'Math.sqrt(', 'Math.exp(', 'Math.PI', 'Math.E', '**'];
+      const funcs = ['Math.sin(', 'Math.cos(', 'Math.tan(', 'Math.log10(', 'Math.log(', 'Math.abs(', 'fact(', 'Math.random()', 'Math.sqrt(', 'Math.exp(', 'Math.PI', 'Math.E', '**2', '10**', '**'];
       let removedFunc = false;
       for (let f of funcs) {
         if (expr.endsWith(f)) {
