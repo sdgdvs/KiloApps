@@ -33,7 +33,6 @@ Multiple agents operate on this codebase on overlapping schedules, potentially f
 ## Size Constraints
 
 - **No individual kiloApp may exceed 999 kilobytes**, including both native (.exe) and web (.html) versions. The aggregated web platform at `kiloapps.web.app` and complete release `.zip` files are exempt.
-- **KiloOS targets:** HTML bundle ≤ 50KB gzipped, EXE ≤ 150KB.
 
 ## Testing Expectations
 

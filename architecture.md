@@ -35,11 +35,9 @@ New apps must specify a `folder` property in the `APPS` array in `App.jsx`. See 
 
 ## Build Process (Web Environments)
 1. **Vite Build:** Outputs optimized assets to `dist/`.
-2. **Concatenation:** All JS assets are combined into a single file (`kiloos.bundle.js`).
-3. **Crinkler:** The bundle is aggressively compressed using XOR compression and dead-code elimination into a native Windows executable (`kiloos.exe`).
-4. **Targets:** 
-   - HTML bundle <= 50KB gzipped.
-   - EXE size <= 150KB.
+2. **Concatenation:** All JS assets are combined into a single file.
+3. **Targets:**
+   - HTML bundle ≤ 50KB gzipped.
    - Load time < 500ms.
    - Startup time < 200ms.
 

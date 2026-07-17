@@ -24,7 +24,7 @@
 - **Taskbar:** Horizontal scroll with entrance animations and active-state indicators.
 
 **KiloOS Build Targets:**
-- HTML bundle ≤ 50KB gzipped, EXE ≤ 150KB, Load time < 500ms, First paint < 300ms on 3G.
+- HTML bundle ≤ 50KB gzipped, Load time < 500ms, First paint < 300ms on 3G.
 - **Always verify:** `cd KiloOS && npm run build` after any changes. Fix failures before committing.
 - Only `react` and `react-dom` are allowed dependencies. No external CSS frameworks.
 

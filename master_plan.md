@@ -5,7 +5,7 @@ The project aims to return software development to the lightweight, compute-effi
 
 ## High-Level Objectives
 - Maintain a suite of standalone, minimal native Windows applications. **No individual kiloApp should exceed 999 kilobytes.** (The aggregated web platform at `kiloapps.web.app` and release `.zip` files are exempt.)
-- Maintain a minimal web-based OS environment (`KiloOS`) that packages HTML5 apps into sub-150KB Windows executables using Crinkler.
+- Maintain a minimal web-based OS environment (`KiloOS`) — a React-based desktop shell deployed to Firebase Hosting at `kiloapps.web.app`.
 - Keep dependencies and framework overhead to an absolute minimum.
 
 ## Current State (as of 2026-07-16)
