@@ -60,6 +60,44 @@
     overflow-y: auto;
     flex-grow: 1;
   }
+  .add-form {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border-color);
+  }
+  .add-form input {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: rgba(255,255,255,0.05);
+    color: var(--text-main);
+    font-family: inherit;
+    flex: 1;
+  }
+  .add-form input#addId { flex: 0.5; }
+  .add-form button {
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    background: var(--primary);
+    color: var(--bg-color);
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .add-form button:hover { opacity: 0.9; }
+  .del-btn {
+    background: rgba(255, 50, 50, 0.2);
+    color: #ffaaaa;
+    border: 1px solid rgba(255,50,50,0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .del-btn:hover { background: rgba(255, 50, 50, 0.4); }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
   th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
   th { 
@@ -101,20 +139,51 @@
           <th>Name</th>
           <th>Department</th>
           <th>Role</th>
+          <th style="width: 50px;"></th>
         </tr>
       </thead>
       <tbody>
-        <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td></tr>
-        <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td></tr>
-        <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td></tr>
-        <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td></tr>
-        <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td></tr>
+        <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
       </tbody>
     </table>
+  </div>
+  <div class="add-form">
+    <input type="text" id="addId" placeholder="ID">
+    <input type="text" id="addName" placeholder="Name">
+    <input type="text" id="addDept" placeholder="Department">
+    <input type="text" id="addRole" placeholder="Role">
+    <button onclick="addRecord()">Add</button>
   </div>
 </div>
 
 <script>
+function addRecord() {
+  const id = document.getElementById('addId').value;
+  const name = document.getElementById('addName').value;
+  const dept = document.getElementById('addDept').value;
+  const role = document.getElementById('addRole').value;
+  if (!id || !name) return;
+
+  const tbody = document.querySelector('#empTable tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td>${id}</td>
+    <td>${name}</td>
+    <td><span class="tag">${dept}</span></td>
+    <td>${role}</td>
+    <td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td>
+  `;
+  tbody.appendChild(tr);
+
+  document.getElementById('addId').value = '';
+  document.getElementById('addName').value = '';
+  document.getElementById('addDept').value = '';
+  document.getElementById('addRole').value = '';
+}
 function filterTable() {
   const input = document.getElementById("searchInput");
   const filter = input.value.toLowerCase();
