@@ -137,6 +137,9 @@
   }
 
   document.addEventListener('keydown', e => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+          e.preventDefault();
+      }
       if (gameOver && e.key === 'Enter') init();
       if (gameOver) return;
       if (e.key.toLowerCase() === 'p') { isPaused = !isPaused; return; }

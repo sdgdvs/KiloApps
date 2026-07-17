@@ -105,7 +105,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 
 ---
 
-**Target App:** KTetris
+**Target App:** KTime (or whatever is next)
 **Status:** Next
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -174,6 +174,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KTask**: Fixed XSS vulnerability in `ktask.html` by using `textContent` for task rendering. Verified `main.c` (no issues found).
 - **KTaskMgr**: Fixed XSS vulnerability in `ktaskmgr.html` process title rendering. (Web-only app)
 - **KTerm**: Fixed buffer overflows in `main.c` `ProcessCommand` and `dir` logic. Fixed `kterm.html` `mkdir` creating `undefined` directory.
+- **KTetris**: Fixed page scrolling bug in `ktetris.html` by calling `e.preventDefault()` on game keys. Verified `main.c` (no leaks or bugs found).
 
 ## Backlog
 All apps need systematic testing. Continue alphabetically after KTaskMgr.
