@@ -21,8 +21,8 @@
 
 ---
 
-**Target App:** KZip
-**Status:** Next
+**Target App:** K2048
+**Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
 
@@ -95,6 +95,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KTodo**: Verified `ktodo.html` logic. Fixed GDI resource leak (`HFONT`) in `main.c` on `WM_DESTROY`.
 - **KType**: Verified `ktype.html` logic. Fixed GDI resource leak (`HBITMAP`) in `main.c` on `WM_PAINT`, fixed negative number handling in `IntToStr`, added missing `KillTimer`, and adjusted window rect to prevent canvas clipping.
 - **KVault**: Fixed XSS vulnerability in category rendering in `kvault.html`. Fixed GDI resource leak (`wc.hbrBackground` initial brush leak) in `main.c`.
+- **KZip**: Fixed size calculation bug in `kzip.html`. Fixed GDI resource leak (`HFONT`) and buffer overflow vulnerability in `main.c`.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically after KVault.
+Pass 1 Complete. Start Pass 2 (Deeper Quality checks) beginning with K2048.
