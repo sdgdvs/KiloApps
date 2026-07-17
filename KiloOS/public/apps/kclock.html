@@ -35,6 +35,7 @@
     <div class="tab active" onclick="switchTab(event, 'clock')">Clock</div>
     <div class="tab" onclick="switchTab(event, 'stopwatch')">Stopwatch</div>
     <div class="tab" onclick="switchTab(event, 'timer')">Timer</div>
+    <div class="tab" onclick="switchTab(event, 'alarms')">Alarms</div>
   </div>
 
   <div id="tab-clock" class="content active">
@@ -63,6 +64,14 @@
     </div>
   </div>
 
+  <div id="tab-alarms" class="content">
+    <div style="margin-top:20px; margin-bottom: 20px;">
+      <input type="time" id="alarm-time" style="background:rgba(255,255,255,0.1); color:white; border:1px solid rgba(255,255,255,0.2); border-radius:5px; padding:8px; font-family:'Inter', sans-serif;">
+      <button onclick="addAlarm()" class="primary">Add Alarm</button>
+    </div>
+    <div id="alarm-list" style="width:100%; flex:1; overflow-y:auto; font-family:'Inter', sans-serif; font-size:14px; color:#ddd;"></div>
+  </div>
+
   <script>
     function switchTab(e, id) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -76,6 +85,7 @@
       const now = new Date();
       document.getElementById('main-clock').innerText = now.toLocaleTimeString('en-US', { hour12: false });
       document.getElementById('main-date').innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+      if (typeof checkAlarms === 'function') checkAlarms(now);
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -199,6 +209,63 @@
       document.getElementById('timer-display').innerText = "00:00";
       document.getElementById('tm-btn').innerText = 'Start';
       document.getElementById('tm-btn').classList.add('primary');
+    }
+
+    // Alarms Logic
+    let alarms = [];
+    
+    function addAlarm() {
+      const timeInput = document.getElementById('alarm-time').value;
+      if (!timeInput) return;
+      if (!alarms.some(a => a.time === timeInput)) {
+        alarms.push({ time: timeInput, active: true, triggered: false });
+        renderAlarms();
+      }
+    }
+    
+    function toggleAlarm(index) {
+      alarms[index].active = !alarms[index].active;
+      alarms[index].triggered = false;
+      renderAlarms();
+    }
+    
+    function deleteAlarm(index) {
+      alarms.splice(index, 1);
+      renderAlarms();
+    }
+    
+    function renderAlarms() {
+      const list = document.getElementById('alarm-list');
+      list.innerHTML = '';
+      alarms.sort((a,b) => a.time.localeCompare(b.time)).forEach((a, i) => {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.justifyContent = 'space-between';
+        div.style.alignItems = 'center';
+        div.style.padding = '8px 20px';
+        div.style.borderBottom = '1px solid rgba(255,255,255,0.1)';
+        div.innerHTML = `
+          <span style="font-weight:bold; font-size:18px; ${a.active ? '' : 'text-decoration:line-through; color:#888;'}">${a.time}</span>
+          <div>
+            <button style="padding:4px 8px; font-size:12px; margin-right:5px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:10px; cursor:pointer;" onclick="toggleAlarm(${i})">${a.active ? 'Disable' : 'Enable'}</button>
+            <button style="padding:4px 8px; font-size:12px; background:rgba(255,255,255,0.05); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:10px; cursor:pointer;" onclick="deleteAlarm(${i})">Delete</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function checkAlarms(now) {
+      const hhmm = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+      alarms.forEach(a => {
+        if (a.active && a.time === hhmm && !a.triggered) {
+          a.triggered = true;
+          alert("Alarm! Time is " + a.time);
+        }
+        if (a.time !== hhmm) {
+          a.triggered = false;
+        }
+      });
     }
   </script>
 </body>

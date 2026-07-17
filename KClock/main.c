@@ -11,6 +11,17 @@ HWND hClockDisplay, hDisplay, hTimerDisplay;
 HWND hBtnStart, hBtnStop, hBtnReset, hBtnLap;
 HWND hEditTimerMins, hBtnTimerStart, hBtnTimerReset;
 HWND hListBox;
+HWND hEditAlarmHour, hEditAlarmMin, hBtnAddAlarm, hBtnDelAlarm, hAlarmList;
+
+#define MAX_ALARMS 20
+typedef struct {
+    int hour;
+    int min;
+    int triggered;
+} Alarm;
+Alarm alarms[MAX_ALARMS];
+int numAlarms = 0;
+
 DWORD startTime = 0;
 DWORD elapsed = 0;
 int isRunning = 0;
@@ -43,6 +54,20 @@ void UpdateDisplays() {
     char buf[32];
     wsprintfA(buf, "%02d:%02d:%02d", st.wHour, st.wMinute, st.wSecond);
     SetWindowTextA(hClockDisplay, buf);
+
+    for (int i = 0; i < numAlarms; i++) {
+        if (alarms[i].hour == st.wHour && alarms[i].min == st.wMinute) {
+            if (!alarms[i].triggered) {
+                alarms[i].triggered = 1;
+                MessageBeep(MB_ICONASTERISK);
+                char msg[64];
+                wsprintfA(msg, "Alarm for %02d:%02d!", alarms[i].hour, alarms[i].min);
+                MessageBoxA(NULL, msg, "KClock Alarm", MB_OK);
+            }
+        } else {
+            alarms[i].triggered = 0;
+        }
+    }
 
     // Stopwatch
     DWORD currentMs = elapsed;
@@ -106,6 +131,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hTimerDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "00:00", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE, 10, 260, 220, 35, hwnd, NULL, NULL, NULL);
             SendMessageA(hTimerDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            CreateWindowA("STATIC", "Alarms (HH:MM):", WS_CHILD | WS_VISIBLE, 10, 305, 120, 15, hwnd, NULL, NULL, NULL);
+            hEditAlarmHour = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "12", WS_CHILD | WS_VISIBLE | ES_NUMBER | ES_CENTER, 10, 320, 30, 20, hwnd, (HMENU)20, NULL, NULL);
+            CreateWindowA("STATIC", ":", WS_CHILD | WS_VISIBLE, 42, 322, 10, 15, hwnd, NULL, NULL, NULL);
+            hEditAlarmMin = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "00", WS_CHILD | WS_VISIBLE | ES_NUMBER | ES_CENTER, 50, 320, 30, 20, hwnd, (HMENU)21, NULL, NULL);
+            hBtnAddAlarm = CreateWindowA("BUTTON", "Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 318, 40, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnDelAlarm = CreateWindowA("BUTTON", "Del", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 135, 318, 40, 25, hwnd, (HMENU)8, NULL, NULL);
+            
+            hAlarmList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY, 10, 345, 220, 70, hwnd, NULL, NULL, NULL);
+            SendMessageA(hAlarmList, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+
             SetTimer(hwnd, 1, 15, NULL); // Roughly 60fps update
             break;
         }
@@ -167,6 +202,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 tmRemaining = 0;
                 SetWindowTextA(hBtnTimerStart, "Start");
                 UpdateDisplays();
+            } else if (id == 7) { // Add Alarm
+                if (numAlarms < MAX_ALARMS) {
+                    int h = GetDlgItemInt(hwnd, 20, NULL, FALSE);
+                    int m = GetDlgItemInt(hwnd, 21, NULL, FALSE);
+                    if (h >= 0 && h < 24 && m >= 0 && m < 60) {
+                        alarms[numAlarms].hour = h;
+                        alarms[numAlarms].min = m;
+                        alarms[numAlarms].triggered = 0;
+                        numAlarms++;
+                        char buf[32];
+                        wsprintfA(buf, "%02d:%02d", h, m);
+                        SendMessageA(hAlarmList, LB_ADDSTRING, 0, (LPARAM)buf);
+                    } else {
+                        MessageBoxA(hwnd, "Invalid time (0-23 : 0-59)", "Error", MB_OK);
+                    }
+                }
+            } else if (id == 8) { // Del Alarm
+                int sel = SendMessage(hAlarmList, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR) {
+                    for (int i = sel; i < numAlarms - 1; i++) {
+                        alarms[i] = alarms[i+1];
+                    }
+                    numAlarms--;
+                    SendMessageA(hAlarmList, LB_DELETESTRING, sel, 0);
+                }
             }
             break;
         }
@@ -191,8 +251,8 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    // Client area size: 240x305
-    RECT rc = {0, 0, 240, 305};
+    // Client area size: 240x425
+    RECT rc = {0, 0, 240, 425};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KClockClass", "KClock", WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);

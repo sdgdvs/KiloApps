@@ -7,6 +7,7 @@
 
 HWND hListBox;
 HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtract;
+HFONT hFont;
 
 #define MAX_FILES 50
 typedef struct {
@@ -94,6 +95,11 @@ void OpenArchive(const char* filepath) {
     for (DWORD i = 0; i < fileCount && i < MAX_FILES; i++) {
         DWORD nameLen;
         ReadFile(hFile, &nameLen, sizeof(DWORD), &read, NULL);
+        if (nameLen > sizeof(archive[i].name)) {
+            CloseHandle(hFile);
+            MessageBoxA(NULL, "Archive corrupted: name too long.", "Error", MB_OK | MB_ICONERROR);
+            return;
+        }
         ReadFile(hFile, archive[i].name, nameLen, &read, NULL);
         
         DWORD size;
@@ -124,7 +130,7 @@ void ExtractAll() {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
                 WS_CHILD | WS_VISIBLE | LBS_STANDARD,
@@ -207,6 +213,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;
         default:

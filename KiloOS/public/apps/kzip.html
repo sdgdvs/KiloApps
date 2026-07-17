@@ -68,7 +68,8 @@
           nameSpan.textContent = f.name;
           
           const sizeSpan = document.createElement('span');
-          sizeSpan.textContent = Math.round(f.data.length * 0.75) + ' bytes';
+          const b64Data = f.data.includes(',') ? f.data.split(',')[1] : f.data;
+          sizeSpan.textContent = Math.round(b64Data.length * 0.75) + ' bytes';
           sizeSpan.style.color = '#888';
           
           div.appendChild(nameSpan);
