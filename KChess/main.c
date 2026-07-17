@@ -34,6 +34,8 @@ int gameOver = 0;
 int winner = 0; // 1 = White, 2 = Black
 int aiMode = 1; // 1 = PvE, 0 = PvP
 int pieceValues[] = {0, 10, 30, 30, 50, 90, 900, 10, 30, 30, 50, 90, 900};
+int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
+
 
 int IsValidMove(int sx, int sy, int tx, int ty) {
     if (sx == tx && sy == ty) return 0;
@@ -166,7 +168,9 @@ void ResetGame() {
     whiteTurn = 1;
     gameOver = 0;
     winner = 0;
+    lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
 }
+
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -201,11 +205,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         brush = CreateSolidBrush(RGB(239, 68, 68)); // red-500 for check
                     } else if (x == selX && y == selY) {
                         brush = CreateSolidBrush(RGB(245, 158, 11)); // selected
+                    } else if ((x == lastMoveSx && y == lastMoveSy) || (x == lastMoveTx && y == lastMoveTy)) {
+                        brush = CreateSolidBrush(RGB(253, 230, 138)); // yellow-200 for last move
                     } else if ((x + y) % 2 == 0) {
                         brush = CreateSolidBrush(RGB(203, 213, 225)); // light
                     } else {
                         brush = CreateSolidBrush(RGB(30, 41, 59)); // dark
                     }
+
                     
                     FillRect(hdc, &rc, brush);
                     DeleteObject(brush);
@@ -312,6 +319,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (pType == 1 && ty == 7) board[ty][tx] = 11;
                         board[sy][sx] = 0;
                         whiteTurn = 1;
+                        lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
                         MessageBeep(MB_OK);
                         
                         if (!HasLegalMoves(whiteTurn)) {
@@ -376,6 +384,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         else if (!isWhite && ty == 7) board[ty][tx] = 11;
                                     }
                                     
+                                    lastMoveSx = selX; lastMoveSy = selY; lastMoveTx = tx; lastMoveTy = ty;
                                     board[selY][selX] = 0;
                                     selX = -1;
                                     selY = -1;

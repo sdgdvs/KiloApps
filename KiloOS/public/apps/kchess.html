@@ -57,6 +57,7 @@
   let winner = 0; // 1 = White, 2 = Black
   let aiMode = true;
   const pieceValues = [0, 10, 30, 30, 50, 90, 900, 10, 30, 30, 50, 90, 900];
+  let lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound() {
@@ -201,8 +202,10 @@
       whiteTurn = true;
       gameOver = false;
       winner = 0;
+      lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
       draw();
   }
+
 
   window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'r') {
@@ -253,6 +256,7 @@
           board[sy][sx] = 0;
           
           whiteTurn = true;
+          lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
           playSound();
           
           if (!hasLegalMoves(whiteTurn)) {
@@ -303,6 +307,8 @@
                   ctx.fillStyle = "rgba(239, 68, 68, 0.8)";
               } else if (x === selX && y === selY) {
                   ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
+              } else if ((x === lastMoveSx && y === lastMoveSy) || (x === lastMoveTx && y === lastMoveTy)) {
+                  ctx.fillStyle = "rgba(253, 230, 138, 0.6)"; // yellow-200 with transparency
               } else if ((x + y) % 2 === 0) {
                   ctx.fillStyle = "rgb(203, 213, 225)";
               } else {
@@ -386,6 +392,7 @@
                                   else if (!isWhite && ty === 7) board[ty][tx] = 11;
                               }
                               
+                              lastMoveSx = selX; lastMoveSy = selY; lastMoveTx = tx; lastMoveTy = ty;
                               board[selY][selX] = 0;
                               selX = -1;
                               selY = -1;
