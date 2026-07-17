@@ -1,6 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <math.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define W 480
 #define H 500
@@ -30,6 +32,8 @@ int selY = -1;
 int whiteTurn = 1;
 int gameOver = 0;
 int winner = 0; // 1 = White, 2 = Black
+int aiMode = 1; // 1 = PvE, 0 = PvP
+int pieceValues[] = {0, 10, 30, 30, 50, 90, 900, 10, 30, 30, 50, 90, 900};
 
 int IsValidMove(int sx, int sy, int tx, int ty) {
     if (sx == tx && sy == ty) return 0;
@@ -82,6 +86,65 @@ int IsValidMove(int sx, int sy, int tx, int ty) {
     return 0;
 }
 
+int IsSquareAttacked(int tx, int ty, int byWhite) {
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            int p = board[y][x];
+            if (p != 0 && (p <= 6) == byWhite) {
+                if (IsValidMove(x, y, tx, ty)) return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int SimulatedMoveLeavesCheck(int sx, int sy, int tx, int ty, int isWhite) {
+    int savedSrc = board[sy][sx];
+    int savedDst = board[ty][tx];
+    board[ty][tx] = savedSrc;
+    board[sy][sx] = 0;
+    
+    int kx = -1, ky = -1;
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            if (board[y][x] == (isWhite ? 6 : 12)) {
+                kx = x; ky = y;
+            }
+        }
+    }
+    
+    int inCheck = 0;
+    if (kx != -1 && ky != -1) {
+        inCheck = IsSquareAttacked(kx, ky, !isWhite);
+    }
+    
+    board[sy][sx] = savedSrc;
+    board[ty][tx] = savedDst;
+    return inCheck;
+}
+
+int HasLegalMoves(int isWhite) {
+    for (int sy = 0; sy < 8; sy++) {
+        for (int sx = 0; sx < 8; sx++) {
+            int p = board[sy][sx];
+            if (p != 0 && (p <= 6) == isWhite) {
+                for (int ty = 0; ty < 8; ty++) {
+                    for (int tx = 0; tx < 8; tx++) {
+                        int dstP = board[ty][tx];
+                        if (dstP != 0 && (dstP <= 6) == isWhite) continue;
+                        if (IsValidMove(sx, sy, tx, ty)) {
+                            if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite)) {
+                                return 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 void ResetGame() {
     int initialBoard[8][8] = {
         {10, 8, 9, 11, 12, 9, 8, 10},
@@ -115,12 +178,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldFont = SelectObject(hdc, hFont);
             SetBkMode(hdc, TRANSPARENT);
             
+            int inCheckX = -1, inCheckY = -1;
+            for (int cy = 0; cy < 8; cy++) {
+                for (int cx = 0; cx < 8; cx++) {
+                    int p = board[cy][cx];
+                    if (p == 6 || p == 12) {
+                        int isWhite = p <= 6;
+                        if (IsSquareAttacked(cx, cy, !isWhite)) {
+                            inCheckX = cx;
+                            inCheckY = cy;
+                        }
+                    }
+                }
+            }
+
             for (int y = 0; y < 8; y++) {
                 for (int x = 0; x < 8; x++) {
                     RECT rc = { OX + x * TS, OY + y * TS, OX + (x + 1) * TS, OY + (y + 1) * TS };
                     HBRUSH brush;
                     
-                    if (x == selX && y == selY) {
+                    if (x == inCheckX && y == inCheckY) {
+                        brush = CreateSolidBrush(RGB(239, 68, 68)); // red-500 for check
+                    } else if (x == selX && y == selY) {
                         brush = CreateSolidBrush(RGB(245, 158, 11)); // selected
                     } else if ((x + y) % 2 == 0) {
                         brush = CreateSolidBrush(RGB(203, 213, 225)); // light
@@ -132,13 +211,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(brush);
                     
                     if (selX != -1 && IsValidMove(selX, selY, x, y)) {
-                        HBRUSH dotBrush = CreateSolidBrush(RGB(134, 239, 172)); // green-300
-                        HGDIOBJ oldBrush = SelectObject(hdc, dotBrush);
-                        HPEN oldPen = SelectObject(hdc, GetStockObject(NULL_PEN));
-                        Ellipse(hdc, rc.left + 15, rc.top + 15, rc.right - 15, rc.bottom - 15);
-                        SelectObject(hdc, oldPen);
-                        SelectObject(hdc, oldBrush);
-                        DeleteObject(dotBrush);
+                        if (!SimulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {
+                            HBRUSH dotBrush = CreateSolidBrush(RGB(134, 239, 172)); // green-300
+                            HGDIOBJ oldBrush = SelectObject(hdc, dotBrush);
+                            HPEN oldPen = SelectObject(hdc, GetStockObject(NULL_PEN));
+                            Ellipse(hdc, rc.left + 15, rc.top + 15, rc.right - 15, rc.bottom - 15);
+                            SelectObject(hdc, oldPen);
+                            SelectObject(hdc, oldBrush);
+                            DeleteObject(dotBrush);
+                        }
                     }
                     
                     int p = board[y][x];
@@ -160,8 +241,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(255, 255, 255));
             
             if (gameOver) {
-                if (winner == 1) DrawTextA(hdc, "White Wins! Press 'R' to Restart", -1, &statusRc, DT_LEFT);
-                else DrawTextA(hdc, "Black Wins! Press 'R' to Restart", -1, &statusRc, DT_LEFT);
+                if (winner == 1) DrawTextA(hdc, "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_LEFT);
+                else if (winner == 2) DrawTextA(hdc, "Checkmate! Black Wins! Press 'R'", -1, &statusRc, DT_LEFT);
+                else DrawTextA(hdc, "Stalemate! Draw! Press 'R'", -1, &statusRc, DT_LEFT);
             } else {
                 if (whiteTurn) {
                     DrawTextA(hdc, "White's Turn", -1, &statusRc, DT_LEFT);
@@ -169,6 +251,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawTextA(hdc, "Black's Turn", -1, &statusRc, DT_LEFT);
                 }
             }
+            
+            RECT modeRc = { 10, 5, W - 10, 25 };
+            DrawTextA(hdc, aiMode ? "Mode: vs AI (Press 'M' to toggle)" : "Mode: vs Player (Press 'M' to toggle)", -1, &modeRc, DT_LEFT);
+            
             SelectObject(hdc, oldFont);
             DeleteObject(sFont);
             
@@ -179,11 +265,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 'R') {
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'M') {
+                aiMode = !aiMode;
+                ResetGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            break;
+        }
+        case WM_TIMER: {
+            if (wParam == 1) {
+                KillTimer(hwnd, 1);
+                if (!gameOver && !whiteTurn && aiMode) {
+                    struct Move { int sx, sy, tx, ty, score; } moves[1024];
+                    int moveCount = 0;
+                    for (int sy = 0; sy < 8; sy++) {
+                        for (int sx = 0; sx < 8; sx++) {
+                            if (board[sy][sx] > 6) { 
+                                for (int ty = 0; ty < 8; ty++) {
+                                    for (int tx = 0; tx < 8; tx++) {
+                                        if (IsValidMove(sx, sy, tx, ty)) {
+                                            moves[moveCount].sx = sx; moves[moveCount].sy = sy;
+                                            moves[moveCount].tx = tx; moves[moveCount].ty = ty;
+                                            int dstP = board[ty][tx];
+                                            moves[moveCount].score = dstP != 0 ? pieceValues[dstP] : 0;
+                                            moveCount++;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (moveCount > 0) {
+                        int bestScore = -1;
+                        for (int i = 0; i < moveCount; i++) if (moves[i].score > bestScore) bestScore = moves[i].score;
+                        int bestMoves[1024], bestCount = 0;
+                        for (int i = 0; i < moveCount; i++) if (moves[i].score == bestScore) bestMoves[bestCount++] = i;
+                        int chosen = bestMoves[rand() % bestCount];
+                        
+                        int sx = moves[chosen].sx; int sy = moves[chosen].sy;
+                        int tx = moves[chosen].tx; int ty = moves[chosen].ty;
+                        int dstP = board[ty][tx];
+                        if (dstP == 6) { gameOver = 1; winner = 2; }
+                        
+                        int pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
+                        board[ty][tx] = board[sy][sx];
+                        if (pType == 1 && ty == 7) board[ty][tx] = 11;
+                        board[sy][sx] = 0;
+                        whiteTurn = 1;
+                        MessageBeep(MB_OK);
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
             }
             break;
         }
         case WM_LBUTTONDOWN: {
             if (gameOver) break;
+            if (aiMode && !whiteTurn) break;
             
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
@@ -215,21 +353,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             selY = ty;
                         } else {
                             if (IsValidMove(selX, selY, tx, ty)) {
-                                if (dstP == 6) { gameOver = 1; winner = 2; }
-                                else if (dstP == 12) { gameOver = 1; winner = 1; }
-                                
-                                int pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
-                                board[ty][tx] = board[selY][selX];
-                                if (pType == 1) {
-                                    if (isWhite && ty == 0) board[ty][tx] = 5;
-                                    else if (!isWhite && ty == 7) board[ty][tx] = 11;
+                                if (!SimulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
+                                    int pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
+                                    board[ty][tx] = board[selY][selX];
+                                    if (pType == 1) {
+                                        if (isWhite && ty == 0) board[ty][tx] = 5;
+                                        else if (!isWhite && ty == 7) board[ty][tx] = 11;
+                                    }
+                                    
+                                    board[selY][selX] = 0;
+                                    selX = -1;
+                                    selY = -1;
+                                    whiteTurn = !whiteTurn;
+                                    MessageBeep(MB_OK);
+                                    
+                                    if (!HasLegalMoves(whiteTurn)) {
+                                        gameOver = 1;
+                                        int kx = -1, ky = -1;
+                                        for(int cy=0; cy<8; cy++) {
+                                            for(int cx=0; cx<8; cx++) {
+                                                if(board[cy][cx] == (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
+                                            }
+                                        }
+                                        if (kx != -1 && ky != -1 && IsSquareAttacked(kx, ky, !whiteTurn)) {
+                                            winner = !whiteTurn ? 1 : 2;
+                                        } else {
+                                            winner = 3;
+                                        }
+                                    }
+                                    
+                                    if (aiMode && !whiteTurn && !gameOver) {
+                                        SetTimer(hwnd, 1, 300, NULL);
+                                    }
+                                } else {
+                                    MessageBeep(MB_ICONWARNING);
                                 }
-                                
-                                board[selY][selX] = 0;
-                                selX = -1;
-                                selY = -1;
-                                whiteTurn = !whiteTurn;
-                                MessageBeep(MB_OK);
                             }
                         }
                     }
@@ -263,6 +421,8 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
     RegisterClass(&wc);
+
+    srand((unsigned int)time(NULL));
 
     HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);

@@ -55,6 +55,8 @@
   let whiteTurn = true;
   let gameOver = false;
   let winner = 0; // 1 = White, 2 = Black
+  let aiMode = true;
+  const pieceValues = [0, 10, 30, 30, 50, 90, 900, 10, 30, 30, 50, 90, 900];
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound() {
@@ -145,8 +147,56 @@
   window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'r') {
           resetGame();
+      } else if (e.key.toLowerCase() === 'm') {
+          aiMode = !aiMode;
+          resetGame();
       }
   });
+
+  function doBlackAIMove() {
+      if (gameOver || whiteTurn || !aiMode) return;
+      
+      let moves = [];
+      for (let sy = 0; sy < 8; sy++) {
+          for (let sx = 0; sx < 8; sx++) {
+              if (board[sy][sx] > 6) {
+                  for (let ty = 0; ty < 8; ty++) {
+                      for (let tx = 0; tx < 8; tx++) {
+                          if (isValidMove(sx, sy, tx, ty)) {
+                              let dstP = board[ty][tx];
+                              moves.push({
+                                  sx: sx, sy: sy, tx: tx, ty: ty,
+                                  score: dstP !== 0 ? pieceValues[dstP] : 0
+                              });
+                          }
+                      }
+                  }
+              }
+          }
+      }
+      
+      if (moves.length > 0) {
+          let bestScore = -1;
+          for (let m of moves) {
+              if (m.score > bestScore) bestScore = m.score;
+          }
+          let bestMoves = moves.filter(m => m.score === bestScore);
+          let chosen = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+          
+          let sx = chosen.sx, sy = chosen.sy, tx = chosen.tx, ty = chosen.ty;
+          let dstP = board[ty][tx];
+          if (dstP === 6) { gameOver = true; winner = 2; }
+          
+          let pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
+          board[ty][tx] = board[sy][sx];
+          if (pType === 1 && ty === 7) board[ty][tx] = 11;
+          board[sy][sx] = 0;
+          
+          whiteTurn = true;
+          playSound();
+          draw();
+      }
+  }
 
   function draw() {
       ctx.clearRect(0, 0, cvs.width, cvs.height);
@@ -194,10 +244,13 @@
       } else {
           ctx.fillText(whiteTurn ? "White's Turn" : "Black's Turn", 10, cvs.height - 30);
       }
+      
+      ctx.fillText(aiMode ? "Mode: vs AI (Press 'M' to toggle)" : "Mode: vs Player (Press 'M' to toggle)", 10, 20);
   }
 
   cvs.onmousedown = (e) => {
       if (gameOver) return;
+      if (aiMode && !whiteTurn) return;
       
       const rect = cvs.getBoundingClientRect();
       const mx = e.clientX - rect.left;
@@ -246,6 +299,10 @@
                           selY = -1;
                           whiteTurn = !whiteTurn;
                           playSound();
+                          
+                          if (aiMode && !whiteTurn && !gameOver) {
+                              setTimeout(doBlackAIMove, 300);
+                          }
                       }
                   }
               }
