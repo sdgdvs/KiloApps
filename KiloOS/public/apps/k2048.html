@@ -971,17 +971,40 @@
                 e.preventDefault();
             }
 
-            if (autoPlayEnabled) toggleAutoPlay();
+            if (autoPlayEnabled && e.key.toLowerCase() !== 'p') toggleAutoPlay();
 
             if (e.key === 'z' && e.ctrlKey) { undoMove(); return; }
-            if (e.key.toLowerCase() === 'u') { undoMove(); return; }
+            let k = e.key.toLowerCase();
+            if (k === 'u') { undoMove(); return; }
+            if (k === 'p') { toggleAutoPlay(); return; }
+            if (k === 'o') { toggleObstacles(); return; }
+            if (k === 'f') { 
+                let newRuleset = ruleset === 'classic' ? 'fibonacci' : 'classic';
+                document.getElementById('ruleset-select').value = newRuleset;
+                setRuleset(newRuleset); 
+                return; 
+            }
+            if (k === 't') { 
+                let themes = ['default', 'classic', 'pastel'];
+                let next = themes[(themes.indexOf(themeSelect.value) + 1) % themes.length];
+                setTheme(next);
+                return;
+            }
+            if (k === 'i') { showStats(); return; }
+            if (k === 'm') { toggleTimeAttack(); return; }
+            if (k === 'h') { showHelp(); return; }
+            if (e.key >= '3' && e.key <= '6') { 
+                let btn = document.querySelectorAll('.size-btn')[parseInt(e.key)-3];
+                setGridSize(parseInt(e.key), btn); 
+                return; 
+            }
 
             if (isGameOverState) return;
             
-            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') handleInput('left');
-            if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') handleInput('right');
-            if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'w') handleInput('up');
-            if (e.key === 'ArrowDown' || e.key.toLowerCase() === 's') handleInput('down');
+            if (e.key === 'ArrowLeft' || k === 'a') handleInput('left');
+            if (e.key === 'ArrowRight' || k === 'd') handleInput('right');
+            if (e.key === 'ArrowUp' || k === 'w') handleInput('up');
+            if (e.key === 'ArrowDown' || k === 's') handleInput('down');
         });
 
         let touchStartX = 0;

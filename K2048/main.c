@@ -738,11 +738,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             GetClientRect(hwnd, &rc);
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBitmap = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
-            SelectObject(memDC, memBitmap);
+            HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
             
             DrawBoard(memDC);
             
             BitBlt(hdc, 0, 0, rc.right, rc.bottom, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBitmap);
             DeleteObject(memBitmap);
             DeleteDC(memDC);
             

@@ -98,4 +98,9 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KZip**: Fixed size calculation bug in `kzip.html`. Fixed GDI resource leak (`HFONT`) and buffer overflow vulnerability in `main.c`.
 
 ## Backlog
-Pass 1 Complete. Start Pass 2 (Deeper Quality checks) beginning with K2048.
+Pass 1 Complete.
+
+## Pass 2 Completed Apps
+- **K2048**: Added missing hotkeys in `k2048.html` keydown handler. Fixed GDI resource leak in `main.c` `WM_PAINT` by selecting original bitmap back into the memDC before deleting.
+
+Start Pass 2 (Deeper Quality checks). Next target: KAudio.
