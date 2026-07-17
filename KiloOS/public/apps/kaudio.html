@@ -70,7 +70,8 @@
 <div class="synth-container">
   <div class="controls">
     <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">KAudio<span style="color:#0ea5e9">.</span></div>
-    <div id="octaveDisplay" style="font-size: 13px; font-weight: 500; color: #94a3b8; margin: 0 16px;">Octave: 0 (L/R)</div>
+    <div id="octaveDisplay" style="font-size: 13px; font-weight: 500; color: #94a3b8; margin: 0 16px;">Oct: 0 (L/R)</div>
+    <div id="recStatus" style="font-size: 13px; font-weight: bold; color: #ef4444; margin: 0 16px 0 0; opacity: 0.5;">Z: Rec, X: Play</div>
     <select id="waveType" class="waveform-select">
       <option value="square">Square Wave</option>
       <option value="sine">Sine Wave</option>
@@ -93,6 +94,12 @@
   const activeOscs = {};
   let octaveShift = 0;
   
+  let isRecording = false;
+  let isPlaying = false;
+  let recordedEvents = [];
+  let recordingStartTime = 0;
+  let playbackTimeouts = [];
+  
   const waveSelect = document.getElementById('waveType');
   const keysContainer = document.getElementById('keys');
   const octaveDisplay = document.getElementById('octaveDisplay');
@@ -114,9 +121,13 @@
       if (!ctx) ctx = new AudioContext();
   }
 
-  function play(i) {
+  function play(i, fromPlayback = false) {
       initAudio();
       if (activeOscs[i]) return;
+      
+      if (isRecording && !fromPlayback) {
+          recordedEvents.push({ keyIndex: i, time: Date.now() - recordingStartTime, type: 1 });
+      }
       
       let osc = ctx.createOscillator();
       let gain = ctx.createGain();
@@ -134,7 +145,11 @@
       keyEls[i].classList.add('active');
   }
 
-  function stop(i) {
+  function stop(i, fromPlayback = false) {
+      if (isRecording && !fromPlayback) {
+          recordedEvents.push({ keyIndex: i, time: Date.now() - recordingStartTime, type: 0 });
+      }
+
       if (activeOscs[i]) {
           let { osc, gain } = activeOscs[i];
           gain.gain.setValueAtTime(0.1, ctx.currentTime);
@@ -145,9 +160,70 @@
       keyEls[i].classList.remove('active');
   }
 
+  function startPlayback() {
+      isPlaying = true;
+      document.getElementById('recStatus').textContent = '[PLAYING]';
+      document.getElementById('recStatus').style.color = '#10b981';
+      document.getElementById('recStatus').style.opacity = '1';
+      
+      let maxTime = 0;
+      recordedEvents.forEach(ev => {
+          let t = setTimeout(() => {
+              if (ev.type === 1) play(ev.keyIndex, true);
+              else stop(ev.keyIndex, true);
+          }, ev.time);
+          playbackTimeouts.push(t);
+          if (ev.time > maxTime) maxTime = ev.time;
+      });
+      
+      playbackTimeouts.push(setTimeout(() => {
+          stopPlayback();
+      }, maxTime + 100));
+  }
+  
+  function stopPlayback() {
+      isPlaying = false;
+      playbackTimeouts.forEach(t => clearTimeout(t));
+      playbackTimeouts = [];
+      for (let i = 0; i < binds.length; i++) stop(i, true);
+      document.getElementById('recStatus').textContent = 'Z: Rec, X: Play';
+      document.getElementById('recStatus').style.color = '#ef4444';
+      document.getElementById('recStatus').style.opacity = '0.5';
+  }
+
   document.addEventListener('keydown', e => {
       let idx = binds.indexOf(e.key.toUpperCase());
       if (idx !== -1 && !e.repeat) play(idx);
+      
+      if (e.key.toUpperCase() === 'Z') {
+          if (isPlaying) stopPlayback();
+          isRecording = !isRecording;
+          if (isRecording) {
+              recordedEvents = [];
+              recordingStartTime = Date.now();
+              for (let i = 0; i < binds.length; i++) {
+                  if (activeOscs[i]) {
+                      recordedEvents.push({ keyIndex: i, time: 0, type: 1 });
+                  }
+              }
+              document.getElementById('recStatus').textContent = '[RECORDING]';
+              document.getElementById('recStatus').style.color = '#ef4444';
+              document.getElementById('recStatus').style.opacity = '1';
+          } else {
+              document.getElementById('recStatus').textContent = 'Z: Rec, X: Play';
+              document.getElementById('recStatus').style.opacity = '0.5';
+          }
+      }
+      if (e.key.toUpperCase() === 'X') {
+          if (isRecording) {
+              isRecording = false;
+              document.getElementById('recStatus').textContent = 'Z: Rec, X: Play';
+              document.getElementById('recStatus').style.opacity = '0.5';
+          }
+          if (recordedEvents.length === 0) return;
+          if (isPlaying) stopPlayback();
+          else startPlayback();
+      }
       
       if (e.key === 'ArrowUp') {
           e.preventDefault();

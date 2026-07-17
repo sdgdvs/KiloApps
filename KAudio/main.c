@@ -14,6 +14,15 @@ int is_black[NUM_KEYS] = {0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0};
 int instrument = 0;
 int octaveShift = 0;
 
+typedef struct { int keyIndex; DWORD time; int type; } AudioEvent;
+AudioEvent recordedEvents[4000];
+int numEvents = 0;
+int isRecording = 0;
+int isPlaying = 0;
+DWORD recordingStartTime = 0;
+DWORD playbackStartTime = 0;
+int playbackIndex = 0;
+
 void PlayNote(int index, int on) {
     if (hMidi) {
         int actualNote = notes[index] + octaveShift * 12;
@@ -32,8 +41,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // Select instrument (0 = Acoustic Grand Piano)
                 midiOutShortMsg(hMidi, 0x000000C0);
             }
+            SetTimer(hwnd, 1, 10, NULL);
+            break;
+        case WM_TIMER:
+            if (isPlaying) {
+                DWORD now = GetTickCount() - playbackStartTime;
+                int changed = 0;
+                while (playbackIndex < numEvents && recordedEvents[playbackIndex].time <= now) {
+                    int idx = recordedEvents[playbackIndex].keyIndex;
+                    int t = recordedEvents[playbackIndex].type;
+                    activeKeys[idx] = t;
+                    PlayNote(idx, t);
+                    playbackIndex++;
+                    changed = 1;
+                }
+                if (playbackIndex >= numEvents) {
+                    isPlaying = 0;
+                    changed = 1;
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                }
+                if (changed) InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
         case WM_KEYDOWN: {
+            if (wParam == 'Z') {
+                if (isPlaying) {
+                    isPlaying = 0;
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                }
+                isRecording = !isRecording;
+                if (isRecording) {
+                    numEvents = 0;
+                    recordingStartTime = GetTickCount();
+                    for (int i = 0; i < NUM_KEYS; i++) {
+                        if (activeKeys[i] && numEvents < 4000) {
+                            recordedEvents[numEvents].keyIndex = i;
+                            recordedEvents[numEvents].time = 0;
+                            recordedEvents[numEvents].type = 1;
+                            numEvents++;
+                        }
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+            if (wParam == 'X') {
+                if (isRecording) isRecording = 0;
+                if (numEvents == 0) break;
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    playbackStartTime = GetTickCount();
+                    playbackIndex = 0;
+                } else {
+                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             if (wParam == VK_UP) {
                 instrument = (instrument + 1) % 128;
                 midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
@@ -67,6 +131,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (!activeKeys[i]) {
                         activeKeys[i] = 1;
                         PlayNote(i, 1);
+                        if (isRecording && numEvents < 4000) {
+                            recordedEvents[numEvents].keyIndex = i;
+                            recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                            recordedEvents[numEvents].type = 1;
+                            numEvents++;
+                        }
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                     break;
@@ -80,6 +150,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (activeKeys[i]) {
                         activeKeys[i] = 0;
                         PlayNote(i, 0);
+                        if (isRecording && numEvents < 4000) {
+                            recordedEvents[numEvents].keyIndex = i;
+                            recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                            recordedEvents[numEvents].type = 0;
+                            numEvents++;
+                        }
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                     break;
@@ -147,8 +223,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             SetTextColor(memDC, RGB(255, 255, 255));
-            char instText[64];
-            wsprintfA(instText, "Inst: %d (Up/Dn) | Octave: %+d (L/R)", instrument, octaveShift);
+            char instText[128];
+            wsprintfA(instText, "Inst: %d (Up/Dn) | Oct: %+d (L/R) | %s %s", 
+                      instrument, octaveShift, 
+                      isRecording ? "[REC]" : "Z:Rec", 
+                      isPlaying ? "[PLAY]" : "X:Play");
             TextOutA(memDC, 10, 0, instText, lstrlenA(instText));
             
             DeleteObject(white);
@@ -164,6 +243,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             if (hMidi) {
                 midiOutReset(hMidi);
                 midiOutClose(hMidi);
