@@ -107,6 +107,7 @@
                             <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Port</label><br><input type="number" id="dirPort" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
                             <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Connection Type</label><br><select id="dirType" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"><option value="telnet">Telnet</option><option value="ws">WebSocket</option></select></div>
                         </div>
+                        <div style="margin-top:4px;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Auto-Login (Wait~Send~Wait~Send)</label><br><input type="text" id="dirAutoLogin" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;" placeholder="ogin:~sysop\r~assword:~secret\r"></div>
                         <div style="margin-top:auto; display:flex; gap:8px;">
                             <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveEntry()">Save</button>
                             <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteEntry()">Delete</button>
@@ -1043,8 +1044,33 @@
     }
 
     // ─── WebSocket Connection ───
-    function toggleConnect() {
-        if (ws) { ws.close(); return; }
+    let autoLoginSteps = [];
+    let autoLoginIndex = 0;
+    let autoLoginBuffer = "";
+
+    function connectTo(host, port, isWs) {
+        if (ws) { ws.close(); ws = null; }
+        document.getElementById('host').value = host;
+        document.getElementById('port').value = port;
+        const autologin = document.getElementById('dirAutoLogin') ? document.getElementById('dirAutoLogin').value.trim() : "";
+        autoLoginSteps = [];
+        if (autologin) {
+            let parts = autologin.split('~');
+            for(let i=0; i<parts.length-1; i+=2) {
+                autoLoginSteps.push({ expect: parts[i], send: parts[i+1] });
+            }
+        }
+        autoLoginIndex = 0;
+        autoLoginBuffer = "";
+        toggleConnect(true);
+    }
+
+    function toggleConnect(forceConnect) {
+        if (ws) { 
+            ws.close(); 
+            if (forceConnect !== true) return; 
+            ws = null;
+        }
         const host = document.getElementById('host').value.trim();
         const port = document.getElementById('port').value.trim();
         if (!host) return;
@@ -1087,6 +1113,20 @@
                 bytesRx += text.length;
                 updateBytes();
                 rxQueue += text;
+                
+                if (autoLoginIndex < autoLoginSteps.length) {
+                    autoLoginBuffer += text;
+                    if (autoLoginBuffer.length > 2000) autoLoginBuffer = autoLoginBuffer.substring(autoLoginBuffer.length - 1000);
+                    let expected = autoLoginSteps[autoLoginIndex].expect;
+                    if (expected && autoLoginBuffer.includes(expected)) {
+                        let toSend = autoLoginSteps[autoLoginIndex].send.replace(/\\r/g, '\r').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+                        let out = new Uint8Array(toSend.length);
+                        for(let k=0; k<toSend.length; k++) out[k] = toSend.charCodeAt(k);
+                        if (ws && ws.readyState === 1) ws.send(out);
+                        autoLoginBuffer = "";
+                        autoLoginIndex++;
+                    }
+                }
             };
             ws.onclose = () => {
                 setStatus('disconnected', 'Disconnected');
@@ -1351,6 +1391,7 @@
             document.getElementById('dirHost').value = bbs.host || '';
             document.getElementById('dirPort').value = bbs.port || 23;
             document.getElementById('dirType').value = bbs.type || (bbs.ws ? 'ws' : 'telnet');
+            if (document.getElementById('dirAutoLogin')) document.getElementById('dirAutoLogin').value = bbs.autologin || '';
         }
     }
 
@@ -1361,6 +1402,7 @@
         document.getElementById('dirHost').value = '';
         document.getElementById('dirPort').value = '23';
         document.getElementById('dirType').value = 'telnet';
+        if (document.getElementById('dirAutoLogin')) document.getElementById('dirAutoLogin').value = '';
     }
 
     function saveEntry() {
@@ -1368,9 +1410,10 @@
         const host = document.getElementById('dirHost').value.trim();
         const port = parseInt(document.getElementById('dirPort').value) || 23;
         const type = document.getElementById('dirType').value;
+        const autologin = document.getElementById('dirAutoLogin') ? document.getElementById('dirAutoLogin').value.trim() : '';
         if (!name || !host) return;
 
-        const entry = { name, host, port, type };
+        const entry = { name, host, port, type, autologin };
         if (selectedIndex >= 0) {
             dynBbsList[selectedIndex] = entry;
         } else {

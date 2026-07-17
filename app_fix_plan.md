@@ -93,6 +93,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KTetris**: Fixed page scrolling bug in `ktetris.html` by calling `e.preventDefault()` on game keys. Verified `main.c` (no leaks or bugs found).
 - **KTimer**: Verified `ktimer.html` logic. Fixed GDI resource leaks (`HFONT`, `HFONT`) in `main.c` on `WM_DESTROY`.
 - **KTodo**: Verified `ktodo.html` logic. Fixed GDI resource leak (`HFONT`) in `main.c` on `WM_DESTROY`.
+- **KType**: Verified `ktype.html` logic. Fixed GDI resource leak (`HBITMAP`) in `main.c` on `WM_PAINT`, fixed negative number handling in `IntToStr`, added missing `KillTimer`, and adjusted window rect to prevent canvas clipping.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically after KTimer.
+All apps need systematic testing. Continue alphabetically after KType.

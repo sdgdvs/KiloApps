@@ -45,9 +45,9 @@ int StrLen(const char* s) {
 void IntToStr(int val, char* buf) {
     if (val == 0) { buf[0] = '0'; buf[1] = '\0'; return; }
     char temp[16];
-    int i = 0;
+    int i = 0, j = 0;
+    if (val < 0) { buf[j++] = '-'; val = -val; }
     while (val > 0) { temp[i++] = (val % 10) + '0'; val /= 10; }
-    int j = 0;
     while (i > 0) buf[j++] = temp[--i];
     buf[j] = '\0';
 }
@@ -167,7 +167,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Double buffering
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
-            SelectObject(memDC, memBM);
+            HBITMAP oldBM = (HBITMAP)SelectObject(memDC, memBM);
             
             HBRUSH bg = CreateSolidBrush(RGB(20, 20, 40));
             RECT full = {0, 0, W, H};
@@ -224,6 +224,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hFont);
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, oldBM);
             DeleteObject(memBM);
             DeleteDC(memDC);
             
@@ -233,6 +234,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_ERASEBKGND:
             return 1;
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;
         default:
@@ -258,8 +260,12 @@ void MainEntry() {
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KTypeApp", "KType", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+    DWORD style = WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX;
+    RECT rect = {0, 0, W, H};
+    AdjustWindowRect(&rect, style, FALSE);
+
+    HWND hwnd = CreateWindowEx(0, "KTypeApp", "KType", style,
+        CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
