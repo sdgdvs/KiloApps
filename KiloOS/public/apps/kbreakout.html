@@ -20,6 +20,7 @@ let score = 0, high_score = parseInt(localStorage.getItem('kbreakout_hi')||'0');
 document.getElementById('hi').innerText = high_score;
 let diff = 0, speed = 3;
 let lives = 3;
+let power_active = 0, power_x = 0, power_y = 0, paddle_timer = 0;
 let keys = {};
 const ROWS = 5, COLS = 10, BR_W = w/COLS, BR_H = 20;
 let bricks = [];
@@ -43,9 +44,16 @@ function initLevel() {
     bricks = [];
     for(let r=0; r<ROWS; r++) {
         let row = [];
-        for(let c=0; c<COLS; c++) row.push(1);
+        for(let c=0; c<COLS; c++) {
+            if (r === 1 && c % 3 === 1) row.push(9);
+            else if (r === 2) row.push(2);
+            else row.push(1);
+        }
         bricks.push(row);
     }
+    power_active = 0;
+    paddle_timer = 0;
+    pad_w = diff === 1 ? 40 : 60;
     pad_x = w/2 - pad_w/2;
     ball_x = w/2;
     ball_y = h-50;
@@ -99,11 +107,14 @@ function loop() {
         
         if(ball_y > h) {
             lives--;
+            power_active = 0;
             if (lives <= 0) {
                 state = 2;
                 playTone(150, 'sawtooth', 0.5);
                 if(score > high_score) { high_score = score; localStorage.setItem('kbreakout_hi', high_score); document.getElementById('hi').innerText = high_score; }
             } else {
+                paddle_timer = 0;
+                pad_w = diff === 1 ? 40 : 60;
                 pad_x = w/2 - pad_w/2;
                 ball_x = w/2;
                 ball_y = h-50;
@@ -113,19 +124,52 @@ function loop() {
             }
         }
         
+        if (power_active) {
+            power_y += 3;
+            if (power_y + 10 > h - 30 && power_y < h - 30 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
+                power_active = 0;
+                paddle_timer = 300;
+                pad_w = diff === 1 ? 80 : 100;
+                playTone(300, 'sine', 0.2);
+            }
+            if (power_y > h) power_active = 0;
+        }
+        if (paddle_timer > 0) {
+            paddle_timer--;
+            if (paddle_timer === 0) pad_w = diff === 1 ? 40 : 60;
+        }
+        
         let bLeft = 0;
         for(let r=0; r<ROWS; r++) {
             for(let c=0; c<COLS; c++) {
                 if(bricks[r][c]) {
-                    bLeft++;
+                    if (bricks[r][c] !== 9) bLeft++;
                     let bx = c * BR_W, by = r * BR_H + 40;
                     if(ball_x + ball_size > bx && ball_x < bx + BR_W && ball_y + ball_size > by && ball_y < by + BR_H) {
-                        bricks[r][c] = 0;
-                        ball_dy = -ball_dy;
-                        score += 10 + diff * 10;
-                        playTone(600, 'square', 0.05);
+                        if (bricks[r][c] === 9) {
+                            ball_dy = -ball_dy;
+                            playTone(800, 'square', 0.05);
+                        } else if (bricks[r][c] === 2) {
+                            bricks[r][c] = 1;
+                            ball_dy = -ball_dy;
+                            score += 5 + diff * 5;
+                            playTone(700, 'square', 0.05);
+                        } else {
+                            bricks[r][c] = 0;
+                            bLeft--;
+                            ball_dy = -ball_dy;
+                            score += 10 + diff * 10;
+                            playTone(600, 'square', 0.05);
+                            if (!power_active && Math.random() < 0.2) {
+                                power_active = 1;
+                                power_x = bx + BR_W/2;
+                                power_y = by;
+                            }
+                        }
                     }
-                    ctx.fillStyle = `rgb(${200-r*30},${100+c*15},${50+r*20})`;
+                    if (bricks[r][c] === 9) ctx.fillStyle = '#666';
+                    else if (bricks[r][c] === 2) ctx.fillStyle = '#f66';
+                    else ctx.fillStyle = `rgb(${200-r*30},${100+c*15},${50+r*20})`;
                     ctx.fillRect(bx+1, by+1, BR_W-2, BR_H-2);
                 }
             }
@@ -139,6 +183,11 @@ function loop() {
     
     ctx.fillStyle = '#3cf';
     if(state !== 0) ctx.fillRect(pad_x, h-30, pad_w, pad_h);
+    
+    if (power_active) {
+        ctx.fillStyle = '#ff0';
+        ctx.fillRect(power_x, power_y, 10, 10);
+    }
     
     ctx.fillStyle = '#fff';
     if(state !== 0) ctx.fillRect(ball_x, ball_y, ball_size, ball_size);

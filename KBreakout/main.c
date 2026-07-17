@@ -20,6 +20,10 @@ int state = 0; // 0=start, 1=play, 2=gameover
 int diff = 0; // 0=Easy, 1=Hard
 int speed = 3;
 int lives = 3;
+int power_x = 0;
+int power_y = 0;
+int power_active = 0;
+int paddle_timer = 0;
 
 #define ROWS 5
 #define COLS 10
@@ -47,12 +51,18 @@ void SaveHighScore() {
 
 void InitLevel() {
     bricks_left = 0;
+    power_active = 0;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
-            bricks[r][c] = 1;
-            bricks_left++;
+            if (r == 1 && c % 3 == 1) bricks[r][c] = 9; // Unbreakable
+            else if (r == 2) bricks[r][c] = 2; // Hard
+            else bricks[r][c] = 1;
+            
+            if (bricks[r][c] != 9) bricks_left++;
         }
     }
+    pad_w = (diff == 1) ? 40 : 60;
+    paddle_timer = 0;
     pad_x = W / 2 - pad_w / 2;
     ball_x = W / 2;
     ball_y = H - 50;
@@ -96,11 +106,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 // Bottom collision
                 if (ball_y > H) {
                     lives--;
+                    power_active = 0;
                     if (lives <= 0) {
                         SaveHighScore();
                         state = 2; // Game Over
                         MessageBeep(MB_ICONEXCLAMATION);
                     } else {
+                        pad_w = (diff == 1) ? 40 : 60;
+                        paddle_timer = 0;
                         pad_x = W / 2 - pad_w / 2;
                         ball_x = W / 2;
                         ball_y = H - 50;
@@ -108,6 +121,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         ball_dy = -speed;
                         MessageBeep(MB_ICONASTERISK);
                     }
+                }
+
+                if (power_active) {
+                    power_y += 3;
+                    if (power_y + 10 > H - 30 && power_y < H - 30 + pad_h) {
+                        if (power_x + 10 > pad_x && power_x < pad_x + pad_w) {
+                            power_active = 0;
+                            paddle_timer = 300;
+                            pad_w = (diff == 1) ? 80 : 100;
+                            MessageBeep(MB_OK);
+                        }
+                    }
+                    if (power_y > H) power_active = 0;
+                }
+                
+                if (paddle_timer > 0) {
+                    paddle_timer--;
+                    if (paddle_timer == 0) pad_w = (diff == 1) ? 40 : 60;
                 }
 
                 // Bricks collision
@@ -120,15 +151,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int by = r * br_h + 40;
                             if (ball_x + ball_size > bx && ball_x < bx + br_w &&
                                 ball_y + ball_size > by && ball_y < by + br_h) {
-                                bricks[r][c] = 0;
-                                bricks_left--;
-                                ball_dy = -ball_dy;
-                                score += 10 + (diff * 10);
-                                MessageBeep(0xFFFFFFFF);
-                                
-                                if (bricks_left == 0) {
-                                    speed++;
-                                    InitLevel();
+                                if (bricks[r][c] == 9) {
+                                    ball_dy = -ball_dy;
+                                    MessageBeep(0xFFFFFFFF);
+                                } else if (bricks[r][c] == 2) {
+                                    bricks[r][c] = 1;
+                                    ball_dy = -ball_dy;
+                                    score += 5 + (diff * 5);
+                                    MessageBeep(0xFFFFFFFF);
+                                } else {
+                                    bricks[r][c] = 0;
+                                    bricks_left--;
+                                    ball_dy = -ball_dy;
+                                    score += 10 + (diff * 10);
+                                    MessageBeep(0xFFFFFFFF);
+                                    
+                                    if (!power_active && (GetTickCount() % 5 == 0)) {
+                                        power_active = 1;
+                                        power_x = bx + br_w / 2;
+                                        power_y = by;
+                                    }
+                                    
+                                    if (bricks_left == 0) {
+                                        speed++;
+                                        InitLevel();
+                                    }
                                 }
                                 goto out_loops;
                             }
@@ -193,12 +240,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int r = 0; r < ROWS; r++) {
                     for (int c = 0; c < COLS; c++) {
                         if (bricks[r][c]) {
-                            HBRUSH br = CreateSolidBrush(RGB(200 - r * 30, 100 + c * 15, 50 + r * 20));
+                            HBRUSH br;
+                            if (bricks[r][c] == 9) br = CreateSolidBrush(RGB(100, 100, 100));
+                            else if (bricks[r][c] == 2) br = CreateSolidBrush(RGB(255, 100, 100));
+                            else br = CreateSolidBrush(RGB(200 - r * 30, 100 + c * 15, 50 + r * 20));
+                            
                             RECT rr = { c * br_w + 1, r * br_h + 40 + 1, (c + 1) * br_w - 1, (r + 1) * br_h + 40 - 1 };
                             FillRect(memDC, &rr, br);
                             DeleteObject(br);
                         }
                     }
+                }
+                
+                if (power_active) {
+                    HBRUSH pw = CreateSolidBrush(RGB(255, 255, 0));
+                    RECT rp = { power_x, power_y, power_x + 10, power_y + 10 };
+                    FillRect(memDC, &rp, pw);
+                    DeleteObject(pw);
                 }
             }
             

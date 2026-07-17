@@ -138,4 +138,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPac (Added target-tracking AI for Red Ghost and Fruit bonus item spawning to both EXE and HTML)
 - [x] KChess (Added check highlighting, strict move validation, and checkmate/stalemate detection to both EXE and HTML)
 - [x] KChess (Added basic greedy AI (PvE mode) with toggle ('M') to both EXE and HTML)
+- [x] KBreakout (Added unbreakable bricks, 2-hit bricks, and wide paddle power-up to both EXE and HTML)
 
