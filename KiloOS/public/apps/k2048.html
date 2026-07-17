@@ -252,6 +252,7 @@
         .val-2584 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
         .val-4181 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
         .val--1 .tile-inner { background: #555; color: #fff; box-shadow: none; }
+        .val--2 .tile-inner { background: #ffd700; color: #000; box-shadow: 0 0 15px #ffd700; font-size: 2rem; }
 
         .tile.new .tile-inner {
             animation: appear 200ms ease;
@@ -397,6 +398,7 @@
         </div>
         <div class="controls">
             <button class="btn" onclick="initGame()">New Game</button>
+            <button class="btn" onclick="toggleCampaign()" id="camp-btn">Camp: Off</button>
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn">Time: Off</button>
             <button class="btn" onclick="toggleAutoPlay()" id="ap-btn">Auto: Off</button>
             <button class="btn" onclick="toggleObstacles()" id="obs-btn">Obs: Off</button>
@@ -511,6 +513,61 @@
         let obstaclesEnabled = false;
         let moveCount = 0;
 
+        let campaignMode = false;
+        let campaignLevel = 1;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(val) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            let note = 400;
+            let v = val;
+            while (v > 1) { note += 50; v >>= 1; }
+            osc.frequency.value = note;
+            osc.type = 'sine';
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1);
+            setTimeout(() => osc.stop(), 100);
+        }
+
+        function toggleCampaign() {
+            campaignMode = !campaignMode;
+            campaignLevel = 1;
+            document.getElementById('camp-btn').textContent = campaignMode ? "Camp: On" : "Camp: Off";
+            if (campaignMode) {
+                startCampaignLevel();
+            } else {
+                initGame();
+            }
+        }
+
+        function startCampaignLevel() {
+            if (campaignLevel === 1) { setGridSize(4); timeAttackEnabled = false; obstaclesEnabled = false; ruleset = 'classic'; }
+            else if (campaignLevel === 2) { setGridSize(4); timeAttackEnabled = true; obstaclesEnabled = false; ruleset = 'classic'; }
+            else if (campaignLevel === 3) { setGridSize(4); timeAttackEnabled = false; obstaclesEnabled = true; ruleset = 'classic'; }
+            else if (campaignLevel === 4) { setGridSize(5); timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'classic'; }
+            else if (campaignLevel >= 5) { setGridSize(5); timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'fibonacci'; }
+            document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: On" : "Time: Off";
+            document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
+            document.getElementById('ruleset-select').value = ruleset;
+            if (!campaignMode) initGame();
+            if (campaignMode) {
+                if (campaignLevel === 2) timeRemaining = 120;
+                else if (campaignLevel === 4) timeRemaining = 90;
+                else if (campaignLevel >= 5) timeRemaining = 60;
+                if (timeAttackEnabled) {
+                    document.getElementById('timer-display').textContent = timeRemaining + "s";
+                    document.getElementById('timer-display').style.display = "block";
+                } else {
+                    document.getElementById('timer-display').style.display = "none";
+                }
+            }
+        }
+
         function toggleObstacles() {
             obstaclesEnabled = !obstaclesEnabled;
             document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
@@ -601,7 +658,7 @@
             
             const inner = document.createElement('div');
             inner.className = 'tile-inner';
-            inner.textContent = tile.val === -1 ? 'X' : tile.val;
+            inner.textContent = tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : tile.val);
             el.appendChild(inner);
             
             tilesContainer.appendChild(el);
@@ -615,7 +672,7 @@
         function updateTileEl(tile, isMerged) {
             tile.el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
             tile.el.className = `tile val-${tile.val} ${isMerged ? 'merged' : ''}`;
-            tile.el.firstChild.textContent = tile.val === -1 ? 'X' : tile.val;
+            tile.el.firstChild.textContent = tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : tile.val);
             if (isMerged) {
                 setTimeout(() => tile.el.classList.remove('merged'), 200);
             }
@@ -632,6 +689,8 @@
                 if (ruleset === 'fibonacci') val = 1;
                 if (obstaclesEnabled && moveCount > 0 && moveCount % 5 === 0) {
                     val = -1;
+                } else if (Math.random() < 0.05) {
+                    val = -2;
                 }
                 const tile = {
                     id: tileIdCounter++,
@@ -639,7 +698,7 @@
                     x: randomIdx % gridSize,
                     y: Math.floor(randomIdx / gridSize)
                 };
-                if (val > stats.highestTile && val !== -1) {
+                if (val > stats.highestTile && val !== -1 && val !== -2) {
                     stats.highestTile = val;
                     saveStats();
                 }
@@ -658,12 +717,29 @@
                     localStorage.setItem('k2048_best_score', bestScore); // Backwards compat
                 }
             }
-            scoreEl.textContent = score;
-            bestScoreEl.textContent = bestScore;
+            if (campaignMode) {
+                let target = (campaignLevel <= 2) ? 128 : (campaignLevel === 3) ? 256 : (campaignLevel === 4) ? 512 : 55;
+                scoreEl.innerHTML = score + "<br><span style='font-size:0.5em'>Target: " + target + "</span>";
+                bestScoreEl.textContent = "Lvl " + campaignLevel;
+            } else {
+                scoreEl.textContent = score;
+                bestScoreEl.textContent = bestScore;
+            }
         }
 
         function getMergeResult(a, b) {
             if (a === -1 || b === -1) return 0;
+            if (a === -2 && b > 0) {
+                if (ruleset === 'fibonacci') {
+                    const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
+                    let i = fibs.indexOf(b);
+                    if (i >= 0) return fibs[i+1];
+                    return b;
+                }
+                return b * 2;
+            }
+            if (b === -2 && a > 0) return getMergeResult(b, a);
+            if (a === -2 && b === -2) return 2;
             if (ruleset === 'fibonacci') {
                 if (a === 1 && b === 1) return 2;
                 const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
@@ -855,6 +931,20 @@
                         }, 1000);
                     }
                 }
+                let max_val = 0;
+                grid.forEach(t => { if (t && t.val > max_val) max_val = t.val; });
+                playBeep(max_val);
+
+                if (campaignMode) {
+                    let target = (campaignLevel <= 2) ? 128 : (campaignLevel === 3) ? 256 : (campaignLevel === 4) ? 512 : 55;
+                    if (max_val >= target) {
+                        alert("Level " + campaignLevel + " Complete!");
+                        campaignLevel++;
+                        startCampaignLevel();
+                        return true;
+                    }
+                }
+
                 historyStack.push(preState);
                 if (historyStack.length > 50) historyStack.shift();
                 updateScore();

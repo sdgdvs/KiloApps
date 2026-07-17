@@ -55,6 +55,9 @@ int autoPlayTimerActive = 0;
 int obstaclesEnabled = 0;
 int moveCount = 0;
 
+int campaignMode = 0;
+int campaignLevel = 1;
+
 #define MAX_HISTORY 50
 typedef struct {
     int grid[MAX_GRID][MAX_GRID];
@@ -189,6 +192,8 @@ void AddRandomTile() {
                 if (emptyCount == target) {
                     if (obstaclesEnabled && moveCount > 0 && moveCount % 5 == 0) {
                         grid[i][j] = -1;
+                    } else if (my_rand() % 20 == 0) {
+                        grid[i][j] = -2; // Wildcard
                     } else {
                         grid[i][j] = (ruleset == 1) ? 1 : ((my_rand() % 10 == 0) ? 4 : 2);
                         if (grid[i][j] > stats_highestTile) {
@@ -225,8 +230,32 @@ void InitGame() {
     LoadBest();
 }
 
+void StartCampaignLevel() {
+    if (campaignLevel == 1) { grid_size = 4; timeAttackEnabled = 0; obstaclesEnabled = 0; ruleset = 0; }
+    else if (campaignLevel == 2) { grid_size = 4; timeAttackEnabled = 1; obstaclesEnabled = 0; ruleset = 0; }
+    else if (campaignLevel == 3) { grid_size = 4; timeAttackEnabled = 0; obstaclesEnabled = 1; ruleset = 0; }
+    else if (campaignLevel == 4) { grid_size = 5; timeAttackEnabled = 1; obstaclesEnabled = 1; ruleset = 0; }
+    else if (campaignLevel >= 5) { grid_size = 5; timeAttackEnabled = 1; obstaclesEnabled = 1; ruleset = 1; }
+    InitGame();
+    if (campaignMode) {
+        if (campaignLevel == 2) timeRemaining = 120;
+        else if (campaignLevel == 4) timeRemaining = 90;
+        else if (campaignLevel >= 5) timeRemaining = 60;
+    }
+}
+
 int GetMergeResult(int a, int b) {
     if (a == -1 || b == -1) return 0;
+    if (a == -2 && b > 0) {
+        if (ruleset == 1) {
+            int fibs[] = {1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025};
+            for (int i = 0; i < 23; i++) if (fibs[i] == b) return fibs[i+1];
+            return b;
+        }
+        return b * 2;
+    }
+    if (b == -2 && a > 0) return GetMergeResult(b, a);
+    if (a == -2 && b == -2) return 2;
     if (ruleset == 1) {
         if (a == 1 && b == 1) return 2;
         int fibs[] = {1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025};
@@ -291,6 +320,7 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
         else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
         else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
+        if (val == -2) { rCol=255; gCol=215; bCol=0; txtCol=0x000000; }
         if (val == -1) { rCol=85; gCol=85; bCol=85; txtCol=0xFFFFFF; }
         if (val == 0) { rCol = 40; gCol = 40; bCol = 40; }
     } else if (theme == 1) { // Classic
@@ -306,6 +336,7 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
         else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
         else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
+        if (val == -2) { rCol=255; gCol=215; bCol=0; txtCol=0x000000; }
         if (val == -1) { rCol=85; gCol=85; bCol=85; txtCol=0xFFFFFF; }
         if (val == 0) { rCol = 204; gCol = 192; bCol = 179; }
     } else { // Pastel
@@ -321,6 +352,7 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         else if (val == 1024) { rCol=240; gCol=244; bCol=195; txtCol=RGB(74,20,140); }
         else if (val == 2048) { rCol=255; gCol=249; bCol=196; txtCol=RGB(74,20,140); }
         else if (val > 2048) { rCol=150; gCol=150; bCol=150; txtCol=RGB(74,20,140); }
+        if (val == -2) { rCol=255; gCol=215; bCol=0; txtCol=0x000000; }
         if (val == -1) { rCol=100; gCol=100; bCol=100; txtCol=0xFFFFFF; }
         if (val == 0) { rCol = 255; gCol = 255; bCol = 255; }
     }
@@ -333,7 +365,10 @@ void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
         SetBkMode(hdc, TRANSPARENT);
         SetTextColor(hdc, txtCol);
         char buf[16];
-        if (originalVal == -1) {
+        if (originalVal == -2) {
+            buf[0] = 'W';
+            buf[1] = 0;
+        } else if (originalVal == -1) {
             buf[0] = 'X';
             buf[1] = 0;
         } else {
@@ -392,7 +427,13 @@ void DrawBoard(HDC hdc) {
     DeleteObject(hFontTitle);
 
     char scoreBuf[128];
-    if (timeAttackEnabled) {
+    if (campaignMode) {
+        int target = (campaignLevel <= 2) ? 128 : (campaignLevel == 3) ? 256 : (campaignLevel == 4) ? 512 : 55;
+        wsprintfA(scoreBuf, "Lvl %d  Score: %d  Target: %d", campaignLevel, score, target);
+        if (timeAttackEnabled) {
+            wsprintfA(scoreBuf, "Lvl %d Target: %d Time: %ds", campaignLevel, target, timeRemaining);
+        }
+    } else if (timeAttackEnabled) {
         wsprintfA(scoreBuf, "Score: %d  Best: %d  Time: %ds", score, bestScore, timeRemaining);
     } else {
         wsprintfA(scoreBuf, "Score: %d  Best: %d", score, bestScore);
@@ -407,7 +448,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "[H]elp  [M]ode  [O]bs  [F]ib  [P]lay  [U]ndo  [I]nfo");
+    wsprintfA(helpBuf, "[H]elp [C]amp [M]ode [O]bs [F]ib [P]lay [U]ndo [I]nfo");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
@@ -487,9 +528,20 @@ int Move(int dx, int dy) {
                         }
                         merged[ni][nj] = 1;
                         moved = 1;
-                        if (grid[ni][nj] == 2048 && !hasWon) {
+                        if (grid[ni][nj] == 2048 && !hasWon && !campaignMode) {
                             win = 1;
                             hasWon = 1;
+                        }
+                        if (campaignMode) {
+                            int target = (campaignLevel <= 2) ? 128 : (campaignLevel == 3) ? 256 : (campaignLevel == 4) ? 512 : 55;
+                            if (grid[ni][nj] >= target) {
+                                char msg[64];
+                                wsprintfA(msg, "Level %d Complete!", campaignLevel);
+                                MessageBoxA(mainHwnd, msg, "Campaign", MB_OK);
+                                campaignLevel++;
+                                StartCampaignLevel();
+                                return 1;
+                            }
                         }
                         break;
                     } else {
@@ -520,7 +572,12 @@ int Move(int dx, int dy) {
             history[MAX_HISTORY - 1].score = tempScore;
         }
 
-        MessageBeep(MB_OK); // simple sound effect
+        int note = 400;
+        int max_val = 0;
+        for (int i=0;i<grid_size;i++) for(int j=0;j<grid_size;j++) if(grid[i][j] > max_val) max_val = grid[i][j];
+        int v = max_val;
+        while (v > 1) { note += 50; v >>= 1; }
+        Beep(note, 30);
         AddRandomTile();
         SaveStats();
         if (CheckGameOver()) {
@@ -583,6 +640,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (wParam >= '3' && wParam <= '6') {
                 grid_size = wParam - '0';
                 InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'C' || wParam == 'c') {
+                campaignMode = !campaignMode;
+                campaignLevel = 1;
+                if (campaignMode) StartCampaignLevel(); else InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'M' || wParam == 'm') {
                 timeAttackEnabled = !timeAttackEnabled;
