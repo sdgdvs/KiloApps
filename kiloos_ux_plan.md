@@ -52,9 +52,10 @@ This agent runs perpetually. After completing the current priority list, identif
 - **Accessibility:** Keyboard navigation, focus management, screen reader support, contrast
 
 ### Current Focus
-- Enhance taskbar functionality with app previews on hover and improved grouping/overflow handling.
+- Theme & Visuals: Improve window glassmorphism, drop shadows, and border highlights for better depth separation between overlapping windows.
 
 ## Completed Items
+- Taskbar Enhancements: Implemented app instance grouping by `app.id` to prevent taskbar clutter. Added rich, interactive hover previews that display all running instances of an app, allowing users to minimize, restore, or focus specific instances directly from the taskbar preview menu.
 - Window Management Polish: Constrained window dragging to keep windows reachable within the viewport, and initialized windows safely constrained to the viewport size. Added a smooth entrance animation for app folders.
 - Start Menu Polish: Replaced real-time filtering with a memoized `useMemo` search to improve performance. Added a "No matching apps found" state, and enhanced the search results UI to display app categories alongside titles for better context.
 - App Folder Polish: Added click-to-select states for icons rendered inside folders to match the desktop behavior. Replaced the flat yellow SVG folder icon with a premium 3D glassmorphic blue gradient design.

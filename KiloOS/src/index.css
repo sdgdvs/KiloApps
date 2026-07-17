@@ -451,6 +451,7 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
 }
 
 .taskbar-preview {
@@ -482,6 +483,61 @@ a, button, .start-button, .desktop-icon, .context-item, .taskbar-item, .xp-btn, 
   border-width: 5px;
   border-style: solid;
   border-color: rgba(255,255,255,0.15) transparent transparent transparent;
+}
+
+.taskbar-badge {
+  background: var(--primary);
+  color: #111;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 10px;
+  padding: 0 5px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.taskbar-preview-header {
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.taskbar-preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.taskbar-preview-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.taskbar-preview-title {
+  font-size: 13px;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.taskbar-preview-state {
+  font-size: 11px;
+  color: var(--primary);
 }
 
 .notification-tray {

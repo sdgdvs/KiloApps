@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.3.57';
+const MICROS_VERSION = '0.3.58';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 
@@ -1051,13 +1051,52 @@ function App() {
             e.currentTarget.scrollLeft += e.deltaY;
           }
         }}>
-          {openApps.map(app => {
-            const baseApp = APPS.find(a => a.id === app.id);
+          {Object.entries(openApps.reduce((acc, app) => {
+            if (!acc[app.id]) acc[app.id] = [];
+            acc[app.id].push(app);
+            return acc;
+          }, {})).map(([id, instances]) => {
+            const baseApp = APPS.find(a => a.id === id);
+            if (!baseApp) return null;
+            const hasActive = instances.some(a => !a.minimized && a.zIndex === Math.max(...openApps.map(o => o.zIndex)));
             return (
-              <div key={app.instanceId} className={`taskbar-item ${(!app.minimized && app.zIndex === Math.max(...openApps.map(a => a.zIndex))) ? 'active' : ''}`} onClick={() => toggleMinimize(app.instanceId)} style={{display: 'flex', alignItems: 'center', gap: '4px'}}>
-                {baseApp && <img src={baseApp.icon} alt="" style={{width:'16px', height:'16px', imageRendering: 'pixelated', flexShrink: 0}} />}
-                <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{app.title}</span>
-                <div className="taskbar-preview">{app.title}</div>
+              <div 
+                key={id} 
+                className={`taskbar-item ${hasActive ? 'active' : ''}`} 
+                onClick={() => {
+                  if (instances.length === 1) toggleMinimize(instances[0].instanceId);
+                  else {
+                    const nextApp = instances.find(a => a.minimized) || instances[0];
+                    if (nextApp.minimized) toggleMinimize(nextApp.instanceId);
+                    else focusApp(nextApp.instanceId);
+                  }
+                }} 
+                style={{display: 'flex', alignItems: 'center', gap: '6px'}}
+              >
+                <img src={baseApp.icon} alt="" style={{width:'16px', height:'16px', imageRendering: 'pixelated', flexShrink: 0}} />
+                {instances.length === 1 ? (
+                  <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{instances[0].title}</span>
+                ) : (
+                  <span style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>{baseApp.title}</span>
+                )}
+                {instances.length > 1 && (
+                  <div className="taskbar-badge">{instances.length}</div>
+                )}
+                <div className="taskbar-preview" onClick={e => e.stopPropagation()}>
+                  <div className="taskbar-preview-header">{baseApp.title}</div>
+                  {instances.map(inst => (
+                    <div 
+                      key={inst.instanceId} 
+                      className="taskbar-preview-item" 
+                      onClick={() => toggleMinimize(inst.instanceId)}
+                    >
+                      <div className="taskbar-preview-title">{inst.title}</div>
+                      <div className="taskbar-preview-state">
+                        {inst.minimized ? 'Minimized' : (inst.zIndex === Math.max(...openApps.map(o => o.zIndex)) ? 'Active' : 'Bg')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             );
           })}
