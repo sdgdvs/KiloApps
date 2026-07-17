@@ -95,6 +95,7 @@ Commands: /nick &lt;name&gt;</div>
         <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled>
         <button id="btnSend" onclick="window.send()" disabled>Send</button>
         <button id="btnClear" onclick="window.clearLog()">Clear</button>
+        <button id="btnSave" onclick="window.saveLog()">Save</button>
     </div>
 
     <script type="module">
@@ -408,6 +409,17 @@ Commands: /nick &lt;name&gt;</div>
 
         window.clearLog = function() {
             logEl.textContent = '';
+        };
+
+        window.saveLog = function() {
+            const text = logEl.textContent;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'chat_log.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            log('* Chat saved to chat_log.txt');
         };
     </script>
 </body>

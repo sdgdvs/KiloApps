@@ -61,12 +61,12 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 **Multi-Agent Coordination**
 
-4 agents operate on this repo on overlapping schedules. You are the **Games Content** agent.
+4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Game Content Expander** agent.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`game_content_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Builder agent), `app_fix_plan.md` (QA agent), `kiloos_ux_plan.md` (UX agent)
-- **Shared file `KiloOS/src/App.jsx`** — owned by the UX agent. You may ONLY add entries to the APPS array (to register new games). Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
-- **`KiloOS/src/index.css`** — owned by the UX agent. Do NOT edit.
+  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `new_app_plan.md` (Creator agent), `kiloos_ux_plan.md` (inactive)
+- **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array (to register new games). Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
+- **`KiloOS/src/index.css`** — Do NOT edit.
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **CI/CD:** Every push to `main` triggers GitHub Actions → Firebase deploy to `kiloapps.web.app`.
 - **Testing:** After editing HTML → verify in browser if possible. After editing App.jsx → `cd KiloOS && npm run build`. After editing `.c` files → run the app's `build.bat`.
@@ -76,7 +76,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - All game HTML files must be SINGLE self-contained files (inline CSS + JS).
 - Do NOT edit: `master_plan.md`, `architecture.md`, `.agents/AGENTS.md`, `KiloOS/src/index.css`.
 - Do NOT edit other agents' plan files: `app_work_plan.md`, `app_fix_plan.md`, `kiloos_ux_plan.md`.
-- Do NOT redo polish work the Builder agent has already completed (check `app_work_plan.md`). Your focus is CONTENT and GAMEPLAY, not visual polish.
+- Your focus is CONTENT, GAMEPLAY DEPTH, and GAME LENGTH — not visual polish. Add more levels, more enemies, more modes, more mechanics. Fill the 999KB budget with gameplay content.
 - Do NOT add ARG/easter egg elements.
 - **Logging discipline:** Keep this plan file concise. Brief notes per turn in the Progress Log. Do NOT dump file contents or create verbose logs.
 

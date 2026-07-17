@@ -2,12 +2,12 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 5 agents operate on this repo on overlapping schedules. You are the **App Creator & Deep Expander**.
+**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **App Creator & Deep Expander**.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`new_app_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Builder agent), `app_fix_plan.md` (QA agent), `kiloos_ux_plan.md` (UX agent), `game_content_plan.md` (Games agent)
-- **Shared file `KiloOS/src/App.jsx`** — owned by the UX agent. You may ONLY add entries to the APPS array. Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
-- **`KiloOS/src/index.css`** — owned by the UX agent. Do NOT edit.
+  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `kiloos_ux_plan.md` (inactive)
+- **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
+- **`KiloOS/src/index.css`** — Do NOT edit.
 - **App folder categories** for the `folder` property in APPS: `System`, `Media`, `Office`, `Games`, `Network`, `Dev`.
 - **Dual-target model:** Each app has a native C version (`K[Name]/main.c` + `build.bat`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). Both versions should offer functional parity where feasible. Web HTML files must be single self-contained files (inline CSS + JS, no imports).
 - **Size limit:** No individual KiloApp may exceed 999 kilobytes (web or native). This is a LOT of room for optimized code — use it to build deep, feature-rich apps.
@@ -40,7 +40,7 @@ Before creating any new app, check for overlap with the existing suite. The foll
 - **Calculators/Converters:** KCalc, KConverter, KBase — no more calculator or unit converter variants.
 - **Time/Clocks:** KClock, KTimer, KCalendar — no more clock or timer variants.
 - **Chat/Messaging:** KChat, KChatServer, KBBS, KMail — no more chat or email apps.
-- **Existing Games:** KBreakout, KChess, KMaze, KMines, KPac, KPong, KRogue, KSnake, KSolitaire, KSpace, KTetris — do NOT recreate these genres.
+- **Existing Games:** K2048, KBreakout, KChess, KMaze, KMines, KPac, KPong, KRogue, KSnake, KSolitaire, KSpace, KSudoku, KTetris — do NOT recreate these genres.
 
 When choosing a new app, ask: "Does this do something fundamentally different from every existing app?" If the answer is no, pick something else.
 
@@ -80,7 +80,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - **Phase 1:** Choose a unique app. Scaffold `K[Name]/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - **Phase 2:** Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 - **Phase 3:** Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- **Phase 4:** Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native.
+- **Phase 4:** Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ### Deep Expansion (Phases 5-14)
 Each expansion phase adds ONE substantial feature to BOTH web and native versions. Target near-commercial quality.

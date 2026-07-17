@@ -56,19 +56,21 @@ Window management (dimming, snap-to-edge previews, drag feedback, minimize anima
 17. Build pipeline improvements: automated size-limit checks, CI artifact upload.
 18. Automated testing or build-verification for native apps.
 
-## Active Agent Fleet (2 computers, 2 accounts)
+## Active Agent Fleet (as of 2026-07-17)
 
-| Agent | Computer | Schedule | Plan File | Model |
-|---|---|---|---|---|
-| App Builder | Other | Every 2h | `app_work_plan.md` | Gemini 3.1 Pro High |
-| Quality & Build | Other | Every 3h | `app_fix_plan.md` | Gemini 3.1 Pro Low |
-| Shell & UX | Other | Every 6h | `kiloos_ux_plan.md` | Gemini 3.1 Pro High |
-| Game Content | Other | ~2h | `game_content_plan.md` | Gemini 3.1 Pro High |
-| App Creator | This | Every 1h | `new_app_plan.md` | Gemini 3.1 Pro High |
-| Director | This | Every 3 days | (reviews) | Claude Opus 4.6 |
+| Agent | Schedule | Plan File | Model |
+|---|---|---|---|
+| Feature Expander | Every 2h (:00) | `app_work_plan.md` | Gemini 3.1 Pro High |
+| Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.1 Pro Low |
+| Game Content Expander | Every 2h (:30) | `game_content_plan.md` | Gemini 3.1 Pro High |
+| App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.1 Pro High |
+| Director | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
+| ~~Shell & UX~~ | ~~Suspended~~ | `kiloos_ux_plan.md` | — |
 
 ## Agent Workflow Rules
+- **Features Only, No Polish:** All agents focus on feature expansion, game content depth, and new app creation. Visual polish is explicitly out of scope.
+- **Self-Contained Context:** Each agent reads ONLY its own .md plan file. Plan files contain all coordination rules inline. No cross-referencing master_plan.md or architecture.md.
+- **Subagent Delegation:** Agents dispatch subagents for coding work, passing ONLY their plan .md file as context. This prevents context bloat over many cron cycles.
 - **Continuous Deployment:** Commit and push after every turn. CI/CD auto-deploys.
-- **Coordination:** See `.agents/AGENTS.md`. Always `git pull` first. Own your plan file only.
-- **Subagent Delegation:** Agents should dispatch subagents for coding work to keep orchestrator context clean.
-- **Documentation:** Keep plan files concise and current.
+- **Coordination:** Always `git pull` first. Own your plan file only.
+- **Infinite Autonomy:** Agents never idle. When a queue/pass completes, they loop and start the next one. Designed for month-long unattended operation.

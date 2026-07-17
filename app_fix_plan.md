@@ -2,12 +2,12 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 4 agents operate on this repo on overlapping schedules. You are the **Quality & Build Verification** agent.
+**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Quality & Build Verification** agent.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`app_fix_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Builder agent), `kiloos_ux_plan.md` (UX agent), `game_content_plan.md` (Games agent)
-- **Shared file `KiloOS/src/App.jsx`** — owned by the UX agent. You may edit ONLY to fix bugs (not to add features or apps). Protocol: `git pull` → minimal surgical fix → commit and push IMMEDIATELY.
-- **`KiloOS/src/index.css`** — owned by the UX agent. Do NOT edit.
+  - `app_work_plan.md` (Feature Expander agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `kiloos_ux_plan.md` (inactive)
+- **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may edit ONLY to fix bugs (not to add features or apps). Protocol: `git pull` → minimal surgical fix → commit and push IMMEDIATELY.
+- **`KiloOS/src/index.css`** — Do NOT edit.
 - **Your scope is surgical bug fixes ONLY.** Do NOT do UI polish, feature expansion, or large code rewrites — those are the Builder and Games agents' jobs.
 - **Size limit:** No individual KiloApp may exceed 999 kilobytes (web or native).
 - **Testing expectations:**

@@ -2,12 +2,12 @@
 
 ## Coordination Rules (DO NOT DELETE — required for subagent context)
 
-**Multi-Agent System:** 4 agents operate on this repo on overlapping schedules. You are the **App Builder**.
+**Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Feature Expander** (formerly App Builder).
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`app_work_plan.md`).** Read but NEVER edit:
-  - `app_fix_plan.md` (QA agent), `kiloos_ux_plan.md` (UX agent), `game_content_plan.md` (Games agent)
-- **Shared file `KiloOS/src/App.jsx`** — owned by the UX agent. You may ONLY add entries to the APPS array. Protocol: `git pull` → make minimal APPS-only change → commit and push IMMEDIATELY before doing other work.
-- **`KiloOS/src/index.css`** — owned by the UX agent. Do NOT edit.
+  - `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `kiloos_ux_plan.md` (inactive)
+- **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → make minimal APPS-only change → commit and push IMMEDIATELY before doing other work.
+- **`KiloOS/src/index.css`** — Do NOT edit.
 - **App folder categories** for the `folder` property in APPS: `System`, `Media`, `Office`, `Games`, `Network`, `Dev`.
 - **Dual-target model:** Each app has a native C version (`K[Name]/main.c` + `build.bat`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). Both versions should offer functional parity where feasible. Web HTML files must be single self-contained files (inline CSS + JS, no imports).
 - **Size limit:** No individual KiloApp may exceed 999 kilobytes (web or native).
@@ -17,16 +17,19 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. A few lines per completed item. Do NOT dump file contents or create verbose logs.
 
+**WORK FOCUS (CRITICAL): FEATURES ONLY, NO POLISH**
+- Do NOT spend time on visual polish, color schemes, glassmorphism, animations, or aesthetic improvements.
+- DO add: new game modes, difficulty levels, save/load, undo/redo, statistics, import/export, search, multi-tab, keyboard shortcuts, new content/levels, new mechanics.
+- Each pass through the queue should add DEEPER, more substantial features than the last. You have up to 999KB per app — use that budget for functionality, not eye candy.
+
 ---
 
-**Target App:** KChess
-**Status:** Feature Expansion (Added last move highlighting to web and native)
+**Target App:** KChat
+**Status:** Feature Expansion (Added Save Log functionality to web and native)
 **Current Phase:** Done
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-
-- KChat
 - KBBS
 - KAudio
 - KClock
@@ -71,3 +74,4 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KCalendar
 - KChart
 - KChess
+- KChat
