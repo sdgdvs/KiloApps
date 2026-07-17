@@ -87,7 +87,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 |------------|-----------------|------------------------|--------|-------|
 | KMines     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
 | KRogue     | Tier 2          | Feature-Expanded       | Expanded | Web upgraded to basic playable version. EXE is a full roguelike. |
-| KSnake     | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
+| KSnake     | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KTetris    | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
 | KPong      | Tier 1          | Polished               | Needs Improvement | Full parity. |
 | KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
@@ -144,3 +144,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 **Loop 4**
 - [x] KMines (Added Campaign Mode with 5 progressively larger grids, and a single-use Shield mechanic to both EXE and HTML)
 - [x] KRogue (Expanded to 15 levels, added Ghost/Hydra/Cube enemies, Biomes, Lightning spell, and Kills tracking to both EXE and HTML)
+- [x] KSnake (Added Campaign Mode, Ghost Power-Up, and Native High Score Persistence to both EXE and HTML)

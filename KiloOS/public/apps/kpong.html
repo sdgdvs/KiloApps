@@ -76,6 +76,9 @@
   let bdx = 5, bdy = 3;
   let s1 = 0, s2 = 0;
   let rally = 0;
+  let difficulty = 2; // 1: Easy, 2: Normal, 3: Hard
+  const aiSpeeds = [0, 2, 4, 6];
+  const startSpeeds = [0, 4, 5, 7];
   let gameOver = false;
   let particles = [];
   
@@ -99,7 +102,8 @@
   function reset() {
       bx = W/2 - BALL_SIZE/2;
       by = H/2 - BALL_SIZE/2;
-      bdx = (bdx > 0) ? -5 : 5;
+      let spd = startSpeeds[difficulty];
+      bdx = (bdx > 0) ? -spd : spd;
       bdy = (bdy > 0) ? 3 : -3;
   }
 
@@ -115,6 +119,10 @@
           return;
       }
 
+      if (keys['1']) { difficulty = 1; }
+      if (keys['2']) { difficulty = 2; }
+      if (keys['3']) { difficulty = 3; }
+
       padH = 50 - (rally * 2);
       if (padH < 20) padH = 20;
 
@@ -123,8 +131,9 @@
       if (p1y < 0) p1y = 0;
       if (p1y > H - padH) p1y = H - padH;
 
-      if (by > p2y + padH/2 + 10) p2y += 4;
-      if (by < p2y + padH/2 - 10) p2y -= 4;
+      let aiSpeed = aiSpeeds[difficulty];
+      if (by > p2y + padH/2 + 10) p2y += aiSpeed;
+      if (by < p2y + padH/2 - 10) p2y -= aiSpeed;
       if (p2y < 0) p2y = 0;
       if (p2y > H - padH) p2y = H - padH;
 
@@ -216,6 +225,9 @@
       ctx.font = '14px Inter';
       ctx.textAlign = 'center';
       ctx.fillText("RALLY: " + rally, W/2, 20);
+
+      let diffStr = difficulty === 1 ? "EASY" : (difficulty === 2 ? "NORMAL" : "HARD");
+      ctx.fillText("DIFF: " + diffStr + " (1-3)", W/2, 40);
 
       if (gameOver) {
           ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';

@@ -19,6 +19,9 @@ int p1_score = 0;
 int p2_score = 0;
 int rally = 0;
 int game_over = 0;
+int difficulty = 2;
+int ai_speeds[] = {0, 2, 4, 6};
+int start_speeds[] = {0, 4, 5, 7};
 
 void ResetBall() {
     ball_x = W / 2 - BALL_SIZE / 2;
@@ -45,6 +48,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
+            if (GetAsyncKeyState('1') & 0x8000) difficulty = 1;
+            if (GetAsyncKeyState('2') & 0x8000) difficulty = 2;
+            if (GetAsyncKeyState('3') & 0x8000) difficulty = 3;
+
             // Dynamic paddle size
             pad_h = 50 - (rally * 2);
             if (pad_h < 20) pad_h = 20;
@@ -56,8 +63,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_y > H - pad_h) p1_y = H - pad_h;
 
             // AI (simple)
-            if (ball_y > p2_y + pad_h / 2 + 10) p2_y += 4;
-            if (ball_y < p2_y + pad_h / 2 - 10) p2_y -= 4;
+            int ai_spd = ai_speeds[difficulty];
+            if (ball_y > p2_y + pad_h / 2 + 10) p2_y += ai_spd;
+            if (ball_y < p2_y + pad_h / 2 - 10) p2_y -= ai_spd;
             if (p2_y < 0) p2_y = 0;
             if (p2_y > H - pad_h) p2_y = H - pad_h;
 
@@ -145,6 +153,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(rallyStr, "RALLY: %d", rally);
             SetTextColor(memDC, RGB(180, 180, 180));
             TextOutA(memDC, W / 2 - 35, 30, rallyStr, lstrlenA(rallyStr));
+            
+            char diffStr[32];
+            char* dName = difficulty == 1 ? "EASY" : (difficulty == 2 ? "NORMAL" : "HARD");
+            wsprintfA(diffStr, "DIFF: %s (1-3)", dName);
+            TextOutA(memDC, W / 2 - 50, 50, diffStr, lstrlenA(diffStr));
             
             if (game_over) {
                 char* winStr = p1_score >= 11 ? "P1 WINS!" : "P2 WINS!";
