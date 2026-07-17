@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KTerminal
+**Target App:** KTodo
 **Status:** Next
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -175,6 +175,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 - **KTaskMgr**: Fixed XSS vulnerability in `ktaskmgr.html` process title rendering. (Web-only app)
 - **KTerm**: Fixed buffer overflows in `main.c` `ProcessCommand` and `dir` logic. Fixed `kterm.html` `mkdir` creating `undefined` directory.
 - **KTetris**: Fixed page scrolling bug in `ktetris.html` by calling `e.preventDefault()` on game keys. Verified `main.c` (no leaks or bugs found).
+- **KTimer**: Verified `ktimer.html` logic. Fixed GDI resource leaks (`HFONT`, `HFONT`) in `main.c` on `WM_DESTROY`.
 
 ## Backlog
-All apps need systematic testing. Continue alphabetically after KTaskMgr.
+All apps need systematic testing. Continue alphabetically after KTimer.

@@ -17,6 +17,7 @@ int sprintf(char* buf, const char* fmt, ...) {
 }
 
 HWND hDisplay, hBtnStart, hBtnReset, hBtnLap, hListLaps;
+HFONT hFont, hBtnFont;
 DWORD startTime = 0;
 DWORD elapsed = 0;
 int isRunning = 0;
@@ -48,9 +49,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnReset = CreateWindowA("BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 80, 70, 30, hwnd, (HMENU)1002, NULL, NULL);
             hListLaps = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOINTEGRALHEIGHT, 20, 120, 240, 170, hwnd, (HMENU)1004, NULL, NULL);
             
-            HFONT hFont = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
+            hFont = CreateFontA(32, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_MODERN, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
-            HFONT hBtnFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            hBtnFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hBtnStart, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnLap, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SendMessageA(hBtnReset, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
@@ -102,6 +103,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return (LRESULT)GetStockObject(BLACK_BRUSH);
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
+            if (hBtnFont) DeleteObject(hBtnFont);
             PostQuitMessage(0);
             return 0;
     }
