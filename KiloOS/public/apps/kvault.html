@@ -905,8 +905,8 @@
                     item.style.animationDelay = `${index * 0.05}s`;
                     
                     const safeTitle = secret.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    
-                    const catBadge = secret.category ? `<span style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${secret.category}</span>` : '';
+                    const safeCat = secret.category ? secret.category.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+                    const catBadge = safeCat ? `<span style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${safeCat}</span>` : '';
                     item.innerHTML = `
                         <div class="secret-item-header">
                             <span>${safeTitle}</span>

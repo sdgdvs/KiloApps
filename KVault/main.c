@@ -470,7 +470,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KVaultClass";
-    wc.hbrBackground = CreateSolidBrush(RGB(15, 15, 19));
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     
     RegisterClassA(&wc);
