@@ -58,12 +58,14 @@
       <button id="btn-easy" class="active" onclick="setDiff('easy')">Easy</button>
       <button id="btn-med" onclick="setDiff('med')">Medium</button>
       <button id="btn-hard" onclick="setDiff('hard')">Hard</button>
+      <button id="btn-camp" onclick="toggleCampaign()">Camp: Off</button>
     </div>
     <div class="toolbar">
       <div class="counter" id="flag-count" title="Mines">010</div>
-      <button class="face-btn" id="face" onclick="init()">🙂</button>
+      <button class="face-btn" id="face" onclick="resetLevel()">🙂</button>
       <div class="counter" id="time-count" title="Time">000</div>
       <div class="counter" id="best-count" title="Best Time" style="color:var(--warning);">999</div>
+      <div class="counter" id="shield-count" title="Shields" style="color:var(--primary); display:none;">000</div>
     </div>
     <div class="board" id="board" oncontextmenu="return false;"></div>
   </div>
@@ -80,6 +82,9 @@
     let timer = null;
     let currentDiff = 'easy';
     let bestTime = localStorage.getItem('kmines_bestTime_easy') || 999;
+    let campaignMode = false;
+    let campaignLevel = 1;
+    let shields = 0;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSound(freq, duration, type='sine') {
@@ -111,7 +116,16 @@
       document.getElementById('face').innerText = '🙂';
       document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
       document.getElementById('time-count').innerText = formatNumber(time);
-      document.getElementById('best-count').innerText = formatNumber(bestTime);
+      if (campaignMode) {
+          document.getElementById('best-count').innerText = formatNumber(campaignLevel);
+          document.getElementById('best-count').title = "Level";
+          document.getElementById('shield-count').style.display = "block";
+          document.getElementById('shield-count').innerText = formatNumber(shields);
+      } else {
+          document.getElementById('best-count').innerText = formatNumber(bestTime);
+          document.getElementById('best-count').title = "Best Time";
+          document.getElementById('shield-count').style.display = "none";
+      }
       
       const board = document.getElementById('board');
       board.style.gridTemplateColumns = `repeat(${COLS}, 30px)`;
@@ -119,17 +133,58 @@
       render();
     }
 
+    function resetLevel() {
+        if (campaignMode) {
+            initCampaignLevel();
+        } else {
+            setDiff(currentDiff);
+        }
+    }
+
+    function toggleCampaign() {
+        campaignMode = !campaignMode;
+        document.getElementById('btn-camp').innerText = campaignMode ? "Camp: On" : "Camp: Off";
+        document.getElementById('btn-camp').classList.toggle('active', campaignMode);
+        if (campaignMode) {
+            campaignLevel = 1;
+            initCampaignLevel();
+        } else {
+            setDiff('easy');
+        }
+    }
+
+    function initCampaignLevel() {
+        if (campaignLevel === 1) { ROWS=8; COLS=8; MINES=10; }
+        else if (campaignLevel === 2) { ROWS=12; COLS=12; MINES=25; }
+        else if (campaignLevel === 3) { ROWS=16; COLS=16; MINES=45; }
+        else if (campaignLevel === 4) { ROWS=20; COLS=20; MINES=75; }
+        else if (campaignLevel === 5) { ROWS=24; COLS=24; MINES=120; }
+        else {
+            campaignMode = false;
+            document.getElementById('btn-camp').innerText = "Camp: Off";
+            document.getElementById('btn-camp').classList.remove('active');
+            setDiff('easy');
+            alert("Campaign Complete!");
+            return;
+        }
+        shields = 1;
+        document.querySelectorAll('.diff-bar button').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-camp').classList.add('active');
+        init();
+    }
+
     function setDiff(level) {
-      document.getElementById('btn-easy').classList.remove('active');
-      document.getElementById('btn-med').classList.remove('active');
-      document.getElementById('btn-hard').classList.remove('active');
+      document.querySelectorAll('.diff-bar button').forEach(b => b.classList.remove('active'));
       document.getElementById('btn-' + level).classList.add('active');
+      campaignMode = false;
+      document.getElementById('btn-camp').innerText = "Camp: Off";
+      document.getElementById('btn-camp').classList.remove('active');
       
       currentDiff = level;
       if (level === 'easy') { ROWS = 10; COLS = 10; MINES = 10; }
       else if (level === 'med') { ROWS = 16; COLS = 16; MINES = 40; }
       else if (level === 'hard') { ROWS = 16; COLS = 30; MINES = 99; }
-      
+      shields = 0;
       init();
     }
 
@@ -176,8 +231,17 @@
       grid[r][c] |= 2; // set revealed
       
       if (grid[r][c] & 8) {
-        gameOver = true;
-        return;
+        if (shields > 0) {
+          shields--;
+          grid[r][c] &= ~8; // Destroy mine
+          MINES--;
+          document.getElementById('shield-count').innerText = formatNumber(shields);
+          document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
+          playSound(200, 0.2, 'square');
+        } else {
+          gameOver = true;
+          return;
+        }
       }
       
       if (countMines(r, c) === 0) {
@@ -244,7 +308,7 @@
         playSound(800, 0.5, 'square');
         gameOver = true;
         clearInterval(timer);
-        if (time < bestTime) {
+        if (!campaignMode && time < bestTime) {
           bestTime = time;
           localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
           document.getElementById('best-count').innerText = formatNumber(bestTime);
@@ -254,6 +318,13 @@
         document.getElementById('flag-count').innerText = formatNumber(0);
         for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4; // flag all
         render();
+        if (campaignMode) {
+            setTimeout(() => {
+                alert("Level Complete!");
+                campaignLevel++;
+                initCampaignLevel();
+            }, 100);
+        }
       } else {
         playSound(400, 0.1, 'sine');
         render();

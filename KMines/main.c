@@ -26,7 +26,12 @@ int timeElapsed = 0;
 int bestTimes[3] = {999, 999, 999};
 int currentDiff = 0; // 0=Easy, 1=Medium, 2=Hard
 int flagsPlaced = 0;
+int campaignMode = 0;
+int campaignLevel = 1;
+int shields = 0;
 HWND mainHwnd = NULL;
+
+void InitCampaignLevel(HWND hwnd);
 static unsigned int seed = 0;
 
 int my_rand() {
@@ -81,6 +86,24 @@ void InitGame(int firstClickX, int firstClickY) {
     SetTimer(mainHwnd, 1, 1000, NULL);
 }
 
+void InitCampaignLevel(HWND hwnd) {
+    if (campaignLevel == 1) { rows=8; cols=8; mines=10; }
+    else if (campaignLevel == 2) { rows=12; cols=12; mines=25; }
+    else if (campaignLevel == 3) { rows=16; cols=16; mines=45; }
+    else if (campaignLevel == 4) { rows=20; cols=20; mines=75; }
+    else if (campaignLevel == 5) { rows=24; cols=24; mines=120; }
+    else { 
+        campaignMode = 0; 
+        rows=10; cols=10; mines=10; currentDiff=0; 
+        MessageBoxA(hwnd, "Campaign Complete!", "Victory", MB_OK); 
+    }
+    shields = 1;
+    initialized = 0; gameOver = 0; timeElapsed = 0; flagsPlaced = 0; memset(grid,0,sizeof(grid));
+    void ResizeWindow(HWND);
+    ResizeWindow(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 int CountMines(int r, int c) {
     int count = 0;
     for (int i = -1; i <= 1; i++) {
@@ -101,10 +124,17 @@ void Reveal(int r, int c) {
     grid[r][c] |= CELL_REVEALED;
     
     if (grid[r][c] & CELL_MINE) {
-        gameOver = 1;
-        KillTimer(mainHwnd, 1);
-        Beep(200, 500);
-        return;
+        if (shields > 0) {
+            shields--;
+            grid[r][c] &= ~CELL_MINE;
+            mines--;
+            Beep(500, 100);
+        } else {
+            gameOver = 1;
+            KillTimer(mainHwnd, 1);
+            Beep(200, 500);
+            return;
+        }
     }
     
     if (CountMines(r, c) == 0) {
@@ -127,12 +157,20 @@ void DrawBoard(HWND hwnd, HDC hdc) {
     DeleteObject(hbrHeader);
 
     char szHeader[128];
-    wsprintfA(szHeader, "T:%03d M:%02d B:%03d", timeElapsed, mines - flagsPlaced, bestTimes[currentDiff]);
+    if (campaignMode) {
+        wsprintfA(szHeader, "T:%03d M:%02d Lvl:%d Shd:%d", timeElapsed, mines - flagsPlaced, campaignLevel, shields);
+    } else {
+        wsprintfA(szHeader, "T:%03d M:%02d B:%03d", timeElapsed, mines - flagsPlaced, bestTimes[currentDiff]);
+    }
     SetTextColor(hdc, RGB(255, 255, 255));
     RECT rcTop = {0, 0, cols * CELL_SIZE, HEADER_HEIGHT / 2};
     RECT rcBot = {0, HEADER_HEIGHT / 2, cols * CELL_SIZE, HEADER_HEIGHT};
     DrawTextA(hdc, szHeader, -1, &rcTop, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawTextA(hdc, "Press: 1-Easy 2-Med 3-Hard", -1, &rcBot, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    if (campaignMode) {
+        DrawTextA(hdc, "Press: C-Exit Campaign", -1, &rcBot, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    } else {
+        DrawTextA(hdc, "Press: 1-Easy 2-Med 3-Hard C-Camp", -1, &rcBot, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    }
 
     for (int r = 0; r < rows; r++) {
         for (int c = 0; c < cols; c++) {
@@ -253,11 +291,17 @@ void HandleReveal(HWND hwnd, int x, int y) {
         gameOver = 1;
         KillTimer(hwnd, 1);
         Beep(1500, 300);
-        if (timeElapsed < bestTimes[currentDiff]) {
+        if (!campaignMode && timeElapsed < bestTimes[currentDiff]) {
             bestTimes[currentDiff] = timeElapsed;
             SaveBest();
         }
-        MessageBoxA(hwnd, "You Win! Click to restart.", "Congratulations", MB_OK);
+        if (campaignMode) {
+            MessageBoxA(hwnd, "Level Complete! Next Level...", "Campaign", MB_OK);
+            campaignLevel++;
+            InitCampaignLevel(hwnd);
+        } else {
+            MessageBoxA(hwnd, "You Win! Click to restart.", "Congratulations", MB_OK);
+        }
     }
 }
 
@@ -294,11 +338,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_LBUTTONDOWN: {
             if (gameOver) {
+                if (campaignMode) { InitCampaignLevel(hwnd); return 0; }
                 initialized = 0;
                 memset(grid, 0, sizeof(grid));
                 gameOver = 0;
                 timeElapsed = 0;
                 flagsPlaced = 0;
+                shields = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
                 return 0;
             }
@@ -326,9 +372,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == '1') { rows=10; cols=10; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == '2') { rows=16; cols=16; mines=40; currentDiff=1; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
-            if (wParam == '3') { rows=16; cols=30; mines=99; currentDiff=2; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            if (wParam == '1') { campaignMode=0; shields=0; rows=10; cols=10; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            if (wParam == '2') { campaignMode=0; shields=0; rows=16; cols=16; mines=40; currentDiff=1; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            if (wParam == '3') { campaignMode=0; shields=0; rows=16; cols=30; mines=99; currentDiff=2; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); }
+            if (wParam == 'C') { campaignMode = !campaignMode; if (campaignMode) { campaignLevel = 1; InitCampaignLevel(hwnd); } else { campaignMode=0; shields=0; rows=10; cols=10; mines=10; currentDiff=0; initialized=0; gameOver=0; timeElapsed=0; flagsPlaced=0; memset(grid,0,sizeof(grid)); ResizeWindow(hwnd); } }
             break;
         case WM_DESTROY:
             PostQuitMessage(0);
