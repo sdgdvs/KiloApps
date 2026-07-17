@@ -59,6 +59,10 @@
   
   let isLineChart = false;
   
+  let hoverX = 0;
+  let hoverY = 0;
+  let hoveredIndex = -1;
+  
   let values = [20, 60, 45, 80, 30];
   let target = [20, 60, 45, 80, 30];
   const labels = ["Q1", "Q2", "Q3", "Q4", "Q5"];
@@ -172,6 +176,33 @@
               ctx.fillText(labels[i], bx, chartY + chartH + 10);
           }
       }
+
+      if (hoveredIndex !== -1 && !animating) {
+          let val = Math.round(values[hoveredIndex]);
+          let txt = labels[hoveredIndex] + ": " + val;
+          ctx.font = "12px 'Inter'";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          let tw = ctx.measureText(txt).width;
+          let th = 24;
+          let tx = hoverX + 10;
+          let ty = hoverY - 10 - th;
+          
+          if (tx + tw + 16 > cvs.width) tx = hoverX - tw - 20;
+          if (ty < 0) ty = hoverY + 20;
+          
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = "rgba(0,0,0,0.5)";
+          ctx.fillStyle = "rgba(20,20,25,0.95)";
+          drawRoundedRect(ctx, tx, ty, tw + 16, th, 4);
+          ctx.strokeStyle = "rgba(255,255,255,0.2)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(txt, tx + (tw + 16)/2, ty + th/2);
+      }
   }
   
   let animating = false;
@@ -210,6 +241,53 @@
       isLineChart = !isLineChart;
       draw();
   };
+
+  cvs.addEventListener('mousemove', (e) => {
+      const rect = cvs.getBoundingClientRect();
+      hoverX = e.clientX - rect.left;
+      hoverY = e.clientY - rect.top;
+      
+      let chartX = 40;
+      let chartY = 20;
+      let chartW = cvs.width - 80;
+      let chartH = cvs.height - 60;
+      let barW = 34;
+      let spacing = (chartW - (5 * barW)) / 6;
+      
+      let newHover = -1;
+      for (let i = 0; i < 5; i++) {
+          let bh = (values[i] * chartH) / 100;
+          let bx, by, bw, h;
+          if (!isLineChart) {
+              bx = chartX + spacing + i * (barW + spacing);
+              by = chartY + chartH - bh;
+              bw = barW;
+              h = bh;
+          } else {
+              bx = chartX + spacing + i * (barW + spacing) + barW / 2 - 10;
+              by = chartY + chartH - bh - 10;
+              bw = 20;
+              h = 20;
+          }
+          if (hoverX >= bx && hoverX <= bx + bw && hoverY >= by && hoverY <= by + h) {
+              newHover = i;
+              break;
+          }
+      }
+      if (newHover !== hoveredIndex) {
+          hoveredIndex = newHover;
+          if (!animating) draw();
+      } else if (hoveredIndex !== -1 && !animating) {
+          draw(); // update tooltip position
+      }
+  });
+
+  cvs.addEventListener('mouseleave', () => {
+      if (hoveredIndex !== -1) {
+          hoveredIndex = -1;
+          if (!animating) draw();
+      }
+  });
   
   draw();
 </script>

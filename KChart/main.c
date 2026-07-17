@@ -24,6 +24,8 @@ int MyRand() {
 HWND hBtnRandomize;
 HWND hBtnToggle;
 int isLineChart = 0;
+int hoveredIndex = -1;
+int mouseX = 0, mouseY = 0;
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -39,6 +41,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hFont, TRUE);
             SetTimer(hwnd, 1, 16, NULL); // Animation timer
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            mouseX = LOWORD(lParam);
+            mouseY = HIWORD(lParam);
+            
+            int chartX = 50;
+            int chartY = 30;
+            int chartW = W - 100;
+            int chartH = H - 120;
+            int barW = 30;
+            int spacing = (chartW - (5 * barW)) / 6;
+            
+            int newHover = -1;
+            for (int i = 0; i < 5; i++) {
+                int bh = (values[i] * chartH) / 100;
+                int bx, by, bw, h;
+                if (!isLineChart) {
+                    bx = chartX + spacing + i * (barW + spacing);
+                    by = chartY + chartH - bh;
+                    bw = barW;
+                    h = bh;
+                } else {
+                    bx = chartX + spacing + i * (barW + spacing) + barW / 2 - 10;
+                    by = chartY + chartH - bh - 10;
+                    bw = 20;
+                    h = 20;
+                }
+                if (mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + h) {
+                    newHover = i;
+                    break;
+                }
+            }
+            if (newHover != hoveredIndex || newHover != -1) {
+                hoveredIndex = newHover;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            
+            TRACKMOUSEEVENT tme;
+            tme.cbSize = sizeof(tme);
+            tme.dwFlags = TME_LEAVE;
+            tme.hwndTrack = hwnd;
+            TrackMouseEvent(&tme);
+            break;
+        }
+        case WM_MOUSELEAVE: {
+            if (hoveredIndex != -1) {
+                hoveredIndex = -1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
         }
         case WM_TIMER: {
@@ -151,6 +203,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RECT lr = { bx - 20, chartY + chartH + 5, bx + 20, chartY + chartH + 25 };
                     DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
                 }
+            }
+            
+            if (hoveredIndex != -1) {
+                char txt[32];
+                wsprintfA(txt, "%s: %d", labels[hoveredIndex], values[hoveredIndex]);
+                
+                SIZE sz;
+                GetTextExtentPoint32A(memDC, txt, lstrlenA(txt), &sz);
+                
+                int th = 24;
+                int tw = sz.cx + 16;
+                int tx = mouseX + 10;
+                int ty = mouseY - 10 - th;
+                
+                if (tx + tw > W) tx = mouseX - tw - 10;
+                if (ty < 0) ty = mouseY + 20;
+                
+                RECT tr = { tx, ty, tx + tw, ty + th };
+                HBRUSH tbg = CreateSolidBrush(RGB(30, 30, 35));
+                FillRect(memDC, &tr, tbg);
+                DeleteObject(tbg);
+                
+                HPEN tpen = CreatePen(PS_SOLID, 1, RGB(100, 100, 110));
+                HGDIOBJ oldTpen = SelectObject(memDC, tpen);
+                HBRUSH hollow = (HBRUSH)GetStockObject(NULL_BRUSH);
+                HGDIOBJ oldHbg = SelectObject(memDC, hollow);
+                Rectangle(memDC, tx, ty, tx + tw, ty + th);
+                SelectObject(memDC, oldHbg);
+                SelectObject(memDC, oldTpen);
+                DeleteObject(tpen);
+                DeleteObject(hollow);
+                
+                SetTextColor(memDC, RGB(255, 255, 255));
+                RECT lrt = { tx, ty, tx + tw, ty + th };
+                DrawTextA(memDC, txt, -1, &lrt, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                SetTextColor(memDC, RGB(161, 161, 170));
             }
             
             SelectObject(memDC, oldFont);
