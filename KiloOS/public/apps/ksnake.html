@@ -21,6 +21,7 @@
         <p style="margin:5px 0">1 - Easy</p>
         <p style="margin:5px 0">2 - Medium</p>
         <p style="margin:5px 0">3 - Hard</p>
+        <p style="margin:5px 0">4 - Campaign</p>
         <p style="margin:5px 0">W - Toggle Wrap: <span id="wrapStatus">OFF</span></p>
     </div>
     <script>
@@ -35,9 +36,19 @@
         let snake, food, dir, lastDir, gameState = 0; // 0=Menu, 1=Playing, 2=GameOver
         let wrapMode = false;
         let specialFood = null;
+        let ghostFood = null;
+        let ghostFoodTimer = 0;
+        let ghostActiveTimer = 0;
+        let campaignMode = false;
+        let campaignLevel = 1;
+        let applesEaten = 0;
         let specialFoodTimer = 0;
         let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
         let score = 0;
+            applesEaten = 0;
+            ghostFood = null;
+            ghostFoodTimer = 0;
+            ghostActiveTimer = 0;
         let scoreMult = 10;
         let highScore = localStorage.getItem('ksnakeHighScore') || 0;
         let currentSpeed = 150;
@@ -77,15 +88,24 @@
             lastDir = {x: 1, y: 0};
             gameState = 1;
             score = 0;
+            applesEaten = 0;
+            ghostFood = null;
+            ghostFoodTimer = 0;
+            ghostActiveTimer = 0;
             
             specialFood = null;
             specialFoodTimer = 0;
+            if (campaignMode) { difficulty = 1; }
             if (difficulty === 0) { currentSpeed = 200; scoreMult = 5; }
             else if (difficulty === 1) { currentSpeed = 150; scoreMult = 10; }
             else { currentSpeed = 100; scoreMult = 20; }
             
             obstacles = [];
             let numObs = difficulty * 10;
+            if (campaignMode) {
+                numObs = campaignLevel * 5;
+                if (numObs > 45) numObs = 45;
+            }
             for(let i=0; i<numObs; i++) {
                 let ok = false;
                 while(!ok) {
@@ -145,6 +165,22 @@
             specialFoodTimer = 40;
         }
 
+        function placeGhostFood() {
+            let ok = false;
+            while(!ok) {
+                ghostFood = {
+                    x: Math.floor(Math.random() * WIDTH),
+                    y: Math.floor(Math.random() * HEIGHT)
+                };
+                ok = true;
+                if (obstacles.some(o => o.x === ghostFood.x && o.y === ghostFood.y)) ok = false;
+                if (snake.some(s => s.x === ghostFood.x && s.y === ghostFood.y)) ok = false;
+                if (ghostFood.x === food.x && ghostFood.y === food.y) ok = false;
+                if (specialFood && ghostFood.x === specialFood.x && ghostFood.y === specialFood.y) ok = false;
+            }
+            ghostFoodTimer = 40;
+        }
+
         function update() {
             if (gameState !== 1) return;
 
@@ -158,14 +194,14 @@
                 if (head.y < 0) head.y = HEIGHT - 1;
                 else if (head.y >= HEIGHT) head.y = 0;
                 
-                if (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y)) {
+                if (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y))) {
                     playSound('die');
                     gameState = 2;
                     msgBox.style.display = 'block';
                     return;
                 }
             } else {
-                if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT || snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y)) {
+                if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT || (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y)))) {
                     playSound('die');
                     gameState = 2;
                     msgBox.style.display = 'block';
@@ -187,8 +223,36 @@
                 if (!specialFood && Math.random() < 0.2) {
                     placeSpecialFood();
                 }
+                if (!ghostFood && Math.random() < 0.15) {
+                    placeGhostFood();
+                }
+                
+                applesEaten++;
+                if (campaignMode && applesEaten >= 10) {
+                    campaignLevel++;
+                    let newSpd = 150 - campaignLevel * 10;
+                    if(newSpd < 40) newSpd = 40;
+                    currentSpeed = newSpd;
+                    init();
+                }
             } else {
                 snake.pop();
+            }
+
+            if (ghostActiveTimer > 0) ghostActiveTimer--;
+            if (ghostFoodTimer > 0) {
+                ghostFoodTimer--;
+                if (ghostFoodTimer === 0) ghostFood = null;
+            }
+            if (ghostFood && head.x === ghostFood.x && head.y === ghostFood.y) {
+                playSound('eat');
+                score += scoreMult * 2;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('ksnakeHighScore', highScore);
+                }
+                ghostActiveTimer = 50;
+                ghostFood = null;
             }
 
             if (specialFoodTimer > 0) {
@@ -214,7 +278,7 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (gameState !== 1) return;
 
-            ctx.fillStyle = '#0f0';
+            ctx.fillStyle = ghostActiveTimer > 0 ? '#0ff' : '#0f0';
             for (let s of snake) {
                 ctx.fillRect(s.x * CELL, s.y * CELL, CELL - 1, CELL - 1);
             }
@@ -222,6 +286,10 @@
             ctx.fillStyle = '#f00';
             ctx.fillRect(food.x * CELL, food.y * CELL, CELL - 1, CELL - 1);
             
+            if (ghostFood) {
+                ctx.fillStyle = '#0ff';
+                ctx.fillRect(ghostFood.x * CELL, ghostFood.y * CELL, CELL - 1, CELL - 1);
+            }
             if (specialFood) {
                 ctx.fillStyle = '#ffd700';
                 ctx.fillRect(specialFood.x * CELL, specialFood.y * CELL, CELL - 1, CELL - 1);
@@ -234,14 +302,15 @@
             
             ctx.fillStyle = '#fff';
             ctx.font = '12px sans-serif';
-            ctx.fillText(`Score: ${score}  High: ${highScore}`, 5, 15);
+            ctx.fillText(campaignMode ? `Lvl: ${campaignLevel} Score: ${score} High: ${highScore}` : `Score: ${score} High: ${highScore}`, 5, 15);
         }
 
         window.addEventListener('keydown', e => {
             if (gameState === 0) {
-                if (e.key === '1') { difficulty = 0; init(); }
-                if (e.key === '2') { difficulty = 1; init(); }
-                if (e.key === '3') { difficulty = 2; init(); }
+                if (e.key === '1') { difficulty = 0; campaignMode = false; init(); }
+                if (e.key === '2') { difficulty = 1; campaignMode = false; init(); }
+                if (e.key === '3') { difficulty = 2; campaignMode = false; init(); }
+                if (e.key === '4') { campaignMode = true; campaignLevel = 1; init(); }
                 if (e.key.toLowerCase() === 'w') {
                     wrapMode = !wrapMode;
                     document.getElementById('wrapStatus').innerText = wrapMode ? 'ON' : 'OFF';
