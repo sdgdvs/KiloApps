@@ -125,6 +125,66 @@
       return false;
   }
 
+  function isSquareAttacked(tx, ty, byWhite) {
+      for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+              let p = board[y][x];
+              if (p !== 0 && (p <= 6) === byWhite) {
+                  if (isValidMove(x, y, tx, ty)) return true;
+              }
+          }
+      }
+      return false;
+  }
+
+  function simulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite) {
+      let savedSrc = board[sy][sx];
+      let savedDst = board[ty][tx];
+      board[ty][tx] = savedSrc;
+      board[sy][sx] = 0;
+      
+      let kx = -1, ky = -1;
+      for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+              if (board[y][x] === (isWhite ? 6 : 12)) {
+                  kx = x; ky = y;
+              }
+          }
+      }
+      
+      let inCheck = false;
+      if (kx !== -1 && ky !== -1) {
+          inCheck = isSquareAttacked(kx, ky, !isWhite);
+      }
+      
+      board[sy][sx] = savedSrc;
+      board[ty][tx] = savedDst;
+      return inCheck;
+  }
+
+  function hasLegalMoves(isWhite) {
+      for (let sy = 0; sy < 8; sy++) {
+          for (let sx = 0; sx < 8; sx++) {
+              let p = board[sy][sx];
+              if (p !== 0 && (p <= 6) === isWhite) {
+                  for (let ty = 0; ty < 8; ty++) {
+                      for (let tx = 0; tx < 8; tx++) {
+                          let dstP = board[ty][tx];
+                          if (dstP !== 0 && (dstP <= 6) === isWhite) continue;
+                          if (isValidMove(sx, sy, tx, ty)) {
+                              if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite)) {
+                                  return true;
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
+      return false;
+  }
+
+
   function resetGame() {
       board = [
           [10, 8, 9, 11, 12, 9, 8, 10],
@@ -163,11 +223,13 @@
                   for (let ty = 0; ty < 8; ty++) {
                       for (let tx = 0; tx < 8; tx++) {
                           if (isValidMove(sx, sy, tx, ty)) {
-                              let dstP = board[ty][tx];
-                              moves.push({
-                                  sx: sx, sy: sy, tx: tx, ty: ty,
-                                  score: dstP !== 0 ? pieceValues[dstP] : 0
-                              });
+                              if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, false)) {
+                                  let dstP = board[ty][tx];
+                                  moves.push({
+                                      sx: sx, sy: sy, tx: tx, ty: ty,
+                                      score: dstP !== 0 ? pieceValues[dstP] : 0
+                                  });
+                              }
                           }
                       }
                   }
@@ -184,8 +246,6 @@
           let chosen = bestMoves[Math.floor(Math.random() * bestMoves.length)];
           
           let sx = chosen.sx, sy = chosen.sy, tx = chosen.tx, ty = chosen.ty;
-          let dstP = board[ty][tx];
-          if (dstP === 6) { gameOver = true; winner = 2; }
           
           let pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
           board[ty][tx] = board[sy][sx];
@@ -194,6 +254,21 @@
           
           whiteTurn = true;
           playSound();
+          
+          if (!hasLegalMoves(whiteTurn)) {
+              gameOver = true;
+              let kx = -1, ky = -1;
+              for(let cy=0; cy<8; cy++) {
+                  for(let cx=0; cx<8; cx++) {
+                      if(board[cy][cx] === (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
+                  }
+              }
+              if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
+                  winner = !whiteTurn ? 1 : 2;
+              } else {
+                  winner = 3;
+              }
+          }
           draw();
       }
   }
@@ -205,12 +280,28 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
+      let inCheckX = -1, inCheckY = -1;
+      for (let cy = 0; cy < 8; cy++) {
+          for (let cx = 0; cx < 8; cx++) {
+              let p = board[cy][cx];
+              if (p === 6 || p === 12) {
+                  let isWhite = p <= 6;
+                  if (isSquareAttacked(cx, cy, !isWhite)) {
+                      inCheckX = cx;
+                      inCheckY = cy;
+                  }
+              }
+          }
+      }
+
       for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
               let px = OX + x * TS;
               let py = OY + y * TS;
 
-              if (x === selX && y === selY) {
+              if (x === inCheckX && y === inCheckY) {
+                  ctx.fillStyle = "rgba(239, 68, 68, 0.8)";
+              } else if (x === selX && y === selY) {
                   ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
               } else if ((x + y) % 2 === 0) {
                   ctx.fillStyle = "rgb(203, 213, 225)";
@@ -221,10 +312,12 @@
               ctx.fillRect(px, py, TS, TS);
 
               if (selX !== -1 && isValidMove(selX, selY, x, y)) {
-                  ctx.fillStyle = "rgba(134, 239, 172, 0.6)";
-                  ctx.beginPath();
-                  ctx.arc(px + TS / 2, py + TS / 2, 10, 0, Math.PI * 2);
-                  ctx.fill();
+                  if (!simulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {
+                      ctx.fillStyle = "rgba(134, 239, 172, 0.6)";
+                      ctx.beginPath();
+                      ctx.arc(px + TS / 2, py + TS / 2, 10, 0, Math.PI * 2);
+                      ctx.fill();
+                  }
               }
 
               let p = board[y][x];
@@ -240,7 +333,9 @@
       ctx.textAlign = "left";
       
       if (gameOver) {
-          ctx.fillText((winner === 1 ? "White Wins!" : "Black Wins!") + " Press 'R' to Restart", 10, cvs.height - 30);
+          if (winner === 1) ctx.fillText("Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
+          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R'", 10, cvs.height - 30);
+          else ctx.fillText("Stalemate! Draw! Press 'R'", 10, cvs.height - 30);
       } else {
           ctx.fillText(whiteTurn ? "White's Turn" : "Black's Turn", 10, cvs.height - 30);
       }
@@ -279,29 +374,41 @@
                   let dstIsWhite = dstP <= 6;
                   
                   if (dstP !== 0 && isWhite === dstIsWhite) {
-                      // Cannot capture own piece
                       selX = tx;
                       selY = ty;
                   } else {
                       if (isValidMove(selX, selY, tx, ty)) {
-                          if (dstP === 6) { gameOver = true; winner = 2; }
-                          else if (dstP === 12) { gameOver = true; winner = 1; }
-                          
-                          let pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
-                          board[ty][tx] = board[selY][selX];
-                          if (pType === 1) {
-                              if (isWhite && ty === 0) board[ty][tx] = 5;
-                              else if (!isWhite && ty === 7) board[ty][tx] = 11;
-                          }
-                          
-                          board[selY][selX] = 0;
-                          selX = -1;
-                          selY = -1;
-                          whiteTurn = !whiteTurn;
-                          playSound();
-                          
-                          if (aiMode && !whiteTurn && !gameOver) {
-                              setTimeout(doBlackAIMove, 300);
+                          if (!simulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
+                              let pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
+                              board[ty][tx] = board[selY][selX];
+                              if (pType === 1) {
+                                  if (isWhite && ty === 0) board[ty][tx] = 5;
+                                  else if (!isWhite && ty === 7) board[ty][tx] = 11;
+                              }
+                              
+                              board[selY][selX] = 0;
+                              selX = -1;
+                              selY = -1;
+                              whiteTurn = !whiteTurn;
+                              playSound();
+
+                              if (!hasLegalMoves(whiteTurn)) {
+                                  gameOver = true;
+                                  let kx = -1, ky = -1;
+                                  for(let cy=0; cy<8; cy++) {
+                                      for(let cx=0; cx<8; cx++) {
+                                          if(board[cy][cx] === (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
+                                      }
+                                  }
+                                  if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
+                                      winner = !whiteTurn ? 1 : 2;
+                                  } else {
+                                      winner = 3;
+                                  }
+                              }
+                              if (aiMode && !whiteTurn && !gameOver) {
+                                  setTimeout(doBlackAIMove, 300);
+                              }
                           }
                       }
                   }

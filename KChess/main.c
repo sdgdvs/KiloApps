@@ -284,11 +284,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 for (int ty = 0; ty < 8; ty++) {
                                     for (int tx = 0; tx < 8; tx++) {
                                         if (IsValidMove(sx, sy, tx, ty)) {
-                                            moves[moveCount].sx = sx; moves[moveCount].sy = sy;
-                                            moves[moveCount].tx = tx; moves[moveCount].ty = ty;
-                                            int dstP = board[ty][tx];
-                                            moves[moveCount].score = dstP != 0 ? pieceValues[dstP] : 0;
-                                            moveCount++;
+                                            if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
+                                                moves[moveCount].sx = sx; moves[moveCount].sy = sy;
+                                                moves[moveCount].tx = tx; moves[moveCount].ty = ty;
+                                                int dstP = board[ty][tx];
+                                                moves[moveCount].score = dstP != 0 ? pieceValues[dstP] : 0;
+                                                moveCount++;
+                                            }
                                         }
                                     }
                                 }
@@ -304,8 +306,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         
                         int sx = moves[chosen].sx; int sy = moves[chosen].sy;
                         int tx = moves[chosen].tx; int ty = moves[chosen].ty;
-                        int dstP = board[ty][tx];
-                        if (dstP == 6) { gameOver = 1; winner = 2; }
                         
                         int pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
                         board[ty][tx] = board[sy][sx];
@@ -313,6 +313,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         board[sy][sx] = 0;
                         whiteTurn = 1;
                         MessageBeep(MB_OK);
+                        
+                        if (!HasLegalMoves(whiteTurn)) {
+                            gameOver = 1;
+                            int kx = -1, ky = -1;
+                            for(int cy=0; cy<8; cy++) {
+                                for(int cx=0; cx<8; cx++) {
+                                    if(board[cy][cx] == (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
+                                }
+                            }
+                            if (kx != -1 && ky != -1 && IsSquareAttacked(kx, ky, !whiteTurn)) {
+                                winner = !whiteTurn ? 1 : 2;
+                            } else {
+                                winner = 3;
+                            }
+                        }
                         InvalidateRect(hwnd, NULL, TRUE);
                     }
                 }

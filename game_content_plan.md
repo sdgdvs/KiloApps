@@ -136,5 +136,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSolitaire (Added score and streak mechanic instead of just moves to both EXE and HTML)
 - [x] KSpace (Added enemy bullets for Type 2 enemies to create bullet-hell mechanics to both EXE and HTML)
 - [x] KPac (Added target-tracking AI for Red Ghost and Fruit bonus item spawning to both EXE and HTML)
+- [x] KChess (Added check highlighting, strict move validation, and checkmate/stalemate detection to both EXE and HTML)
 - [x] KChess (Added basic greedy AI (PvE mode) with toggle ('M') to both EXE and HTML)
 
