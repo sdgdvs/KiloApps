@@ -35,6 +35,11 @@ void save_high_score() {
 }
 int game_over = 0;
 int is_paused = 0;
+int start_screen = 1;
+int win_screen = 0;
+int game_mode = 0;
+int campaign_level = 1;
+int stat_lines[4] = {0, 0, 0, 0};
 int score = 0;
 int lines = 0;
 int level = 1;
@@ -51,7 +56,7 @@ const unsigned short tetrominos[7][4] = {
     {0x0C60, 0x4C80, 0xC600, 0x2640}  // Z
 };
 
-const COLORREF colors[8] = {
+const COLORREF colors[9] = {
     RGB(0,0,0),
     RGB(0,255,255), // I
     RGB(0,0,255),   // J
@@ -59,7 +64,8 @@ const COLORREF colors[8] = {
     RGB(255,255,0), // O
     RGB(0,255,0),   // S
     RGB(128,0,128), // T
-    RGB(255,0,0)    // Z
+    RGB(255,0,0),   // Z
+    RGB(128,128,128) // Garbage
 };
 
 unsigned int rng_state = 12345;
@@ -129,6 +135,7 @@ void lock_piece() {
         }
     }
     if (lines_cleared > 0) {
+        if (lines_cleared >= 1 && lines_cleared <= 4) stat_lines[lines_cleared - 1]++;
         combo++;
         Beep(1000 + lines_cleared * 200 + combo * 100, 100);
     } else {
@@ -136,11 +143,29 @@ void lock_piece() {
         Beep(500, 50);
     }
     lines += lines_cleared;
-    level = (lines / 10) + 1;
-    score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
-    int new_speed = 500 - (level - 1) * 30;
-    if (new_speed < 50) new_speed = 50;
-    timer_speed = new_speed;
+    
+    if (game_mode == 1) {
+        int goal = campaign_level * 10;
+        level = campaign_level;
+        score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
+        if (lines >= goal) {
+            campaign_level++;
+            if (campaign_level > 5) {
+                win_screen = 1;
+                Beep(800, 150); Beep(1000, 150); Beep(1200, 300);
+                return;
+            } else {
+                InitGame();
+                return;
+            }
+        }
+    } else {
+        level = (lines / 10) + 1;
+        score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
+        int new_speed = 500 - (level - 1) * 30;
+        if (new_speed < 50) new_speed = 50;
+        timer_speed = new_speed;
+    }
 }
 
 void spawn_piece() {
@@ -163,14 +188,29 @@ void InitGame() {
     for (int y = 0; y < H; y++)
         for (int x = 0; x < W; x++)
             grid[y][x] = 0;
-    score = 0;
-    lines = 0;
-    level = 1;
+            
+    if (game_mode == 1) {
+        int garbage = campaign_level * 2;
+        for (int r = 0; r < garbage; r++) {
+            int hole = random_int(W);
+            for (int x = 0; x < W; x++) {
+                grid[H - 1 - r][x] = (x == hole) ? 0 : 8;
+            }
+        }
+        lines = 0;
+        level = campaign_level;
+        timer_speed = 500 - (level - 1) * 30;
+    } else {
+        lines = 0;
+        level = 1;
+        timer_speed = 500;
+        for (int i=0; i<4; i++) stat_lines[i] = 0;
+    }
     combo = 0;
-    timer_speed = 500;
     bag_index = 7;
     game_over = 0;
     is_paused = 0;
+    win_screen = 0;
     hold_piece = -1;
     hold_used = 0;
     next_piece = get_next_pc();
@@ -186,22 +226,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, TIMER_ID, 500, NULL);
             break;
         case WM_TIMER:
-            if (!game_over && !is_paused) {
+            if (!game_over && !is_paused && !start_screen && !win_screen) {
                 if (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
                     current_y++;
                 } else {
+                    int old_level = campaign_level;
                     lock_piece();
-                    spawn_piece();
+                    if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
+                        spawn_piece();
+                    }
                     SetTimer(hwnd, TIMER_ID, timer_speed, NULL);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_KEYDOWN:
-            if (game_over && wParam == VK_RETURN) {
-                InitGame();
+            if (start_screen) {
+                if (wParam == '1') { game_mode = 0; start_screen = 0; score = 0; InitGame(); }
+                if (wParam == '2') { game_mode = 1; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (!game_over) {
+                return 0;
+            }
+            if (win_screen && wParam == VK_RETURN) {
+                start_screen = 1; win_screen = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (game_over && wParam == VK_RETURN) {
+                start_screen = 1; game_over = 0;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            } else if (!game_over && !win_screen) {
                 if (wParam == 'P') {
                     is_paused = !is_paused;
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -246,8 +301,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
                         current_y++;
                     }
+                    int old_level = campaign_level;
                     lock_piece();
-                    spawn_piece();
+                    if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
+                        spawn_piece();
+                    }
                     SetTimer(hwnd, TIMER_ID, timer_speed, NULL);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -267,8 +325,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
-            HBRUSH brushes[8];
-            for (int i = 0; i < 8; i++) brushes[i] = CreateSolidBrush(colors[i]);
+            HBRUSH brushes[9];
+            for (int i = 0; i < 9; i++) brushes[i] = CreateSolidBrush(colors[i]);
             
             // Draw grid
             for (int y = 0; y < H; y++) {
@@ -281,7 +339,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Draw current piece
-            if (!game_over && !is_paused) {
+            if (!game_over && !is_paused && !start_screen && !win_screen) {
                 unsigned short shape = tetrominos[current_piece][current_rot];
                 // Draw Ghost piece
                 int ghost_y = current_y;
@@ -314,6 +372,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(255, 0, 0));
                 SetBkMode(memDC, TRANSPARENT);
                 TextOutA(memDC, 20, H * CELL_SIZE / 2, "GAME OVER", 9);
+            } else if (win_screen) {
+                SetTextColor(memDC, RGB(0, 255, 0));
+                SetBkMode(memDC, TRANSPARENT);
+                TextOutA(memDC, 20, H * CELL_SIZE / 2, "YOU WIN!", 8);
+                TextOutA(memDC, 20, H * CELL_SIZE / 2 + 20, "ENTER TO MENU", 13);
+            } else if (start_screen) {
+                SetTextColor(memDC, RGB(255, 255, 255));
+                SetBkMode(memDC, TRANSPARENT);
+                TextOutA(memDC, 40, H * CELL_SIZE / 2 - 40, "KTETRIS", 7);
+                TextOutA(memDC, 40, H * CELL_SIZE / 2, "1. Endless", 10);
+                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 20, "2. Campaign", 11);
             } else if (is_paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
                 SetBkMode(memDC, TRANSPARENT);
@@ -332,12 +401,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, W * CELL_SIZE + 10, 40, hi_str, lstrlenA(hi_str));
             
             char level_str[32];
-            wsprintfA(level_str, "LEVEL: %d", level);
+            if (game_mode == 1) wsprintfA(level_str, "STAGE: %d/5", campaign_level);
+            else wsprintfA(level_str, "LEVEL: %d", level);
             TextOutA(memDC, W * CELL_SIZE + 10, 60, level_str, lstrlenA(level_str));
             
             char lines_str[32];
-            wsprintfA(lines_str, "LINES: %d", lines);
+            if (game_mode == 1) wsprintfA(lines_str, "LINES: %d/%d", lines, campaign_level * 10);
+            else wsprintfA(lines_str, "LINES: %d", lines);
             TextOutA(memDC, W * CELL_SIZE + 10, 80, lines_str, lstrlenA(lines_str));
+            
+            if (game_mode == 0 && !start_screen) {
+                char stat1[32], stat2[32], stat3[32], stat4[32];
+                wsprintfA(stat1, "SGL: %d", stat_lines[0]);
+                wsprintfA(stat2, "DBL: %d", stat_lines[1]);
+                wsprintfA(stat3, "TPL: %d", stat_lines[2]);
+                wsprintfA(stat4, "TET: %d", stat_lines[3]);
+                SetTextColor(memDC, RGB(150, 150, 255));
+                TextOutA(memDC, W * CELL_SIZE + 10, 290, stat1, lstrlenA(stat1));
+                TextOutA(memDC, W * CELL_SIZE + 10, 310, stat2, lstrlenA(stat2));
+                TextOutA(memDC, W * CELL_SIZE + 10, 330, stat3, lstrlenA(stat3));
+                TextOutA(memDC, W * CELL_SIZE + 10, 350, stat4, lstrlenA(stat4));
+                SetTextColor(memDC, RGB(255, 255, 255));
+            }
             
             if (combo > 1) {
                 SetTextColor(memDC, RGB(255, 100, 100));
@@ -380,7 +465,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, hOldPen);
             DeleteObject(hPen);
             
-            for (int i = 0; i < 8; i++) DeleteObject(brushes[i]);
+            for (int i = 0; i < 9; i++) DeleteObject(brushes[i]);
             
             BitBlt(hdc, 0, 0, W * CELL_SIZE + 120, H * CELL_SIZE, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);

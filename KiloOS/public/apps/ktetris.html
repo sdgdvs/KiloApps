@@ -29,7 +29,7 @@
   const CELL = 20;
   const W = 10, H = 20;
   
-  const colors = ['#000', '#0ff', '#00f', '#fa0', '#ff0', '#0f0', '#808', '#f00'];
+  const colors = ['#000', '#0ff', '#00f', '#fa0', '#ff0', '#0f0', '#808', '#f00', '#888'];
   const tetrominos = [
       [0x0F00, 0x2222, 0x00F0, 0x4444],
       [0x44C0, 0x8E00, 0x6220, 0x0710],
@@ -42,6 +42,8 @@
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
   let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0, lines = 0, level = 1, combo = 0;
+  let startScreen = true, winScreen = false, gameMode = 0, campaignLevel = 1;
+  let statLines = [0, 0, 0, 0];
   let nextPc, nextRot;
   let holdPc = -1, holdUsed = false;
   let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
@@ -106,6 +108,7 @@
           }
       }
       if (linesCleared > 0) {
+          if (linesCleared >= 1 && linesCleared <= 4) statLines[linesCleared - 1]++;
           combo++;
           playSound(1000 + linesCleared * 200 + combo * 100, 'square', 0.1);
       } else {
@@ -114,20 +117,52 @@
       }
       
       lines += linesCleared;
-      level = Math.floor(lines / 10) + 1;
-      score += linesCleared * 100 * level * (combo > 0 ? combo : 1);
-      dropInterval = Math.max(50, 500 - (level - 1) * 30);
+      
+      if (gameMode === 1) {
+          let goal = campaignLevel * 10;
+          level = campaignLevel;
+          score += linesCleared * 100 * level * (combo > 0 ? combo : 1);
+          if (lines >= goal) {
+              campaignLevel++;
+              if (campaignLevel > 5) {
+                  winScreen = true;
+                  playSound(800, 'square', 0.15); playSound(1000, 'square', 0.15); playSound(1200, 'square', 0.3);
+                  return;
+              } else {
+                  init();
+                  return;
+              }
+          }
+      } else {
+          level = Math.floor(lines / 10) + 1;
+          score += linesCleared * 100 * level * (combo > 0 ? combo : 1);
+          dropInterval = Math.max(50, 500 - (level - 1) * 30);
+      }
   }
 
   function init() {
       grid = Array(H).fill().map(() => Array(W).fill(0));
+      if (gameMode === 1) {
+          let garbage = campaignLevel * 2;
+          for (let r = 0; r < garbage; r++) {
+              let hole = Math.floor(Math.random() * W);
+              for (let x = 0; x < W; x++) {
+                  grid[H - 1 - r][x] = (x === hole) ? 0 : 8;
+              }
+          }
+          lines = 0;
+          level = campaignLevel;
+          dropInterval = Math.max(50, 500 - (level - 1) * 30);
+      } else {
+          lines = 0;
+          level = 1;
+          dropInterval = 500;
+          statLines = [0, 0, 0, 0];
+      }
       gameOver = false;
       isPaused = false;
-      score = 0;
-      lines = 0;
-      level = 1;
+      winScreen = false;
       combo = 0;
-      dropInterval = 500;
       bag = [];
       nextPc = getNextPc();
       nextRot = 0;
@@ -140,8 +175,14 @@
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
           e.preventDefault();
       }
-      if (gameOver && e.key === 'Enter') init();
-      if (gameOver) return;
+      if (startScreen) {
+          if (e.key === '1') { gameMode = 0; startScreen = false; score = 0; init(); }
+          if (e.key === '2') { gameMode = 1; startScreen = false; campaignLevel = 1; score = 0; init(); }
+          return;
+      }
+      if (winScreen && e.key === 'Enter') { startScreen = true; winScreen = false; return; }
+      if (gameOver && e.key === 'Enter') { startScreen = true; gameOver = false; return; }
+      if (gameOver || winScreen) return;
       if (e.key.toLowerCase() === 'p') { isPaused = !isPaused; return; }
       if (isPaused) return;
 
@@ -179,7 +220,9 @@
       }
       if (e.key === ' ') {
           while (!checkCol(pc, rot, cx, cy + 1)) cy++;
-          lock(); spawn();
+          let oldLevel = campaignLevel;
+          lock();
+          if (!winScreen && (gameMode === 0 || campaignLevel === oldLevel)) spawn();
       }
       draw();
   });
@@ -197,7 +240,7 @@
           }
       }
 
-      if (!gameOver && !isPaused) {
+      if (!gameOver && !isPaused && !startScreen && !winScreen) {
           // Draw Ghost piece
           let ghost_y = cy;
           while (!checkCol(pc, rot, cx, ghost_y + 1)) {
@@ -230,6 +273,19 @@
           ctx.fillStyle = 'red';
           ctx.font = '20px monospace';
           ctx.fillText('GAME OVER', 50, 200);
+      } else if (winScreen) {
+          ctx.fillStyle = '#0f0';
+          ctx.font = '20px monospace';
+          ctx.fillText('YOU WIN!', 60, 190);
+          ctx.font = '14px monospace';
+          ctx.fillText('ENTER TO MENU', 50, 210);
+      } else if (startScreen) {
+          ctx.fillStyle = 'white';
+          ctx.font = '20px monospace';
+          ctx.fillText('KTETRIS', 65, 170);
+          ctx.font = '14px monospace';
+          ctx.fillText('1. Endless', 65, 200);
+          ctx.fillText('2. Campaign', 65, 220);
       } else if (isPaused) {
           ctx.fillStyle = 'yellow';
           ctx.font = '20px monospace';
@@ -246,8 +302,17 @@
       ctx.font = '12px monospace';
       ctx.fillText('SCORE: ' + score, 210, 20);
       ctx.fillText('HI: ' + highScore, 210, 40);
-      ctx.fillText('LEVEL: ' + level, 210, 60);
-      ctx.fillText('LINES: ' + lines, 210, 80);
+      ctx.fillText(gameMode === 1 ? 'STAGE: ' + campaignLevel + '/5' : 'LEVEL: ' + level, 210, 60);
+      ctx.fillText(gameMode === 1 ? 'LINES: ' + lines + '/' + (campaignLevel*10) : 'LINES: ' + lines, 210, 80);
+      
+      if (gameMode === 0 && !startScreen) {
+          ctx.fillStyle = '#99f';
+          ctx.fillText('SGL: ' + statLines[0], 210, 290);
+          ctx.fillText('DBL: ' + statLines[1], 210, 310);
+          ctx.fillText('TPL: ' + statLines[2], 210, 330);
+          ctx.fillText('TET: ' + statLines[3], 210, 350);
+          ctx.fillStyle = 'white';
+      }
       
       if (combo > 1) {
           ctx.fillStyle = '#ff6464';
@@ -293,14 +358,18 @@
       if (!isPaused) dropCounter += deltaTime;
       
       if (dropCounter > dropInterval) {
-          if (!gameOver && !isPaused) {
+          if (!gameOver && !isPaused && !startScreen && !winScreen) {
               if (!checkCol(pc, rot, cx, cy + 1)) cy++;
-              else { lock(); spawn(); }
+              else { 
+                  let oldLevel = campaignLevel;
+                  lock(); 
+                  if (!winScreen && (gameMode === 0 || campaignLevel === oldLevel)) spawn(); 
+              }
               draw();
           }
           dropCounter = 0;
       }
-      if (isPaused) draw();
+      if (isPaused || startScreen || winScreen) draw();
       requestAnimationFrame(update);
   }
 
