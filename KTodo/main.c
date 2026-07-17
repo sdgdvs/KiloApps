@@ -14,6 +14,7 @@ int my_strlen(const char* s) {
 }
 
 HWND hInput, hAddBtn, hList, hPriority;
+HFONT hFont;
 
 int my_strcpy(char* dest, const char* src) {
     int i = 0;
@@ -34,7 +35,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hAddBtn = CreateWindowA("BUTTON", "Add", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 220, 10, 50, 24, hwnd, (HMENU)1001, NULL, NULL);
             hList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL, 10, 45, 260, 200, hwnd, NULL, NULL, NULL);
             
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
+            hFont = CreateFontA(16, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
             SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hPriority, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hAddBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -66,6 +67,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             return 0;
     }
