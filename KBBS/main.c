@@ -47,6 +47,17 @@ void my_memset(void* dest, int c, size_t count) {
 
 void my_strcpy(char* d, const char* s) { while (*s) *d++ = *s++; *d = 0; }
 int my_strlen(const char* s) { int l = 0; while (s[l]) l++; return l; }
+void my_memcpy(void* dest, const void* src, size_t count) { char* d = (char*)dest; const char* s = (const char*)src; while (count--) *d++ = *s++; }
+char* my_strstr(const char* haystack, const char* needle) {
+    if (!*needle) return (char*)haystack;
+    while (*haystack) {
+        const char* h = haystack; const char* n = needle;
+        while (*h && *n && *h == *n) { h++; n++; }
+        if (!*n) return (char*)haystack;
+        haystack++;
+    }
+    return NULL;
+}
 int my_atoi(const char* str) {
     int v = 0;
     while (*str >= '0' && *str <= '9') { v = v * 10 + (*str - '0'); str++; }
@@ -759,6 +770,7 @@ struct BBS bbsList[] = {
 #define IDC_SAVE    1006
 #define IDC_NEW     1007
 #define IDC_DELETE  1008
+#define IDC_AUTOLOGIN 1009
 
 #define MAX_BBS 100
 struct BBS_ENTRY {
@@ -766,10 +778,19 @@ struct BBS_ENTRY {
     char host[128];
     int port;
     char type[32];
+    char autologin[128];
 };
 struct BBS_ENTRY dynBbsList[MAX_BBS];
 int numBbs = 0;
 int selectedDirIdx = -1;
+
+struct AutoLoginStep { char expect[64]; char send[64]; };
+int autoLoginActive = 0;
+struct AutoLoginStep autoLoginSteps[10];
+int autoLoginStepsCount = 0;
+int autoLoginIndex = 0;
+char autoLoginMatchBuffer[1024];
+int autoLoginMatchLen = 0;
 
 void LoadBBSList(void) {
     HANDLE hFile = CreateFileA("kbbs_dir.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
@@ -790,12 +811,14 @@ void LoadBBSList(void) {
                     char* p2 = p1; while(*p2 && *p2 != '|') p2++; if (*p2) { *p2++ = 0; }
                     char* p3 = p2; while(*p3 && *p3 != '|') p3++; if (*p3) { *p3++ = 0; }
                     char* p4 = p3; while(*p4 && *p4 != '|') p4++; if (*p4) { *p4++ = 0; }
+                    char* p5 = p4; while(*p5 && *p5 != '|') p5++; if (*p5) { *p5++ = 0; }
                     
                     if (*p1 && *p2 && *p3) {
                         my_strcpy(dynBbsList[numBbs].name, p1);
                         my_strcpy(dynBbsList[numBbs].host, p2);
                         dynBbsList[numBbs].port = my_atoi(p3);
                         my_strcpy(dynBbsList[numBbs].type, *p4 ? p4 : "Telnet");
+                        my_strcpy(dynBbsList[numBbs].autologin, *p5 ? p5 : "");
                         numBbs++;
                     }
                 }
@@ -813,6 +836,7 @@ void LoadBBSList(void) {
             my_strcpy(dynBbsList[numBbs].host, bbsList[i].host);
             dynBbsList[numBbs].port = bbsList[i].port;
             my_strcpy(dynBbsList[numBbs].type, "Telnet");
+            my_strcpy(dynBbsList[numBbs].autologin, "");
             numBbs++;
         }
     }
@@ -832,8 +856,9 @@ void SaveBBSList(void) {
             my_strcpy(buf + my_strlen(buf), dynBbsList[i].host);
             my_strcpy(buf + my_strlen(buf), "|");
             my_strcpy(buf + my_strlen(buf), portStr);
-            my_strcpy(buf + my_strlen(buf), "|");
             my_strcpy(buf + my_strlen(buf), dynBbsList[i].type);
+            my_strcpy(buf + my_strlen(buf), "|");
+            my_strcpy(buf + my_strlen(buf), dynBbsList[i].autologin);
             my_strcpy(buf + my_strlen(buf), "\r\n");
             WriteFile(hFile, buf, (DWORD)my_strlen(buf), &written, NULL);
         }
@@ -862,6 +887,7 @@ INT_PTR CALLBACK DialDirProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) 
                 char pBuf[16]; my_itoa(dynBbsList[0].port, pBuf);
                 SetDlgItemTextA(hdlg, IDC_PORT, pBuf);
                 SendMessageA(hType, CB_SETCURSEL, dynBbsList[0].type[0]=='W' ? 1 : 0, 0);
+                SetDlgItemTextA(hdlg, IDC_AUTOLOGIN, dynBbsList[0].autologin);
             }
             return TRUE;
         }
@@ -877,6 +903,7 @@ INT_PTR CALLBACK DialDirProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) 
                     char pBuf[16]; my_itoa(dynBbsList[sel].port, pBuf);
                     SetDlgItemTextA(hdlg, IDC_PORT, pBuf);
                     SendMessageA(GetDlgItem(hdlg, IDC_TYPE), CB_SETCURSEL, dynBbsList[sel].type[0]=='W' ? 1 : 0, 0);
+                    SetDlgItemTextA(hdlg, IDC_AUTOLOGIN, dynBbsList[sel].autologin);
                 }
             } else if (id == IDC_NEW) {
                 selectedDirIdx = -1;
@@ -885,11 +912,13 @@ INT_PTR CALLBACK DialDirProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) 
                 SetDlgItemTextA(hdlg, IDC_HOST, "");
                 SetDlgItemTextA(hdlg, IDC_PORT, "23");
                 SendMessageA(GetDlgItem(hdlg, IDC_TYPE), CB_SETCURSEL, 0, 0);
+                SetDlgItemTextA(hdlg, IDC_AUTOLOGIN, "");
             } else if (id == IDC_SAVE) {
-                char name[64], host[128], port[16];
+                char name[64], host[128], port[16], autologin[128];
                 GetDlgItemTextA(hdlg, IDC_NAME, name, 64);
                 GetDlgItemTextA(hdlg, IDC_HOST, host, 128);
                 GetDlgItemTextA(hdlg, IDC_PORT, port, 16);
+                GetDlgItemTextA(hdlg, IDC_AUTOLOGIN, autologin, 128);
                 int typeSel = (int)SendMessageA(GetDlgItem(hdlg, IDC_TYPE), CB_GETCURSEL, 0, 0);
                 if (name[0] && host[0]) {
                     int target = selectedDirIdx;
@@ -902,6 +931,7 @@ INT_PTR CALLBACK DialDirProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) 
                     my_strcpy(dynBbsList[target].host, host);
                     dynBbsList[target].port = my_atoi(port);
                     my_strcpy(dynBbsList[target].type, typeSel == 1 ? "WebSocket" : "Telnet");
+                    my_strcpy(dynBbsList[target].autologin, autologin);
                     
                     HWND hList = GetDlgItem(hdlg, IDC_LIST);
                     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
@@ -1623,12 +1653,47 @@ int IsSelected(int r, int c) {
     if (r1 > r2 || (r1 == r2 && c1 > c2)) {
         r1 = selEndAbsR; c1 = selEndC;
         r2 = selStartAbsR; c2 = selStartC;
-    }
+}
     if (r < r1 || r > r2) return 0;
     if (r == r1 && r == r2) return c >= c1 && c <= c2;
     if (r == r1) return c >= c1;
     if (r == r2) return c <= c2;
     return 1;
+}
+
+void ProcessByteAndAutoLogin(unsigned char ch) {
+    ProcessTelnetByte(ch);
+    if (autoLoginActive && autoLoginIndex < autoLoginStepsCount) {
+        if (autoLoginMatchLen < 1000) {
+            autoLoginMatchBuffer[autoLoginMatchLen++] = ch;
+            autoLoginMatchBuffer[autoLoginMatchLen] = 0;
+        } else {
+            my_memcpy(autoLoginMatchBuffer, autoLoginMatchBuffer + 500, 500);
+            autoLoginMatchLen = 500;
+            autoLoginMatchBuffer[autoLoginMatchLen++] = ch;
+            autoLoginMatchBuffer[autoLoginMatchLen] = 0;
+        }
+        if (my_strstr(autoLoginMatchBuffer, autoLoginSteps[autoLoginIndex].expect)) {
+            char out[128];
+            int outLen = 0;
+            char* sendStr = autoLoginSteps[autoLoginIndex].send;
+            int k;
+            for(k=0; sendStr[k] && outLen < 127; k++) {
+                if (sendStr[k] == '\\' && sendStr[k+1] == 'r') { out[outLen++] = '\r'; k++; }
+                else if (sendStr[k] == '\\' && sendStr[k+1] == 'n') { out[outLen++] = '\n'; k++; }
+                else if (sendStr[k] == '\\' && sendStr[k+1] == 't') { out[outLen++] = '\t'; k++; }
+                else out[outLen++] = sendStr[k];
+            }
+            out[outLen] = 0;
+            if (sock != INVALID_SOCKET) {
+                send(sock, out, outLen, 0);
+                bytesTx += outLen;
+            }
+            autoLoginMatchLen = 0;
+            autoLoginMatchBuffer[0] = 0;
+            autoLoginIndex++;
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -1780,6 +1845,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetWindowTextA(hHost, dynBbsList[res].host);
                     my_itoa(dynBbsList[res].port, portBuf);
                     SetWindowTextA(hPort, portBuf);
+                    
+                    autoLoginActive = 0;
+                    autoLoginStepsCount = 0;
+                    autoLoginIndex = 0;
+                    autoLoginMatchLen = 0;
+                    autoLoginMatchBuffer[0] = 0;
+                    if (dynBbsList[res].autologin[0]) {
+                        char temp[128];
+                        my_strcpy(temp, dynBbsList[res].autologin);
+                        char* pt = temp;
+                        while (*pt && autoLoginStepsCount < 10) {
+                            char* ex = pt;
+                            while (*pt && *pt != '~') pt++;
+                            if (*pt) *pt++ = 0;
+                            char* se = pt;
+                            while (*pt && *pt != '~') pt++;
+                            if (*pt) *pt++ = 0;
+                            if (*ex && *se) {
+                                my_strcpy(autoLoginSteps[autoLoginStepsCount].expect, ex);
+                                my_strcpy(autoLoginSteps[autoLoginStepsCount].send, se);
+                                autoLoginStepsCount++;
+                            }
+                        }
+                        autoLoginActive = 1;
+                    }
                     SendMessage(hwnd, WM_COMMAND, 100, 0);
                 }
             } else if (LOWORD(wParam) == 109) {
@@ -2146,7 +2236,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (kbbsSettings.baudRate <= 0) {
                     if (rxBufLen > 0) {
                         int i;
-                        for (i = 0; i < rxBufLen; i++) ProcessTelnetByte((unsigned char)rxBuffer[i]);
+                        for (i = 0; i < rxBufLen; i++) ProcessByteAndAutoLogin((unsigned char)rxBuffer[i]);
                         rxBufLen = 0;
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
@@ -2170,7 +2260,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         
                         int i;
                         for (i = 0; i < take; i++) {
-                            ProcessTelnetByte((unsigned char)rxBuffer[i]);
+                            ProcessByteAndAutoLogin((unsigned char)rxBuffer[i]);
                         }
                         
                         int remain = rxBufLen - take;

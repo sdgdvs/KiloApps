@@ -15,9 +15,11 @@ BEGIN
     EDITTEXT        1004, 175, 44, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Type:", -1, 135, 64, 40, 8
     COMBOBOX        1005, 175, 62, 70, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Save", 1006, 135, 90, 50, 14
-    PUSHBUTTON      "New", 1007, 190, 90, 50, 14
-    PUSHBUTTON      "Delete", 1008, 245, 90, 45, 14
+    LTEXT           "AutoLogin:", -1, 135, 82, 40, 8
+    EDITTEXT        1009, 175, 80, 115, 14, ES_AUTOHSCROLL
+    PUSHBUTTON      "Save", 1006, 135, 105, 50, 14
+    PUSHBUTTON      "New", 1007, 190, 105, 50, 14
+    PUSHBUTTON      "Delete", 1008, 245, 105, 45, 14
     DEFPUSHBUTTON   "Connect", 1, 135, 175, 75, 16
     PUSHBUTTON      "Cancel", 2, 215, 175, 75, 16
 END
@@ -47,69 +49,3 @@ BEGIN
     EDITTEXT        3001, 80, 10, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
     LTEXT           "Blink Rate (ms):", -1, 10, 32, 60, 8
     EDITTEXT        3002, 80, 30, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
-1 ICON "icon.ico"
-#include <windows.h>
-
-1000 DIALOGEX 0, 0, 300, 200
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialing Directory"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    LISTBOX         1001, 5, 5, 120, 190, LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Name:", -1, 135, 10, 40, 8
-    EDITTEXT        1002, 175, 8, 115, 14, ES_AUTOHSCROLL
-    LTEXT           "Host:", -1, 135, 28, 40, 8
-    EDITTEXT        1003, 175, 26, 115, 14, ES_AUTOHSCROLL
-    LTEXT           "Port:", -1, 135, 46, 40, 8
-    EDITTEXT        1004, 175, 44, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Type:", -1, 135, 64, 40, 8
-    COMBOBOX        1005, 175, 62, 70, 50, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Save", 1006, 135, 90, 50, 14
-    PUSHBUTTON      "New", 1007, 190, 90, 50, 14
-    PUSHBUTTON      "Delete", 1008, 245, 90, 45, 14
-    DEFPUSHBUTTON   "Connect", 1, 135, 175, 75, 16
-    PUSHBUTTON      "Cancel", 2, 215, 175, 75, 16
-END
-
-2000 DIALOGEX 0, 0, 300, 200
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Macros (Alt + Key)"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    LISTBOX         2001, 5, 5, 120, 190, LBS_NOTIFY | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Key (e.g. L):", -1, 135, 10, 50, 8
-    EDITTEXT        2002, 190, 8, 20, 14, ES_AUTOHSCROLL | ES_UPPERCASE
-    LTEXT           "Sequence (use \\r):", -1, 135, 28, 100, 8
-    EDITTEXT        2003, 135, 40, 155, 60, ES_MULTILINE | ES_WANTRETURN | WS_VSCROLL
-    PUSHBUTTON      "Save", 2006, 135, 110, 50, 14
-    PUSHBUTTON      "New", 2007, 190, 110, 50, 14
-    PUSHBUTTON      "Delete", 2008, 245, 110, 45, 14
-    PUSHBUTTON      "Close", 2, 215, 175, 75, 16
-END
-
-3000 DIALOGEX 0, 0, 180, 140
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Display Settings"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    LTEXT           "Font Size (px):", -1, 10, 12, 60, 8
-    EDITTEXT        3001, 80, 10, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Blink Rate (ms):", -1, 10, 32, 60, 8
-    EDITTEXT        3002, 80, 30, 40, 14, ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "Baud Rate:", -1, 10, 52, 60, 8
-    COMBOBOX        3006, 80, 50, 70, 60, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "Local Echo", 3003, 10, 70, 60, 10
-    PUSHBUTTON      "Edit Palette Colors...", 3004, 10, 90, 75, 14
-    PUSHBUTTON      "Reset Palette", 3005, 90, 90, 60, 14
-    DEFPUSHBUTTON   "Save", 1, 30, 115, 50, 14
-    PUSHBUTTON      "Cancel", 2, 100, 115, 50, 14
-END
-
-4000 DIALOGEX 0, 0, 260, 200
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "KBBS Help / Quick Reference"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    LTEXT           "Features:\r\n\r\n- Dialing Directory: Save & quick-connect to BBSs\r\n- XMODEM/ZMODEM: File transfers (DL/UL)\r\n- ANSI Music: Plays ANSI-M music codes\r\n- Macros: Bind Alt+Key to string sequences\r\n- Display Settings: Adjust font size, blink, palette\r\n- Scrollback: View past terminal history\r\n- Copy/Paste: Select text and copy/paste\r\n- Custom Palette: Set custom 16-color PC colors\r\n- Session Capture: Save session text to file\r\n- Baud Rate Emulation: Simulate old modem speeds", -1, 10, 10, 240, 150
-    DEFPUSHBUTTON   "OK", 1, 105, 175, 50, 14
-END
