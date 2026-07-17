@@ -8,24 +8,24 @@ The project aims to return software development to the lightweight, compute-effi
 - Maintain a minimal web-based OS environment (`KiloOS`) that packages HTML5 apps into sub-150KB Windows executables using Crinkler.
 - Keep dependencies and framework overhead to an absolute minimum.
 
-## Current State (as of 2026-07-13)
-- **Total Apps:** 56 native Windows applications in individual subdirectories.
-- **KiloOS Version:** 0.3.52
+## Current State (as of 2026-07-16)
+- **Total Apps:** 58 native Windows applications in individual subdirectories.
+- **KiloOS Version:** 0.3.56
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 - **Redundant apps deleted:** KWrite (merged into KPad), KDraw (merged into KPaint).
 
-### New Apps Created with Deep Expansion (3, through Phase 14)
-KVault (encrypted text storage), KBudget (expense tracker), KHabit (habit tracker with streaks)
+### New Apps Created with Deep Expansion (6, all through Phase 14)
+KVault, KBudget, KHabit, KFlash (flashcards), K2048 (puzzle game), KSudoku (logic puzzle). KBBS also received a full 14-phase deep expansion.
 
 ### All Existing Apps Polished + Feature-Expanded
 The Builder agent completed a full pass of all ~45 existing apps. It has transitioned to a **round-robin continuous improvement** model, cycling through every app adding one new feature per turn.
 
-### Games: 11 games, Loop 2 nearly complete
-KBreakout created. Loop 1 (all 10 games) complete. Loop 2: 9 of 10 done (KChess remaining).
+### Games: 12 games, Loop 3 in progress
+KBreakout and K2048 created. Loops 1-2 complete. Loop 3: 9 of 12 done. Features getting genuinely deep (wall kicks, procedural generation, bullet-hell mechanics, AI improvements).
 
-### QA: 23 apps tested and fixed
-Systematic alphabetical pass through KPad. Common bug pattern: **GDI resource leaks** in native C apps (HFONT, HBRUSH, HBITMAP not freed on WM_DESTROY). Also found XSS vulnerabilities, logic bugs, and memory issues.
+### QA: 27+ apps tested and fixed
+Systematic alphabetical pass through KTerminal. Common bug patterns: **GDI resource leaks**, XSS vulnerabilities, logic bugs, memory issues.
 
 ### KiloOS Shell/UX: 15 improvements delivered
 Window management (dimming, snap-to-edge previews, drag feedback, minimize animation), start menu (folder navigation, glassmorphic polish, animations), taskbar (scrolling, system tray), responsive design, theme consistency.
