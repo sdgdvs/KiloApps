@@ -9,6 +9,8 @@
   .grid.easy { grid-template-columns: repeat(4, 1fr); width: 380px; height: 380px; }
   .grid.hard { grid-template-columns: repeat(6, 1fr); width: 570px; height: 380px; }
   .grid.expert { grid-template-columns: repeat(8, 1fr); width: 760px; height: 380px; }
+  .grid.camp4 { grid-template-columns: repeat(8, 1fr); width: 760px; height: 570px; }
+  .grid.camp5 { grid-template-columns: repeat(8, 1fr); width: 760px; height: 760px; }
   .card { background: #3264c8; border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #000; }
   .card.flipped { background: #fff; box-shadow: inset 0 0 0 1px #ccc; cursor: default; }
   .card.matched { background: transparent; box-shadow: none; cursor: default; color: transparent; }
@@ -24,6 +26,8 @@
   <div>Score: <span id="score">0</span></div>
   <div>Combo: x<span id="combo">1</span></div>
   <div>Best Score: <span id="best">-</span></div>
+  <div>Total Pairs: <span id="stats_pairs">0</span></div>
+  <div>Wins: <span id="stats_wins">0</span></div>
 </div>
 <div class="grid easy" id="grid"></div>
 <div class="controls">
@@ -35,6 +39,7 @@
   <button onclick="setDifficulty('easy')">Easy (4x4)</button>
   <button onclick="setDifficulty('hard')">Hard (6x4)</button>
   <button onclick="setDifficulty('expert')">Expert (8x4)</button>
+  <button onclick="setDifficulty('campaign')">Campaign</button>
   <button onclick="peek()">Peek</button>
   <button onclick="init()">Restart</button>
 </div>
@@ -66,6 +71,11 @@
   let timer = null;
   let elapsed = 0;
   let playing = false;
+  let stats_pairs = parseInt(localStorage.getItem('kmemory_pairs')) || 0;
+  let stats_wins = parseInt(localStorage.getItem('kmemory_wins')) || 0;
+  let campaign_level = 1;
+  document.getElementById('stats_pairs').textContent = stats_pairs;
+  document.getElementById('stats_wins').textContent = stats_wins;
   
   let audioCtx;
   function playTone(freq, type, duration) {
@@ -98,7 +108,17 @@
       movesEl.textContent = moves;
       scoreEl.textContent = score;
       comboEl.textContent = combo;
-      let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
+      let numCards = 16;
+      if (diff === 'easy') numCards = 16;
+      else if (diff === 'hard') numCards = 24;
+      else if (diff === 'expert') numCards = 32;
+      else if (diff === 'campaign') {
+          if (campaign_level === 1) numCards = 16;
+          else if (campaign_level === 2) numCards = 24;
+          else if (campaign_level === 3) numCards = 32;
+          else if (campaign_level === 4) numCards = 48;
+          else numCards = 64;
+      }
       for (let i = 0; i < numCards; i++) {
           if (!matched[i]) flipped[i] = true;
       }
@@ -118,9 +138,18 @@
   function setDifficulty(d) {
       diff = d;
       grid.className = 'grid ' + d;
-      if (d === 'easy') document.getElementById('ui').style.width = '380px';
-      else if (d === 'hard') document.getElementById('ui').style.width = '570px';
-      else document.getElementById('ui').style.width = '760px';
+      if (d === 'campaign') campaign_level = 1;
+      updateGridSize();
+  }
+  function updateGridSize() {
+      let d = diff;
+      let ui = document.getElementById('ui');
+      if (d === 'easy' || (d === 'campaign' && campaign_level === 1)) { grid.className = 'grid easy'; ui.style.width = '380px'; }
+      else if (d === 'hard' || (d === 'campaign' && campaign_level === 2)) { grid.className = 'grid hard'; ui.style.width = '570px'; }
+      else if (d === 'expert' || (d === 'campaign' && campaign_level === 3)) { grid.className = 'grid expert'; ui.style.width = '760px'; }
+      else if (d === 'campaign' && campaign_level === 4) { grid.className = 'grid camp4'; ui.style.width = '760px'; }
+      else if (d === 'campaign' && campaign_level === 5) { grid.className = 'grid camp5'; ui.style.width = '760px'; }
+  }
       init();
   }
 
@@ -150,7 +179,17 @@
       elapsed = 0;
       timeEl.textContent = elapsed;
       cards = [];
-      let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
+      let numCards = 16;
+      if (diff === 'easy') numCards = 16;
+      else if (diff === 'hard') numCards = 24;
+      else if (diff === 'expert') numCards = 32;
+      else if (diff === 'campaign') {
+          if (campaign_level === 1) numCards = 16;
+          else if (campaign_level === 2) numCards = 24;
+          else if (campaign_level === 3) numCards = 32;
+          else if (campaign_level === 4) numCards = 48;
+          else numCards = 64;
+      }
       for (let i = 0; i < numCards; i++) {
           cards.push(Math.floor(i / 2));
           flipped[i] = true;
@@ -183,7 +222,17 @@
 
   function render() {
       grid.innerHTML = '';
-      let numCards = diff === 'easy' ? 16 : (diff === 'hard' ? 24 : 32);
+      let numCards = 16;
+      if (diff === 'easy') numCards = 16;
+      else if (diff === 'hard') numCards = 24;
+      else if (diff === 'expert') numCards = 32;
+      else if (diff === 'campaign') {
+          if (campaign_level === 1) numCards = 16;
+          else if (campaign_level === 2) numCards = 24;
+          else if (campaign_level === 3) numCards = 32;
+          else if (campaign_level === 4) numCards = 48;
+          else numCards = 64;
+      }
       for (let i = 0; i < numCards; i++) {
           const c = document.createElement('div');
           c.className = 'card';
@@ -191,7 +240,9 @@
               c.classList.add('matched');
           } else if (flipped[i]) {
               c.classList.add('flipped');
-              c.textContent = themes[currentTheme](cards[i]);
+              if (cards[i] === 100) { c.textContent = "+T"; c.style.color = "#00f"; }
+              else if (cards[i] === 101) { c.textContent = "??"; c.style.color = "#f00"; }
+              else c.textContent = themes[currentTheme](cards[i] % 16);
           }
           
           c.onclick = () => {
@@ -208,6 +259,22 @@
                   moves++;
                   movesEl.textContent = moves;
                   if (cards[firstFlip] === cards[secondFlip]) {
+                      if (cards[firstFlip] === 100) {
+                          score += 500;
+                          elapsed = Math.max(0, elapsed - 10);
+                          timeEl.textContent = elapsed;
+                      } else if (cards[firstFlip] === 101) {
+                          for (let k = numCards - 1; k > 0; k--) {
+                              if (!matched[k]) {
+                                  let j = Math.floor(Math.random() * (k + 1));
+                                  while(matched[j]) j = Math.floor(Math.random() * (k + 1));
+                                  if (!matched[j]) {
+                                      [cards[k], cards[j]] = [cards[j], cards[k]];
+                                  }
+                              }
+                          }
+                      }
+                      
                       score += 100 * combo;
                       combo++;
                       scoreEl.textContent = score;
@@ -217,14 +284,32 @@
                       firstFlip = -1;
                       secondFlip = -1;
                       matches++;
+                      stats_pairs++;
+                      localStorage.setItem('kmemory_pairs', stats_pairs);
+                      document.getElementById('stats_pairs').textContent = stats_pairs;
+                      
                       playTone(800, 'square', 0.2);
                       if (matches === numCards / 2) {
                           stopTimer();
+                          stats_wins++;
+                          localStorage.setItem('kmemory_wins', stats_wins);
+                          document.getElementById('stats_wins').textContent = stats_wins;
+                          
                           let b = localStorage.getItem(getBestKey());
                           if (!b || score > parseInt(b)) {
                               localStorage.setItem(getBestKey(), score);
                           }
-                          setTimeout(() => { alert("You won with score " + score + " in " + moves + " moves and " + elapsed + " seconds!"); updateBest(); init(); }, 100);
+                          
+                          if (diff === 'campaign') {
+                              campaign_level++;
+                              if (campaign_level > 5) {
+                                  setTimeout(() => { alert("You beat the Campaign! Total score: " + score); updateBest(); diff='campaign'; campaign_level=1; init(); }, 100);
+                              } else {
+                                  setTimeout(() => { alert("Stage Clear! Next Stage..."); updateBest(); init(); }, 100);
+                              }
+                          } else {
+                              setTimeout(() => { alert("You won with score " + score + " in " + moves + " moves and " + elapsed + " seconds!"); updateBest(); init(); }, 100);
+                          }
                       }
                       render();
                   } else {
