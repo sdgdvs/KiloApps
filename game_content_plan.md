@@ -89,7 +89,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KRogue     | Tier 2          | Feature-Expanded       | Expanded | Web upgraded to basic playable version. EXE is a full roguelike. |
 | KSnake     | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KTetris    | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KPong      | Tier 1          | Polished               | Needs Improvement | Full parity. |
+| KPong      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
 | KSolitaire | Tier 1          | Never Touched          | Needs Improvement | Memory Match game in both Web and EXE. |
 | KSpace     | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
@@ -146,3 +146,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Expanded to 15 levels, added Ghost/Hydra/Cube enemies, Biomes, Lightning spell, and Kills tracking to both EXE and HTML)
 - [x] KSnake (Added Campaign Mode, Ghost Power-Up, and Native High Score Persistence to both EXE and HTML)
 - [x] KTetris (Added Start Screen, 5-Stage Campaign Mode, and Line Clear Statistics Tracking to both EXE and HTML)
+- [x] KPong (Added 5-Level Campaign Mode, mid-match paddle-buff Power-Ups, and Persistent High Rally stats to both EXE and HTML)
