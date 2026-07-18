@@ -30,7 +30,7 @@
       <option value="Verdana">Verdana</option>
     </select>
     <div class="label" style="margin-top: 10px;">Size:</div>
-    <select id="sizeList" style="flex: none; margin-bottom: auto;">
+    <select id="sizeList" style="flex: none; margin-bottom: 10px;">
       <option value="12px">12</option>
       <option value="16px">16</option>
       <option value="24px" selected>24</option>
@@ -38,6 +38,12 @@
       <option value="48px">48</option>
       <option value="64px">64</option>
     </select>
+    <div class="label">Custom Text:</div>
+    <input type="text" id="customText" value="" placeholder="Type here..." style="font-family: 'Segoe UI', sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; margin-bottom: 10px; box-sizing: border-box; width: 100%;">
+    <div style="display: flex; gap: 10px; margin-bottom: auto; font-size: 14px;">
+      <label><input type="checkbox" id="boldCheck"> Bold</label>
+      <label><input type="checkbox" id="italicCheck"> Italic</label>
+    </div>
   </div>
   <div class="sample-container">
     <div id="sample">
@@ -50,14 +56,28 @@
   const fontList = document.getElementById('fontList');
   const sizeList = document.getElementById('sizeList');
   const sample = document.getElementById('sample');
+  const customText = document.getElementById('customText');
+  const boldCheck = document.getElementById('boldCheck');
+  const italicCheck = document.getElementById('italicCheck');
   
   const updateFont = () => {
       sample.style.fontFamily = `"${fontList.value}", sans-serif`;
       sample.style.fontSize = sizeList.value;
+      sample.style.fontWeight = boldCheck.checked ? 'bold' : 'normal';
+      sample.style.fontStyle = italicCheck.checked ? 'italic' : 'normal';
+      
+      if (customText.value.trim() !== "") {
+          sample.innerText = customText.value;
+      } else {
+          sample.innerHTML = "The quick brown fox jumps over the lazy dog.<br><br>0123456789<br><br>Aa Bb Cc Dd Ee Ff";
+      }
   };
   
   fontList.onchange = updateFont;
   sizeList.onchange = updateFont;
+  customText.oninput = updateFont;
+  boldCheck.onchange = updateFont;
+  italicCheck.onchange = updateFont;
   
   // Trigger initial
   updateFont();

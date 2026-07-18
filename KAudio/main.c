@@ -112,7 +112,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (wParam == VK_LEFT) {
                 if (octaveShift > -4) {
-                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                    for (int i = 0; i < NUM_KEYS; i++) {
+                        if (activeKeys[i]) {
+                            PlayNote(i, 0);
+                            activeKeys[i] = 0;
+                            if (isRecording && numEvents < 4000) {
+                                recordedEvents[numEvents].keyIndex = i;
+                                recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                                recordedEvents[numEvents].type = 0;
+                                numEvents++;
+                            }
+                        }
+                    }
                     octaveShift--;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -120,7 +131,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (wParam == VK_RIGHT) {
                 if (octaveShift < 4) {
-                    for (int i = 0; i < NUM_KEYS; i++) if (activeKeys[i]) { PlayNote(i, 0); activeKeys[i] = 0; }
+                    for (int i = 0; i < NUM_KEYS; i++) {
+                        if (activeKeys[i]) {
+                            PlayNote(i, 0);
+                            activeKeys[i] = 0;
+                            if (isRecording && numEvents < 4000) {
+                                recordedEvents[numEvents].keyIndex = i;
+                                recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                                recordedEvents[numEvents].type = 0;
+                                numEvents++;
+                            }
+                        }
+                    }
                     octaveShift++;
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -168,6 +190,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (activeKeys[i]) {
                     activeKeys[i] = 0;
                     PlayNote(i, 0);
+                    if (isRecording && numEvents < 4000) {
+                        recordedEvents[numEvents].keyIndex = i;
+                        recordedEvents[numEvents].time = GetTickCount() - recordingStartTime;
+                        recordedEvents[numEvents].type = 0;
+                        numEvents++;
+                    }
                 }
             }
             InvalidateRect(hwnd, NULL, FALSE);

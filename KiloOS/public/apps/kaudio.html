@@ -72,7 +72,7 @@
     <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">KAudio<span style="color:#0ea5e9">.</span></div>
     <div id="octaveDisplay" style="font-size: 13px; font-weight: 500; color: #94a3b8; margin: 0 16px;">Oct: 0 (L/R)</div>
     <div id="recStatus" style="font-size: 13px; font-weight: bold; color: #ef4444; margin: 0 16px 0 0; opacity: 0.5;">Z: Rec, X: Play</div>
-    <select id="waveType" class="waveform-select">
+    <select id="waveType" class="waveform-select" aria-label="Waveform type">
       <option value="square">Square Wave</option>
       <option value="sine">Sine Wave</option>
       <option value="sawtooth">Sawtooth Wave</option>
@@ -109,6 +109,9 @@
       el.className = 'key' + (isBlack[i] ? ' black' : '');
       el.dataset.note = i;
       el.textContent = binds[i];
+      el.tabIndex = 0;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', 'Play key ' + binds[i]);
       keysContainer.appendChild(el);
       keyEls.push(el);
       
@@ -125,7 +128,7 @@
       initAudio();
       if (activeOscs[i]) return;
       
-      if (isRecording && !fromPlayback) {
+      if (isRecording && !fromPlayback && recordedEvents.length < 4000) {
           recordedEvents.push({ keyIndex: i, time: Date.now() - recordingStartTime, type: 1 });
       }
       
@@ -146,7 +149,7 @@
   }
 
   function stop(i, fromPlayback = false) {
-      if (isRecording && !fromPlayback) {
+      if (isRecording && !fromPlayback && recordedEvents.length < 4000) {
           recordedEvents.push({ keyIndex: i, time: Date.now() - recordingStartTime, type: 0 });
       }
 
@@ -238,7 +241,7 @@
           if (octaveShift > -4) {
               for (let i = 0; i < binds.length; i++) stop(i);
               octaveShift--;
-              octaveDisplay.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+              octaveDisplay.textContent = 'Oct: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
           }
       }
       if (e.key === 'ArrowRight') {
@@ -246,7 +249,7 @@
           if (octaveShift < 4) {
               for (let i = 0; i < binds.length; i++) stop(i);
               octaveShift++;
-              octaveDisplay.textContent = 'Octave: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+              octaveDisplay.textContent = 'Oct: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
           }
       }
   });
@@ -254,6 +257,11 @@
   document.addEventListener('keyup', e => {
       let idx = binds.indexOf(e.key.toUpperCase());
       if (idx !== -1) stop(idx);
+  });
+
+  window.addEventListener('blur', () => {
+      for (let i = 0; i < binds.length; i++) stop(i);
+      if (isPlaying) stopPlayback();
   });
 </script>
 </body>
