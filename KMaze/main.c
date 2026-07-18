@@ -90,11 +90,99 @@ const int orig_map5[12][12] = {
 };
 
 
+
+const int orig_map6[12][12] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,6,0,0,0,1,5,0,0,1},
+    {1,0,1,1,1,1,0,1,1,1,0,1},
+    {1,0,1,5,0,1,0,6,0,1,0,1},
+    {1,0,1,0,0,1,0,1,0,1,0,1},
+    {1,0,1,1,4,1,1,1,0,1,0,1},
+    {1,0,0,0,0,0,0,0,0,1,0,1},
+    {1,1,1,1,1,1,1,1,0,1,0,1},
+    {1,3,6,0,5,0,0,1,0,1,0,1},
+    {1,0,1,1,1,1,0,1,6,1,0,1},
+    {1,0,0,0,0,1,0,0,0,1,2,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+const int orig_map7[15][15] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,1,0,0,0,1,0,0,0,1,0,0,8,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,1,1,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,0,0,1},
+    {1,0,1,0,1,0,1,0,1,0,1,1,1,0,1},
+    {1,0,1,0,1,0,1,0,1,0,1,5,0,0,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,1,1,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,1,3,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,1,1,1},
+    {1,0,1,0,1,0,1,0,1,0,1,0,0,0,1},
+    {1,0,1,0,1,0,1,0,1,0,1,1,1,0,1},
+    {1,0,0,0,1,0,0,0,1,0,0,0,4,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,0,1},
+    {1,2,0,0,0,0,0,0,0,0,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+const int orig_map8[12][12] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,1,2,1,0,0,0,5,0,1},
+    {1,1,0,1,4,1,0,1,1,1,1,1},
+    {1,0,0,1,0,1,0,1,3,0,0,1},
+    {1,0,1,1,7,1,1,1,1,1,0,1},
+    {1,0,0,0,0,0,0,1,5,0,0,1},
+    {1,1,1,1,1,1,0,1,1,1,1,1},
+    {1,5,0,0,0,1,0,1,0,0,0,1},
+    {1,1,1,1,0,1,0,1,0,1,0,1},
+    {1,8,0,1,0,7,0,7,0,1,0,1},
+    {1,1,0,1,1,1,1,1,1,1,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+const int orig_map9[12][12] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,6,0,0,1,2,1,0,3,1},
+    {1,0,1,1,1,0,1,4,1,0,1,1},
+    {1,0,1,8,1,0,1,0,1,0,0,1},
+    {1,0,1,1,1,0,1,0,1,1,0,1},
+    {1,0,0,0,6,0,7,0,6,0,0,1},
+    {1,1,1,1,1,1,1,0,1,1,1,1},
+    {1,5,0,0,0,0,1,0,1,5,0,1},
+    {1,0,1,1,1,0,1,0,1,0,1,1},
+    {1,0,1,6,1,0,1,0,7,0,0,1},
+    {1,0,0,0,1,5,1,0,1,1,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
+const int orig_map10[15][15] = {
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+    {1,0,0,0,1,5,0,6,0,0,0,1,8,0,1},
+    {1,0,1,0,1,1,1,1,1,1,0,1,1,0,1},
+    {1,0,1,0,7,0,0,5,0,1,0,7,0,0,1},
+    {1,0,1,1,1,1,1,1,0,1,1,1,1,1,1},
+    {1,0,1,3,0,0,0,1,0,0,0,6,0,0,1},
+    {1,0,1,1,1,1,0,1,1,1,1,1,1,0,1},
+    {1,0,0,6,0,1,0,4,0,0,0,1,0,0,1},
+    {1,1,1,1,0,1,1,1,1,1,0,1,0,1,1},
+    {1,5,0,1,0,0,0,0,0,1,0,1,0,0,1},
+    {1,0,1,1,1,1,1,1,0,1,0,1,1,0,1},
+    {1,0,1,2,1,0,0,1,0,1,0,1,5,0,1},
+    {1,0,1,4,1,1,0,1,0,1,0,1,1,1,1},
+    {1,0,0,0,6,0,0,1,5,1,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+};
+
 int map1[10][10];
 int map2[12][12];
 int map3[15][15];
 int map4[10][10];
 int map5[12][12];
+int map6[12][12];
+int map7[15][15];
+int map8[12][12];
+int map9[12][12];
+int map10[15][15];
+
 
 int mapRandom[31][31];
 int curRandW = 15;
@@ -147,6 +235,29 @@ void GenerateMaze(int w, int h) {
             mapRandom[rx][ry] = 5;
         }
     }
+    int placedCompass = 0;
+    while(!placedCompass) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0) {
+            mapRandom[rx][ry] = 8;
+            placedCompass = 1;
+        }
+    }
+    for(int i=0; i<w*h/20; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0) {
+            mapRandom[rx][ry] = 6;
+        }
+    }
+    for(int i=0; i<w*h/20; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 1 && rx > 1 && rx < w-2 && ry > 1 && ry < h-2) {
+            mapRandom[rx][ry] = 7;
+        }
+    }
     mapRandom[farX][farY] = 2;
     curRandW = w;
     curRandH = h;
@@ -158,10 +269,16 @@ void ResetMaps() {
     memcpy(map3, orig_map3, sizeof(map3));
     memcpy(map4, orig_map4, sizeof(map4));
     memcpy(map5, orig_map5, sizeof(map5));
+    memcpy(map6, orig_map6, sizeof(map6));
+    memcpy(map7, orig_map7, sizeof(map7));
+    memcpy(map8, orig_map8, sizeof(map8));
+    memcpy(map9, orig_map9, sizeof(map9));
+    memcpy(map10, orig_map10, sizeof(map10));
 }
 
 int currentLevel = 0;
 int keysHeld = 0;
+int hasCompass = 0;
 
 int gameState = 0; // 0=start, 1=play, 2=win
 DWORD startTime = 0;
@@ -202,6 +319,21 @@ int GetMapValue(int x, int y) {
     } else if (currentLevel == 4) {
         if (x >= 12 || y >= 12) return 1;
         return map5[x][y];
+    } else if (currentLevel == 5) {
+        if (x >= 12 || y >= 12) return 1;
+        return map6[x][y];
+    } else if (currentLevel == 6) {
+        if (x >= 15 || y >= 15) return 1;
+        return map7[x][y];
+    } else if (currentLevel == 7) {
+        if (x >= 12 || y >= 12) return 1;
+        return map8[x][y];
+    } else if (currentLevel == 8) {
+        if (x >= 12 || y >= 12) return 1;
+        return map9[x][y];
+    } else if (currentLevel == 9) {
+        if (x >= 15 || y >= 15) return 1;
+        return map10[x][y];
     } else {
         if (x >= curRandW || y >= curRandH) return 1;
         return mapRandom[x][y];
@@ -215,7 +347,12 @@ void SetMapValue(int x, int y, int v) {
     else if (currentLevel == 2 && x < 15 && y < 15) map3[x][y] = v;
     else if (currentLevel == 3 && x < 10 && y < 10) map4[x][y] = v;
     else if (currentLevel == 4 && x < 12 && y < 12) map5[x][y] = v;
-    else if (currentLevel >= 5 && x < curRandW && y < curRandH) mapRandom[x][y] = v;
+    else if (currentLevel == 5 && x < 12 && y < 12) map6[x][y] = v;
+    else if (currentLevel == 6 && x < 15 && y < 15) map7[x][y] = v;
+    else if (currentLevel == 7 && x < 12 && y < 12) map8[x][y] = v;
+    else if (currentLevel == 8 && x < 12 && y < 12) map9[x][y] = v;
+    else if (currentLevel == 9 && x < 15 && y < 15) map10[x][y] = v;
+    else if (currentLevel >= 10 && x < curRandW && y < curRandH) mapRandom[x][y] = v;
 }
 
 float pX = 1.5f, pY = 1.5f;
@@ -226,7 +363,8 @@ float planeX = 0.0f, planeY = 0.66f;
 void NextLevel() {
     keysHeld = 0;
     currentLevel++;
-    if (currentLevel > 9) {
+    hasCompass = (currentLevel < 6) ? 1 : 0;
+    if (currentLevel > 14) {
         gameState = 2;
         endTime = GetTickCount();
         float elapsed = (endTime - startTime) / 1000.0f;
@@ -237,8 +375,8 @@ void NextLevel() {
         return;
     }
     
-    if (currentLevel >= 5) {
-        int s = 11 + (currentLevel - 5) * 4;
+    if (currentLevel >= 10) {
+        int s = 11 + (currentLevel - 10) * 4;
         if (s > 31) s = 31;
         GenerateMaze(s, s);
     }
@@ -265,7 +403,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             int TryMove(int x, int y) {
                 int val = GetMapValue(x, y);
-                if (val == 0 || val == 2 || val == 3 || val == 5) return 1;
+                if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8) return 1;
                 if (val == 4) {
                     if (keysHeld > 0) {
                         keysHeld--;
@@ -316,6 +454,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 score += 100;
                 SetMapValue((int)pX, (int)pY, 0);
                 MessageBeep(MB_OK);
+            } else if (curVal == 6) {
+                MessageBeep(MB_ICONHAND);
+                score = (score >= 50) ? score - 50 : 0;
+                pX = 1.5f; pY = 1.5f;
+            } else if (curVal == 7) {
+                SetMapValue((int)pX, (int)pY, 0);
+                MessageBeep(MB_OK);
+            } else if (curVal == 8) {
+                hasCompass = 1;
+                SetMapValue((int)pX, (int)pY, 0);
+                MessageBeep(MB_ICONASTERISK);
             }
 
             if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
@@ -366,6 +515,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH c1 = CreateSolidBrush(RGB(255, 128, 0));
             HBRUSH c2 = CreateSolidBrush(RGB(204, 102, 0));
             
+            HBRUSH t1 = CreateSolidBrush(RGB(153, 0, 153));
+            HBRUSH t2 = CreateSolidBrush(RGB(102, 0, 102));
+            HBRUSH m1 = CreateSolidBrush(RGB(0, 255, 255));
+            HBRUSH m2 = CreateSolidBrush(RGB(0, 204, 204));
+            
             HBRUSH w1s = CreateSolidBrush(RGB(170, 0, 0));
             HBRUSH w2s = CreateSolidBrush(RGB(120, 0, 0));
             HBRUSH e1s = CreateSolidBrush(RGB(0, 204, 0));
@@ -376,6 +530,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH d2s = CreateSolidBrush(RGB(0, 51, 153));
             HBRUSH c1s = CreateSolidBrush(RGB(204, 102, 0));
             HBRUSH c2s = CreateSolidBrush(RGB(153, 76, 0));
+            HBRUSH t1s = CreateSolidBrush(RGB(102, 0, 102));
+            HBRUSH t2s = CreateSolidBrush(RGB(51, 0, 51));
+            HBRUSH m1s = CreateSolidBrush(RGB(0, 204, 204));
+            HBRUSH m2s = CreateSolidBrush(RGB(0, 153, 153));
             
             for (int x = 0; x < W; x++) {
                 float cameraX = 2 * x / (float)W - 1;
@@ -426,6 +584,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int tex = ((int)(wallX * 8.0f)) % 2;
                 
                 RECT wallRc = {x, drawStart, x+1, drawEnd};
+                if (hit == 7) hit = 1;
                 if (hit == 2) {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? e2s : e2) : (tex ? e1s : e1));
                 } else if (hit == 3) {
@@ -434,12 +593,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? d2s : d2) : (tex ? d1s : d1));
                 } else if (hit == 5) {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? c2s : c2) : (tex ? c1s : c1));
+                } else if (hit == 6) {
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? t2s : t2) : (tex ? t1s : t1));
+                } else if (hit == 8) {
+                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? m2s : m2) : (tex ? m1s : m1));
                 } else {
                     FillRect(hdcMem, &wallRc, side == 1 ? (tex ? w2s : w2) : (tex ? w1s : w1));
                 }
             }
             DeleteObject(w1); DeleteObject(w2); DeleteObject(e1); DeleteObject(e2); DeleteObject(k1); DeleteObject(k2); DeleteObject(d1); DeleteObject(d2); DeleteObject(c1); DeleteObject(c2);
+            DeleteObject(t1); DeleteObject(t2); DeleteObject(m1); DeleteObject(m2);
             DeleteObject(w1s); DeleteObject(w2s); DeleteObject(e1s); DeleteObject(e2s); DeleteObject(k1s); DeleteObject(k2s); DeleteObject(d1s); DeleteObject(d2s); DeleteObject(c1s); DeleteObject(c2s);
+            DeleteObject(t1s); DeleteObject(t2s); DeleteObject(m1s); DeleteObject(m2s);
             
             // Draw UI
             char uiText[128];
@@ -457,12 +622,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(hdcMem, 10, 10, uiText, lstrlenA(uiText));
 
             // Minimap
-            if (gameState == 1) {
+            if (gameState == 1 && hasCompass) {
                 int mmW = 0, mmH = 0;
-                if (currentLevel >= 5) { mmW = curRandW; mmH = curRandH; }
+                if (currentLevel >= 10) { mmW = curRandW; mmH = curRandH; }
                 else if (currentLevel == 0 || currentLevel == 3) { mmW = 10; mmH = 10; }
-                else if (currentLevel == 1 || currentLevel == 4) { mmW = 12; mmH = 12; }
-                else if (currentLevel == 2) { mmW = 15; mmH = 15; }
+                else if (currentLevel == 1 || currentLevel == 4 || currentLevel == 5 || currentLevel == 7 || currentLevel == 8) { mmW = 12; mmH = 12; }
+                else if (currentLevel == 2 || currentLevel == 6 || currentLevel == 9) { mmW = 15; mmH = 15; }
                 
                 if (mmW > 0) {
                     int mmS = 5;
@@ -477,16 +642,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     HBRUSH mFloor = CreateSolidBrush(RGB(34, 34, 34));
                     HBRUSH mPlayer = CreateSolidBrush(RGB(255, 0, 0));
                     HBRUSH mCoin = CreateSolidBrush(RGB(255, 128, 0));
+                    HBRUSH mTrap = CreateSolidBrush(RGB(153, 0, 153));
+                    HBRUSH mFake = CreateSolidBrush(RGB(153, 153, 153));
+                    HBRUSH mComp = CreateSolidBrush(RGB(0, 255, 255));
                     
                     for (int i = 0; i < mmW; i++) {
                         for (int j = 0; j < mmH; j++) {
                             int v = GetMapValue(i, j);
                             HBRUSH b = mFloor;
-                            if (v == 1) b = mWall;
+                            if (v == 1 || v == 7) b = mWall;
                             else if (v == 2) b = mExit;
                             else if (v == 3) b = mKey;
                             else if (v == 4) b = mDoor;
                             else if (v == 5) b = mCoin;
+                            else if (v == 6) b = mTrap;
+                            else if (v == 8) b = mComp;
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
                             FillRect(hdcMem, &mr, b);
@@ -496,6 +666,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdcMem, &mr, mPlayer);
                     
                     DeleteObject(mWall); DeleteObject(mExit); DeleteObject(mKey); DeleteObject(mDoor); DeleteObject(mFloor); DeleteObject(mPlayer); DeleteObject(mCoin);
+                    DeleteObject(mTrap); DeleteObject(mFake); DeleteObject(mComp);
                 }
             }
 
