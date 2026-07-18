@@ -90,7 +90,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSnake     | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KTetris    | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KPong      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
+| KMaze      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KSolitaire | Tier 1          | Never Touched          | Needs Improvement | Memory Match game in both Web and EXE. |
 | KSpace     | Tier 1          | Never Touched          | Needs Improvement | Full parity. |
 | KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
@@ -147,3 +147,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSnake (Added Campaign Mode, Ghost Power-Up, and Native High Score Persistence to both EXE and HTML)
 - [x] KTetris (Added Start Screen, 5-Stage Campaign Mode, and Line Clear Statistics Tracking to both EXE and HTML)
 - [x] KPong (Added 5-Level Campaign Mode, mid-match paddle-buff Power-Ups, and Persistent High Rally stats to both EXE and HTML)
+- [x] KMaze (Added Lava Traps, Fake Walls, Compass minimap lock, and expanded handcrafted levels from 5 to 10 to both EXE and HTML)

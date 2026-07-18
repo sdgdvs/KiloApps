@@ -180,7 +180,9 @@
   <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
   <div class="folder" onclick="switchFolder('sent')" id="f-sent">Sent</div>
   <div class="folder" onclick="switchFolder('trash')" id="f-trash">Trash</div>
-  <div style="flex:1"></div>
+  <div style="padding: 15px; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
+    <input type="text" id="search-box" placeholder="Search..." onkeyup="handleSearch()" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit;">
+  </div>
   <button class="compose-btn" style="background:var(--danger); margin-bottom: 20px;" onclick="emptyTrash()">Empty Trash</button>
 </div>
 
@@ -236,11 +238,20 @@
   let currentFolder = 'inbox';
   let selectedId = null;
   let nextId = 6;
+  let searchQuery = "";
+
+  function handleSearch() {
+    searchQuery = document.getElementById('search-box').value.toLowerCase();
+    renderList();
+  }
 
   function renderList() {
     const list = document.getElementById('list');
     list.innerHTML = '';
-    const filtered = emails.filter(e => e.folder === currentFolder);
+    const filtered = emails.filter(e => 
+      e.folder === currentFolder && 
+      (e.subject.toLowerCase().includes(searchQuery) || e.sender.toLowerCase().includes(searchQuery) || e.body.toLowerCase().includes(searchQuery))
+    );
     
     if (filtered.length === 0) {
       list.innerHTML = '<div style="padding: 20px; color: #64748b; text-align: center; font-size: 14px;">Folder is empty</div>';
@@ -289,6 +300,8 @@
   function switchFolder(folder) {
     currentFolder = folder;
     selectedId = null;
+    searchQuery = "";
+    document.getElementById('search-box').value = "";
     document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
     document.getElementById(`f-${folder}`).classList.add('active');
     renderList();

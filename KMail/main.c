@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <ctype.h>
+#include <commctrl.h>
 
 #define W 700
 #define H 500
@@ -11,8 +13,9 @@
 #define ID_BTN_COMPOSE 103
 #define ID_BTN_DELETE 104
 #define ID_BTN_EMPTY_TRASH 105
+#define ID_SEARCH_BOX 106
 
-HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash;
+HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash, hSearchBox;
 
 typedef struct {
     int id;
@@ -34,6 +37,19 @@ int num_emails = 5;
 
 int currentFolder = 0; // 0=inbox, 1=sent, 2=trash
 int currentEmailId = -1;
+char searchQuery[128] = "";
+
+int contains_nocase(const char* haystack, const char* needle) {
+    if (!needle[0]) return 1;
+    for (int i = 0; haystack[i]; i++) {
+        int j = 0;
+        while (needle[j] && tolower((unsigned char)haystack[i + j]) == tolower((unsigned char)needle[j])) {
+            j++;
+        }
+        if (!needle[j]) return 1;
+    }
+    return 0;
+}
 
 HBRUSH hbgMain, hbgList;
 HFONT hFont, hBold;
@@ -45,8 +61,14 @@ void RefreshEmailList() {
     SendMessage(hEmails, LB_RESETCONTENT, 0, 0);
     for(int i = 0; i < num_emails; i++) {
         if(emails[i].folder == currentFolder) {
-            int idx = SendMessageA(hEmails, LB_ADDSTRING, 0, (LPARAM)emails[i].subject);
-            SendMessage(hEmails, LB_SETITEMDATA, idx, emails[i].id);
+            if (searchQuery[0] == '\0' || 
+                contains_nocase(emails[i].subject, searchQuery) || 
+                contains_nocase(emails[i].sender, searchQuery) || 
+                contains_nocase(emails[i].body, searchQuery)) {
+                
+                int idx = SendMessageA(hEmails, LB_ADDSTRING, 0, (LPARAM)emails[i].subject);
+                SendMessage(hEmails, LB_SETITEMDATA, idx, emails[i].id);
+            }
         }
     }
 }
@@ -97,6 +119,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnEmptyTrash = CreateWindowEx(0, "BUTTON", "Empty Trash", WS_CHILD | WS_VISIBLE, 10, H - 40, 100, 30, hwnd, (HMENU)ID_BTN_EMPTY_TRASH, NULL, NULL);
             SendMessage(hBtnEmptyTrash, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            hSearchBox = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, 120, 15, 200, 25, hwnd, (HMENU)ID_SEARCH_BOX, NULL, NULL);
+            SendMessage(hSearchBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageW(hSearchBox, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search...");
+
             hEmails = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL,
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT,
                 120, 50, 200, H - 100, hwnd, (HMENU)ID_EMAIL_LIST, NULL, NULL);
@@ -120,8 +146,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == ID_FOLDER_LIST && HIWORD(wParam) == LBN_SELCHANGE) {
+            if (LOWORD(wParam) == ID_SEARCH_BOX && HIWORD(wParam) == EN_CHANGE) {
+                GetWindowTextA(hSearchBox, searchQuery, sizeof(searchQuery));
+                RefreshEmailList();
+                SelectEmail(-1);
+            }
+            else if (LOWORD(wParam) == ID_FOLDER_LIST && HIWORD(wParam) == LBN_SELCHANGE) {
                 currentFolder = SendMessage(hFolders, LB_GETCURSEL, 0, 0);
+                searchQuery[0] = '\0';
+                SetWindowTextA(hSearchBox, "");
                 RefreshEmailList();
                 SelectEmail(-1);
             }
@@ -182,6 +215,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             MoveWindow(hFolders, 10, 50, 100, nh - 100, TRUE);
             MoveWindow(hBtnEmptyTrash, 10, nh - 40, 100, 30, TRUE);
+            MoveWindow(hSearchBox, 120, 15, 200, 25, TRUE);
             MoveWindow(hEmails, 120, 50, 200, nh - 60, TRUE);
             MoveWindow(hBtnDelete, nw - 110, 10, 90, 30, TRUE);
             MoveWindow(hTitle, 330, 50, nw - 340, 40, TRUE);
