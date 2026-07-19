@@ -259,13 +259,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         } else {
                             flash_btn = sequence[current_flash_index++];
                             InvalidateRect(hwnd, NULL, TRUE);
-                            PlaySoundAsync(btn_freqs[flash_btn], (current_mode == MODE_SPEED) ? 200 : 400);
-                            SetTimer(hwnd, TIMER_SEQUENCE, (current_mode == MODE_SPEED) ? 200 : 400, NULL);
+                            int speed_factor = sequence_length - 1;
+                            if (speed_factor < 0) speed_factor = 0;
+                            int f_dur = (current_mode == MODE_SPEED) ? (200 - speed_factor * 10) : (400 - speed_factor * 20);
+                            if (f_dur < 80 && current_mode == MODE_SPEED) f_dur = 80;
+                            if (f_dur < 150 && current_mode != MODE_SPEED) f_dur = 150;
+                            PlaySoundAsync(btn_freqs[flash_btn], f_dur);
+                            SetTimer(hwnd, TIMER_SEQUENCE, f_dur, NULL);
                         }
                     } else {
                         flash_btn = -1;
                         InvalidateRect(hwnd, NULL, TRUE);
-                        SetTimer(hwnd, TIMER_SEQUENCE, (current_mode == MODE_SPEED) ? 100 : 200, NULL);
+                        int speed_factor = sequence_length - 1;
+                        if (speed_factor < 0) speed_factor = 0;
+                        int p_dur = (current_mode == MODE_SPEED) ? (100 - speed_factor * 5) : (200 - speed_factor * 10);
+                        if (p_dur < 40 && current_mode == MODE_SPEED) p_dur = 40;
+                        if (p_dur < 75 && current_mode != MODE_SPEED) p_dur = 75;
+                        SetTimer(hwnd, TIMER_SEQUENCE, p_dur, NULL);
                     }
                 }
             }

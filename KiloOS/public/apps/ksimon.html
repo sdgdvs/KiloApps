@@ -214,8 +214,9 @@
     statusDisplay.innerText = "Watch...";
     let i = 0;
     
-    let flashDuration = currentMode === 'speed' ? 200 : 400;
-    let pauseDuration = currentMode === 'speed' ? 100 : 200;
+    let speedFactor = Math.max(0, sequence.length - 1);
+    let flashDuration = currentMode === 'speed' ? Math.max(80, 200 - (speedFactor * 10)) : Math.max(150, 400 - (speedFactor * 20));
+    let pauseDuration = currentMode === 'speed' ? Math.max(40, 100 - (speedFactor * 5)) : Math.max(75, 200 - (speedFactor * 10));
 
     function flashNext() {
       if (i >= sequence.length) {
