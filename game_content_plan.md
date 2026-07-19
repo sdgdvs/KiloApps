@@ -78,6 +78,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - Do NOT edit other agents' plan files: `app_work_plan.md`, `app_fix_plan.md`, `kiloos_ux_plan.md`.
 - Your focus is CONTENT, GAMEPLAY DEPTH, and GAME LENGTH — not visual polish. Add more levels, more enemies, more modes, more mechanics. Fill the 999KB budget with gameplay content.
 - Do NOT add ARG/easter egg elements.
+- **CLEANUP:** Before committing, delete any temporary `patch_*.py` or `patch_*.js` scripts in the repo root. Subagents must not leave scratch files behind.
 - **Logging discipline:** Keep this plan file concise. Brief notes per turn in the Progress Log. Do NOT dump file contents or create verbose logs.
 
 ---
