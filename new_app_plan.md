@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHangman (Word guessing game)
-**Phase:** 10
+**Phase:** 11
 **Status:** In Progress
 
 - Phase 1: Scaffold `KHangman/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (Completed)
@@ -61,11 +61,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 7: Add win streak and statistics tracking (Wins, Losses, Current Streak, Best Streak) using persistence. (Completed)
 - Phase 8: Add a Hint System to reveal a random un-guessed letter. Limit 1 per game. (Completed)
 - Phase 9: Add Physical Keyboard Support. Bind physical key presses (A-Z) to trigger letter guesses automatically. (Completed)
+- Phase 10: Add sound effects for valid guesses, invalid guesses, win, and lose states using Web Audio API (web) and Beep/PlaySound (native). Include a mute toggle button. (Completed)
 
 ## Next Priority (Before New Apps)
 
 **App:** KHangman
-**Goal:** Phase 10
+**Goal:** Phase 11
 
 
 ## App Lifecycle (14 phases per app)

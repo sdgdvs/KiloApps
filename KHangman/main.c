@@ -26,6 +26,23 @@ int game_over = 0;
 int won = 0;
 int initialized = 0;
 int hint_used = 0;
+int is_muted = 0;
+
+void PlaySoundEffect(int type) {
+    if (is_muted) return;
+    if (type == 1) { // valid
+        Beep(800, 100);
+    } else if (type == 2) { // invalid
+        Beep(200, 150);
+    } else if (type == 3) { // win
+        Beep(400, 100);
+        Beep(600, 100);
+        Beep(800, 200);
+    } else if (type == 4) { // lose
+        Beep(300, 200);
+        Beep(150, 300);
+    }
+}
 
 typedef struct {
     int wins;
@@ -107,9 +124,12 @@ void Guess(char c) {
         if (errors >= 6) {
             game_over = 1;
             won = 0;
+            PlaySoundEffect(4); // lose
             stats.losses++;
             stats.streak = 0;
             SaveStats();
+        } else {
+            PlaySoundEffect(2); // invalid
         }
     } else {
         all_guessed = 1;
@@ -122,10 +142,13 @@ void Guess(char c) {
         if (all_guessed) {
             game_over = 1;
             won = 1;
+            PlaySoundEffect(3); // win
             stats.wins++;
             stats.streak++;
             if (stats.streak > stats.best) stats.best = stats.streak;
             SaveStats();
+        } else {
+            PlaySoundEffect(1); // valid
         }
     }
 }
@@ -149,7 +172,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = (short)HIWORD(lParam);
             
             // Check hint button
-            if (x >= 100 && x <= 220 && y >= 450 && y <= 490) {
+            if (x >= 80 && x <= 180 && y >= 450 && y <= 490) {
                 if (!hint_used && !game_over) {
                     char unguessed[32];
                     int uCount = 0;
@@ -172,8 +195,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Check restart button
-            if (x >= 280 && x <= 400 && y >= 450 && y <= 490) {
+            if (x >= 200 && x <= 320 && y >= 450 && y <= 490) {
                 InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+
+            // Check mute button
+            if (x >= 340 && x <= 440 && y >= 450 && y <= 490) {
+                is_muted = !is_muted;
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
@@ -360,7 +390,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Hint button
-            RECT hintRect = {100, 450, 220, 490};
+            RECT hintRect = {80, 450, 180, 490};
             HBRUSH hintBg;
             if (hint_used || game_over) {
                 hintBg = CreateSolidBrush(RGB(68, 68, 68));
@@ -375,12 +405,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Restart button
-            RECT resRect = {280, 450, 400, 490};
+            RECT resRect = {200, 450, 320, 490};
             HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+            // Mute button
+            RECT muteRect = {340, 450, 440, 490};
+            HBRUSH muteBg = CreateSolidBrush(RGB(85, 85, 85));
+            FillRect(memDC, &muteRect, muteBg);
+            DeleteObject(muteBg);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            DrawTextA(memDC, is_muted ? "Muted" : "Sound", -1, &muteRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Stats
             char statText[128];

@@ -125,6 +125,9 @@
             color: #777;
             cursor: not-allowed;
         }
+        button.mute-btn:hover {
+            background-color: #777 !important;
+        }
     </style>
 </head>
 <body>
@@ -157,6 +160,7 @@
     <div style="display: flex; justify-content: center;">
         <button class="hint-btn" onclick="useHint()" id="hint-btn">Hint</button>
         <button class="restart" onclick="initGame()">New Game</button>
+        <button class="mute-btn" onclick="toggleMute()" id="mute-btn" style="margin-left: 10px; background-color: #555; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background-color 0.2s;">🔊 Sound</button>
     </div>
 </div>
 
@@ -174,6 +178,71 @@
     let gameEnded = false;
     let hintUsed = false;
     let stats = { wins: 0, losses: 0, streak: 0, best: 0 };
+
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let isMuted = false;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+        }
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        document.getElementById('mute-btn').innerText = isMuted ? '🔇 Muted' : '🔊 Sound';
+    }
+
+    function playSound(type) {
+        if (isMuted) return;
+        initAudio();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        const now = audioCtx.currentTime;
+        
+        if (type === 'valid') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'invalid') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(150, now + 0.2);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'win') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.setValueAtTime(600, now + 0.1);
+            osc.frequency.setValueAtTime(800, now + 0.2);
+            osc.frequency.setValueAtTime(1200, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else if (type === 'lose') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.6);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.6);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        }
+    }
 
     function loadStats() {
         const saved = localStorage.getItem('khangman_stats');
@@ -309,11 +378,16 @@
     function guess(letter) {
         if (guessed.has(letter) || errors >= MAX_ERRORS || isWin()) return;
         
+        initAudio(); // Initialize audio context on first user interaction
+        
         guessed.add(letter);
         document.getElementById('key-' + letter).disabled = true;
         
         if (!word.includes(letter)) {
             errors++;
+            if (errors < MAX_ERRORS) playSound('invalid');
+        } else {
+            if (!isWin()) playSound('valid');
         }
         
         updateDisplay();
@@ -342,6 +416,7 @@
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
+                playSound('win');
                 stats.wins++;
                 stats.streak++;
                 if (stats.streak > stats.best) stats.best = stats.streak;
@@ -353,6 +428,7 @@
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
+                playSound('lose');
                 stats.losses++;
                 stats.streak = 0;
                 saveStats();
