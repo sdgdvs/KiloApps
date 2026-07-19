@@ -17,6 +17,11 @@
   }
   h1 {
     margin-top: 0;
+    margin-bottom: 10px;
+  }
+  #status {
+    margin-bottom: 20px;
+    font-size: 1.2em;
   }
   #board {
     display: grid;
@@ -26,32 +31,129 @@
     background: #0044cc;
     padding: 10px;
     border-radius: 8px;
+    cursor: pointer;
   }
   .cell {
     width: 50px;
     height: 50px;
     background: #1e1e1e;
     border-radius: 50%;
+    pointer-events: none; /* Let board handle clicks */
+  }
+  .cell.p1 { background: #ff4444; }
+  .cell.p2 { background: #ffeb3b; }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
     cursor: pointer;
   }
+  button:hover { background: #444; }
 </style>
 </head>
 <body>
   <h1>KConnect4</h1>
-  <div id="status">Player 1's turn</div>
-  <br>
+  <div id="status">Player 1's turn (Red)</div>
   <div id="board"></div>
+  <button onclick="initGame()">Reset Game</button>
   <script>
-    const board = document.getElementById('board');
-    for (let r = 0; r < 6; r++) {
-      for (let c = 0; c < 7; c++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.dataset.r = r;
-        cell.dataset.c = c;
-        board.appendChild(cell);
+    const ROWS = 6;
+    const COLS = 7;
+    let board = [];
+    let currentPlayer = 1;
+    let gameActive = true;
+
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+
+    function initGame() {
+      board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+      currentPlayer = 1;
+      gameActive = true;
+      renderBoard();
+      updateStatus();
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          if (board[r][c] === 1) cell.classList.add('p1');
+          if (board[r][c] === 2) cell.classList.add('p2');
+          boardEl.appendChild(cell);
+        }
       }
     }
+
+    function updateStatus() {
+      if (!gameActive) return;
+      const color = currentPlayer === 1 ? 'Red' : 'Yellow';
+      statusEl.textContent = `Player ${currentPlayer}'s turn (${color})`;
+    }
+
+    boardEl.addEventListener('click', (e) => {
+      if (!gameActive) return;
+      const rect = boardEl.getBoundingClientRect();
+      const x = e.clientX - rect.left - 10; // 10 is padding
+      const c = Math.floor(x / 55); // 50px width + 5px gap
+      
+      if (c >= 0 && c < COLS) {
+        dropPiece(c);
+      }
+    });
+
+    function dropPiece(col) {
+      for (let r = ROWS - 1; r >= 0; r--) {
+        if (board[r][col] === 0) {
+          board[r][col] = currentPlayer;
+          renderBoard();
+          if (checkWin(r, col)) {
+            const color = currentPlayer === 1 ? 'Red' : 'Yellow';
+            statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
+            gameActive = false;
+          } else if (checkDraw()) {
+            statusEl.textContent = `It's a Draw!`;
+            gameActive = false;
+          } else {
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateStatus();
+          }
+          return;
+        }
+      }
+    }
+
+    function checkWin(r, c) {
+      const p = currentPlayer;
+      const dirs = [[0,1], [1,0], [1,1], [1,-1]];
+      
+      for (let [dr, dc] of dirs) {
+        let count = 1;
+        for (let i = 1; i < 4; i++) {
+          const nr = r + dr*i, nc = c + dc*i;
+          if (nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]===p) count++;
+          else break;
+        }
+        for (let i = 1; i < 4; i++) {
+          const nr = r - dr*i, nc = c - dc*i;
+          if (nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]===p) count++;
+          else break;
+        }
+        if (count >= 4) return true;
+      }
+      return false;
+    }
+
+    function checkDraw() {
+      return board[0].every(cell => cell !== 0);
+    }
+
+    initGame();
   </script>
 </body>
 </html>

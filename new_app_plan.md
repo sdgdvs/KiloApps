@@ -49,11 +49,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KConnect4 (Two-player drop-disc game)
-**Phase:** 2
+**Phase:** 4
 **Status:** In Progress
 
 - Phase 1: Scaffold `KConnect4/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED)
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED)
+- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 
 ## Next Priority (Before New Apps)

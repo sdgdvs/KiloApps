@@ -1,9 +1,57 @@
 #include <windows.h>
+#include <stdbool.h>
 
 const char g_szClassName[] = "KConnect4WindowClass";
+#define ROWS 6
+#define COLS 7
+
+int board[ROWS][COLS];
+int currentPlayer = 1;
+bool gameActive = true;
+bool isDraw = false;
+
+void ResetGame() {
+    for(int r=0; r<ROWS; r++)
+        for(int c=0; c<COLS; c++)
+            board[r][c] = 0;
+    currentPlayer = 1;
+    gameActive = true;
+    isDraw = false;
+}
+
+bool CheckWin(int r, int c, int p) {
+    int dirs[4][2] = {{0,1}, {1,0}, {1,1}, {1,-1}};
+    for(int d=0; d<4; d++) {
+        int count = 1;
+        for(int i=1; i<4; i++) {
+            int nr = r + dirs[d][0]*i;
+            int nc = c + dirs[d][1]*i;
+            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) count++;
+            else break;
+        }
+        for(int i=1; i<4; i++) {
+            int nr = r - dirs[d][0]*i;
+            int nc = c - dirs[d][1]*i;
+            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) count++;
+            else break;
+        }
+        if(count >= 4) return true;
+    }
+    return false;
+}
+
+bool CheckDraw() {
+    for(int c=0; c<COLS; c++) {
+        if(board[0][c] == 0) return false;
+    }
+    return true;
+}
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
+        case WM_CREATE:
+            ResetGame();
+            break;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -15,28 +63,75 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(255, 255, 255));
-            TextOut(hdc, 20, 20, "KConnect4 - Skeleton", 20);
+            char statusText[64];
+            if (!gameActive) {
+                if (isDraw) wsprintf(statusText, "It's a Draw! Click to reset.");
+                else wsprintf(statusText, "Player %d Wins! Click to reset.", currentPlayer);
+            } else {
+                wsprintf(statusText, "Player %d's turn", currentPlayer);
+            }
+            TextOut(hdc, 20, 20, statusText, lstrlen(statusText));
             
-            // Draw simple board background
+            // Draw board background
             HBRUSH boardBg = CreateSolidBrush(RGB(0, 68, 204));
-            RECT boardRect = {20, 50, 20 + 7 * 40, 50 + 6 * 40};
+            RECT boardRect = {20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5};
             FillRect(hdc, &boardRect, boardBg);
             DeleteObject(boardBg);
             
             // Draw cells
             HBRUSH emptyCell = CreateSolidBrush(RGB(30, 30, 30));
-            for (int r = 0; r < 6; r++) {
-                for (int c = 0; c < 7; c++) {
-                    int x = 20 + c * 40;
-                    int y = 50 + r * 40;
-                    SelectObject(hdc, emptyCell);
+            HBRUSH p1Cell = CreateSolidBrush(RGB(255, 68, 68));
+            HBRUSH p2Cell = CreateSolidBrush(RGB(255, 235, 59));
+            
+            for (int r = 0; r < ROWS; r++) {
+                for (int c = 0; c < COLS; c++) {
+                    int x = 20 + 5 + c * 45;
+                    int y = 50 + 5 + r * 45;
+                    
+                    if (board[r][c] == 1) SelectObject(hdc, p1Cell);
+                    else if (board[r][c] == 2) SelectObject(hdc, p2Cell);
+                    else SelectObject(hdc, emptyCell);
+                    
                     SelectObject(hdc, GetStockObject(NULL_PEN));
-                    Ellipse(hdc, x + 2, y + 2, x + 38, y + 38);
+                    Ellipse(hdc, x, y, x + 40, y + 40);
                 }
             }
             DeleteObject(emptyCell);
+            DeleteObject(p1Cell);
+            DeleteObject(p2Cell);
             
             EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_LBUTTONDOWN: {
+            if (!gameActive) {
+                ResetGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            int xPos = LOWORD(lParam);
+            int yPos = HIWORD(lParam);
+            
+            if (xPos >= 25 && xPos <= 25 + COLS * 45 && yPos >= 55 && yPos <= 55 + ROWS * 45) {
+                int c = (xPos - 25) / 45;
+                if (c >= 0 && c < COLS) {
+                    for (int r = ROWS - 1; r >= 0; r--) {
+                        if (board[r][c] == 0) {
+                            board[r][c] = currentPlayer;
+                            if (CheckWin(r, c, currentPlayer)) {
+                                gameActive = false;
+                            } else if (CheckDraw()) {
+                                gameActive = false;
+                                isDraw = true;
+                            } else {
+                                currentPlayer = currentPlayer == 1 ? 2 : 1;
+                            }
+                            InvalidateRect(hwnd, NULL, TRUE);
+                            break;
+                        }
+                    }
+                }
+            }
             break;
         }
         case WM_CLOSE:
@@ -77,7 +172,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     hwnd = CreateWindowEx(
         0, g_szClassName, "KConnect4",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 350, 400,
+        CW_USEDEFAULT, CW_USEDEFAULT, 400, 450,
         NULL, NULL, hInstance, NULL);
 
     if(hwnd == NULL) {
