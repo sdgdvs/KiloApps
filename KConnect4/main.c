@@ -26,7 +26,7 @@ int hoverCol = -1;
 
 int winCells[7][2];
 int winCellCount = 0;
-HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn, hSaveBtn, hLoadBtn;
+HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn, hSaveBtn, hLoadBtn, hHelpBtn;
 bool isMuted = false;
 
 void PlaySoundEffect(int type) {
@@ -452,6 +452,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 380, 70, 30, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hSaveBtn = CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 380, 70, 30, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hLoadBtn = CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 380, 70, 30, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 250, 380, 70, 30, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             ResetGame();
             break;
         case WM_COMMAND:
@@ -473,6 +474,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveGame();
             } else if (LOWORD(wParam) == 7) {
                 LoadGame(hwnd);
+            } else if (LOWORD(wParam) == 8) {
+                MessageBox(hwnd, "KConnect4 - How to Play\n\n"
+                    "Rules:\n"
+                    "- Be the first to form a horizontal, vertical, or diagonal line of four of your discs.\n"
+                    "- Players take turns dropping discs into the columns.\n\n"
+                    "Controls:\n"
+                    "- Click a column to drop a piece.\n"
+                    "- Use the Undo button to take back moves.\n\n"
+                    "Features:\n"
+                    "- Play against another player locally or against the AI.\n"
+                    "- Select AI Difficulty (Easy, Medium, Hard).\n"
+                    "- Save and Load your ongoing game state.\n"
+                    "- Tracks your stats including wins, draws, and win streaks.", 
+                    "Help / Rules", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == 3) {
                 if (historyCount == 0) break;
                 if (isAnimating) break; // Don't undo during animation to prevent glitches

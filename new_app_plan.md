@@ -48,28 +48,15 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KConnect4 (Two-player drop-disc game)
-**Phase:** 14
-**Status:** Ready
+**App:** KHangman (Word guessing game)
+**Phase:** 1
+**Status:** In Progress
 
-- Phase 1: Scaffold `KConnect4/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED)
-- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED)
-- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
-- Phase 5: Add winning line highlighting to show which pieces formed the connection. (COMPLETED)
-- Phase 6: Add single-player mode with an AI opponent. Include a UI toggle to switch between 2-player and vs-AI modes. (COMPLETED)
-- Phase 7: Add animated disc drops to show pieces falling into place rather than instantly appearing. (COMPLETED)
-- Phase 8: Add win streak and statistics tracking (Wins for Red, Wins for Yellow/AI, Draws, Current Streak, Best Streak) using persistence. (COMPLETED)
-- Phase 9: Add an Undo move feature to allow players to take back their last move (and the AI's response if in single-player mode). (COMPLETED)
-- Phase 10: Add Difficulty Settings for the AI (Easy, Medium, Hard) using a Minimax algorithm for deeper difficulties. (COMPLETED)
-- Phase 11: Add hover column highlighting to visually show players where their piece will land. (COMPLETED)
-- Phase 12: Add sound effects for dropping pieces, winning/losing, and invalid moves using Web Audio API (web) and Beep/PlaySound (native). Include a mute toggle button. (COMPLETED)
-- Phase 13: Add Save/Load functionality to persist the current game state (board, current player, game mode, AI difficulty, and undo history) using localStorage for web and a binary .dat file for native. (COMPLETED)
-- Phase 14: Next feature (TBD)
+- Phase 1: Scaffold `KHangman/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 
 ## Next Priority (Before New Apps)
 
-**App:** Next
+**App:** KHangman
 **Goal:** Next
 
 
@@ -110,6 +97,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KConnect4 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - K2048 (Phase 14 completed: Added Comprehensive Help / Manual System to both versions)
 - KBBS (Phase 14 completed: Added Help/Quick Reference System to both versions)
 - KFlash (Phase 14 completed: Added Help/Tutorial modal to both versions)
@@ -121,7 +109,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
-- **KHangman** — Word guessing. Multiple word categories (animals, countries, science). Animated hangman drawing. Win/loss stats.
 - **KSimon** — Memory pattern game. Colored button sequences with sounds. Progressive speed increase. Longest streak tracking.
 - **KAsteroids** — Space shooter. Wrap-around screen. Ship thrust physics. Progressive waves. UFO bonus targets. Particle explosions.
 - **KFreecell** — Card solitaire variant. Full Freecell rules. Undo stack. Auto-complete. Win statistics.

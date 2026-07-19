@@ -77,6 +77,30 @@
     text-align: center;
     line-height: 1.5;
   }
+  #helpModal {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #1f4287;
+    color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    z-index: 100;
+    max-width: 300px;
+  }
+  #helpModal h2 { margin-top: 0; }
+  #helpModal ul { padding-left: 20px; }
+  #helpModal button.close {
+    margin-top: 10px;
+    background: #ff5252;
+    border: none;
+    width: 100%;
+  }
+  #helpModal button.close:hover { background: #ff7070; }
 </style>
 </head>
 <body>
@@ -95,6 +119,7 @@
     <button id="muteBtn" onclick="toggleMute()">Mute</button>
     <button onclick="saveGame()">Save</button>
     <button onclick="loadGame()">Load</button>
+    <button onclick="toggleHelp()">Help</button>
   </div>
   <div id="stats">
     Wins (Red): <span id="s-red">0</span> |
@@ -103,12 +128,32 @@
     Streak: <span id="s-streak">0</span> |
     Best Streak: <span id="s-best">0</span>
   </div>
+  
+  <div id="helpModal">
+    <h2>How to Play</h2>
+    <p><strong>Rules:</strong> Be the first to form a horizontal, vertical, or diagonal line of four of your discs.</p>
+    <p><strong>Controls:</strong> Click any column on the board to drop your disc. Use the buttons below to change modes or undo moves.</p>
+    <p><strong>Features:</strong></p>
+    <ul>
+      <li>2-Player or vs AI modes</li>
+      <li>Adjustable AI difficulty</li>
+      <li>Stat tracking (Wins, Streaks)</li>
+      <li>Save/Load your game</li>
+    </ul>
+    <button class="close" onclick="toggleHelp()">Close</button>
+  </div>
+
   <script>
     let vsAI = true;
     let aiDifficulty = 0;
     
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMuted = false;
+
+    function toggleHelp() {
+      const modal = document.getElementById('helpModal');
+      modal.style.display = modal.style.display === 'none' || modal.style.display === '' ? 'block' : 'none';
+    }
 
     function toggleMute() {
       isMuted = !isMuted;
