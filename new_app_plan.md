@@ -61,7 +61,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 7: Add Win Statistics tracking (Games Played, Win Percentage, Current Streak, Best Streak). (COMPLETED)
 - Phase 8: Add Save/Load state (persist the current board, move stack, and statistics). (COMPLETED)
 - Phase 9: Add Sound effects (card flip, card snap/place, win fanfare). (COMPLETED)
-- Phase 10: Add visual animations (smooth card sliding between cascades/cells).
+- Phase 10: Add visual animations (smooth card sliding between cascades/cells). (COMPLETED)
 - Phase 11: Add customizable card backs (a simple settings UI to change the card back design/color).
 - Phase 12: Add a Timer and Move Counter.
 - Phase 13: Add Game Modes (e.g. Classic Freecell vs. Random Deal).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KFreecell
-**Goal:** Phase 10
+**Goal:** Phase 11
 
 
 ## App Lifecycle (14 phases per app)

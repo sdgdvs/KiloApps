@@ -41,6 +41,70 @@ int statsStreak = 0;
 int statsBestStreak = 0;
 
 typedef struct {
+    int active;
+    Card c;
+    int startX, startY;
+    int endX, endY;
+    DWORD startTime;
+    DWORD duration;
+} Animation;
+#define MAX_ANIMS 52
+Animation anims[MAX_ANIMS];
+
+void StartAnim(Card c, int sx, int sy, int ex, int ey) {
+    for(int i=0; i<MAX_ANIMS; i++) {
+        if(!anims[i].active) {
+            anims[i].active = 1;
+            anims[i].c = c;
+            anims[i].startX = sx;
+            anims[i].startY = sy;
+            anims[i].endX = ex;
+            anims[i].endY = ey;
+            anims[i].startTime = GetTickCount();
+            anims[i].duration = 150;
+            break;
+        }
+    }
+}
+
+void ClearAnims() {
+    for(int i=0; i<MAX_ANIMS; i++) anims[i].active = 0;
+}
+
+int IsAnimating(Card c, int *px, int *py) {
+    for(int i=0; i<MAX_ANIMS; i++) {
+        if(anims[i].active && anims[i].c.s == c.s && anims[i].c.r == c.r) {
+            DWORD now = GetTickCount();
+            if (now >= anims[i].startTime + anims[i].duration) {
+                anims[i].active = 0;
+                return 0;
+            }
+            float t = (float)(now - anims[i].startTime) / anims[i].duration;
+            *px = anims[i].startX + (int)(t * (anims[i].endX - anims[i].startX));
+            *py = anims[i].startY + (int)(t * (anims[i].endY - anims[i].startY));
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int GetCardX(int type, int idx, int cIdx, RECT clientRect) {
+    if (type == 0) return PAD + idx * (CELL_W + TAB_PAD_X);
+    if (type == 1) {
+        int totalTabW = 8 * CELL_W + 7 * TAB_PAD_X;
+        return (clientRect.right - totalTabW) / 2 + idx * (CELL_W + TAB_PAD_X);
+    }
+    if (type == 2) return clientRect.right - PAD - 4*(CELL_W + TAB_PAD_X) + idx * (CELL_W + TAB_PAD_X);
+    return 0;
+}
+
+int GetCardY(int type, int idx, int cIdx, RECT clientRect) {
+    if (type == 0 || type == 2) return TOP_Y;
+    if (type == 1) return TAB_Y + cIdx * TAB_PAD_Y;
+    return 0;
+}
+
+typedef struct {
     Card freeCells[4];
     int freeCellsOccupied[4];
     int found[4];
@@ -115,6 +179,7 @@ void UndoMove(HWND hwnd) {
         }
         selType = -1;
         won = 0;
+        ClearAnims();
         InvalidateRect(hwnd, NULL, TRUE);
     }
 }
@@ -157,6 +222,7 @@ void LoadGame(HWND hwnd) {
         fclose(f);
         selType = -1;
         won = 0;
+        ClearAnims();
         if (found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) won = 1;
         InvalidateRect(hwnd, NULL, TRUE);
         MessageBoxW(hwnd, L"Game Loaded", L"Load", MB_OK | MB_ICONINFORMATION);
@@ -175,6 +241,7 @@ void InitGame() {
     won = 0;
     selType = -1;
     undoCount = 0;
+    ClearAnims();
     for(int i=0; i<4; i++) {
         freeCellsOccupied[i] = 0;
         found[i] = 0;
@@ -271,6 +338,8 @@ int AutoComplete(HWND hwnd) {
             if (freeCellsOccupied[i]) {
                 Card c = freeCells[i];
                 if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
+                    RECT clientRect; GetClientRect(hwnd, &clientRect);
+                    StartAnim(c, GetCardX(0, i, 0, clientRect), GetCardY(0, i, 0, clientRect), GetCardX(2, c.s, 0, clientRect), GetCardY(2, c.s, 0, clientRect));
                     PushUndo();
                     found[c.s] = c.r;
                     freeCellsOccupied[i] = 0;
@@ -286,6 +355,8 @@ int AutoComplete(HWND hwnd) {
             if (tabCount[i] > 0) {
                 Card c = tab[i][tabCount[i]-1];
                 if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
+                    RECT clientRect; GetClientRect(hwnd, &clientRect);
+                    StartAnim(c, GetCardX(1, i, tabCount[i]-1, clientRect), GetCardY(1, i, tabCount[i]-1, clientRect), GetCardX(2, c.s, 0, clientRect), GetCardY(2, c.s, 0, clientRect));
                     PushUndo();
                     found[c.s] = c.r;
                     tabCount[i]--;
@@ -357,6 +428,7 @@ void DrawEmptyCell(HDC hdc, int x, int y, int isFound, int suitIdx) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
+            SetTimer(hwnd, 1, 16, NULL);
             srand((unsigned int)time(NULL));
             InitGame();
             return 0;
@@ -394,7 +466,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for(int i=0; i<4; i++) {
                 int x = group1X + i*(CELL_W + TAB_PAD_X);
                 if(freeCellsOccupied[i]) {
-                    DrawCard(hdcMem, x, TOP_Y, freeCells[i], (selType==0 && selIdx==i));
+                    int ax, ay;
+                    if(!IsAnimating(freeCells[i], &ax, &ay)) {
+                        DrawCard(hdcMem, x, TOP_Y, freeCells[i], (selType==0 && selIdx==i));
+                    }
                 } else {
                     DrawEmptyCell(hdcMem, x, TOP_Y, 0, 0);
                 }
@@ -406,7 +481,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int x = group2X + i*(CELL_W + TAB_PAD_X);
                 if(found[i] > 0) {
                     Card c = {i, found[i], (i==1||i==3)?1:0};
-                    DrawCard(hdcMem, x, TOP_Y, c, 0);
+                    int ax, ay;
+                    if(!IsAnimating(c, &ax, &ay)) {
+                        DrawCard(hdcMem, x, TOP_Y, c, 0);
+                    } else if(found[i] > 1) {
+                        Card cPrev = {i, found[i]-1, (i==1||i==3)?1:0};
+                        DrawCard(hdcMem, x, TOP_Y, cPrev, 0);
+                    } else {
+                        DrawEmptyCell(hdcMem, x, TOP_Y, 1, i);
+                    }
                 } else {
                     DrawEmptyCell(hdcMem, x, TOP_Y, 1, i);
                 }
@@ -423,7 +506,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for(int j=0; j<tabCount[i]; j++) {
                         int y = TAB_Y + j*TAB_PAD_Y;
                         int selected = (selType==1 && selIdx==i && j>=selCardIdx);
-                        DrawCard(hdcMem, x, y, tab[i][j], selected);
+                        int ax, ay;
+                        if(!IsAnimating(tab[i][j], &ax, &ay)) {
+                            DrawCard(hdcMem, x, y, tab[i][j], selected);
+                        }
+                    }
+                }
+            }
+
+            for(int i=0; i<MAX_ANIMS; i++) {
+                if(anims[i].active) {
+                    int cx, cy;
+                    if(IsAnimating(anims[i].c, &cx, &cy)) {
+                        DrawCard(hdcMem, cx, cy, anims[i].c, 0);
                     }
                 }
             }
@@ -543,6 +638,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int maxMove = (emptyFree + 1) * (1 << emptyTab);
                     
                     if(nToMove <= maxMove && CanMoveToTab(cardsToMove[0], clickedIdx)) {
+                        for(int i=0; i<nToMove; i++) {
+                            StartAnim(cardsToMove[i], GetCardX(selType, selIdx, selCardIdx + i, clientRect), GetCardY(selType, selIdx, selCardIdx + i, clientRect), GetCardX(clickedType, clickedIdx, tabCount[clickedIdx] + i, clientRect), GetCardY(clickedType, clickedIdx, tabCount[clickedIdx] + i, clientRect));
+                        }
                         PushUndo();
                         for(int i=0; i<nToMove; i++) {
                             tab[clickedIdx][tabCount[clickedIdx]++] = cardsToMove[i];
@@ -550,12 +648,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         moved = 1;
                     }
                 } else if(clickedType == 0 && nToMove == 1 && !freeCellsOccupied[clickedIdx]) {
+                    StartAnim(cardsToMove[0], GetCardX(selType, selIdx, selCardIdx, clientRect), GetCardY(selType, selIdx, selCardIdx, clientRect), GetCardX(clickedType, clickedIdx, 0, clientRect), GetCardY(clickedType, clickedIdx, 0, clientRect));
                     PushUndo();
                     freeCells[clickedIdx] = cardsToMove[0];
                     freeCellsOccupied[clickedIdx] = 1;
                     moved = 1;
                 } else if(clickedType == 2 && nToMove == 1 && cardsToMove[0].s == clickedIdx) {
                     if(cardsToMove[0].r == found[clickedIdx] + 1) {
+                        StartAnim(cardsToMove[0], GetCardX(selType, selIdx, selCardIdx, clientRect), GetCardY(selType, selIdx, selCardIdx, clientRect), GetCardX(clickedType, clickedIdx, 0, clientRect), GetCardY(clickedType, clickedIdx, 0, clientRect));
                         PushUndo();
                         found[clickedIdx] = cardsToMove[0].r;
                         moved = 1;
@@ -596,6 +696,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             return 0;
             
+        case WM_TIMER: {
+            int active = 0;
+            DWORD now = GetTickCount();
+            for(int i=0; i<MAX_ANIMS; i++) {
+                if(anims[i].active) {
+                    if (now >= anims[i].startTime + anims[i].duration) {
+                        anims[i].active = 0;
+                    }
+                    active = 1;
+                }
+            }
+            if(active) {
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+        }
+
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
