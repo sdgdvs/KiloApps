@@ -191,6 +191,25 @@ void ShowStats(HWND hwnd) {
     MessageBoxW(hwnd, msg, L"Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
+void ShowHelp(HWND hwnd) {
+    WCHAR msg[1024] = 
+        L"How to Play Freecell\n\n"
+        L"Rules:\n"
+        L"- Build all 4 foundations from Ace to King by suit.\n"
+        L"- Move cards between tableau columns. Cards must be placed in descending order and alternating colors.\n"
+        L"- You can use the 4 free cells at the top left to temporarily store single cards.\n"
+        L"- Moving multiple cards requires enough empty free cells/columns.\n"
+        L"- Cards can be moved to empty tableau columns.\n\n"
+        L"Controls:\n"
+        L"- Click a card to select it, then click a destination to move.\n"
+        L"- Cards move to foundations automatically when safe.\n"
+        L"- Key bindings: [N]ew Game, [Z]Undo, [S]tats, [C]hange Card Back, [M]ode Toggle, [+]Next Seed, [-]Prev Seed, [F5]Save, [F9]Load, [H]elp.\n\n"
+        L"Modes:\n"
+        L"- Random Deal: A completely shuffled deck.\n"
+        L"- Numbered Deal: Deals based on a specific seed number (use +/- to change).";
+    MessageBoxW(hwnd, msg, L"Help", MB_OK | MB_ICONINFORMATION);
+}
+
 void UndoMove(HWND hwnd) {
     if(undoCount > 0) {
         undoCount--;
@@ -541,9 +560,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int m = timeElapsed / 60;
             int s = timeElapsed % 60;
             if (gameMode == 1) {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load", m, s, moves, currentSeed);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load [H]elp", m, s, moves, currentSeed);
             } else {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load", m, s, moves);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load [H]elp", m, s, moves);
             }
             DrawTextW(hdcMem, titleMsg, -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
@@ -807,6 +826,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveGame(hwnd);
             } else if(wParam == VK_F9) {
                 LoadGame(hwnd);
+            } else if(wParam == 'H' || wParam == VK_F1) {
+                ShowHelp(hwnd);
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
                 InvalidateRect(hwnd, NULL, TRUE);

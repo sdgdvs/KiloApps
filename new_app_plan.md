@@ -48,29 +48,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KFreecell
-**Phase:** 9
-**Status:** Completed
+**App:** KMatch3
+**Phase:** 1
+**Status:** In Progress
 
-- Phase 1: Scaffold `KFreecell/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED)
-- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED)
-- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
-- Phase 5: Add a robust Undo stack for moves. (COMPLETED)
-- Phase 6: Add Auto-complete logic (automatically moving cards to foundations if safe). (COMPLETED)
-- Phase 7: Add Win Statistics tracking (Games Played, Win Percentage, Current Streak, Best Streak). (COMPLETED)
-- Phase 8: Add Save/Load state (persist the current board, move stack, and statistics). (COMPLETED)
-- Phase 9: Add Sound effects (card flip, card snap/place, win fanfare). (COMPLETED)
-- Phase 10: Add visual animations (smooth card sliding between cascades/cells). (COMPLETED)
-- Phase 11: Add customizable card backs (a simple settings UI to change the card back design/color). (COMPLETED)
-- Phase 12: Add a Timer and Move Counter. (COMPLETED)
-- Phase 13: Add Game Modes (e.g. Classic Freecell vs. Random Deal). (COMPLETED)
-- Phase 14: Add Comprehensive Help / How-to-Play modal.
+- Phase 1: Scaffold `KMatch3/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
-**App:** KFreecell
-**Goal:** Phase 14
+**App:** KMatch3
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -121,11 +111,11 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 - KBudget (Phase 14 completed: Added Print Report support to both versions)
 - KHabit (Phase 14 completed: Added Detailed Statistics modal to both versions)
 - KSudoku (Phase 14 completed: Added Auto-fill Notes / Magic Pencil feature to both versions)
+- KFreecell (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
-- **KMatch3** — Gem/candy matching. Grid-based match-3 with cascades and combos. Level progression. Score multipliers.
 - **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
 - **KGo** — Abstract strategy board game. 9x9, 13x13, 19x19 boards. Territory scoring. Simple AI. Capture visualization.
 - **KDarts** — Dartboard game. 301/501 scoring. Cricket mode. Aim-and-throw mechanic. Stats per player.

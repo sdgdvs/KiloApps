@@ -79,6 +79,7 @@
       <button class="btn" onclick="loadGame()">Load</button>
       <button class="btn" onclick="showStats()">Stats</button>
       <button class="btn" onclick="showSettings()">Settings</button>
+      <button class="btn" onclick="showHelp()">Help</button>
     </div>
     <h1>KFreecell</h1>
     <div id="game-info" style="font-size: 14px; margin: 0 15px;">Time: 00:00 | Moves: 0</div>
@@ -101,6 +102,33 @@
       <div style="display:flex; gap:10px; justify-content:center; margin-bottom: 20px;" id="card-back-options">
       </div>
       <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
+    </div>
+  </div>
+  <div id="help-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
+    <div style="background:#2d2d30; padding:20px; border-radius:5px; border:1px solid #555; max-width:500px; text-align:left;">
+      <h2 style="margin-top:0; text-align:center;">How to Play Freecell</h2>
+      <p><b>Rules:</b></p>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Build all 4 foundations from Ace to King by suit.</li>
+        <li>Move cards between tableau columns. Cards must be placed in descending order and alternating colors.</li>
+        <li>You can use the 4 free cells at the top left to temporarily store single cards.</li>
+        <li>Moving multiple cards requires enough empty free cells/columns (calculated automatically).</li>
+        <li>Cards can be moved to empty tableau columns.</li>
+      </ul>
+      <p><b>Controls:</b></p>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li>Click a card to select it, then click a destination column, free cell, or foundation to move.</li>
+        <li>Cards move to foundations automatically when safe.</li>
+        <li>Use <b>Ctrl+Z</b> to Undo moves.</li>
+      </ul>
+      <p><b>Modes:</b></p>
+      <ul style="margin: 0; padding-left: 20px;">
+        <li><b>Random Deal:</b> A completely shuffled deck.</li>
+        <li><b>Numbered Deal:</b> Deals based on a specific seed number. Replayable!</li>
+      </ul>
+      <div style="text-align:center; margin-top:15px;">
+        <button class="btn" onclick="document.getElementById('help-modal').style.display='none'">Close</button>
+      </div>
     </div>
   </div>
   <div class="game-board">
@@ -259,6 +287,10 @@
     function showSettings() {
       updateCardBackUI();
       document.getElementById('settings-modal').style.display = 'flex';
+    }
+
+    function showHelp() {
+      document.getElementById('help-modal').style.display = 'flex';
     }
 
     function showStats() {
