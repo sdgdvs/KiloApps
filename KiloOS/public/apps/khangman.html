@@ -103,6 +103,13 @@
 <div id="game-container">
     <h1>KHangman</h1>
     
+    <select id="category" onchange="initGame()" style="margin-bottom: 20px; padding: 5px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 16px; cursor: pointer;">
+        <option value="Technology">Technology</option>
+        <option value="Animals">Animals</option>
+        <option value="Countries">Countries</option>
+        <option value="Science">Science</option>
+    </select>
+    
     <div id="hangman-drawing">
   +---+
   |   |
@@ -123,7 +130,12 @@
 </div>
 
 <script>
-    const WORDS = ["HANGMAN", "COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER"];
+    const CATEGORIES = {
+        "Technology": ["COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE"],
+        "Animals": ["ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO"],
+        "Countries": ["AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN"],
+        "Science": ["PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION"]
+    };
     const MAX_ERRORS = 6;
     let word = "";
     let guessed = new Set();
@@ -196,7 +208,9 @@
     }
 
     function initGame() {
-        word = WORDS[Math.floor(Math.random() * WORDS.length)];
+        const category = document.getElementById('category').value;
+        const words = CATEGORIES[category];
+        word = words[Math.floor(Math.random() * words.length)];
         guessed.clear();
         errors = 0;
         document.getElementById('message').innerText = "Guess a letter";

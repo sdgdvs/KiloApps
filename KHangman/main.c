@@ -5,8 +5,17 @@
 #define W 500
 #define H 550
 
-const char* WORDS[] = {"HANGMAN", "COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER"};
-const int NUM_WORDS = 6;
+#define NUM_CATEGORIES 4
+const char* CAT_NAMES[NUM_CATEGORIES] = {"Technology", "Animals", "Countries", "Science"};
+
+const char* CAT_WORDS[NUM_CATEGORIES][10] = {
+    {"COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE"},
+    {"ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO"},
+    {"AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN"},
+    {"PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION"}
+};
+const int NUM_WORDS_PER_CAT = 10;
+int current_category = 0;
 
 const char* DRAWINGS[] = {
 "  +---+\r\n  |   |\r\n      |\r\n      |\r\n      |\r\n      |\r\n=========",
@@ -42,10 +51,10 @@ void InitGame() {
         initialized = 1;
     }
     
-    int w_idx = CustomRand() % NUM_WORDS;
+    int w_idx = CustomRand() % NUM_WORDS_PER_CAT;
     int i = 0;
-    while(WORDS[w_idx][i]) {
-        target_word[i] = WORDS[w_idx][i];
+    while(CAT_WORDS[current_category][w_idx][i]) {
+        target_word[i] = CAT_WORDS[current_category][w_idx][i];
         i++;
     }
     target_word[i] = '\0';
@@ -119,6 +128,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
+            // Check categories
+            int cx = 40;
+            int cy = 45;
+            for (int i = 0; i < NUM_CATEGORIES; i++) {
+                if (x >= cx && x <= cx + 90 && y >= cy && y <= cy + 25) {
+                    if (current_category != i) {
+                        current_category = i;
+                        InitGame();
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                    break;
+                }
+                cx += 105;
+            }
+
             // Check keyboard clicks
             int kx = 110;
             int ky = 270;
@@ -157,12 +181,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Title
             SetTextColor(memDC, RGB(79, 172, 254));
             SelectObject(memDC, hFontMain);
-            TextOutA(memDC, 200, 20, "KHangman", 8);
+            TextOutA(memDC, 190, 10, "KHangman", 8);
+
+            // Categories
+            int cx = 40;
+            int cy = 45;
+            SelectObject(memDC, hFontMono);
+            for (int i = 0; i < NUM_CATEGORIES; i++) {
+                RECT cRect = {cx, cy, cx + 90, cy + 25};
+                HBRUSH cBg = CreateSolidBrush(i == current_category ? RGB(0, 122, 204) : RGB(44, 44, 44));
+                FillRect(memDC, &cRect, cBg);
+                DeleteObject(cBg);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                DrawTextA(memDC, CAT_NAMES[i], -1, &cRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                cx += 105;
+            }
 
             // Drawing
             SetTextColor(memDC, RGB(255, 82, 82));
             SelectObject(memDC, hFontMono);
-            RECT drawRect = {190, 60, 400, 200};
+            RECT drawRect = {190, 80, 400, 200};
             DrawTextA(memDC, DRAWINGS[errors], -1, &drawRect, DT_LEFT | DT_TOP);
 
             // Word display
