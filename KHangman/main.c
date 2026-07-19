@@ -282,7 +282,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = (short)HIWORD(lParam);
             
             // Check hint button
-            if (x >= 30 && x <= 100 && y >= 490 && y <= 530) {
+            if (x >= 20 && x <= 75 && y >= 490 && y <= 530) {
                 if (!hint_used && !game_over) {
                     char unguessed[32];
                     int uCount = 0;
@@ -305,7 +305,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Check restart button
-            if (x >= 110 && x <= 210 && y >= 490 && y <= 530) {
+            if (x >= 85 && x <= 175 && y >= 490 && y <= 530) {
                 SetFocus(hwnd);
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -313,21 +313,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Check save button
-            if (x >= 220 && x <= 290 && y >= 490 && y <= 530) {
+            if (x >= 185 && x <= 235 && y >= 490 && y <= 530) {
                 SaveGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             
             // Check load button
-            if (x >= 300 && x <= 370 && y >= 490 && y <= 530) {
+            if (x >= 245 && x <= 295 && y >= 490 && y <= 530) {
                 LoadGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
 
+            // Check help button
+            if (x >= 305 && x <= 365 && y >= 490 && y <= 530) {
+                MessageBoxA(hwnd,
+                    "How to Play KHangman\n\n"
+                    "Rules: Guess the hidden word one letter at a time. You have 6 lives.\n"
+                    "Controls: Click the on-screen keyboard or type (A-Z).\n"
+                    "Categories: Select from predefined themes or choose Custom.\n"
+                    "Custom Words: Enter your own comma-separated list of words.\n"
+                    "Hint: Reveals one correct letter. Limit 1 per game.",
+                    "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+                break;
+            }
+
             // Check mute button
-            if (x >= 380 && x <= 460 && y >= 490 && y <= 530) {
+            if (x >= 375 && x <= 445 && y >= 490 && y <= 530) {
                 is_muted = !is_muted;
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
@@ -540,7 +553,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Hint button
-            RECT hintRect = {30, 490, 100, 530};
+            RECT hintRect = {20, 490, 75, 530};
             HBRUSH hintBg;
             if (hint_used || game_over) {
                 hintBg = CreateSolidBrush(RGB(68, 68, 68));
@@ -557,7 +570,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Restart button
-            RECT resRect = {110, 490, 210, 530};
+            RECT resRect = {85, 490, 175, 530};
             HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
@@ -565,7 +578,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             
             // Save button
-            RECT saveRect = {220, 490, 290, 530};
+            RECT saveRect = {185, 490, 235, 530};
             HBRUSH saveBg = CreateSolidBrush(RGB(76, 175, 80));
             FillRect(memDC, &saveRect, saveBg);
             DeleteObject(saveBg);
@@ -573,15 +586,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Save", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Load button
-            RECT loadRect = {300, 490, 370, 530};
+            RECT loadRect = {245, 490, 295, 530};
             HBRUSH loadBg = CreateSolidBrush(RGB(156, 39, 176));
             FillRect(memDC, &loadRect, loadBg);
             DeleteObject(loadBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "Load", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
+            // Help button
+            RECT helpRect = {305, 490, 365, 530};
+            HBRUSH helpBg = CreateSolidBrush(RGB(33, 150, 243));
+            FillRect(memDC, &helpRect, helpBg);
+            DeleteObject(helpBg);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            DrawTextA(memDC, "Help", -1, &helpRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
             // Mute button
-            RECT muteRect = {380, 490, 460, 530};
+            RECT muteRect = {375, 490, 445, 530};
             HBRUSH muteBg = CreateSolidBrush(RGB(85, 85, 85));
             FillRect(memDC, &muteRect, muteBg);
             DeleteObject(muteBg);

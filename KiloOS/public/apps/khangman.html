@@ -185,7 +185,22 @@
         <button class="restart" onclick="initGame()">New Game</button>
         <button class="action-btn" onclick="saveGameState()" style="background-color: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Save</button>
         <button class="action-btn" onclick="loadGameState()" style="background-color: #9c27b0; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Load</button>
+        <button class="action-btn" onclick="showHelp()" style="background-color: #2196f3; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Help</button>
         <button class="mute-btn" onclick="toggleMute()" id="mute-btn" style="background-color: #555; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">🔊 Sound</button>
+    </div>
+</div>
+
+<div id="help-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
+    <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 400px; text-align: left; border: 1px solid #444; color: #e0e0e0;">
+        <h2 style="color: #4facfe; margin-top: 0;">How to Play KHangman</h2>
+        <p><strong>Rules:</strong> Guess the hidden word one letter at a time. You have 6 lives. Incorrect guesses draw parts of the hangman. If the hangman is completed before you guess the word, you lose!</p>
+        <p><strong>Controls:</strong> Click the on-screen keyboard or type using your physical keyboard (A-Z).</p>
+        <p><strong>Categories:</strong> Select from predefined categories (Technology, Animals, Countries, Science).</p>
+        <p><strong>Custom Words:</strong> Select "Custom" to enter your own comma-separated list of words to play with.</p>
+        <p><strong>Hint:</strong> Reveals one correct letter. Can only be used once per game.</p>
+        <div style="text-align: right; margin-top: 20px;">
+            <button onclick="hideHelp()" style="background-color: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Close</button>
+        </div>
     </div>
 </div>
 
@@ -207,6 +222,14 @@
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
     let isMuted = false;
+
+    function showHelp() {
+        document.getElementById('help-modal').style.display = 'flex';
+    }
+
+    function hideHelp() {
+        document.getElementById('help-modal').style.display = 'none';
+    }
 
     function initAudio() {
         if (!audioCtx) {

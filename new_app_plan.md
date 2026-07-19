@@ -48,27 +48,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KHangman (Word guessing game)
-**Phase:** 14
+**App:** KSimon (Memory pattern game)
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1: Scaffold `KHangman/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (Completed)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (Completed)
-- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (Completed)
-- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (Completed)
-- Phase 5: Add Multiple Word Categories (e.g., Animals, Countries, Science, Technology) with a UI selector. (Completed)
-- Phase 6: (Skipped)
-- Phase 7: Add win streak and statistics tracking (Wins, Losses, Current Streak, Best Streak) using persistence. (Completed)
-- Phase 8: Add a Hint System to reveal a random un-guessed letter. Limit 1 per game. (Completed)
-- Phase 9: Add Physical Keyboard Support. Bind physical key presses (A-Z) to trigger letter guesses automatically. (Completed)
-- Phase 10: Add sound effects for valid guesses, invalid guesses, win, and lose states using Web Audio API (web) and Beep/PlaySound (native). Include a mute toggle button. (Completed)
-- Phase 11: Add Save/Load functionality to persist the current game state using localStorage for web and a binary .dat save file for native. (Completed)
-- Phase 12: Add visual animations: shake the hangman canvas when an incorrect guess is made, and add a simple pulsing effect to the winning word when the game is won. (Completed)
-- Phase 13: Add Custom Word List Support. Provide a text input field where players can paste their own comma-separated list of words to create a custom category and play with their own words. (Completed)
+- Phase 1: Scaffold `KSimon/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
+- Phase 5: Add Multiple Game Modes (e.g., Classic, Reverse, Speed).
+- Phase 6: Add High Score system with multiple categories.
+- Phase 7: Add Sound effects (Web Audio API for web, Beep()/PlaySound for native).
+- Phase 8: Add visual animations: button presses, sequence playback highlights, game over flash.
+- Phase 9: Add progressive difficulty (speed increases as streak gets longer).
+- Phase 10: Add statistics tracking (games played, longest streak, best time).
+- Phase 11: Add Save/Load functionality to persist high scores and stats.
+- Phase 12: Add Physical Keyboard Support. Bind physical keys (e.g. Q, W, A, S or Arrows) to colored buttons.
+- Phase 13: Add an "Endless" mode with no mistakes allowed, tracking maximum sequence.
+- Phase 14: Add Comprehensive Help / How-to-Play modal detailing the rules, controls, and modes.
 
 ## Next Priority (Before New Apps)
 
-**App:** KHangman
+**App:** KSimon
 **Goal:** Phase 14
 
 
@@ -109,6 +110,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KHangman (Phase 14 completed: Added Help / How-to-Play modal to both versions)
 - KConnect4 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - K2048 (Phase 14 completed: Added Comprehensive Help / Manual System to both versions)
 - KBBS (Phase 14 completed: Added Help/Quick Reference System to both versions)
@@ -121,7 +123,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
-- **KSimon** — Memory pattern game. Colored button sequences with sounds. Progressive speed increase. Longest streak tracking.
 - **KAsteroids** — Space shooter. Wrap-around screen. Ship thrust physics. Progressive waves. UFO bonus targets. Particle explosions.
 - **KFreecell** — Card solitaire variant. Full Freecell rules. Undo stack. Auto-complete. Win statistics.
 - **KMatch3** — Gem/candy matching. Grid-based match-3 with cascades and combos. Level progression. Score multipliers.
