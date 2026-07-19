@@ -1,336 +1,413 @@
 #include <windows.h>
 #include <stdlib.h>
-#include <time.h>
 #include <stdio.h>
-#include <string.h>
+#include <time.h>
+
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
+
+#define CELL_W 70
+#define CELL_H 100
+#define PAD 20
+#define TOP_Y 50
+#define TAB_Y 170
+#define TAB_PAD_X 10
+#define TAB_PAD_Y 25
 
 typedef struct {
-    int s; // 0:S, 1:H, 2:C, 3:D
+    int s; // 0=Spades, 1=Hearts, 2=Clubs, 3=Diamonds
     int r; // 1-13
+    int color; // 0=Black, 1=Red
 } Card;
 
 Card deck[52];
-Card freecells[4]; // r=0 if empty
-int foundations[4]; // max r (1-13)
-Card tab[8][20];
-int tab_counts[8];
+Card freeCells[4];
+int freeCellsOccupied[4];
+int found[4]; // 0-13
 
-int sel_type = -1; // 0=free, 1=tab, -1=none
-int sel_idx = -1;
-int sel_card_idx = -1;
+Card tab[8][52];
+int tabCount[8];
 
-#define CARD_W 60
-#define CARD_H 85
-#define MARGIN 10
-#define TAB_DY 20
-
-void Shuffle() {
-    int i, j;
-    for (i = 0; i < 52; i++) {
-        deck[i].s = i % 4;
-        deck[i].r = (i / 4) + 1;
-    }
-    for (i = 51; i > 0; i--) {
-        j = rand() % (i + 1);
-        Card t = deck[i]; deck[i] = deck[j]; deck[j] = t;
-    }
-}
+int selType = -1; // 0=free, 1=tab, -1=none
+int selIdx = -1;
+int selCardIdx = -1;
+int won = 0;
 
 void InitGame() {
-    Shuffle();
-    memset(freecells, 0, sizeof(freecells));
-    memset(foundations, 0, sizeof(foundations));
-    memset(tab_counts, 0, sizeof(tab_counts));
-    
-    int i;
-    for (i = 0; i < 52; i++) {
-        int c = i % 8;
-        tab[c][tab_counts[c]++] = deck[i];
+    won = 0;
+    selType = -1;
+    for(int i=0; i<4; i++) {
+        freeCellsOccupied[i] = 0;
+        found[i] = 0;
     }
-    sel_type = -1;
-}
-
-int GetColor(int s) {
-    return (s == 1 || s == 3) ? 1 : 0; // 1=red, 0=black
-}
-
-int CanMoveToTab(Card c, int dst_idx) {
-    if (tab_counts[dst_idx] == 0) return 1;
-    Card top = tab[dst_idx][tab_counts[dst_idx] - 1];
-    if (GetColor(c.s) != GetColor(top.s) && c.r == top.r - 1) return 1;
-    return 0;
-}
-
-int CanMoveToFound(Card c) {
-    if (c.r == foundations[c.s] + 1) return 1;
-    return 0;
-}
-
-int GetMaxMove() {
-    int empty_free = 0, empty_tab = 0;
-    for(int i=0; i<4; i++) if (freecells[i].r == 0) empty_free++;
-    for(int i=0; i<8; i++) if (tab_counts[i] == 0) empty_tab++;
-    return (empty_free + 1) * (1 << empty_tab);
-}
-
-void HandleClick(int type, int idx, int c_idx) {
-    if (sel_type == -1) { // Select
-        if (type == 1) { // Tab
-            int n = tab_counts[idx];
-            if (c_idx < 0 || c_idx >= n) return;
-            // check valid stack
-            int valid = 1;
-            for (int i = c_idx + 1; i < n; i++) {
-                if (GetColor(tab[idx][i].s) == GetColor(tab[idx][i-1].s) || tab[idx][i].r != tab[idx][i-1].r - 1) {
-                    valid = 0; break;
-                }
-            }
-            if (valid && (n - c_idx) <= GetMaxMove()) {
-                sel_type = type; sel_idx = idx; sel_card_idx = c_idx;
-            }
-        } else if (type == 0) { // Free
-            if (freecells[idx].r > 0) {
-                sel_type = type; sel_idx = idx; sel_card_idx = 0;
-            }
+    for(int i=0; i<8; i++) {
+        tabCount[i] = 0;
+    }
+    
+    Card* deckPtrs[52];
+    int c = 0;
+    for(int s=0; s<4; s++) {
+        for(int r=1; r<=13; r++) {
+            deck[c].s = s;
+            deck[c].r = r;
+            deck[c].color = (s==1 || s==3) ? 1 : 0;
+            deckPtrs[c] = &deck[c];
+            c++;
         }
-    } else { // Move
-        Card cards_to_move[20];
-        int n_move = 0;
-        
-        if (sel_type == 1) {
-            n_move = tab_counts[sel_idx] - sel_card_idx;
-            for(int i=0; i<n_move; i++) cards_to_move[i] = tab[sel_idx][sel_card_idx + i];
-        } else if (sel_type == 0) {
-            n_move = 1;
-            cards_to_move[0] = freecells[sel_idx];
-        }
-        
-        int moved = 0;
-        if (type == 1) { // to Tab
-            int max_move = GetMaxMove();
-            if (tab_counts[idx] == 0) {
-                int empty_free = 0, empty_tab = 0;
-                for(int i=0; i<4; i++) if (freecells[i].r == 0) empty_free++;
-                for(int i=0; i<8; i++) if (tab_counts[i] == 0 && i != idx) empty_tab++;
-                max_move = (empty_free + 1) * (1 << empty_tab);
-            }
-            if (n_move <= max_move && CanMoveToTab(cards_to_move[0], idx)) {
-                for(int i=0; i<n_move; i++) tab[idx][tab_counts[idx]++] = cards_to_move[i];
-                moved = 1;
-            }
-        } else if (type == 0 && n_move == 1) { // to Free
-            if (freecells[idx].r == 0) {
-                freecells[idx] = cards_to_move[0];
-                moved = 1;
-            }
-        } else if (type == 2 && n_move == 1) { // to Found
-            if (cards_to_move[0].s == idx && CanMoveToFound(cards_to_move[0])) {
-                foundations[idx] = cards_to_move[0].r;
-                moved = 1;
-            }
-        }
-        
-        if (moved) {
-            if (sel_type == 1) tab_counts[sel_idx] = sel_card_idx;
-            else if (sel_type == 0) freecells[sel_idx].r = 0;
-        }
-        sel_type = -1;
+    }
+    
+    for(int i=51; i>0; i--) {
+        int j = rand() % (i + 1);
+        Card *t = deckPtrs[i];
+        deckPtrs[i] = deckPtrs[j];
+        deckPtrs[j] = t;
+    }
+    
+    c = 0;
+    for(int i=0; i<52; i++) {
+        tab[c][tabCount[c]++] = *deckPtrs[i];
+        c = (c + 1) % 8;
     }
 }
 
-void DrawCard(HDC hdc, int x, int y, Card c, int is_sel) {
-    if (c.r == 0) return;
+int GetMaxMoveCount() {
+    int emptyFree = 0;
+    for(int i=0; i<4; i++) if(!freeCellsOccupied[i]) emptyFree++;
+    int emptyTab = 0;
+    for(int i=0; i<8; i++) if(tabCount[i] == 0) emptyTab++;
+    return (emptyFree + 1) * (1 << emptyTab);
+}
+
+int CanMoveToTab(Card c, int tIdx) {
+    if(tabCount[tIdx] == 0) return 1;
+    Card top = tab[tIdx][tabCount[tIdx]-1];
+    return c.color != top.color && c.r == top.r - 1;
+}
+
+int GetDraggableGroup(int tIdx, int startIdx) {
+    if(startIdx >= tabCount[tIdx]) return 0;
+    for(int i=startIdx+1; i<tabCount[tIdx]; i++) {
+        Card prev = tab[tIdx][i-1];
+        Card curr = tab[tIdx][i];
+        if(curr.color == prev.color || curr.r != prev.r - 1) return 0;
+    }
+    return tabCount[tIdx] - startIdx;
+}
+
+void CheckWin(HWND hwnd) {
+    if(found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) {
+        won = 1;
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
+void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
+    HBRUSH bg = CreateSolidBrush(RGB(255, 255, 255));
+    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 235, 59) : RGB(204, 204, 204));
     
-    HBRUSH bg = CreateSolidBrush(RGB(255,255,255));
-    HPEN pen = CreatePen(PS_SOLID, is_sel ? 3 : 1, is_sel ? RGB(255,215,0) : RGB(100,100,100));
-    SelectObject(hdc, bg); SelectObject(hdc, pen);
-    Rectangle(hdc, x, y, x + CARD_W, y + CARD_H);
-    DeleteObject(bg); DeleteObject(pen);
+    SelectObject(hdc, bg);
+    SelectObject(hdc, pen);
+    Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
     
-    const char* suits[] = {"S", "H", "C", "D"};
-    const char* ranks[] = {"A","2","3","4","5","6","7","8","9","10","J","Q","K"};
-    
-    char text[10];
-    sprintf(text, "%s %s", ranks[c.r-1], suits[c.s]);
-    
-    SetTextColor(hdc, GetColor(c.s) ? RGB(200,0,0) : RGB(0,0,0));
     SetBkMode(hdc, TRANSPARENT);
-    TextOutA(hdc, x + 5, y + 5, text, strlen(text));
+    SetTextColor(hdc, c.color ? RGB(211, 47, 47) : RGB(0, 0, 0));
+    
+    WCHAR *suits[] = {L"\x2660", L"\x2665", L"\x2663", L"\x2666"};
+    WCHAR *ranks[] = {L"A",L"2",L"3",L"4",L"5",L"6",L"7",L"8",L"9",L"10",L"J",L"Q",L"K"};
+    WCHAR text[16];
+    wsprintfW(text, L"%s%s", ranks[c.r-1], suits[c.s]);
+    
+    HFONT hFont = CreateFontW(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    
+    RECT rT = {x+5, y+5, x+CELL_W-5, y+25};
+    DrawTextW(hdc, text, -1, &rT, DT_LEFT | DT_TOP);
+    
+    RECT rB = {x+5, y+CELL_H-25, x+CELL_W-5, y+CELL_H-5};
+    DrawTextW(hdc, text, -1, &rB, DT_RIGHT | DT_BOTTOM);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
+    DeleteObject(bg);
+    DeleteObject(pen);
 }
 
-void DrawEmptyCell(HDC hdc, int x, int y, int is_found, int suit) {
-    HBRUSH bg = CreateSolidBrush(RGB(40,40,40));
-    HPEN pen = CreatePen(PS_SOLID, 2, RGB(80,80,80));
-    SelectObject(hdc, bg); SelectObject(hdc, pen);
-    Rectangle(hdc, x, y, x + CARD_W, y + CARD_H);
-    DeleteObject(bg); DeleteObject(pen);
+void DrawEmptyCell(HDC hdc, int x, int y, int isFound, int suitIdx) {
+    HBRUSH bg = CreateSolidBrush(RGB(37, 37, 38));
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(85, 85, 85));
+    SelectObject(hdc, bg);
+    SelectObject(hdc, pen);
+    Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
+    DeleteObject(bg);
+    DeleteObject(pen);
     
-    if (is_found) {
-        const char* suits[] = {"S", "H", "C", "D"};
-        SetTextColor(hdc, RGB(80,80,80));
+    if(isFound) {
+        WCHAR *suits[] = {L"\x2660", L"\x2665", L"\x2663", L"\x2666"};
         SetBkMode(hdc, TRANSPARENT);
-        TextOutA(hdc, x + 20, y + 30, suits[suit], 1);
+        SetTextColor(hdc, (suitIdx==1||suitIdx==3) ? RGB(139, 0, 0) : RGB(68, 68, 68));
+        HFONT hFont = CreateFontW(40, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        
+        RECT r = {x, y, x+CELL_W, y+CELL_H};
+        DrawTextW(hdc, suits[suitIdx], -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hFont);
     }
 }
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch(msg) {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             InitGame();
             return 0;
             
-        case WM_LBUTTONDOWN: {
-            int mx = LOWORD(lParam);
-            int my = HIWORD(lParam);
-            
-            // Check Freecells
-            for(int i=0; i<4; i++) {
-                int cx = MARGIN + i * (CARD_W + MARGIN);
-                int cy = MARGIN;
-                if (mx >= cx && mx <= cx + CARD_W && my >= cy && my <= cy + CARD_H) {
-                    HandleClick(0, i, 0);
-                    InvalidateRect(hwnd, NULL, TRUE);
-                    return 0;
-                }
-            }
-            
-            // Check Foundations
-            for(int i=0; i<4; i++) {
-                int cx = 800 - MARGIN - (4-i) * (CARD_W + MARGIN);
-                int cy = MARGIN;
-                if (mx >= cx && mx <= cx + CARD_W && my >= cy && my <= cy + CARD_H) {
-                    HandleClick(2, i, 0);
-                    InvalidateRect(hwnd, NULL, TRUE);
-                    return 0;
-                }
-            }
-            
-            // Check Tableau
-            for(int i=0; i<8; i++) {
-                int cx = MARGIN + i * (CARD_W + MARGIN);
-                int cy = MARGIN + CARD_H + MARGIN * 2;
-                if (mx >= cx && mx <= cx + CARD_W) {
-                    if (tab_counts[i] == 0) {
-                        if (my >= cy && my <= cy + CARD_H) {
-                            HandleClick(1, i, 0);
-                            InvalidateRect(hwnd, NULL, TRUE);
-                            return 0;
-                        }
-                    } else {
-                        int c_idx = -1;
-                        for(int j=tab_counts[i]-1; j>=0; j--) {
-                            int card_y = cy + j * TAB_DY;
-                            int card_h = (j == tab_counts[i]-1) ? CARD_H : TAB_DY;
-                            if (my >= card_y && my < card_y + card_h) {
-                                c_idx = j;
-                                break;
-                            }
-                        }
-                        if (c_idx != -1) {
-                            HandleClick(1, i, c_idx);
-                            InvalidateRect(hwnd, NULL, TRUE);
-                            return 0;
-                        }
-                    }
-                }
-            }
-            
-            // Deselect on empty area click
-            sel_type = -1;
-            InvalidateRect(hwnd, NULL, TRUE);
-            return 0;
-        }
-            
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            // Dark theme background
-            HBRUSH brush = CreateSolidBrush(RGB(30, 30, 30));
-            FillRect(hdc, &ps.rcPaint, brush);
-            DeleteObject(brush);
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
             
-            // Draw Freecells
+            HDC hdcMem = CreateCompatibleDC(hdc);
+            HBITMAP hbmMem = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
+            HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
+            
+            HBRUSH hbrBg = CreateSolidBrush(RGB(30, 30, 30));
+            FillRect(hdcMem, &clientRect, hbrBg);
+            DeleteObject(hbrBg);
+            
+            SetBkMode(hdcMem, TRANSPARENT);
+            SetTextColor(hdcMem, RGB(255, 255, 255));
+            HFONT hTitleFont = CreateFontW(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+            HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
+            RECT titleRect = {0, 10, clientRect.right, 40};
+            DrawTextW(hdcMem, L"KFreecell", -1, &titleRect, DT_CENTER | DT_TOP);
+            if(won) {
+                RECT winRect = {0, 10, clientRect.right - 20, 40};
+                DrawTextW(hdcMem, L"You Win!", -1, &winRect, DT_RIGHT | DT_TOP);
+            }
+            SelectObject(hdcMem, hOldFont);
+            DeleteObject(hTitleFont);
+            
+            // Draw Free Cells
+            int group1X = PAD;
             for(int i=0; i<4; i++) {
-                int cx = MARGIN + i * (CARD_W + MARGIN);
-                int cy = MARGIN;
-                if (freecells[i].r == 0) DrawEmptyCell(hdc, cx, cy, 0, 0);
-                else DrawCard(hdc, cx, cy, freecells[i], (sel_type == 0 && sel_idx == i));
+                int x = group1X + i*(CELL_W + TAB_PAD_X);
+                if(freeCellsOccupied[i]) {
+                    DrawCard(hdcMem, x, TOP_Y, freeCells[i], (selType==0 && selIdx==i));
+                } else {
+                    DrawEmptyCell(hdcMem, x, TOP_Y, 0, 0);
+                }
             }
             
             // Draw Foundations
+            int group2X = clientRect.right - PAD - 4*(CELL_W + TAB_PAD_X);
             for(int i=0; i<4; i++) {
-                int cx = 800 - MARGIN - (4-i) * (CARD_W + MARGIN);
-                int cy = MARGIN;
-                if (foundations[i] == 0) DrawEmptyCell(hdc, cx, cy, 1, i);
-                else {
-                    Card c = {i, foundations[i]};
-                    DrawCard(hdc, cx, cy, c, 0);
+                int x = group2X + i*(CELL_W + TAB_PAD_X);
+                if(found[i] > 0) {
+                    Card c = {i, found[i], (i==1||i==3)?1:0};
+                    DrawCard(hdcMem, x, TOP_Y, c, 0);
+                } else {
+                    DrawEmptyCell(hdcMem, x, TOP_Y, 1, i);
                 }
             }
             
             // Draw Tableau
+            int totalTabW = 8 * CELL_W + 7 * TAB_PAD_X;
+            int tabStartX = (clientRect.right - totalTabW) / 2;
             for(int i=0; i<8; i++) {
-                int cx = MARGIN + i * (CARD_W + MARGIN);
-                int cy = MARGIN + CARD_H + MARGIN * 2;
-                if (tab_counts[i] == 0) {
-                    DrawEmptyCell(hdc, cx, cy, 0, 0);
+                int x = tabStartX + i*(CELL_W + TAB_PAD_X);
+                if(tabCount[i] == 0) {
+                    DrawEmptyCell(hdcMem, x, TAB_Y, 0, 0);
                 } else {
-                    for(int j=0; j<tab_counts[i]; j++) {
-                        int is_sel = (sel_type == 1 && sel_idx == i && j >= sel_card_idx);
-                        DrawCard(hdc, cx, cy + j * TAB_DY, tab[i][j], is_sel);
+                    for(int j=0; j<tabCount[i]; j++) {
+                        int y = TAB_Y + j*TAB_PAD_Y;
+                        int selected = (selType==1 && selIdx==i && j>=selCardIdx);
+                        DrawCard(hdcMem, x, y, tab[i][j], selected);
                     }
                 }
             }
             
-            // Check win
-            int win = 1;
-            for(int i=0; i<4; i++) if(foundations[i] != 13) win = 0;
-            if(win) {
-                SetTextColor(hdc, RGB(255,255,0));
-                SetBkMode(hdc, TRANSPARENT);
-                TextOutA(hdc, 350, 50, "YOU WIN!", 8);
-            }
+            BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, hdcMem, 0, 0, SRCCOPY);
+            
+            SelectObject(hdcMem, hbmOld);
+            DeleteObject(hbmMem);
+            DeleteDC(hdcMem);
             
             EndPaint(hwnd, &ps);
             return 0;
         }
         
+        case WM_LBUTTONDOWN: {
+            if(won) return 0;
+            int mx = (short)LOWORD(lParam);
+            int my = (short)HIWORD(lParam);
+            
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            
+            int clickedType = -1; // 0=free, 1=tab, 2=found
+            int clickedIdx = -1;
+            int clickedCardIdx = 0;
+            
+            // Check Free Cells
+            int group1X = PAD;
+            for(int i=0; i<4; i++) {
+                int x = group1X + i*(CELL_W + TAB_PAD_X);
+                if(mx >= x && mx <= x+CELL_W && my >= TOP_Y && my <= TOP_Y+CELL_H) {
+                    clickedType = 0;
+                    clickedIdx = i;
+                    break;
+                }
+            }
+            
+            // Check Foundations
+            if(clickedType == -1) {
+                int group2X = clientRect.right - PAD - 4*(CELL_W + TAB_PAD_X);
+                for(int i=0; i<4; i++) {
+                    int x = group2X + i*(CELL_W + TAB_PAD_X);
+                    if(mx >= x && mx <= x+CELL_W && my >= TOP_Y && my <= TOP_Y+CELL_H) {
+                        clickedType = 2;
+                        clickedIdx = i;
+                        break;
+                    }
+                }
+            }
+            
+            // Check Tableau
+            if(clickedType == -1) {
+                int totalTabW = 8 * CELL_W + 7 * TAB_PAD_X;
+                int tabStartX = (clientRect.right - totalTabW) / 2;
+                for(int i=0; i<8; i++) {
+                    int x = tabStartX + i*(CELL_W + TAB_PAD_X);
+                    if(mx >= x && mx <= x+CELL_W) {
+                        if(tabCount[i] == 0) {
+                            if(my >= TAB_Y && my <= TAB_Y+CELL_H) {
+                                clickedType = 1;
+                                clickedIdx = i;
+                                clickedCardIdx = 0;
+                                break;
+                            }
+                        } else {
+                            for(int j=tabCount[i]-1; j>=0; j--) {
+                                int y = TAB_Y + j*TAB_PAD_Y;
+                                int h = (j == tabCount[i]-1) ? CELL_H : TAB_PAD_Y;
+                                if(my >= y && my <= y+h) {
+                                    clickedType = 1;
+                                    clickedIdx = i;
+                                    clickedCardIdx = j;
+                                    break;
+                                }
+                            }
+                            if(clickedType != -1) break;
+                        }
+                    }
+                }
+            }
+            
+            if(selType == -1) { // Select
+                if(clickedType == 1 && tabCount[clickedIdx] > 0) {
+                    int groupSize = GetDraggableGroup(clickedIdx, clickedCardIdx);
+                    if(groupSize > 0 && groupSize <= GetMaxMoveCount()) {
+                        selType = clickedType;
+                        selIdx = clickedIdx;
+                        selCardIdx = clickedCardIdx;
+                    }
+                } else if(clickedType == 0 && freeCellsOccupied[clickedIdx]) {
+                    selType = clickedType;
+                    selIdx = clickedIdx;
+                    selCardIdx = 0;
+                }
+            } else { // Move
+                int moved = 0;
+                
+                Card cardsToMove[52];
+                int nToMove = 0;
+                if(selType == 1) {
+                    nToMove = tabCount[selIdx] - selCardIdx;
+                    for(int i=0; i<nToMove; i++) {
+                        cardsToMove[i] = tab[selIdx][selCardIdx + i];
+                    }
+                } else if(selType == 0) {
+                    nToMove = 1;
+                    cardsToMove[0] = freeCells[selIdx];
+                }
+                
+                if(clickedType == 1) { // move to tableau
+                    int emptyFree = 0;
+                    for(int i=0; i<4; i++) if(!freeCellsOccupied[i]) emptyFree++;
+                    int emptyTab = 0;
+                    for(int i=0; i<8; i++) if(tabCount[i] == 0 && i != clickedIdx) emptyTab++;
+                    int maxMove = (emptyFree + 1) * (1 << emptyTab);
+                    
+                    if(nToMove <= maxMove && CanMoveToTab(cardsToMove[0], clickedIdx)) {
+                        for(int i=0; i<nToMove; i++) {
+                            tab[clickedIdx][tabCount[clickedIdx]++] = cardsToMove[i];
+                        }
+                        moved = 1;
+                    }
+                } else if(clickedType == 0 && nToMove == 1 && !freeCellsOccupied[clickedIdx]) {
+                    freeCells[clickedIdx] = cardsToMove[0];
+                    freeCellsOccupied[clickedIdx] = 1;
+                    moved = 1;
+                } else if(clickedType == 2 && nToMove == 1 && cardsToMove[0].s == clickedIdx) {
+                    if(cardsToMove[0].r == found[clickedIdx] + 1) {
+                        found[clickedIdx] = cardsToMove[0].r;
+                        moved = 1;
+                    }
+                }
+                
+                if(moved) {
+                    if(selType == 1) {
+                        tabCount[selIdx] = selCardIdx;
+                    } else if(selType == 0) {
+                        freeCellsOccupied[selIdx] = 0;
+                    }
+                    CheckWin(hwnd);
+                }
+                selType = -1;
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
+            return 0;
+        }
+        
+        case WM_KEYDOWN:
+            if(wParam == 'R' || wParam == 'N') {
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if(wParam == VK_ESCAPE) {
+                selType = -1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            return 0;
+            
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    const char CLASS_NAME[] = "KFreecellClass";
-    
-    WNDCLASSA wc = {0};
-    wc.lpfnWndProc = WindowProc;
+void MainEntry() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    WNDCLASSW wc = {0};
+    wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.lpszClassName = L"KFreecellClass";
+    RegisterClassW(&wc);
     
-    RegisterClassA(&wc);
-    
-    HWND hwnd = CreateWindowExA(
-        0, CLASS_NAME, "KFreecell",
-        WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
-        NULL, NULL, hInstance, NULL
-    );
-    
-    if (hwnd == NULL) return 0;
-    
-    ShowWindow(hwnd, nCmdShow);
-    
-    MSG msg = {0};
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    HWND hwnd = CreateWindowW(L"KFreecellClass", L"KFreecell",
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT, 800, 700,
+        NULL, NULL, hInstance, NULL);
+        
+    MSG msg;
+    while(GetMessageW(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageW(&msg);
     }
-    
-    return 0;
+    ExitProcess(0);
 }

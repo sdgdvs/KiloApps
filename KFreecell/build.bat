@@ -1,8 +1,2 @@
 @echo off
-gcc main.c -o KFreecell.exe -mwindows -lgdi32 -luser32
-if %errorlevel% neq 0 (
-    echo Build failed.
-    pause
-    exit /b %errorlevel%
-)
-echo Build succeeded.
+cl.exe /O1 /Os /GS- /Gy main.c kernel32.lib user32.lib gdi32.lib /link /ENTRY:MainEntry /SUBSYSTEM:WINDOWS /OUT:KFreecell.exe
