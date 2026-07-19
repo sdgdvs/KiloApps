@@ -48,6 +48,20 @@
   #controls {
     margin-top: 20px;
   }
+  #mode-select {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 10px;
+    border-radius: 5px;
+    margin-right: 10px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  #mode-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
   #start-btn {
     background-color: #333;
     color: #e0e0e0;
@@ -86,6 +100,11 @@
     <button id="btn-3" class="simon-btn"></button>
   </div>
   <div id="controls">
+    <select id="mode-select">
+      <option value="classic">Mode: Classic</option>
+      <option value="reverse">Mode: Reverse</option>
+      <option value="speed">Mode: Speed</option>
+    </select>
     <button id="start-btn">Start Game</button>
   </div>
   <div id="status">Press Start</div>
@@ -99,12 +118,14 @@
     document.getElementById('btn-3')
   ];
   const startBtn = document.getElementById('start-btn');
+  const modeSelect = document.getElementById('mode-select');
   const scoreDisplay = document.getElementById('score');
   const statusDisplay = document.getElementById('status');
 
   let sequence = [];
   let playerSequence = [];
   let isPlayingSequence = false;
+  let currentMode = 'classic';
 
   startBtn.addEventListener('click', startGame);
 
@@ -116,6 +137,8 @@
   });
 
   function startGame() {
+    currentMode = modeSelect.value;
+    modeSelect.disabled = true;
     sequence = [];
     scoreDisplay.innerText = "0";
     statusDisplay.innerText = "Get Ready...";
@@ -135,10 +158,13 @@
     statusDisplay.innerText = "Watch...";
     let i = 0;
     
+    let flashDuration = currentMode === 'speed' ? 200 : 400;
+    let pauseDuration = currentMode === 'speed' ? 100 : 200;
+
     function flashNext() {
       if (i >= sequence.length) {
         isPlayingSequence = false;
-        statusDisplay.innerText = "Your Turn!";
+        statusDisplay.innerText = currentMode === 'reverse' ? "Your Turn (Reverse)!" : "Your Turn!";
         return;
       }
       const index = sequence[i];
@@ -147,8 +173,8 @@
       setTimeout(() => {
         btn.classList.remove('active');
         i++;
-        setTimeout(flashNext, 200); // Wait before next flash
-      }, 400); // Flash duration
+        setTimeout(flashNext, pauseDuration);
+      }, flashDuration);
     }
     
     flashNext();
@@ -164,11 +190,19 @@
     playerSequence.push(index);
 
     const currentStep = playerSequence.length - 1;
-    if (playerSequence[currentStep] !== sequence[currentStep]) {
+    let expectedIndex;
+    if (currentMode === 'reverse') {
+      expectedIndex = sequence[sequence.length - 1 - currentStep];
+    } else {
+      expectedIndex = sequence[currentStep];
+    }
+
+    if (playerSequence[currentStep] !== expectedIndex) {
       // Game Over
       statusDisplay.innerText = "Game Over! Score: " + (sequence.length - 1);
       sequence = [];
       startBtn.disabled = false;
+      modeSelect.disabled = false;
       return;
     }
 

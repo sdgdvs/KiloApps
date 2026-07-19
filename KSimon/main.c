@@ -11,7 +11,14 @@
 #define TIMER_SEQUENCE 1
 #define TIMER_FLASH    2
 
+#define MODE_CLASSIC 0
+#define MODE_REVERSE 1
+#define MODE_SPEED 2
+
 HWND hwndMain;
+HWND hwndModeBox;
+int current_mode = MODE_CLASSIC;
+
 int sequence[1000];
 int sequence_length = 0;
 int player_step = 0;
@@ -53,6 +60,8 @@ void DrawBoard(HDC hdc) {
 }
 
 void StartGame() {
+    current_mode = SendMessage(hwndModeBox, CB_GETCURSEL, 0, 0);
+    EnableWindow(hwndModeBox, FALSE);
     sequence_length = 0;
     score = 0;
     is_playing_sequence = 1;
@@ -77,11 +86,19 @@ void HandleClick(int btn_id) {
 
     flash_btn = btn_id;
     InvalidateRect(hwndMain, NULL, TRUE);
-    SetTimer(hwndMain, TIMER_FLASH, 300, NULL);
+    SetTimer(hwndMain, TIMER_FLASH, (current_mode == MODE_SPEED) ? 150 : 300, NULL);
 
-    if (btn_id != sequence[player_step]) {
+    int expected_index;
+    if (current_mode == MODE_REVERSE) {
+        expected_index = sequence[sequence_length - 1 - player_step];
+    } else {
+        expected_index = sequence[player_step];
+    }
+
+    if (btn_id != expected_index) {
         sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
         sequence_length = 0;
+        EnableWindow(hwndModeBox, TRUE);
         InvalidateRect(hwndMain, NULL, TRUE);
         return;
     }
@@ -100,6 +117,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             hwndMain = hwnd;
             srand((unsigned)time(NULL));
+            hwndModeBox = CreateWindowEx(
+                0, "COMBOBOX", "", 
+                CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL, 
+                10, 50, 150, 100, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Classic Mode");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");
+            SendMessage(hwndModeBox, CB_SETCURSEL, 0, 0);
             break;
         case WM_SIZE: {
             int width = LOWORD(lParam);
@@ -145,17 +170,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (current_flash_index >= sequence_length) {
                             KillTimer(hwnd, TIMER_SEQUENCE);
                             is_playing_sequence = 0;
-                            strcpy(status_text, "Your Turn!");
+                            if (current_mode == MODE_REVERSE) {
+                                strcpy(status_text, "Your Turn (Reverse)!");
+                            } else {
+                                strcpy(status_text, "Your Turn!");
+                            }
                             InvalidateRect(hwnd, NULL, TRUE);
                         } else {
                             flash_btn = sequence[current_flash_index++];
                             InvalidateRect(hwnd, NULL, TRUE);
-                            SetTimer(hwnd, TIMER_SEQUENCE, 400, NULL);
+                            SetTimer(hwnd, TIMER_SEQUENCE, (current_mode == MODE_SPEED) ? 200 : 400, NULL);
                         }
                     } else {
                         flash_btn = -1;
                         InvalidateRect(hwnd, NULL, TRUE);
-                        SetTimer(hwnd, TIMER_SEQUENCE, 200, NULL);
+                        SetTimer(hwnd, TIMER_SEQUENCE, (current_mode == MODE_SPEED) ? 100 : 200, NULL);
                     }
                 }
             }
