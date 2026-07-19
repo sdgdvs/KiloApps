@@ -93,6 +93,8 @@
     <button onclick="undoMove()">Undo</button>
     <button onclick="initGame()">Reset Game</button>
     <button id="muteBtn" onclick="toggleMute()">Mute</button>
+    <button onclick="saveGame()">Save</button>
+    <button onclick="loadGame()">Load</button>
   </div>
   <div id="stats">
     Wins (Red): <span id="s-red">0</span> |
@@ -342,6 +344,45 @@
         }
       }
       playSound('invalid');
+    }
+
+    function saveGame() {
+      const state = {
+        board,
+        currentPlayer,
+        gameActive,
+        winningCells,
+        moveHistory,
+        vsAI,
+        aiDifficulty
+      };
+      localStorage.setItem('kconnect4_save', JSON.stringify(state));
+      alert('Game Saved!');
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('kconnect4_save');
+      if (saved) {
+        const state = JSON.parse(saved);
+        board = state.board;
+        currentPlayer = state.currentPlayer;
+        gameActive = state.gameActive;
+        winningCells = state.winningCells || [];
+        moveHistory = state.moveHistory || [];
+        vsAI = state.vsAI;
+        aiDifficulty = state.aiDifficulty;
+        
+        document.getElementById('modeBtn').textContent = vsAI ? 'Mode: vs AI' : 'Mode: 2 Player';
+        document.getElementById('diffSelect').style.display = vsAI ? 'inline-block' : 'none';
+        document.getElementById('diffSelect').value = aiDifficulty;
+        
+        if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
+        renderBoard();
+        updateStatus();
+        alert('Game Loaded!');
+      } else {
+        alert('No saved game found.');
+      }
     }
 
     function undoMove() {

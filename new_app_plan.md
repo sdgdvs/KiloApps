@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KConnect4 (Two-player drop-disc game)
-**Phase:** 13
+**Phase:** 14
 **Status:** Ready
 
 - Phase 1: Scaffold `KConnect4/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
@@ -64,7 +64,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 10: Add Difficulty Settings for the AI (Easy, Medium, Hard) using a Minimax algorithm for deeper difficulties. (COMPLETED)
 - Phase 11: Add hover column highlighting to visually show players where their piece will land. (COMPLETED)
 - Phase 12: Add sound effects for dropping pieces, winning/losing, and invalid moves using Web Audio API (web) and Beep/PlaySound (native). Include a mute toggle button. (COMPLETED)
-- Phase 13: Next feature (TBD)
+- Phase 13: Add Save/Load functionality to persist the current game state (board, current player, game mode, AI difficulty, and undo history) using localStorage for web and a binary .dat file for native. (COMPLETED)
+- Phase 14: Next feature (TBD)
 
 ## Next Priority (Before New Apps)
 

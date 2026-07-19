@@ -26,7 +26,7 @@ int hoverCol = -1;
 
 int winCells[7][2];
 int winCellCount = 0;
-HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn;
+HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn, hSaveBtn, hLoadBtn;
 bool isMuted = false;
 
 void PlaySoundEffect(int type) {
@@ -79,6 +79,69 @@ void SaveStats() {
     FILE *f = fopen("kconnect4_stats.bin", "wb");
     if(f) {
         fwrite(&stats, sizeof(GameStats), 1, f);
+        fclose(f);
+    }
+}
+
+typedef struct {
+    int board[ROWS][COLS];
+    int currentPlayer;
+    bool gameActive;
+    bool isDraw;
+    bool vsAI;
+    int aiDifficulty;
+    int winCells[7][2];
+    int winCellCount;
+    MoveRecord moveHistory[ROWS * COLS];
+    int historyCount;
+} GameState;
+
+void SaveGame() {
+    GameState state;
+    memcpy(state.board, board, sizeof(board));
+    state.currentPlayer = currentPlayer;
+    state.gameActive = gameActive;
+    state.isDraw = isDraw;
+    state.vsAI = vsAI;
+    state.aiDifficulty = aiDifficulty;
+    memcpy(state.winCells, winCells, sizeof(winCells));
+    state.winCellCount = winCellCount;
+    memcpy(state.moveHistory, moveHistory, sizeof(moveHistory));
+    state.historyCount = historyCount;
+    
+    FILE *f = fopen("kconnect4_save.dat", "wb");
+    if(f) {
+        fwrite(&state, sizeof(GameState), 1, f);
+        fclose(f);
+    }
+}
+
+void LoadGame(HWND hwnd) {
+    FILE *f = fopen("kconnect4_save.dat", "rb");
+    if(f) {
+        GameState state;
+        if (fread(&state, sizeof(GameState), 1, f) == 1) {
+            memcpy(board, state.board, sizeof(board));
+            currentPlayer = state.currentPlayer;
+            gameActive = state.gameActive;
+            isDraw = state.isDraw;
+            vsAI = state.vsAI;
+            aiDifficulty = state.aiDifficulty;
+            memcpy(winCells, state.winCells, sizeof(winCells));
+            winCellCount = state.winCellCount;
+            memcpy(moveHistory, state.moveHistory, sizeof(moveHistory));
+            historyCount = state.historyCount;
+            
+            SetWindowText(hModeBtn, vsAI ? "Mode: vs AI" : "Mode: 2 Player");
+            ShowWindow(hDiffSelect, vsAI ? SW_SHOW : SW_HIDE);
+            SendMessage(hDiffSelect, CB_SETCURSEL, aiDifficulty, 0);
+            
+            isAnimating = false;
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
+            
+            InvalidateRect(hwnd, NULL, TRUE);
+        }
         fclose(f);
     }
 }
@@ -387,6 +450,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hUndoBtn = CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 210, 340, 70, 30, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 290, 340, 70, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 380, 70, 30, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSaveBtn = CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 90, 380, 70, 30, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hLoadBtn = CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 170, 380, 70, 30, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             ResetGame();
             break;
         case WM_COMMAND:
@@ -404,6 +469,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 5) {
                 isMuted = !isMuted;
                 SetWindowText(hMuteBtn, isMuted ? "Unmute" : "Mute");
+            } else if (LOWORD(wParam) == 6) {
+                SaveGame();
+            } else if (LOWORD(wParam) == 7) {
+                LoadGame(hwnd);
             } else if (LOWORD(wParam) == 3) {
                 if (historyCount == 0) break;
                 if (isAnimating) break; // Don't undo during animation to prevent glitches
