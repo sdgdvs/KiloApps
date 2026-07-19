@@ -57,12 +57,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             RECT rect;
             GetClientRect(hwnd, &rect);
-            HBRUSH bg = CreateSolidBrush(RGB(30, 30, 30));
+            HBRUSH bg = CreateSolidBrush(RGB(18, 18, 18));
             FillRect(hdc, &rect, bg);
             DeleteObject(bg);
             
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(255, 255, 255));
+            SetTextColor(hdc, RGB(224, 224, 224));
             char statusText[64];
             if (!gameActive) {
                 if (isDraw) wsprintf(statusText, "It's a Draw! Click to reset.");
@@ -73,14 +73,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOut(hdc, 20, 20, statusText, lstrlen(statusText));
             
             // Draw board background
-            HBRUSH boardBg = CreateSolidBrush(RGB(0, 68, 204));
+            HBRUSH boardBg = CreateSolidBrush(RGB(31, 66, 135));
             RECT boardRect = {20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5};
             FillRect(hdc, &boardRect, boardBg);
             DeleteObject(boardBg);
             
             // Draw cells
-            HBRUSH emptyCell = CreateSolidBrush(RGB(30, 30, 30));
-            HBRUSH p1Cell = CreateSolidBrush(RGB(255, 68, 68));
+            HBRUSH emptyCell = CreateSolidBrush(RGB(18, 18, 18));
+            HBRUSH p1Cell = CreateSolidBrush(RGB(255, 82, 82));
             HBRUSH p2Cell = CreateSolidBrush(RGB(255, 235, 59));
             
             for (int r = 0; r < ROWS; r++) {
