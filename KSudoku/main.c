@@ -33,7 +33,7 @@ int elapsedTime = 0;
 int score = 0;
 int awarded[9][9];
 int timerActive = 0;
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings;
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill;
 HFONT hFont, hFontSmall;
 
 typedef struct {
@@ -453,6 +453,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 50, 30, hwnd, (HMENU)7, NULL, NULL);
             hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 45, 50, 30, hwnd, (HMENU)8, NULL, NULL);
             hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 45, 70, 30, hwnd, (HMENU)9, NULL, NULL);
+            hBtnAutoFill = CreateWindowA("BUTTON", "Auto-fill", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 45, 65, 30, hwnd, (HMENU)11, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -555,6 +556,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 8) { // Redo
                 Redo();
+                SaveGameState();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 11) { // Auto-fill Notes
+                PushState();
+                for(int r=0; r<9; r++) {
+                    for(int c=0; c<9; c++) {
+                        if(board[r][c] == 0) {
+                            for(int i=1; i<=10; i++) notes[r][c][i] = 0;
+                            for(int num=1; num<=9; num++) {
+                                int invalid = 0;
+                                for(int i=0; i<9; i++) {
+                                    if(i != c && board[r][i] == num) invalid = 1;
+                                    if(i != r && board[i][c] == num) invalid = 1;
+                                }
+                                int br = (r/3)*3, bc = (c/3)*3;
+                                for(int i=0; i<3; i++) {
+                                    for(int j=0; j<3; j++) {
+                                        if((br+i != r || bc+j != c) && board[br+i][bc+j] == num) invalid = 1;
+                                    }
+                                }
+                                if(!invalid) {
+                                    notes[r][c][num] = 1;
+                                }
+                            }
+                        }
+                    }
+                }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 9) { // Settings
