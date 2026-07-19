@@ -23,6 +23,7 @@ int MyRand() {
 
 HWND hBtnRandomize;
 HWND hBtnToggle;
+HFONT hBtnFont = NULL;
 int isLineChart = 0;
 int hoveredIndex = -1;
 int mouseX = 0, mouseY = 0;
@@ -37,9 +38,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnToggle = CreateWindowEx(0, "BUTTON", "Toggle Type",
                 WS_CHILD | WS_VISIBLE,
                 W / 2 + 10, H - 70, 100, 24, hwnd, (HMENU)2, NULL, NULL);
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hBtnFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            SendMessage(hBtnRandomize, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
+            SendMessage(hBtnToggle, WM_SETFONT, (WPARAM)hBtnFont, TRUE);
             SetTimer(hwnd, 1, 16, NULL); // Animation timer
             break;
         }
@@ -255,6 +256,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_ERASEBKGND:
             return 1;
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            if (hBtnFont) DeleteObject(hBtnFont);
             PostQuitMessage(0);
             break;
         default:

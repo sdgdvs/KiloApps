@@ -203,5 +203,6 @@ Pass 1 Complete.
 - **KAudio**: Added ARIA labels and accessibility attributes in `kaudio.html`, and added window blur listener to prevent stuck keys. Enforced bounds checking on recording array. In `main.c`, ensured note-off events are recorded on focus loss or octave shift.
 - **KBBS**: Fixed view jump bug on line add in `kbbs.html` by correctly incrementing `scrollOffset`. In `main.c`, fixed GDI resource leaks by tracking and deleting `hUIFont` and `hBgBrush` in `WM_DESTROY`, and removed dead code (`PlayChime`).
 - **KCalc**: Added ARIA labels to buttons and fixed potential XSS by using `textContent` in `kcalc.html`. Fixed GDI resource leaks (`HFONT`, `HBRUSH`) in `main.c`.
+- **KChart**: Added ARIA labels to canvas and buttons in `kchart.html`. Fixed GDI resource leak (`HFONT`) and timer leak in `main.c` on `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: Chart.
+Start Pass 2 (Deeper Quality checks). Next target: KChat.
