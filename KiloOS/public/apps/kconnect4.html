@@ -50,6 +50,13 @@
     border: 3px solid white;
     box-shadow: 0 0 10px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.4);
   }
+  @keyframes drop {
+    0% { transform: translateY(var(--drop-dist, -300px)); }
+    100% { transform: translateY(0); }
+  }
+  .dropping {
+    animation: drop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
   button {
     margin-top: 20px;
     padding: 10px 20px;
@@ -93,22 +100,38 @@
       currentPlayer = 1;
       gameActive = true;
       winningCells = [];
+      
+      if (boardEl.children.length === 0) {
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = `cell-${r}-${c}`;
+            boardEl.appendChild(cell);
+          }
+        }
+      }
       renderBoard();
       updateStatus();
     }
 
-    function renderBoard() {
-      boardEl.innerHTML = '';
+    function renderBoard(animatedRow = -1, animatedCol = -1) {
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-          const cell = document.createElement('div');
-          cell.className = 'cell';
-          if (board[r][c] === 1) cell.classList.add('p1');
-          if (board[r][c] === 2) cell.classList.add('p2');
-          if (winningCells.some(w => w[0] === r && w[1] === c)) {
-            cell.classList.add('highlight');
+          const cell = document.getElementById(`cell-${r}-${c}`);
+          let classes = ['cell'];
+          if (board[r][c] === 1) classes.push('p1');
+          if (board[r][c] === 2) classes.push('p2');
+          
+          if (r === animatedRow && c === animatedCol) {
+            classes.push('dropping');
+            cell.style.setProperty('--drop-dist', `-${(r + 1) * 55}px`);
           }
-          boardEl.appendChild(cell);
+          
+          if (winningCells.some(w => w[0] === r && w[1] === c)) {
+            classes.push('highlight');
+          }
+          cell.className = classes.join(' ');
         }
       }
     }
@@ -139,17 +162,17 @@
             const color = currentPlayer === 1 ? 'Red' : 'Yellow';
             statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
             gameActive = false;
-            renderBoard();
+            renderBoard(r, col);
           } else if (checkDraw()) {
             statusEl.textContent = `It's a Draw!`;
             gameActive = false;
-            renderBoard();
+            renderBoard(r, col);
           } else {
             currentPlayer = currentPlayer === 1 ? 2 : 1;
             updateStatus();
-            renderBoard();
+            renderBoard(r, col);
             if (vsAI && currentPlayer === 2 && gameActive) {
-              setTimeout(aiMove, 300);
+              setTimeout(aiMove, 500);
             }
           }
           return;

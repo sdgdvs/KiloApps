@@ -13,6 +13,13 @@ bool gameActive = true;
 bool isDraw = false;
 bool vsAI = true;
 
+bool isAnimating = false;
+int animPlayer = 0;
+int animRow = -1;
+int animCol = -1;
+int animY = 0;
+int animTargetY = 0;
+
 int winCells[7][2];
 int winCellCount = 0;
 HWND hModeBtn, hResetBtn;
@@ -24,6 +31,7 @@ void ResetGame() {
     currentPlayer = 1;
     gameActive = true;
     isDraw = false;
+    isAnimating = false;
     winCellCount = 0;
 }
 
@@ -115,15 +123,13 @@ void AIMove(HWND hwnd) {
     for (int r = ROWS - 1; r >= 0; r--) {
         if (board[r][bestCol] == 0) {
             board[r][bestCol] = 2;
-            if (CheckWin(r, bestCol, 2)) {
-                gameActive = false;
-            } else if (CheckDraw()) {
-                gameActive = false;
-                isDraw = true;
-            } else {
-                currentPlayer = 1;
-            }
-            InvalidateRect(hwnd, NULL, TRUE);
+            animPlayer = 2;
+            animRow = r;
+            animCol = bestCol;
+            animY = 50;
+            animTargetY = 50 + 5 + r * 45;
+            isAnimating = true;
+            SetTimer(hwnd, 2, 16, NULL);
             break;
         }
     }
@@ -152,6 +158,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 AIMove(hwnd);
+            } else if (wParam == 2) {
+                animY += 25;
+                if (animY >= animTargetY) {
+                    animY = animTargetY;
+                    isAnimating = false;
+                    KillTimer(hwnd, 2);
+                    
+                    if (CheckWin(animRow, animCol, animPlayer)) {
+                        gameActive = false;
+                    } else if (CheckDraw()) {
+                        gameActive = false;
+                        isDraw = true;
+                    } else {
+                        currentPlayer = animPlayer == 1 ? 2 : 1;
+                        if (vsAI && currentPlayer == 2 && gameActive) {
+                            SetTimer(hwnd, 1, 300, NULL);
+                        }
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         case WM_PAINT: {
@@ -180,6 +206,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &boardRect, boardBg);
             DeleteObject(boardBg);
             
+            HRGN hRgn = CreateRectRgn(20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5);
+            SelectClipRgn(hdc, hRgn);
+
             // Draw cells
             HBRUSH emptyCell = CreateSolidBrush(RGB(18, 18, 18));
             HBRUSH p1Cell = CreateSolidBrush(RGB(255, 82, 82));
@@ -200,7 +229,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
-                    if (board[r][c] == 1) SelectObject(hdc, p1Cell);
+                    if (isAnimating && r == animRow && c == animCol) {
+                        SelectObject(hdc, emptyCell);
+                    } else if (board[r][c] == 1) SelectObject(hdc, p1Cell);
                     else if (board[r][c] == 2) SelectObject(hdc, p2Cell);
                     else SelectObject(hdc, emptyCell);
                     
@@ -213,6 +244,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Ellipse(hdc, x, y, x + 40, y + 40);
                 }
             }
+            
+            if (isAnimating) {
+                int x = 20 + 5 + animCol * 45;
+                if (animPlayer == 1) SelectObject(hdc, p1Cell);
+                else SelectObject(hdc, p2Cell);
+                SelectObject(hdc, nullPen);
+                Ellipse(hdc, x, animY, x + 40, animY + 40);
+            }
+            
+            SelectClipRgn(hdc, NULL);
+            DeleteObject(hRgn);
+
             SelectObject(hdc, nullPen);
             DeleteObject(emptyCell);
             DeleteObject(p1Cell);
@@ -223,6 +266,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
+            if (isAnimating) break;
             if (!gameActive) {
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -238,18 +282,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int r = ROWS - 1; r >= 0; r--) {
                         if (board[r][c] == 0) {
                             board[r][c] = currentPlayer;
-                            if (CheckWin(r, c, currentPlayer)) {
-                                gameActive = false;
-                            } else if (CheckDraw()) {
-                                gameActive = false;
-                                isDraw = true;
-                            } else {
-                                currentPlayer = currentPlayer == 1 ? 2 : 1;
-                                if (vsAI && currentPlayer == 2) {
-                                    SetTimer(hwnd, 1, 300, NULL);
-                                }
-                            }
-                            InvalidateRect(hwnd, NULL, TRUE);
+                            animPlayer = currentPlayer;
+                            animRow = r;
+                            animCol = c;
+                            animY = 50;
+                            animTargetY = 50 + 5 + r * 45;
+                            isAnimating = true;
+                            SetTimer(hwnd, 2, 16, NULL);
                             break;
                         }
                     }
