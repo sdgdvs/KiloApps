@@ -49,15 +49,16 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFreecell
-**Phase:** 1
+**Phase:** 2
 **Status:** In Progress
 
-- Phase 1: Scaffold `KFreecell/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 1: Scaffold `KFreecell/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 
 ## Next Priority (Before New Apps)
 
 **App:** KFreecell
-**Goal:** Phase 1
+**Goal:** Phase 2
 
 
 ## App Lifecycle (14 phases per app)
