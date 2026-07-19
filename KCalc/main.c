@@ -245,6 +245,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            DeleteObject((HGDIOBJ)SendMessageA(hDisplay, WM_GETFONT, 0, 0));
             PostQuitMessage(0);
             return 0;
     }
@@ -295,5 +296,6 @@ void __stdcall MainEntry() {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+    DeleteObject(wc.hbrBackground);
     ExitProcess(0);
 }

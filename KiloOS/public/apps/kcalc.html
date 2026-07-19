@@ -159,7 +159,7 @@
       <button class="func" onclick="memRecall()">MR</button>
       <button class="func" onclick="memAdd()">M+</button>
       <button class="func" onclick="memSub()">M-</button>
-      <button class="func danger" onclick="clearDisp()">C</button>
+      <button class="func danger" onclick="clearDisp()" aria-label="Clear">C</button>
 
       <!-- Row 1 -->
       <button class="func" onclick="append('Math.sin(')">sin</button>
@@ -180,35 +180,35 @@
       <button onclick="append('7')">7</button>
       <button onclick="append('8')">8</button>
       <button onclick="append('9')">9</button>
-      <button class="operator" onclick="append('/')">÷</button>
+      <button class="operator" onclick="append('/')" aria-label="Divide">÷</button>
 
       <!-- Row 3 -->
       <button class="func" onclick="append('Math.log10(')">log</button>
       <button onclick="append('4')">4</button>
       <button onclick="append('5')">5</button>
       <button onclick="append('6')">6</button>
-      <button class="operator" onclick="append('*')">×</button>
+      <button class="operator" onclick="append('*')" aria-label="Multiply">×</button>
 
       <!-- Row 4 -->
-      <button class="func" onclick="append('Math.sqrt(')">√</button>
+      <button class="func" onclick="append('Math.sqrt(')" aria-label="Square Root">√</button>
       <button onclick="append('1')">1</button>
       <button onclick="append('2')">2</button>
       <button onclick="append('3')">3</button>
-      <button class="operator" onclick="append('-')">−</button>
+      <button class="operator" onclick="append('-')" aria-label="Subtract">−</button>
 
       <!-- Row 5 -->
       <button class="func" onclick="append('**')">^</button>
-      <button class="func" onclick="append('Math.PI')">π</button>
+      <button class="func" onclick="append('Math.PI')" aria-label="Pi">π</button>
       <button onclick="append('0')">0</button>
       <button onclick="append('.')">.</button>
-      <button class="operator" onclick="append('+')">+</button>
+      <button class="operator" onclick="append('+')" aria-label="Add">+</button>
 
       <!-- Row 6 -->
       <button class="func" onclick="append('Math.exp(')">eˣ</button>
       <button class="func" onclick="append('Math.E')">e</button>
-      <button class="func danger" onclick="backspace()">⌫</button>
+      <button class="func danger" onclick="backspace()" aria-label="Backspace">⌫</button>
       <button class="operator" onclick="append('%')">mod</button>
-      <button class="operator" onclick="calc()">=</button>
+      <button class="operator" onclick="calc()" aria-label="Equals">=</button>
     </div>
   </div>
   <script>
@@ -240,7 +240,7 @@
         .replace(/\*/g, '×')
         .replace(/\//g, '÷')
         .replace(/-/g, '−');
-      d.innerText = pretty === '' ? '0' : pretty;
+      d.textContent = pretty === '' ? '0' : pretty;
       d.scrollLeft = d.scrollWidth; // Auto-scroll to end
     }
 
