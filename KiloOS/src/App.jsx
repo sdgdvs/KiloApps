@@ -73,7 +73,8 @@ const APPS = [
   { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/khabit.ico', w: 800, h: 600, folder: 'Office' },
   { id: 'kflash', title: 'KFlash', url: '/apps/kflash.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kflash.ico', w: 600, h: 500, folder: 'Office' },
   { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/k2048.ico', w: 380, h: 480, folder: 'Games' },
-  { id: 'ksudoku', title: 'KSudoku', url: '/apps/ksudoku.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksudoku.ico', w: 600, h: 600, folder: 'Games' }
+  { id: 'ksudoku', title: 'KSudoku', url: '/apps/ksudoku.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksudoku.ico', w: 600, h: 600, folder: 'Games' },
+  { id: 'kconnect4', title: 'KConnect4', url: '/apps/kconnect4.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kconnect4.ico', w: 600, h: 600, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
