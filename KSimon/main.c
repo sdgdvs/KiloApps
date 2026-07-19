@@ -61,11 +61,19 @@ COLORREF flash_colors[4] = {
 char status_text[128] = "Press Space to Start";
 int score = 0;
 int high_scores[3] = {0, 0, 0};
+int stat_games_played = 0;
+int stat_longest_streak = 0;
+int stat_best_time = 0;
+time_t start_time = 0;
 
 void LoadHighScores() {
     high_scores[MODE_CLASSIC] = GetPrivateProfileInt("HighScores", "Classic", 0, ".\\ksimon.ini");
     high_scores[MODE_REVERSE] = GetPrivateProfileInt("HighScores", "Reverse", 0, ".\\ksimon.ini");
     high_scores[MODE_SPEED]   = GetPrivateProfileInt("HighScores", "Speed", 0, ".\\ksimon.ini");
+    
+    stat_games_played = GetPrivateProfileInt("Stats", "GamesPlayed", 0, ".\\ksimon.ini");
+    stat_longest_streak = GetPrivateProfileInt("Stats", "LongestStreak", 0, ".\\ksimon.ini");
+    stat_best_time = GetPrivateProfileInt("Stats", "BestTime", 0, ".\\ksimon.ini");
 }
 
 void SaveHighScore(int mode, int s) {
@@ -74,6 +82,16 @@ void SaveHighScore(int mode, int s) {
     if (mode == MODE_CLASSIC) WritePrivateProfileString("HighScores", "Classic", str, ".\\ksimon.ini");
     else if (mode == MODE_REVERSE) WritePrivateProfileString("HighScores", "Reverse", str, ".\\ksimon.ini");
     else if (mode == MODE_SPEED) WritePrivateProfileString("HighScores", "Speed", str, ".\\ksimon.ini");
+}
+
+void SaveStats() {
+    char str[32];
+    sprintf(str, "%d", stat_games_played);
+    WritePrivateProfileString("Stats", "GamesPlayed", str, ".\\ksimon.ini");
+    sprintf(str, "%d", stat_longest_streak);
+    WritePrivateProfileString("Stats", "LongestStreak", str, ".\\ksimon.ini");
+    sprintf(str, "%d", stat_best_time);
+    WritePrivateProfileString("Stats", "BestTime", str, ".\\ksimon.ini");
 }
 
 void DrawBoard(HDC hdc) {
@@ -108,6 +126,10 @@ void DrawBoard(HDC hdc) {
     char hi_score_text[64];
     sprintf(hi_score_text, "High Score: %d", high_scores[current_mode]);
     TextOutA(hdc, 10, 50, hi_score_text, strlen(hi_score_text));
+
+    char stats_text[128];
+    sprintf(stats_text, "Games: %d | Streak: %d | Time: %ds", stat_games_played, stat_longest_streak, stat_best_time);
+    TextOutA(hdc, 10, 70, stats_text, strlen(stats_text));
 }
 
 void StartGame() {
@@ -116,6 +138,7 @@ void StartGame() {
     sequence_length = 0;
     score = 0;
     is_playing_sequence = 1;
+    start_time = time(NULL);
     strcpy(status_text, "Get Ready...");
     InvalidateRect(hwndMain, NULL, TRUE);
     SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
@@ -158,6 +181,12 @@ void HandleClick(int btn_id) {
         } else {
             sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
         }
+        
+        stat_games_played++;
+        if (score > stat_longest_streak) stat_longest_streak = score;
+        int elapsed = (int)(time(NULL) - start_time);
+        if (elapsed > stat_best_time) stat_best_time = elapsed;
+        SaveStats();
         sequence_length = 0;
         EnableWindow(hwndModeBox, TRUE);
         InvalidateRect(hwndMain, NULL, TRUE);
@@ -184,7 +213,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hwndModeBox = CreateWindowEx(
                 0, "COMBOBOX", "", 
                 CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL, 
-                10, 70, 150, 100, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 90, 150, 100, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Classic Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");

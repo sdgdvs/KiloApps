@@ -124,6 +124,9 @@
     <button id="start-btn">Start Game</button>
   </div>
   <div id="status">Press Start</div>
+  <div id="stats" style="margin-top: 15px; font-size: 14px; color: #aaa;">
+    Games: <span id="stat-games">0</span> | Streak: <span id="stat-streak">0</span> | Best Time: <span id="stat-time">0</span>s
+  </div>
 </div>
 
 <script>
@@ -139,6 +142,27 @@
   const statusDisplay = document.getElementById('status');
   const highScoreModeDisplay = document.getElementById('high-score-mode');
   const highScoreDisplay = document.getElementById('high-score');
+
+  const statGamesDisplay = document.getElementById('stat-games');
+  const statStreakDisplay = document.getElementById('stat-streak');
+  const statTimeDisplay = document.getElementById('stat-time');
+
+  function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
+  function setStat(key, value) { localStorage.setItem('KSimon_Stat_' + key, value); }
+  
+  let statsGamesPlayed = getStat('gamesPlayed');
+  let statsLongestStreak = getStat('longestStreak');
+  let statsBestTime = getStat('bestTime');
+  
+  function updateStatsDisplay() {
+    statGamesDisplay.innerText = statsGamesPlayed;
+    statStreakDisplay.innerText = statsLongestStreak;
+    statTimeDisplay.innerText = statsBestTime;
+  }
+
+  updateStatsDisplay();
+
+  let startTime = 0;
 
   let sequence = [];
   let playerSequence = [];
@@ -193,6 +217,7 @@
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
+    startTime = Date.now();
     currentMode = modeSelect.value;
     modeSelect.disabled = true;
     sequence = [];
@@ -268,6 +293,15 @@
         updateHighScoreDisplay();
         statusDisplay.innerText += " (New High Score!)";
       }
+
+      statsGamesPlayed++;
+      statsLongestStreak = Math.max(statsLongestStreak, finalScore);
+      let gameTime = Math.floor((Date.now() - startTime) / 1000);
+      statsBestTime = Math.max(statsBestTime, gameTime);
+      setStat('gamesPlayed', statsGamesPlayed);
+      setStat('longestStreak', statsLongestStreak);
+      setStat('bestTime', statsBestTime);
+      updateStatsDisplay();
       
       sequence = [];
       startBtn.disabled = false;
