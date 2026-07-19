@@ -6,96 +6,299 @@
 <title>KFreecell</title>
 <style>
   body {
-    margin: 0;
-    padding: 0;
+    margin: 0; padding: 0;
     background-color: #1e1e1e;
     color: #ffffff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex; flex-direction: column;
+    height: 100vh; overflow: hidden;
+    user-select: none;
   }
   .header {
-    background-color: #2d2d30;
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #3e3e42;
+    background-color: #2d2d30; padding: 10px;
+    text-align: center; border-bottom: 1px solid #3e3e42;
+    display: flex; justify-content: space-between; align-items: center;
   }
-  .header h1 {
-    margin: 0;
-    font-size: 20px;
+  .header h1 { margin: 0; font-size: 20px; }
+  .btn {
+    background: #3e3e42; color: #fff; border: 1px solid #555;
+    padding: 5px 10px; cursor: pointer; border-radius: 3px;
   }
+  .btn:hover { background: #555; }
   .game-board {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-sizing: border-box;
+    flex-grow: 1; padding: 20px;
+    display: flex; flex-direction: column; gap: 20px;
   }
   .top-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 20px;
+    display: flex; justify-content: space-between;
   }
-  .free-cells, .foundation {
-    display: flex;
-    gap: 10px;
-  }
+  .group { display: flex; gap: 10px; }
   .cell {
-    width: 80px;
-    height: 120px;
-    border: 2px solid #555;
-    border-radius: 5px;
+    width: 70px; height: 100px;
+    border: 2px solid #555; border-radius: 5px;
     background-color: #252526;
+    position: relative; box-sizing: border-box;
   }
   .tableau {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-grow: 1;
+    display: flex; justify-content: space-between; flex-grow: 1;
   }
   .column {
-    width: 80px;
-    min-height: 120px;
-    border: 1px dashed #555;
-    border-radius: 5px;
+    width: 70px; min-height: 100px;
+    position: relative;
   }
+  .card {
+    width: 70px; height: 100px;
+    border-radius: 5px; border: 1px solid #ccc;
+    background-color: #fff;
+    position: absolute; top: 0; left: 0;
+    box-sizing: border-box;
+    display: flex; flex-direction: column;
+    justify-content: space-between; padding: 5px;
+    font-size: 16px; font-weight: bold;
+    cursor: pointer; box-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+  }
+  .card.red { color: #d32f2f; }
+  .card.black { color: #000000; }
+  .card.selected { outline: 3px solid #ffeb3b; }
 </style>
 </head>
 <body>
   <div class="header">
+    <button class="btn" onclick="initGame()">New Game</button>
     <h1>KFreecell</h1>
+    <div id="status" style="font-size: 14px;"></div>
   </div>
   <div class="game-board">
     <div class="top-row">
-      <div class="free-cells" id="free-cells">
-        <div class="cell"></div>
-        <div class="cell"></div>
-        <div class="cell"></div>
-        <div class="cell"></div>
+      <div class="group" id="free-cells">
+        <div class="cell" data-type="free" data-index="0"></div>
+        <div class="cell" data-type="free" data-index="1"></div>
+        <div class="cell" data-type="free" data-index="2"></div>
+        <div class="cell" data-type="free" data-index="3"></div>
       </div>
-      <div class="foundation" id="foundation">
-        <div class="cell"></div>
-        <div class="cell"></div>
-        <div class="cell"></div>
-        <div class="cell"></div>
+      <div class="group" id="foundations">
+        <div class="cell" data-type="found" data-index="0"></div>
+        <div class="cell" data-type="found" data-index="1"></div>
+        <div class="cell" data-type="found" data-index="2"></div>
+        <div class="cell" data-type="found" data-index="3"></div>
       </div>
     </div>
     <div class="tableau" id="tableau">
-      <div class="column"></div>
-      <div class="column"></div>
-      <div class="column"></div>
-      <div class="column"></div>
-      <div class="column"></div>
-      <div class="column"></div>
-      <div class="column"></div>
-      <div class="column"></div>
+      <div class="column" data-type="tab" data-index="0"></div>
+      <div class="column" data-type="tab" data-index="1"></div>
+      <div class="column" data-type="tab" data-index="2"></div>
+      <div class="column" data-type="tab" data-index="3"></div>
+      <div class="column" data-type="tab" data-index="4"></div>
+      <div class="column" data-type="tab" data-index="5"></div>
+      <div class="column" data-type="tab" data-index="6"></div>
+      <div class="column" data-type="tab" data-index="7"></div>
     </div>
   </div>
   <script>
-    console.log("KFreecell initialized");
-    // Placeholder for game logic
+    const suits = ['♠', '♥', '♣', '♦'];
+    const colors = ['black', 'red', 'black', 'red'];
+    const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+    let deck = [];
+    let state = {
+      free: [null, null, null, null],
+      found: [0, 0, 0, 0], // ranks 0-13 per suit (index matches suits array)
+      tab: Array.from({length: 8}, () => []),
+      selected: null // { type, index, cardIdx }
+    };
+
+    function initGame() {
+      deck = [];
+      for(let s=0; s<4; s++) {
+        for(let r=1; r<=13; r++) {
+          deck.push({ s, r, color: colors[s], display: ranks[r-1] + suits[s] });
+        }
+      }
+      for(let i = deck.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deck[i], deck[j]] = [deck[j], deck[i]];
+      }
+
+      state.free = [null, null, null, null];
+      state.found = [0, 0, 0, 0];
+      state.tab = Array.from({length: 8}, () => []);
+      state.selected = null;
+
+      let c = 0;
+      for(let i=0; i<52; i++) {
+        state.tab[c].push(deck[i]);
+        c = (c + 1) % 8;
+      }
+      
+      document.getElementById('status').innerText = "";
+      render();
+    }
+
+    function canMoveToTab(card, targetTab) {
+      if(targetTab.length === 0) return true;
+      let topCard = targetTab[targetTab.length - 1];
+      return card.color !== topCard.color && card.r === topCard.r - 1;
+    }
+
+    function canMoveToFound(card) {
+      let currentTop = state.found[card.s];
+      return card.r === currentTop + 1;
+    }
+
+    function getDraggableGroup(tabIdx, startIdx) {
+      let col = state.tab[tabIdx];
+      let group = [col[startIdx]];
+      for(let i = startIdx + 1; i < col.length; i++) {
+        let prev = col[i-1];
+        let curr = col[i];
+        if(curr.color !== prev.color && curr.r === prev.r - 1) {
+          group.push(curr);
+        } else {
+          return null;
+        }
+      }
+      return group;
+    }
+
+    function getMaxMoveCount() {
+      let emptyFree = state.free.filter(c => !c).length;
+      let emptyTab = state.tab.filter(c => c.length === 0).length;
+      return (emptyFree + 1) * Math.pow(2, emptyTab);
+    }
+
+    function handleCardClick(type, index, cardIdx, isTarget = false) {
+      if(!state.selected) {
+        if(!isTarget) {
+          if(type === 'tab') {
+            let group = getDraggableGroup(index, cardIdx);
+            if(group && group.length <= getMaxMoveCount()) {
+               state.selected = { type, index, cardIdx };
+            }
+          } else if(type === 'free' && state.free[index]) {
+            state.selected = { type, index, cardIdx: 0 };
+          }
+        }
+      } else {
+        // execute move
+        let sel = state.selected;
+        let cardsToMove = [];
+        if(sel.type === 'tab') {
+          cardsToMove = state.tab[sel.index].slice(sel.cardIdx);
+        } else if(sel.type === 'free') {
+          cardsToMove = [state.free[sel.index]];
+        }
+        
+        let moved = false;
+
+        if(type === 'tab') {
+          let emptyTabFactor = (state.tab[index].length === 0) ? 1 : 0;
+          let emptyFree = state.free.filter(c => !c).length;
+          let emptyTab = state.tab.filter((c, i) => c.length === 0 && i !== index).length;
+          let maxMove = (emptyFree + 1) * Math.pow(2, emptyTab);
+
+          if(cardsToMove.length <= maxMove && canMoveToTab(cardsToMove[0], state.tab[index])) {
+            state.tab[index].push(...cardsToMove);
+            moved = true;
+          }
+        } else if(type === 'free' && cardsToMove.length === 1 && !state.free[index]) {
+          state.free[index] = cardsToMove[0];
+          moved = true;
+        } else if(type === 'found' && cardsToMove.length === 1 && cardsToMove[0].s === index && canMoveToFound(cardsToMove[0])) {
+          state.found[index] = cardsToMove[0].r;
+          moved = true;
+        }
+
+        if(moved) {
+          if(sel.type === 'tab') {
+            state.tab[sel.index].splice(sel.cardIdx);
+          } else if(sel.type === 'free') {
+            state.free[sel.index] = null;
+          }
+          checkWin();
+        }
+        
+        state.selected = null;
+      }
+      render();
+    }
+
+    function handleBgClick(type, index) {
+      handleCardClick(type, index, 0, true);
+    }
+
+    function checkWin() {
+      if(state.found.every(r => r === 13)) {
+        document.getElementById('status').innerText = "You Win!";
+      }
+    }
+
+    function render() {
+      // Free cells
+      document.querySelectorAll('#free-cells .cell').forEach((el, i) => {
+        el.innerHTML = '';
+        el.onclick = () => handleBgClick('free', i);
+        if(state.free[i]) {
+          let c = state.free[i];
+          let cardEl = createCardEl(c, 'free', i, 0);
+          el.appendChild(cardEl);
+        }
+      });
+
+      // Foundations
+      document.querySelectorAll('#foundations .cell').forEach((el, i) => {
+        el.innerHTML = '';
+        el.onclick = () => handleBgClick('found', i);
+        if(state.found[i] > 0) {
+          let c = { s: i, r: state.found[i], color: colors[i], display: ranks[state.found[i]-1] + suits[i] };
+          let cardEl = createCardEl(c, 'found', i, 0);
+          el.appendChild(cardEl);
+        } else {
+          el.innerText = suits[i];
+          el.style.color = colors[i] === 'red' ? '#8b0000' : '#444';
+          el.style.fontSize = '40px';
+          el.style.display = 'flex';
+          el.style.justifyContent = 'center';
+          el.style.alignItems = 'center';
+        }
+      });
+
+      // Tableau
+      document.querySelectorAll('#tableau .column').forEach((el, i) => {
+        el.innerHTML = '';
+        el.onclick = (e) => { if(e.target === el) handleBgClick('tab', i); };
+        state.tab[i].forEach((c, j) => {
+          let cardEl = createCardEl(c, 'tab', i, j);
+          cardEl.style.top = (j * 25) + 'px';
+          el.appendChild(cardEl);
+        });
+      });
+    }
+
+    function createCardEl(c, type, index, cardIdx) {
+      let div = document.createElement('div');
+      div.className = 'card ' + c.color;
+      
+      let top = document.createElement('div');
+      top.innerText = c.display;
+      let bot = document.createElement('div');
+      bot.innerText = c.display;
+      bot.style.transform = 'rotate(180deg)';
+      
+      div.appendChild(top);
+      div.appendChild(bot);
+      
+      if(state.selected && state.selected.type === type && state.selected.index === index && cardIdx >= state.selected.cardIdx) {
+        div.classList.add('selected');
+      }
+
+      div.onclick = (e) => {
+        e.stopPropagation();
+        handleCardClick(type, index, cardIdx);
+      };
+      return div;
+    }
+
+    initGame();
   </script>
 </body>
 </html>
