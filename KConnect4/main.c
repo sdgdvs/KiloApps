@@ -23,7 +23,7 @@ int animTargetY = 0;
 
 int winCells[7][2];
 int winCellCount = 0;
-HWND hModeBtn, hResetBtn;
+HWND hModeBtn, hUndoBtn, hResetBtn;
 
 typedef struct {
     int redWins;
@@ -34,6 +34,16 @@ typedef struct {
     int lastWinner;
 } GameStats;
 GameStats stats = {0,0,0,0,0,0};
+
+typedef struct {
+    int r;
+    int c;
+    int p;
+    GameStats oldStats;
+} MoveRecord;
+
+MoveRecord moveHistory[ROWS * COLS];
+int historyCount = 0;
 
 void LoadStats() {
     FILE *f = fopen("kconnect4_stats.bin", "rb");
@@ -59,6 +69,7 @@ void ResetGame() {
     isDraw = false;
     isAnimating = false;
     winCellCount = 0;
+    historyCount = 0;
 }
 
 bool CheckWin(int r, int c, int p) {
@@ -148,6 +159,12 @@ void AIMove(HWND hwnd) {
     
     for (int r = ROWS - 1; r >= 0; r--) {
         if (board[r][bestCol] == 0) {
+            moveHistory[historyCount].r = r;
+            moveHistory[historyCount].c = bestCol;
+            moveHistory[historyCount].p = 2;
+            moveHistory[historyCount].oldStats = stats;
+            historyCount++;
+
             board[r][bestCol] = 2;
             animPlayer = 2;
             animRow = r;
@@ -166,8 +183,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             LoadStats();
-            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 20, 340, 150, 30, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 340, 100, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 20, 340, 120, 30, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hUndoBtn = CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 150, 340, 80, 30, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 240, 340, 80, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             ResetGame();
             break;
         case WM_COMMAND:
@@ -178,6 +196,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 2) {
                 ResetGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 3) {
+                if (historyCount == 0) break;
+                if (isAnimating) break; // Don't undo during animation to prevent glitches
+                
+                // If AI is scheduled to move, kill the timer
+                KillTimer(hwnd, 1);
+                
+                int toPop = 1;
+                if (vsAI) {
+                    if (gameActive && currentPlayer == 1 && historyCount >= 2) toPop = 2;
+                    if (!gameActive && historyCount >= 2 && moveHistory[historyCount - 1].p == 2) toPop = 2;
+                }
+                
+                for (int i = 0; i < toPop; i++) {
+                    if (historyCount > 0) {
+                        historyCount--;
+                        MoveRecord m = moveHistory[historyCount];
+                        board[m.r][m.c] = 0;
+                        stats = m.oldStats;
+                        currentPlayer = m.p;
+                    }
+                }
+                
+                SaveStats();
+                gameActive = true;
+                isDraw = false;
+                winCellCount = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
@@ -324,6 +370,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (c >= 0 && c < COLS) {
                     for (int r = ROWS - 1; r >= 0; r--) {
                         if (board[r][c] == 0) {
+                            moveHistory[historyCount].r = r;
+                            moveHistory[historyCount].c = c;
+                            moveHistory[historyCount].p = currentPlayer;
+                            moveHistory[historyCount].oldStats = stats;
+                            historyCount++;
+
                             board[r][c] = currentPlayer;
                             animPlayer = currentPlayer;
                             animRow = r;

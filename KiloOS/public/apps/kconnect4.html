@@ -83,6 +83,7 @@
   <div id="board"></div>
   <div>
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
+    <button onclick="undoMove()">Undo</button>
     <button onclick="initGame()">Reset Game</button>
   </div>
   <div id="stats">
@@ -105,6 +106,8 @@
     let currentPlayer = 1;
     let gameActive = true;
     let winningCells = [];
+    let moveHistory = [];
+    let aiTimeout = null;
 
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
@@ -132,6 +135,8 @@
       currentPlayer = 1;
       gameActive = true;
       winningCells = [];
+      moveHistory = [];
+      if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
       
       if (boardEl.children.length === 0) {
         for (let r = 0; r < ROWS; r++) {
@@ -189,7 +194,9 @@
     function dropPiece(col) {
       for (let r = ROWS - 1; r >= 0; r--) {
         if (board[r][col] === 0) {
+          let oldStats = JSON.stringify(stats);
           board[r][col] = currentPlayer;
+          moveHistory.push({r, c: col, p: currentPlayer, oldStats});
           if (checkWin(r, col)) {
             const color = currentPlayer === 1 ? 'Red' : 'Yellow';
             statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
@@ -215,12 +222,41 @@
             updateStatus();
             renderBoard(r, col);
             if (vsAI && currentPlayer === 2 && gameActive) {
-              setTimeout(aiMove, 500);
+              aiTimeout = setTimeout(aiMove, 500);
             }
           }
           return;
         }
       }
+    }
+
+    function undoMove() {
+      if (moveHistory.length === 0) return;
+      if (aiTimeout) {
+        clearTimeout(aiTimeout);
+        aiTimeout = null;
+      }
+      
+      let toPop = 1;
+      if (vsAI) {
+        if (gameActive && currentPlayer === 1 && moveHistory.length >= 2) toPop = 2;
+        if (!gameActive && moveHistory.length >= 2 && moveHistory[moveHistory.length - 1].p === 2) toPop = 2;
+      }
+      
+      for(let i=0; i<toPop; i++) {
+        if (moveHistory.length > 0) {
+          let m = moveHistory.pop();
+          board[m.r][m.c] = 0;
+          stats = JSON.parse(m.oldStats);
+          currentPlayer = m.p;
+        }
+      }
+      
+      saveStats();
+      gameActive = true;
+      winningCells = [];
+      updateStatus();
+      renderBoard();
     }
 
     function checkWin(r, c) {
@@ -284,6 +320,7 @@
     }
 
     function aiMove() {
+      aiTimeout = null;
       if(!gameActive) return;
       let available = getAvailableCols();
       if(available.length === 0) return;
