@@ -365,6 +365,7 @@
     }
 
     document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
         if (e.key >= 'a' && e.key <= 'z') {
             guess(e.key.toUpperCase());
         } else if (e.key >= 'A' && e.key <= 'Z') {
