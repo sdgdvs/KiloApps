@@ -30,14 +30,28 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
+    transition: filter 0.1s;
+    opacity: 0.6;
   }
-  #btn-green { background-color: #00aa00; }
-  #btn-red { background-color: #aa0000; }
-  #btn-yellow { background-color: #aaaa00; }
-  #btn-blue { background-color: #0000aa; }
-  
   .simon-btn:active {
+    opacity: 1;
+  }
+  .simon-btn.active {
+    opacity: 1;
     filter: brightness(1.5);
+  }
+  #btn-0 { background-color: #00aa00; } /* green */
+  #btn-1 { background-color: #aa0000; } /* red */
+  #btn-2 { background-color: #aaaa00; } /* yellow */
+  #btn-3 { background-color: #0000aa; } /* blue */
+  
+  #controls {
+    margin-top: 20px;
+  }
+  #status {
+    margin-top: 10px;
+    font-weight: bold;
+    height: 20px;
   }
 </style>
 </head>
@@ -47,16 +61,104 @@
   <h1>KSimon</h1>
   <div>Score: <span id="score">0</span></div>
   <div class="simon-board">
-    <button id="btn-green" class="simon-btn"></button>
-    <button id="btn-red" class="simon-btn"></button>
-    <button id="btn-yellow" class="simon-btn"></button>
-    <button id="btn-blue" class="simon-btn"></button>
+    <button id="btn-0" class="simon-btn"></button>
+    <button id="btn-1" class="simon-btn"></button>
+    <button id="btn-2" class="simon-btn"></button>
+    <button id="btn-3" class="simon-btn"></button>
   </div>
-  <button id="start-btn">Start Game</button>
+  <div id="controls">
+    <button id="start-btn">Start Game</button>
+  </div>
+  <div id="status">Press Start</div>
 </div>
 
 <script>
-  console.log("KSimon basic skeleton initialized.");
+  const btns = [
+    document.getElementById('btn-0'),
+    document.getElementById('btn-1'),
+    document.getElementById('btn-2'),
+    document.getElementById('btn-3')
+  ];
+  const startBtn = document.getElementById('start-btn');
+  const scoreDisplay = document.getElementById('score');
+  const statusDisplay = document.getElementById('status');
+
+  let sequence = [];
+  let playerSequence = [];
+  let isPlayingSequence = false;
+
+  startBtn.addEventListener('click', startGame);
+
+  btns.forEach((btn, index) => {
+    btn.addEventListener('mousedown', () => {
+      if (isPlayingSequence || sequence.length === 0) return;
+      handlePlayerInput(index);
+    });
+  });
+
+  function startGame() {
+    sequence = [];
+    scoreDisplay.innerText = "0";
+    statusDisplay.innerText = "Get Ready...";
+    startBtn.disabled = true;
+    setTimeout(nextRound, 1000);
+  }
+
+  function nextRound() {
+    playerSequence = [];
+    sequence.push(Math.floor(Math.random() * 4));
+    scoreDisplay.innerText = (sequence.length - 1).toString();
+    playSequence();
+  }
+
+  function playSequence() {
+    isPlayingSequence = true;
+    statusDisplay.innerText = "Watch...";
+    let i = 0;
+    
+    function flashNext() {
+      if (i >= sequence.length) {
+        isPlayingSequence = false;
+        statusDisplay.innerText = "Your Turn!";
+        return;
+      }
+      const index = sequence[i];
+      const btn = btns[index];
+      btn.classList.add('active');
+      setTimeout(() => {
+        btn.classList.remove('active');
+        i++;
+        setTimeout(flashNext, 200); // Wait before next flash
+      }, 400); // Flash duration
+    }
+    
+    flashNext();
+  }
+
+  function handlePlayerInput(index) {
+    const btn = btns[index];
+    btn.classList.add('active');
+    setTimeout(() => {
+      btn.classList.remove('active');
+    }, 200);
+
+    playerSequence.push(index);
+
+    const currentStep = playerSequence.length - 1;
+    if (playerSequence[currentStep] !== sequence[currentStep]) {
+      // Game Over
+      statusDisplay.innerText = "Game Over! Score: " + (sequence.length - 1);
+      sequence = [];
+      startBtn.disabled = false;
+      return;
+    }
+
+    if (playerSequence.length === sequence.length) {
+      statusDisplay.innerText = "Good! Get ready...";
+      isPlayingSequence = true;
+      setTimeout(nextRound, 1000);
+    }
+  }
 </script>
 
 </body>

@@ -1,18 +1,175 @@
 #include <windows.h>
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
+
+#define BTN_GREEN  0
+#define BTN_RED    1
+#define BTN_YELLOW 2
+#define BTN_BLUE   3
+
+#define TIMER_SEQUENCE 1
+#define TIMER_FLASH    2
+
+HWND hwndMain;
+int sequence[1000];
+int sequence_length = 0;
+int player_step = 0;
+int is_playing_sequence = 0;
+int current_flash_index = 0;
+int flash_btn = -1;
+
+RECT btn_rects[4];
+COLORREF btn_colors[4] = {
+    RGB(0, 170, 0),    // Green
+    RGB(170, 0, 0),    // Red
+    RGB(170, 170, 0),  // Yellow
+    RGB(0, 0, 170)     // Blue
+};
+COLORREF flash_colors[4] = {
+    RGB(0, 255, 0),
+    RGB(255, 0, 0),
+    RGB(255, 255, 0),
+    RGB(0, 0, 255)
+};
+
+char status_text[128] = "Press Space to Start";
+int score = 0;
+
+void DrawBoard(HDC hdc) {
+    for (int i = 0; i < 4; i++) {
+        HBRUSH brush = CreateSolidBrush(flash_btn == i ? flash_colors[i] : btn_colors[i]);
+        FillRect(hdc, &btn_rects[i], brush);
+        DeleteObject(brush);
+    }
+
+    SetBkMode(hdc, TRANSPARENT);
+    TextOutA(hdc, 10, 10, status_text, strlen(status_text));
+    
+    char score_text[32];
+    sprintf(score_text, "Score: %d", score);
+    TextOutA(hdc, 10, 30, score_text, strlen(score_text));
+}
+
+void StartGame() {
+    sequence_length = 0;
+    score = 0;
+    is_playing_sequence = 1;
+    strcpy(status_text, "Get Ready...");
+    InvalidateRect(hwndMain, NULL, TRUE);
+    SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
+}
+
+void NextRound() {
+    player_step = 0;
+    sequence[sequence_length++] = rand() % 4;
+    score = sequence_length - 1;
+    is_playing_sequence = 1;
+    current_flash_index = 0;
+    strcpy(status_text, "Watch...");
+    InvalidateRect(hwndMain, NULL, TRUE);
+    SetTimer(hwndMain, TIMER_SEQUENCE, 500, NULL);
+}
+
+void HandleClick(int btn_id) {
+    if (is_playing_sequence || sequence_length == 0) return;
+
+    flash_btn = btn_id;
+    InvalidateRect(hwndMain, NULL, TRUE);
+    SetTimer(hwndMain, TIMER_FLASH, 300, NULL);
+
+    if (btn_id != sequence[player_step]) {
+        sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
+        sequence_length = 0;
+        InvalidateRect(hwndMain, NULL, TRUE);
+        return;
+    }
+
+    player_step++;
+    if (player_step == sequence_length) {
+        strcpy(status_text, "Good! Get ready...");
+        is_playing_sequence = 1;
+        InvalidateRect(hwndMain, NULL, TRUE);
+        SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
+    }
+}
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
+        case WM_CREATE:
+            hwndMain = hwnd;
+            srand((unsigned)time(NULL));
+            break;
+        case WM_SIZE: {
+            int width = LOWORD(lParam);
+            int height = HIWORD(lParam);
+            int cx = width / 2;
+            int cy = height / 2;
+            int size = 100;
+            SetRect(&btn_rects[0], cx - size - 5, cy - size - 5, cx - 5, cy - 5);
+            SetRect(&btn_rects[1], cx + 5, cy - size - 5, cx + size + 5, cy - 5);
+            SetRect(&btn_rects[2], cx - size - 5, cy + 5, cx - 5, cy + size + 5);
+            SetRect(&btn_rects[3], cx + 5, cy + 5, cx + size + 5, cy + size + 5);
+            break;
+        }
+        case WM_LBUTTONDOWN: {
+            if (is_playing_sequence) break;
+            POINT pt;
+            pt.x = LOWORD(lParam);
+            pt.y = HIWORD(lParam);
+            for (int i = 0; i < 4; i++) {
+                if (PtInRect(&btn_rects[i], pt)) {
+                    HandleClick(i);
+                    break;
+                }
+            }
+            break;
+        }
+        case WM_KEYDOWN:
+            if (wParam == VK_SPACE && sequence_length == 0) {
+                StartGame();
+            }
+            break;
+        case WM_TIMER:
+            if (wParam == TIMER_FLASH) {
+                KillTimer(hwnd, TIMER_FLASH);
+                flash_btn = -1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == TIMER_SEQUENCE) {
+                if (sequence_length == 0) {
+                    KillTimer(hwnd, TIMER_SEQUENCE);
+                    NextRound();
+                } else {
+                    if (flash_btn == -1) {
+                        if (current_flash_index >= sequence_length) {
+                            KillTimer(hwnd, TIMER_SEQUENCE);
+                            is_playing_sequence = 0;
+                            strcpy(status_text, "Your Turn!");
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        } else {
+                            flash_btn = sequence[current_flash_index++];
+                            InvalidateRect(hwnd, NULL, TRUE);
+                            SetTimer(hwnd, TIMER_SEQUENCE, 400, NULL);
+                        }
+                    } else {
+                        flash_btn = -1;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                        SetTimer(hwnd, TIMER_SEQUENCE, 200, NULL);
+                    }
+                }
+            }
+            break;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
-            TextOutA(hdc, 50, 50, "KSimon - Skeleton", 17);
+            DrawBoard(hdc);
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
@@ -22,6 +179,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = hInstance;
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.lpszClassName = CLASS_NAME;
     RegisterClass(&wc);
 

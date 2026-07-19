@@ -49,8 +49,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSimon (Memory pattern game)
-**Phase:** 1
-**Status:** In Progress
+**Phase:** 2
+**Status:** Completed
 
 - Phase 1: Scaffold `KSimon/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
