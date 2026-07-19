@@ -48,29 +48,16 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KAsteroids
-**Phase:** 14
+**App:** KFreecell
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1: Completed. Scaffolded `KAsteroids/` directory. Created web HTML file with basic UI skeleton. Registered in App.jsx.
-- Phase 2: Completed. Implemented core functionality in the web HTML (inline JS/CSS, self-contained) and native C version.
-- Phase 3: Completed. Created native C version (`main.c`, `build.bat`) with Win32 API. Aimed for functional parity with web.
-- Phase 4: Completed. Applied a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- Phase 5: Completed. Added core gameplay loop (asteroids splitting, collision detection, player death).
-- Phase 6: Completed. Added progressive waves (increasing asteroid count/speed).
-- Phase 7: Completed. Added UFO enemy behavior (spawns periodically, shoots at player).
-- Phase 8: Completed. Added High Score system to both versions.
-- Phase 9: Completed. Added Sound effects (thrust, laser, explosion) to both web (Web Audio API) and native (Beep threads).
-- Phase 10: Completed. Added visual animations (particle explosions, thrust exhaust).
-- Phase 11: Completed. Added Multiple Game Modes (Classic, Time Attack, Hardcore) to both versions.
-- Phase 12: Completed. Added Save/Load functionality for high scores and stats to both versions.
-- Phase 13: Completed. Added Statistics tracking (games played, asteroids destroyed, best accuracy).
-- Phase 14: Add Comprehensive Help / How-to-Play modal.
+- Phase 1: Scaffold `KFreecell/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 
 ## Next Priority (Before New Apps)
 
-**App:** KAsteroids
-**Goal:** Phase 14
+**App:** KFreecell
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -110,6 +97,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KAsteroids (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KSimon (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KHangman (Phase 14 completed: Added Help / How-to-Play modal to both versions)
 - KConnect4 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
@@ -124,7 +112,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
-- **KFreecell** — Card solitaire variant. Full Freecell rules. Undo stack. Auto-complete. Win statistics.
 - **KMatch3** — Gem/candy matching. Grid-based match-3 with cascades and combos. Level progression. Score multipliers.
 - **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
 - **KGo** — Abstract strategy board game. 9x9, 13x13, 19x19 boards. Territory scoring. Simple AI. Capture visualization.

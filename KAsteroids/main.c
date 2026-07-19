@@ -83,6 +83,7 @@ int game_mode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore
 int time_left = 0;
 long long last_tick_time = 0;
 bool showing_stats = false;
+bool showing_help = false;
 int current_shots_fired = 0;
 int current_shots_hit = 0;
 
@@ -192,6 +193,7 @@ void InitGame(int mode) {
     current_shots_fired = 0;
     current_shots_hit = 0;
     showing_stats = false;
+    showing_help = false;
     ship.x = WIDTH / 2.0f;
     ship.y = HEIGHT / 2.0f;
     ship.vx = 0;
@@ -379,8 +381,9 @@ void CompactArrays() {
 
 void Update() {
     if (game_over) {
-        if (keys['S']) showing_stats = true;
-        if (keys['B']) showing_stats = false;
+        if (keys['S']) { showing_stats = true; showing_help = false; }
+        if (keys['H']) { showing_help = true; showing_stats = false; }
+        if (keys['B']) { showing_stats = false; showing_help = false; }
         if (keys['1']) InitGame(0);
         if (keys['2']) InitGame(1);
         if (keys['3']) InitGame(2);
@@ -554,6 +557,7 @@ void Update() {
     
     if (!was_game_over && game_over) {
         showing_stats = false;
+        showing_help = false;
         if (current_shots_fired >= 10) {
             int acc = (int)round(((double)current_shots_hit / current_shots_fired) * 100.0);
             if (acc > stats.best_accuracy) {
@@ -679,6 +683,17 @@ void Draw(HDC hdc) {
             
             SetTextColor(hdc, RGB(250, 204, 21));
             TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 80, "[B] Back to Menu", 16);
+        } else if (showing_help) {
+            SetTextColor(hdc, RGB(56, 189, 248));
+            TextOutA(hdc, WIDTH / 2 - 45, HEIGHT / 2 - 20, "How to Play", 11);
+            
+            SetTextColor(hdc, RGB(161, 161, 170));
+            TextOutA(hdc, WIDTH / 2 - 85, HEIGHT / 2 + 10, "Arrows: Rotate & Thrust", 23);
+            TextOutA(hdc, WIDTH / 2 - 85, HEIGHT / 2 + 30, "Space: Shoot", 12);
+            TextOutA(hdc, WIDTH / 2 - 85, HEIGHT / 2 + 50, "Destroy asteroids & UFOs!", 25);
+            
+            SetTextColor(hdc, RGB(250, 204, 21));
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 80, "[B] Back to Menu", 16);
         } else {
             SetTextColor(hdc, RGB(161, 161, 170));
             TextOutA(hdc, WIDTH / 2 - 70, HEIGHT / 2 - 20, "Select Mode to Play:", 20);
@@ -688,6 +703,8 @@ void Draw(HDC hdc) {
             
             SetTextColor(hdc, RGB(163, 230, 53));
             TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 80, "[S] View Statistics", 19);
+            SetTextColor(hdc, RGB(110, 231, 183));
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 100, "[H] How to Play", 15);
         }
     }
     

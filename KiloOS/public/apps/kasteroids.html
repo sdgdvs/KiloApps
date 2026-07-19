@@ -70,6 +70,14 @@
                 <p>[2] Time Attack - 2 Min Limit</p>
                 <p>[3] Hardcore - Fast & Deadly</p>
                 <p style="margin-top: 15px; color: #a3e635;">[S] View Statistics</p>
+                <p style="margin-top: 5px; color: #6ee7b7;">[H] How to Play</p>
+            </div>
+            <div id="helpContent" style="display: none;">
+                <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 15px; font-size: 24px;">How to Play</h3>
+                <p>Arrows: Rotate & Thrust</p>
+                <p>Space: Shoot</p>
+                <p style="margin-top: 10px;">Destroy asteroids & UFOs!</p>
+                <p style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
             </div>
             <div id="statsContent" style="display: none;">
                 <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 15px; font-size: 24px;">Statistics</h3>
@@ -560,13 +568,20 @@
                 if (keys['Digit3']) initGame(2);
                 if (keys['KeyS']) {
                     document.getElementById('menuContent').style.display = 'none';
+                    document.getElementById('helpContent').style.display = 'none';
                     document.getElementById('statsContent').style.display = 'block';
                     document.getElementById('statGames').innerText = 'Games Played: ' + stats.gamesPlayed;
                     document.getElementById('statAsteroids').innerText = 'Asteroids Destroyed: ' + stats.asteroidsDestroyed;
                     document.getElementById('statAccuracy').innerText = 'Best Accuracy: ' + (stats.bestAccuracy || 0) + '%';
                 }
+                if (keys['KeyH']) {
+                    document.getElementById('menuContent').style.display = 'none';
+                    document.getElementById('statsContent').style.display = 'none';
+                    document.getElementById('helpContent').style.display = 'block';
+                }
                 if (keys['KeyB']) {
                     document.getElementById('statsContent').style.display = 'none';
+                    document.getElementById('helpContent').style.display = 'none';
                     document.getElementById('menuContent').style.display = 'block';
                 }
                 return;
@@ -637,6 +652,7 @@
             if (!wasGameOver && gameOver) {
                 document.getElementById('menuContent').style.display = 'block';
                 document.getElementById('statsContent').style.display = 'none';
+                document.getElementById('helpContent').style.display = 'none';
                 if (currentShotsFired >= 10) {
                     let acc = Math.round((currentShotsHit / currentShotsFired) * 100);
                     if (acc > (stats.bestAccuracy || 0)) {
