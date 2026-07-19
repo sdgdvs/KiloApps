@@ -242,6 +242,7 @@
           } else if(sel.type === 'free') {
             state.free[sel.index] = null;
           }
+          autoComplete();
           checkWin();
         }
         
@@ -257,6 +258,58 @@
     function checkWin() {
       if(state.found.every(r => r === 13)) {
         document.getElementById('status').innerText = "You Win!";
+      }
+    }
+
+    function isSafeToAutoMove(card) {
+      if (card.r <= 2) return true;
+      let minOppFound = 14;
+      for (let i = 0; i < 4; i++) {
+        let fColor = (i === 1 || i === 3) ? 'red' : 'black';
+        if (fColor !== card.color) {
+          if (state.found[i] < minOppFound) {
+            minOppFound = state.found[i];
+          }
+        }
+      }
+      return card.r <= minOppFound + 1;
+    }
+
+    function autoComplete() {
+      let didMove = true;
+      while (didMove) {
+        didMove = false;
+        for (let i = 0; i < 4; i++) {
+          if (state.free[i]) {
+            let c = state.free[i];
+            if (c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
+              let prevState = JSON.parse(JSON.stringify(state));
+              prevState.selected = null;
+              undoStack.push(prevState);
+              state.found[c.s] = c.r;
+              state.free[i] = null;
+              didMove = true;
+              break;
+            }
+          }
+        }
+        if (didMove) continue;
+
+        for (let i = 0; i < 8; i++) {
+          let col = state.tab[i];
+          if (col.length > 0) {
+            let c = col[col.length - 1];
+            if (c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
+              let prevState = JSON.parse(JSON.stringify(state));
+              prevState.selected = null;
+              undoStack.push(prevState);
+              state.found[c.s] = c.r;
+              col.pop();
+              didMove = true;
+              break;
+            }
+          }
+        }
       }
     }
 

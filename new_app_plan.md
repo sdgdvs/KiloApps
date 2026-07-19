@@ -57,7 +57,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED)
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
 - Phase 5: Add a robust Undo stack for moves. (COMPLETED)
-- Phase 6: Add Auto-complete logic (automatically moving cards to foundations if safe).
+- Phase 6: Add Auto-complete logic (automatically moving cards to foundations if safe). (COMPLETED)
 - Phase 7: Add Win Statistics tracking (Games Played, Win Percentage, Current Streak, Best Streak).
 - Phase 8: Add Save/Load state (persist the current board, move stack, and statistics).
 - Phase 9: Add Sound effects (card flip, card snap/place, win fanfare).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KFreecell
-**Goal:** Phase 6
+**Goal:** Phase 7
 
 
 ## App Lifecycle (14 phases per app)

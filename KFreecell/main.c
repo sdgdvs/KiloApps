@@ -153,6 +153,57 @@ void CheckWin(HWND hwnd) {
     }
 }
 
+int IsSafeToAutoMove(Card c) {
+    if (c.r <= 2) return 1;
+    int minOppFound = 14;
+    for (int i = 0; i < 4; i++) {
+        int color = (i == 1 || i == 3) ? 1 : 0;
+        if (color != c.color) {
+            if (found[i] < minOppFound) {
+                minOppFound = found[i];
+            }
+        }
+    }
+    return c.r <= minOppFound + 1;
+}
+
+int AutoComplete(HWND hwnd) {
+    int didMove = 1;
+    int anyMoved = 0;
+    while(didMove) {
+        didMove = 0;
+        for (int i = 0; i < 4; i++) {
+            if (freeCellsOccupied[i]) {
+                Card c = freeCells[i];
+                if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
+                    PushUndo();
+                    found[c.s] = c.r;
+                    freeCellsOccupied[i] = 0;
+                    didMove = 1;
+                    anyMoved = 1;
+                    break;
+                }
+            }
+        }
+        if (didMove) continue;
+        
+        for (int i = 0; i < 8; i++) {
+            if (tabCount[i] > 0) {
+                Card c = tab[i][tabCount[i]-1];
+                if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
+                    PushUndo();
+                    found[c.s] = c.r;
+                    tabCount[i]--;
+                    didMove = 1;
+                    anyMoved = 1;
+                    break;
+                }
+            }
+        }
+    }
+    return anyMoved;
+}
+
 void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
     HBRUSH bg = CreateSolidBrush(RGB(45, 45, 48));
     HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 235, 59) : RGB(85, 85, 85));
@@ -420,6 +471,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if(selType == 0) {
                         freeCellsOccupied[selIdx] = 0;
                     }
+                    AutoComplete(hwnd);
                     CheckWin(hwnd);
                 }
                 selType = -1;
