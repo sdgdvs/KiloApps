@@ -4,10 +4,10 @@
 #include <string.h>
 
 #define W 500
-#define H 550
+#define H 600
 
-#define NUM_CATEGORIES 4
-const char* CAT_NAMES[NUM_CATEGORIES] = {"Technology", "Animals", "Countries", "Science"};
+#define NUM_CATEGORIES 5
+const char* CAT_NAMES[NUM_CATEGORIES] = {"Technology", "Animals", "Countries", "Science", "Custom"};
 
 const char* CAT_WORDS[NUM_CATEGORIES][10] = {
     {"COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE"},
@@ -20,6 +20,7 @@ int current_category = 0;
 
 
 
+HWND hCustomEdit = NULL;
 int errors = 0;
 char target_word[32];
 int guessed[26] = {0};
@@ -142,13 +143,45 @@ void InitGame() {
         initialized = 1;
     }
     
-    int w_idx = CustomRand() % NUM_WORDS_PER_CAT;
-    int i = 0;
-    while(CAT_WORDS[current_category][w_idx][i]) {
-        target_word[i] = CAT_WORDS[current_category][w_idx][i];
-        i++;
+    if (current_category == 4) {
+        char buf[1024] = {0};
+        if (hCustomEdit) {
+            GetWindowTextA(hCustomEdit, buf, sizeof(buf));
+        } else {
+            strcpy(buf, "APPLE, BANANA");
+        }
+        
+        char words[50][32];
+        int w_count = 0;
+        char *p = buf;
+        while (*p && w_count < 50) {
+            while (*p == ' ' || *p == ',') p++;
+            if (!*p) break;
+            int i = 0;
+            while (*p && *p != ',' && i < 31) {
+                if (*p >= 'a' && *p <= 'z') words[w_count][i++] = *p - 32;
+                else if (*p >= 'A' && *p <= 'Z') words[w_count][i++] = *p;
+                p++;
+            }
+            words[w_count][i] = '\0';
+            if (i > 0) w_count++;
+            while (*p && *p != ',') p++;
+        }
+        if (w_count == 0) {
+            strcpy(target_word, "CUSTOM");
+        } else {
+            int w_idx = CustomRand() % w_count;
+            strcpy(target_word, words[w_idx]);
+        }
+    } else {
+        int w_idx = CustomRand() % NUM_WORDS_PER_CAT;
+        int i = 0;
+        while(CAT_WORDS[current_category][w_idx][i]) {
+            target_word[i] = CAT_WORDS[current_category][w_idx][i];
+            i++;
+        }
+        target_word[i] = '\0';
     }
-    target_word[i] = '\0';
     
     for(i=0; i<26; i++) guessed[i] = 0;
     errors = 0;
@@ -214,6 +247,8 @@ void Guess(char c) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
+            hCustomEdit = CreateWindowEx(0, "EDIT", "APPLE, BANANA", WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_LEFT, 100, 75, 300, 25, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+            if (current_category == 4) ShowWindow(hCustomEdit, SW_SHOW);
             InitGame();
             SetTimer(hwnd, 1, 30, NULL);
             break;
@@ -247,7 +282,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = (short)HIWORD(lParam);
             
             // Check hint button
-            if (x >= 30 && x <= 100 && y >= 450 && y <= 490) {
+            if (x >= 30 && x <= 100 && y >= 490 && y <= 530) {
                 if (!hint_used && !game_over) {
                     char unguessed[32];
                     int uCount = 0;
@@ -270,51 +305,55 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Check restart button
-            if (x >= 110 && x <= 210 && y >= 450 && y <= 490) {
+            if (x >= 110 && x <= 210 && y >= 490 && y <= 530) {
+                SetFocus(hwnd);
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             
             // Check save button
-            if (x >= 220 && x <= 290 && y >= 450 && y <= 490) {
+            if (x >= 220 && x <= 290 && y >= 490 && y <= 530) {
                 SaveGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             
             // Check load button
-            if (x >= 300 && x <= 370 && y >= 450 && y <= 490) {
+            if (x >= 300 && x <= 370 && y >= 490 && y <= 530) {
                 LoadGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
 
             // Check mute button
-            if (x >= 380 && x <= 460 && y >= 450 && y <= 490) {
+            if (x >= 380 && x <= 460 && y >= 490 && y <= 530) {
                 is_muted = !is_muted;
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
 
             // Check categories
-            int cx = 40;
+            int cx = 15;
             int cy = 45;
             for (int i = 0; i < NUM_CATEGORIES; i++) {
-                if (x >= cx && x <= cx + 90 && y >= cy && y <= cy + 25) {
+                if (x >= cx && x <= cx + 85 && y >= cy && y <= cy + 25) {
                     if (current_category != i) {
                         current_category = i;
+                        if (current_category == 4) ShowWindow(hCustomEdit, SW_SHOW);
+                        else ShowWindow(hCustomEdit, SW_HIDE);
+                        SetFocus(hwnd);
                         InitGame();
                         InvalidateRect(hwnd, NULL, TRUE);
                     }
                     break;
                 }
-                cx += 105;
+                cx += 95;
             }
 
             // Check keyboard clicks
             int kx = 110;
-            int ky = 270;
+            int ky = 330;
             for (int i = 0; i < 26; i++) {
                 int col = i % 7;
                 int row = i / 7;
@@ -359,17 +398,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 190, 10, "KHangman", 8);
 
             // Categories
-            int cx = 40;
+            int cx = 15;
             int cy = 45;
             SelectObject(memDC, hFontMono);
             for (int i = 0; i < NUM_CATEGORIES; i++) {
-                RECT cRect = {cx, cy, cx + 90, cy + 25};
+                RECT cRect = {cx, cy, cx + 85, cy + 25};
                 HBRUSH cBg = CreateSolidBrush(i == current_category ? RGB(0, 122, 204) : RGB(44, 44, 44));
                 FillRect(memDC, &cRect, cBg);
                 DeleteObject(cBg);
                 SetTextColor(memDC, RGB(255, 255, 255));
                 DrawTextA(memDC, CAT_NAMES[i], -1, &cRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                cx += 105;
+                cx += 95;
             }
 
             // Drawing
@@ -387,41 +426,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Base gallows
-            MoveToEx(memDC, 190 + ox, 200, NULL);
-            LineTo(memDC, 310 + ox, 200); // Base
-            MoveToEx(memDC, 210 + ox, 200, NULL);
-            LineTo(memDC, 210 + ox, 60);  // Pole
-            LineTo(memDC, 270 + ox, 60);  // Top
-            LineTo(memDC, 270 + ox, 80);  // Rope
+            MoveToEx(memDC, 190 + ox, 240, NULL);
+            LineTo(memDC, 310 + ox, 240); // Base
+            MoveToEx(memDC, 210 + ox, 240, NULL);
+            LineTo(memDC, 210 + ox, 100);  // Pole
+            LineTo(memDC, 270 + ox, 100);  // Top
+            LineTo(memDC, 270 + ox, 120);  // Rope
             
             if (errors > 0) {
                 // Head
-                Ellipse(memDC, 250 + ox, 80, 290 + ox, 120);
+                Ellipse(memDC, 250 + ox, 120, 290 + ox, 160);
             }
             if (errors > 1) {
                 // Body
-                MoveToEx(memDC, 270 + ox, 120, NULL);
-                LineTo(memDC, 270 + ox, 160);
+                MoveToEx(memDC, 270 + ox, 200, NULL);
+                LineTo(memDC, 270 + ox, 200);
             }
             if (errors > 2) {
                 // Left arm
-                MoveToEx(memDC, 270 + ox, 130, NULL);
-                LineTo(memDC, 240 + ox, 150);
+                MoveToEx(memDC, 270 + ox, 170, NULL);
+                LineTo(memDC, 240 + ox, 230);
             }
             if (errors > 3) {
                 // Right arm
-                MoveToEx(memDC, 270 + ox, 130, NULL);
-                LineTo(memDC, 300 + ox, 150);
+                MoveToEx(memDC, 270 + ox, 170, NULL);
+                LineTo(memDC, 300 + ox, 230);
             }
             if (errors > 4) {
                 // Left leg
-                MoveToEx(memDC, 270 + ox, 160, NULL);
-                LineTo(memDC, 240 + ox, 190);
+                MoveToEx(memDC, 270 + ox, 200, NULL);
+                LineTo(memDC, 240 + ox, 230);
             }
             if (errors > 5) {
                 // Right leg
-                MoveToEx(memDC, 270 + ox, 160, NULL);
-                LineTo(memDC, 300 + ox, 190);
+                MoveToEx(memDC, 270 + ox, 200, NULL);
+                LineTo(memDC, 300 + ox, 230);
             }
             SelectObject(memDC, hOldPen);
             SelectObject(memDC, hOldBrush);
@@ -452,7 +491,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Center the word display
             SIZE tSize;
             GetTextExtentPoint32A(memDC, disp, len, &tSize);
-            TextOutA(memDC, (W - tSize.cx) / 2, 200, disp, len);
+            TextOutA(memDC, (W - tSize.cx) / 2, 250, disp, len);
 
             // Message
             char* msgTxt = "Guess a letter to start";
@@ -470,12 +509,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             SetTextColor(memDC, msgColor);
             GetTextExtentPoint32A(memDC, msgTxt, lstrlenA(msgTxt), &tSize);
-            TextOutA(memDC, (W - tSize.cx) / 2, 240, msgTxt, lstrlenA(msgTxt));
+            TextOutA(memDC, (W - tSize.cx) / 2, 290, msgTxt, lstrlenA(msgTxt));
 
             // Keyboard
             SelectObject(memDC, hFontMono);
             int kx = 110;
-            int ky = 280;
+            int ky = 330;
             for (int i = 0; i < 26; i++) {
                 int col = i % 7;
                 int row = i / 7;
@@ -501,7 +540,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Hint button
-            RECT hintRect = {30, 450, 100, 490};
+            RECT hintRect = {30, 490, 100, 530};
             HBRUSH hintBg;
             if (hint_used || game_over) {
                 hintBg = CreateSolidBrush(RGB(68, 68, 68));
@@ -518,7 +557,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Restart button
-            RECT resRect = {110, 450, 210, 490};
+            RECT resRect = {110, 490, 210, 530};
             HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
@@ -526,7 +565,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             
             // Save button
-            RECT saveRect = {220, 450, 290, 490};
+            RECT saveRect = {220, 490, 290, 530};
             HBRUSH saveBg = CreateSolidBrush(RGB(76, 175, 80));
             FillRect(memDC, &saveRect, saveBg);
             DeleteObject(saveBg);
@@ -534,7 +573,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Save", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Load button
-            RECT loadRect = {300, 450, 370, 490};
+            RECT loadRect = {300, 490, 370, 530};
             HBRUSH loadBg = CreateSolidBrush(RGB(156, 39, 176));
             FillRect(memDC, &loadRect, loadBg);
             DeleteObject(loadBg);
@@ -542,7 +581,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Load", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Mute button
-            RECT muteRect = {380, 450, 460, 490};
+            RECT muteRect = {380, 490, 460, 530};
             HBRUSH muteBg = CreateSolidBrush(RGB(85, 85, 85));
             FillRect(memDC, &muteRect, muteBg);
             DeleteObject(muteBg);
@@ -557,7 +596,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(79, 172, 254));
             SelectObject(memDC, hFontMono);
             GetTextExtentPoint32A(memDC, statText, lstrlenA(statText), &tSize);
-            TextOutA(memDC, (W - tSize.cx) / 2, 510, statText, lstrlenA(statText));
+            TextOutA(memDC, (W - tSize.cx) / 2, 550, statText, lstrlenA(statText));
 
             DeleteObject(hFontMain);
             DeleteObject(hFontMono);

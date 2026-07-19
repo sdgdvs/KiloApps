@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHangman (Word guessing game)
-**Phase:** 13
+**Phase:** 14
 **Status:** In Progress
 
 - Phase 1: Scaffold `KHangman/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (Completed)
@@ -64,11 +64,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 10: Add sound effects for valid guesses, invalid guesses, win, and lose states using Web Audio API (web) and Beep/PlaySound (native). Include a mute toggle button. (Completed)
 - Phase 11: Add Save/Load functionality to persist the current game state using localStorage for web and a binary .dat save file for native. (Completed)
 - Phase 12: Add visual animations: shake the hangman canvas when an incorrect guess is made, and add a simple pulsing effect to the winning word when the game is won. (Completed)
+- Phase 13: Add Custom Word List Support. Provide a text input field where players can paste their own comma-separated list of words to create a custom category and play with their own words. (Completed)
 
 ## Next Priority (Before New Apps)
 
 **App:** KHangman
-**Goal:** Phase 13
+**Goal:** Phase 14
 
 
 ## App Lifecycle (14 phases per app)

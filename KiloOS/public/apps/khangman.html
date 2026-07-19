@@ -159,12 +159,18 @@
         <div>Best: <span id="stat-best">0</span></div>
     </div>
     
-    <select id="category" onchange="initGame()" style="margin-bottom: 20px; padding: 5px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 16px; cursor: pointer;">
+    <select id="category" onchange="handleCategoryChange()" style="margin-bottom: 20px; padding: 5px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 16px; cursor: pointer;">
         <option value="Technology">Technology</option>
         <option value="Animals">Animals</option>
         <option value="Countries">Countries</option>
         <option value="Science">Science</option>
+        <option value="Custom">Custom</option>
     </select>
+    
+    <div id="custom-container" style="display: none; margin-bottom: 20px;">
+        <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA, CHERRY" style="padding: 5px; width: 250px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 14px;">
+        <button onclick="initGame()" style="background-color: #007acc; color: white; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-weight: bold;">Play</button>
+    </div>
     
     <canvas id="hangman-canvas" width="200" height="200"></canvas>
     
@@ -308,6 +314,11 @@
                 const state = JSON.parse(saved);
                 word = state.word;
                 document.getElementById('category').value = state.category;
+                if (state.category === "Custom") {
+                    document.getElementById('custom-container').style.display = 'block';
+                } else {
+                    document.getElementById('custom-container').style.display = 'none';
+                }
                 guessed = new Set(state.guessed);
                 errors = state.errors;
                 hintUsed = state.hintUsed;
@@ -411,9 +422,39 @@
         }
     }
 
+    function handleCategoryChange() {
+        const category = document.getElementById('category').value;
+        if (category === "Custom") {
+            document.getElementById('custom-container').style.display = 'block';
+        } else {
+            document.getElementById('custom-container').style.display = 'none';
+        }
+        initGame();
+    }
+
     function initGame() {
         const category = document.getElementById('category').value;
-        const words = CATEGORIES[category];
+        let words = CATEGORIES[category];
+        
+        if (category === "Custom") {
+            const customInput = document.getElementById('custom-words').value;
+            if (customInput.trim() !== "") {
+                const parsedWords = customInput.split(',').map(w => w.trim().toUpperCase().replace(/[^A-Z]/g, '')).filter(w => w.length > 0);
+                if (parsedWords.length > 0) {
+                    CATEGORIES["Custom"] = parsedWords;
+                    words = parsedWords;
+                } else {
+                    CATEGORIES["Custom"] = ["CUSTOM"];
+                    words = CATEGORIES["Custom"];
+                }
+            } else {
+                if (!CATEGORIES["Custom"] || CATEGORIES["Custom"].length === 0) {
+                    CATEGORIES["Custom"] = ["CUSTOM"];
+                }
+                words = CATEGORIES["Custom"];
+            }
+        }
+        
         word = words[Math.floor(Math.random() * words.length)];
         guessed.clear();
         errors = 0;
