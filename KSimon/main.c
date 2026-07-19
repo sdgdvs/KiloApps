@@ -37,6 +37,7 @@ HWND hwndModeBox;
 HWND hwndSaveBtn;
 HWND hwndLoadBtn;
 HWND hwndResetBtn;
+HWND hwndHelpBtn;
 int current_mode = MODE_CLASSIC;
 
 int sequence[1000];
@@ -295,6 +296,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hwndSaveBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 90, 60, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hwndLoadBtn = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 240, 90, 60, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hwndResetBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 90, 60, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndHelpBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 120, 60, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             EnableWindow(hwndSaveBtn, FALSE);
             break;
         case WM_COMMAND:
@@ -307,6 +309,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 LoadGameState();
             } else if (LOWORD(wParam) == 1004) {
                 ResetStats();
+            } else if (LOWORD(wParam) == 1005) {
+                MessageBox(hwnd, "KSimon - How to Play\n\n"
+                                 "Rules:\n"
+                                 "Observe the pattern and repeat it back. The sequence gets longer each round.\n\n"
+                                 "Controls:\n"
+                                 "Mouse: Click buttons.\n"
+                                 "Keyboard: Q/Up (Green), W/Right (Red), A/Down (Yellow), S/Left (Blue).\n"
+                                 "Space: Start game.\n\n"
+                                 "Modes:\n"
+                                 "- Classic: Normal gameplay.\n"
+                                 "- Reverse: Repeat sequence backwards.\n"
+                                 "- Speed: Faster flashing.\n"
+                                 "- Endless: Only the new color flashes each round.", "Help / How-to-Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         case WM_SIZE: {

@@ -107,6 +107,27 @@
     font-weight: bold;
     height: 20px;
   }
+  #help-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+  .modal-content {
+    background: #222;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 400px;
+    text-align: left;
+    border: 1px solid #555;
+  }
+  .modal-content h2 { margin-top: 0; }
+  .close-btn {
+    background-color: #555; color: white; border: none; padding: 5px 10px; cursor: pointer; float: right; border-radius: 3px;
+  }
 </style>
 </head>
 <body>
@@ -132,11 +153,32 @@
       <button id="save-btn" class="action-btn" disabled>Save Game</button>
       <button id="load-btn" class="action-btn">Load Game</button>
       <button id="reset-btn" class="action-btn">Reset Stats</button>
+      <button id="help-btn" class="action-btn">Help</button>
     </div>
   </div>
   <div id="status">Press Start</div>
   <div id="stats" style="margin-top: 15px; font-size: 14px; color: #aaa;">
     Games: <span id="stat-games">0</span> | Streak: <span id="stat-streak">0</span> | Best Time: <span id="stat-time">0</span>s
+  </div>
+</div>
+
+<div id="help-modal">
+  <div class="modal-content">
+    <button class="close-btn" id="close-help-btn">X</button>
+    <h2>How to Play KSimon</h2>
+    <p><strong>Rules:</strong> Observe the pattern of colors/sounds and repeat it back. The sequence gets longer each round.</p>
+    <p><strong>Controls:</strong></p>
+    <ul>
+      <li>Mouse: Click the colored buttons.</li>
+      <li>Keyboard: Q/Up (Green), W/Right (Red), A/Down (Yellow), S/Left (Blue).</li>
+    </ul>
+    <p><strong>Modes:</strong></p>
+    <ul>
+      <li><strong>Classic:</strong> Normal gameplay.</li>
+      <li><strong>Reverse:</strong> Repeat the sequence in reverse order.</li>
+      <li><strong>Speed:</strong> Flashing gets much faster over time.</li>
+      <li><strong>Endless:</strong> Only the newest color flashes each round.</li>
+    </ul>
   </div>
 </div>
 
@@ -160,6 +202,9 @@
   const saveBtn = document.getElementById('save-btn');
   const loadBtn = document.getElementById('load-btn');
   const resetBtn = document.getElementById('reset-btn');
+  const helpBtn = document.getElementById('help-btn');
+  const helpModal = document.getElementById('help-modal');
+  const closeHelpBtn = document.getElementById('close-help-btn');
 
   function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
   function setStat(key, value) { localStorage.setItem('KSimon_Stat_' + key, value); }
@@ -223,6 +268,8 @@
   saveBtn.addEventListener('click', saveGameState);
   loadBtn.addEventListener('click', loadGameState);
   resetBtn.addEventListener('click', resetStats);
+  helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
+  closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
 
   function saveGameState() {
     if (sequence.length === 0 || isPlayingSequence) return;
