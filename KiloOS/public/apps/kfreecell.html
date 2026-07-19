@@ -69,6 +69,11 @@
   <div class="header">
     <div style="display:flex;gap:10px;">
       <button class="btn" onclick="initGame()">New Game</button>
+      <select id="game-mode" class="btn" style="background:#2d2d30; color:#fff;" onchange="updateModeUI(); initGame();">
+        <option value="random">Random Deal</option>
+        <option value="numbered">Numbered Deal</option>
+      </select>
+      <input type="number" id="seed-input" class="btn" style="width: 60px; display: none; background:#2d2d30; color:#fff;" value="1" min="1" max="1000000" onchange="initGame()">
       <button class="btn" onclick="undoMove()" title="Ctrl+Z">Undo</button>
       <button class="btn" onclick="saveGame()">Save</button>
       <button class="btn" onclick="loadGame()">Load</button>
@@ -266,6 +271,16 @@
       document.getElementById('stats-modal').style.display = 'flex';
     }
 
+    function updateModeUI() {
+      const mode = document.getElementById('game-mode').value;
+      const seedInput = document.getElementById('seed-input');
+      if (mode === 'numbered') {
+        seedInput.style.display = 'inline-block';
+      } else {
+        seedInput.style.display = 'none';
+      }
+    }
+
     function saveGame() {
       const data = { state, undoStack, stats, gameInProgress, timeElapsed };
       localStorage.setItem('kfreecell_save', JSON.stringify(data));
@@ -307,9 +322,24 @@
           deck.push({ s, r, color: colors[s], display: ranks[r-1] + suits[s] });
         }
       }
-      for(let i = deck.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [deck[i], deck[j]] = [deck[j], deck[i]];
+      
+      const mode = document.getElementById('game-mode').value;
+      if (mode === 'numbered') {
+        let seed = parseInt(document.getElementById('seed-input').value) || 1;
+        let stateRng = seed;
+        function rand() {
+          stateRng = (stateRng * 214013 + 2531011) & 0x7FFFFFFF;
+          return (stateRng >> 16) & 0x7FFF;
+        }
+        for(let i = deck.length - 1; i > 0; i--) {
+          const j = rand() % (i + 1);
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+      } else {
+        for(let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
       }
 
       state.free = [null, null, null, null];
@@ -644,6 +674,7 @@
       settings = JSON.parse(initSavedSettings);
     }
     updateCardBackUI();
+    updateModeUI();
     initGame();
   </script>
 </body>

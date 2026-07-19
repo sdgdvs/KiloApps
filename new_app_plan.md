@@ -64,13 +64,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 10: Add visual animations (smooth card sliding between cascades/cells). (COMPLETED)
 - Phase 11: Add customizable card backs (a simple settings UI to change the card back design/color). (COMPLETED)
 - Phase 12: Add a Timer and Move Counter. (COMPLETED)
-- Phase 13: Add Game Modes (e.g. Classic Freecell vs. Random Deal).
+- Phase 13: Add Game Modes (e.g. Classic Freecell vs. Random Deal). (COMPLETED)
 - Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KFreecell
-**Goal:** Phase 13
+**Goal:** Phase 14
 
 
 ## App Lifecycle (14 phases per app)

@@ -34,6 +34,8 @@ int selIdx = -1;
 int selCardIdx = -1;
 int won = 0;
 int gameInProgress = 0;
+int gameMode = 0; // 0=Random, 1=Numbered
+int currentSeed = 1;
 
 int statsPlayed = 0;
 int statsWins = 0;
@@ -224,6 +226,8 @@ void SaveGame(HWND hwnd) {
         fwrite(&statsWins, sizeof(statsWins), 1, f);
         fwrite(&statsStreak, sizeof(statsStreak), 1, f);
         fwrite(&statsBestStreak, sizeof(statsBestStreak), 1, f);
+        fwrite(&gameMode, sizeof(gameMode), 1, f);
+        fwrite(&currentSeed, sizeof(currentSeed), 1, f);
         fwrite(&undoCount, sizeof(undoCount), 1, f);
         if(undoCount > 0) fwrite(undoStack, sizeof(GameState), undoCount, f);
         fwrite(&moves, sizeof(moves), 1, f);
@@ -247,6 +251,8 @@ void LoadGame(HWND hwnd) {
         fread(&statsWins, sizeof(statsWins), 1, f);
         fread(&statsStreak, sizeof(statsStreak), 1, f);
         fread(&statsBestStreak, sizeof(statsBestStreak), 1, f);
+        if(fread(&gameMode, sizeof(gameMode), 1, f) != 1) gameMode = 0;
+        if(fread(&currentSeed, sizeof(currentSeed), 1, f) != 1) currentSeed = 1;
         fread(&undoCount, sizeof(undoCount), 1, f);
         if(undoCount > 0) fread(undoStack, sizeof(GameState), undoCount, f);
         if(fread(&moves, sizeof(moves), 1, f) != 1) moves = 0;
@@ -303,11 +309,22 @@ void InitGame() {
         }
     }
     
-    for(int i=51; i>0; i--) {
-        int j = rand() % (i + 1);
-        Card *t = deckPtrs[i];
-        deckPtrs[i] = deckPtrs[j];
-        deckPtrs[j] = t;
+    if (gameMode == 1) {
+        int stateRng = currentSeed;
+        for(int i=51; i>0; i--) {
+            stateRng = (stateRng * 214013 + 2531011) & 0x7FFFFFFF;
+            int j = ((stateRng >> 16) & 0x7FFF) % (i + 1);
+            Card *t = deckPtrs[i];
+            deckPtrs[i] = deckPtrs[j];
+            deckPtrs[j] = t;
+        }
+    } else {
+        for(int i=51; i>0; i--) {
+            int j = rand() % (i + 1);
+            Card *t = deckPtrs[i];
+            deckPtrs[i] = deckPtrs[j];
+            deckPtrs[j] = t;
+        }
     }
     
     c = 0;
@@ -523,7 +540,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WCHAR titleMsg[256];
             int m = timeElapsed / 60;
             int s = timeElapsed % 60;
-            wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d   |   [N]ew [Z]Undo [S]tats [C]ardBack [F5]Save [F9]Load", m, s, moves);
+            if (gameMode == 1) {
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load", m, s, moves, currentSeed);
+            } else {
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load", m, s, moves);
+            }
             DrawTextW(hdcMem, titleMsg, -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
                 RECT winRect = {0, 10, clientRect.right - 20, 40};
@@ -766,6 +787,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 settingsCardBack = (settingsCardBack + 1) % 4;
                 SaveSettings();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if(wParam == 'M') {
+                gameMode = (gameMode == 0) ? 1 : 0;
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if(wParam == VK_OEM_PLUS || wParam == VK_ADD) {
+                if (gameMode == 1) {
+                    currentSeed++;
+                    InitGame();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if(wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT) {
+                if (gameMode == 1) {
+                    if (currentSeed > 1) currentSeed--;
+                    InitGame();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if(wParam == VK_F5) {
                 SaveGame(hwnd);
             } else if(wParam == VK_F9) {
