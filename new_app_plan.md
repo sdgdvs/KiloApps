@@ -57,7 +57,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED)
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
 - Phase 5: Add winning line highlighting to show which pieces formed the connection. (COMPLETED)
-- Phase 6: Next feature (TBD)
+- Phase 6: Add single-player mode with an AI opponent. Include a UI toggle to switch between 2-player and vs-AI modes. (COMPLETED)
+- Phase 7: Next feature (TBD)
 
 ## Next Priority (Before New Apps)
 

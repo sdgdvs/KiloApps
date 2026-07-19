@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
 
 const char g_szClassName[] = "KConnect4WindowClass";
 #define ROWS 6
@@ -9,9 +11,11 @@ int board[ROWS][COLS];
 int currentPlayer = 1;
 bool gameActive = true;
 bool isDraw = false;
+bool vsAI = true;
 
 int winCells[7][2];
 int winCellCount = 0;
+HWND hModeBtn, hResetBtn;
 
 void ResetGame() {
     for(int r=0; r<ROWS; r++)
@@ -69,10 +73,86 @@ bool CheckDraw() {
     return true;
 }
 
+bool SimDrop(int col, int p) {
+    for (int r = ROWS - 1; r >= 0; r--) {
+        if (board[r][col] == 0) {
+            board[r][col] = p;
+            int tempWin[7][2];
+            int tempCount = winCellCount;
+            for(int i=0; i<7; i++) { tempWin[i][0]=winCells[i][0]; tempWin[i][1]=winCells[i][1]; }
+            bool win = CheckWin(r, col, p);
+            for(int i=0; i<7; i++) { winCells[i][0]=tempWin[i][0]; winCells[i][1]=tempWin[i][1]; }
+            winCellCount = tempCount;
+            board[r][col] = 0;
+            return win;
+        }
+    }
+    return false;
+}
+
+void AIMove(HWND hwnd) {
+    if (!gameActive) return;
+    int available[COLS];
+    int count = 0;
+    for(int c=0; c<COLS; c++) {
+        if (board[0][c] == 0) available[count++] = c;
+    }
+    if (count == 0) return;
+    
+    int bestCol = -1;
+    for(int i=0; i<count; i++) {
+        if(SimDrop(available[i], 2)) { bestCol = available[i]; break; }
+    }
+    if(bestCol == -1) {
+        for(int i=0; i<count; i++) {
+            if(SimDrop(available[i], 1)) { bestCol = available[i]; break; }
+        }
+    }
+    if(bestCol == -1) {
+        bestCol = available[rand() % count];
+    }
+    
+    for (int r = ROWS - 1; r >= 0; r--) {
+        if (board[r][bestCol] == 0) {
+            board[r][bestCol] = 2;
+            if (CheckWin(r, bestCol, 2)) {
+                gameActive = false;
+            } else if (CheckDraw()) {
+                gameActive = false;
+                isDraw = true;
+            } else {
+                currentPlayer = 1;
+            }
+            InvalidateRect(hwnd, NULL, TRUE);
+            break;
+        }
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
+            srand((unsigned int)time(NULL));
+            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 20, 340, 150, 30, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 340, 100, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             ResetGame();
+            break;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == 1) {
+                vsAI = !vsAI;
+                SetWindowText(hModeBtn, vsAI ? "Mode: vs AI" : "Mode: 2 Player");
+                ResetGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 2) {
+                ResetGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            break;
+        case WM_TIMER:
+            if (wParam == 1) {
+                KillTimer(hwnd, 1);
+                AIMove(hwnd);
+            }
             break;
         case WM_PAINT: {
             PAINTSTRUCT ps;
@@ -148,6 +228,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
+            if (vsAI && currentPlayer == 2) break;
             int xPos = LOWORD(lParam);
             int yPos = HIWORD(lParam);
             
@@ -164,6 +245,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 isDraw = true;
                             } else {
                                 currentPlayer = currentPlayer == 1 ? 2 : 1;
+                                if (vsAI && currentPlayer == 2) {
+                                    SetTimer(hwnd, 1, 300, NULL);
+                                }
                             }
                             InvalidateRect(hwnd, NULL, TRUE);
                             break;

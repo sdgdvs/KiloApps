@@ -67,8 +67,17 @@
   <h1>KConnect4</h1>
   <div id="status">Player 1's turn (Red)</div>
   <div id="board"></div>
-  <button onclick="initGame()">Reset Game</button>
+  <div>
+    <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
+    <button onclick="initGame()">Reset Game</button>
+  </div>
   <script>
+    let vsAI = true;
+    function toggleMode() {
+      vsAI = !vsAI;
+      document.getElementById('modeBtn').textContent = vsAI ? 'Mode: vs AI' : 'Mode: 2 Player';
+      initGame();
+    }
     const ROWS = 6;
     const COLS = 7;
     let board = [];
@@ -112,6 +121,7 @@
 
     boardEl.addEventListener('click', (e) => {
       if (!gameActive) return;
+      if (vsAI && currentPlayer === 2) return;
       const rect = boardEl.getBoundingClientRect();
       const x = e.clientX - rect.left - 10; // 10 is padding
       const c = Math.floor(x / 55); // 50px width + 5px gap
@@ -138,6 +148,9 @@
             currentPlayer = currentPlayer === 1 ? 2 : 1;
             updateStatus();
             renderBoard();
+            if (vsAI && currentPlayer === 2 && gameActive) {
+              setTimeout(aiMove, 300);
+            }
           }
           return;
         }
@@ -177,6 +190,52 @@
 
     function checkDraw() {
       return board[0].every(cell => cell !== 0);
+    }
+
+    function getAvailableCols() {
+      let cols = [];
+      for(let c=0; c<COLS; c++) {
+        if(board[0][c] === 0) cols.push(c);
+      }
+      return cols;
+    }
+
+    function simDrop(col, player) {
+      for(let r=ROWS-1; r>=0; r--) {
+        if(board[r][col] === 0) {
+          board[r][col] = player;
+          let oldCurrent = currentPlayer;
+          currentPlayer = player;
+          let oldWinCells = [...winningCells];
+          let win = checkWin(r, col);
+          winningCells = oldWinCells;
+          currentPlayer = oldCurrent;
+          board[r][col] = 0;
+          return win;
+        }
+      }
+      return false;
+    }
+
+    function aiMove() {
+      if(!gameActive) return;
+      let available = getAvailableCols();
+      if(available.length === 0) return;
+      
+      let bestCol = -1;
+      for(let c of available) {
+        if(simDrop(c, 2)) { bestCol = c; break; }
+      }
+      if(bestCol === -1) {
+        for(let c of available) {
+          if(simDrop(c, 1)) { bestCol = c; break; }
+        }
+      }
+      if(bestCol === -1) {
+        bestCol = available[Math.floor(Math.random() * available.length)];
+      }
+      
+      dropPiece(bestCol);
     }
 
     initGame();
