@@ -303,7 +303,7 @@ DWORD WINAPI MusicThread(LPVOID lpParam) {
 void PlayANSI(const char* str) {
     struct MusicArgs* args = (struct MusicArgs*)GlobalAlloc(GPTR, sizeof(struct MusicArgs));
     if (args) {
-        my_strcpy(args->data, str);
+        lstrcpynA(args->data, str, sizeof(args->data));
         CreateThread(NULL, 0, MusicThread, args, 0, NULL);
     }
 }
@@ -814,11 +814,11 @@ void LoadBBSList(void) {
                     char* p5 = p4; while(*p5 && *p5 != '|') p5++; if (*p5) { *p5++ = 0; }
                     
                     if (*p1 && *p2 && *p3) {
-                        my_strcpy(dynBbsList[numBbs].name, p1);
-                        my_strcpy(dynBbsList[numBbs].host, p2);
+                        lstrcpynA(dynBbsList[numBbs].name, p1, sizeof(dynBbsList[numBbs].name));
+                        lstrcpynA(dynBbsList[numBbs].host, p2, sizeof(dynBbsList[numBbs].host));
                         dynBbsList[numBbs].port = my_atoi(p3);
-                        my_strcpy(dynBbsList[numBbs].type, *p4 ? p4 : "Telnet");
-                        my_strcpy(dynBbsList[numBbs].autologin, *p5 ? p5 : "");
+                        lstrcpynA(dynBbsList[numBbs].type, *p4 ? p4 : "Telnet", sizeof(dynBbsList[numBbs].type));
+                        lstrcpynA(dynBbsList[numBbs].autologin, *p5 ? p5 : "", sizeof(dynBbsList[numBbs].autologin));
                         numBbs++;
                     }
                 }
@@ -927,11 +927,11 @@ INT_PTR CALLBACK DialDirProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) 
                         if (numBbs < MAX_BBS) numBbs++;
                         else target = MAX_BBS - 1;
                     }
-                    my_strcpy(dynBbsList[target].name, name);
-                    my_strcpy(dynBbsList[target].host, host);
+                    lstrcpynA(dynBbsList[target].name, name, sizeof(dynBbsList[target].name));
+                    lstrcpynA(dynBbsList[target].host, host, sizeof(dynBbsList[target].host));
                     dynBbsList[target].port = my_atoi(port);
-                    my_strcpy(dynBbsList[target].type, typeSel == 1 ? "WebSocket" : "Telnet");
-                    my_strcpy(dynBbsList[target].autologin, autologin);
+                    lstrcpynA(dynBbsList[target].type, typeSel == 1 ? "WebSocket" : "Telnet", sizeof(dynBbsList[target].type));
+                    lstrcpynA(dynBbsList[target].autologin, autologin, sizeof(dynBbsList[target].autologin));
                     
                     HWND hList = GetDlgItem(hdlg, IDC_LIST);
                     SendMessageA(hList, LB_RESETCONTENT, 0, 0);
@@ -1007,7 +1007,7 @@ void LoadMacros(void) {
                     
                     if (*p1 && *p2) {
                         dynMacros[numMacros].key = p1[0];
-                        my_strcpy(dynMacros[numMacros].str, p2);
+                        lstrcpynA(dynMacros[numMacros].str, p2, sizeof(dynMacros[numMacros].str));
                         numMacros++;
                     }
                 }
@@ -1101,7 +1101,7 @@ INT_PTR CALLBACK MacrosProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     dynMacros[target].key = k;
-                    my_strcpy(dynMacros[target].str, strBuf);
+                    lstrcpynA(dynMacros[target].str, strBuf, sizeof(dynMacros[target].str));
                     
                     HWND hList = GetDlgItem(hdlg, IDC_MACRO_LIST);
                     UpdateMacroListUI(hList);
@@ -2536,6 +2536,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             if (sock != INVALID_SOCKET) closesocket(sock);
             if (hTermFont) DeleteObject(hTermFont);
+            if (captureBuffer) { GlobalFree(captureBuffer); captureBuffer = NULL; }
+            if (rxBuffer) { GlobalFree(rxBuffer); rxBuffer = NULL; }
+            if (zmDlBuf) { GlobalFree(zmDlBuf); zmDlBuf = NULL; }
             PostQuitMessage(0);
             return 0;
     }

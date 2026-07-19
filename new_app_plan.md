@@ -121,8 +121,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
-- **K2048** — Sliding tile puzzle. Merge tiles to reach 2048. Multiple grid sizes (4x4, 5x5, 6x6). Undo move. Best score tracking.
-- **KSudoku** — Logic puzzle. Generate puzzles at Easy/Medium/Hard/Expert. Pencil marks. Hint system. Timer. Validate button.
 - **KConnect4** — Two-player (or vs AI) drop-disc game. AI with minimax. Win streak tracking. Animated disc drops.
 - **KHangman** — Word guessing. Multiple word categories (animals, countries, science). Animated hangman drawing. Win/loss stats.
 - **KSimon** — Memory pattern game. Colored button sequences with sounds. Progressive speed increase. Longest streak tracking.
