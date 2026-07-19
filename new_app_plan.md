@@ -48,8 +48,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KSimon (Memory pattern game)
-**Phase:** 8
+**App:** KSimon
+**Phase:** 9
 **Status:** Goal
 
 - Phase 1: [x] Scaffold `KSimon/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -59,7 +59,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 5: [x] Add Multiple Game Modes (e.g., Classic, Reverse, Speed).
 - Phase 6: [x] Add High Score system with multiple categories.
 - Phase 7: [x] Add Sound effects (Web Audio API for web, Beep()/PlaySound for native).
-- Phase 8: Add visual animations: button presses, sequence playback highlights, game over flash.
+- Phase 8: [x] Add visual animations: button presses, sequence playback highlights, game over flash.
 - Phase 9: Add progressive difficulty (speed increases as streak gets longer).
 - Phase 10: Add statistics tracking (games played, longest streak, best time).
 - Phase 11: Add Save/Load functionality to persist high scores and stats.
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KSimon
-**Goal:** Phase 14
+**Goal:** Phase 9
 
 
 ## App Lifecycle (14 phases per app)

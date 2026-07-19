@@ -10,6 +10,7 @@
 
 #define TIMER_SEQUENCE 1
 #define TIMER_FLASH    2
+#define TIMER_GAME_OVER 3
 
 #define MODE_CLASSIC 0
 #define MODE_REVERSE 1
@@ -40,6 +41,8 @@ int player_step = 0;
 int is_playing_sequence = 0;
 int current_flash_index = 0;
 int flash_btn = -1;
+int game_over_flash = 0;
+int game_over_flash_count = 0;
 
 RECT btn_rects[4];
 COLORREF btn_colors[4] = {
@@ -75,9 +78,23 @@ void SaveHighScore(int mode, int s) {
 
 void DrawBoard(HDC hdc) {
     for (int i = 0; i < 4; i++) {
+        RECT r = btn_rects[i];
+        if (flash_btn == i) {
+            InflateRect(&r, 4, 4);
+        }
         HBRUSH brush = CreateSolidBrush(flash_btn == i ? flash_colors[i] : btn_colors[i]);
-        FillRect(hdc, &btn_rects[i], brush);
+        FillRect(hdc, &r, brush);
         DeleteObject(brush);
+        
+        if (flash_btn == i) {
+            HPEN pen = CreatePen(PS_SOLID, 3, RGB(255, 255, 255));
+            HGDIOBJ oldPen = SelectObject(hdc, pen);
+            HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Rectangle(hdc, r.left, r.top, r.right, r.bottom);
+            SelectObject(hdc, oldPen);
+            SelectObject(hdc, oldBrush);
+            DeleteObject(pen);
+        }
     }
 
     SetBkMode(hdc, TRANSPARENT);
@@ -131,6 +148,9 @@ void HandleClick(int btn_id) {
 
     if (btn_id != expected_index) {
         PlaySoundAsync(100, 800);
+        game_over_flash_count = 0;
+        game_over_flash = 1;
+        SetTimer(hwndMain, TIMER_GAME_OVER, 100, NULL);
         if (score > high_scores[current_mode]) {
             high_scores[current_mode] = score;
             SaveHighScore(current_mode, score);
@@ -211,6 +231,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 KillTimer(hwnd, TIMER_FLASH);
                 flash_btn = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == TIMER_GAME_OVER) {
+                game_over_flash_count++;
+                game_over_flash = game_over_flash_count % 2;
+                InvalidateRect(hwnd, NULL, TRUE);
+                if (game_over_flash_count >= 5) {
+                    KillTimer(hwnd, TIMER_GAME_OVER);
+                    game_over_flash = 0;
+                    game_over_flash_count = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (wParam == TIMER_SEQUENCE) {
                 if (sequence_length == 0) {
                     KillTimer(hwnd, TIMER_SEQUENCE);
@@ -243,7 +273,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            HBRUSH bgBrush = CreateSolidBrush(RGB(26, 26, 26));
+            HBRUSH bgBrush = CreateSolidBrush(game_over_flash ? RGB(170, 0, 0) : RGB(26, 26, 26));
             FillRect(hdc, &ps.rcPaint, bgBrush);
             DeleteObject(bgBrush);
             DrawBoard(hdc);

@@ -30,20 +30,36 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: filter 0.1s;
+    transition: all 0.1s ease-in-out;
     opacity: 0.6;
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0,0,0,0);
   }
   .simon-btn:active {
     opacity: 1;
+    transform: scale(0.95);
   }
   .simon-btn.active {
     opacity: 1;
     filter: brightness(1.5);
+    transform: scale(1.05);
   }
   #btn-0 { background-color: #00aa00; } /* green */
+  #btn-0.active { box-shadow: 0 0 20px #00ff00; }
   #btn-1 { background-color: #aa0000; } /* red */
+  #btn-1.active { box-shadow: 0 0 20px #ff0000; }
   #btn-2 { background-color: #aaaa00; } /* yellow */
+  #btn-2.active { box-shadow: 0 0 20px #ffff00; }
   #btn-3 { background-color: #0000aa; } /* blue */
+  #btn-3.active { box-shadow: 0 0 20px #0000ff; }
+  
+  body.game-over-flash {
+    animation: flashRed 0.5s;
+  }
+  @keyframes flashRed {
+    0% { background-color: #800000; }
+    100% { background-color: #1a1a1a; }
+  }
   
   #controls {
     margin-top: 20px;
@@ -240,6 +256,8 @@
 
     if (playerSequence[currentStep] !== expectedIndex) {
       // Game Over
+      document.body.classList.add('game-over-flash');
+      setTimeout(() => document.body.classList.remove('game-over-flash'), 500);
       playTone(freqWrong, 800);
       let finalScore = sequence.length - 1;
       statusDisplay.innerText = "Game Over! Score: " + finalScore;
