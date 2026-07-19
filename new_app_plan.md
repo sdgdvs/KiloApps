@@ -49,11 +49,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHangman (Word guessing game)
-**Phase:** 2
+**Phase:** 3
 **Status:** In Progress
 
 - Phase 1: Scaffold `KHangman/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (Completed)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (Completed)
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 
 ## Next Priority (Before New Apps)
 
