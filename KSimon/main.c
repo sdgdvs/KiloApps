@@ -333,6 +333,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_KEYDOWN:
             if (wParam == VK_SPACE && sequence_length == 0) {
                 StartGame();
+            } else if (!is_playing_sequence && sequence_length > 0) {
+                if (wParam == 'Q' || wParam == VK_UP) {
+                    HandleClick(0);
+                } else if (wParam == 'W' || wParam == VK_RIGHT) {
+                    HandleClick(1);
+                } else if (wParam == 'A' || wParam == VK_DOWN) {
+                    HandleClick(2);
+                } else if (wParam == 'S' || wParam == VK_LEFT) {
+                    HandleClick(3);
+                }
             }
             break;
         case WM_TIMER:

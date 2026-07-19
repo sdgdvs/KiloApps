@@ -277,6 +277,21 @@
     });
   });
 
+  document.addEventListener('keydown', (e) => {
+    if (isPlayingSequence || sequence.length === 0) return;
+    let index = -1;
+    switch(e.key.toLowerCase()) {
+      case 'q': case 'arrowup': index = 0; break;
+      case 'w': case 'arrowright': index = 1; break;
+      case 'a': case 'arrowdown': index = 2; break;
+      case 's': case 'arrowleft': index = 3; break;
+    }
+    if (index !== -1) {
+      e.preventDefault();
+      handlePlayerInput(index);
+    }
+  });
+
   function startGame() {
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
