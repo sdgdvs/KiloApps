@@ -12,8 +12,8 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: #1a1a1a;
+    color: #e0e0e0;
   }
   #game-container {
     text-align: center;
@@ -47,6 +47,25 @@
   
   #controls {
     margin-top: 20px;
+  }
+  #start-btn {
+    background-color: #333;
+    color: #e0e0e0;
+    border: 1px solid #555;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+  }
+  #start-btn:hover {
+    background-color: #444;
+  }
+  #start-btn:disabled {
+    background-color: #222;
+    color: #555;
+    border-color: #333;
+    cursor: not-allowed;
   }
   #status {
     margin-top: 10px;

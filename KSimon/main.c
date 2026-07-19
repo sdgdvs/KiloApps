@@ -44,6 +44,7 @@ void DrawBoard(HDC hdc) {
     }
 
     SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(224, 224, 224));
     TextOutA(hdc, 10, 10, status_text, strlen(status_text));
     
     char score_text[32];
@@ -162,7 +163,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            FillRect(hdc, &ps.rcPaint, (HBRUSH)(COLOR_WINDOW+1));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(26, 26, 26));
+            FillRect(hdc, &ps.rcPaint, bgBrush);
+            DeleteObject(bgBrush);
             DrawBoard(hdc);
             EndPaint(hwnd, &ps);
             return 0;
