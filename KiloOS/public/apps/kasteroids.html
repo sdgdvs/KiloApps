@@ -60,7 +60,7 @@
 <body>
     <div id="gameContainer">
         <div id="ui">
-            <div class="score">Score: <span id="scoreVal">0</span> | Wave: <span id="waveVal">1</span></div>
+            <div class="score">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | Wave: <span id="waveVal">1</span></div>
         </div>
         <div id="gameOver">
             <h2>GAME OVER</h2>
@@ -74,8 +74,20 @@
         const scoreSpan = document.getElementById('scoreVal');
         const waveSpan = document.getElementById('waveVal');
         const gameOverDiv = document.getElementById('gameOver');
+        const highScoreSpan = document.getElementById('highScoreVal');
 
         let score = 0;
+        let highScore = localStorage.getItem('kasteroids_highscore') || 0;
+        highScoreSpan.innerText = highScore;
+
+        function updateHighScore() {
+            if (score > highScore) {
+                highScore = score;
+                highScoreSpan.innerText = highScore;
+                localStorage.setItem('kasteroids_highscore', highScore);
+            }
+        }
+
         let wave = 1;
         let keys = {};
         
@@ -328,6 +340,7 @@
                         if (!b.isEnemy) {
                             score += (4 - a.level) * 10;
                             scoreSpan.innerText = score;
+                            updateHighScore();
                         }
                         
                         if (a.level > 1) {
@@ -350,6 +363,7 @@
                             u.active = false;
                             score += 200;
                             scoreSpan.innerText = score;
+                            updateHighScore();
                             break;
                         }
                     }

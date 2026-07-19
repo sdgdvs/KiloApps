@@ -53,9 +53,32 @@ Ufo ufos[10];
 int num_ufos = 0;
 int ufo_spawn_timer = 0;
 int score = 0;
+int high_score = 0;
 int wave = 1;
 bool game_over = false;
 bool keys[256] = {0};
+
+void LoadHighScore() {
+    FILE* f = fopen("kasteroids_highscore.txt", "r");
+    if (f) {
+        fscanf(f, "%d", &high_score);
+        fclose(f);
+    }
+}
+void SaveHighScore() {
+    FILE* f = fopen("kasteroids_highscore.txt", "w");
+    if (f) {
+        fprintf(f, "%d", high_score);
+        fclose(f);
+    }
+}
+
+void UpdateHighScore() {
+    if (score > high_score) {
+        high_score = score;
+        SaveHighScore();
+    }
+}
 long long last_shoot_time = 0;
 
 long long GetTimeMs() {
@@ -130,6 +153,7 @@ void CheckCollisions() {
                 asteroids[j].active = false;
                 if (!bullets[i].is_enemy) {
                     score += (4 - asteroids[j].level) * 10;
+                    UpdateHighScore();
                 }
                 
                 if (asteroids[j].level > 1 && num_asteroids + 2 <= 100) {
@@ -163,6 +187,7 @@ void CheckCollisions() {
                     bullets[i].active = false;
                     ufos[k].active = false;
                     score += 200;
+                    UpdateHighScore();
                     break;
                 }
             }
@@ -421,8 +446,8 @@ void Draw(HDC hdc) {
     
     SetTextColor(hdc, RGB(56, 189, 248));
     SetBkMode(hdc, TRANSPARENT);
-    char scoreStr[64];
-    sprintf(scoreStr, "Score: %d   Wave: %d", score, wave);
+    char scoreStr[128];
+    sprintf(scoreStr, "Score: %d   High: %d   Wave: %d", score, high_score, wave);
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
     
     if (game_over) {
@@ -447,6 +472,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
+            LoadHighScore();
             InitGame();
             SetTimer(hwnd, TIMER_ID, 16, NULL); // ~60fps
             break;
