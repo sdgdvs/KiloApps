@@ -62,8 +62,19 @@ int num_ufos = 0;
 Particle particles[500];
 int num_particles = 0;
 int ufo_spawn_timer = 0;
+typedef struct {
+    int high_score_classic;
+    int high_score_time_attack;
+    int high_score_hardcore;
+    int games_played;
+    int asteroids_destroyed;
+    int shots_fired;
+    int shots_hit;
+} Stats;
+
+Stats stats = {0};
+
 int score = 0;
-int high_score = 0;
 int wave = 1;
 bool game_over = true;
 bool keys[256] = {0};
@@ -87,25 +98,49 @@ void PlaySoundEffect(int type) {
     CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
-void LoadHighScore() {
-    FILE* f = fopen("kasteroids_highscore.txt", "r");
+void LoadStats() {
+    FILE* f = fopen("kasteroids_stats.txt", "r");
     if (f) {
-        fscanf(f, "%d", &high_score);
-        fclose(f);
-    }
-}
-void SaveHighScore() {
-    FILE* f = fopen("kasteroids_highscore.txt", "w");
-    if (f) {
-        fprintf(f, "%d", high_score);
+        fscanf(f, "%d %d %d %d %d %d %d", 
+               &stats.high_score_classic, 
+               &stats.high_score_time_attack, 
+               &stats.high_score_hardcore, 
+               &stats.games_played, 
+               &stats.asteroids_destroyed, 
+               &stats.shots_fired, 
+               &stats.shots_hit);
         fclose(f);
     }
 }
 
+void SaveStats() {
+    FILE* f = fopen("kasteroids_stats.txt", "w");
+    if (f) {
+        fprintf(f, "%d %d %d %d %d %d %d", 
+                stats.high_score_classic, 
+                stats.high_score_time_attack, 
+                stats.high_score_hardcore, 
+                stats.games_played, 
+                stats.asteroids_destroyed, 
+                stats.shots_fired, 
+                stats.shots_hit);
+        fclose(f);
+    }
+}
+
+int GetHighScore() {
+    if (game_mode == 1) return stats.high_score_time_attack;
+    if (game_mode == 2) return stats.high_score_hardcore;
+    return stats.high_score_classic;
+}
+
 void UpdateHighScore() {
-    if (score > high_score) {
-        high_score = score;
-        SaveHighScore();
+    int current_high = GetHighScore();
+    if (score > current_high) {
+        if (game_mode == 1) stats.high_score_time_attack = score;
+        else if (game_mode == 2) stats.high_score_hardcore = score;
+        else stats.high_score_classic = score;
+        SaveStats();
     }
 }
 long long last_shoot_time = 0;
@@ -162,6 +197,9 @@ void InitGame(int mode) {
     ufo_spawn_timer = 0;
     game_over = false;
     
+    stats.games_played++;
+    SaveStats();
+    
     SpawnAsteroids(3 + wave);
 }
 
@@ -202,6 +240,9 @@ void CheckCollisions() {
                     pt->life = 30 + (rand()%20); pt->color = RGB(148, 163, 184); pt->active = true;
                 }
                 if (!bullets[i].is_enemy) {
+                    stats.shots_hit++;
+                    stats.asteroids_destroyed++;
+                    SaveStats();
                     score += (4 - asteroids[j].level) * 10;
                     UpdateHighScore();
                 }
@@ -244,6 +285,8 @@ void CheckCollisions() {
                         pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
                         pt->life = 30 + (rand()%20); pt->color = RGB(239, 68, 68); pt->active = true;
                     }
+                    stats.shots_hit++;
+                    SaveStats();
                     score += 200;
                     UpdateHighScore();
                     break;
@@ -397,6 +440,8 @@ void Update() {
             b->is_enemy = false;
             last_shoot_time = now;
             PlaySoundEffect(1);
+            stats.shots_fired++;
+            SaveStats();
         }
     }
     
@@ -575,10 +620,11 @@ void Draw(HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);
     char scoreStr[128];
     const char* modeStr = (game_mode == 0) ? "Classic" : ((game_mode == 1) ? "Time Attack" : "Hardcore");
+    int current_high = GetHighScore();
     if (game_mode == 1) {
-        sprintf(scoreStr, "Score: %d   High: %d   Time: %d   Mode: %s", score, high_score, time_left, modeStr);
+        sprintf(scoreStr, "Score: %d   High: %d   Time: %d   Mode: %s", score, current_high, time_left, modeStr);
     } else {
-        sprintf(scoreStr, "Score: %d   High: %d   Wave: %d   Mode: %s", score, high_score, wave, modeStr);
+        sprintf(scoreStr, "Score: %d   High: %d   Wave: %d   Mode: %s", score, current_high, wave, modeStr);
     }
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
     
@@ -611,7 +657,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
-            LoadHighScore();
+            LoadStats();
             SetTimer(hwnd, TIMER_ID, 16, NULL); // ~60fps
             break;
         case WM_TIMER:

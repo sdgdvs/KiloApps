@@ -134,17 +134,39 @@
         }
 
         let score = 0;
-        let highScore = localStorage.getItem('kasteroids_highscore') || 0;
+        let stats = JSON.parse(localStorage.getItem('kasteroids_stats')) || {
+            highScoreClassic: 0,
+            highScoreTimeAttack: 0,
+            highScoreHardcore: 0,
+            gamesPlayed: 0,
+            asteroidsDestroyed: 0,
+            shotsFired: 0,
+            shotsHit: 0
+        };
         let gameMode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore
         let timeLeft = 0;
         let lastTick = 0;
-        highScoreSpan.innerText = highScore;
+        
+        function getHighScore() {
+            if (gameMode === 1) return stats.highScoreTimeAttack;
+            if (gameMode === 2) return stats.highScoreHardcore;
+            return stats.highScoreClassic;
+        }
+
+        highScoreSpan.innerText = getHighScore();
+
+        function saveStats() {
+            localStorage.setItem('kasteroids_stats', JSON.stringify(stats));
+        }
 
         function updateHighScore() {
-            if (score > highScore) {
-                highScore = score;
-                highScoreSpan.innerText = highScore;
-                localStorage.setItem('kasteroids_highscore', highScore);
+            let currentHigh = getHighScore();
+            if (score > currentHigh) {
+                if (gameMode === 1) stats.highScoreTimeAttack = score;
+                else if (gameMode === 2) stats.highScoreHardcore = score;
+                else stats.highScoreClassic = score;
+                highScoreSpan.innerText = score;
+                saveStats();
             }
         }
 
@@ -400,6 +422,7 @@
             timeLeft = (gameMode === 1) ? 120 : 0;
             lastTick = Date.now();
             scoreSpan.innerText = score;
+            highScoreSpan.innerText = getHighScore();
             document.getElementById('waveLabel').innerText = (gameMode === 1) ? "Time: " : "Wave: ";
             waveSpan.innerText = (gameMode === 1) ? timeLeft : wave;
             document.getElementById('modeVal').innerText = (gameMode === 0) ? "Classic" : ((gameMode === 1) ? "Time Attack" : "Hardcore");
@@ -411,6 +434,8 @@
             ufoSpawnTimer = 0;
             gameOver = false;
             gameOverDiv.style.display = 'none';
+            stats.gamesPlayed++;
+            saveStats();
             spawnAsteroids(3 + wave);
         }
 
@@ -442,6 +467,9 @@
                         playSound('explosion');
                         for(let p=0; p<20; p++) particles.push(new Particle(a.x, a.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#94a3b8', 30 + Math.random()*20));
                         if (!b.isEnemy) {
+                            stats.shotsHit++;
+                            stats.asteroidsDestroyed++;
+                            saveStats();
                             score += (4 - a.level) * 10;
                             scoreSpan.innerText = score;
                             updateHighScore();
@@ -467,6 +495,8 @@
                             u.active = false;
                             playSound('explosion');
                             for(let p=0; p<20; p++) particles.push(new Particle(u.x, u.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#ef4444', 30 + Math.random()*20));
+                            stats.shotsHit++;
+                            saveStats();
                             score += 200;
                             scoreSpan.innerText = score;
                             updateHighScore();
@@ -536,6 +566,8 @@
                     bullets.push(new Bullet(ship.x + Math.cos(ship.angle)*15, ship.y + Math.sin(ship.angle)*15, ship.angle, false));
                     lastShootTime = now;
                     playSound('laser');
+                    stats.shotsFired++;
+                    saveStats();
                 }
             }
 
