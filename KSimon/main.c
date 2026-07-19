@@ -15,6 +15,7 @@
 #define MODE_CLASSIC 0
 #define MODE_REVERSE 1
 #define MODE_SPEED 2
+#define MODE_ENDLESS 3
 
 int btn_freqs[4] = {415, 329, 261, 196};
 
@@ -63,7 +64,7 @@ COLORREF flash_colors[4] = {
 
 char status_text[128] = "Press Space to Start";
 int score = 0;
-int high_scores[3] = {0, 0, 0};
+int high_scores[4] = {0, 0, 0, 0};
 int stat_games_played = 0;
 int stat_longest_streak = 0;
 int stat_best_time = 0;
@@ -73,6 +74,7 @@ void LoadHighScores() {
     high_scores[MODE_CLASSIC] = GetPrivateProfileInt("HighScores", "Classic", 0, ".\\ksimon.ini");
     high_scores[MODE_REVERSE] = GetPrivateProfileInt("HighScores", "Reverse", 0, ".\\ksimon.ini");
     high_scores[MODE_SPEED]   = GetPrivateProfileInt("HighScores", "Speed", 0, ".\\ksimon.ini");
+    high_scores[MODE_ENDLESS] = GetPrivateProfileInt("HighScores", "Endless", 0, ".\\ksimon.ini");
     
     stat_games_played = GetPrivateProfileInt("Stats", "GamesPlayed", 0, ".\\ksimon.ini");
     stat_longest_streak = GetPrivateProfileInt("Stats", "LongestStreak", 0, ".\\ksimon.ini");
@@ -85,6 +87,7 @@ void SaveHighScore(int mode, int s) {
     if (mode == MODE_CLASSIC) WritePrivateProfileString("HighScores", "Classic", str, ".\\ksimon.ini");
     else if (mode == MODE_REVERSE) WritePrivateProfileString("HighScores", "Reverse", str, ".\\ksimon.ini");
     else if (mode == MODE_SPEED) WritePrivateProfileString("HighScores", "Speed", str, ".\\ksimon.ini");
+    else if (mode == MODE_ENDLESS) WritePrivateProfileString("HighScores", "Endless", str, ".\\ksimon.ini");
 }
 
 void SaveStats() {
@@ -145,7 +148,7 @@ void LoadGameState() {
     score = sequence_length - 1;
     player_step = 0;
     is_playing_sequence = 1;
-    current_flash_index = 0;
+    current_flash_index = (current_mode == MODE_ENDLESS && sequence_length > 0) ? sequence_length - 1 : 0;
     strcpy(status_text, "Game Loaded! Watch...");
     InvalidateRect(hwndMain, NULL, TRUE);
     SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
@@ -216,7 +219,7 @@ void NextRound() {
     sequence[sequence_length++] = rand() % 4;
     score = sequence_length - 1;
     is_playing_sequence = 1;
-    current_flash_index = 0;
+    current_flash_index = (current_mode == MODE_ENDLESS && sequence_length > 0) ? sequence_length - 1 : 0;
     strcpy(status_text, "Watch...");
     InvalidateRect(hwndMain, NULL, TRUE);
     SetTimer(hwndMain, TIMER_SEQUENCE, 500, NULL);
@@ -286,6 +289,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Classic Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Endless Mode");
             SendMessage(hwndModeBox, CB_SETCURSEL, 0, 0);
 
             hwndSaveBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 90, 60, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);

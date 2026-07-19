@@ -64,13 +64,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 10: [x] Add statistics tracking (games played, longest streak, best time).
 - Phase 11: [x] Add Save/Load functionality to persist high scores and stats.
 - Phase 12: [x] Add Physical Keyboard Support. Bind physical keys (e.g. Q, W, A, S or Arrows) to colored buttons.
-- Phase 13: Add an "Endless" mode with no mistakes allowed, tracking maximum sequence.
+- Phase 13: [x] Add an "Endless" mode with no mistakes allowed, tracking maximum sequence.
 - Phase 14: Add Comprehensive Help / How-to-Play modal detailing the rules, controls, and modes.
 
 ## Next Priority (Before New Apps)
 
 **App:** KSimon
-**Goal:** Phase 13
+**Goal:** Phase 14
 
 
 ## App Lifecycle (14 phases per app)
