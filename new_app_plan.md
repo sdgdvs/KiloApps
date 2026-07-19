@@ -16,9 +16,9 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
 
-## Director Priority: GAMES FIRST (as of 2026-07-13)
+## DIRECTOR NOTE (2026-07-19): GAMES DEFICIT — ACCELERATE
 
-After the current app (KFlash) completes Phase 14, **prioritize creating and deeply expanding GAMES**. The user wants a rich, diverse game library approaching commercial quality. Alternate: create 2-3 games, then 1 utility, then repeat.
+**Current: 14 games. Target: 25+. Gap: 11 games.** After KSudoku Phase 14 completes, your NEXT app MUST be a game. Pick from the "Possible Future Apps → Games" list below. Do NOT create utilities until the game count reaches 20. The priority order is: KConnect4, KHangman, KSimon, KAsteroids, KFreecell — these are all proven, fun game concepts with clear depth potential. Create them with full dual-target (web + native) from Phase 1.
 
 When creating games, think about what makes them **deeply replayable**:
 - Multiple game modes (classic, timed, endless, puzzle)

@@ -94,10 +94,12 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMaze      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KSolitaire | Tier 1          | Feature-Expanded       | Expanded | Memory Match game in both Web and EXE. |
 | KSpace     | Tier 1          | Feature-Expanded       | Expanded          | Full parity. |
-| KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
-| KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. |
-| KBreakout  | Tier 1          | Never Touched          | Needs Improvement | Full parity, native and web. |
-| K2048      | Tier 1          | Never Touched          | Needs Improvement | Full parity, native and web. |
+| KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 4 pending. |
+| KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. Loop 4 pending. |
+| KBreakout  | Tier 1          | Never Touched          | Needs Improvement | Full parity. Loop 4 pending. |
+| K2048      | Tier 1          | Never Touched          | Needs Improvement | Full parity. Loop 4 pending. |
+| KSudoku    | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Add to current or next loop. |
+
 ## Progress Log
 
 **Loop 1**
