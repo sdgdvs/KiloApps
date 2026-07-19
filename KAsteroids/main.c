@@ -228,15 +228,15 @@ void Update() {
 }
 
 void Draw(HDC hdc) {
-    HBRUSH bgBrush = CreateSolidBrush(RGB(17, 17, 17));
+    HBRUSH bgBrush = CreateSolidBrush(RGB(24, 24, 27));
     RECT rect = {0, 0, WIDTH, HEIGHT};
     FillRect(hdc, &rect, bgBrush);
     DeleteObject(bgBrush);
     
-    HPEN shipPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-    HPEN astPen = CreatePen(PS_SOLID, 2, RGB(170, 170, 170));
-    HPEN bulletPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
-    HBRUSH bulletBrush = CreateSolidBrush(RGB(255, 255, 0));
+    HPEN shipPen = CreatePen(PS_SOLID, 2, RGB(226, 232, 240));
+    HPEN astPen = CreatePen(PS_SOLID, 2, RGB(148, 163, 184));
+    HPEN bulletPen = CreatePen(PS_SOLID, 2, RGB(253, 224, 71));
+    HBRUSH bulletBrush = CreateSolidBrush(RGB(253, 224, 71));
     
     if (ship.active) {
         SelectObject(hdc, shipPen);
@@ -288,16 +288,16 @@ void Draw(HDC hdc) {
         Ellipse(hdc, (int)(bullets[i].x - 2), (int)(bullets[i].y - 2), (int)(bullets[i].x + 2), (int)(bullets[i].y + 2));
     }
     
-    SetTextColor(hdc, RGB(0, 255, 0));
+    SetTextColor(hdc, RGB(56, 189, 248));
     SetBkMode(hdc, TRANSPARENT);
     char scoreStr[32];
     sprintf(scoreStr, "Score: %d", score);
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
     
     if (game_over) {
-        SetTextColor(hdc, RGB(255, 0, 0));
+        SetTextColor(hdc, RGB(239, 68, 68));
         TextOutA(hdc, WIDTH / 2 - 50, HEIGHT / 2 - 20, "GAME OVER", 9);
-        SetTextColor(hdc, RGB(255, 255, 255));
+        SetTextColor(hdc, RGB(161, 161, 170));
         TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 10, "Press Enter to Restart", 22);
     }
     

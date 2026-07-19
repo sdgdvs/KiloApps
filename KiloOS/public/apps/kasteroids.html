@@ -7,8 +7,8 @@
         body { 
             margin: 0; 
             overflow: hidden; 
-            background-color: #000; 
-            color: #fff; 
+            background-color: #09090b; 
+            color: #fafafa; 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             display: flex; 
             flex-direction: column; 
@@ -20,22 +20,26 @@
             position: relative;
             width: 800px;
             height: 600px;
-            border: 2px solid #333;
-            background: #111;
+            border: 2px solid #27272a;
+            background: #18181b;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            overflow: hidden;
         }
         #gameCanvas { 
             display: block; 
         }
         #ui { 
             position: absolute; 
-            top: 10px; 
-            left: 10px; 
+            top: 20px; 
+            left: 20px; 
             z-index: 10; 
         }
         .score { 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #0f0;
+            font-size: 24px; 
+            font-weight: 600; 
+            color: #38bdf8;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
         }
         #gameOver {
             display: none;
@@ -44,9 +48,13 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
+            background: rgba(24, 24, 27, 0.9);
+            padding: 30px 50px;
+            border-radius: 12px;
+            border: 1px solid #3f3f46;
         }
-        h2 { margin: 0 0 10px 0; font-size: 36px; color: #f00; }
-        p { margin: 0; font-size: 18px; }
+        h2 { margin: 0 0 10px 0; font-size: 36px; color: #ef4444; }
+        p { margin: 0; font-size: 18px; color: #a1a1aa; }
     </style>
 </head>
 <body>
@@ -113,7 +121,7 @@
                 ctx.save();
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.angle);
-                ctx.strokeStyle = '#fff';
+                ctx.strokeStyle = '#e2e8f0';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(15, 0);
@@ -160,7 +168,7 @@
             draw() {
                 ctx.save();
                 ctx.translate(this.x, this.y);
-                ctx.strokeStyle = '#aaa';
+                ctx.strokeStyle = '#94a3b8';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 for (let i = 0; i < 10; i++) {
@@ -197,7 +205,7 @@
                 if (this.y > canvas.height) this.y = 0;
             }
             draw() {
-                ctx.fillStyle = '#ff0';
+                ctx.fillStyle = '#fde047';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
                 ctx.fill();
