@@ -56,7 +56,20 @@
   let gameOver = false;
   let winner = 0; // 1 = White, 2 = Black
   let aiMode = true;
-  const pieceValues = [0, 10, 30, 30, 50, 90, 900, 10, 30, 30, 50, 90, 900];
+  let campaignMode = false;
+  let currentStage = 1;
+  let aiDifficulty = 2; // 1=Easy, 2=Normal, 3=Hard
+  let statsWins = parseInt(localStorage.getItem('kchess_wins') || '0');
+  let statsLosses = parseInt(localStorage.getItem('kchess_losses') || '0');
+  let statsDraws = parseInt(localStorage.getItem('kchess_draws') || '0');
+
+  function saveStats() {
+      localStorage.setItem('kchess_wins', statsWins);
+      localStorage.setItem('kchess_losses', statsLosses);
+      localStorage.setItem('kchess_draws', statsDraws);
+  }
+
+  const pieceValues = [0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000];
   let lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -197,6 +210,13 @@
           [1,  1, 1,  1,  1, 1, 1,  1],
           [4,  2, 3,  5,  6, 3, 2,  4]
       ];
+      if (campaignMode) {
+          aiDifficulty = currentStage > 3 ? 3 : currentStage;
+          if (currentStage === 4) board[7][1] = 0; // Missing Queen Knight
+          if (currentStage === 5) board[7][3] = 0; // Missing Queen
+      } else {
+          aiDifficulty = 2;
+      }
       selX = -1;
       selY = -1;
       whiteTurn = true;
@@ -209,9 +229,19 @@
 
   window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'r') {
+          if (gameOver && campaignMode && winner === 1) {
+              if (currentStage < 5) currentStage++;
+              else { campaignMode = false; currentStage = 1; }
+          }
           resetGame();
       } else if (e.key.toLowerCase() === 'm') {
-          aiMode = !aiMode;
+          if (!campaignMode) {
+              aiMode = !aiMode;
+              resetGame();
+          }
+      } else if (e.key.toLowerCase() === 'c') {
+          campaignMode = !campaignMode;
+          if (campaignMode) { aiMode = true; currentStage = 1; }
           resetGame();
       }
   });
@@ -228,9 +258,45 @@
                           if (isValidMove(sx, sy, tx, ty)) {
                               if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, false)) {
                                   let dstP = board[ty][tx];
+                                  let baseScore = dstP !== 0 ? pieceValues[dstP] : 0;
+                                  
+                                  if (aiDifficulty >= 2) {
+                                      if (tx >= 3 && tx <= 4 && ty >= 3 && ty <= 4) baseScore += 20;
+                                      if (isSquareAttacked(tx, ty, true)) baseScore -= Math.floor(pieceValues[board[sy][sx]] / 10);
+                                  }
+                                  
+                                  if (aiDifficulty >= 3) {
+                                      let savedSrc = board[sy][sx];
+                                      let savedDst = board[ty][tx];
+                                      board[ty][tx] = savedSrc;
+                                      board[sy][sx] = 0;
+                                      
+                                      let maxOppScore = 0;
+                                      for (let osy = 0; osy < 8; osy++) {
+                                          for (let osx = 0; osx < 8; osx++) {
+                                              if (board[osy][osx] !== 0 && board[osy][osx] <= 6) {
+                                                  for (let oty = 0; oty < 8; oty++) {
+                                                      for (let otx = 0; otx < 8; otx++) {
+                                                          if (isValidMove(osx, osy, otx, oty)) {
+                                                              let oDstP = board[oty][otx];
+                                                              if (oDstP !== 0) {
+                                                                  let oScore = pieceValues[oDstP];
+                                                                  if (oScore > maxOppScore) maxOppScore = oScore;
+                                                              }
+                                                          }
+                                                      }
+                                                  }
+                                              }
+                                          }
+                                      }
+                                      board[sy][sx] = savedSrc;
+                                      board[ty][tx] = savedDst;
+                                      baseScore -= maxOppScore;
+                                  }
+                                  
                                   moves.push({
                                       sx: sx, sy: sy, tx: tx, ty: ty,
-                                      score: dstP !== 0 ? pieceValues[dstP] : 0
+                                      score: baseScore
                                   });
                               }
                           }
@@ -241,7 +307,7 @@
       }
       
       if (moves.length > 0) {
-          let bestScore = -1;
+          let bestScore = -9999999;
           for (let m of moves) {
               if (m.score > bestScore) bestScore = m.score;
           }
@@ -269,8 +335,10 @@
               }
               if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
                   winner = !whiteTurn ? 1 : 2;
+                  if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
               } else {
                   winner = 3;
+                  if (aiMode) { statsDraws++; saveStats(); }
               }
           }
           draw();
@@ -339,14 +407,22 @@
       ctx.textAlign = "left";
       
       if (gameOver) {
-          if (winner === 1) ctx.fillText("Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
+          if (winner === 1) ctx.fillText(campaignMode && currentStage < 5 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
           else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R'", 10, cvs.height - 30);
           else ctx.fillText("Stalemate! Draw! Press 'R'", 10, cvs.height - 30);
       } else {
           ctx.fillText(whiteTurn ? "White's Turn" : "Black's Turn", 10, cvs.height - 30);
       }
       
-      ctx.fillText(aiMode ? "Mode: vs AI (Press 'M' to toggle)" : "Mode: vs Player (Press 'M' to toggle)", 10, 20);
+      if (campaignMode) {
+          ctx.fillText(`Campaign: Stage ${currentStage} (Press 'C' to Exit)`, 10, 20);
+      } else {
+          ctx.fillText(aiMode ? "vs AI ('M' toggle) | 'C' Campaign" : "vs Player ('M' toggle) | 'C' Campaign", 10, 20);
+      }
+      
+      ctx.textAlign = "right";
+      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, cvs.width - 10, 20);
+      ctx.textAlign = "left"; // reset for other text
   }
 
   cvs.onmousedown = (e) => {
@@ -409,8 +485,10 @@
                                   }
                                   if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
                                       winner = !whiteTurn ? 1 : 2;
+                                      if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
                                   } else {
                                       winner = 3;
+                                      if (aiMode) { statsDraws++; saveStats(); }
                                   }
                               }
                               if (aiMode && !whiteTurn && !gameOver) {

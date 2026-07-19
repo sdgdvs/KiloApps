@@ -3,6 +3,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 #define W 480
 #define H 500
@@ -33,8 +34,27 @@ int whiteTurn = 1;
 int gameOver = 0;
 int winner = 0; // 1 = White, 2 = Black
 int aiMode = 1; // 1 = PvE, 0 = PvP
-int pieceValues[] = {0, 10, 30, 30, 50, 90, 900, 10, 30, 30, 50, 90, 900};
+int campaignMode = 0;
+int currentStage = 1;
+int aiDifficulty = 2; // 1=Easy, 2=Normal, 3=Hard
+int statsWins = 0, statsLosses = 0, statsDraws = 0;
+int pieceValues[] = {0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000};
 int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
+
+void LoadStats() {
+    FILE *f = fopen("kchess_stats.txt", "r");
+    if (f) {
+        fscanf(f, "%d %d %d", &statsWins, &statsLosses, &statsDraws);
+        fclose(f);
+    }
+}
+void SaveStats() {
+    FILE *f = fopen("kchess_stats.txt", "w");
+    if (f) {
+        fprintf(f, "%d %d %d", statsWins, statsLosses, statsDraws);
+        fclose(f);
+    }
+}
 
 
 int IsValidMove(int sx, int sy, int tx, int ty) {
@@ -158,6 +178,15 @@ void ResetGame() {
         {1,  1, 1,  1,  1, 1, 1,  1},
         {4,  2, 3,  5,  6, 3, 2,  4}
     };
+    
+    if (campaignMode) {
+        aiDifficulty = currentStage > 3 ? 3 : currentStage;
+        if (currentStage == 4) initialBoard[7][1] = 0; // Missing Queen Knight
+        if (currentStage == 5) initialBoard[7][3] = 0; // Missing Queen
+    } else {
+        aiDifficulty = 2; // Default Normal
+    }
+    
     for(int y=0; y<8; y++) {
         for(int x=0; x<8; x++) {
             board[y][x] = initialBoard[y][x];
@@ -248,7 +277,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(255, 255, 255));
             
             if (gameOver) {
-                if (winner == 1) DrawTextA(hdc, "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_LEFT);
+                if (winner == 1) DrawTextA(hdc, campaignMode && currentStage < 5 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_LEFT);
                 else if (winner == 2) DrawTextA(hdc, "Checkmate! Black Wins! Press 'R'", -1, &statusRc, DT_LEFT);
                 else DrawTextA(hdc, "Stalemate! Draw! Press 'R'", -1, &statusRc, DT_LEFT);
             } else {
@@ -260,7 +289,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             RECT modeRc = { 10, 5, W - 10, 25 };
-            DrawTextA(hdc, aiMode ? "Mode: vs AI (Press 'M' to toggle)" : "Mode: vs Player (Press 'M' to toggle)", -1, &modeRc, DT_LEFT);
+            if (campaignMode) {
+                char stBuf[64];
+                sprintf(stBuf, "Campaign: Stage %d (Press 'C' to Exit)", currentStage);
+                DrawTextA(hdc, stBuf, -1, &modeRc, DT_LEFT);
+            } else {
+                DrawTextA(hdc, aiMode ? "vs AI ('M' toggle) | 'C' Campaign" : "vs Player ('M' toggle) | 'C' Campaign", -1, &modeRc, DT_LEFT);
+            }
+
+            RECT statsRc = { W - 150, 5, W - 10, 25 };
+            char statsBuf[64];
+            sprintf(statsBuf, "W:%d L:%d D:%d", statsWins, statsLosses, statsDraws);
+            DrawTextA(hdc, statsBuf, -1, &statsRc, DT_RIGHT);
             
             SelectObject(hdc, oldFont);
             DeleteObject(sFont);
@@ -270,10 +310,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == 'R') {
+                if (gameOver && campaignMode && winner == 1) {
+                    if (currentStage < 5) currentStage++;
+                    else { campaignMode = 0; currentStage = 1; }
+                }
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'M') {
-                aiMode = !aiMode;
+                if (!campaignMode) {
+                    aiMode = !aiMode;
+                    ResetGame();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == 'C') {
+                campaignMode = !campaignMode;
+                if (campaignMode) { aiMode = 1; currentStage = 1; }
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -294,8 +345,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                             if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
                                                 moves[moveCount].sx = sx; moves[moveCount].sy = sy;
                                                 moves[moveCount].tx = tx; moves[moveCount].ty = ty;
-                                                int dstP = board[ty][tx];
-                                                moves[moveCount].score = dstP != 0 ? pieceValues[dstP] : 0;
+                                                int baseScore = dstP != 0 ? pieceValues[dstP] : 0;
+                                                if (aiDifficulty >= 2) {
+                                                    if (tx >= 3 && tx <= 4 && ty >= 3 && ty <= 4) baseScore += 20;
+                                                    if (IsSquareAttacked(tx, ty, 1)) baseScore -= (pieceValues[board[sy][sx]] / 10);
+                                                }
+                                                if (aiDifficulty >= 3) {
+                                                    int savedSrc = board[sy][sx];
+                                                    int savedDst = board[ty][tx];
+                                                    board[ty][tx] = savedSrc;
+                                                    board[sy][sx] = 0;
+                                                    int maxOppScore = 0;
+                                                    for (int osy = 0; osy < 8; osy++) {
+                                                        for (int osx = 0; osx < 8; osx++) {
+                                                            if (board[osy][osx] != 0 && board[osy][osx] <= 6) {
+                                                                for (int oty = 0; oty < 8; oty++) {
+                                                                    for (int otx = 0; otx < 8; otx++) {
+                                                                        if (IsValidMove(osx, osy, otx, oty)) {
+                                                                            int oDstP = board[oty][otx];
+                                                                            if (oDstP != 0) {
+                                                                                int oScore = pieceValues[oDstP];
+                                                                                if (oScore > maxOppScore) maxOppScore = oScore;
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    board[sy][sx] = savedSrc;
+                                                    board[ty][tx] = savedDst;
+                                                    baseScore -= maxOppScore;
+                                                }
+                                                moves[moveCount].score = baseScore;
                                                 moveCount++;
                                             }
                                         }
@@ -305,7 +387,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     if (moveCount > 0) {
-                        int bestScore = -1;
+                        int bestScore = -9999999;
                         for (int i = 0; i < moveCount; i++) if (moves[i].score > bestScore) bestScore = moves[i].score;
                         int bestMoves[1024], bestCount = 0;
                         for (int i = 0; i < moveCount; i++) if (moves[i].score == bestScore) bestMoves[bestCount++] = i;
@@ -332,8 +414,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                             if (kx != -1 && ky != -1 && IsSquareAttacked(kx, ky, !whiteTurn)) {
                                 winner = !whiteTurn ? 1 : 2;
+                                if (aiMode) { if (winner == 1) statsWins++; else statsLosses++; SaveStats(); }
                             } else {
                                 winner = 3;
+                                if (aiMode) { statsDraws++; SaveStats(); }
                             }
                         }
                         InvalidateRect(hwnd, NULL, TRUE);
@@ -401,8 +485,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         }
                                         if (kx != -1 && ky != -1 && IsSquareAttacked(kx, ky, !whiteTurn)) {
                                             winner = !whiteTurn ? 1 : 2;
+                                            if (aiMode) { if (winner == 1) statsWins++; else statsLosses++; SaveStats(); }
                                         } else {
                                             winner = 3;
+                                            if (aiMode) { statsDraws++; SaveStats(); }
                                         }
                                     }
                                     
@@ -447,6 +533,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     srand((unsigned int)time(NULL));
+    LoadStats();
 
     HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
