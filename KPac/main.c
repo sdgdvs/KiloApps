@@ -8,24 +8,60 @@
 #define ROWS 15
 #define TS 20
 
-char map[ROWS][COLS] = {
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-    {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
-    {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
-    {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
-    {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
-    {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
-    {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
-    {1,1,1,1,1,1,2,1,2,1,1,1,1,1,1},
-    {0,0,0,0,0,1,2,1,2,1,0,0,0,0,0},
-    {1,1,1,1,1,1,2,2,2,1,1,1,1,1,1},
-    {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
-    {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
-    {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
-    {1,1,1,3,2,2,2,1,2,2,2,3,1,1,1},
-    {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+char maps[3][ROWS][COLS] = {
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+        {1,1,1,1,1,1,2,1,2,1,1,1,1,1,1},
+        {0,0,0,0,0,1,2,1,2,1,0,0,0,0,0},
+        {1,1,1,1,1,1,2,2,2,1,1,1,1,1,1},
+        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,2,2,1,1,2,2,2,1,1,2,2,2,1},
+        {1,1,1,3,2,2,2,1,2,2,2,3,1,1,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,3,2,2,2,2,2,2,2,2,2,2,2,3,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+        {1,1,1,1,1,1,2,1,2,1,1,1,1,1,1},
+        {0,0,0,0,0,1,2,1,2,1,0,0,0,0,0},
+        {1,1,1,1,1,1,2,2,2,1,1,1,1,1,1},
+        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,4,2,2,1,2,2,2,2,2,1,2,2,4,1},
+        {1,1,1,2,1,2,1,1,1,2,1,2,1,1,1},
+        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+        {1,3,1,1,1,1,2,2,2,1,1,1,1,3,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,4,2,2,2,2,2,1,2,2,2,2,2,4,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,2,1,1,2,1,2,2,2,1,2,1,1,2,1},
+        {1,2,2,2,2,1,1,1,1,1,2,2,2,2,1},
+        {1,1,1,1,2,2,2,2,2,2,2,1,1,1,1},
+        {0,0,0,1,2,1,1,2,1,1,2,1,0,0,0},
+        {1,1,1,1,2,1,0,0,0,1,2,1,1,1,1},
+        {1,2,2,2,2,1,1,1,1,1,2,2,2,2,1},
+        {1,2,1,1,2,2,2,1,2,2,2,1,1,2,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,3,2,2,2,2,2,3,2,2,2,2,2,3,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    }
 };
-char initialMap[ROWS][COLS];
+char map[ROWS][COLS];
 
 int randSeed = 42;
 int MyRand() {
@@ -50,6 +86,7 @@ int lives = 3;
 int paused = 0;
 int fruitActive = 0;
 int fruitTimer = 0;
+int speedTimer = 0;
 
 void LoadHighScore() {
     FILE *f = fopen("kpac_hi.dat", "rb");
@@ -71,10 +108,11 @@ void Init(int keepScore) {
     gameOver = 0;
     paused = 0;
     dotCount = 0;
+    int mapIndex = (level - 1) % 3;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
-            map[r][c] = initialMap[r][c];
-            if (map[r][c] == 2 || map[r][c] == 3) dotCount++;
+            map[r][c] = maps[mapIndex][r][c];
+            if (map[r][c] >= 2 && map[r][c] <= 4) dotCount++;
         }
     }
     px = 7; py = 12;
@@ -87,6 +125,7 @@ void Init(int keepScore) {
     frightTimer = 0;
     fruitActive = 0;
     fruitTimer = 0;
+    speedTimer = 0;
 }
 
 void Update() {
@@ -101,7 +140,13 @@ void Update() {
     if (frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for(int i=0; i<4; i++) {
-            if (i == 0 && frightTimer == 0) {
+            if ((i == 0 || i == 1) && frightTimer == 0) {
+                int tx = px;
+                int ty = py;
+                if (i == 1) { // Pink ghost anticipates
+                    tx = px + pdx * 2;
+                    ty = py + pdy * 2;
+                }
                 int best_d = -1;
                 int min_dist = 9999;
                 if (MyRand() % 100 < 20) {
@@ -113,7 +158,7 @@ void Update() {
                         if (nx < 0) nx = COLS - 1;
                         if (nx >= COLS) nx = 0;
                         if (map[ny][nx] != 1) {
-                            int dist = abs(nx - px) + abs(ny - py);
+                            int dist = abs(nx - tx) + abs(ny - ty);
                             if (dist < min_dist) { min_dist = dist; best_d = d; }
                         }
                     }
@@ -152,7 +197,10 @@ void Update() {
         }
     }
     
-    if (frameCount % 2 == 0) {
+    if (speedTimer > 0) speedTimer--;
+    int playerMoves = (speedTimer > 0) ? 1 : (frameCount % 2 == 0);
+    
+    if (playerMoves) {
         int nx = px + pdx;
         int ny = py + pdy;
         if (nx < 0) nx = COLS - 1;
@@ -161,8 +209,9 @@ void Update() {
         if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
             px = nx;
             py = ny;
-            if (map[py][px] == 2 || map[py][px] == 3) {
+            if (map[py][px] >= 2 && map[py][px] <= 4) {
                 if (map[py][px] == 3) { score += 40; frightTimer = 50; MessageBeep(MB_OK); }
+                else if (map[py][px] == 4) { score += 20; speedTimer = 80; MessageBeep(MB_ICONEXCLAMATION); }
                 else { score += 10; }
                 if (score > highScore) highScore = score;
                 map[py][px] = 0;
@@ -224,7 +273,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             LoadHighScore();
-            for(int r=0; r<ROWS; r++) for(int c=0; c<COLS; c++) initialMap[r][c] = map[r][c];
             Init(0);
             randSeed = GetTickCount();
             SetTimer(hwnd, 1, 100, NULL);
@@ -266,6 +314,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (map[r][c] == 3) {
                         RECT dr = {c * TS + 6, r * TS + 6, c * TS + 14, r * TS + 14};
                         FillRect(memDC, &dr, dotBr);
+                    } else if (map[r][c] == 4) {
+                        HBRUSH spBr = CreateSolidBrush(RGB(0, 255, 255));
+                        RECT dr = {c * TS + 7, r * TS + 7, c * TS + 13, r * TS + 13};
+                        FillRect(memDC, &dr, spBr);
+                        DeleteObject(spBr);
                     }
                 }
             }

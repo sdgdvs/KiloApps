@@ -6,6 +6,7 @@
 
 HWND hInput;
 HWND hBtn;
+HWND hBtnTrace;
 HWND hOutput;
 HWND hStatic;
 HWND hStaticCount, hInputCount;
@@ -21,6 +22,7 @@ HFONT hFont;
 HFONT hFontMono;
 
 DWORD WINAPI PingThread(LPVOID param) {
+    BOOL traceMode = (BOOL)(INT_PTR)param;
     char host[256];
     GetWindowTextA(hInput, host, 256);
     
@@ -39,7 +41,9 @@ DWORD WINAPI PingThread(LPVOID param) {
     BOOL continuous = SendMessage(hCheckCont, BM_GETCHECK, 0, 0) == BST_CHECKED;
     
     char cmd[512];
-    if (continuous) {
+    if (traceMode) {
+        wsprintfA(cmd, "tracert.exe %s", host);
+    } else if (continuous) {
         wsprintfA(cmd, "ping.exe %s -t -l %s -i %s", host, sizeStr, ttlStr);
     } else {
         wsprintfA(cmd, "ping.exe %s -n %s -l %s -i %s", host, countStr, sizeStr, ttlStr);
@@ -60,7 +64,8 @@ DWORD WINAPI PingThread(LPVOID param) {
     if (CreateProcessA(NULL, cmd, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         CloseHandle(hWrite);
         hPingProcess = pi.hProcess;
-        SetWindowTextA(hBtn, "Stop");
+        if (traceMode) SetWindowTextA(hBtnTrace, "Stop");
+        else SetWindowTextA(hBtn, "Stop");
         
         char buf[512];
         DWORD bytesRead;
@@ -88,7 +93,8 @@ DWORD WINAPI PingThread(LPVOID param) {
         CloseHandle(hWrite);
     }
     CloseHandle(hRead);
-    SetWindowTextA(hBtn, "Ping");
+    if (traceMode) SetWindowTextA(hBtnTrace, "Trace");
+    else SetWindowTextA(hBtn, "Ping");
     hThread = NULL;
     return 0;
 }
@@ -109,8 +115,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!hFontMono) hFontMono = CreateFontA(15, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Courier New");
             
             hStatic = CreateWindowEx(0, "STATIC", "Target Host:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 22, hwnd, NULL, NULL, NULL);
-            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 180, 24, hwnd, NULL, NULL, NULL);
-            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 75, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+            hInput = CreateWindowEx(0, "EDIT", "127.0.0.1", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL, 100, 15, W - 250, 24, hwnd, NULL, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Ping", WS_CHILD | WS_VISIBLE, W - 140, 15, 60, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace", WS_CHILD | WS_VISIBLE, W - 75, 15, 60, 24, hwnd, (HMENU)2, NULL, NULL);
             
             hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 45, 50, 22, hwnd, NULL, NULL, NULL);
             hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_NUMBER, 65, 45, 50, 24, hwnd, NULL, NULL, NULL);
@@ -149,9 +156,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == 1) {
                 if (!hThread) {
                     SetWindowTextA(hOutput, "");
-                    hThread = CreateThread(NULL, 0, PingThread, NULL, 0, NULL);
+                    hThread = CreateThread(NULL, 0, PingThread, (LPVOID)0, 0, NULL);
                 } else {
                     // Stop pinging
+                    if (hPingProcess) {
+                        TerminateProcess(hPingProcess, 0);
+                    }
+                }
+            } else if (LOWORD(wParam) == 2) {
+                if (!hThread) {
+                    SetWindowTextA(hOutput, "");
+                    hThread = CreateThread(NULL, 0, PingThread, (LPVOID)1, 0, NULL);
+                } else {
+                    // Stop tracing
                     if (hPingProcess) {
                         TerminateProcess(hPingProcess, 0);
                     }
@@ -162,8 +179,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
-            MoveWindow(hInput, 100, 15, nw - 180, 24, TRUE);
-            MoveWindow(hBtn, nw - 75, 15, 60, 24, TRUE);
+            MoveWindow(hInput, 100, 15, nw - 250, 24, TRUE);
+            MoveWindow(hBtn, nw - 140, 15, 60, 24, TRUE);
+            MoveWindow(hBtnTrace, nw - 75, 15, 60, 24, TRUE);
             MoveWindow(hOutput, 15, 75, nw - 30, nh - 120, TRUE);
             break;
         }

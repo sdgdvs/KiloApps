@@ -103,6 +103,7 @@
       <span style="font-size: 13px; font-weight: 500; color: var(--text-muted)">Continuous -t</span>
     </label>
     <button id="btnAction" class="btn btn-primary">Start Ping</button>
+    <button id="btnTrace" class="btn btn-primary">Trace</button>
   </div>
   
   <div class="glass terminal">
@@ -122,10 +123,12 @@
   const ttlInput = document.getElementById('ttl');
   const continuousCheck = document.getElementById('continuous');
   const btnAction = document.getElementById('btnAction');
+  const btnTrace = document.getElementById('btnTrace');
   const out = document.getElementById('out');
   
   let pingInterval = null;
   let isPinging = false;
+  let isTracing = false;
   let stats = { sent: 0, recv: 0, lost: 0, times: [] };
   let currentHost = '';
 
@@ -151,6 +154,7 @@
       isPinging = true;
       btnAction.textContent = 'Stop';
       btnAction.className = 'btn btn-danger';
+      btnTrace.disabled = true;
       hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
       
       stats = { sent: 0, recv: 0, lost: 0, times: [] };
@@ -182,6 +186,7 @@
       isPinging = false;
       btnAction.textContent = 'Start Ping';
       btnAction.className = 'btn btn-primary';
+      btnTrace.disabled = false;
       hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false;
       countInput.disabled = continuousCheck.checked;
       
@@ -202,6 +207,59 @@
       if (isPinging) stopPing();
       else startPing();
   };
+
+  btnTrace.onclick = () => {
+      if (isPinging && !isTracing) return;
+      if (isTracing) {
+          stopTrace();
+          return;
+      }
+      currentHost = hostInput.value.trim() || '127.0.0.1';
+      out.value = "";
+      append(`Tracing route to ${currentHost} over a maximum of 30 hops:\n\n`);
+      
+      isTracing = true;
+      btnTrace.textContent = 'Stop Trace';
+      btnTrace.className = 'btn btn-danger';
+      btnAction.disabled = true;
+      hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
+      
+      let hop = 1;
+      const maxHops = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 8 + Math.floor(Math.random() * 5); 
+      
+      pingInterval = setInterval(() => {
+          if (hop > maxHops) {
+              append(`\nTrace complete.\n`);
+              stopTrace();
+              return;
+          }
+          
+          const t1 = Math.floor(Math.random() * 15) + 1;
+          const t2 = Math.floor(Math.random() * 15) + 1;
+          const t3 = Math.floor(Math.random() * 15) + 1;
+          
+          let ip = "";
+          if (hop === maxHops) {
+              ip = currentHost === '127.0.0.1' ? '127.0.0.1' : `93.184.216.${Math.floor(Math.random()*255)}`; 
+              append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  ${currentHost} [${ip}]\n`);
+          } else {
+              ip = `10.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+              append(` ${hop.toString().padStart(2, ' ')}    ${t1} ms    ${t2} ms    ${t3} ms  router-${hop}.network [${ip}]\n`);
+          }
+          hop++;
+      }, 1000);
+  };
+  
+  function stopTrace() {
+      if (!isTracing) return;
+      clearInterval(pingInterval);
+      isTracing = false;
+      btnTrace.textContent = 'Trace';
+      btnTrace.className = 'btn btn-primary';
+      btnAction.disabled = false;
+      hostInput.disabled = false; sizeInput.disabled = false; ttlInput.disabled = false; continuousCheck.disabled = false;
+      countInput.disabled = continuousCheck.checked;
+  }
 </script>
 </body>
 </html>
