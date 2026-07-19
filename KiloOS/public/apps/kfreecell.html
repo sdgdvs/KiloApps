@@ -67,6 +67,8 @@
     <div style="display:flex;gap:10px;">
       <button class="btn" onclick="initGame()">New Game</button>
       <button class="btn" onclick="undoMove()" title="Ctrl+Z">Undo</button>
+      <button class="btn" onclick="saveGame()">Save</button>
+      <button class="btn" onclick="loadGame()">Load</button>
       <button class="btn" onclick="showStats()">Stats</button>
     </div>
     <h1>KFreecell</h1>
@@ -146,6 +148,27 @@
       document.getElementById('stat-streak').innerText = stats.streak;
       document.getElementById('stat-best').innerText = stats.bestStreak;
       document.getElementById('stats-modal').style.display = 'flex';
+    }
+
+    function saveGame() {
+      const data = { state, undoStack, stats, gameInProgress };
+      localStorage.setItem('kfreecell_save', JSON.stringify(data));
+      document.getElementById('status').innerText = "Game Saved";
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('kfreecell_save');
+      if (saved) {
+        const data = JSON.parse(saved);
+        state = data.state;
+        undoStack = data.undoStack || [];
+        stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0 };
+        gameInProgress = data.gameInProgress || false;
+        document.getElementById('status').innerText = "Game Loaded";
+        render();
+      } else {
+        document.getElementById('status').innerText = "No Save Found";
+      }
     }
 
     function initGame() {

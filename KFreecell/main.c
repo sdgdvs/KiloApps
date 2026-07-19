@@ -98,6 +98,52 @@ void UndoMove(HWND hwnd) {
     }
 }
 
+void SaveGame(HWND hwnd) {
+    FILE *f = _wfopen(L"kfreecell_save.dat", L"wb");
+    if(f) {
+        fwrite(&freeCells, sizeof(freeCells), 1, f);
+        fwrite(&freeCellsOccupied, sizeof(freeCellsOccupied), 1, f);
+        fwrite(&found, sizeof(found), 1, f);
+        fwrite(&tab, sizeof(tab), 1, f);
+        fwrite(&tabCount, sizeof(tabCount), 1, f);
+        fwrite(&gameInProgress, sizeof(gameInProgress), 1, f);
+        fwrite(&statsPlayed, sizeof(statsPlayed), 1, f);
+        fwrite(&statsWins, sizeof(statsWins), 1, f);
+        fwrite(&statsStreak, sizeof(statsStreak), 1, f);
+        fwrite(&statsBestStreak, sizeof(statsBestStreak), 1, f);
+        fwrite(&undoCount, sizeof(undoCount), 1, f);
+        if(undoCount > 0) fwrite(undoStack, sizeof(GameState), undoCount, f);
+        fclose(f);
+        MessageBoxW(hwnd, L"Game Saved", L"Save", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void LoadGame(HWND hwnd) {
+    FILE *f = _wfopen(L"kfreecell_save.dat", L"rb");
+    if(f) {
+        fread(&freeCells, sizeof(freeCells), 1, f);
+        fread(&freeCellsOccupied, sizeof(freeCellsOccupied), 1, f);
+        fread(&found, sizeof(found), 1, f);
+        fread(&tab, sizeof(tab), 1, f);
+        fread(&tabCount, sizeof(tabCount), 1, f);
+        fread(&gameInProgress, sizeof(gameInProgress), 1, f);
+        fread(&statsPlayed, sizeof(statsPlayed), 1, f);
+        fread(&statsWins, sizeof(statsWins), 1, f);
+        fread(&statsStreak, sizeof(statsStreak), 1, f);
+        fread(&statsBestStreak, sizeof(statsBestStreak), 1, f);
+        fread(&undoCount, sizeof(undoCount), 1, f);
+        if(undoCount > 0) fread(undoStack, sizeof(GameState), undoCount, f);
+        fclose(f);
+        selType = -1;
+        won = 0;
+        if (found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) won = 1;
+        InvalidateRect(hwnd, NULL, TRUE);
+        MessageBoxW(hwnd, L"Game Loaded", L"Load", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxW(hwnd, L"No Save Found", L"Load", MB_OK | MB_ICONWARNING);
+    }
+}
+
 void InitGame() {
     if (gameInProgress && !won) {
         statsStreak = 0;
@@ -313,7 +359,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hTitleFont = CreateFontW(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
-            DrawTextW(hdcMem, L"KFreecell - [N]ew [Z]Undo [S]tats", -1, &titleRect, DT_CENTER | DT_TOP);
+            DrawTextW(hdcMem, L"KFreecell - [N]ew [Z]Undo [S]tats [F5]Save [F9]Load", -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
                 RECT winRect = {0, 10, clientRect.right - 20, 40};
                 DrawTextW(hdcMem, L"You Win!", -1, &winRect, DT_RIGHT | DT_TOP);
@@ -515,6 +561,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UndoMove(hwnd);
             } else if(wParam == 'S') {
                 ShowStats(hwnd);
+            } else if(wParam == VK_F5) {
+                SaveGame(hwnd);
+            } else if(wParam == VK_F9) {
+                LoadGame(hwnd);
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
