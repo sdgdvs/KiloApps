@@ -92,7 +92,7 @@
 
 <div id="game-container">
   <h1>KSimon</h1>
-  <div>Score: <span id="score">0</span></div>
+  <div>Score: <span id="score">0</span> | High Score (<span id="high-score-mode">Classic</span>): <span id="high-score">0</span></div>
   <div class="simon-board">
     <button id="btn-0" class="simon-btn"></button>
     <button id="btn-1" class="simon-btn"></button>
@@ -121,11 +121,27 @@
   const modeSelect = document.getElementById('mode-select');
   const scoreDisplay = document.getElementById('score');
   const statusDisplay = document.getElementById('status');
+  const highScoreModeDisplay = document.getElementById('high-score-mode');
+  const highScoreDisplay = document.getElementById('high-score');
 
   let sequence = [];
   let playerSequence = [];
   let isPlayingSequence = false;
   let currentMode = 'classic';
+
+  function getHighScore(mode) {
+    return parseInt(localStorage.getItem('KSimon_HighScore_' + mode)) || 0;
+  }
+  function setHighScore(mode, score) {
+    localStorage.setItem('KSimon_HighScore_' + mode, score);
+  }
+  function updateHighScoreDisplay() {
+    highScoreModeDisplay.innerText = modeSelect.options[modeSelect.selectedIndex].text.replace('Mode: ', '');
+    highScoreDisplay.innerText = getHighScore(modeSelect.value);
+  }
+
+  modeSelect.addEventListener('change', updateHighScoreDisplay);
+  updateHighScoreDisplay();
 
   startBtn.addEventListener('click', startGame);
 
@@ -199,7 +215,15 @@
 
     if (playerSequence[currentStep] !== expectedIndex) {
       // Game Over
-      statusDisplay.innerText = "Game Over! Score: " + (sequence.length - 1);
+      let finalScore = sequence.length - 1;
+      statusDisplay.innerText = "Game Over! Score: " + finalScore;
+      
+      if (finalScore > getHighScore(currentMode)) {
+        setHighScore(currentMode, finalScore);
+        updateHighScoreDisplay();
+        statusDisplay.innerText += " (New High Score!)";
+      }
+      
       sequence = [];
       startBtn.disabled = false;
       modeSelect.disabled = false;

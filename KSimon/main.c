@@ -42,6 +42,21 @@ COLORREF flash_colors[4] = {
 
 char status_text[128] = "Press Space to Start";
 int score = 0;
+int high_scores[3] = {0, 0, 0};
+
+void LoadHighScores() {
+    high_scores[MODE_CLASSIC] = GetPrivateProfileInt("HighScores", "Classic", 0, ".\\ksimon.ini");
+    high_scores[MODE_REVERSE] = GetPrivateProfileInt("HighScores", "Reverse", 0, ".\\ksimon.ini");
+    high_scores[MODE_SPEED]   = GetPrivateProfileInt("HighScores", "Speed", 0, ".\\ksimon.ini");
+}
+
+void SaveHighScore(int mode, int s) {
+    char str[32];
+    sprintf(str, "%d", s);
+    if (mode == MODE_CLASSIC) WritePrivateProfileString("HighScores", "Classic", str, ".\\ksimon.ini");
+    else if (mode == MODE_REVERSE) WritePrivateProfileString("HighScores", "Reverse", str, ".\\ksimon.ini");
+    else if (mode == MODE_SPEED) WritePrivateProfileString("HighScores", "Speed", str, ".\\ksimon.ini");
+}
 
 void DrawBoard(HDC hdc) {
     for (int i = 0; i < 4; i++) {
@@ -57,6 +72,10 @@ void DrawBoard(HDC hdc) {
     char score_text[32];
     sprintf(score_text, "Score: %d", score);
     TextOutA(hdc, 10, 30, score_text, strlen(score_text));
+
+    char hi_score_text[64];
+    sprintf(hi_score_text, "High Score: %d", high_scores[current_mode]);
+    TextOutA(hdc, 10, 50, hi_score_text, strlen(hi_score_text));
 }
 
 void StartGame() {
@@ -96,7 +115,13 @@ void HandleClick(int btn_id) {
     }
 
     if (btn_id != expected_index) {
-        sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
+        if (score > high_scores[current_mode]) {
+            high_scores[current_mode] = score;
+            SaveHighScore(current_mode, score);
+            sprintf(status_text, "Game Over! Score: %d (New High Score!)", score);
+        } else {
+            sprintf(status_text, "Game Over! Score: %d (Space to restart)", score);
+        }
         sequence_length = 0;
         EnableWindow(hwndModeBox, TRUE);
         InvalidateRect(hwndMain, NULL, TRUE);
@@ -117,14 +142,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             hwndMain = hwnd;
             srand((unsigned)time(NULL));
+            LoadHighScores();
             hwndModeBox = CreateWindowEx(
                 0, "COMBOBOX", "", 
                 CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL, 
-                10, 50, 150, 100, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 70, 150, 100, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Classic Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");
             SendMessage(hwndModeBox, CB_SETCURSEL, 0, 0);
+            break;
+        case WM_COMMAND:
+            if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == 1001) {
+                current_mode = SendMessage(hwndModeBox, CB_GETCURSEL, 0, 0);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
         case WM_SIZE: {
             int width = LOWORD(lParam);
