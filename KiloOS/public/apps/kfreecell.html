@@ -111,6 +111,46 @@
     </div>
   </div>
   <script>
+    let audioCtx = null;
+    function initAudio() {
+      if(!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    function playSound(type) {
+      if(!audioCtx) initAudio();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+      if (type === 'flip') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      } else if (type === 'place') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+      } else if (type === 'win') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(554, now + 0.2);
+        osc.frequency.setValueAtTime(659, now + 0.4);
+        osc.frequency.setValueAtTime(880, now + 0.6);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 1.2);
+        osc.start(now); osc.stop(now + 1.2);
+      }
+    }
+
     const suits = ['♠', '♥', '♣', '♦'];
     const colors = ['black', 'red', 'black', 'red'];
     const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -243,9 +283,11 @@
             let group = getDraggableGroup(index, cardIdx);
             if(group && group.length <= getMaxMoveCount()) {
                state.selected = { type, index, cardIdx };
+               playSound('flip');
             }
           } else if(type === 'free' && state.free[index]) {
             state.selected = { type, index, cardIdx: 0 };
+            playSound('flip');
           }
         }
       } else {
@@ -293,6 +335,7 @@
           } else if(sel.type === 'free') {
             state.free[sel.index] = null;
           }
+          playSound('place');
           autoComplete();
           checkWin();
         }
@@ -309,6 +352,7 @@
     function checkWin() {
       if(state.found.every(r => r === 13)) {
         if (gameInProgress) {
+          playSound('win');
           document.getElementById('status').innerText = "You Win!";
           stats.wins++;
           stats.streak++;

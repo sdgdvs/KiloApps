@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <stdint.h>
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
@@ -68,6 +69,26 @@ void PushUndo() {
         }
     }
     undoCount++;
+}
+
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 0) {
+        Beep(600, 30);
+    } else if (type == 1) {
+        Beep(400, 20);
+        Beep(200, 20);
+    } else if (type == 2) {
+        Beep(440, 200);
+        Beep(554, 200);
+        Beep(659, 200);
+        Beep(880, 400);
+    }
+    return 0;
+}
+
+void PlaySoundEffect(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
 void ShowStats(HWND hwnd) {
@@ -215,6 +236,7 @@ int GetDraggableGroup(int tIdx, int startIdx) {
 void CheckWin(HWND hwnd) {
     if(found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) {
         if(gameInProgress) {
+            PlaySoundEffect(2);
             won = 1;
             statsWins++;
             statsStreak++;
@@ -490,11 +512,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selType = clickedType;
                         selIdx = clickedIdx;
                         selCardIdx = clickedCardIdx;
+                        PlaySoundEffect(0);
                     }
                 } else if(clickedType == 0 && freeCellsOccupied[clickedIdx]) {
                     selType = clickedType;
                     selIdx = clickedIdx;
                     selCardIdx = 0;
+                    PlaySoundEffect(0);
                 }
             } else { // Move
                 int moved = 0;
@@ -544,6 +568,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if(selType == 0) {
                         freeCellsOccupied[selIdx] = 0;
                     }
+                    PlaySoundEffect(1);
                     AutoComplete(hwnd);
                     CheckWin(hwnd);
                 }
