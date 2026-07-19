@@ -68,6 +68,13 @@
     font-size: 1em;
   }
   button:hover { background: #3a3a3a; }
+  #stats {
+    margin-top: 15px;
+    font-size: 0.9em;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.5;
+  }
 </style>
 </head>
 <body>
@@ -77,6 +84,13 @@
   <div>
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
     <button onclick="initGame()">Reset Game</button>
+  </div>
+  <div id="stats">
+    Wins (Red): <span id="s-red">0</span> |
+    Wins (Yellow): <span id="s-yellow">0</span> |
+    Draws: <span id="s-draws">0</span> <br>
+    Streak: <span id="s-streak">0</span> |
+    Best Streak: <span id="s-best">0</span>
   </div>
   <script>
     let vsAI = true;
@@ -94,6 +108,24 @@
 
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
+
+    let stats = { red: 0, yellow: 0, draws: 0, streak: 0, best: 0, lastWinner: 0 };
+    function loadStats() {
+      const s = localStorage.getItem('kconnect4_stats');
+      if(s) stats = JSON.parse(s);
+      updateStatsUI();
+    }
+    function saveStats() {
+      localStorage.setItem('kconnect4_stats', JSON.stringify(stats));
+      updateStatsUI();
+    }
+    function updateStatsUI() {
+      document.getElementById('s-red').textContent = stats.red;
+      document.getElementById('s-yellow').textContent = stats.yellow;
+      document.getElementById('s-draws').textContent = stats.draws;
+      document.getElementById('s-streak').textContent = stats.streak;
+      document.getElementById('s-best').textContent = stats.best;
+    }
 
     function initGame() {
       board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
@@ -162,10 +194,21 @@
             const color = currentPlayer === 1 ? 'Red' : 'Yellow';
             statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
             gameActive = false;
+            if (currentPlayer === 1) stats.red++;
+            else stats.yellow++;
+            if (stats.lastWinner === currentPlayer) stats.streak++;
+            else stats.streak = 1;
+            stats.lastWinner = currentPlayer;
+            if (stats.streak > stats.best) stats.best = stats.streak;
+            saveStats();
             renderBoard(r, col);
           } else if (checkDraw()) {
             statusEl.textContent = `It's a Draw!`;
             gameActive = false;
+            stats.draws++;
+            stats.streak = 0;
+            stats.lastWinner = 0;
+            saveStats();
             renderBoard(r, col);
           } else {
             currentPlayer = currentPlayer === 1 ? 2 : 1;
@@ -261,6 +304,7 @@
       dropPiece(bestCol);
     }
 
+    loadStats();
     initGame();
   </script>
 </body>

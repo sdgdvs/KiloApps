@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdio.h>
 
 const char g_szClassName[] = "KConnect4WindowClass";
 #define ROWS 6
@@ -23,6 +24,31 @@ int animTargetY = 0;
 int winCells[7][2];
 int winCellCount = 0;
 HWND hModeBtn, hResetBtn;
+
+typedef struct {
+    int redWins;
+    int yellowWins;
+    int draws;
+    int streak;
+    int bestStreak;
+    int lastWinner;
+} GameStats;
+GameStats stats = {0,0,0,0,0,0};
+
+void LoadStats() {
+    FILE *f = fopen("kconnect4_stats.bin", "rb");
+    if(f) {
+        fread(&stats, sizeof(GameStats), 1, f);
+        fclose(f);
+    }
+}
+void SaveStats() {
+    FILE *f = fopen("kconnect4_stats.bin", "wb");
+    if(f) {
+        fwrite(&stats, sizeof(GameStats), 1, f);
+        fclose(f);
+    }
+}
 
 void ResetGame() {
     for(int r=0; r<ROWS; r++)
@@ -139,6 +165,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
+            LoadStats();
             hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 20, 340, 150, 30, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 340, 100, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             ResetGame();
@@ -167,9 +194,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     if (CheckWin(animRow, animCol, animPlayer)) {
                         gameActive = false;
+                        if(animPlayer == 1) stats.redWins++;
+                        else stats.yellowWins++;
+                        if(stats.lastWinner == animPlayer) stats.streak++;
+                        else stats.streak = 1;
+                        stats.lastWinner = animPlayer;
+                        if(stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+                        SaveStats();
                     } else if (CheckDraw()) {
                         gameActive = false;
                         isDraw = true;
+                        stats.draws++;
+                        stats.streak = 0;
+                        stats.lastWinner = 0;
+                        SaveStats();
                     } else {
                         currentPlayer = animPlayer == 1 ? 2 : 1;
                         if (vsAI && currentPlayer == 2 && gameActive) {
@@ -199,6 +237,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 wsprintf(statusText, "Player %d's turn", currentPlayer);
             }
             TextOut(hdc, 20, 20, statusText, lstrlen(statusText));
+            
+            char statsStr[128];
+            wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d)",
+                     stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak);
+            TextOut(hdc, 20, 390, statsStr, lstrlen(statsStr));
             
             // Draw board background
             HBRUSH boardBg = CreateSolidBrush(RGB(31, 66, 135));
@@ -334,7 +377,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     hwnd = CreateWindowEx(
         0, g_szClassName, "KConnect4",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 400, 450,
+        CW_USEDEFAULT, CW_USEDEFAULT, 400, 480,
         NULL, NULL, hInstance, NULL);
 
     if(hwnd == NULL) {
