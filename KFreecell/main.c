@@ -102,15 +102,15 @@ void CheckWin(HWND hwnd) {
 }
 
 void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
-    HBRUSH bg = CreateSolidBrush(RGB(255, 255, 255));
-    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 235, 59) : RGB(204, 204, 204));
+    HBRUSH bg = CreateSolidBrush(RGB(45, 45, 48));
+    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 235, 59) : RGB(85, 85, 85));
     
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
     Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
     
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, c.color ? RGB(211, 47, 47) : RGB(0, 0, 0));
+    SetTextColor(hdc, c.color ? RGB(255, 82, 82) : RGB(255, 255, 255));
     
     WCHAR *suits[] = {L"\x2660", L"\x2665", L"\x2663", L"\x2666"};
     WCHAR *ranks[] = {L"A",L"2",L"3",L"4",L"5",L"6",L"7",L"8",L"9",L"10",L"J",L"Q",L"K"};
