@@ -105,6 +105,26 @@
         button.restart:hover {
             background-color: #005999;
         }
+        button.hint-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.2s;
+        }
+        button.hint-btn:hover:not(:disabled) {
+            background-color: #f57c00;
+        }
+        button.hint-btn:disabled {
+            background-color: #444;
+            color: #777;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -134,7 +154,10 @@
     
     <div id="keyboard"></div>
     
-    <button class="restart" onclick="initGame()">New Game</button>
+    <div style="display: flex; justify-content: center;">
+        <button class="hint-btn" onclick="useHint()" id="hint-btn">Hint</button>
+        <button class="restart" onclick="initGame()">New Game</button>
+    </div>
 </div>
 
 <script>
@@ -149,6 +172,7 @@
     let guessed = new Set();
     let errors = 0;
     let gameEnded = false;
+    let hintUsed = false;
     let stats = { wins: 0, losses: 0, streak: 0, best: 0 };
 
     function loadStats() {
@@ -256,10 +280,30 @@
         guessed.clear();
         errors = 0;
         gameEnded = false;
+        hintUsed = false;
+        if(document.getElementById('hint-btn')) document.getElementById('hint-btn').disabled = false;
         document.getElementById('message').innerText = "Guess a letter";
         document.getElementById('message').style.color = "#e0e0e0";
         initKeyboard();
         updateDisplay();
+    }
+
+    function useHint() {
+        if (hintUsed || gameEnded) return;
+        
+        let unGuessed = [];
+        for (let char of word) {
+            if (!guessed.has(char)) {
+                unGuessed.push(char);
+            }
+        }
+        
+        if (unGuessed.length > 0) {
+            let randomChar = unGuessed[Math.floor(Math.random() * unGuessed.length)];
+            hintUsed = true;
+            document.getElementById('hint-btn').disabled = true;
+            guess(randomChar);
+        }
     }
 
     function guess(letter) {

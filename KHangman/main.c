@@ -25,6 +25,7 @@ int guessed[26] = {0};
 int game_over = 0;
 int won = 0;
 int initialized = 0;
+int hint_used = 0;
 
 typedef struct {
     int wins;
@@ -81,6 +82,7 @@ void InitGame() {
     errors = 0;
     game_over = 0;
     won = 0;
+    hint_used = 0;
 }
 
 void Guess(char c) {
@@ -146,8 +148,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
             
-            // Check restart button (center: 250, bottom: 450)
-            if (x >= 150 && x <= 350 && y >= 450 && y <= 490) {
+            // Check hint button
+            if (x >= 100 && x <= 220 && y >= 450 && y <= 490) {
+                if (!hint_used && !game_over) {
+                    char unguessed[32];
+                    int uCount = 0;
+                    for (int i = 0; target_word[i] != '\0'; i++) {
+                        if (!guessed[target_word[i] - 'A']) {
+                            int already = 0;
+                            for (int j = 0; j < uCount; j++) {
+                                if (unguessed[j] == target_word[i]) { already = 1; break; }
+                            }
+                            if (!already) unguessed[uCount++] = target_word[i];
+                        }
+                    }
+                    if (uCount > 0) {
+                        hint_used = 1;
+                        Guess(unguessed[CustomRand() % uCount]);
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+                break;
+            }
+
+            // Check restart button
+            if (x >= 280 && x <= 400 && y >= 450 && y <= 490) {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
@@ -334,13 +359,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, l, 1, &btnRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
+            // Hint button
+            RECT hintRect = {100, 450, 220, 490};
+            HBRUSH hintBg;
+            if (hint_used || game_over) {
+                hintBg = CreateSolidBrush(RGB(68, 68, 68));
+                SetTextColor(memDC, RGB(119, 119, 119));
+            } else {
+                hintBg = CreateSolidBrush(RGB(255, 152, 0));
+                SetTextColor(memDC, RGB(255, 255, 255));
+            }
+            FillRect(memDC, &hintRect, hintBg);
+            DeleteObject(hintBg);
+            SelectObject(memDC, hFontMain);
+            DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
             // Restart button
-            RECT resRect = {150, 450, 350, 490};
+            RECT resRect = {280, 450, 400, 490};
             HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            SelectObject(memDC, hFontMain);
             DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Stats
