@@ -60,11 +60,14 @@
 <body>
     <div id="gameContainer">
         <div id="ui">
-            <div class="score">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | Wave: <span id="waveVal">1</span></div>
+            <div class="score">Score: <span id="scoreVal">0</span> | High: <span id="highScoreVal">0</span> | <span id="waveLabel">Wave: </span><span id="waveVal">1</span> | Mode: <span id="modeVal">None</span></div>
         </div>
         <div id="gameOver">
-            <h2>GAME OVER</h2>
-            <p>Press Enter to Restart</p>
+            <h2 id="gameOverTitle">K-ASTEROIDS</h2>
+            <p>Select Mode to Play:</p>
+            <p style="margin-top: 10px;">[1] Classic - Standard Waves</p>
+            <p>[2] Time Attack - 2 Min Limit</p>
+            <p>[3] Hardcore - Fast & Deadly</p>
         </div>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
@@ -132,6 +135,9 @@
 
         let score = 0;
         let highScore = localStorage.getItem('kasteroids_highscore') || 0;
+        let gameMode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore
+        let timeLeft = 0;
+        let lastTick = 0;
         highScoreSpan.innerText = highScore;
 
         function updateHighScore() {
@@ -371,11 +377,12 @@
         let ufos = [];
         let particles = [];
         let ufoSpawnTimer = 0;
-        let gameOver = false;
+        let gameOver = true;
         let lastShootTime = 0;
 
         function spawnAsteroids(count) {
             let speedMult = 1.0 + (wave - 1) * 0.15;
+            if (gameMode === 2) speedMult *= 1.5;
             for (let i = 0; i < count; i++) {
                 let x, y;
                 do {
@@ -386,11 +393,16 @@
             }
         }
 
-        function initGame() {
+        function initGame(mode) {
+            gameMode = mode;
             score = 0;
             wave = 1;
+            timeLeft = (gameMode === 1) ? 120 : 0;
+            lastTick = Date.now();
             scoreSpan.innerText = score;
-            waveSpan.innerText = wave;
+            document.getElementById('waveLabel').innerText = (gameMode === 1) ? "Time: " : "Wave: ";
+            waveSpan.innerText = (gameMode === 1) ? timeLeft : wave;
+            document.getElementById('modeVal').innerText = (gameMode === 0) ? "Classic" : ((gameMode === 1) ? "Time Attack" : "Hardcore");
             ship.reset();
             asteroids = [];
             bullets = [];
@@ -412,6 +424,7 @@
                     if (dist < ship.radius) {
                         ship.active = false;
                         gameOver = true;
+                        document.getElementById('gameOverTitle').innerText = "GAME OVER";
                         gameOverDiv.style.display = 'block';
                         b.active = false;
                         playSound('explosion');
@@ -471,6 +484,7 @@
                     if (dist < a.radius + ship.radius) {
                         ship.active = false;
                         gameOver = true;
+                        document.getElementById('gameOverTitle').innerText = "GAME OVER";
                         gameOverDiv.style.display = 'block';
                         playSound('explosion');
                         for(let p=0; p<40; p++) particles.push(new Particle(ship.x, ship.y, (Math.random()-0.5)*5, (Math.random()-0.5)*5, '#e2e8f0', 40 + Math.random()*30));
@@ -482,6 +496,7 @@
                     if (dist < u.radius + ship.radius) {
                         ship.active = false;
                         gameOver = true;
+                        document.getElementById('gameOverTitle').innerText = "GAME OVER";
                         gameOverDiv.style.display = 'block';
                         playSound('explosion');
                         for(let p=0; p<40; p++) particles.push(new Particle(ship.x, ship.y, (Math.random()-0.5)*5, (Math.random()-0.5)*5, '#e2e8f0', 40 + Math.random()*30));
@@ -492,8 +507,27 @@
 
         function update() {
             if (gameOver) {
-                if (keys['Enter']) initGame();
+                if (keys['Digit1']) initGame(0);
+                if (keys['Digit2']) initGame(1);
+                if (keys['Digit3']) initGame(2);
                 return;
+            }
+
+            if (gameMode === 1) {
+                let now = Date.now();
+                if (now - lastTick >= 1000) {
+                    timeLeft--;
+                    lastTick = now;
+                    waveSpan.innerText = timeLeft;
+                    if (timeLeft <= 0) {
+                        ship.active = false;
+                        gameOver = true;
+                        document.getElementById('gameOverTitle').innerText = "TIME UP!";
+                        gameOverDiv.style.display = 'block';
+                        playSound('explosion');
+                        for(let p=0; p<40; p++) particles.push(new Particle(ship.x, ship.y, (Math.random()-0.5)*5, (Math.random()-0.5)*5, '#e2e8f0', 40 + Math.random()*30));
+                    }
+                }
             }
 
             if (keys['Space']) {
@@ -508,7 +542,8 @@
             ship.update();
             
             ufoSpawnTimer++;
-            if (ufoSpawnTimer > 600) {
+            let ufoThreshold = (gameMode === 2) ? 300 : 600;
+            if (ufoSpawnTimer > ufoThreshold) {
                 ufoSpawnTimer = 0;
                 if (Math.random() < 0.5 + (wave * 0.05)) {
                     ufos.push(new Ufo());
@@ -551,7 +586,7 @@
             requestAnimationFrame(gameLoop);
         }
 
-        initGame();
+        gameOverDiv.style.display = 'block';
         gameLoop();
     </script>
 </body>

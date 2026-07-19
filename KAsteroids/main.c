@@ -65,8 +65,11 @@ int ufo_spawn_timer = 0;
 int score = 0;
 int high_score = 0;
 int wave = 1;
-bool game_over = false;
+bool game_over = true;
 bool keys[256] = {0};
+int game_mode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore
+int time_left = 0;
+long long last_tick_time = 0;
 
 DWORD WINAPI SoundThread(LPVOID param) {
     int type = (int)(intptr_t)param;
@@ -113,6 +116,7 @@ long long GetTimeMs() {
 
 void SpawnAsteroids(int count) {
     float speedMult = 1.0f + (wave - 1) * 0.15f;
+    if (game_mode == 2) speedMult *= 1.5f;
     for (int i = 0; i < count; i++) {
         if (num_asteroids >= 100) break;
         float x, y;
@@ -137,9 +141,12 @@ void SpawnAsteroids(int count) {
     }
 }
 
-void InitGame() {
+void InitGame(int mode) {
+    game_mode = mode;
     score = 0;
     wave = 1;
+    time_left = (game_mode == 1) ? 120 : 0;
+    last_tick_time = GetTimeMs();
     ship.x = WIDTH / 2.0f;
     ship.y = HEIGHT / 2.0f;
     ship.vx = 0;
@@ -317,12 +324,32 @@ void CompactArrays() {
 
 void Update() {
     if (game_over) {
-        if (keys[VK_RETURN]) {
-            InitGame();
-        }
+        if (keys['1']) InitGame(0);
+        if (keys['2']) InitGame(1);
+        if (keys['3']) InitGame(2);
         return;
     }
     
+    if (game_mode == 1) {
+        long long now = GetTimeMs();
+        if (now - last_tick_time >= 1000) {
+            time_left--;
+            last_tick_time = now;
+            if (time_left <= 0) {
+                ship.active = false;
+                game_over = true;
+                PlaySoundEffect(2);
+                for(int p=0; p<40; p++) {
+                    if(num_particles >= 500) break;
+                    Particle* pt = &particles[num_particles++];
+                    pt->x = ship.x; pt->y = ship.y;
+                    pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                    pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
+            }
+        }
+    }
+
     if (keys[VK_LEFT]) ship.angle -= 0.05f;
     if (keys[VK_RIGHT]) ship.angle += 0.05f;
     if (keys[VK_UP]) {
@@ -400,7 +427,8 @@ void Update() {
     }
     
     ufo_spawn_timer++;
-    if (ufo_spawn_timer > 600) {
+    int ufo_threshold = (game_mode == 2) ? 300 : 600;
+    if (ufo_spawn_timer > ufo_threshold) {
         ufo_spawn_timer = 0;
         if ((rand() % 100) < (int)((0.5f + (wave * 0.05f)) * 100) && num_ufos < 10) {
             Ufo* u = &ufos[num_ufos++];
@@ -546,14 +574,26 @@ void Draw(HDC hdc) {
     SetTextColor(hdc, RGB(56, 189, 248));
     SetBkMode(hdc, TRANSPARENT);
     char scoreStr[128];
-    sprintf(scoreStr, "Score: %d   High: %d   Wave: %d", score, high_score, wave);
+    const char* modeStr = (game_mode == 0) ? "Classic" : ((game_mode == 1) ? "Time Attack" : "Hardcore");
+    if (game_mode == 1) {
+        sprintf(scoreStr, "Score: %d   High: %d   Time: %d   Mode: %s", score, high_score, time_left, modeStr);
+    } else {
+        sprintf(scoreStr, "Score: %d   High: %d   Wave: %d   Mode: %s", score, high_score, wave, modeStr);
+    }
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
     
     if (game_over) {
         SetTextColor(hdc, RGB(239, 68, 68));
-        TextOutA(hdc, WIDTH / 2 - 50, HEIGHT / 2 - 20, "GAME OVER", 9);
+        if (game_mode == 1 && time_left <= 0) {
+            TextOutA(hdc, WIDTH / 2 - 40, HEIGHT / 2 - 60, "TIME UP!", 8);
+        } else {
+            TextOutA(hdc, WIDTH / 2 - 50, HEIGHT / 2 - 60, "K-ASTEROIDS", 11);
+        }
         SetTextColor(hdc, RGB(161, 161, 170));
-        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 10, "Press Enter to Restart", 22);
+        TextOutA(hdc, WIDTH / 2 - 70, HEIGHT / 2 - 20, "Select Mode to Play:", 20);
+        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 10, "[1] Classic - Standard Waves", 28);
+        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 30, "[2] Time Attack - 2 Min Limit", 29);
+        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 50, "[3] Hardcore - Fast & Deadly", 28);
     }
     
     DeleteObject(shipPen);
@@ -572,7 +612,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             LoadHighScore();
-            InitGame();
             SetTimer(hwnd, TIMER_ID, 16, NULL); // ~60fps
             break;
         case WM_TIMER:
