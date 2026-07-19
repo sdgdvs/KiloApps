@@ -49,12 +49,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSimon (Memory pattern game)
-**Phase:** 2
-**Status:** Completed
+**Phase:** 4
+**Status:** Goal
 
-- Phase 1: Scaffold `KSimon/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- Phase 1: [x] Scaffold `KSimon/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 2: [x] Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 3: [x] Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - Phase 5: Add Multiple Game Modes (e.g., Classic, Reverse, Speed).
 - Phase 6: Add High Score system with multiple categories.

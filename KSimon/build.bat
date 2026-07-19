@@ -1,5 +1,8 @@
 @echo off
-set "VC_DIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build"
+set "VC_DIR=C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build"
+if not exist "%VC_DIR%\vcvars32.bat" (
+    set "VC_DIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build"
+)
 if exist "%VC_DIR%\vcvars32.bat" (
     call "%VC_DIR%\vcvars32.bat"
 ) else (
