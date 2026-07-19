@@ -205,4 +205,6 @@ Pass 1 Complete.
 - **KCalc**: Added ARIA labels to buttons and fixed potential XSS by using `textContent` in `kcalc.html`. Fixed GDI resource leaks (`HFONT`, `HBRUSH`) in `main.c`.
 - **KChart**: Added ARIA labels to canvas and buttons in `kchart.html`. Fixed GDI resource leak (`HFONT`) and timer leak in `main.c` on `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KChat.
+- **KChat & KChatServer**: Added ARIA labels in `kchat.html`. Fixed GDI resource leaks (`hUIFont`, `wc.hbrBackground`) and fixed incorrect button labels/states during socket connect/disconnect errors in `main.c`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KChess.

@@ -21,6 +21,7 @@ void my_memset(void* dest, int c, size_t count) {
 SOCKET s = INVALID_SOCKET;
 HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave;
 char logBuf[16384] = "";
+HFONT hUIFont = NULL;
 
 void my_strcpy(char* d, const char* s) { while (*s) *d++ = *s++; *d = 0; }
 int my_strlen(const char* s) { int l = 0; while (s[l]) l++; return l; }
@@ -64,15 +65,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 280, 270, 50, 24, hwnd, (HMENU)102, 0, 0);
             hSave = CreateWindowA("BUTTON", "Save", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 335, 270, 50, 24, hwnd, (HMENU)103, 0, 0);
             
-            HFONT hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            SendMessageA(hIp, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hLog, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hInput, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hSend, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hClear, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hSave, WM_SETFONT, (WPARAM)hFont, TRUE);            
+            hUIFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            SendMessageA(hIp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hLog, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hInput, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hSend, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hClear, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hSave, WM_SETFONT, (WPARAM)hUIFont, TRUE);            
 
             Log("Welcome to KChat! Connect to a server to begin.");
             Log("Commands: /nick <name>, /join <#room>");
@@ -153,13 +154,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (s != INVALID_SOCKET) closesocket(s);
                 s = INVALID_SOCKET;
                 EnableWindow(hBtn, TRUE);
+                SetWindowTextA(hBtn, "Connect");
                 EnableWindow(hSend, FALSE);
                 break;
             }
             if (WSAGETSELECTEVENT(lParam) == FD_CONNECT) {
                 Log("Connected!");
                 EnableWindow(hBtn, TRUE);
-                SetWindowTextA(hBtn, "Reconnect");
+                SetWindowTextA(hBtn, "Disconnect");
                 EnableWindow(hSend, TRUE);
             } else if (WSAGETSELECTEVENT(lParam) == FD_READ) {
                 char buf[513];
@@ -178,12 +180,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 closesocket(s);
                 s = INVALID_SOCKET;
                 EnableWindow(hBtn, TRUE);
+                SetWindowTextA(hBtn, "Connect");
                 EnableWindow(hSend, FALSE);
             }
             break;
         }
         case WM_DESTROY:
             if (s != INVALID_SOCKET) closesocket(s);
+            if (hUIFont) DeleteObject(hUIFont);
             PostQuitMessage(0);
             return 0;
     }
@@ -210,5 +214,6 @@ void __stdcall MainEntry() {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+    DeleteObject(wc.hbrBackground);
     ExitProcess(0);
 }

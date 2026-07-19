@@ -82,20 +82,20 @@
 </head>
 <body>
     <div class="row">
-        <button id="btnConnectGlobal" class="btn-global" onclick="window.connectGlobal()">Join Global Room (Firebase)</button>
-        <span style="opacity: 0.5; margin: 0 5px;">|</span>
-        <span>Custom IP:</span> <input type="text" id="ip" value="127.0.0.1" style="width: 100px;">
-        <span>Port:</span> <input type="text" id="port" value="6667" style="width: 50px;">
-        <button id="btnConnect" onclick="window.connect()">Connect</button>
+        <button id="btnConnectGlobal" class="btn-global" onclick="window.connectGlobal()" aria-label="Join or leave Global Room">Join Global Room (Firebase)</button>
+        <span style="opacity: 0.5; margin: 0 5px;" aria-hidden="true">|</span>
+        <label for="ip" aria-hidden="true">Custom IP:</label> <input type="text" id="ip" value="127.0.0.1" style="width: 100px;" aria-label="Custom server IP address">
+        <label for="port" aria-hidden="true">Port:</label> <input type="text" id="port" value="6667" style="width: 50px;" aria-label="Custom server port">
+        <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
     </div>
-    <div id="log">Welcome to KChat!
+    <div id="log" aria-label="Chat log" role="log" aria-live="polite">Welcome to KChat!
 You can join the Global Room or connect to a custom KChat Server.
 Commands: /nick &lt;name&gt;</div>
     <div class="row">
-        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled>
-        <button id="btnSend" onclick="window.send()" disabled>Send</button>
-        <button id="btnClear" onclick="window.clearLog()">Clear</button>
-        <button id="btnSave" onclick="window.saveLog()">Save</button>
+        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled aria-label="Chat message input">
+        <button id="btnSend" onclick="window.send()" disabled aria-label="Send message">Send</button>
+        <button id="btnClear" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
+        <button id="btnSave" onclick="window.saveLog()" aria-label="Save chat log to file">Save</button>
     </div>
 
     <script type="module">
