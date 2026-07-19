@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <math.h>
+#include <commdlg.h>
 
 #define W 400
 #define H 400
@@ -17,6 +18,53 @@ unsigned int max_iter = 100;
 int theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW
 int isJulia = 0;
 double juliaCRe = 0.0, juliaCIm = 0.0;
+
+#define MAX_HISTORY 256
+typedef struct {
+    double minRe, maxRe, minIm, maxIm;
+    unsigned int max_iter;
+    int isJulia;
+    double juliaCRe, juliaCIm;
+    int theme;
+} ViewState;
+
+ViewState history[MAX_HISTORY];
+int history_idx = -1;
+int history_max = -1;
+
+void SaveState() {
+    if (history_idx < MAX_HISTORY - 1) {
+        history_idx++;
+    } else {
+        for (int i = 0; i < MAX_HISTORY - 1; i++) {
+            history[i] = history[i+1];
+        }
+    }
+    history[history_idx].minRe = minRe;
+    history[history_idx].maxRe = maxRe;
+    history[history_idx].minIm = minIm;
+    history[history_idx].maxIm = maxIm;
+    history[history_idx].max_iter = max_iter;
+    history[history_idx].isJulia = isJulia;
+    history[history_idx].juliaCRe = juliaCRe;
+    history[history_idx].juliaCIm = juliaCIm;
+    history[history_idx].theme = theme;
+    history_max = history_idx;
+}
+
+void LoadState(int idx) {
+    if (idx >= 0 && idx <= history_max) {
+        minRe = history[idx].minRe;
+        maxRe = history[idx].maxRe;
+        minIm = history[idx].minIm;
+        maxIm = history[idx].maxIm;
+        max_iter = history[idx].max_iter;
+        isJulia = history[idx].isJulia;
+        juliaCRe = history[idx].juliaCRe;
+        juliaCIm = history[idx].juliaCIm;
+        theme = history[idx].theme;
+    }
+}
 
 void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsigned char* g, unsigned char* b) {
     if (t == 0) { // Fire
@@ -126,6 +174,46 @@ void Zoom(double factor, int mouseX, int mouseY) {
     RenderMandelbrot(bmpW, bmpH);
 }
 
+void SaveImage(HWND hwnd) {
+    if (!pixels || bmpW <= 0 || bmpH <= 0) return;
+    OPENFILENAME ofn = {0};
+    char szFileName[MAX_PATH] = "kmandel.bmp";
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFilter = "Bitmap Files (*.bmp)\0*.bmp\0All Files (*.*)\0*.*\0";
+    ofn.lpstrFile = szFileName;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+    ofn.lpstrDefExt = "bmp";
+    
+    if (GetSaveFileName(&ofn)) {
+        HANDLE hFile = CreateFile(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            BITMAPFILEHEADER bfh = {0};
+            BITMAPINFOHEADER bih = {0};
+            int imageSize32 = bmpW * bmpH * 4;
+            
+            bfh.bfType = 0x4D42;
+            bfh.bfSize = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + imageSize32;
+            bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+            
+            bih.biSize = sizeof(BITMAPINFOHEADER);
+            bih.biWidth = bmpW;
+            bih.biHeight = -bmpH;
+            bih.biPlanes = 1;
+            bih.biBitCount = 32;
+            bih.biCompression = BI_RGB;
+            bih.biSizeImage = imageSize32;
+            
+            DWORD dwWritten;
+            WriteFile(hFile, &bfh, sizeof(BITMAPFILEHEADER), &dwWritten, NULL);
+            WriteFile(hFile, &bih, sizeof(BITMAPINFOHEADER), &dwWritten, NULL);
+            WriteFile(hFile, pixels, imageSize32, &dwWritten, NULL);
+            CloseHandle(hFile);
+        }
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_SIZE: {
@@ -139,6 +227,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
             Zoom(0.5, x, y); // Zoom in
+            SaveState();
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -146,6 +235,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
             Zoom(2.0, x, y); // Zoom out
+            SaveState();
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -159,10 +249,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     minIm = -1.2; maxIm = 1.2;
                 }
                 max_iter = 100;
+                SaveState();
                 RenderMandelbrot(bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T') {
                 theme = (theme + 1) % 4;
+                SaveState();
                 RenderMandelbrot(bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'J') {
@@ -178,8 +270,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     minIm = -1.2; maxIm = 1.2;
                 }
                 max_iter = 100;
+                SaveState();
                 RenderMandelbrot(bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'Z') {
+                if (history_idx > 0) {
+                    history_idx--;
+                    LoadState(history_idx);
+                    RenderMandelbrot(bmpW, bmpH);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 'Y') {
+                if (history_idx < history_max) {
+                    history_idx++;
+                    LoadState(history_idx);
+                    RenderMandelbrot(bmpW, bmpH);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 'S') {
+                SaveImage(hwnd);
             }
             break;
         }
@@ -234,8 +343,10 @@ void MainEntry() {
     wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - LClick: In, RClick: Out, R: Reset, T: Theme, J: Julia", WS_OVERLAPPEDWINDOW,
+    HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel - L/R Click: Zoom, Z/Y: Undo/Redo, S: Save, R: Reset, T: Theme, J: Julia", WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
+
+    SaveState(); // Save initial state
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);

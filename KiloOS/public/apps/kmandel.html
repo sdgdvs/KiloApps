@@ -135,6 +135,11 @@
         <button id="btn-zoom-in">+</button>
         <button id="btn-zoom-out">-</button>
       </div>
+      <div class="row">
+        <button id="btn-undo" disabled>Undo</button>
+        <button id="btn-redo" disabled>Redo</button>
+      </div>
+      <button id="btn-save">Save Image</button>
       <button id="btn-theme">Toggle Theme</button>
       <button id="btn-julia">Toggle Julia</button>
       <button id="btn-reset">Reset View</button>
@@ -158,11 +163,58 @@
 
     let isJulia = false;
     let juliaCRe = 0.0, juliaCIm = 0.0;
+    
+    let history = [];
+    let historyIdx = -1;
 
     // Interaction state
     let isDragging = false;
+    let hasDragged = false;
     let dragStartX, dragStartY;
     let startMinRe, startMaxRe, startMinIm, startMaxIm;
+    
+    function saveState() {
+        const state = { minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme };
+        if (historyIdx < history.length - 1) {
+            history = history.slice(0, historyIdx + 1);
+        }
+        history.push(state);
+        if (history.length > 256) history.shift();
+        historyIdx = history.length - 1;
+        updateUndoRedoButtons();
+    }
+    
+    function loadState(state) {
+        minRe = state.minRe; maxRe = state.maxRe;
+        minIm = state.minIm; maxIm = state.maxIm;
+        max_iter = state.max_iter;
+        isJulia = state.isJulia;
+        juliaCRe = state.juliaCRe; juliaCIm = state.juliaCIm;
+        theme = state.theme;
+        updateUndoRedoButtons();
+    }
+    
+    function updateUndoRedoButtons() {
+        document.getElementById('btn-undo').disabled = historyIdx <= 0;
+        document.getElementById('btn-redo').disabled = historyIdx >= history.length - 1;
+        document.getElementById('btn-julia').textContent = isJulia ? 'Mandelbrot Mode' : 'Toggle Julia';
+    }
+
+    function undo() {
+        if (historyIdx > 0) {
+            historyIdx--;
+            loadState(history[historyIdx]);
+            requestRender();
+        }
+    }
+    
+    function redo() {
+        if (historyIdx < history.length - 1) {
+            historyIdx++;
+            loadState(history[historyIdx]);
+            requestRender();
+        }
+    }
     
     function updateDisplays() {
       const wRe = maxRe - minRe;
@@ -291,7 +343,7 @@
       renderNextChunk();
     }
     
-    function zoom(factor, centerX, centerY) {
+    function zoom(factor, centerX, centerY, dontSave) {
         const w = window.innerWidth;
         const h = window.innerHeight;
         const re_factor = (maxRe - minRe) / (w - 1);
@@ -309,6 +361,7 @@
         maxIm = centerIm + (centerY / h) * newWIm;
         minIm = maxIm - newWIm;
         
+        if (!dontSave) saveState();
         requestRender();
     }
 
@@ -323,6 +376,7 @@
             minIm = -1.2; maxIm = 1.2;
         }
         max_iter = 100;
+        saveState();
         requestRender();
     });
     
@@ -333,19 +387,19 @@
             juliaCIm = minIm + (maxIm - minIm) / 2.0;
             minRe = -2.0; maxRe = 2.0;
             minIm = -2.0; maxIm = 2.0;
-            document.getElementById('btn-julia').textContent = 'Mandelbrot Mode';
         } else {
             isJulia = false;
             minRe = -2.0; maxRe = 1.0;
             minIm = -1.2; maxIm = 1.2;
-            document.getElementById('btn-julia').textContent = 'Toggle Julia';
         }
         max_iter = 100;
+        saveState();
         requestRender();
     });
     
     document.getElementById('btn-theme').addEventListener('click', () => {
         theme = (theme + 1) % 4;
+        saveState();
         requestRender();
     });
     
@@ -357,17 +411,36 @@
         zoom(2.0, window.innerWidth/2, window.innerHeight/2);
     });
 
+    document.getElementById('btn-undo').addEventListener('click', undo);
+    document.getElementById('btn-redo').addEventListener('click', redo);
+    document.getElementById('btn-save').addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'kmandel.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'z') undo();
+        if (e.key.toLowerCase() === 'y') redo();
+        if (e.key.toLowerCase() === 's') document.getElementById('btn-save').click();
+    });
+
     const container = document.getElementById('canvas-container');
     
+    let wheelTimeout;
     container.addEventListener('wheel', (e) => {
         e.preventDefault();
         const factor = e.deltaY > 0 ? 1.5 : 1/1.5;
-        zoom(factor, e.clientX, e.clientY);
+        zoom(factor, e.clientX, e.clientY, true);
+        clearTimeout(wheelTimeout);
+        wheelTimeout = setTimeout(saveState, 400);
     });
     
     container.addEventListener('pointerdown', (e) => {
         if (e.target !== canvas) return;
         isDragging = true;
+        hasDragged = false;
         dragStartX = e.clientX;
         dragStartY = e.clientY;
         startMinRe = minRe; startMaxRe = maxRe;
@@ -377,6 +450,7 @@
     
     container.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
+        hasDragged = true;
         const dx = e.clientX - dragStartX;
         const dy = e.clientY - dragStartY;
         
@@ -397,8 +471,13 @@
     container.addEventListener('pointerup', (e) => {
         isDragging = false;
         container.releasePointerCapture(e.pointerId);
+        if (hasDragged) {
+            saveState();
+            hasDragged = false;
+        }
     });
 
+    saveState();
     requestRender();
   </script>
 </body>
