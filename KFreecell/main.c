@@ -39,6 +39,23 @@ int statsPlayed = 0;
 int statsWins = 0;
 int statsStreak = 0;
 int statsBestStreak = 0;
+int settingsCardBack = 0;
+
+void LoadSettings() {
+    FILE *f = _wfopen(L"kfreecell_settings.dat", L"rb");
+    if(f) {
+        fread(&settingsCardBack, sizeof(settingsCardBack), 1, f);
+        fclose(f);
+    }
+}
+
+void SaveSettings() {
+    FILE *f = _wfopen(L"kfreecell_settings.dat", L"wb");
+    if(f) {
+        fwrite(&settingsCardBack, sizeof(settingsCardBack), 1, f);
+        fclose(f);
+    }
+}
 
 typedef struct {
     int active;
@@ -425,9 +442,33 @@ void DrawEmptyCell(HDC hdc, int x, int y, int isFound, int suitIdx) {
     }
 }
 
+void DrawCardBack(HDC hdc, int x, int y, int type) {
+    HBRUSH bg;
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+    if (type == 0) bg = CreateSolidBrush(RGB(30, 136, 229)); // Blue
+    else if (type == 1) bg = CreateSolidBrush(RGB(229, 57, 53)); // Red
+    else if (type == 2) bg = CreateSolidBrush(RGB(67, 160, 71)); // Green
+    else bg = CreateSolidBrush(RGB(142, 36, 170)); // Purple
+
+    SelectObject(hdc, bg);
+    SelectObject(hdc, pen);
+    Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
+    
+    HPEN innerPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    SelectObject(hdc, innerPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, x + 5, y + 5, x + CELL_W - 5, y + CELL_H - 5);
+    Rectangle(hdc, x + 10, y + 10, x + CELL_W - 10, y + CELL_H - 10);
+    
+    DeleteObject(innerPen);
+    DeleteObject(bg);
+    DeleteObject(pen);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
+            LoadSettings();
             SetTimer(hwnd, 1, 16, NULL);
             srand((unsigned int)time(NULL));
             InitGame();
@@ -453,7 +494,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hTitleFont = CreateFontW(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
-            DrawTextW(hdcMem, L"KFreecell - [N]ew [Z]Undo [S]tats [F5]Save [F9]Load", -1, &titleRect, DT_CENTER | DT_TOP);
+            DrawTextW(hdcMem, L"KFreecell - [N]ew [Z]Undo [S]tats [C]ardBack [F5]Save [F9]Load", -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
                 RECT winRect = {0, 10, clientRect.right - 20, 40};
                 DrawTextW(hdcMem, L"You Win!", -1, &winRect, DT_RIGHT | DT_TOP);
@@ -474,6 +515,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawEmptyCell(hdcMem, x, TOP_Y, 0, 0);
                 }
             }
+            
+            // Draw Decorative Deck
+            int deckX = (clientRect.right - CELL_W) / 2;
+            DrawCardBack(hdcMem, deckX, TOP_Y, settingsCardBack);
             
             // Draw Foundations
             int group2X = clientRect.right - PAD - 4*(CELL_W + TAB_PAD_X);
@@ -686,6 +731,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UndoMove(hwnd);
             } else if(wParam == 'S') {
                 ShowStats(hwnd);
+            } else if(wParam == 'C') {
+                settingsCardBack = (settingsCardBack + 1) % 4;
+                SaveSettings();
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == VK_F5) {
                 SaveGame(hwnd);
             } else if(wParam == VK_F9) {

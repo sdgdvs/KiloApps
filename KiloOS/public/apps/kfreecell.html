@@ -73,6 +73,7 @@
       <button class="btn" onclick="saveGame()">Save</button>
       <button class="btn" onclick="loadGame()">Load</button>
       <button class="btn" onclick="showStats()">Stats</button>
+      <button class="btn" onclick="showSettings()">Settings</button>
     </div>
     <h1>KFreecell</h1>
     <div id="status" style="font-size: 14px;"></div>
@@ -87,6 +88,15 @@
       <button class="btn" style="margin-top:10px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
     </div>
   </div>
+  <div id="settings-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
+    <div style="background:#2d2d30; padding:20px; border-radius:5px; border:1px solid #555; text-align:center;">
+      <h2 style="margin-top:0;">Settings</h2>
+      <p>Card Back Design:</p>
+      <div style="display:flex; gap:10px; justify-content:center; margin-bottom: 20px;" id="card-back-options">
+      </div>
+      <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
+    </div>
+  </div>
   <div class="game-board">
     <div class="top-row">
       <div class="group" id="free-cells">
@@ -95,6 +105,7 @@
         <div class="cell" data-type="free" data-index="2"></div>
         <div class="cell" data-type="free" data-index="3"></div>
       </div>
+      <div id="decorative-deck" class="cell" style="border: 2px solid #fff; background-color: #1e88e5; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px);"></div>
       <div class="group" id="foundations">
         <div class="cell" data-type="found" data-index="0"></div>
         <div class="cell" data-type="found" data-index="1"></div>
@@ -161,6 +172,13 @@
     let deck = [];
     let gameInProgress = false;
     let stats = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
+    let settings = { cardBack: 0 };
+    const cardBacks = [
+      { color: '#1e88e5', pattern: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)' },
+      { color: '#e53935', pattern: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)' },
+      { color: '#43a047', pattern: 'radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2.5px)' },
+      { color: '#8e24aa', pattern: 'repeating-radial-gradient(circle, transparent, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 8px)' }
+    ];
     let state = {
       free: [null, null, null, null],
       found: [0, 0, 0, 0],
@@ -193,6 +211,39 @@
       }, 50);
     });
 
+    function updateCardBackUI() {
+      const deck = document.getElementById('decorative-deck');
+      const back = cardBacks[settings.cardBack];
+      deck.style.backgroundColor = back.color;
+      deck.style.backgroundImage = back.pattern;
+      
+      const opts = document.getElementById('card-back-options');
+      if (opts) {
+        opts.innerHTML = '';
+        cardBacks.forEach((cb, i) => {
+          let div = document.createElement('div');
+          div.style.width = '50px';
+          div.style.height = '70px';
+          div.style.backgroundColor = cb.color;
+          div.style.backgroundImage = cb.pattern;
+          div.style.border = (i === settings.cardBack) ? '3px solid #ffeb3b' : '1px solid #555';
+          div.style.cursor = 'pointer';
+          div.style.borderRadius = '3px';
+          div.onclick = () => {
+            settings.cardBack = i;
+            localStorage.setItem('kfreecell_settings', JSON.stringify(settings));
+            updateCardBackUI();
+          };
+          opts.appendChild(div);
+        });
+      }
+    }
+
+    function showSettings() {
+      updateCardBackUI();
+      document.getElementById('settings-modal').style.display = 'flex';
+    }
+
     function showStats() {
       document.getElementById('stat-played').innerText = stats.played;
       document.getElementById('stat-wins').innerText = stats.wins;
@@ -221,6 +272,11 @@
         render();
       } else {
         document.getElementById('status').innerText = "No Save Found";
+      }
+      const savedSettings = localStorage.getItem('kfreecell_settings');
+      if (savedSettings) {
+        settings = JSON.parse(savedSettings);
+        updateCardBackUI();
       }
     }
 
@@ -552,6 +608,11 @@
       });
     }
 
+    const initSavedSettings = localStorage.getItem('kfreecell_settings');
+    if (initSavedSettings) {
+      settings = JSON.parse(initSavedSettings);
+    }
+    updateCardBackUI();
     initGame();
   </script>
 </body>
