@@ -33,6 +33,9 @@ void PlaySoundAsync(int freq, int duration) {
 
 HWND hwndMain;
 HWND hwndModeBox;
+HWND hwndSaveBtn;
+HWND hwndLoadBtn;
+HWND hwndResetBtn;
 int current_mode = MODE_CLASSIC;
 
 int sequence[1000];
@@ -94,6 +97,69 @@ void SaveStats() {
     WritePrivateProfileString("Stats", "BestTime", str, ".\\ksimon.ini");
 }
 
+void SaveGameState() {
+    if (sequence_length == 0 || is_playing_sequence) return;
+    char str[1024] = {0};
+    char temp[16];
+    for(int i = 0; i < sequence_length; i++) {
+        sprintf(temp, "%d,", sequence[i]);
+        strcat(str, temp);
+    }
+    WritePrivateProfileString("GameState", "Sequence", str, ".\\ksimon.ini");
+    sprintf(temp, "%d", current_mode);
+    WritePrivateProfileString("GameState", "Mode", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", (int)(time(NULL) - start_time));
+    WritePrivateProfileString("GameState", "ElapsedTime", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", sequence_length);
+    WritePrivateProfileString("GameState", "Length", temp, ".\\ksimon.ini");
+    strcpy(status_text, "Game Saved!");
+    InvalidateRect(hwndMain, NULL, TRUE);
+}
+
+void LoadGameState() {
+    int len = GetPrivateProfileInt("GameState", "Length", 0, ".\\ksimon.ini");
+    if (len == 0) {
+        strcpy(status_text, "No saved game found.");
+        InvalidateRect(hwndMain, NULL, TRUE);
+        return;
+    }
+    sequence_length = len;
+    current_mode = GetPrivateProfileInt("GameState", "Mode", MODE_CLASSIC, ".\\ksimon.ini");
+    int elapsed = GetPrivateProfileInt("GameState", "ElapsedTime", 0, ".\\ksimon.ini");
+    start_time = time(NULL) - elapsed;
+    
+    char str[1024] = {0};
+    GetPrivateProfileString("GameState", "Sequence", "", str, sizeof(str), ".\\ksimon.ini");
+    
+    char* token = strtok(str, ",");
+    int i = 0;
+    while (token != NULL && i < sequence_length) {
+        sequence[i++] = atoi(token);
+        token = strtok(NULL, ",");
+    }
+    
+    SendMessage(hwndModeBox, CB_SETCURSEL, current_mode, 0);
+    EnableWindow(hwndModeBox, FALSE);
+    EnableWindow(hwndSaveBtn, FALSE);
+    
+    score = sequence_length - 1;
+    player_step = 0;
+    is_playing_sequence = 1;
+    current_flash_index = 0;
+    strcpy(status_text, "Game Loaded! Watch...");
+    InvalidateRect(hwndMain, NULL, TRUE);
+    SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
+}
+
+void ResetStats() {
+    stat_games_played = 0;
+    stat_longest_streak = 0;
+    stat_best_time = 0;
+    SaveStats();
+    strcpy(status_text, "Stats Reset!");
+    InvalidateRect(hwndMain, NULL, TRUE);
+}
+
 void DrawBoard(HDC hdc) {
     for (int i = 0; i < 4; i++) {
         RECT r = btn_rects[i];
@@ -135,6 +201,7 @@ void DrawBoard(HDC hdc) {
 void StartGame() {
     current_mode = SendMessage(hwndModeBox, CB_GETCURSEL, 0, 0);
     EnableWindow(hwndModeBox, FALSE);
+    EnableWindow(hwndSaveBtn, FALSE);
     sequence_length = 0;
     score = 0;
     is_playing_sequence = 1;
@@ -159,6 +226,7 @@ void HandleClick(int btn_id) {
     if (is_playing_sequence || sequence_length == 0) return;
 
     flash_btn = btn_id;
+    EnableWindow(hwndSaveBtn, FALSE);
     InvalidateRect(hwndMain, NULL, TRUE);
     SetTimer(hwndMain, TIMER_FLASH, (current_mode == MODE_SPEED) ? 150 : 300, NULL);
 
@@ -189,6 +257,7 @@ void HandleClick(int btn_id) {
         SaveStats();
         sequence_length = 0;
         EnableWindow(hwndModeBox, TRUE);
+        EnableWindow(hwndSaveBtn, FALSE);
         InvalidateRect(hwndMain, NULL, TRUE);
         return;
     }
@@ -218,11 +287,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");
             SendMessage(hwndModeBox, CB_SETCURSEL, 0, 0);
+
+            hwndSaveBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 90, 60, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndLoadBtn = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 240, 90, 60, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndResetBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 90, 60, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            EnableWindow(hwndSaveBtn, FALSE);
             break;
         case WM_COMMAND:
             if (HIWORD(wParam) == CBN_SELCHANGE && LOWORD(wParam) == 1001) {
                 current_mode = SendMessage(hwndModeBox, CB_GETCURSEL, 0, 0);
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 1002) {
+                SaveGameState();
+            } else if (LOWORD(wParam) == 1003) {
+                LoadGameState();
+            } else if (LOWORD(wParam) == 1004) {
+                ResetStats();
             }
             break;
         case WM_SIZE: {
@@ -284,6 +364,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             } else {
                                 strcpy(status_text, "Your Turn!");
                             }
+                            EnableWindow(hwndSaveBtn, TRUE);
                             InvalidateRect(hwnd, NULL, TRUE);
                         } else {
                             flash_btn = sequence[current_flash_index++];

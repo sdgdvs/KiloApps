@@ -78,7 +78,7 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
-  #start-btn {
+  #start-btn, .action-btn {
     background-color: #333;
     color: #e0e0e0;
     border: 1px solid #555;
@@ -88,14 +88,19 @@
     font-size: 16px;
     transition: background-color 0.2s;
   }
-  #start-btn:hover {
+  #start-btn:hover, .action-btn:hover {
     background-color: #444;
   }
-  #start-btn:disabled {
+  #start-btn:disabled, .action-btn:disabled {
     background-color: #222;
     color: #555;
     border-color: #333;
     cursor: not-allowed;
+  }
+  .action-btn {
+    padding: 5px 10px;
+    font-size: 14px;
+    margin: 0 5px;
   }
   #status {
     margin-top: 10px;
@@ -122,6 +127,11 @@
       <option value="speed">Mode: Speed</option>
     </select>
     <button id="start-btn">Start Game</button>
+    <div style="margin-top: 10px;">
+      <button id="save-btn" class="action-btn" disabled>Save Game</button>
+      <button id="load-btn" class="action-btn">Load Game</button>
+      <button id="reset-btn" class="action-btn">Reset Stats</button>
+    </div>
   </div>
   <div id="status">Press Start</div>
   <div id="stats" style="margin-top: 15px; font-size: 14px; color: #aaa;">
@@ -146,6 +156,9 @@
   const statGamesDisplay = document.getElementById('stat-games');
   const statStreakDisplay = document.getElementById('stat-streak');
   const statTimeDisplay = document.getElementById('stat-time');
+  const saveBtn = document.getElementById('save-btn');
+  const loadBtn = document.getElementById('load-btn');
+  const resetBtn = document.getElementById('reset-btn');
 
   function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
   function setStat(key, value) { localStorage.setItem('KSimon_Stat_' + key, value); }
@@ -206,6 +219,57 @@
 
   startBtn.addEventListener('click', startGame);
 
+  saveBtn.addEventListener('click', saveGameState);
+  loadBtn.addEventListener('click', loadGameState);
+  resetBtn.addEventListener('click', resetStats);
+
+  function saveGameState() {
+    if (sequence.length === 0 || isPlayingSequence) return;
+    const gameState = {
+      sequence: sequence,
+      currentMode: currentMode,
+      elapsedTime: Date.now() - startTime
+    };
+    localStorage.setItem('KSimon_GameState', JSON.stringify(gameState));
+    statusDisplay.innerText = "Game Saved!";
+  }
+
+  function loadGameState() {
+    const saved = localStorage.getItem('KSimon_GameState');
+    if (!saved) {
+      statusDisplay.innerText = "No saved game found.";
+      return;
+    }
+    const gameState = JSON.parse(saved);
+    sequence = gameState.sequence;
+    currentMode = gameState.currentMode;
+    startTime = Date.now() - gameState.elapsedTime;
+    
+    modeSelect.value = currentMode;
+    modeSelect.disabled = true;
+    startBtn.disabled = true;
+    saveBtn.disabled = true;
+    
+    scoreDisplay.innerText = (sequence.length - 1).toString();
+    updateHighScoreDisplay();
+    
+    playerSequence = [];
+    statusDisplay.innerText = "Game Loaded! Watch...";
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    playSequence();
+  }
+
+  function resetStats() {
+    localStorage.removeItem('KSimon_Stat_gamesPlayed');
+    localStorage.removeItem('KSimon_Stat_longestStreak');
+    localStorage.removeItem('KSimon_Stat_bestTime');
+    statsGamesPlayed = 0;
+    statsLongestStreak = 0;
+    statsBestTime = 0;
+    updateStatsDisplay();
+    statusDisplay.innerText = "Stats Reset!";
+  }
+
   btns.forEach((btn, index) => {
     btn.addEventListener('mousedown', () => {
       if (isPlayingSequence || sequence.length === 0) return;
@@ -236,6 +300,7 @@
 
   function playSequence() {
     isPlayingSequence = true;
+    saveBtn.disabled = true;
     statusDisplay.innerText = "Watch...";
     let i = 0;
     
@@ -247,6 +312,7 @@
       if (i >= sequence.length) {
         isPlayingSequence = false;
         statusDisplay.innerText = currentMode === 'reverse' ? "Your Turn (Reverse)!" : "Your Turn!";
+        saveBtn.disabled = false;
         return;
       }
       const index = sequence[i];
@@ -306,6 +372,7 @@
       sequence = [];
       startBtn.disabled = false;
       modeSelect.disabled = false;
+      saveBtn.disabled = true;
       return;
     }
 

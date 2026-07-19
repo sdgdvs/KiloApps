@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 8: [x] Add visual animations: button presses, sequence playback highlights, game over flash.
 - Phase 9: [x] Add progressive difficulty (speed increases as streak gets longer).
 - Phase 10: [x] Add statistics tracking (games played, longest streak, best time).
-- Phase 11: Add Save/Load functionality to persist high scores and stats.
+- Phase 11: [x] Add Save/Load functionality to persist high scores and stats.
 - Phase 12: Add Physical Keyboard Support. Bind physical keys (e.g. Q, W, A, S or Arrows) to colored buttons.
 - Phase 13: Add an "Endless" mode with no mistakes allowed, tracking maximum sequence.
 - Phase 14: Add Comprehensive Help / How-to-Play modal detailing the rules, controls, and modes.
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KSimon
-**Goal:** Phase 11
+**Goal:** Phase 12
 
 
 ## App Lifecycle (14 phases per app)
