@@ -1,15 +1,12 @@
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdbool.h>
+#include <stdio.h>
 
-#define ID_BTN_NEWGAME 100
-#define ID_BTN_KEY_BASE 200
+#define W 500
+#define H 550
 
 const char* WORDS[] = {"HANGMAN", "COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER"};
-#define NUM_WORDS (sizeof(WORDS) / sizeof(WORDS[0]))
-#define MAX_ERRORS 6
+const int NUM_WORDS = 6;
 
 const char* DRAWINGS[] = {
 "  +---+\r\n  |   |\r\n      |\r\n      |\r\n      |\r\n      |\r\n=========",
@@ -21,244 +18,268 @@ const char* DRAWINGS[] = {
 "  +---+\r\n  |   |\r\n  O   |\r\n /|\\  |\r\n / \\  |\r\n      |\r\n========="
 };
 
-const char* current_word;
-bool guessed[26];
 int errors = 0;
-bool game_over = false;
-bool game_won = false;
+char target_word[32];
+int guessed[26] = {0};
+int game_over = 0;
+int won = 0;
+int initialized = 0;
 
-HWND hKeyboard[26];
-HWND hNewGame;
+unsigned int seed = 0;
 
-void InitGame(HWND hwnd) {
-    srand((unsigned int)time(NULL));
-    current_word = WORDS[rand() % NUM_WORDS];
-    for (int i = 0; i < 26; i++) {
-        guessed[i] = false;
-        if (hKeyboard[i]) EnableWindow(hKeyboard[i], TRUE);
-    }
-    errors = 0;
-    game_over = false;
-    game_won = false;
-    InvalidateRect(hwnd, NULL, TRUE);
+int CustomRand() {
+    seed = seed * 1103515245 + 12345;
+    return (unsigned int)(seed / 65536) % 32768;
 }
 
-void CheckGameState(HWND hwnd) {
-    bool win = true;
-    for (int i = 0; i < (int)strlen(current_word); i++) {
-        if (!guessed[current_word[i] - 'A']) {
-            win = false;
-            break;
-        }
-    }
-    if (win) {
-        game_won = true;
-        game_over = true;
-    } else if (errors >= MAX_ERRORS) {
-        game_over = true;
+void CustomSrand(unsigned int s) {
+    seed = s;
+}
+
+void InitGame() {
+    if (!initialized) {
+        CustomSrand(GetTickCount());
+        initialized = 1;
     }
     
-    if (game_over) {
-        for (int i = 0; i < 26; i++) {
-            if (hKeyboard[i]) EnableWindow(hKeyboard[i], FALSE);
-        }
+    int w_idx = CustomRand() % NUM_WORDS;
+    int i = 0;
+    while(WORDS[w_idx][i]) {
+        target_word[i] = WORDS[w_idx][i];
+        i++;
     }
-    InvalidateRect(hwnd, NULL, TRUE);
+    target_word[i] = '\0';
+    
+    for(i=0; i<26; i++) guessed[i] = 0;
+    errors = 0;
+    game_over = 0;
+    won = 0;
 }
 
-void GuessLetter(HWND hwnd, char letter) {
-    if (game_over || letter < 'A' || letter > 'Z') return;
-    int idx = letter - 'A';
+void Guess(char c) {
+    if (game_over) return;
+    if (c >= 'a' && c <= 'z') c -= 32;
+    if (c < 'A' || c > 'Z') return;
+    
+    int idx = c - 'A';
     if (guessed[idx]) return;
-
-    guessed[idx] = true;
-    if (hKeyboard[idx]) EnableWindow(hKeyboard[idx], FALSE);
-
-    bool found = false;
-    for (int i = 0; i < (int)strlen(current_word); i++) {
-        if (current_word[i] == letter) {
-            found = true;
-            break;
-        }
+    
+    guessed[idx] = 1;
+    
+    int found = 0;
+    int all_guessed = 1;
+    for (int i = 0; target_word[i] != '\0'; i++) {
+        if (target_word[i] == c) found = 1;
+        if (!guessed[target_word[i] - 'A']) all_guessed = 0;
     }
+    
     if (!found) {
         errors++;
+        if (errors >= 6) {
+            game_over = 1;
+            won = 0;
+        }
+    } else {
+        all_guessed = 1;
+        for (int i = 0; target_word[i] != '\0'; i++) {
+            if (!guessed[target_word[i] - 'A']) {
+                all_guessed = 0;
+                break;
+            }
+        }
+        if (all_guessed) {
+            game_over = 1;
+            won = 1;
+        }
     }
-    CheckGameState(hwnd);
 }
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    HDC hdc;
-    PAINTSTRUCT ps;
-    RECT rect;
-
-    switch (uMsg) {
-        case WM_CREATE: {
-            hNewGame = CreateWindowA("BUTTON", "New Game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                20, 20, 100, 30, hwnd, (HMENU)ID_BTN_NEWGAME, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
-            
-            // Create keyboard
-            int startX = 20;
-            int startY = 320;
-            for (int i = 0; i < 26; i++) {
-                char label[2] = { (char)('A' + i), '\0' };
-                int x = startX + (i % 7) * 45;
-                int y = startY + (i / 7) * 45;
-                hKeyboard[i] = CreateWindowA("BUTTON", label, WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                    x, y, 40, 40, hwnd, (HMENU)(ID_BTN_KEY_BASE + i), (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
-            }
-
-            InitGame(hwnd);
-            return 0;
-        }
-
-        case WM_COMMAND: {
-            if (LOWORD(wParam) == ID_BTN_NEWGAME) {
-                InitGame(hwnd);
-            } else if (LOWORD(wParam) >= ID_BTN_KEY_BASE && LOWORD(wParam) < ID_BTN_KEY_BASE + 26) {
-                char letter = 'A' + (LOWORD(wParam) - ID_BTN_KEY_BASE);
-                GuessLetter(hwnd, letter);
-            }
-            SetFocus(hwnd);
-            return 0;
-        }
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_CREATE:
+            InitGame();
+            break;
 
         case WM_KEYDOWN: {
-            char key = (char)wParam;
-            if (key >= 'a' && key <= 'z') {
-                GuessLetter(hwnd, key - 'a' + 'A');
-            } else if (key >= 'A' && key <= 'Z') {
-                GuessLetter(hwnd, key);
+            if (wParam >= 'A' && wParam <= 'Z') {
+                Guess((char)wParam);
+                InvalidateRect(hwnd, NULL, TRUE);
             }
-            return 0;
+            break;
+        }
+
+        case WM_LBUTTONDOWN: {
+            int x = (short)LOWORD(lParam);
+            int y = (short)HIWORD(lParam);
+            
+            // Check restart button (center: 250, bottom: 450)
+            if (x >= 150 && x <= 350 && y >= 450 && y <= 490) {
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+
+            // Check keyboard clicks
+            int kx = 110;
+            int ky = 270;
+            for (int i = 0; i < 26; i++) {
+                int col = i % 7;
+                int row = i / 7;
+                int bx = kx + col * 40;
+                int by = ky + row * 40;
+                if (x >= bx && x <= bx + 35 && y >= by && y <= by + 35) {
+                    Guess('A' + i);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                }
+            }
+            break;
         }
 
         case WM_PAINT: {
-            hdc = BeginPaint(hwnd, &ps);
-            GetClientRect(hwnd, &rect);
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
+            HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
 
-            // Dark background
-            HBRUSH hBrush = CreateSolidBrush(RGB(30, 30, 30));
-            FillRect(hdc, &rect, hBrush);
-            DeleteObject(hBrush);
+            // Background
+            HBRUSH bgBrush = CreateSolidBrush(RGB(30, 30, 30));
+            RECT fullRc = {0, 0, W, H};
+            FillRect(memDC, &fullRc, bgBrush);
+            DeleteObject(bgBrush);
 
-            SetBkMode(hdc, TRANSPARENT);
+            SetBkMode(memDC, TRANSPARENT);
+            
+            HFONT hFontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            HFONT hFontMono = CreateFontA(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, FIXED_PITCH, "Consolas");
+            
+            // Title
+            SetTextColor(memDC, RGB(79, 172, 254));
+            SelectObject(memDC, hFontMain);
+            TextOutA(memDC, 200, 20, "KHangman", 8);
 
-            HFONT hFont = CreateFontA(24, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
-                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
-                                      DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+            // Drawing
+            SetTextColor(memDC, RGB(255, 82, 82));
+            SelectObject(memDC, hFontMono);
+            RECT drawRect = {190, 60, 400, 200};
+            DrawTextA(memDC, DRAWINGS[errors], -1, &drawRect, DT_LEFT | DT_TOP);
 
-            // Draw title
-            SetTextColor(hdc, RGB(79, 172, 254));
-            TextOutA(hdc, 140, 20, "KHangman", 8);
-
-            // Draw Word
-            SetTextColor(hdc, RGB(255, 255, 255));
-            char display_word[100] = {0};
-            int len = strlen(current_word);
-            for (int i = 0; i < len; i++) {
-                if (guessed[current_word[i] - 'A']) {
-                    display_word[i*2] = current_word[i];
+            // Word display
+            SetTextColor(memDC, RGB(255, 255, 255));
+            SelectObject(memDC, hFontMain);
+            char disp[100] = {0};
+            int len = 0;
+            for (int i = 0; target_word[i] != '\0'; i++) {
+                if (guessed[target_word[i] - 'A']) {
+                    disp[len++] = target_word[i];
                 } else {
-                    display_word[i*2] = '_';
+                    disp[len++] = '_';
                 }
-                display_word[i*2+1] = ' ';
+                disp[len++] = ' ';
             }
-            TextOutA(hdc, 200, 150, display_word, strlen(display_word));
+            disp[len] = '\0';
+            
+            // Center the word display
+            SIZE tSize;
+            GetTextExtentPoint32A(memDC, disp, len, &tSize);
+            TextOutA(memDC, (W - tSize.cx) / 2, 200, disp, len);
 
-            // Draw Status Message
-            if (game_won) {
-                SetTextColor(hdc, RGB(76, 175, 80));
-                TextOutA(hdc, 200, 200, "You Win!", 8);
-            } else if (game_over) {
-                SetTextColor(hdc, RGB(244, 67, 54));
-                char msg[100];
-                wsprintfA(msg, "Game Over! Word was %s", current_word);
-                TextOutA(hdc, 200, 200, msg, strlen(msg));
-            } else {
-                SetTextColor(hdc, RGB(255, 255, 255));
-                TextOutA(hdc, 200, 200, "Guess a letter", 14);
+            // Message
+            char* msgTxt = "Guess a letter to start";
+            COLORREF msgColor = RGB(255, 255, 255);
+            if (game_over) {
+                if (won) {
+                    msgTxt = "You Win!";
+                    msgColor = RGB(76, 175, 80);
+                } else {
+                    static char loseMsg[100];
+                    wsprintfA(loseMsg, "Game Over! Word was %s", target_word);
+                    msgTxt = loseMsg;
+                    msgColor = RGB(244, 67, 54);
+                }
+            }
+            SetTextColor(memDC, msgColor);
+            GetTextExtentPoint32A(memDC, msgTxt, lstrlenA(msgTxt), &tSize);
+            TextOutA(memDC, (W - tSize.cx) / 2, 240, msgTxt, lstrlenA(msgTxt));
+
+            // Keyboard
+            SelectObject(memDC, hFontMono);
+            int kx = 110;
+            int ky = 280;
+            for (int i = 0; i < 26; i++) {
+                int col = i % 7;
+                int row = i / 7;
+                int bx = kx + col * 40;
+                int by = ky + row * 40;
+                
+                RECT btnRect = {bx, by, bx + 35, by + 35};
+                
+                if (guessed[i]) {
+                    HBRUSH btnBg = CreateSolidBrush(RGB(50, 50, 50));
+                    FillRect(memDC, &btnRect, btnBg);
+                    DeleteObject(btnBg);
+                    SetTextColor(memDC, RGB(100, 100, 100));
+                } else {
+                    HBRUSH btnBg = CreateSolidBrush(RGB(62, 62, 66));
+                    FillRect(memDC, &btnRect, btnBg);
+                    DeleteObject(btnBg);
+                    SetTextColor(memDC, RGB(255, 255, 255));
+                }
+                
+                char l[2] = {(char)('A' + i), 0};
+                DrawTextA(memDC, l, 1, &btnRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
-            SelectObject(hdc, hOldFont);
-            DeleteObject(hFont);
-            
-            // Hangman base drawing (text)
-            HFONT hMono = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, 
-                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, 
-                                      FIXED_PITCH | FF_MODERN, "Consolas");
-            hOldFont = (HFONT)SelectObject(hdc, hMono);
-            SetTextColor(hdc, RGB(255, 82, 82));
-            
-            const char* drawing = DRAWINGS[errors];
-            RECT drawRect = {20, 80, 150, 300};
-            DrawTextA(hdc, drawing, -1, &drawRect, DT_LEFT | DT_TOP);
+            // Restart button
+            RECT resRect = {150, 450, 350, 490};
+            HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
+            FillRect(memDC, &resRect, resBg);
+            DeleteObject(resBg);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            SelectObject(memDC, hFontMain);
+            DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            SelectObject(hdc, hOldFont);
-            DeleteObject(hMono);
+            DeleteObject(hFontMain);
+            DeleteObject(hFontMono);
 
+            BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
+            SelectObject(memDC, hOld);
+            DeleteObject(hbm);
+            DeleteDC(memDC);
             EndPaint(hwnd, &ps);
-            return 0;
+            break;
         }
 
-        case WM_CTLCOLORBTN:
-        case WM_CTLCOLORSTATIC: {
-            HDC hdcBtn = (HDC)wParam;
-            SetBkMode(hdcBtn, TRANSPARENT);
-            SetTextColor(hdcBtn, RGB(255, 255, 255));
-            return (LRESULT)GetStockObject(NULL_BRUSH);
-        }
-
-        case WM_DESTROY: {
+        case WM_DESTROY:
             PostQuitMessage(0);
-            return 0;
-        }
+            break;
+        default:
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return 0;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    const char CLASS_NAME[] = "KHangmanWindow";
+void MainEntry() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = "KHangmanApp";
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
+    RegisterClass(&wc);
 
-    WNDCLASSA wc = {0};
-    wc.lpfnWndProc   = WindowProc;
-    wc.hInstance     = hInstance;
-    wc.lpszClassName = CLASS_NAME;
-    wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
+    HWND hwnd = CreateWindowEx(0, "KHangmanApp", "KHangman", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        CW_USEDEFAULT, CW_USEDEFAULT, W + 16, H + 39, NULL, NULL, hInstance, NULL);
 
-    RegisterClassA(&wc);
+    ShowWindow(hwnd, SW_SHOW);
+    UpdateWindow(hwnd);
 
-    HWND hwnd = CreateWindowExA(
-        0,                              
-        CLASS_NAME,                     
-        "KHangman",                     
-        WS_OVERLAPPEDWINDOW,            
-        CW_USEDEFAULT, CW_USEDEFAULT, 600, 600,
-        NULL,                           
-        NULL,                           
-        hInstance,                      
-        NULL                            
-    );
-
-    if (hwnd == NULL) {
-        return 0;
-    }
-
-    ShowWindow(hwnd, nCmdShow);
-
-    MSG msg = {0};
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_KEYDOWN) {
-            char key = (char)msg.wParam;
-            if (key >= 'A' && key <= 'Z') {
-                GuessLetter(hwnd, key);
-            }
-        }
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0) > 0) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
-    return 0;
+    ExitProcess(0);
 }
