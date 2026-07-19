@@ -119,6 +119,7 @@ void CheckCollisions() {
                         }
                     }
                 }
+                break;
             }
         }
     }
