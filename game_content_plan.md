@@ -96,8 +96,8 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSpace     | Tier 1          | Feature-Expanded       | Expanded          | Full parity. |
 | KPac       | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KChess     | Tier 1          | Polished / Expanded    | Expanded          | Full parity. Loop 4 complete. |
-| KBreakout  | Tier 1          | Never Touched          | Needs Improvement | Full parity. Loop 4 pending. |
-| K2048      | Tier 1          | Never Touched          | Needs Improvement | Full parity. Loop 4 pending. |
+| KBreakout  | Tier 1          | Feature-Expanded       | Expanded          | Full parity. Loop 4 complete. |
+| K2048      | Tier 1          | Feature-Expanded       | Expanded          | Full parity. Loop 4 complete. |
 | KSudoku    | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Add to current or next loop. |
 
 ## Progress Log
@@ -155,3 +155,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSpace (Added Wave progression, Boss Tank enemies, Rapid Fire powerup, Sound Effects, and Stats Tracking to both EXE and HTML)
 - [x] KPac (Added Campaign Mode with 3 maps, Speed Power-Up, and Pink Ghost intercept AI to both EXE and HTML)
 - [x] KChess (Added 5-Stage Campaign Mode, 1-ply Minimax AI Difficulty, and Lifetime Statistics Tracking to both EXE and HTML)
+- [x] KBreakout (Added 5-Stage Campaign Mode, Extra Life/Piercing Ball powerups, and Lifetime Statistics Tracking to both EXE and HTML)
+- [x] K2048 (Added 10-Stage Campaign Mode, Bomb Tiles (-3), and Threes Ruleset to both EXE and HTML)

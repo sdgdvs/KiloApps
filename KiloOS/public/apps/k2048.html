@@ -251,8 +251,19 @@
         .val-1597 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
         .val-2584 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
         .val-4181 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
+        .val-6 .tile-inner { background: var(--t16-bg); color: var(--t16-c); box-shadow: var(--t16-sh); }
+        .val-12 .tile-inner { background: var(--t32-bg); color: var(--t32-c); box-shadow: var(--t32-sh); }
+        .val-24 .tile-inner { background: var(--t64-bg); color: var(--t64-c); box-shadow: var(--t64-sh); }
+        .val-48 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.8rem; }
+        .val-96 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.8rem; }
+        .val-192 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.5rem; }
+        .val-384 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
+        .val-768 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val-1536 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
+        .val-3072 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
         .val--1 .tile-inner { background: #555; color: #fff; box-shadow: none; }
         .val--2 .tile-inner { background: #ffd700; color: #000; box-shadow: 0 0 15px #ffd700; font-size: 2rem; }
+        .val--3 .tile-inner { background: #e53935; color: #fff; box-shadow: 0 0 15px rgba(229, 57, 53, 0.8); font-size: 2rem; }
 
         .tile.new .tile-inner {
             animation: appear 200ms ease;
@@ -364,6 +375,7 @@
                 <select id="ruleset-select" onchange="setRuleset(this.value)" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
                     <option value="classic">Classic</option>
                     <option value="fibonacci">Fibonacci</option>
+                    <option value="threes">Threes</option>
                 </select>
                 <select id="theme-select" onchange="setTheme(this.value)" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
                     <option value="default">Dark</option>
@@ -402,6 +414,7 @@
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn">Time: Off</button>
             <button class="btn" onclick="toggleAutoPlay()" id="ap-btn">Auto: Off</button>
             <button class="btn" onclick="toggleObstacles()" id="obs-btn">Obs: Off</button>
+            <button class="btn" onclick="toggleBombs()" id="bomb-btn">Bomb: Off</button>
             <button class="btn" onclick="showStats()">Stats</button>
             <button class="btn" onclick="undoMove()">Undo</button>
             <button class="btn" onclick="showHelp()">Help</button>
@@ -421,13 +434,14 @@
                 U / Ctrl+Z: Undo<br>
                 P: Auto-Play<br>
                 O: Toggle Obstacles<br>
+                B: Toggle Bombs<br>
                 F: Toggle Fibonacci Mode<br>
                 T: Change Theme<br>
                 I: Statistics<br>
                 M: Time Attack<br>
                 3, 4, 5, 6: Change Grid Size</p>
-                <p><b>Fibonacci Mode:</b> Merge adjacent Fibonacci numbers (1+1=2, 1+2=3, 2+3=5, etc.).</p>
-                <p><b>Obstacles:</b> Unmergeable blocks drop occasionally.</p>
+                <p><b>Fibonacci/Threes Mode:</b> Merge Fib numbers or 1+2=3, 3+3=6.</p>
+                <p><b>Obstacles/Bombs:</b> Unmergeable blocks drop occasionally. Bombs destroy any tile.</p>
                 <p><b>Time Attack:</b> You have 60 seconds. Game over when time runs out.</p>
             </div>
             <button class="btn" onclick="closeHelp()" style="width: auto;">Close</button>
@@ -511,6 +525,7 @@
         let autoPlayInterval = null;
 
         let obstaclesEnabled = false;
+        let bombsEnabled = false;
         let moveCount = 0;
 
         let campaignMode = false;
@@ -546,11 +561,17 @@
         }
 
         function startCampaignLevel() {
-            if (campaignLevel === 1) { setGridSize(4); timeAttackEnabled = false; obstaclesEnabled = false; ruleset = 'classic'; }
-            else if (campaignLevel === 2) { setGridSize(4); timeAttackEnabled = true; obstaclesEnabled = false; ruleset = 'classic'; }
-            else if (campaignLevel === 3) { setGridSize(4); timeAttackEnabled = false; obstaclesEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel === 4) { setGridSize(5); timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel >= 5) { setGridSize(5); timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'fibonacci'; }
+            gridSize = 4; timeAttackEnabled = false; obstaclesEnabled = false; bombsEnabled = false; ruleset = 'classic';
+            if (campaignLevel === 2) { timeAttackEnabled = true; }
+            else if (campaignLevel === 3) { obstaclesEnabled = true; }
+            else if (campaignLevel === 4) { gridSize = 5; timeAttackEnabled = true; obstaclesEnabled = true; }
+            else if (campaignLevel === 5) { gridSize = 5; timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'fibonacci'; }
+            else if (campaignLevel === 6) { gridSize = 5; bombsEnabled = true; ruleset = 'threes'; }
+            else if (campaignLevel === 7) { gridSize = 6; obstaclesEnabled = true; bombsEnabled = true; }
+            else if (campaignLevel === 8) { gridSize = 6; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
+            else if (campaignLevel === 9) { gridSize = 4; timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'threes'; }
+            else if (campaignLevel >= 10) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; }
+            setGridSize(gridSize);
             document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: On" : "Time: Off";
             document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
             document.getElementById('ruleset-select').value = ruleset;
@@ -558,7 +579,10 @@
             if (campaignMode) {
                 if (campaignLevel === 2) timeRemaining = 120;
                 else if (campaignLevel === 4) timeRemaining = 90;
-                else if (campaignLevel >= 5) timeRemaining = 60;
+                else if (campaignLevel === 5) timeRemaining = 60;
+                else if (campaignLevel === 8) timeRemaining = 90;
+                else if (campaignLevel === 9) timeRemaining = 60;
+                else if (campaignLevel >= 10) timeRemaining = 120;
                 if (timeAttackEnabled) {
                     document.getElementById('timer-display').textContent = timeRemaining + "s";
                     document.getElementById('timer-display').style.display = "block";
@@ -571,6 +595,12 @@
         function toggleObstacles() {
             obstaclesEnabled = !obstaclesEnabled;
             document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
+            initGame();
+        }
+
+        function toggleBombs() {
+            bombsEnabled = !bombsEnabled;
+            document.getElementById('bomb-btn').textContent = bombsEnabled ? "Bomb: On" : "Bomb: Off";
             initGame();
         }
 
@@ -658,7 +688,7 @@
             
             const inner = document.createElement('div');
             inner.className = 'tile-inner';
-            inner.textContent = tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : tile.val);
+            inner.textContent = tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : (tile.val === -3 ? 'B' : tile.val));
             el.appendChild(inner);
             
             tilesContainer.appendChild(el);
@@ -672,7 +702,7 @@
         function updateTileEl(tile, isMerged) {
             tile.el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
             tile.el.className = `tile val-${tile.val} ${isMerged ? 'merged' : ''}`;
-            tile.el.firstChild.textContent = tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : tile.val);
+            tile.el.firstChild.textContent = tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : (tile.val === -3 ? 'B' : tile.val));
             if (isMerged) {
                 setTimeout(() => tile.el.classList.remove('merged'), 200);
             }
@@ -687,8 +717,12 @@
                 const randomIdx = emptyCells[Math.floor(Math.random() * emptyCells.length)];
                 let val = Math.random() < 0.9 ? 2 : 4;
                 if (ruleset === 'fibonacci') val = 1;
+                else if (ruleset === 'threes') val = Math.random() < 0.5 ? 1 : 2;
+
                 if (obstaclesEnabled && moveCount > 0 && moveCount % 5 === 0) {
                     val = -1;
+                } else if (bombsEnabled && Math.random() < 0.033) {
+                    val = -3;
                 } else if (Math.random() < 0.05) {
                     val = -2;
                 }
@@ -709,7 +743,7 @@
         }
 
         function updateScore() {
-            let key = 'k2048_best_score_' + gridSize + (ruleset === 'fibonacci' ? '_fib' : '');
+            let key = 'k2048_best_score_' + gridSize + (ruleset === 'fibonacci' ? '_fib' : (ruleset === 'threes' ? '_threes' : ''));
             if (score > bestScore) {
                 bestScore = score;
                 localStorage.setItem(key, bestScore);
@@ -718,7 +752,15 @@
                 }
             }
             if (campaignMode) {
-                let target = (campaignLevel <= 2) ? 128 : (campaignLevel === 3) ? 256 : (campaignLevel === 4) ? 512 : 55;
+                let target = 128;
+                if (campaignLevel === 3) target = 256;
+                else if (campaignLevel === 4) target = 512;
+                else if (campaignLevel === 5) target = 55;
+                else if (campaignLevel === 6) target = 192;
+                else if (campaignLevel === 7) target = 1024;
+                else if (campaignLevel === 8) target = 144;
+                else if (campaignLevel === 9) target = 96;
+                else if (campaignLevel >= 10) target = 2048;
                 scoreEl.innerHTML = score + "<br><span style='font-size:0.5em'>Target: " + target + "</span>";
                 bestScoreEl.textContent = "Lvl " + campaignLevel;
             } else {
@@ -729,23 +771,32 @@
 
         function getMergeResult(a, b) {
             if (a === -1 || b === -1) return 0;
+            if ((a === -3 && b > 0) || (b === -3 && a > 0)) return -100;
             if (a === -2 && b > 0) {
                 if (ruleset === 'fibonacci') {
                     const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
                     let i = fibs.indexOf(b);
                     if (i >= 0) return fibs[i+1];
                     return b;
+                } else if (ruleset === 'threes') {
+                    if (b === 1 || b === 2) return 3;
+                    return b * 2;
                 }
                 return b * 2;
             }
             if (b === -2 && a > 0) return getMergeResult(b, a);
             if (a === -2 && b === -2) return 2;
+            
             if (ruleset === 'fibonacci') {
                 if (a === 1 && b === 1) return 2;
                 const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
                 let i = fibs.indexOf(a);
                 let j = fibs.indexOf(b);
                 if (i >= 0 && j >= 0 && Math.abs(i - j) === 1) return a + b;
+                return 0;
+            } else if (ruleset === 'threes') {
+                if ((a === 1 && b === 2) || (a === 2 && b === 1)) return 3;
+                if (a >= 3 && a === b) return a * 2;
                 return 0;
             } else {
                 if (a === b) return a * 2;
@@ -760,18 +811,42 @@
             while(i < filtered.length) {
                 if (i + 1 < filtered.length && filtered[i].val !== -1 && filtered[i+1].val !== -1) {
                     let mergeResult = getMergeResult(filtered[i].val, filtered[i+1].val);
-                    if (mergeResult > 0) {
-                        let mergedTile = {
-                            ...filtered[i],
-                            val: mergeResult,
-                            mergePartner: filtered[i+1]
-                        };
-                        result.push(mergedTile);
-                        score += mergedTile.val;
-                        stats.tilesMerged++;
-                        if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
-                        i += 2;
-                        continue;
+                    if (mergeResult !== 0) {
+                        if (mergeResult === -100) {
+                            score += 10;
+                            i += 2;
+                            continue;
+                        } else {
+                            let mergedTile = {
+                                ...filtered[i],
+                                val: mergeResult,
+                                mergePartner: filtered[i+1]
+                            };
+                            result.push(mergedTile);
+                            score += mergedTile.val;
+                            stats.tilesMerged++;
+                            if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
+                            if (campaignMode && mergedTile.val > 0) {
+                                let target = 128;
+                                if (campaignLevel === 3) target = 256;
+                                else if (campaignLevel === 4) target = 512;
+                                else if (campaignLevel === 5) target = 55;
+                                else if (campaignLevel === 6) target = 192;
+                                else if (campaignLevel === 7) target = 1024;
+                                else if (campaignLevel === 8) target = 144;
+                                else if (campaignLevel === 9) target = 96;
+                                else if (campaignLevel >= 10) target = 2048;
+                                if (mergedTile.val >= target) {
+                                    setTimeout(() => {
+                                        alert("Level " + campaignLevel + " Complete!");
+                                        campaignLevel++;
+                                        startCampaignLevel();
+                                    }, 100);
+                                }
+                            }
+                            i += 2;
+                            continue;
+                        }
                     }
                 }
                 result.push(filtered[i]);
