@@ -16,14 +16,19 @@ int ball_dx = 0;
 int ball_dy = 0;
 int score = 0;
 int high_score = 0;
-int state = 0; // 0=start, 1=play, 2=gameover
+int state = 0; // 0=start, 1=play, 2=gameover, 3=win
 int diff = 0; // 0=Easy, 1=Hard
 int speed = 3;
 int lives = 3;
 int power_x = 0;
 int power_y = 0;
 int power_active = 0;
+int power_type = 0;
 int paddle_timer = 0;
+int piercing = 0;
+int level = 1;
+int max_level = 1;
+int total_bricks = 0;
 
 #define ROWS 5
 #define COLS 10
@@ -33,30 +38,43 @@ int bricks_left = 0;
 void LoadHighScore() {
     FILE *f = fopen("kbreakout_hi.dat", "r");
     if (f) {
-        fscanf(f, "%d", &high_score);
+        fscanf(f, "%d %d %d", &high_score, &max_level, &total_bricks);
         fclose(f);
     }
 }
 
 void SaveHighScore() {
-    if (score > high_score) {
-        high_score = score;
-        FILE *f = fopen("kbreakout_hi.dat", "w");
-        if (f) {
-            fprintf(f, "%d", high_score);
-            fclose(f);
-        }
+    if (score > high_score) high_score = score;
+    FILE *f = fopen("kbreakout_hi.dat", "w");
+    if (f) {
+        fprintf(f, "%d %d %d", high_score, max_level, total_bricks);
+        fclose(f);
     }
 }
 
 void InitLevel() {
     bricks_left = 0;
     power_active = 0;
+    piercing = 0;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
-            if (r == 1 && c % 3 == 1) bricks[r][c] = 9; // Unbreakable
-            else if (r == 2) bricks[r][c] = 2; // Hard
-            else bricks[r][c] = 1;
+            if (level == 1) {
+                if (r == 1 && c % 3 == 1) bricks[r][c] = 9;
+                else if (r == 2) bricks[r][c] = 2;
+                else bricks[r][c] = 1;
+            } else if (level == 2) {
+                if ((r + c) % 2 == 0) bricks[r][c] = 2;
+                else bricks[r][c] = 1;
+            } else if (level == 3) {
+                if (r == 2 && (c < 3 || c > 6)) bricks[r][c] = 9;
+                else bricks[r][c] = 2;
+            } else if (level == 4) {
+                if (c == 2 || c == 7) bricks[r][c] = 9;
+                else bricks[r][c] = (r % 2 == 0) ? 2 : 1;
+            } else {
+                bricks[r][c] = 2;
+                if (r == 2 && c > 2 && c < 7) bricks[r][c] = 9;
+            }
             
             if (bricks[r][c] != 9) bricks_left++;
         }
@@ -128,8 +146,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (power_y + 10 > H - 30 && power_y < H - 30 + pad_h) {
                         if (power_x + 10 > pad_x && power_x < pad_x + pad_w) {
                             power_active = 0;
-                            paddle_timer = 300;
-                            pad_w = (diff == 1) ? 80 : 100;
+                            if (power_type == 1) {
+                                paddle_timer = 300;
+                                pad_w = (diff == 1) ? 80 : 100;
+                            } else if (power_type == 2) {
+                                lives++;
+                            } else if (power_type == 3) {
+                                piercing = 300;
+                            }
                             MessageBeep(MB_OK);
                         }
                     }
@@ -139,6 +163,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (paddle_timer > 0) {
                     paddle_timer--;
                     if (paddle_timer == 0) pad_w = (diff == 1) ? 40 : 60;
+                }
+                if (piercing > 0) {
+                    piercing--;
                 }
 
                 // Bricks collision
@@ -155,26 +182,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     ball_dy = -ball_dy;
                                     MessageBeep(0xFFFFFFFF);
                                 } else if (bricks[r][c] == 2) {
-                                    bricks[r][c] = 1;
-                                    ball_dy = -ball_dy;
-                                    score += 5 + (diff * 5);
+                                    if (piercing) {
+                                        bricks[r][c] = 0;
+                                        bricks_left--;
+                                        score += 15 + (diff * 5);
+                                        total_bricks++;
+                                    } else {
+                                        bricks[r][c] = 1;
+                                        ball_dy = -ball_dy;
+                                        score += 5 + (diff * 5);
+                                    }
                                     MessageBeep(0xFFFFFFFF);
                                 } else {
                                     bricks[r][c] = 0;
                                     bricks_left--;
-                                    ball_dy = -ball_dy;
+                                    total_bricks++;
+                                    if (!piercing) ball_dy = -ball_dy;
                                     score += 10 + (diff * 10);
                                     MessageBeep(0xFFFFFFFF);
                                     
-                                    if (!power_active && (GetTickCount() % 5 == 0)) {
+                                    if (!power_active && (GetTickCount() % 6 == 0)) {
                                         power_active = 1;
+                                        power_type = (GetTickCount() % 3) + 1;
                                         power_x = bx + br_w / 2;
                                         power_y = by;
                                     }
                                     
                                     if (bricks_left == 0) {
-                                        speed++;
-                                        InitLevel();
+                                        level++;
+                                        if (level > max_level) max_level = level;
+                                        if (level > 5) {
+                                            SaveHighScore();
+                                            state = 3; // Win
+                                        } else {
+                                            speed++;
+                                            InitLevel();
+                                        }
                                     }
                                 }
                                 goto out_loops;
@@ -183,12 +226,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             out_loops:;
-            } else if (state == 0 || state == 2) {
+            } else if (state == 0 || state == 2 || state == 3) {
                 if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
-                    diff = 0; speed = 3; score = 0; lives = 3; InitLevel(); state = 1; pad_w = 60;
+                    diff = 0; speed = 3; score = 0; lives = 3; level = 1; InitLevel(); state = 1; pad_w = 60;
                 }
                 if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-                    diff = 1; speed = 5; score = 0; lives = 3; InitLevel(); state = 1; pad_w = 40;
+                    diff = 1; speed = 5; score = 0; lives = 3; level = 1; InitLevel(); state = 1; pad_w = 40;
                 }
             }
             InvalidateRect(hwnd, NULL, FALSE);
@@ -228,11 +271,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 RECT rp = { pad_x, H - 30, pad_x + pad_w, H - 30 + pad_h };
                 FillRect(memDC, &rp, p_brush);
+                DeleteObject(p_brush);
                 
+                if (piercing) {
+                    DeleteObject(b_brush);
+                    b_brush = CreateSolidBrush(RGB(50, 150, 255));
+                }
                 RECT rb = { ball_x, ball_y, ball_x + ball_size, ball_y + ball_size };
                 FillRect(memDC, &rb, b_brush);
-                
-                DeleteObject(p_brush);
                 DeleteObject(b_brush);
                 
                 int br_w = W / COLS;
@@ -253,15 +299,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 
                 if (power_active) {
-                    HBRUSH pw = CreateSolidBrush(RGB(255, 255, 0));
+                    HBRUSH pw;
+                    if (power_type == 1) pw = CreateSolidBrush(RGB(255, 255, 0));
+                    else if (power_type == 2) pw = CreateSolidBrush(RGB(255, 50, 50));
+                    else pw = CreateSolidBrush(RGB(50, 150, 255));
                     RECT rp = { power_x, power_y, power_x + 10, power_y + 10 };
                     FillRect(memDC, &rp, pw);
                     DeleteObject(pw);
                 }
             }
             
-            char sStr[64];
-            wsprintfA(sStr, "Score: %d  High: %d  Lives: %d", score, high_score, lives);
+            char sStr[128];
+            wsprintfA(sStr, "Lvl:%d Sc:%d Hi:%d Lvs:%d TBr:%d", level, score, high_score, lives, total_bricks);
             TextOutA(memDC, 10, 10, sStr, lstrlenA(sStr));
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
