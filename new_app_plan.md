@@ -48,24 +48,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KSudoku (Logic puzzle)
-**Phase:** 14
+**App:** KConnect4 (Two-player drop-disc game)
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1: Scaffold `KSudoku/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED - Implemented 9x9 grid, puzzle generator, numpad, and validation logic)
-- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED - Built Win32 GUI, 9x9 grid, puzzle generator, and keyboard nav/input)
-- Phase 4: Polish both versions: dark-mode glassmorphic aesthetic for web, dark theme for native. (COMPLETED - Polished HTML UI with animations/hover effects, polished C native UI with MessageBeep and exact text centering)
-- Phase 5: Deep Expansion 1 - Add Pencil Marks / Notes feature to both versions. (COMPLETED - Added Notes toggle and 3x3 mini-grid rendering for pencil marks)
-- Phase 6: Deep Expansion 2 - Add a Timer and Score system. (COMPLETED - Added timer, score logic, correct placement bonuses and error penalties to both versions)
-- Phase 7: Deep Expansion 3 - Level selection / Difficulty generation. (COMPLETED - Added Easy/Medium/Hard selection affecting hole count in generation for both versions)
-- Phase 8: Deep Expansion 4 - Add a basic solving aid / hint system. (COMPLETED - Added Hint button to both web and native versions with a -150 score penalty)
-- Phase 9: Deep Expansion 5 - Add statistics tracking (games played, win rate, best times/scores per difficulty). (COMPLETED - Added stats modal/messagebox, tracking metrics on win and games played on generation for both versions)
-- Phase 10: Deep Expansion 6 - Save/Load current game state. (COMPLETED - Added localStorage save to web and binary .dat save to native C)
-- Phase 11: Deep Expansion 7 - Undo/Redo stack. (COMPLETED - Added Undo/Redo buttons and Ctrl+Z/Ctrl+Y shortcuts to both versions, using state history arrays)
-- Phase 12: Deep Expansion 8 - Add Settings / Theme Engine. (COMPLETED - Added settings modal/window with 3 themes and highlight same number toggle to both versions)
-- Phase 13: Deep Expansion 9 - Add a Daily Challenge mode with a deterministic puzzle based on the date. (COMPLETED - Implemented LCG PRNG in JS, srand() with date seed in C, and streak tracking in both)
-- Phase 14: Deep Expansion 10 - Add Auto-fill Notes (Magic Pencil) feature to automatically calculate and fill all possible pencil marks for empty cells. (COMPLETED - Added Auto-fill Notes button to both web and native versions)
+- Phase 1: Scaffold `KConnect4/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 
 
 ## Next Priority (Before New Apps)
@@ -117,11 +104,11 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 - KVault (Phase 14 completed: Added Help/Tutorial modal to both versions)
 - KBudget (Phase 14 completed: Added Print Report support to both versions)
 - KHabit (Phase 14 completed: Added Detailed Statistics modal to both versions)
+- KSudoku (Phase 14 completed: Added Auto-fill Notes / Magic Pencil feature to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
-- **KConnect4** — Two-player (or vs AI) drop-disc game. AI with minimax. Win streak tracking. Animated disc drops.
 - **KHangman** — Word guessing. Multiple word categories (animals, countries, science). Animated hangman drawing. Win/loss stats.
 - **KSimon** — Memory pattern game. Colored button sequences with sounds. Progressive speed increase. Longest streak tracking.
 - **KAsteroids** — Space shooter. Wrap-around screen. Ship thrust physics. Progressive waves. UFO bonus targets. Particle explosions.
