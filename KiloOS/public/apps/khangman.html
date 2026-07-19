@@ -128,6 +128,23 @@
         button.mute-btn:hover {
             background-color: #777 !important;
         }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-animation {
+            animation: shake 0.4s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); color: #4caf50; text-shadow: 0 0 5px #4caf50; }
+            50% { transform: scale(1.1); color: #81c784; text-shadow: 0 0 20px #81c784; }
+            100% { transform: scale(1); color: #4caf50; text-shadow: 0 0 5px #4caf50; }
+        }
+        .win-animation {
+            animation: pulse 1.5s infinite;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -299,6 +316,8 @@
                 document.getElementById('hint-btn').disabled = hintUsed;
                 document.getElementById('message').innerText = "Game loaded. Guess a letter";
                 document.getElementById('message').style.color = "#e0e0e0";
+                document.getElementById('word-display').classList.remove('win-animation');
+                document.getElementById('hangman-canvas').classList.remove('shake-animation');
                 
                 initKeyboard();
                 guessed.forEach(letter => {
@@ -403,6 +422,8 @@
         if(document.getElementById('hint-btn')) document.getElementById('hint-btn').disabled = false;
         document.getElementById('message').innerText = "Guess a letter";
         document.getElementById('message').style.color = "#e0e0e0";
+        document.getElementById('word-display').classList.remove('win-animation');
+        document.getElementById('hangman-canvas').classList.remove('shake-animation');
         initKeyboard();
         updateDisplay();
     }
@@ -436,6 +457,10 @@
         if (!word.includes(letter)) {
             errors++;
             if (errors < MAX_ERRORS) playSound('invalid');
+            const canvas = document.getElementById('hangman-canvas');
+            canvas.classList.remove('shake-animation');
+            void canvas.offsetWidth;
+            canvas.classList.add('shake-animation');
         } else {
             if (!isWin()) playSound('valid');
         }
@@ -463,6 +488,7 @@
         if (isWin()) {
             msgEl.innerText = "You Win!";
             msgEl.style.color = "#4caf50";
+            document.getElementById('word-display').classList.add('win-animation');
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;

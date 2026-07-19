@@ -28,6 +28,8 @@ int won = 0;
 int initialized = 0;
 int hint_used = 0;
 int is_muted = 0;
+int shake_frames = 0;
+int win_pulse_phase = 0;
 
 void PlaySoundEffect(int type) {
     if (is_muted) return;
@@ -153,6 +155,8 @@ void InitGame() {
     game_over = 0;
     won = 0;
     hint_used = 0;
+    shake_frames = 0;
+    win_pulse_phase = 0;
 }
 
 void Guess(char c) {
@@ -174,6 +178,7 @@ void Guess(char c) {
     
     if (!found) {
         errors++;
+        shake_frames = 15;
         if (errors >= 6) {
             game_over = 1;
             won = 0;
@@ -210,6 +215,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             InitGame();
+            SetTimer(hwnd, 1, 30, NULL);
+            break;
+
+        case WM_TIMER:
+            if (wParam == 1) {
+                int needs_redraw = 0;
+                if (shake_frames > 0) {
+                    shake_frames--;
+                    needs_redraw = 1;
+                }
+                if (game_over && won) {
+                    win_pulse_phase += 10;
+                    if (win_pulse_phase > 360) win_pulse_phase -= 360;
+                    needs_redraw = 1;
+                }
+                if (needs_redraw) InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
 
         case WM_KEYDOWN: {
@@ -322,7 +344,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetBkMode(memDC, TRANSPARENT);
             
-            HFONT hFontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            HFONT hFontMain;
+            if (game_over && won) {
+                int size = 24 + (4 * abs(win_pulse_phase - 180) / 180);
+                hFontMain = CreateFontA(size, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            } else {
+                hFontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            }
             HFONT hFontMono = CreateFontA(18, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, FIXED_PITCH, "Consolas");
             
             // Title
@@ -349,49 +377,65 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
             HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
             
+            int ox = 0;
+            if (shake_frames > 0) {
+                int offsets[] = {-10, 10, -8, 8, -6, 6, -4, 4, -2, 2, 0, 0, 0, 0, 0, 0};
+                int idx = 15 - shake_frames;
+                if (idx < 0) idx = 0;
+                if (idx > 15) idx = 15;
+                ox = offsets[idx];
+            }
+            
             // Base gallows
-            MoveToEx(memDC, 190, 200, NULL);
-            LineTo(memDC, 310, 200); // Base
-            MoveToEx(memDC, 210, 200, NULL);
-            LineTo(memDC, 210, 60);  // Pole
-            LineTo(memDC, 270, 60);  // Top
-            LineTo(memDC, 270, 80);  // Rope
+            MoveToEx(memDC, 190 + ox, 200, NULL);
+            LineTo(memDC, 310 + ox, 200); // Base
+            MoveToEx(memDC, 210 + ox, 200, NULL);
+            LineTo(memDC, 210 + ox, 60);  // Pole
+            LineTo(memDC, 270 + ox, 60);  // Top
+            LineTo(memDC, 270 + ox, 80);  // Rope
             
             if (errors > 0) {
                 // Head
-                Ellipse(memDC, 250, 80, 290, 120);
+                Ellipse(memDC, 250 + ox, 80, 290 + ox, 120);
             }
             if (errors > 1) {
                 // Body
-                MoveToEx(memDC, 270, 120, NULL);
-                LineTo(memDC, 270, 160);
+                MoveToEx(memDC, 270 + ox, 120, NULL);
+                LineTo(memDC, 270 + ox, 160);
             }
             if (errors > 2) {
                 // Left arm
-                MoveToEx(memDC, 270, 130, NULL);
-                LineTo(memDC, 240, 150);
+                MoveToEx(memDC, 270 + ox, 130, NULL);
+                LineTo(memDC, 240 + ox, 150);
             }
             if (errors > 3) {
                 // Right arm
-                MoveToEx(memDC, 270, 130, NULL);
-                LineTo(memDC, 300, 150);
+                MoveToEx(memDC, 270 + ox, 130, NULL);
+                LineTo(memDC, 300 + ox, 150);
             }
             if (errors > 4) {
                 // Left leg
-                MoveToEx(memDC, 270, 160, NULL);
-                LineTo(memDC, 240, 190);
+                MoveToEx(memDC, 270 + ox, 160, NULL);
+                LineTo(memDC, 240 + ox, 190);
             }
             if (errors > 5) {
                 // Right leg
-                MoveToEx(memDC, 270, 160, NULL);
-                LineTo(memDC, 300, 190);
+                MoveToEx(memDC, 270 + ox, 160, NULL);
+                LineTo(memDC, 300 + ox, 190);
             }
             SelectObject(memDC, hOldPen);
             SelectObject(memDC, hOldBrush);
             DeleteObject(hPen);
 
             // Word display
-            SetTextColor(memDC, RGB(224, 224, 224));
+            COLORREF wordColor = RGB(224, 224, 224);
+            if (game_over && won) {
+                int g = 175 + (50 * abs(win_pulse_phase - 180) / 180);
+                int r = 76 + (50 * abs(win_pulse_phase - 180) / 180);
+                int b = 80 + (50 * abs(win_pulse_phase - 180) / 180);
+                wordColor = RGB(r, g, b);
+            }
+            SetTextColor(memDC, wordColor);
             SelectObject(memDC, hFontMain);
             char disp[100] = {0};
             int len = 0;
