@@ -6,8 +6,8 @@
     <title>KHangman</title>
     <style>
         body {
-            background-color: #1e1e1e;
-            color: #ffffff;
+            background-color: #121212;
+            color: #e0e0e0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
@@ -19,8 +19,8 @@
             box-sizing: border-box;
         }
         #game-container {
-            background-color: #2d2d30;
-            border: 1px solid #3e3e42;
+            background-color: #1e1e1e;
+            border: 1px solid #333;
             border-radius: 8px;
             padding: 30px;
             width: 100%;
@@ -36,7 +36,7 @@
         #hangman-drawing {
             font-family: monospace;
             white-space: pre;
-            background-color: #1e1e1e;
+            background-color: #121212;
             padding: 10px;
             border-radius: 4px;
             margin-bottom: 20px;
@@ -58,9 +58,9 @@
             margin-bottom: 20px;
         }
         .key {
-            background-color: #3e3e42;
-            color: #ffffff;
-            border: 1px solid #555;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border: 1px solid #444;
             border-radius: 4px;
             padding: 10px 0;
             cursor: pointer;
@@ -68,13 +68,13 @@
             transition: background-color 0.2s;
         }
         .key:hover:not(:disabled) {
-            background-color: #007acc;
+            background-color: #3a3a3a;
         }
         .key:disabled {
-            background-color: #1e1e1e;
+            background-color: #121212;
             color: #555;
             cursor: not-allowed;
-            border-color: #333;
+            border-color: #222;
         }
         #message {
             height: 24px;
@@ -200,7 +200,7 @@
         guessed.clear();
         errors = 0;
         document.getElementById('message').innerText = "Guess a letter";
-        document.getElementById('message').style.color = "#ffffff";
+        document.getElementById('message').style.color = "#e0e0e0";
         initKeyboard();
         updateDisplay();
     }

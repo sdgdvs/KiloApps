@@ -144,7 +144,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
 
             // Background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(30, 30, 30));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bgBrush);
             DeleteObject(bgBrush);
@@ -166,7 +166,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, DRAWINGS[errors], -1, &drawRect, DT_LEFT | DT_TOP);
 
             // Word display
-            SetTextColor(memDC, RGB(255, 255, 255));
+            SetTextColor(memDC, RGB(224, 224, 224));
             SelectObject(memDC, hFontMain);
             char disp[100] = {0};
             int len = 0;
@@ -187,7 +187,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Message
             char* msgTxt = "Guess a letter to start";
-            COLORREF msgColor = RGB(255, 255, 255);
+            COLORREF msgColor = RGB(224, 224, 224);
             if (game_over) {
                 if (won) {
                     msgTxt = "You Win!";
@@ -216,15 +216,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT btnRect = {bx, by, bx + 35, by + 35};
                 
                 if (guessed[i]) {
-                    HBRUSH btnBg = CreateSolidBrush(RGB(50, 50, 50));
+                    HBRUSH btnBg = CreateSolidBrush(RGB(18, 18, 18));
                     FillRect(memDC, &btnRect, btnBg);
                     DeleteObject(btnBg);
-                    SetTextColor(memDC, RGB(100, 100, 100));
+                    SetTextColor(memDC, RGB(85, 85, 85));
                 } else {
-                    HBRUSH btnBg = CreateSolidBrush(RGB(62, 62, 66));
+                    HBRUSH btnBg = CreateSolidBrush(RGB(44, 44, 44));
                     FillRect(memDC, &btnRect, btnBg);
                     DeleteObject(btnBg);
-                    SetTextColor(memDC, RGB(255, 255, 255));
+                    SetTextColor(memDC, RGB(224, 224, 224));
                 }
                 
                 char l[2] = {(char)('A' + i), 0};
