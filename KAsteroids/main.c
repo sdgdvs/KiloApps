@@ -41,6 +41,7 @@ int num_asteroids = 0;
 Bullet bullets[50];
 int num_bullets = 0;
 int score = 0;
+int wave = 1;
 bool game_over = false;
 bool keys[256] = {0};
 long long last_shoot_time = 0;
@@ -50,6 +51,7 @@ long long GetTimeMs() {
 }
 
 void SpawnAsteroids(int count) {
+    float speedMult = 1.0f + (wave - 1) * 0.15f;
     for (int i = 0; i < count; i++) {
         if (num_asteroids >= 100) break;
         float x, y;
@@ -64,7 +66,7 @@ void SpawnAsteroids(int count) {
         a->radius = 40.0f;
         a->level = 3;
         float angle = (rand() % 360) * 3.14159f / 180.0f;
-        float speed = (rand() % 200 + 100) / 100.0f;
+        float speed = ((rand() % 200 + 100) / 100.0f) * speedMult;
         a->vx = cos(angle) * speed;
         a->vy = sin(angle) * speed;
         a->active = true;
@@ -76,6 +78,7 @@ void SpawnAsteroids(int count) {
 
 void InitGame() {
     score = 0;
+    wave = 1;
     ship.x = WIDTH / 2.0f;
     ship.y = HEIGHT / 2.0f;
     ship.vx = 0;
@@ -88,7 +91,7 @@ void InitGame() {
     num_bullets = 0;
     game_over = false;
     
-    SpawnAsteroids(4);
+    SpawnAsteroids(3 + wave);
 }
 
 void CheckCollisions() {
@@ -110,7 +113,8 @@ void CheckCollisions() {
                         a->radius = asteroids[j].radius / 2.0f;
                         a->level = asteroids[j].level - 1;
                         float angle = (rand() % 360) * 3.14159f / 180.0f;
-                        float speed = (rand() % 200 + 100) / 100.0f;
+                        float speedMult = 1.0f + (wave - 1) * 0.15f;
+                        float speed = ((rand() % 200 + 100) / 100.0f) * speedMult;
                         a->vx = cos(angle) * speed;
                         a->vy = sin(angle) * speed;
                         a->active = true;
@@ -224,7 +228,8 @@ void Update() {
     CompactArrays();
     
     if (active_asteroids == 0) {
-        SpawnAsteroids(4);
+        wave++;
+        SpawnAsteroids(3 + wave);
     }
 }
 
@@ -291,8 +296,8 @@ void Draw(HDC hdc) {
     
     SetTextColor(hdc, RGB(56, 189, 248));
     SetBkMode(hdc, TRANSPARENT);
-    char scoreStr[32];
-    sprintf(scoreStr, "Score: %d", score);
+    char scoreStr[64];
+    sprintf(scoreStr, "Score: %d   Wave: %d", score, wave);
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
     
     if (game_over) {
