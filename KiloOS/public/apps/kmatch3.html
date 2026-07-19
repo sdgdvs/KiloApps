@@ -5,43 +5,189 @@
 <title>KMatch3</title>
 <style>
   body {
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-    font-family: sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
+    margin: 0; padding: 0; background-color: #f0f0f0; font-family: sans-serif;
+    display: flex; flex-direction: column; align-items: center; height: 100vh;
   }
-  h1 { margin-bottom: 10px; }
+  h1 { margin: 10px 0; }
+  .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 10px; font-size: 18px; font-weight: bold; }
   #board {
-    width: 400px;
-    height: 400px;
-    background-color: #ddd;
-    border: 2px solid #333;
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
-    gap: 2px;
+    width: 400px; height: 400px; background-color: #ddd; border: 2px solid #333;
+    display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 2px;
+    position: relative; touch-action: none; user-select: none;
   }
   .cell {
-    background-color: #fff;
-    border-radius: 4px;
+    border-radius: 4px; display: flex; justify-content: center; align-items: center;
+    cursor: pointer; transition: transform 0.2s, background-color 0.2s;
   }
+  .cell.selected { border: 2px solid #000; box-sizing: border-box; transform: scale(1.1); }
 </style>
 </head>
 <body>
   <h1>KMatch3</h1>
+  <div class="info">
+    <span>Score: <span id="score">0</span></span>
+    <span>Moves: <span id="moves">0</span></span>
+  </div>
   <div id="board"></div>
   <script>
-    const board = document.getElementById('board');
-    for (let i = 0; i < 64; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'cell';
-      board.appendChild(cell);
+    const boardEl = document.getElementById('board');
+    const scoreEl = document.getElementById('score');
+    const movesEl = document.getElementById('moves');
+    const ROWS = 8;
+    const COLS = 8;
+    const COLORS = ['#ff4040', '#40ff40', '#4040ff', '#ffff40', '#ff40ff', '#40ffff'];
+    let grid = [];
+    let score = 0;
+    let moves = 0;
+    let selectedCell = null;
+    let isProcessing = false;
+
+    function initGame() {
+      boardEl.innerHTML = '';
+      grid = [];
+      for (let r = 0; r < ROWS; r++) {
+        let row = [];
+        for (let c = 0; c < COLS; c++) {
+          let color;
+          do {
+            color = COLORS[Math.floor(Math.random() * COLORS.length)];
+          } while (
+            (r >= 2 && grid[r-1][c].color === color && grid[r-2][c].color === color) ||
+            (c >= 2 && row[c-1].color === color && row[c-2].color === color)
+          );
+          let cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.style.backgroundColor = color;
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+          cell.addEventListener('click', onCellClick);
+          boardEl.appendChild(cell);
+          row.push({ color, el: cell });
+        }
+        grid.push(row);
+      }
     }
+
+    function onCellClick(e) {
+      if (isProcessing) return;
+      const r = parseInt(e.target.dataset.r);
+      const c = parseInt(e.target.dataset.c);
+      if (selectedCell) {
+        if (selectedCell.r === r && selectedCell.c === c) {
+          selectedCell.el.classList.remove('selected');
+          selectedCell = null;
+        } else if (isAdjacent(selectedCell.r, selectedCell.c, r, c)) {
+          moves++;
+          movesEl.textContent = moves;
+          swapAndCheck(selectedCell.r, selectedCell.c, r, c);
+        } else {
+          selectedCell.el.classList.remove('selected');
+          e.target.classList.add('selected');
+          selectedCell = { r, c, el: e.target };
+        }
+      } else {
+        e.target.classList.add('selected');
+        selectedCell = { r, c, el: e.target };
+      }
+    }
+
+    function isAdjacent(r1, c1, r2, c2) {
+      return Math.abs(r1 - r2) + Math.abs(c1 - c2) === 1;
+    }
+
+    async function swapAndCheck(r1, c1, r2, c2) {
+      isProcessing = true;
+      if (selectedCell) selectedCell.el.classList.remove('selected');
+      selectedCell = null;
+      
+      swap(r1, c1, r2, c2);
+      await sleep(200);
+
+      let matches = findMatches();
+      if (matches.length > 0) {
+        await processMatches(matches);
+      } else {
+        swap(r1, c1, r2, c2); // swap back
+        await sleep(200);
+      }
+      isProcessing = false;
+    }
+
+    function swap(r1, c1, r2, c2) {
+      const tempColor = grid[r1][c1].color;
+      grid[r1][c1].color = grid[r2][c2].color;
+      grid[r2][c2].color = tempColor;
+      grid[r1][c1].el.style.backgroundColor = grid[r1][c1].color;
+      grid[r2][c2].el.style.backgroundColor = grid[r2][c2].color;
+    }
+
+    function findMatches() {
+      let matches = new Set();
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 2; c++) {
+          let color = grid[r][c].color;
+          if (color && grid[r][c+1].color === color && grid[r][c+2].color === color) {
+            matches.add(`${r},${c}`); matches.add(`${r},${c+1}`); matches.add(`${r},${c+2}`);
+            let k = c + 3;
+            while(k < COLS && grid[r][k].color === color) { matches.add(`${r},${k}`); k++; }
+          }
+        }
+      }
+      for (let c = 0; c < COLS; c++) {
+        for (let r = 0; r < ROWS - 2; r++) {
+          let color = grid[r][c].color;
+          if (color && grid[r+1][c].color === color && grid[r+2][c].color === color) {
+            matches.add(`${r},${c}`); matches.add(`${r+1},${c}`); matches.add(`${r+2},${c}`);
+            let k = r + 3;
+            while(k < ROWS && grid[k][c].color === color) { matches.add(`${k},${c}`); k++; }
+          }
+        }
+      }
+      return Array.from(matches).map(m => {
+        let [r, c] = m.split(',').map(Number);
+        return {r, c};
+      });
+    }
+
+    async function processMatches(matches) {
+      while(matches.length > 0) {
+        score += matches.length * 10;
+        scoreEl.textContent = score;
+
+        matches.forEach(m => {
+          grid[m.r][m.c].color = null;
+          grid[m.r][m.c].el.style.backgroundColor = '#ddd';
+        });
+        await sleep(200);
+
+        for (let c = 0; c < COLS; c++) {
+          let emptyR = ROWS - 1;
+          for (let r = ROWS - 1; r >= 0; r--) {
+            if (grid[r][c].color) {
+              if (emptyR !== r) {
+                grid[emptyR][c].color = grid[r][c].color;
+                grid[emptyR][c].el.style.backgroundColor = grid[emptyR][c].color;
+                grid[r][c].color = null;
+                grid[r][c].el.style.backgroundColor = '#ddd';
+              }
+              emptyR--;
+            }
+          }
+          for (let r = emptyR; r >= 0; r--) {
+            grid[r][c].color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            grid[r][c].el.style.backgroundColor = grid[r][c].color;
+          }
+        }
+        await sleep(200);
+        matches = findMatches();
+      }
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    initGame();
   </script>
 </body>
 </html>
