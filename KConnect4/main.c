@@ -10,6 +10,9 @@ int currentPlayer = 1;
 bool gameActive = true;
 bool isDraw = false;
 
+int winCells[7][2];
+int winCellCount = 0;
+
 void ResetGame() {
     for(int r=0; r<ROWS; r++)
         for(int c=0; c<COLS; c++)
@@ -17,25 +20,44 @@ void ResetGame() {
     currentPlayer = 1;
     gameActive = true;
     isDraw = false;
+    winCellCount = 0;
 }
 
 bool CheckWin(int r, int c, int p) {
     int dirs[4][2] = {{0,1}, {1,0}, {1,1}, {1,-1}};
     for(int d=0; d<4; d++) {
         int count = 1;
+        int tempCells[7][2];
+        tempCells[0][0] = r;
+        tempCells[0][1] = c;
         for(int i=1; i<4; i++) {
             int nr = r + dirs[d][0]*i;
             int nc = c + dirs[d][1]*i;
-            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) count++;
+            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) {
+                tempCells[count][0] = nr;
+                tempCells[count][1] = nc;
+                count++;
+            }
             else break;
         }
         for(int i=1; i<4; i++) {
             int nr = r - dirs[d][0]*i;
             int nc = c - dirs[d][1]*i;
-            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) count++;
+            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) {
+                tempCells[count][0] = nr;
+                tempCells[count][1] = nc;
+                count++;
+            }
             else break;
         }
-        if(count >= 4) return true;
+        if(count >= 4) {
+            for(int k=0; k<count; k++) {
+                winCells[k][0] = tempCells[k][0];
+                winCells[k][1] = tempCells[k][1];
+            }
+            winCellCount = count;
+            return true;
+        }
     }
     return false;
 }
@@ -82,23 +104,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH emptyCell = CreateSolidBrush(RGB(18, 18, 18));
             HBRUSH p1Cell = CreateSolidBrush(RGB(255, 82, 82));
             HBRUSH p2Cell = CreateSolidBrush(RGB(255, 235, 59));
+            HPEN hlPen = CreatePen(PS_SOLID, 3, RGB(255, 255, 255));
+            HPEN nullPen = GetStockObject(NULL_PEN);
             
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
                     int x = 20 + 5 + c * 45;
                     int y = 50 + 5 + r * 45;
                     
+                    bool isWinCell = false;
+                    for(int i=0; i<winCellCount; i++) {
+                        if(winCells[i][0] == r && winCells[i][1] == c) {
+                            isWinCell = true;
+                            break;
+                        }
+                    }
+
                     if (board[r][c] == 1) SelectObject(hdc, p1Cell);
                     else if (board[r][c] == 2) SelectObject(hdc, p2Cell);
                     else SelectObject(hdc, emptyCell);
                     
-                    SelectObject(hdc, GetStockObject(NULL_PEN));
+                    if (isWinCell) {
+                        SelectObject(hdc, hlPen);
+                    } else {
+                        SelectObject(hdc, nullPen);
+                    }
+                    
                     Ellipse(hdc, x, y, x + 40, y + 40);
                 }
             }
+            SelectObject(hdc, nullPen);
             DeleteObject(emptyCell);
             DeleteObject(p1Cell);
             DeleteObject(p2Cell);
+            DeleteObject(hlPen);
             
             EndPaint(hwnd, &ps);
             break;
