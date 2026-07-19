@@ -61,7 +61,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 7: Add animated disc drops to show pieces falling into place rather than instantly appearing. (COMPLETED)
 - Phase 8: Add win streak and statistics tracking (Wins for Red, Wins for Yellow/AI, Draws, Current Streak, Best Streak) using persistence. (COMPLETED)
 - Phase 9: Add an Undo move feature to allow players to take back their last move (and the AI's response if in single-player mode). (COMPLETED)
-- Phase 10: Next feature (TBD)
+- Phase 10: Add Difficulty Settings for the AI (Easy, Medium, Hard) using a Minimax algorithm for deeper difficulties. (COMPLETED)
+- Phase 11: Next feature (TBD)
 
 ## Next Priority (Before New Apps)
 
