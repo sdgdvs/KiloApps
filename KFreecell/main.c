@@ -32,6 +32,12 @@ int selType = -1; // 0=free, 1=tab, -1=none
 int selIdx = -1;
 int selCardIdx = -1;
 int won = 0;
+int gameInProgress = 0;
+
+int statsPlayed = 0;
+int statsWins = 0;
+int statsStreak = 0;
+int statsBestStreak = 0;
 
 typedef struct {
     Card freeCells[4];
@@ -64,6 +70,14 @@ void PushUndo() {
     undoCount++;
 }
 
+void ShowStats(HWND hwnd) {
+    WCHAR msg[256];
+    int pct = statsPlayed > 0 ? (statsWins * 100) / statsPlayed : 0;
+    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d",
+              statsPlayed, statsWins, pct, statsStreak, statsBestStreak);
+    MessageBoxW(hwnd, msg, L"Statistics", MB_OK | MB_ICONINFORMATION);
+}
+
 void UndoMove(HWND hwnd) {
     if(undoCount > 0) {
         undoCount--;
@@ -85,6 +99,12 @@ void UndoMove(HWND hwnd) {
 }
 
 void InitGame() {
+    if (gameInProgress && !won) {
+        statsStreak = 0;
+    }
+    statsPlayed++;
+    gameInProgress = 1;
+
     won = 0;
     selType = -1;
     undoCount = 0;
@@ -148,8 +168,15 @@ int GetDraggableGroup(int tIdx, int startIdx) {
 
 void CheckWin(HWND hwnd) {
     if(found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) {
-        won = 1;
-        InvalidateRect(hwnd, NULL, TRUE);
+        if(gameInProgress) {
+            won = 1;
+            statsWins++;
+            statsStreak++;
+            if (statsStreak > statsBestStreak) statsBestStreak = statsStreak;
+            gameInProgress = 0;
+            InvalidateRect(hwnd, NULL, TRUE);
+            ShowStats(hwnd);
+        }
     }
 }
 
@@ -286,7 +313,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hTitleFont = CreateFontW(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
-            DrawTextW(hdcMem, L"KFreecell", -1, &titleRect, DT_CENTER | DT_TOP);
+            DrawTextW(hdcMem, L"KFreecell - [N]ew [Z]Undo [S]tats", -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
                 RECT winRect = {0, 10, clientRect.right - 20, 40};
                 DrawTextW(hdcMem, L"You Win!", -1, &winRect, DT_RIGHT | DT_TOP);
@@ -486,6 +513,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == 'Z' || wParam == 'U') {
                 UndoMove(hwnd);
+            } else if(wParam == 'S') {
+                ShowStats(hwnd);
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
                 InvalidateRect(hwnd, NULL, TRUE);

@@ -67,9 +67,20 @@
     <div style="display:flex;gap:10px;">
       <button class="btn" onclick="initGame()">New Game</button>
       <button class="btn" onclick="undoMove()" title="Ctrl+Z">Undo</button>
+      <button class="btn" onclick="showStats()">Stats</button>
     </div>
     <h1>KFreecell</h1>
     <div id="status" style="font-size: 14px;"></div>
+  </div>
+  <div id="stats-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:100;">
+    <div style="background:#2d2d30; padding:20px; border-radius:5px; border:1px solid #555; text-align:center;">
+      <h2 style="margin-top:0;">Statistics</h2>
+      <p>Games Played: <span id="stat-played">0</span></p>
+      <p>Wins: <span id="stat-wins">0</span> (<span id="stat-winpct">0</span>%)</p>
+      <p>Current Streak: <span id="stat-streak">0</span></p>
+      <p>Best Streak: <span id="stat-best">0</span></p>
+      <button class="btn" style="margin-top:10px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+    </div>
   </div>
   <div class="game-board">
     <div class="top-row">
@@ -103,6 +114,8 @@
     const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
     let deck = [];
+    let gameInProgress = false;
+    let stats = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
     let state = {
       free: [null, null, null, null],
       found: [0, 0, 0, 0], // ranks 0-13 per suit (index matches suits array)
@@ -125,7 +138,22 @@
       }
     });
 
+    function showStats() {
+      document.getElementById('stat-played').innerText = stats.played;
+      document.getElementById('stat-wins').innerText = stats.wins;
+      let pct = stats.played > 0 ? Math.round((stats.wins / stats.played) * 100) : 0;
+      document.getElementById('stat-winpct').innerText = pct;
+      document.getElementById('stat-streak').innerText = stats.streak;
+      document.getElementById('stat-best').innerText = stats.bestStreak;
+      document.getElementById('stats-modal').style.display = 'flex';
+    }
+
     function initGame() {
+      if (gameInProgress) {
+        stats.streak = 0;
+      }
+      stats.played++;
+      gameInProgress = true;
       undoStack = [];
       deck = [];
       for(let s=0; s<4; s++) {
@@ -257,7 +285,14 @@
 
     function checkWin() {
       if(state.found.every(r => r === 13)) {
-        document.getElementById('status').innerText = "You Win!";
+        if (gameInProgress) {
+          document.getElementById('status').innerText = "You Win!";
+          stats.wins++;
+          stats.streak++;
+          if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+          gameInProgress = false;
+          showStats();
+        }
       }
     }
 
