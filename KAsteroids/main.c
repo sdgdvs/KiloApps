@@ -44,6 +44,14 @@ typedef struct {
     int shoot_timer;
 } Ufo;
 
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    COLORREF color;
+    bool active;
+} Particle;
+
 Ship ship;
 Asteroid asteroids[100];
 int num_asteroids = 0;
@@ -51,6 +59,8 @@ Bullet bullets[50];
 int num_bullets = 0;
 Ufo ufos[10];
 int num_ufos = 0;
+Particle particles[500];
+int num_particles = 0;
 int ufo_spawn_timer = 0;
 int score = 0;
 int high_score = 0;
@@ -141,6 +151,7 @@ void InitGame() {
     num_asteroids = 0;
     num_bullets = 0;
     num_ufos = 0;
+    num_particles = 0;
     ufo_spawn_timer = 0;
     game_over = false;
     
@@ -158,6 +169,13 @@ void CheckCollisions() {
                 game_over = true;
                 bullets[i].active = false;
                 PlaySoundEffect(2);
+                for(int p=0; p<40; p++) {
+                    if(num_particles >= 500) break;
+                    Particle* pt = &particles[num_particles++];
+                    pt->x = ship.x; pt->y = ship.y;
+                    pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                    pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
             }
         }
         if (!bullets[i].active) continue;
@@ -169,6 +187,13 @@ void CheckCollisions() {
                 bullets[i].active = false;
                 asteroids[j].active = false;
                 PlaySoundEffect(2);
+                for(int p=0; p<20; p++) {
+                    if(num_particles >= 500) break;
+                    Particle* pt = &particles[num_particles++];
+                    pt->x = asteroids[j].x; pt->y = asteroids[j].y;
+                    pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                    pt->life = 30 + (rand()%20); pt->color = RGB(148, 163, 184); pt->active = true;
+                }
                 if (!bullets[i].is_enemy) {
                     score += (4 - asteroids[j].level) * 10;
                     UpdateHighScore();
@@ -205,6 +230,13 @@ void CheckCollisions() {
                     bullets[i].active = false;
                     ufos[k].active = false;
                     PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = ufos[k].x; pt->y = ufos[k].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(239, 68, 68); pt->active = true;
+                    }
                     score += 200;
                     UpdateHighScore();
                     break;
@@ -221,6 +253,13 @@ void CheckCollisions() {
                 ship.active = false;
                 game_over = true;
                 PlaySoundEffect(2);
+                for(int p=0; p<40; p++) {
+                    if(num_particles >= 500) break;
+                    Particle* pt = &particles[num_particles++];
+                    pt->x = ship.x; pt->y = ship.y;
+                    pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                    pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
             }
         }
         for (int k = 0; k < num_ufos; k++) {
@@ -230,6 +269,13 @@ void CheckCollisions() {
                 ship.active = false;
                 game_over = true;
                 PlaySoundEffect(2);
+                for(int p=0; p<40; p++) {
+                    if(num_particles >= 500) break;
+                    Particle* pt = &particles[num_particles++];
+                    pt->x = ship.x; pt->y = ship.y;
+                    pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                    pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
             }
         }
     }
@@ -259,6 +305,14 @@ void CompactArrays() {
         }
     }
     num_ufos = active_ufos;
+    
+    int active_particles = 0;
+    for (int i = 0; i < num_particles; i++) {
+        if (particles[i].active) {
+            particles[active_particles++] = particles[i];
+        }
+    }
+    num_particles = active_particles;
 }
 
 void Update() {
@@ -279,6 +333,16 @@ void Update() {
         if (thrust_timer > 3) {
             PlaySoundEffect(3);
             thrust_timer = 0;
+        }
+        if (num_particles < 500 && ship.active) {
+            Particle* p = &particles[num_particles++];
+            p->x = ship.x - cos(ship.angle) * 15.0f;
+            p->y = ship.y - sin(ship.angle) * 15.0f;
+            p->vx = -cos(ship.angle) * 3.0f + ((rand() % 100) - 50) / 33.0f;
+            p->vy = -sin(ship.angle) * 3.0f + ((rand() % 100) - 50) / 33.0f;
+            p->life = 15 + (rand() % 10);
+            p->color = RGB(249, 115, 22);
+            p->active = true;
         }
     }
     
@@ -382,6 +446,15 @@ void Update() {
     }
     
     CheckCollisions();
+    
+    for (int i = 0; i < num_particles; i++) {
+        if (!particles[i].active) continue;
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        particles[i].life--;
+        if (particles[i].life <= 0) particles[i].active = false;
+    }
+    
     CompactArrays();
     
     if (active_asteroids == 0) {
@@ -414,20 +487,6 @@ void Draw(HDC hdc) {
         LineTo(hdc, pts[1].x, pts[1].y);
         LineTo(hdc, pts[2].x, pts[2].y);
         LineTo(hdc, pts[0].x, pts[0].y);
-        
-        if (keys[VK_UP]) {
-            POINT flame[3];
-            flame[0].x = (LONG)(ship.x - cos(ship.angle) * 10);
-            flame[0].y = (LONG)(ship.y - sin(ship.angle) * 10);
-            flame[1].x = (LONG)(ship.x - cos(ship.angle) * 20 - sin(ship.angle) * 5);
-            flame[1].y = (LONG)(ship.y - sin(ship.angle) * 20 + cos(ship.angle) * 5);
-            flame[2].x = (LONG)(ship.x - cos(ship.angle) * 20 + sin(ship.angle) * 5);
-            flame[2].y = (LONG)(ship.y - sin(ship.angle) * 20 - cos(ship.angle) * 5);
-            MoveToEx(hdc, flame[0].x, flame[0].y, NULL);
-            LineTo(hdc, flame[1].x, flame[1].y);
-            LineTo(hdc, flame[2].x, flame[2].y);
-            LineTo(hdc, flame[0].x, flame[0].y);
-        }
     }
     
     SelectObject(hdc, astPen);
@@ -471,6 +530,17 @@ void Draw(HDC hdc) {
             SelectObject(hdc, bulletBrush);
         }
         Ellipse(hdc, (int)(bullets[i].x - 2), (int)(bullets[i].y - 2), (int)(bullets[i].x + 2), (int)(bullets[i].y + 2));
+    }
+    
+    for (int i = 0; i < num_particles; i++) {
+        if (!particles[i].active) continue;
+        HBRUSH pb = CreateSolidBrush(particles[i].color);
+        HPEN pp = CreatePen(PS_SOLID, 1, particles[i].color);
+        SelectObject(hdc, pb);
+        SelectObject(hdc, pp);
+        Ellipse(hdc, (int)(particles[i].x - 1), (int)(particles[i].y - 1), (int)(particles[i].x + 2), (int)(particles[i].y + 2));
+        DeleteObject(pb);
+        DeleteObject(pp);
     }
     
     SetTextColor(hdc, RGB(56, 189, 248));

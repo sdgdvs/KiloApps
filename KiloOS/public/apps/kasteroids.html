@@ -189,6 +189,17 @@
                 if (this.x > canvas.width) this.x = 0;
                 if (this.y < 0) this.y = canvas.height;
                 if (this.y > canvas.height) this.y = 0;
+                
+                if (keys['ArrowUp'] && this.active) {
+                    particles.push(new Particle(
+                        this.x - Math.cos(this.angle)*15, 
+                        this.y - Math.sin(this.angle)*15, 
+                        -Math.cos(this.angle)*3 + (Math.random()-0.5)*1.5, 
+                        -Math.sin(this.angle)*3 + (Math.random()-0.5)*1.5, 
+                        '#f97316', 
+                        15 + Math.random()*10
+                    ));
+                }
             }
             draw() {
                 if (!this.active) return;
@@ -203,14 +214,6 @@
                 ctx.lineTo(-10, -10);
                 ctx.closePath();
                 ctx.stroke();
-                
-                if (keys['ArrowUp']) {
-                    ctx.beginPath();
-                    ctx.moveTo(-10, 5);
-                    ctx.lineTo(-20, 0);
-                    ctx.lineTo(-10, -5);
-                    ctx.stroke();
-                }
                 ctx.restore();
             }
         }
@@ -287,6 +290,27 @@
             }
         }
 
+        class Particle {
+            constructor(x, y, vx, vy, color, life) {
+                this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+                this.color = color; this.life = life; this.maxLife = life; this.active = true;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.life--;
+                if (this.life <= 0) this.active = false;
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
         class Ufo {
             constructor() {
                 this.y = Math.random() * (canvas.height - 100) + 50;
@@ -345,6 +369,7 @@
         let asteroids = [];
         let bullets = [];
         let ufos = [];
+        let particles = [];
         let ufoSpawnTimer = 0;
         let gameOver = false;
         let lastShootTime = 0;
@@ -370,6 +395,7 @@
             asteroids = [];
             bullets = [];
             ufos = [];
+            particles = [];
             ufoSpawnTimer = 0;
             gameOver = false;
             gameOverDiv.style.display = 'none';
@@ -389,6 +415,7 @@
                         gameOverDiv.style.display = 'block';
                         b.active = false;
                         playSound('explosion');
+                        for(let p=0; p<40; p++) particles.push(new Particle(ship.x, ship.y, (Math.random()-0.5)*5, (Math.random()-0.5)*5, '#e2e8f0', 40 + Math.random()*30));
                     }
                 }
                 if (!b.active) continue;
@@ -400,6 +427,7 @@
                         b.active = false;
                         a.active = false;
                         playSound('explosion');
+                        for(let p=0; p<20; p++) particles.push(new Particle(a.x, a.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#94a3b8', 30 + Math.random()*20));
                         if (!b.isEnemy) {
                             score += (4 - a.level) * 10;
                             scoreSpan.innerText = score;
@@ -425,6 +453,7 @@
                             b.active = false;
                             u.active = false;
                             playSound('explosion');
+                            for(let p=0; p<20; p++) particles.push(new Particle(u.x, u.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#ef4444', 30 + Math.random()*20));
                             score += 200;
                             scoreSpan.innerText = score;
                             updateHighScore();
@@ -444,6 +473,7 @@
                         gameOver = true;
                         gameOverDiv.style.display = 'block';
                         playSound('explosion');
+                        for(let p=0; p<40; p++) particles.push(new Particle(ship.x, ship.y, (Math.random()-0.5)*5, (Math.random()-0.5)*5, '#e2e8f0', 40 + Math.random()*30));
                     }
                 }
                 for (let u of ufos) {
@@ -454,6 +484,7 @@
                         gameOver = true;
                         gameOverDiv.style.display = 'block';
                         playSound('explosion');
+                        for(let p=0; p<40; p++) particles.push(new Particle(ship.x, ship.y, (Math.random()-0.5)*5, (Math.random()-0.5)*5, '#e2e8f0', 40 + Math.random()*30));
                     }
                 }
             }
@@ -493,6 +524,9 @@
             asteroids.forEach(a => a.update());
             asteroids = asteroids.filter(a => a.active);
 
+            particles.forEach(p => p.update());
+            particles = particles.filter(p => p.active);
+
             if (asteroids.length === 0) {
                 wave++;
                 waveSpan.innerText = wave;
@@ -508,6 +542,7 @@
             ufos.forEach(u => u.draw());
             bullets.forEach(b => b.draw());
             asteroids.forEach(a => a.draw());
+            particles.forEach(p => p.draw());
         }
 
         function gameLoop() {

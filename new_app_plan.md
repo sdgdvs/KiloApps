@@ -61,7 +61,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 7: Completed. Added UFO enemy behavior (spawns periodically, shoots at player).
 - Phase 8: Completed. Added High Score system to both versions.
 - Phase 9: Completed. Added Sound effects (thrust, laser, explosion) to both web (Web Audio API) and native (Beep threads).
-- Phase 10: Add visual animations (particle explosions, thrust exhaust).
+- Phase 10: Completed. Added visual animations (particle explosions, thrust exhaust).
 - Phase 11: Add Multiple Game Modes (e.g. Classic, Endless, Time Attack).
 - Phase 12: Add Save/Load functionality for high scores and stats.
 - Phase 13: Add Statistics tracking (games played, asteroids destroyed, best accuracy).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KAsteroids
-**Goal:** Phase 10
+**Goal:** Phase 11
 
 
 ## App Lifecycle (14 phases per app)
