@@ -56,11 +56,21 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED)
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (COMPLETED)
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
+- Phase 5: Add a robust Undo stack for moves. (COMPLETED)
+- Phase 6: Add Auto-complete logic (automatically moving cards to foundations if safe).
+- Phase 7: Add Win Statistics tracking (Games Played, Win Percentage, Current Streak, Best Streak).
+- Phase 8: Add Save/Load state (persist the current board, move stack, and statistics).
+- Phase 9: Add Sound effects (card flip, card snap/place, win fanfare).
+- Phase 10: Add visual animations (smooth card sliding between cascades/cells).
+- Phase 11: Add customizable card backs (a simple settings UI to change the card back design/color).
+- Phase 12: Add a Timer and Move Counter.
+- Phase 13: Add Game Modes (e.g. Classic Freecell vs. Random Deal).
+- Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KFreecell
-**Goal:** Phase 5
+**Goal:** Phase 6
 
 
 ## App Lifecycle (14 phases per app)

@@ -33,9 +33,61 @@ int selIdx = -1;
 int selCardIdx = -1;
 int won = 0;
 
+typedef struct {
+    Card freeCells[4];
+    int freeCellsOccupied[4];
+    int found[4];
+    Card tab[8][52];
+    int tabCount[8];
+} GameState;
+
+#define MAX_UNDO 500
+GameState undoStack[MAX_UNDO];
+int undoCount = 0;
+
+void PushUndo() {
+    if (undoCount == MAX_UNDO) {
+        for(int i=1; i<MAX_UNDO; i++) undoStack[i-1] = undoStack[i];
+        undoCount--;
+    }
+    for(int i=0; i<4; i++) {
+        undoStack[undoCount].freeCells[i] = freeCells[i];
+        undoStack[undoCount].freeCellsOccupied[i] = freeCellsOccupied[i];
+        undoStack[undoCount].found[i] = found[i];
+    }
+    for(int i=0; i<8; i++) {
+        undoStack[undoCount].tabCount[i] = tabCount[i];
+        for(int j=0; j<52; j++) {
+            undoStack[undoCount].tab[i][j] = tab[i][j];
+        }
+    }
+    undoCount++;
+}
+
+void UndoMove(HWND hwnd) {
+    if(undoCount > 0) {
+        undoCount--;
+        for(int i=0; i<4; i++) {
+            freeCells[i] = undoStack[undoCount].freeCells[i];
+            freeCellsOccupied[i] = undoStack[undoCount].freeCellsOccupied[i];
+            found[i] = undoStack[undoCount].found[i];
+        }
+        for(int i=0; i<8; i++) {
+            tabCount[i] = undoStack[undoCount].tabCount[i];
+            for(int j=0; j<52; j++) {
+                tab[i][j] = undoStack[undoCount].tab[i][j];
+            }
+        }
+        selType = -1;
+        won = 0;
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
 void InitGame() {
     won = 0;
     selType = -1;
+    undoCount = 0;
     for(int i=0; i<4; i++) {
         freeCellsOccupied[i] = 0;
         found[i] = 0;
@@ -343,17 +395,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int maxMove = (emptyFree + 1) * (1 << emptyTab);
                     
                     if(nToMove <= maxMove && CanMoveToTab(cardsToMove[0], clickedIdx)) {
+                        PushUndo();
                         for(int i=0; i<nToMove; i++) {
                             tab[clickedIdx][tabCount[clickedIdx]++] = cardsToMove[i];
                         }
                         moved = 1;
                     }
                 } else if(clickedType == 0 && nToMove == 1 && !freeCellsOccupied[clickedIdx]) {
+                    PushUndo();
                     freeCells[clickedIdx] = cardsToMove[0];
                     freeCellsOccupied[clickedIdx] = 1;
                     moved = 1;
                 } else if(clickedType == 2 && nToMove == 1 && cardsToMove[0].s == clickedIdx) {
                     if(cardsToMove[0].r == found[clickedIdx] + 1) {
+                        PushUndo();
                         found[clickedIdx] = cardsToMove[0].r;
                         moved = 1;
                     }
@@ -377,6 +432,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(wParam == 'R' || wParam == 'N') {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if(wParam == 'Z' || wParam == 'U') {
+                UndoMove(hwnd);
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
                 InvalidateRect(hwnd, NULL, TRUE);

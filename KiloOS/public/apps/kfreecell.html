@@ -64,7 +64,10 @@
 </head>
 <body>
   <div class="header">
-    <button class="btn" onclick="initGame()">New Game</button>
+    <div style="display:flex;gap:10px;">
+      <button class="btn" onclick="initGame()">New Game</button>
+      <button class="btn" onclick="undoMove()" title="Ctrl+Z">Undo</button>
+    </div>
     <h1>KFreecell</h1>
     <div id="status" style="font-size: 14px;"></div>
   </div>
@@ -106,8 +109,24 @@
       tab: Array.from({length: 8}, () => []),
       selected: null // { type, index, cardIdx }
     };
+    let undoStack = [];
+
+    function undoMove() {
+      if(undoStack.length > 0) {
+        state = undoStack.pop();
+        document.getElementById('status').innerText = "";
+        render();
+      }
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
+        undoMove();
+      }
+    });
 
     function initGame() {
+      undoStack = [];
       deck = [];
       for(let s=0; s<4; s++) {
         for(let r=1; r<=13; r++) {
@@ -197,13 +216,22 @@
           let maxMove = (emptyFree + 1) * Math.pow(2, emptyTab);
 
           if(cardsToMove.length <= maxMove && canMoveToTab(cardsToMove[0], state.tab[index])) {
+            let prevState = JSON.parse(JSON.stringify(state));
+            prevState.selected = null;
+            undoStack.push(prevState);
             state.tab[index].push(...cardsToMove);
             moved = true;
           }
         } else if(type === 'free' && cardsToMove.length === 1 && !state.free[index]) {
+          let prevState = JSON.parse(JSON.stringify(state));
+          prevState.selected = null;
+          undoStack.push(prevState);
           state.free[index] = cardsToMove[0];
           moved = true;
         } else if(type === 'found' && cardsToMove.length === 1 && cardsToMove[0].s === index && canMoveToFound(cardsToMove[0])) {
+          let prevState = JSON.parse(JSON.stringify(state));
+          prevState.selected = null;
+          undoStack.push(prevState);
           state.found[index] = cardsToMove[0].r;
           moved = true;
         }
