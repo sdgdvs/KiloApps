@@ -58,7 +58,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 4: Completed. Applied a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - Phase 5: Completed. Added core gameplay loop (asteroids splitting, collision detection, player death).
 - Phase 6: Completed. Added progressive waves (increasing asteroid count/speed).
-- Phase 7: Add UFO enemy behavior (spawns periodically, shoots at player).
+- Phase 7: Completed. Added UFO enemy behavior (spawns periodically, shoots at player).
 - Phase 8: Add High Score system.
 - Phase 9: Add Sound effects (thrust, laser, explosion).
 - Phase 10: Add visual animations (particle explosions, thrust exhaust).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KAsteroids
-**Goal:** Phase 7
+**Goal:** Phase 8
 
 
 ## App Lifecycle (14 phases per app)

@@ -33,13 +33,25 @@ typedef struct {
     float vx, vy;
     int life;
     bool active;
+    bool is_enemy;
 } Bullet;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float radius;
+    bool active;
+    int shoot_timer;
+} Ufo;
 
 Ship ship;
 Asteroid asteroids[100];
 int num_asteroids = 0;
 Bullet bullets[50];
 int num_bullets = 0;
+Ufo ufos[10];
+int num_ufos = 0;
+int ufo_spawn_timer = 0;
 int score = 0;
 int wave = 1;
 bool game_over = false;
@@ -89,6 +101,8 @@ void InitGame() {
     
     num_asteroids = 0;
     num_bullets = 0;
+    num_ufos = 0;
+    ufo_spawn_timer = 0;
     game_over = false;
     
     SpawnAsteroids(3 + wave);
@@ -97,13 +111,26 @@ void InitGame() {
 void CheckCollisions() {
     for (int i = 0; i < num_bullets; i++) {
         if (!bullets[i].active) continue;
+        
+        if (bullets[i].is_enemy && ship.active) {
+            float dist = sqrt(pow(bullets[i].x - ship.x, 2) + pow(bullets[i].y - ship.y, 2));
+            if (dist < ship.radius) {
+                ship.active = false;
+                game_over = true;
+                bullets[i].active = false;
+            }
+        }
+        if (!bullets[i].active) continue;
+
         for (int j = 0; j < num_asteroids; j++) {
             if (!asteroids[j].active) continue;
             float dist = sqrt(pow(bullets[i].x - asteroids[j].x, 2) + pow(bullets[i].y - asteroids[j].y, 2));
             if (dist < asteroids[j].radius) {
                 bullets[i].active = false;
                 asteroids[j].active = false;
-                score += (4 - asteroids[j].level) * 10;
+                if (!bullets[i].is_enemy) {
+                    score += (4 - asteroids[j].level) * 10;
+                }
                 
                 if (asteroids[j].level > 1 && num_asteroids + 2 <= 100) {
                     for (int k = 0; k < 2; k++) {
@@ -126,6 +153,20 @@ void CheckCollisions() {
                 break;
             }
         }
+        
+        if (!bullets[i].active) continue;
+        if (!bullets[i].is_enemy) {
+            for (int k = 0; k < num_ufos; k++) {
+                if (!ufos[k].active) continue;
+                float dist = sqrt(pow(bullets[i].x - ufos[k].x, 2) + pow(bullets[i].y - ufos[k].y, 2));
+                if (dist < ufos[k].radius) {
+                    bullets[i].active = false;
+                    ufos[k].active = false;
+                    score += 200;
+                    break;
+                }
+            }
+        }
     }
     
     if (ship.active) {
@@ -133,6 +174,14 @@ void CheckCollisions() {
             if (!asteroids[j].active) continue;
             float dist = sqrt(pow(ship.x - asteroids[j].x, 2) + pow(ship.y - asteroids[j].y, 2));
             if (dist < asteroids[j].radius + ship.radius) {
+                ship.active = false;
+                game_over = true;
+            }
+        }
+        for (int k = 0; k < num_ufos; k++) {
+            if (!ufos[k].active) continue;
+            float dist = sqrt(pow(ship.x - ufos[k].x, 2) + pow(ship.y - ufos[k].y, 2));
+            if (dist < ufos[k].radius + ship.radius) {
                 ship.active = false;
                 game_over = true;
             }
@@ -156,6 +205,14 @@ void CompactArrays() {
         }
     }
     num_asteroids = active_asteroids;
+    
+    int active_ufos = 0;
+    for (int i = 0; i < num_ufos; i++) {
+        if (ufos[i].active) {
+            ufos[active_ufos++] = ufos[i];
+        }
+    }
+    num_ufos = active_ufos;
 }
 
 void Update() {
@@ -194,6 +251,7 @@ void Update() {
             b->vy = sin(ship.angle) * 7.0f;
             b->life = 60;
             b->active = true;
+            b->is_enemy = false;
             last_shoot_time = now;
         }
     }
@@ -222,6 +280,51 @@ void Update() {
         if (asteroids[i].x > WIDTH + asteroids[i].radius) asteroids[i].x = -asteroids[i].radius;
         if (asteroids[i].y < -asteroids[i].radius) asteroids[i].y = HEIGHT + asteroids[i].radius;
         if (asteroids[i].y > HEIGHT + asteroids[i].radius) asteroids[i].y = -asteroids[i].radius;
+    }
+    
+    ufo_spawn_timer++;
+    if (ufo_spawn_timer > 600) {
+        ufo_spawn_timer = 0;
+        if ((rand() % 100) < (int)((0.5f + (wave * 0.05f)) * 100) && num_ufos < 10) {
+            Ufo* u = &ufos[num_ufos++];
+            u->y = 50.0f + (rand() % (HEIGHT - 100));
+            u->x = (rand() % 2 == 0) ? 0.0f : (float)WIDTH;
+            u->vx = (u->x == 0.0f) ? 2.0f : -2.0f;
+            u->vy = ((rand() % 200) - 100) / 100.0f * 2.0f;
+            u->radius = 15.0f;
+            u->active = true;
+            u->shoot_timer = 0;
+        }
+    }
+    
+    for (int i = 0; i < num_ufos; i++) {
+        if (!ufos[i].active) continue;
+        ufos[i].x += ufos[i].vx;
+        ufos[i].y += ufos[i].vy;
+        
+        if (ufos[i].y < 0) ufos[i].y = HEIGHT;
+        if (ufos[i].y > HEIGHT) ufos[i].y = 0;
+        
+        if ((ufos[i].vx > 0 && ufos[i].x > WIDTH + 50) ||
+            (ufos[i].vx < 0 && ufos[i].x < -50)) {
+            ufos[i].active = false;
+        }
+        
+        ufos[i].shoot_timer++;
+        if (ufos[i].shoot_timer > 100 && ship.active && num_bullets < 50) {
+            ufos[i].shoot_timer = 0;
+            float angle = atan2(ship.y - ufos[i].y, ship.x - ufos[i].x);
+            angle += (((rand() % 100) - 50) / 100.0f) * 0.2f;
+            
+            Bullet* b = &bullets[num_bullets++];
+            b->x = ufos[i].x;
+            b->y = ufos[i].y;
+            b->vx = cos(angle) * 7.0f;
+            b->vy = sin(angle) * 7.0f;
+            b->life = 60;
+            b->active = true;
+            b->is_enemy = true;
+        }
     }
     
     CheckCollisions();
@@ -287,10 +390,32 @@ void Draw(HDC hdc) {
         LineTo(hdc, pts[0].x, pts[0].y);
     }
     
-    SelectObject(hdc, bulletPen);
-    SelectObject(hdc, bulletBrush);
+    HPEN ufoPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+    HPEN enemyBulletPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+    HBRUSH enemyBulletBrush = CreateSolidBrush(RGB(239, 68, 68));
+    
+    SelectObject(hdc, ufoPen);
+    for (int i = 0; i < num_ufos; i++) {
+        if (!ufos[i].active) continue;
+        MoveToEx(hdc, (int)(ufos[i].x - 15), (int)ufos[i].y, NULL);
+        LineTo(hdc, (int)(ufos[i].x + 15), (int)ufos[i].y);
+        LineTo(hdc, (int)(ufos[i].x + 8), (int)(ufos[i].y - 8));
+        LineTo(hdc, (int)(ufos[i].x - 8), (int)(ufos[i].y - 8));
+        LineTo(hdc, (int)(ufos[i].x - 15), (int)ufos[i].y);
+        LineTo(hdc, (int)(ufos[i].x - 8), (int)(ufos[i].y + 8));
+        LineTo(hdc, (int)(ufos[i].x + 8), (int)(ufos[i].y + 8));
+        LineTo(hdc, (int)(ufos[i].x + 15), (int)ufos[i].y);
+    }
+    
     for (int i = 0; i < num_bullets; i++) {
         if (!bullets[i].active) continue;
+        if (bullets[i].is_enemy) {
+            SelectObject(hdc, enemyBulletPen);
+            SelectObject(hdc, enemyBulletBrush);
+        } else {
+            SelectObject(hdc, bulletPen);
+            SelectObject(hdc, bulletBrush);
+        }
         Ellipse(hdc, (int)(bullets[i].x - 2), (int)(bullets[i].y - 2), (int)(bullets[i].x + 2), (int)(bullets[i].y + 2));
     }
     
@@ -309,8 +434,11 @@ void Draw(HDC hdc) {
     
     DeleteObject(shipPen);
     DeleteObject(astPen);
+    DeleteObject(ufoPen);
     DeleteObject(bulletPen);
     DeleteObject(bulletBrush);
+    DeleteObject(enemyBulletPen);
+    DeleteObject(enemyBulletBrush);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)

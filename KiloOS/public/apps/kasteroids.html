@@ -188,13 +188,14 @@
         }
 
         class Bullet {
-            constructor(x, y, angle) {
+            constructor(x, y, angle, isEnemy = false) {
                 this.x = x;
                 this.y = y;
                 this.vx = Math.cos(angle) * 7;
                 this.vy = Math.sin(angle) * 7;
                 this.life = 60;
                 this.active = true;
+                this.isEnemy = isEnemy;
             }
             update() {
                 this.x += this.vx;
@@ -207,16 +208,71 @@
                 if (this.y > canvas.height) this.y = 0;
             }
             draw() {
-                ctx.fillStyle = '#fde047';
+                ctx.fillStyle = this.isEnemy ? '#ef4444' : '#fde047';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
 
+        class Ufo {
+            constructor() {
+                this.y = Math.random() * (canvas.height - 100) + 50;
+                this.x = (Math.random() > 0.5) ? 0 : canvas.width;
+                this.vx = (this.x === 0) ? 2 : -2;
+                this.vy = (Math.random() - 0.5) * 2;
+                this.radius = 15;
+                this.active = true;
+                this.shootTimer = 0;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+                
+                if ((this.vx > 0 && this.x > canvas.width + 50) ||
+                    (this.vx < 0 && this.x < -50)) {
+                    this.active = false;
+                }
+
+                this.shootTimer++;
+                if (this.shootTimer > 100 && ship.active) {
+                    this.shootTimer = 0;
+                    let angle = Math.atan2(ship.y - this.y, ship.x - this.x);
+                    angle += (Math.random() - 0.5) * 0.2; // slight inaccuracy
+                    bullets.push(new Bullet(this.x, this.y, angle, true));
+                }
+            }
+            draw() {
+                if (!this.active) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(-15, 0);
+                ctx.lineTo(15, 0);
+                ctx.lineTo(8, -8);
+                ctx.lineTo(-8, -8);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(-15, 0);
+                ctx.lineTo(-8, 8);
+                ctx.lineTo(8, 8);
+                ctx.lineTo(15, 0);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
         let ship = new Ship();
         let asteroids = [];
         let bullets = [];
+        let ufos = [];
+        let ufoSpawnTimer = 0;
         let gameOver = false;
         let lastShootTime = 0;
 
@@ -240,23 +296,39 @@
             ship.reset();
             asteroids = [];
             bullets = [];
+            ufos = [];
+            ufoSpawnTimer = 0;
             gameOver = false;
             gameOverDiv.style.display = 'none';
             spawnAsteroids(3 + wave);
         }
 
         function checkCollisions() {
-            // Bullet-Asteroid
+            // Bullet-Asteroid, Bullet-Ship, Bullet-Ufo
             for (let b of bullets) {
                 if (!b.active) continue;
+                
+                if (b.isEnemy && ship.active) {
+                    let dist = Math.hypot(b.x - ship.x, b.y - ship.y);
+                    if (dist < ship.radius) {
+                        ship.active = false;
+                        gameOver = true;
+                        gameOverDiv.style.display = 'block';
+                        b.active = false;
+                    }
+                }
+                if (!b.active) continue;
+
                 for (let a of asteroids) {
                     if (!a.active) continue;
                     let dist = Math.hypot(b.x - a.x, b.y - a.y);
                     if (dist < a.radius) {
                         b.active = false;
                         a.active = false;
-                        score += (4 - a.level) * 10;
-                        scoreSpan.innerText = score;
+                        if (!b.isEnemy) {
+                            score += (4 - a.level) * 10;
+                            scoreSpan.innerText = score;
+                        }
                         
                         if (a.level > 1) {
                             let speedMult = 1.0 + (wave - 1) * 0.15;
@@ -266,14 +338,39 @@
                         break;
                     }
                 }
+                
+                if (!b.active) continue;
+                
+                if (!b.isEnemy) {
+                    for (let u of ufos) {
+                        if (!u.active) continue;
+                        let dist = Math.hypot(b.x - u.x, b.y - u.y);
+                        if (dist < u.radius) {
+                            b.active = false;
+                            u.active = false;
+                            score += 200;
+                            scoreSpan.innerText = score;
+                            break;
+                        }
+                    }
+                }
             }
             
-            // Ship-Asteroid
+            // Ship-Asteroid & Ship-Ufo
             if (ship.active) {
                 for (let a of asteroids) {
                     if (!a.active) continue;
                     let dist = Math.hypot(ship.x - a.x, ship.y - a.y);
                     if (dist < a.radius + ship.radius) {
+                        ship.active = false;
+                        gameOver = true;
+                        gameOverDiv.style.display = 'block';
+                    }
+                }
+                for (let u of ufos) {
+                    if (!u.active) continue;
+                    let dist = Math.hypot(ship.x - u.x, ship.y - u.y);
+                    if (dist < u.radius + ship.radius) {
                         ship.active = false;
                         gameOver = true;
                         gameOverDiv.style.display = 'block';
@@ -291,13 +388,24 @@
             if (keys['Space']) {
                 let now = Date.now();
                 if (now - lastShootTime > 200) {
-                    bullets.push(new Bullet(ship.x + Math.cos(ship.angle)*15, ship.y + Math.sin(ship.angle)*15, ship.angle));
+                    bullets.push(new Bullet(ship.x + Math.cos(ship.angle)*15, ship.y + Math.sin(ship.angle)*15, ship.angle, false));
                     lastShootTime = now;
                 }
             }
 
             ship.update();
             
+            ufoSpawnTimer++;
+            if (ufoSpawnTimer > 600) {
+                ufoSpawnTimer = 0;
+                if (Math.random() < 0.5 + (wave * 0.05)) {
+                    ufos.push(new Ufo());
+                }
+            }
+
+            ufos.forEach(u => u.update());
+            ufos = ufos.filter(u => u.active);
+
             bullets.forEach(b => b.update());
             bullets = bullets.filter(b => b.active);
 
@@ -316,6 +424,7 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ship.draw();
+            ufos.forEach(u => u.draw());
             bullets.forEach(b => b.draw());
             asteroids.forEach(a => a.draw());
         }
