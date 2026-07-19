@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KHangman (Word guessing game)
-**Phase:** 5
+**Phase:** 8
 **Status:** In Progress
 
 - Phase 1: Scaffold `KHangman/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (Completed)
@@ -57,11 +57,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web. (Completed)
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (Completed)
 - Phase 5: Add Multiple Word Categories (e.g., Animals, Countries, Science, Technology) with a UI selector. (Completed)
+- Phase 6: (Skipped)
+- Phase 7: Add win streak and statistics tracking (Wins, Losses, Current Streak, Best Streak) using persistence. (Completed)
 
 ## Next Priority (Before New Apps)
 
 **App:** KHangman
-**Goal:** Phase 6
+**Goal:** Phase 8
 
 
 ## App Lifecycle (14 phases per app)

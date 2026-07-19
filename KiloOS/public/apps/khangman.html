@@ -28,6 +28,21 @@
             text-align: center;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
+        #stats {
+            background-color: #2c2c2c;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        #stats span {
+            font-weight: bold;
+            color: #4facfe;
+        }
         h1 {
             margin-top: 0;
             color: #4facfe;
@@ -97,6 +112,13 @@
 <div id="game-container">
     <h1>KHangman</h1>
     
+    <div id="stats">
+        <div>Wins: <span id="stat-wins">0</span></div>
+        <div>Losses: <span id="stat-losses">0</span></div>
+        <div>Streak: <span id="stat-streak">0</span></div>
+        <div>Best: <span id="stat-best">0</span></div>
+    </div>
+    
     <select id="category" onchange="initGame()" style="margin-bottom: 20px; padding: 5px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 16px; cursor: pointer;">
         <option value="Technology">Technology</option>
         <option value="Animals">Animals</option>
@@ -126,6 +148,30 @@
     let word = "";
     let guessed = new Set();
     let errors = 0;
+    let gameEnded = false;
+    let stats = { wins: 0, losses: 0, streak: 0, best: 0 };
+
+    function loadStats() {
+        const saved = localStorage.getItem('khangman_stats');
+        if (saved) {
+            try {
+                stats = JSON.parse(saved);
+            } catch (e) {}
+        }
+        updateStatsDisplay();
+    }
+    
+    function saveStats() {
+        localStorage.setItem('khangman_stats', JSON.stringify(stats));
+        updateStatsDisplay();
+    }
+    
+    function updateStatsDisplay() {
+        document.getElementById('stat-wins').innerText = stats.wins;
+        document.getElementById('stat-losses').innerText = stats.losses;
+        document.getElementById('stat-streak').innerText = stats.streak;
+        document.getElementById('stat-best').innerText = stats.best;
+    }
 
     function drawHangman() {
         const canvas = document.getElementById('hangman-canvas');
@@ -209,6 +255,7 @@
         word = words[Math.floor(Math.random() * words.length)];
         guessed.clear();
         errors = 0;
+        gameEnded = false;
         document.getElementById('message').innerText = "Guess a letter";
         document.getElementById('message').style.color = "#e0e0e0";
         initKeyboard();
@@ -249,10 +296,23 @@
             msgEl.innerText = "You Win!";
             msgEl.style.color = "#4caf50";
             disableAllKeys();
+            if (!gameEnded) {
+                gameEnded = true;
+                stats.wins++;
+                stats.streak++;
+                if (stats.streak > stats.best) stats.best = stats.streak;
+                saveStats();
+            }
         } else if (errors >= MAX_ERRORS) {
             msgEl.innerText = "Game Over! Word was " + word;
             msgEl.style.color = "#f44336";
             disableAllKeys();
+            if (!gameEnded) {
+                gameEnded = true;
+                stats.losses++;
+                stats.streak = 0;
+                saveStats();
+            }
         }
     }
 
@@ -268,6 +328,7 @@
         }
     });
 
+    loadStats();
     initGame();
 </script>
 </body>

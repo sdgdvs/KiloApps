@@ -26,6 +26,31 @@ int game_over = 0;
 int won = 0;
 int initialized = 0;
 
+typedef struct {
+    int wins;
+    int losses;
+    int streak;
+    int best;
+} Stats;
+
+Stats stats = {0, 0, 0, 0};
+
+void LoadStats() {
+    FILE* f = fopen("khangman_stats.dat", "rb");
+    if (f) {
+        fread(&stats, sizeof(Stats), 1, f);
+        fclose(f);
+    }
+}
+
+void SaveStats() {
+    FILE* f = fopen("khangman_stats.dat", "wb");
+    if (f) {
+        fwrite(&stats, sizeof(Stats), 1, f);
+        fclose(f);
+    }
+}
+
 unsigned int seed = 0;
 
 int CustomRand() {
@@ -39,6 +64,7 @@ void CustomSrand(unsigned int s) {
 
 void InitGame() {
     if (!initialized) {
+        LoadStats();
         CustomSrand(GetTickCount());
         initialized = 1;
     }
@@ -79,6 +105,9 @@ void Guess(char c) {
         if (errors >= 6) {
             game_over = 1;
             won = 0;
+            stats.losses++;
+            stats.streak = 0;
+            SaveStats();
         }
     } else {
         all_guessed = 1;
@@ -91,6 +120,10 @@ void Guess(char c) {
         if (all_guessed) {
             game_over = 1;
             won = 1;
+            stats.wins++;
+            stats.streak++;
+            if (stats.streak > stats.best) stats.best = stats.streak;
+            SaveStats();
         }
     }
 }
@@ -309,6 +342,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(255, 255, 255));
             SelectObject(memDC, hFontMain);
             DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+            // Stats
+            char statText[128];
+            wsprintfA(statText, "Wins: %d  |  Losses: %d  |  Streak: %d  |  Best: %d", stats.wins, stats.losses, stats.streak, stats.best);
+            SetTextColor(memDC, RGB(79, 172, 254));
+            SelectObject(memDC, hFontMono);
+            GetTextExtentPoint32A(memDC, statText, lstrlenA(statText), &tSize);
+            TextOutA(memDC, (W - tSize.cx) / 2, 510, statText, lstrlenA(statText));
 
             DeleteObject(hFontMain);
             DeleteObject(hFontMono);
