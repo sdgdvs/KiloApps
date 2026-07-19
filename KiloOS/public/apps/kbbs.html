@@ -854,9 +854,11 @@
         screen.push(row);
         if (screen.length > MAX_LINES) {
             screen.shift();
-        } else {
-            // When lines are added but we aren't at max, if we are scrolled up, we should stay at the same relative position (which means scrollOffset should increase)
-            // But usually we just let scrollOffset remain same, so the view stays pinned to the bottom.
+        }
+        if (scrollOffset > 0) {
+            scrollOffset++;
+            let maxOffset = Math.max(0, screen.length - ROWS);
+            if (scrollOffset > maxOffset) scrollOffset = maxOffset;
         }
         updateScrollbar();
     }

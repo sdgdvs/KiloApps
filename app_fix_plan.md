@@ -104,4 +104,6 @@ Pass 1 Complete.
 - **K2048**: Added missing hotkeys in `k2048.html` keydown handler. Fixed GDI resource leak in `main.c` `WM_PAINT` by selecting original bitmap back into the memDC before deleting.
 - **KAudio**: Added ARIA labels and accessibility attributes in `kaudio.html`, and added window blur listener to prevent stuck keys. Enforced bounds checking on recording array. In `main.c`, ensured note-off events are recorded on focus loss or octave shift.
 
-Start Pass 2 (Deeper Quality checks). Next target: KBBS.
+- **KBBS**: Fixed view jump bug on line add in `kbbs.html` by correctly incrementing `scrollOffset`. In `main.c`, fixed GDI resource leaks by tracking and deleting `hUIFont` and `hBgBrush` in `WM_DESTROY`, and removed dead code (`PlayChime`).
+
+Start Pass 2 (Deeper Quality checks). Next target: Calculator.

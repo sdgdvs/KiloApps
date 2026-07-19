@@ -144,6 +144,8 @@ HWND hMain, hHost, hPort, hBtn, hCombo, hEcho, hStatus;
 HWND hBtnMacros;
 HWND hBtnSettings;
 HFONT hTermFont;
+HFONT hUIFont;
+HBRUSH hBgBrush;
 int bytesRx = 0;
 int bytesTx = 0;
 
@@ -305,12 +307,6 @@ void PlayANSI(const char* str) {
     if (args) {
         lstrcpynA(args->data, str, sizeof(args->data));
         CreateThread(NULL, 0, MusicThread, args, 0, NULL);
-    }
-}
-
-void PlayChime(int type) {
-    if (type == 1) { /* connect */
-        CreateThread(NULL, 0, MusicThread, NULL, 0, NULL); // Hack: avoid using this just call Beep in new thread? No.
     }
 }
 // wait let's write a proper PlayChimeThread
@@ -1706,7 +1702,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetTimer(hwnd, 1, kbbsSettings.blinkRateMs, NULL);
             SetTimer(hwnd, 2, 16, NULL);
-            HFONT hFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
+            hUIFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                 ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                 DEFAULT_PITCH | FF_SWISS, "Tahoma");
 
@@ -1763,20 +1759,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 dpiScale(5), dpiScale(30 + TERM_ROWS * 16 + 4), dpiScale(640), dpiScale(18), hwnd, 0, 0, 0);
 
             /* Set fonts */
-            SendMessageA(hHost, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnMacros, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnXmDl, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnXmUl, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnZmDl, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnZmUl, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hEcho, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessageA(hHost, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hCombo, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnMacros, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnXmDl, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnXmUl, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnZmDl, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnZmUl, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hEcho, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnSettings, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnCapture, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hStatus, WM_SETFONT, (WPARAM)hUIFont, TRUE);
 
             ClearScreen();
             break;
@@ -2536,6 +2532,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             if (sock != INVALID_SOCKET) closesocket(sock);
             if (hTermFont) DeleteObject(hTermFont);
+            if (hUIFont) DeleteObject(hUIFont);
+            if (hBgBrush) DeleteObject(hBgBrush);
             if (captureBuffer) { GlobalFree(captureBuffer); captureBuffer = NULL; }
             if (rxBuffer) { GlobalFree(rxBuffer); rxBuffer = NULL; }
             if (zmDlBuf) { GlobalFree(zmDlBuf); zmDlBuf = NULL; }
@@ -2558,7 +2556,8 @@ void __stdcall MainEntry() {
     wc.hInstance = GetModuleHandleA(NULL);
     wc.lpszClassName = "KBBSClass";
     wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(9, 9, 11));
+    hBgBrush = CreateSolidBrush(RGB(9, 9, 11));
+    wc.hbrBackground = hBgBrush;
     wc.hIcon = LoadIconA(wc.hInstance, MAKEINTRESOURCEA(1));
 
     RegisterClassA(&wc);
