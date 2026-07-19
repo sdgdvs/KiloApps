@@ -28,6 +28,9 @@ int highScore = 0;
 int gameOver = 0;
 int frameCount = 0;
 int shieldActive = 0;
+int wave = 1;
+int enemiesKilled = 0;
+int rapidTimer = 0;
 
 unsigned int seed = 999;
 unsigned int rnd() {
@@ -59,15 +62,28 @@ void SpawnEnemy() {
             e[i].active = 1.0f;
             e[i].x = (float)(rnd() % (W - 20));
             e[i].y = -20.0f;
-            int t = rnd() % 3;
+            int t = rnd() % 4;
             e[i].type = (float)t;
-            e[i].hp = (t == 2) ? 5 : 1;
+            if (t == 3) e[i].hp = 10;
+            else if (t == 2) e[i].hp = 5;
+            else e[i].hp = 1;
             break;
         }
     }
 }
 
+DWORD WINAPI SndThread(LPVOID param) {
+    int type = (int)(intptr_t)param;
+    if (type == 0) Beep(1000, 20); // shoot
+    else if (type == 1) Beep(200, 40); // explode
+    else if (type == 2) { Beep(600, 50); Beep(800, 50); } // powerup
+    else if (type == 3) { Beep(400, 100); Beep(600, 100); Beep(800, 150); } // wave
+    return 0;
+}
+void PlaySnd(int type) { CreateThread(NULL, 0, SndThread, (LPVOID)(intptr_t)type, 0, NULL); }
+
 void Shoot() {
+    PlaySnd(0);
     int shots = (spreadTimer > 0) ? 3 : 1;
     float dxs[] = {0.0f, -2.0f, 2.0f};
     int spawned = 0;
@@ -94,10 +110,19 @@ void Update() {
             for(int i=0; i<MAX_EBULLETS; i++) eb[i].active = 0;
             for(int i=0; i<MAX_POWERUPS; i++) pu[i].active = 0;
             spreadTimer = 0;
+            rapidTimer = 0;
             shieldActive = 0;
+            wave = 1;
+            enemiesKilled = 0;
             p.x = W/2.0f; p.y = H - 50.0f;
         }
         return;
+    }
+    
+    int currentWave = 1 + (score / 1000);
+    if (currentWave > wave) {
+        wave = currentWave;
+        PlaySnd(3);
     }
     
     for (int i=0; i<MAX_STARS; i++) {
@@ -124,7 +149,8 @@ void Update() {
     if (p.y > H - 20) p.y = H - 20;
     
     if (GetAsyncKeyState(VK_SPACE) & 0x8001) { // simple debounce
-        if (frameCount % 5 == 0) Shoot();
+        int fireRate = (rapidTimer > 0) ? 2 : 5;
+        if (frameCount % fireRate == 0) Shoot();
     }
     
     for (int i = 0; i < MAX_BULLETS; i++) {
@@ -143,8 +169,10 @@ void Update() {
                 e[i].y += baseEnemySpeed * 0.75f;
                 if (e[i].x < p.x) e[i].x += baseEnemySpeed * 0.5f;
                 if (e[i].x > p.x) e[i].x -= baseEnemySpeed * 0.5f;
-            } else {
+            } else if (e[i].type == 2.0f) {
                 e[i].y += baseEnemySpeed * 0.4f;
+            } else if (e[i].type == 3.0f) {
+                e[i].y += baseEnemySpeed * 0.3f;
             }
             if (e[i].y > H) e[i].active = 0.0f;
             
@@ -165,8 +193,10 @@ void Update() {
                 if (shieldActive) {
                     shieldActive = 0;
                     e[i].active = 0.0f;
+                    PlaySnd(1);
                 } else {
                     gameOver = 1;
+                    PlaySnd(1);
                 }
             }
             
@@ -177,16 +207,18 @@ void Update() {
                     e[i].hp--;
                     if (e[i].hp <= 0) {
                         e[i].active = 0.0f;
-                        score += (e[i].type == 2.0f) ? 50 : 10;
+                        score += (e[i].type == 2.0f) ? 50 : (e[i].type == 3.0f ? 100 : 10);
+                        enemiesKilled++;
+                        PlaySnd(1);
                         if (score > highScore) {
                             highScore = score;
                             SaveHighScore();
                         }
-                        if ((rnd() % 100) < 10) {
+                        if ((rnd() % 100) < 15) {
                             for(int k=0; k<MAX_POWERUPS; k++) {
                                 if(!pu[k].active) {
                                     pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
-                                    pu[k].type = (float)(rnd() % 2);
+                                    pu[k].type = (float)(rnd() % 3);
                                     break;
                                 }
                             }
@@ -206,8 +238,10 @@ void Update() {
                 eb[i].active = 0.0f;
                 if (shieldActive) {
                     shieldActive = 0;
+                    PlaySnd(1);
                 } else {
                     gameOver = 1;
+                    PlaySnd(1);
                 }
             }
         }
@@ -219,16 +253,16 @@ void Update() {
             if (pu[i].y > H) pu[i].active = 0.0f;
             if (p.x < pu[i].x + 15 && p.x + 20 > pu[i].x && p.y < pu[i].y + 15 && p.y + 20 > pu[i].y) {
                 pu[i].active = 0.0f;
-                if (pu[i].type == 0.0f) {
-                    spreadTimer = 300;
-                } else {
-                    shieldActive = 1;
-                }
+                if (pu[i].type == 0.0f) spreadTimer = 300;
+                else if (pu[i].type == 1.0f) shieldActive = 1;
+                else rapidTimer = 300;
                 score += 50;
+                PlaySnd(2);
             }
         }
     }
     if (spreadTimer > 0) spreadTimer--;
+    if (rapidTimer > 0) rapidTimer--;
     
     if (frameCount % spawnRate == 0) SpawnEnemy();
     frameCount++;
@@ -257,7 +291,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP oldBm = (HBITMAP)SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(10, 10, 30));
+            int bgR = 10 + (wave * 5) % 40;
+            int bgG = 10 + (wave * 10) % 40;
+            int bgB = 30 + (wave * 15) % 60;
+            HBRUSH bg = CreateSolidBrush(RGB(bgR, bgG, bgB));
             RECT rc = {0, 0, W, H};
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
@@ -307,34 +344,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH ebr1 = CreateSolidBrush(RGB(255, 50, 50));
             HBRUSH ebr2 = CreateSolidBrush(RGB(255, 150, 50));
             HBRUSH ebr3 = CreateSolidBrush(RGB(160, 32, 240));
+            HBRUSH ebr4 = CreateSolidBrush(RGB(150, 150, 150));
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (e[i].active) {
                     RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + 20, (int)e[i].y + 20};
-                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : ebr3);
+                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : (e[i].type == 2.0f ? ebr3 : ebr4));
                     FillRect(memDC, &er, br);
                 }
             }
             DeleteObject(ebr1);
             DeleteObject(ebr2);
             DeleteObject(ebr3);
+            DeleteObject(ebr4);
             
             // Draw powerups
             HBRUSH pubr1 = CreateSolidBrush(RGB(50, 255, 50));
             HBRUSH pubr2 = CreateSolidBrush(RGB(50, 200, 255));
+            HBRUSH pubr3 = CreateSolidBrush(RGB(255, 255, 255));
             for (int i = 0; i < MAX_POWERUPS; i++) {
                 if (pu[i].active) {
                     RECT pr = {(int)pu[i].x, (int)pu[i].y, (int)pu[i].x + 15, (int)pu[i].y + 15};
-                    FillRect(memDC, &pr, pu[i].type == 0.0f ? pubr1 : pubr2);
+                    HBRUSH br = pu[i].type == 0.0f ? pubr1 : (pu[i].type == 1.0f ? pubr2 : pubr3);
+                    FillRect(memDC, &pr, br);
                 }
             }
             DeleteObject(pubr1);
             DeleteObject(pubr2);
+            DeleteObject(pubr3);
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
             char scoreStr[64];
             wsprintfA(scoreStr, "Score: %d  High: %d", score, highScore);
             TextOutA(memDC, 10, 10, scoreStr, lstrlenA(scoreStr));
+            char waveStr[64];
+            wsprintfA(waveStr, "Wave: %d  Kills: %d", wave, enemiesKilled);
+            TextOutA(memDC, 10, 28, waveStr, lstrlenA(waveStr));
             
             if (gameOver) {
                 SetTextColor(memDC, RGB(255, 0, 0));
