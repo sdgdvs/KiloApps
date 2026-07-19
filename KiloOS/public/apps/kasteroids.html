@@ -76,6 +76,60 @@
         const gameOverDiv = document.getElementById('gameOver');
         const highScoreSpan = document.getElementById('highScoreVal');
 
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'laser') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'explosion') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        let thrustOsc = null;
+        let thrustGain = null;
+        function setThrust(active) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            if (active && !thrustOsc) {
+                thrustOsc = audioCtx.createOscillator();
+                thrustOsc.type = 'sawtooth';
+                thrustOsc.frequency.value = 50;
+                thrustGain = audioCtx.createGain();
+                thrustGain.gain.value = 0.05;
+                thrustOsc.connect(thrustGain);
+                thrustGain.connect(audioCtx.destination);
+                thrustOsc.start();
+            } else if (!active && thrustOsc) {
+                try { thrustOsc.stop(); thrustOsc.disconnect(); } catch (e) {}
+                thrustOsc = null;
+            }
+        }
+
         let score = 0;
         let highScore = localStorage.getItem('kasteroids_highscore') || 0;
         highScoreSpan.innerText = highScore;
@@ -108,13 +162,19 @@
                 this.active = true;
             }
             update() {
-                if (!this.active) return;
+                if (!this.active) {
+                    setThrust(false);
+                    return;
+                }
                 
                 if (keys['ArrowLeft']) this.angle -= 0.05;
                 if (keys['ArrowRight']) this.angle += 0.05;
                 if (keys['ArrowUp']) {
                     this.vx += Math.cos(this.angle) * 0.1;
                     this.vy += Math.sin(this.angle) * 0.1;
+                    setThrust(true);
+                } else {
+                    setThrust(false);
                 }
 
                 // Friction
@@ -255,6 +315,7 @@
                     let angle = Math.atan2(ship.y - this.y, ship.x - this.x);
                     angle += (Math.random() - 0.5) * 0.2; // slight inaccuracy
                     bullets.push(new Bullet(this.x, this.y, angle, true));
+                    playSound('laser');
                 }
             }
             draw() {
@@ -327,6 +388,7 @@
                         gameOver = true;
                         gameOverDiv.style.display = 'block';
                         b.active = false;
+                        playSound('explosion');
                     }
                 }
                 if (!b.active) continue;
@@ -337,6 +399,7 @@
                     if (dist < a.radius) {
                         b.active = false;
                         a.active = false;
+                        playSound('explosion');
                         if (!b.isEnemy) {
                             score += (4 - a.level) * 10;
                             scoreSpan.innerText = score;
@@ -361,6 +424,7 @@
                         if (dist < u.radius) {
                             b.active = false;
                             u.active = false;
+                            playSound('explosion');
                             score += 200;
                             scoreSpan.innerText = score;
                             updateHighScore();
@@ -379,6 +443,7 @@
                         ship.active = false;
                         gameOver = true;
                         gameOverDiv.style.display = 'block';
+                        playSound('explosion');
                     }
                 }
                 for (let u of ufos) {
@@ -388,6 +453,7 @@
                         ship.active = false;
                         gameOver = true;
                         gameOverDiv.style.display = 'block';
+                        playSound('explosion');
                     }
                 }
             }
@@ -404,6 +470,7 @@
                 if (now - lastShootTime > 200) {
                     bullets.push(new Bullet(ship.x + Math.cos(ship.angle)*15, ship.y + Math.sin(ship.angle)*15, ship.angle, false));
                     lastShootTime = now;
+                    playSound('laser');
                 }
             }
 

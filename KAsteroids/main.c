@@ -58,6 +58,22 @@ int wave = 1;
 bool game_over = false;
 bool keys[256] = {0};
 
+DWORD WINAPI SoundThread(LPVOID param) {
+    int type = (int)(intptr_t)param;
+    if (type == 1) { // Laser
+        Beep(880, 50);
+    } else if (type == 2) { // Explosion
+        Beep(100, 150);
+    } else if (type == 3) { // Thrust
+        Beep(50, 50);
+    }
+    return 0;
+}
+
+void PlaySoundEffect(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
 void LoadHighScore() {
     FILE* f = fopen("kasteroids_highscore.txt", "r");
     if (f) {
@@ -141,6 +157,7 @@ void CheckCollisions() {
                 ship.active = false;
                 game_over = true;
                 bullets[i].active = false;
+                PlaySoundEffect(2);
             }
         }
         if (!bullets[i].active) continue;
@@ -151,6 +168,7 @@ void CheckCollisions() {
             if (dist < asteroids[j].radius) {
                 bullets[i].active = false;
                 asteroids[j].active = false;
+                PlaySoundEffect(2);
                 if (!bullets[i].is_enemy) {
                     score += (4 - asteroids[j].level) * 10;
                     UpdateHighScore();
@@ -186,6 +204,7 @@ void CheckCollisions() {
                 if (dist < ufos[k].radius) {
                     bullets[i].active = false;
                     ufos[k].active = false;
+                    PlaySoundEffect(2);
                     score += 200;
                     UpdateHighScore();
                     break;
@@ -201,6 +220,7 @@ void CheckCollisions() {
             if (dist < asteroids[j].radius + ship.radius) {
                 ship.active = false;
                 game_over = true;
+                PlaySoundEffect(2);
             }
         }
         for (int k = 0; k < num_ufos; k++) {
@@ -209,6 +229,7 @@ void CheckCollisions() {
             if (dist < ufos[k].radius + ship.radius) {
                 ship.active = false;
                 game_over = true;
+                PlaySoundEffect(2);
             }
         }
     }
@@ -253,6 +274,12 @@ void Update() {
     if (keys[VK_UP]) {
         ship.vx += cos(ship.angle) * 0.1f;
         ship.vy += sin(ship.angle) * 0.1f;
+        static int thrust_timer = 0;
+        thrust_timer++;
+        if (thrust_timer > 3) {
+            PlaySoundEffect(3);
+            thrust_timer = 0;
+        }
     }
     
     ship.vx *= 0.99f;
@@ -278,6 +305,7 @@ void Update() {
             b->active = true;
             b->is_enemy = false;
             last_shoot_time = now;
+            PlaySoundEffect(1);
         }
     }
     
@@ -349,6 +377,7 @@ void Update() {
             b->life = 60;
             b->active = true;
             b->is_enemy = true;
+            PlaySoundEffect(1);
         }
     }
     
