@@ -157,10 +157,12 @@
     
     <div id="keyboard"></div>
     
-    <div style="display: flex; justify-content: center;">
-        <button class="hint-btn" onclick="useHint()" id="hint-btn">Hint</button>
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+        <button class="hint-btn" onclick="useHint()" id="hint-btn" style="margin-right: 0;">Hint</button>
         <button class="restart" onclick="initGame()">New Game</button>
-        <button class="mute-btn" onclick="toggleMute()" id="mute-btn" style="margin-left: 10px; background-color: #555; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px; transition: background-color 0.2s;">🔊 Sound</button>
+        <button class="action-btn" onclick="saveGameState()" style="background-color: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Save</button>
+        <button class="action-btn" onclick="loadGameState()" style="background-color: #9c27b0; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Load</button>
+        <button class="mute-btn" onclick="toggleMute()" id="mute-btn" style="background-color: #555; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">🔊 Sound</button>
     </div>
 </div>
 
@@ -264,6 +266,54 @@
         document.getElementById('stat-losses').innerText = stats.losses;
         document.getElementById('stat-streak').innerText = stats.streak;
         document.getElementById('stat-best').innerText = stats.best;
+    }
+
+    function saveGameState() {
+        if (gameEnded) {
+            alert("Cannot save a finished game.");
+            return;
+        }
+        const state = {
+            word: word,
+            category: document.getElementById('category').value,
+            guessed: Array.from(guessed),
+            errors: errors,
+            hintUsed: hintUsed
+        };
+        localStorage.setItem('khangman_save', JSON.stringify(state));
+        alert("Game saved!");
+    }
+
+    function loadGameState() {
+        const saved = localStorage.getItem('khangman_save');
+        if (saved) {
+            try {
+                const state = JSON.parse(saved);
+                word = state.word;
+                document.getElementById('category').value = state.category;
+                guessed = new Set(state.guessed);
+                errors = state.errors;
+                hintUsed = state.hintUsed;
+                gameEnded = false;
+                
+                document.getElementById('hint-btn').disabled = hintUsed;
+                document.getElementById('message').innerText = "Game loaded. Guess a letter";
+                document.getElementById('message').style.color = "#e0e0e0";
+                
+                initKeyboard();
+                guessed.forEach(letter => {
+                    if (document.getElementById('key-' + letter)) {
+                        document.getElementById('key-' + letter).disabled = true;
+                    }
+                });
+                
+                updateDisplay();
+            } catch (e) {
+                alert("Failed to load game.");
+            }
+        } else {
+            alert("No saved game found.");
+        }
     }
 
     function drawHangman() {

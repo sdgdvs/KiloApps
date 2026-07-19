@@ -1,6 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
+#include <string.h>
 
 #define W 500
 #define H 550
@@ -66,6 +67,58 @@ void SaveStats() {
     if (f) {
         fwrite(&stats, sizeof(Stats), 1, f);
         fclose(f);
+    }
+}
+
+typedef struct {
+    char target_word[32];
+    int current_category;
+    int guessed[26];
+    int errors;
+    int hint_used;
+    int game_over;
+    int won;
+} GameState;
+
+void SaveGame(HWND hwnd) {
+    if (game_over) {
+        MessageBoxA(hwnd, "Cannot save a finished game.", "Save", MB_OK);
+        return;
+    }
+    GameState st;
+    strcpy(st.target_word, target_word);
+    st.current_category = current_category;
+    for (int i = 0; i < 26; i++) st.guessed[i] = guessed[i];
+    st.errors = errors;
+    st.hint_used = hint_used;
+    st.game_over = game_over;
+    st.won = won;
+    
+    FILE* f = fopen("khangman_save.dat", "wb");
+    if (f) {
+        fwrite(&st, sizeof(GameState), 1, f);
+        fclose(f);
+        MessageBoxA(hwnd, "Game saved successfully.", "Save", MB_OK);
+    }
+}
+
+void LoadGame(HWND hwnd) {
+    FILE* f = fopen("khangman_save.dat", "rb");
+    if (f) {
+        GameState st;
+        if (fread(&st, sizeof(GameState), 1, f) == 1) {
+            strcpy(target_word, st.target_word);
+            current_category = st.current_category;
+            for (int i = 0; i < 26; i++) guessed[i] = st.guessed[i];
+            errors = st.errors;
+            hint_used = st.hint_used;
+            game_over = st.game_over;
+            won = st.won;
+            MessageBoxA(hwnd, "Game loaded successfully.", "Load", MB_OK);
+        }
+        fclose(f);
+    } else {
+        MessageBoxA(hwnd, "No saved game found.", "Load", MB_OK);
     }
 }
 
@@ -172,7 +225,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = (short)HIWORD(lParam);
             
             // Check hint button
-            if (x >= 80 && x <= 180 && y >= 450 && y <= 490) {
+            if (x >= 30 && x <= 100 && y >= 450 && y <= 490) {
                 if (!hint_used && !game_over) {
                     char unguessed[32];
                     int uCount = 0;
@@ -195,14 +248,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Check restart button
-            if (x >= 200 && x <= 320 && y >= 450 && y <= 490) {
+            if (x >= 110 && x <= 210 && y >= 450 && y <= 490) {
                 InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            
+            // Check save button
+            if (x >= 220 && x <= 290 && y >= 450 && y <= 490) {
+                SaveGame(hwnd);
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            
+            // Check load button
+            if (x >= 300 && x <= 370 && y >= 450 && y <= 490) {
+                LoadGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
 
             // Check mute button
-            if (x >= 340 && x <= 440 && y >= 450 && y <= 490) {
+            if (x >= 380 && x <= 460 && y >= 450 && y <= 490) {
                 is_muted = !is_muted;
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
@@ -390,7 +457,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Hint button
-            RECT hintRect = {80, 450, 180, 490};
+            RECT hintRect = {30, 450, 100, 490};
             HBRUSH hintBg;
             if (hint_used || game_over) {
                 hintBg = CreateSolidBrush(RGB(68, 68, 68));
@@ -401,24 +468,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             FillRect(memDC, &hintRect, hintBg);
             DeleteObject(hintBg);
-            SelectObject(memDC, hFontMain);
+            
+            HFONT hFontBtn = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            SelectObject(memDC, hFontBtn);
             DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Restart button
-            RECT resRect = {200, 450, 320, 490};
+            RECT resRect = {110, 450, 210, 490};
             HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            
+            // Save button
+            RECT saveRect = {220, 450, 290, 490};
+            HBRUSH saveBg = CreateSolidBrush(RGB(76, 175, 80));
+            FillRect(memDC, &saveRect, saveBg);
+            DeleteObject(saveBg);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            DrawTextA(memDC, "Save", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+            // Load button
+            RECT loadRect = {300, 450, 370, 490};
+            HBRUSH loadBg = CreateSolidBrush(RGB(156, 39, 176));
+            FillRect(memDC, &loadRect, loadBg);
+            DeleteObject(loadBg);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            DrawTextA(memDC, "Load", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Mute button
-            RECT muteRect = {340, 450, 440, 490};
+            RECT muteRect = {380, 450, 460, 490};
             HBRUSH muteBg = CreateSolidBrush(RGB(85, 85, 85));
             FillRect(memDC, &muteRect, muteBg);
             DeleteObject(muteBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, is_muted ? "Muted" : "Sound", -1, &muteRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            
+            DeleteObject(hFontBtn);
 
             // Stats
             char statText[128];
