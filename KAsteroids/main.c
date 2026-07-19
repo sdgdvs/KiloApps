@@ -70,6 +70,7 @@ typedef struct {
     int asteroids_destroyed;
     int shots_fired;
     int shots_hit;
+    int best_accuracy;
 } Stats;
 
 Stats stats = {0};
@@ -81,6 +82,9 @@ bool keys[256] = {0};
 int game_mode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore
 int time_left = 0;
 long long last_tick_time = 0;
+bool showing_stats = false;
+int current_shots_fired = 0;
+int current_shots_hit = 0;
 
 DWORD WINAPI SoundThread(LPVOID param) {
     int type = (int)(intptr_t)param;
@@ -101,14 +105,16 @@ void PlaySoundEffect(int type) {
 void LoadStats() {
     FILE* f = fopen("kasteroids_stats.txt", "r");
     if (f) {
-        fscanf(f, "%d %d %d %d %d %d %d", 
+        int r = fscanf(f, "%d %d %d %d %d %d %d %d", 
                &stats.high_score_classic, 
                &stats.high_score_time_attack, 
                &stats.high_score_hardcore, 
                &stats.games_played, 
                &stats.asteroids_destroyed, 
                &stats.shots_fired, 
-               &stats.shots_hit);
+               &stats.shots_hit,
+               &stats.best_accuracy);
+        if (r < 8) stats.best_accuracy = 0;
         fclose(f);
     }
 }
@@ -116,14 +122,15 @@ void LoadStats() {
 void SaveStats() {
     FILE* f = fopen("kasteroids_stats.txt", "w");
     if (f) {
-        fprintf(f, "%d %d %d %d %d %d %d", 
+        fprintf(f, "%d %d %d %d %d %d %d %d", 
                 stats.high_score_classic, 
                 stats.high_score_time_attack, 
                 stats.high_score_hardcore, 
                 stats.games_played, 
                 stats.asteroids_destroyed, 
                 stats.shots_fired, 
-                stats.shots_hit);
+                stats.shots_hit,
+                stats.best_accuracy);
         fclose(f);
     }
 }
@@ -182,6 +189,9 @@ void InitGame(int mode) {
     wave = 1;
     time_left = (game_mode == 1) ? 120 : 0;
     last_tick_time = GetTimeMs();
+    current_shots_fired = 0;
+    current_shots_hit = 0;
+    showing_stats = false;
     ship.x = WIDTH / 2.0f;
     ship.y = HEIGHT / 2.0f;
     ship.vx = 0;
@@ -241,6 +251,7 @@ void CheckCollisions() {
                 }
                 if (!bullets[i].is_enemy) {
                     stats.shots_hit++;
+                    current_shots_hit++;
                     stats.asteroids_destroyed++;
                     SaveStats();
                     score += (4 - asteroids[j].level) * 10;
@@ -286,6 +297,7 @@ void CheckCollisions() {
                         pt->life = 30 + (rand()%20); pt->color = RGB(239, 68, 68); pt->active = true;
                     }
                     stats.shots_hit++;
+                    current_shots_hit++;
                     SaveStats();
                     score += 200;
                     UpdateHighScore();
@@ -367,11 +379,15 @@ void CompactArrays() {
 
 void Update() {
     if (game_over) {
+        if (keys['S']) showing_stats = true;
+        if (keys['B']) showing_stats = false;
         if (keys['1']) InitGame(0);
         if (keys['2']) InitGame(1);
         if (keys['3']) InitGame(2);
         return;
     }
+    
+    bool was_game_over = game_over;
     
     if (game_mode == 1) {
         long long now = GetTimeMs();
@@ -441,6 +457,7 @@ void Update() {
             last_shoot_time = now;
             PlaySoundEffect(1);
             stats.shots_fired++;
+            current_shots_fired++;
             SaveStats();
         }
     }
@@ -533,6 +550,17 @@ void Update() {
     if (active_asteroids == 0) {
         wave++;
         SpawnAsteroids(3 + wave);
+    }
+    
+    if (!was_game_over && game_over) {
+        showing_stats = false;
+        if (current_shots_fired >= 10) {
+            int acc = (int)round(((double)current_shots_hit / current_shots_fired) * 100.0);
+            if (acc > stats.best_accuracy) {
+                stats.best_accuracy = acc;
+                SaveStats();
+            }
+        }
     }
 }
 
@@ -635,11 +663,32 @@ void Draw(HDC hdc) {
         } else {
             TextOutA(hdc, WIDTH / 2 - 50, HEIGHT / 2 - 60, "K-ASTEROIDS", 11);
         }
-        SetTextColor(hdc, RGB(161, 161, 170));
-        TextOutA(hdc, WIDTH / 2 - 70, HEIGHT / 2 - 20, "Select Mode to Play:", 20);
-        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 10, "[1] Classic - Standard Waves", 28);
-        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 30, "[2] Time Attack - 2 Min Limit", 29);
-        TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 50, "[3] Hardcore - Fast & Deadly", 28);
+        
+        if (showing_stats) {
+            SetTextColor(hdc, RGB(56, 189, 248));
+            TextOutA(hdc, WIDTH / 2 - 40, HEIGHT / 2 - 20, "Statistics", 10);
+            
+            SetTextColor(hdc, RGB(161, 161, 170));
+            char statsStr[64];
+            sprintf(statsStr, "Games Played: %d", stats.games_played);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 10, statsStr, strlen(statsStr));
+            sprintf(statsStr, "Asteroids Destroyed: %d", stats.asteroids_destroyed);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 30, statsStr, strlen(statsStr));
+            sprintf(statsStr, "Best Accuracy: %d%%", stats.best_accuracy);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 50, statsStr, strlen(statsStr));
+            
+            SetTextColor(hdc, RGB(250, 204, 21));
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 80, "[B] Back to Menu", 16);
+        } else {
+            SetTextColor(hdc, RGB(161, 161, 170));
+            TextOutA(hdc, WIDTH / 2 - 70, HEIGHT / 2 - 20, "Select Mode to Play:", 20);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 10, "[1] Classic - Standard Waves", 28);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 30, "[2] Time Attack - 2 Min Limit", 29);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 50, "[3] Hardcore - Fast & Deadly", 28);
+            
+            SetTextColor(hdc, RGB(163, 230, 53));
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 80, "[S] View Statistics", 19);
+        }
     }
     
     DeleteObject(shipPen);

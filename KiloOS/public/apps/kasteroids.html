@@ -64,10 +64,20 @@
         </div>
         <div id="gameOver">
             <h2 id="gameOverTitle">K-ASTEROIDS</h2>
-            <p>Select Mode to Play:</p>
-            <p style="margin-top: 10px;">[1] Classic - Standard Waves</p>
-            <p>[2] Time Attack - 2 Min Limit</p>
-            <p>[3] Hardcore - Fast & Deadly</p>
+            <div id="menuContent">
+                <p>Select Mode to Play:</p>
+                <p style="margin-top: 10px;">[1] Classic - Standard Waves</p>
+                <p>[2] Time Attack - 2 Min Limit</p>
+                <p>[3] Hardcore - Fast & Deadly</p>
+                <p style="margin-top: 15px; color: #a3e635;">[S] View Statistics</p>
+            </div>
+            <div id="statsContent" style="display: none;">
+                <h3 style="color: #38bdf8; margin-top: 0; margin-bottom: 15px; font-size: 24px;">Statistics</h3>
+                <p id="statGames">Games Played: 0</p>
+                <p id="statAsteroids">Asteroids Destroyed: 0</p>
+                <p id="statAccuracy">Best Accuracy: 0%</p>
+                <p style="margin-top: 15px; color: #facc15;">[B] Back to Menu</p>
+            </div>
         </div>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
     </div>
@@ -141,11 +151,15 @@
             gamesPlayed: 0,
             asteroidsDestroyed: 0,
             shotsFired: 0,
-            shotsHit: 0
+            shotsHit: 0,
+            bestAccuracy: 0
         };
+        if (stats.bestAccuracy === undefined) stats.bestAccuracy = 0;
         let gameMode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore
         let timeLeft = 0;
         let lastTick = 0;
+        let currentShotsFired = 0;
+        let currentShotsHit = 0;
         
         function getHighScore() {
             if (gameMode === 1) return stats.highScoreTimeAttack;
@@ -421,6 +435,8 @@
             wave = 1;
             timeLeft = (gameMode === 1) ? 120 : 0;
             lastTick = Date.now();
+            currentShotsFired = 0;
+            currentShotsHit = 0;
             scoreSpan.innerText = score;
             highScoreSpan.innerText = getHighScore();
             document.getElementById('waveLabel').innerText = (gameMode === 1) ? "Time: " : "Wave: ";
@@ -468,6 +484,7 @@
                         for(let p=0; p<20; p++) particles.push(new Particle(a.x, a.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#94a3b8', 30 + Math.random()*20));
                         if (!b.isEnemy) {
                             stats.shotsHit++;
+                            currentShotsHit++;
                             stats.asteroidsDestroyed++;
                             saveStats();
                             score += (4 - a.level) * 10;
@@ -496,6 +513,7 @@
                             playSound('explosion');
                             for(let p=0; p<20; p++) particles.push(new Particle(u.x, u.y, (Math.random()-0.5)*4, (Math.random()-0.5)*4, '#ef4444', 30 + Math.random()*20));
                             stats.shotsHit++;
+                            currentShotsHit++;
                             saveStats();
                             score += 200;
                             scoreSpan.innerText = score;
@@ -540,8 +558,21 @@
                 if (keys['Digit1']) initGame(0);
                 if (keys['Digit2']) initGame(1);
                 if (keys['Digit3']) initGame(2);
+                if (keys['KeyS']) {
+                    document.getElementById('menuContent').style.display = 'none';
+                    document.getElementById('statsContent').style.display = 'block';
+                    document.getElementById('statGames').innerText = 'Games Played: ' + stats.gamesPlayed;
+                    document.getElementById('statAsteroids').innerText = 'Asteroids Destroyed: ' + stats.asteroidsDestroyed;
+                    document.getElementById('statAccuracy').innerText = 'Best Accuracy: ' + (stats.bestAccuracy || 0) + '%';
+                }
+                if (keys['KeyB']) {
+                    document.getElementById('statsContent').style.display = 'none';
+                    document.getElementById('menuContent').style.display = 'block';
+                }
                 return;
             }
+
+            let wasGameOver = gameOver;
 
             if (gameMode === 1) {
                 let now = Date.now();
@@ -567,6 +598,7 @@
                     lastShootTime = now;
                     playSound('laser');
                     stats.shotsFired++;
+                    currentShotsFired++;
                     saveStats();
                 }
             }
@@ -601,6 +633,18 @@
             }
 
             checkCollisions();
+            
+            if (!wasGameOver && gameOver) {
+                document.getElementById('menuContent').style.display = 'block';
+                document.getElementById('statsContent').style.display = 'none';
+                if (currentShotsFired >= 10) {
+                    let acc = Math.round((currentShotsHit / currentShotsFired) * 100);
+                    if (acc > (stats.bestAccuracy || 0)) {
+                        stats.bestAccuracy = acc;
+                        saveStats();
+                    }
+                }
+            }
         }
 
         function draw() {
