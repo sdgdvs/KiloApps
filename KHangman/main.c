@@ -17,15 +17,7 @@ const char* CAT_WORDS[NUM_CATEGORIES][10] = {
 const int NUM_WORDS_PER_CAT = 10;
 int current_category = 0;
 
-const char* DRAWINGS[] = {
-"  +---+\r\n  |   |\r\n      |\r\n      |\r\n      |\r\n      |\r\n=========",
-"  +---+\r\n  |   |\r\n  O   |\r\n      |\r\n      |\r\n      |\r\n=========",
-"  +---+\r\n  |   |\r\n  O   |\r\n  |   |\r\n      |\r\n      |\r\n=========",
-"  +---+\r\n  |   |\r\n  O   |\r\n /|   |\r\n      |\r\n      |\r\n=========",
-"  +---+\r\n  |   |\r\n  O   |\r\n /|\\  |\r\n      |\r\n      |\r\n=========",
-"  +---+\r\n  |   |\r\n  O   |\r\n /|\\  |\r\n /    |\r\n      |\r\n=========",
-"  +---+\r\n  |   |\r\n  O   |\r\n /|\\  |\r\n / \\  |\r\n      |\r\n========="
-};
+
 
 int errors = 0;
 char target_word[32];
@@ -198,10 +190,50 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Drawing
-            SetTextColor(memDC, RGB(255, 82, 82));
-            SelectObject(memDC, hFontMono);
-            RECT drawRect = {190, 80, 400, 200};
-            DrawTextA(memDC, DRAWINGS[errors], -1, &drawRect, DT_LEFT | DT_TOP);
+            HPEN hPen = CreatePen(PS_SOLID, 4, RGB(255, 82, 82));
+            HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+            
+            // Base gallows
+            MoveToEx(memDC, 190, 200, NULL);
+            LineTo(memDC, 310, 200); // Base
+            MoveToEx(memDC, 210, 200, NULL);
+            LineTo(memDC, 210, 60);  // Pole
+            LineTo(memDC, 270, 60);  // Top
+            LineTo(memDC, 270, 80);  // Rope
+            
+            if (errors > 0) {
+                // Head
+                Ellipse(memDC, 250, 80, 290, 120);
+            }
+            if (errors > 1) {
+                // Body
+                MoveToEx(memDC, 270, 120, NULL);
+                LineTo(memDC, 270, 160);
+            }
+            if (errors > 2) {
+                // Left arm
+                MoveToEx(memDC, 270, 130, NULL);
+                LineTo(memDC, 240, 150);
+            }
+            if (errors > 3) {
+                // Right arm
+                MoveToEx(memDC, 270, 130, NULL);
+                LineTo(memDC, 300, 150);
+            }
+            if (errors > 4) {
+                // Left leg
+                MoveToEx(memDC, 270, 160, NULL);
+                LineTo(memDC, 240, 190);
+            }
+            if (errors > 5) {
+                // Right leg
+                MoveToEx(memDC, 270, 160, NULL);
+                LineTo(memDC, 300, 190);
+            }
+            SelectObject(memDC, hOldPen);
+            SelectObject(memDC, hOldBrush);
+            DeleteObject(hPen);
 
             // Word display
             SetTextColor(memDC, RGB(224, 224, 224));

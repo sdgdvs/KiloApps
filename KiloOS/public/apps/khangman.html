@@ -33,17 +33,11 @@
             color: #4facfe;
             font-size: 24px;
         }
-        #hangman-drawing {
-            font-family: monospace;
-            white-space: pre;
+        #hangman-canvas {
             background-color: #121212;
-            padding: 10px;
             border-radius: 4px;
             margin-bottom: 20px;
-            text-align: left;
             display: inline-block;
-            font-size: 16px;
-            color: #ff5252;
         }
         #word-display {
             font-size: 32px;
@@ -110,15 +104,7 @@
         <option value="Science">Science</option>
     </select>
     
-    <div id="hangman-drawing">
-  +---+
-  |   |
-      |
-      |
-      |
-      |
-=========
-    </div>
+    <canvas id="hangman-canvas" width="200" height="200"></canvas>
     
     <div id="word-display">_ _ _ _ _</div>
     
@@ -141,57 +127,67 @@
     let guessed = new Set();
     let errors = 0;
 
-    const DRAWINGS = [
-`  +---+
-  |   |
-      |
-      |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
-      |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
-  |   |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|   |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|\\  |
-      |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|\\  |
- /    |
-      |
-=========`,
-`  +---+
-  |   |
-  O   |
- /|\\  |
- / \\  |
-      |
-=========`
-    ];
+    function drawHangman() {
+        const canvas = document.getElementById('hangman-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.strokeStyle = '#ff5252';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        
+        // Base gallows
+        ctx.beginPath();
+        ctx.moveTo(20, 180);
+        ctx.lineTo(180, 180); // Base
+        ctx.moveTo(50, 180);
+        ctx.lineTo(50, 20); // Pole
+        ctx.lineTo(120, 20); // Top
+        ctx.lineTo(120, 40); // Rope
+        ctx.stroke();
+        
+        if (errors > 0) {
+            // Head
+            ctx.beginPath();
+            ctx.arc(120, 60, 20, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+        if (errors > 1) {
+            // Body
+            ctx.beginPath();
+            ctx.moveTo(120, 80);
+            ctx.lineTo(120, 130);
+            ctx.stroke();
+        }
+        if (errors > 2) {
+            // Left arm
+            ctx.beginPath();
+            ctx.moveTo(120, 90);
+            ctx.lineTo(90, 120);
+            ctx.stroke();
+        }
+        if (errors > 3) {
+            // Right arm
+            ctx.beginPath();
+            ctx.moveTo(120, 90);
+            ctx.lineTo(150, 120);
+            ctx.stroke();
+        }
+        if (errors > 4) {
+            // Left leg
+            ctx.beginPath();
+            ctx.moveTo(120, 130);
+            ctx.lineTo(90, 160);
+            ctx.stroke();
+        }
+        if (errors > 5) {
+            // Right leg
+            ctx.beginPath();
+            ctx.moveTo(120, 130);
+            ctx.lineTo(150, 160);
+            ctx.stroke();
+        }
+    }
 
     function initKeyboard() {
         const keyboard = document.getElementById('keyboard');
@@ -234,7 +230,7 @@
     }
 
     function updateDisplay() {
-        document.getElementById('hangman-drawing').innerText = DRAWINGS[errors];
+        drawHangman();
         
         let displayStr = "";
         for (let char of word) {
