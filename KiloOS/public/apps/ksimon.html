@@ -129,6 +129,27 @@
   let isPlayingSequence = false;
   let currentMode = 'classic';
 
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const freqs = [415, 329, 261, 196]; // Green, Red, Yellow, Blue
+  const freqWrong = 100;
+
+  function playTone(freq, duration) {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+    
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration / 1000);
+  }
+
   function getHighScore(mode) {
     return parseInt(localStorage.getItem('KSimon_HighScore_' + mode)) || 0;
   }
@@ -153,6 +174,9 @@
   });
 
   function startGame() {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
     currentMode = modeSelect.value;
     modeSelect.disabled = true;
     sequence = [];
@@ -186,6 +210,7 @@
       const index = sequence[i];
       const btn = btns[index];
       btn.classList.add('active');
+      playTone(freqs[index], flashDuration);
       setTimeout(() => {
         btn.classList.remove('active');
         i++;
@@ -215,6 +240,7 @@
 
     if (playerSequence[currentStep] !== expectedIndex) {
       // Game Over
+      playTone(freqWrong, 800);
       let finalScore = sequence.length - 1;
       statusDisplay.innerText = "Game Over! Score: " + finalScore;
       
@@ -229,6 +255,8 @@
       modeSelect.disabled = false;
       return;
     }
+
+    playTone(freqs[index], 200);
 
     if (playerSequence.length === sequence.length) {
       statusDisplay.innerText = "Good! Get ready...";

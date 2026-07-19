@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KSimon (Memory pattern game)
-**Phase:** 7
+**Phase:** 8
 **Status:** Goal
 
 - Phase 1: [x] Scaffold `KSimon/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -58,7 +58,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 4: [x] Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - Phase 5: [x] Add Multiple Game Modes (e.g., Classic, Reverse, Speed).
 - Phase 6: [x] Add High Score system with multiple categories.
-- Phase 7: Add Sound effects (Web Audio API for web, Beep()/PlaySound for native).
+- Phase 7: [x] Add Sound effects (Web Audio API for web, Beep()/PlaySound for native).
 - Phase 8: Add visual animations: button presses, sequence playback highlights, game over flash.
 - Phase 9: Add progressive difficulty (speed increases as streak gets longer).
 - Phase 10: Add statistics tracking (games played, longest streak, best time).

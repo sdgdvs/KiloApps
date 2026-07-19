@@ -15,6 +15,21 @@
 #define MODE_REVERSE 1
 #define MODE_SPEED 2
 
+int btn_freqs[4] = {415, 329, 261, 196};
+
+DWORD WINAPI PlayBeep(LPVOID lpParam) {
+    INT_PTR param = (INT_PTR)lpParam;
+    int freq = param & 0xFFFF;
+    int duration = (param >> 16) & 0xFFFF;
+    Beep(freq, duration);
+    return 0;
+}
+
+void PlaySoundAsync(int freq, int duration) {
+    INT_PTR param = (freq & 0xFFFF) | ((duration & 0xFFFF) << 16);
+    CreateThread(NULL, 0, PlayBeep, (LPVOID)param, 0, NULL);
+}
+
 HWND hwndMain;
 HWND hwndModeBox;
 int current_mode = MODE_CLASSIC;
@@ -115,6 +130,7 @@ void HandleClick(int btn_id) {
     }
 
     if (btn_id != expected_index) {
+        PlaySoundAsync(100, 800);
         if (score > high_scores[current_mode]) {
             high_scores[current_mode] = score;
             SaveHighScore(current_mode, score);
@@ -127,6 +143,8 @@ void HandleClick(int btn_id) {
         InvalidateRect(hwndMain, NULL, TRUE);
         return;
     }
+
+    PlaySoundAsync(btn_freqs[btn_id], 200);
 
     player_step++;
     if (player_step == sequence_length) {
@@ -211,6 +229,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         } else {
                             flash_btn = sequence[current_flash_index++];
                             InvalidateRect(hwnd, NULL, TRUE);
+                            PlaySoundAsync(btn_freqs[flash_btn], (current_mode == MODE_SPEED) ? 200 : 400);
                             SetTimer(hwnd, TIMER_SEQUENCE, (current_mode == MODE_SPEED) ? 200 : 400, NULL);
                         }
                     } else {
