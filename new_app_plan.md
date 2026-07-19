@@ -63,14 +63,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 9: Add Sound effects (card flip, card snap/place, win fanfare). (COMPLETED)
 - Phase 10: Add visual animations (smooth card sliding between cascades/cells). (COMPLETED)
 - Phase 11: Add customizable card backs (a simple settings UI to change the card back design/color). (COMPLETED)
-- Phase 12: Add a Timer and Move Counter.
+- Phase 12: Add a Timer and Move Counter. (COMPLETED)
 - Phase 13: Add Game Modes (e.g. Classic Freecell vs. Random Deal).
 - Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KFreecell
-**Goal:** Phase 12
+**Goal:** Phase 13
 
 
 ## App Lifecycle (14 phases per app)

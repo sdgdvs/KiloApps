@@ -41,6 +41,10 @@ int statsStreak = 0;
 int statsBestStreak = 0;
 int settingsCardBack = 0;
 
+int moves = 0;
+int timeElapsed = 0;
+DWORD lastTimeTick = 0;
+
 void LoadSettings() {
     FILE *f = _wfopen(L"kfreecell_settings.dat", L"rb");
     if(f) {
@@ -131,11 +135,15 @@ typedef struct {
 
 #define MAX_UNDO 500
 GameState undoStack[MAX_UNDO];
+int undoMovesStack[MAX_UNDO];
 int undoCount = 0;
 
 void PushUndo() {
     if (undoCount == MAX_UNDO) {
-        for(int i=1; i<MAX_UNDO; i++) undoStack[i-1] = undoStack[i];
+        for(int i=1; i<MAX_UNDO; i++) {
+            undoStack[i-1] = undoStack[i];
+            undoMovesStack[i-1] = undoMovesStack[i];
+        }
         undoCount--;
     }
     for(int i=0; i<4; i++) {
@@ -149,6 +157,7 @@ void PushUndo() {
             undoStack[undoCount].tab[i][j] = tab[i][j];
         }
     }
+    undoMovesStack[undoCount] = moves;
     undoCount++;
 }
 
@@ -194,6 +203,7 @@ void UndoMove(HWND hwnd) {
                 tab[i][j] = undoStack[undoCount].tab[i][j];
             }
         }
+        moves = undoMovesStack[undoCount];
         selType = -1;
         won = 0;
         ClearAnims();
@@ -216,6 +226,9 @@ void SaveGame(HWND hwnd) {
         fwrite(&statsBestStreak, sizeof(statsBestStreak), 1, f);
         fwrite(&undoCount, sizeof(undoCount), 1, f);
         if(undoCount > 0) fwrite(undoStack, sizeof(GameState), undoCount, f);
+        fwrite(&moves, sizeof(moves), 1, f);
+        fwrite(&timeElapsed, sizeof(timeElapsed), 1, f);
+        if(undoCount > 0) fwrite(undoMovesStack, sizeof(int), undoCount, f);
         fclose(f);
         MessageBoxW(hwnd, L"Game Saved", L"Save", MB_OK | MB_ICONINFORMATION);
     }
@@ -236,7 +249,15 @@ void LoadGame(HWND hwnd) {
         fread(&statsBestStreak, sizeof(statsBestStreak), 1, f);
         fread(&undoCount, sizeof(undoCount), 1, f);
         if(undoCount > 0) fread(undoStack, sizeof(GameState), undoCount, f);
+        if(fread(&moves, sizeof(moves), 1, f) != 1) moves = 0;
+        if(fread(&timeElapsed, sizeof(timeElapsed), 1, f) != 1) timeElapsed = 0;
+        if(undoCount > 0) {
+            if(fread(undoMovesStack, sizeof(int), undoCount, f) != undoCount) {
+                for(int i=0; i<undoCount; i++) undoMovesStack[i] = 0;
+            }
+        }
         fclose(f);
+        lastTimeTick = GetTickCount();
         selType = -1;
         won = 0;
         ClearAnims();
@@ -254,6 +275,9 @@ void InitGame() {
     }
     statsPlayed++;
     gameInProgress = 1;
+    moves = 0;
+    timeElapsed = 0;
+    lastTimeTick = GetTickCount();
 
     won = 0;
     selType = -1;
@@ -360,6 +384,7 @@ int AutoComplete(HWND hwnd) {
                     PushUndo();
                     found[c.s] = c.r;
                     freeCellsOccupied[i] = 0;
+                    moves++;
                     didMove = 1;
                     anyMoved = 1;
                     break;
@@ -377,6 +402,7 @@ int AutoComplete(HWND hwnd) {
                     PushUndo();
                     found[c.s] = c.r;
                     tabCount[i]--;
+                    moves++;
                     didMove = 1;
                     anyMoved = 1;
                     break;
@@ -494,7 +520,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hTitleFont = CreateFontW(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
-            DrawTextW(hdcMem, L"KFreecell - [N]ew [Z]Undo [S]tats [C]ardBack [F5]Save [F9]Load", -1, &titleRect, DT_CENTER | DT_TOP);
+            WCHAR titleMsg[256];
+            int m = timeElapsed / 60;
+            int s = timeElapsed % 60;
+            wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d   |   [N]ew [Z]Undo [S]tats [C]ardBack [F5]Save [F9]Load", m, s, moves);
+            DrawTextW(hdcMem, titleMsg, -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
                 RECT winRect = {0, 10, clientRect.right - 20, 40};
                 DrawTextW(hdcMem, L"You Win!", -1, &winRect, DT_RIGHT | DT_TOP);
@@ -708,6 +738,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 
                 if(moved) {
+                    moves++;
                     if(selType == 1) {
                         tabCount[selIdx] = selCardIdx;
                     } else if(selType == 0) {
@@ -753,6 +784,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (now >= anims[i].startTime + anims[i].duration) {
                         anims[i].active = 0;
                     }
+                    active = 1;
+                }
+            }
+            if(gameInProgress && !won) {
+                if(now - lastTimeTick >= 1000) {
+                    timeElapsed++;
+                    lastTimeTick = now;
                     active = 1;
                 }
             }

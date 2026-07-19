@@ -76,6 +76,7 @@
       <button class="btn" onclick="showSettings()">Settings</button>
     </div>
     <h1>KFreecell</h1>
+    <div id="game-info" style="font-size: 14px; margin: 0 15px;">Time: 00:00 | Moves: 0</div>
     <div id="status" style="font-size: 14px;"></div>
   </div>
   <div id="stats-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
@@ -187,11 +188,22 @@
     };
     let undoStack = [];
     let cardEls = {};
+    let timeElapsed = 0;
+    let timerInterval = null;
+
+    function updateGameInfo() {
+      const m = Math.floor(timeElapsed / 60).toString().padStart(2, '0');
+      const s = (timeElapsed % 60).toString().padStart(2, '0');
+      const el = document.getElementById('game-info');
+      let mvs = state.moves || 0;
+      if(el) el.innerText = `Time: ${m}:${s} | Moves: ${mvs}`;
+    }
 
     function undoMove() {
       if(undoStack.length > 0) {
         state = undoStack.pop();
         document.getElementById('status').innerText = "";
+        updateGameInfo();
         render();
       }
     }
@@ -255,7 +267,7 @@
     }
 
     function saveGame() {
-      const data = { state, undoStack, stats, gameInProgress };
+      const data = { state, undoStack, stats, gameInProgress, timeElapsed };
       localStorage.setItem('kfreecell_save', JSON.stringify(data));
       document.getElementById('status').innerText = "Game Saved";
     }
@@ -268,7 +280,9 @@
         undoStack = data.undoStack || [];
         stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0 };
         gameInProgress = data.gameInProgress || false;
+        timeElapsed = data.timeElapsed || 0;
         document.getElementById('status').innerText = "Game Loaded";
+        updateGameInfo();
         render();
       } else {
         document.getElementById('status').innerText = "No Save Found";
@@ -302,6 +316,16 @@
       state.found = [0, 0, 0, 0];
       state.tab = Array.from({length: 8}, () => []);
       state.selected = null;
+      state.moves = 0;
+      timeElapsed = 0;
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (gameInProgress) {
+          timeElapsed++;
+          updateGameInfo();
+        }
+      }, 1000);
 
       let c = 0;
       for(let i=0; i<52; i++) {
@@ -310,6 +334,7 @@
       }
       
       document.getElementById('status').innerText = "";
+      updateGameInfo();
       createAllCards();
       
       // Temporarily disable transitions for initial deal
@@ -446,12 +471,14 @@
         }
 
         if(moved) {
+          state.moves = (state.moves || 0) + 1;
           if(sel.type === 'tab') {
             state.tab[sel.index].splice(sel.cardIdx);
           } else if(sel.type === 'free') {
             state.free[sel.index] = null;
           }
           playSound('place');
+          updateGameInfo();
           autoComplete();
           checkWin();
         }
@@ -506,6 +533,8 @@
               undoStack.push(prevState);
               state.found[c.s] = c.r;
               state.free[i] = null;
+              state.moves = (state.moves || 0) + 1;
+              updateGameInfo();
               didMove = true;
               break;
             }
@@ -523,6 +552,8 @@
               undoStack.push(prevState);
               state.found[c.s] = c.r;
               col.pop();
+              state.moves = (state.moves || 0) + 1;
+              updateGameInfo();
               didMove = true;
               break;
             }
