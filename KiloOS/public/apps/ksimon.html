@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KSimon</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    color: #333;
+  }
+  #game-container {
+    text-align: center;
+  }
+  .simon-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 10px;
+    margin: 20px auto;
+    width: 300px;
+    height: 300px;
+  }
+  .simon-btn {
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  #btn-green { background-color: #00aa00; }
+  #btn-red { background-color: #aa0000; }
+  #btn-yellow { background-color: #aaaa00; }
+  #btn-blue { background-color: #0000aa; }
+  
+  .simon-btn:active {
+    filter: brightness(1.5);
+  }
+</style>
+</head>
+<body>
+
+<div id="game-container">
+  <h1>KSimon</h1>
+  <div>Score: <span id="score">0</span></div>
+  <div class="simon-board">
+    <button id="btn-green" class="simon-btn"></button>
+    <button id="btn-red" class="simon-btn"></button>
+    <button id="btn-yellow" class="simon-btn"></button>
+    <button id="btn-blue" class="simon-btn"></button>
+  </div>
+  <button id="start-btn">Start Game</button>
+</div>
+
+<script>
+  console.log("KSimon basic skeleton initialized.");
+</script>
+
+</body>
+</html>
