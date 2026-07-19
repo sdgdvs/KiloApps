@@ -26,7 +26,27 @@ int hoverCol = -1;
 
 int winCells[7][2];
 int winCellCount = 0;
-HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn;
+HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn;
+bool isMuted = false;
+
+void PlaySoundEffect(int type) {
+    if (isMuted) return;
+    if (type == 1) { // Drop
+        Beep(400, 50);
+    } else if (type == 2) { // Win
+        Beep(400, 100);
+        Beep(500, 100);
+        Beep(600, 100);
+        Beep(800, 150);
+    } else if (type == 3) { // Lose
+        Beep(300, 200);
+        Beep(200, 250);
+    } else if (type == 4) { // Invalid
+        Beep(150, 100);
+    } else if (type == 5) { // Draw
+        Beep(300, 300);
+    }
+}
 
 typedef struct {
     int redWins;
@@ -332,6 +352,7 @@ void AIMove(HWND hwnd) {
     if (bestCol != -1) {
         for (int r = ROWS - 1; r >= 0; r--) {
             if (board[r][bestCol] == 0) {
+                PlaySoundEffect(1);
                 moveHistory[historyCount].r = r;
                 moveHistory[historyCount].c = bestCol;
                 moveHistory[historyCount].p = 2;
@@ -365,6 +386,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hDiffSelect, CB_SETCURSEL, 0, 0);
             hUndoBtn = CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 210, 340, 70, 30, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 290, 340, 70, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 380, 70, 30, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             ResetGame();
             break;
         case WM_COMMAND:
@@ -379,6 +401,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 2) {
                 ResetGame();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 5) {
+                isMuted = !isMuted;
+                SetWindowText(hMuteBtn, isMuted ? "Unmute" : "Mute");
             } else if (LOWORD(wParam) == 3) {
                 if (historyCount == 0) break;
                 if (isAnimating) break; // Don't undo during animation to prevent glitches
@@ -421,6 +446,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     KillTimer(hwnd, 2);
                     
                     if (CheckWin(animRow, animCol, animPlayer)) {
+                        if (vsAI && animPlayer == 2) PlaySoundEffect(3);
+                        else PlaySoundEffect(2);
                         gameActive = false;
                         if(animPlayer == 1) stats.redWins++;
                         else stats.yellowWins++;
@@ -430,6 +457,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if(stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
                         SaveStats();
                     } else if (CheckDraw()) {
+                        PlaySoundEffect(5);
                         gameActive = false;
                         isDraw = true;
                         stats.draws++;
@@ -469,7 +497,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char statsStr[128];
             wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d)",
                      stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak);
-            TextOut(hdc, 20, 390, statsStr, lstrlen(statsStr));
+            TextOut(hdc, 20, 420, statsStr, lstrlen(statsStr));
             
             // Draw board background
             HBRUSH boardBg = CreateSolidBrush(RGB(31, 66, 135));
@@ -607,8 +635,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (xPos >= 25 && xPos <= 25 + COLS * 45 && yPos >= 55 && yPos <= 55 + ROWS * 45) {
                 int c = (xPos - 25) / 45;
                 if (c >= 0 && c < COLS) {
+                    bool dropped = false;
                     for (int r = ROWS - 1; r >= 0; r--) {
                         if (board[r][c] == 0) {
+                            dropped = true;
+                            PlaySoundEffect(1);
                             moveHistory[historyCount].r = r;
                             moveHistory[historyCount].c = c;
                             moveHistory[historyCount].p = currentPlayer;
@@ -626,6 +657,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             break;
                         }
                     }
+                    if (!dropped) PlaySoundEffect(4);
                 }
             }
             break;

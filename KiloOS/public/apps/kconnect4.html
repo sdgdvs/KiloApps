@@ -92,6 +92,7 @@
     </select>
     <button onclick="undoMove()">Undo</button>
     <button onclick="initGame()">Reset Game</button>
+    <button id="muteBtn" onclick="toggleMute()">Mute</button>
   </div>
   <div id="stats">
     Wins (Red): <span id="s-red">0</span> |
@@ -103,6 +104,66 @@
   <script>
     let vsAI = true;
     let aiDifficulty = 0;
+    
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let isMuted = false;
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      document.getElementById('muteBtn').textContent = isMuted ? 'Unmute' : 'Mute';
+    }
+
+    function playSound(type) {
+      if (isMuted) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const now = audioCtx.currentTime;
+      
+      if (type === 'drop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else if (type === 'win') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.setValueAtTime(500, now + 0.1);
+        osc.frequency.setValueAtTime(600, now + 0.2);
+        osc.frequency.setValueAtTime(800, now + 0.3);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (type === 'lose') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.linearRampToValueAtTime(200, now + 0.4);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      } else if (type === 'invalid') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      } else if (type === 'draw') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+    }
 
     function changeDifficulty() {
       aiDifficulty = parseInt(document.getElementById('diffSelect').value);
@@ -242,10 +303,13 @@
     function dropPiece(col) {
       for (let r = ROWS - 1; r >= 0; r--) {
         if (board[r][col] === 0) {
+          playSound('drop');
           let oldStats = JSON.stringify(stats);
           board[r][col] = currentPlayer;
           moveHistory.push({r, c: col, p: currentPlayer, oldStats});
           if (checkWin(r, col)) {
+            if (vsAI && currentPlayer === 2) playSound('lose');
+            else playSound('win');
             const color = currentPlayer === 1 ? 'Red' : 'Yellow';
             statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
             gameActive = false;
@@ -258,6 +322,7 @@
             saveStats();
             renderBoard(r, col);
           } else if (checkDraw()) {
+            playSound('draw');
             statusEl.textContent = `It's a Draw!`;
             gameActive = false;
             stats.draws++;
@@ -276,6 +341,7 @@
           return;
         }
       }
+      playSound('invalid');
     }
 
     function undoMove() {

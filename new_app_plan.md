@@ -49,8 +49,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KConnect4 (Two-player drop-disc game)
-**Phase:** 11
-**Status:** Completed
+**Phase:** 13
+**Status:** Ready
 
 - Phase 1: Scaffold `KConnect4/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
 - Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained). (COMPLETED)
@@ -63,7 +63,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 9: Add an Undo move feature to allow players to take back their last move (and the AI's response if in single-player mode). (COMPLETED)
 - Phase 10: Add Difficulty Settings for the AI (Easy, Medium, Hard) using a Minimax algorithm for deeper difficulties. (COMPLETED)
 - Phase 11: Add hover column highlighting to visually show players where their piece will land. (COMPLETED)
-- Phase 12: Next feature (TBD)
+- Phase 12: Add sound effects for dropping pieces, winning/losing, and invalid moves using Web Audio API (web) and Beep/PlaySound (native). Include a mute toggle button. (COMPLETED)
+- Phase 13: Next feature (TBD)
 
 ## Next Priority (Before New Apps)
 
