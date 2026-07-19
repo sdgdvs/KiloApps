@@ -94,7 +94,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMaze      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KSolitaire | Tier 1          | Feature-Expanded       | Expanded | Memory Match game in both Web and EXE. |
 | KSpace     | Tier 1          | Feature-Expanded       | Expanded          | Full parity. |
-| KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 4 pending. |
+| KPac       | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
 | KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. Loop 4 pending. |
 | KBreakout  | Tier 1          | Never Touched          | Needs Improvement | Full parity. Loop 4 pending. |
 | K2048      | Tier 1          | Never Touched          | Needs Improvement | Full parity. Loop 4 pending. |
@@ -153,3 +153,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KMaze (Added Lava Traps, Fake Walls, Compass minimap lock, and expanded handcrafted levels from 5 to 10 to both EXE and HTML)
 - [x] KSolitaire (Added 5-Stage Campaign Mode, Clock & Shuffle Power-Ups, and Persistent Lifetime Statistics tracking to both EXE and HTML)
 - [x] KSpace (Added Wave progression, Boss Tank enemies, Rapid Fire powerup, Sound Effects, and Stats Tracking to both EXE and HTML)
+- [x] KPac (Added Campaign Mode with 3 maps, Speed Power-Up, and Pink Ghost intercept AI to both EXE and HTML)
