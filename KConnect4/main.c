@@ -22,6 +22,8 @@ int animCol = -1;
 int animY = 0;
 int animTargetY = 0;
 
+int hoverCol = -1;
+
 int winCells[7][2];
 int winCellCount = 0;
 HWND hModeBtn, hDiffSelect, hUndoBtn, hResetBtn;
@@ -482,8 +484,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH emptyCell = CreateSolidBrush(RGB(18, 18, 18));
             HBRUSH p1Cell = CreateSolidBrush(RGB(255, 82, 82));
             HBRUSH p2Cell = CreateSolidBrush(RGB(255, 235, 59));
+            HBRUSH hoverP1 = CreateSolidBrush(RGB(120, 40, 40));
+            HBRUSH hoverP2 = CreateSolidBrush(RGB(120, 110, 20));
             HPEN hlPen = CreatePen(PS_SOLID, 3, RGB(255, 255, 255));
             HPEN nullPen = GetStockObject(NULL_PEN);
+
+            int hoverRow = -1;
+            if (hoverCol != -1 && !isAnimating && gameActive && !(vsAI && currentPlayer == 2)) {
+                for (int r = ROWS - 1; r >= 0; r--) {
+                    if (board[r][hoverCol] == 0) {
+                        hoverRow = r;
+                        break;
+                    }
+                }
+            }
             
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
@@ -502,7 +516,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SelectObject(hdc, emptyCell);
                     } else if (board[r][c] == 1) SelectObject(hdc, p1Cell);
                     else if (board[r][c] == 2) SelectObject(hdc, p2Cell);
-                    else SelectObject(hdc, emptyCell);
+                    else if (r == hoverRow && c == hoverCol) {
+                        SelectObject(hdc, currentPlayer == 1 ? hoverP1 : hoverP2);
+                    } else SelectObject(hdc, emptyCell);
                     
                     if (isWinCell) {
                         SelectObject(hdc, hlPen);
@@ -529,9 +545,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(emptyCell);
             DeleteObject(p1Cell);
             DeleteObject(p2Cell);
+            DeleteObject(hoverP1);
+            DeleteObject(hoverP2);
             DeleteObject(hlPen);
             
             EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_MOUSEMOVE: {
+            if (isAnimating || !gameActive || (vsAI && currentPlayer == 2)) {
+                if (hoverCol != -1) {
+                    hoverCol = -1;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+                break;
+            }
+            int xPos = LOWORD(lParam);
+            int yPos = HIWORD(lParam);
+            
+            if (xPos >= 25 && xPos <= 25 + COLS * 45 && yPos >= 55 && yPos <= 55 + ROWS * 45) {
+                int c = (xPos - 25) / 45;
+                if (c >= 0 && c < COLS) {
+                    if (hoverCol != c) {
+                        hoverCol = c;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                } else if (hoverCol != -1) {
+                    hoverCol = -1;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (hoverCol != -1) {
+                hoverCol = -1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            
+            TRACKMOUSEEVENT tme;
+            tme.cbSize = sizeof(TRACKMOUSEEVENT);
+            tme.dwFlags = TME_LEAVE;
+            tme.hwndTrack = hwnd;
+            TrackMouseEvent(&tme);
+            break;
+        }
+        case WM_MOUSELEAVE: {
+            if (hoverCol != -1) {
+                hoverCol = -1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             break;
         }
         case WM_LBUTTONDOWN: {

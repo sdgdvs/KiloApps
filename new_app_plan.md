@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KConnect4 (Two-player drop-disc game)
-**Phase:** 9
+**Phase:** 11
 **Status:** Completed
 
 - Phase 1: Scaffold `KConnect4/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx. (COMPLETED)
@@ -62,7 +62,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 8: Add win streak and statistics tracking (Wins for Red, Wins for Yellow/AI, Draws, Current Streak, Best Streak) using persistence. (COMPLETED)
 - Phase 9: Add an Undo move feature to allow players to take back their last move (and the AI's response if in single-player mode). (COMPLETED)
 - Phase 10: Add Difficulty Settings for the AI (Easy, Medium, Hard) using a Minimax algorithm for deeper difficulties. (COMPLETED)
-- Phase 11: Next feature (TBD)
+- Phase 11: Add hover column highlighting to visually show players where their piece will land. (COMPLETED)
+- Phase 12: Next feature (TBD)
 
 ## Next Priority (Before New Apps)
 

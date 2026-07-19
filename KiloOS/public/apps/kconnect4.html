@@ -46,6 +46,8 @@
   }
   .cell.p1 { background: #ff5252; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4); }
   .cell.p2 { background: #ffeb3b; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4); }
+  .cell.hover-p1 { background: rgba(255, 82, 82, 0.4); box-shadow: none; }
+  .cell.hover-p2 { background: rgba(255, 235, 59, 0.4); box-shadow: none; }
   .cell.highlight {
     border: 3px solid white;
     box-shadow: 0 0 10px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.4);
@@ -123,6 +125,7 @@
 
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
+    let hoverCol = -1;
 
     let stats = { red: 0, yellow: 0, draws: 0, streak: 0, best: 0, lastWinner: 0 };
     function loadStats() {
@@ -179,6 +182,8 @@
           
           if (winningCells.some(w => w[0] === r && w[1] === c)) {
             classes.push('highlight');
+          } else if (hoverCol === c && board[r][c] === 0 && (r === ROWS - 1 || board[r+1][c] !== 0) && gameActive && !(vsAI && currentPlayer === 2)) {
+            classes.push(currentPlayer === 1 ? 'hover-p1' : 'hover-p2');
           }
           cell.className = classes.join(' ');
         }
@@ -190,6 +195,37 @@
       const color = currentPlayer === 1 ? 'Red' : 'Yellow';
       statusEl.textContent = `Player ${currentPlayer}'s turn (${color})`;
     }
+
+    boardEl.addEventListener('mousemove', (e) => {
+      if (!gameActive || (vsAI && currentPlayer === 2)) {
+        if (hoverCol !== -1) {
+          hoverCol = -1;
+          renderBoard();
+        }
+        return;
+      }
+      const rect = boardEl.getBoundingClientRect();
+      const x = e.clientX - rect.left - 10;
+      const c = Math.floor(x / 55);
+      if (c >= 0 && c < COLS) {
+        if (hoverCol !== c) {
+          hoverCol = c;
+          renderBoard();
+        }
+      } else {
+        if (hoverCol !== -1) {
+          hoverCol = -1;
+          renderBoard();
+        }
+      }
+    });
+
+    boardEl.addEventListener('mouseleave', () => {
+      if (hoverCol !== -1) {
+        hoverCol = -1;
+        renderBoard();
+      }
+    });
 
     boardEl.addEventListener('click', (e) => {
       if (!gameActive) return;
