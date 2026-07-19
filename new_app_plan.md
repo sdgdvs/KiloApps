@@ -49,11 +49,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAsteroids
-**Phase:** 2
+**Phase:** 3
 **Status:** In Progress
 
 - Phase 1: Completed. Scaffolded `KAsteroids/` directory. Created web HTML file with basic UI skeleton. Registered in App.jsx.
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 2: Completed. Implemented core functionality in the web HTML (inline JS/CSS, self-contained) and native C version.
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - Phase 5: Add core gameplay loop (asteroids splitting, collision detection, player death).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KAsteroids
-**Goal:** Phase 2
+**Goal:** Phase 3
 
 
 ## App Lifecycle (14 phases per app)
