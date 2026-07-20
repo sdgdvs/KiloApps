@@ -209,12 +209,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(15, 17, 26));
             FillRect(hdc, &ps.rcPaint, bgBrush);
             DeleteObject(bgBrush);
             
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(255, 255, 255));
+            SetTextColor(hdc, RGB(226, 232, 240));
             
             char header[128];
             sprintf(header, "KWords   Found: %d/%d   Timer: %02d:%02d", foundCount, wordCount, timerSeconds/60, timerSeconds%60);
@@ -230,7 +230,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
             
-            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(45, 55, 72));
             HPEN hOldPen = (HPEN)SelectObject(hdc, gridPen);
             
             for(int r=0; r<GRID_SIZE; r++) {
@@ -245,11 +245,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     
                     if (isSelected) {
-                        HBRUSH selBrush = CreateSolidBrush(RGB(0, 120, 215));
+                        HBRUSH selBrush = CreateSolidBrush(RGB(49, 130, 206));
                         FillRect(hdc, &rc, selBrush);
                         DeleteObject(selBrush);
                     } else if (foundGrid[r][c]) {
-                        HBRUSH foundBrush = CreateSolidBrush(RGB(16, 124, 16));
+                        HBRUSH foundBrush = CreateSolidBrush(RGB(56, 161, 105));
                         FillRect(hdc, &rc, foundBrush);
                         DeleteObject(foundBrush);
                     }
