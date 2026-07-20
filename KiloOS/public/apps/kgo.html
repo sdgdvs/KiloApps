@@ -77,6 +77,13 @@
     0% { transform: scale(0.3); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
   }
+  @keyframes captureAnim {
+    0% { transform: scale(1); opacity: 1; filter: brightness(2); }
+    100% { transform: scale(0); opacity: 0; filter: brightness(2); }
+  }
+  .stone.captured {
+    animation: captureAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+  }
   .black { background-color: #111; box-shadow: inset -2px -2px 4px rgba(255,255,255,0.1), 2px 2px 4px rgba(0,0,0,0.5); }
   .white { background-color: #eee; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 2px 2px 4px rgba(0,0,0,0.5); }
   .stone.ghost {
@@ -138,6 +145,7 @@
   let history = []; // for ko rule
   let captures = { B: 0, W: 0 };
   let lastMove = {x: -1, y: -1};
+  let capturedStonesForAnim = [];
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
@@ -182,6 +190,7 @@
     history = [];
     captures = { B: 0, W: 0 };
     lastMove = {x: -1, y: -1};
+    capturedStonesForAnim = [];
     updateStatus();
     drawBoard();
   }
@@ -210,6 +219,12 @@
           stone.className = classes;
           cell.appendChild(stone);
         } else {
+          const capturedAnim = capturedStonesForAnim.find(s => s.x === x && s.y === y);
+          if (capturedAnim) {
+            const stone = document.createElement('div');
+            stone.className = `stone ${capturedAnim.color === 'B' ? 'black' : 'white'} captured`;
+            cell.appendChild(stone);
+          }
           const ghost = document.createElement('div');
           ghost.className = `stone ghost ${currentPlayer === 'B' ? 'black' : 'white'}`;
           cell.appendChild(ghost);
@@ -248,7 +263,7 @@
     getGroup(x, y+1, color, visited, group);
   }
 
-  function checkCaptures(color) {
+  function checkCaptures(color, realMove = false) {
     let captured = 0;
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
@@ -261,6 +276,7 @@
             getGroup(x, y, color, groupVisited, group);
             group.forEach(p => {
               board[p.y][p.x] = null;
+              if (realMove) capturedStonesForAnim.push({x: p.x, y: p.y, color: color});
               captured++;
             });
           }
@@ -340,7 +356,7 @@
     board[y][x] = currentPlayer;
     
     let opp = currentPlayer === 'B' ? 'W' : 'B';
-    let caps = checkCaptures(opp);
+    let caps = checkCaptures(opp, true);
     
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     if (getLiberties(x, y, currentPlayer, visited) === 0) {
@@ -366,6 +382,15 @@
     updateStatus();
     drawBoard();
     
+    if (caps > 0) {
+      setTimeout(() => {
+        capturedStonesForAnim = [];
+        drawBoard();
+      }, 300);
+    } else {
+      capturedStonesForAnim = [];
+    }
+    
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
       setTimeout(makeAIMove, 500);
     }
@@ -378,7 +403,7 @@
     
     board[y][x] = color;
     let opp = color === 'B' ? 'W' : 'B';
-    let capturedCount = checkCaptures(opp);
+    let capturedCount = checkCaptures(opp, false);
     
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     if (getLiberties(x, y, color, visited) === 0) {

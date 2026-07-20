@@ -63,7 +63,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 7: Add a Simple AI Opponent (random valid moves or basic capture/defend heuristics).
 - [x] Phase 8: Add Sound Effects (stone clack on placement, capture sound, game over chime).
 - [x] Phase 9: Add Save/Load State (persist current board, captures, and turn).
-- Phase 10: Add Visual Capture indicators (highlight stones before they are captured or animate removal).
+- [x] Phase 10: Add Visual Capture indicators (highlight stones before they are captured or animate removal).
 - Phase 11: Add Undo/Redo functionality (keep a history of board states).
 - Phase 12: Add Statistics tracking (games played, win/loss record against AI vs Local Multiplayer).
 - Phase 13: Add Adjustable AI Difficulty (Easy = random, Medium = basic heuristics).
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KGo
-**Goal:** Phase 10
+**Goal:** Phase 11
 
 
 ## App Lifecycle (14 phases per app)

@@ -21,6 +21,10 @@ int captures[3] = {0}; // 1 = black, 2 = white
 int hoverX = -1, hoverY = -1;
 int animX = -1, animY = -1;
 int animRadius = 13;
+POINT capturedAnimStones[19*19];
+int capturedAnimColor[19*19];
+int capturedAnimCount = 0;
+int captureAnimRadius = 0;
 
 DWORD WINAPI PlaySoundThread(LPVOID lpParam) {
     int type = (int)(intptr_t)lpParam;
@@ -74,7 +78,7 @@ void GetGroup(int x, int y, int color, char visited[19][19], POINT group[], int 
     GetGroup(x, y+1, color, visited, group, groupSize);
 }
 
-int CheckCaptures(int color) {
+int CheckCaptures(int color, int realMove) {
     int totalCaptured = 0;
     for (int y = 0; y < boardSize; y++) {
         for (int x = 0; x < boardSize; x++) {
@@ -87,6 +91,12 @@ int CheckCaptures(int color) {
                     GetGroup(x, y, color, groupVisited, group, &groupSize);
                     for (int i = 0; i < groupSize; i++) {
                         board[group[i].y][group[i].x] = 0;
+                        if (realMove) {
+                            capturedAnimStones[capturedAnimCount].x = group[i].x;
+                            capturedAnimStones[capturedAnimCount].y = group[i].y;
+                            capturedAnimColor[capturedAnimCount] = color;
+                            capturedAnimCount++;
+                        }
                         totalCaptured++;
                     }
                 }
@@ -109,7 +119,8 @@ void PlaceStone(HWND hwnd, int x, int y) {
     board[y][x] = (char)currentPlayer;
     
     int opp = currentPlayer == 1 ? 2 : 1;
-    int caps = CheckCaptures(opp);
+    capturedAnimCount = 0;
+    int caps = CheckCaptures(opp, 1);
     
     char visited[19][19] = {0};
     if (GetLiberties(x, y, currentPlayer, visited) == 0) {
@@ -134,6 +145,12 @@ void PlaceStone(HWND hwnd, int x, int y) {
     animY = y;
     animRadius = 0;
     SetTimer(hwnd, 1, 16, NULL);
+    
+    if (caps > 0) {
+        captureAnimRadius = 13;
+        SetTimer(hwnd, 3, 16, NULL);
+    }
+    
     InvalidateRect(hwnd, NULL, TRUE);
     
     if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
@@ -150,7 +167,7 @@ int IsValidMove(int x, int y, int color, int *outCaptures) {
     
     board[y][x] = (char)color;
     int opp = color == 1 ? 2 : 1;
-    int capCount = CheckCaptures(opp);
+    int capCount = CheckCaptures(opp, 0);
     if (outCaptures) *outCaptures = capCount;
     
     char visited[19][19] = {0};
@@ -255,6 +272,7 @@ void InitBoard() {
     captures[2] = 0;
     animX = -1;
     animY = -1;
+    capturedAnimCount = 0;
 }
 
 void CalculateScore(HWND hwnd) {
@@ -358,6 +376,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     KillTimer(hwnd, 1);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 3) {
+                captureAnimRadius -= 2;
+                if (captureAnimRadius <= 0) {
+                    captureAnimRadius = 0;
+                    capturedAnimCount = 0;
+                    KillTimer(hwnd, 3);
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 2) {
                 KillTimer(hwnd, 2);
                 MakeAIMove(hwnd);
@@ -453,6 +479,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         DeleteObject(stonePen);
                     }
                 }
+            }
+
+            for (int i = 0; i < capturedAnimCount; i++) {
+                int cx = padding + capturedAnimStones[i].x * cellSize;
+                int cy = padding + capturedAnimStones[i].y * cellSize;
+                HBRUSH stoneBrush = CreateSolidBrush(capturedAnimColor[i] == 1 ? RGB(17, 17, 17) : RGB(238, 238, 238));
+                HPEN stonePen = CreatePen(PS_SOLID, 2, RGB(255, 68, 68)); // Red border for capture highlight
+                HBRUSH oldBrush = SelectObject(hdc, stoneBrush);
+                HPEN oldPen = SelectObject(hdc, stonePen);
+                
+                Ellipse(hdc, cx - captureAnimRadius, cy - captureAnimRadius, cx + captureAnimRadius, cy + captureAnimRadius);
+                
+                SelectObject(hdc, oldBrush);
+                SelectObject(hdc, oldPen);
+                DeleteObject(stoneBrush);
+                DeleteObject(stonePen);
             }
 
             if (hoverX != -1 && hoverY != -1 && board[hoverY][hoverX] == 0) {
