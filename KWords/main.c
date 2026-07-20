@@ -73,6 +73,31 @@ float strikeAnim[MAX_WORDS] = {0};
 int timerSeconds = 0;
 bool gameWon = false;
 
+typedef struct {
+    int completed;
+    int bestTimes[NUM_THEMES][3];
+} Stats;
+
+Stats gameStats = {0};
+
+void LoadStats() {
+    FILE* fp = fopen("kwords_stats.dat", "rb");
+    if (fp) {
+        fread(&gameStats, sizeof(Stats), 1, fp);
+        fclose(fp);
+    } else {
+        memset(&gameStats, 0, sizeof(Stats));
+    }
+}
+
+void SaveStats() {
+    FILE* fp = fopen("kwords_stats.dat", "wb");
+    if (fp) {
+        fwrite(&gameStats, sizeof(Stats), 1, fp);
+        fclose(fp);
+    }
+}
+
 RECT btnTheme = {220, 10, 360, 35};
 RECT btnEasy = {370, 10, 430, 35};
 RECT btnMed  = {440, 10, 510, 35};
@@ -80,6 +105,9 @@ RECT btnHard = {520, 10, 580, 35};
 RECT btnHint = {590, 10, 650, 35};
 RECT btnSave = {660, 10, 720, 35};
 RECT btnLoad = {730, 10, 790, 35};
+RECT btnStats = {800, 10, 860, 35};
+
+bool showStats = false;
 
 DWORD WINAPI SoundTick(LPVOID lpParam) {
     Beep(1500, 10);
@@ -237,6 +265,13 @@ void EndSelection(HWND hwnd) {
         if (foundCount == wordCount) {
             gameWon = true;
             PlaySoundEffect(2);
+            LoadStats();
+            gameStats.completed++;
+            int bTime = gameStats.bestTimes[currentThemeIdx][currentDifficulty];
+            if (bTime == 0 || timerSeconds < bTime) {
+                gameStats.bestTimes[currentThemeIdx][currentDifficulty] = timerSeconds;
+            }
+            SaveStats();
         } else if (found) {
             PlaySoundEffect(1);
         }
@@ -404,6 +439,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_LBUTTONDOWN: {
+            if (showStats) {
+                showStats = false;
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
             if (PtInRect(&btnTheme, pt)) {
                 currentThemeIdx = (currentThemeIdx + 1) % NUM_THEMES; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
@@ -425,6 +465,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (PtInRect(&btnLoad, pt)) {
                 LoadGame(hwnd); break;
+            }
+            if (PtInRect(&btnStats, pt)) {
+                LoadStats();
+                showStats = true;
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
             }
 
             if(gameWon) {
@@ -503,6 +549,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH slBrush = CreateSolidBrush(RGB(100, 100, 100));
             FillRect(hdc, &btnSave, slBrush);
             FillRect(hdc, &btnLoad, slBrush);
+            FillRect(hdc, &btnStats, slBrush);
             DeleteObject(slBrush);
             
             char themeStr[64];
@@ -519,6 +566,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             TextOut(hdc, btnSave.left + 14, btnSave.top + 5, "Save", 4);
             TextOut(hdc, btnLoad.left + 14, btnLoad.top + 5, "Load", 4);
+            TextOut(hdc, btnStats.left + 10, btnStats.top + 5, "Stats", 5);
             
             DeleteObject(btnBrush);
             DeleteObject(activeBrush);
@@ -610,6 +658,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOut(hdc, listX, listY + 50, scoreStr, strlen(scoreStr));
                 TextOut(hdc, listX, listY + 75, "Click anywhere", 14);
                 TextOut(hdc, listX, listY + 95, "to play again", 13);
+            }
+            
+            if(showStats) {
+                RECT modalRc = { 100, 100, 700, 700 };
+                HBRUSH modalBrush = CreateSolidBrush(RGB(30, 33, 43));
+                FillRect(hdc, &modalRc, modalBrush);
+                DeleteObject(modalBrush);
+                
+                SetTextColor(hdc, RGB(226, 232, 240));
+                TextOut(hdc, 120, 120, "Statistics", 10);
+                char statStr[128];
+                sprintf(statStr, "Puzzles Completed: %d", gameStats.completed);
+                TextOut(hdc, 120, 160, statStr, strlen(statStr));
+                
+                int yPos = 200;
+                TextOut(hdc, 120, yPos, "Best Times:", 11);
+                yPos += 30;
+                const char* diffNames[] = {"Easy", "Medium", "Hard"};
+                for(int t=0; t<NUM_THEMES; t++) {
+                    for(int d=0; d<3; d++) {
+                        int bTime = gameStats.bestTimes[t][d];
+                        if(bTime > 0) {
+                            sprintf(statStr, "%s - %s: %02d:%02d", THEMES[t], diffNames[d], bTime / 60, bTime % 60);
+                            TextOut(hdc, 140, yPos, statStr, strlen(statStr));
+                            yPos += 25;
+                        }
+                    }
+                }
+                TextOut(hdc, 120, 650, "Click anywhere to close stats", 29);
             }
             
             SelectObject(hdc, hOldPen);
