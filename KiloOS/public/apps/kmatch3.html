@@ -5,13 +5,13 @@
 <title>KMatch3</title>
 <style>
   body {
-    margin: 0; padding: 0; background-color: #f0f0f0; font-family: sans-serif;
+    margin: 0; padding: 0; background-color: #1e1e1e; color: #fff; font-family: sans-serif;
     display: flex; flex-direction: column; align-items: center; height: 100vh;
   }
   h1 { margin: 10px 0; }
   .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 10px; font-size: 18px; font-weight: bold; }
   #board {
-    width: 400px; height: 400px; background-color: #ddd; border: 2px solid #333;
+    width: 400px; height: 400px; background-color: #2d2d2d; border: 2px solid #555;
     display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 2px;
     position: relative; touch-action: none; user-select: none;
   }
@@ -19,7 +19,7 @@
     border-radius: 4px; display: flex; justify-content: center; align-items: center;
     cursor: pointer; transition: transform 0.2s, background-color 0.2s;
   }
-  .cell.selected { border: 2px solid #000; box-sizing: border-box; transform: scale(1.1); }
+  .cell.selected { border: 2px solid #fff; box-sizing: border-box; transform: scale(1.1); }
 </style>
 </head>
 <body>
@@ -156,7 +156,7 @@
 
         matches.forEach(m => {
           grid[m.r][m.c].color = null;
-          grid[m.r][m.c].el.style.backgroundColor = '#ddd';
+          grid[m.r][m.c].el.style.backgroundColor = '#2d2d2d';
         });
         await sleep(200);
 
@@ -168,7 +168,7 @@
                 grid[emptyR][c].color = grid[r][c].color;
                 grid[emptyR][c].el.style.backgroundColor = grid[emptyR][c].color;
                 grid[r][c].color = null;
-                grid[r][c].el.style.backgroundColor = '#ddd';
+                grid[r][c].el.style.backgroundColor = '#2d2d2d';
               }
               emptyR--;
             }

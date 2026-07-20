@@ -27,6 +27,8 @@ COLORREF colors[] = {
 void DrawBoard(HDC hdc) {
     char buf[64];
     sprintf(buf, "Score: %d   Moves: %d", score, moves);
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
     TextOut(hdc, BOARD_X, 15, buf, strlen(buf));
 
     for (int r = 0; r < ROWS; r++) {
@@ -36,7 +38,7 @@ void DrawBoard(HDC hdc) {
             
             HBRUSH brush;
             if (grid[r][c] == -1) {
-                brush = CreateSolidBrush(RGB(221, 221, 221));
+                brush = CreateSolidBrush(RGB(45, 45, 45));
             } else {
                 brush = CreateSolidBrush(colors[grid[r][c]]);
             }
@@ -44,16 +46,16 @@ void DrawBoard(HDC hdc) {
             DeleteObject(brush);
 
             if (r == selR && c == selC) {
-                HBRUSH border = CreateSolidBrush(RGB(0, 0, 0));
+                HBRUSH border = CreateSolidBrush(RGB(255, 255, 255));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
                 
                 rect.left += 1; rect.top += 1; rect.right -= 1; rect.bottom -= 1;
-                border = CreateSolidBrush(RGB(0, 0, 0));
+                border = CreateSolidBrush(RGB(255, 255, 255));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
             } else {
-                HBRUSH border = CreateSolidBrush(RGB(51, 51, 51));
+                HBRUSH border = CreateSolidBrush(RGB(85, 85, 85));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
             }
@@ -159,7 +161,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP memBitmap = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
             HBITMAP oldBitmap = (HBITMAP)SelectObject(memDC, memBitmap);
             
-            FillRect(memDC, &rect, (HBRUSH)(COLOR_WINDOW+1));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(30, 30, 30));
+            FillRect(memDC, &rect, bgBrush);
+            DeleteObject(bgBrush);
+            
             DrawBoard(memDC);
             
             BitBlt(hdc, 0, 0, rect.right, rect.bottom, memDC, 0, 0, SRCCOPY);
@@ -229,7 +234,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
     wc.lpszClassName = "KMatch3Class";
 
     if(!RegisterClassEx(&wc)) return 0;
