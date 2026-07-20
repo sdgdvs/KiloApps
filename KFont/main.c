@@ -12,6 +12,7 @@ BOOL isBold = FALSE;
 BOOL isItalic = FALSE;
 HFONT hFont = NULL;
 HBRUSH hBrush = NULL;
+HBRUSH hBgBrush = NULL;
 
 int CALLBACK EnumFontFamExProc(const LOGFONT *lpelfe, const TEXTMETRIC *lpntme, DWORD FontType, LPARAM lParam) {
     SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)lpelfe->lfFaceName);
@@ -111,6 +112,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hCurrentFont) DeleteObject(hCurrentFont);
             if (hFont) DeleteObject(hFont);
             if (hBrush) DeleteObject(hBrush);
+            if (hBgBrush) DeleteObject(hBgBrush);
             PostQuitMessage(0);
             break;
         default:
@@ -133,7 +135,8 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KFontApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = CreateSolidBrush(RGB(18, 18, 18));
+    hBgBrush = CreateSolidBrush(RGB(18, 18, 18));
+    wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,

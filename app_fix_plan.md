@@ -114,5 +114,6 @@ Pass 1 Complete.
 - **KConverter**: Added ARIA labels and keyboard accessibility to tabs and inputs in `kconverter.html`. Verified `main.c` (no leaks or bugs found).
 - **KDB**: Fixed XSS vulnerability in `kdb.html` by safely creating DOM nodes and added ARIA labels for accessibility. Fixed GDI resource leak (`hBgBrush`) in `main.c` on `WM_DESTROY`.
 - **KExplorer**: Added ARIA labels, tab indexes, and keyboard enter-key support for file/folder navigation in `kexplorer.html`. (Web-only app, no `main.c`).
+- **KFont**: Added ARIA labels and `aria-live` to `kfont.html` for accessibility. Fixed GDI resource leak (`hBgBrush`) in `main.c` on `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KFont (or next in alphabetical order).
+Start Pass 2 (Deeper Quality checks). Next target: KHex (or next in alphabetical order).

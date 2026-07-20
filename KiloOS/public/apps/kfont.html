@@ -14,7 +14,7 @@
 <body>
   <div class="list-container">
     <div class="label">System Fonts:</div>
-    <select id="fontList" size="10">
+    <select id="fontList" size="10" aria-label="System Fonts">
       <option value="Arial" selected>Arial</option>
       <option value="Calibri">Calibri</option>
       <option value="Comic Sans MS">Comic Sans MS</option>
@@ -30,7 +30,7 @@
       <option value="Verdana">Verdana</option>
     </select>
     <div class="label" style="margin-top: 10px;">Size:</div>
-    <select id="sizeList" style="flex: none; margin-bottom: 10px;">
+    <select id="sizeList" style="flex: none; margin-bottom: 10px;" aria-label="Font Size">
       <option value="12px">12</option>
       <option value="16px">16</option>
       <option value="24px" selected>24</option>
@@ -39,13 +39,13 @@
       <option value="64px">64</option>
     </select>
     <div class="label">Custom Text:</div>
-    <input type="text" id="customText" value="" placeholder="Type here..." style="font-family: 'Segoe UI', sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; margin-bottom: 10px; box-sizing: border-box; width: 100%;">
+    <input type="text" id="customText" value="" placeholder="Type here..." aria-label="Custom Text" style="font-family: 'Segoe UI', sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; margin-bottom: 10px; box-sizing: border-box; width: 100%;">
     <div style="display: flex; gap: 10px; margin-bottom: auto; font-size: 14px;">
       <label><input type="checkbox" id="boldCheck"> Bold</label>
       <label><input type="checkbox" id="italicCheck"> Italic</label>
     </div>
   </div>
-  <div class="sample-container">
+  <div class="sample-container" aria-live="polite">
     <div id="sample">
       The quick brown fox jumps over the lazy dog.<br><br>
       0123456789<br><br>
