@@ -39,6 +39,7 @@ int start_screen = 1;
 int win_screen = 0;
 int game_mode = 0;
 int campaign_level = 1;
+int pieces_placed = 0;
 int stat_lines[4] = {0, 0, 0, 0};
 int score = 0;
 int lines = 0;
@@ -144,13 +145,29 @@ void lock_piece() {
     }
     lines += lines_cleared;
     
+    pieces_placed++;
+    if (game_mode == 1 && campaign_level > 5) {
+        int threshold = 16 - campaign_level;
+        if (threshold < 5) threshold = 5;
+        if (pieces_placed % threshold == 0) {
+            for (int y = 0; y < H - 1; y++) {
+                for (int x = 0; x < W; x++) grid[y][x] = grid[y+1][x];
+            }
+            int hole = random_int(W);
+            for (int x = 0; x < W; x++) {
+                grid[H - 1][x] = (x == hole) ? 0 : 8;
+            }
+            Beep(300, 100);
+        }
+    }
+
     if (game_mode == 1) {
         int goal = campaign_level * 10;
         level = campaign_level;
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
         if (lines >= goal) {
             campaign_level++;
-            if (campaign_level > 5) {
+            if (campaign_level > 10) {
                 win_screen = 1;
                 Beep(800, 150); Beep(1000, 150); Beep(1200, 300);
                 return;
@@ -189,8 +206,10 @@ void InitGame() {
         for (int x = 0; x < W; x++)
             grid[y][x] = 0;
             
+    pieces_placed = 0;
     if (game_mode == 1) {
         int garbage = campaign_level * 2;
+        if (garbage > 12) garbage = 12;
         for (int r = 0; r < garbage; r++) {
             int hole = random_int(W);
             for (int x = 0; x < W; x++) {
@@ -298,9 +317,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 if (wParam == VK_SPACE) {
+                    int drop_dist = 0;
                     while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
                         current_y++;
+                        drop_dist++;
                     }
+                    score += drop_dist * 2;
                     int old_level = campaign_level;
                     lock_piece();
                     if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
@@ -401,7 +423,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, W * CELL_SIZE + 10, 40, hi_str, lstrlenA(hi_str));
             
             char level_str[32];
-            if (game_mode == 1) wsprintfA(level_str, "STAGE: %d/5", campaign_level);
+            if (game_mode == 1) wsprintfA(level_str, "STAGE: %d/10", campaign_level);
             else wsprintfA(level_str, "LEVEL: %d", level);
             TextOutA(memDC, W * CELL_SIZE + 10, 60, level_str, lstrlenA(level_str));
             

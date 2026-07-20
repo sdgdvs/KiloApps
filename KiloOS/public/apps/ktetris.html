@@ -42,7 +42,7 @@
 
   let grid = Array(H).fill().map(() => Array(W).fill(0));
   let pc, rot, cx, cy, gameOver = false, isPaused = false, score = 0, lines = 0, level = 1, combo = 0;
-  let startScreen = true, winScreen = false, gameMode = 0, campaignLevel = 1;
+  let startScreen = true, winScreen = false, gameMode = 0, campaignLevel = 1, piecesPlaced = 0;
   let statLines = [0, 0, 0, 0];
   let nextPc, nextRot;
   let holdPc = -1, holdUsed = false;
@@ -118,13 +118,27 @@
       
       lines += linesCleared;
       
+      piecesPlaced++;
+      if (gameMode === 1 && campaignLevel > 5) {
+          let threshold = 16 - campaignLevel;
+          if (threshold < 5) threshold = 5;
+          if (piecesPlaced % threshold === 0) {
+              grid.shift();
+              let newRow = Array(W).fill(8);
+              let hole = Math.floor(Math.random() * W);
+              newRow[hole] = 0;
+              grid.push(newRow);
+              playSound(300, 'square', 0.1);
+          }
+      }
+
       if (gameMode === 1) {
           let goal = campaignLevel * 10;
           level = campaignLevel;
           score += linesCleared * 100 * level * (combo > 0 ? combo : 1);
           if (lines >= goal) {
               campaignLevel++;
-              if (campaignLevel > 5) {
+              if (campaignLevel > 10) {
                   winScreen = true;
                   playSound(800, 'square', 0.15); playSound(1000, 'square', 0.15); playSound(1200, 'square', 0.3);
                   return;
@@ -141,9 +155,11 @@
   }
 
   function init() {
+      piecesPlaced = 0;
       grid = Array(H).fill().map(() => Array(W).fill(0));
       if (gameMode === 1) {
           let garbage = campaignLevel * 2;
+          if (garbage > 12) garbage = 12;
           for (let r = 0; r < garbage; r++) {
               let hole = Math.floor(Math.random() * W);
               for (let x = 0; x < W; x++) {
@@ -219,7 +235,9 @@
           }
       }
       if (e.key === ' ') {
-          while (!checkCol(pc, rot, cx, cy + 1)) cy++;
+          let dropDist = 0;
+          while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
+          score += dropDist * 2;
           let oldLevel = campaignLevel;
           lock();
           if (!winScreen && (gameMode === 0 || campaignLevel === oldLevel)) spawn();
@@ -302,7 +320,7 @@
       ctx.font = '12px monospace';
       ctx.fillText('SCORE: ' + score, 210, 20);
       ctx.fillText('HI: ' + highScore, 210, 40);
-      ctx.fillText(gameMode === 1 ? 'STAGE: ' + campaignLevel + '/5' : 'LEVEL: ' + level, 210, 60);
+      ctx.fillText(gameMode === 1 ? 'STAGE: ' + campaignLevel + '/10' : 'LEVEL: ' + level, 210, 60);
       ctx.fillText(gameMode === 1 ? 'LINES: ' + lines + '/' + (campaignLevel*10) : 'LINES: ' + lines, 210, 80);
       
       if (gameMode === 0 && !startScreen) {
