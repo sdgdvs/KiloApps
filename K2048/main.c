@@ -60,6 +60,9 @@ int bombsEnabled = 0;
 int campaignMode = 0;
 int campaignLevel = 1;
 
+int powerups_shuffles = 3;
+int powerups_hammers = 3;
+
 #define MAX_HISTORY 50
 typedef struct {
     int grid[MAX_GRID][MAX_GRID];
@@ -227,6 +230,8 @@ void InitGame() {
     gameStarted = 0;
     moveCount = 0;
     timeRemaining = 60;
+    powerups_shuffles = 3;
+    powerups_hammers = 3;
     if (timerActive) {
         KillTimer(mainHwnd, 1);
         timerActive = 0;
@@ -247,7 +252,17 @@ void StartCampaignLevel() {
     else if (campaignLevel == 7) { grid_size = 6; obstaclesEnabled = 1; bombsEnabled = 1; }
     else if (campaignLevel == 8) { grid_size = 6; timeAttackEnabled = 1; bombsEnabled = 1; ruleset = 1; }
     else if (campaignLevel == 9) { grid_size = 4; timeAttackEnabled = 1; obstaclesEnabled = 1; ruleset = 2; }
-    else if (campaignLevel >= 10) { grid_size = 6; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; }
+    else if (campaignLevel == 10) { grid_size = 6; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; }
+    else if (campaignLevel == 11) { grid_size = 5; timeAttackEnabled = 1; }
+    else if (campaignLevel == 12) { grid_size = 5; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 1; }
+    else if (campaignLevel == 13) { grid_size = 4; timeAttackEnabled = 1; ruleset = 2; }
+    else if (campaignLevel == 14) { grid_size = 6; obstaclesEnabled = 1; ruleset = 1; }
+    else if (campaignLevel == 15) { grid_size = 5; timeAttackEnabled = 1; bombsEnabled = 1; ruleset = 2; }
+    else if (campaignLevel == 16) { grid_size = 6; timeAttackEnabled = 1; }
+    else if (campaignLevel == 17) { grid_size = 5; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 1; }
+    else if (campaignLevel == 18) { grid_size = 6; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 2; }
+    else if (campaignLevel == 19) { grid_size = 4; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; }
+    else if (campaignLevel >= 20) { grid_size = 6; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 1; }
     InitGame();
     if (campaignMode) {
         if (campaignLevel == 2) timeRemaining = 120;
@@ -255,7 +270,13 @@ void StartCampaignLevel() {
         else if (campaignLevel == 5) timeRemaining = 60;
         else if (campaignLevel == 8) timeRemaining = 90;
         else if (campaignLevel == 9) timeRemaining = 60;
-        else if (campaignLevel >= 10) timeRemaining = 120;
+        else if (campaignLevel == 10) timeRemaining = 120;
+        else if (campaignLevel == 11) timeRemaining = 100;
+        else if (campaignLevel == 13) timeRemaining = 50;
+        else if (campaignLevel == 15) timeRemaining = 80;
+        else if (campaignLevel == 16) timeRemaining = 120;
+        else if (campaignLevel == 19) timeRemaining = 45;
+        else if (campaignLevel >= 20) timeRemaining = 90;
     }
 }
 
@@ -498,9 +519,14 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, scoreBuf, -1, &scoreRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf[128];
-    wsprintfA(helpBuf, "[H]elp [C]amp [M]ode [O]bs [B]omb [F]Rule [U]ndo");
+    wsprintfA(helpBuf, "[H]elp [C]amp [M]ode [F]Rule [U]ndo");
     RECT helpRect = { 150, HEADER_HEIGHT / 2, MARGIN + grid_size*cell_size, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+
+    char helpBuf2[128];
+    wsprintfA(helpBuf2, "Pwrs: Shuffle(E):%d Hammer(Q):%d", powerups_shuffles, powerups_hammers);
+    RECT helpRect2 = { MARGIN, HEADER_HEIGHT / 2, 250, HEADER_HEIGHT };
+    DrawTextA(hdc, helpBuf2, -1, &helpRect2, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
     RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + grid_size*cell_size + 8, HEADER_HEIGHT + grid_size*cell_size + 8 };
     HBRUSH boardBrush = CreateSolidBrush(RGB(boardR, boardG, boardB));
@@ -598,7 +624,17 @@ int Move(int dx, int dy) {
                             else if (campaignLevel == 7) target = 1024;
                             else if (campaignLevel == 8) target = 144;
                             else if (campaignLevel == 9) target = 96;
-                            else if (campaignLevel >= 10) target = 2048;
+                            else if (campaignLevel == 10) target = 2048;
+                            else if (campaignLevel == 11) target = 1024;
+                            else if (campaignLevel == 12) target = 144;
+                            else if (campaignLevel == 13) target = 48;
+                            else if (campaignLevel == 14) target = 1597;
+                            else if (campaignLevel == 15) target = 384;
+                            else if (campaignLevel == 16) target = 4096;
+                            else if (campaignLevel == 17) target = 610;
+                            else if (campaignLevel == 18) target = 768;
+                            else if (campaignLevel == 19) target = 8192;
+                            else if (campaignLevel >= 20) target = 2584;
 
                             if (grid[ni][nj] >= target) {
                                 char msg[64];
@@ -756,6 +792,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "Hotkeys:\n"
                     "H: Help\n"
                     "U / Ctrl+Z: Undo Move\n"
+                    "E: Shuffle Powerup\n"
+                    "Q: Hammer Powerup\n"
                     "P: Auto-Play Toggle\n"
                     "O: Obstacles Toggle\n"
                     "B: Bombs Toggle\n"
@@ -779,6 +817,53 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     timeOut = 0;
                     win = 0;
                     InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == 'E' || wParam == 'e') {
+                if (powerups_shuffles > 0 && !gameOver && !win) {
+                    powerups_shuffles--;
+                    int tiles[MAX_GRID * MAX_GRID];
+                    int count = 0;
+                    for (int i=0; i<grid_size; i++) {
+                        for (int j=0; j<grid_size; j++) {
+                            if (grid[i][j] != 0 && grid[i][j] != -1) {
+                                tiles[count++] = grid[i][j];
+                                grid[i][j] = 0;
+                            }
+                        }
+                    }
+                    for (int i=0; i<count; i++) {
+                        int swapIdx = i + (my_rand() % (count - i));
+                        int temp = tiles[i];
+                        tiles[i] = tiles[swapIdx];
+                        tiles[swapIdx] = temp;
+                    }
+                    int idx = 0;
+                    for (int i=0; i<grid_size; i++) {
+                        for (int j=0; j<grid_size; j++) {
+                            if (grid[i][j] != -1 && idx < count) {
+                                grid[i][j] = tiles[idx++];
+                            }
+                        }
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == 'Q' || wParam == 'q') {
+                if (powerups_hammers > 0 && !gameOver && !win) {
+                    int minVal = 9999999;
+                    int minI = -1, minJ = -1;
+                    for (int i=0; i<grid_size; i++) {
+                        for (int j=0; j<grid_size; j++) {
+                            if (grid[i][j] > 0 && grid[i][j] < minVal) {
+                                minVal = grid[i][j];
+                                minI = i; minJ = j;
+                            }
+                        }
+                    }
+                    if (minI != -1) {
+                        powerups_hammers--;
+                        grid[minI][minJ] = 0;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
                 }
             } else if (!gameOver && !win) {
                 if (autoPlayEnabled) {

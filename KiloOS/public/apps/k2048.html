@@ -400,6 +400,9 @@
             <button class="btn size-btn" onclick="setGridSize(5, this)">5x5</button>
             <button class="btn size-btn" onclick="setGridSize(6, this)">6x6</button>
         </div>
+        <div id="powerup-display" style="text-align:center; color:var(--text-color); margin-bottom:15px; font-weight:bold;">
+            Shuffles (E): 3 | Hammers (Q): 3
+        </div>
         <div class="board-container">
             <div class="grid" id="grid-bg">
                 <!-- 16 empty cells -->
@@ -432,6 +435,8 @@
                 <p><b>Controls:</b> Arrow keys, WASD, or swipe to move tiles.</p>
                 <p><b>Hotkeys:</b><br>
                 U / Ctrl+Z: Undo<br>
+                E: Shuffle Powerup<br>
+                Q: Hammer Powerup<br>
                 P: Auto-Play<br>
                 O: Toggle Obstacles<br>
                 B: Toggle Bombs<br>
@@ -530,6 +535,14 @@
 
         let campaignMode = false;
         let campaignLevel = 1;
+        
+        let powerupsShuffles = 3;
+        let powerupsHammers = 3;
+        
+        function updatePowerupsDisplay() {
+            const disp = document.getElementById('powerup-display');
+            if (disp) disp.textContent = `Shuffles (E): ${powerupsShuffles} | Hammers (Q): ${powerupsHammers}`;
+        }
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playBeep(val) {
@@ -570,7 +583,17 @@
             else if (campaignLevel === 7) { gridSize = 6; obstaclesEnabled = true; bombsEnabled = true; }
             else if (campaignLevel === 8) { gridSize = 6; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
             else if (campaignLevel === 9) { gridSize = 4; timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel >= 10) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; }
+            else if (campaignLevel === 10) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; }
+            else if (campaignLevel === 11) { gridSize = 5; timeAttackEnabled = true; }
+            else if (campaignLevel === 12) { gridSize = 5; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
+            else if (campaignLevel === 13) { gridSize = 4; timeAttackEnabled = true; ruleset = 'threes'; }
+            else if (campaignLevel === 14) { gridSize = 6; obstaclesEnabled = true; ruleset = 'fibonacci'; }
+            else if (campaignLevel === 15) { gridSize = 5; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'threes'; }
+            else if (campaignLevel === 16) { gridSize = 6; timeAttackEnabled = true; }
+            else if (campaignLevel === 17) { gridSize = 5; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
+            else if (campaignLevel === 18) { gridSize = 6; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'threes'; }
+            else if (campaignLevel === 19) { gridSize = 4; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; }
+            else if (campaignLevel >= 20) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
             setGridSize(gridSize);
             document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: On" : "Time: Off";
             document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
@@ -582,7 +605,13 @@
                 else if (campaignLevel === 5) timeRemaining = 60;
                 else if (campaignLevel === 8) timeRemaining = 90;
                 else if (campaignLevel === 9) timeRemaining = 60;
-                else if (campaignLevel >= 10) timeRemaining = 120;
+                else if (campaignLevel === 10) timeRemaining = 120;
+                else if (campaignLevel === 11) timeRemaining = 100;
+                else if (campaignLevel === 13) timeRemaining = 50;
+                else if (campaignLevel === 15) timeRemaining = 80;
+                else if (campaignLevel === 16) timeRemaining = 120;
+                else if (campaignLevel === 19) timeRemaining = 45;
+                else if (campaignLevel >= 20) timeRemaining = 90;
                 if (timeAttackEnabled) {
                     document.getElementById('timer-display').textContent = timeRemaining + "s";
                     document.getElementById('timer-display').style.display = "block";
@@ -671,6 +700,9 @@
             gameStarted = false;
             moveCount = 0;
             timeRemaining = 60;
+            powerupsShuffles = 3;
+            powerupsHammers = 3;
+            updatePowerupsDisplay();
             clearInterval(timerInterval);
             if (timeAttackEnabled) {
                 document.getElementById('timer-display').textContent = timeRemaining + "s";
@@ -760,7 +792,17 @@
                 else if (campaignLevel === 7) target = 1024;
                 else if (campaignLevel === 8) target = 144;
                 else if (campaignLevel === 9) target = 96;
-                else if (campaignLevel >= 10) target = 2048;
+                else if (campaignLevel === 10) target = 2048;
+                else if (campaignLevel === 11) target = 1024;
+                else if (campaignLevel === 12) target = 144;
+                else if (campaignLevel === 13) target = 48;
+                else if (campaignLevel === 14) target = 1597;
+                else if (campaignLevel === 15) target = 384;
+                else if (campaignLevel === 16) target = 4096;
+                else if (campaignLevel === 17) target = 610;
+                else if (campaignLevel === 18) target = 768;
+                else if (campaignLevel === 19) target = 8192;
+                else if (campaignLevel >= 20) target = 2584;
                 scoreEl.innerHTML = score + "<br><span style='font-size:0.5em'>Target: " + target + "</span>";
                 bestScoreEl.textContent = "Lvl " + campaignLevel;
             } else {
@@ -835,7 +877,17 @@
                                 else if (campaignLevel === 7) target = 1024;
                                 else if (campaignLevel === 8) target = 144;
                                 else if (campaignLevel === 9) target = 96;
-                                else if (campaignLevel >= 10) target = 2048;
+                                else if (campaignLevel === 10) target = 2048;
+                                else if (campaignLevel === 11) target = 1024;
+                                else if (campaignLevel === 12) target = 144;
+                                else if (campaignLevel === 13) target = 48;
+                                else if (campaignLevel === 14) target = 1597;
+                                else if (campaignLevel === 15) target = 384;
+                                else if (campaignLevel === 16) target = 4096;
+                                else if (campaignLevel === 17) target = 610;
+                                else if (campaignLevel === 18) target = 768;
+                                else if (campaignLevel === 19) target = 8192;
+                                else if (campaignLevel >= 20) target = 2584;
                                 if (mergedTile.val >= target) {
                                     setTimeout(() => {
                                         alert("Level " + campaignLevel + " Complete!");
@@ -1011,7 +1063,26 @@
                 playBeep(max_val);
 
                 if (campaignMode) {
-                    let target = (campaignLevel <= 2) ? 128 : (campaignLevel === 3) ? 256 : (campaignLevel === 4) ? 512 : 55;
+                    let target = 128;
+                    if (campaignLevel === 3) target = 256;
+                    else if (campaignLevel === 4) target = 512;
+                    else if (campaignLevel === 5) target = 55;
+                    else if (campaignLevel === 6) target = 192;
+                    else if (campaignLevel === 7) target = 1024;
+                    else if (campaignLevel === 8) target = 144;
+                    else if (campaignLevel === 9) target = 96;
+                    else if (campaignLevel === 10) target = 2048;
+                    else if (campaignLevel === 11) target = 1024;
+                    else if (campaignLevel === 12) target = 144;
+                    else if (campaignLevel === 13) target = 48;
+                    else if (campaignLevel === 14) target = 1597;
+                    else if (campaignLevel === 15) target = 384;
+                    else if (campaignLevel === 16) target = 4096;
+                    else if (campaignLevel === 17) target = 610;
+                    else if (campaignLevel === 18) target = 768;
+                    else if (campaignLevel === 19) target = 8192;
+                    else if (campaignLevel >= 20) target = 2584;
+                    
                     if (max_val >= target) {
                         alert("Level " + campaignLevel + " Complete!");
                         campaignLevel++;
@@ -1053,6 +1124,58 @@
             if (k === 'u') { undoMove(); return; }
             if (k === 'p') { toggleAutoPlay(); return; }
             if (k === 'o') { toggleObstacles(); return; }
+            if (k === 'e') {
+                if (powerupsShuffles > 0 && !isGameOverState && !isAnimating) {
+                    powerupsShuffles--;
+                    updatePowerupsDisplay();
+                    let nonNullTiles = grid.filter(t => t !== null && t.val !== -1);
+                    let emptyOrFilledPositions = [];
+                    for (let i=0; i<grid.length; i++) {
+                        if (grid[i] === null || grid[i].val !== -1) {
+                            emptyOrFilledPositions.push(i);
+                        }
+                    }
+                    nonNullTiles.sort(() => Math.random() - 0.5);
+                    
+                    for (let i=0; i<emptyOrFilledPositions.length; i++) {
+                        grid[emptyOrFilledPositions[i]] = null;
+                    }
+                    let idx = 0;
+                    for (let pos of emptyOrFilledPositions) {
+                        if (idx < nonNullTiles.length) {
+                            let tile = nonNullTiles[idx];
+                            tile.x = pos % gridSize;
+                            tile.y = Math.floor(pos / gridSize);
+                            grid[pos] = tile;
+                            updateTileEl(tile, false);
+                            idx++;
+                        }
+                    }
+                }
+                return;
+            }
+            if (k === 'q') {
+                if (powerupsHammers > 0 && !isGameOverState && !isAnimating) {
+                    let minVal = 9999999;
+                    let targetTile = null;
+                    let targetPos = -1;
+                    for (let i=0; i<grid.length; i++) {
+                        if (grid[i] !== null && grid[i].val > 0 && grid[i].val < minVal) {
+                            minVal = grid[i].val;
+                            targetTile = grid[i];
+                            targetPos = i;
+                        }
+                    }
+                    if (targetTile !== null) {
+                        powerupsHammers--;
+                        updatePowerupsDisplay();
+                        grid[targetPos] = null;
+                        targetTile.el.remove();
+                        tiles = tiles.filter(t => t.id !== targetTile.id);
+                    }
+                }
+                return;
+            }
             if (k === 'f') { 
                 let newRuleset = ruleset === 'classic' ? 'fibonacci' : 'classic';
                 document.getElementById('ruleset-select').value = newRuleset;
