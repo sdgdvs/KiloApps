@@ -64,13 +64,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 10: Add Level Progression (target scores and limited moves/time per level). (COMPLETED)
 - Phase 11: Add Save/Load State (persist current level, score, and board). (COMPLETED)
 - Phase 12: Add High Score tracking and Statistics (Games Played, Best Score, Max Combo). (COMPLETED)
-- Phase 13: Add Game Modes (e.g., Zen mode with no limits, Timed mode).
+- Phase 13: Add Game Modes (e.g., Zen mode with no limits, Timed mode). (COMPLETED)
 - Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KMatch3
-**Goal:** Phase 13
+**Goal:** Phase 14
 
 
 ## App Lifecycle (14 phases per app)

@@ -15,6 +15,7 @@ int typeGrid[ROWS][COLS] = {0};
 int score = 0;
 int moves = 20;
 int level = 1;
+int gameMode = 0;
 int targetScore = 1000;
 int selR = -1, selC = -1;
 int isProcessing = 0;
@@ -104,13 +105,15 @@ COLORREF colors[] = {
 
 void DrawBoard(HDC hdc) {
     char buf[128];
-    sprintf(buf, "Lvl: %d  Score: %d/%d  Moves: %d", level, score, targetScore, moves);
+    if (gameMode == 0) sprintf(buf, "Lvl: %d  Score: %d/%d  Moves: %d", level, score, targetScore, moves);
+    else if (gameMode == 1) sprintf(buf, "Lvl: %d  Score: %d  Zen Mode", level, score);
+    else if (gameMode == 2) sprintf(buf, "Lvl: %d  Score: %d/%d  Time: %ds", level, score, targetScore, moves);
     SetTextColor(hdc, RGB(255, 255, 255));
     SetBkMode(hdc, TRANSPARENT);
     TextOut(hdc, BOARD_X, 10, buf, strlen(buf));
     
     char statsBuf[128];
-    sprintf(statsBuf, "Games: %d  Best: %d  Max Combo: %d", statsGamesPlayed, statsBestScore, statsMaxCombo);
+    sprintf(statsBuf, "[1] Classic [2] Zen [3] Timed | Best: %d", statsBestScore);
     SetTextColor(hdc, RGB(200, 200, 200));
     TextOut(hdc, BOARD_X, 30, statsBuf, strlen(statsBuf));
 
@@ -501,6 +504,7 @@ void SaveGame() {
     fwrite(&score, sizeof(int), 1, f);
     fwrite(&moves, sizeof(int), 1, f);
     fwrite(&targetScore, sizeof(int), 1, f);
+    fwrite(&gameMode, sizeof(int), 1, f);
     fwrite(grid, sizeof(int), ROWS * COLS, f);
     fwrite(typeGrid, sizeof(int), ROWS * COLS, f);
     fclose(f);
@@ -513,29 +517,40 @@ int LoadGame() {
     fread(&score, sizeof(int), 1, f);
     fread(&moves, sizeof(int), 1, f);
     fread(&targetScore, sizeof(int), 1, f);
+    if (fread(&gameMode, sizeof(int), 1, f) != 1) gameMode = 0;
     fread(grid, sizeof(int), ROWS * COLS, f);
     fread(typeGrid, sizeof(int), ROWS * COLS, f);
     fclose(f);
     return 1;
 }
 
+void GameOver(HWND hwnd) {
+    statsGamesPlayed++;
+    SaveStats();
+    MessageBox(hwnd, "Game Over!", "KMatch3", MB_OK | MB_ICONWARNING);
+    level = 1; score = 0;
+    if (gameMode == 0) { moves = 20; targetScore = 1000; }
+    else if (gameMode == 1) { moves = 0; targetScore = 0; }
+    else if (gameMode == 2) { moves = 60; targetScore = 1000; }
+    InitGame();
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 void CheckLevelProgress(HWND hwnd) {
+    if (gameMode == 1) {
+        if (score >= level * 2000) level++;
+        SaveGame();
+        return;
+    }
     if (score >= targetScore) {
         level++;
-        moves += 15;
+        if (gameMode == 0) moves += 15;
+        if (gameMode == 2) moves += 30;
         targetScore += 1000 + (level * 500);
         MessageBox(hwnd, "Level Up!", "KMatch3", MB_OK | MB_ICONINFORMATION);
         InvalidateRect(hwnd, NULL, FALSE);
-    } else if (moves <= 0) {
-        statsGamesPlayed++;
-        SaveStats();
-        MessageBox(hwnd, "Game Over!", "KMatch3", MB_OK | MB_ICONWARNING);
-        level = 1;
-        score = 0;
-        moves = 20;
-        targetScore = 1000;
-        InitGame();
-        InvalidateRect(hwnd, NULL, FALSE);
+    } else if ((gameMode == 0 || gameMode == 2) && moves <= 0) {
+        GameOver(hwnd);
     }
     SaveGame();
 }
@@ -550,8 +565,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveGame();
             }
             SetTimer(hwnd, 1, 30, NULL);
+            SetTimer(hwnd, 2, 1000, NULL);
             break;
         case WM_TIMER: {
+            if (wParam == 2) {
+                if (gameMode == 2 && moves > 0 && !isProcessing) {
+                    moves--;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    if (moves <= 0) GameOver(hwnd);
+                }
+                break;
+            }
             int needsUpdate = 0;
             for (int i = 0; i < MAX_PARTICLES; i++) {
                 if (particles[i].life > 0) {
@@ -588,6 +612,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteDC(memDC);
             
             EndPaint(hwnd, &ps);
+            break;
+        }
+        case WM_KEYDOWN: {
+            if (wParam == '1' || wParam == VK_NUMPAD1) {
+                gameMode = 0; level = 1; score = 0; moves = 20; targetScore = 1000; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == '2' || wParam == VK_NUMPAD2) {
+                gameMode = 1; level = 1; score = 0; moves = 0; targetScore = 0; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == '3' || wParam == VK_NUMPAD3) {
+                gameMode = 2; level = 1; score = 0; moves = 60; targetScore = 1000; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            }
             break;
         }
         case WM_LBUTTONDOWN: {
@@ -632,7 +666,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
 
                         if (triggerR != -1 || CheckMatchPossible()) {
-                            moves--;
+                            if (gameMode == 0) moves--;
                             ProcessMatches(hwnd, triggerR, triggerC, triggerColor);
                             CheckLevelProgress(hwnd);
                             SaveGame();

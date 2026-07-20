@@ -33,9 +33,10 @@
 <body>
   <h1>KMatch3</h1>
   <div class="info" style="font-size: 16px;">
-    <span>Level: <span id="level">1</span></span>
+    <span><select id="mode" onchange="changeMode()" style="background:#333;color:#fff;border:1px solid #555;"><option value="0">Classic</option><option value="1">Zen</option><option value="2">Timed</option></select></span>
+    <span>Lvl: <span id="level">1</span></span>
     <span>Score: <span id="score">0</span> / <span id="target">1000</span></span>
-    <span>Moves Left: <span id="moves">20</span></span>
+    <span><span id="movesLabel">Moves</span>: <span id="moves">20</span></span>
   </div>
   <div class="info" style="font-size: 14px; color: #ccc;">
     <span>Games: <span id="gamesPlayed">0</span></span>
@@ -60,6 +61,7 @@
     let score = 0;
     let moves = 20;
     let targetScore = 1000;
+    let gameMode = 0;
     let selectedCell = null;
     let isProcessing = false;
     let lastSwap = null;
@@ -189,7 +191,7 @@
 
     function saveGame() {
       const state = {
-        level, score, moves, targetScore,
+        level, score, moves, targetScore, gameMode,
         grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type} : null))
       };
       localStorage.setItem('kmatch3_save', JSON.stringify(state));
@@ -204,6 +206,11 @@
           score = state.score;
           moves = state.moves;
           targetScore = state.targetScore;
+          gameMode = state.gameMode || 0;
+          document.getElementById('mode').value = gameMode;
+          if (gameMode === 1) document.getElementById('movesLabel').textContent = "Zen";
+          else if (gameMode === 2) document.getElementById('movesLabel').textContent = "Time";
+          else document.getElementById('movesLabel').textContent = "Moves";
           
           levelEl.textContent = level;
           scoreEl.textContent = score;
@@ -286,7 +293,7 @@
 
       let matches = findMatches();
       if (matches.hMatches.length > 0 || matches.vMatches.length > 0 || specialTrigger) {
-        moves--;
+        if (gameMode === 0) moves--;
         movesEl.textContent = moves;
         await processMatches(matches, specialTrigger);
         checkLevelProgress();
@@ -510,31 +517,52 @@
       return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    function gameOver() {
+        alert("Game Over! You reached Level " + level);
+        gamesPlayed++;
+        gamesPlayedEl.textContent = gamesPlayed;
+        saveStats();
+        changeMode();
+    }
+
+    function changeMode() {
+        gameMode = parseInt(document.getElementById('mode').value);
+        level = 1; score = 0;
+        if (gameMode === 0) { moves = 20; targetScore = 1000; document.getElementById('movesLabel').textContent = "Moves"; document.getElementById('target').textContent = targetScore; }
+        else if (gameMode === 1) { moves = '∞'; targetScore = '∞'; document.getElementById('movesLabel').textContent = "Zen"; document.getElementById('target').textContent = '∞'; }
+        else if (gameMode === 2) { moves = 60; targetScore = 1000; document.getElementById('movesLabel').textContent = "Time"; document.getElementById('target').textContent = targetScore; }
+        levelEl.textContent = level;
+        scoreEl.textContent = score;
+        movesEl.textContent = moves;
+        initGame();
+    }
+
     function checkLevelProgress() {
+      if (gameMode === 1) {
+          if (score >= level * 2000) { level++; levelEl.textContent = level; }
+          return;
+      }
       if (score >= targetScore) {
         level++;
-        moves += 15;
+        if (gameMode === 0) moves += 15;
+        if (gameMode === 2) moves += 30;
         targetScore += 1000 + (level * 500);
         levelEl.textContent = level;
         targetEl.textContent = targetScore;
         movesEl.textContent = moves;
         alert("Level Up! Welcome to Level " + level);
-      } else if (moves <= 0) {
-        alert("Game Over! You reached Level " + level);
-        gamesPlayed++;
-        gamesPlayedEl.textContent = gamesPlayed;
-        saveStats();
-        level = 1;
-        score = 0;
-        moves = 20;
-        targetScore = 1000;
-        levelEl.textContent = level;
-        scoreEl.textContent = score;
-        targetEl.textContent = targetScore;
-        movesEl.textContent = moves;
-        initGame();
+      } else if ((gameMode === 0 || gameMode === 2) && moves <= 0) {
+        gameOver();
       }
     }
+
+    setInterval(() => {
+        if (gameMode === 2 && moves > 0 && !isProcessing) {
+            moves--;
+            movesEl.textContent = moves;
+            if (moves <= 0) gameOver();
+        }
+    }, 1000);
 
     loadStats();
     if (!loadGame()) {
