@@ -130,6 +130,7 @@
     <button id="btn-score">Score Game</button>
     <button id="btn-save">Save</button>
     <button id="btn-load">Load</button>
+    <button id="btn-stats">Stats</button>
     <select id="board-size">
       <option value="9">9x9</option>
       <option value="13">13x13</option>
@@ -150,6 +151,26 @@
   let capturedStonesForAnim = [];
   let undoStack = [];
   let redoStack = [];
+
+  let stats = { played: 0, aiWins: 0, aiLosses: 0, localB: 0, localW: 0 };
+  function loadStats() {
+    const data = localStorage.getItem('kgo_stats');
+    if (data) stats = JSON.parse(data);
+  }
+  function saveStats() {
+    localStorage.setItem('kgo_stats', JSON.stringify(stats));
+  }
+  function recordGameEnd(winner) {
+    stats.played++;
+    if (document.getElementById('ai-toggle').checked) {
+      if (winner === 'B') stats.aiWins++;
+      else stats.aiLosses++;
+    } else {
+      if (winner === 'B') stats.localB++;
+      else stats.localW++;
+    }
+    saveStats();
+  }
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
@@ -341,8 +362,13 @@
     
     let msg = `Black: ${terrB} territory + ${captures.B} captures = ${totalB}\n`;
     msg += `White: ${terrW} territory + ${captures.W} captures + 6.5 komi = ${totalW}\n\n`;
-    if (totalB > totalW) msg += `Black wins by ${totalB - totalW}!`;
-    else msg += `White wins by ${totalW - totalB}!`;
+    if (totalB > totalW) {
+      msg += `Black wins by ${totalB - totalW}!`;
+      recordGameEnd('B');
+    } else {
+      msg += `White wins by ${totalW - totalB}!`;
+      recordGameEnd('W');
+    }
     
     playSound('over');
     setTimeout(() => {
@@ -541,7 +567,9 @@
   document.getElementById('btn-resign').addEventListener('click', () => {
     playSound('over');
     setTimeout(() => {
+      let winner = currentPlayer === 'B' ? 'W' : 'B';
       alert(`${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`);
+      recordGameEnd(winner);
       initBoard();
     }, 50);
   });
@@ -594,6 +622,11 @@
     initBoard();
   });
 
+  document.getElementById('btn-stats').addEventListener('click', () => {
+    alert(`Statistics:\nGames Played: ${stats.played}\n\nvs AI Mode:\nWins: ${stats.aiWins}\nLosses: ${stats.aiLosses}\n\nLocal Mode:\nBlack Wins: ${stats.localB}\nWhite Wins: ${stats.localW}`);
+  });
+
+  loadStats();
   initBoard();
 </script>
 </body>

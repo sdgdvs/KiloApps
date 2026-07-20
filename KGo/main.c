@@ -14,6 +14,42 @@
 #define ID_BTN_LOAD 108
 #define ID_BTN_UNDO 109
 #define ID_BTN_REDO 110
+#define ID_BTN_STATS 111
+
+typedef struct {
+    int played;
+    int aiWins;
+    int aiLosses;
+    int localB;
+    int localW;
+} GameStats;
+GameStats stats = {0};
+
+void LoadStats() {
+    FILE *f = fopen("kgo_stats.dat", "rb");
+    if (f) {
+        fread(&stats, sizeof(GameStats), 1, f);
+        fclose(f);
+    }
+}
+void SaveStats() {
+    FILE *f = fopen("kgo_stats.dat", "wb");
+    if (f) {
+        fwrite(&stats, sizeof(GameStats), 1, f);
+        fclose(f);
+    }
+}
+void RecordGameEnd(int winnerPlayer, HWND hwnd) {
+    stats.played++;
+    if (SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+        if (winnerPlayer == 1) stats.aiWins++;
+        else stats.aiLosses++;
+    } else {
+        if (winnerPlayer == 1) stats.localB++;
+        else stats.localW++;
+    }
+    SaveStats();
+}
 
 typedef struct {
     char board[19][19];
@@ -420,6 +456,9 @@ void CalculateScore(HWND hwnd) {
     float totalB = captures[1] + terrB;
     float totalW = captures[2] + terrW + 6.5f;
     
+    int winner = (totalB > totalW) ? 1 : 2;
+    RecordGameEnd(winner, hwnd);
+
     char msg[256];
     sprintf(msg, "Black: %d territory + %d captures = %g\n"
                  "White: %d territory + %d captures + 6.5 komi = %g\n\n"
@@ -464,6 +503,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 160, 640, 60, 30, hwnd, (HMENU)ID_BTN_UNDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Redo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 230, 640, 60, 30, hwnd, (HMENU)ID_BTN_REDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Stats", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                300, 640, 60, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -630,6 +671,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SetTimer(hwnd, 2, 500, NULL);
                 }
             } else if (LOWORD(wParam) == ID_BTN_RESIGN) {
+                int winner = currentPlayer == 1 ? 2 : 1;
+                RecordGameEnd(winner, hwnd);
                 char msg[64];
                 sprintf(msg, "%s wins by resignation!", currentPlayer == 1 ? "White" : "Black");
                 PlayGameSound(3);
@@ -649,6 +692,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 DoUndo(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_REDO) {
                 DoRedo(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_STATS) {
+                char smsg[256];
+                sprintf(smsg, "Statistics:\nGames Played: %d\n\nvs AI Mode:\nWins: %d\nLosses: %d\n\nLocal Mode:\nBlack Wins: %d\nWhite Wins: %d",
+                        stats.played, stats.aiWins, stats.aiLosses, stats.localB, stats.localW);
+                MessageBox(hwnd, smsg, "Statistics", MB_OK);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);
                 if (sel == 0) boardSize = 9;
@@ -689,6 +737,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (hwnd == NULL) {
         return 0;
     }
+
+    LoadStats();
 
     ShowWindow(hwnd, nCmdShow);
 
