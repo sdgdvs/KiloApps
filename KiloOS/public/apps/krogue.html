@@ -26,6 +26,12 @@
         .floor.volcanic { color: #533; }
         .wall.abyss { color: #606; }
         .floor.abyss { color: #303; }
+        .wall.void { color: #406; }
+        .floor.void { color: #102; }
+        .monster-B { color: #f40; }
+        .monster-t { color: #dda; }
+        .monster-E { color: #a0f; }
+        .monster-M { color: #90d; }
     </style>
 </head>
 <body>
@@ -94,9 +100,15 @@
                 else if (dlevel > 3 && r > 0.4 && r < 0.5) { type = 'z'; hp = 15; name = 'Zombie'; }
                 else if (dlevel > 4 && r > 0.5 && r < 0.6) { type = 'T'; hp = 25; name = 'Cave Troll'; }
                 else if (dlevel > 5 && r > 0.6 && r < 0.7) { type = 'G'; hp = 18; name = 'Ghost'; }
-                else if (dlevel > 8 && r > 0.7 && r < 0.85) { type = 'C'; hp = 35; name = 'Gelatinous Cube'; }
-                else if (dlevel > 10 && r > 0.85) { type = 'H'; hp = 50; name = 'Hydra'; }
-                
+                else if (dlevel > 8 && r > 0.7 && r < 0.8) { type = 'C'; hp = 35; name = 'Gelatinous Cube'; }
+                else if (dlevel > 10 && r >= 0.8 && r < 0.9) { type = 'H'; hp = 50; name = 'Hydra'; }
+                else if (dlevel > 12 && r >= 0.9) {
+                    let m4 = Math.floor(Math.random()*4);
+                    if (m4 === 0) { type = 'B'; hp = 80; name = 'Balrog'; }
+                    else if (m4 === 1) { type = 't'; hp = 100; name = 'Titan'; }
+                    else if (m4 === 2) { type = 'E'; hp = 60; name = 'Beholder'; }
+                    else { type = 'M'; hp = 60; name = 'Mind Flayer'; }
+                }
                 hp = Math.floor(hp * (1 + difficulty * 0.5));
                 monsters.push({
                     x: mx, y: my, hp: hp, max_hp: hp, ch: type, name: name, turn: 0
@@ -129,7 +141,7 @@
                                     let biome = "";
                                     if(dlevel >= 5 && dlevel < 10) biome = " moss";
                                     else if(dlevel >= 10 && dlevel < 15) biome = " volcanic";
-                                    else if(dlevel >= 15) biome = " abyss";
+                                    else if(dlevel >= 15) biome = " void";
                                     out += map[y][x] === '#' ? `<span class='wall${biome}'>#</span>` : `<span class='floor${biome}'>.</span>`;
                                 }
                             }
@@ -225,7 +237,7 @@
                                     let it = items[itIdx];
                                     if (it.type === 'stairs') {
                                         dlevel++;
-                                        if (dlevel > 15) {
+                                        if (dlevel > 20) {
                                             state = 3; // Victory
                                             render();
                                             return;

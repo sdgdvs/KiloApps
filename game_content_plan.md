@@ -87,7 +87,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
 | KMines     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-level campaign, radar powerup, stats. |
-| KRogue     | Tier 2          | Feature-Expanded       | Needs Improvement | Web upgraded to basic playable version. EXE is a full roguelike. Loop 5 pending. |
+| KRogue     | Tier 2          | Feature-Expanded       | Loop 5 Completed | Web upgraded to basic playable version. EXE is a full roguelike. Expanded to 20 levels, added Balrog, Titan, Beholder, Mind Flayer, Void biome. |
 | KSnake     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | KTetris    | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | KPong      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
@@ -162,3 +162,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 **Loop 5**
 - [x] KMines (Expanded Campaign to 10 levels, added Radar powerup and Lifetime Stats tracking to both EXE and HTML)
+- [x] KRogue (Expanded to 20 levels, added Balrog, Titan, Beholder, Mind Flayer, and Void biome to both EXE and HTML)

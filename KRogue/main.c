@@ -31,6 +31,10 @@
 #define C_GHOST RGB(150, 200, 255)
 #define C_HYDRA RGB(50, 200, 100)
 #define C_CUBE  RGB(0, 255, 255)
+#define C_BALROG RGB(255, 69, 0)
+#define C_TITAN RGB(210, 180, 140)
+#define C_BEHOLDER RGB(138, 43, 226)
+#define C_MINDFLAYER RGB(148, 0, 211)
 
 #define C_POTION RGB(255,50,255)
 #define C_WEAPON RGB(50,255,255)
@@ -291,12 +295,17 @@ void spawn_monster(int x, int y) {
                 else if(m == 4) { e->ch = 'y'; e->fg = C_SKELETON; str_cpy(e->name, "Gargoyle"); e->hp = e->max_hp = 35 + g.dlevel*3; e->atk = 7; e->def = 8; e->xp = 16; e->behavior = B_SLUGGISH; }
                 else { e->ch = 'C'; e->fg = C_CUBE; str_cpy(e->name, "Gelatinous Cube"); e->hp = e->max_hp = 50 + g.dlevel*3; e->atk = 5; e->def = 10; e->xp = 25; e->behavior = B_SLUGGISH; e->special_ability = ABILITY_SPLIT; }
             } else {
-                if(m == 0) { e->ch = 'D'; e->fg = C_DRAGON; str_cpy(e->name, "Red Dragon"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 15; e->def = 8; e->xp = 50; e->behavior = B_NORMAL; e->special_ability = ABILITY_BREATHE_FIRE; }
-                else if(m == 1) { e->ch = 'V'; e->fg = C_VAMPIRE; str_cpy(e->name, "Vampire"); e->hp = e->max_hp = 45 + g.dlevel*5; e->atk = 14; e->def = 6; e->xp = 45; e->behavior = B_FAST; }
-                else if(m == 2) { e->ch = 'G'; e->fg = C_GOLEM; str_cpy(e->name, "Stone Golem"); e->hp = e->max_hp = 80 + g.dlevel*5; e->atk = 10; e->def = 15; e->xp = 60; e->behavior = B_SLUGGISH; }
-                else if(m == 3) { e->ch = 'L'; e->fg = C_LICH; str_cpy(e->name, "Lich"); e->hp = e->max_hp = 40 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 80; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
-                else if(m == 4) { e->ch = 'd'; e->fg = C_DEMON; str_cpy(e->name, "Demon"); e->hp = e->max_hp = 50 + g.dlevel*5; e->atk = 18; e->def = 10; e->xp = 70; e->behavior = B_FAST; e->special_ability = ABILITY_BREATHE_FIRE; }
-                else { e->ch = 'H'; e->fg = C_HYDRA; str_cpy(e->name, "Hydra"); e->hp = e->max_hp = 90 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 100; e->behavior = B_NORMAL; }
+                int m4 = rand_range(0, 9);
+                if(m4 == 0) { e->ch = 'D'; e->fg = C_DRAGON; str_cpy(e->name, "Red Dragon"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 15; e->def = 8; e->xp = 50; e->behavior = B_NORMAL; e->special_ability = ABILITY_BREATHE_FIRE; }
+                else if(m4 == 1) { e->ch = 'V'; e->fg = C_VAMPIRE; str_cpy(e->name, "Vampire"); e->hp = e->max_hp = 45 + g.dlevel*5; e->atk = 14; e->def = 6; e->xp = 45; e->behavior = B_FAST; }
+                else if(m4 == 2) { e->ch = 'G'; e->fg = C_GOLEM; str_cpy(e->name, "Stone Golem"); e->hp = e->max_hp = 80 + g.dlevel*5; e->atk = 10; e->def = 15; e->xp = 60; e->behavior = B_SLUGGISH; }
+                else if(m4 == 3) { e->ch = 'L'; e->fg = C_LICH; str_cpy(e->name, "Lich"); e->hp = e->max_hp = 40 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 80; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else if(m4 == 4) { e->ch = 'd'; e->fg = C_DEMON; str_cpy(e->name, "Demon"); e->hp = e->max_hp = 50 + g.dlevel*5; e->atk = 18; e->def = 10; e->xp = 70; e->behavior = B_FAST; e->special_ability = ABILITY_BREATHE_FIRE; }
+                else if(m4 == 5) { e->ch = 'H'; e->fg = C_HYDRA; str_cpy(e->name, "Hydra"); e->hp = e->max_hp = 90 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 100; e->behavior = B_NORMAL; }
+                else if(m4 == 6) { e->ch = 'B'; e->fg = C_BALROG; str_cpy(e->name, "Balrog"); e->hp = e->max_hp = 100 + g.dlevel*5; e->atk = 30; e->def = 12; e->xp = 150; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
+                else if(m4 == 7) { e->ch = 't'; e->fg = C_TITAN; str_cpy(e->name, "Titan"); e->hp = e->max_hp = 120 + g.dlevel*5; e->atk = 35; e->def = 15; e->xp = 200; e->behavior = B_NORMAL; }
+                else if(m4 == 8) { e->ch = 'E'; e->fg = C_BEHOLDER; str_cpy(e->name, "Beholder"); e->hp = e->max_hp = 70 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 180; e->behavior = B_ERRATIC; e->special_ability = ABILITY_SUMMON; }
+                else { e->ch = 'M'; e->fg = C_MINDFLAYER; str_cpy(e->name, "Mind Flayer"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 160; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
             }
             
             if(e->behavior != B_SHOPKEEPER) {
@@ -463,7 +472,7 @@ void generate_map() {
     get_player()->x = cx;
     get_player()->y = cy;
     
-    if(g.dlevel == 15) {
+    if(g.dlevel == 20) {
         g.stair_x = -1;
         g.stair_y = -1;
         for(int i=1; i<MAX_ENTITIES; i++) {
@@ -531,7 +540,7 @@ void generate_map() {
     COLORREF cur_floor = C_FLOOR;
     if(g.dlevel >= 5 && g.dlevel < 10) { cur_wall = RGB(100, 150, 100); cur_floor = RGB(50, 80, 50); }
     else if(g.dlevel >= 10 && g.dlevel < 15) { cur_wall = RGB(150, 50, 50); cur_floor = RGB(80, 40, 40); }
-    else if(g.dlevel >= 15) { cur_wall = RGB(100, 0, 100); cur_floor = RGB(50, 0, 50); }
+    else if(g.dlevel >= 15) { cur_wall = RGB(50, 0, 80); cur_floor = RGB(20, 0, 30); }
     for(int y=0; y<H; y++) {
         for(int x=0; x<W; x++) {
             if(g.map[y][x].ch == '#') g.map[y][x].fg = cur_wall;
