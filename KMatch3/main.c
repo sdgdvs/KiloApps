@@ -27,6 +27,28 @@ int popGrid[ROWS][COLS] = {0};
 int dropAnim = 0;
 int dropCount[ROWS][COLS] = {0};
 
+int statsGamesPlayed = 0;
+int statsBestScore = 0;
+int statsMaxCombo = 0;
+
+void SaveStats() {
+    FILE *f = fopen("kmatch3_stats.dat", "wb");
+    if (!f) return;
+    fwrite(&statsGamesPlayed, sizeof(int), 1, f);
+    fwrite(&statsBestScore, sizeof(int), 1, f);
+    fwrite(&statsMaxCombo, sizeof(int), 1, f);
+    fclose(f);
+}
+
+void LoadStats() {
+    FILE *f = fopen("kmatch3_stats.dat", "rb");
+    if (!f) return;
+    fread(&statsGamesPlayed, sizeof(int), 1, f);
+    fread(&statsBestScore, sizeof(int), 1, f);
+    fread(&statsMaxCombo, sizeof(int), 1, f);
+    fclose(f);
+}
+
 #define MAX_PARTICLES 200
 
 typedef struct {
@@ -85,7 +107,12 @@ void DrawBoard(HDC hdc) {
     sprintf(buf, "Lvl: %d  Score: %d/%d  Moves: %d", level, score, targetScore, moves);
     SetTextColor(hdc, RGB(255, 255, 255));
     SetBkMode(hdc, TRANSPARENT);
-    TextOut(hdc, BOARD_X, 15, buf, strlen(buf));
+    TextOut(hdc, BOARD_X, 10, buf, strlen(buf));
+    
+    char statsBuf[128];
+    sprintf(statsBuf, "Games: %d  Best: %d  Max Combo: %d", statsGamesPlayed, statsBestScore, statsMaxCombo);
+    SetTextColor(hdc, RGB(200, 200, 200));
+    TextOut(hdc, BOARD_X, 30, statsBuf, strlen(statsBuf));
 
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
@@ -371,6 +398,10 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             }
         }
         score += matchCount * 10 * comboMultiplier;
+        if (score > statsBestScore) {
+            statsBestScore = score;
+            SaveStats();
+        }
         PlayMatchSound(comboMultiplier);
         
         for (int i = 1; i <= 10; i++) {
@@ -401,6 +432,10 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         }
 
         comboMultiplier++;
+        if (comboMultiplier > statsMaxCombo) {
+            statsMaxCombo = comboMultiplier;
+            SaveStats();
+        }
 
         for (int c = 0; c < COLS; c++) {
             int emptyR = ROWS - 1;
@@ -492,6 +527,8 @@ void CheckLevelProgress(HWND hwnd) {
         MessageBox(hwnd, "Level Up!", "KMatch3", MB_OK | MB_ICONINFORMATION);
         InvalidateRect(hwnd, NULL, FALSE);
     } else if (moves <= 0) {
+        statsGamesPlayed++;
+        SaveStats();
         MessageBox(hwnd, "Game Over!", "KMatch3", MB_OK | MB_ICONWARNING);
         level = 1;
         score = 0;
@@ -507,6 +544,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             srand((unsigned)time(NULL));
+            LoadStats();
             if (!LoadGame()) {
                 InitGame();
                 SaveGame();
