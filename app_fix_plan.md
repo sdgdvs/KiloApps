@@ -206,5 +206,6 @@ Pass 1 Complete.
 - **KChart**: Added ARIA labels to canvas and buttons in `kchart.html`. Fixed GDI resource leak (`HFONT`) and timer leak in `main.c` on `WM_DESTROY`.
 
 - **KChat & KChatServer**: Added ARIA labels in `kchat.html`. Fixed GDI resource leaks (`hUIFont`, `wc.hbrBackground`) and fixed incorrect button labels/states during socket connect/disconnect errors in `main.c`.
+- **KChess**: Added ARIA tags and localStorage error handling in `kchess.html`. Fixed undeclared `dstP` variable in `WM_TIMER` that caused compilation error and fixed GDI resource leak (`wc.hbrBackground`) and timer leak in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KChess.
+Start Pass 2 (Deeper Quality checks). Next target: KClock.

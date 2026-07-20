@@ -25,7 +25,7 @@
 </style>
 </head>
 <body>
-<canvas id="cvs" width="480" height="500"></canvas>
+<canvas id="cvs" width="480" height="500" tabindex="0" role="application" aria-label="Chess game"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
@@ -64,9 +64,11 @@
   let statsDraws = parseInt(localStorage.getItem('kchess_draws') || '0');
 
   function saveStats() {
-      localStorage.setItem('kchess_wins', statsWins);
-      localStorage.setItem('kchess_losses', statsLosses);
-      localStorage.setItem('kchess_draws', statsDraws);
+      try {
+          localStorage.setItem('kchess_wins', statsWins);
+          localStorage.setItem('kchess_losses', statsLosses);
+          localStorage.setItem('kchess_draws', statsDraws);
+      } catch (e) {}
   }
 
   const pieceValues = [0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000];

@@ -40,6 +40,7 @@ int aiDifficulty = 2; // 1=Easy, 2=Normal, 3=Hard
 int statsWins = 0, statsLosses = 0, statsDraws = 0;
 int pieceValues[] = {0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000};
 int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
+HBRUSH hBgBrush = NULL;
 
 void LoadStats() {
     FILE *f = fopen("kchess_stats.txt", "r");
@@ -345,6 +346,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                             if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
                                                 moves[moveCount].sx = sx; moves[moveCount].sy = sy;
                                                 moves[moveCount].tx = tx; moves[moveCount].ty = ty;
+                                                int dstP = board[ty][tx];
                                                 int baseScore = dstP != 0 ? pieceValues[dstP] : 0;
                                                 if (aiDifficulty >= 2) {
                                                     if (tx >= 3 && tx <= 4 && ty >= 3 && ty <= 4) baseScore += 20;
@@ -507,6 +509,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            if (hBgBrush) DeleteObject(hBgBrush);
+            KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;
         default:
@@ -529,7 +533,8 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KChessApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
+    hBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+    wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
     srand((unsigned int)time(NULL));
