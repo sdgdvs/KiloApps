@@ -8,7 +8,7 @@ long _ftol2(float f) { return (long)f; }
 #define W 320
 #define H 480
 #define MAX_BULLETS 20
-#define MAX_ENEMIES 10
+#define MAX_ENEMIES 15
 #define MAX_STARS 50
 
 typedef struct { float x, y, active, dx, dy, type; int hp; } Ent;
@@ -19,12 +19,13 @@ Ent b[MAX_BULLETS] = {0};
 Ent e[MAX_ENEMIES] = {0};
 #define MAX_EBULLETS 20
 Ent eb[MAX_EBULLETS] = {0};
-#define MAX_POWERUPS 3
+#define MAX_POWERUPS 5
 Ent pu[MAX_POWERUPS] = {0};
 int spreadTimer = 0;
 Star stars[MAX_STARS] = {0};
 int score = 0;
 int highScore = 0;
+int totalKills = 0;
 int gameOver = 0;
 int frameCount = 0;
 int shieldActive = 0;
@@ -44,6 +45,8 @@ void LoadHighScore() {
         DWORD type = REG_DWORD;
         DWORD size = sizeof(DWORD);
         RegQueryValueExA(hKey, "HighScore", NULL, &type, (LPBYTE)&highScore, &size);
+        size = sizeof(DWORD);
+        RegQueryValueExA(hKey, "TotalKills", NULL, &type, (LPBYTE)&totalKills, &size);
         RegCloseKey(hKey);
     }
 }
@@ -52,6 +55,7 @@ void SaveHighScore() {
     HKEY hKey;
     if (RegCreateKeyExA(HKEY_CURRENT_USER, "Software\\KSpace", 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL) == ERROR_SUCCESS) {
         RegSetValueExA(hKey, "HighScore", 0, REG_DWORD, (const BYTE*)&highScore, sizeof(DWORD));
+        RegSetValueExA(hKey, "TotalKills", 0, REG_DWORD, (const BYTE*)&totalKills, sizeof(DWORD));
         RegCloseKey(hKey);
     }
 }
@@ -62,10 +66,17 @@ void SpawnEnemy() {
             e[i].active = 1.0f;
             e[i].x = (float)(rnd() % (W - 20));
             e[i].y = -20.0f;
-            int t = rnd() % 4;
-            e[i].type = (float)t;
-            if (t == 3) e[i].hp = 10;
-            else if (t == 2) e[i].hp = 5;
+            int t = rnd() % 100;
+            if (t < 40) e[i].type = 0.0f;
+            else if (t < 60) e[i].type = 1.0f;
+            else if (t < 75) e[i].type = 2.0f;
+            else if (t < 85) e[i].type = 3.0f;
+            else if (t < 95) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.0f:-2.0f); }
+            else e[i].type = 5.0f;
+            if (e[i].type == 3.0f) e[i].hp = 10;
+            else if (e[i].type == 2.0f) e[i].hp = 5;
+            else if (e[i].type == 4.0f) e[i].hp = 3;
+            else if (e[i].type == 5.0f) e[i].hp = 30;
             else e[i].hp = 1;
             break;
         }
@@ -173,6 +184,13 @@ void Update() {
                 e[i].y += baseEnemySpeed * 0.4f;
             } else if (e[i].type == 3.0f) {
                 e[i].y += baseEnemySpeed * 0.3f;
+            } else if (e[i].type == 4.0f) {
+                e[i].y += baseEnemySpeed * 0.8f;
+                e[i].x += e[i].dx;
+                if (e[i].x < 0) { e[i].x = 0; e[i].dx = -e[i].dx; }
+                if (e[i].x > W - 20) { e[i].x = W - 20; e[i].dx = -e[i].dx; }
+            } else if (e[i].type == 5.0f) {
+                e[i].y += baseEnemySpeed * 1.2f;
             }
             if (e[i].y > H) e[i].active = 0.0f;
             
@@ -196,6 +214,7 @@ void Update() {
                     PlaySnd(1);
                 } else {
                     gameOver = 1;
+                    SaveHighScore();
                     PlaySnd(1);
                 }
             }
@@ -207,8 +226,10 @@ void Update() {
                     e[i].hp--;
                     if (e[i].hp <= 0) {
                         e[i].active = 0.0f;
-                        score += (e[i].type == 2.0f) ? 50 : (e[i].type == 3.0f ? 100 : 10);
+                        score += (e[i].type == 2.0f) ? 50 : (e[i].type == 3.0f ? 100 : (e[i].type == 4.0f ? 60 : 10));
+                        if (e[i].type == 5.0f) score += 100;
                         enemiesKilled++;
+                        totalKills++;
                         PlaySnd(1);
                         if (score > highScore) {
                             highScore = score;
@@ -218,7 +239,7 @@ void Update() {
                             for(int k=0; k<MAX_POWERUPS; k++) {
                                 if(!pu[k].active) {
                                     pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
-                                    pu[k].type = (float)(rnd() % 3);
+                                    pu[k].type = (float)(rnd() % 4);
                                     break;
                                 }
                             }
@@ -241,6 +262,7 @@ void Update() {
                     PlaySnd(1);
                 } else {
                     gameOver = 1;
+                    SaveHighScore();
                     PlaySnd(1);
                 }
             }
@@ -255,7 +277,18 @@ void Update() {
                 pu[i].active = 0.0f;
                 if (pu[i].type == 0.0f) spreadTimer = 300;
                 else if (pu[i].type == 1.0f) shieldActive = 1;
-                else rapidTimer = 300;
+                else if (pu[i].type == 2.0f) rapidTimer = 300;
+                else if (pu[i].type == 3.0f) {
+                    for(int j=0; j<MAX_ENEMIES; j++) {
+                        if(e[j].active && e[j].type != 5.0f) {
+                            e[j].active = 0.0f;
+                            score += 10;
+                            enemiesKilled++;
+                            totalKills++;
+                        }
+                    }
+                    PlaySnd(1);
+                }
                 score += 50;
                 PlaySnd(2);
             }
@@ -345,10 +378,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH ebr2 = CreateSolidBrush(RGB(255, 150, 50));
             HBRUSH ebr3 = CreateSolidBrush(RGB(160, 32, 240));
             HBRUSH ebr4 = CreateSolidBrush(RGB(150, 150, 150));
+            HBRUSH ebr5 = CreateSolidBrush(RGB(0, 255, 255));
+            HBRUSH ebr6 = CreateSolidBrush(RGB(139, 69, 19));
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (e[i].active) {
                     RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + 20, (int)e[i].y + 20};
-                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : (e[i].type == 2.0f ? ebr3 : ebr4));
+                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : (e[i].type == 2.0f ? ebr3 : (e[i].type == 3.0f ? ebr4 : (e[i].type == 4.0f ? ebr5 : ebr6))));
                     FillRect(memDC, &er, br);
                 }
             }
@@ -356,21 +391,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(ebr2);
             DeleteObject(ebr3);
             DeleteObject(ebr4);
+            DeleteObject(ebr5);
+            DeleteObject(ebr6);
             
             // Draw powerups
             HBRUSH pubr1 = CreateSolidBrush(RGB(50, 255, 50));
             HBRUSH pubr2 = CreateSolidBrush(RGB(50, 200, 255));
             HBRUSH pubr3 = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH pubr4 = CreateSolidBrush(RGB(255, 255, 0));
             for (int i = 0; i < MAX_POWERUPS; i++) {
                 if (pu[i].active) {
                     RECT pr = {(int)pu[i].x, (int)pu[i].y, (int)pu[i].x + 15, (int)pu[i].y + 15};
-                    HBRUSH br = pu[i].type == 0.0f ? pubr1 : (pu[i].type == 1.0f ? pubr2 : pubr3);
+                    HBRUSH br = pu[i].type == 0.0f ? pubr1 : (pu[i].type == 1.0f ? pubr2 : (pu[i].type == 2.0f ? pubr3 : pubr4));
                     FillRect(memDC, &pr, br);
                 }
             }
             DeleteObject(pubr1);
             DeleteObject(pubr2);
             DeleteObject(pubr3);
+            DeleteObject(pubr4);
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
@@ -380,6 +419,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char waveStr[64];
             wsprintfA(waveStr, "Wave: %d  Kills: %d", wave, enemiesKilled);
             TextOutA(memDC, 10, 28, waveStr, lstrlenA(waveStr));
+            char totalStr[64];
+            wsprintfA(totalStr, "Life Kills: %d", totalKills);
+            TextOutA(memDC, W - 120, 10, totalStr, lstrlenA(totalStr));
             
             if (gameOver) {
                 SetTextColor(memDC, RGB(255, 0, 0));

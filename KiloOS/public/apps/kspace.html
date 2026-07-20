@@ -28,6 +28,7 @@
   let rapidTimer = 0;
   let score = 0;
   let highScore = localStorage.getItem('kspace_highscore') || 0;
+  let totalKills = parseInt(localStorage.getItem('kspace_totalkills') || '0', 10);
   let gameOver = false;
   let frameCount = 0;
   let shieldActive = false;
@@ -89,9 +90,16 @@
   document.addEventListener('keyup', e => keys[e.key] = false);
 
   function spawnEnemy() {
-      let type = Math.floor(Math.random() * 4);
-      let hp = type === 3 ? 10 : (type === 2 ? 5 : 1);
-      enemies.push({ x: Math.random() * (W - 20), y: -20, type: type, hp: hp });
+      let t = Math.floor(Math.random() * 100);
+      let type, dx = 0;
+      if (t < 40) type = 0;
+      else if (t < 60) type = 1;
+      else if (t < 75) type = 2;
+      else if (t < 85) type = 3;
+      else if (t < 95) { type = 4; dx = (Math.random() < 0.5 ? 2 : -2); }
+      else type = 5;
+      let hp = type === 5 ? 30 : (type === 3 ? 10 : (type === 2 ? 5 : (type === 4 ? 3 : 1)));
+      enemies.push({ x: Math.random() * (W - 20), y: -20, type: type, hp: hp, dx: dx });
   }
 
   function shoot() {
@@ -171,6 +179,13 @@
               enemies[i].y += baseEnemySpeed * 0.4;
           } else if (enemies[i].type === 3) {
               enemies[i].y += baseEnemySpeed * 0.3;
+          } else if (enemies[i].type === 4) {
+              enemies[i].y += baseEnemySpeed * 0.8;
+              enemies[i].x += enemies[i].dx;
+              if (enemies[i].x < 0) { enemies[i].x = 0; enemies[i].dx = -enemies[i].dx; }
+              if (enemies[i].x > W - 20) { enemies[i].x = W - 20; enemies[i].dx = -enemies[i].dx; }
+          } else if (enemies[i].type === 5) {
+              enemies[i].y += baseEnemySpeed * 1.2;
           }
           
           if (enemies[i].type === 2 && (frameCount % 60 === 0) && Math.random() < 0.5) {
@@ -202,15 +217,18 @@
           }
           
           if (hit && enemies[i].hp <= 0) {
-              score += enemies[i].type === 3 ? 100 : (enemies[i].type === 2 ? 50 : 10);
+              score += enemies[i].type === 3 ? 100 : (enemies[i].type === 2 ? 50 : (enemies[i].type === 4 ? 60 : 10));
+              if (enemies[i].type === 5) score += 100;
               enemiesKilled++;
+              totalKills++;
               playSound(1);
               if (score > highScore) {
                   highScore = score;
                   localStorage.setItem('kspace_highscore', highScore);
               }
+              localStorage.setItem('kspace_totalkills', totalKills);
               if (Math.random() < 0.15) {
-                  powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2, type: Math.floor(Math.random() * 3)});
+                  powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2, type: Math.floor(Math.random() * 4)});
               }
               enemies.splice(i, 1);
           } else if (enemies[i].y > H) {
@@ -243,8 +261,19 @@
                   spreadTimer = 300;
               } else if (powerups[i].type === 1) {
                   shieldActive = true;
-              } else {
+              } else if (powerups[i].type === 2) {
                   rapidTimer = 300;
+              } else if (powerups[i].type === 3) {
+                  for (let j = enemies.length - 1; j >= 0; j--) {
+                      if (enemies[j].type !== 5) {
+                          score += 10;
+                          enemiesKilled++;
+                          totalKills++;
+                          enemies.splice(j, 1);
+                      }
+                  }
+                  localStorage.setItem('kspace_totalkills', totalKills);
+                  playSound(1);
               }
               powerups.splice(i, 1);
               score += 50;
@@ -294,12 +323,12 @@
       }
       
       for (let e of enemies) {
-          ctx.fillStyle = e.type === 0 ? '#ff3232' : e.type === 1 ? '#ff9632' : e.type === 2 ? '#a020f0' : '#969696';
+          ctx.fillStyle = e.type === 0 ? '#ff3232' : (e.type === 1 ? '#ff9632' : (e.type === 2 ? '#a020f0' : (e.type === 3 ? '#969696' : (e.type === 4 ? '#00ffff' : '#8b4513'))));
           ctx.fillRect(e.x, e.y, 20, 20);
       }
       
       for (let pu of powerups) {
-          ctx.fillStyle = pu.type === 0 ? '#32ff32' : pu.type === 1 ? '#32c8ff' : '#ffffff';
+          ctx.fillStyle = pu.type === 0 ? '#32ff32' : (pu.type === 1 ? '#32c8ff' : (pu.type === 2 ? '#ffffff' : '#ffff00'));
           ctx.fillRect(pu.x, pu.y, 15, 15);
       }
       
@@ -307,6 +336,7 @@
       ctx.font = '16px monospace';
       ctx.fillText(`Score: ${score}  High: ${highScore}`, 10, 20);
       ctx.fillText(`Wave: ${wave}  Kills: ${enemiesKilled}`, 10, 38);
+      ctx.fillText(`Life Kills: ${totalKills}`, W - 140, 20);
       
       if (gameOver) {
           ctx.fillStyle = '#ff0000';
