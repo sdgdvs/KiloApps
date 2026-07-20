@@ -128,7 +128,7 @@
   <div class="header">
     <h2>Employee Database</h2>
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search employees..." onkeyup="filterTable()">
+      <input type="text" id="searchInput" aria-label="Search employees" placeholder="Search employees..." onkeyup="filterTable()">
     </div>
   </div>
   <div class="table-container">
@@ -143,20 +143,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td><td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
+        <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
       </tbody>
     </table>
   </div>
   <div class="add-form">
-    <input type="text" id="addId" placeholder="ID">
-    <input type="text" id="addName" placeholder="Name">
-    <input type="text" id="addDept" placeholder="Department">
-    <input type="text" id="addRole" placeholder="Role">
-    <button onclick="addRecord()">Add</button>
+    <input type="text" id="addId" aria-label="ID" placeholder="ID">
+    <input type="text" id="addName" aria-label="Name" placeholder="Name">
+    <input type="text" id="addDept" aria-label="Department" placeholder="Department">
+    <input type="text" id="addRole" aria-label="Role" placeholder="Role">
+    <button aria-label="Add record" onclick="addRecord()">Add</button>
   </div>
 </div>
 
@@ -170,13 +170,20 @@ function addRecord() {
 
   const tbody = document.querySelector('#empTable tbody');
   const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td>${id}</td>
-    <td>${name}</td>
-    <td><span class="tag">${dept}</span></td>
-    <td>${role}</td>
-    <td><button class="del-btn" onclick="this.closest('tr').remove()">Del</button></td>
-  `;
+  const tdId = document.createElement('td'); tdId.textContent = id;
+  const tdName = document.createElement('td'); tdName.textContent = name;
+  const tdDept = document.createElement('td'); 
+  const spanDept = document.createElement('span'); spanDept.className = 'tag'; spanDept.textContent = dept;
+  tdDept.appendChild(spanDept);
+  const tdRole = document.createElement('td'); tdRole.textContent = role;
+  const tdAction = document.createElement('td');
+  tdAction.innerHTML = '<button class="del-btn" aria-label="Delete record" onclick="this.closest(\'tr\').remove()">Del</button>';
+  
+  tr.appendChild(tdId);
+  tr.appendChild(tdName);
+  tr.appendChild(tdDept);
+  tr.appendChild(tdRole);
+  tr.appendChild(tdAction);
   tbody.appendChild(tr);
 
   document.getElementById('addId').value = '';

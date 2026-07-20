@@ -112,5 +112,6 @@ Pass 1 Complete.
 - **KColor**: Added ARIA labels and `aria-live` to color preview in `kcolor.html` for accessibility. Verified `main.c` (no leaks or bugs found).
 - **KContacts**: Fixed XSS vulnerability in `kcontacts.html` contact list rendering using `textContent` and safe DOM creation. Added keyboard accessibility attributes and handlers. Verified `main.c` (no issues found).
 - **KConverter**: Added ARIA labels and keyboard accessibility to tabs and inputs in `kconverter.html`. Verified `main.c` (no leaks or bugs found).
+- **KDB**: Fixed XSS vulnerability in `kdb.html` by safely creating DOM nodes and added ARIA labels for accessibility. Fixed GDI resource leak (`hBgBrush`) in `main.c` on `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KDB.
+Start Pass 2 (Deeper Quality checks). Next target: KDraw (or next in alphabetical order).

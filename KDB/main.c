@@ -16,6 +16,7 @@ HWND hListView;
 HWND hSearch;
 HWND hAddId, hAddName, hAddDept, hAddRole, hAddBtn, hDelBtn;
 HFONT hFont;
+HBRUSH hBgBrush;
 
 const char* headers[] = {"ID", "Name", "Department", "Role"};
 
@@ -200,6 +201,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY:
             if (hFont) DeleteObject(hFont);
+            if (hBgBrush) DeleteObject(hBgBrush);
             PostQuitMessage(0);
             break;
         default:
@@ -222,7 +224,8 @@ void MainEntry() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "KDBApp";
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
-    wc.hbrBackground = CreateSolidBrush(RGB(26, 32, 38));
+    hBgBrush = CreateSolidBrush(RGB(26, 32, 38));
+    wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
     HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database", WS_OVERLAPPEDWINDOW,
