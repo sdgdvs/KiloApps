@@ -53,14 +53,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KWords/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 - Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
 **App:** KWords
-**Goal:** Phase 2
+**Goal:** Phase 3
 
 
 ## App Lifecycle (14 phases per app)
