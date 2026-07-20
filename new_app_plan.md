@@ -64,7 +64,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Add Sound Effects (dart throw whoosh, thud on hit, bullseye cheer).
 - [x] Phase 9: Add Save/Load State (persist current match and scores).
 - [x] Phase 10: Add Match Statistics (average score per dart, highest checkout).
-- Phase 11: Add Local Multiplayer (hotseat for 2 players).
+- [x] Phase 11: Add Local Multiplayer (hotseat for 2 players).
 - Phase 12: Add Visual Polish (particle effects for high scores or bullseyes).
 - Phase 13: Add Undo/Redo functionality for misclicks.
 - Phase 14: Add Comprehensive Help / How-to-Play modal explaining rules for 301/501 and Cricket.
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KDarts
-**Goal:** Phase 11
+**Goal:** Phase 12
 
 
 ## App Lifecycle (14 phases per app)

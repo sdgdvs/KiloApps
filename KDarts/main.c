@@ -102,10 +102,11 @@ void LoadState(HWND hwnd) {
         fclose(f);
         dartsCount = 0;
         
-        char buf[20];
-        if (aiDifficulty == 0) strcpy(buf, "AI: Easy");
-        else if (aiDifficulty == 1) strcpy(buf, "AI: Medium");
-        else strcpy(buf, "AI: Hard");
+        char buf[30];
+        if (aiDifficulty == 0) strcpy(buf, "Vs AI: Easy");
+        else if (aiDifficulty == 1) strcpy(buf, "Vs AI: Medium");
+        else if (aiDifficulty == 2) strcpy(buf, "Vs AI: Hard");
+        else strcpy(buf, "Vs Human");
         SetWindowText(GetDlgItem(hwnd, 103), buf);
         
         sprintf(statusMsg, "Game Loaded!");
@@ -126,10 +127,10 @@ void SetMode(int mode) {
     if (mode == 0) {
         scores[0] = 501; scores[1] = 501;
         prevScores[0] = 501; prevScores[1] = 501;
-        sprintf(statusMsg, "Game On! Player Turn - Throw 3 Darts");
+        sprintf(statusMsg, "Game On! Player 1 Turn - Throw 3 Darts");
     } else {
         for(int i=0; i<7; i++) { cricketHits[0][i] = 0; cricketHits[1][i] = 0; }
-        sprintf(statusMsg, "Player Turn - Close 15-20 and Bullseye");
+        sprintf(statusMsg, "Player 1 Turn - Close 15-20 and Bullseye");
     }
 }
 
@@ -202,8 +203,8 @@ void NextTurn(HWND hwnd) {
         prevScores[currentPlayer] = scores[currentPlayer];
         currentPlayer = 1 - currentPlayer;
         gameState = 0;
-        if (currentPlayer == 0) sprintf(statusMsg, "Player's Turn - Throw Dart 1");
-        else sprintf(statusMsg, "AI's Turn");
+        if (currentPlayer == 0) sprintf(statusMsg, "Player 1's Turn - Throw Dart 1");
+        else sprintf(statusMsg, aiDifficulty == 3 ? "Player 2's Turn - Throw Dart 1" : "AI's Turn");
     } else if (gameState == 2) {
         SetMode(gameMode);
     }
@@ -282,7 +283,7 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
     dartsLeft--;
     totalDarts[currentPlayer]++;
     
-    const char* turnName = currentPlayer == 0 ? "Player" : "AI";
+    const char* turnName = currentPlayer == 0 ? "Player 1" : (aiDifficulty == 3 ? "Player 2" : "AI");
     
     if (gameMode == 0) {
         scores[currentPlayer] -= pts;
@@ -351,8 +352,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          260, 120, 80, 30, hwnd, (HMENU)104, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
                          350, 120, 80, 30, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            CreateWindow("BUTTON", "AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         440, 120, 100, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Vs AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         440, 120, 120, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
@@ -364,11 +365,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetMode(1);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == 103) {
-                aiDifficulty = (aiDifficulty + 1) % 3;
-                char buf[20];
-                if (aiDifficulty == 0) strcpy(buf, "AI: Easy");
-                else if (aiDifficulty == 1) strcpy(buf, "AI: Medium");
-                else strcpy(buf, "AI: Hard");
+                aiDifficulty = (aiDifficulty + 1) % 4;
+                char buf[30];
+                if (aiDifficulty == 0) strcpy(buf, "Vs AI: Easy");
+                else if (aiDifficulty == 1) strcpy(buf, "Vs AI: Medium");
+                else if (aiDifficulty == 2) strcpy(buf, "Vs AI: Hard");
+                else strcpy(buf, "Vs Human");
                 SetWindowText((HWND)lParam, buf);
             } else if (LOWORD(wParam) == 104) {
                 SaveState(hwnd);
@@ -400,7 +402,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
             
-            if (currentPlayer == 1 && gameState == 0) {
+            if (currentPlayer == 1 && gameState == 0 && aiDifficulty != 3) {
                 int allAnimated = 1;
                 for (int i = 0; i < dartsCount; i++) {
                     if (darts[i].animating) allAnimated = 0;
@@ -412,7 +414,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         ThrowDart(hwnd, 0, 0, 1);
                     }
                 }
-            } else if (currentPlayer == 1 && gameState == 1) {
+            } else if (currentPlayer == 1 && gameState == 1 && aiDifficulty != 3) {
                 aiTimer++;
                 if (aiTimer > 120) {
                     aiTimer = 0;
@@ -431,11 +433,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_LBUTTONDOWN: {
             if (mouseY < 160 && mouseX > 50 && mouseX < 600) return 0; // Ignore UI clicks
             
-            if (gameState == 0 && currentPlayer == 0) { // PLAYING
+            if (gameState == 0 && (currentPlayer == 0 || aiDifficulty == 3)) { // PLAYING
                 int targetX = mouseX + wobbleX;
                 int targetY = mouseY + wobbleY;
                 ThrowDart(hwnd, targetX, targetY, 0);
-            } else if ((gameState == 1 || gameState == 2) && currentPlayer == 0) {
+            } else if ((gameState == 1 || gameState == 2) && (currentPlayer == 0 || aiDifficulty == 3)) {
                 NextTurn(hwnd);
             }
             return 0;
@@ -533,19 +535,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 
                 SelectObject(memDC, font);
                 TextOut(memDC, 325 - sz.cx/2 - 50, 5, "P1", 2);
-                TextOut(memDC, 325 + sz.cx/2 + 20, 5, "AI", 2);
+                const char* p2Name = aiDifficulty == 3 ? "P2" : "AI";
+                TextOut(memDC, 325 + sz.cx/2 + 20, 5, p2Name, strlen(p2Name));
                 
                 SetTextColor(memDC, RGB(170, 170, 170));
                 char statsStr[100];
                 float pAvg = totalDarts[0] > 0 ? (float)(501 - scores[0]) / totalDarts[0] : 0.0f;
                 float aAvg = totalDarts[1] > 0 ? (float)(501 - scores[1]) / totalDarts[1] : 0.0f;
-                sprintf(statsStr, "P1 Avg: %.1f | High Out: %d    AI Avg: %.1f | High Out: %d", pAvg, highestCheckout[0], aAvg, highestCheckout[1]);
+                sprintf(statsStr, "P1 Avg: %.1f | High Out: %d    %s Avg: %.1f | High Out: %d", pAvg, highestCheckout[0], p2Name, aAvg, highestCheckout[1]);
                 GetTextExtentPoint32(memDC, statsStr, strlen(statsStr), &sz);
                 TextOut(memDC, 325 - sz.cx/2, 105, statsStr, strlen(statsStr));
             } else {
                 SelectObject(memDC, font);
-                char scoreStrP[100] = "P: ";
-                char scoreStrA[100] = "AI: ";
+                const char* p2Name = aiDifficulty == 3 ? "P2" : "AI";
+                char scoreStrP[100] = "P1: ";
+                char scoreStrA[100];
+                sprintf(scoreStrA, "%s: ", p2Name);
                 int targets[] = {20, 19, 18, 17, 16, 15, 25};
                 int pMarks = 0, aMarks = 0;
                 for (int i=0; i<7; i++) {
@@ -574,7 +579,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 char statsStr[100];
                 float pAvg = totalDarts[0] > 0 ? (float)pMarks / totalDarts[0] : 0.0f;
                 float aAvg = totalDarts[1] > 0 ? (float)aMarks / totalDarts[1] : 0.0f;
-                sprintf(statsStr, "P1 Marks/Dart: %.2f    AI Marks/Dart: %.2f", pAvg, aAvg);
+                sprintf(statsStr, "P1 Marks/Dart: %.2f    %s Marks/Dart: %.2f", pAvg, p2Name, aAvg);
                 GetTextExtentPoint32(memDC, statsStr, strlen(statsStr), &sz);
                 TextOut(memDC, 325 - sz.cx/2, 105, statsStr, strlen(statsStr));
             }
@@ -626,7 +631,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             // Draw crosshair
-            if (gameState == 0 && currentPlayer == 0) {
+            if (gameState == 0 && (currentPlayer == 0 || aiDifficulty == 3)) {
                 int tx = mouseX + wobbleX;
                 int ty = mouseY + wobbleY;
                 HPEN cPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));
