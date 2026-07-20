@@ -49,18 +49,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KMatch3
-**Phase:** 4
+**Phase:** 5
 **Status:** In Progress
 
 - Phase 1: Completed. Scaffolded `KMatch3/` directory, created basic UI skeleton, registered in App.jsx.
 - Phase 2: Completed. Implemented core functionality in the web HTML (inline JS/CSS, self-contained). Created native C version.
 - Phase 3: Completed. Created native C version (`main.c`, `build.bat`) with Win32 API with functional parity.
-- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
+- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
+- Phase 5: Add a Score System with Combo Multipliers (score based on match size and cascades). (COMPLETED)
+- Phase 6: Add Sound Effects (gem swap, match pop, cascade combo sounds).
+- Phase 7: Add Visual Animations (smooth gem swapping and falling gravity).
+- Phase 8: Add Particle Effects (explosions when gems match).
+- Phase 9: Add Special Gems (e.g., matching 4 creates a line bomb, matching 5 creates a color bomb).
+- Phase 10: Add Level Progression (target scores and limited moves/time per level).
+- Phase 11: Add Save/Load State (persist current level, score, and board).
+- Phase 12: Add High Score tracking and Statistics (Games Played, Best Score, Max Combo).
+- Phase 13: Add Game Modes (e.g., Zen mode with no limits, Timed mode).
+- Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KMatch3
-**Goal:** Phase 4
+**Goal:** Phase 6
 
 
 ## App Lifecycle (14 phases per app)

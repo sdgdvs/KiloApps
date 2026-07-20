@@ -150,8 +150,9 @@
     }
 
     async function processMatches(matches) {
+      let comboMultiplier = 1;
       while(matches.length > 0) {
-        score += matches.length * 10;
+        score += matches.length * 10 * comboMultiplier;
         scoreEl.textContent = score;
 
         matches.forEach(m => {
@@ -180,6 +181,7 @@
         }
         await sleep(200);
         matches = findMatches();
+        if (matches.length > 0) comboMultiplier++;
       }
     }
 

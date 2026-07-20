@@ -96,6 +96,7 @@ int FindMatches(int matchGrid[ROWS][COLS]) {
 
 void ProcessMatches(HWND hwnd) {
     int matchGrid[ROWS][COLS];
+    int comboMultiplier = 1;
     while (FindMatches(matchGrid)) {
         int matchCount = 0;
         for (int r = 0; r < ROWS; r++) {
@@ -106,7 +107,8 @@ void ProcessMatches(HWND hwnd) {
                 }
             }
         }
-        score += matchCount * 10;
+        score += matchCount * 10 * comboMultiplier;
+        comboMultiplier++;
         InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
         Sleep(200);
 
