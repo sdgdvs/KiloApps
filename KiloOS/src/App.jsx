@@ -80,7 +80,8 @@ const APPS = [
   { id: 'kasteroids', title: 'KAsteroids', url: '/apps/kasteroids.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kasteroids.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kfreecell', title: 'KFreecell', url: '/apps/kfreecell.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kfreecell.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kmatch3', title: 'KMatch3', url: '/apps/kmatch3.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmatch3.ico', w: 600, h: 600, folder: 'Games' },
-  { id: 'kwords', title: 'KWords', url: '/apps/kwords.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwords.ico', w: 600, h: 600, folder: 'Games' }
+  { id: 'kwords', title: 'KWords', url: '/apps/kwords.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwords.ico', w: 600, h: 600, folder: 'Games' },
+  { id: 'kgo', title: 'KGo', url: '/apps/kgo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgo.ico', w: 600, h: 600, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
