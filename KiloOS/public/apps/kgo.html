@@ -8,22 +8,24 @@
   body {
     margin: 0;
     padding: 20px;
-    background-color: #121212;
+    background-color: #181818;
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
-  h1 { margin-top: 0; }
+  h1 { margin-top: 0; color: #fff; }
   .board {
     display: grid;
     grid-template-columns: repeat(9, 30px);
     grid-template-rows: repeat(9, 30px);
-    background-color: #dcb35c;
+    background-color: #cda756;
     padding: 15px;
     gap: 0;
-    border: 2px solid #555;
+    border: 2px solid #222;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
   .cell {
     width: 30px;
@@ -39,7 +41,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background-color: #000;
+    background-color: #111;
     z-index: 1;
   }
   .cell::after {
@@ -49,7 +51,7 @@
     top: 0;
     bottom: 0;
     width: 1px;
-    background-color: #000;
+    background-color: #111;
     z-index: 1;
   }
   /* Edge adjustments can go here */
@@ -66,26 +68,30 @@
     height: 26px;
     border-radius: 50%;
     z-index: 2;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
   }
-  .black { background-color: #111; box-shadow: inset -2px -2px 4px rgba(255,255,255,0.2); }
-  .white { background-color: #eee; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2); }
+  .black { background-color: #111; box-shadow: inset -2px -2px 4px rgba(255,255,255,0.1), 2px 2px 4px rgba(0,0,0,0.5); }
+  .white { background-color: #eee; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 2px 2px 4px rgba(0,0,0,0.5); }
   .controls {
     margin-top: 20px;
     display: flex;
     gap: 10px;
   }
-  button {
-    background-color: #333;
+  button, select {
+    background-color: #2a2a2a;
     color: #fff;
-    border: 1px solid #555;
-    padding: 5px 15px;
+    border: 1px solid #444;
+    padding: 6px 16px;
     cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
   }
-  button:hover { background-color: #444; }
+  button:hover, select:hover { background-color: #3a3a3a; }
   .status {
     margin-top: 15px;
     font-size: 1.2em;
     margin-bottom: 10px;
+    font-weight: 500;
   }
 </style>
 </head>
