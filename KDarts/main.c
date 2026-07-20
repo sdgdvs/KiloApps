@@ -1,6 +1,8 @@
 #include <windows.h>
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define PI 3.14159265358979323846
 #define TIMER_ID 1
@@ -18,11 +20,13 @@ typedef struct {
 } Dart;
 
 int gameMode = 0; // 0=501, 1=Cricket
-int cricketHits[7] = {0}; // 20, 19, 18, 17, 16, 15, 25
-int totalDarts = 0;
+int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
+int currentPlayer = 0; // 0=Player, 1=AI
+int cricketHits[2][7] = {{0}}; // 20, 19, 18, 17, 16, 15, 25
+int totalDarts[2] = {0};
 
-int score = 501;
-int prevScore = 501;
+int scores[2] = {501, 501};
+int prevScores[2] = {501, 501};
 int dartsLeft = 3;
 Dart darts[3];
 int dartsCount = 0;
@@ -30,21 +34,28 @@ int gameState = 0; // 0=PLAYING, 1=TURN_END, 2=WON
 int mouseX = 325, mouseY = 380;
 int wobbleX = 0, wobbleY = 0;
 float t = 0.0f;
-char statusMsg[100] = "Game On! Throw 3 Darts";
+int aiTimer = 0;
+char statusMsg[100] = "Game On! Player Turn - Throw 3 Darts";
+
+void SetMode(int mode);
+void NextTurn(HWND hwnd);
+void ThrowDart(HWND hwnd, int tx, int ty, int isAI);
 
 void SetMode(int mode) {
     gameMode = mode;
     gameState = 0;
     dartsCount = 0;
     dartsLeft = 3;
-    totalDarts = 0;
+    currentPlayer = 0;
+    totalDarts[0] = 0;
+    totalDarts[1] = 0;
     if (mode == 0) {
-        score = 501;
-        prevScore = 501;
-        sprintf(statusMsg, "Game On! Throw 3 Darts");
+        scores[0] = 501; scores[1] = 501;
+        prevScores[0] = 501; prevScores[1] = 501;
+        sprintf(statusMsg, "Game On! Player Turn - Throw 3 Darts");
     } else {
-        for(int i=0; i<7; i++) cricketHits[i] = 0;
-        sprintf(statusMsg, "Close 15-20 and Bullseye");
+        for(int i=0; i<7; i++) { cricketHits[0][i] = 0; cricketHits[1][i] = 0; }
+        sprintf(statusMsg, "Player Turn - Close 15-20 and Bullseye");
     }
 }
 
@@ -110,13 +121,155 @@ void DrawCircle(HDC hdc, int r, COLORREF color) {
     DeleteObject(pen);
 }
 
+void NextTurn(HWND hwnd) {
+    if (gameState == 1) {
+        dartsCount = 0;
+        dartsLeft = 3;
+        prevScores[currentPlayer] = scores[currentPlayer];
+        currentPlayer = 1 - currentPlayer;
+        gameState = 0;
+        if (currentPlayer == 0) sprintf(statusMsg, "Player's Turn - Throw Dart 1");
+        else sprintf(statusMsg, "AI's Turn");
+    } else if (gameState == 2) {
+        SetMode(gameMode);
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
+    if (isAI) {
+        int targetNum = 20;
+        int targetMult = 3;
+        
+        if (gameMode == 0) {
+            if (scores[1] > 60) { targetNum = 20; targetMult = 3; }
+            else {
+                if (scores[1] <= 20) { targetNum = scores[1]; targetMult = 1; }
+                else { targetNum = 20; targetMult = 1; }
+            }
+        } else {
+            int targets[] = {20,19,18,17,16,15,25};
+            for (int i=0; i<7; i++) {
+                if (cricketHits[1][i] < 3) {
+                    targetNum = targets[i];
+                    targetMult = (targetNum == 25) ? 2 : 3;
+                    break;
+                }
+            }
+        }
+        
+        float rad = 0;
+        if (targetNum == 25) {
+            rad = targetMult == 2 ? R * 0.02f : R * 0.06f;
+        } else {
+            if (targetMult == 3) rad = R * 0.605f;
+            else if (targetMult == 2) rad = R * 0.976f;
+            else rad = R * 0.75f;
+        }
+        
+        float idealX = CX, idealY = CY;
+        if (targetNum != 25) {
+            int scoresArray[] = {20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5};
+            int idx = 0;
+            for(int i=0; i<20; i++) { if(scoresArray[i]==targetNum) { idx=i; break; } }
+            float a = -(float)PI / 2.0f + idx * ((float)PI / 10.0f);
+            idealX = CX + cosf(a) * rad;
+            idealY = CY + sinf(a) * rad;
+        }
+        
+        float errorMag = 50.0f;
+        if (aiDifficulty == 0) errorMag = 120.0f;
+        else if (aiDifficulty == 2) errorMag = 20.0f;
+        
+        float rx = (((float)rand()/RAND_MAX) + ((float)rand()/RAND_MAX) + ((float)rand()/RAND_MAX) - 1.5f) * errorMag;
+        float ry = (((float)rand()/RAND_MAX) + ((float)rand()/RAND_MAX) + ((float)rand()/RAND_MAX) - 1.5f) * errorMag;
+        
+        tx = (int)(idealX + rx);
+        ty = (int)(idealY + ry);
+    }
+    
+    int number, mult;
+    GetHitDetails(tx, ty, &number, &mult);
+    int pts = number * mult;
+    
+    if (dartsCount < 3) {
+        darts[dartsCount].targetX = tx;
+        darts[dartsCount].targetY = ty;
+        darts[dartsCount].x = (float)CX;
+        darts[dartsCount].y = 750.0f;
+        darts[dartsCount].pts = pts;
+        darts[dartsCount].progress = 0.0f;
+        darts[dartsCount].animating = 1;
+        dartsCount++;
+    }
+    
+    dartsLeft--;
+    totalDarts[currentPlayer]++;
+    
+    const char* turnName = currentPlayer == 0 ? "Player" : "AI";
+    
+    if (gameMode == 0) {
+        scores[currentPlayer] -= pts;
+        if (scores[currentPlayer] < 0) {
+            sprintf(statusMsg, "%s Bust!", turnName);
+            scores[currentPlayer] = prevScores[currentPlayer];
+            gameState = 1;
+        } else if (scores[currentPlayer] == 0) {
+            sprintf(statusMsg, "%s Wins!", turnName);
+            gameState = 2;
+        } else if (dartsLeft == 0) {
+            sprintf(statusMsg, "%s Turn Over. Score: %d", turnName, scores[currentPlayer]);
+            gameState = 1;
+        } else {
+            sprintf(statusMsg, "%s Hit %d! left: %d", turnName, pts, dartsLeft);
+        }
+    } else {
+        if (mult > 0) {
+            int tIdx = -1;
+            if (number == 20) tIdx = 0; else if (number == 19) tIdx = 1;
+            else if (number == 18) tIdx = 2; else if (number == 17) tIdx = 3;
+            else if (number == 16) tIdx = 4; else if (number == 15) tIdx = 5;
+            else if (number == 25) tIdx = 6;
+            
+            if (tIdx != -1) {
+                cricketHits[currentPlayer][tIdx] += mult;
+                if (cricketHits[currentPlayer][tIdx] > 3) cricketHits[currentPlayer][tIdx] = 3;
+            }
+        }
+        
+        int allClosed = 1;
+        for (int i=0; i<7; i++) {
+            if (cricketHits[currentPlayer][i] < 3) allClosed = 0;
+        }
+        
+        if (allClosed) {
+            sprintf(statusMsg, "%s Wins in %d darts!", turnName, totalDarts[currentPlayer]);
+            gameState = 2;
+        } else if (dartsLeft == 0) {
+            sprintf(statusMsg, "%s Turn Over.", turnName);
+            gameState = 1;
+        } else {
+            if (mult == 0) sprintf(statusMsg, "Miss! - left: %d", dartsLeft);
+            else {
+                const char* mStr = mult == 1 ? "S" : (mult == 2 ? "D" : "T");
+                if (number == 25) sprintf(statusMsg, "%s: %s Bull - left: %d", turnName, mStr, dartsLeft);
+                else sprintf(statusMsg, "%s: %s %d - left: %d", turnName, mStr, number, dartsLeft);
+            }
+        }
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
+            srand((unsigned int)time(NULL));
             CreateWindow("BUTTON", "501", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         210, 120, 100, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         150, 120, 100, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Cricket", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         340, 120, 100, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         270, 120, 100, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         390, 120, 100, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
@@ -127,6 +280,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == 102) {
                 SetMode(1);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (LOWORD(wParam) == 103) {
+                aiDifficulty = (aiDifficulty + 1) % 3;
+                char buf[20];
+                if (aiDifficulty == 0) strcpy(buf, "AI: Easy");
+                else if (aiDifficulty == 1) strcpy(buf, "AI: Medium");
+                else strcpy(buf, "AI: Hard");
+                SetWindowText((HWND)lParam, buf);
             }
             return 0;
 
@@ -150,6 +310,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     darts[i].y = (float)darts[i].targetY;
                 }
             }
+            
+            if (currentPlayer == 1 && gameState == 0) {
+                int allAnimated = 1;
+                for (int i = 0; i < dartsCount; i++) {
+                    if (darts[i].animating) allAnimated = 0;
+                }
+                if (allAnimated) {
+                    aiTimer++;
+                    if (aiTimer > 60) {
+                        aiTimer = 0;
+                        ThrowDart(hwnd, 0, 0, 1);
+                    }
+                }
+            } else if (currentPlayer == 1 && gameState == 1) {
+                aiTimer++;
+                if (aiTimer > 120) {
+                    aiTimer = 0;
+                    NextTurn(hwnd);
+                }
+            }
+            
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
             
@@ -161,87 +342,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_LBUTTONDOWN: {
             if (mouseY < 160 && mouseX > 50 && mouseX < 600) return 0; // Ignore UI clicks
             
-            if (gameState == 0) { // PLAYING
+            if (gameState == 0 && currentPlayer == 0) { // PLAYING
                 int targetX = mouseX + wobbleX;
                 int targetY = mouseY + wobbleY;
-                int number, mult;
-                GetHitDetails(targetX, targetY, &number, &mult);
-                int pts = number * mult;
-                
-                if (dartsCount < 3) {
-                    darts[dartsCount].targetX = targetX;
-                    darts[dartsCount].targetY = targetY;
-                    darts[dartsCount].x = (float)CX;
-                    darts[dartsCount].y = 750.0f;
-                    darts[dartsCount].pts = pts;
-                    darts[dartsCount].progress = 0.0f;
-                    darts[dartsCount].animating = 1;
-                    dartsCount++;
-                }
-                
-                dartsLeft--;
-                totalDarts++;
-                
-                if (gameMode == 0) {
-                    score -= pts;
-                    if (score < 0) {
-                        sprintf(statusMsg, "Bust!");
-                        score = prevScore;
-                        gameState = 1;
-                    } else if (score == 0) {
-                        sprintf(statusMsg, "You Win!");
-                        gameState = 2;
-                    } else if (dartsLeft == 0) {
-                        sprintf(statusMsg, "Turn Over. Score: %d", score);
-                        gameState = 1;
-                    } else {
-                        sprintf(statusMsg, "Hit %d! Darts left: %d", pts, dartsLeft);
-                    }
-                } else { // Cricket
-                    if (mult > 0) {
-                        int tIdx = -1;
-                        if (number == 20) tIdx = 0;
-                        else if (number == 19) tIdx = 1;
-                        else if (number == 18) tIdx = 2;
-                        else if (number == 17) tIdx = 3;
-                        else if (number == 16) tIdx = 4;
-                        else if (number == 15) tIdx = 5;
-                        else if (number == 25) tIdx = 6;
-                        
-                        if (tIdx != -1) {
-                            cricketHits[tIdx] += mult;
-                            if (cricketHits[tIdx] > 3) cricketHits[tIdx] = 3;
-                        }
-                    }
-                    
-                    int allClosed = 1;
-                    for (int i=0; i<7; i++) {
-                        if (cricketHits[i] < 3) allClosed = 0;
-                    }
-                    
-                    if (allClosed) {
-                        sprintf(statusMsg, "You Win in %d darts!", totalDarts);
-                        gameState = 2;
-                    } else if (dartsLeft == 0) {
-                        sprintf(statusMsg, "Turn Over.");
-                        gameState = 1;
-                    } else {
-                        if (mult == 0) sprintf(statusMsg, "Miss! - Darts left: %d", dartsLeft);
-                        else {
-                            const char* mStr = mult == 1 ? "Single" : (mult == 2 ? "Double" : "Triple");
-                            if (number == 25) sprintf(statusMsg, "%s Bull - Darts left: %d", mStr, dartsLeft);
-                            else sprintf(statusMsg, "%s %d - Darts left: %d", mStr, number, dartsLeft);
-                        }
-                    }
-                }
-            } else if (gameState == 1) { // TURN_END
-                dartsCount = 0;
-                dartsLeft = 3;
-                prevScore = score;
-                gameState = 0; // PLAYING
-                sprintf(statusMsg, "Throw Dart 1");
-            } else if (gameState == 2) { // WON
-                SetMode(gameMode);
+                ThrowDart(hwnd, targetX, targetY, 0);
+            } else if ((gameState == 1 || gameState == 2) && currentPlayer == 0) {
+                NextTurn(hwnd);
             }
             return 0;
         }
@@ -330,26 +436,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             if (gameMode == 0) {
                 SelectObject(memDC, largeFont);
-                char scoreStr[20];
-                sprintf(scoreStr, "%d", score);
+                char scoreStr[40];
+                sprintf(scoreStr, "%d | %d", scores[0], scores[1]);
                 SIZE sz;
                 GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
                 TextOut(memDC, 325 - sz.cx/2, 25, scoreStr, strlen(scoreStr));
+                
+                SelectObject(memDC, font);
+                TextOut(memDC, 325 - sz.cx/2 - 50, 5, "P1", 2);
+                TextOut(memDC, 325 + sz.cx/2 + 20, 5, "AI", 2);
             } else {
                 SelectObject(memDC, font);
-                char scoreStr[100] = "";
+                char scoreStrP[100] = "P: ";
+                char scoreStrA[100] = "AI: ";
                 int targets[] = {20, 19, 18, 17, 16, 15, 25};
                 for (int i=0; i<7; i++) {
-                    int hits = cricketHits[i];
+                    int hits = cricketHits[0][i];
                     char mark = hits == 0 ? '-' : (hits == 1 ? '/' : (hits == 2 ? 'X' : 'O'));
                     char buf[16];
-                    if (targets[i] == 25) sprintf(buf, "B:%c  ", mark);
-                    else sprintf(buf, "%d:%c  ", targets[i], mark);
-                    strcat(scoreStr, buf);
+                    if (targets[i] == 25) sprintf(buf, "B:%c ", mark);
+                    else sprintf(buf, "%d:%c ", targets[i], mark);
+                    strcat(scoreStrP, buf);
+                    
+                    hits = cricketHits[1][i];
+                    mark = hits == 0 ? '-' : (hits == 1 ? '/' : (hits == 2 ? 'X' : 'O'));
+                    if (targets[i] == 25) sprintf(buf, "B:%c ", mark);
+                    else sprintf(buf, "%d:%c ", targets[i], mark);
+                    strcat(scoreStrA, buf);
                 }
                 SIZE sz;
-                GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
-                TextOut(memDC, 325 - sz.cx/2, 40, scoreStr, strlen(scoreStr));
+                GetTextExtentPoint32(memDC, scoreStrP, strlen(scoreStrP), &sz);
+                TextOut(memDC, 325 - sz.cx/2, 20, scoreStrP, strlen(scoreStrP));
+                GetTextExtentPoint32(memDC, scoreStrA, strlen(scoreStrA), &sz);
+                TextOut(memDC, 325 - sz.cx/2, 50, scoreStrA, strlen(scoreStrA));
             }
             
             SelectObject(memDC, font);
@@ -399,7 +518,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             // Draw crosshair
-            if (gameState == 0) {
+            if (gameState == 0 && currentPlayer == 0) {
                 int tx = mouseX + wobbleX;
                 int ty = mouseY + wobbleY;
                 HPEN cPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 0));

@@ -56,6 +56,11 @@
     <div style="margin-bottom: 10px;">
       <button onclick="setMode('501')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">501</button>
       <button onclick="setMode('cricket')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">Cricket</button>
+      <select id="diff" onchange="setDifficulty(this.value)" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">
+        <option value="Easy">AI: Easy</option>
+        <option value="Medium" selected>AI: Medium</option>
+        <option value="Hard">AI: Hard</option>
+      </select>
     </div>
     <div id="score">501</div>
     <div id="status">Game On! Throw 3 Darts</div>
@@ -70,11 +75,13 @@ const scoreEl = document.getElementById('score');
 const statusEl = document.getElementById('status');
 
 let gameMode = '501';
-let cricketHits = {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0};
-let dartCount = 0;
+let aiDifficulty = 'Medium';
+let currentPlayer = 0;
+let cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
+let totalDarts = [0, 0];
 
-let score = 501;
-let prevScore = 501;
+let scores = [501, 501];
+let prevScores = [501, 501];
 let dartsLeft = 3;
 let darts = [];
 let state = 'PLAYING';
@@ -87,38 +94,49 @@ const CY = 300;
 const R = 220; // scoring radius
 const BOARD_R = 300;
 
+function setDifficulty(diff) {
+    aiDifficulty = diff;
+}
+
 function setMode(mode) {
     gameMode = mode;
     state = 'PLAYING';
     darts = [];
     dartsLeft = 3;
-    dartCount = 0;
+    currentPlayer = 0;
+    scores = [501, 501];
+    prevScores = [501, 501];
+    cricketHits = [
+        {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0},
+        {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}
+    ];
+    totalDarts = [0, 0];
     if (mode === '501') {
-        score = 501;
-        prevScore = 501;
-        scoreEl.style.fontSize = "48px";
-        statusEl.innerText = "Game On! Throw 3 Darts";
+        scoreEl.style.fontSize = "32px";
+        statusEl.innerText = "Game On! Player Turn - Throw 3 Darts";
     } else {
-        cricketHits = {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0};
-        scoreEl.style.fontSize = "24px";
-        statusEl.innerText = "Close 15-20 and Bullseye";
+        scoreEl.style.fontSize = "20px";
+        statusEl.innerText = "Player Turn - Close 15-20 and Bullseye";
     }
     updateScoreUI();
 }
 
 function updateScoreUI() {
     if (gameMode === '501') {
-        scoreEl.innerText = score;
+        scoreEl.innerHTML = `Player: ${scores[0]} | AI: ${scores[1]}`;
     } else {
-        let str = "";
+        let str = "P: ";
         const targets = [20,19,18,17,16,15,25];
         for (let t of targets) {
-            let label = t === 25 ? 'B' : t;
-            let hits = cricketHits[t];
-            let mark = hits === 0 ? '-' : (hits === 1 ? '/' : (hits === 2 ? 'X' : 'O'));
-            str += `${label}:${mark}  `;
+            let hits = cricketHits[0][t];
+            str += `${t===25?'B':t}:${hits===0?'-':(hits===1?'/':(hits===2?'X':'O'))} `;
         }
-        scoreEl.innerText = str;
+        str += "<br>AI: ";
+        for (let t of targets) {
+            let hits = cricketHits[1][t];
+            str += `${t===25?'B':t}:${hits===0?'-':(hits===1?'/':(hits===2?'X':'O'))} `;
+        }
+        scoreEl.innerHTML = str;
     }
 }
 
@@ -128,65 +146,139 @@ canvas.addEventListener('mousemove', (e) => {
     mouseY = e.clientY - rect.top;
 });
 
+function nextTurn() {
+    if (state === 'TURN_END') {
+        darts = [];
+        dartsLeft = 3;
+        prevScores[currentPlayer] = scores[currentPlayer];
+        currentPlayer = 1 - currentPlayer;
+        state = 'PLAYING';
+        statusEl.innerText = currentPlayer === 0 ? "Player's Turn - Throw Dart 1" : "AI's Turn";
+        if (currentPlayer === 1) {
+            setTimeout(aiThrow, 1000);
+        }
+    } else if (state === 'WON') {
+        setMode(gameMode);
+    }
+}
+
+function throwDart(targetX, targetY) {
+    const hit = getHitDetails(targetX, targetY);
+    const pts = hit.number * hit.mult;
+    
+    darts.push({targetX: targetX, targetY: targetY, x: 300, y: 600, pts: pts, progress: 0, animating: true});
+    dartsLeft--;
+    totalDarts[currentPlayer]++;
+
+    let turnName = currentPlayer === 0 ? "Player" : "AI";
+
+    if (gameMode === '501') {
+        scores[currentPlayer] -= pts;
+        if (scores[currentPlayer] < 0) {
+            statusEl.innerText = `${turnName} Bust!`;
+            scores[currentPlayer] = prevScores[currentPlayer];
+            state = 'TURN_END';
+        } else if (scores[currentPlayer] === 0) {
+            statusEl.innerText = `${turnName} Wins!`;
+            state = 'WON';
+        } else if (dartsLeft === 0) {
+            statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}`;
+            state = 'TURN_END';
+        } else {
+            statusEl.innerText = `${turnName} Hit ${pts}! Darts left: ${dartsLeft}`;
+        }
+    } else {
+        let hitMsg = hit.mult > 0 ? (hit.mult === 1 ? "Single " : (hit.mult === 2 ? "Double " : "Triple ")) + (hit.number===25?"Bull":hit.number) : "Miss!";
+        if (cricketHits[currentPlayer][hit.number] !== undefined) {
+            cricketHits[currentPlayer][hit.number] += hit.mult;
+            if (cricketHits[currentPlayer][hit.number] > 3) cricketHits[currentPlayer][hit.number] = 3;
+        }
+        
+        let allClosed = true;
+        for (let t of [20,19,18,17,16,15,25]) {
+            if (cricketHits[currentPlayer][t] < 3) allClosed = false;
+        }
+        
+        if (allClosed) {
+            statusEl.innerText = `${turnName} Wins in ${totalDarts[currentPlayer]} darts!`;
+            state = 'WON';
+        } else if (dartsLeft === 0) {
+            statusEl.innerText = `${turnName} Turn Over.`;
+            state = 'TURN_END';
+        } else {
+            statusEl.innerText = `${turnName}: ${hitMsg} - Darts left: ${dartsLeft}`;
+        }
+    }
+    updateScoreUI();
+
+    if (state === 'PLAYING' && currentPlayer === 1) {
+        setTimeout(aiThrow, 1000);
+    } else if (state === 'TURN_END' && currentPlayer === 1) {
+        setTimeout(nextTurn, 2000);
+    }
+}
+
+function aiThrow() {
+    if (state !== 'PLAYING' || currentPlayer !== 1) return;
+    
+    let targetNum = 20;
+    let targetMult = 3;
+    
+    if (gameMode === '501') {
+        if (scores[1] > 60) {
+            targetNum = 20; targetMult = 3;
+        } else {
+            let s = scores[1];
+            if (s <= 20) { targetNum = s; targetMult = 1; }
+            else { targetNum = 20; targetMult = 1; }
+        }
+    } else {
+        let targets = [20,19,18,17,16,15,25];
+        for (let t of targets) {
+            if (cricketHits[1][t] < 3) {
+                targetNum = t;
+                targetMult = (t === 25) ? 2 : 3;
+                break;
+            }
+        }
+    }
+    
+    let rad = 0;
+    if (targetNum === 25) {
+        rad = targetMult === 2 ? R * 0.02 : R * 0.06;
+    } else {
+        if (targetMult === 3) rad = R * 0.605;
+        else if (targetMult === 2) rad = R * 0.976;
+        else rad = R * 0.75;
+    }
+    
+    let idealX = CX; let idealY = CY;
+    if (targetNum !== 25) {
+        const scoresArray = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+        let a = -Math.PI / 2 + scoresArray.indexOf(targetNum) * (Math.PI / 10);
+        idealX = CX + Math.cos(a) * rad;
+        idealY = CY + Math.sin(a) * rad;
+    }
+    
+    let errorMag = 50;
+    if (aiDifficulty === 'Easy') errorMag = 120;
+    else if (aiDifficulty === 'Hard') errorMag = 20;
+    
+    let rx = (Math.random() + Math.random() + Math.random() - 1.5) * errorMag;
+    let ry = (Math.random() + Math.random() + Math.random() - 1.5) * errorMag;
+    
+    throwDart(idealX + rx, idealY + ry);
+}
+
 canvas.addEventListener('mousedown', (e) => {
     // If clicking over UI panel roughly (y < 100), ignore
     if (mouseY < 100) return;
-    if (state === 'PLAYING') {
-        const targetX = mouseX + wobbleX;
-        const targetY = mouseY + wobbleY;
-        const hit = getHitDetails(targetX, targetY);
-        const pts = hit.number * hit.mult;
-        
-        darts.push({targetX: targetX, targetY: targetY, x: 300, y: 600, pts: pts, progress: 0, animating: true});
-        dartsLeft--;
-        dartCount++;
-
-        if (gameMode === '501') {
-            score -= pts;
-            if (score < 0) {
-                statusEl.innerText = "Bust!";
-                score = prevScore;
-                state = 'TURN_END';
-            } else if (score === 0) {
-                statusEl.innerText = "You Win!";
-                state = 'WON';
-            } else if (dartsLeft === 0) {
-                statusEl.innerText = `Turn Over. Score: ${score}`;
-                state = 'TURN_END';
-            } else {
-                statusEl.innerText = `Hit ${pts}! Darts left: ${dartsLeft}`;
-            }
-        } else {
-            let hitMsg = hit.mult > 0 ? (hit.mult === 1 ? "Single " : (hit.mult === 2 ? "Double " : "Triple ")) + (hit.number===25?"Bull":hit.number) : "Miss!";
-            if (cricketHits[hit.number] !== undefined) {
-                cricketHits[hit.number] += hit.mult;
-                if (cricketHits[hit.number] > 3) cricketHits[hit.number] = 3;
-            }
-            
-            let allClosed = true;
-            for (let t of [20,19,18,17,16,15,25]) {
-                if (cricketHits[t] < 3) allClosed = false;
-            }
-            
-            if (allClosed) {
-                statusEl.innerText = `You Win in ${dartCount} darts!`;
-                state = 'WON';
-            } else if (dartsLeft === 0) {
-                statusEl.innerText = `Turn Over.`;
-                state = 'TURN_END';
-            } else {
-                statusEl.innerText = `${hitMsg} - Darts left: ${dartsLeft}`;
-            }
-        }
-        updateScoreUI();
-    } else if (state === 'TURN_END') {
-        darts = [];
-        dartsLeft = 3;
-        prevScore = score;
-        state = 'PLAYING';
-        statusEl.innerText = "Throw Dart 1";
+    if (state === 'PLAYING' && currentPlayer === 0) {
+        throwDart(mouseX + wobbleX, mouseY + wobbleY);
+    } else if (state === 'TURN_END' && currentPlayer === 0) {
+        nextTurn();
     } else if (state === 'WON') {
-        setMode(gameMode);
+        nextTurn();
     }
 });
 

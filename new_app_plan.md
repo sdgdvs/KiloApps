@@ -60,7 +60,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - [x] Phase 5: Add a second game mode (e.g., Cricket).
 - [x] Phase 6: Add Visual Polish (dart throwing animation and sticking effect).
-- Phase 7: Add a Simple AI Opponent (adjustable difficulty for single-player).
+- [x] Phase 7: Add a Simple AI Opponent (adjustable difficulty for single-player).
 - Phase 8: Add Sound Effects (dart throw whoosh, thud on hit, bullseye cheer).
 - Phase 9: Add Save/Load State (persist current match and scores).
 - Phase 10: Add Match Statistics (average score per dart, highest checkout).
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KDarts
-**Goal:** Phase 7
+**Goal:** Phase 8
 
 
 ## App Lifecycle (14 phases per app)
