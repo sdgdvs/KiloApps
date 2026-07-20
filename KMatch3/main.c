@@ -13,7 +13,9 @@
 int grid[ROWS][COLS];
 int typeGrid[ROWS][COLS] = {0};
 int score = 0;
-int moves = 0;
+int moves = 20;
+int level = 1;
+int targetScore = 1000;
 int selR = -1, selC = -1;
 int isProcessing = 0;
 
@@ -79,8 +81,8 @@ COLORREF colors[] = {
 };
 
 void DrawBoard(HDC hdc) {
-    char buf[64];
-    sprintf(buf, "Score: %d   Moves: %d", score, moves);
+    char buf[128];
+    sprintf(buf, "Lvl: %d  Score: %d/%d  Moves: %d", level, score, targetScore, moves);
     SetTextColor(hdc, RGB(255, 255, 255));
     SetBkMode(hdc, TRANSPARENT);
     TextOut(hdc, BOARD_X, 15, buf, strlen(buf));
@@ -457,6 +459,24 @@ void InitGame() {
     }
 }
 
+void CheckLevelProgress(HWND hwnd) {
+    if (score >= targetScore) {
+        level++;
+        moves += 15;
+        targetScore += 1000 + (level * 500);
+        MessageBox(hwnd, "Level Up!", "KMatch3", MB_OK | MB_ICONINFORMATION);
+        InvalidateRect(hwnd, NULL, FALSE);
+    } else if (moves <= 0) {
+        MessageBox(hwnd, "Game Over!", "KMatch3", MB_OK | MB_ICONWARNING);
+        level = 1;
+        score = 0;
+        moves = 20;
+        targetScore = 1000;
+        InitGame();
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
@@ -518,7 +538,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selR = -1; selC = -1;
                         InvalidateRect(hwnd, NULL, FALSE);
                     } else if (abs(selR - r) + abs(selC - c) == 1) {
-                        moves++;
                         isProcessing = 1;
                         int origR = selR, origC = selC;
                         selR = -1; selC = -1;
@@ -546,7 +565,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
 
                         if (triggerR != -1 || CheckMatchPossible()) {
+                            moves--;
                             ProcessMatches(hwnd, triggerR, triggerC, triggerColor);
+                            CheckLevelProgress(hwnd);
                         } else {
                             PlayBadSwapSound();
                             AnimateSwap(hwnd, origR, origC, r, c);
