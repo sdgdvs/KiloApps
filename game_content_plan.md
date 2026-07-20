@@ -94,7 +94,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMaze      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 20-level campaign, speed powerup, teleporters, stats. |
 | KSolitaire | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-stage campaign, Bomb trap, X-Ray powerup. |
 | KSpace     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Zig-Zag enemies, Asteroids, Smart Bomb, Lifetime Stats. |
-| KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KPac       | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Expanded Campaign to 10 maps, advanced AI for all ghosts, and Lifetime Stats tracking. |
 | KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. Loop 5 pending. |
 | KBreakout  | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | K2048      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
@@ -175,3 +175,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KMaze (Expanded to 20-level campaign, added Speed Boost powerup, Teleporters, and Lifetime Stats tracking to both EXE and HTML)
 - [x] KSolitaire (Expanded Campaign to 10 stages, added Bomb trap and X-Ray powerups to both EXE and HTML)
 - [x] KSpace (Added Zig-Zag enemy, Asteroid obstacles, Smart Bomb power-up, and Lifetime Stats tracking to both EXE and HTML)
+- [x] KPac (Expanded Campaign to 10 maps, enhanced Ghost AI, and Lifetime Stats tracking to both EXE and HTML)
