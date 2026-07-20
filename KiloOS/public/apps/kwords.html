@@ -161,6 +161,11 @@
         <option value="Countries">Countries</option>
         <option value="Space">Space</option>
       </select>
+      <select id="mode-select" onchange="setMode(this.value)" style="background:#2d3748; color:white; border:none; padding:5px 10px; margin-right:10px; border-radius:4px; outline:none; font-size:14px; cursor:pointer;">
+        <option value="classic">Classic</option>
+        <option value="zen">Zen Mode</option>
+        <option value="time_attack">Time Attack</option>
+      </select>
       <button class="diff-btn" id="btn-easy" onclick="setDifficulty('easy')">Easy</button>
       <button class="diff-btn active" id="btn-medium" onclick="setDifficulty('medium')">Medium</button>
       <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">Hard</button>
@@ -175,7 +180,7 @@
     <div class="grid-container">
       <div class="grid" id="grid"></div>
       <div id="win-message">
-        <h2>You Win!</h2>
+        <h2 id="win-title">You Win!</h2>
         <p style="font-size: 18px; margin-bottom: 15px;">Final Score: <strong id="final-score">0</strong></p>
         <button onclick="initGame()">Play Again</button>
       </div>
@@ -246,6 +251,7 @@
       "Space": ["ASTEROID", "COMET", "GALAXY", "NEBULA", "PLANET", "STAR", "ORBIT", "SATELLITE", "ROCKET", "GRAVITY", "ECLIPSE", "METEOR", "UNIVERSE", "COSMOS", "PULSAR", "QUASAR", "SUPERNOVA", "VACUUM", "EQUATOR", "HORIZON", "ZENITH", "LUNAR", "SOLAR", "TELESCOPE", "ASTRONAUT", "SPACECRAFT", "OBSERVATORY", "CONSTELLATION", "ZODIAC", "APOLLO"]
     };
     let currentTheme = "Programming";
+    let gameMode = "classic";
     let gridSize = 15;
     let numWordsToFind = 8;
     let grid = [];
@@ -258,6 +264,11 @@
     let timerInterval = null;
     let seconds = 0;
     let score = 0;
+
+    function setMode(mode) {
+        gameMode = mode;
+        initGame();
+    }
 
     function setDifficulty(diff) {
         if(diff === 'easy') { gridSize = 10; numWordsToFind = 5; }
@@ -299,12 +310,31 @@
         score = 0;
         document.getElementById('score').textContent = 0;
         document.getElementById('win-message').style.display = 'none';
-        seconds = 0;
+        document.getElementById('win-title').textContent = "You Win!";
+        
+        if (gameMode === "time_attack") {
+            seconds = (gridSize === 10) ? 120 : (gridSize === 15) ? 180 : 300;
+        } else {
+            seconds = 0;
+        }
         updateTimerDisplay();
+        
         if(timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
-            seconds++;
-            updateTimerDisplay();
+            if (gameMode === "time_attack") {
+                if (seconds > 0) {
+                    seconds--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    document.getElementById('final-score').textContent = "Time's up!";
+                    document.getElementById('win-title').textContent = "Game Over";
+                    document.getElementById('win-message').style.display = 'block';
+                }
+            } else if (gameMode === "classic") {
+                seconds++;
+                updateTimerDisplay();
+            }
         }, 1000);
 
         renderGrid();
@@ -312,9 +342,15 @@
     }
 
     function updateTimerDisplay() {
-        let m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        let s = (seconds % 60).toString().padStart(2, '0');
-        document.getElementById('timer').textContent = `${m}:${s}`;
+        if (gameMode === "zen") {
+            document.getElementById('timer').textContent = "--:--";
+            document.getElementById('score').textContent = "-";
+        } else {
+            let m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            let s = (seconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${m}:${s}`;
+            document.getElementById('score').textContent = score;
+        }
     }
 
     function placeWord(word) {
@@ -438,12 +474,17 @@
                 let foundStr = foundWords[foundWords.length-1];
                 document.getElementById('word-' + foundStr).className = 'found';
                 
-                let points = 1000 - (seconds * 2);
-                if (points < 100) points = 100;
-                score += points;
+                if (gameMode !== "zen") {
+                    let points = 1000 - (seconds * 2);
+                    if (gameMode === "time_attack") points = 500; 
+                    if (points < 100) points = 100;
+                    score += points;
+                }
                 
                 document.getElementById('found-count').textContent = foundWords.length;
-                document.getElementById('score').textContent = score;
+                if (gameMode !== "zen") {
+                    document.getElementById('score').textContent = score;
+                }
                 
                 // Mark cells as found permanently in DOM
                 currentSelection.forEach(cell => {
@@ -520,10 +561,13 @@
             const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
             if (el) el.classList.add('hint');
             
-            score = Math.max(0, score - 50);
-            seconds += 30;
-            document.getElementById('score').textContent = score;
-            updateTimerDisplay();
+            if (gameMode !== "zen") {
+                score = Math.max(0, score - 50);
+                if (gameMode === "classic") seconds += 30;
+                if (gameMode === "time_attack") seconds = Math.max(0, seconds - 30);
+                document.getElementById('score').textContent = score;
+                updateTimerDisplay();
+            }
         }
     }
 
@@ -538,7 +582,7 @@
             });
         });
         const state = {
-            currentTheme, gridSize, numWordsToFind,
+            currentTheme, gameMode, gridSize, numWordsToFind,
             grid, wordsToFind, foundWords, hintedWords,
             seconds, score, cellStates
         };
@@ -551,6 +595,7 @@
         if (saved) {
             const state = JSON.parse(saved);
             currentTheme = state.currentTheme;
+            gameMode = state.gameMode || "classic";
             gridSize = state.gridSize;
             numWordsToFind = state.numWordsToFind;
             grid = state.grid;
@@ -561,6 +606,7 @@
             score = state.score || 0;
 
             document.getElementById('theme-select').value = currentTheme;
+            document.getElementById('mode-select').value = gameMode;
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             if(gridSize === 10) document.getElementById('btn-easy').classList.add('active');
             else if(gridSize === 15) document.getElementById('btn-medium').classList.add('active');
@@ -574,8 +620,20 @@
             
             if(timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                seconds++;
-                updateTimerDisplay();
+                if (gameMode === "time_attack") {
+                    if (seconds > 0) {
+                        seconds--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        document.getElementById('final-score').textContent = "Time's up!";
+                        document.getElementById('win-title').textContent = "Game Over";
+                        document.getElementById('win-message').style.display = 'block';
+                    }
+                } else if (gameMode === "classic") {
+                    seconds++;
+                    updateTimerDisplay();
+                }
             }, 1000);
 
             renderGrid();

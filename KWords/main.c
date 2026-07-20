@@ -55,6 +55,7 @@ int gridSize = 15;
 int numWordsToFind = 8;
 int currentDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 int currentThemeIdx = 0;
+int currentGameMode = 0; // 0=Classic, 1=Zen, 2=TimeAttack
 
 char wordsToFind[MAX_WORDS][32];
 bool wordsFoundStatus[MAX_WORDS];
@@ -72,6 +73,7 @@ float strikeAnim[MAX_WORDS] = {0};
 
 int timerSeconds = 0;
 bool gameWon = false;
+bool gameOver = false;
 
 typedef struct {
     int completed;
@@ -98,14 +100,15 @@ void SaveStats() {
     }
 }
 
-RECT btnTheme = {220, 10, 360, 35};
-RECT btnEasy = {370, 10, 430, 35};
-RECT btnMed  = {440, 10, 510, 35};
-RECT btnHard = {520, 10, 580, 35};
-RECT btnHint = {590, 10, 650, 35};
-RECT btnSave = {660, 10, 720, 35};
-RECT btnLoad = {730, 10, 790, 35};
-RECT btnStats = {800, 10, 860, 35};
+RECT btnTheme = {180, 10, 275, 35};
+RECT btnMode  = {285, 10, 380, 35};
+RECT btnEasy = {390, 10, 440, 35};
+RECT btnMed  = {450, 10, 515, 35};
+RECT btnHard = {525, 10, 575, 35};
+RECT btnHint = {585, 10, 635, 35};
+RECT btnSave = {645, 10, 695, 35};
+RECT btnLoad = {705, 10, 755, 35};
+RECT btnStats = {765, 10, 815, 35};
 
 bool showStats = false;
 
@@ -145,8 +148,15 @@ void InitGame() {
     memset(strikeAnim, 0, sizeof(strikeAnim));
     foundCount = 0;
     currentScore = 0;
-    timerSeconds = 0;
+    
+    if (currentGameMode == 2) {
+        timerSeconds = (gridSize == 10) ? 120 : ((gridSize == 15) ? 180 : 300);
+    } else {
+        timerSeconds = 0;
+    }
+    
     gameWon = false;
+    gameOver = false;
     
     // Fill empty
     for(int r=0; r<gridSize; r++){
@@ -250,9 +260,12 @@ void EndSelection(HWND hwnd) {
                     foundCount++;
                     found = true;
                     
-                    int points = 1000 - (timerSeconds * 2);
-                    if (points < 100) points = 100;
-                    currentScore += points;
+                    if (currentGameMode != 1) {
+                        int points = 1000 - (timerSeconds * 2);
+                        if (currentGameMode == 2) points = 500;
+                        if (points < 100) points = 100;
+                        currentScore += points;
+                    }
                     
                     for(int i=0; i<count; i++) {
                         foundGrid[selR[i]][selC[i]] = true;
@@ -281,7 +294,7 @@ void EndSelection(HWND hwnd) {
 }
 
 void UseHint(HWND hwnd) {
-    if (gameWon) return;
+    if (gameWon || gameOver) return;
     
     int unfound[MAX_WORDS];
     int uncount = 0;
@@ -322,9 +335,15 @@ void UseHint(HWND hwnd) {
                     if (match) {
                         hintedGrid[r][c] = true;
                         wordsHintedStatus[targetIdx] = true;
-                        currentScore -= 50;
-                        if (currentScore < 0) currentScore = 0;
-                        timerSeconds += 30;
+                        if (currentGameMode != 1) {
+                            currentScore -= 50;
+                            if (currentScore < 0) currentScore = 0;
+                            if (currentGameMode == 0) timerSeconds += 30;
+                            else if (currentGameMode == 2) {
+                                timerSeconds -= 30;
+                                if (timerSeconds < 0) timerSeconds = 0;
+                            }
+                        }
                         foundInGrid = true;
                         break;
                     }
@@ -342,11 +361,13 @@ void SaveGame(HWND hwnd) {
         fwrite(&numWordsToFind, sizeof(int), 1, fp);
         fwrite(&currentDifficulty, sizeof(int), 1, fp);
         fwrite(&currentThemeIdx, sizeof(int), 1, fp);
+        fwrite(&currentGameMode, sizeof(int), 1, fp);
         fwrite(&wordCount, sizeof(int), 1, fp);
         fwrite(&foundCount, sizeof(int), 1, fp);
         fwrite(&currentScore, sizeof(int), 1, fp);
         fwrite(&timerSeconds, sizeof(int), 1, fp);
         fwrite(&gameWon, sizeof(bool), 1, fp);
+        fwrite(&gameOver, sizeof(bool), 1, fp);
         fwrite(grid, sizeof(char), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fwrite(foundGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fwrite(hintedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
@@ -367,11 +388,13 @@ void LoadGame(HWND hwnd) {
         fread(&numWordsToFind, sizeof(int), 1, fp);
         fread(&currentDifficulty, sizeof(int), 1, fp);
         fread(&currentThemeIdx, sizeof(int), 1, fp);
+        fread(&currentGameMode, sizeof(int), 1, fp);
         fread(&wordCount, sizeof(int), 1, fp);
         fread(&foundCount, sizeof(int), 1, fp);
         fread(&currentScore, sizeof(int), 1, fp);
         fread(&timerSeconds, sizeof(int), 1, fp);
         fread(&gameWon, sizeof(bool), 1, fp);
+        fread(&gameOver, sizeof(bool), 1, fp);
         fread(grid, sizeof(char), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fread(foundGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fread(hintedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
@@ -408,8 +431,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER:
             if(wParam == 1) {
-                if(!gameWon) {
-                    timerSeconds++;
+                if(!gameWon && !gameOver) {
+                    if (currentGameMode == 2) {
+                        if (timerSeconds > 0) {
+                            timerSeconds--;
+                        } else {
+                            gameOver = true;
+                            PlaySoundEffect(1); // just a sound
+                        }
+                    } else if (currentGameMode == 0) {
+                        timerSeconds++;
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 2) {
@@ -448,6 +480,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (PtInRect(&btnTheme, pt)) {
                 currentThemeIdx = (currentThemeIdx + 1) % NUM_THEMES; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
+            if (PtInRect(&btnMode, pt)) {
+                currentGameMode = (currentGameMode + 1) % 3; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+            }
             if (PtInRect(&btnEasy, pt)) {
                 currentDifficulty = 0; gridSize = 10; numWordsToFind = 5; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
@@ -473,7 +508,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
-            if(gameWon) {
+            if(gameWon || gameOver) {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
@@ -530,7 +565,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(226, 232, 240));
             
             char header[128];
-            sprintf(header, "Found: %d/%d   Score: %d   Timer: %02d:%02d", foundCount, wordCount, currentScore, timerSeconds/60, timerSeconds%60);
+            if (currentGameMode == 1) {
+                sprintf(header, "Found: %d/%d   Score: -   Timer: --:--", foundCount, wordCount);
+            } else {
+                sprintf(header, "Found: %d/%d   Score: %d   Timer: %02d:%02d", foundCount, wordCount, currentScore, timerSeconds/60, timerSeconds%60);
+            }
             TextOut(hdc, 20, 15, header, strlen(header));
             
             // Draw difficulty buttons
@@ -538,6 +577,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH activeBrush = CreateSolidBrush(RGB(49, 130, 206));
             
             FillRect(hdc, &btnTheme, btnBrush);
+            FillRect(hdc, &btnMode, btnBrush);
             FillRect(hdc, &btnEasy, currentDifficulty == 0 ? activeBrush : btnBrush);
             FillRect(hdc, &btnMed, currentDifficulty == 1 ? activeBrush : btnBrush);
             FillRect(hdc, &btnHard, currentDifficulty == 2 ? activeBrush : btnBrush);
@@ -554,19 +594,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             char themeStr[64];
             sprintf(themeStr, "Theme: %s", THEMES[currentThemeIdx]);
-            TextOut(hdc, btnTheme.left + 10, btnTheme.top + 5, themeStr, strlen(themeStr));
+            TextOut(hdc, btnTheme.left + 5, btnTheme.top + 5, themeStr, strlen(themeStr));
+
+            const char* MODES[3] = {"Classic", "Zen", "Time Attack"};
+            char modeStr[64];
+            sprintf(modeStr, "Mode: %s", MODES[currentGameMode]);
+            TextOut(hdc, btnMode.left + 5, btnMode.top + 5, modeStr, strlen(modeStr));
             
-            TextOut(hdc, btnEasy.left + 14, btnEasy.top + 5, "Easy", 4);
-            TextOut(hdc, btnMed.left + 7, btnMed.top + 5, "Medium", 6);
-            TextOut(hdc, btnHard.left + 14, btnHard.top + 5, "Hard", 4);
+            TextOut(hdc, btnEasy.left + 8, btnEasy.top + 5, "Easy", 4);
+            TextOut(hdc, btnMed.left + 6, btnMed.top + 5, "Medium", 6);
+            TextOut(hdc, btnHard.left + 8, btnHard.top + 5, "Hard", 4);
             
             SetTextColor(hdc, RGB(26, 32, 44));
-            TextOut(hdc, btnHint.left + 14, btnHint.top + 5, "Hint", 4);
+            TextOut(hdc, btnHint.left + 8, btnHint.top + 5, "Hint", 4);
             SetTextColor(hdc, RGB(226, 232, 240));
             
-            TextOut(hdc, btnSave.left + 14, btnSave.top + 5, "Save", 4);
-            TextOut(hdc, btnLoad.left + 14, btnLoad.top + 5, "Load", 4);
-            TextOut(hdc, btnStats.left + 10, btnStats.top + 5, "Stats", 5);
+            TextOut(hdc, btnSave.left + 8, btnSave.top + 5, "Save", 4);
+            TextOut(hdc, btnLoad.left + 8, btnLoad.top + 5, "Load", 4);
+            TextOut(hdc, btnStats.left + 6, btnStats.top + 5, "Stats", 5);
             
             DeleteObject(btnBrush);
             DeleteObject(activeBrush);
@@ -658,6 +703,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOut(hdc, listX, listY + 50, scoreStr, strlen(scoreStr));
                 TextOut(hdc, listX, listY + 75, "Click anywhere", 14);
                 TextOut(hdc, listX, listY + 95, "to play again", 13);
+            } else if (gameOver) {
+                SetTextColor(hdc, RGB(255, 100, 100));
+                TextOut(hdc, listX, listY + 20, "GAME OVER!", 10);
+                SetTextColor(hdc, RGB(200, 200, 200));
+                TextOut(hdc, listX, listY + 50, "Time's up!", 10);
+                TextOut(hdc, listX, listY + 75, "Click anywhere", 14);
+                TextOut(hdc, listX, listY + 95, "to try again", 12);
             }
             
             if(showStats) {
