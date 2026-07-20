@@ -154,6 +154,54 @@
         }
         grid.push(row);
       }
+      saveGame();
+    }
+
+    function saveGame() {
+      const state = {
+        level, score, moves, targetScore,
+        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type} : null))
+      };
+      localStorage.setItem('kmatch3_save', JSON.stringify(state));
+    }
+
+    function loadGame() {
+      const saved = localStorage.getItem('kmatch3_save');
+      if (saved) {
+        try {
+          const state = JSON.parse(saved);
+          level = state.level;
+          score = state.score;
+          moves = state.moves;
+          targetScore = state.targetScore;
+          
+          levelEl.textContent = level;
+          scoreEl.textContent = score;
+          targetEl.textContent = targetScore;
+          movesEl.textContent = moves;
+
+          boardEl.innerHTML = '';
+          grid = [];
+          for (let r = 0; r < ROWS; r++) {
+            let row = [];
+            for (let c = 0; c < COLS; c++) {
+              let savedCell = state.grid[r][c];
+              if (savedCell) {
+                let cell = createCellElement(r, c, savedCell.color, savedCell.type);
+                boardEl.appendChild(cell);
+                row.push({ color: savedCell.color, type: savedCell.type, el: cell });
+              } else {
+                row.push(null);
+              }
+            }
+            grid.push(row);
+          }
+          return true;
+        } catch(e) {
+          console.error("Save file corrupted");
+        }
+      }
+      return false;
     }
 
     function onCellClick(e) {
@@ -212,6 +260,7 @@
         movesEl.textContent = moves;
         await processMatches(matches, specialTrigger);
         checkLevelProgress();
+        saveGame();
       } else {
         playBadSwapSound();
         swap(r1, c1, r2, c2); // swap back
@@ -444,7 +493,9 @@
       }
     }
 
-    initGame();
+    if (!loadGame()) {
+      initGame();
+    }
   </script>
 </body>
 </html>

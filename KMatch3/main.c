@@ -459,6 +459,31 @@ void InitGame() {
     }
 }
 
+void SaveGame() {
+    FILE *f = fopen("kmatch3_save.dat", "wb");
+    if (!f) return;
+    fwrite(&level, sizeof(int), 1, f);
+    fwrite(&score, sizeof(int), 1, f);
+    fwrite(&moves, sizeof(int), 1, f);
+    fwrite(&targetScore, sizeof(int), 1, f);
+    fwrite(grid, sizeof(int), ROWS * COLS, f);
+    fwrite(typeGrid, sizeof(int), ROWS * COLS, f);
+    fclose(f);
+}
+
+int LoadGame() {
+    FILE *f = fopen("kmatch3_save.dat", "rb");
+    if (!f) return 0;
+    fread(&level, sizeof(int), 1, f);
+    fread(&score, sizeof(int), 1, f);
+    fread(&moves, sizeof(int), 1, f);
+    fread(&targetScore, sizeof(int), 1, f);
+    fread(grid, sizeof(int), ROWS * COLS, f);
+    fread(typeGrid, sizeof(int), ROWS * COLS, f);
+    fclose(f);
+    return 1;
+}
+
 void CheckLevelProgress(HWND hwnd) {
     if (score >= targetScore) {
         level++;
@@ -475,13 +500,17 @@ void CheckLevelProgress(HWND hwnd) {
         InitGame();
         InvalidateRect(hwnd, NULL, FALSE);
     }
+    SaveGame();
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
             srand((unsigned)time(NULL));
-            InitGame();
+            if (!LoadGame()) {
+                InitGame();
+                SaveGame();
+            }
             SetTimer(hwnd, 1, 30, NULL);
             break;
         case WM_TIMER: {
@@ -568,6 +597,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             moves--;
                             ProcessMatches(hwnd, triggerR, triggerC, triggerColor);
                             CheckLevelProgress(hwnd);
+                            SaveGame();
                         } else {
                             PlayBadSwapSound();
                             AnimateSwap(hwnd, origR, origC, r, c);
