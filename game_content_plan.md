@@ -98,9 +98,15 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. Loop 5 pending. |
 | KBreakout  | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | K2048      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
-| KSudoku    | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Loop 5 pending. |
-| KAsteroids | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Loop 5 pending. |
-| KFreecell  | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Loop 5 pending. |
+| KSudoku    | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KAsteroids | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KFreecell  | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KConnect4  | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KHangman   | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KSimon     | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KMatch3    | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KWords     | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KGo        | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent (in progress). Loop 5 pending. |
 
 ## Progress Log
 

@@ -8,26 +8,29 @@ The project aims to return software development to the lightweight, compute-effi
 - Maintain a minimal web-based OS environment (`KiloOS`) — a React-based desktop shell deployed to Firebase Hosting at `kiloapps.web.app`.
 - Keep dependencies and framework overhead to an absolute minimum.
 
-## Current State (as of 2026-07-19)
-- **Total Apps:** 58 native Windows applications in individual subdirectories.
+## Current State (as of 2026-07-20)
+- **Total Apps:** 67 registered in App.jsx.
 - **KiloOS Version:** 0.3.58
+- **Games:** 21 registered game titles.
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 
-### New Apps Created with Deep Expansion (6, all through Phase 14)
-KVault, KBudget, KHabit, KFlash (flashcards), K2048 (puzzle game), KSudoku (logic puzzle). KBBS also received a full 14-phase deep expansion.
+### New Apps Created with Deep Expansion (14 through Phase 14)
+KVault, KBudget, KHabit, KFlash, K2048, KBBS, KSudoku, KFreecell, KConnect4, KHangman, KSimon, KAsteroids, KMatch3, KWords. KGo in progress (Phase 5).
 
-### All Existing Apps Polished + Feature-Expanded
-The Builder agent completed a full pass of all ~45 existing apps. It has transitioned to a **round-robin continuous improvement** model, cycling through every app adding one new feature per turn.
+### Feature Expander: Round-Robin Continuous Improvement
+Cycling through all apps adding one meaningful feature per turn. Recently completed: Traceroute for KPing. Added KConnect4 to queue. Working through round-robin normally.
 
-### Games: 13 games, Loop 4 in progress
-Loops 1-3 complete. Loop 4: 8 of 13 done. Games now have campaign modes, power-ups, persistent stats, AI opponents, and wave progression. Commercial-grade depth approaching.
+### Games: 21 titles, Loop 5 in progress (2/21 done)
+**Game titles:** K2048, KAsteroids, KBreakout, KChess, KConnect4, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KRogue, KSimon, KSnake, KSolitaire, KSpace, KSudoku, KTetris, KWords.
+Loops 1-4 fully complete for original 12 games. Loop 5 started: KMines and KRogue done. 9 new Creator games added to inventory awaiting their first content loop.
+Content depth is genuinely impressive — campaign modes, power-ups, procedural generation, boss enemies, biomes, sound effects, stats tracking.
 
-### QA: Pass 1 complete, Pass 2 started
-Pass 1 finished all apps alphabetically. Pass 2 (deeper quality: edge cases, accessibility, error handling) now underway — K2048 tested.
+### QA: Pass 1 complete (46 apps), Pass 2 in progress
+Pass 2 deeper quality checks: 8 apps done (K2048, KAudio, KBBS, KCalc, KChart, KChat, KChess, KClock). Next: KColor.
 
-### KiloOS Shell/UX: Suspended
-Agent suspended by other director to reallocate quota to feature expansion. 15+ improvements delivered previously. Can be reactivated when needed.
+### Shell/UX: Suspended
+15+ improvements delivered previously. Agent suspended to focus compute on content.
 
 ## Milestones
 
@@ -40,23 +43,25 @@ Agent suspended by other director to reallocate quota to feature expansion. 15+ 
 6. Agent fleet optimization (7 agents → 4, admin bloat eliminated) — July 9.
 7. Full polish/expansion pass of all existing apps — July 10-11.
 8. 5th agent added (App Creator & Deep Expander) — July 11.
-9. 6 new apps created through full 14-phase lifecycle — July 11-17.
-10. Games Loops 1-3 complete — July 13-17.
-11. QA Pass 1 complete — July 17.
+9. 14 new apps created through full 14-phase lifecycle — July 11-20.
+10. Games Loops 1-4 complete for original 12 games — July 13-19.
+11. QA Pass 1 complete (46 apps) — July 18.
 12. Fleet restructured: UX suspended, features-only mandate — July 17.
+13. Game library expanded from 12 to 21 titles — July 19-20.
 
 ### Active 🔄
-13. **🎮 PRIORITY: Expand game library** — Creator agent building games-first. Target: deep 14-phase expansion.
-14. Feature Expander: Round-robin feature additions across all apps (perpetual).
-15. QA: Pass 2 (deeper quality checks) underway.
-16. Games agent: Loop 4 with campaign modes, power-ups, and persistent stats.
+14. **🎮 PRIORITY: Reach 25+ game titles.** Creator agent building KGo (4 more titles needed after KGo).
+15. Games agent: Loop 5 with 21 games (2/21 done). New Creator games getting first content pass.
+16. Feature Expander: Round-robin feature additions across all apps (perpetual).
+17. QA: Pass 2 deeper quality checks (8 of ~67 done).
 
 ### Upcoming 📋
-16. Approach commercial-grade quality for key games (leverage 999KB budget fully).
-17. Build pipeline improvements: automated size-limit checks, CI artifact upload.
-18. Automated testing or build-verification for native apps.
+18. Approach commercial-grade quality for key games (leverage 999KB budget fully).
+19. Build pipeline improvements: automated size-limit checks, CI artifact upload.
+20. Automated testing or build-verification for native apps.
+21. Consider reactivating Shell/UX agent once game library reaches 25+ titles.
 
-## Active Agent Fleet (as of 2026-07-17)
+## Active Agent Fleet (as of 2026-07-20)
 
 | Agent | Schedule | Plan File | Model |
 |---|---|---|---|
@@ -64,7 +69,8 @@ Agent suspended by other director to reallocate quota to feature expansion. 15+ 
 | Quality & Build | Every 3h (:00) | `app_fix_plan.md` | Gemini 3.1 Pro Low |
 | Game Content Expander | Every 2h (:30) | `game_content_plan.md` | Gemini 3.1 Pro High |
 | App Creator | Every 1h (:15) | `new_app_plan.md` | Gemini 3.1 Pro High |
-| Director | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
+| Director #1 | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
+| Director #2 | Every 3 days (offset) | (reviews all plan files) | Claude Opus 4.6 |
 | ~~Shell & UX~~ | ~~Suspended~~ | `kiloos_ux_plan.md` | — |
 
 ## Agent Workflow Rules

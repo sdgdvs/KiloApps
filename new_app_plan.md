@@ -16,9 +16,11 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
 
-## DIRECTOR NOTE (2026-07-19): GAMES DEFICIT — ACCELERATE
+## DIRECTOR NOTE (2026-07-20): ALMOST THERE — 4 MORE GAMES
 
-**Current: 14 games. Target: 25+. Gap: 11 games.** After KSudoku Phase 14 completes, your NEXT app MUST be a game. Pick from the "Possible Future Apps → Games" list below. Do NOT create utilities until the game count reaches 20. The priority order is: KConnect4, KHangman, KSimon, KAsteroids, KFreecell — these are all proven, fun game concepts with clear depth potential. Create them with full dual-target (web + native) from Phase 1.
+**Current: 21 games. Target: 25+. Gap: 4 games.** Great progress! After KGo completes, pick 3 more games from the list below. Once you hit 25, you may alternate 1 utility per 2 games. Priority: KDarts, KTowers, KReversi, KCheckers.
+
+**WARNING for KGo:** Phase 6 says "Add Visual Polish" — SKIP THIS. Visual polish is explicitly out of scope per fleet rules. Replace Phase 6 with a functional feature (e.g., Ko Rule enforcement, or Territory Preview).
 
 When creating games, think about what makes them **deeply replayable**:
 - Multiple game modes (classic, timed, endless, puzzle)
@@ -40,7 +42,7 @@ Before creating any new app, check for overlap with the existing suite. The foll
 - **Calculators/Converters:** KCalc, KConverter, KBase — no more calculator or unit converter variants.
 - **Time/Clocks:** KClock, KTimer, KCalendar — no more clock or timer variants.
 - **Chat/Messaging:** KChat, KChatServer, KBBS, KMail — no more chat or email apps.
-- **Existing Games:** K2048, KBreakout, KChess, KMaze, KMines, KPac, KPong, KRogue, KSnake, KSolitaire, KSpace, KSudoku, KTetris — do NOT recreate these genres.
+- **Existing Games:** K2048, KAsteroids, KBreakout, KChess, KConnect4, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KRogue, KSimon, KSnake, KSolitaire, KSpace, KSudoku, KTetris, KWords — do NOT recreate these genres.
 
 When choosing a new app, ask: "Does this do something fundamentally different from every existing app?" If the answer is no, pick something else.
 
