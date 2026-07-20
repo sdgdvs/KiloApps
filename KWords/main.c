@@ -5,19 +5,25 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define GRID_SIZE 15
+#define MAX_GRID_SIZE 25
 #define CELL_SIZE 30
-#define MAX_WORDS 8
-#define DICTIONARY_SIZE 15
+#define MAX_WORDS 20
+#define DICTIONARY_SIZE 30
 
 const char* WORD_LIST[DICTIONARY_SIZE] = {
     "ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", 
     "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", 
-    "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT"
+    "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT",
+    "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL", 
+    "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD", 
+    "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"
 };
 
-char grid[GRID_SIZE][GRID_SIZE];
-bool foundGrid[GRID_SIZE][GRID_SIZE];
+char grid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+bool foundGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+int gridSize = 15;
+int numWordsToFind = 8;
+int currentDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 
 char wordsToFind[MAX_WORDS][32];
 bool wordsFoundStatus[MAX_WORDS];
@@ -31,6 +37,10 @@ int curR = -1, curC = -1;
 int timerSeconds = 0;
 bool gameWon = false;
 
+RECT btnEasy = {350, 10, 410, 35};
+RECT btnMed  = {420, 10, 490, 35};
+RECT btnHard = {500, 10, 560, 35};
+
 void InitGame() {
     srand((unsigned int)time(NULL));
     memset(foundGrid, 0, sizeof(foundGrid));
@@ -40,8 +50,8 @@ void InitGame() {
     gameWon = false;
     
     // Fill empty
-    for(int r=0; r<GRID_SIZE; r++){
-        for(int c=0; c<GRID_SIZE; c++){
+    for(int r=0; r<gridSize; r++){
+        for(int c=0; c<gridSize; c++){
             grid[r][c] = ' ';
         }
     }
@@ -49,7 +59,7 @@ void InitGame() {
     // Pick words
     int picked[DICTIONARY_SIZE] = {0};
     wordCount = 0;
-    while(wordCount < MAX_WORDS) {
+    while(wordCount < numWordsToFind) {
         int idx = rand() % DICTIONARY_SIZE;
         if(!picked[idx]) {
             picked[idx] = 1;
@@ -67,14 +77,14 @@ void InitGame() {
         while(!placed && attempts < 200) {
             attempts++;
             int d = rand() % 8;
-            int r = rand() % GRID_SIZE;
-            int c = rand() % GRID_SIZE;
+            int r = rand() % gridSize;
+            int c = rand() % gridSize;
             
             bool canPlace = true;
             for(int i=0; i<len; i++) {
                 int nr = r + i * dirs[d][0];
                 int nc = c + i * dirs[d][1];
-                if(nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE || (grid[nr][nc] != ' ' && grid[nr][nc] != wordsToFind[w][i])) {
+                if(nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || (grid[nr][nc] != ' ' && grid[nr][nc] != wordsToFind[w][i])) {
                     canPlace = false;
                     break;
                 }
@@ -89,8 +99,8 @@ void InitGame() {
     }
     
     // Fill rest
-    for(int r=0; r<GRID_SIZE; r++){
-        for(int c=0; c<GRID_SIZE; c++){
+    for(int r=0; r<gridSize; r++){
+        for(int c=0; c<gridSize; c++){
             if(grid[r][c] == ' '){
                 grid[r][c] = 'A' + (rand() % 26);
             }
@@ -121,7 +131,7 @@ void EndSelection(HWND hwnd) {
     if (!isSelecting) return;
     isSelecting = false;
     
-    int selR[GRID_SIZE*2], selC[GRID_SIZE*2];
+    int selR[MAX_GRID_SIZE*2], selC[MAX_GRID_SIZE*2];
     int count;
     GetLineCells(startR, startC, curR, curC, selR, selC, &count);
     
@@ -169,6 +179,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_LBUTTONDOWN: {
+            POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            if (PtInRect(&btnEasy, pt)) {
+                currentDifficulty = 0; gridSize = 10; numWordsToFind = 5; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+            }
+            if (PtInRect(&btnMed, pt)) {
+                currentDifficulty = 1; gridSize = 15; numWordsToFind = 8; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+            }
+            if (PtInRect(&btnHard, pt)) {
+                currentDifficulty = 2; gridSize = 20; numWordsToFind = 12; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+            }
+
             if(gameWon) {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -178,7 +199,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int y = HIWORD(lParam);
             int c = (x - 20) / CELL_SIZE;
             int r = (y - 50) / CELL_SIZE;
-            if(r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+            if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
                 isSelecting = true;
                 startR = curR = r;
                 startC = curC = c;
@@ -192,7 +213,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int y = HIWORD(lParam);
                 int c = (x - 20) / CELL_SIZE;
                 int r = (y - 50) / CELL_SIZE;
-                if(r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+                if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
                     if(curR != r || curC != c) {
                         curR = r;
                         curC = c;
@@ -220,7 +241,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             sprintf(header, "KWords   Found: %d/%d   Timer: %02d:%02d", foundCount, wordCount, timerSeconds/60, timerSeconds%60);
             TextOut(hdc, 20, 15, header, strlen(header));
             
-            int selR[GRID_SIZE*2], selC[GRID_SIZE*2];
+            // Draw difficulty buttons
+            HBRUSH btnBrush = CreateSolidBrush(RGB(45, 55, 72));
+            HBRUSH activeBrush = CreateSolidBrush(RGB(49, 130, 206));
+            
+            FillRect(hdc, &btnEasy, currentDifficulty == 0 ? activeBrush : btnBrush);
+            FillRect(hdc, &btnMed, currentDifficulty == 1 ? activeBrush : btnBrush);
+            FillRect(hdc, &btnHard, currentDifficulty == 2 ? activeBrush : btnBrush);
+            
+            TextOut(hdc, btnEasy.left + 14, btnEasy.top + 5, "Easy", 4);
+            TextOut(hdc, btnMed.left + 7, btnMed.top + 5, "Medium", 6);
+            TextOut(hdc, btnHard.left + 14, btnHard.top + 5, "Hard", 4);
+            
+            DeleteObject(btnBrush);
+            DeleteObject(activeBrush);
+            
+            int selR[MAX_GRID_SIZE*2], selC[MAX_GRID_SIZE*2];
             int selCount = 0;
             if (isSelecting) {
                 GetLineCells(startR, startC, curR, curC, selR, selC, &selCount);
@@ -233,8 +269,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(45, 55, 72));
             HPEN hOldPen = (HPEN)SelectObject(hdc, gridPen);
             
-            for(int r=0; r<GRID_SIZE; r++) {
-                for(int c=0; c<GRID_SIZE; c++) {
+            for(int r=0; r<gridSize; r++) {
+                for(int c=0; c<gridSize; c++) {
                     RECT rc = { 20 + c*CELL_SIZE, 50 + r*CELL_SIZE, 20 + (c+1)*CELL_SIZE, 50 + (r+1)*CELL_SIZE };
                     
                     bool isSelected = false;
@@ -261,7 +297,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            int listX = 20 + GRID_SIZE*CELL_SIZE + 30;
+            int listX = 20 + gridSize*CELL_SIZE + 30;
             int listY = 50;
             TextOut(hdc, listX, listY, "Words to Find:", 14);
             listY += 25;
@@ -322,7 +358,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!RegisterClass(&wc)) return 0;
     
     HWND hwnd = CreateWindow("KWordsClass", "KWords", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-                             CW_USEDEFAULT, CW_USEDEFAULT, 700, 600,
+                             CW_USEDEFAULT, CW_USEDEFAULT, 900, 850,
                              NULL, NULL, hInstance, NULL);
                              
     MSG msg;

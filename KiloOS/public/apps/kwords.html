@@ -96,7 +96,7 @@
     border-radius: 10px;
   }
   button {
-    background-color: #0078d7;
+    background-color: #2d3748;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -105,13 +105,33 @@
     margin-top: 10px;
   }
   button:hover {
-    background-color: #005a9e;
+    background-color: #4a5568;
+  }
+  .diff-btn {
+    margin: 0 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+    margin-top: 0;
+  }
+  .diff-btn.active {
+    background-color: #3182ce;
+  }
+  #win-message button {
+    background-color: #3182ce;
+  }
+  #win-message button:hover {
+    background-color: #2b6cb0;
   }
 </style>
 </head>
 <body>
   <div class="header">
     <h2>KWords</h2>
+    <div>
+      <button class="diff-btn" id="btn-easy" onclick="setDifficulty('easy')">Easy</button>
+      <button class="diff-btn active" id="btn-medium" onclick="setDifficulty('medium')">Medium</button>
+      <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">Hard</button>
+    </div>
     <div>Found: <span id="score">0</span>/<span id="total">0</span> | Timer: <span id="timer">00:00</span></div>
   </div>
   <div class="container">
@@ -128,8 +148,9 @@
     </div>
   </div>
   <script>
-    const WORD_LIST = ["ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT"];
-    const GRID_SIZE = 15;
+    const WORD_LIST = ["ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT", "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL", "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD", "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"];
+    let gridSize = 15;
+    let numWordsToFind = 8;
     let grid = [];
     let wordsToFind = [];
     let foundWords = [];
@@ -139,20 +160,29 @@
     let timerInterval = null;
     let seconds = 0;
 
+    function setDifficulty(diff) {
+        if(diff === 'easy') { gridSize = 10; numWordsToFind = 5; }
+        else if(diff === 'medium') { gridSize = 15; numWordsToFind = 8; }
+        else if(diff === 'hard') { gridSize = 20; numWordsToFind = 12; }
+        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('btn-' + diff).classList.add('active');
+        initGame();
+    }
+
     function initGame() {
         wordsToFind = [];
         let shuffled = [...WORD_LIST].sort(() => 0.5 - Math.random());
-        wordsToFind = shuffled.slice(0, 8);
+        wordsToFind = shuffled.slice(0, numWordsToFind);
         foundWords = [];
-        grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
+        grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
         
         for (let word of wordsToFind) {
             placeWord(word);
         }
         
         const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        for(let r=0; r<GRID_SIZE; r++){
-            for(let c=0; c<GRID_SIZE; c++){
+        for(let r=0; r<gridSize; r++){
+            for(let c=0; c<gridSize; c++){
                 if(grid[r][c] === ''){
                     grid[r][c] = letters.charAt(Math.floor(Math.random() * letters.length));
                 }
@@ -187,14 +217,14 @@
         while (!placed && attempts < 200) {
             attempts++;
             const dir = dirs[Math.floor(Math.random() * dirs.length)];
-            const r = Math.floor(Math.random() * GRID_SIZE);
-            const c = Math.floor(Math.random() * GRID_SIZE);
+            const r = Math.floor(Math.random() * gridSize);
+            const c = Math.floor(Math.random() * gridSize);
             
             let canPlace = true;
             for (let i = 0; i < word.length; i++) {
                 const nr = r + i * dir[0];
                 const nc = c + i * dir[1];
-                if (nr < 0 || nr >= GRID_SIZE || nc < 0 || nc >= GRID_SIZE || (grid[nr][nc] !== '' && grid[nr][nc] !== word[i])) {
+                if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || (grid[nr][nc] !== '' && grid[nr][nc] !== word[i])) {
                     canPlace = false;
                     break;
                 }
@@ -211,11 +241,11 @@
 
     function renderGrid() {
         const gridEl = document.getElementById('grid');
-        gridEl.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 30px)`;
+        gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`;
         gridEl.innerHTML = '';
         
-        for(let r=0; r<GRID_SIZE; r++){
-            for(let c=0; c<GRID_SIZE; c++){
+        for(let r=0; r<gridSize; r++){
+            for(let c=0; c<gridSize; c++){
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.r = r;
