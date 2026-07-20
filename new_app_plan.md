@@ -66,13 +66,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Add Match Statistics (average score per dart, highest checkout).
 - [x] Phase 11: Add Local Multiplayer (hotseat for 2 players).
 - [x] Phase 12: Add Settings Panel (toggle sound effects and change dart visual styles).
-- Phase 13: Add Undo/Redo functionality for misclicks.
+- [x] Phase 13: Add Undo/Redo functionality for misclicks.
 - Phase 14: Add Comprehensive Help / How-to-Play modal explaining rules for 301/501 and Cricket.
 
 ## Next Priority (Before New Apps)
 
 **App:** KDarts
-**Goal:** Phase 13
+**Goal:** Phase 14
 
 
 ## App Lifecycle (14 phases per app)

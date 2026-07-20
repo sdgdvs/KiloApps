@@ -58,6 +58,8 @@
       <button onclick="setMode('cricket')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">Cricket</button>
       <button onclick="saveState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">Save</button>
       <button onclick="loadState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Load</button>
+      <button onclick="undo()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Undo</button>
+      <button onclick="redo()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Redo</button>
       <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Settings</button>
       <select id="diff" onchange="setDifficulty(this.value)" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">
         <option value="Human">Vs Human</option>
@@ -176,6 +178,60 @@ let mouseX = 300, mouseY = 300;
 let wobbleX = 0, wobbleY = 0;
 let t = 0;
 
+let historyStack = [];
+let redoStack = [];
+let aiTimeoutId = null;
+
+function getSnapshot() {
+    return JSON.stringify({
+        gameMode, aiDifficulty, currentPlayer, cricketHits,
+        totalDarts, highestCheckout, scores, prevScores, dartsLeft, state, darts: darts.map(d => ({...d}))
+    });
+}
+
+function restoreSnapshot(snap) {
+    const s = JSON.parse(snap);
+    gameMode = s.gameMode;
+    aiDifficulty = s.aiDifficulty;
+    currentPlayer = s.currentPlayer;
+    cricketHits = s.cricketHits;
+    totalDarts = s.totalDarts;
+    highestCheckout = s.highestCheckout;
+    scores = s.scores;
+    prevScores = s.prevScores;
+    dartsLeft = s.dartsLeft;
+    state = s.state;
+    darts = s.darts;
+    updateScoreUI();
+    let turnName = currentPlayer === 0 ? "Player 1" : (aiDifficulty === 'Human' ? "Player 2" : "AI");
+    statusEl.innerText = `${turnName}'s Turn - Darts left: ${dartsLeft}`;
+}
+
+function undo() {
+    if (historyStack.length > 0) {
+        clearTimeout(aiTimeoutId);
+        do {
+            redoStack.push(getSnapshot());
+            restoreSnapshot(historyStack.pop());
+        } while (historyStack.length > 0 && currentPlayer === 1 && aiDifficulty !== 'Human');
+    }
+}
+
+function redo() {
+    if (redoStack.length > 0) {
+        clearTimeout(aiTimeoutId);
+        historyStack.push(getSnapshot());
+        restoreSnapshot(redoStack.pop());
+        if (currentPlayer === 1 && aiDifficulty !== 'Human') {
+            if (state === 'PLAYING') {
+                aiTimeoutId = setTimeout(aiThrow, 1000);
+            } else if (state === 'TURN_END') {
+                aiTimeoutId = setTimeout(nextTurn, 2000);
+            }
+        }
+    }
+}
+
 const CX = 300;
 const CY = 300;
 const R = 220; // scoring radius
@@ -217,9 +273,11 @@ function loadState() {
             updateScoreUI();
             
             if (state === 'PLAYING' && currentPlayer === 1 && aiDifficulty !== 'Human') {
-                setTimeout(aiThrow, 1000);
+                clearTimeout(aiTimeoutId);
+                aiTimeoutId = setTimeout(aiThrow, 1000);
             } else if (state === 'TURN_END' && currentPlayer === 1 && aiDifficulty !== 'Human') {
-                setTimeout(nextTurn, 2000);
+                clearTimeout(aiTimeoutId);
+                aiTimeoutId = setTimeout(nextTurn, 2000);
             }
             
             statusEl.innerText = "Game Loaded!";
@@ -235,6 +293,9 @@ function setMode(mode) {
     state = 'PLAYING';
     darts = [];
     dartsLeft = 3;
+    historyStack = [];
+    redoStack = [];
+    clearTimeout(aiTimeoutId);
     currentPlayer = 0;
     scores = [501, 501];
     prevScores = [501, 501];
@@ -300,7 +361,8 @@ function nextTurn() {
         state = 'PLAYING';
         statusEl.innerText = currentPlayer === 0 ? "Player 1's Turn - Throw Dart 1" : (aiDifficulty === 'Human' ? "Player 2's Turn - Throw Dart 1" : "AI's Turn");
         if (currentPlayer === 1 && aiDifficulty !== 'Human') {
-            setTimeout(aiThrow, 1000);
+            clearTimeout(aiTimeoutId);
+            aiTimeoutId = setTimeout(aiThrow, 1000);
         }
     } else if (state === 'WON') {
         setMode(gameMode);
@@ -308,6 +370,8 @@ function nextTurn() {
 }
 
 function throwDart(targetX, targetY) {
+    historyStack.push(getSnapshot());
+    redoStack = [];
     const hit = getHitDetails(targetX, targetY);
     const pts = hit.number * hit.mult;
     
@@ -361,9 +425,11 @@ function throwDart(targetX, targetY) {
     updateScoreUI();
 
     if (state === 'PLAYING' && currentPlayer === 1 && aiDifficulty !== 'Human') {
-        setTimeout(aiThrow, 1000);
+        clearTimeout(aiTimeoutId);
+        aiTimeoutId = setTimeout(aiThrow, 1000);
     } else if (state === 'TURN_END' && currentPlayer === 1 && aiDifficulty !== 'Human') {
-        setTimeout(nextTurn, 2000);
+        clearTimeout(aiTimeoutId);
+        aiTimeoutId = setTimeout(nextTurn, 2000);
     }
 }
 

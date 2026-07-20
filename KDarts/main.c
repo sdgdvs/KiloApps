@@ -65,6 +65,107 @@ float t = 0.0f;
 int aiTimer = 0;
 char statusMsg[100] = "Game On! Player Turn - Throw 3 Darts";
 
+typedef struct {
+    int gameMode;
+    int aiDifficulty;
+    int currentPlayer;
+    int cricketHits[2][7];
+    int totalDarts[2];
+    int highestCheckout[2];
+    int scores[2];
+    int prevScores[2];
+    int dartsLeft;
+    int gameState;
+    int dartsCount;
+    Dart darts[3];
+} GameState;
+
+#define MAX_HISTORY 50
+GameState history[MAX_HISTORY];
+int historyCount = 0;
+GameState redoHistory[MAX_HISTORY];
+int redoCount = 0;
+
+void GetSnapshot(GameState* st) {
+    st->gameMode = gameMode;
+    st->aiDifficulty = aiDifficulty;
+    st->currentPlayer = currentPlayer;
+    memcpy(st->cricketHits, cricketHits, sizeof(cricketHits));
+    memcpy(st->totalDarts, totalDarts, sizeof(totalDarts));
+    memcpy(st->highestCheckout, highestCheckout, sizeof(highestCheckout));
+    memcpy(st->scores, scores, sizeof(scores));
+    memcpy(st->prevScores, prevScores, sizeof(prevScores));
+    st->dartsLeft = dartsLeft;
+    st->gameState = gameState;
+    st->dartsCount = dartsCount;
+    memcpy(st->darts, darts, sizeof(darts));
+}
+
+void RestoreSnapshot(GameState* st) {
+    gameMode = st->gameMode;
+    aiDifficulty = st->aiDifficulty;
+    currentPlayer = st->currentPlayer;
+    memcpy(cricketHits, st->cricketHits, sizeof(cricketHits));
+    memcpy(totalDarts, st->totalDarts, sizeof(totalDarts));
+    memcpy(highestCheckout, st->highestCheckout, sizeof(highestCheckout));
+    memcpy(scores, st->scores, sizeof(scores));
+    memcpy(prevScores, st->prevScores, sizeof(prevScores));
+    dartsLeft = st->dartsLeft;
+    gameState = st->gameState;
+    dartsCount = st->dartsCount;
+    memcpy(darts, st->darts, sizeof(darts));
+    aiTimer = 0;
+}
+
+void PushHistory() {
+    if (historyCount < MAX_HISTORY) {
+        GetSnapshot(&history[historyCount]);
+        historyCount++;
+    } else {
+        memmove(&history[0], &history[1], sizeof(GameState) * (MAX_HISTORY - 1));
+        GetSnapshot(&history[MAX_HISTORY - 1]);
+    }
+    redoCount = 0;
+}
+
+void Undo(HWND hwnd) {
+    if (historyCount > 0) {
+        do {
+            if (redoCount < MAX_HISTORY) {
+                GetSnapshot(&redoHistory[redoCount]);
+                redoCount++;
+            } else {
+                memmove(&redoHistory[0], &redoHistory[1], sizeof(GameState) * (MAX_HISTORY - 1));
+                GetSnapshot(&redoHistory[MAX_HISTORY - 1]);
+            }
+            historyCount--;
+            RestoreSnapshot(&history[historyCount]);
+        } while (historyCount > 0 && currentPlayer == 1 && aiDifficulty != 3);
+        
+        const char* turnName = currentPlayer == 0 ? "Player 1" : (aiDifficulty == 3 ? "Player 2" : "AI");
+        sprintf(statusMsg, "%s's Turn - Darts left: %d", turnName, dartsLeft);
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
+void Redo(HWND hwnd) {
+    if (redoCount > 0) {
+        if (historyCount < MAX_HISTORY) {
+            GetSnapshot(&history[historyCount]);
+            historyCount++;
+        } else {
+            memmove(&history[0], &history[1], sizeof(GameState) * (MAX_HISTORY - 1));
+            GetSnapshot(&history[MAX_HISTORY - 1]);
+        }
+        redoCount--;
+        RestoreSnapshot(&redoHistory[redoCount]);
+        
+        const char* turnName = currentPlayer == 0 ? "Player 1" : (aiDifficulty == 3 ? "Player 2" : "AI");
+        sprintf(statusMsg, "%s's Turn - Darts left: %d", turnName, dartsLeft);
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
 void SetMode(int mode);
 void NextTurn(HWND hwnd);
 void ThrowDart(HWND hwnd, int tx, int ty, int isAI);
@@ -127,6 +228,8 @@ void SetMode(int mode) {
     gameState = 0;
     dartsCount = 0;
     dartsLeft = 3;
+    historyCount = 0;
+    redoCount = 0;
     currentPlayer = 0;
     totalDarts[0] = 0;
     totalDarts[1] = 0;
@@ -220,6 +323,7 @@ void NextTurn(HWND hwnd) {
 }
 
 void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
+    PushHistory();
     if (isAI) {
         int targetNum = 20;
         int targetMult = 3;
@@ -353,19 +457,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             CreateWindow("BUTTON", "501", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         80, 120, 80, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         40, 120, 50, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Cricket", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         170, 120, 80, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         95, 120, 60, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         260, 120, 80, 30, hwnd, (HMENU)104, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         160, 120, 50, 30, hwnd, (HMENU)104, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         350, 120, 80, 30, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         215, 120, 50, 30, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         270, 120, 50, 30, hwnd, (HMENU)108, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Redo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         325, 120, 50, 30, hwnd, (HMENU)109, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Vs AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         440, 120, 120, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         380, 120, 100, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Sound", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         570, 120, 60, 30, hwnd, (HMENU)106, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         485, 120, 60, 30, hwnd, (HMENU)106, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Style", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         635, 120, 50, 30, hwnd, (HMENU)107, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         550, 120, 50, 30, hwnd, (HMENU)107, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
@@ -397,6 +505,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 const char* styles[] = {"Cyan", "Red", "Gold"};
                 sprintf(statusMsg, "Dart Style: %s", styles[dartStyle]);
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (LOWORD(wParam) == 108) {
+                Undo(hwnd);
+            } else if (LOWORD(wParam) == 109) {
+                Redo(hwnd);
             }
             return 0;
 
