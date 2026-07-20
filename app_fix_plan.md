@@ -119,7 +119,7 @@ Start over again. By now other agents have added new features and new apps. Ther
 
 ---
 
-**Target App:** K2048
+**Target App:** KColor
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -208,4 +208,6 @@ Pass 1 Complete.
 - **KChat & KChatServer**: Added ARIA labels in `kchat.html`. Fixed GDI resource leaks (`hUIFont`, `wc.hbrBackground`) and fixed incorrect button labels/states during socket connect/disconnect errors in `main.c`.
 - **KChess**: Added ARIA tags and localStorage error handling in `kchess.html`. Fixed undeclared `dstP` variable in `WM_TIMER` that caused compilation error and fixed GDI resource leak (`wc.hbrBackground`) and timer leak in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KClock.
+- **KClock**: Added ARIA labels and improved keyboard accessibility for tabs in `kclock.html`. Fixed non-modal MessageBox bug in `main.c` by passing `hwnd` to `UpdateDisplays`, preventing re-entrancy and UI interaction issues when alerts are shown.
+
+Start Pass 2 (Deeper Quality checks). Next target: KColor.

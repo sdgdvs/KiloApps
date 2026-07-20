@@ -47,7 +47,7 @@ void FormatTimer(DWORD ms, char* buf) {
     wsprintfA(buf, "%02d:%02d", minutes, seconds);
 }
 
-void UpdateDisplays() {
+void UpdateDisplays(HWND hwnd) {
     // Clock
     SYSTEMTIME st;
     GetLocalTime(&st);
@@ -62,7 +62,7 @@ void UpdateDisplays() {
                 MessageBeep(MB_ICONASTERISK);
                 char msg[64];
                 wsprintfA(msg, "Alarm for %02d:%02d!", alarms[i].hour, alarms[i].min);
-                MessageBoxA(NULL, msg, "KClock Alarm", MB_OK);
+                MessageBoxA(hwnd, msg, "KClock Alarm", MB_OK);
             }
         } else {
             alarms[i].triggered = 0;
@@ -88,7 +88,7 @@ void UpdateDisplays() {
             tmCur = 0;
             SetWindowTextA(hBtnTimerStart, "Start");
             MessageBeep(MB_ICONEXCLAMATION);
-            MessageBoxA(NULL, "Timer Finished!", "KClock Timer", MB_OK);
+            MessageBoxA(hwnd, "Timer Finished!", "KClock Timer", MB_OK);
         } else {
             tmCur = tmDuration - pass;
         }
@@ -145,7 +145,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_TIMER: {
-            UpdateDisplays();
+            UpdateDisplays(hwnd);
             break;
         }
         case WM_COMMAND: {
@@ -159,14 +159,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (isRunning) {
                     elapsed += (GetTickCount() - startTime);
                     isRunning = 0;
-                    UpdateDisplays();
+                    UpdateDisplays(hwnd);
                 }
             } else if (id == 3) { // SW Reset
                 isRunning = 0;
                 elapsed = 0;
                 lapCount = 0;
                 SendMessage(hListBox, LB_RESETCONTENT, 0, 0);
-                UpdateDisplays();
+                UpdateDisplays(hwnd);
             } else if (id == 4) { // SW Lap
                 if (isRunning) {
                     lapCount++;
@@ -201,7 +201,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 tmRunning = 0;
                 tmRemaining = 0;
                 SetWindowTextA(hBtnTimerStart, "Start");
-                UpdateDisplays();
+                UpdateDisplays(hwnd);
             } else if (id == 7) { // Add Alarm
                 if (numAlarms < MAX_ALARMS) {
                     int h = GetDlgItemInt(hwnd, 20, NULL, FALSE);
