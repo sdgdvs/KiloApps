@@ -65,6 +65,9 @@ bool isSelecting = false;
 int startR = -1, startC = -1;
 int curR = -1, curC = -1;
 
+float cellAnim[MAX_GRID_SIZE][MAX_GRID_SIZE] = {0};
+float strikeAnim[MAX_WORDS] = {0};
+
 int timerSeconds = 0;
 bool gameWon = false;
 
@@ -103,6 +106,8 @@ void InitGame() {
     srand((unsigned int)time(NULL));
     memset(foundGrid, 0, sizeof(foundGrid));
     memset(wordsFoundStatus, 0, sizeof(wordsFoundStatus));
+    memset(cellAnim, 0, sizeof(cellAnim));
+    memset(strikeAnim, 0, sizeof(strikeAnim));
     foundCount = 0;
     currentScore = 0;
     timerSeconds = 0;
@@ -238,11 +243,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             InitGame();
             SetTimer(hwnd, 1, 1000, NULL);
+            SetTimer(hwnd, 2, 30, NULL);
             break;
         case WM_TIMER:
-            if(!gameWon) {
-                timerSeconds++;
-                InvalidateRect(hwnd, NULL, FALSE);
+            if(wParam == 1) {
+                if(!gameWon) {
+                    timerSeconds++;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 2) {
+                bool needsRedraw = false;
+                int selR[MAX_GRID_SIZE*2], selC[MAX_GRID_SIZE*2];
+                int selCount = 0;
+                if (isSelecting) {
+                    GetLineCells(startR, startC, curR, curC, selR, selC, &selCount);
+                }
+                for(int r=0; r<gridSize; r++) {
+                    for(int c=0; c<gridSize; c++) {
+                        bool isSel = false;
+                        for(int i=0; i<selCount; i++) {
+                            if(selR[i] == r && selC[i] == c) { isSel = true; break; }
+                        }
+                        bool isFound = foundGrid[r][c];
+                        float target = (isSel || isFound) ? 1.0f : 0.0f;
+                        if(cellAnim[r][c] < target) { cellAnim[r][c] += 0.2f; if(cellAnim[r][c]>1.0f) cellAnim[r][c]=1.0f; needsRedraw = true; }
+                        else if(cellAnim[r][c] > target) { cellAnim[r][c] -= 0.2f; if(cellAnim[r][c]<0.0f) cellAnim[r][c]=0.0f; needsRedraw = true; }
+                    }
+                }
+                for(int w=0; w<wordCount; w++) {
+                    float target = wordsFoundStatus[w] ? 1.0f : 0.0f;
+                    if(strikeAnim[w] < target) { strikeAnim[w] += 0.1f; if(strikeAnim[w]>1.0f) strikeAnim[w]=1.0f; needsRedraw = true; }
+                }
+                if(needsRedraw) InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         case WM_LBUTTONDOWN: {
@@ -364,14 +396,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     
-                    if (isSelected) {
-                        HBRUSH selBrush = CreateSolidBrush(RGB(49, 130, 206));
-                        FillRect(hdc, &rc, selBrush);
-                        DeleteObject(selBrush);
-                    } else if (foundGrid[r][c]) {
-                        HBRUSH foundBrush = CreateSolidBrush(RGB(56, 161, 105));
-                        FillRect(hdc, &rc, foundBrush);
-                        DeleteObject(foundBrush);
+                    if (cellAnim[r][c] > 0.0f) {
+                        int cx = (rc.left + rc.right) / 2;
+                        int cy = (rc.top + rc.bottom) / 2;
+                        int cw = (rc.right - rc.left) / 2;
+                        int ch = (rc.bottom - rc.top) / 2;
+                        int w = (int)(cw * cellAnim[r][c]);
+                        int h = (int)(ch * cellAnim[r][c]);
+                        RECT animRc = { cx - w, cy - h, cx + w, cy + h };
+                        COLORREF color = isSelected ? RGB(49, 130, 206) : RGB(56, 161, 105);
+                        HBRUSH animBrush = CreateSolidBrush(color);
+                        FillRect(hdc, &animRc, animBrush);
+                        DeleteObject(animBrush);
                     }
                     
                     Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
@@ -394,11 +430,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 TextOut(hdc, listX, listY, wordsToFind[w], strlen(wordsToFind[w]));
                 
-                if(wordsFoundStatus[w]) {
+                if(strikeAnim[w] > 0.0f) {
                     HPEN strikePen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
                     HPEN oldP = (HPEN)SelectObject(hdc, strikePen);
                     MoveToEx(hdc, listX, listY + 10, NULL);
-                    LineTo(hdc, listX + strlen(wordsToFind[w])*9, listY + 10);
+                    int strikeLen = (int)(strlen(wordsToFind[w]) * 9 * strikeAnim[w]);
+                    LineTo(hdc, listX + strikeLen, listY + 10);
                     SelectObject(hdc, oldP);
                     DeleteObject(strikePen);
                 }
@@ -427,6 +464,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
             PostQuitMessage(0);
             break;
         default:
