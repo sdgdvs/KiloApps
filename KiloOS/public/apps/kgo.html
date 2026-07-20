@@ -102,6 +102,7 @@
   <div class="controls">
     <button id="btn-pass">Pass</button>
     <button id="btn-resign">Resign</button>
+    <button id="btn-score">Score Game</button>
     <select id="board-size">
       <option value="9">9x9</option>
       <option value="13">13x13</option>
@@ -116,11 +117,13 @@
   let board = [];
   let currentPlayer = 'B';
   let history = []; // for ko rule
+  let captures = { B: 0, W: 0 };
 
   function initBoard() {
     board = Array(size).fill(null).map(() => Array(size).fill(null));
     currentPlayer = 'B';
     history = [];
+    captures = { B: 0, W: 0 };
     updateStatus();
     drawBoard();
   }
@@ -200,7 +203,63 @@
         }
       }
     }
+    if (captured > 0) {
+      if (color === 'B') captures.W += captured;
+      else captures.B += captured;
+    }
     return captured;
+  }
+
+  function calculateScore() {
+    let terrB = 0;
+    let terrW = 0;
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (board[y][x] === null && !visited[y][x]) {
+          let emptyGroup = [];
+          let touchesB = false;
+          let touchesW = false;
+          
+          let queue = [{x, y}];
+          visited[y][x] = true;
+          
+          while (queue.length > 0) {
+            let p = queue.shift();
+            emptyGroup.push(p);
+            
+            const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+            for (let d of dirs) {
+              let nx = p.x + d[0];
+              let ny = p.y + d[1];
+              if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                if (board[ny][nx] === 'B') touchesB = true;
+                else if (board[ny][nx] === 'W') touchesW = true;
+                else if (!visited[ny][nx]) {
+                  visited[ny][nx] = true;
+                  queue.push({x: nx, y: ny});
+                }
+              }
+            }
+          }
+          
+          if (touchesB && !touchesW) terrB += emptyGroup.length;
+          if (touchesW && !touchesB) terrW += emptyGroup.length;
+        }
+      }
+    }
+    
+    let totalB = captures.B + terrB;
+    let totalW = captures.W + terrW + 6.5; // komi
+    
+    let msg = `Black: ${terrB} territory + ${captures.B} captures = ${totalB}\n`;
+    msg += `White: ${terrW} territory + ${captures.W} captures + 6.5 komi = ${totalW}\n\n`;
+    if (totalB > totalW) msg += `Black wins by ${totalB - totalW}!`;
+    else msg += `White wins by ${totalW - totalB}!`;
+    
+    alert(msg);
+    initBoard();
   }
 
   function boardToString() {
@@ -251,6 +310,9 @@
   document.getElementById('btn-resign').addEventListener('click', () => {
     alert(`${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`);
     initBoard();
+  });
+  document.getElementById('btn-score').addEventListener('click', () => {
+    calculateScore();
   });
   document.getElementById('btn-new').addEventListener('click', () => {
     initBoard();

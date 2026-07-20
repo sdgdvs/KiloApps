@@ -6,11 +6,13 @@
 #define ID_BTN_RESIGN 102
 #define ID_BTN_NEW 103
 #define ID_CB_SIZE 104
+#define ID_BTN_SCORE 105
 
 int boardSize = 9;
 char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
 char prevBoard[19][19] = {0};
 int currentPlayer = 1;
+int captures[3] = {0}; // 1 = black, 2 = white
 
 void CopyBoard(char dst[19][19], char src[19][19]) {
     memcpy(dst, src, sizeof(char) * 19 * 19);
@@ -47,7 +49,7 @@ void GetGroup(int x, int y, int color, char visited[19][19], POINT group[], int 
 }
 
 int CheckCaptures(int color) {
-    int captured = 0;
+    int totalCaptured = 0;
     for (int y = 0; y < boardSize; y++) {
         for (int x = 0; x < boardSize; x++) {
             if (board[y][x] == color) {
@@ -59,13 +61,17 @@ int CheckCaptures(int color) {
                     GetGroup(x, y, color, groupVisited, group, &groupSize);
                     for (int i = 0; i < groupSize; i++) {
                         board[group[i].y][group[i].x] = 0;
-                        captured++;
+                        totalCaptured++;
                     }
                 }
             }
         }
     }
-    return captured;
+    if (totalCaptured > 0) {
+        if (color == 1) captures[2] += totalCaptured;
+        else captures[1] += totalCaptured;
+    }
+    return totalCaptured;
 }
 
 void PlaceStone(HWND hwnd, int x, int y) {
@@ -101,6 +107,72 @@ void InitBoard() {
     memset(board, 0, sizeof(board));
     memset(prevBoard, 0, sizeof(prevBoard));
     currentPlayer = 1;
+    captures[1] = 0;
+    captures[2] = 0;
+}
+
+void CalculateScore(HWND hwnd) {
+    int terrB = 0;
+    int terrW = 0;
+    char visited[19][19] = {0};
+    
+    for (int y = 0; y < boardSize; y++) {
+        for (int x = 0; x < boardSize; x++) {
+            if (board[y][x] == 0 && !visited[y][x]) {
+                int touchesB = 0;
+                int touchesW = 0;
+                
+                POINT queue[19*19];
+                int head = 0, tail = 0;
+                queue[tail].x = x;
+                queue[tail].y = y;
+                tail++;
+                visited[y][x] = 1;
+                
+                int emptyCount = 0;
+                
+                while (head < tail) {
+                    POINT p = queue[head++];
+                    emptyCount++;
+                    
+                    int dx[] = {0, 1, 0, -1};
+                    int dy[] = {1, 0, -1, 0};
+                    for (int i = 0; i < 4; i++) {
+                        int nx = p.x + dx[i];
+                        int ny = p.y + dy[i];
+                        if (nx >= 0 && nx < boardSize && ny >= 0 && ny < boardSize) {
+                            if (board[ny][nx] == 1) touchesB = 1;
+                            else if (board[ny][nx] == 2) touchesW = 1;
+                            else if (!visited[ny][nx]) {
+                                visited[ny][nx] = 1;
+                                queue[tail].x = nx;
+                                queue[tail].y = ny;
+                                tail++;
+                            }
+                        }
+                    }
+                }
+                
+                if (touchesB && !touchesW) terrB += emptyCount;
+                if (touchesW && !touchesB) terrW += emptyCount;
+            }
+        }
+    }
+    
+    float totalB = captures[1] + terrB;
+    float totalW = captures[2] + terrW + 6.5f;
+    
+    char msg[256];
+    sprintf(msg, "Black: %d territory + %d captures = %g\n"
+                 "White: %d territory + %d captures + 6.5 komi = %g\n\n"
+                 "%s wins!", 
+                 terrB, captures[1], totalB,
+                 terrW, captures[2], totalW,
+                 (totalB > totalW) ? "Black" : "White");
+                 
+    MessageBox(hwnd, msg, "Game Score", MB_OK);
+    InitBoard();
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -109,13 +181,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
     switch (uMsg) {
         case WM_CREATE:
             hBtnPass = CreateWindow("BUTTON", "Pass", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                20, 600, 80, 30, hwnd, (HMENU)ID_BTN_PASS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                20, 600, 60, 30, hwnd, (HMENU)ID_BTN_PASS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hBtnResign = CreateWindow("BUTTON", "Resign", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                110, 600, 80, 30, hwnd, (HMENU)ID_BTN_RESIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                90, 600, 60, 30, hwnd, (HMENU)ID_BTN_RESIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Score", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                160, 600, 60, 30, hwnd, (HMENU)ID_BTN_SCORE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hBtnNew = CreateWindow("BUTTON", "New Game", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                200, 600, 80, 30, hwnd, (HMENU)ID_BTN_NEW, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                230, 600, 80, 30, hwnd, (HMENU)ID_BTN_NEW, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             hCbSize = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
-                290, 600, 80, 100, hwnd, (HMENU)ID_CB_SIZE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                320, 600, 80, 100, hwnd, (HMENU)ID_CB_SIZE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"9x9");
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"13x13");
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"19x19");
@@ -204,6 +278,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 MessageBox(hwnd, msg, "Game Over", MB_OK);
                 InitBoard();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_SCORE) {
+                CalculateScore(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_NEW) {
                 InitBoard();
                 InvalidateRect(hwnd, NULL, TRUE);
