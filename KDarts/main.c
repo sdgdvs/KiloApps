@@ -30,6 +30,8 @@ DWORD WINAPI PlaySoundThread(LPVOID lpParam) {
 }
 
 void PlayGameSound(int type) {
+    extern int soundEnabled;
+    if (!soundEnabled) return;
     CreateThread(NULL, 0, PlaySoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
@@ -45,6 +47,8 @@ typedef struct {
 int gameMode = 0; // 0=501, 1=Cricket
 int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 int currentPlayer = 0; // 0=Player, 1=AI
+int soundEnabled = 1;
+int dartStyle = 0; // 0=cyan, 1=red, 2=gold
 int cricketHits[2][7] = {{0}}; // 20, 19, 18, 17, 16, 15, 25
 int totalDarts[2] = {0};
 int highestCheckout[2] = {0};
@@ -80,6 +84,8 @@ void SaveState(HWND hwnd) {
         fwrite(&dartsLeft, sizeof(int), 1, f);
         fwrite(&gameState, sizeof(int), 1, f);
         fwrite(highestCheckout, sizeof(int), 2, f);
+        fwrite(&soundEnabled, sizeof(int), 1, f);
+        fwrite(&dartStyle, sizeof(int), 1, f);
         fclose(f);
         sprintf(statusMsg, "Game Saved!");
         InvalidateRect(hwnd, NULL, FALSE);
@@ -99,6 +105,8 @@ void LoadState(HWND hwnd) {
         fread(&dartsLeft, sizeof(int), 1, f);
         fread(&gameState, sizeof(int), 1, f);
         fread(highestCheckout, sizeof(int), 2, f);
+        fread(&soundEnabled, sizeof(int), 1, f);
+        fread(&dartStyle, sizeof(int), 1, f);
         fclose(f);
         dartsCount = 0;
         
@@ -354,6 +362,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          350, 120, 80, 30, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Vs AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
                          440, 120, 120, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Sound", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         570, 120, 60, 30, hwnd, (HMENU)106, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Style", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         635, 120, 50, 30, hwnd, (HMENU)107, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
@@ -376,6 +388,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SaveState(hwnd);
             } else if (LOWORD(wParam) == 105) {
                 LoadState(hwnd);
+            } else if (LOWORD(wParam) == 106) {
+                soundEnabled = !soundEnabled;
+                sprintf(statusMsg, "Sound: %s", soundEnabled ? "ON" : "OFF");
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (LOWORD(wParam) == 107) {
+                dartStyle = (dartStyle + 1) % 3;
+                const char* styles[] = {"Cyan", "Red", "Gold"};
+                sprintf(statusMsg, "Dart Style: %s", styles[dartStyle]);
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             return 0;
 
@@ -465,7 +486,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HPEN uiPen = CreatePen(PS_SOLID, 1, RGB(51, 51, 51));
             HBRUSH oldUIBrush = (HBRUSH)SelectObject(memDC, uiBrush);
             HPEN oldUIPen = (HPEN)SelectObject(memDC, uiPen);
-            RoundRect(memDC, 82, 10, 568, 160, 15, 15);
+            RoundRect(memDC, 70, 10, 695, 160, 15, 15);
             SelectObject(memDC, oldUIBrush);
             SelectObject(memDC, oldUIPen);
             DeleteObject(uiBrush);
@@ -611,7 +632,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 flight[2].x = dx + (int)(35.0f * scale); flight[2].y = dy + (int)(25.0f * scale);
                 flight[3].x = dx + (int)(25.0f * scale); flight[3].y = dy + (int)(35.0f * scale);
                 
-                HBRUSH fBrush = CreateSolidBrush(RGB(0, 255, 255));
+                COLORREF fColor = RGB(0, 255, 255); // Cyan
+                if (dartStyle == 1) fColor = RGB(255, 51, 51); // Red
+                else if (dartStyle == 2) fColor = RGB(255, 215, 0); // Gold
+                HBRUSH fBrush = CreateSolidBrush(fColor);
                 HPEN fPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
                 HBRUSH oldFBr = (HBRUSH)SelectObject(memDC, fBrush);
                 HPEN oldFPen = (HPEN)SelectObject(memDC, fPen);
@@ -683,7 +707,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KDarts", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
-        CW_USEDEFAULT, CW_USEDEFAULT, 650, 750,
+        CW_USEDEFAULT, CW_USEDEFAULT, 720, 750,
         NULL, NULL, hInstance, NULL
     );
     

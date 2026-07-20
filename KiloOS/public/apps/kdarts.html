@@ -58,6 +58,7 @@
       <button onclick="setMode('cricket')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">Cricket</button>
       <button onclick="saveState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">Save</button>
       <button onclick="loadState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Load</button>
+      <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Settings</button>
       <select id="diff" onchange="setDifficulty(this.value)" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">
         <option value="Human">Vs Human</option>
         <option value="Easy">Vs AI: Easy</option>
@@ -71,6 +72,20 @@
   </div>
   <div id="canvas-container">
     <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div id="settingsPanel" style="display:none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: #222; padding: 20px; border-radius: 8px; border: 1px solid #555; z-index: 10; color: white; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8);">
+      <h3 style="margin-top: 0;">Settings</h3>
+      <label><input type="checkbox" id="soundToggle" checked onchange="toggleSound()"> Sound Effects</label><br><br>
+      <label>Dart Style:
+        <select id="dartStyle" onchange="changeDartStyle()" style="background: #333; color: white; border: 1px solid #555; padding: 3px;">
+          <option value="cyan">Cyan</option>
+          <option value="red">Red</option>
+          <option value="gold">Gold</option>
+        </select>
+      </label><br><br>
+      <div style="text-align: right;">
+        <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 4px;">Close</button>
+      </div>
+    </div>
   </div>
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -81,7 +96,25 @@ const statusEl = document.getElementById('status');
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
+let soundEnabled = true;
+let dartColor = '#0ff';
+
+function toggleSettings() {
+    const p = document.getElementById('settingsPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+function toggleSound() {
+    soundEnabled = document.getElementById('soundToggle').checked;
+}
+function changeDartStyle() {
+    const style = document.getElementById('dartStyle').value;
+    if (style === 'cyan') dartColor = '#0ff';
+    if (style === 'red') dartColor = '#ff3333';
+    if (style === 'gold') dartColor = '#ffd700';
+}
+
 function playSound(type) {
+    if (!soundEnabled) return;
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime;
     if (type === 'whoosh') {
@@ -522,7 +555,7 @@ function update() {
         ctx.lineTo(d.x + 35 * scale, d.y + 25 * scale);
         ctx.lineTo(d.x + 25 * scale, d.y + 35 * scale);
         ctx.closePath();
-        ctx.fillStyle = '#0ff';
+        ctx.fillStyle = dartColor;
         ctx.fill();
         ctx.strokeStyle = '#000';
         ctx.lineWidth = 1 * scale;
