@@ -110,5 +110,6 @@ Pass 1 Complete.
 - **KChess**: Added ARIA tags and localStorage error handling in `kchess.html`. Fixed undeclared `dstP` variable in `WM_TIMER` that caused compilation error and fixed GDI resource leak (`wc.hbrBackground`) and timer leak in `main.c`.
 - **KClock**: Added ARIA labels and improved keyboard accessibility for tabs in `kclock.html`. Fixed non-modal MessageBox bug in `main.c` by passing `hwnd` to `UpdateDisplays`, preventing re-entrancy and UI interaction issues when alerts are shown.
 - **KColor**: Added ARIA labels and `aria-live` to color preview in `kcolor.html` for accessibility. Verified `main.c` (no leaks or bugs found).
+- **KContacts**: Fixed XSS vulnerability in `kcontacts.html` contact list rendering using `textContent` and safe DOM creation. Added keyboard accessibility attributes and handlers. Verified `main.c` (no issues found).
 
-Start Pass 2 (Deeper Quality checks). Next target: KContacts.
+Start Pass 2 (Deeper Quality checks). Next target: KConverter.

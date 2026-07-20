@@ -156,8 +156,8 @@
 <body>
   <div class="sidebar">
     <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search contacts...">
-      <select id="filterCategory">
+      <input type="text" id="searchInput" placeholder="Search contacts..." aria-label="Search Contacts">
+      <select id="filterCategory" aria-label="Filter Contacts Category">
         <option value="All">All Categories</option>
         <option value="Favorites">★ Favorites Only</option>
         <option value="Work">Work</option>
@@ -256,16 +256,37 @@
         if ((nameMatch || emailMatch) && catMatch) {
           const div = document.createElement('div');
           div.className = 'contact-item' + (i === currentEditIndex ? ' active' : '');
-          div.innerHTML = `
-            <div class="contact-item-header">
-              <span class="contact-item-name">${c.name || 'Unnamed Contact'} ${c.fav ? '★' : ''}</span>
-              <span class="badge ${c.category || 'Other'}">${c.category || 'Other'}</span>
-            </div>
-            <div class="contact-item-sub">
-              <span>${c.email || ''}</span>
-            </div>
-          `;
+          div.tabIndex = 0;
+          div.setAttribute('role', 'button');
+          div.setAttribute('aria-label', 'Contact ' + (c.name || 'Unnamed Contact'));
+          
+          const header = document.createElement('div');
+          header.className = 'contact-item-header';
+          
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'contact-item-name';
+          nameSpan.textContent = (c.name || 'Unnamed Contact') + (c.fav ? ' ★' : '');
+          
+          const badgeSpan = document.createElement('span');
+          badgeSpan.className = 'badge ' + (c.category || 'Other');
+          badgeSpan.textContent = c.category || 'Other';
+          
+          header.appendChild(nameSpan);
+          header.appendChild(badgeSpan);
+          
+          const sub = document.createElement('div');
+          sub.className = 'contact-item-sub';
+          
+          const emailSpan = document.createElement('span');
+          emailSpan.textContent = c.email || '';
+          
+          sub.appendChild(emailSpan);
+          
+          div.appendChild(header);
+          div.appendChild(sub);
+          
           div.onclick = () => selectContact(i);
+          div.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectContact(i); } };
           contactList.appendChild(div);
         }
       });
