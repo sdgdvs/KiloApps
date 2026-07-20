@@ -50,6 +50,7 @@ const char* DICTIONARIES[NUM_THEMES][THEME_DICT_SIZE] = {
 
 char grid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 bool foundGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+bool hintedGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 int gridSize = 15;
 int numWordsToFind = 8;
 int currentDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
@@ -57,6 +58,7 @@ int currentThemeIdx = 0;
 
 char wordsToFind[MAX_WORDS][32];
 bool wordsFoundStatus[MAX_WORDS];
+bool wordsHintedStatus[MAX_WORDS];
 int wordCount = 0;
 int foundCount = 0;
 int currentScore = 0;
@@ -75,6 +77,7 @@ RECT btnTheme = {220, 10, 360, 35};
 RECT btnEasy = {370, 10, 430, 35};
 RECT btnMed  = {440, 10, 510, 35};
 RECT btnHard = {520, 10, 580, 35};
+RECT btnHint = {590, 10, 650, 35};
 
 DWORD WINAPI SoundTick(LPVOID lpParam) {
     Beep(1500, 10);
@@ -105,7 +108,9 @@ void PlaySoundEffect(int type) {
 void InitGame() {
     srand((unsigned int)time(NULL));
     memset(foundGrid, 0, sizeof(foundGrid));
+    memset(hintedGrid, 0, sizeof(hintedGrid));
     memset(wordsFoundStatus, 0, sizeof(wordsFoundStatus));
+    memset(wordsHintedStatus, 0, sizeof(wordsHintedStatus));
     memset(cellAnim, 0, sizeof(cellAnim));
     memset(strikeAnim, 0, sizeof(strikeAnim));
     foundCount = 0;
@@ -238,6 +243,61 @@ void EndSelection(HWND hwnd) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
+void UseHint(HWND hwnd) {
+    if (gameWon) return;
+    
+    int unfound[MAX_WORDS];
+    int uncount = 0;
+    for(int w=0; w<wordCount; w++) {
+        if(!wordsFoundStatus[w] && !wordsHintedStatus[w]) {
+            unfound[uncount++] = w;
+        }
+    }
+    
+    if (uncount == 0) {
+        for(int w=0; w<wordCount; w++) {
+            if(!wordsFoundStatus[w]) {
+                unfound[uncount++] = w;
+            }
+        }
+    }
+    
+    if (uncount == 0) return;
+    
+    int targetIdx = unfound[rand() % uncount];
+    
+    int dirs[8][2] = {{0,1}, {1,0}, {1,1}, {-1,1}, {1,-1}, {-1,-1}, {0,-1}, {-1,0}};
+    int len = strlen(wordsToFind[targetIdx]);
+    bool foundInGrid = false;
+    for (int r = 0; r < gridSize && !foundInGrid; r++) {
+        for (int c = 0; c < gridSize && !foundInGrid; c++) {
+            if (grid[r][c] == wordsToFind[targetIdx][0]) {
+                for (int d = 0; d < 8; d++) {
+                    bool match = true;
+                    for (int i = 0; i < len; i++) {
+                        int nr = r + i * dirs[d][0];
+                        int nc = c + i * dirs[d][1];
+                        if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || grid[nr][nc] != wordsToFind[targetIdx][i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        hintedGrid[r][c] = true;
+                        wordsHintedStatus[targetIdx] = true;
+                        currentScore -= 50;
+                        if (currentScore < 0) currentScore = 0;
+                        timerSeconds += 30;
+                        foundInGrid = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
@@ -290,6 +350,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (PtInRect(&btnHard, pt)) {
                 currentDifficulty = 2; gridSize = 20; numWordsToFind = 12; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+            }
+            if (PtInRect(&btnHint, pt)) {
+                UseHint(hwnd); break;
             }
 
             if(gameWon) {
@@ -361,6 +424,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &btnMed, currentDifficulty == 1 ? activeBrush : btnBrush);
             FillRect(hdc, &btnHard, currentDifficulty == 2 ? activeBrush : btnBrush);
             
+            HBRUSH hintBrush = CreateSolidBrush(RGB(214, 158, 46));
+            FillRect(hdc, &btnHint, hintBrush);
+            DeleteObject(hintBrush);
+            
             char themeStr[64];
             sprintf(themeStr, "Theme: %s", THEMES[currentThemeIdx]);
             TextOut(hdc, btnTheme.left + 10, btnTheme.top + 5, themeStr, strlen(themeStr));
@@ -368,6 +435,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOut(hdc, btnEasy.left + 14, btnEasy.top + 5, "Easy", 4);
             TextOut(hdc, btnMed.left + 7, btnMed.top + 5, "Medium", 6);
             TextOut(hdc, btnHard.left + 14, btnHard.top + 5, "Hard", 4);
+            
+            SetTextColor(hdc, RGB(26, 32, 44));
+            TextOut(hdc, btnHint.left + 14, btnHint.top + 5, "Hint", 4);
+            SetTextColor(hdc, RGB(226, 232, 240));
             
             DeleteObject(btnBrush);
             DeleteObject(activeBrush);
@@ -408,9 +479,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         HBRUSH animBrush = CreateSolidBrush(color);
                         FillRect(hdc, &animRc, animBrush);
                         DeleteObject(animBrush);
+                    } else if (hintedGrid[r][c]) {
+                        HBRUSH hHint = CreateSolidBrush(RGB(214, 158, 46));
+                        FillRect(hdc, &rc, hHint);
+                        DeleteObject(hHint);
                     }
                     
                     Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
+                    
+                    if (hintedGrid[r][c] && cellAnim[r][c] == 0.0f) SetTextColor(hdc, RGB(26, 32, 44));
+                    else SetTextColor(hdc, RGB(226, 232, 240));
                     
                     char ch[2] = { grid[r][c], 0 };
                     DrawText(hdc, ch, 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
