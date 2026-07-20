@@ -50,29 +50,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KGo
-**Phase:** 9
+**App:** KDarts
+**Phase:** 1
 **Status:** In Progress
 
-- [x] Phase 1: Choose a unique app. Scaffold `KGo/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [x] Phase 5: Add a Score System (calculate territory using flood fill and captured stones to determine winner at game end).
-- [x] Phase 6: Add Visual Polish (smooth stone placement animations, hover effect on valid intersections).
-- [x] Phase 7: Add a Simple AI Opponent (random valid moves or basic capture/defend heuristics).
-- [x] Phase 8: Add Sound Effects (stone clack on placement, capture sound, game over chime).
-- [x] Phase 9: Add Save/Load State (persist current board, captures, and turn).
-- [x] Phase 10: Add Visual Capture indicators (highlight stones before they are captured or animate removal).
-- [x] Phase 11: Add Undo/Redo functionality (keep a history of board states).
-- [x] Phase 12: Add Statistics tracking (games played, win/loss record against AI vs Local Multiplayer).
-- [x] Phase 13: Add Adjustable AI Difficulty (Easy = random, Medium = basic heuristics).
-- Phase 14: Add Comprehensive Help / How-to-Play modal explaining Go rules and territory scoring.
+- [ ] Phase 1: Choose a unique app. Scaffold `KDarts/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- [ ] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- [ ] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- [ ] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
-**App:** KGo
-**Goal:** Phase 14
+**App:** KDarts
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -112,6 +102,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KGo (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KWords (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KMatch3 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KAsteroids (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
@@ -131,7 +122,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 
 ### 🎮 GAMES (PRIORITY — create these first)
 - **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
-- **KGo** — Abstract strategy board game. 9x9, 13x13, 19x19 boards. Territory scoring. Simple AI. Capture visualization.
 - **KDarts** — Dartboard game. 301/501 scoring. Cricket mode. Aim-and-throw mechanic. Stats per player.
 - **KTowers** — Tower of Hanoi. Multiple difficulties (3-8 discs). Move counter. Optimal solution hint. Animated disc movement.
 - **KMemory** — Card memory matching. Multiple themes. Timed mode. Pair count options (8-32 pairs). Best time tracking.

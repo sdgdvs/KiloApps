@@ -16,6 +16,7 @@
 #define ID_BTN_REDO 110
 #define ID_BTN_STATS 111
 #define ID_CB_DIFFICULTY 112
+#define ID_BTN_HELP 113
 
 typedef struct {
     int played;
@@ -512,6 +513,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 230, 640, 60, 30, hwnd, (HMENU)ID_BTN_REDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Stats", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 300, 640, 60, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                370, 640, 60, 30, hwnd, (HMENU)ID_BTN_HELP, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -704,6 +707,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 sprintf(smsg, "Statistics:\nGames Played: %d\n\nvs AI Mode:\nWins: %d\nLosses: %d\n\nLocal Mode:\nBlack Wins: %d\nWhite Wins: %d",
                         stats.played, stats.aiWins, stats.aiLosses, stats.localB, stats.localW);
                 MessageBox(hwnd, smsg, "Statistics", MB_OK);
+            } else if (LOWORD(wParam) == ID_BTN_HELP) {
+                MessageBox(hwnd, 
+                    "Goal: Control more territory (empty points) than your opponent.\n\n"
+                    "- Players (Black & White) take turns placing stones on intersections.\n"
+                    "- Stones must have at least one empty adjacent point (liberty).\n"
+                    "- If surrounded, stones are captured and removed.\n"
+                    "- Ko Rule: Cannot recreate the exact previous board position.\n"
+                    "- Suicide Rule: Cannot place a stone with no liberties unless it captures.\n"
+                    "- Score: Empty intersections surrounded + captured stones.\n"
+                    "  (White gets 6.5 extra points as Komi).",
+                    "How to Play KGo", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);
                 if (sel == 0) boardSize = 9;
