@@ -56,6 +56,8 @@
     <div style="margin-bottom: 10px;">
       <button onclick="setMode('501')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">501</button>
       <button onclick="setMode('cricket')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">Cricket</button>
+      <button onclick="saveState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">Save</button>
+      <button onclick="loadState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Load</button>
       <select id="diff" onchange="setDifficulty(this.value)" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">
         <option value="Easy">AI: Easy</option>
         <option value="Medium" selected>AI: Medium</option>
@@ -145,6 +147,50 @@ const BOARD_R = 300;
 
 function setDifficulty(diff) {
     aiDifficulty = diff;
+}
+
+function saveState() {
+    const stateObj = {
+        gameMode, aiDifficulty, currentPlayer, cricketHits,
+        totalDarts, scores, prevScores, dartsLeft, state
+    };
+    localStorage.setItem('kdarts_save', JSON.stringify(stateObj));
+    const oldMsg = statusEl.innerText;
+    statusEl.innerText = "Game Saved!";
+    setTimeout(() => { if (statusEl.innerText === "Game Saved!") statusEl.innerText = oldMsg; }, 1500);
+}
+
+function loadState() {
+    const saved = localStorage.getItem('kdarts_save');
+    if (saved) {
+        try {
+            const stateObj = JSON.parse(saved);
+            gameMode = stateObj.gameMode;
+            aiDifficulty = stateObj.aiDifficulty;
+            currentPlayer = stateObj.currentPlayer;
+            cricketHits = stateObj.cricketHits;
+            totalDarts = stateObj.totalDarts;
+            scores = stateObj.scores;
+            prevScores = stateObj.prevScores;
+            dartsLeft = stateObj.dartsLeft;
+            state = stateObj.state;
+            darts = [];
+            
+            document.getElementById('diff').value = aiDifficulty;
+            updateScoreUI();
+            
+            if (state === 'PLAYING' && currentPlayer === 1) {
+                setTimeout(aiThrow, 1000);
+            } else if (state === 'TURN_END' && currentPlayer === 1) {
+                setTimeout(nextTurn, 2000);
+            }
+            
+            statusEl.innerText = "Game Loaded!";
+            setTimeout(() => { if (statusEl.innerText === "Game Loaded!") statusEl.innerText = currentPlayer === 0 ? "Player's Turn" : "AI's Turn"; }, 1500);
+        } catch (e) {
+            console.error("Load failed", e);
+        }
+    }
 }
 
 function setMode(mode) {

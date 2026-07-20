@@ -63,6 +63,52 @@ char statusMsg[100] = "Game On! Player Turn - Throw 3 Darts";
 void SetMode(int mode);
 void NextTurn(HWND hwnd);
 void ThrowDart(HWND hwnd, int tx, int ty, int isAI);
+void SaveState(HWND hwnd);
+void LoadState(HWND hwnd);
+
+void SaveState(HWND hwnd) {
+    FILE *f = fopen("kdarts_save.dat", "wb");
+    if (f) {
+        fwrite(&gameMode, sizeof(int), 1, f);
+        fwrite(&aiDifficulty, sizeof(int), 1, f);
+        fwrite(&currentPlayer, sizeof(int), 1, f);
+        fwrite(cricketHits, sizeof(int), 14, f);
+        fwrite(totalDarts, sizeof(int), 2, f);
+        fwrite(scores, sizeof(int), 2, f);
+        fwrite(prevScores, sizeof(int), 2, f);
+        fwrite(&dartsLeft, sizeof(int), 1, f);
+        fwrite(&gameState, sizeof(int), 1, f);
+        fclose(f);
+        sprintf(statusMsg, "Game Saved!");
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
+
+void LoadState(HWND hwnd) {
+    FILE *f = fopen("kdarts_save.dat", "rb");
+    if (f) {
+        fread(&gameMode, sizeof(int), 1, f);
+        fread(&aiDifficulty, sizeof(int), 1, f);
+        fread(&currentPlayer, sizeof(int), 1, f);
+        fread(cricketHits, sizeof(int), 14, f);
+        fread(totalDarts, sizeof(int), 2, f);
+        fread(scores, sizeof(int), 2, f);
+        fread(prevScores, sizeof(int), 2, f);
+        fread(&dartsLeft, sizeof(int), 1, f);
+        fread(&gameState, sizeof(int), 1, f);
+        fclose(f);
+        dartsCount = 0;
+        
+        char buf[20];
+        if (aiDifficulty == 0) strcpy(buf, "AI: Easy");
+        else if (aiDifficulty == 1) strcpy(buf, "AI: Medium");
+        else strcpy(buf, "AI: Hard");
+        SetWindowText(GetDlgItem(hwnd, 103), buf);
+        
+        sprintf(statusMsg, "Game Loaded!");
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
+}
 
 void SetMode(int mode) {
     gameMode = mode;
@@ -290,11 +336,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             CreateWindow("BUTTON", "501", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         150, 120, 100, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         80, 120, 80, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Cricket", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         270, 120, 100, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         170, 120, 80, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         260, 120, 80, 30, hwnd, (HMENU)104, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         350, 120, 80, 30, hwnd, (HMENU)105, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "AI: Medium", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
-                         390, 120, 100, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                         440, 120, 100, 30, hwnd, (HMENU)103, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
@@ -312,6 +362,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if (aiDifficulty == 1) strcpy(buf, "AI: Medium");
                 else strcpy(buf, "AI: Hard");
                 SetWindowText((HWND)lParam, buf);
+            } else if (LOWORD(wParam) == 104) {
+                SaveState(hwnd);
+            } else if (LOWORD(wParam) == 105) {
+                LoadState(hwnd);
             }
             return 0;
 
