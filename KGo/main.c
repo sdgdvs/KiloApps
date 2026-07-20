@@ -13,6 +13,9 @@ char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
 char prevBoard[19][19] = {0};
 int currentPlayer = 1;
 int captures[3] = {0}; // 1 = black, 2 = white
+int hoverX = -1, hoverY = -1;
+int animX = -1, animY = -1;
+int animRadius = 13;
 
 void CopyBoard(char dst[19][19], char src[19][19]) {
     memcpy(dst, src, sizeof(char) * 19 * 19);
@@ -100,6 +103,10 @@ void PlaceStone(HWND hwnd, int x, int y) {
     
     CopyBoard(prevBoard, boardBackup);
     currentPlayer = opp;
+    animX = x;
+    animY = y;
+    animRadius = 0;
+    SetTimer(hwnd, 1, 16, NULL);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -109,6 +116,8 @@ void InitBoard() {
     currentPlayer = 1;
     captures[1] = 0;
     captures[2] = 0;
+    animX = -1;
+    animY = -1;
 }
 
 void CalculateScore(HWND hwnd) {
@@ -196,6 +205,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hCbSize, CB_SETCURSEL, 0, 0);
             return 0;
 
+        case WM_TIMER:
+            if (wParam == 1) {
+                animRadius += 2;
+                if (animRadius >= 13) {
+                    animRadius = 13;
+                    KillTimer(hwnd, 1);
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            return 0;
+
+        case WM_MOUSEMOVE: {
+            int x = (short)LOWORD(lParam);
+            int y = (short)HIWORD(lParam);
+            int padding = 40;
+            int cellSize = 30;
+            
+            if (x >= padding - cellSize/2 && x <= padding + (boardSize-1)*cellSize + cellSize/2 &&
+                y >= padding - cellSize/2 && y <= padding + (boardSize-1)*cellSize + cellSize/2) {
+                int col = (x - padding + cellSize / 2) / cellSize;
+                int row = (y - padding + cellSize / 2) / cellSize;
+                if (col >= 0 && col < boardSize && row >= 0 && row < boardSize) {
+                    if (hoverX != col || hoverY != row) {
+                        hoverX = col;
+                        hoverY = row;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
+            } else {
+                if (hoverX != -1 || hoverY != -1) {
+                    hoverX = -1; hoverY = -1;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+            return 0;
+        }
+
         case WM_LBUTTONDOWN: {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
@@ -249,13 +295,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         HPEN stonePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
                         HBRUSH oldBrush = SelectObject(hdc, stoneBrush);
                         HPEN oldPen = SelectObject(hdc, stonePen);
-                        Ellipse(hdc, cx - 13, cy - 13, cx + 13, cy + 13);
+                        
+                        int radius = (r == animY && c == animX) ? animRadius : 13;
+                        Ellipse(hdc, cx - radius, cy - radius, cx + radius, cy + radius);
+                        
                         SelectObject(hdc, oldBrush);
                         SelectObject(hdc, oldPen);
                         DeleteObject(stoneBrush);
                         DeleteObject(stonePen);
                     }
                 }
+            }
+
+            if (hoverX != -1 && hoverY != -1 && board[hoverY][hoverX] == 0) {
+                int cx = padding + hoverX * cellSize;
+                int cy = padding + hoverY * cellSize;
+                HPEN ghostPen = CreatePen(PS_SOLID, 2, currentPlayer == 1 ? RGB(100, 100, 100) : RGB(200, 200, 200));
+                HBRUSH ghostBrush = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+                HPEN oldPen = SelectObject(hdc, ghostPen);
+                HBRUSH oldBrush = SelectObject(hdc, ghostBrush);
+                Ellipse(hdc, cx - 13, cy - 13, cx + 13, cy + 13);
+                SelectObject(hdc, oldBrush);
+                SelectObject(hdc, oldPen);
+                DeleteObject(ghostPen);
             }
             
             SetBkMode(hdc, TRANSPARENT);
