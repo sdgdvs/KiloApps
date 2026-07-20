@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KGo</title>
+<style>
+  body {
+    margin: 0;
+    padding: 20px;
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 { margin-top: 0; }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(9, 30px);
+    grid-template-rows: repeat(9, 30px);
+    background-color: #dcb35c;
+    padding: 15px;
+    gap: 0;
+    border: 2px solid #555;
+  }
+  .cell {
+    width: 30px;
+    height: 30px;
+    position: relative;
+    cursor: pointer;
+  }
+  /* Grid lines */
+  .cell::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #000;
+    z-index: 1;
+  }
+  .cell::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background-color: #000;
+    z-index: 1;
+  }
+  /* Edge adjustments can go here */
+  .cell.top::after { top: 50%; }
+  .cell.bottom::after { bottom: 50%; }
+  .cell.left::before { left: 50%; }
+  .cell.right::before { right: 50%; }
+
+  .stone {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    z-index: 2;
+  }
+  .black { background-color: #111; box-shadow: inset -2px -2px 4px rgba(255,255,255,0.2); }
+  .white { background-color: #eee; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2); }
+  .controls {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+  }
+  button {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 5px 15px;
+    cursor: pointer;
+  }
+  button:hover { background-color: #444; }
+  .status {
+    margin-top: 15px;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+</style>
+</head>
+<body>
+  <h1>KGo</h1>
+  <div class="status">Current Turn: Black</div>
+  <div class="board" id="board"></div>
+  <div class="controls">
+    <button id="btn-pass">Pass</button>
+    <button id="btn-resign">Resign</button>
+    <select id="board-size">
+      <option value="9">9x9</option>
+      <option value="13">13x13</option>
+      <option value="19">19x19</option>
+    </select>
+    <button id="btn-new">New Game</button>
+  </div>
+
+<script>
+  // Basic skeleton for Phase 1
+  const boardEl = document.getElementById('board');
+  const size = 9; // Default for Phase 1 skeleton
+  
+  function drawBoard() {
+    boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
+    boardEl.style.gridTemplateRows = `repeat(${size}, 30px)`;
+    
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        if (y === 0) cell.classList.add('top');
+        if (y === size - 1) cell.classList.add('bottom');
+        if (x === 0) cell.classList.add('left');
+        if (x === size - 1) cell.classList.add('right');
+        
+        cell.dataset.x = x;
+        cell.dataset.y = y;
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+  
+  drawBoard();
+</script>
+</body>
+</html>
