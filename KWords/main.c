@@ -8,15 +8,44 @@
 #define MAX_GRID_SIZE 25
 #define CELL_SIZE 30
 #define MAX_WORDS 20
-#define DICTIONARY_SIZE 30
+#define NUM_THEMES 4
+#define THEME_DICT_SIZE 30
 
-const char* WORD_LIST[DICTIONARY_SIZE] = {
-    "ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", 
-    "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", 
-    "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT",
-    "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL", 
-    "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD", 
-    "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"
+const char* THEMES[NUM_THEMES] = {"Programming", "Animals", "Countries", "Space"};
+
+const char* DICTIONARIES[NUM_THEMES][THEME_DICT_SIZE] = {
+    { // Programming
+        "ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", 
+        "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", 
+        "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT",
+        "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL", 
+        "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD", 
+        "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"
+    },
+    { // Animals
+        "ELEPHANT", "GIRAFFE", "PENGUIN", "KANGAROO", "DOLPHIN",
+        "TIGER", "CHEETAH", "MONKEY", "OSTRICH", "IGUANA",
+        "ZEBRA", "GORILLA", "PANTHER", "LEOPARD", "HIPPO",
+        "RHINO", "CROCODILE", "ALLIGATOR", "CHIMPANZEE", "SNAIL",
+        "OCTOPUS", "SHARK", "WHALE", "WALRUS", "SEAL",
+        "BEAR", "WOLF", "FOX", "RABBIT", "DEER"
+    },
+    { // Countries
+        "CANADA", "BRAZIL", "JAPAN", "FRANCE", "GERMANY",
+        "ITALY", "SPAIN", "INDIA", "CHINA", "RUSSIA",
+        "AUSTRALIA", "MEXICO", "ARGENTINA", "CHILE", "PERU",
+        "EGYPT", "MOROCCO", "NIGERIA", "KENYA", "SWEDEN",
+        "NORWAY", "FINLAND", "DENMARK", "IRELAND", "POLAND",
+        "GREECE", "TURKEY", "THAILAND", "VIETNAM", "INDONESIA"
+    },
+    { // Space
+        "ASTEROID", "COMET", "GALAXY", "NEBULA", "PLANET",
+        "STAR", "ORBIT", "SATELLITE", "ROCKET", "GRAVITY",
+        "ECLIPSE", "METEOR", "UNIVERSE", "COSMOS", "PULSAR",
+        "QUASAR", "SUPERNOVA", "VACUUM", "EQUATOR", "HORIZON",
+        "ZENITH", "LUNAR", "SOLAR", "TELESCOPE", "ASTRONAUT",
+        "SPACECRAFT", "OBSERVATORY", "CONSTELLATION", "ZODIAC", "APOLLO"
+    }
 };
 
 char grid[MAX_GRID_SIZE][MAX_GRID_SIZE];
@@ -24,6 +53,7 @@ bool foundGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 int gridSize = 15;
 int numWordsToFind = 8;
 int currentDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
+int currentThemeIdx = 0;
 
 char wordsToFind[MAX_WORDS][32];
 bool wordsFoundStatus[MAX_WORDS];
@@ -37,9 +67,10 @@ int curR = -1, curC = -1;
 int timerSeconds = 0;
 bool gameWon = false;
 
-RECT btnEasy = {350, 10, 410, 35};
-RECT btnMed  = {420, 10, 490, 35};
-RECT btnHard = {500, 10, 560, 35};
+RECT btnTheme = {220, 10, 360, 35};
+RECT btnEasy = {370, 10, 430, 35};
+RECT btnMed  = {440, 10, 510, 35};
+RECT btnHard = {520, 10, 580, 35};
 
 void InitGame() {
     srand((unsigned int)time(NULL));
@@ -57,13 +88,13 @@ void InitGame() {
     }
     
     // Pick words
-    int picked[DICTIONARY_SIZE] = {0};
+    int picked[THEME_DICT_SIZE] = {0};
     wordCount = 0;
     while(wordCount < numWordsToFind) {
-        int idx = rand() % DICTIONARY_SIZE;
+        int idx = rand() % THEME_DICT_SIZE;
         if(!picked[idx]) {
             picked[idx] = 1;
-            strcpy(wordsToFind[wordCount], WORD_LIST[idx]);
+            strcpy(wordsToFind[wordCount], DICTIONARIES[currentThemeIdx][idx]);
             wordCount++;
         }
     }
@@ -180,6 +211,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_LBUTTONDOWN: {
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
+            if (PtInRect(&btnTheme, pt)) {
+                currentThemeIdx = (currentThemeIdx + 1) % NUM_THEMES; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+            }
             if (PtInRect(&btnEasy, pt)) {
                 currentDifficulty = 0; gridSize = 10; numWordsToFind = 5; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
@@ -238,16 +272,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(226, 232, 240));
             
             char header[128];
-            sprintf(header, "KWords   Found: %d/%d   Timer: %02d:%02d", foundCount, wordCount, timerSeconds/60, timerSeconds%60);
+            sprintf(header, "Found: %d/%d   Timer: %02d:%02d", foundCount, wordCount, timerSeconds/60, timerSeconds%60);
             TextOut(hdc, 20, 15, header, strlen(header));
             
             // Draw difficulty buttons
             HBRUSH btnBrush = CreateSolidBrush(RGB(45, 55, 72));
             HBRUSH activeBrush = CreateSolidBrush(RGB(49, 130, 206));
             
+            FillRect(hdc, &btnTheme, btnBrush);
             FillRect(hdc, &btnEasy, currentDifficulty == 0 ? activeBrush : btnBrush);
             FillRect(hdc, &btnMed, currentDifficulty == 1 ? activeBrush : btnBrush);
             FillRect(hdc, &btnHard, currentDifficulty == 2 ? activeBrush : btnBrush);
+            
+            char themeStr[64];
+            sprintf(themeStr, "Theme: %s", THEMES[currentThemeIdx]);
+            TextOut(hdc, btnTheme.left + 10, btnTheme.top + 5, themeStr, strlen(themeStr));
             
             TextOut(hdc, btnEasy.left + 14, btnEasy.top + 5, "Easy", 4);
             TextOut(hdc, btnMed.left + 7, btnMed.top + 5, "Medium", 6);

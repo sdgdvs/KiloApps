@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KWords
-**Phase:** 6
+**Phase:** 7
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KWords/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -57,7 +57,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - [x] Phase 5: Add Multiple Difficulty Levels (Easy/Medium/Hard, affecting grid size and number of hidden words).
-- Phase 6: Add Category Themes (e.g. Animals, Countries, Programming) with distinct word lists.
+- [x] Phase 6: Add Category Themes (e.g. Animals, Countries, Programming) with distinct word lists.
 - Phase 7: Add a Timer and Scoring System (faster completion yields a higher score).
 - Phase 8: Add Sound Effects (word selection tick, word found chime, puzzle complete fanfare).
 - Phase 9: Add Visual Polish (smooth highlighting animations and strikethrough for found words on the word list).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KWords
-**Goal:** Phase 6
+**Goal:** Phase 7
 
 
 ## App Lifecycle (14 phases per app)
