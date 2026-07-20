@@ -24,6 +24,15 @@ int power_x = 0;
 int power_y = 0;
 int power_active = 0;
 int paddle_timer = 0;
+int level = 1;
+int lifetime_bricks = 0;
+int power_type = 0;
+int pierce_timer = 0;
+int ufo_active = 0;
+int ufo_x = 0;
+int ufo_y = 25;
+int ufo_dx = 2;
+int ufo_timer = 500;
 
 #define ROWS 5
 #define COLS 10
@@ -33,34 +42,51 @@ int bricks_left = 0;
 void LoadHighScore() {
     FILE *f = fopen("kbreakout_hi.dat", "r");
     if (f) {
-        fscanf(f, "%d", &high_score);
+        fscanf(f, "%d %d", &high_score, &lifetime_bricks);
         fclose(f);
     }
 }
 
 void SaveHighScore() {
-    if (score > high_score) {
-        high_score = score;
-        FILE *f = fopen("kbreakout_hi.dat", "w");
-        if (f) {
-            fprintf(f, "%d", high_score);
-            fclose(f);
-        }
+    if (score > high_score) high_score = score;
+    FILE *f = fopen("kbreakout_hi.dat", "w");
+    if (f) {
+        fprintf(f, "%d %d", high_score, lifetime_bricks);
+        fclose(f);
     }
 }
 
 void InitLevel() {
     bricks_left = 0;
     power_active = 0;
+    pierce_timer = 0;
+    ufo_active = 0;
+    ufo_timer = 300;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
-            if (r == 1 && c % 3 == 1) bricks[r][c] = 9; // Unbreakable
-            else if (r == 2) bricks[r][c] = 2; // Hard
-            else bricks[r][c] = 1;
-            
-            if (bricks[r][c] != 9) bricks_left++;
+            bricks[r][c] = 0;
+            if (level % 5 == 1) {
+                if (r == 1 && c % 3 == 1) bricks[r][c] = 9;
+                else if (r == 2) bricks[r][c] = 2;
+                else bricks[r][c] = 1;
+            } else if (level % 5 == 2) {
+                if ((r+c)%2 == 0) bricks[r][c] = 1;
+                else if (r == 0) bricks[r][c] = 9;
+            } else if (level % 5 == 3) {
+                if (c >= r && c < COLS - r) bricks[r][c] = (r == 0) ? 2 : 1;
+            } else if (level % 5 == 4) {
+                if ((r==1 && (c==2 || c==7))) bricks[r][c] = 9;
+                else if (r==3 && (c>1 && c<8)) bricks[r][c] = 2;
+                else if (r==4 && (c==2 || c==7)) bricks[r][c] = 1;
+            } else {
+                if (c == 2 || c == 7) bricks[r][c] = 9;
+                else bricks[r][c] = (r%2==0) ? 2 : 1;
+            }
+            if (bricks[r][c] != 9 && bricks[r][c] != 0) bricks_left++;
         }
     }
+    if (bricks_left == 0) { bricks[0][0] = 1; bricks_left = 1; }
+    
     pad_w = (diff == 1) ? 40 : 60;
     paddle_timer = 0;
     pad_x = W / 2 - pad_w / 2;
@@ -124,136 +150,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 if (power_active) {
-                    power_y += 3;
-                    if (power_y + 10 > H - 30 && power_y < H - 30 + pad_h) {
-                        if (power_x + 10 > pad_x && power_x < pad_x + pad_w) {
-                            power_active = 0;
-                            paddle_timer = 300;
-                            pad_w = (diff == 1) ? 80 : 100;
-                            MessageBeep(MB_OK);
-                        }
-                    }
-                    if (power_y > H) power_active = 0;
-                }
-                
-                if (paddle_timer > 0) {
-                    paddle_timer--;
-                    if (paddle_timer == 0) pad_w = (diff == 1) ? 40 : 60;
-                }
-
-                // Bricks collision
-                int br_w = W / COLS;
-                int br_h = 20;
-                for (int r = 0; r < ROWS; r++) {
-                    for (int c = 0; c < COLS; c++) {
-                        if (bricks[r][c]) {
-                            int bx = c * br_w;
-                            int by = r * br_h + 40;
-                            if (ball_x + ball_size > bx && ball_x < bx + br_w &&
-                                ball_y + ball_size > by && ball_y < by + br_h) {
-                                if (bricks[r][c] == 9) {
-                                    ball_dy = -ball_dy;
-                                    MessageBeep(0xFFFFFFFF);
-                                } else if (bricks[r][c] == 2) {
-                                    bricks[r][c] = 1;
-                                    ball_dy = -ball_dy;
-                                    score += 5 + (diff * 5);
-                                    MessageBeep(0xFFFFFFFF);
-                                } else {
-                                    bricks[r][c] = 0;
-                                    bricks_left--;
-                                    ball_dy = -ball_dy;
-                                    score += 10 + (diff * 10);
-                                    MessageBeep(0xFFFFFFFF);
-                                    
-                                    if (!power_active && (GetTickCount() % 5 == 0)) {
-                                        power_active = 1;
-                                        power_x = bx + br_w / 2;
-                                        power_y = by;
-                                    }
-                                    
-                                    if (bricks_left == 0) {
-                                        speed++;
-                                        InitLevel();
-                                    }
-                                }
-                                goto out_loops;
-                            }
-                        }
-                    }
-                }
-            out_loops:;
-            } else if (state == 0 || state == 2) {
-                if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
-                    diff = 0; speed = 3; score = 0; lives = 3; InitLevel(); state = 1; pad_w = 60;
-                }
-                if (GetAsyncKeyState(VK_SPACE) & 0x8000) {
-                    diff = 1; speed = 5; score = 0; lives = 3; InitLevel(); state = 1; pad_w = 40;
-                }
-            }
-            InvalidateRect(hwnd, NULL, FALSE);
-            break;
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
-            HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
-            
-            HBRUSH bg = CreateSolidBrush(RGB(20, 20, 30));
-            RECT fullRc = {0, 0, W, H};
-            FillRect(memDC, &fullRc, bg);
-            DeleteObject(bg);
-            
-            SetTextColor(memDC, RGB(255, 255, 255));
-            SetBkMode(memDC, TRANSPARENT);
-            
-            if (state == 0) {
-                char* t1 = "KBreakout";
-                char* t2 = "Press ENTER for Easy";
-                char* t3 = "Press SPACE for Hard";
-                TextOutA(memDC, W/2 - 35, H/2 - 20, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 70, H/2 + 10, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 70, H/2 + 30, t3, lstrlenA(t3));
-            } else if (state == 2) {
-                char* t1 = "GAME OVER";
-                char* t2 = "Press ENTER for Easy";
-                char* t3 = "Press SPACE for Hard";
-                TextOutA(memDC, W/2 - 40, H/2 - 20, t1, lstrlenA(t1));
-                TextOutA(memDC, W/2 - 70, H/2 + 10, t2, lstrlenA(t2));
-                TextOutA(memDC, W/2 - 70, H/2 + 30, t3, lstrlenA(t3));
-            } else {
-                HBRUSH p_brush = CreateSolidBrush(RGB(51, 204, 255));
-                HBRUSH b_brush = CreateSolidBrush(RGB(255, 255, 255));
-                
-                RECT rp = { pad_x, H - 30, pad_x + pad_w, H - 30 + pad_h };
-                FillRect(memDC, &rp, p_brush);
-                
-                RECT rb = { ball_x, ball_y, ball_x + ball_size, ball_y + ball_size };
-                FillRect(memDC, &rb, b_brush);
-                
-                DeleteObject(p_brush);
-                DeleteObject(b_brush);
-                
-                int br_w = W / COLS;
-                int br_h = 20;
-                for (int r = 0; r < ROWS; r++) {
-                    for (int c = 0; c < COLS; c++) {
-                        if (bricks[r][c]) {
-                            HBRUSH br;
-                            if (bricks[r][c] == 9) br = CreateSolidBrush(RGB(100, 100, 100));
-                            else if (bricks[r][c] == 2) br = CreateSolidBrush(RGB(255, 100, 100));
-                            else br = CreateSolidBrush(RGB(200 - r * 30, 100 + c * 15, 50 + r * 20));
-                            
-                            RECT rr = { c * br_w + 1, r * br_h + 40 + 1, (c + 1) * br_w - 1, (r + 1) * br_h + 40 - 1 };
-                            FillRect(memDC, &rr, br);
-                            DeleteObject(br);
-                        }
-                    }
-                }
-                
-                if (power_active) {
-                    HBRUSH pw = CreateSolidBrush(RGB(255, 255, 0));
+                    HBRUSH pw;
+                    if (power_type == 1) pw = CreateSolidBrush(RGB(255, 255, 0));
+                    else if (power_type == 2) pw = CreateSolidBrush(RGB(0, 255, 0));
+                    else pw = CreateSolidBrush(RGB(255, 0, 0));
                     RECT rp = { power_x, power_y, power_x + 10, power_y + 10 };
                     FillRect(memDC, &rp, pw);
                     DeleteObject(pw);
@@ -261,7 +161,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             char sStr[64];
-            wsprintfA(sStr, "Score: %d  High: %d  Lives: %d", score, high_score, lives);
+            wsprintfA(sStr, "L%d Sc:%d Hi:%d Lv:%d Brks:%d", level, score, high_score, lives, lifetime_bricks);
             TextOutA(memDC, 10, 10, sStr, lstrlenA(sStr));
             
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
