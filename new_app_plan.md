@@ -49,7 +49,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KGo
-**Phase:** 3
+**Phase:** 9
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KGo/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -59,8 +59,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Add a Score System (calculate territory using flood fill and captured stones to determine winner at game end).
 - [x] Phase 6: Add Visual Polish (smooth stone placement animations, hover effect on valid intersections).
 - [x] Phase 7: Add a Simple AI Opponent (random valid moves or basic capture/defend heuristics).
-- [ ] Phase 8: Add Sound Effects (stone clack on placement, capture sound, game over chime).
-- Phase 9: Add Save/Load State (persist current board, captures, and turn).
+- [x] Phase 8: Add Sound Effects (stone clack on placement, capture sound, game over chime).
+- [ ] Phase 9: Add Save/Load State (persist current board, captures, and turn).
 - Phase 10: Add Visual Capture indicators (highlight stones before they are captured or animate removal).
 - Phase 11: Add Undo/Redo functionality (keep a history of board states).
 - Phase 12: Add Statistics tracking (games played, win/loss record against AI vs Local Multiplayer).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KGo
-**Goal:** Phase 8
+**Goal:** Phase 9
 
 
 ## App Lifecycle (14 phases per app)

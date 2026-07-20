@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #define ID_BTN_PASS 101
 #define ID_BTN_RESIGN 102
@@ -18,6 +19,24 @@ int captures[3] = {0}; // 1 = black, 2 = white
 int hoverX = -1, hoverY = -1;
 int animX = -1, animY = -1;
 int animRadius = 13;
+
+DWORD WINAPI PlaySoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 1) {
+        Beep(300, 80);
+    } else if (type == 2) {
+        Beep(150, 100);
+        Beep(400, 100);
+    } else if (type == 3) {
+        Beep(440, 150);
+        Beep(554, 150);
+        Beep(659, 400);
+    }
+    return 0;
+}
+void PlayGameSound(int type) {
+    CreateThread(NULL, 0, PlaySoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
 
 void CopyBoard(char dst[19][19], char src[19][19]) {
     memcpy(dst, src, sizeof(char) * 19 * 19);
@@ -88,7 +107,7 @@ void PlaceStone(HWND hwnd, int x, int y) {
     board[y][x] = (char)currentPlayer;
     
     int opp = currentPlayer == 1 ? 2 : 1;
-    CheckCaptures(opp);
+    int caps = CheckCaptures(opp);
     
     char visited[19][19] = {0};
     if (GetLiberties(x, y, currentPlayer, visited) == 0) {
@@ -105,6 +124,10 @@ void PlaceStone(HWND hwnd, int x, int y) {
     
     CopyBoard(prevBoard, boardBackup);
     currentPlayer = opp;
+    
+    if (caps > 0) PlayGameSound(2);
+    else PlayGameSound(1);
+    
     animX = x;
     animY = y;
     animRadius = 0;
@@ -254,6 +277,7 @@ void CalculateScore(HWND hwnd) {
                  terrW, captures[2], totalW,
                  (totalB > totalW) ? "Black" : "White");
                  
+    PlayGameSound(3);
     MessageBox(hwnd, msg, "Game Score", MB_OK);
     InitBoard();
     InvalidateRect(hwnd, NULL, TRUE);
@@ -421,6 +445,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_RESIGN) {
                 char msg[64];
                 sprintf(msg, "%s wins by resignation!", currentPlayer == 1 ? "White" : "Black");
+                PlayGameSound(3);
                 MessageBox(hwnd, msg, "Game Over", MB_OK);
                 InitBoard();
                 InvalidateRect(hwnd, NULL, TRUE);
