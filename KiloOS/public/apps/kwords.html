@@ -138,13 +138,14 @@
       <button class="diff-btn active" id="btn-medium" onclick="setDifficulty('medium')">Medium</button>
       <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">Hard</button>
     </div>
-    <div>Found: <span id="score">0</span>/<span id="total">0</span> | Timer: <span id="timer">00:00</span></div>
+    <div>Found: <span id="found-count">0</span>/<span id="total">0</span> | Score: <span id="score">0</span> | Timer: <span id="timer">00:00</span></div>
   </div>
   <div class="container">
     <div class="grid-container">
       <div class="grid" id="grid"></div>
       <div id="win-message">
         <h2>You Win!</h2>
+        <p style="font-size: 18px; margin-bottom: 15px;">Final Score: <strong id="final-score">0</strong></p>
         <button onclick="initGame()">Play Again</button>
       </div>
     </div>
@@ -171,6 +172,7 @@
     let currentSelection = [];
     let timerInterval = null;
     let seconds = 0;
+    let score = 0;
 
     function setDifficulty(diff) {
         if(diff === 'easy') { gridSize = 10; numWordsToFind = 5; }
@@ -207,6 +209,8 @@
         }
         
         document.getElementById('total').textContent = wordsToFind.length;
+        document.getElementById('found-count').textContent = 0;
+        score = 0;
         document.getElementById('score').textContent = 0;
         document.getElementById('win-message').style.display = 'none';
         seconds = 0;
@@ -342,7 +346,13 @@
             if (found) {
                 let foundStr = foundWords[foundWords.length-1];
                 document.getElementById('word-' + foundStr).className = 'found';
-                document.getElementById('score').textContent = foundWords.length;
+                
+                let points = 1000 - (seconds * 2);
+                if (points < 100) points = 100;
+                score += points;
+                
+                document.getElementById('found-count').textContent = foundWords.length;
+                document.getElementById('score').textContent = score;
                 
                 // Mark cells as found permanently in DOM
                 currentSelection.forEach(cell => {
@@ -352,6 +362,7 @@
                 
                 if (foundWords.length === wordsToFind.length) {
                     clearInterval(timerInterval);
+                    document.getElementById('final-score').textContent = score;
                     document.getElementById('win-message').style.display = 'block';
                 }
             }

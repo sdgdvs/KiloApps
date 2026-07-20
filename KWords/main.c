@@ -59,6 +59,7 @@ char wordsToFind[MAX_WORDS][32];
 bool wordsFoundStatus[MAX_WORDS];
 int wordCount = 0;
 int foundCount = 0;
+int currentScore = 0;
 
 bool isSelecting = false;
 int startR = -1, startC = -1;
@@ -77,6 +78,7 @@ void InitGame() {
     memset(foundGrid, 0, sizeof(foundGrid));
     memset(wordsFoundStatus, 0, sizeof(wordsFoundStatus));
     foundCount = 0;
+    currentScore = 0;
     timerSeconds = 0;
     gameWon = false;
     
@@ -181,6 +183,11 @@ void EndSelection(HWND hwnd) {
                     wordsFoundStatus[w] = true;
                     foundCount++;
                     found = true;
+                    
+                    int points = 1000 - (timerSeconds * 2);
+                    if (points < 100) points = 100;
+                    currentScore += points;
+                    
                     for(int i=0; i<count; i++) {
                         foundGrid[selR[i]][selC[i]] = true;
                     }
@@ -272,7 +279,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(226, 232, 240));
             
             char header[128];
-            sprintf(header, "Found: %d/%d   Timer: %02d:%02d", foundCount, wordCount, timerSeconds/60, timerSeconds%60);
+            sprintf(header, "Found: %d/%d   Score: %d   Timer: %02d:%02d", foundCount, wordCount, currentScore, timerSeconds/60, timerSeconds%60);
             TextOut(hdc, 20, 15, header, strlen(header));
             
             // Draw difficulty buttons
@@ -365,8 +372,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(hdc, RGB(255, 215, 0));
                 TextOut(hdc, listX, listY + 20, "YOU WIN!", 8);
                 SetTextColor(hdc, RGB(200, 200, 200));
-                TextOut(hdc, listX, listY + 50, "Click anywhere", 14);
-                TextOut(hdc, listX, listY + 70, "to play again", 13);
+                char scoreStr[64];
+                sprintf(scoreStr, "Score: %d", currentScore);
+                TextOut(hdc, listX, listY + 50, scoreStr, strlen(scoreStr));
+                TextOut(hdc, listX, listY + 75, "Click anywhere", 14);
+                TextOut(hdc, listX, listY + 95, "to play again", 13);
             }
             
             SelectObject(hdc, hOldPen);
