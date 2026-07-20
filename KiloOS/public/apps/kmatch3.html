@@ -12,14 +12,14 @@
   .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 10px; font-size: 18px; font-weight: bold; }
   #board {
     width: 400px; height: 400px; background-color: #2d2d2d; border: 2px solid #555;
-    display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr); gap: 2px;
-    position: relative; touch-action: none; user-select: none;
+    position: relative; touch-action: none; user-select: none; overflow: hidden;
   }
   .cell {
     border-radius: 4px; display: flex; justify-content: center; align-items: center;
-    cursor: pointer; transition: transform 0.2s, background-color 0.2s;
+    cursor: pointer; transition: transform 0.2s, top 0.2s, left 0.2s, opacity 0.2s;
+    position: absolute; width: 48px; height: 48px; box-sizing: border-box;
   }
-  .cell.selected { border: 2px solid #fff; box-sizing: border-box; transform: scale(1.1); }
+  .cell.selected { border: 2px solid #fff; box-sizing: border-box; transform: scale(1.1); z-index: 10; }
 </style>
 </head>
 <body>
@@ -79,6 +79,8 @@
           cell.style.backgroundColor = color;
           cell.dataset.r = r;
           cell.dataset.c = c;
+          cell.style.top = (r * 50 + 1) + 'px';
+          cell.style.left = (c * 50 + 1) + 'px';
           cell.addEventListener('click', onCellClick);
           boardEl.appendChild(cell);
           row.push({ color, el: cell });
@@ -135,32 +137,40 @@
     }
 
     function swap(r1, c1, r2, c2) {
-      const tempColor = grid[r1][c1].color;
-      grid[r1][c1].color = grid[r2][c2].color;
-      grid[r2][c2].color = tempColor;
-      grid[r1][c1].el.style.backgroundColor = grid[r1][c1].color;
-      grid[r2][c2].el.style.backgroundColor = grid[r2][c2].color;
+      const temp = grid[r1][c1];
+      grid[r1][c1] = grid[r2][c2];
+      grid[r2][c2] = temp;
+      grid[r1][c1].el.dataset.r = r1;
+      grid[r1][c1].el.dataset.c = c1;
+      grid[r1][c1].el.style.top = (r1 * 50 + 1) + 'px';
+      grid[r1][c1].el.style.left = (c1 * 50 + 1) + 'px';
+      grid[r2][c2].el.dataset.r = r2;
+      grid[r2][c2].el.dataset.c = c2;
+      grid[r2][c2].el.style.top = (r2 * 50 + 1) + 'px';
+      grid[r2][c2].el.style.left = (c2 * 50 + 1) + 'px';
     }
 
     function findMatches() {
       let matches = new Set();
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS - 2; c++) {
+          if (!grid[r][c]) continue;
           let color = grid[r][c].color;
-          if (color && grid[r][c+1].color === color && grid[r][c+2].color === color) {
+          if (color && grid[r][c+1] && grid[r][c+1].color === color && grid[r][c+2] && grid[r][c+2].color === color) {
             matches.add(`${r},${c}`); matches.add(`${r},${c+1}`); matches.add(`${r},${c+2}`);
             let k = c + 3;
-            while(k < COLS && grid[r][k].color === color) { matches.add(`${r},${k}`); k++; }
+            while(k < COLS && grid[r][k] && grid[r][k].color === color) { matches.add(`${r},${k}`); k++; }
           }
         }
       }
       for (let c = 0; c < COLS; c++) {
         for (let r = 0; r < ROWS - 2; r++) {
+          if (!grid[r][c]) continue;
           let color = grid[r][c].color;
-          if (color && grid[r+1][c].color === color && grid[r+2][c].color === color) {
+          if (color && grid[r+1][c] && grid[r+1][c].color === color && grid[r+2][c] && grid[r+2][c].color === color) {
             matches.add(`${r},${c}`); matches.add(`${r+1},${c}`); matches.add(`${r+2},${c}`);
             let k = r + 3;
-            while(k < ROWS && grid[k][c].color === color) { matches.add(`${k},${c}`); k++; }
+            while(k < ROWS && grid[k][c] && grid[k][c].color === color) { matches.add(`${k},${c}`); k++; }
           }
         }
       }
@@ -178,30 +188,51 @@
         scoreEl.textContent = score;
 
         matches.forEach(m => {
-          grid[m.r][m.c].color = null;
-          grid[m.r][m.c].el.style.backgroundColor = '#2d2d2d';
+          if (grid[m.r][m.c]) {
+            grid[m.r][m.c].el.style.transform = 'scale(0)';
+            grid[m.r][m.c].el.style.opacity = '0';
+          }
         });
         await sleep(200);
+        matches.forEach(m => {
+          if (grid[m.r][m.c]) {
+            boardEl.removeChild(grid[m.r][m.c].el);
+            grid[m.r][m.c] = null;
+          }
+        });
 
         for (let c = 0; c < COLS; c++) {
           let emptyR = ROWS - 1;
           for (let r = ROWS - 1; r >= 0; r--) {
-            if (grid[r][c].color) {
+            if (grid[r][c]) {
               if (emptyR !== r) {
-                grid[emptyR][c].color = grid[r][c].color;
-                grid[emptyR][c].el.style.backgroundColor = grid[emptyR][c].color;
-                grid[r][c].color = null;
-                grid[r][c].el.style.backgroundColor = '#2d2d2d';
+                grid[emptyR][c] = grid[r][c];
+                grid[emptyR][c].el.dataset.r = emptyR;
+                grid[emptyR][c].el.style.top = (emptyR * 50 + 1) + 'px';
+                grid[r][c] = null;
               }
               emptyR--;
             }
           }
           for (let r = emptyR; r >= 0; r--) {
-            grid[r][c].color = COLORS[Math.floor(Math.random() * COLORS.length)];
-            grid[r][c].el.style.backgroundColor = grid[r][c].color;
+            let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            let cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.style.backgroundColor = color;
+            cell.dataset.r = r;
+            cell.dataset.c = c;
+            cell.style.top = ((r - emptyR - 1) * 50 + 1) + 'px';
+            cell.style.left = (c * 50 + 1) + 'px';
+            cell.addEventListener('click', onCellClick);
+            boardEl.appendChild(cell);
+            grid[r][c] = { color, el: cell };
+            
+            // force reflow
+            cell.offsetHeight;
+            cell.style.top = (r * 50 + 1) + 'px';
           }
         }
-        await sleep(200);
+        await sleep(300);
         matches = findMatches();
         if (matches.length > 0) comboMultiplier++;
       }

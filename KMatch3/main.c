@@ -15,6 +15,13 @@ int moves = 0;
 int selR = -1, selC = -1;
 int isProcessing = 0;
 
+int swapAnim = 0;
+int swapR1 = -1, swapC1 = -1, swapR2 = -1, swapC2 = -1;
+int popAnim = 0;
+int popGrid[ROWS][COLS] = {0};
+int dropAnim = 0;
+int dropCount[ROWS][COLS] = {0};
+
 void PlaySwapSound() { Beep(300, 100); }
 void PlayMatchSound(int combo) { Beep(400 + combo * 100, 150); }
 void PlayBadSwapSound() { Beep(150, 150); }
@@ -39,13 +46,50 @@ void DrawBoard(HDC hdc) {
         for (int c = 0; c < COLS; c++) {
             RECT rect = { BOARD_X + c * CELL_SIZE, BOARD_Y + r * CELL_SIZE, 
                           BOARD_X + (c + 1) * CELL_SIZE, BOARD_Y + (r + 1) * CELL_SIZE };
-            
-            HBRUSH brush;
-            if (grid[r][c] == -1) {
-                brush = CreateSolidBrush(RGB(45, 45, 45));
-            } else {
-                brush = CreateSolidBrush(colors[grid[r][c]]);
+            HBRUSH bg = CreateSolidBrush(RGB(45, 45, 45));
+            FillRect(hdc, &rect, bg);
+            DeleteObject(bg);
+            HBRUSH border = CreateSolidBrush(RGB(85, 85, 85));
+            FrameRect(hdc, &rect, border);
+            DeleteObject(border);
+        }
+    }
+
+    HRGN hRgn = CreateRectRgn(BOARD_X, BOARD_Y, BOARD_X + COLS * CELL_SIZE, BOARD_Y + ROWS * CELL_SIZE);
+    SelectClipRgn(hdc, hRgn);
+
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            if (grid[r][c] == -1) continue;
+
+            int drawX = BOARD_X + c * CELL_SIZE;
+            int drawY = BOARD_Y + r * CELL_SIZE;
+
+            if (r == swapR1 && c == swapC1) {
+                drawX += (swapC2 - swapC1) * CELL_SIZE * swapAnim / 10;
+                drawY += (swapR2 - swapR1) * CELL_SIZE * swapAnim / 10;
+            } else if (r == swapR2 && c == swapC2) {
+                drawX += (swapC1 - swapC2) * CELL_SIZE * swapAnim / 10;
+                drawY += (swapR1 - swapR2) * CELL_SIZE * swapAnim / 10;
             }
+
+            if (dropAnim > 0 && dropCount[r][c] > 0) {
+                int startY = drawY - (dropCount[r][c] * CELL_SIZE);
+                drawY = startY + (drawY - startY) * dropAnim / 10;
+            }
+
+            RECT rect = { drawX, drawY, drawX + CELL_SIZE, drawY + CELL_SIZE };
+
+            if (popGrid[r][c] && popAnim > 0) {
+                int shrink = (CELL_SIZE / 2) * popAnim / 10;
+                rect.left += shrink;
+                rect.top += shrink;
+                rect.right -= shrink;
+                rect.bottom -= shrink;
+                if (rect.right <= rect.left) continue;
+            }
+
+            HBRUSH brush = CreateSolidBrush(colors[grid[r][c]]);
             FillRect(hdc, &rect, brush);
             DeleteObject(brush);
 
@@ -58,13 +102,11 @@ void DrawBoard(HDC hdc) {
                 border = CreateSolidBrush(RGB(255, 255, 255));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
-            } else {
-                HBRUSH border = CreateSolidBrush(RGB(85, 85, 85));
-                FrameRect(hdc, &rect, border);
-                DeleteObject(border);
             }
         }
     }
+    SelectClipRgn(hdc, NULL);
+    DeleteObject(hRgn);
 }
 
 int FindMatches(int matchGrid[ROWS][COLS]) {
@@ -98,6 +140,17 @@ int FindMatches(int matchGrid[ROWS][COLS]) {
     return hasMatch;
 }
 
+void AnimateSwap(HWND hwnd, int r1, int c1, int r2, int c2) {
+    swapR1 = r1; swapC1 = c1; swapR2 = r2; swapC2 = c2;
+    for (int i = 1; i <= 10; i++) {
+        swapAnim = i;
+        InvalidateRect(hwnd, NULL, FALSE);
+        UpdateWindow(hwnd);
+        Sleep(15);
+    }
+    swapR1 = -1;
+}
+
 void ProcessMatches(HWND hwnd) {
     int matchGrid[ROWS][COLS];
     int comboMultiplier = 1;
@@ -106,15 +159,30 @@ void ProcessMatches(HWND hwnd) {
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 if (matchGrid[r][c]) {
-                    grid[r][c] = -1;
+                    popGrid[r][c] = 1;
                     matchCount++;
                 }
             }
         }
         score += matchCount * 10 * comboMultiplier;
-        InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
         PlayMatchSound(comboMultiplier);
-        Sleep(50);
+        
+        for (int i = 1; i <= 10; i++) {
+            popAnim = i;
+            InvalidateRect(hwnd, NULL, FALSE);
+            UpdateWindow(hwnd);
+            Sleep(15);
+        }
+        popAnim = 0;
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (popGrid[r][c]) {
+                    grid[r][c] = -1;
+                    popGrid[r][c] = 0;
+                }
+            }
+        }
         comboMultiplier++;
 
         for (int c = 0; c < COLS; c++) {
@@ -124,16 +192,32 @@ void ProcessMatches(HWND hwnd) {
                     if (emptyR != r) {
                         grid[emptyR][c] = grid[r][c];
                         grid[r][c] = -1;
+                        dropCount[emptyR][c] = emptyR - r;
+                    } else {
+                        dropCount[emptyR][c] = 0;
                     }
                     emptyR--;
                 }
             }
             for (int r = emptyR; r >= 0; r--) {
                 grid[r][c] = rand() % 6;
+                dropCount[r][c] = emptyR + 1;
             }
         }
-        InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
-        Sleep(200);
+
+        for (int i = 1; i <= 10; i++) {
+            dropAnim = i;
+            InvalidateRect(hwnd, NULL, FALSE);
+            UpdateWindow(hwnd);
+            Sleep(15);
+        }
+        dropAnim = 0;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                dropCount[r][c] = 0;
+            }
+        }
+        Sleep(50);
     }
 }
 
@@ -200,20 +284,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (abs(selR - r) + abs(selC - c) == 1) {
                         moves++;
                         isProcessing = 1;
-                        int temp = grid[selR][selC];
-                        grid[selR][selC] = grid[r][c];
-                        grid[r][c] = temp;
                         int origR = selR, origC = selC;
                         selR = -1; selC = -1;
-                        InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
                         PlaySwapSound();
-                        Sleep(100);
+                        AnimateSwap(hwnd, origR, origC, r, c);
+
+                        int temp = grid[origR][origC];
+                        grid[origR][origC] = grid[r][c];
+                        grid[r][c] = temp;
 
                         int matchGrid[ROWS][COLS];
                         if (FindMatches(matchGrid)) {
                             ProcessMatches(hwnd);
                         } else {
                             PlayBadSwapSound();
+                            AnimateSwap(hwnd, origR, origC, r, c);
                             temp = grid[origR][origC];
                             grid[origR][origC] = grid[r][c];
                             grid[r][c] = temp;
