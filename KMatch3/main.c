@@ -113,7 +113,7 @@ void DrawBoard(HDC hdc) {
     TextOut(hdc, BOARD_X, 10, buf, strlen(buf));
     
     char statsBuf[128];
-    sprintf(statsBuf, "[1] Classic [2] Zen [3] Timed | Best: %d", statsBestScore);
+    sprintf(statsBuf, "[1] Classic [2] Zen [3] Timed | Best: %d | [H] Help", statsBestScore);
     SetTextColor(hdc, RGB(200, 200, 200));
     TextOut(hdc, BOARD_X, 30, statsBuf, strlen(statsBuf));
 
@@ -621,6 +621,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 gameMode = 1; level = 1; score = 0; moves = 0; targetScore = 0; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == '3' || wParam == VK_NUMPAD3) {
                 gameMode = 2; level = 1; score = 0; moves = 60; targetScore = 1000; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+                MessageBox(hwnd, "How to Play:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Bomb (destroys row/col).\n- Match 5: Color Bomb (destroys all of one color).\n- Swap two specials for big effects!\n\nModes:\n- [1] Classic: Target score in limited moves.\n- [2] Zen: Infinite play.\n- [3] Timed: Target score in time limit.", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }

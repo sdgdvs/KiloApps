@@ -31,7 +31,10 @@
 </style>
 </head>
 <body>
-  <h1>KMatch3</h1>
+  <div style="width: 400px; display: flex; justify-content: space-between; align-items: center;">
+    <h1 style="margin: 10px 0;">KMatch3</h1>
+    <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:5px 15px; cursor:pointer; border-radius:4px; font-weight:bold;">Help</button>
+  </div>
   <div class="info" style="font-size: 16px;">
     <span><select id="mode" onchange="changeMode()" style="background:#333;color:#fff;border:1px solid #555;"><option value="0">Classic</option><option value="1">Zen</option><option value="2">Timed</option></select></span>
     <span>Lvl: <span id="level">1</span></span>
@@ -44,7 +47,27 @@
     <span>Max Combo: <span id="maxCombo">0</span></span>
   </div>
   <div id="board"></div>
+  <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:20px; width:350px; max-height:80vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+      <h2 style="margin-top:0;">How to Play</h2>
+      <p>Swap adjacent gems to form vertical or horizontal lines of 3 or more of the same color.</p>
+      <p><b>Special Gems:</b><br/>
+      - <b>Match 4:</b> Creates a Line Bomb (destroys whole row/col).<br/>
+      - <b>Match 5:</b> Creates a Color Bomb (destroys all gems of one color).<br/>
+      - Swap two special gems for massive destruction!</p>
+      <p><b>Game Modes:</b><br/>
+      - <b>Classic:</b> Reach target score within limited moves.<br/>
+      - <b>Zen:</b> Infinite moves/time. Just relax.<br/>
+      - <b>Timed:</b> Reach target score before time runs out.</p>
+      <div style="text-align:center; margin-top:20px;">
+        <button onclick="hideHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:8px 16px; cursor:pointer; border-radius:4px; font-weight:bold;">Close</button>
+      </div>
+    </div>
+  </div>
   <script>
+    function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
+    function hideHelp() { document.getElementById('helpModal').style.display = 'none'; }
+
     const boardEl = document.getElementById('board');
     const scoreEl = document.getElementById('score');
     const movesEl = document.getElementById('moves');

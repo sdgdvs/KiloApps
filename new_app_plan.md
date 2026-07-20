@@ -48,29 +48,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KMatch3
-**Phase:** 13
+**App:** KWords
+**Phase:** 1
 **Status:** In Progress
 
-- Phase 1: Completed. Scaffolded `KMatch3/` directory, created basic UI skeleton, registered in App.jsx.
-- Phase 2: Completed. Implemented core functionality in the web HTML (inline JS/CSS, self-contained). Created native C version.
-- Phase 3: Completed. Created native C version (`main.c`, `build.bat`) with Win32 API with functional parity.
-- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
-- Phase 5: Add a Score System with Combo Multipliers (score based on match size and cascades). (COMPLETED)
-- Phase 6: Add Sound Effects (gem swap, match pop, cascade combo sounds). (COMPLETED)
-- Phase 7: Add Visual Animations (smooth gem swapping and falling gravity). (COMPLETED)
-- Phase 8: Add Particle Effects (explosions when gems match). (COMPLETED)
-- Phase 9: Add Special Gems (e.g., matching 4 creates a line bomb, matching 5 creates a color bomb). (COMPLETED)
-- Phase 10: Add Level Progression (target scores and limited moves/time per level). (COMPLETED)
-- Phase 11: Add Save/Load State (persist current level, score, and board). (COMPLETED)
-- Phase 12: Add High Score tracking and Statistics (Games Played, Best Score, Max Combo). (COMPLETED)
-- Phase 13: Add Game Modes (e.g., Zen mode with no limits, Timed mode). (COMPLETED)
-- Phase 14: Add Comprehensive Help / How-to-Play modal.
+- Phase 1: Choose a unique app. Scaffold `KWords/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
-**App:** KMatch3
-**Goal:** Phase 14
+**App:** KWords
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -110,6 +100,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KMatch3 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KAsteroids (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KSimon (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KHangman (Phase 14 completed: Added Help / How-to-Play modal to both versions)
