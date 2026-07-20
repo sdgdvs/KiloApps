@@ -474,6 +474,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                          485, 120, 60, 30, hwnd, (HMENU)106, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             CreateWindow("BUTTON", "Style", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
                          550, 120, 50, 30, hwnd, (HMENU)107, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         605, 120, 50, 30, hwnd, (HMENU)110, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
@@ -509,6 +511,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Undo(hwnd);
             } else if (LOWORD(wParam) == 109) {
                 Redo(hwnd);
+            } else if (LOWORD(wParam) == 110) {
+                MessageBox(hwnd, 
+                    "General Controls:\n"
+                    "Aim with the mouse and click to throw a dart. Your aim will wobble automatically over time. You have 3 darts per turn.\n\n"
+                    "501 Mode:\n"
+                    "Start with 501 points. Subtract your throw scores from the total. The goal is to reach exactly 0. If a throw reduces your score below 0 (or to 1), you bust and your score resets to what it was at the start of the turn.\n\n"
+                    "Cricket Mode:\n"
+                    "The objective is to \"close\" the numbers 15, 16, 17, 18, 19, 20, and the Bullseye. To close a number, hit it 3 times (Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits). The first player to close all numbers wins the game.", 
+                    "How to Play KDarts", MB_OK | MB_ICONINFORMATION);
             }
             return 0;
 

@@ -50,29 +50,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KDarts
-**Phase:** 4
+**App:** KTowers
+**Phase:** 1
 **Status:** In Progress
 
-- [x] Phase 1: Choose a unique app. Scaffold `KDarts/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [x] Phase 5: Add a second game mode (e.g., Cricket).
-- [x] Phase 6: Add Visual Polish (dart throwing animation and sticking effect).
-- [x] Phase 7: Add a Simple AI Opponent (adjustable difficulty for single-player).
-- [x] Phase 8: Add Sound Effects (dart throw whoosh, thud on hit, bullseye cheer).
-- [x] Phase 9: Add Save/Load State (persist current match and scores).
-- [x] Phase 10: Add Match Statistics (average score per dart, highest checkout).
-- [x] Phase 11: Add Local Multiplayer (hotseat for 2 players).
-- [x] Phase 12: Add Settings Panel (toggle sound effects and change dart visual styles).
-- [x] Phase 13: Add Undo/Redo functionality for misclicks.
-- Phase 14: Add Comprehensive Help / How-to-Play modal explaining rules for 301/501 and Cricket.
+- [ ] Phase 1: Choose a unique app. Scaffold `KTowers/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- [ ] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- [ ] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- [ ] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
-**App:** KDarts
-**Goal:** Phase 14
+**App:** KTowers
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -112,6 +102,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KDarts (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KGo (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KWords (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KMatch3 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
@@ -132,7 +123,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 
 ### 🎮 GAMES (PRIORITY — create these first)
 - **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
-- **KDarts** — Dartboard game. 301/501 scoring. Cricket mode. Aim-and-throw mechanic. Stats per player.
 - **KTowers** — Tower of Hanoi. Multiple difficulties (3-8 discs). Move counter. Optimal solution hint. Animated disc movement.
 - **KMemory** — Card memory matching. Multiple themes. Timed mode. Pair count options (8-32 pairs). Best time tracking.
 - **KTrivia** — Quiz game. Multiple categories. Multiple choice. Score tracking. Timed rounds.

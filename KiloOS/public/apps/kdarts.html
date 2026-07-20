@@ -61,6 +61,7 @@
       <button onclick="undo()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Undo</button>
       <button onclick="redo()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Redo</button>
       <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Settings</button>
+      <button onclick="toggleHelp()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Help</button>
       <select id="diff" onchange="setDifficulty(this.value)" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">
         <option value="Human">Vs Human</option>
         <option value="Easy">Vs AI: Easy</option>
@@ -88,6 +89,18 @@
         <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 4px;">Close</button>
       </div>
     </div>
+    <div id="helpPanel" style="display:none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); background: #222; padding: 20px; border-radius: 8px; border: 1px solid #555; z-index: 10; color: white; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); max-width: 400px;">
+      <h3 style="margin-top: 0;">How to Play KDarts</h3>
+      <h4>General Controls</h4>
+      <p style="font-size: 14px;">Aim with the mouse cursor and click to throw a dart. Your aim will wobble automatically over time. You have 3 darts per turn.</p>
+      <h4>501 Mode</h4>
+      <p style="font-size: 14px;">Start with 501 points. Subtract your throw scores from the total. The goal is to reach exactly 0. If a throw reduces your score below 0 (or to 1), you <strong>bust</strong> and your score resets to what it was at the start of the turn.</p>
+      <h4>Cricket Mode</h4>
+      <p style="font-size: 14px;">The objective is to "close" the numbers 15, 16, 17, 18, 19, 20, and the Bullseye. To close a number, hit it 3 times (Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits). The first player to close all numbers wins the game.</p>
+      <div style="text-align: right; margin-top: 15px;">
+        <button onclick="toggleHelp()" style="padding: 5px 15px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 4px;">Close</button>
+      </div>
+    </div>
   </div>
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -103,6 +116,10 @@ let dartColor = '#0ff';
 
 function toggleSettings() {
     const p = document.getElementById('settingsPanel');
+    p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+function toggleHelp() {
+    const p = document.getElementById('helpPanel');
     p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 function toggleSound() {
