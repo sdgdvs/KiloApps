@@ -58,11 +58,21 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 - [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
+- [x] Phase 5: Add a second game mode (e.g., Cricket).
+- Phase 6: Add Visual Polish (dart throwing animation and sticking effect).
+- Phase 7: Add a Simple AI Opponent (adjustable difficulty for single-player).
+- Phase 8: Add Sound Effects (dart throw whoosh, thud on hit, bullseye cheer).
+- Phase 9: Add Save/Load State (persist current match and scores).
+- Phase 10: Add Match Statistics (average score per dart, highest checkout).
+- Phase 11: Add Local Multiplayer (hotseat for 2 players).
+- Phase 12: Add Visual Polish (particle effects for high scores or bullseyes).
+- Phase 13: Add Undo/Redo functionality for misclicks.
+- Phase 14: Add Comprehensive Help / How-to-Play modal explaining rules for 301/501 and Cricket.
 
 ## Next Priority (Before New Apps)
 
 **App:** KDarts
-**Goal:** Phase 5
+**Goal:** Phase 6
 
 
 ## App Lifecycle (14 phases per app)

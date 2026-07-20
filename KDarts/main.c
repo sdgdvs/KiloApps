@@ -13,6 +13,10 @@ typedef struct {
     int x, y, pts;
 } Dart;
 
+int gameMode = 0; // 0=501, 1=Cricket
+int cricketHits[7] = {0}; // 20, 19, 18, 17, 16, 15, 25
+int totalDarts = 0;
+
 int score = 501;
 int prevScore = 501;
 int dartsLeft = 3;
@@ -24,25 +28,44 @@ int wobbleX = 0, wobbleY = 0;
 float t = 0.0f;
 char statusMsg[100] = "Game On! Throw 3 Darts";
 
-int GetHitScore(int x, int y) {
+void SetMode(int mode) {
+    gameMode = mode;
+    gameState = 0;
+    dartsCount = 0;
+    dartsLeft = 3;
+    totalDarts = 0;
+    if (mode == 0) {
+        score = 501;
+        prevScore = 501;
+        sprintf(statusMsg, "Game On! Throw 3 Darts");
+    } else {
+        for(int i=0; i<7; i++) cricketHits[i] = 0;
+        sprintf(statusMsg, "Close 15-20 and Bullseye");
+    }
+}
+
+void GetHitDetails(int x, int y, int* number, int* mult) {
     float dx = (float)(x - CX);
     float dy = (float)(y - CY);
     float d = sqrtf(dx*dx + dy*dy) / (float)R;
     
-    if (d > 1.0f) return 0;
-    if (d <= 0.037f) return 50;
-    if (d <= 0.093f) return 25;
+    *number = 0;
+    *mult = 0;
     
-    int mult = 1;
-    if (d >= 0.582f && d <= 0.629f) mult = 3;
-    if (d >= 0.952f && d <= 1.0f) mult = 2;
+    if (d > 1.0f) return;
+    if (d <= 0.037f) { *number = 25; *mult = 2; return; }
+    if (d <= 0.093f) { *number = 25; *mult = 1; return; }
+    
+    *mult = 1;
+    if (d >= 0.582f && d <= 0.629f) *mult = 3;
+    if (d >= 0.952f && d <= 1.0f) *mult = 2;
     
     float angle = atan2f(dy, dx) + (float)PI / 2.0f;
     if (angle < 0) angle += 2.0f * (float)PI;
     
     int idx = (int)floorf((angle + (float)PI / 20.0f) / ((float)PI / 10.0f)) % 20;
     int scores[] = {20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5};
-    return scores[idx] * mult;
+    *number = scores[idx];
 }
 
 void DrawPieSlice(HDC hdc, int r, float a1, float a2, COLORREF color) {
@@ -86,9 +109,23 @@ void DrawCircle(HDC hdc, int r, COLORREF color) {
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
-            SetTimer(hwnd, TIMER_ID, 16, NULL); // ~60fps
+            CreateWindow("BUTTON", "501", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         210, 120, 100, 30, hwnd, (HMENU)101, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            CreateWindow("BUTTON", "Cricket", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 
+                         340, 120, 100, 30, hwnd, (HMENU)102, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            SetTimer(hwnd, TIMER_ID, 16, NULL);
             return 0;
             
+        case WM_COMMAND:
+            if (LOWORD(wParam) == 101) {
+                SetMode(0);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (LOWORD(wParam) == 102) {
+                SetMode(1);
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            return 0;
+
         case WM_TIMER:
             t += 0.05f;
             wobbleX = (int)(sinf(t * 1.3f) * 15.0f + sinf(t * 0.8f) * 10.0f);
@@ -102,10 +139,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
             
         case WM_LBUTTONDOWN: {
+            if (mouseY < 160 && mouseX > 50 && mouseX < 600) return 0; // Ignore UI clicks
+            
             if (gameState == 0) { // PLAYING
                 int targetX = mouseX + wobbleX;
                 int targetY = mouseY + wobbleY;
-                int pts = GetHitScore(targetX, targetY);
+                int number, mult;
+                GetHitDetails(targetX, targetY, &number, &mult);
+                int pts = number * mult;
                 
                 if (dartsCount < 3) {
                     darts[dartsCount].x = targetX;
@@ -114,21 +155,60 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     dartsCount++;
                 }
                 
-                score -= pts;
                 dartsLeft--;
+                totalDarts++;
                 
-                if (score < 0) {
-                    sprintf(statusMsg, "Bust!");
-                    score = prevScore;
-                    gameState = 1; // TURN_END
-                } else if (score == 0) {
-                    sprintf(statusMsg, "You Win!");
-                    gameState = 2; // WON
-                } else if (dartsLeft == 0) {
-                    sprintf(statusMsg, "Turn Over. Score: %d", score);
-                    gameState = 1; // TURN_END
-                } else {
-                    sprintf(statusMsg, "Hit %d! Darts left: %d", pts, dartsLeft);
+                if (gameMode == 0) {
+                    score -= pts;
+                    if (score < 0) {
+                        sprintf(statusMsg, "Bust!");
+                        score = prevScore;
+                        gameState = 1;
+                    } else if (score == 0) {
+                        sprintf(statusMsg, "You Win!");
+                        gameState = 2;
+                    } else if (dartsLeft == 0) {
+                        sprintf(statusMsg, "Turn Over. Score: %d", score);
+                        gameState = 1;
+                    } else {
+                        sprintf(statusMsg, "Hit %d! Darts left: %d", pts, dartsLeft);
+                    }
+                } else { // Cricket
+                    if (mult > 0) {
+                        int tIdx = -1;
+                        if (number == 20) tIdx = 0;
+                        else if (number == 19) tIdx = 1;
+                        else if (number == 18) tIdx = 2;
+                        else if (number == 17) tIdx = 3;
+                        else if (number == 16) tIdx = 4;
+                        else if (number == 15) tIdx = 5;
+                        else if (number == 25) tIdx = 6;
+                        
+                        if (tIdx != -1) {
+                            cricketHits[tIdx] += mult;
+                            if (cricketHits[tIdx] > 3) cricketHits[tIdx] = 3;
+                        }
+                    }
+                    
+                    int allClosed = 1;
+                    for (int i=0; i<7; i++) {
+                        if (cricketHits[i] < 3) allClosed = 0;
+                    }
+                    
+                    if (allClosed) {
+                        sprintf(statusMsg, "You Win in %d darts!", totalDarts);
+                        gameState = 2;
+                    } else if (dartsLeft == 0) {
+                        sprintf(statusMsg, "Turn Over.");
+                        gameState = 1;
+                    } else {
+                        if (mult == 0) sprintf(statusMsg, "Miss! - Darts left: %d", dartsLeft);
+                        else {
+                            const char* mStr = mult == 1 ? "Single" : (mult == 2 ? "Double" : "Triple");
+                            if (number == 25) sprintf(statusMsg, "%s Bull - Darts left: %d", mStr, dartsLeft);
+                            else sprintf(statusMsg, "%s %d - Darts left: %d", mStr, number, dartsLeft);
+                        }
+                    }
                 }
             } else if (gameState == 1) { // TURN_END
                 dartsCount = 0;
@@ -137,12 +217,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 gameState = 0; // PLAYING
                 sprintf(statusMsg, "Throw Dart 1");
             } else if (gameState == 2) { // WON
-                score = 501;
-                prevScore = 501;
-                dartsCount = 0;
-                dartsLeft = 3;
-                gameState = 0; // PLAYING
-                sprintf(statusMsg, "Game On! Throw 3 Darts");
+                SetMode(gameMode);
             }
             return 0;
         }
@@ -151,7 +226,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            // Double buffering
             RECT rect;
             GetClientRect(hwnd, &rect);
             int width = rect.right - rect.left;
@@ -161,7 +235,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBITMAP hbmMem = CreateCompatibleBitmap(hdc, width, height);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbmMem);
             
-            // Clear background
             HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
             FillRect(memDC, &rect, bgBrush);
             DeleteObject(bgBrush);
@@ -171,7 +244,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HPEN uiPen = CreatePen(PS_SOLID, 1, RGB(51, 51, 51));
             HBRUSH oldUIBrush = (HBRUSH)SelectObject(memDC, uiBrush);
             HPEN oldUIPen = (HPEN)SelectObject(memDC, uiPen);
-            RoundRect(memDC, 162, 20, 488, 130, 15, 15);
+            RoundRect(memDC, 82, 10, 568, 160, 15, 15);
             SelectObject(memDC, oldUIBrush);
             SelectObject(memDC, oldUIPen);
             DeleteObject(uiBrush);
@@ -227,21 +300,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TextOut(memDC, nx - sz.cx/2, ny - sz.cy/2, numStr, strlen(numStr));
             }
             
-            // UI text
             HFONT largeFont = CreateFont(48, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                     DEFAULT_PITCH | FF_SWISS, "Arial");
-            SelectObject(memDC, largeFont);
-            char scoreStr[20];
-            sprintf(scoreStr, "%d", score);
-            SIZE sz;
-            GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
-            TextOut(memDC, 325 - sz.cx/2, 35, scoreStr, strlen(scoreStr));
+            
+            if (gameMode == 0) {
+                SelectObject(memDC, largeFont);
+                char scoreStr[20];
+                sprintf(scoreStr, "%d", score);
+                SIZE sz;
+                GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
+                TextOut(memDC, 325 - sz.cx/2, 25, scoreStr, strlen(scoreStr));
+            } else {
+                SelectObject(memDC, font);
+                char scoreStr[100] = "";
+                int targets[] = {20, 19, 18, 17, 16, 15, 25};
+                for (int i=0; i<7; i++) {
+                    int hits = cricketHits[i];
+                    char mark = hits == 0 ? '-' : (hits == 1 ? '/' : (hits == 2 ? 'X' : 'O'));
+                    char buf[16];
+                    if (targets[i] == 25) sprintf(buf, "B:%c  ", mark);
+                    else sprintf(buf, "%d:%c  ", targets[i], mark);
+                    strcat(scoreStr, buf);
+                }
+                SIZE sz;
+                GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
+                TextOut(memDC, 325 - sz.cx/2, 40, scoreStr, strlen(scoreStr));
+            }
             
             SelectObject(memDC, font);
             SetTextColor(memDC, RGB(170, 170, 170));
+            SIZE sz;
             GetTextExtentPoint32(memDC, statusMsg, strlen(statusMsg), &sz);
-            TextOut(memDC, 325 - sz.cx/2, 90, statusMsg, strlen(statusMsg));
+            TextOut(memDC, 325 - sz.cx/2, 85, statusMsg, strlen(statusMsg));
             
             // Draw darts
             for (int i = 0; i < dartsCount; i++) {
@@ -278,7 +369,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(font);
             DeleteObject(largeFont);
             
-            // Blit
             BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
             
             SelectObject(memDC, hOld);
@@ -304,12 +394,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.lpfnWndProc   = WindowProc;
     wc.hInstance     = hInstance;
     wc.lpszClassName = CLASS_NAME;
-    wc.hCursor       = LoadCursor(NULL, IDC_CROSS); // Use crosshair cursor
+    wc.hCursor       = LoadCursor(NULL, IDC_CROSS);
     
     RegisterClass(&wc);
     
     HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KDarts", WS_OVERLAPPEDWINDOW,
+        0, CLASS_NAME, "KDarts", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, 650, 750,
         NULL, NULL, hInstance, NULL
     );
