@@ -165,6 +165,8 @@
       <button class="diff-btn active" id="btn-medium" onclick="setDifficulty('medium')">Medium</button>
       <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">Hard</button>
       <button class="diff-btn" id="btn-hint" onclick="useHint()" style="background-color: #d69e2e; color: #1a202c; font-weight: bold; margin-left: 10px;">Hint</button>
+      <button class="diff-btn" onclick="saveGame()" style="margin-left: 10px;">Save</button>
+      <button class="diff-btn" onclick="loadGame()">Load</button>
     </div>
     <div>Found: <span id="found-count">0</span>/<span id="total">0</span> | Score: <span id="score">0</span> | Timer: <span id="timer">00:00</span></div>
   </div>
@@ -513,6 +515,74 @@
             seconds += 30;
             document.getElementById('score').textContent = score;
             updateTimerDisplay();
+        }
+    }
+
+    function saveGame() {
+        let cellStates = [];
+        document.querySelectorAll('.cell').forEach(cell => {
+            cellStates.push({
+                r: cell.dataset.r,
+                c: cell.dataset.c,
+                found: cell.classList.contains('found'),
+                hint: cell.classList.contains('hint')
+            });
+        });
+        const state = {
+            currentTheme, gridSize, numWordsToFind,
+            grid, wordsToFind, foundWords, hintedWords,
+            seconds, score, cellStates
+        };
+        localStorage.setItem('kwords_save', JSON.stringify(state));
+        alert('Game Saved!');
+    }
+
+    function loadGame() {
+        const saved = localStorage.getItem('kwords_save');
+        if (saved) {
+            const state = JSON.parse(saved);
+            currentTheme = state.currentTheme;
+            gridSize = state.gridSize;
+            numWordsToFind = state.numWordsToFind;
+            grid = state.grid;
+            wordsToFind = state.wordsToFind;
+            foundWords = state.foundWords || [];
+            hintedWords = state.hintedWords || [];
+            seconds = state.seconds || 0;
+            score = state.score || 0;
+
+            document.getElementById('theme-select').value = currentTheme;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            if(gridSize === 10) document.getElementById('btn-easy').classList.add('active');
+            else if(gridSize === 15) document.getElementById('btn-medium').classList.add('active');
+            else if(gridSize === 20) document.getElementById('btn-hard').classList.add('active');
+
+            document.getElementById('total').textContent = wordsToFind.length;
+            document.getElementById('found-count').textContent = foundWords.length;
+            document.getElementById('score').textContent = score;
+            document.getElementById('win-message').style.display = 'none';
+            updateTimerDisplay();
+            
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds++;
+                updateTimerDisplay();
+            }, 1000);
+
+            renderGrid();
+            renderWordList();
+            
+            if (state.cellStates) {
+                state.cellStates.forEach(cs => {
+                    const el = document.querySelector(`.cell[data-r="${cs.r}"][data-c="${cs.c}"]`);
+                    if (el) {
+                        if (cs.found) el.classList.add('found');
+                        if (cs.hint) el.classList.add('hint');
+                    }
+                });
+            }
+        } else {
+            alert('No saved game found.');
         }
     }
 

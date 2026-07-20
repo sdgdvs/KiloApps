@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Add Sound Effects (word selection tick, word found chime, puzzle complete fanfare).
 - [x] Phase 9: Add Visual Polish (smooth highlighting animations and strikethrough for found words on the word list).
 - [x] Phase 10: Add a Hint System (highlight the first letter of a word, with a score/time penalty).
-- Phase 11: Add Save/Load State (persist current grid, selected words, timer, and score).
+- [x] Phase 11: Add Save/Load State (persist current grid, selected words, timer, and score).
 - Phase 12: Add High Score tracking and Statistics (Best times per category/difficulty, puzzles completed).
 - Phase 13: Add Game Modes (e.g. Zen Mode with no timer, Time Attack).
 - Phase 14: Add Comprehensive Help / How-to-Play modal.
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KWords
-**Goal:** Phase 11
+**Goal:** Phase 12
 
 
 ## App Lifecycle (14 phases per app)

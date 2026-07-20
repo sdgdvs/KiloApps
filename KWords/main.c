@@ -78,6 +78,8 @@ RECT btnEasy = {370, 10, 430, 35};
 RECT btnMed  = {440, 10, 510, 35};
 RECT btnHard = {520, 10, 580, 35};
 RECT btnHint = {590, 10, 650, 35};
+RECT btnSave = {660, 10, 720, 35};
+RECT btnLoad = {730, 10, 790, 35};
 
 DWORD WINAPI SoundTick(LPVOID lpParam) {
     Beep(1500, 10);
@@ -298,6 +300,70 @@ void UseHint(HWND hwnd) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
+void SaveGame(HWND hwnd) {
+    FILE* fp = fopen("kwords_save.dat", "wb");
+    if (fp) {
+        fwrite(&gridSize, sizeof(int), 1, fp);
+        fwrite(&numWordsToFind, sizeof(int), 1, fp);
+        fwrite(&currentDifficulty, sizeof(int), 1, fp);
+        fwrite(&currentThemeIdx, sizeof(int), 1, fp);
+        fwrite(&wordCount, sizeof(int), 1, fp);
+        fwrite(&foundCount, sizeof(int), 1, fp);
+        fwrite(&currentScore, sizeof(int), 1, fp);
+        fwrite(&timerSeconds, sizeof(int), 1, fp);
+        fwrite(&gameWon, sizeof(bool), 1, fp);
+        fwrite(grid, sizeof(char), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(foundGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(hintedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(wordsToFind, sizeof(char), MAX_WORDS * 32, fp);
+        fwrite(wordsFoundStatus, sizeof(bool), MAX_WORDS, fp);
+        fwrite(wordsHintedStatus, sizeof(bool), MAX_WORDS, fp);
+        fclose(fp);
+        MessageBox(hwnd, "Game Saved successfully!", "Save", MB_OK);
+    } else {
+        MessageBox(hwnd, "Failed to save game.", "Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void LoadGame(HWND hwnd) {
+    FILE* fp = fopen("kwords_save.dat", "rb");
+    if (fp) {
+        fread(&gridSize, sizeof(int), 1, fp);
+        fread(&numWordsToFind, sizeof(int), 1, fp);
+        fread(&currentDifficulty, sizeof(int), 1, fp);
+        fread(&currentThemeIdx, sizeof(int), 1, fp);
+        fread(&wordCount, sizeof(int), 1, fp);
+        fread(&foundCount, sizeof(int), 1, fp);
+        fread(&currentScore, sizeof(int), 1, fp);
+        fread(&timerSeconds, sizeof(int), 1, fp);
+        fread(&gameWon, sizeof(bool), 1, fp);
+        fread(grid, sizeof(char), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fread(foundGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fread(hintedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fread(wordsToFind, sizeof(char), MAX_WORDS * 32, fp);
+        fread(wordsFoundStatus, sizeof(bool), MAX_WORDS, fp);
+        fread(wordsHintedStatus, sizeof(bool), MAX_WORDS, fp);
+        fclose(fp);
+        
+        memset(cellAnim, 0, sizeof(cellAnim));
+        memset(strikeAnim, 0, sizeof(strikeAnim));
+        isSelecting = false;
+        
+        for(int w=0; w<wordCount; w++) {
+            if (wordsFoundStatus[w]) strikeAnim[w] = 1.0f;
+        }
+        for(int r=0; r<gridSize; r++){
+            for(int c=0; c<gridSize; c++){
+                if(foundGrid[r][c]) cellAnim[r][c] = 1.0f;
+            }
+        }
+        
+        InvalidateRect(hwnd, NULL, TRUE);
+    } else {
+        MessageBox(hwnd, "No save file found.", "Load", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
@@ -353,6 +419,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (PtInRect(&btnHint, pt)) {
                 UseHint(hwnd); break;
+            }
+            if (PtInRect(&btnSave, pt)) {
+                SaveGame(hwnd); break;
+            }
+            if (PtInRect(&btnLoad, pt)) {
+                LoadGame(hwnd); break;
             }
 
             if(gameWon) {
@@ -428,6 +500,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &btnHint, hintBrush);
             DeleteObject(hintBrush);
             
+            HBRUSH slBrush = CreateSolidBrush(RGB(100, 100, 100));
+            FillRect(hdc, &btnSave, slBrush);
+            FillRect(hdc, &btnLoad, slBrush);
+            DeleteObject(slBrush);
+            
             char themeStr[64];
             sprintf(themeStr, "Theme: %s", THEMES[currentThemeIdx]);
             TextOut(hdc, btnTheme.left + 10, btnTheme.top + 5, themeStr, strlen(themeStr));
@@ -439,6 +516,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(26, 32, 44));
             TextOut(hdc, btnHint.left + 14, btnHint.top + 5, "Hint", 4);
             SetTextColor(hdc, RGB(226, 232, 240));
+            
+            TextOut(hdc, btnSave.left + 14, btnSave.top + 5, "Save", 4);
+            TextOut(hdc, btnLoad.left + 14, btnLoad.top + 5, "Load", 4);
             
             DeleteObject(btnBrush);
             DeleteObject(activeBrush);
