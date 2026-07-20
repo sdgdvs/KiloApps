@@ -4,8 +4,8 @@
 
 #define PI 3.14159265358979323846
 #define TIMER_ID 1
-#define CX 300
-#define CY 300
+#define CX 325
+#define CY 380
 #define BOARD_R 300
 #define R 220
 
@@ -19,7 +19,7 @@ int dartsLeft = 3;
 Dart darts[3];
 int dartsCount = 0;
 int gameState = 0; // 0=PLAYING, 1=TURN_END, 2=WON
-int mouseX = 300, mouseY = 300;
+int mouseX = 325, mouseY = 380;
 int wobbleX = 0, wobbleY = 0;
 float t = 0.0f;
 char statusMsg[100] = "Game On! Throw 3 Darts";
@@ -162,9 +162,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbmMem);
             
             // Clear background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(26, 26, 26));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
             FillRect(memDC, &rect, bgBrush);
             DeleteObject(bgBrush);
+            
+            // Draw UI panel
+            HBRUSH uiBrush = CreateSolidBrush(RGB(30, 30, 30));
+            HPEN uiPen = CreatePen(PS_SOLID, 1, RGB(51, 51, 51));
+            HBRUSH oldUIBrush = (HBRUSH)SelectObject(memDC, uiBrush);
+            HPEN oldUIPen = (HPEN)SelectObject(memDC, uiPen);
+            RoundRect(memDC, 162, 20, 488, 130, 15, 15);
+            SelectObject(memDC, oldUIBrush);
+            SelectObject(memDC, oldUIPen);
+            DeleteObject(uiBrush);
+            DeleteObject(uiPen);
             
             // Board background
             HBRUSH boardBg = CreateSolidBrush(RGB(17, 17, 17));
@@ -223,11 +234,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(memDC, largeFont);
             char scoreStr[20];
             sprintf(scoreStr, "%d", score);
-            TextOut(memDC, 20, 20, scoreStr, strlen(scoreStr));
+            SIZE sz;
+            GetTextExtentPoint32(memDC, scoreStr, strlen(scoreStr), &sz);
+            TextOut(memDC, 325 - sz.cx/2, 35, scoreStr, strlen(scoreStr));
             
             SelectObject(memDC, font);
             SetTextColor(memDC, RGB(170, 170, 170));
-            TextOut(memDC, 20, 70, statusMsg, strlen(statusMsg));
+            GetTextExtentPoint32(memDC, statusMsg, strlen(statusMsg), &sz);
+            TextOut(memDC, 325 - sz.cx/2, 90, statusMsg, strlen(statusMsg));
             
             // Draw darts
             for (int i = 0; i < dartsCount; i++) {
@@ -296,7 +310,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KDarts", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 650, 680,
+        CW_USEDEFAULT, CW_USEDEFAULT, 650, 750,
         NULL, NULL, hInstance, NULL
     );
     
