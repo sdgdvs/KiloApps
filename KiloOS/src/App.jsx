@@ -82,7 +82,8 @@ const APPS = [
   { id: 'kmatch3', title: 'KMatch3', url: '/apps/kmatch3.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmatch3.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kwords', title: 'KWords', url: '/apps/kwords.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kwords.ico', w: 600, h: 600, folder: 'Games' },
   { id: 'kgo', title: 'KGo', url: '/apps/kgo.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kgo.ico', w: 600, h: 600, folder: 'Games' },
-  { id: 'kdarts', title: 'KDarts', url: '/apps/kdarts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdarts.ico', w: 600, h: 600, folder: 'Games' }
+  { id: 'kdarts', title: 'KDarts', url: '/apps/kdarts.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kdarts.ico', w: 600, h: 600, folder: 'Games' },
+  { id: 'ktowers', title: 'KTowers', url: '/apps/ktowers.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktowers.ico', w: 600, h: 500, folder: 'Games' }
 ];
 
 function Window({ app, onClose, onFocus, onMinimize, vfs, setVfs, requestVfsModal, openApps, closeApp }) {
