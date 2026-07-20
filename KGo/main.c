@@ -12,6 +12,21 @@
 #define ID_CB_AI 106
 #define ID_BTN_SAVE 107
 #define ID_BTN_LOAD 108
+#define ID_BTN_UNDO 109
+#define ID_BTN_REDO 110
+
+typedef struct {
+    char board[19][19];
+    char prevBoard[19][19];
+    int currentPlayer;
+    int captures[3];
+} GameState;
+
+#define MAX_HISTORY 500
+GameState undoStack[MAX_HISTORY];
+int undoCount = 0;
+GameState redoStack[MAX_HISTORY];
+int redoCount = 0;
 
 int boardSize = 9;
 char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
@@ -46,6 +61,69 @@ void PlayGameSound(int type) {
 
 void CopyBoard(char dst[19][19], char src[19][19]) {
     memcpy(dst, src, sizeof(char) * 19 * 19);
+}
+
+void PushUndo(char bBackup[19][19], int cBackup[3], int pBackup) {
+    if (undoCount < MAX_HISTORY) {
+        CopyBoard(undoStack[undoCount].board, bBackup);
+        CopyBoard(undoStack[undoCount].prevBoard, prevBoard);
+        undoStack[undoCount].currentPlayer = pBackup;
+        undoStack[undoCount].captures[1] = cBackup[1];
+        undoStack[undoCount].captures[2] = cBackup[2];
+        undoCount++;
+    } else {
+        for (int i = 1; i < MAX_HISTORY; i++) {
+            undoStack[i-1] = undoStack[i];
+        }
+        CopyBoard(undoStack[MAX_HISTORY-1].board, bBackup);
+        CopyBoard(undoStack[MAX_HISTORY-1].prevBoard, prevBoard);
+        undoStack[MAX_HISTORY-1].currentPlayer = pBackup;
+        undoStack[MAX_HISTORY-1].captures[1] = cBackup[1];
+        undoStack[MAX_HISTORY-1].captures[2] = cBackup[2];
+    }
+    redoCount = 0;
+}
+
+void DoUndo(HWND hwnd) {
+    if (undoCount > 0) {
+        if (redoCount < MAX_HISTORY) {
+            CopyBoard(redoStack[redoCount].board, board);
+            CopyBoard(redoStack[redoCount].prevBoard, prevBoard);
+            redoStack[redoCount].currentPlayer = currentPlayer;
+            redoStack[redoCount].captures[1] = captures[1];
+            redoStack[redoCount].captures[2] = captures[2];
+            redoCount++;
+        }
+        undoCount--;
+        CopyBoard(board, undoStack[undoCount].board);
+        CopyBoard(prevBoard, undoStack[undoCount].prevBoard);
+        currentPlayer = undoStack[undoCount].currentPlayer;
+        captures[1] = undoStack[undoCount].captures[1];
+        captures[2] = undoStack[undoCount].captures[2];
+        capturedAnimCount = 0;
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
+void DoRedo(HWND hwnd) {
+    if (redoCount > 0) {
+        if (undoCount < MAX_HISTORY) {
+            CopyBoard(undoStack[undoCount].board, board);
+            CopyBoard(undoStack[undoCount].prevBoard, prevBoard);
+            undoStack[undoCount].currentPlayer = currentPlayer;
+            undoStack[undoCount].captures[1] = captures[1];
+            undoStack[undoCount].captures[2] = captures[2];
+            undoCount++;
+        }
+        redoCount--;
+        CopyBoard(board, redoStack[redoCount].board);
+        CopyBoard(prevBoard, redoStack[redoCount].prevBoard);
+        currentPlayer = redoStack[redoCount].currentPlayer;
+        captures[1] = redoStack[redoCount].captures[1];
+        captures[2] = redoStack[redoCount].captures[2];
+        capturedAnimCount = 0;
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
 }
 
 int GetLiberties(int x, int y, int color, char visited[19][19]) {
@@ -115,6 +193,7 @@ void PlaceStone(HWND hwnd, int x, int y) {
     
     char boardBackup[19][19];
     CopyBoard(boardBackup, board);
+    int capBackup[3] = { captures[0], captures[1], captures[2] };
     
     board[y][x] = (char)currentPlayer;
     
@@ -125,16 +204,21 @@ void PlaceStone(HWND hwnd, int x, int y) {
     char visited[19][19] = {0};
     if (GetLiberties(x, y, currentPlayer, visited) == 0) {
         CopyBoard(board, boardBackup);
+        captures[1] = capBackup[1];
+        captures[2] = capBackup[2];
         if (currentPlayer == 1) MessageBox(hwnd, "Suicide move is not allowed.", "Invalid Move", MB_OK);
         return;
     }
     
     if (memcmp(board, prevBoard, sizeof(char) * 19 * 19) == 0) {
         CopyBoard(board, boardBackup);
+        captures[1] = capBackup[1];
+        captures[2] = capBackup[2];
         if (currentPlayer == 1) MessageBox(hwnd, "Ko rule violation.", "Invalid Move", MB_OK);
         return;
     }
     
+    PushUndo(boardBackup, capBackup, currentPlayer);
     CopyBoard(prevBoard, boardBackup);
     currentPlayer = opp;
     
@@ -235,6 +319,10 @@ void SaveGame(HWND hwnd) {
         fwrite(prevBoard, sizeof(char), 19*19, f);
         fwrite(&currentPlayer, sizeof(int), 1, f);
         fwrite(captures, sizeof(int), 3, f);
+        fwrite(&undoCount, sizeof(int), 1, f);
+        fwrite(undoStack, sizeof(GameState), undoCount, f);
+        fwrite(&redoCount, sizeof(int), 1, f);
+        fwrite(redoStack, sizeof(GameState), redoCount, f);
         fclose(f);
         MessageBox(hwnd, "Game saved.", "Save", MB_OK);
     } else {
@@ -250,6 +338,10 @@ void LoadGame(HWND hwnd) {
         fread(prevBoard, sizeof(char), 19*19, f);
         fread(&currentPlayer, sizeof(int), 1, f);
         fread(captures, sizeof(int), 3, f);
+        fread(&undoCount, sizeof(int), 1, f);
+        fread(undoStack, sizeof(GameState), undoCount, f);
+        fread(&redoCount, sizeof(int), 1, f);
+        fread(redoStack, sizeof(GameState), redoCount, f);
         fclose(f);
         
         int sel = 0;
@@ -273,6 +365,8 @@ void InitBoard() {
     animX = -1;
     animY = -1;
     capturedAnimCount = 0;
+    undoCount = 0;
+    redoCount = 0;
 }
 
 void CalculateScore(HWND hwnd) {
@@ -366,6 +460,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 20, 640, 60, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 90, 640, 60, 30, hwnd, (HMENU)ID_BTN_LOAD, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                160, 640, 60, 30, hwnd, (HMENU)ID_BTN_UNDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Redo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                230, 640, 60, 30, hwnd, (HMENU)ID_BTN_REDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -522,6 +620,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
         case WM_COMMAND:
             if (LOWORD(wParam) == ID_BTN_PASS) {
+                int capBackup[3] = { captures[0], captures[1], captures[2] };
+                char bBackup[19][19];
+                CopyBoard(bBackup, board);
+                PushUndo(bBackup, capBackup, currentPlayer);
                 currentPlayer = currentPlayer == 1 ? 2 : 1;
                 InvalidateRect(hwnd, NULL, TRUE);
                 if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
@@ -543,6 +645,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SaveGame(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_LOAD) {
                 LoadGame(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_UNDO) {
+                DoUndo(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_REDO) {
+                DoRedo(hwnd);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);
                 if (sel == 0) boardSize = 9;

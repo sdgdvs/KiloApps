@@ -125,6 +125,8 @@
   <div class="controls">
     <button id="btn-pass">Pass</button>
     <button id="btn-resign">Resign</button>
+    <button id="btn-undo">Undo</button>
+    <button id="btn-redo">Redo</button>
     <button id="btn-score">Score Game</button>
     <button id="btn-save">Save</button>
     <button id="btn-load">Load</button>
@@ -146,6 +148,8 @@
   let captures = { B: 0, W: 0 };
   let lastMove = {x: -1, y: -1};
   let capturedStonesForAnim = [];
+  let undoStack = [];
+  let redoStack = [];
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(type) {
@@ -191,6 +195,8 @@
     captures = { B: 0, W: 0 };
     lastMove = {x: -1, y: -1};
     capturedStonesForAnim = [];
+    undoStack = [];
+    redoStack = [];
     updateStatus();
     drawBoard();
   }
@@ -353,6 +359,11 @@
     if (board[y][x] !== null) return;
     
     let boardBackup = deepCopy(board);
+    let capBackup = { ...captures };
+    let histBackup = [...history];
+    let lastMoveBackup = { ...lastMove };
+    let currPlayerBackup = currentPlayer;
+    
     board[y][x] = currentPlayer;
     
     let opp = currentPlayer === 'B' ? 'W' : 'B';
@@ -361,6 +372,7 @@
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     if (getLiberties(x, y, currentPlayer, visited) === 0) {
       board = boardBackup;
+      captures = capBackup;
       alert("Suicide move is not allowed.");
       return;
     }
@@ -368,10 +380,20 @@
     let state = boardToString();
     if (history.includes(state)) {
       board = boardBackup;
+      captures = capBackup;
       alert("Ko rule violation.");
       return;
     }
     
+    undoStack.push({
+      board: boardBackup,
+      captures: capBackup,
+      history: histBackup,
+      lastMove: lastMoveBackup,
+      currentPlayer: currPlayerBackup
+    });
+    redoStack = [];
+
     history.push(boardToString());
     currentPlayer = opp;
     lastMove = {x, y};
@@ -463,11 +485,58 @@
   }
 
   document.getElementById('btn-pass').addEventListener('click', () => {
+    undoStack.push({
+      board: deepCopy(board),
+      captures: { ...captures },
+      history: [...history],
+      lastMove: { ...lastMove },
+      currentPlayer: currentPlayer
+    });
+    redoStack = [];
+
     currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
     updateStatus();
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
       setTimeout(makeAIMove, 500);
     }
+  });
+  document.getElementById('btn-undo').addEventListener('click', () => {
+    if (undoStack.length === 0) return;
+    redoStack.push({
+      board: deepCopy(board),
+      currentPlayer,
+      captures: { ...captures },
+      lastMove: { ...lastMove },
+      history: [...history]
+    });
+    let state = undoStack.pop();
+    board = state.board;
+    currentPlayer = state.currentPlayer;
+    captures = state.captures;
+    lastMove = state.lastMove;
+    history = state.history;
+    capturedStonesForAnim = [];
+    updateStatus();
+    drawBoard();
+  });
+  document.getElementById('btn-redo').addEventListener('click', () => {
+    if (redoStack.length === 0) return;
+    undoStack.push({
+      board: deepCopy(board),
+      currentPlayer,
+      captures: { ...captures },
+      lastMove: { ...lastMove },
+      history: [...history]
+    });
+    let state = redoStack.pop();
+    board = state.board;
+    currentPlayer = state.currentPlayer;
+    captures = state.captures;
+    lastMove = state.lastMove;
+    history = state.history;
+    capturedStonesForAnim = [];
+    updateStatus();
+    drawBoard();
   });
   document.getElementById('btn-resign').addEventListener('click', () => {
     playSound('over');
@@ -489,7 +558,9 @@
       currentPlayer,
       history,
       captures,
-      lastMove
+      lastMove,
+      undoStack,
+      redoStack
     };
     localStorage.setItem('kgo_save', JSON.stringify(state));
     alert('Game saved.');
@@ -505,6 +576,8 @@
         history = state.history || [];
         captures = state.captures;
         lastMove = state.lastMove || {x: -1, y: -1};
+        undoStack = state.undoStack || [];
+        redoStack = state.redoStack || [];
         document.getElementById('board-size').value = size;
         updateStatus();
         drawBoard();
