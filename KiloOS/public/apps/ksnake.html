@@ -23,6 +23,7 @@
         <p style="margin:5px 0">3 - Hard</p>
         <p style="margin:5px 0">4 - Campaign</p>
         <p style="margin:5px 0">W - Toggle Wrap: <span id="wrapStatus">OFF</span></p>
+        <p style="margin:15px 0 5px 0; font-size: 14px; color: #aaa;" id="statsDisplay"></p>
     </div>
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -43,6 +44,13 @@
         let campaignLevel = 1;
         let applesEaten = 0;
         let specialFoodTimer = 0;
+        let iceFood = null;
+        let iceFoodTimer = 0;
+        let iceActiveTimer = 0;
+        let spiders = [];
+        
+        let totalApples = parseInt(localStorage.getItem('ksnakeTotalApples')) || 0;
+        let gamesPlayed = parseInt(localStorage.getItem('ksnakeGamesPlayed')) || 0;
         let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
         let score = 0;
             applesEaten = 0;
@@ -53,6 +61,7 @@
         let highScore = localStorage.getItem('ksnakeHighScore') || 0;
         let currentSpeed = 150;
         let gameLoop;
+        let spiderTick = 0;
         let obstacles = [];
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -83,6 +92,10 @@
         }
 
         function init() {
+            gamesPlayed++;
+            localStorage.setItem('ksnakeGamesPlayed', gamesPlayed);
+            document.getElementById('statsDisplay').innerText = `Games: ${gamesPlayed}  Total Apples: ${totalApples}`;
+            
             snake = [{x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}];
             dir = {x: 1, y: 0};
             lastDir = {x: 1, y: 0};
@@ -92,6 +105,10 @@
             ghostFood = null;
             ghostFoodTimer = 0;
             ghostActiveTimer = 0;
+            iceFood = null;
+            iceFoodTimer = 0;
+            iceActiveTimer = 0;
+            spiderTick = 0;
             
             specialFood = null;
             specialFoodTimer = 0;
@@ -117,6 +134,14 @@
                 }
             }
             
+            spiders = [];
+            let numSpiders = difficulty;
+            if (campaignMode) { numSpiders = Math.floor(campaignLevel / 2); }
+            if (numSpiders > 10) numSpiders = 10;
+            for(let i=0; i<numSpiders; i++) {
+                spiders.push({x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT)});
+            }
+            
             msgBox.style.display = 'none';
             menuBox.style.display = 'none';
             canvas.style.display = 'block';
@@ -133,7 +158,9 @@
             update();
             draw();
             if (gameState === 1) {
-                gameLoop = setTimeout(loop, currentSpeed);
+                let spd = currentSpeed;
+                if (iceActiveTimer > 0) spd += 100;
+                gameLoop = setTimeout(loop, spd);
             }
         }
 
@@ -181,8 +208,40 @@
             ghostFoodTimer = 40;
         }
 
+        function placeIceFood() {
+            let ok = false;
+            while(!ok) {
+                iceFood = {
+                    x: Math.floor(Math.random() * WIDTH),
+                    y: Math.floor(Math.random() * HEIGHT)
+                };
+                ok = true;
+                if (obstacles.some(o => o.x === iceFood.x && o.y === iceFood.y)) ok = false;
+                if (snake.some(s => s.x === iceFood.x && s.y === iceFood.y)) ok = false;
+                if (iceFood.x === food.x && iceFood.y === food.y) ok = false;
+            }
+            iceFoodTimer = 40;
+        }
+
         function update() {
             if (gameState !== 1) return;
+            
+            spiderTick++;
+            if (spiderTick >= 2) {
+                spiderTick = 0;
+                for(let i=0; i<spiders.length; i++) {
+                    let r = Math.floor(Math.random() * 4);
+                    let dx = 0, dy = 0;
+                    if (r === 0) dx = 1; else if (r === 1) dx = -1; else if (r === 2) dy = 1; else if (r === 3) dy = -1;
+                    let nx = spiders[i].x + dx;
+                    let ny = spiders[i].y + dy;
+                    if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
+                        if (!obstacles.some(o => o.x === nx && o.y === ny)) {
+                            spiders[i].x = nx; spiders[i].y = ny;
+                        }
+                    }
+                }
+            }
 
             lastDir = {x: dir.x, y: dir.y};
             const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
@@ -194,16 +253,18 @@
                 if (head.y < 0) head.y = HEIGHT - 1;
                 else if (head.y >= HEIGHT) head.y = 0;
                 
-                if (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y))) {
+                if (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y) || spiders.some(sp => sp.x === head.x && sp.y === head.y))) {
                     playSound('die');
                     gameState = 2;
+                    msgBox.innerHTML = '<h2 style="color: red; margin:0">GAME OVER</h2><p style="margin:5px 0">Press ENTER to return</p>';
                     msgBox.style.display = 'block';
                     return;
                 }
             } else {
-                if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT || (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y)))) {
+                if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT || (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y) || spiders.some(sp => sp.x === head.x && sp.y === head.y)))) {
                     playSound('die');
                     gameState = 2;
+                    msgBox.innerHTML = '<h2 style="color: red; margin:0">GAME OVER</h2><p style="margin:5px 0">Press ENTER to return</p>';
                     msgBox.style.display = 'block';
                     return;
                 }
@@ -214,6 +275,8 @@
             if (head.x === food.x && head.y === food.y) {
                 playSound('eat');
                 score += scoreMult;
+                totalApples++;
+                localStorage.setItem('ksnakeTotalApples', totalApples);
                 if (score > highScore) {
                     highScore = score;
                     localStorage.setItem('ksnakeHighScore', highScore);
@@ -226,14 +289,24 @@
                 if (!ghostFood && Math.random() < 0.15) {
                     placeGhostFood();
                 }
+                if (!iceFood && Math.random() < 0.15) {
+                    placeIceFood();
+                }
                 
                 applesEaten++;
                 if (campaignMode && applesEaten >= 10) {
                     campaignLevel++;
-                    let newSpd = 150 - campaignLevel * 10;
-                    if(newSpd < 40) newSpd = 40;
-                    currentSpeed = newSpd;
-                    init();
+                    if (campaignLevel > 10) {
+                        gameState = 3;
+                        msgBox.innerHTML = '<h2 style="color: #0f0; margin:0">YOU WIN!</h2><p style="margin:5px 0">Press ENTER to return</p>';
+                        msgBox.style.display = 'block';
+                        return;
+                    } else {
+                        let newSpd = 150 - campaignLevel * 10;
+                        if(newSpd < 40) newSpd = 40;
+                        currentSpeed = newSpd;
+                        init();
+                    }
                 }
             } else {
                 snake.pop();
@@ -272,6 +345,22 @@
                 }
                 specialFood = null;
             }
+            
+            if (iceActiveTimer > 0) iceActiveTimer--;
+            if (iceFoodTimer > 0) {
+                iceFoodTimer--;
+                if (iceFoodTimer === 0) iceFood = null;
+            }
+            if (iceFood && head.x === iceFood.x && head.y === iceFood.y) {
+                playSound('eat');
+                score += scoreMult * 2;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('ksnakeHighScore', highScore);
+                }
+                iceActiveTimer = 50;
+                iceFood = null;
+            }
         }
 
         function draw() {
@@ -294,10 +383,19 @@
                 ctx.fillStyle = '#ffd700';
                 ctx.fillRect(specialFood.x * CELL, specialFood.y * CELL, CELL - 1, CELL - 1);
             }
+            if (iceFood) {
+                ctx.fillStyle = '#add8e6';
+                ctx.fillRect(iceFood.x * CELL, iceFood.y * CELL, CELL - 1, CELL - 1);
+            }
             
             ctx.fillStyle = '#666';
             for (let o of obstacles) {
                 ctx.fillRect(o.x * CELL, o.y * CELL, CELL - 1, CELL - 1);
+            }
+            
+            ctx.fillStyle = '#f0f';
+            for (let sp of spiders) {
+                ctx.fillRect(sp.x * CELL, sp.y * CELL, CELL - 1, CELL - 1);
             }
             
             ctx.fillStyle = '#fff';
@@ -315,9 +413,10 @@
                     wrapMode = !wrapMode;
                     document.getElementById('wrapStatus').innerText = wrapMode ? 'ON' : 'OFF';
                 }
-            } else if (gameState === 2 && e.key === 'Enter') {
+            } else if ((gameState === 2 || gameState === 3) && e.key === 'Enter') {
                 gameState = 0;
                 msgBox.style.display = 'none';
+                document.getElementById('statsDisplay').innerText = `Games: ${parseInt(localStorage.getItem('ksnakeGamesPlayed'))||0}  Total Apples: ${parseInt(localStorage.getItem('ksnakeTotalApples'))||0}`;
                 menuBox.style.display = 'block';
                 canvas.style.display = 'none';
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -331,6 +430,7 @@
         });
 
         // initial state
+        document.getElementById('statsDisplay').innerText = `Games: ${parseInt(localStorage.getItem('ksnakeGamesPlayed'))||0}  Total Apples: ${parseInt(localStorage.getItem('ksnakeTotalApples'))||0}`;
         canvas.style.display = 'none';
         msgBox.style.display = 'none';
         menuBox.style.display = 'block';

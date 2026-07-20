@@ -34,19 +34,38 @@ int apples_eaten = 0;
 struct Point ghost_food = {-1, -1};
 int ghost_food_timer = 0;
 int ghost_active_timer = 0;
+struct Point ice_food = {-1, -1};
+int ice_food_timer = 0;
+int ice_active_timer = 0;
+struct Point spiders[10];
+int num_spiders = 0;
+int spider_tick = 0;
 
-void LoadHighScore() {
+int total_apples = 0;
+int games_played = 0;
+
+void LoadStats() {
     FILE* f = fopen("ksnake.dat", "rb");
-    if(f) { fread(&high_score, sizeof(int), 1, f); fclose(f); }
+    if(f) { 
+        fread(&high_score, sizeof(int), 1, f); 
+        fread(&total_apples, sizeof(int), 1, f); 
+        fread(&games_played, sizeof(int), 1, f); 
+        fclose(f); 
+    }
 }
-void SaveHighScore() {
+void SaveStats() {
     FILE* f = fopen("ksnake.dat", "wb");
-    if(f) { fwrite(&high_score, sizeof(int), 1, f); fclose(f); }
+    if(f) { 
+        fwrite(&high_score, sizeof(int), 1, f); 
+        fwrite(&total_apples, sizeof(int), 1, f); 
+        fwrite(&games_played, sizeof(int), 1, f); 
+        fclose(f); 
+    }
 }
-
-
 
 void InitGame() {
+    games_played++;
+    SaveStats();
     apples_eaten = 0;
     if(campaign_mode) {
         difficulty = 1;
@@ -71,6 +90,10 @@ void InitGame() {
     ghost_food.x = -1; ghost_food.y = -1;
     ghost_food_timer = 0;
     ghost_active_timer = 0;
+    ice_food.x = -1; ice_food.y = -1;
+    ice_food_timer = 0;
+    ice_active_timer = 0;
+    spider_tick = 0;
     
     num_obstacles = difficulty * 10;
     if (campaign_mode) {
@@ -86,6 +109,18 @@ void InitGame() {
             if (obstacles[i].y == 5 && (obstacles[i].x >= 2 && obstacles[i].x <= 6)) ok = 0;
         }
     }
+    
+    num_spiders = difficulty;
+    if (campaign_mode) {
+        num_spiders = campaign_level / 2;
+    }
+    if (num_spiders > 10) num_spiders = 10;
+    
+    for(int i=0; i<num_spiders; i++) {
+        spiders[i].x = random_int(GRID_WIDTH);
+        spiders[i].y = random_int(GRID_HEIGHT);
+    }
+
     PlaceFood();
 }
 
@@ -140,6 +175,19 @@ void PlaceSpecialFood() {
     special_food_timer = 40;
 }
 
+void PlaceIceFood() {
+    int ok = 0;
+    while(!ok) {
+        ice_food.x = random_int(GRID_WIDTH);
+        ice_food.y = random_int(GRID_HEIGHT);
+        ok = 1;
+        for(int i=0; i<num_obstacles; i++) if (ice_food.x == obstacles[i].x && ice_food.y == obstacles[i].y) ok = 0;
+        for(int i=0; i<snake_len; i++) if (ice_food.x == snake[i].x && ice_food.y == snake[i].y) ok = 0;
+        if (ice_food.x == food.x && ice_food.y == food.y) ok = 0;
+    }
+    ice_food_timer = 40;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE:
@@ -173,6 +221,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            // Spider Movement
+            spider_tick++;
+            if (spider_tick >= 2) {
+                spider_tick = 0;
+                for(int i=0; i<num_spiders; i++) {
+                    int dx = 0, dy = 0;
+                    int r = random_int(4);
+                    if (r==0) dx = 1; else if (r==1) dx = -1; else if (r==2) dy = 1; else if (r==3) dy = -1;
+                    int nx = spiders[i].x + dx;
+                    int ny = spiders[i].y + dy;
+                    if (nx >= 0 && nx < GRID_WIDTH && ny >= 0 && ny < GRID_HEIGHT) {
+                        int obs_hit = 0;
+                        for(int j=0; j<num_obstacles; j++) if (nx == obstacles[j].x && ny == obstacles[j].y) obs_hit = 1;
+                        if (!obs_hit) { spiders[i].x = nx; spiders[i].y = ny; }
+                    }
+                }
+            }
+
             // Collision with self and obstacles
             if(ghost_active_timer == 0) {
                 for(int i = 1; i < snake_len; i++) {
@@ -180,6 +246,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 for(int i = 0; i < num_obstacles; i++) {
                     if (snake[0].x == obstacles[i].x && snake[0].y == obstacles[i].y) game_state = 2;
+                }
+                for(int i = 0; i < num_spiders; i++) {
+                    if (snake[0].x == spiders[i].x && snake[0].y == spiders[i].y) game_state = 2;
                 }
             }
             
@@ -195,9 +264,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     snake_len++;
                 }
                 score += score_mult;
-                if (score > high_score) { high_score = score; SaveHighScore(); }
+                total_apples++;
+                if (score > high_score) { high_score = score; }
+                SaveStats();
                 if (current_speed > 30) current_speed -= 2;
-                SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+                SetTimer(hwnd, TIMER_ID, ice_active_timer > 0 ? current_speed + 100 : current_speed, NULL);
                 PlaceFood();
                 
                 if (special_food.x == -1 && random_int(100) < 20) {
@@ -206,17 +277,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (ghost_food.x == -1 && random_int(100) < 15) {
                     PlaceGhostFood();
                 }
+                if (ice_food.x == -1 && random_int(100) < 15) {
+                    PlaceIceFood();
+                }
                 
                 apples_eaten++;
                 if (campaign_mode && apples_eaten >= 10) {
                     campaign_level++;
-                    base_speed -= 10;
-                    if(base_speed < 40) base_speed = 40;
-                    InitGame();
+                    if (campaign_level > 10) {
+                        game_state = 3;
+                    } else {
+                        base_speed -= 10;
+                        if(base_speed < 40) base_speed = 40;
+                        InitGame();
+                    }
                 }
             }
 
-            
+            if (ice_active_timer > 0) {
+                ice_active_timer--;
+                if (ice_active_timer == 0) SetTimer(hwnd, TIMER_ID, current_speed, NULL);
+            }
+            if (ice_food_timer > 0) {
+                ice_food_timer--;
+                if (ice_food_timer == 0) { ice_food.x = -1; ice_food.y = -1; }
+            }
+            if (ice_food.x != -1 && snake[0].x == ice_food.x && snake[0].y == ice_food.y) {
+                MessageBeep(MB_ICONASTERISK);
+                score += score_mult * 2;
+                if (score > high_score) { high_score = score; SaveStats(); }
+                ice_active_timer = 50;
+                ice_food.x = -1; ice_food.y = -1;
+                SetTimer(hwnd, TIMER_ID, current_speed + 100, NULL);
+            }
+
             if (ghost_active_timer > 0) ghost_active_timer--;
             
             if (ghost_food_timer > 0) {
@@ -226,7 +320,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (ghost_food.x != -1 && snake[0].x == ghost_food.x && snake[0].y == ghost_food.y) {
                 MessageBeep(MB_ICONASTERISK);
                 score += score_mult * 2;
-                if (score > high_score) { high_score = score; SaveHighScore(); }
+                if (score > high_score) { high_score = score; SaveStats(); }
                 ghost_active_timer = 50; // ghost for 50 ticks
                 ghost_food.x = -1; ghost_food.y = -1;
             }
@@ -242,7 +336,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (special_food.x != -1 && snake[0].x == special_food.x && snake[0].y == special_food.y) {
                 MessageBeep(MB_ICONASTERISK);
                 score += score_mult * 5;
-                if (score > high_score) { high_score = score; SaveHighScore(); }
+                if (score > high_score) { high_score = score; SaveStats(); }
                 snake_len -= 3;
                 if (snake_len < 3) snake_len = 3;
                 special_food.x = -1;
@@ -260,7 +354,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (wParam == '4') { campaign_mode = 1; campaign_level = 1; InitGame(); SetTimer(hwnd, TIMER_ID, current_speed, NULL); }
                 else if (wParam == 'W') { wrap_mode = !wrap_mode; InvalidateRect(hwnd, NULL, TRUE); }
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (game_state == 2 && wParam == VK_RETURN) {
+            } else if ((game_state == 2 || game_state == 3) && wParam == VK_RETURN) {
                 game_state = 0;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (game_state == 1) {
@@ -291,10 +385,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char wrap_text[32];
                 wsprintf(wrap_text, "W - Toggle Wrap: %s", wrap_mode ? "ON" : "OFF");
                 TextOutA(hdc, 40, 210, wrap_text, lstrlenA(wrap_text));
+                
+                char stats_text[64];
+                wsprintf(stats_text, "Games: %d  Total Apples: %d", games_played, total_apples);
+                TextOutA(hdc, 40, 230, stats_text, lstrlenA(stats_text));
             } else if (game_state == 2) {
                 SetTextColor(hdc, RGB(255, 0, 0));
                 SetBkMode(hdc, TRANSPARENT);
                 TextOutA(hdc, 100, 100, "GAME OVER", 9);
+                TextOutA(hdc, 60, 130, "Press ENTER to return", 21);
+            } else if (game_state == 3) {
+                SetTextColor(hdc, RGB(0, 255, 0));
+                SetBkMode(hdc, TRANSPARENT);
+                TextOutA(hdc, 100, 100, "YOU WIN!", 8);
                 TextOutA(hdc, 60, 130, "Press ENTER to return", 21);
             } else {
                 HBRUSH snakeBrush;
@@ -327,6 +430,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdc, &sfr, sFoodBrush);
                     DeleteObject(sFoodBrush);
                 }
+                if (ice_food.x != -1) {
+                    HBRUSH iFoodBrush = CreateSolidBrush(RGB(173, 216, 230)); // Light blue
+                    RECT ifr = { ice_food.x * CELL_SIZE, ice_food.y * CELL_SIZE, 
+                                 (ice_food.x + 1) * CELL_SIZE - 1, (ice_food.y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &ifr, iFoodBrush);
+                    DeleteObject(iFoodBrush);
+                }
 
                 HBRUSH obsBrush = CreateSolidBrush(RGB(100, 100, 100));
                 for(int i = 0; i < num_obstacles; i++) {
@@ -335,6 +445,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdc, &or, obsBrush);
                 }
                 DeleteObject(obsBrush);
+                
+                HBRUSH spiderBrush = CreateSolidBrush(RGB(255, 0, 255)); // Magenta
+                for(int i = 0; i < num_spiders; i++) {
+                    RECT sr = { spiders[i].x * CELL_SIZE, spiders[i].y * CELL_SIZE, 
+                                (spiders[i].x + 1) * CELL_SIZE - 1, (spiders[i].y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &sr, spiderBrush);
+                }
+                DeleteObject(spiderBrush);
             }
 
             if (game_state != 0) {
@@ -369,7 +487,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
 }
 
-void MainEntry() { LoadHighScore();
+void MainEntry() { LoadStats();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
