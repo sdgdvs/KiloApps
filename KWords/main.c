@@ -169,6 +169,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_LBUTTONDOWN: {
+            if(gameWon) {
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
             int c = (x - 20) / CELL_SIZE;
@@ -284,6 +289,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(gameWon) {
                 SetTextColor(hdc, RGB(255, 215, 0));
                 TextOut(hdc, listX, listY + 20, "YOU WIN!", 8);
+                SetTextColor(hdc, RGB(200, 200, 200));
+                TextOut(hdc, listX, listY + 50, "Click anywhere", 14);
+                TextOut(hdc, listX, listY + 70, "to play again", 13);
             }
             
             SelectObject(hdc, hOldPen);
