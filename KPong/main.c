@@ -20,7 +20,13 @@ int powerup_y = -1;
 int powerup_active = 0;
 int p1_buff_timer = 0;
 int p2_buff_timer = 0;
+int p1_debuff_timer = 0;
+int p2_debuff_timer = 0;
+int powerup_type = 0;
 int high_rally = 0;
+int lifetime_wins = 0;
+int obs_y = H / 2 - 20;
+int obs_dy = 3;
 
 int p1_y = H / 2 - 25;
 int p2_y = H / 2 - 25;
@@ -36,13 +42,21 @@ int difficulty = 2;
 int ai_speeds[] = {0, 2, 4, 6};
 int start_speeds[] = {0, 4, 5, 7};
 
-void LoadHighRally() {
+void LoadStats() {
     FILE* f = fopen("kpong_stats.dat", "rb");
-    if(f) { fread(&high_rally, sizeof(int), 1, f); fclose(f); }
+    if(f) { 
+        fread(&high_rally, sizeof(int), 1, f); 
+        fread(&lifetime_wins, sizeof(int), 1, f);
+        fclose(f); 
+    }
 }
-void SaveHighRally() {
+void SaveStats() {
     FILE* f = fopen("kpong_stats.dat", "wb");
-    if(f) { fwrite(&high_rally, sizeof(int), 1, f); fclose(f); }
+    if(f) { 
+        fwrite(&high_rally, sizeof(int), 1, f); 
+        fwrite(&lifetime_wins, sizeof(int), 1, f);
+        fclose(f); 
+    }
 }
 
 void ResetBall() {
@@ -78,13 +92,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Dynamic paddle size
             if(p1_buff_timer > 0) p1_buff_timer--;
             if(p2_buff_timer > 0) p2_buff_timer--;
+            if(p1_debuff_timer > 0) p1_debuff_timer--;
+            if(p2_debuff_timer > 0) p2_debuff_timer--;
             
             p1_pad_h = 50 - (rally * 2); if(p1_pad_h < 20) p1_pad_h = 20;
             p2_pad_h = 50 - (rally * 2); if(p2_pad_h < 20) p2_pad_h = 20;
             
-            if(campaign_mode && campaign_level >= 3) { p2_pad_h -= 10; if(p2_pad_h < 15) p2_pad_h = 15; }
+            if(campaign_mode && campaign_level >= 3) { p2_pad_h -= 10; }
+            if(campaign_mode && campaign_level == 10) { p2_pad_h += 50; } // Boss paddle
+            
+            if(p1_pad_h < 15) p1_pad_h = 15;
+            if(p2_pad_h < 15) p2_pad_h = 15;
+
             if(p1_buff_timer > 0) p1_pad_h += 30;
             if(p2_buff_timer > 0) p2_pad_h += 30;
+            if(p1_debuff_timer > 0) p1_pad_h = 15;
+            if(p2_debuff_timer > 0) p2_pad_h = 15;
 
             // Input
             if (GetAsyncKeyState(VK_UP) & 0x8000) p1_y -= 6;
@@ -92,14 +115,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_y < 0) p1_y = 0;
             if (p1_y > H - p1_pad_h) p1_y = H - p1_pad_h;
 
-            // AI (simple)
             int ai_spd = ai_speeds[difficulty];
             if(campaign_mode) {
                 if(campaign_level == 1) ai_spd = 2;
                 else if(campaign_level == 2) ai_spd = 4;
-                else if(campaign_level == 3) ai_spd = 6;
-                else if(campaign_level == 4) ai_spd = 8;
-                else ai_spd = 10;
+                else if(campaign_level == 3) ai_spd = 5;
+                else if(campaign_level == 4) ai_spd = 6;
+                else if(campaign_level == 5) ai_spd = 7;
+                else if(campaign_level == 6) ai_spd = 8;
+                else if(campaign_level == 7) ai_spd = 9;
+                else if(campaign_level == 8) ai_spd = 10;
+                else if(campaign_level == 9) ai_spd = 12;
+                else ai_spd = 15;
             }
             if (ball_y > p2_y + p2_pad_h / 2 + 10) p2_y += ai_spd;
             if (ball_y < p2_y + p2_pad_h / 2 - 10) p2_y -= ai_spd;
@@ -110,16 +137,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(powerup_active > 0) powerup_active--;
             if(powerup_x == -1 && rand() % 200 == 0) {
                 powerup_x = W/4 + rand()%(W/2); powerup_y = H/4 + rand()%(H/2); powerup_active = 250;
+                powerup_type = rand() % 2;
             }
             if(powerup_active == 0) { powerup_x = -1; powerup_y = -1; }
             
+            // Obstacles
+            if(campaign_mode && campaign_level >= 6) {
+                obs_y += obs_dy;
+                if(obs_y < 0) { obs_y = 0; obs_dy = -obs_dy; }
+                if(obs_y > H - 40) { obs_y = H - 40; obs_dy = -obs_dy; }
+                
+                // Obstacle collision
+                if(ball_x + BALL_SIZE > W/2 - 10 && ball_x < W/2 + 10 && ball_y + BALL_SIZE > obs_y && ball_y < obs_y + 40) {
+                    ball_dx = -ball_dx;
+                    MessageBeep(0xFFFFFFFF);
+                }
+            }
+
             // Ball logic
-            if(campaign_mode && campaign_level == 5) { ball_x += (ball_dx > 0 ? ball_dx + 2 : ball_dx - 2); ball_y += (ball_dy > 0 ? ball_dy + 1 : ball_dy - 1); }
-            else { ball_x += ball_dx; ball_y += ball_dy; }
+            if(campaign_mode && campaign_level >= 5 && campaign_level < 10) { 
+                ball_x += (ball_dx > 0 ? ball_dx + 2 : ball_dx - 2); 
+                ball_y += (ball_dy > 0 ? ball_dy + 1 : ball_dy - 1); 
+            } else if (campaign_mode && campaign_level == 10) {
+                ball_x += (ball_dx > 0 ? ball_dx + 3 : ball_dx - 3); 
+                ball_y += (ball_dy > 0 ? ball_dy + 2 : ball_dy - 2); 
+            } else { 
+                ball_x += ball_dx; ball_y += ball_dy; 
+            }
             
             if(powerup_x != -1 && ball_x < powerup_x+15 && ball_x+BALL_SIZE > powerup_x && ball_y < powerup_y+15 && ball_y+BALL_SIZE > powerup_y) {
-                if(last_hitter == 1) p1_buff_timer = 200;
-                else if(last_hitter == 2) p2_buff_timer = 200;
+                if (powerup_type == 0) {
+                    if(last_hitter == 1) p1_buff_timer = 200;
+                    else if(last_hitter == 2) p2_buff_timer = 200;
+                } else {
+                    if(last_hitter == 1) p2_debuff_timer = 200;
+                    else if(last_hitter == 2) p1_debuff_timer = 200;
+                }
                 powerup_x = -1; powerup_y = -1;
                 MessageBeep(MB_ICONASTERISK);
             }
@@ -135,7 +188,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ball_dx = -ball_dx;
                 last_hitter = 1;
                 rally++;
-                if(rally > high_rally) { high_rally = rally; SaveHighRally(); }
+                if(rally > high_rally) { high_rally = rally; SaveStats(); }
                 float hit_pos = (float)((ball_y + BALL_SIZE/2.0f) - (p1_y + p1_pad_h/2.0f)) / (p1_pad_h/2.0f);
                 ball_dy += (int)(hit_pos * 5.0f);
                 if (ball_dy > 10) ball_dy = 10;
@@ -148,7 +201,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ball_dx = -ball_dx;
                 last_hitter = 2;
                 rally++;
-                if(rally > high_rally) { high_rally = rally; SaveHighRally(); }
+                if(rally > high_rally) { high_rally = rally; SaveStats(); }
                 float hit_pos = (float)((ball_y + BALL_SIZE/2.0f) - (p2_y + p2_pad_h/2.0f)) / (p2_pad_h/2.0f);
                 ball_dy += (int)(hit_pos * 5.0f);
                 if (ball_dy > 10) ball_dy = 10;
@@ -165,10 +218,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_score >= target_score) {
                 if(campaign_mode) {
                     campaign_level++; p1_score = 0; p2_score = 0; rally = 0;
-                    if(campaign_level > 5) { win_screen = 1; campaign_mode = 0; game_over = 1; }
+                    if(campaign_level > 10) { 
+                        win_screen = 1; campaign_mode = 0; game_over = 1; 
+                        lifetime_wins++; SaveStats();
+                    }
                     ResetBall();
                 } else {
                     game_over = 1;
+                    lifetime_wins++; SaveStats();
                 }
             }
             if (p2_score >= target_score) {
@@ -205,10 +262,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rBall = { ball_x, ball_y, ball_x + BALL_SIZE, ball_y + BALL_SIZE };
             FillRect(memDC, &rBall, ball_brush);
             if(powerup_x != -1) {
-                HBRUSH pu_brush = CreateSolidBrush(RGB(255, 255, 0));
+                HBRUSH pu_brush = CreateSolidBrush(powerup_type == 0 ? RGB(255, 255, 0) : RGB(255, 50, 50));
                 RECT rPu = { powerup_x, powerup_y, powerup_x+15, powerup_y+15 };
                 FillRect(memDC, &rPu, pu_brush);
                 DeleteObject(pu_brush);
+            }
+            if(campaign_mode && campaign_level >= 6) {
+                HBRUSH obs_brush = CreateSolidBrush(RGB(150, 150, 150));
+                RECT rObs = { W/2 - 10, obs_y, W/2 + 10, obs_y + 40 };
+                FillRect(memDC, &rObs, obs_brush);
+                DeleteObject(obs_brush);
             }
             
             DeleteObject(p1_brush);
@@ -223,9 +286,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, W / 2 - 20, 10, scoreStr, lstrlenA(scoreStr));
             
             char rallyStr[64];
-            wsprintfA(rallyStr, "RALLY: %d  HIGH: %d", rally, high_rally);
+            wsprintfA(rallyStr, "RALLY: %d  HIGH: %d  WINS: %d", rally, high_rally, lifetime_wins);
             SetTextColor(memDC, RGB(180, 180, 180));
-            TextOutA(memDC, W / 2 - 50, 30, rallyStr, lstrlenA(rallyStr));
+            TextOutA(memDC, W / 2 - 80, 30, rallyStr, lstrlenA(rallyStr));
             
             char diffStr[32];
             if(campaign_mode) {
@@ -274,7 +337,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 void MainEntry() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASS wc = {0};
-    LoadHighRally();
+    LoadStats();
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = "KPongApp";

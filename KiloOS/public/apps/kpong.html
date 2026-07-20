@@ -78,11 +78,17 @@
   let powerupX = -1;
   let powerupY = -1;
   let powerupActive = 0;
+  let powerupType = 0;
   let p1BuffTimer = 0;
   let p2BuffTimer = 0;
+  let p1DebuffTimer = 0;
+  let p2DebuffTimer = 0;
   let winScreen = false;
   let highRally = localStorage.getItem('kpong_high_rally') || 0;
-  let p1y = H/2 - padH/2, p2y = H/2 - padH/2;
+  let lifetimeWins = parseInt(localStorage.getItem('kpong_wins')) || 0;
+  let obsY = H/2 - 20;
+  let obsDy = 3;
+  let p1y = H/2 - 25, p2y = H/2 - 25;
   let bx = W/2 - BALL_SIZE/2, by = H/2 - BALL_SIZE/2;
   let bdx = 5, bdy = 3;
   let s1 = 0, s2 = 0;
@@ -139,13 +145,22 @@
 
       if(p1BuffTimer > 0) p1BuffTimer--;
       if(p2BuffTimer > 0) p2BuffTimer--;
+      if(p1DebuffTimer > 0) p1DebuffTimer--;
+      if(p2DebuffTimer > 0) p2DebuffTimer--;
       
       p1PadH = 50 - (rally * 2); if(p1PadH < 20) p1PadH = 20;
       p2PadH = 50 - (rally * 2); if(p2PadH < 20) p2PadH = 20;
       
-      if(campaignMode && campaignLevel >= 3) { p2PadH -= 10; if(p2PadH < 15) p2PadH = 15; }
+      if(campaignMode && campaignLevel >= 3) { p2PadH -= 10; }
+      if(campaignMode && campaignLevel === 10) { p2PadH += 50; }
+      
+      if(p1PadH < 15) p1PadH = 15;
+      if(p2PadH < 15) p2PadH = 15;
+
       if(p1BuffTimer > 0) p1PadH += 30;
       if(p2BuffTimer > 0) p2PadH += 30;
+      if(p1DebuffTimer > 0) p1PadH = 15;
+      if(p2DebuffTimer > 0) p2PadH = 15;
 
       if (keys['ArrowUp'] || keys['w']) p1y -= 6;
       if (keys['ArrowDown'] || keys['s']) p1y += 6;
@@ -156,9 +171,14 @@
       if(campaignMode) {
           if(campaignLevel===1) aiSpeed = 2;
           else if(campaignLevel===2) aiSpeed = 4;
-          else if(campaignLevel===3) aiSpeed = 6;
-          else if(campaignLevel===4) aiSpeed = 8;
-          else aiSpeed = 10;
+          else if(campaignLevel===3) aiSpeed = 5;
+          else if(campaignLevel===4) aiSpeed = 6;
+          else if(campaignLevel===5) aiSpeed = 7;
+          else if(campaignLevel===6) aiSpeed = 8;
+          else if(campaignLevel===7) aiSpeed = 9;
+          else if(campaignLevel===8) aiSpeed = 10;
+          else if(campaignLevel===9) aiSpeed = 12;
+          else aiSpeed = 15;
       }
       if (by > p2y + p2PadH/2 + 10) p2y += aiSpeed;
       if (by < p2y + p2PadH/2 - 10) p2y -= aiSpeed;
@@ -171,19 +191,39 @@
           powerupX = W/4 + Math.random()*(W/2);
           powerupY = H/4 + Math.random()*(H/2);
           powerupActive = 250;
+          powerupType = Math.floor(Math.random() * 2);
       }
       if(powerupActive <= 0) { powerupX = -1; powerupY = -1; }
       
-      if(campaignMode && campaignLevel === 5) {
+      if (campaignMode && campaignLevel >= 6) {
+          obsY += obsDy;
+          if(obsY < 0) { obsY = 0; obsDy = -obsDy; }
+          if(obsY > H - 40) { obsY = H - 40; obsDy = -obsDy; }
+          
+          if(bx + BALL_SIZE > W/2 - 10 && bx < W/2 + 10 && by + BALL_SIZE > obsY && by < obsY + 40) {
+              bdx = -bdx;
+              playSound(800, 'hit');
+          }
+      }
+
+      if(campaignMode && campaignLevel >= 5 && campaignLevel < 10) {
           bx += (bdx > 0 ? bdx + 2 : bdx - 2);
           by += (bdy > 0 ? bdy + 1 : bdy - 1);
+      } else if (campaignMode && campaignLevel === 10) {
+          bx += (bdx > 0 ? bdx + 3 : bdx - 3);
+          by += (bdy > 0 ? bdy + 2 : bdy - 2);
       } else {
           bx += bdx; by += bdy;
       }
       
       if(powerupX !== -1 && bx < powerupX+15 && bx+BALL_SIZE > powerupX && by < powerupY+15 && by+BALL_SIZE > powerupY) {
-          if(lastHitter === 1) p1BuffTimer = 200;
-          else if(lastHitter === 2) p2BuffTimer = 200;
+          if (powerupType === 0) {
+              if(lastHitter === 1) p1BuffTimer = 200;
+              else if(lastHitter === 2) p2BuffTimer = 200;
+          } else {
+              if(lastHitter === 1) p2DebuffTimer = 200;
+              else if(lastHitter === 2) p1DebuffTimer = 200;
+          }
           powerupX = -1; powerupY = -1;
           playSound(1000, 'score');
       }
@@ -234,8 +274,14 @@
           if(s1 >= tScore) {
               if(campaignMode) {
                   campaignLevel++; s1=0; s2=0; rally=0; document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
-                  if(campaignLevel > 5) { winScreen = true; campaignMode = false; gameOver = true; }
-              } else { gameOver = true; }
+                  if(campaignLevel > 10) { 
+                      winScreen = true; campaignMode = false; gameOver = true; 
+                      lifetimeWins++; localStorage.setItem('kpong_wins', lifetimeWins);
+                  }
+              } else { 
+                  gameOver = true; 
+                  lifetimeWins++; localStorage.setItem('kpong_wins', lifetimeWins);
+              }
           }
       }
   }
@@ -271,6 +317,19 @@
       ctx.arc(bx + BALL_SIZE/2, by + BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI * 2);
       ctx.fill();
       
+      if(powerupX !== -1) {
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = powerupType === 0 ? 'yellow' : 'red';
+          ctx.fillStyle = powerupType === 0 ? 'yellow' : 'red';
+          ctx.fillRect(powerupX, powerupY, 15, 15);
+      }
+      
+      if (campaignMode && campaignLevel >= 6) {
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = 'gray';
+          ctx.fillRect(W/2 - 10, obsY, 20, 40);
+      }
+      
       // Draw particles
       ctx.shadowBlur = 0;
       for (let p of particles) {
@@ -288,7 +347,7 @@
       ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.font = '14px Inter';
       ctx.textAlign = 'center';
-      ctx.fillText("RALLY: " + rally + "  HIGH: " + highRally, W/2, 20);
+      ctx.fillText("RALLY: " + rally + "  HIGH: " + highRally + "  WINS: " + lifetimeWins, W/2, 20);
 
       if(campaignMode) {
           ctx.fillText("CAMPAIGN: LVL " + campaignLevel, W/2, 40);

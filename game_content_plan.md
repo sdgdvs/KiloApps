@@ -90,7 +90,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KRogue     | Tier 2          | Feature-Expanded       | Loop 5 Completed | Web upgraded to basic playable version. EXE is a full roguelike. Expanded to 20 levels, added Balrog, Titan, Beholder, Mind Flayer, Void biome. |
 | KSnake     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Spider enemies, Ice powerup, stats, 10-level campaign win. |
 | KTetris    | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, dynamic garbage, hard drop scoring. |
-| KPong      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KPong      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-Level campaign, moving obstacles, debuff powerups, stats. |
 | KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | KSolitaire | Tier 1          | Feature-Expanded       | Needs Improvement | Memory Match game in both Web and EXE. Loop 5 pending. |
 | KSpace     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
@@ -171,3 +171,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Expanded to 20 levels, added Balrog, Titan, Beholder, Mind Flayer, and Void biome to both EXE and HTML)
 - [x] KSnake (Expanded to 10-Level campaign win, added Spider enemies, Ice power-up, and Lifetime Stats tracking to both EXE and HTML)
 - [x] KTetris (Expanded Campaign to 10 stages, added Dynamic Garbage injection in later stages, and Hard Drop scoring to both EXE and HTML)
+- [x] KPong (Expanded Campaign to 10 levels, added moving obstacles, debuff powerups, and Lifetime Wins tracking to both EXE and HTML)
