@@ -86,19 +86,21 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
-| KMines     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. |
-| KRogue     | Tier 2          | Feature-Expanded       | Expanded | Web upgraded to basic playable version. EXE is a full roguelike. |
-| KSnake     | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KTetris    | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KPong      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KMaze      | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KSolitaire | Tier 1          | Feature-Expanded       | Expanded | Memory Match game in both Web and EXE. |
-| KSpace     | Tier 1          | Feature-Expanded       | Expanded          | Full parity. |
-| KPac       | Tier 1          | Feature-Expanded       | Expanded | Full parity. |
-| KChess     | Tier 1          | Polished / Expanded    | Expanded          | Full parity. Loop 4 complete. |
-| KBreakout  | Tier 1          | Feature-Expanded       | Expanded          | Full parity. Loop 4 complete. |
-| K2048      | Tier 1          | Feature-Expanded       | Expanded          | Full parity. Loop 4 complete. |
-| KSudoku    | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Add to current or next loop. |
+| KMines     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KRogue     | Tier 2          | Feature-Expanded       | Needs Improvement | Web upgraded to basic playable version. EXE is a full roguelike. Loop 5 pending. |
+| KSnake     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KTetris    | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KPong      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KSolitaire | Tier 1          | Feature-Expanded       | Needs Improvement | Memory Match game in both Web and EXE. Loop 5 pending. |
+| KSpace     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. Loop 5 pending. |
+| KBreakout  | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| K2048      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
+| KSudoku    | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Loop 5 pending. |
+| KAsteroids | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Loop 5 pending. |
+| KFreecell  | Tier 1          | Creator-Created        | Needs Improvement | New game — created by Creator agent. Loop 5 pending. |
 
 ## Progress Log
 
@@ -157,3 +159,5 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KChess (Added 5-Stage Campaign Mode, 1-ply Minimax AI Difficulty, and Lifetime Statistics Tracking to both EXE and HTML)
 - [x] KBreakout (Added 5-Stage Campaign Mode, Extra Life/Piercing Ball powerups, and Lifetime Statistics Tracking to both EXE and HTML)
 - [x] K2048 (Added 10-Stage Campaign Mode, Bomb Tiles (-3), and Threes Ruleset to both EXE and HTML)
+
+**Loop 5**

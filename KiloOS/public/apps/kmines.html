@@ -59,12 +59,14 @@
       <button id="btn-med" onclick="setDiff('med')">Medium</button>
       <button id="btn-hard" onclick="setDiff('hard')">Hard</button>
       <button id="btn-camp" onclick="toggleCampaign()">Camp: Off</button>
+      <button id="btn-radar" onclick="useRadar()" style="display:none; background:var(--primary); color:#000;">Radar (0)</button>
     </div>
     <div class="toolbar">
       <div class="counter" id="flag-count" title="Mines">010</div>
       <button class="face-btn" id="face" onclick="resetLevel()">🙂</button>
       <div class="counter" id="time-count" title="Time">000</div>
       <div class="counter" id="best-count" title="Best Time" style="color:var(--warning);">999</div>
+      <div class="counter" id="stats-count" title="Played / Wins" style="color:#c0caf5; font-size:16px;">P:0 W:0</div>
       <div class="counter" id="shield-count" title="Shields" style="color:var(--primary); display:none;">000</div>
     </div>
     <div class="board" id="board" oncontextmenu="return false;"></div>
@@ -82,9 +84,12 @@
     let timer = null;
     let currentDiff = 'easy';
     let bestTime = localStorage.getItem('kmines_bestTime_easy') || 999;
+    let totalPlayed = parseInt(localStorage.getItem('kmines_totalPlayed') || '0');
+    let totalWins = parseInt(localStorage.getItem('kmines_totalWins') || '0');
     let campaignMode = false;
     let campaignLevel = 1;
     let shields = 0;
+    let scans = 0;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     
     function playSound(freq, duration, type='sine') {
@@ -112,6 +117,8 @@
       flags = 0;
       time = 0;
       bestTime = localStorage.getItem('kmines_bestTime_' + currentDiff) || 999;
+      totalPlayed = parseInt(localStorage.getItem('kmines_totalPlayed') || '0');
+      totalWins = parseInt(localStorage.getItem('kmines_totalWins') || '0');
       clearInterval(timer);
       document.getElementById('face').innerText = '🙂';
       document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
@@ -121,16 +128,40 @@
           document.getElementById('best-count').title = "Level";
           document.getElementById('shield-count').style.display = "block";
           document.getElementById('shield-count').innerText = formatNumber(shields);
+          document.getElementById('stats-count').style.display = "none";
+          document.getElementById('btn-radar').style.display = "inline-block";
+          document.getElementById('btn-radar').innerText = "Radar (" + scans + ")";
       } else {
           document.getElementById('best-count').innerText = formatNumber(bestTime);
           document.getElementById('best-count').title = "Best Time";
           document.getElementById('shield-count').style.display = "none";
+          document.getElementById('stats-count').style.display = "block";
+          document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
+          document.getElementById('btn-radar').style.display = "none";
       }
       
       const board = document.getElementById('board');
       board.style.gridTemplateColumns = `repeat(${COLS}, 30px)`;
       board.style.gridTemplateRows = `repeat(${ROWS}, 30px)`;
       render();
+    }
+
+    function useRadar() {
+        if (!campaignMode || scans <= 0 || gameOver || !initialized) return;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                if ((grid[r][c] & 8) && !(grid[r][c] & 4) && !(grid[r][c] & 2)) {
+                    grid[r][c] |= 4; // flag it
+                    flags++;
+                    scans--;
+                    document.getElementById('btn-radar').innerText = "Radar (" + scans + ")";
+                    document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
+                    playSound(1200, 0.1, 'sine');
+                    render();
+                    return;
+                }
+            }
+        }
     }
 
     function resetLevel() {
@@ -159,6 +190,11 @@
         else if (campaignLevel === 3) { ROWS=16; COLS=16; MINES=45; }
         else if (campaignLevel === 4) { ROWS=20; COLS=20; MINES=75; }
         else if (campaignLevel === 5) { ROWS=24; COLS=24; MINES=120; }
+        else if (campaignLevel === 6) { ROWS=24; COLS=30; MINES=150; }
+        else if (campaignLevel === 7) { ROWS=26; COLS=30; MINES=180; }
+        else if (campaignLevel === 8) { ROWS=28; COLS=30; MINES=200; }
+        else if (campaignLevel === 9) { ROWS=30; COLS=30; MINES=220; }
+        else if (campaignLevel === 10) { ROWS=30; COLS=30; MINES=250; }
         else {
             campaignMode = false;
             document.getElementById('btn-camp').innerText = "Camp: Off";
@@ -167,7 +203,8 @@
             alert("Campaign Complete!");
             return;
         }
-        shields = 1;
+        shields = campaignLevel >= 5 ? 2 : 1;
+        scans = 3;
         document.querySelectorAll('.diff-bar button').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-camp').classList.add('active');
         init();
@@ -208,6 +245,8 @@
         }
       }
       initialized = true;
+      totalPlayed++;
+      localStorage.setItem('kmines_totalPlayed', totalPlayed);
       startTimer();
     }
 
@@ -308,11 +347,14 @@
         playSound(800, 0.5, 'square');
         gameOver = true;
         clearInterval(timer);
+        totalWins++;
+        localStorage.setItem('kmines_totalWins', totalWins);
         if (!campaignMode && time < bestTime) {
-          bestTime = time;
-          localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
-          document.getElementById('best-count').innerText = formatNumber(bestTime);
+            bestTime = time;
+            localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
+            document.getElementById('best-count').innerText = formatNumber(bestTime);
         }
+        document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
         document.getElementById('face').innerText = '😎';
         flags = MINES;
         document.getElementById('flag-count').innerText = formatNumber(0);
