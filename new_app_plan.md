@@ -59,7 +59,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Add Multiple Difficulty Levels (Easy/Medium/Hard, affecting grid size and number of hidden words).
 - [x] Phase 6: Add Category Themes (e.g. Animals, Countries, Programming) with distinct word lists.
 - [x] Phase 7: Add a Timer and Scoring System (faster completion yields a higher score).
-- Phase 8: Add Sound Effects (word selection tick, word found chime, puzzle complete fanfare).
+- [x] Phase 8: Add Sound Effects (word selection tick, word found chime, puzzle complete fanfare).
 - Phase 9: Add Visual Polish (smooth highlighting animations and strikethrough for found words on the word list).
 - Phase 10: Add a Hint System (highlight the first letter of a word, with a score/time penalty).
 - Phase 11: Add Save/Load State (persist current grid, selected words, timer, and score).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KWords
-**Goal:** Phase 8
+**Goal:** Phase 9
 
 
 ## App Lifecycle (14 phases per app)

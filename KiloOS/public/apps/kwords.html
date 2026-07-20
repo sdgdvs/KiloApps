@@ -155,6 +155,52 @@
     </div>
   </div>
   <script>
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playSound(type) {
+        if (!audioCtx) audioCtx = new AudioContext();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+        
+        if (type === 'tick') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+            gainNode.gain.setValueAtTime(0.05, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } else if (type === 'chime') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now); 
+            osc.frequency.setValueAtTime(659.25, now + 0.1); 
+            osc.frequency.setValueAtTime(783.99, now + 0.2); 
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.1, now + 0.05);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'fanfare') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, now); 
+            osc.frequency.setValueAtTime(554.37, now + 0.15); 
+            osc.frequency.setValueAtTime(659.25, now + 0.3); 
+            osc.frequency.setValueAtTime(880, now + 0.45); 
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(0.2, now + 0.05);
+            gainNode.gain.setValueAtTime(0.2, now + 0.45);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.0);
+            osc.start(now);
+            osc.stop(now + 1.0);
+        }
+    }
+
     const THEMES = {
       "Programming": ["ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT", "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL", "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD", "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"],
       "Animals": ["ELEPHANT", "GIRAFFE", "PENGUIN", "KANGAROO", "DOLPHIN", "TIGER", "CHEETAH", "MONKEY", "OSTRICH", "IGUANA", "ZEBRA", "GORILLA", "PANTHER", "LEOPARD", "HIPPO", "RHINO", "CROCODILE", "ALLIGATOR", "CHIMPANZEE", "SNAIL", "OCTOPUS", "SHARK", "WHALE", "WALRUS", "SEAL", "BEAR", "WOLF", "FOX", "RABBIT", "DEER"],
@@ -317,12 +363,17 @@
         isSelecting = true;
         startCell = {r, c};
         currentSelection = [{r, c}];
+        playSound('tick');
         updateGridVisuals();
     }
 
     function updateSelection(r, c, e) {
         if (!isSelecting) return;
-        currentSelection = getLineCells(startCell.r, startCell.c, r, c);
+        let newSelection = getLineCells(startCell.r, startCell.c, r, c);
+        if (newSelection.length !== currentSelection.length) {
+            playSound('tick');
+        }
+        currentSelection = newSelection;
         updateGridVisuals();
     }
 
@@ -361,9 +412,12 @@
                 });
                 
                 if (foundWords.length === wordsToFind.length) {
+                    playSound('fanfare');
                     clearInterval(timerInterval);
                     document.getElementById('final-score').textContent = score;
                     document.getElementById('win-message').style.display = 'block';
+                } else {
+                    playSound('chime');
                 }
             }
         }

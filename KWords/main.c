@@ -73,6 +73,32 @@ RECT btnEasy = {370, 10, 430, 35};
 RECT btnMed  = {440, 10, 510, 35};
 RECT btnHard = {520, 10, 580, 35};
 
+DWORD WINAPI SoundTick(LPVOID lpParam) {
+    Beep(1500, 10);
+    return 0;
+}
+
+DWORD WINAPI SoundChime(LPVOID lpParam) {
+    Beep(523, 100);
+    Beep(659, 100);
+    Beep(784, 200);
+    return 0;
+}
+
+DWORD WINAPI SoundFanfare(LPVOID lpParam) {
+    Beep(440, 150);
+    Beep(554, 150);
+    Beep(659, 150);
+    Beep(880, 400);
+    return 0;
+}
+
+void PlaySoundEffect(int type) {
+    if (type == 0) CreateThread(NULL, 0, SoundTick, NULL, 0, NULL);
+    else if (type == 1) CreateThread(NULL, 0, SoundChime, NULL, 0, NULL);
+    else if (type == 2) CreateThread(NULL, 0, SoundFanfare, NULL, 0, NULL);
+}
+
 void InitGame() {
     srand((unsigned int)time(NULL));
     memset(foundGrid, 0, sizeof(foundGrid));
@@ -198,6 +224,9 @@ void EndSelection(HWND hwnd) {
         
         if (foundCount == wordCount) {
             gameWon = true;
+            PlaySoundEffect(2);
+        } else if (found) {
+            PlaySoundEffect(1);
         }
     }
     
@@ -244,6 +273,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 isSelecting = true;
                 startR = curR = r;
                 startC = curC = c;
+                PlaySoundEffect(0);
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -256,8 +286,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int r = (y - 50) / CELL_SIZE;
                 if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
                     if(curR != r || curC != c) {
+                        int oldR = curR, oldC = curC;
                         curR = r;
                         curC = c;
+                        int dummyR[MAX_GRID_SIZE*2], dummyC[MAX_GRID_SIZE*2];
+                        int oldSelCount = 0, newSelCount = 0;
+                        GetLineCells(startR, startC, oldR, oldC, dummyR, dummyC, &oldSelCount);
+                        GetLineCells(startR, startC, curR, curC, dummyR, dummyC, &newSelCount);
+                        if (oldSelCount != newSelCount) {
+                            PlaySoundEffect(0);
+                        }
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 }
