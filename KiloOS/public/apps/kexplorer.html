@@ -32,9 +32,9 @@
 </head>
 <body>
   <div class="toolbar">
-    <button onclick="refresh()">Refresh</button>
+    <button onclick="refresh()" aria-label="Refresh">Refresh</button>
     <div style="flex: 1"></div>
-    <select id="view-mode" onchange="toggleViewMode(this.value)" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; font-family: 'Inter', sans-serif; font-size: 12px;">
+    <select id="view-mode" onchange="toggleViewMode(this.value)" aria-label="View Mode" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; font-family: 'Inter', sans-serif; font-size: 12px;">
       <option value="icon">Icon View</option>
       <option value="list">List View</option>
     </select>
@@ -87,12 +87,18 @@
       if (currentPath !== '/') {
         const upItem = document.createElement('div');
         upItem.className = 'file-item';
+        upItem.tabIndex = 0;
+        upItem.setAttribute('role', 'button');
+        upItem.setAttribute('aria-label', 'Go up one directory');
         upItem.innerHTML = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="none" stroke="#ffd700" stroke-width="2"/><path d="M12 16V10M9 13l3-3 3 3" fill="none" stroke="#ffd700" stroke-width="2"/></svg></div><div class="file-name">..</div>`;
         upItem.ondblclick = () => {
           const parts = currentPath.split('/').filter(Boolean);
           parts.pop();
           currentPath = parts.length === 0 ? '/' : '/' + parts.join('/') + '/';
           refresh();
+        };
+        upItem.onkeydown = (e) => {
+          if (e.key === 'Enter') upItem.ondblclick();
         };
         list.appendChild(upItem);
       }
@@ -127,11 +133,17 @@
       foldersToShow.forEach(folderName => {
         const item = document.createElement('div');
         item.className = 'file-item';
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-label', `Folder: ${folderName}`);
         const escFolder = folderName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         item.innerHTML = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="none" stroke="#ffd700" stroke-width="2"/></svg></div><div class="file-name">${escFolder}</div>`;
         item.ondblclick = () => {
           currentPath = currentPath + folderName + '/';
           refresh();
+        };
+        item.onkeydown = (e) => {
+          if (e.key === 'Enter') item.ondblclick();
         };
         list.appendChild(item);
       });
@@ -142,6 +154,9 @@
         const escName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         const item = document.createElement('div');
         item.className = 'file-item';
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
+        item.setAttribute('aria-label', `File: ${name}`);
         let iconHtml;
         if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log')) {
           iconHtml = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="var(--primary)" stroke-width="2" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline fill="none" stroke="var(--primary)" stroke-width="2" points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13" stroke="var(--primary)" stroke-width="2"/><line x1="8" y1="17" x2="16" y2="17" stroke="var(--primary)" stroke-width="2"/><line x1="8" y1="9" x2="10" y2="9" stroke="var(--primary)" stroke-width="2"/></svg></div>`;
@@ -163,6 +178,9 @@
           let appId = lowerName.endsWith('.png') || lowerName.endsWith('.jpg') ? 'kpaint' : 'kpad';
           if (lowerName.endsWith('quarantine.exe')) appId = 'kquarantine';
           window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: appId, path: fullPath }, '*');
+        };
+        item.onkeydown = (e) => {
+          if (e.key === 'Enter') item.ondblclick();
         };
         list.appendChild(item);
       });

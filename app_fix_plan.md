@@ -113,5 +113,6 @@ Pass 1 Complete.
 - **KContacts**: Fixed XSS vulnerability in `kcontacts.html` contact list rendering using `textContent` and safe DOM creation. Added keyboard accessibility attributes and handlers. Verified `main.c` (no issues found).
 - **KConverter**: Added ARIA labels and keyboard accessibility to tabs and inputs in `kconverter.html`. Verified `main.c` (no leaks or bugs found).
 - **KDB**: Fixed XSS vulnerability in `kdb.html` by safely creating DOM nodes and added ARIA labels for accessibility. Fixed GDI resource leak (`hBgBrush`) in `main.c` on `WM_DESTROY`.
+- **KExplorer**: Added ARIA labels, tab indexes, and keyboard enter-key support for file/folder navigation in `kexplorer.html`. (Web-only app, no `main.c`).
 
-Start Pass 2 (Deeper Quality checks). Next target: KDraw (or next in alphabetical order).
+Start Pass 2 (Deeper Quality checks). Next target: KFont (or next in alphabetical order).
