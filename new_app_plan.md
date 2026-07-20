@@ -58,8 +58,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - [x] Phase 5: Add a Score System (calculate territory using flood fill and captured stones to determine winner at game end).
 - [x] Phase 6: Add Visual Polish (smooth stone placement animations, hover effect on valid intersections).
-- [ ] Phase 7: Add a Simple AI Opponent (random valid moves or basic capture/defend heuristics).
-- Phase 8: Add Sound Effects (stone clack on placement, capture sound, game over chime).
+- [x] Phase 7: Add a Simple AI Opponent (random valid moves or basic capture/defend heuristics).
+- [ ] Phase 8: Add Sound Effects (stone clack on placement, capture sound, game over chime).
 - Phase 9: Add Save/Load State (persist current board, captures, and turn).
 - Phase 10: Add Visual Capture indicators (highlight stones before they are captured or animate removal).
 - Phase 11: Add Undo/Redo functionality (keep a history of board states).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KGo
-**Goal:** Phase 7
+**Goal:** Phase 8
 
 
 ## App Lifecycle (14 phases per app)

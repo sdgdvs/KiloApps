@@ -124,6 +124,7 @@
       <option value="19">19x19</option>
     </select>
     <button id="btn-new">New Game</button>
+    <label style="display:flex;align-items:center;margin-left:10px;cursor:pointer;"><input type="checkbox" id="ai-toggle" checked> Play vs AI (White)</label>
   </div>
 
 <script>
@@ -317,6 +318,68 @@
     lastMove = {x, y};
     updateStatus();
     drawBoard();
+    
+    if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
+      setTimeout(makeAIMove, 500);
+    }
+  }
+
+  function isValidMove(x, y, color) {
+    if (board[y][x] !== null) return {valid: false};
+    let boardBackup = deepCopy(board);
+    let capBackup = { B: captures.B, W: captures.W };
+    
+    board[y][x] = color;
+    let opp = color === 'B' ? 'W' : 'B';
+    let capturedCount = checkCaptures(opp);
+    
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    if (getLiberties(x, y, color, visited) === 0) {
+      board = boardBackup;
+      captures = capBackup;
+      return {valid: false};
+    }
+    
+    let state = boardToString();
+    if (history.includes(state)) {
+      board = boardBackup;
+      captures = capBackup;
+      return {valid: false};
+    }
+    
+    board = boardBackup;
+    captures = capBackup;
+    return {valid: true, captures: capturedCount};
+  }
+
+  function makeAIMove() {
+    if (currentPlayer !== 'W') return;
+    
+    let validMoves = [];
+    let captureMoves = [];
+    
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        let res = isValidMove(x, y, 'W');
+        if (res.valid) {
+          if (res.captures > 0) captureMoves.push({x, y});
+          else validMoves.push({x, y});
+        }
+      }
+    }
+    
+    let move = null;
+    if (captureMoves.length > 0) {
+      move = captureMoves[Math.floor(Math.random() * captureMoves.length)];
+    } else if (validMoves.length > 0) {
+      move = validMoves[Math.floor(Math.random() * validMoves.length)];
+    }
+    
+    if (move) {
+      placeStone(move.x, move.y);
+    } else {
+      document.getElementById('btn-pass').click();
+    }
   }
 
   function deepCopy(arr) {
@@ -330,6 +393,9 @@
   document.getElementById('btn-pass').addEventListener('click', () => {
     currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
     updateStatus();
+    if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
+      setTimeout(makeAIMove, 500);
+    }
   });
   document.getElementById('btn-resign').addEventListener('click', () => {
     alert(`${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`);

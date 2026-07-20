@@ -1,12 +1,14 @@
 #include <windows.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define ID_BTN_PASS 101
 #define ID_BTN_RESIGN 102
 #define ID_BTN_NEW 103
 #define ID_CB_SIZE 104
 #define ID_BTN_SCORE 105
+#define ID_CB_AI 106
 
 int boardSize = 9;
 char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
@@ -91,13 +93,13 @@ void PlaceStone(HWND hwnd, int x, int y) {
     char visited[19][19] = {0};
     if (GetLiberties(x, y, currentPlayer, visited) == 0) {
         CopyBoard(board, boardBackup);
-        MessageBox(hwnd, "Suicide move is not allowed.", "Invalid Move", MB_OK);
+        if (currentPlayer == 1) MessageBox(hwnd, "Suicide move is not allowed.", "Invalid Move", MB_OK);
         return;
     }
     
     if (memcmp(board, prevBoard, sizeof(char) * 19 * 19) == 0) {
         CopyBoard(board, boardBackup);
-        MessageBox(hwnd, "Ko rule violation.", "Invalid Move", MB_OK);
+        if (currentPlayer == 1) MessageBox(hwnd, "Ko rule violation.", "Invalid Move", MB_OK);
         return;
     }
     
@@ -108,6 +110,79 @@ void PlaceStone(HWND hwnd, int x, int y) {
     animRadius = 0;
     SetTimer(hwnd, 1, 16, NULL);
     InvalidateRect(hwnd, NULL, TRUE);
+    
+    if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+        SetTimer(hwnd, 2, 500, NULL);
+    }
+}
+
+int IsValidMove(int x, int y, int color, int *outCaptures) {
+    if (board[y][x] != 0) return 0;
+    
+    char boardBackup[19][19];
+    CopyBoard(boardBackup, board);
+    int capBackup[3] = { captures[0], captures[1], captures[2] };
+    
+    board[y][x] = (char)color;
+    int opp = color == 1 ? 2 : 1;
+    int capCount = CheckCaptures(opp);
+    if (outCaptures) *outCaptures = capCount;
+    
+    char visited[19][19] = {0};
+    if (GetLiberties(x, y, color, visited) == 0) {
+        CopyBoard(board, boardBackup);
+        captures[1] = capBackup[1];
+        captures[2] = capBackup[2];
+        return 0; // suicide
+    }
+    
+    if (memcmp(board, prevBoard, sizeof(char) * 19 * 19) == 0) {
+        CopyBoard(board, boardBackup);
+        captures[1] = capBackup[1];
+        captures[2] = capBackup[2];
+        return 0; // ko
+    }
+    
+    CopyBoard(board, boardBackup);
+    captures[1] = capBackup[1];
+    captures[2] = capBackup[2];
+    return 1;
+}
+
+void MakeAIMove(HWND hwnd) {
+    if (currentPlayer != 2) return;
+    
+    POINT captureMoves[19*19];
+    int captureCount = 0;
+    POINT validMoves[19*19];
+    int validCount = 0;
+    
+    for (int y = 0; y < boardSize; y++) {
+        for (int x = 0; x < boardSize; x++) {
+            int caps = 0;
+            if (IsValidMove(x, y, 2, &caps)) {
+                if (caps > 0) {
+                    captureMoves[captureCount].x = x;
+                    captureMoves[captureCount].y = y;
+                    captureCount++;
+                } else {
+                    validMoves[validCount].x = x;
+                    validMoves[validCount].y = y;
+                    validCount++;
+                }
+            }
+        }
+    }
+    
+    if (captureCount > 0) {
+        int r = rand() % captureCount;
+        PlaceStone(hwnd, captureMoves[r].x, captureMoves[r].y);
+    } else if (validCount > 0) {
+        int r = rand() % validCount;
+        PlaceStone(hwnd, validMoves[r].x, validMoves[r].y);
+    } else {
+        SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PASS, 0), 0);
+    }
 }
 
 void InitBoard() {
@@ -185,7 +260,7 @@ void CalculateScore(HWND hwnd) {
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    static HWND hBtnPass, hBtnResign, hBtnNew, hCbSize;
+    static HWND hBtnPass, hBtnResign, hBtnNew, hCbSize, hCbAi;
 
     switch (uMsg) {
         case WM_CREATE:
@@ -203,6 +278,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"13x13");
             SendMessage(hCbSize, CB_ADDSTRING, 0, (LPARAM)"19x19");
             SendMessage(hCbSize, CB_SETCURSEL, 0, 0);
+            hCbAi = CreateWindow("BUTTON", "Play vs AI (White)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
+                420, 600, 150, 30, hwnd, (HMENU)ID_CB_AI, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            SendMessage(hCbAi, BM_SETCHECK, BST_CHECKED, 0);
             return 0;
 
         case WM_TIMER:
@@ -213,6 +291,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     KillTimer(hwnd, 1);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 2) {
+                KillTimer(hwnd, 2);
+                MakeAIMove(hwnd);
             }
             return 0;
 
@@ -334,6 +415,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (LOWORD(wParam) == ID_BTN_PASS) {
                 currentPlayer = currentPlayer == 1 ? 2 : 1;
                 InvalidateRect(hwnd, NULL, TRUE);
+                if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
+                    SetTimer(hwnd, 2, 500, NULL);
+                }
             } else if (LOWORD(wParam) == ID_BTN_RESIGN) {
                 char msg[64];
                 sprintf(msg, "%s wins by resignation!", currentPlayer == 1 ? "White" : "Black");
@@ -364,6 +448,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     const char CLASS_NAME[] = "KGoWindowClass";
+    srand(GetTickCount());
 
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WindowProc;
