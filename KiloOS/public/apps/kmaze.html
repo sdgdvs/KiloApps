@@ -164,12 +164,16 @@
   let currentLevel = 0;
   let keysHeld = 0;
   let hasCompass = 0;
+  let speedBoost = 0;
   let map = JSON.parse(JSON.stringify(maps[currentLevel]));
   
   let gameState = 0; // 0: Start, 1: Play, 2: Win
   let startTime = 0;
   let endTime = 0;
   let bestTime = localStorage.getItem('kmaze_best') ? parseFloat(localStorage.getItem('kmaze_best')) : 9999.9;
+  let totalGames = localStorage.getItem('kmaze_games') ? parseInt(localStorage.getItem('kmaze_games')) : 0;
+  let totalEscapes = localStorage.getItem('kmaze_escapes') ? parseInt(localStorage.getItem('kmaze_escapes')) : 0;
+  let totalScore = localStorage.getItem('kmaze_score') ? parseInt(localStorage.getItem('kmaze_score')) : 0;
   let score = 0;
   
   function generateMaze(w, h) {
@@ -225,6 +229,28 @@
           let ry = 1 + Math.floor(Math.random()*(h-2));
           if (m[rx][ry] === 1 && rx > 1 && rx < w-2 && ry > 1 && ry < h-2) m[rx][ry] = 7;
       }
+      for(let i=0; i < (w*h)/30; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2));
+          let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) {
+              m[rx][ry] = 9;
+          }
+      }
+      let t1x=0, t1y=0, t2x=0, t2y=0;
+      for(let i=0; i<100; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2));
+          let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1)) { t1x=rx; t1y=ry; break; }
+      }
+      for(let i=0; i<100; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2));
+          let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== t1x || ry !== t1y) && (rx !== 1 || ry !== 1)) { t2x=rx; t2y=ry; break; }
+      }
+      if (t1x && t2x) {
+          m[t1x][t1y] = 10;
+          m[t2x][t2y] = 11;
+      }
       m[farX][farY] = 2;
       return m;
   }
@@ -232,7 +258,8 @@
   function nextLevel() {
       currentLevel++;
       hasCompass = currentLevel < 6 ? 1 : 0;
-      if (currentLevel > 14) {
+      speedBoost = 0;
+      if (currentLevel > 19) {
           gameState = 2;
           endTime = Date.now();
           let elapsed = (endTime - startTime) / 1000;
@@ -240,6 +267,10 @@
               bestTime = elapsed;
               localStorage.setItem('kmaze_best', bestTime);
           }
+          totalEscapes++;
+          totalScore += score;
+          localStorage.setItem('kmaze_escapes', totalEscapes);
+          localStorage.setItem('kmaze_score', totalScore);
           return;
       }
       
@@ -284,6 +315,8 @@
               startTime = Date.now();
               currentLevel = -1;
               score = 0;
+              totalGames++;
+              localStorage.setItem('kmaze_games', totalGames);
               nextLevel();
           }
       }
@@ -296,10 +329,11 @@
       const rotSpeed = 0.05;
       
       if (keys['Shift']) moveSpeed = 0.2;
+      if (speedBoost) moveSpeed *= 1.5;
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if ([0,2,3,5,6,7,8].includes(val)) return true;
+          if ([0,2,3,5,6,7,8,9,10,11].includes(val)) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
@@ -343,6 +377,35 @@
           hasCompass = 1;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(700, 'square', 0.2);
+      } else if (curVal === 9) {
+          speedBoost = 1;
+          score += 50;
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(600, 'sine', 0.2);
+      } else if (curVal === 10) {
+          let found = false;
+          for(let i=0; i<map.length; i++) {
+              for(let j=0; j<map[0].length; j++) {
+                  if (map[i][j] === 11) {
+                      pX = i + 0.5; pY = j + 0.5;
+                      playTone(300, 'square', 0.3);
+                      found = true; break;
+                  }
+              }
+              if (found) break;
+          }
+      } else if (curVal === 11) {
+          let found = false;
+          for(let i=0; i<map.length; i++) {
+              for(let j=0; j<map[0].length; j++) {
+                  if (map[i][j] === 10) {
+                      pX = i + 0.5; pY = j + 0.5;
+                      playTone(300, 'square', 0.3);
+                      found = true; break;
+                  }
+              }
+              if (found) break;
+          }
       }
 
       if (keys['ArrowRight'] || keys['d']) {
@@ -430,6 +493,10 @@
               ctx.fillStyle = side === 1 ? (tex ? '#660066' : '#990099') : (tex ? '#990099' : '#cc00cc');
           } else if (hit === 8) {
               ctx.fillStyle = side === 1 ? (tex ? '#009999' : '#00cccc') : (tex ? '#00cccc' : '#00ffff');
+          } else if (hit === 9) {
+              ctx.fillStyle = side === 1 ? (tex ? '#aaaaaa' : '#cccccc') : (tex ? '#cccccc' : '#ffffff');
+          } else if (hit === 10 || hit === 11) {
+              ctx.fillStyle = side === 1 ? (tex ? '#990099' : '#cc00cc') : (tex ? '#cc00cc' : '#ff00ff');
           } else {
               ctx.fillStyle = side === 1 ? (tex ? '#770000' : '#960000') : (tex ? '#aa0000' : '#c80000');
           }
@@ -442,6 +509,7 @@
       if (gameState === 0) {
           ctx.fillText("KMAZE", W/2 - 20, H/2 - 20);
           ctx.fillText("Press ENTER to start", W/2 - 70, H/2 + 10);
+          ctx.fillText(`Games: ${totalGames} Escapes: ${totalEscapes}`, W/2 - 70, H/2 + 30);
       } else if (gameState === 2) {
           let elapsed = (endTime - startTime) / 1000;
           ctx.fillText("You Escaped!", W/2 - 40, H/2 - 20);
@@ -474,6 +542,8 @@
                       else if (v === 5) ctx.fillStyle = '#f80';
                       else if (v === 6) ctx.fillStyle = '#909';
                       else if (v === 8) ctx.fillStyle = '#0ff';
+                      else if (v === 9) ctx.fillStyle = '#fff';
+                      else if (v === 10 || v === 11) ctx.fillStyle = '#f0f';
                       else ctx.fillStyle = '#222';
                       ctx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }
