@@ -59,7 +59,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 5: Add a Score System with Combo Multipliers (score based on match size and cascades). (COMPLETED)
 - Phase 6: Add Sound Effects (gem swap, match pop, cascade combo sounds). (COMPLETED)
 - Phase 7: Add Visual Animations (smooth gem swapping and falling gravity). (COMPLETED)
-- Phase 8: Add Particle Effects (explosions when gems match).
+- Phase 8: Add Particle Effects (explosions when gems match). (COMPLETED)
 - Phase 9: Add Special Gems (e.g., matching 4 creates a line bomb, matching 5 creates a color bomb).
 - Phase 10: Add Level Progression (target scores and limited moves/time per level).
 - Phase 11: Add Save/Load State (persist current level, score, and board).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KMatch3
-**Goal:** Phase 8
+**Goal:** Phase 9
 
 
 ## App Lifecycle (14 phases per app)

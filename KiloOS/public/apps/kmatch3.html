@@ -20,6 +20,14 @@
     position: absolute; width: 48px; height: 48px; box-sizing: border-box;
   }
   .cell.selected { border: 2px solid #fff; box-sizing: border-box; transform: scale(1.1); z-index: 10; }
+  .particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+  }
 </style>
 </head>
 <body>
@@ -60,6 +68,50 @@
     function playSwapSound() { playTone(300, 'sine', 0.1); }
     function playMatchSound(combo) { playTone(400 + combo * 100, 'sine', 0.15); }
     function playBadSwapSound() { playTone(150, 'sawtooth', 0.15); }
+
+    let particles = [];
+    
+    function createParticles(x, y, color) {
+      for (let i = 0; i < 15; i++) {
+        let p = document.createElement('div');
+        p.className = 'particle';
+        p.style.backgroundColor = color;
+        p.style.left = x + 'px';
+        p.style.top = y + 'px';
+        boardEl.appendChild(p);
+        
+        let angle = Math.random() * Math.PI * 2;
+        let speed = Math.random() * 4 + 2;
+        particles.push({
+          el: p,
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0,
+          decay: Math.random() * 0.05 + 0.02
+        });
+      }
+    }
+
+    function updateParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        if (p.life <= 0) {
+          if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+          particles.splice(i, 1);
+        } else {
+          p.el.style.left = p.x + 'px';
+          p.el.style.top = p.y + 'px';
+          p.el.style.opacity = p.life;
+        }
+      }
+      requestAnimationFrame(updateParticles);
+    }
+    requestAnimationFrame(updateParticles);
 
     function initGame() {
       boardEl.innerHTML = '';
@@ -189,6 +241,8 @@
 
         matches.forEach(m => {
           if (grid[m.r][m.c]) {
+            let color = grid[m.r][m.c].color;
+            createParticles(m.c * 50 + 25, m.r * 50 + 25, color);
             grid[m.r][m.c].el.style.transform = 'scale(0)';
             grid[m.r][m.c].el.style.opacity = '0';
           }

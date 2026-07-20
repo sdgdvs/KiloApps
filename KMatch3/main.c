@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 
 #define ROWS 8
 #define COLS 8
@@ -21,6 +22,46 @@ int popAnim = 0;
 int popGrid[ROWS][COLS] = {0};
 int dropAnim = 0;
 int dropCount[ROWS][COLS] = {0};
+
+#define MAX_PARTICLES 200
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float life, decay;
+    COLORREF color;
+} Particle;
+
+Particle particles[MAX_PARTICLES] = {0};
+
+void CreateParticles(int cx, int cy, COLORREF color) {
+    for (int i = 0; i < 15; i++) {
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (particles[p].life <= 0) {
+                particles[p].x = (float)cx;
+                particles[p].y = (float)cy;
+                float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
+                float speed = (float)((rand() % 50) + 20) / 10.0f;
+                particles[p].vx = cosf(angle) * speed;
+                particles[p].vy = sinf(angle) * speed;
+                particles[p].life = 1.0f;
+                particles[p].decay = (float)((rand() % 5) + 2) / 100.0f;
+                particles[p].color = color;
+                break;
+            }
+        }
+    }
+}
+
+void UpdateParticles() {
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].life -= particles[i].decay;
+        }
+    }
+}
 
 void PlaySwapSound() { Beep(300, 100); }
 void PlayMatchSound(int combo) { Beep(400 + combo * 100, 150); }
@@ -107,6 +148,15 @@ void DrawBoard(HDC hdc) {
     }
     SelectClipRgn(hdc, NULL);
     DeleteObject(hRgn);
+
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            RECT pr = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+            HBRUSH pb = CreateSolidBrush(particles[i].color);
+            FillRect(hdc, &pr, pb);
+            DeleteObject(pb);
+        }
+    }
 }
 
 int FindMatches(int matchGrid[ROWS][COLS]) {
@@ -144,6 +194,7 @@ void AnimateSwap(HWND hwnd, int r1, int c1, int r2, int c2) {
     swapR1 = r1; swapC1 = c1; swapR2 = r2; swapC2 = c2;
     for (int i = 1; i <= 10; i++) {
         swapAnim = i;
+        UpdateParticles();
         InvalidateRect(hwnd, NULL, FALSE);
         UpdateWindow(hwnd);
         Sleep(15);
@@ -161,6 +212,7 @@ void ProcessMatches(HWND hwnd) {
                 if (matchGrid[r][c]) {
                     popGrid[r][c] = 1;
                     matchCount++;
+                    CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, colors[grid[r][c]]);
                 }
             }
         }
@@ -169,6 +221,7 @@ void ProcessMatches(HWND hwnd) {
         
         for (int i = 1; i <= 10; i++) {
             popAnim = i;
+            UpdateParticles();
             InvalidateRect(hwnd, NULL, FALSE);
             UpdateWindow(hwnd);
             Sleep(15);
@@ -207,6 +260,7 @@ void ProcessMatches(HWND hwnd) {
 
         for (int i = 1; i <= 10; i++) {
             dropAnim = i;
+            UpdateParticles();
             InvalidateRect(hwnd, NULL, FALSE);
             UpdateWindow(hwnd);
             Sleep(15);
@@ -241,7 +295,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             srand((unsigned)time(NULL));
             InitGame();
+            SetTimer(hwnd, 1, 30, NULL);
             break;
+        case WM_TIMER: {
+            int needsUpdate = 0;
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (particles[i].life > 0) {
+                    needsUpdate = 1;
+                    break;
+                }
+            }
+            if (needsUpdate) {
+                UpdateParticles();
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            break;
+        }
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
