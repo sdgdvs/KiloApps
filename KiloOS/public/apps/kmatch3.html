@@ -49,6 +49,8 @@
     let moves = 0;
     let selectedCell = null;
     let isProcessing = false;
+    let lastSwap = null;
+    let toDestroy = new Set();
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTone(freq, type, duration) {
@@ -113,6 +115,21 @@
     }
     requestAnimationFrame(updateParticles);
 
+    function createCellElement(r, c, color, type) {
+        let cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style.backgroundColor = type === 3 ? '#ffffff' : color;
+        cell.dataset.r = r;
+        cell.dataset.c = c;
+        cell.style.top = (r * 50 + 1) + 'px';
+        cell.style.left = (c * 50 + 1) + 'px';
+        if (type === 1) cell.innerHTML = '<div style="width:100%;height:8px;background:#fff;border-radius:4px"></div>';
+        if (type === 2) cell.innerHTML = '<div style="height:100%;width:8px;background:#fff;border-radius:4px"></div>';
+        if (type === 3) cell.innerHTML = '<div style="width:24px;height:24px;background:#000;border-radius:50%"></div>';
+        cell.addEventListener('click', onCellClick);
+        return cell;
+    }
+
     function initGame() {
       boardEl.innerHTML = '';
       grid = [];
@@ -126,16 +143,9 @@
             (r >= 2 && grid[r-1][c].color === color && grid[r-2][c].color === color) ||
             (c >= 2 && row[c-1].color === color && row[c-2].color === color)
           );
-          let cell = document.createElement('div');
-          cell.className = 'cell';
-          cell.style.backgroundColor = color;
-          cell.dataset.r = r;
-          cell.dataset.c = c;
-          cell.style.top = (r * 50 + 1) + 'px';
-          cell.style.left = (c * 50 + 1) + 'px';
-          cell.addEventListener('click', onCellClick);
+          let cell = createCellElement(r, c, color, 0);
           boardEl.appendChild(cell);
-          row.push({ color, el: cell });
+          row.push({ color, type: 0, el: cell });
         }
         grid.push(row);
       }
@@ -143,8 +153,9 @@
 
     function onCellClick(e) {
       if (isProcessing) return;
-      const r = parseInt(e.target.dataset.r);
-      const c = parseInt(e.target.dataset.c);
+      let target = e.currentTarget;
+      const r = parseInt(target.dataset.r);
+      const c = parseInt(target.dataset.c);
       if (selectedCell) {
         if (selectedCell.r === r && selectedCell.c === c) {
           selectedCell.el.classList.remove('selected');
@@ -155,12 +166,12 @@
           swapAndCheck(selectedCell.r, selectedCell.c, r, c);
         } else {
           selectedCell.el.classList.remove('selected');
-          e.target.classList.add('selected');
-          selectedCell = { r, c, el: e.target };
+          target.classList.add('selected');
+          selectedCell = { r, c, el: target };
         }
       } else {
-        e.target.classList.add('selected');
-        selectedCell = { r, c, el: e.target };
+        target.classList.add('selected');
+        selectedCell = { r, c, el: target };
       }
     }
 
@@ -172,14 +183,29 @@
       isProcessing = true;
       if (selectedCell) selectedCell.el.classList.remove('selected');
       selectedCell = null;
+      lastSwap = [{r:r1, c:c1}, {r:r2, c:c2}];
       
       swap(r1, c1, r2, c2);
       playSwapSound();
       await sleep(200);
 
+      let colorBombSwap = false;
+      let cbR = -1, cbC = -1, targetColor = null;
+      let specialTrigger = null;
+
+      if (grid[r1][c1].type === 3 && grid[r2][c2].type === 3) {
+          specialTrigger = {r: r1, c: c1, color: 'all'};
+      } else if (grid[r1][c1].type === 3 && grid[r2][c2].type !== 3) {
+          specialTrigger = {r: r1, c: c1, color: grid[r2][c2].color};
+      } else if (grid[r2][c2].type === 3 && grid[r1][c1].type !== 3) {
+          specialTrigger = {r: r2, c: c2, color: grid[r1][c1].color};
+      } else if (grid[r1][c1].type > 0 && grid[r2][c2].type > 0 && grid[r1][c1].type < 3 && grid[r2][c2].type < 3) {
+          specialTrigger = {r: r2, c: c2, cross: true};
+      }
+
       let matches = findMatches();
-      if (matches.length > 0) {
-        await processMatches(matches);
+      if (matches.hMatches.length > 0 || matches.vMatches.length > 0 || specialTrigger) {
+        await processMatches(matches, specialTrigger);
       } else {
         playBadSwapSound();
         swap(r1, c1, r2, c2); // swap back
@@ -203,56 +229,152 @@
     }
 
     function findMatches() {
-      let matches = new Set();
+      let hMatches = [];
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS - 2; c++) {
           if (!grid[r][c]) continue;
           let color = grid[r][c].color;
-          if (color && grid[r][c+1] && grid[r][c+1].color === color && grid[r][c+2] && grid[r][c+2].color === color) {
-            matches.add(`${r},${c}`); matches.add(`${r},${c+1}`); matches.add(`${r},${c+2}`);
-            let k = c + 3;
-            while(k < COLS && grid[r][k] && grid[r][k].color === color) { matches.add(`${r},${k}`); k++; }
+          if (grid[r][c].type === 3) continue;
+          if (color && grid[r][c+1] && grid[r][c+1].color === color && grid[r][c+1].type !== 3 && grid[r][c+2] && grid[r][c+2].color === color && grid[r][c+2].type !== 3) {
+            let group = [];
+            let k = c;
+            while(k < COLS && grid[r][k] && grid[r][k].color === color && grid[r][k].type !== 3) { group.push({r, c:k}); k++; }
+            hMatches.push(group);
+            c = k - 1;
           }
         }
       }
+      let vMatches = [];
       for (let c = 0; c < COLS; c++) {
         for (let r = 0; r < ROWS - 2; r++) {
           if (!grid[r][c]) continue;
           let color = grid[r][c].color;
-          if (color && grid[r+1][c] && grid[r+1][c].color === color && grid[r+2][c] && grid[r+2][c].color === color) {
-            matches.add(`${r},${c}`); matches.add(`${r+1},${c}`); matches.add(`${r+2},${c}`);
-            let k = r + 3;
-            while(k < ROWS && grid[k][c] && grid[k][c].color === color) { matches.add(`${k},${c}`); k++; }
+          if (grid[r][c].type === 3) continue;
+          if (color && grid[r+1][c] && grid[r+1][c].color === color && grid[r+1][c].type !== 3 && grid[r+2][c] && grid[r+2][c].color === color && grid[r+2][c].type !== 3) {
+            let group = [];
+            let k = r;
+            while(k < ROWS && grid[k][c] && grid[k][c].color === color && grid[k][c].type !== 3) { group.push({r:k, c}); k++; }
+            vMatches.push(group);
+            r = k - 1;
           }
         }
       }
-      return Array.from(matches).map(m => {
-        let [r, c] = m.split(',').map(Number);
-        return {r, c};
-      });
+      return {hMatches, vMatches};
     }
 
-    async function processMatches(matches) {
+    function addDestroy(r, c) {
+        let key = `${r},${c}`;
+        if (toDestroy.has(key)) return;
+        if (!grid[r][c]) return;
+        toDestroy.add(key);
+        let cell = grid[r][c];
+        if (cell.type === 1) {
+            for (let i = 0; i < COLS; i++) if (grid[r][i]) addDestroy(r, i);
+        } else if (cell.type === 2) {
+            for (let i = 0; i < ROWS; i++) if (grid[i][c]) addDestroy(i, c);
+        } else if (cell.type === 3) {
+            let color = COLORS[Math.floor(Math.random() * COLORS.length)];
+            for (let i = 0; i < ROWS; i++) {
+                for (let j = 0; j < COLS; j++) {
+                    if (grid[i][j] && grid[i][j].color === color && grid[i][j].type !== 3) addDestroy(i, j);
+                }
+            }
+        }
+    }
+
+    async function processMatches(matches, specialTrigger) {
       let comboMultiplier = 1;
-      while(matches.length > 0) {
+      let hasMatches = true;
+
+      while(hasMatches) {
+        toDestroy.clear();
+        let newSpecials = []; 
+
+        if (specialTrigger) {
+            toDestroy.add(`${specialTrigger.r},${specialTrigger.c}`);
+            if (specialTrigger.color === 'all') {
+                for(let i=0; i<ROWS; i++) for(let j=0; j<COLS; j++) if(grid[i][j]) addDestroy(i,j);
+            } else if (specialTrigger.color) {
+                for(let i=0; i<ROWS; i++) {
+                    for(let j=0; j<COLS; j++) {
+                        if(grid[i][j] && grid[i][j].color === specialTrigger.color) addDestroy(i,j);
+                    }
+                }
+            } else if (specialTrigger.cross) {
+                grid[specialTrigger.r][specialTrigger.c].type = 1; addDestroy(specialTrigger.r, specialTrigger.c);
+                if (lastSwap) {
+                    grid[lastSwap[0].r][lastSwap[0].c].type = 2; addDestroy(lastSwap[0].r, lastSwap[0].c);
+                }
+            }
+            specialTrigger = null; 
+        }
+
+        let allGroups = [...matches.hMatches, ...matches.vMatches];
+        allGroups.forEach(g => {
+            let isLen5 = g.length >= 5;
+            let isLen4 = g.length === 4;
+            let sR = g[0].r, sC = g[0].c;
+            if (lastSwap) {
+                let found = g.find(m => (m.r === lastSwap[0].r && m.c === lastSwap[0].c) || (m.r === lastSwap[1].r && m.c === lastSwap[1].c));
+                if (found) { sR = found.r; sC = found.c; }
+            }
+            if (isLen5) {
+                newSpecials.push({r: sR, c: sC, type: 3, color: '#ffffff'});
+            } else if (isLen4) {
+                let isHoriz = g[0].r === g[1].r;
+                newSpecials.push({r: sR, c: sC, type: isHoriz ? 1 : 2, color: grid[sR][sC].color});
+            }
+            g.forEach(m => addDestroy(m.r, m.c));
+        });
+
+        if (toDestroy.size === 0) { hasMatches = false; break; }
+
+        let initialDestroy = Array.from(toDestroy);
+        toDestroy.clear(); 
+        initialDestroy.forEach(key => {
+            let [r, c] = key.split(',').map(Number);
+            addDestroy(r, c);
+        });
+
+        newSpecials.forEach(s => {
+            toDestroy.delete(`${s.r},${s.c}`);
+        });
+
         playMatchSound(comboMultiplier);
-        score += matches.length * 10 * comboMultiplier;
+        score += toDestroy.size * 10 * comboMultiplier;
         scoreEl.textContent = score;
 
-        matches.forEach(m => {
+        let destroyArr = Array.from(toDestroy).map(key => {
+            let [r, c] = key.split(',').map(Number);
+            return {r, c};
+        });
+
+        destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {
             let color = grid[m.r][m.c].color;
+            if (grid[m.r][m.c].type === 3) color = '#ffffff';
             createParticles(m.c * 50 + 25, m.r * 50 + 25, color);
             grid[m.r][m.c].el.style.transform = 'scale(0)';
             grid[m.r][m.c].el.style.opacity = '0';
           }
         });
+
         await sleep(200);
-        matches.forEach(m => {
+
+        destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {
             boardEl.removeChild(grid[m.r][m.c].el);
             grid[m.r][m.c] = null;
           }
+        });
+
+        newSpecials.forEach(s => {
+            if (grid[s.r][s.c]) {
+                boardEl.removeChild(grid[s.r][s.c].el);
+            }
+            let cell = createCellElement(s.r, s.c, s.color, s.type);
+            boardEl.appendChild(cell);
+            grid[s.r][s.c] = { color: s.color, type: s.type, el: cell };
         });
 
         for (let c = 0; c < COLS; c++) {
@@ -270,25 +392,22 @@
           }
           for (let r = emptyR; r >= 0; r--) {
             let color = COLORS[Math.floor(Math.random() * COLORS.length)];
-            let cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.style.backgroundColor = color;
-            cell.dataset.r = r;
-            cell.dataset.c = c;
-            cell.style.top = ((r - emptyR - 1) * 50 + 1) + 'px';
-            cell.style.left = (c * 50 + 1) + 'px';
-            cell.addEventListener('click', onCellClick);
+            let cell = createCellElement(r, c, color, 0);
             boardEl.appendChild(cell);
-            grid[r][c] = { color, el: cell };
-            
-            // force reflow
+            grid[r][c] = { color, type: 0, el: cell };
             cell.offsetHeight;
             cell.style.top = (r * 50 + 1) + 'px';
           }
         }
+        
         await sleep(300);
+        lastSwap = null; 
         matches = findMatches();
-        if (matches.length > 0) comboMultiplier++;
+        if (matches.hMatches.length === 0 && matches.vMatches.length === 0) {
+            hasMatches = false;
+        } else {
+            comboMultiplier++;
+        }
       }
     }
 

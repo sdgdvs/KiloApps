@@ -11,6 +11,7 @@
 #define BOARD_Y 50
 
 int grid[ROWS][COLS];
+int typeGrid[ROWS][COLS] = {0};
 int score = 0;
 int moves = 0;
 int selR = -1, selC = -1;
@@ -18,6 +19,7 @@ int isProcessing = 0;
 
 int swapAnim = 0;
 int swapR1 = -1, swapC1 = -1, swapR2 = -1, swapC2 = -1;
+int lastSwapR1 = -1, lastSwapC1 = -1, lastSwapR2 = -1, lastSwapC2 = -1;
 int popAnim = 0;
 int popGrid[ROWS][COLS] = {0};
 int dropAnim = 0;
@@ -130,9 +132,26 @@ void DrawBoard(HDC hdc) {
                 if (rect.right <= rect.left) continue;
             }
 
-            HBRUSH brush = CreateSolidBrush(colors[grid[r][c]]);
+            HBRUSH brush = CreateSolidBrush(typeGrid[r][c] == 3 ? RGB(255,255,255) : colors[grid[r][c]]);
             FillRect(hdc, &rect, brush);
             DeleteObject(brush);
+
+            if (typeGrid[r][c] == 1) { // horiz
+                RECT hRect = { rect.left, rect.top + CELL_SIZE/2 - 4, rect.right, rect.top + CELL_SIZE/2 + 4 };
+                HBRUSH b = CreateSolidBrush(RGB(255,255,255));
+                FillRect(hdc, &hRect, b);
+                DeleteObject(b);
+            } else if (typeGrid[r][c] == 2) { // vert
+                RECT vRect = { rect.left + CELL_SIZE/2 - 4, rect.top, rect.left + CELL_SIZE/2 + 4, rect.bottom };
+                HBRUSH b = CreateSolidBrush(RGB(255,255,255));
+                FillRect(hdc, &vRect, b);
+                DeleteObject(b);
+            } else if (typeGrid[r][c] == 3) { // color
+                RECT cRect = { rect.left + 12, rect.top + 12, rect.right - 12, rect.bottom - 12 };
+                HBRUSH b = CreateSolidBrush(RGB(0,0,0));
+                FillRect(hdc, &cRect, b);
+                DeleteObject(b);
+            }
 
             if (r == selR && c == selC) {
                 HBRUSH border = CreateSolidBrush(RGB(255, 255, 255));
@@ -159,35 +178,42 @@ void DrawBoard(HDC hdc) {
     }
 }
 
-int FindMatches(int matchGrid[ROWS][COLS]) {
-    int hasMatch = 0;
-    for (int r = 0; r < ROWS; r++)
-        for (int c = 0; c < COLS; c++)
-            matchGrid[r][c] = 0;
+int toDestroy[ROWS][COLS] = {0};
 
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS - 2; c++) {
-            int color = grid[r][c];
-            if (color != -1 && grid[r][c+1] == color && grid[r][c+2] == color) {
-                matchGrid[r][c] = 1; matchGrid[r][c+1] = 1; matchGrid[r][c+2] = 1;
-                int k = c + 3;
-                while(k < COLS && grid[r][k] == color) { matchGrid[r][k] = 1; k++; }
-                hasMatch = 1;
+void AddDestroy(int r, int c) {
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+    if (grid[r][c] == -1) return;
+    if (toDestroy[r][c]) return;
+    
+    toDestroy[r][c] = 1;
+    if (typeGrid[r][c] == 1) {
+        for (int i = 0; i < COLS; i++) AddDestroy(r, i);
+    } else if (typeGrid[r][c] == 2) {
+        for (int i = 0; i < ROWS; i++) AddDestroy(i, c);
+    } else if (typeGrid[r][c] == 3) {
+        int tcolor = rand() % 6;
+        for(int i=0; i<ROWS; i++) {
+            for(int j=0; j<COLS; j++) {
+                if (grid[i][j] == tcolor && typeGrid[i][j] != 3) AddDestroy(i, j);
             }
         }
     }
-    for (int c = 0; c < COLS; c++) {
-        for (int r = 0; r < ROWS - 2; r++) {
+}
+
+int CheckMatchPossible() {
+    for (int r=0; r<ROWS; r++) {
+        for (int c=0; c<COLS-2; c++) {
             int color = grid[r][c];
-            if (color != -1 && grid[r+1][c] == color && grid[r+2][c] == color) {
-                matchGrid[r][c] = 1; matchGrid[r+1][c] = 1; matchGrid[r+2][c] = 1;
-                int k = r + 3;
-                while(k < ROWS && grid[k][c] == color) { matchGrid[k][c] = 1; k++; }
-                hasMatch = 1;
-            }
+            if (color != -1 && typeGrid[r][c] != 3 && grid[r][c+1] == color && typeGrid[r][c+1] != 3 && grid[r][c+2] == color && typeGrid[r][c+2] != 3) return 1;
         }
     }
-    return hasMatch;
+    for (int c=0; c<COLS; c++) {
+        for (int r=0; r<ROWS-2; r++) {
+            int color = grid[r][c];
+            if (color != -1 && typeGrid[r][c] != 3 && grid[r+1][c] == color && typeGrid[r+1][c] != 3 && grid[r+2][c] == color && typeGrid[r+2][c] != 3) return 1;
+        }
+    }
+    return 0;
 }
 
 void AnimateSwap(HWND hwnd, int r1, int c1, int r2, int c2) {
@@ -202,17 +228,143 @@ void AnimateSwap(HWND hwnd, int r1, int c1, int r2, int c2) {
     swapR1 = -1;
 }
 
-void ProcessMatches(HWND hwnd) {
-    int matchGrid[ROWS][COLS];
+void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
     int comboMultiplier = 1;
-    while (FindMatches(matchGrid)) {
+    int hasMatches = 1;
+    
+    while (hasMatches) {
+        memset(toDestroy, 0, sizeof(toDestroy));
+        int newSpecials[ROWS][COLS] = {0}; 
+
+        if (triggerR != -1) {
+            toDestroy[triggerR][triggerC] = 1;
+            if (triggerColor == 999) {
+                for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) if(grid[i][j]!=-1) AddDestroy(i, j);
+            } else if (triggerColor == 888) {
+                typeGrid[triggerR][triggerC] = 1; AddDestroy(triggerR, triggerC);
+                typeGrid[lastSwapR1][lastSwapC1] = 2; AddDestroy(lastSwapR1, lastSwapC1);
+            } else if (triggerColor >= 0 && triggerColor < 6) {
+                for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) {
+                    if (grid[i][j] == triggerColor) AddDestroy(i, j);
+                }
+            }
+            triggerR = -1; 
+        }
+
+        int hMatchLen[ROWS][COLS] = {0};
+        int vMatchLen[ROWS][COLS] = {0};
+        
+        for (int r=0; r<ROWS; r++) {
+            for (int c=0; c<COLS-2; c++) {
+                int color = grid[r][c];
+                if (color != -1 && typeGrid[r][c] != 3 && grid[r][c+1] == color && typeGrid[r][c+1] != 3 && grid[r][c+2] == color && typeGrid[r][c+2] != 3) {
+                    int k = c;
+                    while(k < COLS && grid[r][k] == color && typeGrid[r][k] != 3) k++;
+                    int len = k - c;
+                    for(int i = c; i < k; i++) hMatchLen[r][i] = len;
+                    c = k - 1;
+                }
+            }
+        }
+        for (int c=0; c<COLS; c++) {
+            for (int r=0; r<ROWS-2; r++) {
+                int color = grid[r][c];
+                if (color != -1 && typeGrid[r][c] != 3 && grid[r+1][c] == color && typeGrid[r+1][c] != 3 && grid[r+2][c] == color && typeGrid[r+2][c] != 3) {
+                    int k = r;
+                    while(k < ROWS && grid[k][c] == color && typeGrid[k][c] != 3) k++;
+                    int len = k - r;
+                    for(int i = r; i < k; i++) vMatchLen[i][c] = len;
+                    r = k - 1;
+                }
+            }
+        }
+        
+        for(int r=0; r<ROWS; r++) {
+            for(int c=0; c<COLS; c++) {
+                if (hMatchLen[r][c] >= 3 || vMatchLen[r][c] >= 3) {
+                    AddDestroy(r, c);
+                }
+            }
+        }
+
+        for(int r=0; r<ROWS; r++) {
+            for(int c=0; c<COLS; c++) {
+                if (hMatchLen[r][c] >= 5) {
+                    int sC = c;
+                    for (int k = c; k < c + hMatchLen[r][c]; k++) {
+                        if ((r == lastSwapR1 && k == lastSwapC1) || (r == lastSwapR2 && k == lastSwapC2)) sC = k;
+                    }
+                    newSpecials[r][sC] = 3;
+                    c += hMatchLen[r][c] - 1;
+                }
+            }
+        }
+        for(int c=0; c<COLS; c++) {
+            for(int r=0; r<ROWS; r++) {
+                if (vMatchLen[r][c] >= 5) {
+                    int sR = r;
+                    for (int k = r; k < r + vMatchLen[r][c]; k++) {
+                        if ((k == lastSwapR1 && c == lastSwapC1) || (k == lastSwapR2 && c == lastSwapC2)) sR = k;
+                    }
+                    newSpecials[sR][c] = 3;
+                    r += vMatchLen[r][c] - 1;
+                }
+            }
+        }
+        for(int r=0; r<ROWS; r++) {
+            for(int c=0; c<COLS; c++) {
+                if (hMatchLen[r][c] == 4 && !newSpecials[r][c]) {
+                    int sC = c;
+                    for (int k = c; k < c + 4; k++) {
+                        if ((r == lastSwapR1 && k == lastSwapC1) || (r == lastSwapR2 && k == lastSwapC2)) sC = k;
+                    }
+                    if (!newSpecials[r][sC]) newSpecials[r][sC] = 1;
+                    c += 3;
+                }
+            }
+        }
+        for(int c=0; c<COLS; c++) {
+            for(int r=0; r<ROWS; r++) {
+                if (vMatchLen[r][c] == 4 && !newSpecials[r][c]) {
+                    int sR = r;
+                    for (int k = r; k < r + 4; k++) {
+                        if ((k == lastSwapR1 && c == lastSwapC1) || (k == lastSwapR2 && c == lastSwapC2)) sR = k;
+                    }
+                    if (!newSpecials[sR][c]) newSpecials[sR][c] = 2;
+                    r += 3;
+                }
+            }
+        }
+
+        int anyDestroy = 0;
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (toDestroy[r][c]) {
+                    anyDestroy = 1;
+                }
+            }
+        }
+        if (!anyDestroy) {
+            hasMatches = 0;
+            break;
+        }
+
+        for(int r=0; r<ROWS; r++) {
+            for(int c=0; c<COLS; c++) {
+                if (newSpecials[r][c]) {
+                    toDestroy[r][c] = 0;
+                }
+            }
+        }
+
         int matchCount = 0;
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
-                if (matchGrid[r][c]) {
+                if (toDestroy[r][c]) {
                     popGrid[r][c] = 1;
                     matchCount++;
-                    CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, colors[grid[r][c]]);
+                    COLORREF pc = (typeGrid[r][c] == 3) ? RGB(255,255,255) : colors[grid[r][c]];
+                    CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, pc);
                 }
             }
         }
@@ -232,10 +384,20 @@ void ProcessMatches(HWND hwnd) {
             for (int c = 0; c < COLS; c++) {
                 if (popGrid[r][c]) {
                     grid[r][c] = -1;
+                    typeGrid[r][c] = 0;
                     popGrid[r][c] = 0;
                 }
             }
         }
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (newSpecials[r][c]) {
+                    typeGrid[r][c] = newSpecials[r][c];
+                }
+            }
+        }
+
         comboMultiplier++;
 
         for (int c = 0; c < COLS; c++) {
@@ -244,7 +406,9 @@ void ProcessMatches(HWND hwnd) {
                 if (grid[r][c] != -1) {
                     if (emptyR != r) {
                         grid[emptyR][c] = grid[r][c];
+                        typeGrid[emptyR][c] = typeGrid[r][c];
                         grid[r][c] = -1;
+                        typeGrid[r][c] = 0;
                         dropCount[emptyR][c] = emptyR - r;
                     } else {
                         dropCount[emptyR][c] = 0;
@@ -254,6 +418,7 @@ void ProcessMatches(HWND hwnd) {
             }
             for (int r = emptyR; r >= 0; r--) {
                 grid[r][c] = rand() % 6;
+                typeGrid[r][c] = 0;
                 dropCount[r][c] = emptyR + 1;
             }
         }
@@ -272,6 +437,7 @@ void ProcessMatches(HWND hwnd) {
             }
         }
         Sleep(50);
+        lastSwapR1 = -1; 
     }
 }
 
@@ -286,6 +452,7 @@ void InitGame() {
                 (c >= 2 && grid[r][c-1] == color && grid[r][c-2] == color)
             );
             grid[r][c] = color;
+            typeGrid[r][c] = 0;
         }
     }
 }
@@ -357,20 +524,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         selR = -1; selC = -1;
                         PlaySwapSound();
                         AnimateSwap(hwnd, origR, origC, r, c);
+                        lastSwapR1 = origR; lastSwapC1 = origC;
+                        lastSwapR2 = r; lastSwapC2 = c;
 
                         int temp = grid[origR][origC];
                         grid[origR][origC] = grid[r][c];
                         grid[r][c] = temp;
+                        int tempT = typeGrid[origR][origC];
+                        typeGrid[origR][origC] = typeGrid[r][c];
+                        typeGrid[r][c] = tempT;
 
-                        int matchGrid[ROWS][COLS];
-                        if (FindMatches(matchGrid)) {
-                            ProcessMatches(hwnd);
+                        int triggerR = -1, triggerC = -1, triggerColor = -1;
+                        if (typeGrid[origR][origC] == 3 && typeGrid[r][c] == 3) {
+                            triggerR = origR; triggerC = origC; triggerColor = 999;
+                        } else if (typeGrid[origR][origC] == 3 && typeGrid[r][c] != 3) {
+                            triggerR = origR; triggerC = origC; triggerColor = grid[r][c];
+                        } else if (typeGrid[r][c] == 3 && typeGrid[origR][origC] != 3) {
+                            triggerR = r; triggerC = c; triggerColor = grid[origR][origC];
+                        } else if (typeGrid[origR][origC] > 0 && typeGrid[r][c] > 0 && typeGrid[origR][origC] < 3 && typeGrid[r][c] < 3) {
+                            triggerR = r; triggerC = c; triggerColor = 888; // cross
+                        }
+
+                        if (triggerR != -1 || CheckMatchPossible()) {
+                            ProcessMatches(hwnd, triggerR, triggerC, triggerColor);
                         } else {
                             PlayBadSwapSound();
                             AnimateSwap(hwnd, origR, origC, r, c);
                             temp = grid[origR][origC];
                             grid[origR][origC] = grid[r][c];
                             grid[r][c] = temp;
+                            tempT = typeGrid[origR][origC];
+                            typeGrid[origR][origC] = typeGrid[r][c];
+                            typeGrid[r][c] = tempT;
                             InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
                         }
                         isProcessing = 0;
