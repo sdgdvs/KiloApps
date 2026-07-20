@@ -47,6 +47,7 @@ int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 int currentPlayer = 0; // 0=Player, 1=AI
 int cricketHits[2][7] = {{0}}; // 20, 19, 18, 17, 16, 15, 25
 int totalDarts[2] = {0};
+int highestCheckout[2] = {0};
 
 int scores[2] = {501, 501};
 int prevScores[2] = {501, 501};
@@ -78,6 +79,7 @@ void SaveState(HWND hwnd) {
         fwrite(prevScores, sizeof(int), 2, f);
         fwrite(&dartsLeft, sizeof(int), 1, f);
         fwrite(&gameState, sizeof(int), 1, f);
+        fwrite(highestCheckout, sizeof(int), 2, f);
         fclose(f);
         sprintf(statusMsg, "Game Saved!");
         InvalidateRect(hwnd, NULL, FALSE);
@@ -96,6 +98,7 @@ void LoadState(HWND hwnd) {
         fread(prevScores, sizeof(int), 2, f);
         fread(&dartsLeft, sizeof(int), 1, f);
         fread(&gameState, sizeof(int), 1, f);
+        fread(highestCheckout, sizeof(int), 2, f);
         fclose(f);
         dartsCount = 0;
         
@@ -118,6 +121,8 @@ void SetMode(int mode) {
     currentPlayer = 0;
     totalDarts[0] = 0;
     totalDarts[1] = 0;
+    highestCheckout[0] = 0;
+    highestCheckout[1] = 0;
     if (mode == 0) {
         scores[0] = 501; scores[1] = 501;
         prevScores[0] = 501; prevScores[1] = 501;
@@ -287,6 +292,9 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
             gameState = 1;
         } else if (scores[currentPlayer] == 0) {
             sprintf(statusMsg, "%s Wins!", turnName);
+            if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
+                highestCheckout[currentPlayer] = prevScores[currentPlayer];
+            }
             gameState = 2;
         } else if (dartsLeft == 0) {
             sprintf(statusMsg, "%s Turn Over. Score: %d", turnName, scores[currentPlayer]);
@@ -526,13 +534,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(memDC, font);
                 TextOut(memDC, 325 - sz.cx/2 - 50, 5, "P1", 2);
                 TextOut(memDC, 325 + sz.cx/2 + 20, 5, "AI", 2);
+                
+                SetTextColor(memDC, RGB(170, 170, 170));
+                char statsStr[100];
+                float pAvg = totalDarts[0] > 0 ? (float)(501 - scores[0]) / totalDarts[0] : 0.0f;
+                float aAvg = totalDarts[1] > 0 ? (float)(501 - scores[1]) / totalDarts[1] : 0.0f;
+                sprintf(statsStr, "P1 Avg: %.1f | High Out: %d    AI Avg: %.1f | High Out: %d", pAvg, highestCheckout[0], aAvg, highestCheckout[1]);
+                GetTextExtentPoint32(memDC, statsStr, strlen(statsStr), &sz);
+                TextOut(memDC, 325 - sz.cx/2, 105, statsStr, strlen(statsStr));
             } else {
                 SelectObject(memDC, font);
                 char scoreStrP[100] = "P: ";
                 char scoreStrA[100] = "AI: ";
                 int targets[] = {20, 19, 18, 17, 16, 15, 25};
+                int pMarks = 0, aMarks = 0;
                 for (int i=0; i<7; i++) {
                     int hits = cricketHits[0][i];
+                    pMarks += hits;
                     char mark = hits == 0 ? '-' : (hits == 1 ? '/' : (hits == 2 ? 'X' : 'O'));
                     char buf[16];
                     if (targets[i] == 25) sprintf(buf, "B:%c ", mark);
@@ -540,6 +558,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     strcat(scoreStrP, buf);
                     
                     hits = cricketHits[1][i];
+                    aMarks += hits;
                     mark = hits == 0 ? '-' : (hits == 1 ? '/' : (hits == 2 ? 'X' : 'O'));
                     if (targets[i] == 25) sprintf(buf, "B:%c ", mark);
                     else sprintf(buf, "%d:%c ", targets[i], mark);
@@ -550,6 +569,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TextOut(memDC, 325 - sz.cx/2, 20, scoreStrP, strlen(scoreStrP));
                 GetTextExtentPoint32(memDC, scoreStrA, strlen(scoreStrA), &sz);
                 TextOut(memDC, 325 - sz.cx/2, 50, scoreStrA, strlen(scoreStrA));
+                
+                SetTextColor(memDC, RGB(170, 170, 170));
+                char statsStr[100];
+                float pAvg = totalDarts[0] > 0 ? (float)pMarks / totalDarts[0] : 0.0f;
+                float aAvg = totalDarts[1] > 0 ? (float)aMarks / totalDarts[1] : 0.0f;
+                sprintf(statsStr, "P1 Marks/Dart: %.2f    AI Marks/Dart: %.2f", pAvg, aAvg);
+                GetTextExtentPoint32(memDC, statsStr, strlen(statsStr), &sz);
+                TextOut(memDC, 325 - sz.cx/2, 105, statsStr, strlen(statsStr));
             }
             
             SelectObject(memDC, font);

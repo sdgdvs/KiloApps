@@ -66,6 +66,7 @@
     </div>
     <div id="score">501</div>
     <div id="status">Game On! Throw 3 Darts</div>
+    <div id="stats" style="font-size: 16px; color: #aaaaaa; margin-top: 5px;"></div>
   </div>
   <div id="canvas-container">
     <canvas id="gameCanvas" width="600" height="600"></canvas>
@@ -130,6 +131,7 @@ let aiDifficulty = 'Medium';
 let currentPlayer = 0;
 let cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
 let totalDarts = [0, 0];
+let highestCheckout = [0, 0];
 
 let scores = [501, 501];
 let prevScores = [501, 501];
@@ -152,7 +154,7 @@ function setDifficulty(diff) {
 function saveState() {
     const stateObj = {
         gameMode, aiDifficulty, currentPlayer, cricketHits,
-        totalDarts, scores, prevScores, dartsLeft, state
+        totalDarts, highestCheckout, scores, prevScores, dartsLeft, state
     };
     localStorage.setItem('kdarts_save', JSON.stringify(stateObj));
     const oldMsg = statusEl.innerText;
@@ -170,6 +172,7 @@ function loadState() {
             currentPlayer = stateObj.currentPlayer;
             cricketHits = stateObj.cricketHits;
             totalDarts = stateObj.totalDarts;
+            highestCheckout = stateObj.highestCheckout || [0, 0];
             scores = stateObj.scores;
             prevScores = stateObj.prevScores;
             dartsLeft = stateObj.dartsLeft;
@@ -206,6 +209,7 @@ function setMode(mode) {
         {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}
     ];
     totalDarts = [0, 0];
+    highestCheckout = [0, 0];
     if (mode === '501') {
         scoreEl.style.fontSize = "32px";
         statusEl.innerText = "Game On! Player Turn - Throw 3 Darts";
@@ -219,19 +223,29 @@ function setMode(mode) {
 function updateScoreUI() {
     if (gameMode === '501') {
         scoreEl.innerHTML = `Player: ${scores[0]} | AI: ${scores[1]}`;
+        let pAvg = totalDarts[0] > 0 ? ((501 - scores[0]) / totalDarts[0]).toFixed(1) : "0.0";
+        let aAvg = totalDarts[1] > 0 ? ((501 - scores[1]) / totalDarts[1]).toFixed(1) : "0.0";
+        document.getElementById('stats').innerHTML = `P1 Avg: ${pAvg} | High Out: ${highestCheckout[0]} &nbsp;&nbsp;&nbsp; AI Avg: ${aAvg} | High Out: ${highestCheckout[1]}`;
     } else {
         let str = "P: ";
         const targets = [20,19,18,17,16,15,25];
+        let pMarks = 0;
         for (let t of targets) {
             let hits = cricketHits[0][t];
+            pMarks += hits;
             str += `${t===25?'B':t}:${hits===0?'-':(hits===1?'/':(hits===2?'X':'O'))} `;
         }
         str += "<br>AI: ";
+        let aMarks = 0;
         for (let t of targets) {
             let hits = cricketHits[1][t];
+            aMarks += hits;
             str += `${t===25?'B':t}:${hits===0?'-':(hits===1?'/':(hits===2?'X':'O'))} `;
         }
         scoreEl.innerHTML = str;
+        let pAvg = totalDarts[0] > 0 ? (pMarks / totalDarts[0]).toFixed(2) : "0.00";
+        let aAvg = totalDarts[1] > 0 ? (aMarks / totalDarts[1]).toFixed(2) : "0.00";
+        document.getElementById('stats').innerHTML = `P1 Marks/Dart: ${pAvg} &nbsp;&nbsp;&nbsp; AI Marks/Dart: ${aAvg}`;
     }
 }
 
@@ -276,6 +290,9 @@ function throwDart(targetX, targetY) {
             state = 'TURN_END';
         } else if (scores[currentPlayer] === 0) {
             statusEl.innerText = `${turnName} Wins!`;
+            if (prevScores[currentPlayer] > highestCheckout[currentPlayer]) {
+                highestCheckout[currentPlayer] = prevScores[currentPlayer];
+            }
             state = 'WON';
         } else if (dartsLeft === 0) {
             statusEl.innerText = `${turnName} Turn Over. Score: ${scores[currentPlayer]}`;

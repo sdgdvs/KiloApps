@@ -63,7 +63,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 7: Add a Simple AI Opponent (adjustable difficulty for single-player).
 - [x] Phase 8: Add Sound Effects (dart throw whoosh, thud on hit, bullseye cheer).
 - [x] Phase 9: Add Save/Load State (persist current match and scores).
-- Phase 10: Add Match Statistics (average score per dart, highest checkout).
+- [x] Phase 10: Add Match Statistics (average score per dart, highest checkout).
 - Phase 11: Add Local Multiplayer (hotseat for 2 players).
 - Phase 12: Add Visual Polish (particle effects for high scores or bullseyes).
 - Phase 13: Add Undo/Redo functionality for misclicks.
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KDarts
-**Goal:** Phase 10
+**Goal:** Phase 11
 
 
 ## App Lifecycle (14 phases per app)
