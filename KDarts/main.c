@@ -10,7 +10,11 @@
 #define R 220
 
 typedef struct {
-    int x, y, pts;
+    int targetX, targetY;
+    float x, y;
+    int pts;
+    float progress;
+    int animating;
 } Dart;
 
 int gameMode = 0; // 0=501, 1=Cricket
@@ -130,6 +134,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             t += 0.05f;
             wobbleX = (int)(sinf(t * 1.3f) * 15.0f + sinf(t * 0.8f) * 10.0f);
             wobbleY = (int)(cosf(t * 1.5f) * 15.0f + sinf(t * 0.9f) * 10.0f);
+            
+            for (int i = 0; i < dartsCount; i++) {
+                if (darts[i].animating) {
+                    darts[i].progress += 0.1f;
+                    if (darts[i].progress >= 1.0f) {
+                        darts[i].progress = 1.0f;
+                        darts[i].animating = 0;
+                    }
+                    float ease = 1.0f - powf(1.0f - darts[i].progress, 3.0f);
+                    darts[i].x = CX + (darts[i].targetX - CX) * ease;
+                    darts[i].y = 750.0f + (darts[i].targetY - 750.0f) * ease;
+                } else {
+                    darts[i].x = (float)darts[i].targetX;
+                    darts[i].y = (float)darts[i].targetY;
+                }
+            }
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
             
@@ -149,9 +169,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int pts = number * mult;
                 
                 if (dartsCount < 3) {
-                    darts[dartsCount].x = targetX;
-                    darts[dartsCount].y = targetY;
+                    darts[dartsCount].targetX = targetX;
+                    darts[dartsCount].targetY = targetY;
+                    darts[dartsCount].x = (float)CX;
+                    darts[dartsCount].y = 750.0f;
                     darts[dartsCount].pts = pts;
+                    darts[dartsCount].progress = 0.0f;
+                    darts[dartsCount].animating = 1;
                     dartsCount++;
                 }
                 
@@ -336,15 +360,42 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             // Draw darts
             for (int i = 0; i < dartsCount; i++) {
-                HBRUSH dBrush = CreateSolidBrush(RGB(0, 255, 255));
-                HBRUSH oldDBr = (HBRUSH)SelectObject(memDC, dBrush);
-                HPEN dPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-                HPEN oldDPen = (HPEN)SelectObject(memDC, dPen);
-                Ellipse(memDC, darts[i].x - 4, darts[i].y - 4, darts[i].x + 4, darts[i].y + 4);
-                SelectObject(memDC, oldDBr);
-                SelectObject(memDC, oldDPen);
-                DeleteObject(dBrush);
-                DeleteObject(dPen);
+                float scale = darts[i].animating ? (1.5f - darts[i].progress * 0.5f) : 1.0f;
+                int dx = (int)darts[i].x;
+                int dy = (int)darts[i].y;
+                
+                // shaft
+                HPEN shaftPen = CreatePen(PS_SOLID, (int)(2.0f * scale), RGB(200, 200, 200));
+                HPEN oldPen = (HPEN)SelectObject(memDC, shaftPen);
+                MoveToEx(memDC, dx, dy, NULL);
+                LineTo(memDC, dx + (int)(15.0f * scale), dy + (int)(25.0f * scale));
+                SelectObject(memDC, oldPen);
+                DeleteObject(shaftPen);
+                
+                // flight
+                POINT flight[4];
+                flight[0].x = dx + (int)(15.0f * scale); flight[0].y = dy + (int)(25.0f * scale);
+                flight[1].x = dx + (int)(25.0f * scale); flight[1].y = dy + (int)(15.0f * scale);
+                flight[2].x = dx + (int)(35.0f * scale); flight[2].y = dy + (int)(25.0f * scale);
+                flight[3].x = dx + (int)(25.0f * scale); flight[3].y = dy + (int)(35.0f * scale);
+                
+                HBRUSH fBrush = CreateSolidBrush(RGB(0, 255, 255));
+                HPEN fPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+                HBRUSH oldFBr = (HBRUSH)SelectObject(memDC, fBrush);
+                HPEN oldFPen = (HPEN)SelectObject(memDC, fPen);
+                Polygon(memDC, flight, 4);
+                SelectObject(memDC, oldFBr);
+                SelectObject(memDC, oldFPen);
+                DeleteObject(fBrush);
+                DeleteObject(fPen);
+                
+                // tip
+                HBRUSH tBrush = CreateSolidBrush(RGB(255, 255, 255));
+                HBRUSH oldTBr = (HBRUSH)SelectObject(memDC, tBrush);
+                int r = (int)(2.0f * scale);
+                Ellipse(memDC, dx - r, dy - r, dx + r, dy + r);
+                SelectObject(memDC, oldTBr);
+                DeleteObject(tBrush);
             }
             
             // Draw crosshair

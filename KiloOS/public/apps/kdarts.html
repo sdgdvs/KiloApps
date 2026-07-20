@@ -137,7 +137,7 @@ canvas.addEventListener('mousedown', (e) => {
         const hit = getHitDetails(targetX, targetY);
         const pts = hit.number * hit.mult;
         
-        darts.push({x: targetX, y: targetY, pts: pts});
+        darts.push({targetX: targetX, targetY: targetY, x: 300, y: 600, pts: pts, progress: 0, animating: true});
         dartsLeft--;
         dartCount++;
 
@@ -280,12 +280,49 @@ function update() {
     
     // Draw thrown darts
     for (let i = 0; i < darts.length; i++) {
+        let d = darts[i];
+        if (d.animating) {
+            d.progress += 0.1;
+            if (d.progress >= 1.0) {
+                d.progress = 1.0;
+                d.animating = false;
+            }
+            let ease = 1 - Math.pow(1 - d.progress, 3);
+            d.x = 300 + (d.targetX - 300) * ease;
+            d.y = 600 + (d.targetY - 600) * ease;
+        } else {
+            d.x = d.targetX;
+            d.y = d.targetY;
+        }
+        
+        let scale = d.animating ? (1.5 - d.progress * 0.5) : 1.0;
+        
+        // shaft
         ctx.beginPath();
-        ctx.arc(darts[i].x, darts[i].y, 4, 0, Math.PI * 2);
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x + 15 * scale, d.y + 25 * scale);
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 2 * scale;
+        ctx.stroke();
+        
+        // flight
+        ctx.beginPath();
+        ctx.moveTo(d.x + 15 * scale, d.y + 25 * scale);
+        ctx.lineTo(d.x + 25 * scale, d.y + 15 * scale);
+        ctx.lineTo(d.x + 35 * scale, d.y + 25 * scale);
+        ctx.lineTo(d.x + 25 * scale, d.y + 35 * scale);
+        ctx.closePath();
         ctx.fillStyle = '#0ff';
         ctx.fill();
         ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1 * scale;
         ctx.stroke();
+        
+        // tip point
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, 2 * scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
     }
     
     // Draw crosshair if playing
