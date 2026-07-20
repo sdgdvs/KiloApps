@@ -10,6 +10,8 @@
 #define ID_CB_SIZE 104
 #define ID_BTN_SCORE 105
 #define ID_CB_AI 106
+#define ID_BTN_SAVE 107
+#define ID_BTN_LOAD 108
 
 int boardSize = 9;
 char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
@@ -208,6 +210,43 @@ void MakeAIMove(HWND hwnd) {
     }
 }
 
+void SaveGame(HWND hwnd) {
+    FILE *f = fopen("kgo_save.dat", "wb");
+    if (f) {
+        fwrite(&boardSize, sizeof(int), 1, f);
+        fwrite(board, sizeof(char), 19*19, f);
+        fwrite(prevBoard, sizeof(char), 19*19, f);
+        fwrite(&currentPlayer, sizeof(int), 1, f);
+        fwrite(captures, sizeof(int), 3, f);
+        fclose(f);
+        MessageBox(hwnd, "Game saved.", "Save", MB_OK);
+    } else {
+        MessageBox(hwnd, "Failed to save game.", "Error", MB_OK);
+    }
+}
+
+void LoadGame(HWND hwnd) {
+    FILE *f = fopen("kgo_save.dat", "rb");
+    if (f) {
+        fread(&boardSize, sizeof(int), 1, f);
+        fread(board, sizeof(char), 19*19, f);
+        fread(prevBoard, sizeof(char), 19*19, f);
+        fread(&currentPlayer, sizeof(int), 1, f);
+        fread(captures, sizeof(int), 3, f);
+        fclose(f);
+        
+        int sel = 0;
+        if (boardSize == 13) sel = 1;
+        else if (boardSize == 19) sel = 2;
+        SendMessage(GetDlgItem(hwnd, ID_CB_SIZE), CB_SETCURSEL, sel, 0);
+        
+        InvalidateRect(hwnd, NULL, TRUE);
+        MessageBox(hwnd, "Game loaded.", "Load", MB_OK);
+    } else {
+        MessageBox(hwnd, "No saved game found.", "Error", MB_OK);
+    }
+}
+
 void InitBoard() {
     memset(board, 0, sizeof(board));
     memset(prevBoard, 0, sizeof(prevBoard));
@@ -305,6 +344,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hCbAi = CreateWindow("BUTTON", "Play vs AI (White)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
                 420, 600, 150, 30, hwnd, (HMENU)ID_CB_AI, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbAi, BM_SETCHECK, BST_CHECKED, 0);
+            CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                20, 640, 60, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                90, 640, 60, 30, hwnd, (HMENU)ID_BTN_LOAD, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -454,6 +497,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_NEW) {
                 InitBoard();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_SAVE) {
+                SaveGame(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_LOAD) {
+                LoadGame(hwnd);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);
                 if (sel == 0) boardSize = 9;

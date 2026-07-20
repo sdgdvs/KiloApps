@@ -90,6 +90,7 @@
   .controls {
     margin-top: 20px;
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
   }
   button, select {
@@ -118,6 +119,8 @@
     <button id="btn-pass">Pass</button>
     <button id="btn-resign">Resign</button>
     <button id="btn-score">Score Game</button>
+    <button id="btn-save">Save</button>
+    <button id="btn-load">Load</button>
     <select id="board-size">
       <option value="9">9x9</option>
       <option value="13">13x13</option>
@@ -453,6 +456,40 @@
   });
   document.getElementById('btn-new').addEventListener('click', () => {
     initBoard();
+  });
+  document.getElementById('btn-save').addEventListener('click', () => {
+    const state = {
+      size,
+      board,
+      currentPlayer,
+      history,
+      captures,
+      lastMove
+    };
+    localStorage.setItem('kgo_save', JSON.stringify(state));
+    alert('Game saved.');
+  });
+  document.getElementById('btn-load').addEventListener('click', () => {
+    const data = localStorage.getItem('kgo_save');
+    if (data) {
+      try {
+        const state = JSON.parse(data);
+        size = state.size;
+        board = state.board;
+        currentPlayer = state.currentPlayer;
+        history = state.history || [];
+        captures = state.captures;
+        lastMove = state.lastMove || {x: -1, y: -1};
+        document.getElementById('board-size').value = size;
+        updateStatus();
+        drawBoard();
+        alert('Game loaded.');
+      } catch (e) {
+        alert('Failed to load game.');
+      }
+    } else {
+      alert('No saved game found.');
+    }
   });
   document.getElementById('board-size').addEventListener('change', (e) => {
     size = parseInt(e.target.value);
