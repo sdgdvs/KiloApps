@@ -66,13 +66,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Add Visual Capture indicators (highlight stones before they are captured or animate removal).
 - [x] Phase 11: Add Undo/Redo functionality (keep a history of board states).
 - [x] Phase 12: Add Statistics tracking (games played, win/loss record against AI vs Local Multiplayer).
-- Phase 13: Add Adjustable AI Difficulty (Easy = random, Medium = basic heuristics).
+- [x] Phase 13: Add Adjustable AI Difficulty (Easy = random, Medium = basic heuristics).
 - Phase 14: Add Comprehensive Help / How-to-Play modal explaining Go rules and territory scoring.
 
 ## Next Priority (Before New Apps)
 
 **App:** KGo
-**Goal:** Phase 13
+**Goal:** Phase 14
 
 
 ## App Lifecycle (14 phases per app)

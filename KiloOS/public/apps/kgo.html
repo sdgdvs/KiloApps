@@ -138,6 +138,10 @@
     </select>
     <button id="btn-new">New Game</button>
     <label style="display:flex;align-items:center;margin-left:10px;cursor:pointer;"><input type="checkbox" id="ai-toggle" checked> Play vs AI (White)</label>
+    <select id="ai-difficulty">
+      <option value="easy">Easy AI</option>
+      <option value="medium" selected>Medium AI</option>
+    </select>
   </div>
 
 <script>
@@ -475,6 +479,8 @@
   function makeAIMove() {
     if (currentPlayer !== 'W') return;
     
+    let difficulty = document.getElementById('ai-difficulty').value;
+    
     let validMoves = [];
     let captureMoves = [];
     
@@ -482,14 +488,14 @@
       for (let x = 0; x < size; x++) {
         let res = isValidMove(x, y, 'W');
         if (res.valid) {
+          validMoves.push({x, y});
           if (res.captures > 0) captureMoves.push({x, y});
-          else validMoves.push({x, y});
         }
       }
     }
     
     let move = null;
-    if (captureMoves.length > 0) {
+    if (difficulty === 'medium' && captureMoves.length > 0) {
       move = captureMoves[Math.floor(Math.random() * captureMoves.length)];
     } else if (validMoves.length > 0) {
       move = validMoves[Math.floor(Math.random() * validMoves.length)];

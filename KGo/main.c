@@ -15,6 +15,7 @@
 #define ID_BTN_UNDO 109
 #define ID_BTN_REDO 110
 #define ID_BTN_STATS 111
+#define ID_CB_DIFFICULTY 112
 
 typedef struct {
     int played;
@@ -314,6 +315,8 @@ int IsValidMove(int x, int y, int color, int *outCaptures) {
 void MakeAIMove(HWND hwnd) {
     if (currentPlayer != 2) return;
     
+    int difficulty = SendMessage(GetDlgItem(hwnd, ID_CB_DIFFICULTY), CB_GETCURSEL, 0, 0);
+    
     POINT captureMoves[19*19];
     int captureCount = 0;
     POINT validMoves[19*19];
@@ -323,20 +326,19 @@ void MakeAIMove(HWND hwnd) {
         for (int x = 0; x < boardSize; x++) {
             int caps = 0;
             if (IsValidMove(x, y, 2, &caps)) {
+                validMoves[validCount].x = x;
+                validMoves[validCount].y = y;
+                validCount++;
                 if (caps > 0) {
                     captureMoves[captureCount].x = x;
                     captureMoves[captureCount].y = y;
                     captureCount++;
-                } else {
-                    validMoves[validCount].x = x;
-                    validMoves[validCount].y = y;
-                    validCount++;
                 }
             }
         }
     }
     
-    if (captureCount > 0) {
+    if (difficulty == 1 && captureCount > 0) {
         int r = rand() % captureCount;
         PlaceStone(hwnd, captureMoves[r].x, captureMoves[r].y);
     } else if (validCount > 0) {
@@ -474,7 +476,7 @@ void CalculateScore(HWND hwnd) {
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    static HWND hBtnPass, hBtnResign, hBtnNew, hCbSize, hCbAi;
+    static HWND hBtnPass, hBtnResign, hBtnNew, hCbSize, hCbAi, hCbDifficulty;
 
     switch (uMsg) {
         case WM_CREATE:
@@ -495,6 +497,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hCbAi = CreateWindow("BUTTON", "Play vs AI (White)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX,
                 420, 600, 150, 30, hwnd, (HMENU)ID_CB_AI, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbAi, BM_SETCHECK, BST_CHECKED, 0);
+            hCbDifficulty = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
+                420, 640, 100, 100, hwnd, (HMENU)ID_CB_DIFFICULTY, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
+            SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
+            SendMessage(hCbDifficulty, CB_SETCURSEL, 1, 0);
             CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 20, 640, 60, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
