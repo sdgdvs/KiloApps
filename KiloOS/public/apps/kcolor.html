@@ -14,20 +14,20 @@
 <body>
   <div class="row">
     <div class="label">R:</div>
-    <input type="range" id="r" min="0" max="255" value="100">
+    <input type="range" id="r" min="0" max="255" value="100" aria-label="Red">
     <div class="val-label" id="vr">100</div>
   </div>
   <div class="row">
     <div class="label">G:</div>
-    <input type="range" id="g" min="0" max="255" value="150">
+    <input type="range" id="g" min="0" max="255" value="150" aria-label="Green">
     <div class="val-label" id="vg">150</div>
   </div>
   <div class="row">
     <div class="label">B:</div>
-    <input type="range" id="b" min="0" max="255" value="200">
+    <input type="range" id="b" min="0" max="255" value="200" aria-label="Blue">
     <div class="val-label" id="vb">200</div>
   </div>
-  <div class="preview" id="preview">#6496C8</div>
+  <div class="preview" id="preview" aria-live="polite">#6496C8</div>
 <script>
   const rr = document.getElementById('r');
   const gg = document.getElementById('g');

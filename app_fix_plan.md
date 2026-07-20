@@ -109,5 +109,6 @@ Pass 1 Complete.
 - **KChat & KChatServer**: Added ARIA labels in `kchat.html`. Fixed GDI resource leaks (`hUIFont`, `wc.hbrBackground`) and fixed incorrect button labels/states during socket connect/disconnect errors in `main.c`.
 - **KChess**: Added ARIA tags and localStorage error handling in `kchess.html`. Fixed undeclared `dstP` variable in `WM_TIMER` that caused compilation error and fixed GDI resource leak (`wc.hbrBackground`) and timer leak in `main.c`.
 - **KClock**: Added ARIA labels and improved keyboard accessibility for tabs in `kclock.html`. Fixed non-modal MessageBox bug in `main.c` by passing `hwnd` to `UpdateDisplays`, preventing re-entrancy and UI interaction issues when alerts are shown.
+- **KColor**: Added ARIA labels and `aria-live` to color preview in `kcolor.html` for accessibility. Verified `main.c` (no leaks or bugs found).
 
-Start Pass 2 (Deeper Quality checks). Next target: KColor.
+Start Pass 2 (Deeper Quality checks). Next target: KContacts.
