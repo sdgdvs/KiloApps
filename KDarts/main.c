@@ -11,10 +11,33 @@
 #define BOARD_R 300
 #define R 220
 
+#include <stdint.h>
+
+DWORD WINAPI PlaySoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 1) { // whoosh
+        Beep(800, 30);
+        Beep(400, 30);
+        Beep(200, 30);
+    } else if (type == 2) { // thud
+        Beep(100, 50);
+    } else if (type == 3) { // cheer
+        Beep(440, 100);
+        Beep(554, 100);
+        Beep(659, 200);
+    }
+    return 0;
+}
+
+void PlayGameSound(int type) {
+    CreateThread(NULL, 0, PlaySoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
 typedef struct {
     int targetX, targetY;
     float x, y;
     int pts;
+    int number;
     float progress;
     int animating;
 } Dart;
@@ -193,11 +216,13 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
     int pts = number * mult;
     
     if (dartsCount < 3) {
+        PlayGameSound(1);
         darts[dartsCount].targetX = tx;
         darts[dartsCount].targetY = ty;
         darts[dartsCount].x = (float)CX;
         darts[dartsCount].y = 750.0f;
         darts[dartsCount].pts = pts;
+        darts[dartsCount].number = number;
         darts[dartsCount].progress = 0.0f;
         darts[dartsCount].animating = 1;
         dartsCount++;
@@ -301,6 +326,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (darts[i].progress >= 1.0f) {
                         darts[i].progress = 1.0f;
                         darts[i].animating = 0;
+                        if (darts[i].number == 25) PlayGameSound(3);
+                        else PlayGameSound(2);
                     }
                     float ease = 1.0f - powf(1.0f - darts[i].progress, 3.0f);
                     darts[i].x = CX + (darts[i].targetX - CX) * ease;
