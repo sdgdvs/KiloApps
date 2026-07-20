@@ -92,26 +92,26 @@
   <div class="app-container">
     <div class="header">KConverter</div>
     <div class="glass-panel">
-      <div class="tabs">
-        <div class="tab active" onclick="setMode('length')">Length</div>
-        <div class="tab" onclick="setMode('weight')">Weight</div>
-        <div class="tab" onclick="setMode('temp')">Temp</div>
-        <div class="tab" onclick="setMode('data')">Data</div>
+      <div class="tabs" role="tablist">
+        <div class="tab active" role="tab" aria-selected="true" tabindex="0" onclick="setMode('length')" onkeydown="if(event.key==='Enter'||event.key===' ') setMode('length')">Length</div>
+        <div class="tab" role="tab" aria-selected="false" tabindex="0" onclick="setMode('weight')" onkeydown="if(event.key==='Enter'||event.key===' ') setMode('weight')">Weight</div>
+        <div class="tab" role="tab" aria-selected="false" tabindex="0" onclick="setMode('temp')" onkeydown="if(event.key==='Enter'||event.key===' ') setMode('temp')">Temp</div>
+        <div class="tab" role="tab" aria-selected="false" tabindex="0" onclick="setMode('data')" onkeydown="if(event.key==='Enter'||event.key===' ') setMode('data')">Data</div>
       </div>
 
       <div class="row">
         <label>From</label>
         <div style="display:flex; gap:8px;">
-          <input type="number" id="inputVal" value="1" oninput="convert()" style="flex:1" />
-          <select id="unitFrom" onchange="convert()" style="flex:1"></select>
+          <input type="number" id="inputVal" value="1" oninput="convert()" style="flex:1" aria-label="Value to convert from" />
+          <select id="unitFrom" onchange="convert()" style="flex:1" aria-label="Unit to convert from"></select>
         </div>
       </div>
 
       <div class="row" style="margin-top:8px;">
         <label>To</label>
         <div style="display:flex; gap:8px;">
-          <input type="text" id="outputVal" readonly style="flex:1; background:rgba(0,0,0,0.4);" />
-          <select id="unitTo" onchange="convert()" style="flex:1"></select>
+          <input type="text" id="outputVal" readonly style="flex:1; background:rgba(0,0,0,0.4);" aria-label="Converted result" aria-live="polite" />
+          <select id="unitTo" onchange="convert()" style="flex:1" aria-label="Unit to convert to"></select>
         </div>
       </div>
     </div>
@@ -152,8 +152,10 @@
       currentMode = mode;
       document.querySelectorAll('.tab').forEach(el => {
         el.classList.remove('active');
+        el.setAttribute('aria-selected', 'false');
         if (el.innerText.toLowerCase().startsWith(mode.substring(0,4))) {
           el.classList.add('active');
+          el.setAttribute('aria-selected', 'true');
         }
       });
       populateDropdowns();

@@ -111,5 +111,6 @@ Pass 1 Complete.
 - **KClock**: Added ARIA labels and improved keyboard accessibility for tabs in `kclock.html`. Fixed non-modal MessageBox bug in `main.c` by passing `hwnd` to `UpdateDisplays`, preventing re-entrancy and UI interaction issues when alerts are shown.
 - **KColor**: Added ARIA labels and `aria-live` to color preview in `kcolor.html` for accessibility. Verified `main.c` (no leaks or bugs found).
 - **KContacts**: Fixed XSS vulnerability in `kcontacts.html` contact list rendering using `textContent` and safe DOM creation. Added keyboard accessibility attributes and handlers. Verified `main.c` (no issues found).
+- **KConverter**: Added ARIA labels and keyboard accessibility to tabs and inputs in `kconverter.html`. Verified `main.c` (no leaks or bugs found).
 
-Start Pass 2 (Deeper Quality checks). Next target: KConverter.
+Start Pass 2 (Deeper Quality checks). Next target: KDB.
