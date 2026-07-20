@@ -42,6 +42,25 @@
     let selectedCell = null;
     let isProcessing = false;
 
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, duration) {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+    
+    function playSwapSound() { playTone(300, 'sine', 0.1); }
+    function playMatchSound(combo) { playTone(400 + combo * 100, 'sine', 0.15); }
+    function playBadSwapSound() { playTone(150, 'sawtooth', 0.15); }
+
     function initGame() {
       boardEl.innerHTML = '';
       grid = [];
@@ -101,12 +120,14 @@
       selectedCell = null;
       
       swap(r1, c1, r2, c2);
+      playSwapSound();
       await sleep(200);
 
       let matches = findMatches();
       if (matches.length > 0) {
         await processMatches(matches);
       } else {
+        playBadSwapSound();
         swap(r1, c1, r2, c2); // swap back
         await sleep(200);
       }
@@ -152,6 +173,7 @@
     async function processMatches(matches) {
       let comboMultiplier = 1;
       while(matches.length > 0) {
+        playMatchSound(comboMultiplier);
         score += matches.length * 10 * comboMultiplier;
         scoreEl.textContent = score;
 

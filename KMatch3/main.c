@@ -15,6 +15,10 @@ int moves = 0;
 int selR = -1, selC = -1;
 int isProcessing = 0;
 
+void PlaySwapSound() { Beep(300, 100); }
+void PlayMatchSound(int combo) { Beep(400 + combo * 100, 150); }
+void PlayBadSwapSound() { Beep(150, 150); }
+
 COLORREF colors[] = {
     RGB(255, 64, 64),
     RGB(64, 255, 64),
@@ -108,9 +112,10 @@ void ProcessMatches(HWND hwnd) {
             }
         }
         score += matchCount * 10 * comboMultiplier;
-        comboMultiplier++;
         InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
-        Sleep(200);
+        PlayMatchSound(comboMultiplier);
+        Sleep(50);
+        comboMultiplier++;
 
         for (int c = 0; c < COLS; c++) {
             int emptyR = ROWS - 1;
@@ -201,12 +206,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int origR = selR, origC = selC;
                         selR = -1; selC = -1;
                         InvalidateRect(hwnd, NULL, FALSE); UpdateWindow(hwnd);
-                        Sleep(200);
+                        PlaySwapSound();
+                        Sleep(100);
 
                         int matchGrid[ROWS][COLS];
                         if (FindMatches(matchGrid)) {
                             ProcessMatches(hwnd);
                         } else {
+                            PlayBadSwapSound();
                             temp = grid[origR][origC];
                             grid[origR][origC] = grid[r][c];
                             grid[r][c] = temp;

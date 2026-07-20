@@ -57,7 +57,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - Phase 3: Completed. Created native C version (`main.c`, `build.bat`) with Win32 API with functional parity.
 - Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features. (COMPLETED)
 - Phase 5: Add a Score System with Combo Multipliers (score based on match size and cascades). (COMPLETED)
-- Phase 6: Add Sound Effects (gem swap, match pop, cascade combo sounds).
+- Phase 6: Add Sound Effects (gem swap, match pop, cascade combo sounds). (COMPLETED)
 - Phase 7: Add Visual Animations (smooth gem swapping and falling gravity).
 - Phase 8: Add Particle Effects (explosions when gems match).
 - Phase 9: Add Special Gems (e.g., matching 4 creates a line bomb, matching 5 creates a color bomb).
@@ -70,7 +70,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KMatch3
-**Goal:** Phase 6
+**Goal:** Phase 7
 
 
 ## App Lifecycle (14 phases per app)
