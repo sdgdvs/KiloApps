@@ -105,10 +105,20 @@
   </div>
 
 <script>
-  // Basic skeleton for Phase 1
   const boardEl = document.getElementById('board');
-  const size = 9; // Default for Phase 1 skeleton
-  
+  let size = 9;
+  let board = [];
+  let currentPlayer = 'B';
+  let history = []; // for ko rule
+
+  function initBoard() {
+    board = Array(size).fill(null).map(() => Array(size).fill(null));
+    currentPlayer = 'B';
+    history = [];
+    updateStatus();
+    drawBoard();
+  }
+
   function drawBoard() {
     boardEl.innerHTML = '';
     boardEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
@@ -125,12 +135,126 @@
         
         cell.dataset.x = x;
         cell.dataset.y = y;
+        
+        if (board[y][x]) {
+          const stone = document.createElement('div');
+          stone.className = `stone ${board[y][x] === 'B' ? 'black' : 'white'}`;
+          cell.appendChild(stone);
+        }
+        
+        cell.addEventListener('click', () => placeStone(x, y));
         boardEl.appendChild(cell);
       }
     }
   }
-  
-  drawBoard();
+
+  function getLiberties(x, y, color, visited) {
+    if (x < 0 || x >= size || y < 0 || y >= size) return 0;
+    if (visited[y][x]) return 0;
+    visited[y][x] = true;
+    
+    if (board[y][x] === null) return 1;
+    if (board[y][x] !== color) return 0;
+    
+    return getLiberties(x-1, y, color, visited) +
+           getLiberties(x+1, y, color, visited) +
+           getLiberties(x, y-1, color, visited) +
+           getLiberties(x, y+1, color, visited);
+  }
+
+  function getGroup(x, y, color, visited, group) {
+    if (x < 0 || x >= size || y < 0 || y >= size) return;
+    if (visited[y][x]) return;
+    if (board[y][x] !== color) return;
+    
+    visited[y][x] = true;
+    group.push({x, y});
+    getGroup(x-1, y, color, visited, group);
+    getGroup(x+1, y, color, visited, group);
+    getGroup(x, y-1, color, visited, group);
+    getGroup(x, y+1, color, visited, group);
+  }
+
+  function checkCaptures(color) {
+    let captured = 0;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (board[y][x] === color) {
+          let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+          if (getLiberties(x, y, color, visited) === 0) {
+            // Capture group
+            let groupVisited = Array(size).fill(null).map(() => Array(size).fill(false));
+            let group = [];
+            getGroup(x, y, color, groupVisited, group);
+            group.forEach(p => {
+              board[p.y][p.x] = null;
+              captured++;
+            });
+          }
+        }
+      }
+    }
+    return captured;
+  }
+
+  function boardToString() {
+    return board.map(row => row.map(c => c || '.').join('')).join('');
+  }
+
+  function placeStone(x, y) {
+    if (board[y][x] !== null) return;
+    
+    let boardBackup = deepCopy(board);
+    board[y][x] = currentPlayer;
+    
+    let opp = currentPlayer === 'B' ? 'W' : 'B';
+    checkCaptures(opp);
+    
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    if (getLiberties(x, y, currentPlayer, visited) === 0) {
+      board = boardBackup;
+      alert("Suicide move is not allowed.");
+      return;
+    }
+    
+    let state = boardToString();
+    if (history.includes(state)) {
+      board = boardBackup;
+      alert("Ko rule violation.");
+      return;
+    }
+    
+    history.push(boardToString());
+    currentPlayer = opp;
+    updateStatus();
+    drawBoard();
+  }
+
+  function deepCopy(arr) {
+    return arr.map(row => [...row]);
+  }
+
+  function updateStatus() {
+    document.querySelector('.status').innerText = `Current Turn: ${currentPlayer === 'B' ? 'Black' : 'White'}`;
+  }
+
+  document.getElementById('btn-pass').addEventListener('click', () => {
+    currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
+    updateStatus();
+  });
+  document.getElementById('btn-resign').addEventListener('click', () => {
+    alert(`${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`);
+    initBoard();
+  });
+  document.getElementById('btn-new').addEventListener('click', () => {
+    initBoard();
+  });
+  document.getElementById('board-size').addEventListener('change', (e) => {
+    size = parseInt(e.target.value);
+    initBoard();
+  });
+
+  initBoard();
 </script>
 </body>
 </html>
