@@ -48,29 +48,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KWords
-**Phase:** 8
+**App:** KGo
+**Phase:** 1
 **Status:** In Progress
 
-- [x] Phase 1: Choose a unique app. Scaffold `KWords/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [x] Phase 5: Add Multiple Difficulty Levels (Easy/Medium/Hard, affecting grid size and number of hidden words).
-- [x] Phase 6: Add Category Themes (e.g. Animals, Countries, Programming) with distinct word lists.
-- [x] Phase 7: Add a Timer and Scoring System (faster completion yields a higher score).
-- [x] Phase 8: Add Sound Effects (word selection tick, word found chime, puzzle complete fanfare).
-- [x] Phase 9: Add Visual Polish (smooth highlighting animations and strikethrough for found words on the word list).
-- [x] Phase 10: Add a Hint System (highlight the first letter of a word, with a score/time penalty).
-- [x] Phase 11: Add Save/Load State (persist current grid, selected words, timer, and score).
-- [x] Phase 12: Add High Score tracking and Statistics (Best times per category/difficulty, puzzles completed).
-- [x] Phase 13: Add Game Modes (e.g. Zen Mode with no timer, Time Attack).
-- Phase 14: Add Comprehensive Help / How-to-Play modal.
+- [ ] Phase 1: Choose a unique app. Scaffold `KGo/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- [ ] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- [ ] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- [ ] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
-**App:** KWords
-**Goal:** Phase 14
+**App:** KGo
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -110,6 +100,7 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
 ## Completed Apps
+- KWords (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KMatch3 (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KAsteroids (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KSimon (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)

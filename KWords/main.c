@@ -109,8 +109,10 @@ RECT btnHint = {585, 10, 635, 35};
 RECT btnSave = {645, 10, 695, 35};
 RECT btnLoad = {705, 10, 755, 35};
 RECT btnStats = {765, 10, 815, 35};
+RECT btnHelp = {825, 10, 875, 35};
 
 bool showStats = false;
+bool showHelp = false;
 
 DWORD WINAPI SoundTick(LPVOID lpParam) {
     Beep(1500, 10);
@@ -476,6 +478,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
+            if (showHelp) {
+                showHelp = false;
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
             if (PtInRect(&btnTheme, pt)) {
                 currentThemeIdx = (currentThemeIdx + 1) % NUM_THEMES; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
@@ -504,6 +511,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (PtInRect(&btnStats, pt)) {
                 LoadStats();
                 showStats = true;
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+            if (PtInRect(&btnHelp, pt)) {
+                showHelp = true;
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
@@ -590,6 +602,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(hdc, &btnSave, slBrush);
             FillRect(hdc, &btnLoad, slBrush);
             FillRect(hdc, &btnStats, slBrush);
+            FillRect(hdc, &btnHelp, slBrush);
             DeleteObject(slBrush);
             
             char themeStr[64];
@@ -612,6 +625,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOut(hdc, btnSave.left + 8, btnSave.top + 5, "Save", 4);
             TextOut(hdc, btnLoad.left + 8, btnLoad.top + 5, "Load", 4);
             TextOut(hdc, btnStats.left + 6, btnStats.top + 5, "Stats", 5);
+            TextOut(hdc, btnHelp.left + 8, btnHelp.top + 5, "Help", 4);
             
             DeleteObject(btnBrush);
             DeleteObject(activeBrush);
@@ -739,6 +753,33 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 TextOut(hdc, 120, 650, "Click anywhere to close stats", 29);
+            }
+            
+            if(showHelp) {
+                RECT modalRc = { 100, 100, 700, 700 };
+                HBRUSH modalBrush = CreateSolidBrush(RGB(30, 33, 43));
+                FillRect(hdc, &modalRc, modalBrush);
+                DeleteObject(modalBrush);
+                
+                SetTextColor(hdc, RGB(226, 232, 240));
+                TextOut(hdc, 120, 120, "How to Play KWords", 18);
+                TextOut(hdc, 120, 160, "Goal: Find all the hidden words in the grid!", 44);
+                TextOut(hdc, 140, 200, "- Words can be horizontal, vertical, or diagonal.", 49);
+                TextOut(hdc, 140, 230, "- They can be spelled forwards or backwards.", 44);
+                TextOut(hdc, 140, 260, "- Click and drag to select a word in the grid.", 46);
+                
+                TextOut(hdc, 120, 310, "Modes & Difficulties", 20);
+                TextOut(hdc, 140, 350, "- Classic: Find words fast for a high score.", 44);
+                TextOut(hdc, 140, 380, "- Time Attack: Find all words before time runs out!", 51);
+                TextOut(hdc, 140, 410, "- Zen: No timer, no score. Just relax.", 38);
+                TextOut(hdc, 140, 440, "- Difficulties change grid size and word count.", 47);
+                
+                SetTextColor(hdc, RGB(214, 158, 46));
+                TextOut(hdc, 120, 500, "Hint Button: reveals the first letter of an unfound word", 56);
+                TextOut(hdc, 120, 520, "(costs 50 points and 30 seconds).", 33);
+                
+                SetTextColor(hdc, RGB(226, 232, 240));
+                TextOut(hdc, 120, 650, "Click anywhere to close help", 28);
             }
             
             SelectObject(hdc, hOldPen);
