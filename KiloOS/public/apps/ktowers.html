@@ -5,38 +5,124 @@
     <title>KTowers</title>
     <style>
         body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fff; color: #333; text-align: center; }
-        h1 { margin-top: 0; }
-        .game-area { display: flex; justify-content: center; margin-top: 50px; gap: 40px; }
-        .peg { width: 120px; height: 150px; border-bottom: 8px solid #333; position: relative; display: flex; flex-direction: column-reverse; align-items: center; }
-        .peg-pole { position: absolute; width: 12px; height: 100%; background: #ccc; bottom: 0; z-index: -1; border-radius: 6px 6px 0 0; }
-        .disc { height: 24px; border-radius: 12px; background: #0078D7; border: 1px solid #005A9E; margin-bottom: 2px; }
+        h1 { margin-top: 0; margin-bottom: 5px; }
+        .info { margin-bottom: 20px; font-size: 18px; }
+        .game-area { display: flex; justify-content: center; margin-top: 20px; gap: 40px; }
+        .peg-container { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: background 0.2s; min-width: 140px; }
+        .peg-container:hover { background: #f0f0f0; }
+        .peg-container.selected { background: #e0f0ff; outline: 2px solid #0078D7; }
+        .peg { width: 140px; height: 180px; border-bottom: 8px solid #555; position: relative; display: flex; flex-direction: column-reverse; align-items: center; }
+        .peg-pole { position: absolute; width: 12px; height: 100%; background: #ccc; bottom: 0; z-index: 0; border-radius: 6px 6px 0 0; }
+        .disc { height: 24px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.2); margin-bottom: 2px; z-index: 1; transition: bottom 0.2s; }
         .controls { margin-top: 40px; }
-        button { padding: 8px 16px; font-size: 14px; cursor: pointer; }
+        button { padding: 8px 16px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #eee; border-radius: 4px; }
+        button:hover { background: #ddd; }
+        .message { margin-top: 20px; font-weight: bold; color: green; font-size: 20px; min-height: 24px;}
     </style>
 </head>
 <body>
     <h1>KTowers</h1>
-    <div>Tower of Hanoi - Phase 1</div>
-    <div class="game-area">
-        <div class="peg">
-            <div class="peg-pole"></div>
-            <!-- Mock discs -->
-            <div class="disc" style="width: 100px;"></div>
-            <div class="disc" style="width: 80px;"></div>
-            <div class="disc" style="width: 60px;"></div>
-        </div>
-        <div class="peg">
-            <div class="peg-pole"></div>
-        </div>
-        <div class="peg">
-            <div class="peg-pole"></div>
-        </div>
+    <div class="info">Moves: <span id="moveCount">0</span></div>
+    
+    <div class="game-area" id="gameArea">
+        <!-- Rendered by JS -->
     </div>
+    
+    <div class="message" id="message"></div>
+
     <div class="controls">
-        <button onclick="alert('Not implemented in Phase 1')">Reset</button>
+        <button onclick="initGame()">Restart Game</button>
     </div>
+
     <script>
-        console.log("KTowers loaded");
+        const numDiscs = 4;
+        let pegs = [[], [], []];
+        let selectedPeg = null;
+        let moves = 0;
+        let won = false;
+
+        const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'];
+
+        function initGame() {
+            pegs = [[], [], []];
+            for (let i = numDiscs; i >= 1; i--) {
+                pegs[0].push(i);
+            }
+            selectedPeg = null;
+            moves = 0;
+            won = false;
+            document.getElementById('message').innerText = '';
+            render();
+        }
+
+        function handlePegClick(index) {
+            if (won) return;
+
+            if (selectedPeg === null) {
+                if (pegs[index].length > 0) {
+                    selectedPeg = index;
+                    render();
+                }
+            } else if (selectedPeg === index) {
+                selectedPeg = null;
+                render();
+            } else {
+                const fromPeg = pegs[selectedPeg];
+                const toPeg = pegs[index];
+                
+                if (toPeg.length === 0 || toPeg[toPeg.length - 1] > fromPeg[fromPeg.length - 1]) {
+                    toPeg.push(fromPeg.pop());
+                    moves++;
+                    selectedPeg = null;
+                    render();
+                    checkWin();
+                } else {
+                    selectedPeg = null;
+                    render();
+                }
+            }
+        }
+
+        function checkWin() {
+            if (pegs[2].length === numDiscs) {
+                won = true;
+                document.getElementById('message').innerText = `You won in ${moves} moves!`;
+            }
+        }
+
+        function render() {
+            document.getElementById('moveCount').innerText = moves;
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+
+            pegs.forEach((peg, index) => {
+                const pegContainer = document.createElement('div');
+                pegContainer.className = 'peg-container' + (selectedPeg === index ? ' selected' : '');
+                pegContainer.onclick = () => handlePegClick(index);
+
+                const pegDiv = document.createElement('div');
+                pegDiv.className = 'peg';
+                
+                const pole = document.createElement('div');
+                pole.className = 'peg-pole';
+                pegDiv.appendChild(pole);
+
+                peg.forEach(discSize => {
+                    const disc = document.createElement('div');
+                    disc.className = 'disc';
+                    // max width 140px, min width 40px
+                    const width = 40 + (discSize / 8) * 80;
+                    disc.style.width = width + 'px';
+                    disc.style.backgroundColor = colors[(discSize - 1) % colors.length];
+                    pegDiv.appendChild(disc);
+                });
+
+                pegContainer.appendChild(pegDiv);
+                gameArea.appendChild(pegContainer);
+            });
+        }
+
+        initGame();
     </script>
 </body>
 </html>
