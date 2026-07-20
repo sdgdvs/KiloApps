@@ -18,9 +18,9 @@ int H = 400;
 int ROWS = 4;
 int COLS = 4;
 
-int cards[64];
-int flipped[64] = {0};
-int matched[64] = {0};
+int cards[256];
+int flipped[256] = {0};
+int matched[256] = {0};
 int firstFlip = -1;
 int secondFlip = -1;
 int matches = 0;
@@ -85,6 +85,8 @@ void Shuffle(HWND hwnd) {
         if (is_hard >= 2 && numCards >= 24) {
             if (val == (numCards/2 - 1)) val = 100; // Clock
             else if (val == (numCards/2 - 2)) val = 101; // Shuffle Trap
+            else if (val == (numCards/2 - 3)) val = 102; // Bomb (-B)
+            else if (val == (numCards/2 - 4) && numCards >= 48) val = 103; // X-Ray (+X)
         }
         cards[i] = val;
         flipped[i] = 0;
@@ -120,7 +122,12 @@ void SetDifficulty(HWND hwnd, int hard) {
         else if (campaign_level == 2) { ROWS = 4; COLS = 6; W = 600; H = 400; }
         else if (campaign_level == 3) { ROWS = 4; COLS = 8; W = 800; H = 400; }
         else if (campaign_level == 4) { ROWS = 6; COLS = 8; W = 800; H = 600; }
-        else { ROWS = 8; COLS = 8; W = 800; H = 800; }
+        else if (campaign_level == 5) { ROWS = 8; COLS = 8; W = 800; H = 800; }
+        else if (campaign_level == 6) { ROWS = 8; COLS = 10; W = 1000; H = 800; }
+        else if (campaign_level == 7) { ROWS = 10; COLS = 10; W = 1000; H = 800; }
+        else if (campaign_level == 8) { ROWS = 10; COLS = 12; W = 1200; H = 800; }
+        else if (campaign_level == 9) { ROWS = 12; COLS = 12; W = 1200; H = 800; }
+        else { ROWS = 12; COLS = 14; W = 1200; H = 800; }
     } else if (hard == 2) {
         ROWS = 4; COLS = 8; W = 800; H = 400;
     } else if (hard == 1) {
@@ -156,19 +163,23 @@ void DrawCard(HDC hdc, int idx, int x, int y, int w, int h) {
         DrawEdge(hdc, &r, BDR_SUNKENOUTER, BF_RECT);
         
         char text[8] = {0};
-        if (cards[idx] == 100) { strcpy(text, "+T"); }
-        else if (cards[idx] == 101) { strcpy(text, "??"); }
+        SetBkMode(hdc, TRANSPARENT);
+        if (cards[idx] == 100) { strcpy(text, "+T"); SetTextColor(hdc, RGB(0, 0, 255)); }
+        else if (cards[idx] == 101) { strcpy(text, "??"); SetTextColor(hdc, RGB(255, 0, 0)); }
+        else if (cards[idx] == 102) { strcpy(text, "-B"); SetTextColor(hdc, RGB(128, 0, 0)); }
+        else if (cards[idx] == 103) { strcpy(text, "+X"); SetTextColor(hdc, RGB(255, 0, 255)); }
         else if (theme == 0) {
-            text[0] = 'A' + cards[idx];
+            text[0] = 'A' + (cards[idx] % 26);
+            SetTextColor(hdc, RGB(0, 0, 0));
         } else if (theme == 1) {
             sprintf(text, "%d", cards[idx] + 1);
+            SetTextColor(hdc, RGB(0, 0, 0));
         } else {
             char sym[] = "!@#$%^&*+=?~OX<>";
             text[0] = sym[cards[idx] % 16];
+            SetTextColor(hdc, RGB(0, 0, 0));
         }
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, RGB(0, 0, 0));
-        TextOutA(hdc, x + w / 2 - 4, y + h / 2 - 8, text, strlen(text));
+        TextOutA(hdc, x + w / 2 - 8, y + h / 2 - 8, text, strlen(text));
     }
 }
 
@@ -286,6 +297,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         }
                                     }
                                 }
+                            } else if (cards[firstFlip] == 102) {
+                                score -= 500;
+                                if (score < 0) score = 0;
+                                elapsed_time += 15;
+                            } else if (cards[firstFlip] == 103) {
+                                score += 500;
+                                int numCards = ROWS * COLS;
+                                for (int i = 0; i < numCards; i++) {
+                                    if (!matched[i]) flipped[i] = 1;
+                                }
+                                is_previewing = 1;
+                                SetTimer(hwnd, 3, 2000, NULL);
                             }
                             firstFlip = -1;
                             secondFlip = -1;
@@ -311,7 +334,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 if (is_hard == 3) {
                                     stats_campaign++;
                                     campaign_level++;
-                                    if (campaign_level > 5) {
+                                    if (campaign_level > 10) {
                                         MessageBoxA(hwnd, "You beat the Campaign!", "KMemory", MB_OK);
                                         campaign_level = 1;
                                     }
@@ -341,7 +364,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 KillTimer(hwnd, 3);
                 is_previewing = 0;
                 int numCards = ROWS * COLS;
-                for (int i = 0; i < numCards; i++) flipped[i] = 0;
+                for (int i = 0; i < numCards; i++) if (!matched[i]) flipped[i] = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 1) {
                 KillTimer(hwnd, 1);
@@ -373,7 +396,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char statusText[256];
             int best = (is_hard == 2) ? best_expert : (is_hard == 1 ? best_hard : best_easy);
             if (is_hard == 3)
-                sprintf(statusText, "Campaign %d/5 | Time: %ds  Moves: %d  Score: %d | Total Wins: %d", campaign_level, elapsed_time, moves, score, stats_wins);
+                sprintf(statusText, "Campaign %d/10 | Time: %ds  Moves: %d  Score: %d | Total Wins: %d", campaign_level, elapsed_time, moves, score, stats_wins);
             else if (best == -1)
                 sprintf(statusText, "Time: %ds  Moves: %d  Score: %d (x%d)  Best: - | Pairs: %d", elapsed_time, moves, score, combo, stats_pairs);
             else

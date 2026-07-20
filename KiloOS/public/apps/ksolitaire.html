@@ -6,11 +6,16 @@
   body { margin: 0; background-color: #1e963c; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; font-family: sans-serif; color: white;}
   #ui { display: flex; justify-content: space-between; width: 100%; max-width: 600px; margin-bottom: 10px; font-weight: bold; font-size: 14px; gap: 10px; }
   .grid { display: grid; gap: 10px; }
-  .grid.easy { grid-template-columns: repeat(4, 1fr); width: 380px; height: 380px; }
-  .grid.hard { grid-template-columns: repeat(6, 1fr); width: 570px; height: 380px; }
-  .grid.expert { grid-template-columns: repeat(8, 1fr); width: 760px; height: 380px; }
-  .grid.camp4 { grid-template-columns: repeat(8, 1fr); width: 760px; height: 570px; }
-  .grid.camp5 { grid-template-columns: repeat(8, 1fr); width: 760px; height: 760px; }
+  .grid.easy { grid-template-columns: repeat(4, 1fr); max-width: 400px; max-height: 400px; }
+  .grid.hard { grid-template-columns: repeat(6, 1fr); max-width: 600px; max-height: 400px; }
+  .grid.expert { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 400px; }
+  .grid.camp4 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 600px; }
+  .grid.camp5 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 800px; }
+  .grid.camp6 { grid-template-columns: repeat(10, 1fr); max-width: 1000px; max-height: 800px; }
+  .grid.camp7 { grid-template-columns: repeat(10, 1fr); max-width: 1000px; max-height: 1000px; }
+  .grid.camp8 { grid-template-columns: repeat(12, 1fr); max-width: 1200px; max-height: 1000px; }
+  .grid.camp9 { grid-template-columns: repeat(12, 1fr); max-width: 1200px; max-height: 1200px; }
+  .grid.camp10 { grid-template-columns: repeat(14, 1fr); max-width: 1400px; max-height: 1200px; }
   .card { background: #3264c8; border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #000; }
   .card.flipped { background: #fff; box-shadow: inset 0 0 0 1px #ccc; cursor: default; }
   .card.matched { background: transparent; box-shadow: none; cursor: default; color: transparent; }
@@ -117,7 +122,12 @@
           else if (campaign_level === 2) numCards = 24;
           else if (campaign_level === 3) numCards = 32;
           else if (campaign_level === 4) numCards = 48;
-          else numCards = 64;
+          else if (campaign_level === 5) numCards = 64;
+          else if (campaign_level === 6) numCards = 80;
+          else if (campaign_level === 7) numCards = 100;
+          else if (campaign_level === 8) numCards = 120;
+          else if (campaign_level === 9) numCards = 144;
+          else numCards = 168;
       }
       for (let i = 0; i < numCards; i++) {
           if (!matched[i]) flipped[i] = true;
@@ -149,6 +159,11 @@
       else if (d === 'expert' || (d === 'campaign' && campaign_level === 3)) { grid.className = 'grid expert'; ui.style.width = '760px'; }
       else if (d === 'campaign' && campaign_level === 4) { grid.className = 'grid camp4'; ui.style.width = '760px'; }
       else if (d === 'campaign' && campaign_level === 5) { grid.className = 'grid camp5'; ui.style.width = '760px'; }
+      else if (d === 'campaign' && campaign_level === 6) { grid.className = 'grid camp6'; ui.style.width = '950px'; }
+      else if (d === 'campaign' && campaign_level === 7) { grid.className = 'grid camp7'; ui.style.width = '950px'; }
+      else if (d === 'campaign' && campaign_level === 8) { grid.className = 'grid camp8'; ui.style.width = '1140px'; }
+      else if (d === 'campaign' && campaign_level === 9) { grid.className = 'grid camp9'; ui.style.width = '1140px'; }
+      else if (d === 'campaign' && campaign_level === 10) { grid.className = 'grid camp10'; ui.style.width = '1330px'; }
   }
       init();
   }
@@ -188,10 +203,22 @@
           else if (campaign_level === 2) numCards = 24;
           else if (campaign_level === 3) numCards = 32;
           else if (campaign_level === 4) numCards = 48;
-          else numCards = 64;
+          else if (campaign_level === 5) numCards = 64;
+          else if (campaign_level === 6) numCards = 80;
+          else if (campaign_level === 7) numCards = 100;
+          else if (campaign_level === 8) numCards = 120;
+          else if (campaign_level === 9) numCards = 144;
+          else numCards = 168;
       }
       for (let i = 0; i < numCards; i++) {
-          cards.push(Math.floor(i / 2));
+          let val = Math.floor(i / 2);
+          if (diff === 'expert' || diff === 'campaign') {
+              if (val === numCards/2 - 1) val = 100;
+              else if (val === numCards/2 - 2) val = 101;
+              else if (val === numCards/2 - 3) val = 102;
+              else if (val === numCards/2 - 4 && numCards >= 48) val = 103;
+          }
+          cards.push(val);
           flipped[i] = true;
           matched[i] = false;
       }
@@ -231,7 +258,12 @@
           else if (campaign_level === 2) numCards = 24;
           else if (campaign_level === 3) numCards = 32;
           else if (campaign_level === 4) numCards = 48;
-          else numCards = 64;
+          else if (campaign_level === 5) numCards = 64;
+          else if (campaign_level === 6) numCards = 80;
+          else if (campaign_level === 7) numCards = 100;
+          else if (campaign_level === 8) numCards = 120;
+          else if (campaign_level === 9) numCards = 144;
+          else numCards = 168;
       }
       for (let i = 0; i < numCards; i++) {
           const c = document.createElement('div');
@@ -242,6 +274,8 @@
               c.classList.add('flipped');
               if (cards[i] === 100) { c.textContent = "+T"; c.style.color = "#00f"; }
               else if (cards[i] === 101) { c.textContent = "??"; c.style.color = "#f00"; }
+              else if (cards[i] === 102) { c.textContent = "-B"; c.style.color = "#800"; }
+              else if (cards[i] === 103) { c.textContent = "+X"; c.style.color = "#f0f"; }
               else c.textContent = themes[currentTheme](cards[i] % 16);
           }
           
@@ -273,6 +307,21 @@
                                   }
                               }
                           }
+                      } else if (cards[firstFlip] === 102) {
+                          score = Math.max(0, score - 500);
+                          elapsed += 15;
+                          timeEl.textContent = elapsed;
+                          playTone(200, 'sawtooth', 0.5);
+                      } else if (cards[firstFlip] === 103) {
+                          score += 500;
+                          for(let k=0; k<numCards; k++) {
+                              if(!matched[k]) flipped[k] = true;
+                          }
+                          render();
+                          setTimeout(() => {
+                              for(let k=0; k<numCards; k++) if(!matched[k]) flipped[k] = false;
+                              render();
+                          }, 2000);
                       }
                       
                       score += 100 * combo;
@@ -302,7 +351,7 @@
                           
                           if (diff === 'campaign') {
                               campaign_level++;
-                              if (campaign_level > 5) {
+                              if (campaign_level > 10) {
                                   setTimeout(() => { alert("You beat the Campaign! Total score: " + score); updateBest(); diff='campaign'; campaign_level=1; init(); }, 100);
                               } else {
                                   setTimeout(() => { alert("Stage Clear! Next Stage..."); updateBest(); init(); }, 100);

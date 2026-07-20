@@ -92,7 +92,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KTetris    | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, dynamic garbage, hard drop scoring. |
 | KPong      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-Level campaign, moving obstacles, debuff powerups, stats. |
 | KMaze      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 20-level campaign, speed powerup, teleporters, stats. |
-| KSolitaire | Tier 1          | Feature-Expanded       | Needs Improvement | Memory Match game in both Web and EXE. Loop 5 pending. |
+| KSolitaire | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-stage campaign, Bomb trap, X-Ray powerup. |
 | KSpace     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 5 pending. |
 | KChess     | Tier 1          | Polished / Expanded    | Needs Improvement | Full parity. Loop 5 pending. |
@@ -173,3 +173,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KTetris (Expanded Campaign to 10 stages, added Dynamic Garbage injection in later stages, and Hard Drop scoring to both EXE and HTML)
 - [x] KPong (Expanded Campaign to 10 levels, added moving obstacles, debuff powerups, and Lifetime Wins tracking to both EXE and HTML)
 - [x] KMaze (Expanded to 20-level campaign, added Speed Boost powerup, Teleporters, and Lifetime Stats tracking to both EXE and HTML)
+- [x] KSolitaire (Expanded Campaign to 10 stages, added Bomb trap and X-Ray powerups to both EXE and HTML)
