@@ -71,6 +71,20 @@
       } catch (e) {}
   }
 
+  let wKingMoved = false, wRookLMoved = false, wRookRMoved = false;
+  let bKingMoved = false, bRookLMoved = false, bRookRMoved = false;
+  let epX = -1, epY = -1;
+
+  function getPST(pType, x, y, isWhite) {
+      let row = isWhite ? y : 7 - y;
+      let center = (x >= 3 && x <= 4 && row >= 3 && row <= 4) ? 10 : 
+                   (x >= 2 && x <= 5 && row >= 2 && row <= 5) ? 5 : 0;
+      if (pType === 1) { if (row <= 1) return 50; if (row === 2) return 20; if (row === 3) return 10; return 0; }
+      if (pType === 2) return center * 3;
+      if (pType === 3) return center * 2;
+      if (pType === 6) { if (row >= 6 && (x <= 2 || x >= 5)) return 20; return -center * 2; }
+      return 0;
+  }
   const pieceValues = [0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000];
   let lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 
@@ -90,7 +104,7 @@
       osc.stop(audioCtx.currentTime + 0.1);
   }
 
-  function isValidMove(sx, sy, tx, ty) {
+  function isValidMove(sx, sy, tx, ty, isAttackCheck=false) {
       if (sx === tx && sy === ty) return false;
       let p = board[sy][sx];
       if (p === 0) return false;
@@ -118,14 +132,19 @@
       };
 
       if (pType === 1) { // Pawn
-          if (isWhite) {
-              if (dx === 0 && dy === -1 && dstP === 0) return true;
-              if (dx === 0 && dy === -2 && sy === 6 && dstP === 0 && board[5][tx] === 0) return true;
-              if (adx === 1 && dy === -1 && dstP !== 0) return true;
+          if (isAttackCheck) {
+              if (isWhite) return (adx === 1 && dy === -1);
+              else return (adx === 1 && dy === 1);
           } else {
-              if (dx === 0 && dy === 1 && dstP === 0) return true;
-              if (dx === 0 && dy === 2 && sy === 1 && dstP === 0 && board[2][tx] === 0) return true;
-              if (adx === 1 && dy === 1 && dstP !== 0) return true;
+              if (isWhite) {
+                  if (dx === 0 && dy === -1 && dstP === 0) return true;
+                  if (dx === 0 && dy === -2 && sy === 6 && dstP === 0 && board[5][tx] === 0) return true;
+                  if (adx === 1 && dy === -1 && (dstP !== 0 || (tx === epX && ty === epY - 1))) return true;
+              } else {
+                  if (dx === 0 && dy === 1 && dstP === 0) return true;
+                  if (dx === 0 && dy === 2 && sy === 1 && dstP === 0 && board[2][tx] === 0) return true;
+                  if (adx === 1 && dy === 1 && (dstP !== 0 || (tx === epX && ty === epY + 1))) return true;
+              }
           }
       } else if (pType === 2) { // Knight
           if ((adx === 1 && ady === 2) || (adx === 2 && ady === 1)) return true;
@@ -137,6 +156,25 @@
           if ((adx === ady || adx === 0 || ady === 0) && checkPath()) return true;
       } else if (pType === 6) { // King
           if (adx <= 1 && ady <= 1) return true;
+          if (!isAttackCheck && dy === 0 && adx === 2) {
+              if (isWhite) {
+                  if (wKingMoved) return false;
+                  if (tx === 6 && !wRookRMoved && board[7][5] === 0 && board[7][6] === 0) {
+                      if (!isSquareAttacked(4, 7, false) && !isSquareAttacked(5, 7, false) && !isSquareAttacked(6, 7, false)) return true;
+                  }
+                  if (tx === 2 && !wRookLMoved && board[7][1] === 0 && board[7][2] === 0 && board[7][3] === 0) {
+                      if (!isSquareAttacked(4, 7, false) && !isSquareAttacked(3, 7, false) && !isSquareAttacked(2, 7, false)) return true;
+                  }
+              } else {
+                  if (bKingMoved) return false;
+                  if (tx === 6 && !bRookRMoved && board[0][5] === 0 && board[0][6] === 0) {
+                      if (!isSquareAttacked(4, 0, true) && !isSquareAttacked(5, 0, true) && !isSquareAttacked(6, 0, true)) return true;
+                  }
+                  if (tx === 2 && !bRookLMoved && board[0][1] === 0 && board[0][2] === 0 && board[0][3] === 0) {
+                      if (!isSquareAttacked(4, 0, true) && !isSquareAttacked(3, 0, true) && !isSquareAttacked(2, 0, true)) return true;
+                  }
+              }
+          }
       }
       return false;
   }
@@ -146,7 +184,7 @@
           for (let x = 0; x < 8; x++) {
               let p = board[y][x];
               if (p !== 0 && (p <= 6) === byWhite) {
-                  if (isValidMove(x, y, tx, ty)) return true;
+                  if (isValidMove(x, y, tx, ty, true)) return true;
               }
           }
       }
@@ -156,6 +194,15 @@
   function simulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite) {
       let savedSrc = board[sy][sx];
       let savedDst = board[ty][tx];
+      let pType = savedSrc > 6 ? savedSrc - 6 : savedSrc;
+      
+      let isEP = (pType === 1 && tx === epX && ty === (isWhite ? epY - 1 : epY + 1));
+      let savedEP = 0;
+      if (isEP) {
+          savedEP = board[epY][epX];
+          board[epY][epX] = 0;
+      }
+      
       board[ty][tx] = savedSrc;
       board[sy][sx] = 0;
       
@@ -175,6 +222,9 @@
       
       board[sy][sx] = savedSrc;
       board[ty][tx] = savedDst;
+      if (isEP) {
+          board[epY][epX] = savedEP;
+      }
       return inCheck;
   }
 
@@ -187,7 +237,7 @@
                       for (let tx = 0; tx < 8; tx++) {
                           let dstP = board[ty][tx];
                           if (dstP !== 0 && (dstP <= 6) === isWhite) continue;
-                          if (isValidMove(sx, sy, tx, ty)) {
+                          if (isValidMove(sx, sy, tx, ty, false)) {
                               if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite)) {
                                   return true;
                               }
@@ -212,10 +262,32 @@
           [1,  1, 1,  1,  1, 1, 1,  1],
           [4,  2, 3,  5,  6, 3, 2,  4]
       ];
+      wKingMoved = false; wRookLMoved = false; wRookRMoved = false;
+      bKingMoved = false; bRookLMoved = false; bRookRMoved = false;
+      epX = -1; epY = -1;
       if (campaignMode) {
           aiDifficulty = currentStage > 3 ? 3 : currentStage;
-          if (currentStage === 4) board[7][1] = 0; // Missing Queen Knight
-          if (currentStage === 5) board[7][3] = 0; // Missing Queen
+          if (currentStage === 4) board[7][1] = 0; 
+          if (currentStage === 5) board[7][3] = 0; 
+          if (currentStage === 6) {
+              for(let x=0; x<8; x++) { board[0][x] = 0; board[1][x] = 7; board[2][x] = 7; }
+              board[0][4] = 12;
+          }
+          if (currentStage === 7) {
+              board[7][3] = 0; board[0][3] = 0;
+              board[7][0] = 0; board[0][0] = 0;
+          }
+          if (currentStage === 8) {
+              board[7][2] = 2; board[7][5] = 2;
+              board[0][2] = 8; board[0][5] = 8;
+          }
+          if (currentStage === 9) {
+              board[7][0] = 0; board[7][7] = 0;
+              board[0][3] = 0;
+          }
+          if (currentStage === 10) {
+              board[7][3] = 0;
+          }
       } else {
           aiDifficulty = 2;
       }
@@ -232,7 +304,7 @@
   window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'r') {
           if (gameOver && campaignMode && winner === 1) {
-              if (currentStage < 5) currentStage++;
+              if (currentStage < 10) currentStage++;
               else { campaignMode = false; currentStage = 1; }
           }
           resetGame();
@@ -257,13 +329,14 @@
               if (board[sy][sx] > 6) {
                   for (let ty = 0; ty < 8; ty++) {
                       for (let tx = 0; tx < 8; tx++) {
-                          if (isValidMove(sx, sy, tx, ty)) {
+                          if (isValidMove(sx, sy, tx, ty, false)) {
                               if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, false)) {
                                   let dstP = board[ty][tx];
                                   let baseScore = dstP !== 0 ? pieceValues[dstP] : 0;
                                   
+                                  let pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
                                   if (aiDifficulty >= 2) {
-                                      if (tx >= 3 && tx <= 4 && ty >= 3 && ty <= 4) baseScore += 20;
+                                      baseScore += getPST(pType, tx, ty, false) - getPST(pType, sx, sy, false);
                                       if (isSquareAttacked(tx, ty, true)) baseScore -= Math.floor(pieceValues[board[sy][sx]] / 10);
                                   }
                                   
@@ -279,7 +352,7 @@
                                               if (board[osy][osx] !== 0 && board[osy][osx] <= 6) {
                                                   for (let oty = 0; oty < 8; oty++) {
                                                       for (let otx = 0; otx < 8; otx++) {
-                                                          if (isValidMove(osx, osy, otx, oty)) {
+                                                          if (isValidMove(osx, osy, otx, oty, false)) {
                                                               let oDstP = board[oty][otx];
                                                               if (oDstP !== 0) {
                                                                   let oScore = pieceValues[oDstP];
@@ -319,8 +392,16 @@
           let sx = chosen.sx, sy = chosen.sy, tx = chosen.tx, ty = chosen.ty;
           
           let pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
+          if (pType === 1 && tx === epX && ty === epY + 1) board[epY][epX] = 0;
           board[ty][tx] = board[sy][sx];
           if (pType === 1 && ty === 7) board[ty][tx] = 11;
+          if (pType === 6 && Math.abs(tx - sx) === 2) {
+              if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+              else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
+          }
+          if (pType === 6) bKingMoved = true;
+          if (pType === 4) { if (sx === 0) bRookLMoved = true; if (sx === 7) bRookRMoved = true; }
+          if (pType === 1 && Math.abs(ty - sy) === 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
           board[sy][sx] = 0;
           
           whiteTurn = true;
@@ -387,7 +468,7 @@
               
               ctx.fillRect(px, py, TS, TS);
 
-              if (selX !== -1 && isValidMove(selX, selY, x, y)) {
+              if (selX !== -1 && isValidMove(selX, selY, x, y, false)) {
                   if (!simulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {
                       ctx.fillStyle = "rgba(134, 239, 172, 0.6)";
                       ctx.beginPath();
@@ -409,7 +490,7 @@
       ctx.textAlign = "left";
       
       if (gameOver) {
-          if (winner === 1) ctx.fillText(campaignMode && currentStage < 5 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
+          if (winner === 1) ctx.fillText(campaignMode && currentStage < 10 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
           else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R'", 10, cvs.height - 30);
           else ctx.fillText("Stalemate! Draw! Press 'R'", 10, cvs.height - 30);
       } else {
@@ -461,15 +542,28 @@
                       selX = tx;
                       selY = ty;
                   } else {
-                      if (isValidMove(selX, selY, tx, ty)) {
+                      if (isValidMove(selX, selY, tx, ty, false)) {
                           if (!simulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
                               let pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
+                              let isWhiteMove = isWhite;
+                              if (pType === 1 && tx === epX && ty === (isWhiteMove ? epY - 1 : epY + 1)) board[epY][epX] = 0;
                               board[ty][tx] = board[selY][selX];
                               if (pType === 1) {
-                                  if (isWhite && ty === 0) board[ty][tx] = 5;
-                                  else if (!isWhite && ty === 7) board[ty][tx] = 11;
+                                  if (isWhiteMove && ty === 0) board[ty][tx] = 5;
+                                  else if (!isWhiteMove && ty === 7) board[ty][tx] = 11;
                               }
-                              
+                              if (pType === 6 && Math.abs(tx - selX) === 2) {
+                                  if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+                                  else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
+                              }
+                              if (pType === 6) {
+                                  if (isWhiteMove) wKingMoved = true; else bKingMoved = true;
+                              }
+                              if (pType === 4) {
+                                  if (isWhiteMove) { if (selX === 0) wRookLMoved = true; if (selX === 7) wRookRMoved = true; }
+                                  else { if (selX === 0) bRookLMoved = true; if (selX === 7) bRookRMoved = true; }
+                              }
+                              if (pType === 1 && Math.abs(ty - selY) === 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
                               lastMoveSx = selX; lastMoveSy = selY; lastMoveTx = tx; lastMoveTy = ty;
                               board[selY][selX] = 0;
                               selX = -1;

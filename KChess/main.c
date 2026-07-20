@@ -42,6 +42,35 @@ int pieceValues[] = {0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 
 int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 HBRUSH hBgBrush = NULL;
 
+int wKingMoved = 0, wRookLMoved = 0, wRookRMoved = 0;
+int bKingMoved = 0, bRookLMoved = 0, bRookRMoved = 0;
+int epX = -1, epY = -1;
+
+int GetPST(int pType, int x, int y, int isWhite) {
+    int row = isWhite ? y : 7 - y;
+    int center = (x >= 3 && x <= 4 && row >= 3 && row <= 4) ? 10 : 
+                 (x >= 2 && x <= 5 && row >= 2 && row <= 5) ? 5 : 0;
+    
+    if (pType == 1) { // Pawn
+        if (row <= 1) return 50; 
+        if (row == 2) return 20;
+        if (row == 3) return 10;
+        return 0;
+    }
+    if (pType == 2) { // Knight
+        return center * 3;
+    }
+    if (pType == 3) { // Bishop
+        return center * 2;
+    }
+    if (pType == 6) { // King
+        if (row >= 6 && (x <= 2 || x >= 5)) return 20; 
+        return -center * 2; 
+    }
+    return 0;
+}
+
+
 void LoadStats() {
     FILE *f = fopen("kchess_stats.txt", "r");
     if (f) {
@@ -58,7 +87,7 @@ void SaveStats() {
 }
 
 
-int IsValidMove(int sx, int sy, int tx, int ty) {
+int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck) {
     if (sx == tx && sy == ty) return 0;
     int p = board[sy][sx];
     if (p == 0) return 0;
@@ -86,14 +115,19 @@ int IsValidMove(int sx, int sy, int tx, int ty) {
     }
 
     if (pType == 1) { // Pawn
-        if (isWhite) {
-            if (dx == 0 && dy == -1 && dstP == 0) return 1;
-            if (dx == 0 && dy == -2 && sy == 6 && dstP == 0 && board[5][tx] == 0) return 1;
-            if (adx == 1 && dy == -1 && dstP != 0) return 1;
+        if (isAttackCheck) {
+            if (isWhite) return (adx == 1 && dy == -1);
+            else return (adx == 1 && dy == 1);
         } else {
-            if (dx == 0 && dy == 1 && dstP == 0) return 1;
-            if (dx == 0 && dy == 2 && sy == 1 && dstP == 0 && board[2][tx] == 0) return 1;
-            if (adx == 1 && dy == 1 && dstP != 0) return 1;
+            if (isWhite) {
+                if (dx == 0 && dy == -1 && dstP == 0) return 1;
+                if (dx == 0 && dy == -2 && sy == 6 && dstP == 0 && board[5][tx] == 0) return 1;
+                if (adx == 1 && dy == -1 && (dstP != 0 || (tx == epX && ty == epY - 1))) return 1;
+            } else {
+                if (dx == 0 && dy == 1 && dstP == 0) return 1;
+                if (dx == 0 && dy == 2 && sy == 1 && dstP == 0 && board[2][tx] == 0) return 1;
+                if (adx == 1 && dy == 1 && (dstP != 0 || (tx == epX && ty == epY + 1))) return 1;
+            }
         }
     } else if (pType == 2) { // Knight
         if ((adx == 1 && ady == 2) || (adx == 2 && ady == 1)) return 1;
@@ -105,6 +139,25 @@ int IsValidMove(int sx, int sy, int tx, int ty) {
         if ((adx == ady || adx == 0 || ady == 0) && pathClear) return 1;
     } else if (pType == 6) { // King
         if (adx <= 1 && ady <= 1) return 1;
+        if (!isAttackCheck && dy == 0 && adx == 2) {
+            if (isWhite) {
+                if (wKingMoved) return 0;
+                if (tx == 6 && !wRookRMoved && board[7][5] == 0 && board[7][6] == 0) {
+                    if (!IsSquareAttacked(4, 7, 0) && !IsSquareAttacked(5, 7, 0) && !IsSquareAttacked(6, 7, 0)) return 1;
+                }
+                if (tx == 2 && !wRookLMoved && board[7][1] == 0 && board[7][2] == 0 && board[7][3] == 0) {
+                    if (!IsSquareAttacked(4, 7, 0) && !IsSquareAttacked(3, 7, 0) && !IsSquareAttacked(2, 7, 0)) return 1;
+                }
+            } else {
+                if (bKingMoved) return 0;
+                if (tx == 6 && !bRookRMoved && board[0][5] == 0 && board[0][6] == 0) {
+                    if (!IsSquareAttacked(4, 0, 1) && !IsSquareAttacked(5, 0, 1) && !IsSquareAttacked(6, 0, 1)) return 1;
+                }
+                if (tx == 2 && !bRookLMoved && board[0][1] == 0 && board[0][2] == 0 && board[0][3] == 0) {
+                    if (!IsSquareAttacked(4, 0, 1) && !IsSquareAttacked(3, 0, 1) && !IsSquareAttacked(2, 0, 1)) return 1;
+                }
+            }
+        }
     }
     return 0;
 }
@@ -114,7 +167,7 @@ int IsSquareAttacked(int tx, int ty, int byWhite) {
         for (int x = 0; x < 8; x++) {
             int p = board[y][x];
             if (p != 0 && (p <= 6) == byWhite) {
-                if (IsValidMove(x, y, tx, ty)) return 1;
+                if (IsValidMove(x, y, tx, ty, 1)) return 1;
             }
         }
     }
@@ -124,6 +177,15 @@ int IsSquareAttacked(int tx, int ty, int byWhite) {
 int SimulatedMoveLeavesCheck(int sx, int sy, int tx, int ty, int isWhite) {
     int savedSrc = board[sy][sx];
     int savedDst = board[ty][tx];
+    int pType = savedSrc > 6 ? savedSrc - 6 : savedSrc;
+    
+    int isEP = (pType == 1 && tx == epX && ty == (isWhite ? epY - 1 : epY + 1));
+    int savedEP = 0;
+    if (isEP) {
+        savedEP = board[epY][epX];
+        board[epY][epX] = 0;
+    }
+    
     board[ty][tx] = savedSrc;
     board[sy][sx] = 0;
     
@@ -143,6 +205,9 @@ int SimulatedMoveLeavesCheck(int sx, int sy, int tx, int ty, int isWhite) {
     
     board[sy][sx] = savedSrc;
     board[ty][tx] = savedDst;
+    if (isEP) {
+        board[epY][epX] = savedEP;
+    }
     return inCheck;
 }
 
@@ -155,7 +220,7 @@ int HasLegalMoves(int isWhite) {
                     for (int tx = 0; tx < 8; tx++) {
                         int dstP = board[ty][tx];
                         if (dstP != 0 && (dstP <= 6) == isWhite) continue;
-                        if (IsValidMove(sx, sy, tx, ty)) {
+                        if (IsValidMove(sx, sy, tx, ty, 0)) {
                             if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, isWhite)) {
                                 return 1;
                             }
@@ -180,10 +245,32 @@ void ResetGame() {
         {4,  2, 3,  5,  6, 3, 2,  4}
     };
     
+    wKingMoved = 0; wRookLMoved = 0; wRookRMoved = 0;
+    bKingMoved = 0; bRookLMoved = 0; bRookRMoved = 0;
+    epX = -1; epY = -1;
     if (campaignMode) {
         aiDifficulty = currentStage > 3 ? 3 : currentStage;
-        if (currentStage == 4) initialBoard[7][1] = 0; // Missing Queen Knight
-        if (currentStage == 5) initialBoard[7][3] = 0; // Missing Queen
+        if (currentStage == 4) initialBoard[7][1] = 0; 
+        if (currentStage == 5) initialBoard[7][3] = 0; 
+        if (currentStage == 6) {
+            for(int x=0; x<8; x++) { initialBoard[0][x] = 0; initialBoard[1][x] = 7; initialBoard[2][x] = 7; }
+            initialBoard[0][4] = 12;
+        }
+        if (currentStage == 7) {
+            initialBoard[7][3] = 0; initialBoard[0][3] = 0;
+            initialBoard[7][0] = 0; initialBoard[0][0] = 0;
+        }
+        if (currentStage == 8) {
+            initialBoard[7][2] = 2; initialBoard[7][5] = 2;
+            initialBoard[0][2] = 8; initialBoard[0][5] = 8;
+        }
+        if (currentStage == 9) {
+            initialBoard[7][0] = 0; initialBoard[7][7] = 0;
+            initialBoard[0][3] = 0;
+        }
+        if (currentStage == 10) {
+            initialBoard[7][3] = 0;
+        }
     } else {
         aiDifficulty = 2; // Default Normal
     }
@@ -247,7 +334,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdc, &rc, brush);
                     DeleteObject(brush);
                     
-                    if (selX != -1 && IsValidMove(selX, selY, x, y)) {
+                    if (selX != -1 && IsValidMove(selX, selY, x, y, 0)) {
                         if (!SimulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {
                             HBRUSH dotBrush = CreateSolidBrush(RGB(134, 239, 172)); // green-300
                             HGDIOBJ oldBrush = SelectObject(hdc, dotBrush);
@@ -278,7 +365,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(255, 255, 255));
             
             if (gameOver) {
-                if (winner == 1) DrawTextA(hdc, campaignMode && currentStage < 5 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_LEFT);
+                if (winner == 1) DrawTextA(hdc, campaignMode && currentStage < 10 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_LEFT);
                 else if (winner == 2) DrawTextA(hdc, "Checkmate! Black Wins! Press 'R'", -1, &statusRc, DT_LEFT);
                 else DrawTextA(hdc, "Stalemate! Draw! Press 'R'", -1, &statusRc, DT_LEFT);
             } else {
@@ -312,7 +399,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == 'R') {
                 if (gameOver && campaignMode && winner == 1) {
-                    if (currentStage < 5) currentStage++;
+                    if (currentStage < 10) currentStage++;
                     else { campaignMode = 0; currentStage = 1; }
                 }
                 ResetGame();
@@ -342,14 +429,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (board[sy][sx] > 6) { 
                                 for (int ty = 0; ty < 8; ty++) {
                                     for (int tx = 0; tx < 8; tx++) {
-                                        if (IsValidMove(sx, sy, tx, ty)) {
+                                        if (IsValidMove(sx, sy, tx, ty, 0)) {
                                             if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
                                                 moves[moveCount].sx = sx; moves[moveCount].sy = sy;
                                                 moves[moveCount].tx = tx; moves[moveCount].ty = ty;
                                                 int dstP = board[ty][tx];
                                                 int baseScore = dstP != 0 ? pieceValues[dstP] : 0;
+                                                int pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
                                                 if (aiDifficulty >= 2) {
-                                                    if (tx >= 3 && tx <= 4 && ty >= 3 && ty <= 4) baseScore += 20;
+                                                    baseScore += GetPST(pType, tx, ty, 0) - GetPST(pType, sx, sy, 0);
                                                     if (IsSquareAttacked(tx, ty, 1)) baseScore -= (pieceValues[board[sy][sx]] / 10);
                                                 }
                                                 if (aiDifficulty >= 3) {
@@ -363,7 +451,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                                             if (board[osy][osx] != 0 && board[osy][osx] <= 6) {
                                                                 for (int oty = 0; oty < 8; oty++) {
                                                                     for (int otx = 0; otx < 8; otx++) {
-                                                                        if (IsValidMove(osx, osy, otx, oty)) {
+                                                                        if (IsValidMove(osx, osy, otx, oty, 0)) {
                                                                             int oDstP = board[oty][otx];
                                                                             if (oDstP != 0) {
                                                                                 int oScore = pieceValues[oDstP];
@@ -399,8 +487,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int tx = moves[chosen].tx; int ty = moves[chosen].ty;
                         
                         int pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
+                        int isWhiteMove = 0;
+                        if (pType == 1 && tx == epX && ty == epY + 1) board[epY][epX] = 0;
                         board[ty][tx] = board[sy][sx];
                         if (pType == 1 && ty == 7) board[ty][tx] = 11;
+                        if (pType == 6 && abs(tx - sx) == 2) {
+                            if (tx == 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+                            else if (tx == 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
+                        }
+                        if (pType == 6) bKingMoved = 1;
+                        if (pType == 4) { if (sx == 0) bRookLMoved = 1; if (sx == 7) bRookRMoved = 1; }
+                        if (pType == 1 && abs(ty - sy) == 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
                         board[sy][sx] = 0;
                         whiteTurn = 1;
                         lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
@@ -461,15 +558,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             selX = tx;
                             selY = ty;
                         } else {
-                            if (IsValidMove(selX, selY, tx, ty)) {
+                            if (IsValidMove(selX, selY, tx, ty, 0)) {
                                 if (!SimulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
                                     int pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
+                                    int isWhiteMove = selY == 7 || board[selY][selX] <= 6;
+                                    if (pType == 1 && tx == epX && ty == (isWhiteMove ? epY - 1 : epY + 1)) board[epY][epX] = 0;
                                     board[ty][tx] = board[selY][selX];
                                     if (pType == 1) {
-                                        if (isWhite && ty == 0) board[ty][tx] = 5;
-                                        else if (!isWhite && ty == 7) board[ty][tx] = 11;
+                                        if (isWhiteMove && ty == 0) board[ty][tx] = 5;
+                                        else if (!isWhiteMove && ty == 7) board[ty][tx] = 11;
                                     }
-                                    
+                                    if (pType == 6 && abs(tx - selX) == 2) {
+                                        if (tx == 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+                                        else if (tx == 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
+                                    }
+                                    if (pType == 6) {
+                                        if (isWhiteMove) wKingMoved = 1; else bKingMoved = 1;
+                                    }
+                                    if (pType == 4) {
+                                        if (isWhiteMove) { if (selX == 0) wRookLMoved = 1; if (selX == 7) wRookRMoved = 1; }
+                                        else { if (selX == 0) bRookLMoved = 1; if (selX == 7) bRookRMoved = 1; }
+                                    }
+                                    if (pType == 1 && abs(ty - selY) == 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
                                     lastMoveSx = selX; lastMoveSy = selY; lastMoveTx = tx; lastMoveTy = ty;
                                     board[selY][selX] = 0;
                                     selX = -1;
