@@ -123,5 +123,7 @@ Pass 1 Complete.
 - **KMail**: Added ARIA labels, `tabindex`, and keyboard enter-key support in `kmail.html` for accessibility. Fixed buffer overflow vulnerability in `main.c` `SelectEmail` by increasing the string buffer and using `snprintf`.
 - **KMandel**: Added ARIA labels and `aria-live` to `kmandel.html` for accessibility, and added keyboard arrow key navigation for panning. Fixed division by zero bug on zoom for 1x1 resize in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KPad (or next in alphabetical order).
+- **KPad**: Added ARIA labels and keyboard accessibility to `kpad.html` tabs and find panel, and fixed a bug where splitting lines used literal backslash-n instead of newline. Fixed GDI resource leak (`wc.hbrBackground`) and `WriteFile` buffer length bug in `main.c`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KPing (or next in alphabetical order).
 
