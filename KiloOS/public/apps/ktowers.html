@@ -31,11 +31,26 @@
     <div class="message" id="message"></div>
 
     <div class="controls">
+        <label for="difficulty">Discs: </label>
+        <select id="difficulty" onchange="changeDifficulty()" style="background:#333; color:#e0e0e0; border:1px solid #444; padding:7px; border-radius:4px; margin-right:10px;">
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select>
         <button onclick="initGame()">Restart Game</button>
     </div>
 
     <script>
-        const numDiscs = 4;
+        let numDiscs = 4;
+
+        function changeDifficulty() {
+            const select = document.getElementById('difficulty');
+            numDiscs = parseInt(select.value, 10);
+            initGame();
+        }
         let pegs = [[], [], []];
         let selectedPeg = null;
         let moves = 0;

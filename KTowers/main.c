@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 
-#define NUM_DISCS 4
+int numDiscs = 4;
 #define MAX_DISCS 8
 
 int pegs[3][MAX_DISCS];
@@ -22,12 +22,15 @@ COLORREF colors[] = {
 };
 
 HWND hRestartBtn;
+HWND hDiffLabel;
+HWND hDiffMinusBtn;
+HWND hDiffPlusBtn;
 
 void InitGame(HWND hwnd) {
     pegCounts[0] = 0;
     pegCounts[1] = 0;
     pegCounts[2] = 0;
-    for (int i = NUM_DISCS; i >= 1; i--) {
+    for (int i = numDiscs; i >= 1; i--) {
         pegs[0][pegCounts[0]++] = i;
     }
     selectedPeg = -1;
@@ -37,7 +40,7 @@ void InitGame(HWND hwnd) {
 }
 
 void CheckWin(HWND hwnd) {
-    if (pegCounts[2] == NUM_DISCS) {
+    if (pegCounts[2] == numDiscs) {
         won = TRUE;
         InvalidateRect(hwnd, NULL, TRUE);
     }
@@ -95,11 +98,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      10, 10, 120, 30,
                                      hwnd, (HMENU) 1,
                                      (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hDiffMinusBtn = CreateWindow("BUTTON", "-",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     140, 10, 30, 30,
+                                     hwnd, (HMENU) 2,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hDiffLabel = CreateWindow("STATIC", "Discs: 4",
+                                     WS_VISIBLE | WS_CHILD | SS_CENTERIMAGE | SS_CENTER,
+                                     180, 10, 80, 30,
+                                     hwnd, (HMENU) 3,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hDiffPlusBtn = CreateWindow("BUTTON", "+",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     270, 10, 30, 30,
+                                     hwnd, (HMENU) 4,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             InitGame(hwnd);
             break;
         case WM_COMMAND:
             if (LOWORD(wParam) == 1) {
                 InitGame(hwnd);
+            } else if (LOWORD(wParam) == 2) {
+                if (numDiscs > 3) {
+                    numDiscs--;
+                    char buf[32];
+                    sprintf(buf, "Discs: %d", numDiscs);
+                    SetWindowText(hDiffLabel, buf);
+                    InitGame(hwnd);
+                }
+            } else if (LOWORD(wParam) == 4) {
+                if (numDiscs < MAX_DISCS) {
+                    numDiscs++;
+                    char buf[32];
+                    sprintf(buf, "Discs: %d", numDiscs);
+                    SetWindowText(hDiffLabel, buf);
+                    InitGame(hwnd);
+                }
             }
             break;
         case WM_LBUTTONDOWN:
@@ -121,7 +155,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(224, 224, 224));
             
             char textBuf[256];
-            int optimalMoves = (1 << NUM_DISCS) - 1;
+            int optimalMoves = (1 << numDiscs) - 1;
             sprintf(textBuf, "Moves: %d / Optimal: %d", moves, optimalMoves);
             TextOut(hdc, rc.right / 2 - 85, 20, textBuf, strlen(textBuf));
 
