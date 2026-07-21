@@ -58,8 +58,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 - [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [ ] Phase 5: Add a Move Counter and "Minimum Moves" optimal display.
-- Phase 6: Add Adjustable Difficulty (change disc count from 3 up to 8).
+- [x] Phase 5: Add a Move Counter and "Minimum Moves" optimal display.
+- [ ] Phase 6: Add Adjustable Difficulty (change disc count from 3 up to 8).
 - Phase 7: Add Sound Effects (pickup, drop, error, and win chime).
 - Phase 8: Add Save/Load State (persist board state and current move count).
 - Phase 9: Add Move History / Undo functionality.
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KTowers
-**Goal:** Phase 5
+**Goal:** Phase 6
 
 
 ## App Lifecycle (14 phases per app)

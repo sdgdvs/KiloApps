@@ -22,7 +22,7 @@
 </head>
 <body>
     <h1>KTowers</h1>
-    <div class="info">Moves: <span id="moveCount">0</span></div>
+    <div class="info">Moves: <span id="moveCount">0</span> / Optimal: <span id="optimalMoves">0</span></div>
     
     <div class="game-area" id="gameArea">
         <!-- Rendered by JS -->
@@ -52,6 +52,7 @@
             moves = 0;
             won = false;
             document.getElementById('message').innerText = '';
+            document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
             render();
         }
 

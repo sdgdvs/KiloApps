@@ -121,8 +121,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(224, 224, 224));
             
             char textBuf[256];
-            sprintf(textBuf, "Moves: %d", moves);
-            TextOut(hdc, rc.right / 2 - 40, 20, textBuf, strlen(textBuf));
+            int optimalMoves = (1 << NUM_DISCS) - 1;
+            sprintf(textBuf, "Moves: %d / Optimal: %d", moves, optimalMoves);
+            TextOut(hdc, rc.right / 2 - 85, 20, textBuf, strlen(textBuf));
 
             if (won) {
                 SetTextColor(hdc, RGB(74, 222, 128));
