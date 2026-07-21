@@ -116,4 +116,6 @@ Pass 1 Complete.
 - **KExplorer**: Added ARIA labels, tab indexes, and keyboard enter-key support for file/folder navigation in `kexplorer.html`. (Web-only app, no `main.c`).
 - **KFont**: Added ARIA labels and `aria-live` to `kfont.html` for accessibility. Fixed GDI resource leak (`hBgBrush`) in `main.c` on `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KHex (or next in alphabetical order).
+- **KHex**: Added ARIA labels to input fields in `khex.html` for accessibility. Verified `main.c` (no leaks or bugs found).
+
+Start Pass 2 (Deeper Quality checks). Next target: KImage (or next in alphabetical order).
