@@ -121,5 +121,7 @@ Pass 1 Complete.
 - **KJournal**: Added ARIA labels, tab indexes, and keyboard enter-key support for entry list navigation in `kjournal.html`. Verified `main.c` (no leaks or bugs found).
 
 - **KMail**: Added ARIA labels, `tabindex`, and keyboard enter-key support in `kmail.html` for accessibility. Fixed buffer overflow vulnerability in `main.c` `SelectEmail` by increasing the string buffer and using `snprintf`.
+- **KMandel**: Added ARIA labels and `aria-live` to `kmandel.html` for accessibility, and added keyboard arrow key navigation for panning. Fixed division by zero bug on zoom for 1x1 resize in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KMandel (or next in alphabetical order).
+Start Pass 2 (Deeper Quality checks). Next target: KPad (or next in alphabetical order).
+

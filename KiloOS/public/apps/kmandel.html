@@ -125,24 +125,24 @@
     <div class="controls">
       <div class="control-group">
         <label>Zoom Level</label>
-        <div class="value-display" id="zoom-disp">1.0x</div>
+        <div class="value-display" id="zoom-disp" aria-live="polite">1.0x</div>
       </div>
       <div class="control-group">
         <label>Iterations</label>
-        <div class="value-display" id="iter-disp">100</div>
+        <div class="value-display" id="iter-disp" aria-live="polite">100</div>
       </div>
       <div class="row">
-        <button id="btn-zoom-in">+</button>
-        <button id="btn-zoom-out">-</button>
+        <button id="btn-zoom-in" aria-label="Zoom In">+</button>
+        <button id="btn-zoom-out" aria-label="Zoom Out">-</button>
       </div>
       <div class="row">
-        <button id="btn-undo" disabled>Undo</button>
-        <button id="btn-redo" disabled>Redo</button>
+        <button id="btn-undo" disabled aria-label="Undo">Undo</button>
+        <button id="btn-redo" disabled aria-label="Redo">Redo</button>
       </div>
-      <button id="btn-save">Save Image</button>
-      <button id="btn-theme">Toggle Theme</button>
-      <button id="btn-julia">Toggle Julia</button>
-      <button id="btn-reset">Reset View</button>
+      <button id="btn-save" aria-label="Save Image">Save Image</button>
+      <button id="btn-theme" aria-label="Toggle Theme">Toggle Theme</button>
+      <button id="btn-julia" aria-label="Toggle Julia">Toggle Julia</button>
+      <button id="btn-reset" aria-label="Reset View">Reset View</button>
     </div>
   </div>
 
@@ -424,6 +424,30 @@
         if (e.key.toLowerCase() === 'z') undo();
         if (e.key.toLowerCase() === 'y') redo();
         if (e.key.toLowerCase() === 's') document.getElementById('btn-save').click();
+        if (e.key.toLowerCase() === 'r') document.getElementById('btn-reset').click();
+        if (e.key.toLowerCase() === 't') document.getElementById('btn-theme').click();
+        if (e.key.toLowerCase() === 'j') document.getElementById('btn-julia').click();
+
+        const panAmount = 0.1;
+        let moved = false;
+        if (e.key === 'ArrowUp') {
+            const h = maxIm - minIm;
+            minIm += h * panAmount; maxIm += h * panAmount; moved = true;
+        } else if (e.key === 'ArrowDown') {
+            const h = maxIm - minIm;
+            minIm -= h * panAmount; maxIm -= h * panAmount; moved = true;
+        } else if (e.key === 'ArrowLeft') {
+            const w = maxRe - minRe;
+            minRe -= w * panAmount; maxRe -= w * panAmount; moved = true;
+        } else if (e.key === 'ArrowRight') {
+            const w = maxRe - minRe;
+            minRe += w * panAmount; maxRe += w * panAmount; moved = true;
+        }
+        
+        if (moved) {
+            saveState();
+            requestRender();
+        }
     });
 
     const container = document.getElementById('canvas-container');

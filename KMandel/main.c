@@ -147,7 +147,7 @@ void ResizeBitmap(HWND hwnd, int width, int height) {
 }
 
 void Zoom(double factor, int mouseX, int mouseY) {
-    if (bmpW <= 0 || bmpH <= 0) return;
+    if (bmpW <= 1 || bmpH <= 1) return;
     
     double re_factor = (maxRe - minRe) / (bmpW - 1);
     double im_factor = (maxIm - minIm) / (bmpH - 1);
