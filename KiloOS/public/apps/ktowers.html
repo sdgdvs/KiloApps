@@ -44,6 +44,28 @@
         <button onclick="applyHint()" id="hintBtn">Hint</button>
         <button onclick="toggleAutoSolve()" id="autoBtn">Auto-Solve</button>
         <button onclick="initGame()">Restart Game</button>
+        <button onclick="showHelp()">Help</button>
+    </div>
+
+    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center;">
+        <div style="background:#222; padding:30px; border-radius:8px; max-width:500px; text-align:left; border:1px solid #444;">
+            <h2 style="margin-top:0;">How to Play KTowers</h2>
+            <p><strong>Goal:</strong> Move all discs from the first peg to the last peg.</p>
+            <p><strong>Rules:</strong></p>
+            <ul>
+                <li>You can only move one disc at a time.</li>
+                <li>Only the top disc on any peg can be moved.</li>
+                <li>You cannot place a larger disc on top of a smaller disc.</li>
+            </ul>
+            <p><strong>Controls:</strong></p>
+            <ul>
+                <li>Click a peg to select the top disc, then click another peg to drop it.</li>
+                <li>Alternatively, use keys <strong>1, 2, 3</strong> to select and move discs.</li>
+            </ul>
+            <div style="text-align:right; margin-top:20px;">
+                <button onclick="hideHelp()">Close</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -401,6 +423,13 @@
             if (e.key === '2') handlePegClick(1);
             if (e.key === '3') handlePegClick(2);
         });
+
+        function showHelp() {
+            document.getElementById('helpModal').style.display = 'flex';
+        }
+        function hideHelp() {
+            document.getElementById('helpModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>

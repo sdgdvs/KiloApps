@@ -50,29 +50,16 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KTowers
-**Phase:** 13
+**App:** KReversi
+**Phase:** 1
 **Status:** In Progress
 
-- [x] Phase 1: Choose a unique app. Scaffold `KTowers/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [x] Phase 5: Add a Move Counter and "Minimum Moves" optimal display.
-- [x] Phase 6: Add Adjustable Difficulty (change disc count from 3 up to 8).
-- [x] Phase 7: Add Sound Effects (pickup, drop, error, and win chime).
-- [x] Phase 8: Add Save/Load State (persist board state and current move count).
-- [x] Phase 9: Add Move History / Undo functionality.
-- [x] Phase 10: Add a Time Tracking / Stopwatch feature.
-- [x] Phase 11: Add Statistics Tracking (best time and fewest moves per difficulty level).
-- [x] Phase 12: Add Auto-Solve / Hint functionality (step-by-step optimal movement).
-- [x] Phase 13: Add Keyboard controls (1, 2, 3 to select and move discs between pegs).
-- Phase 14: Add Comprehensive Help / How-to-Play modal.
+- [ ] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 
 ## Next Priority (Before New Apps)
 
-**App:** KTowers
-**Goal:** Phase 14
+**App:** KReversi
+**Goal:** Phase 1
 
 
 ## App Lifecycle (14 phases per app)
@@ -128,12 +115,12 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 - KHabit (Phase 14 completed: Added Detailed Statistics modal to both versions)
 - KSudoku (Phase 14 completed: Added Auto-fill Notes / Magic Pencil feature to both versions)
 - KFreecell (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
+- KTowers (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES (PRIORITY — create these first)
 - **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
-- **KTowers** — Tower of Hanoi. Multiple difficulties (3-8 discs). Move counter. Optimal solution hint. Animated disc movement.
 - **KMemory** — Card memory matching. Multiple themes. Timed mode. Pair count options (8-32 pairs). Best time tracking.
 - **KTrivia** — Quiz game. Multiple categories. Multiple choice. Score tracking. Timed rounds.
 - **KReversi** — Othello/Reversi board game. AI with adjustable strength. Disc flip animations. Score display.

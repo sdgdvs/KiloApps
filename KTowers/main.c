@@ -59,6 +59,7 @@ HWND hDiffPlusBtn;
 HWND hUndoBtn;
 HWND hHintBtn;
 HWND hAutoBtn;
+HWND hHelpBtn;
 BOOL autoSolving = FALSE;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
@@ -364,6 +365,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      450, 10, 100, 30,
                                      hwnd, (HMENU) 7,
                                      (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Help",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     560, 10, 60, 30,
+                                     hwnd, (HMENU) 8,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             LoadStats();
             if (LoadState()) {
                 char buf[32];
@@ -428,6 +434,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetWindowText(hAutoBtn, "Stop Auto");
                     }
                 }
+            } else if (LOWORD(wParam) == 8) {
+                MessageBox(hwnd, 
+                    "How to Play KTowers\n\n"
+                    "Goal: Move all discs from the first peg to the last peg.\n\n"
+                    "Rules:\n"
+                    "- You can only move one disc at a time.\n"
+                    "- Only the top disc on any peg can be moved.\n"
+                    "- You cannot place a larger disc on top of a smaller disc.\n\n"
+                    "Controls:\n"
+                    "- Click a peg to select the top disc, then click another peg to drop it.\n"
+                    "- Alternatively, use keys 1, 2, 3 to select and move discs.",
+                    "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         case WM_KEYDOWN:
