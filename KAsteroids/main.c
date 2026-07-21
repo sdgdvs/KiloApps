@@ -59,9 +59,38 @@ Bullet bullets[50];
 int num_bullets = 0;
 Ufo ufos[10];
 int num_ufos = 0;
+
+    num_powerups = 0;
+    num_mines = 0;
+    shield_timer = 0;
+    spread_timer = 0;
+
 Particle particles[500];
 int num_particles = 0;
 int ufo_spawn_timer = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int type; // 1 = Shield, 2 = Spread Shot
+    int life;
+    bool active;
+} PowerUp;
+PowerUp powerups[20];
+int num_powerups = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float radius;
+    bool active;
+} Mine;
+Mine mines[20];
+int num_mines = 0;
+
+int shield_timer = 0;
+int spread_timer = 0;
+
 typedef struct {
     int high_score_classic;
     int high_score_time_attack;
@@ -205,6 +234,12 @@ void InitGame(int mode) {
     num_asteroids = 0;
     num_bullets = 0;
     num_ufos = 0;
+
+    num_powerups = 0;
+    num_mines = 0;
+    shield_timer = 0;
+    spread_timer = 0;
+
     num_particles = 0;
     ufo_spawn_timer = 0;
     game_over = false;
@@ -222,8 +257,13 @@ void CheckCollisions() {
         if (bullets[i].is_enemy && ship.active) {
             float dist = sqrt(pow(bullets[i].x - ship.x, 2) + pow(bullets[i].y - ship.y, 2));
             if (dist < ship.radius) {
-                ship.active = false;
+                if (shield_timer > 0) {
+                    bullets[i].active = false;
+                    PlaySoundEffect(2);
+                } else {
+                    ship.active = false;
                 game_over = true;
+                }
                 bullets[i].active = false;
                 PlaySoundEffect(2);
                 for(int p=0; p<40; p++) {
@@ -232,6 +272,7 @@ void CheckCollisions() {
                     pt->x = ship.x; pt->y = ship.y;
                     pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
                     pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
                 }
             }
         }
@@ -251,12 +292,46 @@ void CheckCollisions() {
                     pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
                     pt->life = 30 + (rand()%20); pt->color = RGB(148, 163, 184); pt->active = true;
                 }
-                if (!bullets[i].is_enemy) {
+                
+        if (!bullets[i].active) continue;
+        if (!bullets[i].is_enemy) {
+            for(int m=0; m<num_mines; m++) {
+                if (!mines[m].active) continue;
+                float dist = sqrt(pow(bullets[i].x - mines[m].x, 2) + pow(bullets[i].y - mines[m].y, 2));
+                if (dist < mines[m].radius) {
+                    bullets[i].active = false;
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = mines[m].x; pt->y = mines[m].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(168, 85, 247); pt->active = true;
+                    }
+                    score += 150;
+                    UpdateHighScore();
+                    break;
+                }
+            }
+        }
+        if (!bullets[i].is_enemy) {
                     stats.shots_hit++;
                     current_shots_hit++;
                     stats.asteroids_destroyed++;
                     SaveStats();
                     score += (4 - asteroids[j].level) * 10;
+                if (rand() % 100 < 15 && num_powerups < 20) {
+                    PowerUp* pu = &powerups[num_powerups++];
+                    pu->x = asteroids[j].x;
+                    pu->y = asteroids[j].y;
+                    pu->vx = ((rand() % 100) - 50) / 50.0f;
+                    pu->vy = ((rand() % 100) - 50) / 50.0f;
+                    pu->type = (rand() % 2) + 1;
+                    pu->life = 60 * 10;
+                    pu->active = true;
+                }
+
                     UpdateHighScore();
                 }
                 
@@ -283,6 +358,29 @@ void CheckCollisions() {
         }
         
         if (!bullets[i].active) continue;
+        
+        if (!bullets[i].active) continue;
+        if (!bullets[i].is_enemy) {
+            for(int m=0; m<num_mines; m++) {
+                if (!mines[m].active) continue;
+                float dist = sqrt(pow(bullets[i].x - mines[m].x, 2) + pow(bullets[i].y - mines[m].y, 2));
+                if (dist < mines[m].radius) {
+                    bullets[i].active = false;
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = mines[m].x; pt->y = mines[m].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(168, 85, 247); pt->active = true;
+                    }
+                    score += 150;
+                    UpdateHighScore();
+                    break;
+                }
+            }
+        }
         if (!bullets[i].is_enemy) {
             for (int k = 0; k < num_ufos; k++) {
                 if (!ufos[k].active) continue;
@@ -310,11 +408,51 @@ void CheckCollisions() {
     }
     
     if (ship.active) {
+        for (int m=0; m<num_mines; m++) {
+            if (!mines[m].active) continue;
+            float dist = sqrt(pow(ship.x - mines[m].x, 2) + pow(ship.y - mines[m].y, 2));
+            if (dist < mines[m].radius + ship.radius) {
+                if (shield_timer > 0) {
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = mines[m].x; pt->y = mines[m].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(168, 85, 247); pt->active = true;
+                    }
+                } else {
+                    ship.active = false;
+                    game_over = true;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<40; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = ship.x; pt->y = ship.y;
+                        pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                        pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                    }
+                }
+            }
+        }
+
         for (int j = 0; j < num_asteroids; j++) {
             if (!asteroids[j].active) continue;
             float dist = sqrt(pow(ship.x - asteroids[j].x, 2) + pow(ship.y - asteroids[j].y, 2));
             if (dist < asteroids[j].radius + ship.radius) {
-                ship.active = false;
+                if (shield_timer > 0) {
+                    asteroids[j].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = asteroids[j].x; pt->y = asteroids[j].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(148, 163, 184); pt->active = true;
+                    }
+                } else {
+                    ship.active = false;
                 game_over = true;
                 PlaySoundEffect(2);
                 for(int p=0; p<40; p++) {
@@ -324,13 +462,25 @@ void CheckCollisions() {
                     pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
                     pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
                 }
+                }
             }
         }
         for (int k = 0; k < num_ufos; k++) {
             if (!ufos[k].active) continue;
             float dist = sqrt(pow(ship.x - ufos[k].x, 2) + pow(ship.y - ufos[k].y, 2));
             if (dist < ufos[k].radius + ship.radius) {
-                ship.active = false;
+                if (shield_timer > 0) {
+                    ufos[k].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = ufos[k].x; pt->y = ufos[k].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(239, 68, 68); pt->active = true;
+                    }
+                } else {
+                    ship.active = false;
                 game_over = true;
                 PlaySoundEffect(2);
                 for(int p=0; p<40; p++) {
@@ -339,6 +489,7 @@ void CheckCollisions() {
                     pt->x = ship.x; pt->y = ship.y;
                     pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
                     pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
                 }
             }
         }
@@ -377,6 +528,23 @@ void CompactArrays() {
         }
     }
     num_particles = active_particles;
+
+    int active_powerups = 0;
+    for (int i = 0; i < num_powerups; i++) {
+        if (powerups[i].active) {
+            powerups[active_powerups++] = powerups[i];
+        }
+    }
+    num_powerups = active_powerups;
+    
+    int active_mines = 0;
+    for (int i = 0; i < num_mines; i++) {
+        if (mines[i].active) {
+            mines[active_mines++] = mines[i];
+        }
+    }
+    num_mines = active_mines;
+
 }
 
 void Update() {
@@ -407,6 +575,7 @@ void Update() {
                     pt->x = ship.x; pt->y = ship.y;
                     pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
                     pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                }
                 }
             }
         }
@@ -449,14 +618,30 @@ void Update() {
     if (keys[VK_SPACE]) {
         long long now = GetTimeMs();
         if (now - last_shoot_time > 200 && num_bullets < 50) {
-            Bullet* b = &bullets[num_bullets++];
-            b->x = ship.x + cos(ship.angle) * 15.0f;
-            b->y = ship.y + sin(ship.angle) * 15.0f;
-            b->vx = cos(ship.angle) * 7.0f;
-            b->vy = sin(ship.angle) * 7.0f;
-            b->life = 60;
-            b->active = true;
-            b->is_enemy = false;
+            if (spread_timer > 0) {
+                for(int k=-1; k<=1; k++) {
+                    if (num_bullets < 50) {
+                        Bullet* b = &bullets[num_bullets++];
+                        b->x = ship.x + cos(ship.angle) * 15.0f;
+                        b->y = ship.y + sin(ship.angle) * 15.0f;
+                        float ang = ship.angle + k * 0.2f;
+                        b->vx = cos(ang) * 7.0f;
+                        b->vy = sin(ang) * 7.0f;
+                        b->life = 60;
+                        b->active = true;
+                        b->is_enemy = false;
+                    }
+                }
+            } else {
+                Bullet* b = &bullets[num_bullets++];
+                b->x = ship.x + cos(ship.angle) * 15.0f;
+                b->y = ship.y + sin(ship.angle) * 15.0f;
+                b->vx = cos(ship.angle) * 7.0f;
+                b->vy = sin(ship.angle) * 7.0f;
+                b->life = 60;
+                b->active = true;
+                b->is_enemy = false;
+            }
             last_shoot_time = now;
             PlaySoundEffect(1);
             stats.shots_fired++;
@@ -538,6 +723,126 @@ void Update() {
         }
     }
     
+
+    if (shield_timer > 0) shield_timer--;
+    if (spread_timer > 0) spread_timer--;
+    
+    for (int i=0; i<num_powerups; i++) {
+        if (!powerups[i].active) continue;
+        powerups[i].x += powerups[i].vx;
+        powerups[i].y += powerups[i].vy;
+        powerups[i].life--;
+        if (powerups[i].life <= 0) powerups[i].active = false;
+        
+        if (powerups[i].x < 0) powerups[i].x = WIDTH;
+        if (powerups[i].x > WIDTH) powerups[i].x = 0;
+        if (powerups[i].y < 0) powerups[i].y = HEIGHT;
+        if (powerups[i].y > HEIGHT) powerups[i].y = 0;
+        
+        if (ship.active) {
+        for (int m=0; m<num_mines; m++) {
+            if (!mines[m].active) continue;
+            float dist = sqrt(pow(ship.x - mines[m].x, 2) + pow(ship.y - mines[m].y, 2));
+            if (dist < mines[m].radius + ship.radius) {
+                if (shield_timer > 0) {
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = mines[m].x; pt->y = mines[m].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(168, 85, 247); pt->active = true;
+                    }
+                } else {
+                    ship.active = false;
+                    game_over = true;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<40; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = ship.x; pt->y = ship.y;
+                        pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                        pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                    }
+                }
+            }
+        }
+
+            float dist = sqrt(pow(ship.x - powerups[i].x, 2) + pow(ship.y - powerups[i].y, 2));
+            if (dist < ship.radius + 15) {
+                powerups[i].active = false;
+                PlaySoundEffect(1);
+                if (powerups[i].type == 1) shield_timer = 60 * 10;
+                if (powerups[i].type == 2) spread_timer = 60 * 10;
+                score += 50;
+                UpdateHighScore();
+            }
+        }
+    }
+
+    if (wave >= 3) {
+        if (rand() % 1000 < 5 && num_mines < 20) {
+            Mine* m = &mines[num_mines++];
+            m->x = (rand() % 2 == 0) ? 0.0f : (float)WIDTH;
+            m->y = (float)(rand() % HEIGHT);
+            m->vx = 0;
+            m->vy = 0;
+            m->radius = 12.0f;
+            m->active = true;
+        }
+    }
+
+    for (int i=0; i<num_mines; i++) {
+        if (!mines[i].active) continue;
+        if (ship.active) {
+        for (int m=0; m<num_mines; m++) {
+            if (!mines[m].active) continue;
+            float dist = sqrt(pow(ship.x - mines[m].x, 2) + pow(ship.y - mines[m].y, 2));
+            if (dist < mines[m].radius + ship.radius) {
+                if (shield_timer > 0) {
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = mines[m].x; pt->y = mines[m].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(168, 85, 247); pt->active = true;
+                    }
+                } else {
+                    ship.active = false;
+                    game_over = true;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<40; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = ship.x; pt->y = ship.y;
+                        pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                        pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                    }
+                }
+            }
+        }
+
+            float ang = atan2(ship.y - mines[i].y, ship.x - mines[i].x);
+            mines[i].vx += cos(ang) * 0.03f;
+            mines[i].vy += sin(ang) * 0.03f;
+        }
+        float speed = sqrt(mines[i].vx*mines[i].vx + mines[i].vy*mines[i].vy);
+        if (speed > 2.5f) {
+            mines[i].vx = (mines[i].vx / speed) * 2.5f;
+            mines[i].vy = (mines[i].vy / speed) * 2.5f;
+        }
+        mines[i].x += mines[i].vx;
+        mines[i].y += mines[i].vy;
+
+        if (mines[i].x < 0) mines[i].x = WIDTH;
+        if (mines[i].x > WIDTH) mines[i].x = 0;
+        if (mines[i].y < 0) mines[i].y = HEIGHT;
+        if (mines[i].y > HEIGHT) mines[i].y = 0;
+    }
+
     CheckCollisions();
     
     for (int i = 0; i < num_particles; i++) {
@@ -580,6 +885,35 @@ void Draw(HDC hdc) {
     HBRUSH bulletBrush = CreateSolidBrush(RGB(253, 224, 71));
     
     if (ship.active) {
+        for (int m=0; m<num_mines; m++) {
+            if (!mines[m].active) continue;
+            float dist = sqrt(pow(ship.x - mines[m].x, 2) + pow(ship.y - mines[m].y, 2));
+            if (dist < mines[m].radius + ship.radius) {
+                if (shield_timer > 0) {
+                    mines[m].active = false;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<20; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = mines[m].x; pt->y = mines[m].y;
+                        pt->vx = ((rand()%100)-50)/12.0f; pt->vy = ((rand()%100)-50)/12.0f;
+                        pt->life = 30 + (rand()%20); pt->color = RGB(168, 85, 247); pt->active = true;
+                    }
+                } else {
+                    ship.active = false;
+                    game_over = true;
+                    PlaySoundEffect(2);
+                    for(int p=0; p<40; p++) {
+                        if(num_particles >= 500) break;
+                        Particle* pt = &particles[num_particles++];
+                        pt->x = ship.x; pt->y = ship.y;
+                        pt->vx = ((rand()%100)-50)/10.0f; pt->vy = ((rand()%100)-50)/10.0f;
+                        pt->life = 40 + (rand()%30); pt->color = RGB(226, 232, 240); pt->active = true;
+                    }
+                }
+            }
+        }
+
         SelectObject(hdc, shipPen);
         POINT pts[3];
         pts[0].x = (LONG)(ship.x + cos(ship.angle) * 15);
@@ -648,6 +982,48 @@ void Draw(HDC hdc) {
         DeleteObject(pp);
     }
     
+
+    for (int i=0; i<num_powerups; i++) {
+        if (!powerups[i].active) continue;
+        if (powerups[i].type == 1) { // Shield
+            HBRUSH b = CreateSolidBrush(RGB(59, 130, 246));
+            SelectObject(hdc, b);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Rectangle(hdc, (int)powerups[i].x - 8, (int)powerups[i].y - 8, (int)powerups[i].x + 8, (int)powerups[i].y + 8);
+            DeleteObject(b);
+            SetTextColor(hdc, RGB(255,255,255));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "S", 1);
+        } else { // Spread
+            HBRUSH b = CreateSolidBrush(RGB(34, 197, 94));
+            SelectObject(hdc, b);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Rectangle(hdc, (int)powerups[i].x - 8, (int)powerups[i].y - 8, (int)powerups[i].x + 8, (int)powerups[i].y + 8);
+            DeleteObject(b);
+            SetTextColor(hdc, RGB(255,255,255));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "P", 1);
+        }
+    }
+
+    HPEN minePen = CreatePen(PS_SOLID, 2, RGB(168, 85, 247));
+    SelectObject(hdc, minePen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    for (int m=0; m<num_mines; m++) {
+        if (!mines[m].active) continue;
+        Ellipse(hdc, (int)(mines[m].x - mines[m].radius), (int)(mines[m].y - mines[m].radius), (int)(mines[m].x + mines[m].radius), (int)(mines[m].y + mines[m].radius));
+        MoveToEx(hdc, (int)(mines[m].x - mines[m].radius - 3), (int)mines[m].y, NULL);
+        LineTo(hdc, (int)(mines[m].x + mines[m].radius + 3), (int)mines[m].y);
+        MoveToEx(hdc, (int)mines[m].x, (int)(mines[m].y - mines[m].radius - 3), NULL);
+        LineTo(hdc, (int)mines[m].x, (int)(mines[m].y + mines[m].radius + 3));
+    }
+    DeleteObject(minePen);
+
+    if (ship.active && shield_timer > 0) {
+        HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(59, 130, 246));
+        SelectObject(hdc, shieldPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, (int)(ship.x - 25), (int)(ship.y - 25), (int)(ship.x + 25), (int)(ship.y + 25));
+        DeleteObject(shieldPen);
+    }
     SetTextColor(hdc, RGB(56, 189, 248));
     SetBkMode(hdc, TRANSPARENT);
     char scoreStr[128];
@@ -669,7 +1045,49 @@ void Draw(HDC hdc) {
         }
         
         if (showing_stats) {
-            SetTextColor(hdc, RGB(56, 189, 248));
+        
+    for (int i=0; i<num_powerups; i++) {
+        if (!powerups[i].active) continue;
+        if (powerups[i].type == 1) { // Shield
+            HBRUSH b = CreateSolidBrush(RGB(59, 130, 246));
+            SelectObject(hdc, b);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Rectangle(hdc, (int)powerups[i].x - 8, (int)powerups[i].y - 8, (int)powerups[i].x + 8, (int)powerups[i].y + 8);
+            DeleteObject(b);
+            SetTextColor(hdc, RGB(255,255,255));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "S", 1);
+        } else { // Spread
+            HBRUSH b = CreateSolidBrush(RGB(34, 197, 94));
+            SelectObject(hdc, b);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Rectangle(hdc, (int)powerups[i].x - 8, (int)powerups[i].y - 8, (int)powerups[i].x + 8, (int)powerups[i].y + 8);
+            DeleteObject(b);
+            SetTextColor(hdc, RGB(255,255,255));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "P", 1);
+        }
+    }
+
+    HPEN minePen = CreatePen(PS_SOLID, 2, RGB(168, 85, 247));
+    SelectObject(hdc, minePen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    for (int m=0; m<num_mines; m++) {
+        if (!mines[m].active) continue;
+        Ellipse(hdc, (int)(mines[m].x - mines[m].radius), (int)(mines[m].y - mines[m].radius), (int)(mines[m].x + mines[m].radius), (int)(mines[m].y + mines[m].radius));
+        MoveToEx(hdc, (int)(mines[m].x - mines[m].radius - 3), (int)mines[m].y, NULL);
+        LineTo(hdc, (int)(mines[m].x + mines[m].radius + 3), (int)mines[m].y);
+        MoveToEx(hdc, (int)mines[m].x, (int)(mines[m].y - mines[m].radius - 3), NULL);
+        LineTo(hdc, (int)mines[m].x, (int)(mines[m].y + mines[m].radius + 3));
+    }
+    DeleteObject(minePen);
+
+    if (ship.active && shield_timer > 0) {
+        HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(59, 130, 246));
+        SelectObject(hdc, shieldPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, (int)(ship.x - 25), (int)(ship.y - 25), (int)(ship.x + 25), (int)(ship.y + 25));
+        DeleteObject(shieldPen);
+    }
+    SetTextColor(hdc, RGB(56, 189, 248));
             TextOutA(hdc, WIDTH / 2 - 40, HEIGHT / 2 - 20, "Statistics", 10);
             
             SetTextColor(hdc, RGB(161, 161, 170));
@@ -684,7 +1102,49 @@ void Draw(HDC hdc) {
             SetTextColor(hdc, RGB(250, 204, 21));
             TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 80, "[B] Back to Menu", 16);
         } else if (showing_help) {
-            SetTextColor(hdc, RGB(56, 189, 248));
+        
+    for (int i=0; i<num_powerups; i++) {
+        if (!powerups[i].active) continue;
+        if (powerups[i].type == 1) { // Shield
+            HBRUSH b = CreateSolidBrush(RGB(59, 130, 246));
+            SelectObject(hdc, b);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Rectangle(hdc, (int)powerups[i].x - 8, (int)powerups[i].y - 8, (int)powerups[i].x + 8, (int)powerups[i].y + 8);
+            DeleteObject(b);
+            SetTextColor(hdc, RGB(255,255,255));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "S", 1);
+        } else { // Spread
+            HBRUSH b = CreateSolidBrush(RGB(34, 197, 94));
+            SelectObject(hdc, b);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            Rectangle(hdc, (int)powerups[i].x - 8, (int)powerups[i].y - 8, (int)powerups[i].x + 8, (int)powerups[i].y + 8);
+            DeleteObject(b);
+            SetTextColor(hdc, RGB(255,255,255));
+            TextOutA(hdc, (int)powerups[i].x - 4, (int)powerups[i].y - 8, "P", 1);
+        }
+    }
+
+    HPEN minePen = CreatePen(PS_SOLID, 2, RGB(168, 85, 247));
+    SelectObject(hdc, minePen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    for (int m=0; m<num_mines; m++) {
+        if (!mines[m].active) continue;
+        Ellipse(hdc, (int)(mines[m].x - mines[m].radius), (int)(mines[m].y - mines[m].radius), (int)(mines[m].x + mines[m].radius), (int)(mines[m].y + mines[m].radius));
+        MoveToEx(hdc, (int)(mines[m].x - mines[m].radius - 3), (int)mines[m].y, NULL);
+        LineTo(hdc, (int)(mines[m].x + mines[m].radius + 3), (int)mines[m].y);
+        MoveToEx(hdc, (int)mines[m].x, (int)(mines[m].y - mines[m].radius - 3), NULL);
+        LineTo(hdc, (int)mines[m].x, (int)(mines[m].y + mines[m].radius + 3));
+    }
+    DeleteObject(minePen);
+
+    if (ship.active && shield_timer > 0) {
+        HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(59, 130, 246));
+        SelectObject(hdc, shieldPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, (int)(ship.x - 25), (int)(ship.y - 25), (int)(ship.x + 25), (int)(ship.y + 25));
+        DeleteObject(shieldPen);
+    }
+    SetTextColor(hdc, RGB(56, 189, 248));
             TextOutA(hdc, WIDTH / 2 - 45, HEIGHT / 2 - 20, "How to Play", 11);
             
             SetTextColor(hdc, RGB(161, 161, 170));

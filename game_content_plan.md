@@ -193,7 +193,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KBreakout  | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Campaign layouts, new powerups, UFO enemy, Lifetime Stats. |
 | K2048      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 20-level campaign, Hammer & Shuffle powerups. |
 | KSudoku    | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, Magic Wand power-up, 3-Strikes rule. |
-| KAsteroids | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KAsteroids | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: Shield, Spread Shot, Tracker Mines. |
 | KFreecell  | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
 | KConnect4  | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
 | KHangman   | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
@@ -274,3 +274,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KBreakout (Expanded Campaign with unique layouts, added Piercing Ball & Extra Life powerups, UFO enemies, and Lifetime Stats to both EXE and HTML)
 - [x] K2048 (Expanded Campaign to 20 stages, added Shuffle and Hammer Power-Ups to both EXE and HTML)
 - [x] KSudoku (Added 10-Stage Campaign Mode, Magic Wand Power-up, and 3-Strikes rule to both EXE and HTML)
+- [x] KAsteroids (Added Shield and Spread Shot Power-Ups, and Tracker Mine enemies to both EXE and HTML)
