@@ -430,6 +430,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             break;
+        case WM_KEYDOWN:
+            if (wParam == '1') {
+                PerformPegClick(hwnd, 0);
+            } else if (wParam == '2') {
+                PerformPegClick(hwnd, 1);
+            } else if (wParam == '3') {
+                PerformPegClick(hwnd, 2);
+            }
+            break;
         case WM_LBUTTONDOWN:
             HandleClick(hwnd, LOWORD(lParam), HIWORD(lParam));
             break;

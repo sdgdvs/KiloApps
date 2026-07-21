@@ -395,6 +395,12 @@
         } else {
             initGame();
         }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '1') handlePegClick(0);
+            if (e.key === '2') handlePegClick(1);
+            if (e.key === '3') handlePegClick(2);
+        });
     </script>
 </body>
 </html>
