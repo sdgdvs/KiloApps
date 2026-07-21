@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <title>KTowers</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #fff; color: #333; text-align: center; }
+        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; text-align: center; }
         h1 { margin-top: 0; margin-bottom: 5px; }
         .info { margin-bottom: 20px; font-size: 18px; }
         .game-area { display: flex; justify-content: center; margin-top: 20px; gap: 40px; }
         .peg-container { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: background 0.2s; min-width: 140px; }
-        .peg-container:hover { background: #f0f0f0; }
-        .peg-container.selected { background: #e0f0ff; outline: 2px solid #0078D7; }
-        .peg { width: 140px; height: 180px; border-bottom: 8px solid #555; position: relative; display: flex; flex-direction: column-reverse; align-items: center; }
-        .peg-pole { position: absolute; width: 12px; height: 100%; background: #ccc; bottom: 0; z-index: 0; border-radius: 6px 6px 0 0; }
-        .disc { height: 24px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.2); margin-bottom: 2px; z-index: 1; transition: bottom 0.2s; }
+        .peg-container:hover { background: #2a2a2a; }
+        .peg-container.selected { background: #1e3a5f; outline: 2px solid #3b82f6; }
+        .peg { width: 140px; height: 180px; border-bottom: 8px solid #888; position: relative; display: flex; flex-direction: column-reverse; align-items: center; }
+        .peg-pole { position: absolute; width: 12px; height: 100%; background: #555; bottom: 0; z-index: 0; border-radius: 6px 6px 0 0; }
+        .disc { height: 24px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.5); margin-bottom: 2px; z-index: 1; transition: bottom 0.2s; }
         .controls { margin-top: 40px; }
-        button { padding: 8px 16px; font-size: 14px; cursor: pointer; border: 1px solid #ccc; background: #eee; border-radius: 4px; }
-        button:hover { background: #ddd; }
-        .message { margin-top: 20px; font-weight: bold; color: green; font-size: 20px; min-height: 24px;}
+        button { padding: 8px 16px; font-size: 14px; cursor: pointer; border: 1px solid #444; background: #333; color: #e0e0e0; border-radius: 4px; }
+        button:hover { background: #444; }
+        .message { margin-top: 20px; font-weight: bold; color: #4ade80; font-size: 20px; min-height: 24px;}
     </style>
 </head>
 <body>

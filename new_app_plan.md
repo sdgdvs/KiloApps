@@ -57,12 +57,22 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 1: Choose a unique app. Scaffold `KTowers/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 - [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [ ] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
+- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
+- [ ] Phase 5: Add a Move Counter and "Minimum Moves" optimal display.
+- Phase 6: Add Adjustable Difficulty (change disc count from 3 up to 8).
+- Phase 7: Add Sound Effects (pickup, drop, error, and win chime).
+- Phase 8: Add Save/Load State (persist board state and current move count).
+- Phase 9: Add Move History / Undo functionality.
+- Phase 10: Add a Time Tracking / Stopwatch feature.
+- Phase 11: Add Statistics Tracking (best time and fewest moves per difficulty level).
+- Phase 12: Add Auto-Solve / Hint functionality (step-by-step optimal movement).
+- Phase 13: Add Keyboard controls (1, 2, 3 to select and move discs between pegs).
+- Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KTowers
-**Goal:** Phase 4
+**Goal:** Phase 5
 
 
 ## App Lifecycle (14 phases per app)

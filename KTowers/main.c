@@ -113,19 +113,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetClientRect(hwnd, &rc);
             
             // Background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(255, 255, 255));
+            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
             FillRect(hdc, &rc, bgBrush);
             DeleteObject(bgBrush);
 
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(51, 51, 51));
+            SetTextColor(hdc, RGB(224, 224, 224));
             
             char textBuf[256];
             sprintf(textBuf, "Moves: %d", moves);
             TextOut(hdc, rc.right / 2 - 40, 20, textBuf, strlen(textBuf));
 
             if (won) {
-                SetTextColor(hdc, RGB(0, 128, 0));
+                SetTextColor(hdc, RGB(74, 222, 128));
                 sprintf(textBuf, "You won in %d moves!", moves);
                 TextOut(hdc, rc.right / 2 - 70, 50, textBuf, strlen(textBuf));
             }
@@ -137,11 +137,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int groundY = height - 100;
             
             // Draw poles
-            HBRUSH poleBrush = CreateSolidBrush(RGB(204, 204, 204));
+            HBRUSH poleBrush = CreateSolidBrush(RGB(85, 85, 85));
             for (int i = 0; i < 3; i++) {
                 if (selectedPeg == i) {
                     // Draw highlight
-                    HBRUSH hlBrush = CreateSolidBrush(RGB(224, 240, 255));
+                    HBRUSH hlBrush = CreateSolidBrush(RGB(30, 58, 95));
                     RECT hlRect = { baseX[i] - 70, groundY - 200, baseX[i] + 70, groundY + 10 };
                     FillRect(hdc, &hlRect, hlBrush);
                     DeleteObject(hlBrush);
@@ -161,7 +161,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 // Draw base
                 RECT baseRect = { baseX[i] - 70, groundY, baseX[i] + 70, groundY + 8 };
-                HBRUSH baseBrush = CreateSolidBrush(RGB(85, 85, 85));
+                HBRUSH baseBrush = CreateSolidBrush(RGB(136, 136, 136));
                 FillRect(hdc, &baseRect, baseBrush);
                 DeleteObject(baseBrush);
             }
@@ -212,7 +212,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hbrBackground = CreateSolidBrush(RGB(18, 18, 18));
     wc.lpszClassName = "KTowersClass";
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     
