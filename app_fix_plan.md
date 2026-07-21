@@ -118,5 +118,6 @@ Pass 1 Complete.
 
 - **KHex**: Added ARIA labels to input fields in `khex.html` for accessibility. Verified `main.c` (no leaks or bugs found).
 - **KImage**: Added ARIA labels in `kimage.html` for accessibility and fixed a bug where the same file couldn't be reopened by clearing `fileInput.value`. Fixed buffer zero-division bounds logic in `main.c` `WM_MOUSEMOVE` and `WM_PAINT` by enforcing `drawW` and `drawH` to be at least 1.
+- **KJournal**: Added ARIA labels, tab indexes, and keyboard enter-key support for entry list navigation in `kjournal.html`. Verified `main.c` (no leaks or bugs found).
 
-Start Pass 2 (Deeper Quality checks). Next target: KJournal (or next in alphabetical order).
+Start Pass 2 (Deeper Quality checks). Next target: KMail (or next in alphabetical order).

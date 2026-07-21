@@ -24,19 +24,19 @@
 <body>
 <div class="sidebar">
     <div class="date-picker">
-        <input type="date" id="dateInput">
+        <input type="date" id="dateInput" aria-label="Select Date">
     </div>
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search entries...">
+        <input type="text" id="searchInput" placeholder="Search entries..." aria-label="Search entries">
     </div>
-    <ul class="entry-list" id="entryList"></ul>
+    <ul class="entry-list" id="entryList" aria-label="Journal Entries"></ul>
 </div>
 <div class="main">
     <div class="toolbar">
-        <h2 id="currentDateDisplay">Select a Date</h2>
-        <button id="saveBtn">Save Entry</button>
+        <h2 id="currentDateDisplay" aria-live="polite">Select a Date</h2>
+        <button id="saveBtn" aria-label="Save Entry">Save Entry</button>
     </div>
-    <textarea id="journalArea" placeholder="Write your thoughts here..."></textarea>
+    <textarea id="journalArea" placeholder="Write your thoughts here..." aria-label="Journal Entry Content"></textarea>
 </div>
 <script>
   const dateInput = document.getElementById('dateInput');
@@ -72,9 +72,17 @@
           let li = document.createElement('li');
           li.className = 'entry-item' + (date === dateInput.value ? ' active' : '');
           li.innerText = date;
+          li.tabIndex = 0;
+          li.setAttribute('role', 'button');
           li.onclick = () => {
               dateInput.value = date;
               loadEntry();
+          };
+          li.onkeydown = (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  li.onclick();
+              }
           };
           entryList.appendChild(li);
       });
