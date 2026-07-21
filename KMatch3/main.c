@@ -12,6 +12,8 @@
 
 int grid[ROWS][COLS];
 int typeGrid[ROWS][COLS] = {0};
+int iceGrid[ROWS][COLS] = {0};
+int powerupMode = 0;
 int score = 0;
 int moves = 20;
 int level = 1;
@@ -113,7 +115,7 @@ void DrawBoard(HDC hdc) {
     TextOut(hdc, BOARD_X, 10, buf, strlen(buf));
     
     char statsBuf[128];
-    sprintf(statsBuf, "[1] Classic [2] Zen [3] Timed | Best: %d | [H] Help", statsBestScore);
+    sprintf(statsBuf, "[1] Classic [2] Zen [3] Timed | Best: %d | [S]huffle [B]omb | [H] Help", statsBestScore);
     SetTextColor(hdc, RGB(200, 200, 200));
     TextOut(hdc, BOARD_X, 30, statsBuf, strlen(statsBuf));
 
@@ -185,8 +187,16 @@ void DrawBoard(HDC hdc) {
                 DeleteObject(b);
             }
 
+            
+            if (iceGrid[r][c]) {
+                RECT iRect = { rect.left + 2, rect.top + 2, rect.right - 2, rect.bottom - 2 };
+                HBRUSH b = CreateHatchBrush(HS_BDIAGONAL, RGB(0, 255, 255));
+                FillRect(hdc, &iRect, b);
+                DeleteObject(b);
+            }
+
             if (r == selR && c == selC) {
-                HBRUSH border = CreateSolidBrush(RGB(255, 255, 255));
+                HBRUSH border = CreateSolidBrush((powerupMode == 1 && r == selR && c == selC) ? RGB(255, 0, 0) : RGB(255, 255, 255));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
                 
@@ -275,6 +285,8 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             } else if (triggerColor == 888) {
                 typeGrid[triggerR][triggerC] = 1; AddDestroy(triggerR, triggerC);
                 typeGrid[lastSwapR1][lastSwapC1] = 2; AddDestroy(lastSwapR1, lastSwapC1);
+            } else if (triggerColor == 777) {
+                AddDestroy(triggerR, triggerC);
             } else if (triggerColor >= 0 && triggerColor < 6) {
                 for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) {
                     if (grid[i][j] == triggerColor) AddDestroy(i, j);
@@ -419,6 +431,7 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
                 if (popGrid[r][c]) {
+                    if (iceGrid[r][c] > 0) iceGrid[r][c] = 0;
                     grid[r][c] = -1;
                     typeGrid[r][c] = 0;
                     popGrid[r][c] = 0;
@@ -493,6 +506,7 @@ void InitGame() {
             );
             grid[r][c] = color;
             typeGrid[r][c] = 0;
+            iceGrid[r][c] = (level >= 3 && (rand() % 5 == 0)) ? 1 : 0;
         }
     }
 }
@@ -507,6 +521,7 @@ void SaveGame() {
     fwrite(&gameMode, sizeof(int), 1, f);
     fwrite(grid, sizeof(int), ROWS * COLS, f);
     fwrite(typeGrid, sizeof(int), ROWS * COLS, f);
+    fwrite(iceGrid, sizeof(int), ROWS * COLS, f);
     fclose(f);
 }
 
@@ -520,6 +535,7 @@ int LoadGame() {
     if (fread(&gameMode, sizeof(int), 1, f) != 1) gameMode = 0;
     fread(grid, sizeof(int), ROWS * COLS, f);
     fread(typeGrid, sizeof(int), ROWS * COLS, f);
+    if (fread(iceGrid, sizeof(int), ROWS * COLS, f) != ROWS * COLS) memset(iceGrid, 0, sizeof(iceGrid));
     fclose(f);
     return 1;
 }
@@ -621,8 +637,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 gameMode = 1; level = 1; score = 0; moves = 0; targetScore = 0; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == '3' || wParam == VK_NUMPAD3) {
                 gameMode = 2; level = 1; score = 0; moves = 60; targetScore = 1000; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'S' || wParam == 's') {
+                if (score >= 500) {
+                    score -= 500;
+                    InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 'B' || wParam == 'b') {
+                if (score >= 500) {
+                    powerupMode = 1; InvalidateRect(hwnd, NULL, FALSE);
+                }
             } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
-                MessageBox(hwnd, "How to Play:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Bomb (destroys row/col).\n- Match 5: Color Bomb (destroys all of one color).\n- Swap two specials for big effects!\n\nModes:\n- [1] Classic: Target score in limited moves.\n- [2] Zen: Infinite play.\n- [3] Timed: Target score in time limit.", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "How to Play:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Bomb (destroys row/col).\n- Match 5: Color Bomb (destroys all of one color).\n- Swap two specials for big effects!\n\nModes:
+- [1] Classic: Target score in limited moves.
+- [2] Zen: Infinite play.
+- [3] Timed: Target score in time limit.
+
+Power-ups:
+- [S]huffle (Cost 500)
+- [B]omb (Cost 500) click to break one gem.", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -633,6 +665,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (x >= 0 && x < COLS * CELL_SIZE && y >= 0 && y < ROWS * CELL_SIZE) {
                 int c = x / CELL_SIZE;
                 int r = y / CELL_SIZE;
+                if (powerupMode == 1) {
+                    score -= 500;
+                    powerupMode = 0;
+                    isProcessing = 1;
+                    ProcessMatches(hwnd, r, c, 777);
+                    CheckLevelProgress(hwnd);
+                    SaveGame();
+                    isProcessing = 0;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
                 if (selR == -1) {
                     selR = r; selC = c;
                     InvalidateRect(hwnd, NULL, FALSE);

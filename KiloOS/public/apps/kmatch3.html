@@ -14,11 +14,21 @@
     width: 400px; height: 400px; background-color: #2d2d2d; border: 2px solid #555;
     position: relative; touch-action: none; user-select: none; overflow: hidden;
   }
+
   .cell {
     border-radius: 4px; display: flex; justify-content: center; align-items: center;
     cursor: pointer; transition: transform 0.2s, top 0.2s, left 0.2s, opacity 0.2s;
     position: absolute; width: 48px; height: 48px; box-sizing: border-box;
   }
+  .ice-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: repeating-linear-gradient(45deg, rgba(0,255,255,0.2), rgba(0,255,255,0.2) 5px, rgba(0,255,255,0.4) 5px, rgba(0,255,255,0.4) 10px);
+    pointer-events: none; border-radius: 4px; z-index: 5;
+  }
+  .powerup-btn {
+    background: #444; color: #fff; border: 1px solid #777; padding: 2px 8px; cursor: pointer; border-radius: 4px; font-size: 12px;
+  }
+
   .cell.selected { border: 2px solid #fff; box-sizing: border-box; transform: scale(1.1); z-index: 10; }
   .particle {
     position: absolute;
@@ -43,8 +53,9 @@
   </div>
   <div class="info" style="font-size: 14px; color: #ccc;">
     <span>Games: <span id="gamesPlayed">0</span></span>
-    <span>Best Score: <span id="bestScore">0</span></span>
-    <span>Max Combo: <span id="maxCombo">0</span></span>
+    <span>Best: <span id="bestScore">0</span></span>
+    <button class="powerup-btn" onclick="useShuffle()">Shuffle (500)</button>
+    <button class="powerup-btn" onclick="useBomb()" id="btnBomb">Bomb (500)</button>
   </div>
   <div id="board"></div>
   <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
@@ -59,6 +70,9 @@
       - <b>Classic:</b> Reach target score within limited moves.<br/>
       - <b>Zen:</b> Infinite moves/time. Just relax.<br/>
       - <b>Timed:</b> Reach target score before time runs out.</p>
+      <p><b>Power-ups:</b><br/>
+      - <b>Shuffle (500):</b> Shuffles the board.<br/>
+      - <b>Bomb (500):</b> Break any single gem.</p>
       <div style="text-align:center; margin-top:20px;">
         <button onclick="hideHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:8px 16px; cursor:pointer; border-radius:4px; font-weight:bold;">Close</button>
       </div>
@@ -92,6 +106,14 @@
     let gamesPlayed = 0;
     let bestScore = 0;
     let maxCombo = 0;
+    let powerupMode = 0;
+    
+    function useShuffle() {
+        if (score >= 500) { score -= 500; scoreEl.textContent = score; initGame(); }
+    }
+    function useBomb() {
+        if (score >= 500) { powerupMode = 1; document.getElementById('btnBomb').style.borderColor = 'red'; }
+    }
 
     function saveStats() {
       localStorage.setItem('kmatch3_stats', JSON.stringify({gamesPlayed, bestScore, maxCombo}));
@@ -186,6 +208,10 @@
         if (type === 1) cell.innerHTML = '<div style="width:100%;height:8px;background:#fff;border-radius:4px"></div>';
         if (type === 2) cell.innerHTML = '<div style="height:100%;width:8px;background:#fff;border-radius:4px"></div>';
         if (type === 3) cell.innerHTML = '<div style="width:24px;height:24px;background:#000;border-radius:50%"></div>';
+        let ice = document.createElement('div');
+        ice.className = 'ice-overlay';
+        ice.style.display = 'none';
+        cell.appendChild(ice);
         cell.addEventListener('click', onCellClick);
         return cell;
     }
@@ -203,9 +229,11 @@
             (r >= 2 && grid[r-1][c].color === color && grid[r-2][c].color === color) ||
             (c >= 2 && row[c-1].color === color && row[c-2].color === color)
           );
+          let isIce = (level > 2 && Math.random() < 0.2);
           let cell = createCellElement(r, c, color, 0);
+          if (isIce) cell.querySelector('.ice-overlay').style.display = 'block';
           boardEl.appendChild(cell);
-          row.push({ color, type: 0, el: cell });
+          row.push({ color, type: 0, el: cell, ice: isIce });
         }
         grid.push(row);
       }
@@ -215,7 +243,7 @@
     function saveGame() {
       const state = {
         level, score, moves, targetScore, gameMode,
-        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type} : null))
+        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice} : null))
       };
       localStorage.setItem('kmatch3_save', JSON.stringify(state));
     }
@@ -248,8 +276,9 @@
               let savedCell = state.grid[r][c];
               if (savedCell) {
                 let cell = createCellElement(r, c, savedCell.color, savedCell.type);
+                if (savedCell.ice) cell.querySelector('.ice-overlay').style.display = 'block';
                 boardEl.appendChild(cell);
-                row.push({ color: savedCell.color, type: savedCell.type, el: cell });
+                row.push({ color: savedCell.color, type: savedCell.type, el: cell, ice: savedCell.ice });
               } else {
                 row.push(null);
               }
@@ -269,6 +298,19 @@
       let target = e.currentTarget;
       const r = parseInt(target.dataset.r);
       const c = parseInt(target.dataset.c);
+      
+      if (powerupMode === 1) {
+          powerupMode = 0;
+          document.getElementById('btnBomb').style.borderColor = '#777';
+          score -= 500; scoreEl.textContent = score;
+          isProcessing = true;
+          processMatches({hMatches:[], vMatches:[]}, {r: r, c: c, single: true}).then(() => {
+              checkLevelProgress();
+              saveGame();
+              isProcessing = false;
+          });
+          return;
+      }
       if (selectedCell) {
         if (selectedCell.r === r && selectedCell.c === c) {
           selectedCell.el.classList.remove('selected');
@@ -420,6 +462,8 @@
                 if (lastSwap) {
                     grid[lastSwap[0].r][lastSwap[0].c].type = 2; addDestroy(lastSwap[0].r, lastSwap[0].c);
                 }
+            } else if (specialTrigger.single) {
+                addDestroy(specialTrigger.r, specialTrigger.c);
             }
             specialTrigger = null; 
         }
@@ -471,6 +515,10 @@
 
         destroyArr.forEach(m => {
           if (grid[m.r][m.c]) {
+            if (grid[m.r][m.c].ice) {
+                grid[m.r][m.c].ice = false;
+                grid[m.r][m.c].el.querySelector('.ice-overlay').style.display = 'none';
+            }
             let color = grid[m.r][m.c].color;
             if (grid[m.r][m.c].type === 3) color = '#ffffff';
             createParticles(m.c * 50 + 25, m.r * 50 + 25, color);
@@ -514,7 +562,7 @@
             let color = COLORS[Math.floor(Math.random() * COLORS.length)];
             let cell = createCellElement(r, c, color, 0);
             boardEl.appendChild(cell);
-            grid[r][c] = { color, type: 0, el: cell };
+            grid[r][c] = { color, type: 0, el: cell, ice: false };
             cell.offsetHeight;
             cell.style.top = (r * 50 + 1) + 'px';
           }
