@@ -57,6 +57,9 @@ HWND hDiffLabel;
 HWND hDiffMinusBtn;
 HWND hDiffPlusBtn;
 HWND hUndoBtn;
+HWND hHintBtn;
+HWND hAutoBtn;
+BOOL autoSolving = FALSE;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(INT_PTR)lpParam;
@@ -124,6 +127,11 @@ BOOL LoadState() {
 }
 
 void InitGame(HWND hwnd) {
+    if (autoSolving) {
+        autoSolving = FALSE;
+        KillTimer(hwnd, 2);
+        SetWindowText(hAutoBtn, "Auto-Solve");
+    }
     pegCounts[0] = 0;
     pegCounts[1] = 0;
     pegCounts[2] = 0;
@@ -176,15 +184,59 @@ BOOL CheckWin(HWND hwnd) {
     return FALSE;
 }
 
-void HandleClick(HWND hwnd, int x, int y) {
+int getNextOptimalMove(int d, int target, int* outFrom, int* outTo) {
+    if (d == 0) return 0;
+    int current = -1;
+    for (int p = 0; p < 3; p++) {
+        for (int i = 0; i < pegCounts[p]; i++) {
+            if (pegs[p][i] == d) {
+                current = p;
+                break;
+            }
+        }
+        if (current != -1) break;
+    }
+    if (current == target) {
+        return getNextOptimalMove(d - 1, target, outFrom, outTo);
+    } else {
+        int aux = 3 - current - target;
+        if (getNextOptimalMove(d - 1, aux, outFrom, outTo)) {
+            return 1;
+        }
+        *outFrom = current;
+        *outTo = target;
+        return 1;
+    }
+}
+
+int getHintMove(int* outFrom, int* outTo) {
+    int target = 2;
+    for (int d = numDiscs; d >= 1; d--) {
+        int current = -1;
+        for (int p = 0; p < 3; p++) {
+            for (int i = 0; i < pegCounts[p]; i++) {
+                if (pegs[p][i] == d) {
+                    current = p;
+                    break;
+                }
+            }
+            if (current != -1) break;
+        }
+        if (current != target) {
+            int aux = 3 - current - target;
+            if (getNextOptimalMove(d - 1, aux, outFrom, outTo)) {
+                return 1;
+            }
+            *outFrom = current;
+            *outTo = target;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void PerformPegClick(HWND hwnd, int clickedPeg) {
     if (won) return;
-
-    RECT rc;
-    GetClientRect(hwnd, &rc);
-    int width = rc.right - rc.left;
-    int pegWidth = width / 3;
-
-    int clickedPeg = x / pegWidth;
     if (clickedPeg < 0 || clickedPeg > 2) return;
 
     if (selectedPeg == -1) {
@@ -235,6 +287,28 @@ void HandleClick(HWND hwnd, int x, int y) {
     }
 }
 
+void ApplyHint(HWND hwnd) {
+    if (won) return;
+    int from, to;
+    if (getHintMove(&from, &to)) {
+        selectedPeg = -1;
+        PerformPegClick(hwnd, from);
+        PerformPegClick(hwnd, to);
+    }
+}
+
+void HandleClick(HWND hwnd, int x, int y) {
+    if (won) return;
+
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    int width = rc.right - rc.left;
+    int pegWidth = width / 3;
+
+    int clickedPeg = x / pegWidth;
+    PerformPegClick(hwnd, clickedPeg);
+}
+
 void UndoMove(HWND hwnd) {
     if (historyCount == 0 || won) return;
     historyCount--;
@@ -280,6 +354,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      310, 10, 60, 30,
                                      hwnd, (HMENU) 5,
                                      (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hHintBtn = CreateWindow("BUTTON", "Hint",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     380, 10, 60, 30,
+                                     hwnd, (HMENU) 6,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hAutoBtn = CreateWindow("BUTTON", "Auto-Solve",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     450, 10, 100, 30,
+                                     hwnd, (HMENU) 7,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             LoadStats();
             if (LoadState()) {
                 char buf[32];
@@ -299,6 +383,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 elapsedSeconds++;
                 SaveState();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 2) {
+                if (won) {
+                    autoSolving = FALSE;
+                    KillTimer(hwnd, 2);
+                    SetWindowText(hAutoBtn, "Auto-Solve");
+                } else {
+                    ApplyHint(hwnd);
+                }
             }
             break;
         case WM_COMMAND:
@@ -322,6 +414,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (LOWORD(wParam) == 5) {
                 UndoMove(hwnd);
+            } else if (LOWORD(wParam) == 6) {
+                ApplyHint(hwnd);
+            } else if (LOWORD(wParam) == 7) {
+                if (autoSolving) {
+                    autoSolving = FALSE;
+                    KillTimer(hwnd, 2);
+                    SetWindowText(hAutoBtn, "Auto-Solve");
+                } else {
+                    if (!won) {
+                        autoSolving = TRUE;
+                        SetTimer(hwnd, 2, 500, NULL);
+                        SetWindowText(hAutoBtn, "Stop Auto");
+                    }
+                }
             }
             break;
         case WM_LBUTTONDOWN:
@@ -329,6 +435,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_PAINT: {
             EnableWindow(hUndoBtn, historyCount > 0 && !won);
+            EnableWindow(hHintBtn, !won && !autoSolving);
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 

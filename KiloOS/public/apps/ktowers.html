@@ -41,6 +41,8 @@
             <option value="8">8</option>
         </select>
         <button onclick="undoMove()" id="undoBtn" disabled>Undo</button>
+        <button onclick="applyHint()" id="hintBtn">Hint</button>
+        <button onclick="toggleAutoSolve()" id="autoBtn">Auto-Solve</button>
         <button onclick="initGame()">Restart Game</button>
     </div>
 
@@ -115,6 +117,7 @@
         let won = false;
         let moveHistory = [];
         let timerInterval = null;
+        let autoSolveInterval = null;
         let elapsedSeconds = 0;
         let stats = JSON.parse(localStorage.getItem('ktowers_stats') || '{}');
 
@@ -183,6 +186,11 @@
             moveHistory = [];
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
+            if (autoSolveInterval) {
+                clearInterval(autoSolveInterval);
+                autoSolveInterval = null;
+                document.getElementById('autoBtn').innerText = "Auto-Solve";
+            }
             elapsedSeconds = 0;
             document.getElementById('timeDisplay').innerText = "00:00";
             document.getElementById('message').innerText = '';
@@ -246,6 +254,69 @@
             saveState();
         }
 
+        function getNextOptimalMove(d, target) {
+            if (d === 0) return null;
+            let current = -1;
+            for (let p = 0; p < 3; p++) {
+                if (pegs[p].includes(d)) { current = p; break; }
+            }
+            if (current === target) {
+                return getNextOptimalMove(d - 1, target);
+            } else {
+                let aux = 3 - current - target;
+                let move = getNextOptimalMove(d - 1, aux);
+                if (move) return move;
+                return { from: current, to: target };
+            }
+        }
+
+        function getHintMove() {
+            let target = 2;
+            for (let d = numDiscs; d >= 1; d--) {
+                let current = -1;
+                for (let p = 0; p < 3; p++) {
+                    if (pegs[p].includes(d)) { current = p; break; }
+                }
+                if (current !== target) {
+                    let aux = 3 - current - target;
+                    let move = getNextOptimalMove(d - 1, aux);
+                    if (move) return move;
+                    return { from: current, to: target };
+                }
+            }
+            return null;
+        }
+
+        function applyHint() {
+            if (won) return;
+            let move = getHintMove();
+            if (move) {
+                selectedPeg = null;
+                handlePegClick(move.from);
+                handlePegClick(move.to);
+            }
+        }
+
+        function toggleAutoSolve() {
+            if (autoSolveInterval) {
+                clearInterval(autoSolveInterval);
+                autoSolveInterval = null;
+                document.getElementById('autoBtn').innerText = "Auto-Solve";
+                render();
+            } else {
+                if (won) return;
+                document.getElementById('autoBtn').innerText = "Stop Auto";
+                autoSolveInterval = setInterval(() => {
+                    if (won) {
+                        toggleAutoSolve();
+                    } else {
+                        applyHint();
+                    }
+                }, 500);
+                render();
+            }
+        }
+
         function checkWin() {
             if (pegs[2].length === numDiscs) {
                 won = true;
@@ -279,6 +350,7 @@
         function render() {
             document.getElementById('moveCount').innerText = moves;
             document.getElementById('undoBtn').disabled = moveHistory.length === 0 || won;
+            document.getElementById('hintBtn').disabled = won || !!autoSolveInterval;
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = '';
 

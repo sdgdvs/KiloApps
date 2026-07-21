@@ -51,7 +51,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KTowers
-**Phase:** 11
+**Phase:** 12
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KTowers/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -65,14 +65,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 9: Add Move History / Undo functionality.
 - [x] Phase 10: Add a Time Tracking / Stopwatch feature.
 - [x] Phase 11: Add Statistics Tracking (best time and fewest moves per difficulty level).
-- Phase 12: Add Auto-Solve / Hint functionality (step-by-step optimal movement).
+- [x] Phase 12: Add Auto-Solve / Hint functionality (step-by-step optimal movement).
 - Phase 13: Add Keyboard controls (1, 2, 3 to select and move discs between pegs).
 - Phase 14: Add Comprehensive Help / How-to-Play modal.
 
 ## Next Priority (Before New Apps)
 
 **App:** KTowers
-**Goal:** Phase 12
+**Goal:** Phase 13
 
 
 ## App Lifecycle (14 phases per app)
