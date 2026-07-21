@@ -14,6 +14,9 @@ int historyFrom[4096];
 int historyTo[4096];
 int historyCount = 0;
 
+int elapsedSeconds = 0;
+BOOL timerRunning = FALSE;
+
 COLORREF colors[] = {
     RGB(255, 59, 48),  // #FF3B30
     RGB(255, 149, 0),  // #FF9500
@@ -65,6 +68,7 @@ void SaveState() {
         fwrite(&historyCount, sizeof(int), 1, fp);
         fwrite(historyFrom, sizeof(int), historyCount, fp);
         fwrite(historyTo, sizeof(int), historyCount, fp);
+        fwrite(&elapsedSeconds, sizeof(int), 1, fp);
         fclose(fp);
     }
 }
@@ -82,8 +86,12 @@ BOOL LoadState() {
         if (fread(&historyCount, sizeof(int), 1, fp) == 1) {
             fread(historyFrom, sizeof(int), historyCount, fp);
             fread(historyTo, sizeof(int), historyCount, fp);
+            if (fread(&elapsedSeconds, sizeof(int), 1, fp) != 1) {
+                elapsedSeconds = 0;
+            }
         } else {
             historyCount = 0;
+            elapsedSeconds = 0;
         }
         fclose(fp);
         return TRUE;
@@ -102,6 +110,11 @@ void InitGame(HWND hwnd) {
     moves = 0;
     won = FALSE;
     historyCount = 0;
+    elapsedSeconds = 0;
+    if (timerRunning) {
+        KillTimer(hwnd, 1);
+        timerRunning = FALSE;
+    }
     SaveState();
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -109,6 +122,10 @@ void InitGame(HWND hwnd) {
 BOOL CheckWin(HWND hwnd) {
     if (pegCounts[2] == numDiscs) {
         won = TRUE;
+        if (timerRunning) {
+            KillTimer(hwnd, 1);
+            timerRunning = FALSE;
+        }
         PlaySoundEffect(4);
         InvalidateRect(hwnd, NULL, TRUE);
         return TRUE;
@@ -159,6 +176,10 @@ void HandleClick(HWND hwnd, int x, int y) {
             pegs[clickedPeg][pegCounts[clickedPeg]++] = fromTop;
             moves++;
             selectedPeg = -1;
+            if (!timerRunning && !won) {
+                timerRunning = TRUE;
+                SetTimer(hwnd, 1, 1000, NULL);
+            }
             if (!CheckWin(hwnd)) {
                 PlaySoundEffect(2);
             }
@@ -220,9 +241,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 char buf[32];
                 sprintf(buf, "Discs: %d", numDiscs);
                 SetWindowText(hDiffLabel, buf);
+                if (moves > 0 && !won && !timerRunning) {
+                    timerRunning = TRUE;
+                    SetTimer(hwnd, 1, 1000, NULL);
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
             } else {
                 InitGame(hwnd);
+            }
+            break;
+        case WM_TIMER:
+            if (wParam == 1) {
+                elapsedSeconds++;
+                SaveState();
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         case WM_COMMAND:
@@ -269,8 +301,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             char textBuf[256];
             int optimalMoves = (1 << numDiscs) - 1;
-            sprintf(textBuf, "Moves: %d / Optimal: %d", moves, optimalMoves);
-            TextOut(hdc, rc.right / 2 - 85, 20, textBuf, strlen(textBuf));
+            int m = elapsedSeconds / 60;
+            int s = elapsedSeconds % 60;
+            sprintf(textBuf, "Time: %02d:%02d | Moves: %d / Optimal: %d", m, s, moves, optimalMoves);
+            TextOut(hdc, rc.right / 2 - 120, 20, textBuf, strlen(textBuf));
 
             if (won) {
                 SetTextColor(hdc, RGB(74, 222, 128));

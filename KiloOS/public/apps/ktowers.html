@@ -22,7 +22,7 @@
 </head>
 <body>
     <h1>KTowers</h1>
-    <div class="info">Moves: <span id="moveCount">0</span> / Optimal: <span id="optimalMoves">0</span></div>
+    <div class="info">Time: <span id="timeDisplay">00:00</span> | Moves: <span id="moveCount">0</span> / Optimal: <span id="optimalMoves">0</span></div>
     
     <div class="game-area" id="gameArea">
         <!-- Rendered by JS -->
@@ -114,8 +114,22 @@
         let moves = 0;
         let won = false;
         let moveHistory = [];
+        let timerInterval = null;
+        let elapsedSeconds = 0;
 
         const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'];
+
+        function formatTime(secs) {
+            const m = Math.floor(secs / 60).toString().padStart(2, '0');
+            const s = (secs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function updateTimer() {
+            elapsedSeconds++;
+            document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
+            saveState();
+        }
 
         function saveState() {
             localStorage.setItem('ktowers_save', JSON.stringify({
@@ -123,7 +137,8 @@
                 pegs: pegs,
                 moves: moves,
                 won: won,
-                moveHistory: moveHistory
+                moveHistory: moveHistory,
+                elapsedSeconds: elapsedSeconds
             }));
         }
 
@@ -138,6 +153,7 @@
                         moves = state.moves;
                         won = state.won;
                         moveHistory = state.moveHistory || [];
+                        elapsedSeconds = state.elapsedSeconds || 0;
                         document.getElementById('difficulty').value = numDiscs;
                         return true;
                     }
@@ -155,6 +171,10 @@
             moves = 0;
             won = false;
             moveHistory = [];
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            elapsedSeconds = 0;
+            document.getElementById('timeDisplay').innerText = "00:00";
             document.getElementById('message').innerText = '';
             document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
             render();
@@ -186,6 +206,9 @@
                     moves++;
                     selectedPeg = null;
                     render();
+                    if (!timerInterval && !won) {
+                        timerInterval = setInterval(updateTimer, 1000);
+                    }
                     if (!checkWin()) {
                         playSound('drop');
                     }
@@ -215,6 +238,8 @@
         function checkWin() {
             if (pegs[2].length === numDiscs) {
                 won = true;
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = null;
                 document.getElementById('message').innerText = `You won in ${moves} moves!`;
                 playSound('win');
                 return true;
@@ -257,9 +282,13 @@
 
         if (loadState()) {
             document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
+            document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
             render();
             if (won) {
                 document.getElementById('message').innerText = `You won in ${moves} moves!`;
+            } else if (moves > 0) {
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(updateTimer, 1000);
             }
         } else {
             initGame();
