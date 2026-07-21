@@ -4,19 +4,28 @@
 #include <string.h>
 
 #define W 500
-#define H 600
+#define H 650
 
-#define NUM_CATEGORIES 5
-const char* CAT_NAMES[NUM_CATEGORIES] = {"Technology", "Animals", "Countries", "Science", "Custom"};
+#define NUM_CATEGORIES 10
+const char* CAT_NAMES[NUM_CATEGORIES] = {"Technology", "Animals", "Countries", "Science", "Movies", "Sports", "Food", "Music", "History", "Custom"};
 
-const char* CAT_WORDS[NUM_CATEGORIES][10] = {
-    {"COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE"},
-    {"ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO"},
-    {"AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN"},
-    {"PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION"}
+const char* CAT_WORDS[NUM_CATEGORIES][20] = {
+    {"COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE", "KEYBOARD", "MONITOR", "ALGORITHM", "COMPILER", "PROCESSOR", "MEMORY", "VARIABLE", "FUNCTION", "ROUTER", "SERVER"},
+    {"ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO", "ALLIGATOR", "CROCODILE", "PLATYPUS", "OSTRICH", "OCTOPUS", "PANTHER", "LEOPARD", "WALRUS", "CHIMPANZEE", "HIPPOPOTAMUS"},
+    {"AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN", "ARGENTINA", "BELGIUM", "CHILE", "GREECE", "INDIA", "ITALY", "NORWAY", "SWEDEN", "THAILAND", "VIETNAM"},
+    {"PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION", "ECOLOGY", "GENETICS", "EVOLUTION", "QUANTUM", "VELOCITY", "PARTICLE", "THERMODYNAMICS", "NEUROLOGY", "BACTERIA", "TELESCOPE"},
+    {"TITANIC", "AVATAR", "GLADIATOR", "MATRIX", "INCEPTION", "GODFATHER", "JAWS", "ROCKY", "TERMINATOR", "ALIEN", "JURASSIC", "CASABLANCA", "SUPERMAN", "BATMAN", "SPIDERMAN", "AVENGERS", "PREDATOR", "GHOSTBUSTERS", "HALLOWEEN", "PSYCHO"},
+    {"BASKETBALL", "FOOTBALL", "BASEBALL", "SOCCER", "TENNIS", "CRICKET", "VOLLEYBALL", "RUGBY", "GOLF", "HOCKEY", "BADMINTON", "SWIMMING", "BOXING", "WRESTLING", "CYCLING", "ARCHERY", "FENCING", "GYMNASTICS", "MARATHON", "SURFING"},
+    {"PIZZA", "BURGER", "SUSHI", "PASTA", "TACO", "STEAK", "SALAD", "SOUP", "SANDWICH", "NOODLES", "PANCAKE", "WAFFLE", "CHICKEN", "CHEESE", "BREAD", "RICE", "POTATO", "APPLE", "BANANA", "CHOCOLATE"},
+    {"GUITAR", "PIANO", "DRUMS", "VIOLIN", "FLUTE", "TRUMPET", "SAXOPHONE", "CELLO", "BASS", "VOCALS", "MELODY", "RHYTHM", "CHORD", "ORCHESTRA", "SYMPHONY", "JAZZ", "ROCK", "BLUES", "CLASSICAL", "POP"},
+    {"ROME", "GREECE", "EGYPT", "EMPIRE", "REVOLUTION", "WAR", "KING", "QUEEN", "KNIGHT", "CASTLE", "PYRAMID", "PHARAOH", "GLADIATOR", "SAMURAI", "NINJA", "VIKING", "PIRATE", "COLONY", "TREATY", "DISCOVERY"}
 };
-const int NUM_WORDS_PER_CAT = 10;
+const int NUM_WORDS_PER_CAT = 20;
 int current_category = 0;
+int is_campaign = 0;
+int campaign_level = 1;
+int max_errors = 6;
+int bombs = 1;
 
 
 
@@ -81,6 +90,10 @@ typedef struct {
     int hint_used;
     int game_over;
     int won;
+    int is_campaign;
+    int campaign_level;
+    int max_errors;
+    int bombs;
 } GameState;
 
 void SaveGame(HWND hwnd) {
@@ -96,6 +109,10 @@ void SaveGame(HWND hwnd) {
     st.hint_used = hint_used;
     st.game_over = game_over;
     st.won = won;
+    st.is_campaign = is_campaign;
+    st.campaign_level = campaign_level;
+    st.max_errors = max_errors;
+    st.bombs = bombs;
     
     FILE* f = fopen("khangman_save.dat", "wb");
     if (f) {
@@ -117,6 +134,10 @@ void LoadGame(HWND hwnd) {
             hint_used = st.hint_used;
             game_over = st.game_over;
             won = st.won;
+            is_campaign = st.is_campaign;
+            campaign_level = st.campaign_level;
+            max_errors = st.max_errors;
+            bombs = st.bombs;
             MessageBoxA(hwnd, "Game loaded successfully.", "Load", MB_OK);
         }
         fclose(f);
@@ -143,7 +164,17 @@ void InitGame() {
         initialized = 1;
     }
     
-    if (current_category == 4) {
+    if (is_campaign) {
+        current_category = (campaign_level - 1) % 9;
+        max_errors = 7 - (campaign_level / 2);
+        if (max_errors < 4) max_errors = 4;
+        if (campaign_level == 1) bombs = 3;
+    } else {
+        max_errors = 6;
+        bombs = 1;
+    }
+    
+    if (current_category == NUM_CATEGORIES - 1) {
         char buf[1024] = {0};
         if (hCustomEdit) {
             GetWindowTextA(hCustomEdit, buf, sizeof(buf));
@@ -183,7 +214,7 @@ void InitGame() {
         target_word[i] = '\0';
     }
     
-    for(i=0; i<26; i++) guessed[i] = 0;
+    for(int i=0; i<26; i++) guessed[i] = 0;
     errors = 0;
     game_over = 0;
     won = 0;
@@ -212,12 +243,16 @@ void Guess(char c) {
     if (!found) {
         errors++;
         shake_frames = 15;
-        if (errors >= 6) {
+        if (errors >= max_errors) {
             game_over = 1;
             won = 0;
             PlaySoundEffect(4); // lose
             stats.losses++;
             stats.streak = 0;
+            if (is_campaign) {
+                is_campaign = 0;
+                campaign_level = 1;
+            }
             SaveStats();
         } else {
             PlaySoundEffect(2); // invalid
@@ -247,8 +282,8 @@ void Guess(char c) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
-            hCustomEdit = CreateWindowEx(0, "EDIT", "APPLE, BANANA", WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_LEFT, 100, 75, 300, 25, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
-            if (current_category == 4) ShowWindow(hCustomEdit, SW_SHOW);
+            hCustomEdit = CreateWindowEx(0, "EDIT", "APPLE, BANANA", WS_CHILD | WS_BORDER | ES_AUTOHSCROLL | ES_LEFT, 100, 105, 300, 25, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+            if (current_category == NUM_CATEGORIES - 1) ShowWindow(hCustomEdit, SW_SHOW);
             InitGame();
             SetTimer(hwnd, 1, 30, NULL);
             break;
@@ -281,8 +316,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
             
-            // Check hint button
-            if (x >= 20 && x <= 75 && y >= 490 && y <= 530) {
+            // Bomb button
+            if (x >= 20 && x <= 80 && y >= 530 && y <= 560) {
+                if (bombs > 0 && !game_over) {
+                    bombs--;
+                    int elims = 0;
+                    for (int k = 0; k < 50 && elims < 3; k++) {
+                        int r = CustomRand() % 26;
+                        if (!guessed[r]) {
+                            int in_word = 0;
+                            for (int w = 0; target_word[w] != '\0'; w++) {
+                                if (target_word[w] == 'A' + r) { in_word = 1; break; }
+                            }
+                            if (!in_word) {
+                                guessed[r] = 1;
+                                elims++;
+                            }
+                        }
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+                break;
+            }
+
+            // Hint button
+            if (x >= 90 && x <= 150 && y >= 530 && y <= 560) {
                 if (!hint_used && !game_over) {
                     char unguessed[32];
                     int uCount = 0;
@@ -304,43 +362,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
 
-            // Check restart button
-            if (x >= 85 && x <= 175 && y >= 490 && y <= 530) {
+            // Campaign button
+            if (x >= 160 && x <= 250 && y >= 530 && y <= 560) {
                 SetFocus(hwnd);
+                if (game_over && won && is_campaign && campaign_level < 10) {
+                    campaign_level++;
+                } else {
+                    is_campaign = 1;
+                    campaign_level = 1;
+                }
+                InitGame();
+                InvalidateRect(hwnd, NULL, TRUE);
+                break;
+            }
+
+            // Restart button
+            if (x >= 260 && x <= 350 && y >= 530 && y <= 560) {
+                SetFocus(hwnd);
+                is_campaign = 0;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             
-            // Check save button
-            if (x >= 185 && x <= 235 && y >= 490 && y <= 530) {
+            // Save button
+            if (x >= 150 && x <= 220 && y >= 570 && y <= 600) {
                 SaveGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
             
-            // Check load button
-            if (x >= 245 && x <= 295 && y >= 490 && y <= 530) {
+            // Load button
+            if (x >= 230 && x <= 300 && y >= 570 && y <= 600) {
                 LoadGame(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
 
-            // Check help button
-            if (x >= 305 && x <= 365 && y >= 490 && y <= 530) {
+            // Help button
+            if (x >= 310 && x <= 370 && y >= 570 && y <= 600) {
                 MessageBoxA(hwnd,
                     "How to Play KHangman\n\n"
-                    "Rules: Guess the hidden word one letter at a time. You have 6 lives.\n"
-                    "Controls: Click the on-screen keyboard or type (A-Z).\n"
-                    "Categories: Select from predefined themes or choose Custom.\n"
-                    "Custom Words: Enter your own comma-separated list of words.\n"
-                    "Hint: Reveals one correct letter. Limit 1 per game.",
+                    "Rules: Guess the hidden word one letter at a time.\n"
+                    "Campaign Mode: 10 stages of increasing difficulty.\n"
+                    "Bomb: Eliminates up to 3 incorrect letters from the keyboard.\n"
+                    "Hint: Reveals one correct letter.\n"
+                    "Categories: Select from predefined themes or choose Custom.",
                     "Help / How to Play", MB_OK | MB_ICONINFORMATION);
                 break;
             }
 
-            // Check mute button
-            if (x >= 375 && x <= 445 && y >= 490 && y <= 530) {
+            // Mute button
+            if (x >= 380 && x <= 450 && y >= 570 && y <= 600) {
                 is_muted = !is_muted;
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
@@ -348,12 +421,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Check categories
             int cx = 15;
-            int cy = 45;
+            int cy = 40;
             for (int i = 0; i < NUM_CATEGORIES; i++) {
                 if (x >= cx && x <= cx + 85 && y >= cy && y <= cy + 25) {
                     if (current_category != i) {
                         current_category = i;
-                        if (current_category == 4) ShowWindow(hCustomEdit, SW_SHOW);
+                        is_campaign = 0;
+                        if (current_category == NUM_CATEGORIES - 1) ShowWindow(hCustomEdit, SW_SHOW);
                         else ShowWindow(hCustomEdit, SW_HIDE);
                         SetFocus(hwnd);
                         InitGame();
@@ -362,11 +436,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
                 cx += 95;
+                if (i == 4) {
+                    cx = 15;
+                    cy = 70;
+                }
             }
 
             // Check keyboard clicks
             int kx = 110;
-            int ky = 330;
+            int ky = 360;
             for (int i = 0; i < 26; i++) {
                 int col = i % 7;
                 int row = i / 7;
@@ -412,16 +490,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Categories
             int cx = 15;
-            int cy = 45;
+            int cy = 40;
             SelectObject(memDC, hFontMono);
             for (int i = 0; i < NUM_CATEGORIES; i++) {
                 RECT cRect = {cx, cy, cx + 85, cy + 25};
-                HBRUSH cBg = CreateSolidBrush(i == current_category ? RGB(0, 122, 204) : RGB(44, 44, 44));
+                HBRUSH cBg = CreateSolidBrush((i == current_category && !is_campaign) ? RGB(0, 122, 204) : RGB(44, 44, 44));
                 FillRect(memDC, &cRect, cBg);
                 DeleteObject(cBg);
                 SetTextColor(memDC, RGB(255, 255, 255));
                 DrawTextA(memDC, CAT_NAMES[i], -1, &cRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 cx += 95;
+                if (i == 4) { cx = 15; cy = 70; }
             }
 
             // Drawing
@@ -439,41 +518,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Base gallows
-            MoveToEx(memDC, 190 + ox, 240, NULL);
-            LineTo(memDC, 310 + ox, 240); // Base
-            MoveToEx(memDC, 210 + ox, 240, NULL);
-            LineTo(memDC, 210 + ox, 100);  // Pole
-            LineTo(memDC, 270 + ox, 100);  // Top
-            LineTo(memDC, 270 + ox, 120);  // Rope
+            MoveToEx(memDC, 190 + ox, 280, NULL);
+            LineTo(memDC, 310 + ox, 280); // Base
+            MoveToEx(memDC, 210 + ox, 280, NULL);
+            LineTo(memDC, 210 + ox, 140);  // Pole
+            LineTo(memDC, 270 + ox, 140);  // Top
+            LineTo(memDC, 270 + ox, 160);  // Rope
             
             if (errors > 0) {
                 // Head
-                Ellipse(memDC, 250 + ox, 120, 290 + ox, 160);
+                Ellipse(memDC, 250 + ox, 160, 290 + ox, 200);
             }
             if (errors > 1) {
                 // Body
                 MoveToEx(memDC, 270 + ox, 200, NULL);
-                LineTo(memDC, 270 + ox, 200);
+                LineTo(memDC, 270 + ox, 240);
             }
             if (errors > 2) {
                 // Left arm
-                MoveToEx(memDC, 270 + ox, 170, NULL);
-                LineTo(memDC, 240 + ox, 230);
+                MoveToEx(memDC, 270 + ox, 210, NULL);
+                LineTo(memDC, 240 + ox, 240);
             }
             if (errors > 3) {
                 // Right arm
-                MoveToEx(memDC, 270 + ox, 170, NULL);
-                LineTo(memDC, 300 + ox, 230);
+                MoveToEx(memDC, 270 + ox, 210, NULL);
+                LineTo(memDC, 300 + ox, 240);
             }
             if (errors > 4) {
                 // Left leg
-                MoveToEx(memDC, 270 + ox, 200, NULL);
-                LineTo(memDC, 240 + ox, 230);
+                MoveToEx(memDC, 270 + ox, 240, NULL);
+                LineTo(memDC, 240 + ox, 270);
             }
             if (errors > 5) {
                 // Right leg
-                MoveToEx(memDC, 270 + ox, 200, NULL);
-                LineTo(memDC, 300 + ox, 230);
+                MoveToEx(memDC, 270 + ox, 240, NULL);
+                LineTo(memDC, 300 + ox, 270);
+            }
+            if (errors > 6) {
+                // Extra error (Campaign mode 7 errors)
+                MoveToEx(memDC, 260 + ox, 175, NULL);
+                LineTo(memDC, 265 + ox, 180);
+                MoveToEx(memDC, 265 + ox, 175, NULL);
+                LineTo(memDC, 260 + ox, 180);
             }
             SelectObject(memDC, hOldPen);
             SelectObject(memDC, hOldBrush);
@@ -504,30 +590,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Center the word display
             SIZE tSize;
             GetTextExtentPoint32A(memDC, disp, len, &tSize);
-            TextOutA(memDC, (W - tSize.cx) / 2, 250, disp, len);
+            TextOutA(memDC, (W - tSize.cx) / 2, 290, disp, len);
 
             // Message
             char* msgTxt = "Guess a letter to start";
             COLORREF msgColor = RGB(224, 224, 224);
+            char infoMsg[100];
+            if (is_campaign) {
+                wsprintfA(infoMsg, "Campaign Stage %d / 10", campaign_level);
+                msgTxt = infoMsg;
+                msgColor = RGB(255, 193, 7);
+            }
             if (game_over) {
                 if (won) {
-                    msgTxt = "You Win!";
+                    if (is_campaign && campaign_level == 10) msgTxt = "Campaign Complete!";
+                    else msgTxt = "You Win!";
                     msgColor = RGB(76, 175, 80);
                 } else {
                     static char loseMsg[100];
-                    wsprintfA(loseMsg, "Game Over! Word was %s", target_word);
+                    wsprintfA(loseMsg, "Game Over! Word: %s", target_word);
                     msgTxt = loseMsg;
                     msgColor = RGB(244, 67, 54);
                 }
             }
             SetTextColor(memDC, msgColor);
             GetTextExtentPoint32A(memDC, msgTxt, lstrlenA(msgTxt), &tSize);
-            TextOutA(memDC, (W - tSize.cx) / 2, 290, msgTxt, lstrlenA(msgTxt));
+            TextOutA(memDC, (W - tSize.cx) / 2, 330, msgTxt, lstrlenA(msgTxt));
 
             // Keyboard
             SelectObject(memDC, hFontMono);
             int kx = 110;
-            int ky = 330;
+            int ky = 360;
             for (int i = 0; i < 26; i++) {
                 int col = i % 7;
                 int row = i / 7;
@@ -552,8 +645,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, l, 1, &btnRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
+            // Bomb button
+            RECT bombRect = {20, 530, 80, 560};
+            HBRUSH bombBg;
+            if (bombs <= 0 || game_over) {
+                bombBg = CreateSolidBrush(RGB(68, 68, 68));
+                SetTextColor(memDC, RGB(119, 119, 119));
+            } else {
+                bombBg = CreateSolidBrush(RGB(244, 67, 54));
+                SetTextColor(memDC, RGB(255, 255, 255));
+            }
+            FillRect(memDC, &bombRect, bombBg);
+            DeleteObject(bombBg);
+            HFONT hFontBtn = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            SelectObject(memDC, hFontBtn);
+            char bombTxt[32];
+            wsprintfA(bombTxt, "Bomb(%d)", bombs);
+            DrawTextA(memDC, bombTxt, -1, &bombRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
             // Hint button
-            RECT hintRect = {20, 490, 75, 530};
+            RECT hintRect = {90, 530, 150, 560};
             HBRUSH hintBg;
             if (hint_used || game_over) {
                 hintBg = CreateSolidBrush(RGB(68, 68, 68));
@@ -564,21 +675,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             FillRect(memDC, &hintRect, hintBg);
             DeleteObject(hintBg);
-            
-            HFONT hFontBtn = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
-            SelectObject(memDC, hFontBtn);
             DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
+            // Campaign button
+            RECT campRect = {160, 530, 250, 560};
+            HBRUSH campBg = CreateSolidBrush(is_campaign ? RGB(0, 150, 136) : RGB(100, 100, 100));
+            FillRect(memDC, &campRect, campBg);
+            DeleteObject(campBg);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            if (game_over && won && is_campaign && campaign_level < 10) {
+                DrawTextA(memDC, "Next Stage", -1, &campRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else {
+                DrawTextA(memDC, "Campaign", -1, &campRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
+
             // Restart button
-            RECT resRect = {85, 490, 175, 530};
+            RECT resRect = {260, 530, 350, 560};
             HBRUSH resBg = CreateSolidBrush(RGB(0, 122, 204));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
             SetTextColor(memDC, RGB(255, 255, 255));
-            DrawTextA(memDC, "New Game", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextA(memDC, "Freeplay", -1, &resRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             
             // Save button
-            RECT saveRect = {185, 490, 235, 530};
+            RECT saveRect = {150, 570, 220, 600};
             HBRUSH saveBg = CreateSolidBrush(RGB(76, 175, 80));
             FillRect(memDC, &saveRect, saveBg);
             DeleteObject(saveBg);
@@ -586,7 +706,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Save", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Load button
-            RECT loadRect = {245, 490, 295, 530};
+            RECT loadRect = {230, 570, 300, 600};
             HBRUSH loadBg = CreateSolidBrush(RGB(156, 39, 176));
             FillRect(memDC, &loadRect, loadBg);
             DeleteObject(loadBg);
@@ -594,7 +714,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Load", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Help button
-            RECT helpRect = {305, 490, 365, 530};
+            RECT helpRect = {310, 570, 370, 600};
             HBRUSH helpBg = CreateSolidBrush(RGB(33, 150, 243));
             FillRect(memDC, &helpRect, helpBg);
             DeleteObject(helpBg);
@@ -602,7 +722,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DrawTextA(memDC, "Help", -1, &helpRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             // Mute button
-            RECT muteRect = {375, 490, 445, 530};
+            RECT muteRect = {380, 570, 450, 600};
             HBRUSH muteBg = CreateSolidBrush(RGB(85, 85, 85));
             FillRect(memDC, &muteRect, muteBg);
             DeleteObject(muteBg);
@@ -617,7 +737,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, RGB(79, 172, 254));
             SelectObject(memDC, hFontMono);
             GetTextExtentPoint32A(memDC, statText, lstrlenA(statText), &tSize);
-            TextOutA(memDC, (W - tSize.cx) / 2, 550, statText, lstrlenA(statText));
+            TextOutA(memDC, (W - tSize.cx) / 2, 615, statText, lstrlenA(statText));
 
             DeleteObject(hFontMain);
             DeleteObject(hFontMono);

@@ -164,6 +164,11 @@
         <option value="Animals">Animals</option>
         <option value="Countries">Countries</option>
         <option value="Science">Science</option>
+        <option value="Movies">Movies</option>
+        <option value="Sports">Sports</option>
+        <option value="Food">Food</option>
+        <option value="Music">Music</option>
+        <option value="History">History</option>
         <option value="Custom">Custom</option>
     </select>
     
@@ -181,8 +186,10 @@
     <div id="keyboard"></div>
     
     <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
+        <button class="hint-btn" onclick="useBomb()" id="bomb-btn" style="background-color: #f44336; margin-right: 0;">Bomb(1)</button>
         <button class="hint-btn" onclick="useHint()" id="hint-btn" style="margin-right: 0;">Hint</button>
-        <button class="restart" onclick="initGame()">New Game</button>
+        <button class="restart" onclick="startCampaign()" id="campaign-btn" style="background-color: #009688;">Campaign</button>
+        <button class="restart" onclick="isCampaign = false; initGame()">Freeplay</button>
         <button class="action-btn" onclick="saveGameState()" style="background-color: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Save</button>
         <button class="action-btn" onclick="loadGameState()" style="background-color: #9c27b0; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Load</button>
         <button class="action-btn" onclick="showHelp()" style="background-color: #2196f3; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Help</button>
@@ -193,10 +200,11 @@
 <div id="help-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
     <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 400px; text-align: left; border: 1px solid #444; color: #e0e0e0;">
         <h2 style="color: #4facfe; margin-top: 0;">How to Play KHangman</h2>
-        <p><strong>Rules:</strong> Guess the hidden word one letter at a time. You have 6 lives. Incorrect guesses draw parts of the hangman. If the hangman is completed before you guess the word, you lose!</p>
+        <p><strong>Rules:</strong> Guess the hidden word one letter at a time. You have up to 6 lives.</p>
         <p><strong>Controls:</strong> Click the on-screen keyboard or type using your physical keyboard (A-Z).</p>
-        <p><strong>Categories:</strong> Select from predefined categories (Technology, Animals, Countries, Science).</p>
-        <p><strong>Custom Words:</strong> Select "Custom" to enter your own comma-separated list of words to play with.</p>
+        <p><strong>Campaign Mode:</strong> 10 stages of increasing difficulty.</p>
+        <p><strong>Bomb:</strong> Eliminates up to 3 incorrect letters from the keyboard.</p>
+        <p><strong>Categories:</strong> Select from predefined categories or choose Custom.</p>
         <p><strong>Hint:</strong> Reveals one correct letter. Can only be used once per game.</p>
         <div style="text-align: right; margin-top: 20px;">
             <button onclick="hideHelp()" style="background-color: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Close</button>
@@ -206,17 +214,26 @@
 
 <script>
     const CATEGORIES = {
-        "Technology": ["COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE"],
-        "Animals": ["ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO"],
-        "Countries": ["AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN"],
-        "Science": ["PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION"]
+        "Technology": ["COMPUTER", "PROGRAM", "APPLICATION", "SOFTWARE", "DEVELOPER", "INTERNET", "BROWSER", "HARDWARE", "NETWORK", "DATABASE", "KEYBOARD", "MONITOR", "ALGORITHM", "COMPILER", "PROCESSOR", "MEMORY", "VARIABLE", "FUNCTION", "ROUTER", "SERVER"],
+        "Animals": ["ELEPHANT", "GIRAFFE", "KANGAROO", "PENGUIN", "DOLPHIN", "TIGER", "MONKEY", "CHEETAH", "GORILLA", "RHINO", "ALLIGATOR", "CROCODILE", "PLATYPUS", "OSTRICH", "OCTOPUS", "PANTHER", "LEOPARD", "WALRUS", "CHIMPANZEE", "HIPPOPOTAMUS"],
+        "Countries": ["AUSTRALIA", "BRAZIL", "CANADA", "DENMARK", "EGYPT", "FRANCE", "GERMANY", "JAPAN", "MEXICO", "SPAIN", "ARGENTINA", "BELGIUM", "CHILE", "GREECE", "INDIA", "ITALY", "NORWAY", "SWEDEN", "THAILAND", "VIETNAM"],
+        "Science": ["PHYSICS", "CHEMISTRY", "BIOLOGY", "ASTRONOMY", "GEOLOGY", "GRAVITY", "MOLECULE", "ATOM", "ENERGY", "RADIATION", "ECOLOGY", "GENETICS", "EVOLUTION", "QUANTUM", "VELOCITY", "PARTICLE", "THERMODYNAMICS", "NEUROLOGY", "BACTERIA", "TELESCOPE"],
+        "Movies": ["TITANIC", "AVATAR", "GLADIATOR", "MATRIX", "INCEPTION", "GODFATHER", "JAWS", "ROCKY", "TERMINATOR", "ALIEN", "JURASSIC", "CASABLANCA", "SUPERMAN", "BATMAN", "SPIDERMAN", "AVENGERS", "PREDATOR", "GHOSTBUSTERS", "HALLOWEEN", "PSYCHO"],
+        "Sports": ["BASKETBALL", "FOOTBALL", "BASEBALL", "SOCCER", "TENNIS", "CRICKET", "VOLLEYBALL", "RUGBY", "GOLF", "HOCKEY", "BADMINTON", "SWIMMING", "BOXING", "WRESTLING", "CYCLING", "ARCHERY", "FENCING", "GYMNASTICS", "MARATHON", "SURFING"],
+        "Food": ["PIZZA", "BURGER", "SUSHI", "PASTA", "TACO", "STEAK", "SALAD", "SOUP", "SANDWICH", "NOODLES", "PANCAKE", "WAFFLE", "CHICKEN", "CHEESE", "BREAD", "RICE", "POTATO", "APPLE", "BANANA", "CHOCOLATE"],
+        "Music": ["GUITAR", "PIANO", "DRUMS", "VIOLIN", "FLUTE", "TRUMPET", "SAXOPHONE", "CELLO", "BASS", "VOCALS", "MELODY", "RHYTHM", "CHORD", "ORCHESTRA", "SYMPHONY", "JAZZ", "ROCK", "BLUES", "CLASSICAL", "POP"],
+        "History": ["ROME", "GREECE", "EGYPT", "EMPIRE", "REVOLUTION", "WAR", "KING", "QUEEN", "KNIGHT", "CASTLE", "PYRAMID", "PHARAOH", "GLADIATOR", "SAMURAI", "NINJA", "VIKING", "PIRATE", "COLONY", "TREATY", "DISCOVERY"]
     };
-    const MAX_ERRORS = 6;
+    const CATEGORY_NAMES = ["Technology", "Animals", "Countries", "Science", "Movies", "Sports", "Food", "Music", "History"];
+    let maxErrors = 6;
     let word = "";
     let guessed = new Set();
     let errors = 0;
     let gameEnded = false;
     let hintUsed = false;
+    let isCampaign = false;
+    let campaignLevel = 1;
+    let bombs = 1;
     let stats = { wins: 0, losses: 0, streak: 0, best: 0 };
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -324,7 +341,11 @@
             category: document.getElementById('category').value,
             guessed: Array.from(guessed),
             errors: errors,
-            hintUsed: hintUsed
+            hintUsed: hintUsed,
+            isCampaign: isCampaign,
+            campaignLevel: campaignLevel,
+            maxErrors: maxErrors,
+            bombs: bombs
         };
         localStorage.setItem('khangman_save', JSON.stringify(state));
         alert("Game saved!");
@@ -345,9 +366,15 @@
                 guessed = new Set(state.guessed);
                 errors = state.errors;
                 hintUsed = state.hintUsed;
+                isCampaign = state.isCampaign || false;
+                campaignLevel = state.campaignLevel || 1;
+                maxErrors = state.maxErrors || 6;
+                bombs = state.bombs !== undefined ? state.bombs : 1;
                 gameEnded = false;
                 
                 document.getElementById('hint-btn').disabled = hintUsed;
+                document.getElementById('bomb-btn').disabled = bombs <= 0;
+                document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
                 document.getElementById('message').innerText = "Game loaded. Guess a letter";
                 document.getElementById('message').style.color = "#e0e0e0";
                 document.getElementById('word-display').classList.remove('win-animation');
@@ -429,6 +456,15 @@
             ctx.lineTo(150, 160);
             ctx.stroke();
         }
+        if (errors > 6) {
+            // Extra error (Campaign mode 7 errors)
+            ctx.beginPath();
+            ctx.moveTo(110, 70);
+            ctx.lineTo(115, 75);
+            ctx.moveTo(115, 70);
+            ctx.lineTo(110, 75);
+            ctx.stroke();
+        }
     }
 
     function initKeyboard() {
@@ -455,6 +491,16 @@
         initGame();
     }
 
+    function startCampaign() {
+        if (gameEnded && isWin() && isCampaign && campaignLevel < 10) {
+            campaignLevel++;
+        } else {
+            isCampaign = true;
+            campaignLevel = 1;
+        }
+        initGame();
+    }
+
     function initGame() {
         const category = document.getElementById('category').value;
         let words = CATEGORIES[category];
@@ -476,6 +522,16 @@
                 }
                 words = CATEGORIES["Custom"];
             }
+        } else if (isCampaign) {
+            document.getElementById('category').value = CATEGORY_NAMES[(campaignLevel - 1) % 9];
+            words = CATEGORIES[CATEGORY_NAMES[(campaignLevel - 1) % 9]];
+            maxErrors = Math.max(4, 7 - Math.floor(campaignLevel / 2));
+            if (campaignLevel === 1) bombs = 3;
+            document.getElementById('campaign-btn').innerText = (gameEnded && isWin() && campaignLevel < 10) ? "Next Stage" : "Campaign";
+        } else {
+            maxErrors = 6;
+            bombs = 1;
+            document.getElementById('campaign-btn').innerText = "Campaign";
         }
         
         word = words[Math.floor(Math.random() * words.length)];
@@ -484,8 +540,17 @@
         gameEnded = false;
         hintUsed = false;
         if(document.getElementById('hint-btn')) document.getElementById('hint-btn').disabled = false;
-        document.getElementById('message').innerText = "Guess a letter";
-        document.getElementById('message').style.color = "#e0e0e0";
+        if(document.getElementById('bomb-btn')) {
+            document.getElementById('bomb-btn').disabled = bombs <= 0;
+            document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
+        }
+        if(isCampaign) {
+            document.getElementById('message').innerText = `Campaign Stage ${campaignLevel} / 10`;
+            document.getElementById('message').style.color = "#ffc107";
+        } else {
+            document.getElementById('message').innerText = "Guess a letter";
+            document.getElementById('message').style.color = "#e0e0e0";
+        }
         document.getElementById('word-display').classList.remove('win-animation');
         document.getElementById('hangman-canvas').classList.remove('shake-animation');
         initKeyboard();
@@ -510,8 +575,39 @@
         }
     }
 
+    function useBomb() {
+        if (bombs <= 0 || gameEnded) return;
+        bombs--;
+        document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
+        if (bombs <= 0) document.getElementById('bomb-btn').disabled = true;
+        
+        initAudio();
+        
+        let elims = 0;
+        let available = [];
+        for (let i = 0; i < 26; i++) {
+            let letter = String.fromCharCode(65 + i);
+            if (!guessed.has(letter) && !word.includes(letter)) {
+                available.push(letter);
+            }
+        }
+        
+        // Shuffle and pick up to 3
+        available.sort(() => 0.5 - Math.random());
+        let toEliminate = available.slice(0, 3);
+        
+        toEliminate.forEach(letter => {
+            guessed.add(letter);
+            if (document.getElementById('key-' + letter)) {
+                document.getElementById('key-' + letter).disabled = true;
+            }
+        });
+        
+        updateDisplay();
+    }
+
     function guess(letter) {
-        if (guessed.has(letter) || errors >= MAX_ERRORS || isWin()) return;
+        if (guessed.has(letter) || errors >= maxErrors || isWin()) return;
         
         initAudio(); // Initialize audio context on first user interaction
         
@@ -520,7 +616,7 @@
         
         if (!word.includes(letter)) {
             errors++;
-            if (errors < MAX_ERRORS) playSound('invalid');
+            if (errors < maxErrors) playSound('invalid');
             const canvas = document.getElementById('hangman-canvas');
             canvas.classList.remove('shake-animation');
             void canvas.offsetWidth;
@@ -550,24 +646,34 @@
     function checkGameState() {
         const msgEl = document.getElementById('message');
         if (isWin()) {
-            msgEl.innerText = "You Win!";
+            if (isCampaign && campaignLevel === 10) {
+                msgEl.innerText = "Campaign Complete!";
+            } else {
+                msgEl.innerText = "You Win!";
+            }
             msgEl.style.color = "#4caf50";
             document.getElementById('word-display').classList.add('win-animation');
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
+                if(isCampaign) document.getElementById('campaign-btn').innerText = (campaignLevel < 10) ? "Next Stage" : "Campaign";
                 playSound('win');
                 stats.wins++;
                 stats.streak++;
                 if (stats.streak > stats.best) stats.best = stats.streak;
                 saveStats();
             }
-        } else if (errors >= MAX_ERRORS) {
+        } else if (errors >= maxErrors) {
             msgEl.innerText = "Game Over! Word was " + word;
             msgEl.style.color = "#f44336";
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
+                if(isCampaign) {
+                    isCampaign = false;
+                    campaignLevel = 1;
+                    document.getElementById('campaign-btn').innerText = "Campaign";
+                }
                 playSound('lose');
                 stats.losses++;
                 stats.streak = 0;
