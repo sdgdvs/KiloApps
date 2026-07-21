@@ -95,7 +95,9 @@ DWORD WINAPI PingThread(LPVOID param) {
     CloseHandle(hRead);
     if (traceMode) SetWindowTextA(hBtnTrace, "Trace");
     else SetWindowTextA(hBtn, "Ping");
+    HANDLE hThisThread = hThread;
     hThread = NULL;
+    if (hThisThread) CloseHandle(hThisThread);
     return 0;
 }
 
@@ -186,6 +188,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            DeleteObject((HBRUSH)GetClassLongPtr(hwnd, GCLP_HBRBACKGROUND));
             DeleteObject(hbg);
             DeleteObject(hinputBg);
             if (hFont) DeleteObject(hFont);

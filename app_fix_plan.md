@@ -125,5 +125,7 @@ Pass 1 Complete.
 
 - **KPad**: Added ARIA labels and keyboard accessibility to `kpad.html` tabs and find panel, and fixed a bug where splitting lines used literal backslash-n instead of newline. Fixed GDI resource leak (`wc.hbrBackground`) and `WriteFile` buffer length bug in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KPing (or next in alphabetical order).
+- **KPing**: Added ARIA labels in `kping.html` for accessibility, and fixed a memory leak in continuous ping where the times array grew unbounded. Fixed GDI resource leak (`wc.hbrBackground`) and thread handle leak in `main.c`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KPong (or next in alphabetical order).
 

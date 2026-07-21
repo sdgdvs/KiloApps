@@ -83,23 +83,23 @@
 <body>
   <div class="glass controls">
     <div class="input-group" style="flex: 1; min-width: 150px;">
-      <label>Target Host / IP</label>
-      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com">
+      <label for="host">Target Host / IP</label>
+      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. google.com" aria-label="Target Host or IP">
     </div>
     <div class="input-group" style="width: 80px;">
-      <label>Count</label>
-      <input type="number" id="count" value="4" min="1" max="100">
+      <label for="count">Count</label>
+      <input type="number" id="count" value="4" min="1" max="100" aria-label="Ping Count">
     </div>
     <div class="input-group" style="width: 80px;">
-      <label>Size (B)</label>
-      <input type="number" id="size" value="32" min="1" max="65500">
+      <label for="size">Size (B)</label>
+      <input type="number" id="size" value="32" min="1" max="65500" aria-label="Packet Size in Bytes">
     </div>
     <div class="input-group" style="width: 70px;">
-      <label>TTL</label>
-      <input type="number" id="ttl" value="115" min="1" max="255">
+      <label for="ttl">TTL</label>
+      <input type="number" id="ttl" value="115" min="1" max="255" aria-label="Time to Live">
     </div>
-    <label class="checkbox-group">
-      <input type="checkbox" id="continuous">
+    <label class="checkbox-group" for="continuous">
+      <input type="checkbox" id="continuous" aria-label="Continuous Ping">
       <span style="font-size: 13px; font-weight: 500; color: var(--text-muted)">Continuous -t</span>
     </label>
     <button id="btnAction" class="btn btn-primary">Start Ping</button>
@@ -113,7 +113,7 @@
       <div class="dot dot-green"></div>
       <span style="margin-left: 10px; font-size: 12px; color: var(--text-muted); font-family: monospace;">KPing Session</span>
     </div>
-    <textarea id="out" readonly spellcheck="false"></textarea>
+    <textarea id="out" aria-label="Terminal Output" readonly spellcheck="false"></textarea>
   </div>
 
 <script>
@@ -129,7 +129,7 @@
   let pingInterval = null;
   let isPinging = false;
   let isTracing = false;
-  let stats = { sent: 0, recv: 0, lost: 0, times: [] };
+  let stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
   let currentHost = '';
 
   continuousCheck.addEventListener('change', () => {
@@ -157,7 +157,7 @@
       btnTrace.disabled = true;
       hostInput.disabled = true; sizeInput.disabled = true; ttlInput.disabled = true; continuousCheck.disabled = true; countInput.disabled = true;
       
-      stats = { sent: 0, recv: 0, lost: 0, times: [] };
+      stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
       
       pingInterval = setInterval(() => {
           if (!continuous && stats.sent >= count) {
@@ -171,7 +171,9 @@
               const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 15;
               const time = Math.floor(baseTime + Math.random() * 20);
               stats.recv++;
-              stats.times.push(time);
+              if (time < stats.min) stats.min = time;
+              if (time > stats.max) stats.max = time;
+              stats.sum += time;
               append(`Reply from ${currentHost}: bytes=${size} time=${time}ms TTL=${ttl}\n`);
           } else {
               stats.lost++;
@@ -195,9 +197,9 @@
       append(`    Packets: Sent = ${stats.sent}, Received = ${stats.recv}, Lost = ${stats.lost} (${lossPercent}% loss),\n`);
       
       if (stats.recv > 0) {
-          const min = Math.min(...stats.times);
-          const max = Math.max(...stats.times);
-          const avg = Math.round(stats.times.reduce((a, b) => a + b, 0) / stats.times.length);
+          const min = stats.min;
+          const max = stats.max;
+          const avg = Math.round(stats.sum / stats.recv);
           append(`Approximate round trip times in milli-seconds:\n`);
           append(`    Minimum = ${min}ms, Maximum = ${max}ms, Average = ${avg}ms\n`);
       }
