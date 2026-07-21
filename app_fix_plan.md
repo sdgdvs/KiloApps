@@ -127,5 +127,6 @@ Pass 1 Complete.
 
 - **KPing**: Added ARIA labels in `kping.html` for accessibility, and fixed a memory leak in continuous ping where the times array grew unbounded. Fixed GDI resource leak (`wc.hbrBackground`) and thread handle leak in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KPong (or next in alphabetical order).
+- **KPong**: Added ARIA labels and keyboard accessibility attributes in `kpong.html`, parsed `highRally` with `parseInt`, and prevented page scroll with arrow keys. Fixed `KillTimer` leak in `main.c` on `WM_DESTROY`.
 
+Start Pass 2 (Deeper Quality checks). Next target: KQuarantine (or next in alphabetical order).

@@ -42,10 +42,10 @@
 <body>
 <div class="container">
   <div class="score-board">
-    <div class="p1-score" id="s1">0</div>
-    <div class="p2-score" id="s2">0</div>
+    <div class="p1-score" id="s1" aria-label="Player 1 Score" aria-live="polite">0</div>
+    <div class="p2-score" id="s2" aria-label="Player 2 Score" aria-live="polite">0</div>
   </div>
-  <canvas id="gameCanvas" width="400" height="300"></canvas>
+  <canvas id="gameCanvas" width="400" height="300" aria-label="Pong Game Canvas" tabindex="0"></canvas>
 </div>
 <script>
   let audioCtx = null;
@@ -84,7 +84,7 @@
   let p1DebuffTimer = 0;
   let p2DebuffTimer = 0;
   let winScreen = false;
-  let highRally = localStorage.getItem('kpong_high_rally') || 0;
+  let highRally = parseInt(localStorage.getItem('kpong_high_rally')) || 0;
   let lifetimeWins = parseInt(localStorage.getItem('kpong_wins')) || 0;
   let obsY = H/2 - 20;
   let obsDy = 3;
@@ -112,8 +112,8 @@
   }
   
   const keys = {};
-  document.addEventListener('keydown', e => keys[e.key] = true);
-  document.addEventListener('keyup', e => keys[e.key] = false);
+  document.addEventListener('keydown', e => { keys[e.key] = true; if(['ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault(); });
+  document.addEventListener('keyup', e => { keys[e.key] = false; });
   window.addEventListener('blur', () => { for(let k in keys) keys[k] = false; });
 
   function reset() {
