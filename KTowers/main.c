@@ -1,193 +1,234 @@
 #include <windows.h>
 #include <stdio.h>
 
+#define NUM_DISCS 4
 #define MAX_DISCS 8
-#define NUM_PEGS 3
 
-int pegs[NUM_PEGS][MAX_DISCS];
-int counts[NUM_PEGS];
-int numDiscs = 4;
+int pegs[3][MAX_DISCS];
+int pegCounts[3] = {0, 0, 0};
 int selectedPeg = -1;
 int moves = 0;
-int won = 0;
+BOOL won = FALSE;
 
-void InitGame() {
-    for (int i = 0; i < NUM_PEGS; i++) {
-        counts[i] = 0;
-    }
-    for (int i = numDiscs; i >= 1; i--) {
-        pegs[0][counts[0]++] = i;
+COLORREF colors[] = {
+    RGB(255, 59, 48),  // #FF3B30
+    RGB(255, 149, 0),  // #FF9500
+    RGB(255, 204, 0),  // #FFCC00
+    RGB(76, 217, 100), // #4CD964
+    RGB(90, 200, 250), // #5AC8FA
+    RGB(0, 122, 255),  // #007AFF
+    RGB(88, 86, 214),  // #5856D6
+    RGB(255, 45, 85)   // #FF2D55
+};
+
+HWND hRestartBtn;
+
+void InitGame(HWND hwnd) {
+    pegCounts[0] = 0;
+    pegCounts[1] = 0;
+    pegCounts[2] = 0;
+    for (int i = NUM_DISCS; i >= 1; i--) {
+        pegs[0][pegCounts[0]++] = i;
     }
     selectedPeg = -1;
     moves = 0;
-    won = 0;
-}
-
-void HandleClick(int pegIndex, HWND hwnd) {
-    if (won) {
-        InitGame();
-        InvalidateRect(hwnd, NULL, TRUE);
-        return;
-    }
-    if (pegIndex < 0 || pegIndex >= NUM_PEGS) return;
-
-    if (selectedPeg == -1) {
-        if (counts[pegIndex] > 0) {
-            selectedPeg = pegIndex;
-        }
-    } else if (selectedPeg == pegIndex) {
-        selectedPeg = -1;
-    } else {
-        int fromTop = pegs[selectedPeg][counts[selectedPeg] - 1];
-        if (counts[pegIndex] == 0 || pegs[pegIndex][counts[pegIndex] - 1] > fromTop) {
-            counts[selectedPeg]--;
-            pegs[pegIndex][counts[pegIndex]++] = fromTop;
-            moves++;
-            selectedPeg = -1;
-            if (counts[NUM_PEGS - 1] == numDiscs) {
-                won = 1;
-            }
-        } else {
-            selectedPeg = -1;
-        }
-    }
+    won = FALSE;
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_CREATE:
-            InitGame();
-            return 0;
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-        case WM_LBUTTONDOWN: {
-            int x = LOWORD(lParam);
-            RECT rect;
-            GetClientRect(hwnd, &rect);
-            int width = rect.right - rect.left;
-            int pegWidth = width / NUM_PEGS;
-            int pegIndex = x / pegWidth;
-            if (pegIndex >= 0 && pegIndex < NUM_PEGS) {
-                HandleClick(pegIndex, hwnd);
-            }
-            return 0;
+void CheckWin(HWND hwnd) {
+    if (pegCounts[2] == NUM_DISCS) {
+        won = TRUE;
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
+void HandleClick(HWND hwnd, int x, int y) {
+    if (won) return;
+
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+    int width = rc.right - rc.left;
+    int pegWidth = width / 3;
+
+    int clickedPeg = x / pegWidth;
+    if (clickedPeg < 0 || clickedPeg > 2) return;
+
+    if (selectedPeg == -1) {
+        if (pegCounts[clickedPeg] > 0) {
+            selectedPeg = clickedPeg;
+            InvalidateRect(hwnd, NULL, TRUE);
         }
+    } else if (selectedPeg == clickedPeg) {
+        selectedPeg = -1;
+        InvalidateRect(hwnd, NULL, TRUE);
+    } else {
+        int fromTop = pegs[selectedPeg][pegCounts[selectedPeg] - 1];
+        BOOL canMove = FALSE;
+        if (pegCounts[clickedPeg] == 0) {
+            canMove = TRUE;
+        } else {
+            int toTop = pegs[clickedPeg][pegCounts[clickedPeg] - 1];
+            if (fromTop < toTop) {
+                canMove = TRUE;
+            }
+        }
+
+        if (canMove) {
+            pegCounts[selectedPeg]--;
+            pegs[clickedPeg][pegCounts[clickedPeg]++] = fromTop;
+            moves++;
+            selectedPeg = -1;
+            CheckWin(hwnd);
+        } else {
+            selectedPeg = -1;
+        }
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_CREATE:
+            hRestartBtn = CreateWindow("BUTTON", "Restart Game",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     10, 10, 120, 30,
+                                     hwnd, (HMENU) 1,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            InitGame(hwnd);
+            break;
+        case WM_COMMAND:
+            if (LOWORD(wParam) == 1) {
+                InitGame(hwnd);
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            HandleClick(hwnd, LOWORD(lParam), HIWORD(lParam));
+            break;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            
-            RECT clientRect;
-            GetClientRect(hwnd, &clientRect);
-            int width = clientRect.right - clientRect.left;
-            int height = clientRect.bottom - clientRect.top;
-            
-            // Draw background
-            HBRUSH hBg = CreateSolidBrush(RGB(255, 255, 255));
-            FillRect(hdc, &clientRect, hBg);
-            DeleteObject(hBg);
 
-            // Draw status text
+            RECT rc;
+            GetClientRect(hwnd, &rc);
+            
+            // Background
+            HBRUSH bgBrush = CreateSolidBrush(RGB(255, 255, 255));
+            FillRect(hdc, &rc, bgBrush);
+            DeleteObject(bgBrush);
+
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(0, 0, 0));
-            char status[128];
+            SetTextColor(hdc, RGB(51, 51, 51));
+            
+            char textBuf[256];
+            sprintf(textBuf, "Moves: %d", moves);
+            TextOut(hdc, rc.right / 2 - 40, 20, textBuf, strlen(textBuf));
+
             if (won) {
-                sprintf(status, "You won in %d moves! Click to restart.", moves);
-            } else {
-                sprintf(status, "Moves: %d", moves);
+                SetTextColor(hdc, RGB(0, 128, 0));
+                sprintf(textBuf, "You won in %d moves!", moves);
+                TextOut(hdc, rc.right / 2 - 70, 50, textBuf, strlen(textBuf));
             }
-            TextOut(hdc, 20, 20, status, strlen(status));
 
-            // Draw pegs
-            int pegWidth = width / NUM_PEGS;
-            int baseHeight = height - 50;
-            int pegHeight = 200;
+            int width = rc.right - rc.left;
+            int height = rc.bottom - rc.top;
+            int pegAreaWidth = width / 3;
+            int baseX[3] = { pegAreaWidth / 2, pegAreaWidth + pegAreaWidth / 2, 2 * pegAreaWidth + pegAreaWidth / 2 };
+            int groundY = height - 100;
             
-            HBRUSH hPoleBrush = CreateSolidBrush(RGB(200, 200, 200));
-            HBRUSH hBaseBrush = CreateSolidBrush(RGB(100, 100, 100));
-            HBRUSH hSelectedBrush = CreateSolidBrush(RGB(220, 240, 255));
-
-            COLORREF discColors[8] = {
-                RGB(255, 59, 48), RGB(255, 149, 0), RGB(255, 204, 0), RGB(76, 217, 100),
-                RGB(90, 200, 250), RGB(0, 122, 255), RGB(88, 86, 214), RGB(255, 45, 85)
-            };
-
-            for (int i = 0; i < NUM_PEGS; i++) {
-                int cx = i * pegWidth + pegWidth / 2;
-                
-                // Draw selection highlight
+            // Draw poles
+            HBRUSH poleBrush = CreateSolidBrush(RGB(204, 204, 204));
+            for (int i = 0; i < 3; i++) {
                 if (selectedPeg == i) {
-                    RECT selRect = { i * pegWidth + 10, baseHeight - pegHeight - 20, (i + 1) * pegWidth - 10, baseHeight + 10 };
-                    FillRect(hdc, &selRect, hSelectedBrush);
+                    // Draw highlight
+                    HBRUSH hlBrush = CreateSolidBrush(RGB(224, 240, 255));
+                    RECT hlRect = { baseX[i] - 70, groundY - 200, baseX[i] + 70, groundY + 10 };
+                    FillRect(hdc, &hlRect, hlBrush);
+                    DeleteObject(hlBrush);
+                    
+                    // Draw outline
+                    HPEN hlPen = CreatePen(PS_SOLID, 2, RGB(0, 120, 215));
+                    HGDIOBJ oldPen = SelectObject(hdc, hlPen);
+                    HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    Rectangle(hdc, hlRect.left, hlRect.top, hlRect.right, hlRect.bottom);
+                    SelectObject(hdc, oldBrush);
+                    SelectObject(hdc, oldPen);
+                    DeleteObject(hlPen);
                 }
-
-                // Draw pole
-                RECT poleRect = { cx - 6, baseHeight - pegHeight, cx + 6, baseHeight };
-                FillRect(hdc, &poleRect, hPoleBrush);
-
+                
+                RECT poleRect = { baseX[i] - 6, groundY - 180, baseX[i] + 6, groundY };
+                FillRect(hdc, &poleRect, poleBrush);
+                
                 // Draw base
-                RECT bRect = { cx - 70, baseHeight, cx + 70, baseHeight + 8 };
-                FillRect(hdc, &bRect, hBaseBrush);
-
-                // Draw discs
-                for (int j = 0; j < counts[i]; j++) {
-                    int size = pegs[i][j];
-                    int dWidth = 40 + (size * 80) / 8;
-                    int dHeight = 24;
-                    int dy = baseHeight - (j + 1) * dHeight;
+                RECT baseRect = { baseX[i] - 70, groundY, baseX[i] + 70, groundY + 8 };
+                HBRUSH baseBrush = CreateSolidBrush(RGB(85, 85, 85));
+                FillRect(hdc, &baseRect, baseBrush);
+                DeleteObject(baseBrush);
+            }
+            DeleteObject(poleBrush);
+            
+            // Draw discs
+            for (int i = 0; i < 3; i++) {
+                for (int j = 0; j < pegCounts[i]; j++) {
+                    int discSize = pegs[i][j];
+                    int discWidth = 40 + discSize * 10;
+                    int discHeight = 24;
+                    int rectY = groundY - (j + 1) * (discHeight + 2);
                     
-                    RECT dRect = { cx - dWidth / 2, dy, cx + dWidth / 2, dy + dHeight - 2 };
-                    HBRUSH hDiscBrush = CreateSolidBrush(discColors[(size - 1) % 8]);
-                    FillRect(hdc, &dRect, hDiscBrush);
-                    DeleteObject(hDiscBrush);
+                    RECT dRect = { baseX[i] - discWidth / 2, rectY, baseX[i] + discWidth / 2, rectY + discHeight };
                     
-                    // Border
-                    HBRUSH hBorder = CreateSolidBrush(RGB(0, 0, 0));
-                    FrameRect(hdc, &dRect, hBorder);
-                    DeleteObject(hBorder);
+                    HBRUSH dBrush = CreateSolidBrush(colors[(discSize - 1) % 8]);
+                    FillRect(hdc, &dRect, dBrush);
+                    
+                    HPEN dPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+                    HGDIOBJ oldPen = SelectObject(hdc, dPen);
+                    HGDIOBJ oldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    
+                    // Draw rounded rect equivalent (or just regular rectangle for simplicity)
+                    // We can use RoundRect
+                    RoundRect(hdc, dRect.left, dRect.top, dRect.right, dRect.bottom, 12, 12);
+                    
+                    SelectObject(hdc, oldBrush);
+                    SelectObject(hdc, oldPen);
+                    
+                    DeleteObject(dPen);
+                    DeleteObject(dBrush);
                 }
             }
-            
-            DeleteObject(hPoleBrush);
-            DeleteObject(hBaseBrush);
-            DeleteObject(hSelectedBrush);
 
             EndPaint(hwnd, &ps);
-            return 0;
+            break;
         }
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+        default:
+            return DefWindowProc(hwnd, msg, wParam, lParam);
     }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    return 0;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    const char CLASS_NAME[] = "KTowersClass";
-
-    WNDCLASS wc = { 0 };
-    wc.lpfnWndProc = WindowProc;
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = CLASS_NAME;
+    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.lpszClassName = "KTowersClass";
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-
+    
     RegisterClass(&wc);
-
-    HWND hwnd = CreateWindowEx(
-        0, CLASS_NAME, "KTowers", WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 600, 400,
-        NULL, NULL, hInstance, NULL
-    );
-
-    if (hwnd == NULL) {
-        return 0;
-    }
-
+    
+    HWND hwnd = CreateWindow("KTowersClass", "KTowers", WS_OVERLAPPEDWINDOW,
+                             CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
+                             NULL, NULL, hInstance, NULL);
+                             
     ShowWindow(hwnd, nCmdShow);
-
-    MSG msg = { 0 };
+    UpdateWindow(hwnd);
+    
+    MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
-    return 0;
+    return msg.wParam;
 }
