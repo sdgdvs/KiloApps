@@ -40,6 +40,11 @@ int ice_active_timer = 0;
 struct Point spiders[10];
 int num_spiders = 0;
 int spider_tick = 0;
+struct Point portal1 = {-1, -1};
+struct Point portal2 = {-1, -1};
+struct Point trackers[5];
+int num_trackers = 0;
+int tracker_tick = 0;
 
 int total_apples = 0;
 int games_played = 0;
@@ -94,11 +99,15 @@ void InitGame() {
     ice_food_timer = 0;
     ice_active_timer = 0;
     spider_tick = 0;
+    tracker_tick = 0;
+    portal1.x = -1; portal1.y = -1;
+    portal2.x = -1; portal2.y = -1;
     
-    num_obstacles = difficulty * 10;
     if (campaign_mode) {
-        num_obstacles = campaign_level * 5;
+        num_obstacles = campaign_level * 4;
         if (num_obstacles > 45) num_obstacles = 45;
+    } else {
+        num_obstacles = difficulty * 10;
     }
     for(int i=0; i<num_obstacles; i++) {
         int ok = 0;
@@ -119,6 +128,35 @@ void InitGame() {
     for(int i=0; i<num_spiders; i++) {
         spiders[i].x = random_int(GRID_WIDTH);
         spiders[i].y = random_int(GRID_HEIGHT);
+    }
+    
+    if (campaign_mode && campaign_level >= 6) {
+        int ok = 0;
+        while(!ok) {
+            portal1.x = random_int(GRID_WIDTH); portal1.y = random_int(GRID_HEIGHT);
+            portal2.x = random_int(GRID_WIDTH); portal2.y = random_int(GRID_HEIGHT);
+            ok = 1;
+            if (portal1.x == portal2.x && portal1.y == portal2.y) ok = 0;
+            for(int i=0; i<num_obstacles; i++) {
+                if (portal1.x == obstacles[i].x && portal1.y == obstacles[i].y) ok = 0;
+                if (portal2.x == obstacles[i].x && portal2.y == obstacles[i].y) ok = 0;
+            }
+            if (portal1.y == 5 && (portal1.x >= 2 && portal1.x <= 6)) ok = 0;
+            if (portal2.y == 5 && (portal2.x >= 2 && portal2.x <= 6)) ok = 0;
+        }
+    }
+    
+    num_trackers = 0;
+    if (campaign_mode && campaign_level >= 11) {
+        num_trackers = campaign_level - 10;
+    } else if (!campaign_mode && difficulty == 2) {
+        num_trackers = 1;
+    }
+    if (num_trackers > 5) num_trackers = 5;
+    
+    for(int i=0; i<num_trackers; i++) {
+        trackers[i].x = random_int(GRID_WIDTH);
+        trackers[i].y = random_int(GRID_HEIGHT);
     }
 
     PlaceFood();
@@ -142,6 +180,8 @@ void PlaceFood() {
         for(int i=0; i<snake_len; i++) {
             if (food.x == snake[i].x && food.y == snake[i].y) ok = 0;
         }
+        if (portal1.x != -1 && food.x == portal1.x && food.y == portal1.y) ok = 0;
+        if (portal2.x != -1 && food.x == portal2.x && food.y == portal2.y) ok = 0;
     }
 }
 
@@ -154,6 +194,8 @@ void PlaceGhostFood() {
         for(int i=0; i<snake_len; i++) if(ghost_food.x==snake[i].x && ghost_food.y==snake[i].y) ok=0;
         if(ghost_food.x == food.x && ghost_food.y == food.y) ok=0;
         if(ghost_food.x == special_food.x && ghost_food.y == special_food.y) ok=0;
+        if (portal1.x != -1 && ghost_food.x == portal1.x && ghost_food.y == portal1.y) ok = 0;
+        if (portal2.x != -1 && ghost_food.x == portal2.x && ghost_food.y == portal2.y) ok = 0;
     }
     ghost_food_timer = 40;
 }
@@ -171,6 +213,8 @@ void PlaceSpecialFood() {
             if (special_food.x == snake[i].x && special_food.y == snake[i].y) ok = 0;
         }
         if (special_food.x == food.x && special_food.y == food.y) ok = 0;
+        if (portal1.x != -1 && special_food.x == portal1.x && special_food.y == portal1.y) ok = 0;
+        if (portal2.x != -1 && special_food.x == portal2.x && special_food.y == portal2.y) ok = 0;
     }
     special_food_timer = 40;
 }
@@ -184,6 +228,8 @@ void PlaceIceFood() {
         for(int i=0; i<num_obstacles; i++) if (ice_food.x == obstacles[i].x && ice_food.y == obstacles[i].y) ok = 0;
         for(int i=0; i<snake_len; i++) if (ice_food.x == snake[i].x && ice_food.y == snake[i].y) ok = 0;
         if (ice_food.x == food.x && ice_food.y == food.y) ok = 0;
+        if (portal1.x != -1 && ice_food.x == portal1.x && ice_food.y == portal1.y) ok = 0;
+        if (portal2.x != -1 && ice_food.x == portal2.x && ice_food.y == portal2.y) ok = 0;
     }
     ice_food_timer = 40;
 }
@@ -206,6 +252,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Move head
             snake[0].x += dir_x;
             snake[0].y += dir_y;
+
+            // Portals
+            if (portal1.x != -1) {
+                if (snake[0].x == portal1.x && snake[0].y == portal1.y) {
+                    snake[0].x = portal2.x; snake[0].y = portal2.y;
+                } else if (snake[0].x == portal2.x && snake[0].y == portal2.y) {
+                    snake[0].x = portal1.x; snake[0].y = portal1.y;
+                }
+            }
 
             // Collision with walls
             if (wrap_mode) {
@@ -239,6 +294,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            // Tracker Movement
+            tracker_tick++;
+            if (tracker_tick >= 3) {
+                tracker_tick = 0;
+                for(int i=0; i<num_trackers; i++) {
+                    int dx = 0, dy = 0;
+                    if (snake[0].x > trackers[i].x) dx = 1;
+                    else if (snake[0].x < trackers[i].x) dx = -1;
+                    if (snake[0].y > trackers[i].y) dy = 1;
+                    else if (snake[0].y < trackers[i].y) dy = -1;
+                    
+                    int nx = trackers[i].x + dx;
+                    int ny = trackers[i].y;
+                    int blocked = 0;
+                    for(int j=0; j<num_obstacles; j++) if(nx == obstacles[j].x && ny == obstacles[j].y) blocked=1;
+                    if (!blocked && dx != 0) { trackers[i].x = nx; }
+                    else {
+                        nx = trackers[i].x; ny = trackers[i].y + dy; blocked = 0;
+                        for(int j=0; j<num_obstacles; j++) if(nx == obstacles[j].x && ny == obstacles[j].y) blocked=1;
+                        if (!blocked && dy != 0) { trackers[i].y = ny; }
+                    }
+                }
+            }
+
             // Collision with self and obstacles
             if(ghost_active_timer == 0) {
                 for(int i = 1; i < snake_len; i++) {
@@ -249,6 +328,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 for(int i = 0; i < num_spiders; i++) {
                     if (snake[0].x == spiders[i].x && snake[0].y == spiders[i].y) game_state = 2;
+                }
+                for(int i = 0; i < num_trackers; i++) {
+                    if (snake[0].x == trackers[i].x && snake[0].y == trackers[i].y) game_state = 2;
                 }
             }
             
@@ -284,7 +366,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 apples_eaten++;
                 if (campaign_mode && apples_eaten >= 10) {
                     campaign_level++;
-                    if (campaign_level > 10) {
+                    if (campaign_level > 15) {
                         game_state = 3;
                     } else {
                         base_speed -= 10;
@@ -453,6 +535,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     FillRect(hdc, &sr, spiderBrush);
                 }
                 DeleteObject(spiderBrush);
+
+                if (portal1.x != -1) {
+                    HBRUSH pBrush = CreateSolidBrush(RGB(255, 165, 0));
+                    RECT pr1 = { portal1.x * CELL_SIZE, portal1.y * CELL_SIZE, 
+                                 (portal1.x + 1) * CELL_SIZE - 1, (portal1.y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &pr1, pBrush);
+                    RECT pr2 = { portal2.x * CELL_SIZE, portal2.y * CELL_SIZE, 
+                                 (portal2.x + 1) * CELL_SIZE - 1, (portal2.y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &pr2, pBrush);
+                    DeleteObject(pBrush);
+                }
+
+                HBRUSH trackerBrush = CreateSolidBrush(RGB(139, 0, 0)); // Dark Red
+                for(int i = 0; i < num_trackers; i++) {
+                    RECT tr = { trackers[i].x * CELL_SIZE, trackers[i].y * CELL_SIZE, 
+                                (trackers[i].x + 1) * CELL_SIZE - 1, (trackers[i].y + 1) * CELL_SIZE - 1 };
+                    FillRect(hdc, &tr, trackerBrush);
+                }
+                DeleteObject(trackerBrush);
             }
 
             if (game_state != 0) {
