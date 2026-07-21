@@ -177,11 +177,11 @@
 
 <div class="sidebar">
   <button class="compose-btn" onclick="openCompose()">New Message</button>
-  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
-  <div class="folder" onclick="switchFolder('sent')" id="f-sent">Sent</div>
-  <div class="folder" onclick="switchFolder('trash')" id="f-trash">Trash</div>
+  <div class="folder active" tabindex="0" role="button" onkeydown="if(event.key==='Enter') switchFolder('inbox')" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
+  <div class="folder" tabindex="0" role="button" onkeydown="if(event.key==='Enter') switchFolder('sent')" onclick="switchFolder('sent')" id="f-sent">Sent</div>
+  <div class="folder" tabindex="0" role="button" onkeydown="if(event.key==='Enter') switchFolder('trash')" onclick="switchFolder('trash')" id="f-trash">Trash</div>
   <div style="padding: 15px; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
-    <input type="text" id="search-box" placeholder="Search..." onkeyup="handleSearch()" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit;">
+    <input type="text" id="search-box" aria-label="Search emails" placeholder="Search..." onkeyup="handleSearch()" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit;">
   </div>
   <button class="compose-btn" style="background:var(--danger); margin-bottom: 20px;" onclick="emptyTrash()">Empty Trash</button>
 </div>
@@ -213,7 +213,7 @@
   <div class="compose-box">
     <div class="compose-header">
       New Message
-      <span onclick="closeCompose()">✕</span>
+      <span tabindex="0" role="button" aria-label="Close" onkeydown="if(event.key==='Enter') closeCompose()" onclick="closeCompose()">✕</span>
     </div>
     <div class="compose-body">
       <input type="text" id="c-to" placeholder="To" />
@@ -272,7 +272,10 @@
       d.appendChild(subjDiv);
       d.appendChild(senderDiv);
       
+      d.tabIndex = 0;
+      d.setAttribute('role', 'button');
       d.onclick = () => selectEmail(em.id);
+      d.onkeydown = (e) => { if (e.key === 'Enter') selectEmail(em.id); };
       list.appendChild(d);
     });
   }
@@ -335,6 +338,7 @@
     document.getElementById('c-sub').value = '';
     document.getElementById('c-body').value = '';
     document.getElementById('compose-modal').classList.add('active');
+    document.getElementById('c-to').focus();
   }
   function closeCompose() {
     document.getElementById('compose-modal').classList.remove('active');

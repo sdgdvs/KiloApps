@@ -120,4 +120,6 @@ Pass 1 Complete.
 - **KImage**: Added ARIA labels in `kimage.html` for accessibility and fixed a bug where the same file couldn't be reopened by clearing `fileInput.value`. Fixed buffer zero-division bounds logic in `main.c` `WM_MOUSEMOVE` and `WM_PAINT` by enforcing `drawW` and `drawH` to be at least 1.
 - **KJournal**: Added ARIA labels, tab indexes, and keyboard enter-key support for entry list navigation in `kjournal.html`. Verified `main.c` (no leaks or bugs found).
 
-Start Pass 2 (Deeper Quality checks). Next target: KMail (or next in alphabetical order).
+- **KMail**: Added ARIA labels, `tabindex`, and keyboard enter-key support in `kmail.html` for accessibility. Fixed buffer overflow vulnerability in `main.c` `SelectEmail` by increasing the string buffer and using `snprintf`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KMandel (or next in alphabetical order).

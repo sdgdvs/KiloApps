@@ -81,11 +81,11 @@ void SelectEmail(int id) {
     } else {
         for(int i = 0; i < num_emails; i++) {
             if(emails[i].id == id) {
-                char tStr[256];
+                char tStr[512];
                 if(emails[i].folder == 1)
-                    sprintf(tStr, "To: %s\r\n%s", emails[i].sender, emails[i].subject);
+                    snprintf(tStr, sizeof(tStr), "To: %s\r\n%s", emails[i].sender, emails[i].subject);
                 else
-                    sprintf(tStr, "From: %s\r\n%s", emails[i].sender, emails[i].subject);
+                    snprintf(tStr, sizeof(tStr), "From: %s\r\n%s", emails[i].sender, emails[i].subject);
                 SetWindowTextA(hTitle, tStr);
                 SetWindowTextA(hBody, emails[i].body);
                 emails[i].unread = 0;
