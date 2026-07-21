@@ -10,6 +10,10 @@ int selectedPeg = -1;
 int moves = 0;
 BOOL won = FALSE;
 
+int historyFrom[4096];
+int historyTo[4096];
+int historyCount = 0;
+
 COLORREF colors[] = {
     RGB(255, 59, 48),  // #FF3B30
     RGB(255, 149, 0),  // #FF9500
@@ -25,6 +29,7 @@ HWND hRestartBtn;
 HWND hDiffLabel;
 HWND hDiffMinusBtn;
 HWND hDiffPlusBtn;
+HWND hUndoBtn;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(INT_PTR)lpParam;
@@ -57,6 +62,9 @@ void SaveState() {
         }
         fwrite(&moves, sizeof(int), 1, fp);
         fwrite(&won, sizeof(BOOL), 1, fp);
+        fwrite(&historyCount, sizeof(int), 1, fp);
+        fwrite(historyFrom, sizeof(int), historyCount, fp);
+        fwrite(historyTo, sizeof(int), historyCount, fp);
         fclose(fp);
     }
 }
@@ -71,6 +79,12 @@ BOOL LoadState() {
         }
         fread(&moves, sizeof(int), 1, fp);
         fread(&won, sizeof(BOOL), 1, fp);
+        if (fread(&historyCount, sizeof(int), 1, fp) == 1) {
+            fread(historyFrom, sizeof(int), historyCount, fp);
+            fread(historyTo, sizeof(int), historyCount, fp);
+        } else {
+            historyCount = 0;
+        }
         fclose(fp);
         return TRUE;
     }
@@ -87,6 +101,7 @@ void InitGame(HWND hwnd) {
     selectedPeg = -1;
     moves = 0;
     won = FALSE;
+    historyCount = 0;
     SaveState();
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -137,6 +152,9 @@ void HandleClick(HWND hwnd, int x, int y) {
         }
 
         if (canMove) {
+            historyFrom[historyCount] = selectedPeg;
+            historyTo[historyCount] = clickedPeg;
+            historyCount++;
             pegCounts[selectedPeg]--;
             pegs[clickedPeg][pegCounts[clickedPeg]++] = fromTop;
             moves++;
@@ -151,6 +169,23 @@ void HandleClick(HWND hwnd, int x, int y) {
         }
         InvalidateRect(hwnd, NULL, TRUE);
     }
+}
+
+void UndoMove(HWND hwnd) {
+    if (historyCount == 0 || won) return;
+    historyCount--;
+    int from = historyFrom[historyCount];
+    int to = historyTo[historyCount];
+    
+    int disc = pegs[to][pegCounts[to] - 1];
+    pegCounts[to]--;
+    pegs[from][pegCounts[from]++] = disc;
+    moves--;
+    selectedPeg = -1;
+    
+    PlaySoundEffect(2);
+    SaveState();
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -175,6 +210,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                                      270, 10, 30, 30,
                                      hwnd, (HMENU) 4,
+                                     (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            hUndoBtn = CreateWindow("BUTTON", "Undo",
+                                     WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                                     310, 10, 60, 30,
+                                     hwnd, (HMENU) 5,
                                      (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             if (LoadState()) {
                 char buf[32];
@@ -204,12 +244,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetWindowText(hDiffLabel, buf);
                     InitGame(hwnd);
                 }
+            } else if (LOWORD(wParam) == 5) {
+                UndoMove(hwnd);
             }
             break;
         case WM_LBUTTONDOWN:
             HandleClick(hwnd, LOWORD(lParam), HIWORD(lParam));
             break;
         case WM_PAINT: {
+            EnableWindow(hUndoBtn, historyCount > 0 && !won);
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 

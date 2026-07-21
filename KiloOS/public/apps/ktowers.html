@@ -40,6 +40,7 @@
             <option value="7">7</option>
             <option value="8">8</option>
         </select>
+        <button onclick="undoMove()" id="undoBtn" disabled>Undo</button>
         <button onclick="initGame()">Restart Game</button>
     </div>
 
@@ -112,6 +113,7 @@
         let selectedPeg = null;
         let moves = 0;
         let won = false;
+        let moveHistory = [];
 
         const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'];
 
@@ -120,7 +122,8 @@
                 numDiscs: numDiscs,
                 pegs: pegs,
                 moves: moves,
-                won: won
+                won: won,
+                moveHistory: moveHistory
             }));
         }
 
@@ -134,6 +137,7 @@
                         pegs = state.pegs;
                         moves = state.moves;
                         won = state.won;
+                        moveHistory = state.moveHistory || [];
                         document.getElementById('difficulty').value = numDiscs;
                         return true;
                     }
@@ -150,6 +154,7 @@
             selectedPeg = null;
             moves = 0;
             won = false;
+            moveHistory = [];
             document.getElementById('message').innerText = '';
             document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
             render();
@@ -176,6 +181,7 @@
                 const toPeg = pegs[index];
                 
                 if (toPeg.length === 0 || toPeg[toPeg.length - 1] > fromPeg[fromPeg.length - 1]) {
+                    moveHistory.push({ from: selectedPeg, to: index });
                     toPeg.push(fromPeg.pop());
                     moves++;
                     selectedPeg = null;
@@ -192,6 +198,20 @@
             }
         }
 
+        function undoMove() {
+            if (moveHistory.length === 0 || won) return;
+            const lastMove = moveHistory.pop();
+            const fromPeg = lastMove.from;
+            const toPeg = lastMove.to;
+            
+            pegs[fromPeg].push(pegs[toPeg].pop());
+            moves--;
+            selectedPeg = null;
+            render();
+            playSound('drop');
+            saveState();
+        }
+
         function checkWin() {
             if (pegs[2].length === numDiscs) {
                 won = true;
@@ -204,6 +224,7 @@
 
         function render() {
             document.getElementById('moveCount').innerText = moves;
+            document.getElementById('undoBtn').disabled = moveHistory.length === 0 || won;
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = '';
 

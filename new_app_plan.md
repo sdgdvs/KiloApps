@@ -62,7 +62,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 6: Add Adjustable Difficulty (change disc count from 3 up to 8).
 - [x] Phase 7: Add Sound Effects (pickup, drop, error, and win chime).
 - [x] Phase 8: Add Save/Load State (persist board state and current move count).
-- [ ] Phase 9: Add Move History / Undo functionality.
+- [x] Phase 9: Add Move History / Undo functionality.
 - Phase 10: Add a Time Tracking / Stopwatch feature.
 - Phase 11: Add Statistics Tracking (best time and fewest moves per difficulty level).
 - Phase 12: Add Auto-Solve / Hint functionality (step-by-step optimal movement).
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KTowers
-**Goal:** Phase 9
+**Goal:** Phase 10
 
 
 ## App Lifecycle (14 phases per app)
