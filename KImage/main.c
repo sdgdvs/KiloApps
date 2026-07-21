@@ -129,6 +129,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     drawH = (int)(drawH * g_zoom);
                 }
                 
+                if (drawW <= 0) drawW = 1;
+                if (drawH <= 0) drawH = 1;
+                
                 int x = (canvasW - drawW) / 2;
                 int y = 50 + (canvasH - drawH) / 2;
                 
@@ -191,6 +194,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     drawW = (int)(drawW * g_zoom);
                     drawH = (int)(drawH * g_zoom);
                 }
+                
+                if (drawW <= 0) drawW = 1;
+                if (drawH <= 0) drawH = 1;
                 
                 int x = (canvasW - drawW) / 2;
                 int y = 50 + (canvasH - drawH) / 2;

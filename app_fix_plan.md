@@ -117,5 +117,6 @@ Pass 1 Complete.
 - **KFont**: Added ARIA labels and `aria-live` to `kfont.html` for accessibility. Fixed GDI resource leak (`hBgBrush`) in `main.c` on `WM_DESTROY`.
 
 - **KHex**: Added ARIA labels to input fields in `khex.html` for accessibility. Verified `main.c` (no leaks or bugs found).
+- **KImage**: Added ARIA labels in `kimage.html` for accessibility and fixed a bug where the same file couldn't be reopened by clearing `fileInput.value`. Fixed buffer zero-division bounds logic in `main.c` `WM_MOUSEMOVE` and `WM_PAINT` by enforcing `drawW` and `drawH` to be at least 1.
 
-Start Pass 2 (Deeper Quality checks). Next target: KImage (or next in alphabetical order).
+Start Pass 2 (Deeper Quality checks). Next target: KJournal (or next in alphabetical order).

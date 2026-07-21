@@ -126,36 +126,36 @@
 <body>
   <div class="toolbar">
     <div class="toolbar-group">
-      <button class="primary" id="btnOpen">
+      <button class="primary" id="btnOpen" aria-label="Open Image">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
         Open
       </button>
-      <button id="btnSave" style="display:none;">
+      <button id="btnSave" style="display:none;" aria-label="Save Image">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save
       </button>
     </div>
     <div class="toolbar-group" id="editTools" style="display:none;">
-      <button id="btnRotateL" title="Rotate Left">↶</button>
-      <button id="btnRotateR" title="Rotate Right">↷</button>
-      <button id="btnFlipH" title="Flip Horizontal">↔</button>
-      <button id="btnFlipV" title="Flip Vertical">↕</button>
-      <button id="btnDraw" title="Toggle Draw Mode">
+      <button id="btnRotateL" title="Rotate Left" aria-label="Rotate Left">↶</button>
+      <button id="btnRotateR" title="Rotate Right" aria-label="Rotate Right">↷</button>
+      <button id="btnFlipH" title="Flip Horizontal" aria-label="Flip Horizontal">↔</button>
+      <button id="btnFlipV" title="Flip Vertical" aria-label="Flip Vertical">↕</button>
+      <button id="btnDraw" title="Toggle Draw Mode" aria-label="Toggle Draw Mode">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
         Draw
       </button>
-      <input type="color" id="drawColor" value="#ff0000" style="width:24px;height:24px;padding:0;border:none;background:transparent;cursor:pointer;">
+      <input type="color" id="drawColor" value="#ff0000" aria-label="Draw Color" style="width:24px;height:24px;padding:0;border:none;background:transparent;cursor:pointer;">
     </div>
     <div class="toolbar-group" id="filterTools" style="display:none;">
-      <button id="btnGray">Grayscale</button>
-      <button id="btnInvert">Invert</button>
-      <button id="btnSepia">Sepia</button>
-      <button id="btnReset">Reset</button>
+      <button id="btnGray" aria-label="Grayscale">Grayscale</button>
+      <button id="btnInvert" aria-label="Invert">Invert</button>
+      <button id="btnSepia" aria-label="Sepia">Sepia</button>
+      <button id="btnReset" aria-label="Reset Filters">Reset</button>
     </div>
     <div class="toolbar-group" id="zoomTools" style="display:none;">
-      <button id="btnZoomIn" title="Zoom In">+</button>
-      <button id="btnZoomOut" title="Zoom Out">-</button>
-      <button id="btnZoomReset" title="Reset Zoom">1:1</button>
+      <button id="btnZoomIn" title="Zoom In" aria-label="Zoom In">+</button>
+      <button id="btnZoomOut" title="Zoom Out" aria-label="Zoom Out">-</button>
+      <button id="btnZoomReset" title="Reset Zoom" aria-label="Reset Zoom">1:1</button>
     </div>
     <div class="title" id="title">No image selected</div>
   </div>
@@ -243,6 +243,7 @@
           state.originalData = ui.ctx.getImageData(0, 0, img.width, img.height);
           
           URL.revokeObjectURL(url);
+          e.target.value = '';
         };
         img.src = url;
       }
