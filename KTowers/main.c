@@ -17,6 +17,30 @@ int historyCount = 0;
 int elapsedSeconds = 0;
 BOOL timerRunning = FALSE;
 
+int bestTime[MAX_DISCS + 1] = {0};
+int fewestMoves[MAX_DISCS + 1] = {0};
+BOOL hasStats[MAX_DISCS + 1] = {FALSE};
+
+void LoadStats() {
+    FILE* fp = fopen("ktowers_stats.dat", "rb");
+    if (fp) {
+        fread(hasStats, sizeof(BOOL), MAX_DISCS + 1, fp);
+        fread(bestTime, sizeof(int), MAX_DISCS + 1, fp);
+        fread(fewestMoves, sizeof(int), MAX_DISCS + 1, fp);
+        fclose(fp);
+    }
+}
+
+void SaveStats() {
+    FILE* fp = fopen("ktowers_stats.dat", "wb");
+    if (fp) {
+        fwrite(hasStats, sizeof(BOOL), MAX_DISCS + 1, fp);
+        fwrite(bestTime, sizeof(int), MAX_DISCS + 1, fp);
+        fwrite(fewestMoves, sizeof(int), MAX_DISCS + 1, fp);
+        fclose(fp);
+    }
+}
+
 COLORREF colors[] = {
     RGB(255, 59, 48),  // #FF3B30
     RGB(255, 149, 0),  // #FF9500
@@ -126,6 +150,25 @@ BOOL CheckWin(HWND hwnd) {
             KillTimer(hwnd, 1);
             timerRunning = FALSE;
         }
+        
+        BOOL newBest = FALSE;
+        if (!hasStats[numDiscs]) {
+            hasStats[numDiscs] = TRUE;
+            bestTime[numDiscs] = elapsedSeconds;
+            fewestMoves[numDiscs] = moves;
+            newBest = TRUE;
+        } else {
+            if (elapsedSeconds < bestTime[numDiscs] || 
+               (elapsedSeconds == bestTime[numDiscs] && moves < fewestMoves[numDiscs])) {
+                bestTime[numDiscs] = elapsedSeconds;
+                fewestMoves[numDiscs] = moves;
+                newBest = TRUE;
+            }
+        }
+        if (newBest) {
+            SaveStats();
+        }
+
         PlaySoundEffect(4);
         InvalidateRect(hwnd, NULL, TRUE);
         return TRUE;
@@ -237,6 +280,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      310, 10, 60, 30,
                                      hwnd, (HMENU) 5,
                                      (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            LoadStats();
             if (LoadState()) {
                 char buf[32];
                 sprintf(buf, "Discs: %d", numDiscs);
@@ -303,8 +347,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int optimalMoves = (1 << numDiscs) - 1;
             int m = elapsedSeconds / 60;
             int s = elapsedSeconds % 60;
-            sprintf(textBuf, "Time: %02d:%02d | Moves: %d / Optimal: %d", m, s, moves, optimalMoves);
-            TextOut(hdc, rc.right / 2 - 120, 20, textBuf, strlen(textBuf));
+
+            char bestBuf[64];
+            if (hasStats[numDiscs]) {
+                sprintf(bestBuf, "%02d:%02d (%d moves)", bestTime[numDiscs]/60, bestTime[numDiscs]%60, fewestMoves[numDiscs]);
+            } else {
+                strcpy(bestBuf, "--:-- (-- moves)");
+            }
+
+            sprintf(textBuf, "Time: %02d:%02d | Moves: %d / Optimal: %d | Best: %s", m, s, moves, optimalMoves, bestBuf);
+            TextOut(hdc, rc.right / 2 - 180, 20, textBuf, strlen(textBuf));
 
             if (won) {
                 SetTextColor(hdc, RGB(74, 222, 128));

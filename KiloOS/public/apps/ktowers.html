@@ -22,7 +22,7 @@
 </head>
 <body>
     <h1>KTowers</h1>
-    <div class="info">Time: <span id="timeDisplay">00:00</span> | Moves: <span id="moveCount">0</span> / Optimal: <span id="optimalMoves">0</span></div>
+    <div class="info">Time: <span id="timeDisplay">00:00</span> | Moves: <span id="moveCount">0</span> / Optimal: <span id="optimalMoves">0</span> | Best: <span id="bestStats">--:-- (-- moves)</span></div>
     
     <div class="game-area" id="gameArea">
         <!-- Rendered by JS -->
@@ -116,6 +116,16 @@
         let moveHistory = [];
         let timerInterval = null;
         let elapsedSeconds = 0;
+        let stats = JSON.parse(localStorage.getItem('ktowers_stats') || '{}');
+
+        function updateStatsDisplay() {
+            const currentStats = stats[numDiscs];
+            if (currentStats) {
+                document.getElementById('bestStats').innerText = `${formatTime(currentStats.bestTime)} (${currentStats.fewestMoves} moves)`;
+            } else {
+                document.getElementById('bestStats').innerText = `--:-- (-- moves)`;
+            }
+        }
 
         const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'];
 
@@ -177,6 +187,7 @@
             document.getElementById('timeDisplay').innerText = "00:00";
             document.getElementById('message').innerText = '';
             document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
+            updateStatsDisplay();
             render();
             saveState();
         }
@@ -240,6 +251,24 @@
                 won = true;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
+                
+                let newBest = false;
+                if (!stats[numDiscs]) {
+                    stats[numDiscs] = { bestTime: elapsedSeconds, fewestMoves: moves };
+                    newBest = true;
+                } else {
+                    if (elapsedSeconds < stats[numDiscs].bestTime || 
+                       (elapsedSeconds === stats[numDiscs].bestTime && moves < stats[numDiscs].fewestMoves)) {
+                        stats[numDiscs].bestTime = elapsedSeconds;
+                        stats[numDiscs].fewestMoves = moves;
+                        newBest = true;
+                    }
+                }
+                if (newBest) {
+                    localStorage.setItem('ktowers_stats', JSON.stringify(stats));
+                    updateStatsDisplay();
+                }
+
                 document.getElementById('message').innerText = `You won in ${moves} moves!`;
                 playSound('win');
                 return true;
@@ -283,6 +312,7 @@
         if (loadState()) {
             document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
             document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
+            updateStatsDisplay();
             render();
             if (won) {
                 document.getElementById('message').innerText = `You won in ${moves} moves!`;
