@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <commdlg.h>
 
 #define W 500
 #define H 400
@@ -7,6 +8,8 @@
 HWND hInput;
 HWND hOutput;
 HWND hBtnRun;
+HWND hBtnLoad;
+HWND hBtnSave;
 
 int vars[26] = {0};
 
@@ -181,6 +184,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 10, 10, 100, 24, hwnd, (HMENU)1, NULL, NULL);
             SendMessage(hBtnRun, WM_SETFONT, (WPARAM)hFont, TRUE);
             
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load",
+                WS_CHILD | WS_VISIBLE,
+                120, 10, 80, 24, hwnd, (HMENU)2, NULL, NULL);
+            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save",
+                WS_CHILD | WS_VISIBLE,
+                210, 10, 80, 24, hwnd, (HMENU)3, NULL, NULL);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            
             hOutput = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
                 10 + (W - 30) / 2 + 10, 44, (W - 30) / 2, H - 95, hwnd, NULL, NULL, NULL);
@@ -190,6 +203,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_COMMAND: {
             if (LOWORD(wParam) == 1) {
                 RunScript();
+            } else if (LOWORD(wParam) == 2) {
+                char szFile[260] = {0};
+                OPENFILENAMEA ofn = {0};
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = szFile;
+                ofn.nMaxFile = sizeof(szFile);
+                ofn.lpstrFilter = "KScript Files\0*.ksc\0All Files\0*.*\0";
+                ofn.nFilterIndex = 1;
+                ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+                if (GetOpenFileNameA(&ofn)) {
+                    HANDLE hFile = CreateFileA(szFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        DWORD dwSize = GetFileSize(hFile, NULL);
+                        if (dwSize > 0) {
+                            char* buf = (char*)VirtualAlloc(NULL, dwSize + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                            DWORD dwRead;
+                            if (ReadFile(hFile, buf, dwSize, &dwRead, NULL)) {
+                                buf[dwRead] = '\0';
+                                SetWindowTextA(hInput, buf);
+                            }
+                            VirtualFree(buf, 0, MEM_RELEASE);
+                        } else {
+                            SetWindowTextA(hInput, "");
+                        }
+                        CloseHandle(hFile);
+                    }
+                }
+            } else if (LOWORD(wParam) == 3) {
+                char szFile[260] = {0};
+                OPENFILENAMEA ofn = {0};
+                ofn.lStructSize = sizeof(ofn);
+                ofn.hwndOwner = hwnd;
+                ofn.lpstrFile = szFile;
+                ofn.nMaxFile = sizeof(szFile);
+                ofn.lpstrFilter = "KScript Files\0*.ksc\0All Files\0*.*\0";
+                ofn.nFilterIndex = 1;
+                ofn.lpstrDefExt = "ksc";
+                ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
+                if (GetSaveFileNameA(&ofn)) {
+                    HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                    if (hFile != INVALID_HANDLE_VALUE) {
+                        int len = GetWindowTextLengthA(hInput);
+                        if (len > 0) {
+                            char* buf = (char*)VirtualAlloc(NULL, len + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+                            GetWindowTextA(hInput, buf, len + 1);
+                            DWORD dwWritten;
+                            WriteFile(hFile, buf, len, &dwWritten, NULL);
+                            VirtualFree(buf, 0, MEM_RELEASE);
+                        } else {
+                            DWORD dwWritten;
+                            WriteFile(hFile, "", 0, &dwWritten, NULL);
+                        }
+                        CloseHandle(hFile);
+                    }
+                }
             }
             break;
         }

@@ -200,7 +200,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSimon     | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, 6-Color Grid, Hint Power-Up. |
 | KMatch3    | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: Ice tiles obstacle, Shuffle Power-up, Bomb Power-up. |
 | KWords     | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Magic Wand power-up, 4 new themes, Combo System. |
-| KGo        | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent (in progress). Loop 5 pending. |
+| KGo        | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Handicap Stones, Hard AI. |
 
 ## Progress Log
 
@@ -281,3 +281,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSimon (Expanded to 6-color grid, added 10-Stage Campaign Mode, and Hint power-up to both EXE and HTML)
 - [x] KMatch3 (Added Ice tiles obstacle, Shuffle Power-up, and Bomb Power-up to both EXE and HTML)
 - [x] KWords (Added 10-Stage Campaign Mode, Magic Wand power-up, 4 new themes, and Combo System to both EXE and HTML)
+- [x] KGo (Added 10-Stage Campaign Mode, Handicap Stones, and Hard AI to both EXE and HTML)

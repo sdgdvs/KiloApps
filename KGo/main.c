@@ -17,6 +17,20 @@
 #define ID_BTN_STATS 111
 #define ID_CB_DIFFICULTY 112
 #define ID_BTN_HELP 113
+#define ID_BTN_CAMPAIGN 114
+
+typedef struct {
+    int size;
+    int handicap;
+    int difficulty;
+} CampaignStage;
+CampaignStage campaign[10] = {
+    {9, 5, 0}, {9, 3, 0}, {9, 0, 1},
+    {13, 5, 1}, {13, 3, 1}, {13, 0, 2},
+    {19, 9, 1}, {19, 5, 2}, {19, 3, 2}, {19, 0, 2}
+};
+int currentCampaignStage = -1;
+
 
 typedef struct {
     int played;
@@ -313,6 +327,103 @@ int IsValidMove(int x, int y, int color, int *outCaptures) {
     return 1;
 }
 
+void PlaceHandicapStones(int size, int count) {
+    if (count <= 0) return;
+    int pts9[5][2] = {{2,2}, {6,6}, {6,2}, {2,6}, {4,4}};
+    int pts13[5][2] = {{3,3}, {9,9}, {9,3}, {3,9}, {6,6}};
+    int pts19[9][2] = {{3,3}, {15,15}, {15,3}, {3,15}, {9,9}, {9,3}, {9,15}, {3,9}, {15,9}};
+    int (*pts)[2];
+    int maxPts = 0;
+    if (size == 9) { pts = pts9; maxPts = 5; }
+    else if (size == 13) { pts = pts13; maxPts = 5; }
+    else { pts = pts19; maxPts = 9; }
+    if (count > maxPts) count = maxPts;
+    for(int i=0; i<count; i++) {
+        board[pts[i][1]][pts[i][0]] = 1; 
+    }
+    currentPlayer = 2; 
+    CopyBoard(prevBoard, board);
+}
+
+void StartCampaignStage(HWND hwnd) {
+    if (currentCampaignStage >= 10 || currentCampaignStage < 0) return;
+    boardSize = campaign[currentCampaignStage].size;
+    int handicap = campaign[currentCampaignStage].handicap;
+    int diff = campaign[currentCampaignStage].difficulty;
+    
+    SendMessage(GetDlgItem(hwnd, ID_CB_SIZE), CB_SETCURSEL, boardSize==9?0:(boardSize==13?1:2), 0);
+    SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_SETCHECK, BST_CHECKED, 0);
+    SendMessage(GetDlgItem(hwnd, ID_CB_DIFFICULTY), CB_SETCURSEL, diff, 0);
+    
+    InitBoard();
+    PlaceHandicapStones(boardSize, handicap);
+    InvalidateRect(hwnd, NULL, TRUE);
+    
+    char msg[128];
+    sprintf(msg, "Stage %d\nBoard: %dx%d\nHandicap: %d\nDifficulty: %s", 
+        currentCampaignStage+1, boardSize, boardSize, handicap, 
+        diff==0?"Easy":(diff==1?"Medium":"Hard"));
+    MessageBox(hwnd, msg, "Campaign Stage", MB_OK);
+}
+
+int EvaluateMove(int x, int y, int color) {
+    int opp = color == 1 ? 2 : 1;
+    char boardBackup[19][19];
+    CopyBoard(boardBackup, board);
+    int capBackup[3] = { captures[0], captures[1], captures[2] };
+    
+    int savingAtari = 0;
+    int dx[] = {0, 1, 0, -1};
+    int dy[] = {1, 0, -1, 0};
+    for(int i=0; i<4; i++) {
+        int nx = x+dx[i];
+        int ny = y+dy[i];
+        if (nx>=0 && nx<boardSize && ny>=0 && ny<boardSize) {
+            if (board[ny][nx] == color) {
+                char v2[19][19]={0};
+                if (GetLiberties(nx, ny, color, v2) == 1) {
+                    savingAtari = 1;
+                }
+            }
+        }
+    }
+    
+    board[y][x] = (char)color;
+    int caps = CheckCaptures(opp, 0);
+    
+    int score = caps * 50;
+    char visited[19][19] = {0};
+    int myLiberties = GetLiberties(x, y, color, visited);
+    score += myLiberties;
+    
+    if (savingAtari && myLiberties > 1) {
+        score += 30;
+    }
+    
+    for(int i=0; i<4; i++) {
+        int nx = x+dx[i];
+        int ny = y+dy[i];
+        if (nx>=0 && nx<boardSize && ny>=0 && ny<boardSize) {
+             if (board[ny][nx] == opp) {
+                 char v2[19][19]={0};
+                 if (GetLiberties(nx, ny, opp, v2) == 1) {
+                     score += 15;
+                 }
+             }
+        }
+    }
+    
+    int cx = boardSize/2;
+    int cy = boardSize/2;
+    int dist = abs(x-cx) + abs(y-cy);
+    score += (boardSize - dist); 
+    
+    CopyBoard(board, boardBackup);
+    captures[1] = capBackup[1];
+    captures[2] = capBackup[2];
+    return score;
+}
+
 void MakeAIMove(HWND hwnd) {
     if (currentPlayer != 2) return;
     
@@ -339,7 +450,27 @@ void MakeAIMove(HWND hwnd) {
         }
     }
     
-    if (difficulty == 1 && captureCount > 0) {
+    if (difficulty == 2 && validCount > 0) {
+        int bestScore = -1;
+        int bestMoves[19*19];
+        int bestCount = 0;
+        for (int i = 0; i < validCount; i++) {
+            int score = EvaluateMove(validMoves[i].x, validMoves[i].y, 2);
+            if (score > bestScore) {
+                bestScore = score;
+                bestCount = 0;
+                bestMoves[bestCount++] = i;
+            } else if (score == bestScore) {
+                bestMoves[bestCount++] = i;
+            }
+        }
+        if (bestCount > 0) {
+            int r = bestMoves[rand() % bestCount];
+            PlaceStone(hwnd, validMoves[r].x, validMoves[r].y);
+        } else {
+            SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PASS, 0), 0);
+        }
+    } else if (difficulty == 1 && captureCount > 0) {
         int r = rand() % captureCount;
         PlaceStone(hwnd, captureMoves[r].x, captureMoves[r].y);
     } else if (validCount > 0) {
@@ -462,18 +593,39 @@ void CalculateScore(HWND hwnd) {
     int winner = (totalB > totalW) ? 1 : 2;
     RecordGameEnd(winner, hwnd);
 
-    char msg[256];
-    sprintf(msg, "Black: %d territory + %d captures = %g\n"
-                 "White: %d territory + %d captures + 6.5 komi = %g\n\n"
-                 "%s wins!", 
-                 terrB, captures[1], totalB,
-                 terrW, captures[2], totalW,
-                 (totalB > totalW) ? "Black" : "White");
-                 
-    PlayGameSound(3);
-    MessageBox(hwnd, msg, "Game Score", MB_OK);
-    InitBoard();
-    InvalidateRect(hwnd, NULL, TRUE);
+    char msg[512];
+    if (currentCampaignStage != -1) {
+        if (winner == 1) { // Black wins
+            currentCampaignStage++;
+            if (currentCampaignStage >= 10) {
+                sprintf(msg, "Black: %g vs White: %g\n\nBlack wins!\n\nCongratulations! You completed the 10-Stage Campaign!", totalB, totalW);
+                currentCampaignStage = -1;
+            } else {
+                sprintf(msg, "Black: %g vs White: %g\n\nBlack wins!\n\nAdvancing to Campaign Stage %d!", totalB, totalW, currentCampaignStage + 1);
+            }
+        } else {
+            sprintf(msg, "Black: %g vs White: %g\n\nWhite wins!\n\nYou failed Campaign Stage %d. Try again.", totalB, totalW, currentCampaignStage + 1);
+        }
+        PlayGameSound(3);
+        MessageBox(hwnd, msg, "Game Score", MB_OK);
+        if (currentCampaignStage != -1) {
+            StartCampaignStage(hwnd);
+        } else {
+            InitBoard();
+            InvalidateRect(hwnd, NULL, TRUE);
+        }
+    } else {
+        sprintf(msg, "Black: %d territory + %d captures = %g\n"
+                     "White: %d territory + %d captures + 6.5 komi = %g\n\n"
+                     "%s wins!", 
+                     terrB, captures[1], totalB,
+                     terrW, captures[2], totalW,
+                     (totalB > totalW) ? "Black" : "White");
+        PlayGameSound(3);
+        MessageBox(hwnd, msg, "Game Score", MB_OK);
+        InitBoard();
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -499,22 +651,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 420, 600, 150, 30, hwnd, (HMENU)ID_CB_AI, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbAi, BM_SETCHECK, BST_CHECKED, 0);
             hCbDifficulty = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_CHILD | WS_OVERLAPPED | WS_VISIBLE,
-                420, 640, 100, 100, hwnd, (HMENU)ID_CB_DIFFICULTY, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                420, 640, 80, 100, hwnd, (HMENU)ID_CB_DIFFICULTY, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
+            SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessage(hCbDifficulty, CB_SETCURSEL, 1, 0);
             CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                20, 640, 60, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                20, 640, 50, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                90, 640, 60, 30, hwnd, (HMENU)ID_BTN_LOAD, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                75, 640, 50, 30, hwnd, (HMENU)ID_BTN_LOAD, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                160, 640, 60, 30, hwnd, (HMENU)ID_BTN_UNDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                130, 640, 50, 30, hwnd, (HMENU)ID_BTN_UNDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Redo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                230, 640, 60, 30, hwnd, (HMENU)ID_BTN_REDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                185, 640, 50, 30, hwnd, (HMENU)ID_BTN_REDO, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Stats", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                300, 640, 60, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                240, 640, 50, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-                370, 640, 60, 30, hwnd, (HMENU)ID_BTN_HELP, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+                295, 640, 50, 30, hwnd, (HMENU)ID_BTN_HELP, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Campaign", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                350, 640, 65, 30, hwnd, (HMENU)ID_BTN_CAMPAIGN, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -683,15 +838,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_RESIGN) {
                 int winner = currentPlayer == 1 ? 2 : 1;
                 RecordGameEnd(winner, hwnd);
-                char msg[64];
-                sprintf(msg, "%s wins by resignation!", currentPlayer == 1 ? "White" : "Black");
+                char msg[256];
+                if (currentCampaignStage != -1) {
+                    sprintf(msg, "%s wins by resignation!\n\nYou failed Campaign Stage %d. Try again.", 
+                            currentPlayer == 1 ? "White" : "Black", currentCampaignStage + 1);
+                } else {
+                    sprintf(msg, "%s wins by resignation!", currentPlayer == 1 ? "White" : "Black");
+                }
                 PlayGameSound(3);
                 MessageBox(hwnd, msg, "Game Over", MB_OK);
-                InitBoard();
-                InvalidateRect(hwnd, NULL, TRUE);
+                if (currentCampaignStage != -1) {
+                    StartCampaignStage(hwnd);
+                } else {
+                    InitBoard();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (LOWORD(wParam) == ID_BTN_SCORE) {
                 CalculateScore(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_NEW) {
+                currentCampaignStage = -1;
                 InitBoard();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == ID_BTN_SAVE) {
@@ -707,6 +872,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 sprintf(smsg, "Statistics:\nGames Played: %d\n\nvs AI Mode:\nWins: %d\nLosses: %d\n\nLocal Mode:\nBlack Wins: %d\nWhite Wins: %d",
                         stats.played, stats.aiWins, stats.aiLosses, stats.localB, stats.localW);
                 MessageBox(hwnd, smsg, "Statistics", MB_OK);
+            } else if (LOWORD(wParam) == ID_BTN_CAMPAIGN) {
+                currentCampaignStage = 0;
+                StartCampaignStage(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBox(hwnd, 
                     "Goal: Control more territory (empty points) than your opponent.\n\n"

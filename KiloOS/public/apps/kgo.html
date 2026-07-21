@@ -160,6 +160,7 @@
     <button id="btn-load">Load</button>
     <button id="btn-stats">Stats</button>
     <button id="btn-help">Help</button>
+    <button id="btn-campaign">Campaign</button>
     <select id="board-size">
       <option value="9">9x9</option>
       <option value="13">13x13</option>
@@ -170,6 +171,7 @@
     <select id="ai-difficulty">
       <option value="easy">Easy AI</option>
       <option value="medium" selected>Medium AI</option>
+      <option value="hard">Hard AI</option>
     </select>
   </div>
 
@@ -201,6 +203,52 @@
   let capturedStonesForAnim = [];
   let undoStack = [];
   let redoStack = [];
+
+  const campaign = [
+    {size: 9, handicap: 5, difficulty: 'easy'},
+    {size: 9, handicap: 3, difficulty: 'easy'},
+    {size: 9, handicap: 0, difficulty: 'medium'},
+    {size: 13, handicap: 5, difficulty: 'medium'},
+    {size: 13, handicap: 3, difficulty: 'medium'},
+    {size: 13, handicap: 0, difficulty: 'hard'},
+    {size: 19, handicap: 9, difficulty: 'medium'},
+    {size: 19, handicap: 5, difficulty: 'hard'},
+    {size: 19, handicap: 3, difficulty: 'hard'},
+    {size: 19, handicap: 0, difficulty: 'hard'}
+  ];
+  let currentCampaignStage = -1;
+
+  function placeHandicapStones(boardSize, count) {
+    if (count <= 0) return;
+    const pts9 = [[2,2], [6,6], [6,2], [2,6], [4,4]];
+    const pts13 = [[3,3], [9,9], [9,3], [3,9], [6,6]];
+    const pts19 = [[3,3], [15,15], [15,3], [3,15], [9,9], [9,3], [9,15], [3,9], [15,9]];
+    let pts = pts19;
+    if (boardSize === 9) pts = pts9;
+    else if (boardSize === 13) pts = pts13;
+    let limit = Math.min(count, pts.length);
+    for(let i=0; i<limit; i++) {
+      board[pts[i][1]][pts[i][0]] = 'B';
+    }
+    currentPlayer = 'W';
+    history = [boardToString()];
+  }
+
+  function startCampaignStage() {
+    if (currentCampaignStage >= 10 || currentCampaignStage < 0) return;
+    let stage = campaign[currentCampaignStage];
+    size = stage.size;
+    document.getElementById('board-size').value = size;
+    document.getElementById('ai-toggle').checked = true;
+    document.getElementById('ai-difficulty').value = stage.difficulty;
+    
+    initBoard();
+    placeHandicapStones(size, stage.handicap);
+    updateStatus();
+    drawBoard();
+    
+    alert(`Stage ${currentCampaignStage + 1}\nBoard: ${size}x${size}\nHandicap: ${stage.handicap}\nDifficulty: ${stage.difficulty === 'easy' ? 'Easy' : (stage.difficulty === 'medium' ? 'Medium' : 'Hard')}`);
+  }
 
   let stats = { played: 0, aiWins: 0, aiLosses: 0, localB: 0, localW: 0 };
   function loadStats() {
@@ -422,8 +470,25 @@
     
     playSound('over');
     setTimeout(() => {
-      alert(msg);
-      initBoard();
+      if (currentCampaignStage !== -1) {
+        if (totalB > totalW) {
+          currentCampaignStage++;
+          if (currentCampaignStage >= 10) {
+            alert(msg + "\n\nCongratulations! You completed the 10-Stage Campaign!");
+            currentCampaignStage = -1;
+            initBoard();
+          } else {
+            alert(msg + `\n\nAdvancing to Campaign Stage ${currentCampaignStage + 1}!`);
+            startCampaignStage();
+          }
+        } else {
+          alert(msg + `\n\nYou failed Campaign Stage ${currentCampaignStage + 1}. Try again.`);
+          startCampaignStage();
+        }
+      } else {
+        alert(msg);
+        initBoard();
+      }
     }, 50);
   }
 
@@ -522,6 +587,61 @@
     return {valid: true, captures: capturedCount};
   }
 
+  function evaluateMove(x, y, color) {
+    let opp = color === 'B' ? 'W' : 'B';
+    let boardBackup = deepCopy(board);
+    let capBackup = { ...captures };
+    
+    let savingAtari = false;
+    let dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+    for (let d of dirs) {
+      let nx = x + d[0];
+      let ny = y + d[1];
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        if (board[ny][nx] === color) {
+          let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
+          if (getLiberties(nx, ny, color, v2) === 1) {
+            savingAtari = true;
+          }
+        }
+      }
+    }
+    
+    board[y][x] = color;
+    let caps = checkCaptures(opp, false);
+    
+    let score = caps * 50;
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    let myLiberties = getLiberties(x, y, color, visited);
+    score += myLiberties;
+    
+    if (savingAtari && myLiberties > 1) {
+      score += 30;
+    }
+    
+    for (let d of dirs) {
+      let nx = x + d[0];
+      let ny = y + d[1];
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        if (board[ny][nx] === opp) {
+          let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
+          if (getLiberties(nx, ny, opp, v2) === 1) {
+            score += 15;
+          }
+        }
+      }
+    }
+    
+    let cx = Math.floor(size / 2);
+    let cy = Math.floor(size / 2);
+    let dist = Math.abs(x - cx) + Math.abs(y - cy);
+    score += (size - dist);
+    
+    board = boardBackup;
+    captures = capBackup;
+    return score;
+  }
+
   function makeAIMove() {
     if (currentPlayer !== 'W') return;
     
@@ -541,7 +661,20 @@
     }
     
     let move = null;
-    if (difficulty === 'medium' && captureMoves.length > 0) {
+    if (difficulty === 'hard' && validMoves.length > 0) {
+      let bestScore = -1;
+      let bestMoves = [];
+      for (let m of validMoves) {
+        let score = evaluateMove(m.x, m.y, 'W');
+        if (score > bestScore) {
+          bestScore = score;
+          bestMoves = [m];
+        } else if (score === bestScore) {
+          bestMoves.push(m);
+        }
+      }
+      move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    } else if (difficulty === 'medium' && captureMoves.length > 0) {
       move = captureMoves[Math.floor(Math.random() * captureMoves.length)];
     } else if (validMoves.length > 0) {
       move = validMoves[Math.floor(Math.random() * validMoves.length)];
@@ -620,15 +753,24 @@
     playSound('over');
     setTimeout(() => {
       let winner = currentPlayer === 'B' ? 'W' : 'B';
-      alert(`${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`);
+      let msg = `${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`;
+      if (currentCampaignStage !== -1) {
+        msg += `\n\nYou failed Campaign Stage ${currentCampaignStage + 1}. Try again.`;
+      }
+      alert(msg);
       recordGameEnd(winner);
-      initBoard();
+      if (currentCampaignStage !== -1) {
+        startCampaignStage();
+      } else {
+        initBoard();
+      }
     }, 50);
   });
   document.getElementById('btn-score').addEventListener('click', () => {
     calculateScore();
   });
   document.getElementById('btn-new').addEventListener('click', () => {
+    currentCampaignStage = -1;
     initBoard();
   });
   document.getElementById('btn-save').addEventListener('click', () => {
@@ -676,6 +818,11 @@
 
   document.getElementById('btn-stats').addEventListener('click', () => {
     alert(`Statistics:\nGames Played: ${stats.played}\n\nvs AI Mode:\nWins: ${stats.aiWins}\nLosses: ${stats.aiLosses}\n\nLocal Mode:\nBlack Wins: ${stats.localB}\nWhite Wins: ${stats.localW}`);
+  });
+
+  document.getElementById('btn-campaign').addEventListener('click', () => {
+    currentCampaignStage = 0;
+    startCampaignStage();
   });
 
   document.getElementById('btn-help').addEventListener('click', () => {

@@ -145,7 +145,11 @@
 <div class="container">
     <div class="header">
         <h1>KScript</h1>
-        <button id="btnRun">Run Script</button>
+        <div style="display: flex; gap: 10px;">
+            <button id="btnLoad">Load</button>
+            <button id="btnSave">Save</button>
+            <button id="btnRun">Run Script</button>
+        </div>
     </div>
     
     <div class="panels">
@@ -166,6 +170,8 @@ print a % 3"></textarea>
 <script>
     const exprInput = document.getElementById('exprInput');
     const btnRun = document.getElementById('btnRun');
+    const btnLoad = document.getElementById('btnLoad');
+    const btnSave = document.getElementById('btnSave');
     const outputArea = document.getElementById('outputArea');
 
     exprInput.value = "a = 10\nb = 20\nprint a * b + 5\nprint a % 3";
@@ -294,6 +300,32 @@ print a % 3"></textarea>
                 outputArea.textContent = `Parse Error:\n${err.message}`;
             }
         }, 50);
+    };
+
+    btnLoad.onclick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.ksc,.txt';
+        input.onchange = e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                exprInput.value = e.target.result;
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+    };
+
+    btnSave.onclick = () => {
+        const blob = new Blob([exprInput.value], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'script.ksc';
+        a.click();
+        URL.revokeObjectURL(url);
     };
 </script>
 </body>
