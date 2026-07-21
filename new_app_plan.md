@@ -51,7 +51,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KTowers
-**Phase:** 4
+**Phase:** 8
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KTowers/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -60,8 +60,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - [x] Phase 5: Add a Move Counter and "Minimum Moves" optimal display.
 - [x] Phase 6: Add Adjustable Difficulty (change disc count from 3 up to 8).
-- [ ] Phase 7: Add Sound Effects (pickup, drop, error, and win chime).
-- Phase 8: Add Save/Load State (persist board state and current move count).
+- [x] Phase 7: Add Sound Effects (pickup, drop, error, and win chime).
+- [ ] Phase 8: Add Save/Load State (persist board state and current move count).
 - Phase 9: Add Move History / Undo functionality.
 - Phase 10: Add a Time Tracking / Stopwatch feature.
 - Phase 11: Add Statistics Tracking (best time and fewest moves per difficulty level).
@@ -72,7 +72,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Next Priority (Before New Apps)
 
 **App:** KTowers
-**Goal:** Phase 7
+**Goal:** Phase 8
 
 
 ## App Lifecycle (14 phases per app)

@@ -26,6 +26,27 @@ HWND hDiffLabel;
 HWND hDiffMinusBtn;
 HWND hDiffPlusBtn;
 
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(INT_PTR)lpParam;
+    if (type == 1) { // pickup
+        Beep(800, 50);
+    } else if (type == 2) { // drop
+        Beep(600, 50);
+    } else if (type == 3) { // error
+        Beep(200, 150);
+    } else if (type == 4) { // win
+        Beep(440, 100);
+        Beep(554, 100);
+        Beep(659, 100);
+        Beep(880, 200);
+    }
+    return 0;
+}
+
+void PlaySoundEffect(int type) {
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(INT_PTR)type, 0, NULL);
+}
+
 void InitGame(HWND hwnd) {
     pegCounts[0] = 0;
     pegCounts[1] = 0;
@@ -39,11 +60,14 @@ void InitGame(HWND hwnd) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
-void CheckWin(HWND hwnd) {
+BOOL CheckWin(HWND hwnd) {
     if (pegCounts[2] == numDiscs) {
         won = TRUE;
+        PlaySoundEffect(4);
         InvalidateRect(hwnd, NULL, TRUE);
+        return TRUE;
     }
+    return FALSE;
 }
 
 void HandleClick(HWND hwnd, int x, int y) {
@@ -60,10 +84,14 @@ void HandleClick(HWND hwnd, int x, int y) {
     if (selectedPeg == -1) {
         if (pegCounts[clickedPeg] > 0) {
             selectedPeg = clickedPeg;
+            PlaySoundEffect(1);
             InvalidateRect(hwnd, NULL, TRUE);
+        } else {
+            PlaySoundEffect(3);
         }
     } else if (selectedPeg == clickedPeg) {
         selectedPeg = -1;
+        PlaySoundEffect(2);
         InvalidateRect(hwnd, NULL, TRUE);
     } else {
         int fromTop = pegs[selectedPeg][pegCounts[selectedPeg] - 1];
@@ -82,9 +110,12 @@ void HandleClick(HWND hwnd, int x, int y) {
             pegs[clickedPeg][pegCounts[clickedPeg]++] = fromTop;
             moves++;
             selectedPeg = -1;
-            CheckWin(hwnd);
+            if (!CheckWin(hwnd)) {
+                PlaySoundEffect(2);
+            }
         } else {
             selectedPeg = -1;
+            PlaySoundEffect(3);
         }
         InvalidateRect(hwnd, NULL, TRUE);
     }
