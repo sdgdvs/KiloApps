@@ -180,29 +180,32 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
-| KMines     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-level campaign, radar powerup, stats. |
-| KRogue     | Tier 2          | Feature-Expanded       | Loop 5 Completed | Web upgraded to basic playable version. EXE is a full roguelike. Expanded to 20 levels, added Balrog, Titan, Beholder, Mind Flayer, Void biome. |
-| KSnake     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Spider enemies, Ice powerup, stats, 10-level campaign win. |
-| KTetris    | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, dynamic garbage, hard drop scoring. |
-| KPong      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-Level campaign, moving obstacles, debuff powerups, stats. |
-| KMaze      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 20-level campaign, speed powerup, teleporters, stats. |
-| KSolitaire | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 10-stage campaign, Bomb trap, X-Ray powerup. |
-| KSpace     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Zig-Zag enemies, Asteroids, Smart Bomb, Lifetime Stats. |
-| KPac       | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Expanded Campaign to 10 maps, advanced AI for all ghosts, and Lifetime Stats tracking. |
-| KChess     | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Expanded Campaign to 10 stages, Castling, En Passant, and PST AI Evaluation. |
-| KBreakout  | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: Campaign layouts, new powerups, UFO enemy, Lifetime Stats. |
-| K2048      | Tier 1          | Feature-Expanded       | Loop 5 Completed | Full parity. Loop 5 completed: 20-level campaign, Hammer & Shuffle powerups. |
-| KSudoku    | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, Magic Wand power-up, 3-Strikes rule. |
-| KAsteroids | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: Shield, Spread Shot, Tracker Mines. |
-| KFreecell  | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Baker's Game Ruleset, Shuffle Power-Up. |
-| KConnect4  | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Bomb Power-Up, Obstacles. |
-| KHangman   | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, Bomb Power-up, 10 Categories with 20 Words each. |
-| KSimon     | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, 6-Color Grid, Hint Power-Up. |
-| KMatch3    | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: Ice tiles obstacle, Shuffle Power-up, Bomb Power-up. |
-| KWords     | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Magic Wand power-up, 4 new themes, Combo System. |
-| KGo        | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Handicap Stones, Hard AI. |
+| KMines     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KRogue     | Tier 2          | Feature-Expanded       | Needs Improvement | Web upgraded to basic playable version. EXE is a full roguelike. Loop 6 pending. |
+| KSnake     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KTetris    | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KPong      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KSolitaire | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KSpace     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KChess     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KBreakout  | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| K2048      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KSudoku    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KAsteroids | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KFreecell  | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KConnect4  | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KHangman   | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KSimon     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KMatch3    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KWords     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KGo        | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 
 ## Progress Log
+
+**Loop 6**
+
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)
