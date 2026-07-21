@@ -47,6 +47,36 @@ void PlaySoundEffect(int type) {
     CreateThread(NULL, 0, SoundThread, (LPVOID)(INT_PTR)type, 0, NULL);
 }
 
+void SaveState() {
+    FILE* fp = fopen("ktowers_save.dat", "wb");
+    if (fp) {
+        fwrite(&numDiscs, sizeof(int), 1, fp);
+        fwrite(pegCounts, sizeof(int), 3, fp);
+        for (int i = 0; i < 3; i++) {
+            fwrite(pegs[i], sizeof(int), MAX_DISCS, fp);
+        }
+        fwrite(&moves, sizeof(int), 1, fp);
+        fwrite(&won, sizeof(BOOL), 1, fp);
+        fclose(fp);
+    }
+}
+
+BOOL LoadState() {
+    FILE* fp = fopen("ktowers_save.dat", "rb");
+    if (fp) {
+        fread(&numDiscs, sizeof(int), 1, fp);
+        fread(pegCounts, sizeof(int), 3, fp);
+        for (int i = 0; i < 3; i++) {
+            fread(pegs[i], sizeof(int), MAX_DISCS, fp);
+        }
+        fread(&moves, sizeof(int), 1, fp);
+        fread(&won, sizeof(BOOL), 1, fp);
+        fclose(fp);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 void InitGame(HWND hwnd) {
     pegCounts[0] = 0;
     pegCounts[1] = 0;
@@ -57,6 +87,7 @@ void InitGame(HWND hwnd) {
     selectedPeg = -1;
     moves = 0;
     won = FALSE;
+    SaveState();
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -113,6 +144,7 @@ void HandleClick(HWND hwnd, int x, int y) {
             if (!CheckWin(hwnd)) {
                 PlaySoundEffect(2);
             }
+            SaveState();
         } else {
             selectedPeg = -1;
             PlaySoundEffect(3);
@@ -144,7 +176,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      270, 10, 30, 30,
                                      hwnd, (HMENU) 4,
                                      (HINSTANCE) GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
-            InitGame(hwnd);
+            if (LoadState()) {
+                char buf[32];
+                sprintf(buf, "Discs: %d", numDiscs);
+                SetWindowText(hDiffLabel, buf);
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else {
+                InitGame(hwnd);
+            }
             break;
         case WM_COMMAND:
             if (LOWORD(wParam) == 1) {

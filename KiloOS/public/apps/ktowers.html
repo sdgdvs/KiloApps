@@ -115,6 +115,33 @@
 
         const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'];
 
+        function saveState() {
+            localStorage.setItem('ktowers_save', JSON.stringify({
+                numDiscs: numDiscs,
+                pegs: pegs,
+                moves: moves,
+                won: won
+            }));
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('ktowers_save');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    if (state && state.pegs && state.numDiscs) {
+                        numDiscs = state.numDiscs;
+                        pegs = state.pegs;
+                        moves = state.moves;
+                        won = state.won;
+                        document.getElementById('difficulty').value = numDiscs;
+                        return true;
+                    }
+                }
+            } catch (e) {}
+            return false;
+        }
+
         function initGame() {
             pegs = [[], [], []];
             for (let i = numDiscs; i >= 1; i--) {
@@ -126,6 +153,7 @@
             document.getElementById('message').innerText = '';
             document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
             render();
+            saveState();
         }
 
         function handlePegClick(index) {
@@ -155,6 +183,7 @@
                     if (!checkWin()) {
                         playSound('drop');
                     }
+                    saveState();
                 } else {
                     selectedPeg = null;
                     playSound('error');
@@ -205,7 +234,15 @@
             });
         }
 
-        initGame();
+        if (loadState()) {
+            document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
+            render();
+            if (won) {
+                document.getElementById('message').innerText = `You won in ${moves} moves!`;
+            }
+        } else {
+            initGame();
+        }
     </script>
 </body>
 </html>
