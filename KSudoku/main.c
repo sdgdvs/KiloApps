@@ -33,7 +33,7 @@ int elapsedTime = 0;
 int score = 0;
 int awarded[9][9];
 int timerActive = 0;
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill;
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic;
 HFONT hFont, hFontSmall;
 
 typedef struct {
@@ -173,6 +173,22 @@ int dailyStreak = 0;
 int lastDailyDate = 0;
 int isDailyGame = 0;
 
+int isCampaignMode = 0;
+int campaignStage = 0;
+int magicWands = 3;
+int strikes = 0;
+int maxCampaignStage = 0;
+
+void LoadCampaignStats() {
+    FILE *f = fopen("ksudoku_camp.dat", "rb");
+    if(f) { fread(&maxCampaignStage, sizeof(int), 1, f); fclose(f); }
+}
+
+void SaveCampaignStats() {
+    FILE *f = fopen("ksudoku_camp.dat", "wb");
+    if(f) { fwrite(&maxCampaignStage, sizeof(int), 1, f); fclose(f); }
+}
+
 void LoadDailyStats() {
     FILE* f = fopen("ksudoku_daily.dat", "rb");
     if (f) {
@@ -202,6 +218,10 @@ typedef struct {
     int currentDiffIdx;
     int gameActive;
     int isDailyGame;
+    int isCampaignMode;
+    int campaignStage;
+    int magicWands;
+    int strikes;
 } GameState;
 
 int LoadGameState() {
@@ -224,6 +244,10 @@ int LoadGameState() {
         currentDiffIdx = state.currentDiffIdx;
         gameActive = 1;
         isDailyGame = state.isDailyGame;
+        isCampaignMode = state.isCampaignMode;
+        campaignStage = state.campaignStage;
+        magicWands = state.magicWands;
+        strikes = state.strikes;
         timerActive = 1;
         undoCount = 0;
         redoCount = 0;
@@ -256,6 +280,10 @@ void SaveGameState() {
         state.currentDiffIdx = currentDiffIdx;
         state.gameActive = gameActive;
         state.isDailyGame = isDailyGame;
+        state.isCampaignMode = isCampaignMode;
+        state.campaignStage = campaignStage;
+        state.magicWands = magicWands;
+        state.strikes = strikes;
         fwrite(&state, sizeof(GameState), 1, f);
         fclose(f);
     }
@@ -361,9 +389,34 @@ void CheckWin(HWND hwnd) {
     score += timeBonus;
     
     if (gameActive) {
-        gameActive = 0;
-        SaveGameState(); // clear save
-        if (isDailyGame) {
+        if (isCampaignMode) {
+            if (campaignStage > maxCampaignStage) { maxCampaignStage = campaignStage; SaveCampaignStats(); }
+            if (campaignStage < 9) {
+                char msg[256];
+                sprintf(msg, "Stage %d Clear!\nTime: %02d:%02d\nScore: %d\nReady for next stage?", campaignStage+1, elapsedTime/60, elapsedTime%60, score);
+                MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
+                int keepScore = score;
+                int rems[] = {25, 30, 35, 40, 45, 48, 51, 54, 57, 60};
+                campaignStage++;
+                magicWands = 3;
+                strikes = 0;
+                GenerateBoard(rems[campaignStage], 0);
+                score = keepScore;
+                SaveGameState();
+                InvalidateRect(hwnd, NULL, TRUE);
+                return;
+            } else {
+                char msg[256];
+                sprintf(msg, "Campaign Complete!!\nTime: %02d:%02d\nScore: %d", elapsedTime/60, elapsedTime%60, score);
+                MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
+                gameActive = 0;
+                SaveGameState();
+                return;
+            }
+        } else {
+            gameActive = 0;
+            SaveGameState(); // clear save
+            if (isDailyGame) {
             time_t t = time(NULL);
             struct tm* tm_info = localtime(&t);
             int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
@@ -432,6 +485,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             srand((unsigned int)time(NULL));
             LoadStats();
             LoadDailyStats();
+            LoadCampaignStats();
             LoadPrefs();
             if(!LoadGameState()) {
                 currentDiffIdx = 1;
@@ -452,8 +506,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 380, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
             hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 50, 30, hwnd, (HMENU)7, NULL, NULL);
             hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 45, 50, 30, hwnd, (HMENU)8, NULL, NULL);
-            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 45, 70, 30, hwnd, (HMENU)9, NULL, NULL);
-            hBtnAutoFill = CreateWindowA("BUTTON", "Auto-fill", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 45, 65, 30, hwnd, (HMENU)11, NULL, NULL);
+            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 45, 60, 30, hwnd, (HMENU)9, NULL, NULL);
+            hBtnAutoFill = CreateWindowA("BUTTON", "Auto", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 45, 45, 30, hwnd, (HMENU)11, NULL, NULL);
+            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 235, 45, 75, 30, hwnd, (HMENU)13, NULL, NULL);
+            hBtnMagic = CreateWindowA("BUTTON", "Wand", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 45, 55, 30, hwnd, (HMENU)12, NULL, NULL);
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
@@ -479,6 +535,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveStats();
                 undoCount = 0;
                 redoCount = 0;
+                isCampaignMode = 0;
                 GenerateBoard(removal, 0);
                 sel_r = -1; sel_c = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -492,6 +549,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     currentDiffIdx = 1;
                     undoCount = 0;
                     redoCount = 0;
+                    isCampaignMode = 0;
                     GenerateBoard(40, 1);
                     sel_r = -1; sel_c = -1;
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -585,6 +643,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 13) { // Campaign
+                StartCampaign(hwnd);
+            } else if (LOWORD(wParam) == 12) { // Magic Wand
+                if (isCampaignMode && magicWands > 0) {
+                    // Find an empty cell or incorrect cell
+                    int emptyCount = 0;
+                    for(int r=0; r<9; r++)
+                        for(int c=0; c<9; c++)
+                            if(!fixed[r][c] && board[r][c] != solution[r][c]) emptyCount++;
+                    if(emptyCount > 0) {
+                        int target = rand() % emptyCount;
+                        int idx = 0;
+                        for(int r=0; r<9; r++) {
+                            for(int c=0; c<9; c++) {
+                                if(!fixed[r][c] && board[r][c] != solution[r][c]) {
+                                    if(idx == target) {
+                                        PushState();
+                                        board[r][c] = solution[r][c];
+                                        awarded[r][c] = 1;
+                                        error_cells[r][c] = 0;
+                                        magicWands--;
+                                        score += 50;
+                                        CheckWin(hwnd);
+                                        SaveGameState();
+                                        InvalidateRect(hwnd, NULL, TRUE);
+                                        break;
+                                    }
+                                    idx++;
+                                }
+                            }
+                        }
+                    }
+                }
             } else if (LOWORD(wParam) == 9) { // Settings
                 if(!hSettingsWnd) {
                     RECT rc; GetWindowRect(hwnd, &rc);
@@ -634,6 +725,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 MessageBeep(MB_ICONWARNING);
                                 score -= 50;
                                 if (score < 0) score = 0;
+                                if (isCampaignMode) {
+                                    strikes++;
+                                    if (strikes >= 3) {
+                                        MessageBoxA(hwnd, "3 Strikes! Game Over. Restarting stage.", "Game Over", MB_OK);
+                                        StartCampaign(hwnd);
+                                        return 0;
+                                    }
+                                }
                             }
                             board[sel_r][sel_c] = num;
                             error_cells[sel_r][sel_c] = 0;
@@ -701,9 +800,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
-            char info[64];
-            sprintf(info, "Time: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
-            TextOutA(hdc, 40, 50, info, strlen(info));
+            char info[128];
+            if (isCampaignMode) {
+                sprintf(info, "Stage: %d/10   Time: %02d:%02d   Score: %d\nStrikes: %d/3   Wands: %d", campaignStage+1, elapsedTime/60, elapsedTime%60, score, strikes, magicWands);
+                TextOutA(hdc, 40, 50, info, strlen(info));
+                // draw second line for strikes
+                char info2[64];
+                sprintf(info2, "Strikes: %d/3   Wands: %d", strikes, magicWands);
+                HFONT oldFnt = (HFONT)SelectObject(hdc, hFontSmall);
+                TextOutA(hdc, 220, 55, info2, strlen(info2));
+                SelectObject(hdc, oldFnt);
+            } else {
+                sprintf(info, "Time: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
+                TextOutA(hdc, 40, 50, info, strlen(info));
+            }
             
             int start_x = 40, start_y = 80, cell_sz = 40;
             

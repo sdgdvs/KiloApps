@@ -324,6 +324,7 @@
                 <option value="50">Hard</option>
             </select>
             <button id="btn-new">New</button>
+            <button id="btn-campaign">Campaign</button>
             <button id="btn-daily">Daily</button>
             <button id="btn-stats">Stats</button>
             <button id="btn-settings">Settings</button>
@@ -332,6 +333,7 @@
         <div style="display:flex; justify-content:center; gap: 10px; margin-bottom: 20px;">
             <button id="btn-validate">Validate</button>
             <button id="btn-hint">Hint</button>
+            <button id="btn-magic">Wand (3)</button>
             <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
             <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
             <button id="btn-autofill">Auto-fill</button>
@@ -393,6 +395,8 @@
         const btnNotes = document.getElementById('btn-notes');
         const btnValidate = document.getElementById('btn-validate');
         const btnHint = document.getElementById('btn-hint');
+        const btnMagic = document.getElementById('btn-magic');
+        const btnCampaign = document.getElementById('btn-campaign');
         const btnUndo = document.getElementById('btn-undo');
         const btnRedo = document.getElementById('btn-redo');
         const btnAutofill = document.getElementById('btn-autofill');
@@ -425,20 +429,38 @@
             40: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             dailyStreak: 0,
-            lastDailyDate: 0
+            lastDailyDate: 0,
+            maxCampaignStage: 0
         };
         if (stats.dailyStreak === undefined) {
             stats.dailyStreak = 0;
             stats.lastDailyDate = 0;
         }
+        if (stats.maxCampaignStage === undefined) stats.maxCampaignStage = 0;
+        
         let currentDifficulty = 40;
         let gameActive = false;
         let isDailyGame = false;
+        
+        let isCampaignMode = false;
+        let campaignStage = 0;
+        let magicWands = 3;
+        let strikes = 0;
 
         let settings = JSON.parse(localStorage.getItem('ksudoku_prefs')) || {
             theme: 'classic-dark',
             highlightSame: true
         };
+
+        function updateUIState() {
+            if (isCampaignMode) {
+                document.getElementById('timer').textContent = `Stage: ${campaignStage+1}/10 | Strikes: ${strikes}/3 | Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('timer').textContent = `Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+            }
+            document.getElementById('score').textContent = `Score: ${score}`;
+            btnMagic.textContent = `Wand (${magicWands})`;
+        }
 
         function applySettings() {
             document.documentElement.setAttribute('data-theme', settings.theme);
@@ -458,7 +480,8 @@
                 return;
             }
             const state = {
-                board, solution, notes, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack, isDailyGame
+                board, solution, notes, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack, isDailyGame,
+                isCampaignMode, campaignStage, magicWands, strikes
             };
             localStorage.setItem('ksudoku_save', JSON.stringify(state));
         }
@@ -480,6 +503,10 @@
                 redoStack = state.redoStack || [];
                 gameActive = true;
                 isDailyGame = state.isDailyGame || false;
+                isCampaignMode = state.isCampaignMode || false;
+                campaignStage = state.campaignStage || 0;
+                magicWands = state.magicWands !== undefined ? state.magicWands : 3;
+                strikes = state.strikes || 0;
                 
                 let sel = document.getElementById('sel-difficulty');
                 if(sel) sel.value = currentDifficulty;
@@ -487,16 +514,11 @@
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = setInterval(() => {
                     elapsedTime++;
-                    let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-                    let s = (elapsedTime % 60).toString().padStart(2, '0');
-                    document.getElementById('timer').textContent = `Time: ${m}:${s}`;
+                    updateUIState();
                     saveGameState();
                 }, 1000);
                 
-                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-                let s = (elapsedTime % 60).toString().padStart(2, '0');
-                document.getElementById('timer').textContent = `Time: ${m}:${s}`;
-                document.getElementById('score').textContent = `Score: ${score}`;
+                updateUIState();
                 
                 return true;
             } catch(e) {
@@ -668,22 +690,21 @@
             elapsedTime = 0;
             score = 0;
             if (timerInterval) clearInterval(timerInterval);
-            document.getElementById('timer').textContent = `Time: 00:00`;
-            document.getElementById('score').textContent = `Score: 0`;
+            updateUIState();
             timerInterval = setInterval(() => {
                 elapsedTime++;
-                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-                let s = (elapsedTime % 60).toString().padStart(2, '0');
-                document.getElementById('timer').textContent = `Time: ${m}:${s}`;
+                updateUIState();
                 saveGameState();
             }, 1000);
             
             // Remove cells to create puzzle
             let difficultySelect = document.getElementById('sel-difficulty');
             let removal = daily ? 40 : (difficultySelect ? parseInt(difficultySelect.value) : 40);
+            if (isCampaignMode) removal = [25, 30, 35, 40, 45, 48, 51, 54, 57, 60][campaignStage];
+            
             currentDifficulty = daily ? 40 : removal;
             
-            if (!daily) {
+            if (!daily && !isCampaignMode) {
                 stats[currentDifficulty].played++;
                 saveStats();
             }
@@ -830,7 +851,16 @@
                         void cell.offsetWidth; // trigger reflow
                         cell.classList.add('flash-error');
                         score = Math.max(0, score - 50);
-                        document.getElementById('score').textContent = `Score: ${score}`;
+                        
+                        if (isCampaignMode) {
+                            strikes++;
+                            updateUIState();
+                            if (strikes >= 3) {
+                                alert("3 Strikes! Game Over. Restarting stage.");
+                                startCampaignStage(campaignStage);
+                                return;
+                            }
+                        }
                     }
                     board[selectedCell.r][selectedCell.c] = num;
                     
@@ -838,9 +868,9 @@
                         if (!awarded[selectedCell.r][selectedCell.c]) {
                             awarded[selectedCell.r][selectedCell.c] = true;
                             score += 100;
-                            document.getElementById('score').textContent = `Score: ${score}`;
                         }
                     }
+                    updateUIState();
                 }
             }
             renderCell(selectedCell.r, selectedCell.c);
@@ -871,12 +901,42 @@
                 }
                 let timeBonus = Math.max(0, 3000 - elapsedTime * 2);
                 score += timeBonus;
-                document.getElementById('score').textContent = `Score: ${score}`;
+                updateUIState();
                 
                 if (gameActive) {
                     gameActive = false;
                     saveGameState(); // this will clear the save
-                    if (isDailyGame) {
+                    if (isCampaignMode) {
+                        if (campaignStage > stats.maxCampaignStage) {
+                            stats.maxCampaignStage = campaignStage;
+                            saveStats();
+                        }
+                        if (campaignStage < 9) {
+                            setTimeout(() => {
+                                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                                let s = (elapsedTime % 60).toString().padStart(2, '0');
+                                alert(`Stage ${campaignStage+1} Clear!\nTime: ${m}:${s}\nScore: ${score}\nReady for next stage?`);
+                                let keepScore = score;
+                                campaignStage++;
+                                startCampaignStage(campaignStage);
+                                score = keepScore;
+                                saveGameState();
+                                updateUIState();
+                                boardEl.classList.remove('board-win');
+                            }, 500);
+                            boardEl.classList.add('board-win');
+                            return;
+                        } else {
+                            setTimeout(() => {
+                                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+                                let s = (elapsedTime % 60).toString().padStart(2, '0');
+                                alert(`Campaign Complete!!\nTime: ${m}:${s}\nScore: ${score}`);
+                                boardEl.classList.remove('board-win');
+                            }, 500);
+                            boardEl.classList.add('board-win');
+                            return;
+                        }
+                    } else if (isDailyGame) {
                         let d = new Date();
                         let todayStr = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
                         if (stats.lastDailyDate !== todayStr) {
@@ -950,11 +1010,30 @@
         });
         
         btnNew.addEventListener('click', () => {
+            isCampaignMode = false;
             generateBoard(false);
             initUI();
             selectedCell = null;
             updateHighlights();
         });
+        
+        function startCampaignStage(stage) {
+            isCampaignMode = true;
+            campaignStage = Math.min(9, stage);
+            magicWands = 3;
+            strikes = 0;
+            generateBoard(false);
+            initUI();
+            selectedCell = null;
+            updateHighlights();
+            updateUIState();
+        }
+
+        if (btnCampaign) {
+            btnCampaign.addEventListener('click', () => {
+                startCampaignStage(stats.maxCampaignStage > 9 ? 9 : stats.maxCampaignStage);
+            });
+        }
         
         const btnDaily = document.getElementById('btn-daily');
         if (btnDaily) {
@@ -1013,10 +1092,40 @@
             }
             if (errorCount > 0) {
                 score = Math.max(0, score - errorCount * 20);
-                document.getElementById('score').textContent = `Score: ${score}`;
+                updateUIState();
             }
             saveGameState();
         });
+
+        if (btnMagic) {
+            btnMagic.addEventListener('click', () => {
+                if (isCampaignMode && magicWands > 0) {
+                    let emptyOrWrong = [];
+                    for(let r=0; r<9; r++) {
+                        for(let c=0; c<9; c++) {
+                            let cell = cells[r * 9 + c];
+                            if (!cell.classList.contains('fixed') && board[r][c] !== solution[r][c]) {
+                                emptyOrWrong.push({r, c});
+                            }
+                        }
+                    }
+                    if(emptyOrWrong.length > 0) {
+                        let target = emptyOrWrong[Math.floor(Math.random() * emptyOrWrong.length)];
+                        pushState();
+                        board[target.r][target.c] = solution[target.r][target.c];
+                        awarded[target.r][target.c] = true;
+                        magicWands--;
+                        score += 50;
+                        renderCell(target.r, target.c);
+                        cells[target.r * 9 + target.c].classList.remove('error', 'flash-error');
+                        updateHighlights();
+                        updateUIState();
+                        saveGameState();
+                        checkWin();
+                    }
+                }
+            });
+        }
 
         btnHint.addEventListener('click', () => {
             if (!selectedCell) return;
@@ -1028,7 +1137,6 @@
             if (board[r][c] !== solution[r][c]) {
                 pushState();
                 score = Math.max(0, score - 150);
-                document.getElementById('score').textContent = `Score: ${score}`;
                 
                 board[r][c] = solution[r][c];
                 awarded[r][c] = true; 
@@ -1036,6 +1144,7 @@
                 renderCell(r, c);
                 cell.classList.remove('error', 'flash-error');
                 updateHighlights();
+                updateUIState();
                 saveGameState();
                 checkWin();
             }
