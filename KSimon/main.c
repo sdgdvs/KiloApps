@@ -7,6 +7,8 @@
 #define BTN_RED    1
 #define BTN_YELLOW 2
 #define BTN_BLUE   3
+#define BTN_PURPLE 4
+#define BTN_CYAN   5
 
 #define TIMER_SEQUENCE 1
 #define TIMER_FLASH    2
@@ -16,8 +18,9 @@
 #define MODE_REVERSE 1
 #define MODE_SPEED 2
 #define MODE_ENDLESS 3
+#define MODE_CAMPAIGN 4
 
-int btn_freqs[4] = {415, 329, 261, 196};
+int btn_freqs[6] = {415, 329, 261, 196, 493, 146};
 
 DWORD WINAPI PlayBeep(LPVOID lpParam) {
     INT_PTR param = (INT_PTR)lpParam;
@@ -48,24 +51,30 @@ int current_flash_index = 0;
 int flash_btn = -1;
 int game_over_flash = 0;
 int game_over_flash_count = 0;
+int hints_remaining = 3;
+int current_stage = 1;
 
-RECT btn_rects[4];
-COLORREF btn_colors[4] = {
+RECT btn_rects[6];
+COLORREF btn_colors[6] = {
     RGB(0, 170, 0),    // Green
     RGB(170, 0, 0),    // Red
     RGB(170, 170, 0),  // Yellow
-    RGB(0, 0, 170)     // Blue
+    RGB(0, 0, 170),    // Blue
+    RGB(170, 0, 170),  // Purple
+    RGB(0, 170, 170)   // Cyan
 };
-COLORREF flash_colors[4] = {
+COLORREF flash_colors[6] = {
     RGB(0, 255, 0),
     RGB(255, 0, 0),
     RGB(255, 255, 0),
-    RGB(0, 0, 255)
+    RGB(0, 0, 255),
+    RGB(255, 0, 255),
+    RGB(0, 255, 255)
 };
 
 char status_text[128] = "Press Space to Start";
 int score = 0;
-int high_scores[4] = {0, 0, 0, 0};
+int high_scores[5] = {0, 0, 0, 0, 0};
 int stat_games_played = 0;
 int stat_longest_streak = 0;
 int stat_best_time = 0;
@@ -76,6 +85,7 @@ void LoadHighScores() {
     high_scores[MODE_REVERSE] = GetPrivateProfileInt("HighScores", "Reverse", 0, ".\\ksimon.ini");
     high_scores[MODE_SPEED]   = GetPrivateProfileInt("HighScores", "Speed", 0, ".\\ksimon.ini");
     high_scores[MODE_ENDLESS] = GetPrivateProfileInt("HighScores", "Endless", 0, ".\\ksimon.ini");
+    high_scores[MODE_CAMPAIGN] = GetPrivateProfileInt("HighScores", "Campaign", 0, ".\\ksimon.ini");
     
     stat_games_played = GetPrivateProfileInt("Stats", "GamesPlayed", 0, ".\\ksimon.ini");
     stat_longest_streak = GetPrivateProfileInt("Stats", "LongestStreak", 0, ".\\ksimon.ini");
@@ -89,6 +99,7 @@ void SaveHighScore(int mode, int s) {
     else if (mode == MODE_REVERSE) WritePrivateProfileString("HighScores", "Reverse", str, ".\\ksimon.ini");
     else if (mode == MODE_SPEED) WritePrivateProfileString("HighScores", "Speed", str, ".\\ksimon.ini");
     else if (mode == MODE_ENDLESS) WritePrivateProfileString("HighScores", "Endless", str, ".\\ksimon.ini");
+    else if (mode == MODE_CAMPAIGN) WritePrivateProfileString("HighScores", "Campaign", str, ".\\ksimon.ini");
 }
 
 void SaveStats() {
@@ -116,6 +127,10 @@ void SaveGameState() {
     WritePrivateProfileString("GameState", "ElapsedTime", temp, ".\\ksimon.ini");
     sprintf(temp, "%d", sequence_length);
     WritePrivateProfileString("GameState", "Length", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", hints_remaining);
+    WritePrivateProfileString("GameState", "Hints", temp, ".\\ksimon.ini");
+    sprintf(temp, "%d", current_stage);
+    WritePrivateProfileString("GameState", "Stage", temp, ".\\ksimon.ini");
     strcpy(status_text, "Game Saved!");
     InvalidateRect(hwndMain, NULL, TRUE);
 }
@@ -131,6 +146,8 @@ void LoadGameState() {
     current_mode = GetPrivateProfileInt("GameState", "Mode", MODE_CLASSIC, ".\\ksimon.ini");
     int elapsed = GetPrivateProfileInt("GameState", "ElapsedTime", 0, ".\\ksimon.ini");
     start_time = time(NULL) - elapsed;
+    hints_remaining = GetPrivateProfileInt("GameState", "Hints", 3, ".\\ksimon.ini");
+    current_stage = GetPrivateProfileInt("GameState", "Stage", 1, ".\\ksimon.ini");
     
     char str[1024] = {0};
     GetPrivateProfileString("GameState", "Sequence", "", str, sizeof(str), ".\\ksimon.ini");
@@ -165,7 +182,7 @@ void ResetStats() {
 }
 
 void DrawBoard(HDC hdc) {
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 6; i++) {
         RECT r = btn_rects[i];
         if (flash_btn == i) {
             InflateRect(&r, 4, 4);
@@ -200,6 +217,16 @@ void DrawBoard(HDC hdc) {
     char stats_text[128];
     sprintf(stats_text, "Games: %d | Streak: %d | Time: %ds", stat_games_played, stat_longest_streak, stat_best_time);
     TextOutA(hdc, 10, 70, stats_text, strlen(stats_text));
+
+    char hint_text[32];
+    sprintf(hint_text, "Hints (H): %d", hints_remaining);
+    TextOutA(hdc, 10, 90, hint_text, strlen(hint_text));
+
+    if (current_mode == MODE_CAMPAIGN) {
+        char stage_text[32];
+        sprintf(stage_text, "Campaign Stage: %d/10", current_stage);
+        TextOutA(hdc, 10, 110, stage_text, strlen(stage_text));
+    }
 }
 
 void StartGame() {
@@ -208,6 +235,8 @@ void StartGame() {
     EnableWindow(hwndSaveBtn, FALSE);
     sequence_length = 0;
     score = 0;
+    hints_remaining = 3;
+    current_stage = 1;
     is_playing_sequence = 1;
     start_time = time(NULL);
     strcpy(status_text, "Get Ready...");
@@ -217,7 +246,14 @@ void StartGame() {
 
 void NextRound() {
     player_step = 0;
-    sequence[sequence_length++] = rand() % 4;
+    int num_colors = 4;
+    if (current_mode == MODE_CAMPAIGN) {
+        num_colors = 4 + (current_stage / 4);
+        if (num_colors > 6) num_colors = 6;
+    } else {
+        num_colors = 6; // Other modes use all 6 colors
+    }
+    sequence[sequence_length++] = rand() % num_colors;
     score = sequence_length - 1;
     is_playing_sequence = 1;
     current_flash_index = (current_mode == MODE_ENDLESS && sequence_length > 0) ? sequence_length - 1 : 0;
@@ -270,7 +306,38 @@ void HandleClick(int btn_id) {
 
     player_step++;
     if (player_step == sequence_length) {
-        strcpy(status_text, "Good! Get ready...");
+        if (current_mode == MODE_CAMPAIGN) {
+            int target = 4 + current_stage * 2;
+            if (sequence_length >= target) {
+                current_stage++;
+                if (current_stage > 10) {
+                    strcpy(status_text, "Campaign Complete! You Win!");
+                    is_playing_sequence = 1;
+                    score += 50; // Bonus for winning
+                    if (score > high_scores[current_mode]) {
+                        high_scores[current_mode] = score;
+                        SaveHighScore(current_mode, score);
+                    }
+                    stat_games_played++;
+                    if (score > stat_longest_streak) stat_longest_streak = score;
+                    int elapsed = (int)(time(NULL) - start_time);
+                    if (elapsed > stat_best_time) stat_best_time = elapsed;
+                    SaveStats();
+                    sequence_length = 0;
+                    EnableWindow(hwndModeBox, TRUE);
+                    InvalidateRect(hwndMain, NULL, TRUE);
+                    return;
+                } else {
+                    sprintf(status_text, "Stage %d Cleared! +1 Hint", current_stage - 1);
+                    hints_remaining++;
+                    sequence_length = 0;
+                }
+            } else {
+                strcpy(status_text, "Good! Get ready...");
+            }
+        } else {
+            strcpy(status_text, "Good! Get ready...");
+        }
         is_playing_sequence = 1;
         InvalidateRect(hwndMain, NULL, TRUE);
         SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
@@ -286,17 +353,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hwndModeBox = CreateWindowEx(
                 0, "COMBOBOX", "", 
                 CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_VSCROLL, 
-                10, 90, 150, 100, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                10, 130, 150, 150, hwnd, (HMENU)1001, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Classic Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Reverse Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Speed Mode");
             SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Endless Mode");
+            SendMessage(hwndModeBox, CB_ADDSTRING, 0, (LPARAM)"Campaign Mode");
             SendMessage(hwndModeBox, CB_SETCURSEL, 0, 0);
 
-            hwndSaveBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 90, 60, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndLoadBtn = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 240, 90, 60, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndResetBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 90, 60, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hwndHelpBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 120, 60, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndSaveBtn = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 130, 60, 25, hwnd, (HMENU)1002, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndLoadBtn = CreateWindowEx(0, "BUTTON", "Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 240, 130, 60, 25, hwnd, (HMENU)1003, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndResetBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 130, 60, 25, hwnd, (HMENU)1004, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hwndHelpBtn = CreateWindowEx(0, "BUTTON", "Help", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 160, 60, 25, hwnd, (HMENU)1005, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             EnableWindow(hwndSaveBtn, FALSE);
             break;
         case WM_COMMAND:
@@ -315,13 +383,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                  "Observe the pattern and repeat it back. The sequence gets longer each round.\n\n"
                                  "Controls:\n"
                                  "Mouse: Click buttons.\n"
-                                 "Keyboard: Q/Up (Green), W/Right (Red), A/Down (Yellow), S/Left (Blue).\n"
-                                 "Space: Start game.\n\n"
+                                 "Keyboard: Q, W, E (Top Row), A, S, D (Bottom Row).\n"
+                                 "Space: Start game.\n"
+                                 "H: Use Hint (Replays sequence).\n\n"
                                  "Modes:\n"
-                                 "- Classic: Normal gameplay.\n"
+                                 "- Classic: Normal gameplay (6 colors).\n"
                                  "- Reverse: Repeat sequence backwards.\n"
                                  "- Speed: Faster flashing.\n"
-                                 "- Endless: Only the new color flashes each round.", "Help / How-to-Play", MB_OK | MB_ICONINFORMATION);
+                                 "- Endless: Only the new color flashes each round.\n"
+                                 "- Campaign: 10 stages, unlocks 5th/6th color later, targets specific sequence lengths.", "Help / How-to-Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         case WM_SIZE: {
@@ -329,11 +399,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int height = HIWORD(lParam);
             int cx = width / 2;
             int cy = height / 2;
-            int size = 100;
-            SetRect(&btn_rects[0], cx - size - 5, cy - size - 5, cx - 5, cy - 5);
-            SetRect(&btn_rects[1], cx + 5, cy - size - 5, cx + size + 5, cy - 5);
-            SetRect(&btn_rects[2], cx - size - 5, cy + 5, cx - 5, cy + size + 5);
-            SetRect(&btn_rects[3], cx + 5, cy + 5, cx + size + 5, cy + size + 5);
+            int size = 80;
+            int spacing = 5;
+            
+            int c1 = cx - size - size/2 - spacing;
+            int c2 = cx - size/2;
+            int c3 = cx + size/2 + spacing;
+            
+            SetRect(&btn_rects[0], c1, cy - size - spacing, c1 + size, cy - spacing);
+            SetRect(&btn_rects[1], c2, cy - size - spacing, c2 + size, cy - spacing);
+            SetRect(&btn_rects[2], c3, cy - size - spacing, c3 + size, cy - spacing);
+            
+            SetRect(&btn_rects[3], c1, cy + spacing, c1 + size, cy + size + spacing);
+            SetRect(&btn_rects[4], c2, cy + spacing, c2 + size, cy + size + spacing);
+            SetRect(&btn_rects[5], c3, cy + spacing, c3 + size, cy + size + spacing);
             break;
         }
         case WM_LBUTTONDOWN: {
@@ -341,7 +420,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             POINT pt;
             pt.x = LOWORD(lParam);
             pt.y = HIWORD(lParam);
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 6; i++) {
                 if (PtInRect(&btn_rects[i], pt)) {
                     HandleClick(i);
                     break;
@@ -352,15 +431,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_KEYDOWN:
             if (wParam == VK_SPACE && sequence_length == 0) {
                 StartGame();
+            } else if (wParam == 'H') {
+                if (!is_playing_sequence && sequence_length > 0 && hints_remaining > 0) {
+                    hints_remaining--;
+                    is_playing_sequence = 1;
+                    current_flash_index = 0;
+                    strcpy(status_text, "Hint: Watch...");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    SetTimer(hwndMain, TIMER_SEQUENCE, 1000, NULL);
+                }
             } else if (!is_playing_sequence && sequence_length > 0) {
-                if (wParam == 'Q' || wParam == VK_UP) {
+                if (wParam == 'Q') {
                     HandleClick(0);
-                } else if (wParam == 'W' || wParam == VK_RIGHT) {
+                } else if (wParam == 'W') {
                     HandleClick(1);
-                } else if (wParam == 'A' || wParam == VK_DOWN) {
+                } else if (wParam == 'E') {
                     HandleClick(2);
-                } else if (wParam == 'S' || wParam == VK_LEFT) {
+                } else if (wParam == 'A') {
                     HandleClick(3);
+                } else if (wParam == 'S') {
+                    HandleClick(4);
+                } else if (wParam == 'D') {
+                    HandleClick(5);
                 }
             }
             break;
@@ -448,7 +540,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     HWND hwnd = CreateWindowEx(
         0, CLASS_NAME, "KSimon",
         WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-        400, 450, NULL, NULL, hInstance, NULL
+        480, 500, NULL, NULL, hInstance, NULL
     );
 
     if (hwnd == NULL) return 0;

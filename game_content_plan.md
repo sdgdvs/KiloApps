@@ -197,7 +197,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KFreecell  | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Baker's Game Ruleset, Shuffle Power-Up. |
 | KConnect4  | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, Bomb Power-Up, Obstacles. |
 | KHangman   | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign, Bomb Power-up, 10 Categories with 20 Words each. |
-| KSimon     | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
+| KSimon     | Tier 1          | Game Content Expander  | Loop 5 Completed | Full parity. Loop 5 completed: 10-Stage Campaign Mode, 6-Color Grid, Hint Power-Up. |
 | KMatch3    | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
 | KWords     | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent. Loop 5 pending. |
 | KGo        | Tier 1          | Creator-Created        | Needs Improvement | Created by Creator agent (in progress). Loop 5 pending. |
@@ -278,3 +278,4 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KFreecell (Added 10-Stage Campaign Mode, Baker's Game Ruleset, and Shuffle Power-Up to both EXE and HTML)
 - [x] KConnect4 (Added 10-Stage Campaign Mode, Bomb Power-Up, and Obstacles to both EXE and HTML)
 - [x] KHangman (Expanded to 10 Categories x 20 Words, added 10-Stage Campaign Mode and Bomb Power-Up to both EXE and HTML)
+- [x] KSimon (Expanded to 6-color grid, added 10-Stage Campaign Mode, and Hint power-up to both EXE and HTML)

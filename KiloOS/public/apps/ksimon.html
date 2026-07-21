@@ -20,11 +20,11 @@
   }
   .simon-board {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 10px;
     margin: 20px auto;
-    width: 300px;
-    height: 300px;
+    width: 330px;
+    height: 220px;
   }
   .simon-btn {
     border: none;
@@ -52,6 +52,10 @@
   #btn-2.active { box-shadow: 0 0 20px #ffff00; }
   #btn-3 { background-color: #0000aa; } /* blue */
   #btn-3.active { box-shadow: 0 0 20px #0000ff; }
+  #btn-4 { background-color: #aa00aa; } /* purple */
+  #btn-4.active { box-shadow: 0 0 20px #ff00ff; }
+  #btn-5 { background-color: #00aaaa; } /* cyan */
+  #btn-5.active { box-shadow: 0 0 20px #00ffff; }
   
   body.game-over-flash {
     animation: flashRed 0.5s;
@@ -107,6 +111,11 @@
     font-weight: bold;
     height: 20px;
   }
+  #hints-display {
+    color: #ffd700;
+    margin-top: 5px;
+    font-weight: bold;
+  }
   #help-modal {
     display: none;
     position: fixed;
@@ -135,11 +144,15 @@
 <div id="game-container">
   <h1>KSimon</h1>
   <div>Score: <span id="score">0</span> | High Score (<span id="high-score-mode">Classic</span>): <span id="high-score">0</span></div>
+  <div id="campaign-stage" style="display:none; color:#00ffcc; margin-top:5px; font-weight:bold;">Campaign Stage: <span id="stage-val">1</span>/10</div>
+  <div id="hints-display">Hints (H): <span id="hints-val">3</span></div>
   <div class="simon-board">
     <button id="btn-0" class="simon-btn"></button>
     <button id="btn-1" class="simon-btn"></button>
     <button id="btn-2" class="simon-btn"></button>
     <button id="btn-3" class="simon-btn"></button>
+    <button id="btn-4" class="simon-btn"></button>
+    <button id="btn-5" class="simon-btn"></button>
   </div>
   <div id="controls">
     <select id="mode-select">
@@ -147,9 +160,11 @@
       <option value="reverse">Mode: Reverse</option>
       <option value="speed">Mode: Speed</option>
       <option value="endless">Mode: Endless</option>
+      <option value="campaign">Mode: Campaign</option>
     </select>
     <button id="start-btn">Start Game</button>
     <div style="margin-top: 10px;">
+      <button id="hint-btn" class="action-btn" disabled>Use Hint (H)</button>
       <button id="save-btn" class="action-btn" disabled>Save Game</button>
       <button id="load-btn" class="action-btn">Load Game</button>
       <button id="reset-btn" class="action-btn">Reset Stats</button>
@@ -170,14 +185,16 @@
     <p><strong>Controls:</strong></p>
     <ul>
       <li>Mouse: Click the colored buttons.</li>
-      <li>Keyboard: Q/Up (Green), W/Right (Red), A/Down (Yellow), S/Left (Blue).</li>
+      <li>Keyboard: Q, W, E (Top Row), A, S, D (Bottom Row).</li>
+      <li>H: Use a Hint to replay the sequence.</li>
     </ul>
     <p><strong>Modes:</strong></p>
     <ul>
-      <li><strong>Classic:</strong> Normal gameplay.</li>
+      <li><strong>Classic:</strong> Normal gameplay (6 colors).</li>
       <li><strong>Reverse:</strong> Repeat the sequence in reverse order.</li>
       <li><strong>Speed:</strong> Flashing gets much faster over time.</li>
       <li><strong>Endless:</strong> Only the newest color flashes each round.</li>
+      <li><strong>Campaign:</strong> 10 stages. Later stages unlock more colors and require longer sequences.</li>
     </ul>
   </div>
 </div>
@@ -187,7 +204,9 @@
     document.getElementById('btn-0'),
     document.getElementById('btn-1'),
     document.getElementById('btn-2'),
-    document.getElementById('btn-3')
+    document.getElementById('btn-3'),
+    document.getElementById('btn-4'),
+    document.getElementById('btn-5')
   ];
   const startBtn = document.getElementById('start-btn');
   const modeSelect = document.getElementById('mode-select');
@@ -199,10 +218,15 @@
   const statGamesDisplay = document.getElementById('stat-games');
   const statStreakDisplay = document.getElementById('stat-streak');
   const statTimeDisplay = document.getElementById('stat-time');
+  const hintsVal = document.getElementById('hints-val');
+  const campaignStage = document.getElementById('campaign-stage');
+  const stageVal = document.getElementById('stage-val');
+
   const saveBtn = document.getElementById('save-btn');
   const loadBtn = document.getElementById('load-btn');
   const resetBtn = document.getElementById('reset-btn');
   const helpBtn = document.getElementById('help-btn');
+  const hintBtn = document.getElementById('hint-btn');
   const helpModal = document.getElementById('help-modal');
   const closeHelpBtn = document.getElementById('close-help-btn');
 
@@ -227,9 +251,11 @@
   let playerSequence = [];
   let isPlayingSequence = false;
   let currentMode = 'classic';
+  let currentStage = 1;
+  let hintsRemaining = 3;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const freqs = [415, 329, 261, 196]; // Green, Red, Yellow, Blue
+  const freqs = [415, 329, 261, 196, 493, 146];
   const freqWrong = 100;
 
   function playTone(freq, duration) {
@@ -258,6 +284,12 @@
   function updateHighScoreDisplay() {
     highScoreModeDisplay.innerText = modeSelect.options[modeSelect.selectedIndex].text.replace('Mode: ', '');
     highScoreDisplay.innerText = getHighScore(modeSelect.value);
+    
+    if (modeSelect.value === 'campaign') {
+        campaignStage.style.display = 'block';
+    } else {
+        campaignStage.style.display = 'none';
+    }
   }
 
   modeSelect.addEventListener('change', updateHighScoreDisplay);
@@ -271,11 +303,24 @@
   helpBtn.addEventListener('click', () => { helpModal.style.display = 'flex'; });
   closeHelpBtn.addEventListener('click', () => { helpModal.style.display = 'none'; });
 
+  function useHint() {
+      if (!isPlayingSequence && sequence.length > 0 && hintsRemaining > 0) {
+          hintsRemaining--;
+          updateDisplays();
+          statusDisplay.innerText = "Hint: Watch...";
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          playSequence();
+      }
+  }
+  hintBtn.addEventListener('click', useHint);
+
   function saveGameState() {
     if (sequence.length === 0 || isPlayingSequence) return;
     const gameState = {
       sequence: sequence,
       currentMode: currentMode,
+      currentStage: currentStage,
+      hintsRemaining: hintsRemaining,
       elapsedTime: Date.now() - startTime
     };
     localStorage.setItem('KSimon_GameState', JSON.stringify(gameState));
@@ -291,6 +336,8 @@
     const gameState = JSON.parse(saved);
     sequence = gameState.sequence;
     currentMode = gameState.currentMode;
+    currentStage = gameState.currentStage || 1;
+    hintsRemaining = gameState.hintsRemaining !== undefined ? gameState.hintsRemaining : 3;
     startTime = Date.now() - gameState.elapsedTime;
     
     modeSelect.value = currentMode;
@@ -299,6 +346,7 @@
     saveBtn.disabled = true;
     
     scoreDisplay.innerText = (sequence.length - 1).toString();
+    updateDisplays();
     updateHighScoreDisplay();
     
     playerSequence = [];
@@ -326,19 +374,31 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'h') {
+        useHint();
+        return;
+    }
     if (isPlayingSequence || sequence.length === 0) return;
     let index = -1;
     switch(e.key.toLowerCase()) {
-      case 'q': case 'arrowup': index = 0; break;
-      case 'w': case 'arrowright': index = 1; break;
-      case 'a': case 'arrowdown': index = 2; break;
-      case 's': case 'arrowleft': index = 3; break;
+      case 'q': index = 0; break;
+      case 'w': index = 1; break;
+      case 'e': index = 2; break;
+      case 'a': index = 3; break;
+      case 's': index = 4; break;
+      case 'd': index = 5; break;
     }
     if (index !== -1) {
       e.preventDefault();
       handlePlayerInput(index);
     }
   });
+
+  function updateDisplays() {
+      hintsVal.innerText = hintsRemaining;
+      stageVal.innerText = currentStage;
+      hintBtn.disabled = hintsRemaining <= 0 || isPlayingSequence;
+  }
 
   function startGame() {
     if (audioCtx.state === 'suspended') {
@@ -348,15 +408,26 @@
     currentMode = modeSelect.value;
     modeSelect.disabled = true;
     sequence = [];
+    currentStage = 1;
+    hintsRemaining = 3;
     scoreDisplay.innerText = "0";
     statusDisplay.innerText = "Get Ready...";
     startBtn.disabled = true;
+    updateDisplays();
+    updateHighScoreDisplay();
     setTimeout(nextRound, 1000);
   }
 
   function nextRound() {
     playerSequence = [];
-    sequence.push(Math.floor(Math.random() * 4));
+    
+    let numColors = 6;
+    if (currentMode === 'campaign') {
+        numColors = 4 + Math.floor(currentStage / 4);
+        if (numColors > 6) numColors = 6;
+    }
+    
+    sequence.push(Math.floor(Math.random() * numColors));
     scoreDisplay.innerText = (sequence.length - 1).toString();
     playSequence();
   }
@@ -364,6 +435,7 @@
   function playSequence() {
     isPlayingSequence = true;
     saveBtn.disabled = true;
+    updateDisplays();
     statusDisplay.innerText = "Watch...";
     let i = currentMode === 'endless' ? Math.max(0, sequence.length - 1) : 0;
     
@@ -376,6 +448,7 @@
         isPlayingSequence = false;
         statusDisplay.innerText = currentMode === 'reverse' ? "Your Turn (Reverse)!" : "Your Turn!";
         saveBtn.disabled = false;
+        updateDisplays();
         return;
       }
       const index = sequence[i];
@@ -436,14 +509,54 @@
       startBtn.disabled = false;
       modeSelect.disabled = false;
       saveBtn.disabled = true;
+      hintBtn.disabled = true;
       return;
     }
 
     playTone(freqs[index], 200);
 
     if (playerSequence.length === sequence.length) {
-      statusDisplay.innerText = "Good! Get ready...";
+      
+      if (currentMode === 'campaign') {
+          let target = 4 + currentStage * 2;
+          if (sequence.length >= target) {
+              currentStage++;
+              if (currentStage > 10) {
+                  statusDisplay.innerText = "Campaign Complete! You Win!";
+                  isPlayingSequence = true;
+                  let finalScore = sequence.length - 1 + 50; // Bonus
+                  if (finalScore > getHighScore(currentMode)) {
+                      setHighScore(currentMode, finalScore);
+                      updateHighScoreDisplay();
+                  }
+                  statsGamesPlayed++;
+                  statsLongestStreak = Math.max(statsLongestStreak, finalScore);
+                  let gameTime = Math.floor((Date.now() - startTime) / 1000);
+                  statsBestTime = Math.max(statsBestTime, gameTime);
+                  setStat('gamesPlayed', statsGamesPlayed);
+                  setStat('longestStreak', statsLongestStreak);
+                  setStat('bestTime', statsBestTime);
+                  updateStatsDisplay();
+                  sequence = [];
+                  startBtn.disabled = false;
+                  modeSelect.disabled = false;
+                  saveBtn.disabled = true;
+                  hintBtn.disabled = true;
+                  return;
+              } else {
+                  statusDisplay.innerText = "Stage " + (currentStage - 1) + " Cleared! +1 Hint";
+                  hintsRemaining++;
+                  sequence = [];
+              }
+          } else {
+              statusDisplay.innerText = "Good! Get ready...";
+          }
+      } else {
+          statusDisplay.innerText = "Good! Get ready...";
+      }
+      
       isPlayingSequence = true;
+      updateDisplays();
       setTimeout(nextRound, 1000);
     }
   }
