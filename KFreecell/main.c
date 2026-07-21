@@ -22,8 +22,11 @@ typedef struct {
 } Card;
 
 Card deck[52];
-Card freeCells[4];
-int freeCellsOccupied[4];
+#define MAX_FREE_CELLS 5
+Card freeCells[MAX_FREE_CELLS];
+int freeCellsOccupied[MAX_FREE_CELLS];
+int numFreeCells = 4;
+int buildRule = 0; // 0=Alt color, 1=Same suit
 int found[4]; // 0-13
 
 Card tab[8][52];
@@ -41,6 +44,9 @@ int statsPlayed = 0;
 int statsWins = 0;
 int statsStreak = 0;
 int statsBestStreak = 0;
+int campaignStage = 1;
+int maxCampaignStage = 1;
+int powerupsShuffle = 1;
 int settingsCardBack = 0;
 
 int moves = 0;
@@ -128,8 +134,8 @@ int GetCardY(int type, int idx, int cIdx, RECT clientRect) {
 }
 
 typedef struct {
-    Card freeCells[4];
-    int freeCellsOccupied[4];
+    Card freeCells[MAX_FREE_CELLS];
+    int freeCellsOccupied[MAX_FREE_CELLS];
     int found[4];
     Card tab[8][52];
     int tabCount[8];
@@ -148,9 +154,11 @@ void PushUndo() {
         }
         undoCount--;
     }
-    for(int i=0; i<4; i++) {
+    for(int i=0; i<MAX_FREE_CELLS; i++) {
         undoStack[undoCount].freeCells[i] = freeCells[i];
         undoStack[undoCount].freeCellsOccupied[i] = freeCellsOccupied[i];
+    }
+    for(int i=0; i<4; i++) {
         undoStack[undoCount].found[i] = found[i];
     }
     for(int i=0; i<8; i++) {
@@ -186,8 +194,8 @@ void PlaySoundEffect(int type) {
 void ShowStats(HWND hwnd) {
     WCHAR msg[256];
     int pct = statsPlayed > 0 ? (statsWins * 100) / statsPlayed : 0;
-    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d",
-              statsPlayed, statsWins, pct, statsStreak, statsBestStreak);
+    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d\nCampaign Progress: Stage %d / 10",
+              statsPlayed, statsWins, pct, statsStreak, statsBestStreak, maxCampaignStage);
     MessageBoxW(hwnd, msg, L"Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -206,16 +214,21 @@ void ShowHelp(HWND hwnd) {
         L"- Key bindings: [N]ew Game, [Z]Undo, [S]tats, [C]hange Card Back, [M]ode Toggle, [+]Next Seed, [-]Prev Seed, [F5]Save, [F9]Load, [H]elp.\n\n"
         L"Modes:\n"
         L"- Random Deal: A completely shuffled deck.\n"
-        L"- Numbered Deal: Deals based on a specific seed number (use +/- to change).";
+        L"- Numbered Deal: Deals based on a specific seed number (use +/- to change).\n"
+        L"- Campaign: 10 stages of increasing difficulty (fewer free cells, Baker's Game rules).\n\n"
+        L"Power-ups:\n"
+        L"- [P] Shuffle: Shuffles the tableau cards in place (1 per game).";
     MessageBoxW(hwnd, msg, L"Help", MB_OK | MB_ICONINFORMATION);
 }
 
 void UndoMove(HWND hwnd) {
     if(undoCount > 0) {
         undoCount--;
-        for(int i=0; i<4; i++) {
+        for(int i=0; i<MAX_FREE_CELLS; i++) {
             freeCells[i] = undoStack[undoCount].freeCells[i];
             freeCellsOccupied[i] = undoStack[undoCount].freeCellsOccupied[i];
+        }
+        for(int i=0; i<4; i++) {
             found[i] = undoStack[undoCount].found[i];
         }
         for(int i=0; i<8; i++) {
@@ -252,6 +265,9 @@ void SaveGame(HWND hwnd) {
         fwrite(&moves, sizeof(moves), 1, f);
         fwrite(&timeElapsed, sizeof(timeElapsed), 1, f);
         if(undoCount > 0) fwrite(undoMovesStack, sizeof(int), undoCount, f);
+        fwrite(&campaignStage, sizeof(campaignStage), 1, f);
+        fwrite(&maxCampaignStage, sizeof(maxCampaignStage), 1, f);
+        fwrite(&powerupsShuffle, sizeof(powerupsShuffle), 1, f);
         fclose(f);
         MessageBoxW(hwnd, L"Game Saved", L"Save", MB_OK | MB_ICONINFORMATION);
     }
@@ -281,6 +297,9 @@ void LoadGame(HWND hwnd) {
                 for(int i=0; i<undoCount; i++) undoMovesStack[i] = 0;
             }
         }
+        if(fread(&campaignStage, sizeof(campaignStage), 1, f) != 1) campaignStage = 1;
+        if(fread(&maxCampaignStage, sizeof(maxCampaignStage), 1, f) != 1) maxCampaignStage = 1;
+        if(fread(&powerupsShuffle, sizeof(powerupsShuffle), 1, f) != 1) powerupsShuffle = 1;
         fclose(f);
         lastTimeTick = GetTickCount();
         selType = -1;
@@ -308,8 +327,28 @@ void InitGame() {
     selType = -1;
     undoCount = 0;
     ClearAnims();
-    for(int i=0; i<4; i++) {
+    
+    if (gameMode == 2) {
+        if (campaignStage == 1) { numFreeCells = 5; buildRule = 0; }
+        else if (campaignStage == 2) { numFreeCells = 5; buildRule = 1; }
+        else if (campaignStage == 3) { numFreeCells = 4; buildRule = 0; }
+        else if (campaignStage == 4) { numFreeCells = 4; buildRule = 0; }
+        else if (campaignStage == 5) { numFreeCells = 4; buildRule = 1; }
+        else if (campaignStage == 6) { numFreeCells = 4; buildRule = 1; }
+        else if (campaignStage == 7) { numFreeCells = 3; buildRule = 0; }
+        else if (campaignStage == 8) { numFreeCells = 3; buildRule = 0; }
+        else if (campaignStage == 9) { numFreeCells = 3; buildRule = 1; }
+        else if (campaignStage >= 10) { numFreeCells = 2; buildRule = 0; }
+    } else {
+        numFreeCells = 4;
+        buildRule = 0;
+    }
+    powerupsShuffle = 1;
+
+    for(int i=0; i<MAX_FREE_CELLS; i++) {
         freeCellsOccupied[i] = 0;
+    }
+    for(int i=0; i<4; i++) {
         found[i] = 0;
     }
     for(int i=0; i<8; i++) {
@@ -355,7 +394,7 @@ void InitGame() {
 
 int GetMaxMoveCount() {
     int emptyFree = 0;
-    for(int i=0; i<4; i++) if(!freeCellsOccupied[i]) emptyFree++;
+    for(int i=0; i<numFreeCells; i++) if(!freeCellsOccupied[i]) emptyFree++;
     int emptyTab = 0;
     for(int i=0; i<8; i++) if(tabCount[i] == 0) emptyTab++;
     return (emptyFree + 1) * (1 << emptyTab);
@@ -364,6 +403,9 @@ int GetMaxMoveCount() {
 int CanMoveToTab(Card c, int tIdx) {
     if(tabCount[tIdx] == 0) return 1;
     Card top = tab[tIdx][tabCount[tIdx]-1];
+    if (buildRule == 1) {
+        return c.s == top.s && c.r == top.r - 1;
+    }
     return c.color != top.color && c.r == top.r - 1;
 }
 
@@ -372,7 +414,11 @@ int GetDraggableGroup(int tIdx, int startIdx) {
     for(int i=startIdx+1; i<tabCount[tIdx]; i++) {
         Card prev = tab[tIdx][i-1];
         Card curr = tab[tIdx][i];
-        if(curr.color == prev.color || curr.r != prev.r - 1) return 0;
+        if (buildRule == 1) {
+            if(curr.s != prev.s || curr.r != prev.r - 1) return 0;
+        } else {
+            if(curr.color == prev.color || curr.r != prev.r - 1) return 0;
+        }
     }
     return tabCount[tIdx] - startIdx;
 }
@@ -385,6 +431,10 @@ void CheckWin(HWND hwnd) {
             statsWins++;
             statsStreak++;
             if (statsStreak > statsBestStreak) statsBestStreak = statsStreak;
+            if (gameMode == 2 && campaignStage < 10) {
+                campaignStage++;
+                if (campaignStage > maxCampaignStage) maxCampaignStage = campaignStage;
+            }
             gameInProgress = 0;
             InvalidateRect(hwnd, NULL, TRUE);
             ShowStats(hwnd);
@@ -411,7 +461,7 @@ int AutoComplete(HWND hwnd) {
     int anyMoved = 0;
     while(didMove) {
         didMove = 0;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < numFreeCells; i++) {
             if (freeCellsOccupied[i]) {
                 Card c = freeCells[i];
                 if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
@@ -559,10 +609,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             WCHAR titleMsg[256];
             int m = timeElapsed / 60;
             int s = timeElapsed % 60;
-            if (gameMode == 1) {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load [H]elp", m, s, moves, currentSeed);
+            if (gameMode == 2) {
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Stage %d/10 (%s)  |  [M]ode [P]Shuffle(%d)", m, s, moves, campaignStage, buildRule==1?L"Suit":L"Color", powerupsShuffle);
+            } else if (gameMode == 1) {
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [N]ew [P]Shuffle", m, s, moves, currentSeed);
             } else {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [N]ew [Z]Undo [S]tats [F5]Save [F9]Load [H]elp", m, s, moves);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [N]ew [P]Shuffle(%d)", m, s, moves, powerupsShuffle);
             }
             DrawTextW(hdcMem, titleMsg, -1, &titleRect, DT_CENTER | DT_TOP);
             if(won) {
@@ -574,7 +626,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Draw Free Cells
             int group1X = PAD;
-            for(int i=0; i<4; i++) {
+            for(int i=0; i<numFreeCells; i++) {
                 int x = group1X + i*(CELL_W + TAB_PAD_X);
                 if(freeCellsOccupied[i]) {
                     int ax, ay;
@@ -662,7 +714,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Check Free Cells
             int group1X = PAD;
-            for(int i=0; i<4; i++) {
+            for(int i=0; i<numFreeCells; i++) {
                 int x = group1X + i*(CELL_W + TAB_PAD_X);
                 if(mx >= x && mx <= x+CELL_W && my >= TOP_Y && my <= TOP_Y+CELL_H) {
                     clickedType = 0;
@@ -747,7 +799,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if(clickedType == 1) { // move to tableau
                     int emptyFree = 0;
-                    for(int i=0; i<4; i++) if(!freeCellsOccupied[i]) emptyFree++;
+                    for(int i=0; i<numFreeCells; i++) if(!freeCellsOccupied[i]) emptyFree++;
                     int emptyTab = 0;
                     for(int i=0; i<8; i++) if(tabCount[i] == 0 && i != clickedIdx) emptyTab++;
                     int maxMove = (emptyFree + 1) * (1 << emptyTab);
@@ -807,7 +859,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveSettings();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == 'M') {
-                gameMode = (gameMode == 0) ? 1 : 0;
+                gameMode = (gameMode + 1) % 3;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == VK_OEM_PLUS || wParam == VK_ADD) {
@@ -828,6 +880,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadGame(hwnd);
             } else if(wParam == 'H' || wParam == VK_F1) {
                 ShowHelp(hwnd);
+            } else if(wParam == 'P') {
+                if (gameInProgress && !won && powerupsShuffle > 0) {
+                    powerupsShuffle--;
+                    PushUndo();
+                    Card flat[52];
+                    int flatCount = 0;
+                    for(int i=0; i<8; i++) {
+                        for(int j=0; j<tabCount[i]; j++) {
+                            flat[flatCount++] = tab[i][j];
+                        }
+                    }
+                    for(int i=flatCount-1; i>0; i--) {
+                        int j = rand() % (i + 1);
+                        Card t = flat[i]; flat[i] = flat[j]; flat[j] = t;
+                    }
+                    flatCount = 0;
+                    for(int i=0; i<8; i++) {
+                        for(int j=0; j<tabCount[i]; j++) {
+                            tab[i][j] = flat[flatCount++];
+                        }
+                    }
+                    PlaySoundEffect(1);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
