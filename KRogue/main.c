@@ -472,7 +472,7 @@ void generate_map() {
     get_player()->x = cx;
     get_player()->y = cy;
     
-    if(g.dlevel == 20) {
+    if(g.dlevel == 25) {
         g.stair_x = -1;
         g.stair_y = -1;
         for(int i=1; i<MAX_ENTITIES; i++) {
@@ -540,7 +540,8 @@ void generate_map() {
     COLORREF cur_floor = C_FLOOR;
     if(g.dlevel >= 5 && g.dlevel < 10) { cur_wall = RGB(100, 150, 100); cur_floor = RGB(50, 80, 50); }
     else if(g.dlevel >= 10 && g.dlevel < 15) { cur_wall = RGB(150, 50, 50); cur_floor = RGB(80, 40, 40); }
-    else if(g.dlevel >= 15) { cur_wall = RGB(50, 0, 80); cur_floor = RGB(20, 0, 30); }
+    else if(g.dlevel >= 15 && g.dlevel < 20) { cur_wall = RGB(50, 0, 80); cur_floor = RGB(20, 0, 30); }
+    else if(g.dlevel >= 20) { cur_wall = RGB(80, 0, 80); cur_floor = RGB(40, 0, 40); }
     for(int y=0; y<H; y++) {
         for(int x=0; x<W; x++) {
             if(g.map[y][x].ch == '#') g.map[y][x].fg = cur_wall;

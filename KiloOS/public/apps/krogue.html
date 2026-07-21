@@ -141,7 +141,8 @@
                                     let biome = "";
                                     if(dlevel >= 5 && dlevel < 10) biome = " moss";
                                     else if(dlevel >= 10 && dlevel < 15) biome = " volcanic";
-                                    else if(dlevel >= 15) biome = " void";
+                                    else if(dlevel >= 15 && dlevel < 20) biome = " void";
+                                    else if(dlevel >= 20) biome = " abyss";
                                     out += map[y][x] === '#' ? `<span class='wall${biome}'>#</span>` : `<span class='floor${biome}'>.</span>`;
                                 }
                             }
@@ -237,7 +238,7 @@
                                     let it = items[itIdx];
                                     if (it.type === 'stairs') {
                                         dlevel++;
-                                        if (dlevel > 20) {
+                                        if (dlevel > 25) {
                                             state = 3; // Victory
                                             render();
                                             return;
