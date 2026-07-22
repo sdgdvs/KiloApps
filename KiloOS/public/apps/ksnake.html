@@ -176,6 +176,7 @@
             canvas.style.display = 'block';
             placeFood();
             startGameLoop();
+            requestAnimationFrame(animLoop);
         }
 
         function startGameLoop() {
@@ -336,6 +337,7 @@
 
             if (head.x === food.x && head.y === food.y) {
                 playSound('eat');
+                addEatParticles(food.x, food.y, '#ff4757');
                 score += scoreMult;
                 totalApples++;
                 safeSetItem('ksnakeTotalApples', totalApples);
@@ -381,6 +383,7 @@
             }
             if (ghostFood && head.x === ghostFood.x && head.y === ghostFood.y) {
                 playSound('eat');
+                addEatParticles(ghostFood.x, ghostFood.y, '#00d2d3');
                 score += scoreMult * 2;
                 if (score > highScore) {
                     highScore = score;
@@ -397,6 +400,7 @@
 
             if (specialFood && head.x === specialFood.x && head.y === specialFood.y) {
                 playSound('eat');
+                addEatParticles(specialFood.x, specialFood.y, '#ffd700');
                 score += scoreMult * 5;
                 if (score > highScore) {
                     highScore = score;
@@ -415,6 +419,7 @@
             }
             if (iceFood && head.x === iceFood.x && head.y === iceFood.y) {
                 playSound('eat');
+                addEatParticles(iceFood.x, iceFood.y, '#74b9ff');
                 score += scoreMult * 2;
                 if (score > highScore) {
                     highScore = score;
@@ -425,55 +430,441 @@
             }
         }
 
+        let particles = [];
+        function addEatParticles(gx, gy, color) {
+            let cx = (gx + 0.5) * CELL;
+            let cy = (gy + 0.5) * CELL;
+            for (let i = 0; i < 12; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = Math.random() * 2.5 + 1;
+                particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 3 + 2,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.size *= 0.92;
+                p.life -= 0.06;
+                if (p.life <= 0 || p.size < 0.5) {
+                    particles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawParticles() {
+            for (let p of particles) {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function drawSnakeSegment(s, index, total, ghost) {
+            let cx = s.x * CELL + CELL / 2;
+            let cy = s.y * CELL + CELL / 2;
+            let r = CELL / 2 - 1;
+            let time = performance.now() * 0.005;
+
+            if (index === 0) {
+                // HEAD
+                ctx.save();
+                ctx.translate(cx, cy);
+
+                let angle = 0;
+                if (dir.x === 1) angle = 0;
+                else if (dir.x === -1) angle = Math.PI;
+                else if (dir.y === 1) angle = Math.PI / 2;
+                else if (dir.y === -1) angle = -Math.PI / 2;
+                ctx.rotate(angle);
+
+                ctx.beginPath();
+                ctx.ellipse(0, 0, r, r * 0.85, 0, 0, Math.PI * 2);
+                if (ghost) {
+                    let grad = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
+                    grad.addColorStop(0, '#74b9ff');
+                    grad.addColorStop(1, '#0984e3');
+                    ctx.fillStyle = grad;
+                    ctx.shadowColor = '#00d2d3';
+                    ctx.shadowBlur = 8;
+                } else {
+                    let grad = ctx.createRadialGradient(-2, -2, 2, 0, 0, r);
+                    grad.addColorStop(0, '#2ecc71');
+                    grad.addColorStop(1, '#27ae60');
+                    ctx.fillStyle = grad;
+                }
+                ctx.fill();
+
+                // Eyes
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(r * 0.3, -r * 0.35, 2.5, 0, Math.PI * 2);
+                ctx.arc(r * 0.3, r * 0.35, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Pupils
+                ctx.fillStyle = ghost ? '#0984e3' : '#1e272e';
+                ctx.beginPath();
+                ctx.arc(r * 0.4, -r * 0.35, 1.2, 0, Math.PI * 2);
+                ctx.arc(r * 0.4, r * 0.35, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Flickering Tongue
+                let tongueFlicker = Math.sin(time * 12) > 0.1;
+                if (tongueFlicker) {
+                    ctx.strokeStyle = '#ff3838';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(r * 0.8, 0);
+                    ctx.lineTo(r * 1.35, 0);
+                    ctx.lineTo(r * 1.55, -2);
+                    ctx.moveTo(r * 1.35, 0);
+                    ctx.lineTo(r * 1.55, 2);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            } else {
+                // BODY
+                ctx.save();
+                let scaleFactor = 1 - (index / (total * 2.5));
+                let bodyR = r * Math.max(0.65, scaleFactor);
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, bodyR, 0, Math.PI * 2);
+                if (ghost) {
+                    ctx.fillStyle = index % 2 === 0 ? '#48dbfb' : '#00d2d3';
+                    ctx.shadowColor = '#00d2d3';
+                    ctx.shadowBlur = 4;
+                } else {
+                    ctx.fillStyle = index % 2 === 0 ? '#2ecc71' : '#218c74';
+                }
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(cx - 1, cy - 1, bodyR * 0.4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.25)';
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        function drawApple(foodX, foodY) {
+            let cx = foodX * CELL + CELL / 2;
+            let cy = foodY * CELL + CELL / 2;
+            let time = performance.now() * 0.006;
+            let bounce = Math.sin(time) * 1.2;
+            let scale = 1 + Math.sin(time * 2) * 0.06;
+
+            ctx.save();
+            ctx.translate(cx, cy + bounce);
+            ctx.scale(scale, scale);
+
+            let r = CELL / 2 - 1.5;
+            let grad = ctx.createRadialGradient(-2, -2, 1, 0, 0, r);
+            grad.addColorStop(0, '#ff6b6b');
+            grad.addColorStop(0.8, '#ee5253');
+            grad.addColorStop(1, '#c0392b');
+
+            ctx.beginPath();
+            ctx.arc(0, 1, r, 0, Math.PI * 2);
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(-r * 0.35, -r * 0.35, r * 0.3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.fill();
+
+            ctx.strokeStyle = '#574b90';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, -r + 1);
+            ctx.quadraticCurveTo(2, -r - 3, 3, -r - 4);
+            ctx.stroke();
+
+            ctx.fillStyle = '#2ecc71';
+            ctx.beginPath();
+            ctx.ellipse(3, -r - 2, 3, 1.5, Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawSpecialFood(foodX, foodY) {
+            let cx = foodX * CELL + CELL / 2;
+            let cy = foodY * CELL + CELL / 2;
+            let time = performance.now() * 0.008;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(time);
+
+            ctx.fillStyle = '#f1c40f';
+            ctx.shadowColor = '#f39c12';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            let spikes = 5;
+            let outerR = CELL / 2 - 1;
+            let innerR = outerR * 0.5;
+            for (let i = 0; i < spikes * 2; i++) {
+                let r = i % 2 === 0 ? outerR : innerR;
+                let a = (i * Math.PI) / spikes;
+                let x = Math.cos(a) * r;
+                let y = Math.sin(a) * r;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawGhostFood(foodX, foodY) {
+            let cx = foodX * CELL + CELL / 2;
+            let cy = foodY * CELL + CELL / 2;
+            let time = performance.now() * 0.007;
+            let floatY = Math.sin(time * 2) * 1.5;
+
+            ctx.save();
+            ctx.translate(cx, cy + floatY);
+
+            ctx.shadowColor = '#00d2d3';
+            ctx.shadowBlur = 12;
+
+            let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, CELL / 2 - 2);
+            grad.addColorStop(0, '#ffffff');
+            grad.addColorStop(0.5, '#48dbfb');
+            grad.addColorStop(1, '#00d2d3');
+
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(0, 0, CELL / 2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#10ac84';
+            ctx.beginPath();
+            ctx.arc(-2, -1, 1.2, 0, Math.PI * 2);
+            ctx.arc(2, -1, 1.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawIceFood(foodX, foodY) {
+            let cx = foodX * CELL + CELL / 2;
+            let cy = foodY * CELL + CELL / 2;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            ctx.shadowColor = '#74b9ff';
+            ctx.shadowBlur = 8;
+
+            let r = CELL / 2 - 2;
+            ctx.fillStyle = '#a29bfe';
+            ctx.beginPath();
+            ctx.moveTo(0, -r);
+            ctx.lineTo(r, 0);
+            ctx.lineTo(0, r);
+            ctx.lineTo(-r, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(0, -r);
+            ctx.lineTo(0, 0);
+            ctx.lineTo(-r, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawObstacle(obsX, obsY) {
+            let x = obsX * CELL;
+            let y = obsY * CELL;
+
+            ctx.save();
+            ctx.fillStyle = '#4b6584';
+            ctx.fillRect(x, y, CELL - 1, CELL - 1);
+
+            ctx.fillStyle = '#778ca3';
+            ctx.fillRect(x, y, CELL - 1, 2);
+            ctx.fillRect(x, y, 2, CELL - 1);
+
+            ctx.fillStyle = '#2d98da';
+            ctx.fillRect(x, y + CELL - 3, CELL - 1, 2);
+            ctx.fillRect(x + CELL - 3, y, 2, CELL - 1);
+
+            ctx.strokeStyle = '#26de81';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 5);
+            ctx.lineTo(x + 7, y + 10);
+            ctx.lineTo(x + 12, y + 8);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawSpider(spX, spY) {
+            let cx = spX * CELL + CELL / 2;
+            let cy = spY * CELL + CELL / 2;
+            let time = performance.now() * 0.01;
+            let legWiggle = Math.sin(time * 4) * 2;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            ctx.strokeStyle = '#a55eea';
+            ctx.lineWidth = 1.5;
+            for (let side = -1; side <= 1; side += 2) {
+                for (let i = -1; i <= 1; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * 2);
+                    ctx.lineTo(side * 6, i * 4 + legWiggle);
+                    ctx.lineTo(side * 8, i * 5 + (side * legWiggle));
+                    ctx.stroke();
+                }
+            }
+
+            ctx.fillStyle = '#4b4b4b';
+            ctx.beginPath();
+            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#2d3436';
+            ctx.beginPath();
+            ctx.arc(0, -3, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ff3838';
+            ctx.beginPath();
+            ctx.arc(-1.2, -4, 0.9, 0, Math.PI * 2);
+            ctx.arc(1.2, -4, 0.9, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawPortal(pX, pY, isSecondary) {
+            let cx = pX * CELL + CELL / 2;
+            let cy = pY * CELL + CELL / 2;
+            let time = performance.now() * 0.005;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            let mainColor = isSecondary ? '#e67e22' : '#f39c12';
+            ctx.shadowColor = mainColor;
+            ctx.shadowBlur = 10;
+
+            for (let i = 3; i >= 1; i--) {
+                let r = (CELL / 2 - 1) * (i / 3);
+                let rot = time * (i % 2 === 0 ? 2 : -2);
+                ctx.save();
+                ctx.rotate(rot);
+                ctx.strokeStyle = i === 1 ? '#ffffff' : mainColor;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(0, 0, r, 0, Math.PI * 1.5);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            ctx.restore();
+        }
+
+        function drawTracker(trX, trY) {
+            let cx = trX * CELL + CELL / 2;
+            let cy = trY * CELL + CELL / 2;
+            let time = performance.now() * 0.008;
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            ctx.shadowColor = '#ff3838';
+            ctx.shadowBlur = 8;
+
+            ctx.fillStyle = '#2c3e50';
+            ctx.beginPath();
+            ctx.arc(0, 0, CELL / 2 - 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            let eyePulse = 1.5 + Math.sin(time * 3) * 0.8;
+            ctx.fillStyle = '#ff3838';
+            ctx.beginPath();
+            ctx.arc(0, 0, eyePulse + 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(0, 0, eyePulse, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function animLoop() {
+            if (gameState === 1) {
+                draw();
+                requestAnimationFrame(animLoop);
+            }
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             if (gameState !== 1) return;
 
-            ctx.fillStyle = ghostActiveTimer > 0 ? '#0ff' : '#0f0';
-            for (let s of snake) {
-                ctx.fillRect(s.x * CELL, s.y * CELL, CELL - 1, CELL - 1);
+            updateParticles();
+            drawParticles();
+
+            for (let o of obstacles) drawObstacle(o.x, o.y);
+
+            if (portal1) {
+                drawPortal(portal1.x, portal1.y, false);
+                drawPortal(portal2.x, portal2.y, true);
             }
 
-            ctx.fillStyle = '#f00';
-            ctx.fillRect(food.x * CELL, food.y * CELL, CELL - 1, CELL - 1);
-            
-            if (ghostFood) {
-                ctx.fillStyle = '#0ff';
-                ctx.fillRect(ghostFood.x * CELL, ghostFood.y * CELL, CELL - 1, CELL - 1);
+            drawApple(food.x, food.y);
+            if (ghostFood) drawGhostFood(ghostFood.x, ghostFood.y);
+            if (specialFood) drawSpecialFood(specialFood.x, specialFood.y);
+            if (iceFood) drawIceFood(iceFood.x, iceFood.y);
+
+            for (let sp of spiders) drawSpider(sp.x, sp.y);
+
+            for (let tr of trackers) drawTracker(tr.x, tr.y);
+
+            for (let i = snake.length - 1; i >= 0; i--) {
+                drawSnakeSegment(snake[i], i, snake.length, ghostActiveTimer > 0);
             }
-            if (specialFood) {
-                ctx.fillStyle = '#ffd700';
-                ctx.fillRect(specialFood.x * CELL, specialFood.y * CELL, CELL - 1, CELL - 1);
-            }
-            if (iceFood) {
-                ctx.fillStyle = '#add8e6';
-                ctx.fillRect(iceFood.x * CELL, iceFood.y * CELL, CELL - 1, CELL - 1);
-            }
-            
-            ctx.fillStyle = '#666';
-            for (let o of obstacles) {
-                ctx.fillRect(o.x * CELL, o.y * CELL, CELL - 1, CELL - 1);
-            }
-            
-            ctx.fillStyle = '#f0f';
-            for (let sp of spiders) {
-                ctx.fillRect(sp.x * CELL, sp.y * CELL, CELL - 1, CELL - 1);
-            }
-            
-            if (portal1) {
-                ctx.fillStyle = '#ffa500'; // Orange
-                ctx.fillRect(portal1.x * CELL, portal1.y * CELL, CELL - 1, CELL - 1);
-                ctx.fillRect(portal2.x * CELL, portal2.y * CELL, CELL - 1, CELL - 1);
-            }
-            
-            ctx.fillStyle = '#8b0000'; // Dark Red
-            for (let tr of trackers) {
-                ctx.fillRect(tr.x * CELL, tr.y * CELL, CELL - 1, CELL - 1);
-            }
-            
+
             ctx.fillStyle = '#fff';
-            ctx.font = '12px sans-serif';
-            ctx.fillText(campaignMode ? `Lvl: ${campaignLevel} Score: ${score} High: ${highScore}` : `Score: ${score} High: ${highScore}`, 5, 15);
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText(campaignMode ? `Lvl: ${campaignLevel}  Score: ${score}  High: ${highScore}` : `Score: ${score}  High: ${highScore}`, 5, 15);
         }
 
         window.addEventListener('keydown', e => {

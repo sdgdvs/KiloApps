@@ -46,22 +46,381 @@ int tracker_tick = 0;
 int total_apples = 0;
 int games_played = 0;
 
+static int anim_tick = 0;
+
+// Forward Function Declarations
+int random_int(int max);
+void PlaceFood();
+void PlaceGhostFood();
+void PlaceSpecialFood();
+void PlaceIceFood();
+void InitGame();
+
+void DrawSnakeSegmentGDI(HDC hdc, int x, int y, int index, int total, int is_ghost, int d_x, int d_y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    HBRUSH oldBrush;
+    HPEN oldPen;
+
+    if (index == 0) {
+        // HEAD
+        HBRUSH headBrush;
+        if (is_ghost) headBrush = CreateSolidBrush(RGB(72, 219, 251));
+        else headBrush = CreateSolidBrush(RGB(39, 174, 96));
+        HPEN headPen = CreatePen(PS_SOLID, 1, is_ghost ? RGB(0, 210, 211) : RGB(30, 130, 70));
+
+        oldBrush = (HBRUSH)SelectObject(hdc, headBrush);
+        oldPen = (HPEN)SelectObject(hdc, headPen);
+
+        Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+
+        // Eyes
+        HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, eyeBrush);
+
+        int eye1_x = cx + d_y * 3 + d_x * 2;
+        int eye1_y = cy + d_x * 3 + d_y * 2;
+        int eye2_x = cx - d_y * 3 + d_x * 2;
+        int eye2_y = cy - d_x * 3 + d_y * 2;
+
+        Ellipse(hdc, eye1_x - 2, eye1_y - 2, eye1_x + 2, eye1_y + 2);
+        Ellipse(hdc, eye2_x - 2, eye2_y - 2, eye2_x + 2, eye2_y + 2);
+
+        // Pupils
+        HBRUSH pupilBrush = CreateSolidBrush(is_ghost ? RGB(9, 132, 227) : RGB(30, 39, 46));
+        SelectObject(hdc, pupilBrush);
+        Ellipse(hdc, eye1_x + d_x - 1, eye1_y + d_y - 1, eye1_x + d_x + 1, eye1_y + d_y + 1);
+        Ellipse(hdc, eye2_x + d_x - 1, eye2_y + d_y - 1, eye2_x + d_x + 1, eye2_y + d_y + 1);
+
+        DeleteObject(eyeBrush);
+        DeleteObject(pupilBrush);
+
+        // Flickering Tongue
+        if ((anim_tick % 2) == 0) {
+            HPEN tonguePen = CreatePen(PS_SOLID, 1, RGB(255, 56, 56));
+            SelectObject(hdc, tonguePen);
+            int tx = cx + d_x * 7;
+            int ty = cy + d_y * 7;
+            MoveToEx(hdc, cx + d_x * 4, cy + d_y * 4, NULL);
+            LineTo(hdc, tx, ty);
+            MoveToEx(hdc, tx, ty, NULL);
+            LineTo(hdc, tx + d_x * 2 + d_y * 2, ty + d_y * 2 + d_x * 2);
+            MoveToEx(hdc, tx, ty, NULL);
+            LineTo(hdc, tx + d_x * 2 - d_y * 2, ty + d_y * 2 - d_x * 2);
+            DeleteObject(tonguePen);
+        }
+
+        SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(headBrush);
+        DeleteObject(headPen);
+    } else {
+        // BODY
+        HBRUSH bodyBrush;
+        if (is_ghost) {
+            bodyBrush = CreateSolidBrush(index % 2 == 0 ? RGB(72, 219, 251) : RGB(0, 210, 211));
+        } else {
+            bodyBrush = CreateSolidBrush(index % 2 == 0 ? RGB(46, 204, 113) : RGB(33, 140, 116));
+        }
+        HPEN bodyPen = CreatePen(PS_SOLID, 1, is_ghost ? RGB(0, 180, 200) : RGB(25, 110, 90));
+
+        oldBrush = (HBRUSH)SelectObject(hdc, bodyBrush);
+        oldPen = (HPEN)SelectObject(hdc, bodyPen);
+
+        int inset = 1 + index / 15;
+        if (inset > 4) inset = 4;
+        Ellipse(hdc, px + inset, py + inset, px + CELL_SIZE - inset, py + CELL_SIZE - inset);
+
+        // Inner highlight
+        HBRUSH hlBrush = CreateSolidBrush(RGB(200, 255, 220));
+        SelectObject(hdc, hlBrush);
+        Ellipse(hdc, cx - 2, cy - 2, cx, cy);
+        DeleteObject(hlBrush);
+
+        SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(bodyBrush);
+        DeleteObject(bodyPen);
+    }
+}
+
+void DrawAppleGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+
+    HBRUSH appleBrush = CreateSolidBrush(RGB(235, 77, 75));
+    HPEN applePen = CreatePen(PS_SOLID, 1, RGB(192, 57, 43));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, appleBrush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, applePen);
+
+    Ellipse(hdc, px + 2, py + 3, px + CELL_SIZE - 2, py + CELL_SIZE - 1);
+
+    HBRUSH shineBrush = CreateSolidBrush(RGB(255, 200, 200));
+    SelectObject(hdc, shineBrush);
+    Ellipse(hdc, px + 4, py + 5, px + 7, py + 8);
+    DeleteObject(shineBrush);
+
+    HPEN stemPen = CreatePen(PS_SOLID, 1, RGB(87, 75, 144));
+    SelectObject(hdc, stemPen);
+    MoveToEx(hdc, cx, py + 3, NULL);
+    LineTo(hdc, cx + 2, py + 1);
+
+    HBRUSH leafBrush = CreateSolidBrush(RGB(46, 204, 113));
+    SelectObject(hdc, leafBrush);
+    Ellipse(hdc, cx + 1, py, cx + 5, py + 3);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(appleBrush);
+    DeleteObject(applePen);
+    DeleteObject(stemPen);
+    DeleteObject(leafBrush);
+}
+
+void DrawSpecialFoodGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    POINT pts[8] = {
+        {cx, py + 1},
+        {cx + 3, cy - 2},
+        {px + CELL_SIZE - 1, cy},
+        {cx + 3, cy + 2},
+        {cx, py + CELL_SIZE - 1},
+        {cx - 3, cy + 2},
+        {px + 1, cy},
+        {cx - 3, cy - 2}
+    };
+
+    HBRUSH starBrush = CreateSolidBrush(RGB(241, 196, 15));
+    HPEN starPen = CreatePen(PS_SOLID, 1, RGB(243, 156, 18));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, starBrush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, starPen);
+
+    Polygon(hdc, pts, 8);
+
+    HBRUSH coreBrush = CreateSolidBrush(RGB(255, 255, 255));
+    SelectObject(hdc, coreBrush);
+    Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
+    DeleteObject(coreBrush);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(starBrush);
+    DeleteObject(starPen);
+}
+
+void DrawGhostFoodGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    HBRUSH ghostBrush = CreateSolidBrush(RGB(72, 219, 251));
+    HPEN ghostPen = CreatePen(PS_SOLID, 1, RGB(0, 210, 211));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, ghostBrush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, ghostPen);
+
+    Ellipse(hdc, px + 2, py + 2, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
+
+    HBRUSH eyeBrush = CreateSolidBrush(RGB(16, 172, 132));
+    SelectObject(hdc, eyeBrush);
+    Ellipse(hdc, cx - 4, cy - 2, cx - 2, cy);
+    Ellipse(hdc, cx + 2, cy - 2, cx + 4, cy);
+    DeleteObject(eyeBrush);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(ghostBrush);
+    DeleteObject(ghostPen);
+}
+
+void DrawIceFoodGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    POINT pts[4] = {
+        {cx, py + 2},
+        {px + CELL_SIZE - 2, cy},
+        {cx, py + CELL_SIZE - 2},
+        {px + 2, cy}
+    };
+
+    HBRUSH iceBrush = CreateSolidBrush(RGB(116, 185, 255));
+    HPEN icePen = CreatePen(PS_SOLID, 1, RGB(162, 155, 254));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, iceBrush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, icePen);
+
+    Polygon(hdc, pts, 4);
+
+    POINT facet[3] = {
+        {cx, py + 2},
+        {cx, cy},
+        {px + 2, cy}
+    };
+    HBRUSH facetBrush = CreateSolidBrush(RGB(255, 255, 255));
+    SelectObject(hdc, facetBrush);
+    Polygon(hdc, facet, 3);
+    DeleteObject(facetBrush);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(iceBrush);
+    DeleteObject(icePen);
+}
+
+void DrawObstacleGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+
+    RECT r = { px, py, px + CELL_SIZE - 1, py + CELL_SIZE - 1 };
+    HBRUSH bgBrush = CreateSolidBrush(RGB(75, 101, 132));
+    FillRect(hdc, &r, bgBrush);
+    DeleteObject(bgBrush);
+
+    HPEN hiPen = CreatePen(PS_SOLID, 1, RGB(119, 140, 163));
+    HPEN oldPen = (HPEN)SelectObject(hdc, hiPen);
+    MoveToEx(hdc, px, py + CELL_SIZE - 2, NULL);
+    LineTo(hdc, px, py);
+    LineTo(hdc, px + CELL_SIZE - 1, py);
+    DeleteObject(hiPen);
+
+    HPEN shPen = CreatePen(PS_SOLID, 1, RGB(45, 152, 218));
+    SelectObject(hdc, shPen);
+    MoveToEx(hdc, px + CELL_SIZE - 1, py + 1, NULL);
+    LineTo(hdc, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+    LineTo(hdc, px, py + CELL_SIZE - 1);
+    DeleteObject(shPen);
+
+    HPEN crackPen = CreatePen(PS_SOLID, 1, RGB(38, 222, 129));
+    SelectObject(hdc, crackPen);
+    MoveToEx(hdc, px + 3, py + 5, NULL);
+    LineTo(hdc, px + 7, py + 10);
+    LineTo(hdc, px + 12, py + 8);
+    DeleteObject(crackPen);
+
+    SelectObject(hdc, oldPen);
+}
+
+void DrawSpiderGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    HPEN legPen = CreatePen(PS_SOLID, 1, RGB(165, 94, 234));
+    HPEN oldPen = (HPEN)SelectObject(hdc, legPen);
+
+    int wiggle = (anim_tick % 2 == 0) ? 1 : -1;
+
+    MoveToEx(hdc, cx, cy - 2, NULL); LineTo(hdc, cx - 6, cy - 5 + wiggle);
+    MoveToEx(hdc, cx, cy - 2, NULL); LineTo(hdc, cx + 6, cy - 5 - wiggle);
+    MoveToEx(hdc, cx, cy, NULL);     LineTo(hdc, cx - 7, cy + wiggle);
+    MoveToEx(hdc, cx, cy, NULL);     LineTo(hdc, cx + 7, cy - wiggle);
+    MoveToEx(hdc, cx, cy + 2, NULL); LineTo(hdc, cx - 6, cy + 5 + wiggle);
+    MoveToEx(hdc, cx, cy + 2, NULL); LineTo(hdc, cx + 6, cy + 5 - wiggle);
+
+    HBRUSH bodyBrush = CreateSolidBrush(RGB(75, 75, 75));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, bodyBrush);
+    Ellipse(hdc, cx - 4, cy - 4, cx + 4, cy + 4);
+
+    HBRUSH headBrush = CreateSolidBrush(RGB(45, 52, 54));
+    SelectObject(hdc, headBrush);
+    Ellipse(hdc, cx - 3, cy - 6, cx + 3, cy - 2);
+
+    HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 56, 56));
+    SelectObject(hdc, eyeBrush);
+    Ellipse(hdc, cx - 2, cy - 5, cx - 1, cy - 4);
+    Ellipse(hdc, cx + 1, cy - 5, cx + 2, cy - 4);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(legPen);
+    DeleteObject(bodyBrush);
+    DeleteObject(headBrush);
+    DeleteObject(eyeBrush);
+}
+
+void DrawPortalGDI(HDC hdc, int x, int y, int is_secondary) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    COLORREF pCol = is_secondary ? RGB(230, 126, 34) : RGB(243, 156, 18);
+
+    HPEN pPen = CreatePen(PS_SOLID, 1, pCol);
+    HPEN oldPen = (HPEN)SelectObject(hdc, pPen);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, (HGDIOBJ)GetStockObject(NULL_BRUSH));
+
+    Ellipse(hdc, px + 1, py + 1, px + CELL_SIZE - 1, py + CELL_SIZE - 1);
+    Ellipse(hdc, px + 3, py + 3, px + CELL_SIZE - 3, py + CELL_SIZE - 3);
+
+    HBRUSH coreBrush = CreateSolidBrush(RGB(255, 255, 255));
+    SelectObject(hdc, coreBrush);
+    Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(pPen);
+    DeleteObject(coreBrush);
+}
+
+void DrawTrackerGDI(HDC hdc, int x, int y) {
+    int px = x * CELL_SIZE;
+    int py = y * CELL_SIZE;
+    int cx = px + CELL_SIZE / 2;
+    int cy = py + CELL_SIZE / 2;
+
+    HBRUSH bodyBrush = CreateSolidBrush(RGB(44, 62, 80));
+    HPEN bodyPen = CreatePen(PS_SOLID, 1, RGB(255, 56, 56));
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, bodyBrush);
+    HPEN oldPen = (HPEN)SelectObject(hdc, bodyPen);
+
+    Ellipse(hdc, px + 2, py + 2, px + CELL_SIZE - 2, py + CELL_SIZE - 2);
+
+    HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 56, 56));
+    SelectObject(hdc, eyeBrush);
+    Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
+
+    HBRUSH dotBrush = CreateSolidBrush(RGB(255, 255, 255));
+    SelectObject(hdc, dotBrush);
+    Ellipse(hdc, cx - 1, cy - 1, cx + 1, cy + 1);
+
+    SelectObject(hdc, oldBrush);
+    SelectObject(hdc, oldPen);
+    DeleteObject(bodyBrush);
+    DeleteObject(bodyPen);
+    DeleteObject(eyeBrush);
+    DeleteObject(dotBrush);
+}
+
 void LoadStats() {
-    FILE* f = fopen("ksnake.dat", "rb");
-    if(f) { 
-        fread(&high_score, sizeof(int), 1, f); 
-        fread(&total_apples, sizeof(int), 1, f); 
-        fread(&games_played, sizeof(int), 1, f); 
-        fclose(f); 
+    HANDLE hFile = CreateFileA("ksnake.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesRead;
+        ReadFile(hFile, &high_score, sizeof(int), &bytesRead, NULL);
+        ReadFile(hFile, &total_apples, sizeof(int), &bytesRead, NULL);
+        ReadFile(hFile, &games_played, sizeof(int), &bytesRead, NULL);
+        CloseHandle(hFile);
     }
 }
 void SaveStats() {
-    FILE* f = fopen("ksnake.dat", "wb");
-    if(f) { 
-        fwrite(&high_score, sizeof(int), 1, f); 
-        fwrite(&total_apples, sizeof(int), 1, f); 
-        fwrite(&games_played, sizeof(int), 1, f); 
-        fclose(f); 
+    HANDLE hFile = CreateFileA("ksnake.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten;
+        WriteFile(hFile, &high_score, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, &total_apples, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, &games_played, sizeof(int), &bytesWritten, NULL);
+        CloseHandle(hFile);
     }
 }
 
@@ -238,6 +597,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER: {
             if (game_state != 1) break;
+            anim_tick++;
             
             last_dir_x = dir_x;
             last_dir_y = dir_y;
@@ -479,78 +839,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(hdc, 100, 100, "YOU WIN!", 8);
                 TextOutA(hdc, 60, 130, "Press ENTER to return", 21);
             } else {
-                HBRUSH snakeBrush;
-                if(ghost_active_timer > 0) snakeBrush = CreateSolidBrush(RGB(0, 255, 255));
-                else snakeBrush = CreateSolidBrush(RGB(0, 255, 0));
-                for(int i = 0; i < snake_len; i++) {
-                    RECT r = { snake[i].x * CELL_SIZE, snake[i].y * CELL_SIZE, 
-                               (snake[i].x + 1) * CELL_SIZE - 1, (snake[i].y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &r, snakeBrush);
-                }
-                DeleteObject(snakeBrush);
-
-                HBRUSH foodBrush = CreateSolidBrush(RGB(255, 0, 0));
-                RECT fr = { food.x * CELL_SIZE, food.y * CELL_SIZE, 
-                            (food.x + 1) * CELL_SIZE - 1, (food.y + 1) * CELL_SIZE - 1 };
-                FillRect(hdc, &fr, foodBrush);
-                DeleteObject(foodBrush);
-
-                if (ghost_food.x != -1) {
-                    HBRUSH gFoodBrush = CreateSolidBrush(RGB(0, 255, 255));
-                    RECT gfr = { ghost_food.x * CELL_SIZE, ghost_food.y * CELL_SIZE, 
-                                 (ghost_food.x + 1) * CELL_SIZE - 1, (ghost_food.y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &gfr, gFoodBrush);
-                    DeleteObject(gFoodBrush);
-                }
-                if (special_food.x != -1) {
-                    HBRUSH sFoodBrush = CreateSolidBrush(RGB(255, 215, 0));
-                    RECT sfr = { special_food.x * CELL_SIZE, special_food.y * CELL_SIZE, 
-                                 (special_food.x + 1) * CELL_SIZE - 1, (special_food.y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &sfr, sFoodBrush);
-                    DeleteObject(sFoodBrush);
-                }
-                if (ice_food.x != -1) {
-                    HBRUSH iFoodBrush = CreateSolidBrush(RGB(173, 216, 230)); // Light blue
-                    RECT ifr = { ice_food.x * CELL_SIZE, ice_food.y * CELL_SIZE, 
-                                 (ice_food.x + 1) * CELL_SIZE - 1, (ice_food.y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &ifr, iFoodBrush);
-                    DeleteObject(iFoodBrush);
-                }
-
-                HBRUSH obsBrush = CreateSolidBrush(RGB(100, 100, 100));
                 for(int i = 0; i < num_obstacles; i++) {
-                    RECT or = { obstacles[i].x * CELL_SIZE, obstacles[i].y * CELL_SIZE, 
-                                (obstacles[i].x + 1) * CELL_SIZE - 1, (obstacles[i].y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &or, obsBrush);
+                    DrawObstacleGDI(hdc, obstacles[i].x, obstacles[i].y);
                 }
-                DeleteObject(obsBrush);
-                
-                HBRUSH spiderBrush = CreateSolidBrush(RGB(255, 0, 255)); // Magenta
-                for(int i = 0; i < num_spiders; i++) {
-                    RECT sr = { spiders[i].x * CELL_SIZE, spiders[i].y * CELL_SIZE, 
-                                (spiders[i].x + 1) * CELL_SIZE - 1, (spiders[i].y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &sr, spiderBrush);
-                }
-                DeleteObject(spiderBrush);
 
                 if (portal1.x != -1) {
-                    HBRUSH pBrush = CreateSolidBrush(RGB(255, 165, 0));
-                    RECT pr1 = { portal1.x * CELL_SIZE, portal1.y * CELL_SIZE, 
-                                 (portal1.x + 1) * CELL_SIZE - 1, (portal1.y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &pr1, pBrush);
-                    RECT pr2 = { portal2.x * CELL_SIZE, portal2.y * CELL_SIZE, 
-                                 (portal2.x + 1) * CELL_SIZE - 1, (portal2.y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &pr2, pBrush);
-                    DeleteObject(pBrush);
+                    DrawPortalGDI(hdc, portal1.x, portal1.y, 0);
+                    DrawPortalGDI(hdc, portal2.x, portal2.y, 1);
                 }
 
-                HBRUSH trackerBrush = CreateSolidBrush(RGB(139, 0, 0)); // Dark Red
-                for(int i = 0; i < num_trackers; i++) {
-                    RECT tr = { trackers[i].x * CELL_SIZE, trackers[i].y * CELL_SIZE, 
-                                (trackers[i].x + 1) * CELL_SIZE - 1, (trackers[i].y + 1) * CELL_SIZE - 1 };
-                    FillRect(hdc, &tr, trackerBrush);
+                DrawAppleGDI(hdc, food.x, food.y);
+                if (ghost_food.x != -1) DrawGhostFoodGDI(hdc, ghost_food.x, ghost_food.y);
+                if (special_food.x != -1) DrawSpecialFoodGDI(hdc, special_food.x, special_food.y);
+                if (ice_food.x != -1) DrawIceFoodGDI(hdc, ice_food.x, ice_food.y);
+
+                for(int i = 0; i < num_spiders; i++) {
+                    DrawSpiderGDI(hdc, spiders[i].x, spiders[i].y);
                 }
-                DeleteObject(trackerBrush);
+
+                for(int i = 0; i < num_trackers; i++) {
+                    DrawTrackerGDI(hdc, trackers[i].x, trackers[i].y);
+                }
+
+                for(int i = snake_len - 1; i >= 0; i--) {
+                    DrawSnakeSegmentGDI(hdc, snake[i].x, snake[i].y, i, snake_len, ghost_active_timer > 0, dir_x, dir_y);
+                }
             }
 
             if (game_state != 0) {
