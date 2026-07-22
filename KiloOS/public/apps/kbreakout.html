@@ -23,6 +23,8 @@ document.getElementById('hi').innerText = high_score; document.getElementById('b
 let diff = 0, speed = 3;
 let lives = 3;
 let power_active = 0, power_x = 0, power_y = 0, paddle_timer = 0, power_type = 0, pierce_timer = 0;
+let sticky_timer = 0, ball_stuck = 0, ball_stuck_offset = 0;
+let laser_timer = 0, lasers = [];
 let ufo_active = 0, ufo_x = 0, ufo_y = 25, ufo_dx = 2, ufo_timer = 300;
 let keys = {};
 const ROWS = 5, COLS = 10, BR_W = w/COLS, BR_H = 20;
@@ -50,22 +52,30 @@ function initLevel() {
         let row = [];
         for(let c=0; c<COLS; c++) {
             let v = 0;
-            if (level % 5 === 1) {
-                if (r === 1 && c % 3 === 1) v = 9;
-                else if (r === 2) v = 2;
-                else v = 1;
-            } else if (level % 5 === 2) {
-                if ((r+c)%2 === 0) v = 1;
-                else if (r === 0) v = 9;
-            } else if (level % 5 === 3) {
+            let L = level % 10;
+            if (L === 1) {
+                if (r === 1 && c % 3 === 1) v = 9; else if (r === 2) v = 2; else v = 1;
+            } else if (L === 2) {
+                if ((r+c)%2 === 0) v = 1; else if (r === 0) v = 9;
+            } else if (L === 3) {
                 if (c >= r && c < COLS - r) v = (r === 0) ? 2 : 1;
-            } else if (level % 5 === 4) {
+            } else if (L === 4) {
                 if ((r===1 && (c===2 || c===7))) v = 9;
                 else if (r===3 && (c>1 && c<8)) v = 2;
                 else if (r===4 && (c===2 || c===7)) v = 1;
+            } else if (L === 5) {
+                if (c === 2 || c === 7) v = 9; else v = (r%2===0) ? 2 : 1;
+            } else if (L === 6) {
+                if ((r+c)%2 === 0) v = 2; else v = 9;
+                if (v === 9 && (r===4 || r===0)) v = 1;
+            } else if (L === 7) {
+                if (Math.abs(r - 2) + Math.abs(c - 4) < 3) v = 2;
+            } else if (L === 8) {
+                if (c === 1 || c === 8) v = 9; else v = 2;
+            } else if (L === 9) {
+                if (c >= r && c < COLS - r) v = 2;
             } else {
-                if (c === 2 || c === 7) v = 9;
-                else v = (r%2===0) ? 2 : 1;
+                v = 2;
             }
             row.push(v);
             if (v !== 0 && v !== 9) bCount++;
@@ -76,6 +86,10 @@ function initLevel() {
     power_active = 0;
     paddle_timer = 0;
     pierce_timer = 0;
+    sticky_timer = 0;
+    laser_timer = 0;
+    ball_stuck = 0;
+    lasers = [];
     ufo_active = 0;
     ufo_timer = 300;
     pad_w = diff === 1 ? 40 : 60;
@@ -114,38 +128,54 @@ function loop() {
         if(pad_x < 0) pad_x = 0;
         if(pad_x > w - pad_w) pad_x = w - pad_w;
         
-        ball_x += ball_dx;
-        ball_y += ball_dy;
-        
-        if(ball_x < 0) { ball_x = 0; ball_dx = -ball_dx; }
-        if(ball_x > w - ball_size) { ball_x = w - ball_size; ball_dx = -ball_dx; }
-        if(ball_y < 0) { ball_y = 0; ball_dy = -ball_dy; }
-        
-        if(ball_y + ball_size > h - 30 && ball_y < h - 30 + pad_h && ball_x + ball_size > pad_x && ball_x < pad_x + pad_w) {
+        if (ball_stuck) {
+            ball_x = pad_x + ball_stuck_offset;
             ball_y = h - 30 - ball_size;
-            ball_dy = -ball_dy;
-            let hit = (ball_x + ball_size/2) - (pad_x + pad_w/2);
-            ball_dx = hit * 0.2;
-            if(Math.abs(ball_dx) < 1) ball_dx = ball_dx > 0 ? 1 : -1;
-            playTone(400, 'square', 0.1);
-        }
-        
-        if(ball_y > h) {
-            lives--;
-            power_active = 0;
-            if (lives <= 0) {
-                state = 2;
-                playTone(150, 'sawtooth', 0.5);
-                if(score > high_score) { high_score = score; localStorage.setItem('kbreakout_hi', high_score); } localStorage.setItem('kbreakout_bricks', lifetime_bricks); document.getElementById('hi').innerText = high_score; document.getElementById('brk').innerText = lifetime_bricks; document.getElementById('lv_txt').innerText = level;
-            } else {
-                paddle_timer = 0;
-                pad_w = diff === 1 ? 40 : 60;
-                pad_x = w/2 - pad_w/2;
-                ball_x = w/2;
-                ball_y = h-50;
-                ball_dx = speed * (Math.random()>0.5?1:-1);
+            if (keys['ArrowUp'] || keys[' ']) {
+                ball_stuck = 0;
                 ball_dy = -speed;
-                playTone(250, 'sawtooth', 0.3);
+            }
+        } else {
+            ball_x += ball_dx;
+            ball_y += ball_dy;
+            
+            if(ball_x < 0) { ball_x = 0; ball_dx = -ball_dx; }
+            if(ball_x > w - ball_size) { ball_x = w - ball_size; ball_dx = -ball_dx; }
+            if(ball_y < 0) { ball_y = 0; ball_dy = -ball_dy; }
+            
+            if(ball_y + ball_size > h - 30 && ball_y < h - 30 + pad_h && ball_x + ball_size > pad_x && ball_x < pad_x + pad_w) {
+                ball_y = h - 30 - ball_size;
+                ball_dy = -ball_dy;
+                let hit = (ball_x + ball_size/2) - (pad_x + pad_w/2);
+                ball_dx = hit * 0.2;
+                if(Math.abs(ball_dx) < 1) ball_dx = ball_dx > 0 ? 1 : -1;
+                playTone(400, 'square', 0.1);
+                if (sticky_timer > 0) {
+                    ball_stuck = 1;
+                    ball_stuck_offset = ball_x - pad_x;
+                }
+            }
+            
+            if(ball_y > h) {
+                lives--;
+                power_active = 0;
+                sticky_timer = 0;
+                laser_timer = 0;
+                ball_stuck = 0;
+                if (lives <= 0) {
+                    state = 2;
+                    playTone(150, 'sawtooth', 0.5);
+                    if(score > high_score) { high_score = score; localStorage.setItem('kbreakout_hi', high_score); } localStorage.setItem('kbreakout_bricks', lifetime_bricks); document.getElementById('hi').innerText = high_score; document.getElementById('brk').innerText = lifetime_bricks; document.getElementById('lv_txt').innerText = level;
+                } else {
+                    paddle_timer = 0;
+                    pad_w = diff === 1 ? 40 : 60;
+                    pad_x = w/2 - pad_w/2;
+                    ball_x = w/2;
+                    ball_y = h-50;
+                    ball_dx = speed * (Math.random()>0.5?1:-1);
+                    ball_dy = -speed;
+                    playTone(250, 'sawtooth', 0.3);
+                }
             }
         }
         
@@ -156,15 +186,26 @@ function loop() {
                 if (power_type === 1) { paddle_timer = 300; pad_w = diff === 1 ? 80 : 100; }
                 else if (power_type === 2) { lives++; }
                 else if (power_type === 3) { pierce_timer = 300; }
+                else if (power_type === 4) { sticky_timer = 300; }
+                else if (power_type === 5) { laser_timer = 300; }
                 playTone(300, 'sine', 0.2);
             }
             if (power_y > h) power_active = 0;
         }
+        
         if (paddle_timer > 0) {
             paddle_timer--;
             if (paddle_timer === 0) pad_w = diff === 1 ? 40 : 60;
         }
         if (pierce_timer > 0) pierce_timer--;
+        if (sticky_timer > 0) sticky_timer--;
+        
+        if (laser_timer > 0) {
+            laser_timer--;
+            if (laser_timer % 30 === 0) {
+                lasers.push({x: pad_x + pad_w/2, y: h - 30});
+            }
+        }
         
         if (ufo_active) {
             ufo_x += ufo_dx;
@@ -180,13 +221,33 @@ function loop() {
             else if (level >= 3) { ufo_active = 1; ufo_x = 0; ufo_dx = 2 + diff; ufo_timer = 400 + Math.random()*400; }
         }
         
+        for (let i = lasers.length - 1; i >= 0; i--) {
+            lasers[i].y -= 5;
+            if (lasers[i].y < 0) {
+                lasers.splice(i, 1);
+                continue;
+            }
+            let r = Math.floor((lasers[i].y - 40) / BR_H);
+            let c = Math.floor(lasers[i].x / BR_W);
+            if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                if (bricks[r][c] !== 0 && bricks[r][c] !== 9) {
+                    if (bricks[r][c] === 2) {
+                        bricks[r][c] = 1; score += 5; lifetime_bricks++; playTone(700, 'square', 0.05);
+                    } else {
+                        bricks[r][c] = 0; score += 10; lifetime_bricks++; playTone(600, 'square', 0.05);
+                    }
+                    lasers.splice(i, 1);
+                }
+            }
+        }
+        
         let bLeft = 0;
         for(let r=0; r<ROWS; r++) {
             for(let c=0; c<COLS; c++) {
                 if(bricks[r][c]) {
                     if (bricks[r][c] !== 9) bLeft++;
                     let bx = c * BR_W, by = r * BR_H + 40;
-                    if(ball_x + ball_size > bx && ball_x < bx + BR_W && ball_y + ball_size > by && ball_y < by + BR_H) {
+                    if(!ball_stuck && ball_x + ball_size > bx && ball_x < bx + BR_W && ball_y + ball_size > by && ball_y < by + BR_H) {
                         if (bricks[r][c] === 9) {
                             ball_dy = -ball_dy;
                             playTone(800, 'square', 0.05);
@@ -205,7 +266,7 @@ function loop() {
                             playTone(600, 'square', 0.05);
                             if (!power_active && Math.random() < 0.2) {
                                 power_active = 1;
-                                power_type = Math.floor(Math.random() * 3) + 1;
+                                power_type = Math.floor(Math.random() * 5) + 1;
                                 power_x = bx + BR_W/2;
                                 power_y = by;
                             }
@@ -232,7 +293,9 @@ function loop() {
     if (power_active) {
         if (power_type === 1) ctx.fillStyle = '#ff0';
         else if (power_type === 2) ctx.fillStyle = '#0f0';
-        else ctx.fillStyle = '#f00';
+        else if (power_type === 3) ctx.fillStyle = '#f00';
+        else if (power_type === 4) ctx.fillStyle = '#00f';
+        else ctx.fillStyle = '#0ff';
         ctx.fillRect(power_x, power_y, 10, 10);
     }
     
@@ -244,12 +307,16 @@ function loop() {
     ctx.fillStyle = pierce_timer > 0 ? '#f33' : '#fff';
     if(state !== 0) ctx.fillRect(ball_x, ball_y, ball_size, ball_size);
     
+    ctx.fillStyle = '#0ff';
+    for (let l of lasers) {
+        ctx.fillRect(l.x - 2, l.y - 5, 4, 10);
+    }
+    
     document.getElementById('sc').innerText = score;
     document.getElementById('lv').innerText = lives;
     document.getElementById('lv_txt').innerText = level;
     document.getElementById('brk').innerText = lifetime_bricks;
-    document.getElementById('hi').innerText = high_score; document.getElementById('brk').innerText = lifetime_bricks; document.getElementById('lv_txt').innerText = level;
-
+    document.getElementById('hi').innerText = high_score; 
     
     ctx.textAlign = 'center';
     ctx.fillStyle = '#fff';
