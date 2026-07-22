@@ -51,15 +51,16 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KReversi
-**Phase:** 1
+**Phase:** 2
 **Status:** In Progress
 
-- [ ] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- [x] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- [ ] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
 
 ## Next Priority (Before New Apps)
 
 **App:** KReversi
-**Goal:** Phase 1
+**Goal:** Phase 2
 
 
 ## App Lifecycle (14 phases per app)
