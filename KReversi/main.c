@@ -13,11 +13,42 @@
 #define IDM_HARD 1003
 #define IDM_UNDO 1004
 #define IDM_SOUND 1005
+#define IDM_STATS 1006
 
 const char g_szClassName[] = "KReversiClass";
 
 int board[64];
 int soundEnabled = 1;
+int stats[3] = {0, 0, 0}; // Wins, Losses, Draws
+
+void LoadStats() {
+    FILE* f = fopen("kreversi_stats.dat", "rb");
+    if (f) {
+        fread(stats, sizeof(int), 3, f);
+        fclose(f);
+    }
+}
+
+void SaveStats() {
+    FILE* f = fopen("kreversi_stats.dat", "wb");
+    if (f) {
+        fwrite(stats, sizeof(int), 3, f);
+        fclose(f);
+    }
+}
+
+void UpdateStats(int bCount, int wCount) {
+    if (bCount > wCount) stats[0]++;
+    else if (wCount > bCount) stats[1]++;
+    else stats[2]++;
+    SaveStats();
+}
+
+void ShowStats(HWND hwnd) {
+    char msg[256];
+    sprintf(msg, "Games Played: %d\nWins: %d\nLosses: %d\nDraws: %d", stats[0]+stats[1]+stats[2], stats[0], stats[1], stats[2]);
+    MessageBox(hwnd, msg, "Game Statistics", MB_OK | MB_ICONINFORMATION);
+}
 int gameOverSoundPlayed = 0;
 int animatingFlips[64];
 int numAnimatingFlips = 0;
@@ -216,11 +247,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HMENU hActionMenu = CreatePopupMenu();
             AppendMenu(hActionMenu, MF_STRING, IDM_UNDO, "Undo Move");
+            AppendMenu(hActionMenu, MF_STRING, IDM_STATS, "Statistics");
             AppendMenu(hActionMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hActionMenu, MF_STRING | MF_CHECKED, IDM_SOUND, "Sound Effects");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hActionMenu, "Actions");
             
             SetMenu(hwnd, hMenu);
+            LoadStats();
             InitGame();
             break;
         }
@@ -239,6 +272,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case IDM_UNDO: {
                     UndoMove(hwnd);
+                    break;
+                }
+                case IDM_STATS: {
+                    ShowStats(hwnd);
                     break;
                 }
                 case IDM_SOUND: {
@@ -317,6 +354,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!gameOverSoundPlayed) {
                     gameOverSoundPlayed = 1;
                     PlaySoundEffect(2);
+                    UpdateStats(bCount, wCount);
                 }
             } else {
                 if (currentPlayer == BLACK) TextOut(hdc, 200, 10, "Turn: Black", 11);

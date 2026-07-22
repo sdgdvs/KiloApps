@@ -60,7 +60,8 @@
     <div id="message"></div>
     <div style="margin-top: 15px;">
         <button onclick="undoMove()" style="margin-right: 10px;">Undo Move</button>
-        <button onclick="initGame()">Restart Game</button>
+        <button onclick="initGame()" style="margin-right: 10px;">Restart Game</button>
+        <button onclick="showStats()">Statistics</button>
     </div>
     <script>
         const boardEl = document.getElementById('board');
@@ -79,6 +80,24 @@
         let history = [];
         let aiTimeoutId = null;
         let audioCtx = null;
+        let stats = { wins: 0, losses: 0, draws: 0 };
+        let gameEnded = false;
+
+        function loadStats() {
+            const saved = localStorage.getItem('kreversi_stats');
+            if (saved) {
+                stats = JSON.parse(saved);
+            }
+        }
+
+        function saveStats() {
+            localStorage.setItem('kreversi_stats', JSON.stringify(stats));
+        }
+
+        function showStats() {
+            const total = stats.wins + stats.losses + stats.draws;
+            alert(`Games Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}`);
+        }
 
         function playSound(type) {
             const soundEnabled = document.getElementById('sound-toggle').checked;
@@ -122,6 +141,7 @@
             boardState[35] = BLACK; boardState[36] = WHITE;
             currentPlayer = BLACK;
             history = [];
+            gameEnded = false;
             if (aiTimeoutId) {
                 clearTimeout(aiTimeoutId);
                 aiTimeoutId = null;
@@ -223,7 +243,15 @@
                 if (b > w) messageEl.textContent = 'Black wins!';
                 else if (w > b) messageEl.textContent = 'White wins!';
                 else messageEl.textContent = 'Draw!';
-                playSound('over');
+                
+                if (!gameEnded) {
+                    gameEnded = true;
+                    if (b > w) stats.wins++;
+                    else if (w > b) stats.losses++;
+                    else stats.draws++;
+                    saveStats();
+                    playSound('over');
+                }
                 return true;
             }
             return false;
@@ -340,6 +368,7 @@
             updateScores();
         }
 
+        loadStats();
         initGame();
     </script>
 </body>

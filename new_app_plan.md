@@ -63,11 +63,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 6: Added Move History/Undo functionality to both versions.
 - [x] Phase 7: Added Sound Effects (Toggleable) to both versions.
 - [x] Phase 8: Added Disc Flip Animations to both versions (and fixed AI flip bug in Web version).
+- [x] Phase 9: Added Game Statistics tracking (Wins, Losses, Draws) to both versions.
 
 ## Next Priority (Before New Apps)
 
 **App:** KReversi
-**Goal:** Phase 9
+**Goal:** Phase 10
 
 
 ## App Lifecycle (14 phases per app)
