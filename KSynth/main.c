@@ -35,6 +35,12 @@ double parse_float(const char* s) {
     return res;
 }
 
+static unsigned int g_seed = 12345;
+static unsigned int fast_rand() {
+    g_seed = g_seed * 1103515245 + 12345;
+    return (unsigned int)(g_seed / 65536) % 32768;
+}
+
 void GenerateWave(int type, int freq, double attack, double decay, double sustain, double release) {
     double phase = 0.0;
     double phaseInc = (double)freq / SAMPLE_RATE;
@@ -44,6 +50,7 @@ void GenerateWave(int type, int freq, double attack, double decay, double sustai
     if (total_time > 5.0) total_time = 5.0;
     
     int total_samples = (int)(total_time * SAMPLE_RATE);
+    if (total_samples < 1) total_samples = 1;
     
     for (int i = 0; i < total_samples; i++) {
         double val = 0.0;
@@ -67,7 +74,7 @@ void GenerateWave(int type, int freq, double attack, double decay, double sustai
             else if (t < 0.75) val = 1.0 - (t - 0.25) * 4.0;
             else val = -1.0 + (t - 0.75) * 4.0;
         } else if (type == 4) { // Noise
-            val = ((double)rand() / RAND_MAX) * 2.0 - 1.0;
+            val = ((double)fast_rand() / 32767.0) * 2.0 - 1.0;
         }
         
         double t = (double)i / SAMPLE_RATE;
@@ -139,7 +146,9 @@ void PlayTone() {
     }
     
     if (waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL) == MMSYSERR_NOERROR) {
+        memset(&waveHdr, 0, sizeof(WAVEHDR));
         waveHdr.lpData = (LPSTR)buffer;
+        waveHdr.dwBufferLength = waveHdr.dwBufferLength ? waveHdr.dwBufferLength : (DWORD)(SAMPLE_RATE * sizeof(short));
         waveHdr.dwBytesRecorded = 0;
         waveHdr.dwUser = 0;
         waveHdr.dwFlags = 0;
@@ -203,6 +212,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 waveOutReset(hWaveOut);
                 waveOutUnprepareHeader(hWaveOut, &waveHdr, sizeof(WAVEHDR));
                 waveOutClose(hWaveOut);
+                hWaveOut = NULL;
             }
             if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
@@ -239,19 +249,22 @@ void MainEntry() {
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN && !(msg.lParam & 0x40000000)) {
-            double noteMap[256] = {0};
-            noteMap['A'] = 261.63; noteMap['W'] = 277.18; noteMap['S'] = 293.66;
-            noteMap['E'] = 311.13; noteMap['D'] = 329.63; noteMap['F'] = 349.23;
-            noteMap['T'] = 369.99; noteMap['G'] = 392.00; noteMap['Y'] = 415.30;
-            noteMap['H'] = 440.00; noteMap['U'] = 466.16; noteMap['J'] = 493.88;
-            noteMap['K'] = 523.25;
-            WPARAM key = msg.wParam;
-            if (key < 256 && noteMap[key] > 0) {
-                char buf[32];
-                wsprintfA(buf, "%d", (int)(noteMap[key] + 0.5));
-                SetWindowTextA(hFreq, buf);
-                PlayTone();
-                continue;
+            HWND hFocus = GetFocus();
+            if (hFocus != hFreq && hFocus != hAttack && hFocus != hDecay && hFocus != hSustain && hFocus != hRelease) {
+                double noteMap[256] = {0};
+                noteMap['A'] = 261.63; noteMap['W'] = 277.18; noteMap['S'] = 293.66;
+                noteMap['E'] = 311.13; noteMap['D'] = 329.63; noteMap['F'] = 349.23;
+                noteMap['T'] = 369.99; noteMap['G'] = 392.00; noteMap['Y'] = 415.30;
+                noteMap['H'] = 440.00; noteMap['U'] = 466.16; noteMap['J'] = 493.88;
+                noteMap['K'] = 523.25;
+                WPARAM key = msg.wParam;
+                if (key < 256 && noteMap[key] > 0) {
+                    char buf[32];
+                    wsprintfA(buf, "%d", (int)(noteMap[key] + 0.5));
+                    SetWindowTextA(hFreq, buf);
+                    PlayTone();
+                    continue;
+                }
             }
         }
         TranslateMessage(&msg);

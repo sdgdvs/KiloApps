@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KSynth
+**Target App:** KSys
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -142,3 +142,5 @@ Pass 1 Complete.
 - **KSolitaire**: Added ARIA labels and keyboard accessibility to cards, and added `localStorage` try-catch blocks in `ksolitaire.html`. Added missing `KillTimer` calls on `WM_DESTROY` in `main.c`.
 
 - **KSpace**: Added ARIA labels, canvas accessibility attributes, arrow key scroll prevention, safe `localStorage` exception handling, and window blur key cleanup in `kspace.html`. Fixed thread handle leak in `PlaySnd` and added missing `KillTimer` call on `WM_DESTROY` in `main.c`.
+
+- **KSynth**: Added ARIA labels, `<label>` elements, try-catch audio playback error handling, noise buffer frame calculation bounds in `ksynth.html`, and input/select element checks before keyboard shortcut execution. Fixed missing `rand()` CRT link error in `main.c` by implementing `fast_rand()`, added focus checks on edit controls before keyboard note processing, zero-initialized `waveHdr`, and enforced minimum sample bounds.

@@ -14,8 +14,8 @@
 </head>
 <body>
   <div class="row">
-    <div class="label">Waveform:</div>
-    <select id="wave">
+    <label for="wave" class="label">Waveform:</label>
+    <select id="wave" aria-label="Waveform">
       <option value="sine">Sine</option>
       <option value="square">Square</option>
       <option value="sawtooth">Sawtooth</option>
@@ -24,27 +24,27 @@
     </select>
   </div>
   <div class="row">
-    <div class="label">Freq (Hz):</div>
-    <input type="text" id="freq" value="440">
+    <label for="freq" class="label">Freq (Hz):</label>
+    <input type="text" id="freq" value="440" aria-label="Frequency in Hertz">
   </div>
   <div class="row">
-    <div class="label">Attack (s):</div>
-    <input type="text" id="attack" value="0.1">
+    <label for="attack" class="label">Attack (s):</label>
+    <input type="text" id="attack" value="0.1" aria-label="Attack time in seconds">
   </div>
   <div class="row">
-    <div class="label">Decay (s):</div>
-    <input type="text" id="decay" value="0.2">
+    <label for="decay" class="label">Decay (s):</label>
+    <input type="text" id="decay" value="0.2" aria-label="Decay time in seconds">
   </div>
   <div class="row">
-    <div class="label">Sustain:</div>
-    <input type="text" id="sustain" value="0.5">
+    <label for="sustain" class="label">Sustain:</label>
+    <input type="text" id="sustain" value="0.5" aria-label="Sustain level">
   </div>
   <div class="row">
-    <div class="label">Release (s):</div>
-    <input type="text" id="release" value="0.5">
+    <label for="release" class="label">Release (s):</label>
+    <input type="text" id="release" value="0.5" aria-label="Release time in seconds">
   </div>
   <div class="row">
-    <button id="btnPlay">Play Tone</button>
+    <button id="btnPlay" aria-label="Play Tone">Play Tone</button>
   </div>
   <div style="font-size: 12px; margin-top: 15px; color: #555;">
     Play Keyboard: A=C4, W=C#4, S=D4, E=D#4, D=E4, F=F4...<br>
@@ -58,54 +58,58 @@
   let ctx = null;
   
   btnPlay.onclick = () => {
-      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-      if (ctx.state === 'suspended') ctx.resume();
-      
-      let freq = parseInt(freqIn.value, 10);
-      if (isNaN(freq) || freq < 20) freq = 440;
-      if (freq > 20000) freq = 20000;
-      freqIn.value = freq;
-      
-      let a = parseFloat(document.getElementById('attack').value) || 0;
-      let d = parseFloat(document.getElementById('decay').value) || 0;
-      let s = parseFloat(document.getElementById('sustain').value) || 0;
-      let r = parseFloat(document.getElementById('release').value) || 0;
-      if (a < 0) a = 0; if (d < 0) d = 0; if (s < 0) s = 0; if (s > 1) s = 1; if (r < 0) r = 0;
-      
-      const gain = ctx.createGain();
-      let now = ctx.currentTime;
-      
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(1.0, now + a);
-      gain.gain.linearRampToValueAtTime(s, now + a + d);
-      gain.gain.setValueAtTime(s, now + a + d + 0.5);
-      gain.gain.linearRampToValueAtTime(0.001, now + a + d + 0.5 + r);
-      
-      if (wave.value === 'noise') {
-          const bufferSize = ctx.sampleRate * (a + d + 0.5 + r + 0.1);
-          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-          const data = buffer.getChannelData(0);
-          for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-          const noise = ctx.createBufferSource();
-          noise.buffer = buffer;
-          noise.connect(gain);
-          gain.connect(ctx.destination);
-          noise.start(now);
-          noise.stop(now + a + d + 0.5 + r);
-      } else {
-          const osc = ctx.createOscillator();
-          osc.type = wave.value;
-          osc.frequency.value = freq;
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(now);
-          osc.stop(now + a + d + 0.5 + r);
+      try {
+          if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+          if (ctx.state === 'suspended') ctx.resume();
+          
+          let freq = parseInt(freqIn.value, 10);
+          if (isNaN(freq) || freq < 20) freq = 440;
+          if (freq > 20000) freq = 20000;
+          freqIn.value = freq;
+          
+          let a = parseFloat(document.getElementById('attack').value) || 0;
+          let d = parseFloat(document.getElementById('decay').value) || 0;
+          let s = parseFloat(document.getElementById('sustain').value) || 0;
+          let r = parseFloat(document.getElementById('release').value) || 0;
+          if (a < 0) a = 0; if (d < 0) d = 0; if (s < 0) s = 0; if (s > 1) s = 1; if (r < 0) r = 0;
+          
+          const gain = ctx.createGain();
+          let now = ctx.currentTime;
+          
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(1.0, now + a);
+          gain.gain.linearRampToValueAtTime(s, now + a + d);
+          gain.gain.setValueAtTime(s, now + a + d + 0.5);
+          gain.gain.linearRampToValueAtTime(0.0001, now + a + d + 0.5 + r);
+          
+          if (wave.value === 'noise') {
+              const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * (a + d + 0.5 + r + 0.1)));
+              const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+              const data = buffer.getChannelData(0);
+              for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+              const noise = ctx.createBufferSource();
+              noise.buffer = buffer;
+              noise.connect(gain);
+              gain.connect(ctx.destination);
+              noise.start(now);
+              noise.stop(now + a + d + 0.5 + r);
+          } else {
+              const osc = ctx.createOscillator();
+              osc.type = wave.value;
+              osc.frequency.value = freq;
+              osc.connect(gain);
+              gain.connect(ctx.destination);
+              osc.start(now);
+              osc.stop(now + a + d + 0.5 + r);
+          }
+      } catch (err) {
+          console.error("Audio playback error:", err);
       }
   };
   
   document.addEventListener('keydown', (e) => {
       if (e.repeat) return;
-      if (e.target.tagName === 'INPUT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
       const keyMap = {
           'a': 261.63, 'w': 277.18, 's': 293.66, 'e': 311.13, 'd': 329.63, 'f': 349.23,
           't': 369.99, 'g': 392.00, 'y': 415.30, 'h': 440.00, 'u': 466.16, 'j': 493.88, 'k': 523.25
