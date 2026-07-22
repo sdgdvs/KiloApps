@@ -4,22 +4,196 @@
     <meta charset="utf-8">
     <title>KReversi</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #f0f0f0; }
-        h1 { font-size: 24px; color: #333; }
-        .board { display: grid; grid-template-columns: repeat(8, 40px); grid-template-rows: repeat(8, 40px); gap: 2px; background: #333; padding: 2px; width: max-content; }
-        .cell { background: #008000; width: 40px; height: 40px; }
+        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; align-items: center; }
+        h1 { font-size: 24px; color: #333; margin-bottom: 10px; }
+        .info { display: flex; justify-content: space-between; width: 340px; margin-bottom: 10px; font-weight: bold; }
+        .board { display: grid; grid-template-columns: repeat(8, 40px); grid-template-rows: repeat(8, 40px); gap: 2px; background: #333; padding: 2px; border-radius: 4px; }
+        .cell { background: #1b7a37; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .cell:hover { background: #239044; }
+        .disc { width: 32px; height: 32px; border-radius: 50%; display: none; }
+        .disc.black { display: block; background: #111; box-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .disc.white { display: block; background: #eee; box-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        .valid-move { position: relative; }
+        .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: rgba(0,0,0,0.2); border-radius: 50%; }
+        #message { margin-top: 15px; font-size: 18px; font-weight: bold; }
+        button { margin-top: 15px; padding: 8px 16px; font-size: 14px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>KReversi</h1>
+    <div class="info">
+        <div id="score-black">Black: 2</div>
+        <div id="turn-display">Turn: Black</div>
+        <div id="score-white">White: 2</div>
+    </div>
     <div id="board" class="board"></div>
+    <div id="message"></div>
+    <button onclick="initGame()">Restart Game</button>
     <script>
-        const board = document.getElementById('board');
-        for (let i = 0; i < 64; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            board.appendChild(cell);
+        const boardEl = document.getElementById('board');
+        const scoreBlackEl = document.getElementById('score-black');
+        const scoreWhiteEl = document.getElementById('score-white');
+        const turnDisplayEl = document.getElementById('turn-display');
+        const messageEl = document.getElementById('message');
+
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+        
+        let boardState = [];
+        let currentPlayer = BLACK;
+        let validMoves = [];
+
+        const DIRS = [
+            [-1, -1], [-1, 0], [-1, 1],
+            [0, -1],           [0, 1],
+            [1, -1],  [1, 0],  [1, 1]
+        ];
+
+        function initGame() {
+            boardState = Array(64).fill(EMPTY);
+            boardState[27] = WHITE; boardState[28] = BLACK;
+            boardState[35] = BLACK; boardState[36] = WHITE;
+            currentPlayer = BLACK;
+            messageEl.textContent = '';
+            renderBoard();
         }
+
+        function getFlippable(index, player) {
+            if (boardState[index] !== EMPTY) return [];
+            const r = Math.floor(index / 8);
+            const c = index % 8;
+            const opponent = player === BLACK ? WHITE : BLACK;
+            let flippable = [];
+
+            for (let [dr, dc] of DIRS) {
+                let nr = r + dr, nc = c + dc;
+                let currentDirFlippable = [];
+                while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && boardState[nr * 8 + nc] === opponent) {
+                    currentDirFlippable.push(nr * 8 + nc);
+                    nr += dr;
+                    nc += dc;
+                }
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && boardState[nr * 8 + nc] === player) {
+                    flippable.push(...currentDirFlippable);
+                }
+            }
+            return flippable;
+        }
+
+        function getValidMoves(player) {
+            const moves = [];
+            for (let i = 0; i < 64; i++) {
+                if (getFlippable(i, player).length > 0) {
+                    moves.push(i);
+                }
+            }
+            return moves;
+        }
+
+        function updateScores() {
+            let b = 0, w = 0;
+            for (let c of boardState) {
+                if (c === BLACK) b++;
+                if (c === WHITE) w++;
+            }
+            scoreBlackEl.textContent = `Black: ${b}`;
+            scoreWhiteEl.textContent = `White: ${w}`;
+            return {b, w};
+        }
+
+        function checkEndGame() {
+            const movesB = getValidMoves(BLACK);
+            const movesW = getValidMoves(WHITE);
+            if (movesB.length === 0 && movesW.length === 0) {
+                const {b, w} = updateScores();
+                if (b > w) messageEl.textContent = 'Black wins!';
+                else if (w > b) messageEl.textContent = 'White wins!';
+                else messageEl.textContent = 'Draw!';
+                return true;
+            }
+            return false;
+        }
+
+        function handleCellClick(index) {
+            const flips = getFlippable(index, currentPlayer);
+            if (flips.length > 0) {
+                boardState[index] = currentPlayer;
+                for (let f of flips) {
+                    boardState[f] = currentPlayer;
+                }
+                
+                currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+                
+                if (getValidMoves(currentPlayer).length === 0) {
+                    currentPlayer = currentPlayer === BLACK ? WHITE : BLACK; // Skip turn
+                    if (getValidMoves(currentPlayer).length === 0) {
+                        renderBoard();
+                        checkEndGame();
+                        return;
+                    }
+                }
+                renderBoard();
+                
+                // Simple AI for White
+                if (currentPlayer === WHITE) {
+                    setTimeout(makeAIMove, 300);
+                }
+            }
+        }
+
+        function makeAIMove() {
+            if (checkEndGame()) return;
+            const moves = getValidMoves(WHITE);
+            if (moves.length > 0) {
+                let bestMove = moves[0];
+                let maxFlips = 0;
+                for(let m of moves) {
+                    let flips = getFlippable(m, WHITE).length;
+                    if(flips > maxFlips) {
+                        maxFlips = flips;
+                        bestMove = m;
+                    }
+                }
+                boardState[bestMove] = WHITE;
+                for (let f of getFlippable(bestMove, WHITE)) {
+                    boardState[f] = WHITE;
+                }
+                currentPlayer = BLACK;
+                if (getValidMoves(BLACK).length === 0) {
+                    currentPlayer = WHITE;
+                }
+            }
+            renderBoard();
+            checkEndGame();
+        }
+
+        function renderBoard() {
+            boardEl.innerHTML = '';
+            validMoves = getValidMoves(currentPlayer);
+            
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                const disc = document.createElement('div');
+                disc.className = 'disc';
+                if (boardState[i] === BLACK) disc.classList.add('black');
+                else if (boardState[i] === WHITE) disc.classList.add('white');
+                
+                if (boardState[i] === EMPTY && currentPlayer === BLACK && validMoves.includes(i)) {
+                    cell.classList.add('valid-move');
+                }
+                
+                cell.appendChild(disc);
+                cell.onclick = () => { if (currentPlayer === BLACK) handleCellClick(i); };
+                boardEl.appendChild(cell);
+            }
+            turnDisplayEl.textContent = `Turn: ${currentPlayer === BLACK ? 'Black' : 'White'}`;
+            updateScores();
+        }
+
+        initGame();
     </script>
 </body>
 </html>
