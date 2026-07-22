@@ -94,8 +94,12 @@
   let timer = null;
   let elapsed = 0;
   let playing = false;
-  let stats_pairs = parseInt(localStorage.getItem('kmemory_pairs')) || 0;
-  let stats_wins = parseInt(localStorage.getItem('kmemory_wins')) || 0;
+  let stats_pairs = 0;
+  let stats_wins = 0;
+  try {
+      stats_pairs = parseInt(localStorage.getItem('kmemory_pairs')) || 0;
+      stats_wins = parseInt(localStorage.getItem('kmemory_wins')) || 0;
+  } catch(e) {}
   let campaign_level = 1;
   let rush_level = 1;
   let rush_time_left = 60;
@@ -121,7 +125,8 @@
   
   function getBestKey() { return 'kmemory_bestscore_' + diff; }
   function updateBest() {
-      let b = localStorage.getItem(getBestKey());
+      let b = null;
+      try { b = localStorage.getItem(getBestKey()); } catch(e) {}
       bestEl.textContent = b ? b : '-';
   }
 
@@ -296,8 +301,14 @@
       for (let i = 0; i < numCards; i++) {
           const c = document.createElement('div');
           c.className = 'card';
+          c.tabIndex = 0;
+          c.setAttribute('role', 'button');
+          let label = 'Face down card';
+          
           if (matched[i]) {
               c.classList.add('matched');
+              label = 'Matched card';
+              c.removeAttribute('tabindex');
           } else if (flipped[i]) {
               c.classList.add('flipped');
               if (cards[i] === 100) { c.textContent = "+T"; c.style.color = "#00f"; }
@@ -307,7 +318,10 @@
               else if (cards[i] === 104) { c.textContent = "+G"; c.style.color = "#888"; }
               else if (cards[i] === 105) { c.textContent = "+F"; c.style.color = "#0ff"; }
               else c.textContent = themes[currentTheme](cards[i]);
+              label = 'Flipped card ' + c.textContent;
           }
+          c.setAttribute('aria-label', label);
+          c.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.onclick(); } };
           
           c.onclick = () => {
               if (lock || flipped[i] || matched[i]) return;
@@ -391,19 +405,20 @@
                       secondFlip = -1;
                       matches++;
                       stats_pairs++;
-                      localStorage.setItem('kmemory_pairs', stats_pairs);
+                      try { localStorage.setItem('kmemory_pairs', stats_pairs); } catch(e) {}
                       document.getElementById('stats_pairs').textContent = stats_pairs;
                       
                       playTone(800, 'square', 0.2);
                       if (matches >= numCards / 2) {
                           if (diff !== 'rush') stopTimer();
                           stats_wins++;
-                          localStorage.setItem('kmemory_wins', stats_wins);
+                          try { localStorage.setItem('kmemory_wins', stats_wins); } catch(e) {}
                           document.getElementById('stats_wins').textContent = stats_wins;
                           
-                          let b = localStorage.getItem(getBestKey());
+                          let b = null;
+                          try { b = localStorage.getItem(getBestKey()); } catch(e) {}
                           if (!b || score > parseInt(b)) {
-                              localStorage.setItem(getBestKey(), score);
+                              try { localStorage.setItem(getBestKey(), score); } catch(e) {}
                           }
                           
                           if (diff === 'campaign') {

@@ -139,4 +139,6 @@ Pass 1 Complete.
 
 - **KSnake**: Added ARIA labels to canvas, removed duplicate globals, and handled `localStorage` quota exceptions with a wrapper function in `ksnake.html`. Fixed invalid duplicate global declarations and added missing `KillTimer` on `WM_DESTROY` in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KSolitaire (or next in alphabetical order).
+- **KSolitaire**: Added ARIA labels and keyboard accessibility to cards, and added `localStorage` try-catch blocks in `ksolitaire.html`. Added missing `KillTimer` calls on `WM_DESTROY` in `main.c`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KSpace (or next in alphabetical order).

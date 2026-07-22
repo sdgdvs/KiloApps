@@ -533,6 +533,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
+            KillTimer(hwnd, 3);
             PostQuitMessage(0);
             break;
         default:
