@@ -58,7 +58,10 @@
       if (e.key === 'Enter') {
         const val = input.value.trim();
         if (!val) return;
-        log(`SECURE&gt; ${val.replace(/</g, '&lt;').replace(/>/g, '&gt;')}`);
+        const userLog = document.createElement('div');
+        userLog.textContent = `SECURE> ${val}`;
+        terminal.appendChild(userLog);
+        terminal.scrollTop = terminal.scrollHeight;
         input.value = '';
         
         setTimeout(() => {
