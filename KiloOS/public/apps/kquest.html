@@ -138,23 +138,29 @@
       line-height: 1.4;
     }
 
-    /* Character Creation Grid */
+    /* Crafting & Character Grids */
     .class-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 12px;
       margin-top: 10px;
     }
-    .class-card {
+    .craft-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .class-card, .craft-card {
       background: #181825;
       border: 2px solid #313244;
       border-radius: 8px;
       padding: 12px;
       cursor: pointer;
       transition: all 0.2s;
-      text-align: center;
+      text-align: left;
     }
-    .class-card:hover {
+    .class-card:hover, .craft-card:hover {
       border-color: #89b4fa;
       background: #1e1e2e;
     }
@@ -162,14 +168,20 @@
       border-color: #a6e3a1;
       background: #24273a;
     }
-    .class-card h3 {
-      font-size: 1rem;
+    .class-card h3, .craft-card h3 {
+      font-size: 0.95rem;
       color: #cba6f7;
       margin-bottom: 6px;
     }
-    .class-card p {
+    .class-card p, .craft-card p {
       font-size: 0.8rem;
       color: #a6adc8;
+      margin-bottom: 8px;
+    }
+    .craft-card .mats-req {
+      font-size: 0.75rem;
+      color: #fab387;
+      font-weight: 600;
       margin-bottom: 8px;
     }
 
@@ -215,6 +227,7 @@
     .log-entry.town { color: #a6e3a1; }
     .log-entry.spell { color: #cba6f7; }
     .log-entry.warning { color: #fab387; }
+    .log-entry.craft { color: #94e2d5; }
 
     /* Action Button Controls */
     .controls-panel {
@@ -269,6 +282,14 @@
     }
     .btn-danger:hover:not(:disabled) {
       background: #f5e0dc;
+    }
+    .btn-craft {
+      background: #cba6f7;
+      color: #11111b;
+      border-color: #cba6f7;
+    }
+    .btn-craft:hover:not(:disabled) {
+      background: #b4befe;
     }
 
     /* Right Sidebar */
@@ -358,7 +379,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 5</span></h1>
+    <h1>🗡️ KQuest <span class="badge">Phase 6</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
   </header>
 
@@ -408,14 +429,14 @@
         <div class="screen-title" id="location-title">🏰 Oakhaven Town Square</div>
         <div class="screen-desc" id="location-desc">Welcome to Oakhaven. Create your hero or venture forth into the Obsidian Spire!</div>
         
-        <!-- Dynamic Interactive Area (Character Creation, Shop, Combat card, etc.) -->
+        <!-- Dynamic Interactive Area -->
         <div id="dynamic-content"></div>
       </div>
 
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Create your character to begin your journey into the Obsidian Spire.</div>
+        <div class="log-entry system">Phase 6: Crafting & Equipment Enchanting System Enabled!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -444,8 +465,18 @@
       <div class="card">
         <div class="card-header">🛡️ Equipment</div>
         <div class="card-body">
-          <div>Weapon: <strong id="eq-weapon">Iron Sword (+5 STR)</strong></div>
+          <div>Weapon: <strong id="eq-weapon">Iron Sword (+4 STR)</strong></div>
           <div>Armor: <strong id="eq-armor">Leather Armor (+3 DEF)</strong></div>
+        </div>
+      </div>
+
+      <!-- Crafting Materials Card -->
+      <div class="card">
+        <div class="card-header">🧪 Materials</div>
+        <div class="card-body" id="materials-list">
+          <div>⚙️ Iron Scrap: <strong style="color:#f9e2af;" id="mat-iron">2</strong></div>
+          <div>✨ Arcane Dust: <strong style="color:#89b4fa;" id="mat-dust">2</strong></div>
+          <div>🔥 Elemental Core: <strong style="color:#f38ba8;" id="mat-core">1</strong></div>
         </div>
       </div>
 
@@ -475,6 +506,7 @@
       CHAR_CREATE: 'CHAR_CREATE',
       TOWN: 'TOWN',
       SHOP: 'SHOP',
+      CRAFTING: 'CRAFTING',
       DUNGEON: 'DUNGEON',
       COMBAT: 'COMBAT',
       GAME_OVER: 'GAME_OVER'
@@ -551,9 +583,14 @@
       xp: 0,
       nextXp: 100,
       floor: 1,
-      biome: 0, // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
-      weapon: { name: 'Iron Shortsword', bonusStr: 4 },
-      armor: { name: 'Leather Armor', bonusDef: 3 },
+      biome: 0,
+      weapon: { name: 'Iron Shortsword', bonusStr: 4, prefix: '' },
+      armor: { name: 'Leather Armor', bonusDef: 3, prefix: '' },
+      materials: {
+        iron: 2,
+        dust: 2,
+        core: 1
+      },
       inventory: [
         { id: 'hp_potion', name: 'Health Potion', count: 3, desc: 'Restores 35 HP' },
         { id: 'mp_potion', name: 'Mana Potion', count: 2, desc: 'Restores 25 MP' }
@@ -592,8 +629,14 @@
       document.getElementById('stat-def').textContent = player.def + (player.armor ? player.armor.bonusDef : 0);
       document.getElementById('stat-agi').textContent = player.agi;
 
-      document.getElementById('eq-weapon').textContent = player.weapon ? `${player.weapon.name} (+${player.weapon.bonusStr} STR)` : 'None';
-      document.getElementById('eq-armor').textContent = player.armor ? `${player.armor.name} (+${player.armor.bonusDef} DEF)` : 'None';
+      const wPrefix = player.weapon && player.weapon.prefix ? `[${player.weapon.prefix}] ` : '';
+      const aPrefix = player.armor && player.armor.prefix ? `[${player.armor.prefix}] ` : '';
+      document.getElementById('eq-weapon').textContent = player.weapon ? `${wPrefix}${player.weapon.name} (+${player.weapon.bonusStr} STR)` : 'None';
+      document.getElementById('eq-armor').textContent = player.armor ? `${aPrefix}${player.armor.name} (+${player.armor.bonusDef} DEF)` : 'None';
+
+      document.getElementById('mat-iron').textContent = player.materials.iron;
+      document.getElementById('mat-dust').textContent = player.materials.dust;
+      document.getElementById('mat-core').textContent = player.materials.core;
 
       const hpPercent = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
       const mpPercent = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
@@ -652,6 +695,32 @@
         const mana = 25;
         player.mp = Math.min(player.maxMp, player.mp + mana);
         logMsg(`🧪 You drank a Mana Potion and recovered ${mana} MP!`, 'loot');
+      } else if (item.id === 'greater_hp') {
+        const heal = 70;
+        player.hp = Math.min(player.maxHp, player.hp + heal);
+        logMsg(`🧪 You drank a Greater Health Elixir and recovered ${heal} HP!`, 'loot');
+      } else if (item.id === 'power_elixir') {
+        player.mp = Math.min(player.maxMp, player.mp + 40);
+        player.str += 3;
+        logMsg(`⚡ You drank Elixir of Might! Recovered 40 MP & gained +3 STR permanently!`, 'loot');
+      } else if (item.id === 'fire_bomb') {
+        if (currentState !== STATE.COMBAT || !currentEnemy) {
+          logMsg(`⚠️ Fire Bomb can only be thrown during battle!`, 'warning');
+          return;
+        }
+        const bombDmg = 45;
+        currentEnemy.hp -= bombDmg;
+        logMsg(`💣 FIRE BOMB EXPLOSION! Threw a Fire Bomb dealing ${bombDmg} fire damage to ${currentEnemy.name}!`, 'spell');
+        item.count--;
+        if (item.count <= 0) player.inventory.splice(index, 1);
+        updateUI();
+        if (currentEnemy.hp <= 0) {
+          currentEnemy.hp = 0;
+          combatVictory();
+        } else {
+          enemyTurn();
+        }
+        return;
       } else {
         logMsg(`Used ${item.name}.`, 'system');
       }
@@ -680,6 +749,8 @@
         renderTown();
       } else if (state === STATE.SHOP) {
         renderShop();
+      } else if (state === STATE.CRAFTING) {
+        renderCrafting();
       } else if (state === STATE.DUNGEON) {
         renderDungeon();
       } else if (state === STATE.COMBAT) {
@@ -742,20 +813,20 @@
         player.maxHp = 60; player.hp = 60;
         player.maxMp = 15; player.mp = 15;
         player.str = 15; player.int = 6; player.def = 12; player.agi = 8;
-        player.weapon = { name: 'Iron Shortsword', bonusStr: 4 };
-        player.armor = { name: 'Chainmail Armor', bonusDef: 5 };
+        player.weapon = { name: 'Iron Shortsword', bonusStr: 4, prefix: '' };
+        player.armor = { name: 'Chainmail Armor', bonusDef: 5, prefix: '' };
       } else if (selectedClass === 'Mage') {
         player.maxHp = 40; player.hp = 40;
         player.maxMp = 45; player.mp = 45;
         player.str = 7; player.int = 18; player.def = 6; player.agi = 10;
-        player.weapon = { name: 'Apprentice Staff', bonusStr: 2 };
-        player.armor = { name: 'Silk Robes', bonusDef: 2 };
+        player.weapon = { name: 'Apprentice Staff', bonusStr: 2, prefix: '' };
+        player.armor = { name: 'Silk Robes', bonusDef: 2, prefix: '' };
       } else if (selectedClass === 'Rogue') {
         player.maxHp = 45; player.hp = 45;
         player.maxMp = 25; player.mp = 25;
         player.str = 11; player.int = 8; player.def = 8; player.agi = 16;
-        player.weapon = { name: 'Twin Daggers', bonusStr: 5 };
-        player.armor = { name: 'Leather Vest', bonusDef: 3 };
+        player.weapon = { name: 'Twin Daggers', bonusStr: 5, prefix: '' };
+        player.armor = { name: 'Leather Vest', bonusDef: 3, prefix: '' };
       }
 
       logMsg(`Welcome, ${player.name} the ${player.class}! Your journey begins in Oakhaven Town.`, 'system');
@@ -797,6 +868,7 @@
         <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
+        <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
         <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
       `;
     }
@@ -887,14 +959,240 @@
       }
       player.gold -= cost;
       if (type === 'weapon') {
-        player.weapon = { name: eqName, bonusStr: val };
+        player.weapon = { name: eqName, bonusStr: val, prefix: '' };
         logMsg(`Equipped new weapon: ${eqName} (+${val} STR)!`, 'loot');
       } else {
-        player.armor = { name: eqName, bonusDef: val };
+        player.armor = { name: eqName, bonusDef: val, prefix: '' };
         logMsg(`Equipped new armor: ${eqName} (+${val} DEF)!`, 'loot');
       }
       updateUI();
       renderShop();
+    }
+
+    // --- PHASE 6: CRAFTING & EQUIPMENT ENCHANTING SYSTEM ---
+    function renderCrafting() {
+      document.getElementById('location-title').textContent = '⚒️ Alchemy Bench & Enchanter\'s Forge';
+      document.getElementById('location-desc').textContent = 'Salvage materials from dungeon loot, craft powerful battle consumables, or imbue weapons & armor with elemental enchantments!';
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="background:#181825; padding:10px; border-radius:6px; border:1px solid #313244; margin-bottom:8px; font-size:0.85rem;">
+          <strong>Materials Stock:</strong> ⚙️ Iron Scrap: <span style="color:#f9e2af;">${player.materials.iron}</span> | ✨ Arcane Dust: <span style="color:#89b4fa;">${player.materials.dust}</span> | 🔥 Elemental Core: <span style="color:#f38ba8;">${player.materials.core}</span>
+        </div>
+
+        <!-- Salvage Station -->
+        <div style="margin-bottom:12px;">
+          <h4 style="color:#a6e3a1; font-size:0.9rem; margin-bottom:4px;">♻️ Salvage Station</h4>
+          <div class="item-row">
+            <span>Break down spare loot/supplies into crafting materials (20 Gold)</span>
+            <button class="btn btn-accent" onclick="salvageLoot()">Salvage (20G)</button>
+          </div>
+        </div>
+
+        <!-- Consumable Crafting (Alchemy Bench) -->
+        <div style="margin-bottom:12px;">
+          <h4 style="color:#cba6f7; font-size:0.9rem; margin-bottom:6px;">🧪 Alchemy Bench (Craft Consumables)</h4>
+          <div class="craft-grid">
+            <div class="craft-card">
+              <h3>💣 Fire Bomb</h3>
+              <p>Deals 45 instant fire damage to an enemy in battle.</p>
+              <div class="mats-req">Req: 1 Iron Scrap, 1 Elemental Core</div>
+              <button class="btn btn-craft" onclick="craftItem('fire_bomb')">Craft</button>
+            </div>
+            <div class="craft-card">
+              <h3>🧪 Greater HP Elixir</h3>
+              <p>Restores 70 HP instantly in battle or dungeon.</p>
+              <div class="mats-req">Req: 2 Arcane Dust, 1 Iron Scrap</div>
+              <button class="btn btn-craft" onclick="craftItem('greater_hp')">Craft</button>
+            </div>
+            <div class="craft-card">
+              <h3>⚡ Elixir of Might</h3>
+              <p>Restores 40 MP & permanently increases STR by +3.</p>
+              <div class="mats-req">Req: 2 Arcane Dust, 1 Elemental Core</div>
+              <button class="btn btn-craft" onclick="craftItem('power_elixir')">Craft</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enchanter's Forge -->
+        <div>
+          <h4 style="color:#89b4fa; font-size:0.9rem; margin-bottom:6px;">🔥 Enchanter's Forge (Equipment Imbuing)</h4>
+          <div class="craft-grid">
+            <!-- Weapon Enchantments -->
+            <div class="craft-card">
+              <h3>🔥 Flaming Weapon</h3>
+              <p>Imbues weapon: Deals +6 bonus Fire Damage on physical strike.</p>
+              <div class="mats-req">Req: 2 Elemental Cores, 1 Arcane Dust</div>
+              <button class="btn btn-primary" onclick="enchantWeapon('Flaming')">Imbue Weapon</button>
+            </div>
+            <div class="craft-card">
+              <h3>🩸 Vampiric Weapon</h3>
+              <p>Imbues weapon: Siphons 25% of attack damage back as HP.</p>
+              <div class="mats-req">Req: 2 Arcane Dust, 1 Iron Scrap</div>
+              <button class="btn btn-primary" onclick="enchantWeapon('Vampiric')">Imbue Weapon</button>
+            </div>
+            <div class="craft-card">
+              <h3>⚡ Thunderous Weapon</h3>
+              <p>Imbues weapon: +6 STR & 30% chance for Lightning strike.</p>
+              <div class="mats-req">Req: 2 Elemental Cores, 1 Iron Scrap</div>
+              <button class="btn btn-primary" onclick="enchantWeapon('Thunderous')">Imbue Weapon</button>
+            </div>
+
+            <!-- Armor Enchantments -->
+            <div class="craft-card">
+              <h3>🛡️ Fortified Armor</h3>
+              <p>Imbues armor: +5 DEF and +20 Maximum HP boost.</p>
+              <div class="mats-req">Req: 2 Iron Scrap, 1 Arcane Dust</div>
+              <button class="btn btn-accent" onclick="enchantArmor('Fortified')">Imbue Armor</button>
+            </div>
+            <div class="craft-card">
+              <h3>🔮 Warded Armor</h3>
+              <p>Imbues armor: +4 DEF and +15 Maximum MP boost.</p>
+              <div class="mats-req">Req: 2 Arcane Dust, 1 Elemental Core</div>
+              <button class="btn btn-accent" onclick="enchantArmor('Warded')">Imbue Armor</button>
+            </div>
+            <div class="craft-card">
+              <h3>🌵 Spiked Armor</h3>
+              <p>Imbues armor: Reflects 35% of enemy damage back to attacker.</p>
+              <div class="mats-req">Req: 2 Iron Scrap, 1 Elemental Core</div>
+              <button class="btn btn-accent" onclick="enchantArmor('Spiked')">Imbue Armor</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    function salvageLoot() {
+      if (player.gold < 20) {
+        logMsg(`You need 20 Gold to salvage materials!`, 'warning');
+        return;
+      }
+      player.gold -= 20;
+      player.materials.iron += 2;
+      player.materials.dust += 1;
+      logMsg(`♻️ Salvaged spare gear for 20 Gold! Gained +2 Iron Scrap & +1 Arcane Dust.`, 'craft');
+      updateUI();
+      renderCrafting();
+    }
+
+    function craftItem(recipe) {
+      if (recipe === 'fire_bomb') {
+        if (player.materials.iron < 1 || player.materials.core < 1) {
+          logMsg(`Insufficient materials! Fire Bomb requires 1 Iron Scrap & 1 Elemental Core.`, 'warning');
+          return;
+        }
+        player.materials.iron -= 1;
+        player.materials.core -= 1;
+        let existing = player.inventory.find(i => i.id === 'fire_bomb');
+        if (existing) existing.count++;
+        else player.inventory.push({ id: 'fire_bomb', name: 'Fire Bomb', count: 1, desc: 'Deals 45 fire damage' });
+        logMsg(`💣 Crafted 1x Fire Bomb at the Alchemy Bench!`, 'craft');
+      } else if (recipe === 'greater_hp') {
+        if (player.materials.dust < 2 || player.materials.iron < 1) {
+          logMsg(`Insufficient materials! Greater HP requires 2 Arcane Dust & 1 Iron Scrap.`, 'warning');
+          return;
+        }
+        player.materials.dust -= 2;
+        player.materials.iron -= 1;
+        let existing = player.inventory.find(i => i.id === 'greater_hp');
+        if (existing) existing.count++;
+        else player.inventory.push({ id: 'greater_hp', name: 'Greater HP Elixir', count: 1, desc: 'Restores 70 HP' });
+        logMsg(`🧪 Crafted 1x Greater HP Elixir at the Alchemy Bench!`, 'craft');
+      } else if (recipe === 'power_elixir') {
+        if (player.materials.dust < 2 || player.materials.core < 1) {
+          logMsg(`Insufficient materials! Elixir of Might requires 2 Arcane Dust & 1 Elemental Core.`, 'warning');
+          return;
+        }
+        player.materials.dust -= 2;
+        player.materials.core -= 1;
+        let existing = player.inventory.find(i => i.id === 'power_elixir');
+        if (existing) existing.count++;
+        else player.inventory.push({ id: 'power_elixir', name: 'Elixir of Might', count: 1, desc: '+40 MP & +3 STR' });
+        logMsg(`⚡ Crafted 1x Elixir of Might at the Alchemy Bench!`, 'craft');
+      }
+      updateUI();
+      renderCrafting();
+    }
+
+    function enchantWeapon(prefix) {
+      if (!player.weapon) return;
+      if (prefix === 'Flaming') {
+        if (player.materials.core < 2 || player.materials.dust < 1) {
+          logMsg(`Requires 2 Elemental Cores & 1 Arcane Dust to enchant Flaming weapon!`, 'warning');
+          return;
+        }
+        player.materials.core -= 2;
+        player.materials.dust -= 1;
+        player.weapon.prefix = 'Flaming';
+        logMsg(`🔥 Imbued weapon with Flaming Enchantment! (+6 Fire Dmg)`, 'craft');
+      } else if (prefix === 'Vampiric') {
+        if (player.materials.dust < 2 || player.materials.iron < 1) {
+          logMsg(`Requires 2 Arcane Dust & 1 Iron Scrap to enchant Vampiric weapon!`, 'warning');
+          return;
+        }
+        player.materials.dust -= 2;
+        player.materials.iron -= 1;
+        player.weapon.prefix = 'Vampiric';
+        logMsg(`🩸 Imbued weapon with Vampiric Enchantment! (25% Lifesteal)`, 'craft');
+      } else if (prefix === 'Thunderous') {
+        if (player.materials.core < 2 || player.materials.iron < 1) {
+          logMsg(`Requires 2 Elemental Cores & 1 Iron Scrap to enchant Thunderous weapon!`, 'warning');
+          return;
+        }
+        player.materials.core -= 2;
+        player.materials.iron -= 1;
+        player.weapon.prefix = 'Thunderous';
+        player.weapon.bonusStr += 6;
+        logMsg(`⚡ Imbued weapon with Thunderous Enchantment! (+6 STR & Lightning)`, 'craft');
+      }
+      updateUI();
+      renderCrafting();
+    }
+
+    function enchantArmor(prefix) {
+      if (!player.armor) return;
+      if (prefix === 'Fortified') {
+        if (player.materials.iron < 2 || player.materials.dust < 1) {
+          logMsg(`Requires 2 Iron Scrap & 1 Arcane Dust for Fortified Armor!`, 'warning');
+          return;
+        }
+        player.materials.iron -= 2;
+        player.materials.dust -= 1;
+        player.armor.prefix = 'Fortified';
+        player.armor.bonusDef += 5;
+        player.maxHp += 20;
+        player.hp += 20;
+        logMsg(`🛡️ Imbued armor with Fortified Enchantment! (+5 DEF, +20 Max HP)`, 'craft');
+      } else if (prefix === 'Warded') {
+        if (player.materials.dust < 2 || player.materials.core < 1) {
+          logMsg(`Requires 2 Arcane Dust & 1 Elemental Core for Warded Armor!`, 'warning');
+          return;
+        }
+        player.materials.dust -= 2;
+        player.materials.core -= 1;
+        player.armor.prefix = 'Warded';
+        player.armor.bonusDef += 4;
+        player.maxMp += 15;
+        player.mp += 15;
+        logMsg(`🔮 Imbued armor with Warded Enchantment! (+4 DEF, +15 Max MP)`, 'craft');
+      } else if (prefix === 'Spiked') {
+        if (player.materials.iron < 2 || player.materials.core < 1) {
+          logMsg(`Requires 2 Iron Scrap & 1 Elemental Core for Spiked Armor!`, 'warning');
+          return;
+        }
+        player.materials.iron -= 2;
+        player.materials.core -= 1;
+        player.armor.prefix = 'Spiked';
+        player.armor.bonusDef += 3;
+        logMsg(`🌵 Imbued armor with Spiked Enchantment! (Reflects 35% damage)`, 'craft');
+      }
+      updateUI();
+      renderCrafting();
     }
 
     // --- DUNGEON EXPLORATION ---
@@ -946,10 +1244,12 @@
         // Combat Encounter
         startCombat();
       } else if (roll < 0.70) {
-        // Treasure Chest
+        // Treasure Chest with Materials
         const goldFound = Math.floor(Math.random() * 25 + 15 * player.floor);
         player.gold += goldFound;
-        logMsg(`✨ You discovered a dusty treasure chest in ${BIOMES[player.biome].name}! Found ${goldFound} Gold!`, 'loot');
+        player.materials.iron += 1;
+        player.materials.dust += 1;
+        logMsg(`✨ You discovered a dusty treasure chest in ${BIOMES[player.biome].name}! Found ${goldFound} Gold, +1 Iron Scrap, +1 Arcane Dust!`, 'loot');
         updateUI();
       } else if (roll < 0.85) {
         // Environmental Hazard Trigger
@@ -1021,11 +1321,20 @@
       `;
 
       const ctrl = document.getElementById('controls-panel');
+      const hasBomb = player.inventory.find(i => i.id === 'fire_bomb' && i.count > 0);
       ctrl.innerHTML = `
         <button class="btn btn-danger" onclick="playerAttack()">⚔️ Attack</button>
         <button class="btn btn-primary" onclick="playerSpell()">🔮 Special / Spell</button>
+        ${hasBomb ? `<button class="btn btn-craft" onclick="throwBombInCombat()">💣 Fire Bomb</button>` : ''}
         <button class="btn" onclick="fleeCombat()">🏃 Flee</button>
       `;
+    }
+
+    function throwBombInCombat() {
+      const idx = player.inventory.findIndex(i => i.id === 'fire_bomb');
+      if (idx !== -1) {
+        useItem(idx);
+      }
     }
 
     function playerAttack() {
@@ -1042,6 +1351,25 @@
         logMsg(`⚔️ You attack ${currentEnemy.name} dealing ${dmg} damage.`, 'combat');
       }
 
+      // Weapon Enchantment Bonuses
+      if (player.weapon && player.weapon.prefix === 'Flaming') {
+        const fireDmg = 6;
+        dmg += fireDmg;
+        logMsg(`🔥 Flaming Enchantment scorches ${currentEnemy.name} for +${fireDmg} fire damage!`, 'spell');
+      }
+      if (player.weapon && player.weapon.prefix === 'Vampiric') {
+        const lifesteal = Math.max(2, Math.floor(dmg * 0.25));
+        player.hp = Math.min(player.maxHp, player.hp + lifesteal);
+        logMsg(`🩸 Vampiric Enchantment siphons +${lifesteal} HP back to your health!`, 'town');
+      }
+      if (player.weapon && player.weapon.prefix === 'Thunderous') {
+        if (Math.random() < 0.35) {
+          const sparkDmg = 8;
+          dmg += sparkDmg;
+          logMsg(`⚡ Thunderous Lightning bolt strikes for +${sparkDmg} bonus damage!`, 'spell');
+        }
+      }
+
       currentEnemy.hp -= dmg;
       if (currentEnemy.hp <= 0) {
         currentEnemy.hp = 0;
@@ -1056,7 +1384,6 @@
       if (!currentEnemy) return;
 
       if (player.class === 'Warrior') {
-        // Shield Bash
         const cost = 5;
         if (player.mp < cost) {
           logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
@@ -1068,7 +1395,6 @@
         currentEnemy.hp -= dmg;
         logMsg(`🛡️ You perform Shield Bash! Dealt ${dmg} physical damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Mage') {
-        // Fireball
         const cost = 10;
         if (player.mp < cost) {
           logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
@@ -1079,7 +1405,6 @@
         currentEnemy.hp -= dmg;
         logMsg(`🔥 You launch a flaming Fireball! Dealt ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Rogue') {
-        // Shadow Strike
         const cost = 8;
         if (player.mp < cost) {
           logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
@@ -1113,6 +1438,18 @@
         player.hp -= enemyDmg;
         logMsg(`💥 ${currentEnemy.name} hits you for ${enemyDmg} damage!`, 'combat');
 
+        // Spiked Armor Reflection
+        if (player.armor && player.armor.prefix === 'Spiked') {
+          const reflectDmg = Math.max(2, Math.floor(enemyDmg * 0.35));
+          currentEnemy.hp -= reflectDmg;
+          logMsg(`🌵 Spiked Armor reflects ${reflectDmg} thorn damage back to ${currentEnemy.name}!`, 'warning');
+          if (currentEnemy.hp <= 0) {
+            currentEnemy.hp = 0;
+            combatVictory();
+            return;
+          }
+        }
+
         // Environmental Hazard Ambient Tick during Combat (20% chance)
         if (Math.random() < 0.20 && player.hp > 0) {
           const b = BIOMES[player.biome];
@@ -1136,7 +1473,23 @@
       logMsg(`🎉 VICTORY! You defeated ${currentEnemy.name}!`, 'loot');
       player.gold += currentEnemy.gold;
       player.xp += currentEnemy.xp;
-      logMsg(`Gained +${currentEnemy.xp} XP and +${currentEnemy.gold} Gold!`, 'loot');
+      
+      // Crafting Material Loot Drops
+      let matMsg = `Gained +${currentEnemy.xp} XP and +${currentEnemy.gold} Gold!`;
+      if (Math.random() < 0.60) {
+        const iGot = Math.floor(Math.random() * 2) + 1;
+        player.materials.iron += iGot;
+        matMsg += ` Looted +${iGot} Iron Scrap!`;
+      }
+      if (Math.random() < 0.40) {
+        player.materials.dust += 1;
+        matMsg += ` Looted +1 Arcane Dust!`;
+      }
+      if (Math.random() < 0.25) {
+        player.materials.core += 1;
+        matMsg += ` Looted +1 Elemental Core!`;
+      }
+      logMsg(matMsg, 'craft');
 
       // Update quests
       player.quests.forEach(q => {
@@ -1199,6 +1552,7 @@
       player.nextXp = 100;
       player.gold = 50;
       player.floor = 1;
+      player.materials = { iron: 2, dust: 2, core: 1 };
       player.quests.forEach(q => { q.current = 0; q.done = false; });
       setGameState(STATE.CHAR_CREATE);
       logMsg(`--- New Journey Initialized ---`, 'system');

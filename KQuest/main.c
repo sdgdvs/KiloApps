@@ -6,6 +6,7 @@
 #define STATE_DUNGEON     3
 #define STATE_COMBAT      4
 #define STATE_GAME_OVER   5
+#define STATE_CRAFTING    6
 
 static unsigned int rngSeed = 54321;
 static int xrand() {
@@ -89,10 +90,18 @@ typedef struct {
     int biome; // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
     char weaponName[32];
     int weaponBonusStr;
+    char weaponPrefix[16]; // "", "Flaming", "Vampiric", "Thunderous"
     char armorName[32];
     int armorBonusDef;
+    char armorPrefix[16];  // "", "Fortified", "Warded", "Spiked"
     int hpPotions;
     int mpPotions;
+    int greaterHpPotions;
+    int powerElixirs;
+    int fireBombs;
+    int ironScrap;
+    int arcaneDust;
+    int elementalCore;
     int questMonstersKilled;
     int questMonstersDone;
     int questBossKilled;
@@ -137,6 +146,14 @@ void InitHero(int classIdx) {
     player.biome = 0;
     player.hpPotions = 3;
     player.mpPotions = 2;
+    player.greaterHpPotions = 0;
+    player.powerElixirs = 0;
+    player.fireBombs = 0;
+    player.ironScrap = 2;
+    player.arcaneDust = 2;
+    player.elementalCore = 1;
+    player.weaponPrefix[0] = '\0';
+    player.armorPrefix[0] = '\0';
     player.questMonstersKilled = 0;
     player.questMonstersDone = 0;
     player.questBossKilled = 0;
@@ -183,14 +200,15 @@ void UpdateUI() {
     wsprintfA(infoBuf,
         "BIOME: %s (Hazard: %s)\r\n"
         "ATTRIBUTES: STR %d (+%d) | INT %d | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
-        "EQUIPMENT: Weapon: %s | Armor: %s\r\n"
-        "INVENTORY: HP Potions x%d | MP Potions x%d  |  QUESTS: Chambers (%d/5) [%s] | Boss (%d/1) [%s]",
+        "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s\r\n"
+        "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Elemental Core x%d\r\n"
+        "INVENTORY: HP Pot x%d | MP Pot x%d | Bomb x%d | Gr.HP x%d | Elixir x%d",
         g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName,
         player.str, player.weaponBonusStr, player.intStat, player.def, player.armorBonusDef, player.agi, player.xp, player.nextXp,
-        player.weaponName, player.armorName,
-        player.hpPotions, player.mpPotions,
-        player.questMonstersKilled, player.questMonstersDone ? "DONE" : "ACTIVE",
-        player.questBossKilled, player.questBossDone ? "DONE" : "ACTIVE");
+        player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
+        player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
+        player.ironScrap, player.arcaneDust, player.elementalCore,
+        player.hpPotions, player.mpPotions, player.fireBombs, player.greaterHpPotions, player.powerElixirs);
 
     if (hStatusText) SetWindowTextA(hStatusText, statusBuf);
     if (hInfoText) SetWindowTextA(hInfoText, infoBuf);
@@ -221,8 +239,8 @@ void SetupButtons() {
             SetWindowTextA(hBtn2, bBtn);
             SetWindowTextA(hBtn3, "Rest at Inn (10G)");
             SetWindowTextA(hBtn4, "Visit Shop");
-            SetWindowTextA(hBtn5, "Claim Rewards");
-            SetWindowTextA(hBtn6, "Reset Game");
+            SetWindowTextA(hBtn5, "Craft & Enchant");
+            SetWindowTextA(hBtn6, "Claim Rewards");
             break;
         }
 
@@ -233,6 +251,15 @@ void SetupButtons() {
             SetWindowTextA(hBtn4, "Plate Armor (+9 DEF, 75G)");
             SetWindowTextA(hBtn5, "Back to Town");
             SetWindowTextA(hBtn6, "---");
+            break;
+
+        case STATE_CRAFTING:
+            SetWindowTextA(hBtn1, "Salvage Loot (20G)");
+            SetWindowTextA(hBtn2, "Craft Fire Bomb");
+            SetWindowTextA(hBtn3, "Craft Greater HP");
+            SetWindowTextA(hBtn4, "Craft Elixir Might");
+            SetWindowTextA(hBtn5, "Imbue Weapon/Armor");
+            SetWindowTextA(hBtn6, "Back to Town");
             break;
 
         case STATE_DUNGEON:
@@ -253,8 +280,12 @@ void SetupButtons() {
             } else {
                 SetWindowTextA(hBtn2, "Shield Bash (5 MP)");
             }
-            SetWindowTextA(hBtn3, "Use HP Potion");
-            SetWindowTextA(hBtn4, "Use MP Potion");
+            SetWindowTextA(hBtn3, "Use HP / Gr.HP");
+            if (player.fireBombs > 0) {
+                SetWindowTextA(hBtn4, "Throw Fire Bomb");
+            } else {
+                SetWindowTextA(hBtn4, "Use MP Potion");
+            }
             SetWindowTextA(hBtn5, "Flee Battle");
             SetWindowTextA(hBtn6, "---");
             break;
@@ -342,6 +373,16 @@ void EnemyTurn() {
     wsprintfA(msg, "💥 %s attacks you for %d damage!", currentEnemy.name, dmg);
     LogMessage(msg);
 
+    // Spiked Armor Reflection
+    if (lstrcmpA(player.armorPrefix, "Spiked") == 0) {
+        int reflectDmg = (dmg * 35) / 100;
+        if (reflectDmg < 2) reflectDmg = 2;
+        currentEnemy.hp -= reflectDmg;
+        char rmsg[128];
+        wsprintfA(rmsg, "🌵 Spiked Armor reflects %d thorn damage back to %s!", reflectDmg, currentEnemy.name);
+        LogMessage(rmsg);
+    }
+
     // Environmental Hazard Ambient Tick during Combat (20% chance)
     if ((xrand() % 100) < 20 && player.hp > 0) {
         const BiomeDef* b = &g_Biomes[player.biome];
@@ -369,6 +410,21 @@ void CombatVictory() {
 
     player.xp += currentEnemy.xp;
     player.gold += currentEnemy.gold;
+
+    // Material Drops
+    if ((xrand() % 100) < 60) {
+        int iGot = 1 + (xrand() % 2);
+        player.ironScrap += iGot;
+        char m1[64]; wsprintfA(m1, "🔧 Looted +%d Iron Scrap!", iGot); LogMessage(m1);
+    }
+    if ((xrand() % 100) < 40) {
+        player.arcaneDust += 1;
+        LogMessage("✨ Looted +1 Arcane Dust!");
+    }
+    if ((xrand() % 100) < 25) {
+        player.elementalCore += 1;
+        LogMessage("🔥 Looted +1 Elemental Core!");
+    }
 
     if (player.questMonstersKilled < 5) player.questMonstersKilled++;
     if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon")) {
@@ -403,6 +459,16 @@ void HandleButton1() {
         } else {
             LogMessage("Not enough gold!");
         }
+    } else if (gameState == STATE_CRAFTING) {
+        if (player.gold >= 20) {
+            player.gold -= 20;
+            player.ironScrap += 2;
+            player.arcaneDust += 1;
+            LogMessage("♻️ Salvaged spare gear for 20 Gold! Gained +2 Iron Scrap & +1 Arcane Dust.");
+            UpdateUI();
+        } else {
+            LogMessage("Not enough gold to salvage!");
+        }
     } else if (gameState == STATE_DUNGEON) {
         int r = xrand() % 100;
         if (r < 50) {
@@ -410,8 +476,10 @@ void HandleButton1() {
         } else if (r < 70) {
             int g = 15 + (xrand() % 25) + (player.floor * 10);
             player.gold += g;
+            player.ironScrap += 1;
+            player.arcaneDust += 1;
             char msg[128];
-            wsprintfA(msg, "✨ Found a treasure chest in %s with %d Gold!", g_Biomes[player.biome].name, g);
+            wsprintfA(msg, "✨ Found a treasure chest in %s with %d Gold, +1 Iron Scrap, +1 Arcane Dust!", g_Biomes[player.biome].name, g);
             LogMessage(msg);
             UpdateUI();
         } else if (r < 85) {
@@ -461,6 +529,26 @@ void HandleButton1() {
             LogMessage(msg);
         }
 
+        // Weapon Enchantment Effects
+        if (lstrcmpA(player.weaponPrefix, "Flaming") == 0) {
+            dmg += 6;
+            LogMessage("🔥 Flaming Enchantment scorches target for +6 fire damage!");
+        }
+        if (lstrcmpA(player.weaponPrefix, "Vampiric") == 0) {
+            int heal = (dmg * 25) / 100;
+            if (heal < 2) heal = 2;
+            player.hp += heal;
+            if (player.hp > player.maxHp) player.hp = player.maxHp;
+            char vmsg[128]; wsprintfA(vmsg, "🩸 Vampiric Enchantment siphons +%d HP back!", heal);
+            LogMessage(vmsg);
+        }
+        if (lstrcmpA(player.weaponPrefix, "Thunderous") == 0) {
+            if ((xrand() % 100) < 35) {
+                dmg += 8;
+                LogMessage("⚡ Thunderous Lightning strikes for +8 bonus damage!");
+            }
+        }
+
         currentEnemy.hp -= dmg;
         if (currentEnemy.hp <= 0) {
             currentEnemy.hp = 0;
@@ -499,6 +587,16 @@ void HandleButton2() {
             UpdateUI();
         } else {
             LogMessage("Not enough gold!");
+        }
+    } else if (gameState == STATE_CRAFTING) {
+        if (player.ironScrap >= 1 && player.elementalCore >= 1) {
+            player.ironScrap -= 1;
+            player.elementalCore -= 1;
+            player.fireBombs++;
+            LogMessage("💣 Crafted 1x Fire Bomb (Deals 45 fire damage in combat)!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 1 Iron Scrap & 1 Elemental Core for Fire Bomb!");
         }
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
@@ -571,8 +669,24 @@ void HandleButton3() {
         } else {
             LogMessage("Not enough gold!");
         }
+    } else if (gameState == STATE_CRAFTING) {
+        if (player.arcaneDust >= 2 && player.ironScrap >= 1) {
+            player.arcaneDust -= 2;
+            player.ironScrap -= 1;
+            player.greaterHpPotions++;
+            LogMessage("🧪 Crafted 1x Greater HP Elixir (+70 HP)!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 2 Arcane Dust & 1 Iron Scrap for Greater HP Elixir!");
+        }
     } else if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
-        if (player.hpPotions > 0) {
+        if (player.greaterHpPotions > 0) {
+            player.greaterHpPotions--;
+            player.hp = (player.hp + 70 > player.maxHp) ? player.maxHp : player.hp + 70;
+            LogMessage("🧪 Drank Greater HP Elixir (+70 HP)!");
+            UpdateUI();
+            if (gameState == STATE_COMBAT) EnemyTurn();
+        } else if (player.hpPotions > 0) {
             player.hpPotions--;
             player.hp = (player.hp + 35 > player.maxHp) ? player.maxHp : player.hp + 35;
             LogMessage("🧪 Drank Health Potion (+35 HP)!");
@@ -605,42 +719,90 @@ void HandleButton4() {
         } else {
             LogMessage("Not enough gold!");
         }
-    } else if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+    } else if (gameState == STATE_CRAFTING) {
+        if (player.arcaneDust >= 2 && player.elementalCore >= 1) {
+            player.arcaneDust -= 2;
+            player.elementalCore -= 1;
+            player.powerElixirs++;
+            player.mp = (player.mp + 40 > player.maxMp) ? player.maxMp : player.mp + 40;
+            player.str += 3;
+            LogMessage("⚡ Crafted & drank 1x Elixir of Might! +40 MP & +3 STR boost!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 2 Arcane Dust & 1 Elemental Core for Elixir of Might!");
+        }
+    } else if (gameState == STATE_DUNGEON) {
         if (player.mpPotions > 0) {
             player.mpPotions--;
             player.mp = (player.mp + 25 > player.maxMp) ? player.maxMp : player.mp + 25;
             LogMessage("🧪 Drank Mana Potion (+25 MP)!");
             UpdateUI();
-            if (gameState == STATE_COMBAT) EnemyTurn();
         } else {
             LogMessage("No Mana Potions remaining!");
+        }
+    } else if (gameState == STATE_COMBAT) {
+        if (player.fireBombs > 0) {
+            player.fireBombs--;
+            currentEnemy.hp -= 45;
+            LogMessage("💣 FIRE BOMB EXPLOSION! Threw a Fire Bomb dealing 45 fire damage!");
+            UpdateUI();
+            if (currentEnemy.hp <= 0) {
+                currentEnemy.hp = 0;
+                CombatVictory();
+            } else {
+                EnemyTurn();
+            }
+        } else if (player.mpPotions > 0) {
+            player.mpPotions--;
+            player.mp = (player.mp + 25 > player.maxMp) ? player.maxMp : player.mp + 25;
+            LogMessage("🧪 Drank Mana Potion (+25 MP)!");
+            UpdateUI();
+            EnemyTurn();
+        } else {
+            LogMessage("No Fire Bombs or Mana Potions!");
         }
     }
 }
 
 void HandleButton5() {
     if (gameState == STATE_TOWN) {
-        int claimed = 0;
-        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
-            player.questMonstersDone = 1;
-            player.gold += 50;
-            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!");
-            claimed++;
-        }
-        if (player.questBossKilled >= 1 && !player.questBossDone) {
-            player.questBossDone = 1;
-            player.gold += 150;
-            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!");
-            claimed++;
-        }
-        if (claimed == 0) {
-            LogMessage("No completed quest rewards to claim right now.");
-        }
+        gameState = STATE_CRAFTING;
+        LogMessage("Entered Enchanter's Forge & Alchemy Bench.");
+        SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_SHOP) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town.");
         SetupButtons();
+        UpdateUI();
+    } else if (gameState == STATE_CRAFTING) {
+        // Imbue Equipment - Cycles through enchantments
+        if (lstrcmpA(player.weaponPrefix, "Flaming") != 0 && player.elementalCore >= 2 && player.arcaneDust >= 1) {
+            player.elementalCore -= 2;
+            player.arcaneDust -= 1;
+            lstrcpyA(player.weaponPrefix, "Flaming");
+            LogMessage("🔥 Imbued weapon with Flaming Enchantment (+6 Fire Dmg)!");
+        } else if (lstrcmpA(player.weaponPrefix, "Vampiric") != 0 && player.arcaneDust >= 2 && player.ironScrap >= 1) {
+            player.arcaneDust -= 2;
+            player.ironScrap -= 1;
+            lstrcpyA(player.weaponPrefix, "Vampiric");
+            LogMessage("🩸 Imbued weapon with Vampiric Enchantment (25% Lifesteal)!");
+        } else if (lstrcmpA(player.armorPrefix, "Fortified") != 0 && player.ironScrap >= 2 && player.arcaneDust >= 1) {
+            player.ironScrap -= 2;
+            player.arcaneDust -= 1;
+            lstrcpyA(player.armorPrefix, "Fortified");
+            player.armorBonusDef += 5;
+            player.maxHp += 20; player.hp += 20;
+            LogMessage("🛡️ Imbued armor with Fortified Enchantment (+5 DEF, +20 Max HP)!");
+        } else if (lstrcmpA(player.armorPrefix, "Spiked") != 0 && player.ironScrap >= 2 && player.elementalCore >= 1) {
+            player.ironScrap -= 2;
+            player.elementalCore -= 1;
+            lstrcpyA(player.armorPrefix, "Spiked");
+            player.armorBonusDef += 3;
+            LogMessage("🌵 Imbued armor with Spiked Enchantment (Reflects 35% damage)!");
+        } else {
+            LogMessage("Need materials for next imbuing tier (e.g. 2 Cores/Dust & 1 Scrap/Dust)!");
+        }
         UpdateUI();
     } else if (gameState == STATE_DUNGEON) {
         gameState = STATE_TOWN;
@@ -662,9 +824,26 @@ void HandleButton5() {
 
 void HandleButton6() {
     if (gameState == STATE_TOWN) {
-        InitHero(selectedClassIndex);
-        gameState = STATE_CHAR_CREATE;
-        LogMessage("--- Game Reset to Character Creation ---");
+        int claimed = 0;
+        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
+            player.questMonstersDone = 1;
+            player.gold += 50;
+            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!");
+            claimed++;
+        }
+        if (player.questBossKilled >= 1 && !player.questBossDone) {
+            player.questBossDone = 1;
+            player.gold += 150;
+            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!");
+            claimed++;
+        }
+        if (claimed == 0) {
+            LogMessage("No completed quest rewards to claim right now.");
+        }
+        UpdateUI();
+    } else if (gameState == STATE_CRAFTING) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
         SetupButtons();
         UpdateUI();
     }
@@ -699,7 +878,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Choose your Hero Class above or click 'Begin Quest'!");
+            LogMessage("Phase 6: Crafting & Equipment Enchanting System Active!");
             break;
         }
         case WM_COMMAND: {
