@@ -265,6 +265,24 @@ void GenerateMaze(int w, int h) {
             mapRandom[rx][ry] = 9;
         }
     }
+    if (currentLevel >= 5) {
+        int placedMino = 0;
+        while (!placedMino) {
+            int rx = 1 + rand()%(w-2);
+            int ry = 1 + rand()%(h-2);
+            if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY) && abs(rx - 1) + abs(ry - 1) > 5) {
+                mapRandom[rx][ry] = 12;
+                placedMino = 1;
+            }
+        }
+    }
+    for(int i=0; i<w*h/40; i++) {
+        int rx = 1 + rand()%(w-2);
+        int ry = 1 + rand()%(h-2);
+        if (mapRandom[rx][ry] == 0 && (rx != 1 || ry != 1) && (rx != farX || ry != farY)) {
+            mapRandom[rx][ry] = 13;
+        }
+    }
     int t1x = 0, t1y = 0, t2x = 0, t2y = 0;
     for(int i=0; i<100; i++) {
         int rx = 1 + rand()%(w-2);
@@ -302,6 +320,7 @@ int currentLevel = 0;
 int keysHeld = 0;
 int hasCompass = 0;
 int speedBoost = 0;
+int hasPickaxe = 0;
 
 int totalGames = 0;
 int totalEscapes = 0;
@@ -396,9 +415,10 @@ float planeX = 0.0f, planeY = 0.66f;
 void NextLevel() {
     keysHeld = 0;
     speedBoost = 0;
+    hasPickaxe = 0;
     currentLevel++;
     hasCompass = (currentLevel < 6) ? 1 : 0;
-    if (currentLevel > 19) {
+    if (currentLevel > 29) {
         gameState = 2;
         endTime = GetTickCount();
         float elapsed = (endTime - startTime) / 1000.0f;
@@ -434,18 +454,83 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 30, NULL);
             break;
         case WM_TIMER: {
+            static int minotaurTimer = 0;
             float moveSpeed = 0.1f;
             float rotSpeed = 0.05f;
             
+            if (gameState == 1) {
+                minotaurTimer += 30;
+                if (minotaurTimer >= 1000) {
+                    minotaurTimer = 0;
+                    int mapW = currentLevel >= 10 ? curRandW : 15;
+                    int mapH = currentLevel >= 10 ? curRandH : 15;
+                    if (currentLevel == 0 || currentLevel == 3) { mapW = 10; mapH = 10; }
+                    else if (currentLevel == 1 || currentLevel == 4 || currentLevel == 5 || currentLevel == 7 || currentLevel == 8) { mapW = 12; mapH = 12; }
+                    
+                    int minotaurs[100][2];
+                    int mCount = 0;
+                    for (int x = 0; x < mapW; x++) {
+                        for (int y = 0; y < mapH; y++) {
+                            if (GetMapValue(x, y) == 12) {
+                                minotaurs[mCount][0] = x;
+                                minotaurs[mCount][1] = y;
+                                mCount++;
+                            }
+                        }
+                    }
+                    for (int i = 0; i < mCount; i++) {
+                        int mx = minotaurs[i][0];
+                        int my = minotaurs[i][1];
+                        int dx = 0, dy = 0;
+                        if ((int)pX > mx) dx = 1;
+                        else if ((int)pX < mx) dx = -1;
+                        if ((int)pY > my) dy = 1;
+                        else if ((int)pY < my) dy = -1;
+                        
+                        if (dx != 0 && GetMapValue(mx + dx, my) == 0) {
+                            SetMapValue(mx, my, 0);
+                            SetMapValue(mx + dx, my, 12);
+                            mx += dx;
+                        } else if (dy != 0 && GetMapValue(mx, my + dy) == 0) {
+                            SetMapValue(mx, my, 0);
+                            SetMapValue(mx, my + dy, 12);
+                            my += dy;
+                        }
+                        
+                        if (mx == (int)pX && my == (int)pY) {
+                            MessageBeep(MB_ICONHAND);
+                            score = (score >= 100) ? score - 100 : 0;
+                            currentLevel--;
+                            NextLevel();
+                            break;
+                        }
+                    }
+                }
+            }
+            
             int TryMove(int x, int y) {
                 int val = GetMapValue(x, y);
-                if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11) return 1;
+                if (val == 0 || val == 2 || val == 3 || val == 5 || val == 6 || val == 7 || val == 8 || val == 9 || val == 10 || val == 11 || val == 12 || val == 13) return 1;
                 if (val == 4) {
                     if (keysHeld > 0) {
                         keysHeld--;
                         SetMapValue(x, y, 0);
                         MessageBeep(MB_ICONEXCLAMATION);
                         return 1;
+                    }
+                }
+                if (val == 1) {
+                    if (hasPickaxe > 0 && x > 0 && y > 0) {
+                        int mapW = currentLevel >= 10 ? curRandW : 15;
+                        int mapH = currentLevel >= 10 ? curRandH : 15;
+                        if (currentLevel == 0 || currentLevel == 3) { mapW = 10; mapH = 10; }
+                        else if (currentLevel == 1 || currentLevel == 4 || currentLevel == 5 || currentLevel == 7 || currentLevel == 8) { mapW = 12; mapH = 12; }
+                        if (x < mapW - 1 && y < mapH - 1) {
+                            hasPickaxe--;
+                            SetMapValue(x, y, 0);
+                            MessageBeep(MB_ICONEXCLAMATION);
+                            return 1;
+                        }
                     }
                 }
                 return 0;
@@ -529,6 +614,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
+            } else if (curVal == 12) {
+                MessageBeep(MB_ICONHAND);
+                score = (score >= 100) ? score - 100 : 0;
+                currentLevel--;
+                NextLevel();
+            } else if (curVal == 13) {
+                hasPickaxe++;
+                SetMapValue((int)pX, (int)pY, 0);
+                MessageBeep(MB_ICONASTERISK);
             }
 
             if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
@@ -609,6 +703,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH tp1s = CreateSolidBrush(RGB(200, 0, 200));
             HBRUSH tp2s = CreateSolidBrush(RGB(150, 0, 150));
             
+            HBRUSH min1 = CreateSolidBrush(RGB(255, 50, 50));
+            HBRUSH min2 = CreateSolidBrush(RGB(200, 50, 50));
+            HBRUSH min1s = CreateSolidBrush(RGB(200, 50, 50));
+            HBRUSH min2s = CreateSolidBrush(RGB(150, 50, 50));
+            
+            HBRUSH pik1 = CreateSolidBrush(RGB(150, 75, 0));
+            HBRUSH pik2 = CreateSolidBrush(RGB(120, 60, 0));
+            HBRUSH pik1s = CreateSolidBrush(RGB(120, 60, 0));
+            HBRUSH pik2s = CreateSolidBrush(RGB(100, 50, 0));
+            
             for (int x = 0; x < W; x++) {
                 float cameraX = 2 * x / (float)W - 1;
                 float rayDX = dX + planeX * cameraX;
@@ -658,25 +762,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int tex = ((int)(wallX * 8.0f)) % 2;
                 
                 RECT wallRc = {x, drawStart, x+1, drawEnd};
-                if (hit == 7) hit = 1;
-                if (hit == 2) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? e2s : e2) : (tex ? e1s : e1));
-                } else if (hit == 3) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? k2s : k2) : (tex ? k1s : k1));
-                } else if (hit == 4) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? d2s : d2) : (tex ? d1s : d1));
-                } else if (hit == 5) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? c2s : c2) : (tex ? c1s : c1));
-                } else if (hit == 6) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? t2s : t2) : (tex ? t1s : t1));
-                } else if (hit == 8) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? m2s : m2) : (tex ? m1s : m1));
-                } else if (hit == 9) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? p2s : p2) : (tex ? p1s : p1));
-                } else if (hit == 10 || hit == 11) {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? tp2s : tp2) : (tex ? tp1s : tp1));
+                if (currentLevel >= 15 && perpWallDist > 4.5f) {
+                    HBRUSH drk = CreateSolidBrush(RGB(0, 0, 0));
+                    FillRect(hdcMem, &wallRc, drk);
+                    DeleteObject(drk);
                 } else {
-                    FillRect(hdcMem, &wallRc, side == 1 ? (tex ? w2s : w2) : (tex ? w1s : w1));
+                    if (hit == 7) hit = 1;
+                    if (hit == 2) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? e2s : e2) : (tex ? e1s : e1));
+                    } else if (hit == 3) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? k2s : k2) : (tex ? k1s : k1));
+                    } else if (hit == 4) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? d2s : d2) : (tex ? d1s : d1));
+                    } else if (hit == 5) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? c2s : c2) : (tex ? c1s : c1));
+                    } else if (hit == 6) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? t2s : t2) : (tex ? t1s : t1));
+                    } else if (hit == 8) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? m2s : m2) : (tex ? m1s : m1));
+                    } else if (hit == 9) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? p2s : p2) : (tex ? p1s : p1));
+                    } else if (hit == 10 || hit == 11) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? tp2s : tp2) : (tex ? tp1s : tp1));
+                    } else if (hit == 12) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? min2s : min2) : (tex ? min1s : min1));
+                    } else if (hit == 13) {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? pik2s : pik2) : (tex ? pik1s : pik1));
+                    } else {
+                        FillRect(hdcMem, &wallRc, side == 1 ? (tex ? w2s : w2) : (tex ? w1s : w1));
+                    }
                 }
             }
             DeleteObject(w1); DeleteObject(w2); DeleteObject(e1); DeleteObject(e2); DeleteObject(k1); DeleteObject(k2); DeleteObject(d1); DeleteObject(d2); DeleteObject(c1); DeleteObject(c2);
@@ -685,6 +799,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(w1s); DeleteObject(w2s); DeleteObject(e1s); DeleteObject(e2s); DeleteObject(k1s); DeleteObject(k2s); DeleteObject(d1s); DeleteObject(d2s); DeleteObject(c1s); DeleteObject(c2s);
             DeleteObject(t1s); DeleteObject(t2s); DeleteObject(m1s); DeleteObject(m2s);
             DeleteObject(p1s); DeleteObject(p2s); DeleteObject(tp1s); DeleteObject(tp2s);
+            DeleteObject(min1); DeleteObject(min2); DeleteObject(min1s); DeleteObject(min2s);
+            DeleteObject(pik1); DeleteObject(pik2); DeleteObject(pik1s); DeleteObject(pik2s);
             
             // Draw UI
             char uiText[128];
@@ -695,7 +811,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 sprintf(uiText, "You Escaped! Score: %d Time: %.1fs (ENTER restart)", score, elapsed);
             } else {
                 float elapsed = (GetTickCount() - startTime) / 1000.0f;
-                sprintf(uiText, "Score: %d  Keys: %d  Lvl: %d  Time: %.1f", score, keysHeld, currentLevel + 1, elapsed);
+                sprintf(uiText, "Score: %d  Keys: %d  Pick: %d  Lvl: %d  Time: %.1f", score, keysHeld, hasPickaxe, currentLevel + 1, elapsed);
             }
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(255, 255, 255));
@@ -741,6 +857,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (v == 8) b = mComp;
                             else if (v == 9) b = mSpeed;
                             else if (v == 10 || v == 11) b = mTele;
+                            else if (v == 12) b = CreateSolidBrush(RGB(255, 50, 50));
+                            else if (v == 13) b = CreateSolidBrush(RGB(150, 75, 0));
                             
                             RECT mr = {mmX + i*mmS, mmY + j*mmS, mmX + i*mmS + mmS, mmY + j*mmS + mmS};
                             FillRect(hdcMem, &mr, b);
