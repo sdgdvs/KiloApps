@@ -60,6 +60,8 @@
     <div id="message"></div>
     <div style="margin-top: 15px;">
         <button onclick="undoMove()" style="margin-right: 10px;">Undo Move</button>
+        <button onclick="saveGame()" style="margin-right: 10px;">Save Game</button>
+        <button onclick="loadGame()" style="margin-right: 10px;">Load Game</button>
         <button onclick="initGame()" style="margin-right: 10px;">Restart Game</button>
         <button onclick="showStats()">Statistics</button>
     </div>
@@ -97,6 +99,37 @@
         function showStats() {
             const total = stats.wins + stats.losses + stats.draws;
             alert(`Games Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}`);
+        }
+
+        function saveGame() {
+            const state = {
+                boardState,
+                currentPlayer,
+                history,
+                gameEnded
+            };
+            localStorage.setItem('kreversi_save', JSON.stringify(state));
+            messageEl.textContent = 'Game Saved!';
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('kreversi_save');
+            if (saved) {
+                const state = JSON.parse(saved);
+                boardState = state.boardState;
+                currentPlayer = state.currentPlayer;
+                history = state.history || [];
+                gameEnded = state.gameEnded || false;
+                if (aiTimeoutId) {
+                    clearTimeout(aiTimeoutId);
+                    aiTimeoutId = null;
+                }
+                messageEl.textContent = 'Game Loaded!';
+                initBoardDOM();
+                renderBoard();
+            } else {
+                messageEl.textContent = 'No save found.';
+            }
         }
 
         function playSound(type) {

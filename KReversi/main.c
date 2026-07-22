@@ -14,6 +14,8 @@
 #define IDM_UNDO 1004
 #define IDM_SOUND 1005
 #define IDM_STATS 1006
+#define IDM_SAVE 1007
+#define IDM_LOAD 1008
 
 const char g_szClassName[] = "KReversiClass";
 
@@ -114,6 +116,39 @@ void UndoMove(HWND hwnd) {
     
     gameOverSoundPlayed = 0;
     InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void SaveGame(HWND hwnd) {
+    FILE* f = fopen("kreversi_save.dat", "wb");
+    if (f) {
+        fwrite(board, sizeof(int), 64, f);
+        fwrite(&currentPlayer, sizeof(int), 1, f);
+        fwrite(&historyCount, sizeof(int), 1, f);
+        fwrite(history, sizeof(HistoryState), historyCount, f);
+        fclose(f);
+        MessageBox(hwnd, "Game saved successfully.", "Save Game", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBox(hwnd, "Failed to save game.", "Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void LoadGame(HWND hwnd) {
+    FILE* f = fopen("kreversi_save.dat", "rb");
+    if (f) {
+        fread(board, sizeof(int), 64, f);
+        fread(&currentPlayer, sizeof(int), 1, f);
+        fread(&historyCount, sizeof(int), 1, f);
+        fread(history, sizeof(HistoryState), historyCount, f);
+        fclose(f);
+        KillTimer(hwnd, 1);
+        KillTimer(hwnd, 2);
+        numAnimatingFlips = 0;
+        gameOverSoundPlayed = 0;
+        InvalidateRect(hwnd, NULL, TRUE);
+        MessageBox(hwnd, "Game loaded successfully.", "Load Game", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBox(hwnd, "No saved game found.", "Load Game", MB_OK | MB_ICONWARNING);
+    }
 }
 
 int GetFlippable(int index, int player, int* flippable) {
@@ -246,6 +281,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
             
             HMENU hActionMenu = CreatePopupMenu();
+            AppendMenu(hActionMenu, MF_STRING, IDM_SAVE, "Save Game");
+            AppendMenu(hActionMenu, MF_STRING, IDM_LOAD, "Load Game");
+            AppendMenu(hActionMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hActionMenu, MF_STRING, IDM_UNDO, "Undo Move");
             AppendMenu(hActionMenu, MF_STRING, IDM_STATS, "Statistics");
             AppendMenu(hActionMenu, MF_SEPARATOR, 0, NULL);
@@ -276,6 +314,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case IDM_STATS: {
                     ShowStats(hwnd);
+                    break;
+                }
+                case IDM_SAVE: {
+                    SaveGame(hwnd);
+                    break;
+                }
+                case IDM_LOAD: {
+                    LoadGame(hwnd);
                     break;
                 }
                 case IDM_SOUND: {
