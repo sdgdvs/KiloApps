@@ -201,6 +201,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMatch3    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KWords     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KGo        | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KDarts     | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
+| KTowers    | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
+| KReversi   | Tier 1          | Creator (Phase 8)      | Needs Improvement | Full parity. New — being created by Creator. |
 
 ## Progress Log
 

@@ -8,29 +8,26 @@ The project aims to return software development to the lightweight, compute-effi
 - Maintain a minimal web-based OS environment (`KiloOS`) — a React-based desktop shell deployed to Firebase Hosting at `kiloapps.web.app`.
 - Keep dependencies and framework overhead to an absolute minimum.
 
-## Current State (as of 2026-07-20)
-- **Total Apps:** 67 registered in App.jsx.
-- **KiloOS Version:** 0.3.58
-- **Games:** 21 registered game titles.
+## Current State (as of 2026-07-22)
+- **Total Apps:** 69 application directories (including servers/proxies).
+- **KiloOS Version:** 0.3.60
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 
-### New Apps Created with Deep Expansion (14 through Phase 14)
-KVault, KBudget, KHabit, KFlash, K2048, KBBS, KSudoku, KFreecell, KConnect4, KHangman, KSimon, KAsteroids, KMatch3, KWords. KGo in progress (Phase 5).
+### New Apps Created with Deep Expansion (17 completed through Phase 14)
+KVault, KBudget, KHabit, KFlash, K2048, KSudoku, KBBS, KConnect4, KHangman, KSimon, KAsteroids, KFreecell, KMatch3, KWords, KGo, KDarts, KTowers. KReversi in progress (Phase 8).
 
-### Feature Expander: Round-Robin Continuous Improvement
-Cycling through all apps adding one meaningful feature per turn. Recently completed: Traceroute for KPing. Added KConnect4 to queue. Working through round-robin normally.
+### Games: 24 games, Loop 6 in progress
+Loops 1-5 complete. Loop 6 nearly done — 15 of 24 games expanded. Games now feature 15-30 level campaigns, boss enemies, multiple power-ups, persistent stats, and deep mechanics. **Next: fantasy/sci-fi originals** (KQuest, KStarship, KAlchemy, etc.)
 
-### Games: 21 titles, Loop 5 in progress (2/21 done)
-**Game titles:** K2048, KAsteroids, KBreakout, KChess, KConnect4, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KRogue, KSimon, KSnake, KSolitaire, KSpace, KSudoku, KTetris, KWords.
-Loops 1-4 fully complete for original 12 games. Loop 5 started: KMines and KRogue done. 9 new Creator games added to inventory awaiting their first content loop.
-Content depth is genuinely impressive — campaign modes, power-ups, procedural generation, boss enemies, biomes, sound effects, stats tracking.
+### QA: Pass 2 in progress
+Pass 1 complete. Pass 2 (deeper quality: edge cases, code quality, error handling) covering all apps.
 
-### QA: Pass 1 complete (46 apps), Pass 2 in progress
-Pass 2 deeper quality checks: 8 apps done (K2048, KAudio, KBBS, KCalc, KChart, KChat, KChess, KClock). Next: KColor.
+### Feature Expander: STALLED
+Zero commits this period. Likely due to other computer's quota exhaustion. Last active July 19.
 
-### Shell/UX: Suspended
-15+ improvements delivered previously. Agent suspended to focus compute on content.
+### KiloOS Shell/UX: Suspended
+Suspended to save quota. Can be reactivated when needed.
 
 ## Milestones
 
