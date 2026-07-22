@@ -1,9 +1,10 @@
 @echo off
-echo Building KVault...
-rc.exe /nologo app.rc
-cl.exe /nologo /O2 /W3 main.c app.res user32.lib gdi32.lib advapi32.lib comdlg32.lib /link /SUBSYSTEM:WINDOWS /OUT:KVault.exe
-if %errorlevel% neq 0 (
-    echo Build failed.
-    exit /b %errorlevel%
+set VCVARS="C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars32.bat"
+call %VCVARS%
+cl /O1 /Os /GS- /Gy /c main.c
+if exist app.rc ( rc /fo app.res app.rc )
+if exist app.res (
+    link /ENTRY:MainEntry /SUBSYSTEM:WINDOWS main.obj app.res kernel32.lib user32.lib gdi32.lib advapi32.lib comdlg32.lib shell32.lib winmm.lib ws2_32.lib comctl32.lib /OUT:KVault.exe
+) else (
+    link /ENTRY:MainEntry /SUBSYSTEM:WINDOWS main.obj kernel32.lib user32.lib gdi32.lib advapi32.lib comdlg32.lib shell32.lib winmm.lib ws2_32.lib comctl32.lib /OUT:KVault.exe
 )
-echo Build successful!
