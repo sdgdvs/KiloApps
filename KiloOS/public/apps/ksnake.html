@@ -10,7 +10,7 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="300" height="300"></canvas>
+    <canvas id="gameCanvas" width="300" height="300" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
     <div id="message">
         <h2 style="color: red; margin:0">GAME OVER</h2>
         <p style="margin:5px 0">Press ENTER to return</p>
@@ -56,10 +56,6 @@
         let gamesPlayed = parseInt(localStorage.getItem('ksnakeGamesPlayed')) || 0;
         let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
         let score = 0;
-            applesEaten = 0;
-            ghostFood = null;
-            ghostFoodTimer = 0;
-            ghostActiveTimer = 0;
         let scoreMult = 10;
         let highScore = localStorage.getItem('ksnakeHighScore') || 0;
         let currentSpeed = 150;
@@ -68,6 +64,9 @@
         let obstacles = [];
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function safeSetItem(key, val) {
+            try { localStorage.setItem(key, val); } catch (e) { console.error(e); }
+        }
         function playSound(type) {
             if(audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
@@ -96,7 +95,7 @@
 
         function init() {
             gamesPlayed++;
-            localStorage.setItem('ksnakeGamesPlayed', gamesPlayed);
+            safeSetItem('ksnakeGamesPlayed', gamesPlayed);
             document.getElementById('statsDisplay').innerText = `Games: ${gamesPlayed}  Total Apples: ${totalApples}`;
             
             snake = [{x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}];
@@ -339,10 +338,10 @@
                 playSound('eat');
                 score += scoreMult;
                 totalApples++;
-                localStorage.setItem('ksnakeTotalApples', totalApples);
+                safeSetItem('ksnakeTotalApples', totalApples);
                 if (score > highScore) {
                     highScore = score;
-                    localStorage.setItem('ksnakeHighScore', highScore);
+                    safeSetItem('ksnakeHighScore', highScore);
                 }
                 if (currentSpeed > 30) currentSpeed -= 2;
                 placeFood();
@@ -385,7 +384,7 @@
                 score += scoreMult * 2;
                 if (score > highScore) {
                     highScore = score;
-                    localStorage.setItem('ksnakeHighScore', highScore);
+                    safeSetItem('ksnakeHighScore', highScore);
                 }
                 ghostActiveTimer = 50;
                 ghostFood = null;
@@ -401,7 +400,7 @@
                 score += scoreMult * 5;
                 if (score > highScore) {
                     highScore = score;
-                    localStorage.setItem('ksnakeHighScore', highScore);
+                    safeSetItem('ksnakeHighScore', highScore);
                 }
                 for (let i = 0; i < 3 && snake.length > 3; i++) {
                     snake.pop();
@@ -419,7 +418,7 @@
                 score += scoreMult * 2;
                 if (score > highScore) {
                     highScore = score;
-                    localStorage.setItem('ksnakeHighScore', highScore);
+                    safeSetItem('ksnakeHighScore', highScore);
                 }
                 iceActiveTimer = 50;
                 iceFood = null;

@@ -137,4 +137,6 @@ Pass 1 Complete.
 
 - **KScript**: Added ARIA labels and `aria-live` to `kscript.html` for accessibility. Fixed critical infinite loop (hang) vulnerability in `kscript.html` and `main.c` when parsing unrecognized characters.
 
-Start Pass 2 (Deeper Quality checks). Next target: KSnake (or next in alphabetical order).
+- **KSnake**: Added ARIA labels to canvas, removed duplicate globals, and handled `localStorage` quota exceptions with a wrapper function in `ksnake.html`. Fixed invalid duplicate global declarations and added missing `KillTimer` on `WM_DESTROY` in `main.c`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KSolitaire (or next in alphabetical order).

@@ -15,9 +15,6 @@ int last_dir_x = 1, last_dir_y = 0;
 struct Point food = { 10, 10 };
 struct Point special_food = { -1, -1 };
 int special_food_timer = 0;
-    ghost_food.x = -1; ghost_food.y = -1;
-    ghost_food_timer = 0;
-    ghost_active_timer = 0;
 struct Point obstacles[50];
 int num_obstacles = 0;
 int game_state = 0; // 0 = Menu, 1 = Playing, 2 = Game Over
@@ -580,6 +577,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, TIMER_ID);
             PostQuitMessage(0);
             break;
         default:
