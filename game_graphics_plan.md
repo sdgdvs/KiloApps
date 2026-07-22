@@ -70,7 +70,6 @@ Your job is to replace placeholder graphics (colored boxes, plain shapes, text-o
 
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 
-- KSpace
 - KPac
 - KSnake
 - KTetris
@@ -95,7 +94,9 @@ Your job is to replace placeholder graphics (colored boxes, plain shapes, text-o
 - KWords
 - KReversi
 - KQuest
+- KSpace
 
 ## Completed Work Log
 
-(Empty — agent has not started yet)
+- **KSpace (Loop 1):** Implemented custom player fighter sprite, 7 distinct enemy craft sprites (scout, chaser predator, purple saucer, heavy armored, cyan swift, rotating asteroid, red boss dreadnought), thruster flame frame animation, rotating energy shield, glowing plasma bullets, animated powerups, and a multi-color particle explosion system for both Web (kspace.html) and Native C GDI (KSpace/main.c).
+

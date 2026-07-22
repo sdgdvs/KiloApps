@@ -10,9 +10,11 @@ long _ftol2(float f) { return (long)f; }
 #define MAX_BULLETS 20
 #define MAX_ENEMIES 15
 #define MAX_STARS 50
+#define MAX_PARTICLES 64
 
 typedef struct { float x, y, active, dx, dy, type; int hp; } Ent;
 typedef struct { float x, y, speed; } Star;
+typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; } Particle;
 
 Ent p = { W/2.0f, H - 50.0f, 1.0f, 0, 0, 0 };
 Ent b[MAX_BULLETS] = {0};
@@ -21,6 +23,8 @@ Ent e[MAX_ENEMIES] = {0};
 Ent eb[MAX_EBULLETS] = {0};
 #define MAX_POWERUPS 5
 Ent pu[MAX_POWERUPS] = {0};
+Particle particles[MAX_PARTICLES] = {0};
+
 int spreadTimer = 0;
 Star stars[MAX_STARS] = {0};
 int score = 0;
@@ -38,6 +42,49 @@ unsigned int seed = 999;
 unsigned int rnd() {
     seed = (seed * 1103515245 + 12345) & 0x7fffffff;
     return seed;
+}
+
+void AddExplosion(float x, float y, int count, COLORREF col) {
+    int added = 0;
+    for (int i = 0; i < MAX_PARTICLES && added < count; i++) {
+        if (particles[i].life <= 0) {
+            particles[i].x = x;
+            particles[i].y = y;
+            particles[i].vx = (float)((int)(rnd() % 7) - 3) * 0.8f;
+            particles[i].vy = (float)((int)(rnd() % 7) - 3) * 0.8f;
+            particles[i].life = 12 + (rnd() % 12);
+            particles[i].maxLife = particles[i].life;
+            particles[i].color = col;
+            added++;
+        }
+    }
+}
+
+void UpdateParticles() {
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].life--;
+        }
+    }
+}
+
+void DrawParticles(HDC hdc) {
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            HBRUSH pbr = CreateSolidBrush(particles[i].color);
+            HBRUSH oldBr = (HBRUSH)SelectObject(hdc, pbr);
+            int sz = (particles[i].life > 6) ? 3 : 2;
+            RECT pr = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + sz, (int)particles[i].y + sz};
+            FillRect(hdc, &pr, pbr);
+            SelectObject(hdc, oldBr);
+            DeleteObject(pbr);
+        }
+    }
+    SelectObject(hdc, oldPen);
 }
 
 void LoadHighScore() {
@@ -126,6 +173,7 @@ void Update() {
             for(int i=0; i<MAX_BULLETS; i++) b[i].active = 0;
             for(int i=0; i<MAX_EBULLETS; i++) eb[i].active = 0;
             for(int i=0; i<MAX_POWERUPS; i++) pu[i].active = 0;
+            for(int i=0; i<MAX_PARTICLES; i++) particles[i].life = 0;
             spreadTimer = 0;
             rapidTimer = 0;
             timeStopTimer = 0;
@@ -150,6 +198,8 @@ void Update() {
             stars[i].x = (float)(rnd() % W);
         }
     }
+
+    UpdateParticles();
     
     float baseEnemySpeed = 2.0f + (score / 200.0f);
     int spawnRate = 30 - (score / 100);
@@ -166,7 +216,7 @@ void Update() {
     if (p.y < 0) p.y = 0;
     if (p.y > H - 20) p.y = H - 20;
     
-    if (GetAsyncKeyState(VK_SPACE) & 0x8001) { // simple debounce
+    if (GetAsyncKeyState(VK_SPACE) & 0x8001) {
         int fireRate = (rapidTimer > 0) ? 2 : 5;
         if (frameCount % fireRate == 0) Shoot();
     }
@@ -246,9 +296,11 @@ void Update() {
             if (p.x < e[i].x + ew && p.x + 20 > e[i].x && p.y < e[i].y + eh && p.y + 20 > e[i].y) {
                 if (shieldActive) {
                     shieldActive = 0;
+                    AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, 16, RGB(0, 229, 255));
                     e[i].active = 0.0f;
                     PlaySnd(1);
                 } else {
+                    AddExplosion(p.x + 10.0f, p.y + 10.0f, 30, RGB(255, 23, 68));
                     gameOver = 1;
                     SaveHighScore();
                     PlaySnd(1);
@@ -260,8 +312,10 @@ void Update() {
                 if (b[j].active && b[j].x < e[i].x + ew && b[j].x + 4 > e[i].x && b[j].y < e[i].y + eh && b[j].y + 10 > e[i].y) {
                     b[j].active = 0.0f;
                     e[i].hp--;
+                    AddExplosion(b[j].x, b[j].y, 3, RGB(0, 229, 255));
                     if (e[i].hp <= 0) {
                         e[i].active = 0.0f;
+                        AddExplosion(e[i].x + ew/2.0f, e[i].y + eh/2.0f, (e[i].type == 6.0f) ? 30 : 12, RGB(255, 152, 0));
                         score += (e[i].type == 2.0f) ? 50 : (e[i].type == 3.0f ? 100 : (e[i].type == 4.0f ? 60 : 10));
                         if (e[i].type == 5.0f) score += 100;
                         if (e[i].type == 6.0f) score += 500;
@@ -299,8 +353,10 @@ void Update() {
                 eb[i].active = 0.0f;
                 if (shieldActive) {
                     shieldActive = 0;
+                    AddExplosion(p.x + 10.0f, p.y + 10.0f, 10, RGB(0, 229, 255));
                     PlaySnd(1);
                 } else {
+                    AddExplosion(p.x + 10.0f, p.y + 10.0f, 30, RGB(255, 23, 68));
                     gameOver = 1;
                     SaveHighScore();
                     PlaySnd(1);
@@ -322,6 +378,7 @@ void Update() {
                     for(int j=0; j<MAX_ENEMIES; j++) {
                         if(e[j].active && e[j].type != 5.0f && e[j].type != 6.0f) {
                             e[j].active = 0.0f;
+                            AddExplosion(e[j].x + 10.0f, e[j].y + 10.0f, 10, RGB(255, 235, 59));
                             score += 10;
                             enemiesKilled++;
                             totalKills++;
@@ -330,6 +387,7 @@ void Update() {
                     PlaySnd(1);
                 }
                 else if (pu[i].type == 4.0f) timeStopTimer = 300;
+                AddExplosion(pu[i].x + 7.0f, pu[i].y + 7.0f, 10, RGB(0, 229, 255));
                 score += 50;
                 PlaySnd(2);
             }
@@ -341,6 +399,165 @@ void Update() {
     
     if (frameCount % spawnRate == 0) SpawnEnemy();
     frameCount++;
+}
+
+void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    // Thruster flame
+    int flameH = 4 + (frame % 3) * 3;
+    COLORREF flameCol = (frame % 2 == 0) ? RGB(255, 200, 0) : RGB(255, 60, 0);
+    HBRUSH fbr = CreateSolidBrush(flameCol);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, fbr);
+    POINT flamePts[3] = { {x + 6, y + 20}, {x + 10, y + 20 + flameH}, {x + 14, y + 20} };
+    Polygon(hdc, flamePts, 3);
+    SelectObject(hdc, oldBr);
+    DeleteObject(fbr);
+
+    // Wings
+    HBRUSH wbr = CreateSolidBrush(RGB(30, 136, 229));
+    SelectObject(hdc, wbr);
+    POINT wingPts[6] = { {x + 10, y}, {x + 20, y + 16}, {x + 16, y + 20}, {x + 10, y + 15}, {x + 4, y + 20}, {x + 0, y + 16} };
+    Polygon(hdc, wingPts, 6);
+    SelectObject(hdc, oldBr);
+    DeleteObject(wbr);
+
+    // Fuselage / body
+    HBRUSH bbr = CreateSolidBrush(RGB(100, 181, 246));
+    SelectObject(hdc, bbr);
+    POINT bodyPts[4] = { {x + 10, y + 1}, {x + 14, y + 12}, {x + 10, y + 18}, {x + 6, y + 12} };
+    Polygon(hdc, bodyPts, 4);
+    SelectObject(hdc, oldBr);
+    DeleteObject(bbr);
+
+    // Cockpit
+    HBRUSH cbr = CreateSolidBrush(RGB(0, 229, 255));
+    SelectObject(hdc, cbr);
+    Ellipse(hdc, x + 7, y + 4, x + 13, y + 12);
+    SelectObject(hdc, oldBr);
+    DeleteObject(cbr);
+
+    // Shield
+    if (shield) {
+        HPEN spen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+        SelectObject(hdc, spen);
+        HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+        SelectObject(hdc, nullBr);
+        Ellipse(hdc, x - 4, y - 4, x + 24, y + 24);
+        SelectObject(hdc, oldBr);
+        DeleteObject(spen);
+    }
+    SelectObject(hdc, oldPen);
+}
+
+void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
+    int x = (int)fx;
+    int y = (int)fy;
+    int type = (int)ftype;
+
+    HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    if (type == 0) { // Scout (Red Interceptor)
+        HBRUSH br = CreateSolidBrush(RGB(229, 57, 53));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        POINT pts[6] = { {x, y + 2}, {x + 10, y + 18}, {x + 20, y + 2}, {x + 13, y + 6}, {x + 10, y}, {x + 7, y + 6} };
+        Polygon(hdc, pts, 6);
+        HBRUSH cbr = CreateSolidBrush(RGB(255, 235, 59));
+        SelectObject(hdc, cbr);
+        Ellipse(hdc, x + 7, y + 7, x + 13, y + 13);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br);
+        DeleteObject(cbr);
+    } else if (type == 1) { // Chaser (Orange Predator)
+        HBRUSH br = CreateSolidBrush(RGB(255, 152, 0));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        POINT pts[4] = { {x + 10, y + 20}, {x + 20, y + 4}, {x + 10, y}, {x, y + 4} };
+        Polygon(hdc, pts, 4);
+        HBRUSH coreBr = CreateSolidBrush(RGB(255, 61, 0));
+        SelectObject(hdc, coreBr);
+        RECT rc = {x + 7, y + 4, x + 13, y + 14};
+        FillRect(hdc, &rc, coreBr);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br);
+        DeleteObject(coreBr);
+    } else if (type == 2) { // Shooter (Purple Saucer)
+        HBRUSH br = CreateSolidBrush(RGB(142, 36, 170));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        Ellipse(hdc, x, y + 6, x + 20, y + 18);
+        HBRUSH cbr = CreateSolidBrush(RGB(224, 64, 251));
+        SelectObject(hdc, cbr);
+        Ellipse(hdc, x + 5, y + 4, x + 15, y + 12);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br);
+        DeleteObject(cbr);
+    } else if (type == 3) { // Armored (Grey Heavy)
+        HBRUSH br = CreateSolidBrush(RGB(120, 144, 156));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        RECT rc = {x + 2, y + 2, x + 18, y + 18};
+        FillRect(hdc, &rc, br);
+        HBRUSH cbr = CreateSolidBrush(RGB(55, 71, 79));
+        RECT rc2 = {x + 5, y + 5, x + 15, y + 15};
+        FillRect(hdc, &rc2, cbr);
+        HBRUSH pbr = CreateSolidBrush(RGB(66, 165, 245));
+        RECT rc3 = {x + 8, y, x + 12, y + 20};
+        FillRect(hdc, &rc3, pbr);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br); DeleteObject(cbr); DeleteObject(pbr);
+    } else if (type == 4) { // Zigzag (Cyan Swift)
+        HBRUSH br = CreateSolidBrush(RGB(0, 188, 212));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        POINT pts[4] = { {x + 10, y + 18}, {x + 20, y}, {x + 10, y + 6}, {x, y} };
+        Polygon(hdc, pts, 4);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br);
+    } else if (type == 5) { // Asteroid (Brown Rock)
+        HBRUSH br = CreateSolidBrush(RGB(109, 76, 65));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        POINT pts[7] = { {x + 2, y + 6}, {x + 8, y + 1}, {x + 16, y + 3}, {x + 19, y + 11}, {x + 15, y + 18}, {x + 6, y + 19}, {x + 1, y + 13} };
+        Polygon(hdc, pts, 7);
+        HBRUSH crBr = CreateSolidBrush(RGB(78, 52, 46));
+        SelectObject(hdc, crBr);
+        Ellipse(hdc, x + 8, y + 9, x + 14, y + 15);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br); DeleteObject(crBr);
+    } else if (type == 6) { // Boss Dreadnought (40x40)
+        HBRUSH br = CreateSolidBrush(RGB(183, 28, 28));
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+        POINT pts[6] = { {x + 20, y + 38}, {x + 38, y + 10}, {x + 32, y + 2}, {x + 20, y + 12}, {x + 8, y + 2}, {x + 2, y + 10} };
+        Polygon(hdc, pts, 6);
+        COLORREF eyeCol = (frame % 10 < 5) ? RGB(255, 235, 59) : RGB(255, 23, 68);
+        HBRUSH eyeBr = CreateSolidBrush(eyeCol);
+        SelectObject(hdc, eyeBr);
+        Ellipse(hdc, x + 13, y + 13, x + 27, y + 27);
+        HBRUSH gunBr = CreateSolidBrush(RGB(66, 66, 66));
+        RECT g1 = {x + 4, y + 24, x + 8, y + 36};
+        RECT g2 = {x + 32, y + 24, x + 36, y + 36};
+        FillRect(hdc, &g1, gunBr);
+        FillRect(hdc, &g2, gunBr);
+        SelectObject(hdc, oldBr);
+        DeleteObject(br); DeleteObject(eyeBr); DeleteObject(gunBr);
+    }
+
+    SelectObject(hdc, oldPen);
+}
+
+void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype) {
+    int x = (int)fx;
+    int y = (int)fy;
+    int type = (int)ftype;
+    COLORREF cols[5] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(255, 255, 255), RGB(255, 234, 0), RGB(124, 77, 255) };
+    COLORREF c = (type >= 0 && type < 5) ? cols[type] : RGB(255, 255, 255);
+    HBRUSH br = CreateSolidBrush(c);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
+    HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+    Ellipse(hdc, x, y, x + 15, y + 15);
+    SelectObject(hdc, oldBr);
+    SelectObject(hdc, oldPen);
+    DeleteObject(br);
+    DeleteObject(pen);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -383,20 +600,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(sbr);
             
             // Draw player
-            HBRUSH pbr = CreateSolidBrush(RGB(100, 200, 255));
-            RECT pr = {(int)p.x, (int)p.y, (int)p.x + 20, (int)p.y + 20};
-            FillRect(memDC, &pr, pbr);
-            DeleteObject(pbr);
-            
-            if (shieldActive) {
-                HBRUSH sbr2 = CreateSolidBrush(RGB(50, 200, 255));
-                RECT sr2 = {(int)p.x - 4, (int)p.y - 4, (int)p.x + 24, (int)p.y + 24};
-                FrameRect(memDC, &sr2, sbr2);
-                DeleteObject(sbr2);
-            }
+            DrawPlayerShipGDI(memDC, (int)p.x, (int)p.y, shieldActive, frameCount);
             
             // Draw bullets
-            HBRUSH bbr = CreateSolidBrush(RGB(255, 255, 100));
+            HBRUSH bbr = CreateSolidBrush(RGB(0, 229, 255));
             for (int i = 0; i < MAX_BULLETS; i++) {
                 if (b[i].active) {
                     RECT br = {(int)b[i].x, (int)b[i].y, (int)b[i].x + 4, (int)b[i].y + 10};
@@ -406,7 +613,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(bbr);
             
             // Draw enemy bullets
-            HBRUSH ebbr = CreateSolidBrush(RGB(255, 100, 255));
+            HBRUSH ebbr = CreateSolidBrush(RGB(255, 23, 68));
             for (int i = 0; i < MAX_EBULLETS; i++) {
                 if (eb[i].active) {
                     RECT br = {(int)eb[i].x, (int)eb[i].y, (int)eb[i].x + 4, (int)eb[i].y + 10};
@@ -416,48 +623,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(ebbr);
             
             // Draw enemies
-            HBRUSH ebr1 = CreateSolidBrush(RGB(255, 50, 50));
-            HBRUSH ebr2 = CreateSolidBrush(RGB(255, 150, 50));
-            HBRUSH ebr3 = CreateSolidBrush(RGB(160, 32, 240));
-            HBRUSH ebr4 = CreateSolidBrush(RGB(150, 150, 150));
-            HBRUSH ebr5 = CreateSolidBrush(RGB(0, 255, 255));
-            HBRUSH ebr6 = CreateSolidBrush(RGB(139, 69, 19));
-            HBRUSH ebr7 = CreateSolidBrush(RGB(150, 0, 0));
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (e[i].active) {
-                    float ew = (e[i].type == 6.0f) ? 40.0f : 20.0f;
-                    float eh = (e[i].type == 6.0f) ? 40.0f : 20.0f;
-                    RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + (int)ew, (int)e[i].y + (int)eh};
-                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : (e[i].type == 2.0f ? ebr3 : (e[i].type == 3.0f ? ebr4 : (e[i].type == 4.0f ? ebr5 : (e[i].type == 5.0f ? ebr6 : ebr7)))));
-                    FillRect(memDC, &er, br);
+                    DrawEnemyShipGDI(memDC, e[i].x, e[i].y, e[i].type, frameCount);
                 }
             }
-            DeleteObject(ebr1);
-            DeleteObject(ebr2);
-            DeleteObject(ebr3);
-            DeleteObject(ebr4);
-            DeleteObject(ebr5);
-            DeleteObject(ebr6);
-            DeleteObject(ebr7);
             
             // Draw powerups
-            HBRUSH pubr1 = CreateSolidBrush(RGB(50, 255, 50));
-            HBRUSH pubr2 = CreateSolidBrush(RGB(50, 200, 255));
-            HBRUSH pubr3 = CreateSolidBrush(RGB(255, 255, 255));
-            HBRUSH pubr4 = CreateSolidBrush(RGB(255, 255, 0));
-            HBRUSH pubr5 = CreateSolidBrush(RGB(50, 50, 255));
             for (int i = 0; i < MAX_POWERUPS; i++) {
                 if (pu[i].active) {
-                    RECT pr = {(int)pu[i].x, (int)pu[i].y, (int)pu[i].x + 15, (int)pu[i].y + 15};
-                    HBRUSH br = pu[i].type == 0.0f ? pubr1 : (pu[i].type == 1.0f ? pubr2 : (pu[i].type == 2.0f ? pubr3 : (pu[i].type == 3.0f ? pubr4 : pubr5)));
-                    FillRect(memDC, &pr, br);
+                    DrawPowerupGDI(memDC, pu[i].x, pu[i].y, pu[i].type);
                 }
             }
-            DeleteObject(pubr1);
-            DeleteObject(pubr2);
-            DeleteObject(pubr3);
-            DeleteObject(pubr4);
-            DeleteObject(pubr5);
+
+            // Draw particles / explosions
+            DrawParticles(memDC);
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
@@ -516,3 +696,4 @@ void MainEntry() {
     }
     ExitProcess(0);
 }
+
