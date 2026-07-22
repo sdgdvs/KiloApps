@@ -118,7 +118,7 @@ void Reveal(int x, int y) {
     }
 }
 
-void Chord(int x, int y) {
+void ChordCell(int x, int y) {
     if (state[y][x] != 1 || grid[y][x] <= 0 || grid[y][x] >= 9) return;
     int flagCount = 0;
     for (int dy = -1; dy <= 1; dy++) {
@@ -267,7 +267,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTimer(hwnd, 1, 1000, NULL);
             }
             if (state[y][x] == 1) {
-                Chord(x, y);
+                ChordCell(x, y);
             } else if (state[y][x] == 0) {
                 Reveal(x, y);
             }
