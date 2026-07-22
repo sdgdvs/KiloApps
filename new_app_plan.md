@@ -52,18 +52,18 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KQuest
-**Phase:** 2
-**Status:** In Progress
+**Phase:** 4
+**Status:** Phase 3 & 4 Complete
 
 - [x] Phase 1: Choose a unique app. Scaffold `KQuest/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [ ] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [ ] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
+- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
 **App:** KQuest
-**Goal:** Phase 3
+**Goal:** Phase 5 (Deep Expansion: Add first substantial expansion feature)
 
 
 

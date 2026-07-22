@@ -7,7 +7,7 @@
 #define STATE_COMBAT      4
 #define STATE_GAME_OVER   5
 
-static unsigned int rngSeed = 12345;
+static unsigned int rngSeed = 54321;
 static int xrand() {
     rngSeed = rngSeed * 1103515245 + 12345;
     return (int)((rngSeed / 65536) % 32768);
@@ -23,10 +23,16 @@ typedef struct {
     int gold;
     int xp, nextXp;
     int floor;
+    char weaponName[32];
+    int weaponBonusStr;
+    char armorName[32];
+    int armorBonusDef;
     int hpPotions;
     int mpPotions;
-    int weaponBonus;
-    int armorBonus;
+    int questMonstersKilled;
+    int questMonstersDone;
+    int questBossKilled;
+    int questBossDone;
 } Hero;
 
 typedef struct {
@@ -36,13 +42,18 @@ typedef struct {
     int xp, gold;
 } Enemy;
 
-static Hero player = { "Valerius", "Warrior", 1, 60, 60, 15, 15, 6, 12, 8, 50, 0, 100, 1, 3, 2, 4, 3 };
+static Hero player;
 static Enemy currentEnemy;
-static int gameState = STATE_TOWN;
+static int gameState = STATE_CHAR_CREATE;
+static int selectedClassIndex = 0; // 0: Warrior, 1: Mage, 2: Rogue
 
-HWND hLogEdit;
 HWND hStatusText;
-HWND hBtn1, hBtn2, hBtn3, hBtn4, hBtn5;
+HWND hInfoText;
+HWND hLogEdit;
+HWND hBtn1, hBtn2, hBtn3, hBtn4, hBtn5, hBtn6;
+
+HBRUSH hBgBrush = NULL;
+HBRUSH hPanelBrush = NULL;
 
 void LogMessage(const char* msg) {
     if (!hLogEdit) return;
@@ -52,112 +63,145 @@ void LogMessage(const char* msg) {
     SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
 }
 
+void InitHero(int classIdx) {
+    lstrcpyA(player.name, "Valerius");
+    player.level = 1;
+    player.xp = 0;
+    player.nextXp = 100;
+    player.gold = 50;
+    player.floor = 1;
+    player.hpPotions = 3;
+    player.mpPotions = 2;
+    player.questMonstersKilled = 0;
+    player.questMonstersDone = 0;
+    player.questBossKilled = 0;
+    player.questBossDone = 0;
+
+    if (classIdx == 0) { // Warrior
+        lstrcpyA(player.heroClass, "Warrior");
+        player.maxHp = 60; player.hp = 60;
+        player.maxMp = 15; player.mp = 15;
+        player.str = 15; player.intStat = 6; player.def = 12; player.agi = 8;
+        lstrcpyA(player.weaponName, "Iron Shortsword"); player.weaponBonusStr = 4;
+        lstrcpyA(player.armorName, "Chainmail Armor"); player.armorBonusDef = 5;
+    } else if (classIdx == 1) { // Mage
+        lstrcpyA(player.heroClass, "Mage");
+        player.maxHp = 40; player.hp = 40;
+        player.maxMp = 45; player.mp = 45;
+        player.str = 7; player.intStat = 18; player.def = 6; player.agi = 10;
+        lstrcpyA(player.weaponName, "Apprentice Staff"); player.weaponBonusStr = 2;
+        lstrcpyA(player.armorName, "Silk Robes"); player.armorBonusDef = 2;
+    } else { // Rogue
+        lstrcpyA(player.heroClass, "Rogue");
+        player.maxHp = 45; player.hp = 45;
+        player.maxMp = 25; player.mp = 25;
+        player.str = 11; player.intStat = 8; player.def = 8; player.agi = 16;
+        lstrcpyA(player.weaponName, "Twin Daggers"); player.weaponBonusStr = 5;
+        lstrcpyA(player.armorName, "Leather Vest"); player.armorBonusDef = 3;
+    }
+}
+
 void UpdateUI() {
-    char buf[512];
-    wsprintfA(buf, "Hero: %s (%s) | Lvl: %d | HP: %d/%d | MP: %d/%d | STR: %d | DEF: %d | Gold: %d 🪙 | XP: %d/%d | Location: %s",
+    char statusBuf[512];
+    char infoBuf[512];
+
+    const char* locStr = "Oakhaven Town";
+    if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+        locStr = "Obsidian Spire";
+    }
+
+    wsprintfA(statusBuf, "Hero: %s (%s)  |  Lvl: %d  |  HP: %d/%d  |  MP: %d/%d  |  Gold: %d Gold  |  Loc: %s (Floor %d)",
         player.name, player.heroClass, player.level,
         player.hp, player.maxHp, player.mp, player.maxMp,
-        player.str + player.weaponBonus, player.def + player.armorBonus,
-        player.gold, player.xp, player.nextXp,
-        (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) ? "Dungeon Spire" : "Oakhaven Town");
-    
-    if (hStatusText) {
-        SetWindowText(hStatusText, buf);
-    }
+        player.gold, locStr, player.floor);
+
+    int totalStr = player.str + player.weaponBonusStr;
+    int totalDef = player.def + player.armorBonusDef;
+
+    wsprintfA(infoBuf,
+        "ATTRIBUTES: STR %d (+%d) | INT %d | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
+        "EQUIPMENT: Weapon: %s | Armor: %s\r\n"
+        "INVENTORY: HP Potions x%d | MP Potions x%d\r\n"
+        "QUESTS: Clear Spire (%d/5 Mon) [%s] | Slay Goblin King (%d/1 Boss) [%s]",
+        player.str, player.weaponBonusStr, player.intStat, player.def, player.armorBonusDef, player.agi, player.xp, player.nextXp,
+        player.weaponName, player.armorName,
+        player.hpPotions, player.mpPotions,
+        player.questMonstersKilled, player.questMonstersDone ? "DONE" : "ACTIVE",
+        player.questBossKilled, player.questBossDone ? "DONE" : "ACTIVE");
+
+    if (hStatusText) SetWindowTextA(hStatusText, statusBuf);
+    if (hInfoText) SetWindowTextA(hInfoText, infoBuf);
 }
 
 void SetupButtons() {
+    ShowWindow(hBtn1, SW_SHOW);
+    ShowWindow(hBtn2, SW_SHOW);
+    ShowWindow(hBtn3, SW_SHOW);
+    ShowWindow(hBtn4, SW_SHOW);
+    ShowWindow(hBtn5, SW_SHOW);
+    ShowWindow(hBtn6, SW_SHOW);
+
     switch (gameState) {
+        case STATE_CHAR_CREATE:
+            SetWindowTextA(hBtn1, "Select Warrior");
+            SetWindowTextA(hBtn2, "Select Mage");
+            SetWindowTextA(hBtn3, "Select Rogue");
+            SetWindowTextA(hBtn4, "Begin Quest");
+            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn6, "---");
+            break;
+
         case STATE_TOWN:
-            SetWindowText(hBtn1, "⚔️ Explore Dungeon");
-            SetWindowText(hBtn2, "🍺 Rest at Inn (10 Gold)");
-            SetWindowText(hBtn3, "🛒 Visit Shop");
-            SetWindowText(hBtn4, "📜 View Attributes");
-            SetWindowText(hBtn5, "🔄 Reset Game");
+            SetWindowTextA(hBtn1, "Enter Obsidian Spire");
+            SetWindowTextA(hBtn2, "Rest at Inn (10 Gold)");
+            SetWindowTextA(hBtn3, "Visit Shop");
+            SetWindowTextA(hBtn4, "Claim Quest Rewards");
+            SetWindowTextA(hBtn5, "Reset Game");
+            SetWindowTextA(hBtn6, "---");
             break;
+
         case STATE_SHOP:
-            SetWindowText(hBtn1, "🧪 Buy HP Potion (15 Gold)");
-            SetWindowText(hBtn2, "🧪 Buy MP Potion (15 Gold)");
-            SetWindowText(hBtn3, "⚔️ Buy Sword (+6 STR, 50G)");
-            SetWindowText(hBtn4, "🛡️ Buy Armor (+6 DEF, 50G)");
-            SetWindowText(hBtn5, "🏰 Back to Town");
+            SetWindowTextA(hBtn1, "Buy HP Potion (15G)");
+            SetWindowTextA(hBtn2, "Buy MP Potion (15G)");
+            SetWindowTextA(hBtn3, "Steel Sword (+8 STR, 60G)");
+            SetWindowTextA(hBtn4, "Plate Armor (+9 DEF, 75G)");
+            SetWindowTextA(hBtn5, "Back to Town");
+            SetWindowTextA(hBtn6, "---");
             break;
+
         case STATE_DUNGEON:
-            SetWindowText(hBtn1, "🚶 Advance Chamber");
-            SetWindowText(hBtn2, "🪜 Descend Floor");
-            SetWindowText(hBtn3, "🧪 Use HP Potion");
-            SetWindowText(hBtn4, "🏰 Return to Town");
-            SetWindowText(hBtn5, "---");
+            SetWindowTextA(hBtn1, "Advance Chamber");
+            SetWindowTextA(hBtn2, "Descend Staircase");
+            SetWindowTextA(hBtn3, "Use HP Potion");
+            SetWindowTextA(hBtn4, "Use MP Potion");
+            SetWindowTextA(hBtn5, "Return to Town");
+            SetWindowTextA(hBtn6, "---");
             break;
+
         case STATE_COMBAT:
-            SetWindowText(hBtn1, "⚔️ Attack");
-            SetWindowText(hBtn2, "🔮 Special Ability");
-            SetWindowText(hBtn3, "🧪 Use HP Potion");
-            SetWindowText(hBtn4, "🏃 Flee");
-            SetWindowText(hBtn5, "---");
+            SetWindowTextA(hBtn1, "Attack");
+            if (lstrcmpA(player.heroClass, "Mage") == 0) {
+                SetWindowTextA(hBtn2, "Fireball (10 MP)");
+            } else if (lstrcmpA(player.heroClass, "Rogue") == 0) {
+                SetWindowTextA(hBtn2, "Shadow Strike (8 MP)");
+            } else {
+                SetWindowTextA(hBtn2, "Shield Bash (5 MP)");
+            }
+            SetWindowTextA(hBtn3, "Use HP Potion");
+            SetWindowTextA(hBtn4, "Use MP Potion");
+            SetWindowTextA(hBtn5, "Flee Battle");
+            SetWindowTextA(hBtn6, "---");
             break;
+
         case STATE_GAME_OVER:
-            SetWindowText(hBtn1, "🔄 Restart Journey");
-            SetWindowText(hBtn2, "---");
-            SetWindowText(hBtn3, "---");
-            SetWindowText(hBtn4, "---");
-            SetWindowText(hBtn5, "---");
+            SetWindowTextA(hBtn1, "Restart Journey");
+            SetWindowTextA(hBtn2, "---");
+            SetWindowTextA(hBtn3, "---");
+            SetWindowTextA(hBtn4, "---");
+            SetWindowTextA(hBtn5, "---");
+            SetWindowTextA(hBtn6, "---");
             break;
     }
-}
-
-void SpawnMonster() {
-    gameState = STATE_COMBAT;
-    char nameBuf[32];
-    if (player.floor == 5) {
-        wsprintfA(currentEnemy.name, "Goblin King (Boss)");
-        currentEnemy.maxHp = 120;
-        currentEnemy.str = 20;
-        currentEnemy.def = 10;
-        currentEnemy.xp = 200;
-        currentEnemy.gold = 120;
-    } else {
-        int r = xrand() % 4;
-        if (r == 0) wsprintfA(nameBuf, "Cave Rat");
-        else if (r == 1) wsprintfA(nameBuf, "Goblin Scout");
-        else if (r == 2) wsprintfA(nameBuf, "Skeleton Archer");
-        else wsprintfA(nameBuf, "Dark Cultist");
-
-        wsprintfA(currentEnemy.name, "%s", nameBuf);
-        currentEnemy.maxHp = 30 + player.floor * 10;
-        currentEnemy.str = 8 + player.floor * 3;
-        currentEnemy.def = 3 + player.floor * 2;
-        currentEnemy.xp = 25 + player.floor * 15;
-        currentEnemy.gold = 15 + player.floor * 10;
-    }
-    currentEnemy.hp = currentEnemy.maxHp;
-
-    char msg[128];
-    wsprintfA(msg, "⚠️ A wild %s (HP: %d) attacks you on Floor %d!", currentEnemy.name, currentEnemy.hp, player.floor);
-    LogMessage(msg);
-    SetupButtons();
-    UpdateUI();
-}
-
-void EnemyTurn() {
-    if (currentEnemy.hp <= 0) return;
-
-    int totalDef = player.def + player.armorBonus;
-    int dmg = currentEnemy.str - (totalDef / 2);
-    if (dmg < 2) dmg = 2;
-
-    player.hp -= dmg;
-    char msg[128];
-    wsprintfA(msg, "💥 %s hits you for %d damage!", currentEnemy.name, dmg);
-    LogMessage(msg);
-
-    if (player.hp <= 0) {
-        player.hp = 0;
-        LogMessage("💀 YOU HAVE FALLEN IN COMBAT! Game Over.");
-        gameState = STATE_GAME_OVER;
-        SetupButtons();
-    }
-    UpdateUI();
 }
 
 void CheckLevelUp() {
@@ -167,24 +211,109 @@ void CheckLevelUp() {
         player.nextXp = (int)(player.nextXp * 1.5);
         player.maxHp += 15; player.hp = player.maxHp;
         player.maxMp += 10; player.mp = player.maxMp;
-        player.str += 3; player.def += 2;
+        player.str += 3; player.intStat += 2; player.def += 2; player.agi += 2;
         char msg[128];
-        wsprintfA(msg, "🌟 LEVEL UP! You are now Level %d! HP and MP restored!", player.level);
+        wsprintfA(msg, "🌟 LEVEL UP! Reached Level %d! HP/MP restored and attributes increased!", player.level);
         LogMessage(msg);
     }
 }
 
+void StartCombat() {
+    gameState = STATE_COMBAT;
+    if (player.floor == 5) {
+        lstrcpyA(currentEnemy.name, "Goblin King (Boss)");
+        currentEnemy.maxHp = 120;
+        currentEnemy.str = 22;
+        currentEnemy.def = 10;
+        currentEnemy.xp = 250;
+        currentEnemy.gold = 150;
+    } else if (player.floor >= 10) {
+        lstrcpyA(currentEnemy.name, "Obsidian Dragon (Final Boss)");
+        currentEnemy.maxHp = 250;
+        currentEnemy.str = 32;
+        currentEnemy.def = 18;
+        currentEnemy.xp = 600;
+        currentEnemy.gold = 500;
+    } else {
+        int r = xrand() % 5;
+        if (r == 0) { lstrcpyA(currentEnemy.name, "Sewer Rat"); currentEnemy.maxHp = 20; currentEnemy.str = 6; currentEnemy.def = 2; currentEnemy.xp = 20; currentEnemy.gold = 10; }
+        else if (r == 1) { lstrcpyA(currentEnemy.name, "Cave Goblin"); currentEnemy.maxHp = 35; currentEnemy.str = 9; currentEnemy.def = 4; currentEnemy.xp = 35; currentEnemy.gold = 18; }
+        else if (r == 2) { lstrcpyA(currentEnemy.name, "Skeleton Warrior"); currentEnemy.maxHp = 45; currentEnemy.str = 12; currentEnemy.def = 6; currentEnemy.xp = 50; currentEnemy.gold = 25; }
+        else if (r == 3) { lstrcpyA(currentEnemy.name, "Dark Cultist"); currentEnemy.maxHp = 55; currentEnemy.str = 15; currentEnemy.def = 5; currentEnemy.xp = 65; currentEnemy.gold = 35; }
+        else { lstrcpyA(currentEnemy.name, "Shadow Beast"); currentEnemy.maxHp = 75; currentEnemy.str = 18; currentEnemy.def = 8; currentEnemy.xp = 90; currentEnemy.gold = 50; }
+
+        // Scale monster stats with floor
+        int floorBonus = player.floor - 1;
+        currentEnemy.maxHp += floorBonus * 8;
+        currentEnemy.str += floorBonus * 2;
+        currentEnemy.def += floorBonus * 1;
+        currentEnemy.xp += floorBonus * 10;
+        currentEnemy.gold += floorBonus * 8;
+    }
+    currentEnemy.hp = currentEnemy.maxHp;
+
+    char msg[128];
+    wsprintfA(msg, "⚠️ Encounter! A hostile %s (HP: %d, STR: %d, DEF: %d) attacks on Floor %d!",
+        currentEnemy.name, currentEnemy.hp, currentEnemy.str, currentEnemy.def, player.floor);
+    LogMessage(msg);
+    SetupButtons();
+    UpdateUI();
+}
+
+void EnemyTurn() {
+    if (currentEnemy.hp <= 0) return;
+
+    int totalDef = player.def + player.armorBonusDef;
+    int dmg = currentEnemy.str - (totalDef / 2);
+    if (dmg < 2) dmg = 2;
+
+    player.hp -= dmg;
+    char msg[128];
+    wsprintfA(msg, "💥 %s attacks you for %d damage!", currentEnemy.name, dmg);
+    LogMessage(msg);
+
+    if (player.hp <= 0) {
+        player.hp = 0;
+        LogMessage("💀 YOU HAVE FALLEN IN COMBAT! Your soul vanishes into darkness.");
+        gameState = STATE_GAME_OVER;
+        SetupButtons();
+    }
+    UpdateUI();
+}
+
+void CombatVictory() {
+    char msg[128];
+    wsprintfA(msg, "🎉 VICTORY! Defeated %s! Gained +%d XP and +%d Gold!", currentEnemy.name, currentEnemy.xp, currentEnemy.gold);
+    LogMessage(msg);
+
+    player.xp += currentEnemy.xp;
+    player.gold += currentEnemy.gold;
+
+    if (player.questMonstersKilled < 5) player.questMonstersKilled++;
+    if (lstrcmpA(currentEnemy.name, "Goblin King (Boss)") == 0) player.questBossKilled = 1;
+
+    CheckLevelUp();
+    gameState = STATE_DUNGEON;
+    SetupButtons();
+    UpdateUI();
+}
+
 void HandleButton1() {
-    if (gameState == STATE_TOWN) {
+    if (gameState == STATE_CHAR_CREATE) {
+        selectedClassIndex = 0;
+        InitHero(0);
+        LogMessage("Selected Class: Warrior (High HP & Defense).");
+        UpdateUI();
+    } else if (gameState == STATE_TOWN) {
         gameState = STATE_DUNGEON;
-        LogMessage("You enter the Obsidian Spire. Shadows loom all around...");
+        LogMessage("You venture into the mysterious Obsidian Spire...");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 15) {
             player.gold -= 15;
             player.hpPotions++;
-            LogMessage("Bought 1x Health Potion for 15 Gold.");
+            LogMessage("Bought 1x Health Potion (+35 HP) for 15 Gold.");
             UpdateUI();
         } else {
             LogMessage("Not enough gold!");
@@ -192,62 +321,69 @@ void HandleButton1() {
     } else if (gameState == STATE_DUNGEON) {
         int r = xrand() % 100;
         if (r < 65) {
-            SpawnMonster();
+            StartCombat();
         } else if (r < 85) {
-            int g = 20 + xrand() % 30;
+            int g = 15 + (xrand() % 25) + (player.floor * 10);
             player.gold += g;
             char msg[128];
-            wsprintfA(msg, "✨ Found a chest containing %d Gold!", g);
+            wsprintfA(msg, "✨ Found an ornate chest with %d Gold!", g);
             LogMessage(msg);
             UpdateUI();
         } else {
-            player.hp = player.maxHp;
-            LogMessage("⛩️ Prayed at an ancient shrine. Full HP restored!");
+            if ((xrand() % 2) == 0) {
+                player.hp = player.maxHp;
+                LogMessage("⛩️ Prayed at a glowing red altar. Health fully restored!");
+            } else {
+                player.mp = player.maxMp;
+                LogMessage("⛩️ Prayed at a glowing blue altar. Mana fully restored!");
+            }
             UpdateUI();
         }
     } else if (gameState == STATE_COMBAT) {
-        int totalStr = player.str + player.weaponBonus;
-        int dmg = totalStr * 2 - currentEnemy.def;
-        if (dmg < 3) dmg = 3;
+        int totalStr = player.str + player.weaponBonusStr;
+        int dmg = (int)(totalStr * 1.2) - (currentEnemy.def / 2);
+        if (dmg < 2) dmg = 2;
+
+        BOOL isCrit = ((xrand() % 100) < (player.agi * 2));
+        if (isCrit) {
+            dmg = (int)(dmg * 1.75);
+            char msg[128];
+            wsprintfA(msg, "🎯 CRITICAL HIT! You strike %s for %d damage!", currentEnemy.name, dmg);
+            LogMessage(msg);
+        } else {
+            char msg[128];
+            wsprintfA(msg, "⚔️ You attack %s dealing %d damage.", currentEnemy.name, dmg);
+            LogMessage(msg);
+        }
 
         currentEnemy.hp -= dmg;
-        char msg[128];
-        wsprintfA(msg, "⚔️ You attack %s dealing %d damage!", currentEnemy.name, dmg);
-        LogMessage(msg);
-
         if (currentEnemy.hp <= 0) {
             currentEnemy.hp = 0;
-            wsprintfA(msg, "🎉 Defeated %s! Gained +%d XP and +%d Gold!", currentEnemy.name, currentEnemy.xp, currentEnemy.gold);
-            LogMessage(msg);
-            player.xp += currentEnemy.xp;
-            player.gold += currentEnemy.gold;
-            CheckLevelUp();
-            gameState = STATE_DUNGEON;
-            SetupButtons();
-            UpdateUI();
+            CombatVictory();
         } else {
             EnemyTurn();
         }
     } else if (gameState == STATE_GAME_OVER) {
-        player.level = 1;
-        player.maxHp = 60; player.hp = 60;
-        player.maxMp = 15; player.mp = 15;
-        player.gold = 50; player.xp = 0; player.floor = 1;
-        player.hpPotions = 3; player.mpPotions = 2;
-        gameState = STATE_TOWN;
-        LogMessage("--- New Journey Begun in Oakhaven ---");
+        InitHero(selectedClassIndex);
+        gameState = STATE_CHAR_CREATE;
+        LogMessage("--- New Journey Initialized ---");
         SetupButtons();
         UpdateUI();
     }
 }
 
 void HandleButton2() {
-    if (gameState == STATE_TOWN) {
+    if (gameState == STATE_CHAR_CREATE) {
+        selectedClassIndex = 1;
+        InitHero(1);
+        LogMessage("Selected Class: Mage (High Mana & Spell Power).");
+        UpdateUI();
+    } else if (gameState == STATE_TOWN) {
         if (player.gold >= 10) {
             player.gold -= 10;
             player.hp = player.maxHp;
             player.mp = player.maxMp;
-            LogMessage("🍺 Rested at the Inn. HP and MP fully restored!");
+            LogMessage("🍺 Rested at the Dragon's Rest Inn. HP and MP fully restored!");
             UpdateUI();
         } else {
             LogMessage("Not enough gold for the Inn!");
@@ -256,7 +392,7 @@ void HandleButton2() {
         if (player.gold >= 15) {
             player.gold -= 15;
             player.mpPotions++;
-            LogMessage("Bought 1x Mana Potion for 15 Gold.");
+            LogMessage("Bought 1x Mana Potion (+25 MP) for 15 Gold.");
             UpdateUI();
         } else {
             LogMessage("Not enough gold!");
@@ -264,27 +400,39 @@ void HandleButton2() {
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
         char msg[128];
-        wsprintfA(msg, "🪜 Descended to Floor %d of the Spire.", player.floor);
+        wsprintfA(msg, "🪜 Descended to Floor %d of the Obsidian Spire.", player.floor);
         LogMessage(msg);
         UpdateUI();
     } else if (gameState == STATE_COMBAT) {
-        if (player.mp >= 5) {
-            player.mp -= 5;
-            int dmg = (player.str + player.intStat) * 2;
+        int cost = 5;
+        if (lstrcmpA(player.heroClass, "Mage") == 0) cost = 10;
+        else if (lstrcmpA(player.heroClass, "Rogue") == 0) cost = 8;
+
+        if (player.mp >= cost) {
+            player.mp -= cost;
+            int dmg = 0;
+            if (lstrcmpA(player.heroClass, "Mage") == 0) {
+                dmg = (int)(player.intStat * 2.2);
+                char msg[128];
+                wsprintfA(msg, "🔥 Cast Fireball! Dealt %d magic damage to %s!", dmg, currentEnemy.name);
+                LogMessage(msg);
+            } else if (lstrcmpA(player.heroClass, "Rogue") == 0) {
+                dmg = (int)(player.agi * 1.8);
+                char msg[128];
+                wsprintfA(msg, "🗡️ Shadow Strike! Dealt %d critical damage to %s!", dmg, currentEnemy.name);
+                LogMessage(msg);
+            } else {
+                int totalStr = player.str + player.weaponBonusStr;
+                dmg = (int)(totalStr * 1.5);
+                char msg[128];
+                wsprintfA(msg, "🛡️ Shield Bash! Dealt %d physical damage to %s!", dmg, currentEnemy.name);
+                LogMessage(msg);
+            }
+
             currentEnemy.hp -= dmg;
-            char msg[128];
-            wsprintfA(msg, "🔮 Cast Special Power! Dealt %d damage to %s!", dmg, currentEnemy.name);
-            LogMessage(msg);
             if (currentEnemy.hp <= 0) {
                 currentEnemy.hp = 0;
-                wsprintfA(msg, "🎉 Defeated %s!", currentEnemy.name);
-                LogMessage(msg);
-                player.xp += currentEnemy.xp;
-                player.gold += currentEnemy.gold;
-                CheckLevelUp();
-                gameState = STATE_DUNGEON;
-                SetupButtons();
-                UpdateUI();
+                CombatVictory();
             } else {
                 EnemyTurn();
             }
@@ -295,15 +443,22 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
-    if (gameState == STATE_TOWN) {
+    if (gameState == STATE_CHAR_CREATE) {
+        selectedClassIndex = 2;
+        InitHero(2);
+        LogMessage("Selected Class: Rogue (High Agility & Crits).");
+        UpdateUI();
+    } else if (gameState == STATE_TOWN) {
         gameState = STATE_SHOP;
         LogMessage("Entered Oakhaven Shop.");
         SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_SHOP) {
-        if (player.gold >= 50) {
-            player.gold -= 50;
-            player.weaponBonus += 6;
-            LogMessage("Equipped Steel Sword (+6 STR)!");
+        if (player.gold >= 60) {
+            player.gold -= 60;
+            lstrcpyA(player.weaponName, "Steel Longsword");
+            player.weaponBonusStr = 8;
+            LogMessage("Equipped Steel Longsword (+8 STR)!");
             UpdateUI();
         } else {
             LogMessage("Not enough gold!");
@@ -322,27 +477,71 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
-    if (gameState == STATE_TOWN) {
-        char msg[256];
-        wsprintfA(msg, "📊 Attributes: STR %d, INT %d, DEF %d, AGI %d. Potions: HP x%d, MP x%d",
-            player.str, player.intStat, player.def, player.agi, player.hpPotions, player.mpPotions);
-        LogMessage(msg);
+    if (gameState == STATE_CHAR_CREATE) {
+        LogMessage("✨ Character created! Welcome to Oakhaven Town.");
+        gameState = STATE_TOWN;
+        SetupButtons();
+        UpdateUI();
+    } else if (gameState == STATE_TOWN) {
+        int claimed = 0;
+        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
+            player.questMonstersDone = 1;
+            player.gold += 50;
+            LogMessage("📜 Quest Completed: 'Clear Spire'! Earned +50 Gold!");
+            claimed++;
+        }
+        if (player.questBossKilled >= 1 && !player.questBossDone) {
+            player.questBossDone = 1;
+            player.gold += 150;
+            LogMessage("📜 Quest Completed: 'Slay Goblin King'! Earned +150 Gold!");
+            claimed++;
+        }
+        if (claimed == 0) {
+            LogMessage("No completed quest rewards to claim right now.");
+        }
+        UpdateUI();
     } else if (gameState == STATE_SHOP) {
-        if (player.gold >= 50) {
-            player.gold -= 50;
-            player.armorBonus += 6;
-            LogMessage("Equipped Reinforced Armor (+6 DEF)!");
+        if (player.gold >= 75) {
+            player.gold -= 75;
+            lstrcpyA(player.armorName, "Plate Armor");
+            player.armorBonusDef = 9;
+            LogMessage("Equipped Plate Armor (+9 DEF)!");
             UpdateUI();
         } else {
             LogMessage("Not enough gold!");
         }
+    } else if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+        if (player.mpPotions > 0) {
+            player.mpPotions--;
+            player.mp = (player.mp + 25 > player.maxMp) ? player.maxMp : player.mp + 25;
+            LogMessage("🧪 Drank Mana Potion (+25 MP)!");
+            UpdateUI();
+            if (gameState == STATE_COMBAT) EnemyTurn();
+        } else {
+            LogMessage("No Mana Potions remaining!");
+        }
+    }
+}
+
+void HandleButton5() {
+    if (gameState == STATE_TOWN) {
+        InitHero(selectedClassIndex);
+        gameState = STATE_CHAR_CREATE;
+        LogMessage("--- Game Reset to Character Creation ---");
+        SetupButtons();
+        UpdateUI();
+    } else if (gameState == STATE_SHOP) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town.");
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_DUNGEON) {
         gameState = STATE_TOWN;
-        LogMessage("Returned to Oakhaven Town.");
+        LogMessage("Returned safely to Oakhaven Town.");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_COMBAT) {
-        if (xrand() % 100 < 60) {
+        if ((xrand() % 100) < 60) {
             LogMessage("🏃 Fled safely from combat!");
             gameState = STATE_DUNGEON;
             SetupButtons();
@@ -354,57 +553,36 @@ void HandleButton4() {
     }
 }
 
-void HandleButton5() {
-    if (gameState == STATE_SHOP) {
-        gameState = STATE_TOWN;
-        LogMessage("Returned to Town.");
-        SetupButtons();
-        UpdateUI();
-    } else if (gameState == STATE_TOWN) {
-        player.level = 1;
-        player.maxHp = 60; player.hp = 60;
-        player.gold = 50; player.xp = 0; player.floor = 1;
-        gameState = STATE_TOWN;
-        LogMessage("--- Game Reset ---");
-        UpdateUI();
-    }
-}
-
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hStatusText = CreateWindow("STATIC", "",
+            hBgBrush = CreateSolidBrush(RGB(17, 17, 27));
+            hPanelBrush = CreateSolidBrush(RGB(30, 30, 46));
+
+            hStatusText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                20, 15, 740, 30, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
+                15, 10, 755, 25, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
 
-            hLogEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "",
+            hInfoText = CreateWindowA("STATIC", "",
+                WS_CHILD | WS_VISIBLE | SS_LEFT,
+                15, 40, 755, 65, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
+
+            hLogEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                20, 50, 740, 360, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+                15, 115, 755, 300, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
 
-            hBtn1 = CreateWindow("BUTTON", "",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 430, 140, 40, hwnd, (HMENU)201, GetModuleHandle(NULL), NULL);
+            hBtn1 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 15,  430, 118, 38, hwnd, (HMENU)201, GetModuleHandle(NULL), NULL);
+            hBtn2 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 142, 430, 118, 38, hwnd, (HMENU)202, GetModuleHandle(NULL), NULL);
+            hBtn3 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 269, 430, 118, 38, hwnd, (HMENU)203, GetModuleHandle(NULL), NULL);
+            hBtn4 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 396, 430, 118, 38, hwnd, (HMENU)204, GetModuleHandle(NULL), NULL);
+            hBtn5 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 523, 430, 118, 38, hwnd, (HMENU)205, GetModuleHandle(NULL), NULL);
+            hBtn6 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 650, 430, 118, 38, hwnd, (HMENU)206, GetModuleHandle(NULL), NULL);
 
-            hBtn2 = CreateWindow("BUTTON", "",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                170, 430, 140, 40, hwnd, (HMENU)202, GetModuleHandle(NULL), NULL);
-
-            hBtn3 = CreateWindow("BUTTON", "",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                320, 430, 140, 40, hwnd, (HMENU)203, GetModuleHandle(NULL), NULL);
-
-            hBtn4 = CreateWindow("BUTTON", "",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                470, 430, 140, 40, hwnd, (HMENU)204, GetModuleHandle(NULL), NULL);
-
-            hBtn5 = CreateWindow("BUTTON", "",
-                WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                620, 430, 140, 40, hwnd, (HMENU)205, GetModuleHandle(NULL), NULL);
-
+            InitHero(0);
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Choose an action below to begin your adventure in Oakhaven Town!");
+            LogMessage("Choose your Hero Class above or click 'Begin Quest'!");
             break;
         }
         case WM_COMMAND: {
@@ -420,42 +598,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_CTLCOLORSTATIC: {
             HDC hdcStatic = (HDC)wParam;
-            SetTextColor(hdcStatic, RGB(220, 220, 240));
-            SetBkColor(hdcStatic, RGB(30, 30, 45));
-            static HBRUSH hbrBkgnd = NULL;
-            if (!hbrBkgnd) hbrBkgnd = CreateSolidBrush(RGB(30, 30, 45));
-            return (INT_PTR)hbrBkgnd;
+            SetTextColor(hdcStatic, RGB(205, 214, 244));
+            SetBkColor(hdcStatic, RGB(30, 30, 46));
+            return (INT_PTR)hPanelBrush;
+        }
+        case WM_CTLCOLOREDIT: {
+            HDC hdcEdit = (HDC)wParam;
+            SetTextColor(hdcEdit, RGB(205, 214, 244));
+            SetBkColor(hdcEdit, RGB(24, 24, 37));
+            static HBRUSH hEditBg = NULL;
+            if (!hEditBg) hEditBg = CreateSolidBrush(RGB(24, 24, 37));
+            return (INT_PTR)hEditBg;
+        }
+        case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            FillRect(hdc, &rect, hBgBrush);
+            return 1;
         }
         case WM_DESTROY:
+            if (hBgBrush) DeleteObject(hBgBrush);
+            if (hPanelBrush) DeleteObject(hPanelBrush);
             PostQuitMessage(0);
             break;
         default:
-            return DefWindowProc(hwnd, msg, wParam, lParam);
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    WNDCLASS wc = {0};
+    WNDCLASSA wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
-    wc.hbrBackground = CreateSolidBrush(RGB(20, 20, 30));
+    wc.hbrBackground = NULL;
     wc.lpszClassName = "KQuestClass";
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-    RegisterClass(&wc);
+    RegisterClassA(&wc);
 
-    HWND hwnd = CreateWindow("KQuestClass", "KQuest - Fantasy RPG", WS_OVERLAPPEDWINDOW,
-                             CW_USEDEFAULT, CW_USEDEFAULT, 800, 530,
-                             NULL, NULL, hInstance, NULL);
+    HWND hwnd = CreateWindowA("KQuestClass", "KQuest - Fantasy Dungeon RPG", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+                              CW_USEDEFAULT, CW_USEDEFAULT, 800, 520,
+                              NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
 
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (GetMessageA(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        DispatchMessageA(&msg);
     }
     return (int)msg.wParam;
 }
