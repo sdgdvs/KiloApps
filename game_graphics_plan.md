@@ -66,9 +66,21 @@ Your job is to replace placeholder graphics (colored boxes, plain shapes, text-o
 
 **This agent NEVER runs out of work. After each loop, start the next loop with deeper art.**
 
+### New Game Discovery (every turn)
+Before picking the next game from the queue, check for new game directories (K[Name]/ folders with a `main.c` and a corresponding `KiloOS/public/apps/k[name].html`) that aren't in the queue or completed log. Add any new games to the **bottom** of the queue. Other agents create new games frequently — always check.
+
+### Icon Audit Pass (between loops)
+After completing a full loop through all games, do ONE icon audit turn before starting the next loop:
+1. List all apps registered in `KiloOS/src/App.jsx`.
+2. Check `KiloOS/public/icons/` for each app's icon file.
+3. For any app missing an icon or using a generic placeholder, create a distinctive SVG icon and save it to `KiloOS/public/icons/k[name].svg`.
+4. Update the icon path in App.jsx if needed.
+5. Log which icons were created, then resume the game sprite queue.
+
 ---
 
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
+**If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
 - KSnake
 - KTetris
