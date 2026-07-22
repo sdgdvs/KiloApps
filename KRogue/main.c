@@ -1176,8 +1176,9 @@ void draw_game(HDC hdc) {
     // create memory DC
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP memBM = CreateCompatibleBitmap(hdc, W * char_w, TOTAL_H * char_h);
-    SelectObject(memDC, memBM);
-    SelectObject(memDC, g_font);
+    HBITMAP hOldBM = (HBITMAP)SelectObject(memDC, memBM);
+    HFONT hOldFont = (HFONT)SelectObject(memDC, g_font);
+
     
     RECT bgRect = {0, 0, W * char_w, TOTAL_H * char_h};
     HBRUSH bgBrush = CreateSolidBrush(RGB(0,0,0));
@@ -1440,6 +1441,8 @@ void draw_game(HDC hdc) {
     
     BitBlt(hdc, 0, 0, W * char_w, TOTAL_H * char_h, memDC, 0, 0, SRCCOPY);
     
+    SelectObject(memDC, hOldFont);
+    SelectObject(memDC, hOldBM);
     DeleteObject(memBM);
     DeleteDC(memDC);
 }
@@ -1614,6 +1617,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_DESTROY: {
+            if (g_font) DeleteObject(g_font);
             PostQuitMessage(0);
             return 0;
         }

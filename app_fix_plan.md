@@ -131,6 +131,8 @@ Pass 1 Complete.
 
 - **KQuarantine**: Fixed XSS vulnerability in terminal log input rendering in `kquarantine.html` by using `textContent` instead of `innerHTML`. (Web-only app).
 
-Start Pass 2 (Deeper Quality checks). Next target: KRead (or next in alphabetical order).
--   * * K R e a d * * :   A d d e d   A R I A   l a b e l s   a n d   k e y b o a r d   a c c e s s i b i l i t y   t o   \ k r e a d . h t m l \ ,   a n d   a d d e d   t r y - c a t c h   b l o c k s   f o r   l o c a l S t o r a g e   t o   h a n d l e   l a r g e   f i l e s .   F i x e d   p o t e n t i a l   b u f f e r   o v e r f l o w   i n   \ m a i n . c \   f i l e   l o a d i n g   b y   u s i n g   \ d w R e a d \   f o r   n u l l - t e r m i n a t i o n   i n s t e a d   o f   \ d w F i l e S i z e \ .  
- 
+- **KRead**: Added ARIA labels and keyboard accessibility to `kread.html`, and added try-catch blocks for localStorage to handle large files. Fixed potential buffer overflow in `main.c` file loading by using `dwRead` for null-termination instead of `dwFileSize`.
+
+- **KRogue**: Added try/catch for `localStorage` in `saveGame` and `loadGame`, and fixed `ReferenceError` for `total_kills` assignment in `krogue.html`. Fixed GDI resource leaks in `main.c` by selecting original items into `memDC` before deletion and deleting `g_font` in `WM_DESTROY`.
+
+Start Pass 2 (Deeper Quality checks). Next target: KScript (or next in alphabetical order).

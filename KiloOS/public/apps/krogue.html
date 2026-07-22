@@ -41,7 +41,6 @@
         const H = 20;
         let map = [];
         let player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
-                    total_kills = 0;
         let monsters = [];
         let items = [];
         let msgs = ["Welcome to KRogue!", "Find the stairs '>'. Defeat evil."];
@@ -163,26 +162,34 @@
         }
         
         function saveGame() {
-            localStorage.setItem('krogue_save', JSON.stringify({ player, monsters, items, map, difficulty, dlevel, msgs, total_kills }));
-            alert("Game Saved!");
+            try {
+                localStorage.setItem('krogue_save', JSON.stringify({ player, monsters, items, map, difficulty, dlevel, msgs, total_kills }));
+                alert("Game Saved!");
+            } catch(e) {
+                alert("Failed to save game.");
+            }
         }
         
         function loadGame() {
-            let s = localStorage.getItem('krogue_save');
-            if (s) {
-                let d = JSON.parse(s);
-                player = d.player;
-                monsters = d.monsters;
-                items = d.items || [];
-                map = d.map;
-                difficulty = d.difficulty;
-                dlevel = d.dlevel || 1;
-                total_kills = d.total_kills || 0;
-                msgs = d.msgs || [];
-                state = 1;
-                render();
-            } else {
-                alert("No save found.");
+            try {
+                let s = localStorage.getItem('krogue_save');
+                if (s) {
+                    let d = JSON.parse(s);
+                    player = d.player;
+                    monsters = d.monsters;
+                    items = d.items || [];
+                    map = d.map;
+                    difficulty = d.difficulty;
+                    dlevel = d.dlevel || 1;
+                    total_kills = d.total_kills || 0;
+                    msgs = d.msgs || [];
+                    state = 1;
+                    render();
+                } else {
+                    alert("No save found.");
+                }
+            } catch(e) {
+                alert("Failed to load game.");
             }
         }
         
