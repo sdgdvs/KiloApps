@@ -73,12 +73,15 @@
         <option value="random">Random Deal</option>
         <option value="numbered">Numbered Deal</option>
         <option value="campaign">Campaign Mode</option>
+        <option value="timeattack">Time Attack</option>
       </select>
       <input type="number" id="seed-input" class="btn" style="width: 60px; display: none; background:#2d2d30; color:#fff;" value="1" min="1" max="1000000" onchange="initGame()">
       <button class="btn" onclick="undoMove()" title="Ctrl+Z">Undo</button>
       <button class="btn" onclick="saveGame()">Save</button>
       <button class="btn" onclick="loadGame()">Load</button>
-      <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau (1 per game)">Shuffle</button>
+      <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau (1 per game) [P]">Shuffle</button>
+      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-sweep safe cards to foundations (1 per game) [W]">Wand</button>
+      <button class="btn" onclick="extraCellPowerup()" title="Extra Cell: Add +1 Free Cell slot (1 per game) [E]">+1 Cell</button>
       <button class="btn" onclick="showStats()">Stats</button>
       <button class="btn" onclick="showSettings()">Settings</button>
       <button class="btn" onclick="showHelp()">Help</button>
@@ -94,7 +97,8 @@
       <p>Wins: <span id="stat-wins">0</span> (<span id="stat-winpct">0</span>%)</p>
       <p>Current Streak: <span id="stat-streak">0</span></p>
       <p>Best Streak: <span id="stat-best">0</span></p>
-      <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 10</p>
+      <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 15</p>
+      <p>Time Attack Wins: <span id="stat-tawins">0</span> (Best Win: <span id="stat-tabest">--</span>)</p>
       <button class="btn" style="margin-top:10px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
     </div>
   </div>
@@ -114,25 +118,28 @@
       <ul style="margin: 0; padding-left: 20px;">
         <li>Build all 4 foundations from Ace to King by suit.</li>
         <li>Move cards between tableau columns. Cards must be placed in descending order and alternating colors.</li>
-        <li>You can use the 4 free cells at the top left to temporarily store single cards.</li>
+        <li>You can use free cells at the top left to temporarily store single cards.</li>
         <li>Moving multiple cards requires enough empty free cells/columns (calculated automatically).</li>
-        <li>Cards can be moved to empty tableau columns.</li>
+        <li>Cards can be moved to empty tableau columns (some campaign stages require Kings).</li>
       </ul>
       <p><b>Controls:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
         <li>Click a card to select it, then click a destination column, free cell, or foundation to move.</li>
         <li>Cards move to foundations automatically when safe.</li>
-        <li>Use <b>Ctrl+Z</b> to Undo moves.</li>
+        <li>Use <b>Ctrl+Z</b> to Undo moves. Hotkeys: <b>[P]</b> Shuffle, <b>[W]</b> Wand, <b>[E]</b> Extra Cell.</li>
       </ul>
       <p><b>Modes:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
         <li><b>Random Deal:</b> A completely shuffled deck.</li>
         <li><b>Numbered Deal:</b> Deals based on a specific seed number. Replayable!</li>
-        <li><b>Campaign Mode:</b> 10 stages of increasing difficulty (fewer free cells, Baker's Game rules).</li>
+        <li><b>Campaign Mode:</b> 15 stages of increasing difficulty (fewer free cells, Baker's Game rules, King-only spaces).</li>
+        <li><b>Time Attack:</b> 180s countdown timer! Each foundation placement adds +15s bonus time.</li>
       </ul>
       <p><b>Power-ups:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
         <li><b>[P] Shuffle:</b> Shuffles the tableau cards in place (1 use per game).</li>
+        <li><b>[W] Magic Wand:</b> Automatically sweeps safe cards to foundations (1 use per game).</li>
+        <li><b>[E] Extra Cell:</b> Grants +1 temporary Free Cell slot (1 use per game).</li>
       </ul>
       <div style="text-align:center; margin-top:15px;">
         <button class="btn" onclick="document.getElementById('help-modal').style.display='none'">Close</button>
@@ -213,13 +220,17 @@
 
     let deck = [];
     let gameInProgress = false;
-    let stats = { played: 0, wins: 0, streak: 0, bestStreak: 0 };
+    let stats = { played: 0, wins: 0, streak: 0, bestStreak: 0, taWins: 0, taBestTime: 0 };
     let settings = { cardBack: 0 };
     let campaignStage = 1;
     let maxCampaignStage = 1;
     let powerupsShuffle = 1;
+    let powerupsWand = 1;
+    let powerupsExtraCell = 1;
     let buildRule = 'color';
+    let emptyKingOnly = false;
     let numFreeCells = 4;
+    let timeRemaining = 180;
     const cardBacks = [
       { color: '#1e88e5', pattern: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)' },
       { color: '#e53935', pattern: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)' },
@@ -245,9 +256,13 @@
       let text = `Time: ${m}:${s} | Moves: ${mvs}`;
       const mode = document.getElementById('game-mode').value;
       if (mode === 'campaign') {
-         text += ` | Stage ${campaignStage}/10 (${buildRule==='suit'?'Suit':'Color'})`;
+         text += ` | Stage ${campaignStage}/15 (${buildRule==='suit'?'Suit':'Color'}${emptyKingOnly?'+King':''})`;
+      } else if (mode === 'timeattack') {
+         const tm = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+         const ts = (timeRemaining % 60).toString().padStart(2, '0');
+         text = `TIME LEFT: ${tm}:${ts} (+15s) | Moves: ${mvs}`;
       }
-      text += ` | Shuffle: ${powerupsShuffle}`;
+      text += ` | P:${powerupsShuffle} W:${powerupsWand} E:${powerupsExtraCell}`;
       if(el) el.innerText = text;
     }
 
@@ -266,6 +281,12 @@
       }
       if (!e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
         shufflePowerup();
+      }
+      if (!e.ctrlKey && !e.metaKey && (e.key === 'w' || e.key === 'W')) {
+        wandPowerup();
+      }
+      if (!e.ctrlKey && !e.metaKey && (e.key === 'e' || e.key === 'E')) {
+        extraCellPowerup();
       }
     });
 
@@ -298,8 +319,29 @@
       }
     }
 
+    function wandPowerup() {
+      if (gameInProgress && powerupsWand > 0) {
+        powerupsWand--;
+        playSound('flip');
+        autoComplete();
+        checkWin();
+        updateGameInfo();
+        render();
+      }
+    }
+
+    function extraCellPowerup() {
+      if (gameInProgress && powerupsExtraCell > 0 && numFreeCells < 5) {
+        powerupsExtraCell--;
+        numFreeCells++;
+        state.free.push(null);
+        playSound('flip');
+        updateGameInfo();
+        render();
+      }
+    }
+
     window.addEventListener('resize', () => {
-      // Temporarily disable transitions during resize
       Object.values(cardEls).forEach(el => el.style.transition = 'none');
       render();
       setTimeout(() => {
@@ -352,6 +394,8 @@
       document.getElementById('stat-streak').innerText = stats.streak;
       document.getElementById('stat-best').innerText = stats.bestStreak;
       document.getElementById('stat-campaign').innerText = maxCampaignStage;
+      document.getElementById('stat-tawins').innerText = stats.taWins || 0;
+      document.getElementById('stat-tabest').innerText = stats.taBestTime ? stats.taBestTime + 's' : '--';
       document.getElementById('stats-modal').style.display = 'flex';
     }
 
@@ -366,7 +410,7 @@
     }
 
     function saveGame() {
-      const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle };
+      const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle, powerupsWand, powerupsExtraCell, timeRemaining };
       localStorage.setItem('kfreecell_save', JSON.stringify(data));
       document.getElementById('status').innerText = "Game Saved";
     }
@@ -377,12 +421,15 @@
         const data = JSON.parse(saved);
         state = data.state;
         undoStack = data.undoStack || [];
-        stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0 };
+        stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0, taWins: 0, taBestTime: 0 };
         gameInProgress = data.gameInProgress || false;
         timeElapsed = data.timeElapsed || 0;
         campaignStage = data.campaignStage || 1;
         maxCampaignStage = data.maxCampaignStage || 1;
         powerupsShuffle = data.powerupsShuffle !== undefined ? data.powerupsShuffle : 1;
+        powerupsWand = data.powerupsWand !== undefined ? data.powerupsWand : 1;
+        powerupsExtraCell = data.powerupsExtraCell !== undefined ? data.powerupsExtraCell : 1;
+        timeRemaining = data.timeRemaining || 180;
         document.getElementById('status').innerText = "Game Loaded";
         updateGameInfo();
         render();
@@ -429,6 +476,7 @@
         }
       }
 
+      emptyKingOnly = false;
       if (mode === 'campaign') {
          if(campaignStage === 1) { numFreeCells = 5; buildRule = 'color'; }
          else if(campaignStage === 2) { numFreeCells = 5; buildRule = 'suit'; }
@@ -439,12 +487,23 @@
          else if(campaignStage === 7) { numFreeCells = 3; buildRule = 'color'; }
          else if(campaignStage === 8) { numFreeCells = 3; buildRule = 'color'; }
          else if(campaignStage === 9) { numFreeCells = 3; buildRule = 'suit'; }
-         else if(campaignStage >= 10) { numFreeCells = 2; buildRule = 'color'; }
+         else if(campaignStage === 10) { numFreeCells = 2; buildRule = 'color'; }
+         else if(campaignStage === 11) { numFreeCells = 3; buildRule = 'suit'; }
+         else if(campaignStage === 12) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = true; }
+         else if(campaignStage === 13) { numFreeCells = 2; buildRule = 'suit'; }
+         else if(campaignStage === 14) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; }
+         else if(campaignStage >= 15) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; }
       } else {
          numFreeCells = 4;
          buildRule = 'color';
       }
       powerupsShuffle = 1;
+      powerupsWand = 1;
+      powerupsExtraCell = 1;
+
+      if (mode === 'timeattack') {
+         timeRemaining = 180;
+      }
 
       state.free = Array.from({length: numFreeCells}, () => null);
       state.found = [0, 0, 0, 0];
@@ -457,6 +516,18 @@
       timerInterval = setInterval(() => {
         if (gameInProgress) {
           timeElapsed++;
+          const mode = document.getElementById('game-mode').value;
+          if (mode === 'timeattack') {
+            timeRemaining--;
+            if (timeRemaining <= 30 && timeRemaining > 0 && timeRemaining % 5 === 0) {
+              playSound('place');
+            }
+            if (timeRemaining <= 0) {
+              gameInProgress = false;
+              document.getElementById('status').innerText = "Time Expired! Game Over.";
+              playSound('place');
+            }
+          }
           updateGameInfo();
         }
       }, 1000);
@@ -471,7 +542,6 @@
       updateGameInfo();
       createAllCards();
       
-      // Temporarily disable transitions for initial deal
       Object.values(cardEls).forEach(el => el.style.transition = 'none');
       render();
       setTimeout(() => {
@@ -520,7 +590,10 @@
     }
 
     function canMoveToTab(card, targetTab) {
-      if(targetTab.length === 0) return true;
+      if(targetTab.length === 0) {
+        if (emptyKingOnly) return card.r === 13;
+        return true;
+      }
       let topCard = targetTab[targetTab.length - 1];
       if (buildRule === 'suit') {
         return card.s === topCard.s && card.r === topCard.r - 1;
@@ -585,7 +658,6 @@
         let moved = false;
 
         if(type === 'tab') {
-          let emptyTabFactor = (state.tab[index].length === 0) ? 1 : 0;
           let emptyFree = state.free.filter(c => !c).length;
           let emptyTab = state.tab.filter((c, i) => c.length === 0 && i !== index).length;
           let maxMove = (emptyFree + 1) * Math.pow(2, emptyTab);
@@ -608,6 +680,7 @@
           prevState.selected = null;
           undoStack.push(prevState);
           state.found[index] = cardsToMove[0].r;
+          if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
           moved = true;
         }
 
@@ -641,9 +714,16 @@
           stats.wins++;
           stats.streak++;
           if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
-          if (document.getElementById('game-mode').value === 'campaign' && campaignStage < 10) {
+          const mode = document.getElementById('game-mode').value;
+          if (mode === 'campaign' && campaignStage < 15) {
             campaignStage++;
             if (campaignStage > maxCampaignStage) maxCampaignStage = campaignStage;
+          }
+          if (mode === 'timeattack') {
+            stats.taWins = (stats.taWins || 0) + 1;
+            if (!stats.taBestTime || timeElapsed < stats.taBestTime) {
+              stats.taBestTime = timeElapsed;
+            }
           }
           gameInProgress = false;
           showStats();
@@ -669,7 +749,7 @@
       let didMove = true;
       while (didMove) {
         didMove = false;
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < numFreeCells; i++) {
           if (state.free[i]) {
             let c = state.free[i];
             if (c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
@@ -679,6 +759,7 @@
               state.found[c.s] = c.r;
               state.free[i] = null;
               state.moves = (state.moves || 0) + 1;
+              if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
               updateGameInfo();
               didMove = true;
               break;
@@ -698,6 +779,7 @@
               state.found[c.s] = c.r;
               col.pop();
               state.moves = (state.moves || 0) + 1;
+              if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
               updateGameInfo();
               didMove = true;
               break;
@@ -724,7 +806,7 @@
 
       if(state.selected && state.selected.type === type && state.selected.index === index && cardIdx >= state.selected.cardIdx) {
         el.classList.add('selected');
-        el.style.zIndex = baseZ + 100 + cardIdx; // Lift selected
+        el.style.zIndex = baseZ + 100 + cardIdx;
       } else {
         el.classList.remove('selected');
       }

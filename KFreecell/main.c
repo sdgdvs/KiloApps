@@ -6,6 +6,7 @@
 
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "msvcrt.lib")
 
 #define CELL_W 70
 #define CELL_H 100
@@ -27,6 +28,7 @@ Card freeCells[MAX_FREE_CELLS];
 int freeCellsOccupied[MAX_FREE_CELLS];
 int numFreeCells = 4;
 int buildRule = 0; // 0=Alt color, 1=Same suit
+int emptyKingOnly = 0; // 0=Any card, 1=King only for empty tab
 int found[4]; // 0-13
 
 Card tab[8][52];
@@ -35,9 +37,9 @@ int tabCount[8];
 int selType = -1; // 0=free, 1=tab, -1=none
 int selIdx = -1;
 int selCardIdx = -1;
-int won = 0;
+int won = 0; // 0=playing, 1=won, -1=lost
 int gameInProgress = 0;
-int gameMode = 0; // 0=Random, 1=Numbered
+int gameMode = 0; // 0=Random, 1=Numbered, 2=Campaign, 3=Time Attack
 int currentSeed = 1;
 
 int statsPlayed = 0;
@@ -47,10 +49,15 @@ int statsBestStreak = 0;
 int campaignStage = 1;
 int maxCampaignStage = 1;
 int powerupsShuffle = 1;
+int powerupsWand = 1;
+int powerupsExtraCell = 1;
 int settingsCardBack = 0;
 
 int moves = 0;
 int timeElapsed = 0;
+int timeRemaining = 180;
+int statsTimeAttackWins = 0;
+int statsBestTimeAttackTime = 0;
 DWORD lastTimeTick = 0;
 
 void LoadSettings() {
@@ -183,6 +190,11 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
         Beep(554, 200);
         Beep(659, 200);
         Beep(880, 400);
+    } else if (type == 3) {
+        Beep(800, 100);
+        Beep(1200, 150);
+    } else if (type == 4) {
+        Beep(300, 80);
     }
     return 0;
 }
@@ -192,32 +204,35 @@ void PlaySoundEffect(int type) {
 }
 
 void ShowStats(HWND hwnd) {
-    WCHAR msg[256];
+    WCHAR msg[512];
     int pct = statsPlayed > 0 ? (statsWins * 100) / statsPlayed : 0;
-    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d\nCampaign Progress: Stage %d / 10",
-              statsPlayed, statsWins, pct, statsStreak, statsBestStreak, maxCampaignStage);
+    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d\nCampaign Progress: Stage %d / 15\nTime Attack Wins: %d\nBest Time Attack Win: %d sec",
+              statsPlayed, statsWins, pct, statsStreak, statsBestStreak, maxCampaignStage, statsTimeAttackWins, statsBestTimeAttackTime);
     MessageBoxW(hwnd, msg, L"Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
 void ShowHelp(HWND hwnd) {
-    WCHAR msg[1024] = 
+    WCHAR msg[2048] = 
         L"How to Play Freecell\n\n"
         L"Rules:\n"
         L"- Build all 4 foundations from Ace to King by suit.\n"
         L"- Move cards between tableau columns. Cards must be placed in descending order and alternating colors.\n"
-        L"- You can use the 4 free cells at the top left to temporarily store single cards.\n"
+        L"- You can use the free cells at the top left to temporarily store single cards.\n"
         L"- Moving multiple cards requires enough empty free cells/columns.\n"
-        L"- Cards can be moved to empty tableau columns.\n\n"
+        L"- Cards can be moved to empty tableau columns (some campaign stages require Kings).\n\n"
         L"Controls:\n"
         L"- Click a card to select it, then click a destination to move.\n"
         L"- Cards move to foundations automatically when safe.\n"
-        L"- Key bindings: [N]ew Game, [Z]Undo, [S]tats, [C]hange Card Back, [M]ode Toggle, [+]Next Seed, [-]Prev Seed, [F5]Save, [F9]Load, [H]elp.\n\n"
+        L"- Key bindings: [N]ew Game, [Z]Undo, [S]tats, [C]hange Card Back, [M]ode Toggle, [+]Next Seed, [-]Prev Seed, [P]Shuffle, [W]Wand, [E]Extra Cell, [F5]Save, [F9]Load, [H]elp.\n\n"
         L"Modes:\n"
         L"- Random Deal: A completely shuffled deck.\n"
         L"- Numbered Deal: Deals based on a specific seed number (use +/- to change).\n"
-        L"- Campaign: 10 stages of increasing difficulty (fewer free cells, Baker's Game rules).\n\n"
+        L"- Campaign: 15 stages of increasing difficulty (fewer free cells, Baker's Game rules, King-only spaces).\n"
+        L"- Time Attack: 180s countdown timer! Foundations give +15s bonus time.\n\n"
         L"Power-ups:\n"
-        L"- [P] Shuffle: Shuffles the tableau cards in place (1 per game).";
+        L"- [P] Shuffle: Shuffles tableau cards in place (1 per game).\n"
+        L"- [W] Magic Wand: Automatically sweeps safe cards to foundations (1 per game).\n"
+        L"- [E] Extra Cell: Adds +1 temporary Free Cell slot (1 per game).";
     MessageBoxW(hwnd, msg, L"Help", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -268,6 +283,11 @@ void SaveGame(HWND hwnd) {
         fwrite(&campaignStage, sizeof(campaignStage), 1, f);
         fwrite(&maxCampaignStage, sizeof(maxCampaignStage), 1, f);
         fwrite(&powerupsShuffle, sizeof(powerupsShuffle), 1, f);
+        fwrite(&powerupsWand, sizeof(powerupsWand), 1, f);
+        fwrite(&powerupsExtraCell, sizeof(powerupsExtraCell), 1, f);
+        fwrite(&timeRemaining, sizeof(timeRemaining), 1, f);
+        fwrite(&statsTimeAttackWins, sizeof(statsTimeAttackWins), 1, f);
+        fwrite(&statsBestTimeAttackTime, sizeof(statsBestTimeAttackTime), 1, f);
         fclose(f);
         MessageBoxW(hwnd, L"Game Saved", L"Save", MB_OK | MB_ICONINFORMATION);
     }
@@ -300,6 +320,11 @@ void LoadGame(HWND hwnd) {
         if(fread(&campaignStage, sizeof(campaignStage), 1, f) != 1) campaignStage = 1;
         if(fread(&maxCampaignStage, sizeof(maxCampaignStage), 1, f) != 1) maxCampaignStage = 1;
         if(fread(&powerupsShuffle, sizeof(powerupsShuffle), 1, f) != 1) powerupsShuffle = 1;
+        if(fread(&powerupsWand, sizeof(powerupsWand), 1, f) != 1) powerupsWand = 1;
+        if(fread(&powerupsExtraCell, sizeof(powerupsExtraCell), 1, f) != 1) powerupsExtraCell = 1;
+        if(fread(&timeRemaining, sizeof(timeRemaining), 1, f) != 1) timeRemaining = 180;
+        if(fread(&statsTimeAttackWins, sizeof(statsTimeAttackWins), 1, f) != 1) statsTimeAttackWins = 0;
+        if(fread(&statsBestTimeAttackTime, sizeof(statsBestTimeAttackTime), 1, f) != 1) statsBestTimeAttackTime = 0;
         fclose(f);
         lastTimeTick = GetTickCount();
         selType = -1;
@@ -314,7 +339,7 @@ void LoadGame(HWND hwnd) {
 }
 
 void InitGame() {
-    if (gameInProgress && !won) {
+    if (gameInProgress && won == 0) {
         statsStreak = 0;
     }
     statsPlayed++;
@@ -328,6 +353,7 @@ void InitGame() {
     undoCount = 0;
     ClearAnims();
     
+    emptyKingOnly = 0;
     if (gameMode == 2) {
         if (campaignStage == 1) { numFreeCells = 5; buildRule = 0; }
         else if (campaignStage == 2) { numFreeCells = 5; buildRule = 1; }
@@ -338,12 +364,22 @@ void InitGame() {
         else if (campaignStage == 7) { numFreeCells = 3; buildRule = 0; }
         else if (campaignStage == 8) { numFreeCells = 3; buildRule = 0; }
         else if (campaignStage == 9) { numFreeCells = 3; buildRule = 1; }
-        else if (campaignStage >= 10) { numFreeCells = 2; buildRule = 0; }
+        else if (campaignStage == 10) { numFreeCells = 2; buildRule = 0; }
+        else if (campaignStage == 11) { numFreeCells = 3; buildRule = 1; }
+        else if (campaignStage == 12) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 1; }
+        else if (campaignStage == 13) { numFreeCells = 2; buildRule = 1; }
+        else if (campaignStage == 14) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; }
+        else if (campaignStage >= 15) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; }
     } else {
         numFreeCells = 4;
         buildRule = 0;
     }
     powerupsShuffle = 1;
+    powerupsWand = 1;
+    powerupsExtraCell = 1;
+    if (gameMode == 3) {
+        timeRemaining = 180;
+    }
 
     for(int i=0; i<MAX_FREE_CELLS; i++) {
         freeCellsOccupied[i] = 0;
@@ -401,7 +437,10 @@ int GetMaxMoveCount() {
 }
 
 int CanMoveToTab(Card c, int tIdx) {
-    if(tabCount[tIdx] == 0) return 1;
+    if(tabCount[tIdx] == 0) {
+        if (emptyKingOnly) return c.r == 13;
+        return 1;
+    }
     Card top = tab[tIdx][tabCount[tIdx]-1];
     if (buildRule == 1) {
         return c.s == top.s && c.r == top.r - 1;
@@ -425,15 +464,21 @@ int GetDraggableGroup(int tIdx, int startIdx) {
 
 void CheckWin(HWND hwnd) {
     if(found[0]==13 && found[1]==13 && found[2]==13 && found[3]==13) {
-        if(gameInProgress) {
+        if(gameInProgress && won == 0) {
             PlaySoundEffect(2);
             won = 1;
             statsWins++;
             statsStreak++;
             if (statsStreak > statsBestStreak) statsBestStreak = statsStreak;
-            if (gameMode == 2 && campaignStage < 10) {
+            if (gameMode == 2 && campaignStage < 15) {
                 campaignStage++;
                 if (campaignStage > maxCampaignStage) maxCampaignStage = campaignStage;
+            }
+            if (gameMode == 3) {
+                statsTimeAttackWins++;
+                if (statsBestTimeAttackTime == 0 || timeElapsed < statsBestTimeAttackTime) {
+                    statsBestTimeAttackTime = timeElapsed;
+                }
             }
             gameInProgress = 0;
             InvalidateRect(hwnd, NULL, TRUE);
@@ -471,6 +516,7 @@ int AutoComplete(HWND hwnd) {
                     found[c.s] = c.r;
                     freeCellsOccupied[i] = 0;
                     moves++;
+                    if (gameMode == 3) timeRemaining += 15;
                     didMove = 1;
                     anyMoved = 1;
                     break;
@@ -489,6 +535,7 @@ int AutoComplete(HWND hwnd) {
                     found[c.s] = c.r;
                     tabCount[i]--;
                     moves++;
+                    if (gameMode == 3) timeRemaining += 15;
                     didMove = 1;
                     anyMoved = 1;
                     break;
@@ -497,6 +544,27 @@ int AutoComplete(HWND hwnd) {
         }
     }
     return anyMoved;
+}
+
+void UseWandPowerup(HWND hwnd) {
+    if (gameInProgress && won == 0 && powerupsWand > 0) {
+        powerupsWand--;
+        PlaySoundEffect(3);
+        AutoComplete(hwnd);
+        CheckWin(hwnd);
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
+void UseExtraCellPowerup(HWND hwnd) {
+    if (gameInProgress && won == 0 && powerupsExtraCell > 0) {
+        if (numFreeCells < MAX_FREE_CELLS) {
+            powerupsExtraCell--;
+            numFreeCells++;
+            PlaySoundEffect(3);
+            InvalidateRect(hwnd, NULL, TRUE);
+        }
+    }
 }
 
 void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
@@ -603,23 +671,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(255, 255, 255));
-            HFONT hTitleFont = CreateFontW(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+            HFONT hTitleFont = CreateFontW(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
             WCHAR titleMsg[256];
             int m = timeElapsed / 60;
             int s = timeElapsed % 60;
-            if (gameMode == 2) {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Stage %d/10 (%s)  |  [M]ode [P]Shuffle(%d)", m, s, moves, campaignStage, buildRule==1?L"Suit":L"Color", powerupsShuffle);
+            if (gameMode == 3) {
+                int tm = timeRemaining / 60;
+                int ts = timeRemaining % 60;
+                wsprintfW(titleMsg, L"TIME LEFT: %02d:%02d (+15s)  Moves: %d  |  [M]ode: Time Attack  |  [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", tm, ts, moves, powerupsShuffle, powerupsWand, powerupsExtraCell);
+            } else if (gameMode == 2) {
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Stage %d/15 (%s%s)  |  [M]ode [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", m, s, moves, campaignStage, buildRule==1?L"Suit":L"Color", emptyKingOnly?L"+King":L"", powerupsShuffle, powerupsWand, powerupsExtraCell);
             } else if (gameMode == 1) {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [N]ew [P]Shuffle", m, s, moves, currentSeed);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", m, s, moves, currentSeed, powerupsShuffle, powerupsWand, powerupsExtraCell);
             } else {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [N]ew [P]Shuffle(%d)", m, s, moves, powerupsShuffle);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", m, s, moves, powerupsShuffle, powerupsWand, powerupsExtraCell);
             }
             DrawTextW(hdcMem, titleMsg, -1, &titleRect, DT_CENTER | DT_TOP);
-            if(won) {
+            if(won == 1) {
                 RECT winRect = {0, 10, clientRect.right - 20, 40};
                 DrawTextW(hdcMem, L"You Win!", -1, &winRect, DT_RIGHT | DT_TOP);
+            } else if(won == -1) {
+                RECT winRect = {0, 10, clientRect.right - 20, 40};
+                DrawTextW(hdcMem, L"Time Expired!", -1, &winRect, DT_RIGHT | DT_TOP);
             }
             SelectObject(hdcMem, hOldFont);
             DeleteObject(hTitleFont);
@@ -701,7 +776,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         
         case WM_LBUTTONDOWN: {
-            if(won) return 0;
+            if(won != 0) return 0;
             int mx = (short)LOWORD(lParam);
             int my = (short)HIWORD(lParam);
             
@@ -825,6 +900,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         StartAnim(cardsToMove[0], GetCardX(selType, selIdx, selCardIdx, clientRect), GetCardY(selType, selIdx, selCardIdx, clientRect), GetCardX(clickedType, clickedIdx, 0, clientRect), GetCardY(clickedType, clickedIdx, 0, clientRect));
                         PushUndo();
                         found[clickedIdx] = cardsToMove[0].r;
+                        if (gameMode == 3) timeRemaining += 15;
                         moved = 1;
                     }
                 }
@@ -859,7 +935,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveSettings();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == 'M') {
-                gameMode = (gameMode + 1) % 3;
+                gameMode = (gameMode + 1) % 4;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == VK_OEM_PLUS || wParam == VK_ADD) {
@@ -881,7 +957,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if(wParam == 'H' || wParam == VK_F1) {
                 ShowHelp(hwnd);
             } else if(wParam == 'P') {
-                if (gameInProgress && !won && powerupsShuffle > 0) {
+                if (gameInProgress && won == 0 && powerupsShuffle > 0) {
                     powerupsShuffle--;
                     PushUndo();
                     Card flat[52];
@@ -904,6 +980,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PlaySoundEffect(1);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if(wParam == 'W') {
+                UseWandPowerup(hwnd);
+            } else if(wParam == 'E') {
+                UseExtraCellPowerup(hwnd);
             } else if(wParam == VK_ESCAPE) {
                 selType = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -921,9 +1001,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     active = 1;
                 }
             }
-            if(gameInProgress && !won) {
+            if(gameInProgress && won == 0) {
                 if(now - lastTimeTick >= 1000) {
                     timeElapsed++;
+                    if (gameMode == 3) {
+                        timeRemaining--;
+                        if (timeRemaining <= 30 && timeRemaining > 0 && timeRemaining % 5 == 0) {
+                            PlaySoundEffect(4);
+                        }
+                        if (timeRemaining <= 0) {
+                            won = -1;
+                            gameInProgress = 0;
+                            PlaySoundEffect(1);
+                            MessageBoxW(hwnd, L"Time Expired! Game Over.", L"Time Attack", MB_OK | MB_ICONWARNING);
+                        }
+                    }
                     lastTimeTick = now;
                     active = 1;
                 }
