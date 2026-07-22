@@ -15,6 +15,20 @@
         .disc.white { display: block; background: #eee; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
         .valid-move { position: relative; }
         .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; }
+        @keyframes flipToWhite {
+            0% { transform: scaleX(1); background: #111; }
+            50% { transform: scaleX(0); background: #111; }
+            51% { transform: scaleX(0); background: #eee; }
+            100% { transform: scaleX(1); background: #eee; }
+        }
+        @keyframes flipToBlack {
+            0% { transform: scaleX(1); background: #eee; }
+            50% { transform: scaleX(0); background: #eee; }
+            51% { transform: scaleX(0); background: #111; }
+            100% { transform: scaleX(1); background: #111; }
+        }
+        .disc.flip-to-white { animation: flipToWhite 0.3s forwards; }
+        .disc.flip-to-black { animation: flipToBlack 0.3s forwards; }
         #message { margin-top: 15px; font-size: 18px; font-weight: bold; }
         button { padding: 8px 16px; font-size: 14px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
         button:hover { background: #444; }
@@ -113,7 +127,25 @@
                 aiTimeoutId = null;
             }
             messageEl.textContent = '';
+            initBoardDOM();
             renderBoard();
+        }
+
+        function initBoardDOM() {
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = 'cell-' + i;
+                
+                const disc = document.createElement('div');
+                disc.className = 'disc';
+                disc.id = 'disc-' + i;
+                
+                cell.appendChild(disc);
+                cell.onclick = () => { if (currentPlayer === BLACK) handleCellClick(i); };
+                boardEl.appendChild(cell);
+            }
         }
 
         function pushHistory() {
@@ -212,16 +244,16 @@
                 if (getValidMoves(currentPlayer).length === 0) {
                     currentPlayer = currentPlayer === BLACK ? WHITE : BLACK; // Skip turn
                     if (getValidMoves(currentPlayer).length === 0) {
-                        renderBoard();
+                        renderBoard(flips);
                         checkEndGame();
                         return;
                     }
                 }
-                renderBoard();
+                renderBoard(flips);
                 
                 // Simple AI for White
                 if (currentPlayer === WHITE) {
-                    aiTimeoutId = setTimeout(makeAIMove, 300);
+                    aiTimeoutId = setTimeout(makeAIMove, 400);
                 }
             }
         }
@@ -268,8 +300,9 @@
                     }
                 }
 
+                let flips = getFlippable(bestMove, WHITE);
                 boardState[bestMove] = WHITE;
-                for (let f of getFlippable(bestMove, WHITE)) {
+                for (let f of flips) {
                     boardState[f] = WHITE;
                 }
                 playSound('place');
@@ -277,31 +310,31 @@
                 if (getValidMoves(BLACK).length === 0) {
                     currentPlayer = WHITE;
                 }
+                renderBoard(flips);
             }
-            renderBoard();
             checkEndGame();
         }
 
-        function renderBoard() {
-            boardEl.innerHTML = '';
+        function renderBoard(flippedIndices = []) {
             validMoves = getValidMoves(currentPlayer);
             
             for (let i = 0; i < 64; i++) {
-                const cell = document.createElement('div');
+                const cell = document.getElementById('cell-' + i);
+                const disc = document.getElementById('disc-' + i);
+                
                 cell.className = 'cell';
-                
-                const disc = document.createElement('div');
-                disc.className = 'disc';
-                if (boardState[i] === BLACK) disc.classList.add('black');
-                else if (boardState[i] === WHITE) disc.classList.add('white');
-                
                 if (boardState[i] === EMPTY && currentPlayer === BLACK && validMoves.includes(i)) {
                     cell.classList.add('valid-move');
                 }
                 
-                cell.appendChild(disc);
-                cell.onclick = () => { if (currentPlayer === BLACK) handleCellClick(i); };
-                boardEl.appendChild(cell);
+                if (boardState[i] === EMPTY) {
+                    disc.className = 'disc';
+                } else {
+                    disc.className = 'disc ' + (boardState[i] === BLACK ? 'black' : 'white');
+                    if (flippedIndices.includes(i)) {
+                        disc.classList.add(boardState[i] === BLACK ? 'flip-to-black' : 'flip-to-white');
+                    }
+                }
             }
             turnDisplayEl.textContent = `Turn: ${currentPlayer === BLACK ? 'Black' : 'White'}`;
             updateScores();

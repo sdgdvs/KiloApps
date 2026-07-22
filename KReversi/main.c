@@ -19,6 +19,10 @@ const char g_szClassName[] = "KReversiClass";
 int board[64];
 int soundEnabled = 1;
 int gameOverSoundPlayed = 0;
+int animatingFlips[64];
+int numAnimatingFlips = 0;
+int flipProgress = 0;
+
 
 void PlaySoundEffect(int type) {
     if (!soundEnabled) return;
@@ -65,6 +69,8 @@ void PushHistory() {
 
 void UndoMove(HWND hwnd) {
     KillTimer(hwnd, 1); // Cancel AI timer if running
+    KillTimer(hwnd, 2); // Cancel animation timer
+    numAnimatingFlips = 0;
     if (historyCount == 0) return;
     
     HistoryState lastState = history[--historyCount];
@@ -114,13 +120,16 @@ int HasValidMoves(int player) {
     return 0;
 }
 
-void DoMove(int index, int player) {
-    int flips[64];
-    int count = GetFlippable(index, player, flips);
+void DoMove(int index, int player, HWND hwnd) {
+    int count = GetFlippable(index, player, animatingFlips);
     if (count > 0) {
         board[index] = player;
+        numAnimatingFlips = count;
+        flipProgress = 0;
+        SetTimer(hwnd, 2, 30, NULL);
+        
         for(int i=0; i<count; i++) {
-            board[flips[i]] = player;
+            board[animatingFlips[i]] = player;
         }
         PlaySoundEffect(1);
     }
@@ -185,7 +194,7 @@ void AIMove(HWND hwnd) {
     }
     
     if (bestMove != -1) {
-        DoMove(bestMove, WHITE);
+        DoMove(bestMove, WHITE, hwnd);
     }
     currentPlayer = BLACK;
     if (!HasValidMoves(BLACK)) {
@@ -254,13 +263,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int count = GetFlippable(idx, BLACK, flips);
                 if (count > 0) {
                     PushHistory();
-                    DoMove(idx, BLACK);
+                    DoMove(idx, BLACK, hwnd);
                     currentPlayer = WHITE;
                     if (!HasValidMoves(WHITE)) {
                         currentPlayer = BLACK;
                     } else {
                         InvalidateRect(hwnd, NULL, TRUE);
-                        SetTimer(hwnd, 1, 300, NULL); // small delay for AI
+                        SetTimer(hwnd, 1, 400, NULL); // small delay for AI
                     }
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -271,6 +280,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 AIMove(hwnd);
+            } else if (wParam == 2) {
+                flipProgress++;
+                InvalidateRect(hwnd, NULL, FALSE);
+                if (flipProgress >= 10) {
+                    KillTimer(hwnd, 2);
+                    numAnimatingFlips = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             }
             break;
         }
@@ -321,8 +338,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     int idx = r * 8 + c;
                     if (board[idx] != EMPTY) {
-                        SelectObject(hdc, board[idx] == BLACK ? blackBrush : whiteBrush);
-                        Ellipse(hdc, rect.left + 5, rect.top + 5, rect.right - 5, rect.bottom - 5);
+                        int isAnimating = 0;
+                        if (numAnimatingFlips > 0 && flipProgress < 10) {
+                            for(int k=0; k<numAnimatingFlips; k++) {
+                                if (animatingFlips[k] == idx) { isAnimating = 1; break; }
+                            }
+                        }
+                        
+                        if (isAnimating) {
+                            int oldColor = (board[idx] == BLACK) ? WHITE : BLACK;
+                            int newColor = board[idx];
+                            int displayColor = (flipProgress < 5) ? oldColor : newColor;
+                            SelectObject(hdc, displayColor == BLACK ? blackBrush : whiteBrush);
+                            
+                            int currentWidth = 40;
+                            if (flipProgress < 5) {
+                                currentWidth = 40 - (flipProgress * 8); 
+                            } else {
+                                currentWidth = (flipProgress - 5) * 8; 
+                            }
+                            if (currentWidth < 2) currentWidth = 2;
+                            int margin = (40 - currentWidth) / 2;
+                            Ellipse(hdc, rect.left + 5 + margin, rect.top + 5, rect.right - 5 - margin, rect.bottom - 5);
+                        } else {
+                            SelectObject(hdc, board[idx] == BLACK ? blackBrush : whiteBrush);
+                            Ellipse(hdc, rect.left + 5, rect.top + 5, rect.right - 5, rect.bottom - 5);
+                        }
                     } else if (currentPlayer == BLACK) {
                         int dummy[64];
                         if (GetFlippable(idx, BLACK, dummy) > 0) {

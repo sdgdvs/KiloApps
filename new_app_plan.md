@@ -51,7 +51,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KReversi
-**Phase:** 6
+**Phase:** 8
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -61,11 +61,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 5: Added Adjustable AI Difficulty (Easy, Medium, Hard) to both versions.
 - [x] Phase 6: Added Move History/Undo functionality to both versions.
 - [x] Phase 7: Added Sound Effects (Toggleable) to both versions.
+- [x] Phase 8: Added Disc Flip Animations to both versions (and fixed AI flip bug in Web version).
 
 ## Next Priority (Before New Apps)
 
 **App:** KReversi
-**Goal:** Phase 8
+**Goal:** Phase 9
 
 
 ## App Lifecycle (14 phases per app)
