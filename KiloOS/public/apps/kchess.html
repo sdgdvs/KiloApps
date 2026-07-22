@@ -62,6 +62,12 @@
   let statsWins = parseInt(localStorage.getItem('kchess_wins') || '0');
   let statsLosses = parseInt(localStorage.getItem('kchess_losses') || '0');
   let statsDraws = parseInt(localStorage.getItem('kchess_draws') || '0');
+  let freezePowerups = 1;
+  let blackFrozen = false;
+  let undoPowerups = 1;
+  let canUndo = false;
+  let undoBoard = [];
+  let undoWKM = false, undoWRL = false, undoWRR = false, undoBKM = false, undoBRL = false, undoBRR = false, undoEpX = -1, undoEpY = -1;
 
   function saveStats() {
       try {
@@ -288,14 +294,38 @@
           if (currentStage === 10) {
               board[7][3] = 0;
           }
+          if (currentStage === 11) {
+              for(let x=0; x<8; x++) board[2][x] = 7; 
+          }
+          if (currentStage === 12) {
+              board[7][1] = 0; board[7][6] = 0;
+              board[2][2] = 8; board[2][5] = 8;
+          }
+          if (currentStage === 13) {
+              board[0][2] = 11;
+          }
+          if (currentStage === 14) {
+              board[7][2] = 0; board[7][5] = 0;
+              board[2][0] = 10; board[2][7] = 10;
+          }
+          if (currentStage === 15) {
+              board[0][2] = 11; 
+              board[2][1] = 8; board[2][6] = 8;
+          }
+          freezePowerups = 1;
+          undoPowerups = 1;
       } else {
           aiDifficulty = 2;
+          freezePowerups = 1;
+          undoPowerups = 1;
       }
       selX = -1;
       selY = -1;
       whiteTurn = true;
       gameOver = false;
       winner = 0;
+      blackFrozen = false;
+      canUndo = false;
       lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
       draw();
   }
@@ -304,7 +334,7 @@
   window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'r') {
           if (gameOver && campaignMode && winner === 1) {
-              if (currentStage < 10) currentStage++;
+              if (currentStage < 15) currentStage++;
               else { campaignMode = false; currentStage = 1; }
           }
           resetGame();
@@ -317,11 +347,36 @@
           campaignMode = !campaignMode;
           if (campaignMode) { aiMode = true; currentStage = 1; }
           resetGame();
+      } else if (e.key.toLowerCase() === 'f') {
+          if (!gameOver && whiteTurn && aiMode && freezePowerups > 0) {
+              freezePowerups--;
+              blackFrozen = true;
+              playSound();
+              draw();
+          }
+      } else if (e.key.toLowerCase() === 'u') {
+          if (!gameOver && whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
+              undoPowerups--;
+              board = undoBoard.map(row => [...row]);
+              wKingMoved = undoWKM; wRookLMoved = undoWRL; wRookRMoved = undoWRR;
+              bKingMoved = undoBKM; bRookLMoved = undoBRL; bRookRMoved = undoBRR;
+              epX = undoEpX; epY = undoEpY;
+              selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
+              canUndo = false;
+              playSound();
+              draw();
+          }
       }
   });
 
   function doBlackAIMove() {
       if (gameOver || whiteTurn || !aiMode) return;
+      if (blackFrozen) {
+          blackFrozen = false;
+          whiteTurn = true;
+          draw();
+          return;
+      }
       
       let moves = [];
       for (let sy = 0; sy < 8; sy++) {
@@ -490,7 +545,7 @@
       ctx.textAlign = "left";
       
       if (gameOver) {
-          if (winner === 1) ctx.fillText(campaignMode && currentStage < 10 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
+          if (winner === 1) ctx.fillText(campaignMode && currentStage < 15 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
           else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R'", 10, cvs.height - 30);
           else ctx.fillText("Stalemate! Draw! Press 'R'", 10, cvs.height - 30);
       } else {
@@ -498,9 +553,9 @@
       }
       
       if (campaignMode) {
-          ctx.fillText(`Campaign: Stage ${currentStage} (Press 'C' to Exit)`, 10, 20);
+          ctx.fillText(`Campaign: Stage ${currentStage} | F:Freeze(${freezePowerups}) U:Undo(${undoPowerups})`, 10, 20);
       } else {
-          ctx.fillText(aiMode ? "vs AI ('M' toggle) | 'C' Campaign" : "vs Player ('M' toggle) | 'C' Campaign", 10, 20);
+          ctx.fillText(aiMode ? `vs AI ('M') | F:Freeze(${freezePowerups}) U:Undo(${undoPowerups}) | 'C' Cmpn` : `vs Player ('M') | 'C' Campaign`, 10, 20);
       }
       
       ctx.textAlign = "right";
@@ -544,6 +599,13 @@
                   } else {
                       if (isValidMove(selX, selY, tx, ty, false)) {
                           if (!simulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
+                              if (whiteTurn) {
+                                  undoBoard = board.map(row => [...row]);
+                                  undoWKM = wKingMoved; undoWRL = wRookLMoved; undoWRR = wRookRMoved;
+                                  undoBKM = bKingMoved; undoBRL = bRookLMoved; undoBRR = bRookRMoved;
+                                  undoEpX = epX; undoEpY = epY;
+                                  canUndo = true;
+                              }
                               let pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
                               let isWhiteMove = isWhite;
                               if (pType === 1 && tx === epX && ty === (isWhiteMove ? epY - 1 : epY + 1)) board[epY][epX] = 0;

@@ -189,7 +189,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSolitaire | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Ghost and Freeze power-ups, and Rush Mode. |
 | KSpace     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Added Boss Enemy, Time Stop power-up, and Dash mechanic. |
 | KPac       | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 maps, added Freeze power-up, and Green Tracker Ghost. |
-| KChess     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KChess     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Freeze and Undo powerups. |
 | KBreakout  | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
 | K2048      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
 | KSudoku    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
@@ -214,6 +214,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSolitaire (Expanded Campaign to 15 stages, added Ghost and Freeze power-ups, and Rush Mode to both EXE and HTML)
 - [x] KSpace (Added Boss Enemy, Time Stop power-up, and Dash mechanic to both EXE and HTML)
 - [x] KPac (Expanded Campaign to 15 maps, added Freeze power-up, and Green Tracker Ghost to both EXE and HTML)
+- [x] KChess (Expanded Campaign to 15 stages, added Freeze and Undo powerups to both EXE and HTML)
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)
