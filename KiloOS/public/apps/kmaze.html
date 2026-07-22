@@ -177,6 +177,9 @@
   let totalScore = localStorage.getItem('kmaze_score') ? parseInt(localStorage.getItem('kmaze_score')) : 0;
   let score = 0;
   
+  let msgText = "";
+  let msgTimer = 0;
+  
   function generateMaze(w, h) {
       let m = Array.from({length: w}, () => Array(h).fill(1));
       let stack = [];
@@ -341,11 +344,44 @@
               nextLevel();
           }
       }
+      if (gameState === 1 && (e.key === 's' || e.key === 'S')) {
+          let saveData = {
+              currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
+              pX, pY, dX, dY, planeX, planeY, map,
+              elapsed: Date.now() - startTime
+          };
+          localStorage.setItem('kmaze_save', JSON.stringify(saveData));
+          msgText = "Game Saved!";
+          msgTimer = 60;
+          playTone(900, 'sine', 0.2);
+      }
+      if (gameState === 1 && (e.key === 'l' || e.key === 'L')) {
+          let sd = localStorage.getItem('kmaze_save');
+          if (sd) {
+              let saveData = JSON.parse(sd);
+              currentLevel = saveData.currentLevel;
+              score = saveData.score;
+              keysHeld = saveData.keysHeld;
+              hasCompass = saveData.hasCompass;
+              speedBoost = saveData.speedBoost;
+              hasPickaxe = saveData.hasPickaxe;
+              pX = saveData.pX; pY = saveData.pY;
+              dX = saveData.dX; dY = saveData.dY;
+              planeX = saveData.planeX; planeY = saveData.planeY;
+              map = saveData.map;
+              startTime = Date.now() - saveData.elapsed;
+              msgText = "Game Loaded!";
+              msgTimer = 60;
+              playTone(900, 'sine', 0.2);
+          }
+      }
   });
   document.addEventListener('keyup', e => keys[e.key] = false);
 
   function update() {
       if (gameState !== 1) return;
+      
+      if (msgTimer > 0) msgTimer--;
       
       minotaurTimer += 30;
       if (minotaurTimer >= 1000) {
@@ -607,6 +643,13 @@
           ctx.fillText("Level: " + (currentLevel+1), 10, 35);
           ctx.fillText("Time: " + elapsed.toFixed(1), 10, 50);
           if (bestTime < 9999) ctx.fillText("Best: " + bestTime.toFixed(1), 10, 65);
+          ctx.fillText("S:Save L:Load", W - 90, 20);
+          
+          if (msgTimer > 0) {
+              ctx.fillStyle = 'yellow';
+              ctx.fillText(msgText, W/2 - 40, 30);
+              ctx.fillStyle = 'white';
+          }
           
           // Minimap
           if (hasCompass) {

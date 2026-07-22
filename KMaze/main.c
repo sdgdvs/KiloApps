@@ -332,6 +332,9 @@ DWORD endTime = 0;
 float bestTime = 9999.9f;
 int score = 0;
 
+char msgText[64] = "";
+int msgTimer = 0;
+
 void LoadBest() {
     FILE* f = fopen("kmaze_score.dat", "rb");
     if (f) {
@@ -546,6 +549,88 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveBest();
                     ResetMaps();
                     NextLevel();
+                }
+            }
+            
+            static int saveLoadCooldown = 0;
+            if (saveLoadCooldown > 0) saveLoadCooldown -= 30;
+            if (msgTimer > 0) msgTimer--;
+            
+            if (gameState == 1 && saveLoadCooldown <= 0) {
+                if (GetAsyncKeyState('S') & 0x8000) {
+                    FILE* f = fopen("kmaze_save.dat", "wb");
+                    if (f) {
+                        fwrite(&currentLevel, sizeof(int), 1, f);
+                        fwrite(&score, sizeof(int), 1, f);
+                        fwrite(&keysHeld, sizeof(int), 1, f);
+                        fwrite(&hasCompass, sizeof(int), 1, f);
+                        fwrite(&speedBoost, sizeof(int), 1, f);
+                        fwrite(&hasPickaxe, sizeof(int), 1, f);
+                        fwrite(&pX, sizeof(float), 1, f);
+                        fwrite(&pY, sizeof(float), 1, f);
+                        fwrite(&dX, sizeof(float), 1, f);
+                        fwrite(&dY, sizeof(float), 1, f);
+                        fwrite(&planeX, sizeof(float), 1, f);
+                        fwrite(&planeY, sizeof(float), 1, f);
+                        DWORD elapsed = GetTickCount() - startTime;
+                        fwrite(&elapsed, sizeof(DWORD), 1, f);
+                        fwrite(&curRandW, sizeof(int), 1, f);
+                        fwrite(&curRandH, sizeof(int), 1, f);
+                        fwrite(map1, sizeof(map1), 1, f);
+                        fwrite(map2, sizeof(map2), 1, f);
+                        fwrite(map3, sizeof(map3), 1, f);
+                        fwrite(map4, sizeof(map4), 1, f);
+                        fwrite(map5, sizeof(map5), 1, f);
+                        fwrite(map6, sizeof(map6), 1, f);
+                        fwrite(map7, sizeof(map7), 1, f);
+                        fwrite(map8, sizeof(map8), 1, f);
+                        fwrite(map9, sizeof(map9), 1, f);
+                        fwrite(map10, sizeof(map10), 1, f);
+                        fwrite(mapRandom, sizeof(mapRandom), 1, f);
+                        fclose(f);
+                        strcpy(msgText, "Game Saved!");
+                        msgTimer = 60;
+                        saveLoadCooldown = 1000;
+                        MessageBeep(MB_OK);
+                    }
+                }
+                if (GetAsyncKeyState('L') & 0x8000) {
+                    FILE* f = fopen("kmaze_save.dat", "rb");
+                    if (f) {
+                        fread(&currentLevel, sizeof(int), 1, f);
+                        fread(&score, sizeof(int), 1, f);
+                        fread(&keysHeld, sizeof(int), 1, f);
+                        fread(&hasCompass, sizeof(int), 1, f);
+                        fread(&speedBoost, sizeof(int), 1, f);
+                        fread(&hasPickaxe, sizeof(int), 1, f);
+                        fread(&pX, sizeof(float), 1, f);
+                        fread(&pY, sizeof(float), 1, f);
+                        fread(&dX, sizeof(float), 1, f);
+                        fread(&dY, sizeof(float), 1, f);
+                        fread(&planeX, sizeof(float), 1, f);
+                        fread(&planeY, sizeof(float), 1, f);
+                        DWORD elapsed = 0;
+                        fread(&elapsed, sizeof(DWORD), 1, f);
+                        startTime = GetTickCount() - elapsed;
+                        fread(&curRandW, sizeof(int), 1, f);
+                        fread(&curRandH, sizeof(int), 1, f);
+                        fread(map1, sizeof(map1), 1, f);
+                        fread(map2, sizeof(map2), 1, f);
+                        fread(map3, sizeof(map3), 1, f);
+                        fread(map4, sizeof(map4), 1, f);
+                        fread(map5, sizeof(map5), 1, f);
+                        fread(map6, sizeof(map6), 1, f);
+                        fread(map7, sizeof(map7), 1, f);
+                        fread(map8, sizeof(map8), 1, f);
+                        fread(map9, sizeof(map9), 1, f);
+                        fread(map10, sizeof(map10), 1, f);
+                        fread(mapRandom, sizeof(mapRandom), 1, f);
+                        fclose(f);
+                        strcpy(msgText, "Game Loaded!");
+                        msgTimer = 60;
+                        saveLoadCooldown = 1000;
+                        MessageBeep(MB_OK);
+                    }
                 }
             }
             if (gameState != 1) {
@@ -816,6 +901,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(255, 255, 255));
             TextOutA(hdcMem, 10, 10, uiText, lstrlenA(uiText));
+
+            if (msgTimer > 0) {
+                SetTextColor(hdcMem, RGB(255, 255, 0));
+                TextOutA(hdcMem, W/2 - 40, 30, msgText, lstrlenA(msgText));
+            }
 
             // Minimap
             if (gameState == 1 && hasCompass) {
