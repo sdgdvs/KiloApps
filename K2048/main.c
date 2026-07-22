@@ -62,6 +62,8 @@ int campaignLevel = 1;
 
 int powerups_shuffles = 3;
 int powerups_hammers = 3;
+int powerups_rotates = 3;
+int powerups_upgrades = 1;
 
 #define MAX_HISTORY 50
 typedef struct {
@@ -232,6 +234,8 @@ void InitGame() {
     timeRemaining = 60;
     powerups_shuffles = 3;
     powerups_hammers = 3;
+    powerups_rotates = 3;
+    powerups_upgrades = 1;
     if (timerActive) {
         KillTimer(mainHwnd, 1);
         timerActive = 0;
@@ -262,7 +266,19 @@ void StartCampaignLevel() {
     else if (campaignLevel == 17) { grid_size = 5; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 1; }
     else if (campaignLevel == 18) { grid_size = 6; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 2; }
     else if (campaignLevel == 19) { grid_size = 4; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; }
-    else if (campaignLevel >= 20) { grid_size = 6; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 1; }
+    else if (campaignLevel == 20) { grid_size = 6; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 1; }
+
+    else if (campaignLevel == 21) { grid_size = 5; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 0; }
+    else if (campaignLevel == 22) { grid_size = 6; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 0; }
+    else if (campaignLevel == 23) { grid_size = 4; timeAttackEnabled = 1; bombsEnabled = 1; ruleset = 0; }
+    else if (campaignLevel == 24) { grid_size = 5; ruleset = 2; }
+    else if (campaignLevel == 25) { grid_size = 6; ruleset = 1; }
+    else if (campaignLevel == 26) { grid_size = 5; timeAttackEnabled = 1; obstaclesEnabled = 1; ruleset = 0; }
+    else if (campaignLevel == 27) { grid_size = 4; bombsEnabled = 1; obstaclesEnabled = 1; ruleset = 0; }
+    else if (campaignLevel == 28) { grid_size = 6; timeAttackEnabled = 1; bombsEnabled = 1; ruleset = 2; }
+    else if (campaignLevel == 29) { grid_size = 5; ruleset = 1; timeAttackEnabled = 1; }
+    else if (campaignLevel >= 30) { grid_size = 6; timeAttackEnabled = 1; obstaclesEnabled = 1; bombsEnabled = 1; ruleset = 2; }
+
     InitGame();
     if (campaignMode) {
         if (campaignLevel == 2) timeRemaining = 120;
@@ -276,7 +292,15 @@ void StartCampaignLevel() {
         else if (campaignLevel == 15) timeRemaining = 80;
         else if (campaignLevel == 16) timeRemaining = 120;
         else if (campaignLevel == 19) timeRemaining = 45;
-        else if (campaignLevel >= 20) timeRemaining = 90;
+        else if (campaignLevel == 20) timeRemaining = 90;
+
+        else if (campaignLevel == 21) timeRemaining = 120;
+        else if (campaignLevel == 23) timeRemaining = 90;
+        else if (campaignLevel == 26) timeRemaining = 100;
+        else if (campaignLevel == 28) timeRemaining = 150;
+        else if (campaignLevel == 29) timeRemaining = 120;
+        else if (campaignLevel >= 30) timeRemaining = 180;
+
     }
 }
 
@@ -524,7 +548,7 @@ void DrawBoard(HDC hdc) {
     DrawTextA(hdc, helpBuf, -1, &helpRect, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
     char helpBuf2[128];
-    wsprintfA(helpBuf2, "Pwrs: Shuffle(E):%d Hammer(Q):%d", powerups_shuffles, powerups_hammers);
+    wsprintfA(helpBuf2, "Pwrs: Shuf(E):%d Ham(Q):%d Rot(X):%d Upg(V):%d", powerups_shuffles, powerups_hammers, powerups_rotates, powerups_upgrades);
     RECT helpRect2 = { MARGIN, HEADER_HEIGHT / 2, 250, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf2, -1, &helpRect2, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
@@ -634,7 +658,17 @@ int Move(int dx, int dy) {
                             else if (campaignLevel == 17) target = 610;
                             else if (campaignLevel == 18) target = 768;
                             else if (campaignLevel == 19) target = 8192;
-                            else if (campaignLevel >= 20) target = 2584;
+                            else if (campaignLevel == 20) target = 2584;
+                            else if (campaignLevel == 21) target = 2048;
+                            else if (campaignLevel == 22) target = 4096;
+                            else if (campaignLevel == 23) target = 1024;
+                            else if (campaignLevel == 24) target = 1536;
+                            else if (campaignLevel == 25) target = 6765;
+                            else if (campaignLevel == 26) target = 4096;
+                            else if (campaignLevel == 27) target = 512;
+                            else if (campaignLevel == 28) target = 3072;
+                            else if (campaignLevel == 29) target = 10946;
+                            else if (campaignLevel >= 30) target = 6144;
 
                             if (grid[ni][nj] >= target) {
                                 char msg[64];
@@ -755,7 +789,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'P' || wParam == 'p') {
+            } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
+                if (historyCount > 0 && !gameOver && !win) {
+                    historyCount--;
+                    memcpy(grid, &history[historyCount].grid, sizeof(grid));
+                    score = history[historyCount].score;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } } else if (wParam == 'P' || wParam == 'p') {
                 autoPlayEnabled = !autoPlayEnabled;
                 if (autoPlayEnabled) {
                     SetTimer(hwnd, 2, 250, NULL);
@@ -772,7 +812,40 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 bombsEnabled = !bombsEnabled;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'F' || wParam == 'f') {
+            } else if (wParam == 'X' || wParam == 'x') {
+                if (powerups_rotates > 0 && !gameOver && !win) {
+                    powerups_rotates--;
+                    int temp[MAX_GRID][MAX_GRID];
+                    for (int i = 0; i < grid_size; i++) {
+                        for (int j = 0; j < grid_size; j++) {
+                            temp[j][grid_size - 1 - i] = grid[i][j];
+                        }
+                    }
+                    memcpy(grid, temp, sizeof(grid));
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == 'V' || wParam == 'v') {
+                if (powerups_upgrades > 0 && !gameOver && !win) {
+                    int maxI = -1, maxJ = -1, maxVal = -1;
+                    for (int i = 0; i < grid_size; i++) {
+                        for (int j = 0; j < grid_size; j++) {
+                            if (grid[i][j] > maxVal) { maxVal = grid[i][j]; maxI = i; maxJ = j; }
+                        }
+                    }
+                    if (maxI != -1) {
+                        powerups_upgrades--;
+                        int nextVal = maxVal * 2;
+                        if (ruleset == 1) {
+                            int fibs[] = {1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025};
+                            for(int f=0; f<23; f++) if(fibs[f] == maxVal) { nextVal = fibs[f+1]; break; }
+                        } else if (ruleset == 2) {
+                            if (maxVal == 1 || maxVal == 2) nextVal = 3;
+                            else nextVal = maxVal * 2;
+                        }
+                        grid[maxI][maxJ] = nextVal;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                } } else if (wParam == 'F' || wParam == 'f') {
                 ruleset = (ruleset + 1) % 3;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -794,6 +867,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "U / Ctrl+Z: Undo Move\n"
                     "E: Shuffle Powerup\n"
                     "Q: Hammer Powerup\n"
+                    "X: Rotate Powerup\n"
+                    "V: Upgrade Powerup\n"
                     "P: Auto-Play Toggle\n"
                     "O: Obstacles Toggle\n"
                     "B: Bombs Toggle\n"
