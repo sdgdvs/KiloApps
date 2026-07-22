@@ -32,6 +32,7 @@ int shieldActive = 0;
 int wave = 1;
 int enemiesKilled = 0;
 int rapidTimer = 0;
+int timeStopTimer = 0;
 
 unsigned int seed = 999;
 unsigned int rnd() {
@@ -67,16 +68,18 @@ void SpawnEnemy() {
             e[i].x = (float)(rnd() % (W - 20));
             e[i].y = -20.0f;
             int t = rnd() % 100;
-            if (t < 40) e[i].type = 0.0f;
-            else if (t < 60) e[i].type = 1.0f;
-            else if (t < 75) e[i].type = 2.0f;
-            else if (t < 85) e[i].type = 3.0f;
-            else if (t < 95) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.0f:-2.0f); }
-            else e[i].type = 5.0f;
+            if (t < 35) e[i].type = 0.0f;
+            else if (t < 50) e[i].type = 1.0f;
+            else if (t < 65) e[i].type = 2.0f;
+            else if (t < 75) e[i].type = 3.0f;
+            else if (t < 85) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.0f:-2.0f); }
+            else if (t < 95) e[i].type = 5.0f;
+            else { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?2.0f:-2.0f); }
             if (e[i].type == 3.0f) e[i].hp = 10;
             else if (e[i].type == 2.0f) e[i].hp = 5;
             else if (e[i].type == 4.0f) e[i].hp = 3;
             else if (e[i].type == 5.0f) e[i].hp = 30;
+            else if (e[i].type == 6.0f) e[i].hp = 50;
             else e[i].hp = 1;
             break;
         }
@@ -122,6 +125,7 @@ void Update() {
             for(int i=0; i<MAX_POWERUPS; i++) pu[i].active = 0;
             spreadTimer = 0;
             rapidTimer = 0;
+            timeStopTimer = 0;
             shieldActive = 0;
             wave = 1;
             enemiesKilled = 0;
@@ -148,7 +152,7 @@ void Update() {
     int spawnRate = 30 - (score / 100);
     if (spawnRate < 10) spawnRate = 10;
     
-    float speed = 4.0f;
+    float speed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) ? 8.0f : 4.0f;
     if (GetAsyncKeyState(VK_LEFT) & 0x8000) p.x -= speed;
     if (GetAsyncKeyState(VK_RIGHT) & 0x8000) p.x += speed;
     if (GetAsyncKeyState(VK_UP) & 0x8000) p.y -= speed;
@@ -174,40 +178,69 @@ void Update() {
     
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (e[i].active) {
-            if (e[i].type == 0.0f) {
-                e[i].y += baseEnemySpeed;
-            } else if (e[i].type == 1.0f) {
-                e[i].y += baseEnemySpeed * 0.75f;
-                if (e[i].x < p.x) e[i].x += baseEnemySpeed * 0.5f;
-                if (e[i].x > p.x) e[i].x -= baseEnemySpeed * 0.5f;
-            } else if (e[i].type == 2.0f) {
-                e[i].y += baseEnemySpeed * 0.4f;
-            } else if (e[i].type == 3.0f) {
-                e[i].y += baseEnemySpeed * 0.3f;
-            } else if (e[i].type == 4.0f) {
-                e[i].y += baseEnemySpeed * 0.8f;
-                e[i].x += e[i].dx;
-                if (e[i].x < 0) { e[i].x = 0; e[i].dx = -e[i].dx; }
-                if (e[i].x > W - 20) { e[i].x = W - 20; e[i].dx = -e[i].dx; }
-            } else if (e[i].type == 5.0f) {
-                e[i].y += baseEnemySpeed * 1.2f;
-            }
-            if (e[i].y > H) e[i].active = 0.0f;
-            
-            if (e[i].type == 2.0f && (frameCount % 60 == 0) && (rnd() % 2 == 0)) {
-                for (int j = 0; j < MAX_EBULLETS; j++) {
-                    if (!eb[j].active) {
-                        eb[j].active = 1.0f;
-                        eb[j].x = e[i].x + 8.0f;
-                        eb[j].y = e[i].y + 20.0f;
-                        eb[j].dy = 4.0f;
-                        break;
+            float ew = (e[i].type == 6.0f) ? 40.0f : 20.0f;
+            float eh = (e[i].type == 6.0f) ? 40.0f : 20.0f;
+            if (timeStopTimer == 0) {
+                if (e[i].type == 0.0f) {
+                    e[i].y += baseEnemySpeed;
+                } else if (e[i].type == 1.0f) {
+                    e[i].y += baseEnemySpeed * 0.75f;
+                    if (e[i].x < p.x) e[i].x += baseEnemySpeed * 0.5f;
+                    if (e[i].x > p.x) e[i].x -= baseEnemySpeed * 0.5f;
+                } else if (e[i].type == 2.0f) {
+                    e[i].y += baseEnemySpeed * 0.4f;
+                } else if (e[i].type == 3.0f) {
+                    e[i].y += baseEnemySpeed * 0.3f;
+                } else if (e[i].type == 4.0f) {
+                    e[i].y += baseEnemySpeed * 0.8f;
+                    e[i].x += e[i].dx;
+                    if (e[i].x < 0) { e[i].x = 0; e[i].dx = -e[i].dx; }
+                    if (e[i].x > W - 20) { e[i].x = W - 20; e[i].dx = -e[i].dx; }
+                } else if (e[i].type == 5.0f) {
+                    e[i].y += baseEnemySpeed * 1.2f;
+                } else if (e[i].type == 6.0f) {
+                    if (e[i].y < 50.0f) {
+                        e[i].y += baseEnemySpeed * 0.5f;
+                    } else {
+                        e[i].x += e[i].dx;
+                        if (e[i].x < 0) { e[i].x = 0; e[i].dx = -e[i].dx; }
+                        if (e[i].x > W - 40) { e[i].x = W - 40; e[i].dx = -e[i].dx; }
+                    }
+                }
+                if (e[i].y > H) e[i].active = 0.0f;
+                
+                if (e[i].type == 2.0f && (frameCount % 60 == 0) && (rnd() % 2 == 0)) {
+                    for (int j = 0; j < MAX_EBULLETS; j++) {
+                        if (!eb[j].active) {
+                            eb[j].active = 1.0f;
+                            eb[j].x = e[i].x + 8.0f;
+                            eb[j].y = e[i].y + 20.0f;
+                            eb[j].dy = 4.0f;
+                            eb[j].dx = 0.0f;
+                            break;
+                        }
+                    }
+                }
+                
+                if (e[i].type == 6.0f && (frameCount % 45 == 0)) {
+                    float bdx[] = {-2.0f, 0.0f, 2.0f};
+                    int bspawned = 0;
+                    for (int j = 0; j < MAX_EBULLETS; j++) {
+                        if (!eb[j].active) {
+                            eb[j].active = 1.0f;
+                            eb[j].x = e[i].x + 20.0f;
+                            eb[j].y = e[i].y + 40.0f;
+                            eb[j].dy = 4.0f;
+                            eb[j].dx = bdx[bspawned];
+                            bspawned++;
+                            if (bspawned >= 3) break;
+                        }
                     }
                 }
             }
             
             // Player collision
-            if (p.x < e[i].x + 20 && p.x + 20 > e[i].x && p.y < e[i].y + 20 && p.y + 20 > e[i].y) {
+            if (p.x < e[i].x + ew && p.x + 20 > e[i].x && p.y < e[i].y + eh && p.y + 20 > e[i].y) {
                 if (shieldActive) {
                     shieldActive = 0;
                     e[i].active = 0.0f;
@@ -221,13 +254,14 @@ void Update() {
             
             // Bullet collision
             for (int j = 0; j < MAX_BULLETS; j++) {
-                if (b[j].active && b[j].x < e[i].x + 20 && b[j].x + 4 > e[i].x && b[j].y < e[i].y + 20 && b[j].y + 10 > e[i].y) {
+                if (b[j].active && b[j].x < e[i].x + ew && b[j].x + 4 > e[i].x && b[j].y < e[i].y + eh && b[j].y + 10 > e[i].y) {
                     b[j].active = 0.0f;
                     e[i].hp--;
                     if (e[i].hp <= 0) {
                         e[i].active = 0.0f;
                         score += (e[i].type == 2.0f) ? 50 : (e[i].type == 3.0f ? 100 : (e[i].type == 4.0f ? 60 : 10));
                         if (e[i].type == 5.0f) score += 100;
+                        if (e[i].type == 6.0f) score += 500;
                         enemiesKilled++;
                         totalKills++;
                         PlaySnd(1);
@@ -239,7 +273,7 @@ void Update() {
                             for(int k=0; k<MAX_POWERUPS; k++) {
                                 if(!pu[k].active) {
                                     pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 2.0f;
-                                    pu[k].type = (float)(rnd() % 4);
+                                    pu[k].type = (float)(rnd() % 5);
                                     break;
                                 }
                             }
@@ -253,8 +287,11 @@ void Update() {
     
     for (int i = 0; i < MAX_EBULLETS; i++) {
         if (eb[i].active) {
-            eb[i].y += eb[i].dy;
-            if (eb[i].y > H) eb[i].active = 0.0f;
+            if (timeStopTimer == 0) {
+                eb[i].y += eb[i].dy;
+                eb[i].x += eb[i].dx;
+            }
+            if (eb[i].y > H || eb[i].x < 0 || eb[i].x > W) eb[i].active = 0.0f;
             if (p.x < eb[i].x + 4 && p.x + 20 > eb[i].x && p.y < eb[i].y + 10 && p.y + 20 > eb[i].y) {
                 eb[i].active = 0.0f;
                 if (shieldActive) {
@@ -280,7 +317,7 @@ void Update() {
                 else if (pu[i].type == 2.0f) rapidTimer = 300;
                 else if (pu[i].type == 3.0f) {
                     for(int j=0; j<MAX_ENEMIES; j++) {
-                        if(e[j].active && e[j].type != 5.0f) {
+                        if(e[j].active && e[j].type != 5.0f && e[j].type != 6.0f) {
                             e[j].active = 0.0f;
                             score += 10;
                             enemiesKilled++;
@@ -289,6 +326,7 @@ void Update() {
                     }
                     PlaySnd(1);
                 }
+                else if (pu[i].type == 4.0f) timeStopTimer = 300;
                 score += 50;
                 PlaySnd(2);
             }
@@ -296,6 +334,7 @@ void Update() {
     }
     if (spreadTimer > 0) spreadTimer--;
     if (rapidTimer > 0) rapidTimer--;
+    if (timeStopTimer > 0) timeStopTimer--;
     
     if (frameCount % spawnRate == 0) SpawnEnemy();
     frameCount++;
@@ -380,10 +419,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH ebr4 = CreateSolidBrush(RGB(150, 150, 150));
             HBRUSH ebr5 = CreateSolidBrush(RGB(0, 255, 255));
             HBRUSH ebr6 = CreateSolidBrush(RGB(139, 69, 19));
+            HBRUSH ebr7 = CreateSolidBrush(RGB(150, 0, 0));
             for (int i = 0; i < MAX_ENEMIES; i++) {
                 if (e[i].active) {
-                    RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + 20, (int)e[i].y + 20};
-                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : (e[i].type == 2.0f ? ebr3 : (e[i].type == 3.0f ? ebr4 : (e[i].type == 4.0f ? ebr5 : ebr6))));
+                    float ew = (e[i].type == 6.0f) ? 40.0f : 20.0f;
+                    float eh = (e[i].type == 6.0f) ? 40.0f : 20.0f;
+                    RECT er = {(int)e[i].x, (int)e[i].y, (int)e[i].x + (int)ew, (int)e[i].y + (int)eh};
+                    HBRUSH br = e[i].type == 0.0f ? ebr1 : (e[i].type == 1.0f ? ebr2 : (e[i].type == 2.0f ? ebr3 : (e[i].type == 3.0f ? ebr4 : (e[i].type == 4.0f ? ebr5 : (e[i].type == 5.0f ? ebr6 : ebr7)))));
                     FillRect(memDC, &er, br);
                 }
             }
@@ -393,16 +435,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(ebr4);
             DeleteObject(ebr5);
             DeleteObject(ebr6);
+            DeleteObject(ebr7);
             
             // Draw powerups
             HBRUSH pubr1 = CreateSolidBrush(RGB(50, 255, 50));
             HBRUSH pubr2 = CreateSolidBrush(RGB(50, 200, 255));
             HBRUSH pubr3 = CreateSolidBrush(RGB(255, 255, 255));
             HBRUSH pubr4 = CreateSolidBrush(RGB(255, 255, 0));
+            HBRUSH pubr5 = CreateSolidBrush(RGB(50, 50, 255));
             for (int i = 0; i < MAX_POWERUPS; i++) {
                 if (pu[i].active) {
                     RECT pr = {(int)pu[i].x, (int)pu[i].y, (int)pu[i].x + 15, (int)pu[i].y + 15};
-                    HBRUSH br = pu[i].type == 0.0f ? pubr1 : (pu[i].type == 1.0f ? pubr2 : (pu[i].type == 2.0f ? pubr3 : pubr4));
+                    HBRUSH br = pu[i].type == 0.0f ? pubr1 : (pu[i].type == 1.0f ? pubr2 : (pu[i].type == 2.0f ? pubr3 : (pu[i].type == 3.0f ? pubr4 : pubr5)));
                     FillRect(memDC, &pr, br);
                 }
             }
@@ -410,6 +454,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(pubr2);
             DeleteObject(pubr3);
             DeleteObject(pubr4);
+            DeleteObject(pubr5);
             
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));

@@ -187,7 +187,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KPong      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 levels, added Horizontal Obstacle, and Freeze power-up. |
 | KMaze      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded to 30 levels, Darkness mechanic, Minotaur enemy, Pickaxe. |
 | KSolitaire | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Ghost and Freeze power-ups, and Rush Mode. |
-| KSpace     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KSpace     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Added Boss Enemy, Time Stop power-up, and Dash mechanic. |
 | KPac       | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
 | KChess     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
 | KBreakout  | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
@@ -212,6 +212,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KPong (Expanded Campaign to 15 levels, added Horizontal Obstacle, and Freeze power-up to both EXE and HTML)
 - [x] KMaze (Expanded to 30 levels, Darkness mechanic, Minotaur enemy, Pickaxe powerup added to both EXE and HTML)
 - [x] KSolitaire (Expanded Campaign to 15 stages, added Ghost and Freeze power-ups, and Rush Mode to both EXE and HTML)
+- [x] KSpace (Added Boss Enemy, Time Stop power-up, and Dash mechanic to both EXE and HTML)
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)
