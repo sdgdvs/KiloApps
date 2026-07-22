@@ -70,7 +70,6 @@ Your job is to replace placeholder graphics (colored boxes, plain shapes, text-o
 
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 
-- KPac
 - KSnake
 - KTetris
 - KBreakout
@@ -95,8 +94,10 @@ Your job is to replace placeholder graphics (colored boxes, plain shapes, text-o
 - KReversi
 - KQuest
 - KSpace
+- KPac
 
 ## Completed Work Log
 
 - **KSpace (Loop 1):** Implemented custom player fighter sprite, 7 distinct enemy craft sprites (scout, chaser predator, purple saucer, heavy armored, cyan swift, rotating asteroid, red boss dreadnought), thruster flame frame animation, rotating energy shield, glowing plasma bullets, animated powerups, and a multi-color particle explosion system for both Web (kspace.html) and Native C GDI (KSpace/main.c).
+- **KPac (Loop 1):** Implemented animated mouth chomp cycle for Pac-Man (with direction-based angles and speed boost aura), distinct ghost sprites (Blinky, Pinky, Inky, Clyde, Green) with movement-direction eye tracking and scared/flashing states, arcade-style double neon wall tiles, glowing pellets, pulsing power pellets, lightning speed item, frost freeze item, cherry fruit sprite, particle sparks, and floating score popups for both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 

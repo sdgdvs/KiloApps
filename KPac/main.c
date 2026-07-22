@@ -277,7 +277,7 @@ int px = 7, py = 12;
 int pdx = 0, pdy = 0;
 int ndx = 0, ndy = 0;
 
-typedef struct { int x; int y; COLORREF c; } Ghost;
+typedef struct { int x; int y; int dx; int dy; COLORREF c; } Ghost;
 Ghost ghosts[5];
 int freezeTimer = 0;
 int score = 0;
@@ -297,32 +297,40 @@ int statsGamesPlayed = 0;
 int statsGhostsEaten = 0;
 int statsMaxScore = 0;
 
+#ifndef abs
+#define abs(x) (((x) < 0) ? -(x) : (x))
+#endif
+
 void LoadHighScore() {
-    FILE *f = fopen("kpac_hi.dat", "rb");
-    if (f) {
-        fread(&highScore, sizeof(int), 1, f);
-        fclose(f);
+    HANDLE hFile = CreateFileA("kpac_hi.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        ReadFile(hFile, &highScore, sizeof(int), &readBytes, NULL);
+        CloseHandle(hFile);
     }
-    f = fopen("kpac_stats.dat", "rb");
-    if (f) {
-        fread(&statsGamesPlayed, sizeof(int), 1, f);
-        fread(&statsGhostsEaten, sizeof(int), 1, f);
-        fread(&statsMaxScore, sizeof(int), 1, f);
-        fclose(f);
+    hFile = CreateFileA("kpac_stats.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        ReadFile(hFile, &statsGamesPlayed, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &statsGhostsEaten, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &statsMaxScore, sizeof(int), &readBytes, NULL);
+        CloseHandle(hFile);
     }
 }
 void SaveHighScore() {
-    FILE *f = fopen("kpac_hi.dat", "wb");
-    if (f) {
-        fwrite(&highScore, sizeof(int), 1, f);
-        fclose(f);
+    HANDLE hFile = CreateFileA("kpac_hi.dat", GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD writtenBytes = 0;
+        WriteFile(hFile, &highScore, sizeof(int), &writtenBytes, NULL);
+        CloseHandle(hFile);
     }
-    f = fopen("kpac_stats.dat", "wb");
-    if (f) {
-        fwrite(&statsGamesPlayed, sizeof(int), 1, f);
-        fwrite(&statsGhostsEaten, sizeof(int), 1, f);
-        fwrite(&statsMaxScore, sizeof(int), 1, f);
-        fclose(f);
+    hFile = CreateFileA("kpac_stats.dat", GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD writtenBytes = 0;
+        WriteFile(hFile, &statsGamesPlayed, sizeof(int), &writtenBytes, NULL);
+        WriteFile(hFile, &statsGhostsEaten, sizeof(int), &writtenBytes, NULL);
+        WriteFile(hFile, &statsMaxScore, sizeof(int), &writtenBytes, NULL);
+        CloseHandle(hFile);
     }
 }
 
@@ -341,11 +349,11 @@ void Init(int keepScore) {
     px = 7; py = 12;
     pdx = 0; pdy = 0;
     ndx = 0; ndy = 0;
-    ghosts[0] = (Ghost){7, 6, RGB(255, 0, 0)};
-    ghosts[1] = (Ghost){6, 7, RGB(255, 184, 255)};
-    ghosts[2] = (Ghost){8, 7, RGB(0, 255, 255)};
-    ghosts[3] = (Ghost){7, 7, RGB(255, 184, 82)};
-    ghosts[4] = (Ghost){7, 5, RGB(0, 255, 0)};
+    ghosts[0] = (Ghost){7, 6, 0, -1, RGB(255, 23, 68)};
+    ghosts[1] = (Ghost){6, 7, -1, 0, RGB(240, 98, 146)};
+    ghosts[2] = (Ghost){8, 7, 1, 0, RGB(0, 229, 255)};
+    ghosts[3] = (Ghost){7, 7, 0, 1, RGB(255, 145, 0)};
+    ghosts[4] = (Ghost){7, 5, 0, -1, RGB(0, 230, 118)};
     frightTimer = 0;
     freezeTimer = 0;
     fruitActive = 0;
@@ -368,6 +376,8 @@ void Update() {
     if (freezeTimer == 0 && frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for(int i=0; i<numGhosts; i++) {
+            int oldX = ghosts[i].x;
+            int oldY = ghosts[i].y;
             if (frightTimer == 0) {
                 int tx = px;
                 int ty = py;
@@ -427,6 +437,11 @@ void Update() {
             }
             if (ghosts[i].x < 0) ghosts[i].x = COLS - 1;
             if (ghosts[i].x >= COLS) ghosts[i].x = 0;
+
+            if (ghosts[i].x != oldX || ghosts[i].y != oldY) {
+                ghosts[i].dx = (ghosts[i].x > oldX) ? 1 : ((ghosts[i].x < oldX) ? -1 : 0);
+                ghosts[i].dy = (ghosts[i].y > oldY) ? 1 : ((ghosts[i].y < oldY) ? -1 : 0);
+            }
         }
     }
     
@@ -489,11 +504,11 @@ void Update() {
                     px = 7; py = 12;
                     pdx = 0; pdy = 0;
                     ndx = 0; ndy = 0;
-                    ghosts[0].x = 7; ghosts[0].y = 6;
-                    ghosts[1].x = 6; ghosts[1].y = 7;
-                    ghosts[2].x = 8; ghosts[2].y = 7;
-                    ghosts[3].x = 7; ghosts[3].y = 7;
-                    ghosts[4].x = 7; ghosts[4].y = 5;
+                    ghosts[0] = (Ghost){7, 6, 0, -1, RGB(255, 23, 68)};
+                    ghosts[1] = (Ghost){6, 7, -1, 0, RGB(240, 98, 146)};
+                    ghosts[2] = (Ghost){8, 7, 1, 0, RGB(0, 229, 255)};
+                    ghosts[3] = (Ghost){7, 7, 0, 1, RGB(255, 145, 0)};
+                    ghosts[4] = (Ghost){7, 5, 0, -1, RGB(0, 230, 118)};
                 }
                 break;
             }
@@ -517,6 +532,215 @@ void Update() {
     }
     
     frameCount++;
+}
+
+void DrawArcadeWall(HDC hdc, int r, int c) {
+    HBRUSH bgBr = CreateSolidBrush(RGB(6, 10, 23));
+    RECT wr = {c * TS, r * TS, c * TS + TS, r * TS + TS};
+    FillRect(hdc, &wr, bgBr);
+    DeleteObject(bgBr);
+
+    HPEN penBlue = CreatePen(PS_SOLID, 2, RGB(30, 136, 229));
+    HPEN oldPen = (HPEN)SelectObject(hdc, penBlue);
+    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, nullBr);
+
+    Rectangle(hdc, c * TS + 2, r * TS + 2, c * TS + TS - 2, r * TS + TS - 2);
+
+    SelectObject(hdc, oldPen); SelectObject(hdc, oldBr);
+    DeleteObject(penBlue);
+}
+
+void DrawPellet(HDC hdc, int c, int r) {
+    HBRUSH dotBr = CreateSolidBrush(RGB(255, 200, 150));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, dotBr);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    Ellipse(hdc, c * TS + 8, r * TS + 8, c * TS + 12, r * TS + 12);
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(dotBr); DeleteObject(nullPen);
+}
+
+void DrawPowerPellet(HDC hdc, int c, int r, int frame) {
+    int rad = 4 + (frame % 3);
+    HBRUSH powerBr = CreateSolidBrush(RGB(255, 235, 170));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, powerBr);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    int cx = c * TS + TS / 2;
+    int cy = r * TS + TS / 2;
+    Ellipse(hdc, cx - rad, cy - rad, cx + rad, cy + rad);
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(powerBr); DeleteObject(nullPen);
+}
+
+void DrawSpeedItem(HDC hdc, int c, int r) {
+    int cx = c * TS + TS / 2;
+    int cy = r * TS + TS / 2;
+    POINT pts[6] = {
+        {cx + 2, cy - 6}, {cx - 4, cy + 1}, {cx, cy + 1},
+        {cx - 2, cy + 6}, {cx + 4, cy - 1}, {cx, cy - 1}
+    };
+    HBRUSH cyanBr = CreateSolidBrush(RGB(0, 229, 255));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, cyanBr);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    Polygon(hdc, pts, 6);
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(cyanBr); DeleteObject(nullPen);
+}
+
+void DrawFreezeItem(HDC hdc, int c, int r) {
+    int cx = c * TS + TS / 2;
+    int cy = r * TS + TS / 2;
+    HPEN icePen = CreatePen(PS_SOLID, 2, RGB(128, 222, 234));
+    HPEN oldPen = (HPEN)SelectObject(hdc, icePen);
+
+    MoveToEx(hdc, cx - 5, cy, NULL); LineTo(hdc, cx + 5, cy);
+    MoveToEx(hdc, cx, cy - 5, NULL); LineTo(hdc, cx, cy + 5);
+    MoveToEx(hdc, cx - 3, cy - 3, NULL); LineTo(hdc, cx + 3, cy + 3);
+    MoveToEx(hdc, cx + 3, cy - 3, NULL); LineTo(hdc, cx - 3, cy + 3);
+
+    SelectObject(hdc, oldPen);
+    DeleteObject(icePen);
+}
+
+void DrawFruit(HDC hdc, int c, int r) {
+    int cx = c * TS + TS / 2;
+    int cy = r * TS + TS / 2;
+    
+    HPEN stemPen = CreatePen(PS_SOLID, 1, RGB(76, 175, 80));
+    HPEN oldPen = (HPEN)SelectObject(hdc, stemPen);
+    MoveToEx(hdc, cx - 3, cy + 1, NULL); LineTo(hdc, cx, cy - 4);
+    MoveToEx(hdc, cx + 3, cy + 2, NULL); LineTo(hdc, cx, cy - 4);
+    SelectObject(hdc, oldPen); DeleteObject(stemPen);
+
+    HBRUSH redBr = CreateSolidBrush(RGB(213, 0, 0));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, redBr);
+    oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    Ellipse(hdc, cx - 6, cy - 1, cx, cy + 5);
+    Ellipse(hdc, cx, cy, cx + 6, cy + 6);
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(redBr); DeleteObject(nullPen);
+}
+
+void DrawPacman(HDC hdc, int c, int r, int dx, int dy, int frame, int speedTimer) {
+    int cx = c * TS + TS / 2;
+    int cy = r * TS + TS / 2;
+
+    HBRUSH pacBr = CreateSolidBrush(RGB(255, 235, 59));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, pacBr);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    int mouthPhase = frame % 4; // 0: closed, 1: medium, 2: wide, 3: medium
+    int offset = (mouthPhase == 0) ? 0 : ((mouthPhase == 2) ? 6 : 3);
+
+    int rad1X = cx, rad1Y = cy;
+    int rad2X = cx, rad2Y = cy;
+
+    if (dx == 1) { // Right
+        rad1X = cx + 8; rad1Y = cy - offset;
+        rad2X = cx + 8; rad2Y = cy + offset;
+    } else if (dx == -1) { // Left
+        rad1X = cx - 8; rad1Y = cy + offset;
+        rad2X = cx - 8; rad2Y = cy - offset;
+    } else if (dy == 1) { // Down
+        rad1X = cx + offset; rad1Y = cy + 8;
+        rad2X = cx - offset; rad2Y = cy + 8;
+    } else if (dy == -1) { // Up
+        rad1X = cx - offset; rad1Y = cy - 8;
+        rad2X = cx + offset; rad2Y = cy - 8;
+    } else { // Stopped (facing Right)
+        rad1X = cx + 8; rad1Y = cy - offset;
+        rad2X = cx + 8; rad2Y = cy + offset;
+    }
+
+    if (offset == 0) {
+        Ellipse(hdc, cx - 8, cy - 8, cx + 8, cy + 8);
+    } else {
+        Pie(hdc, cx - 8, cy - 8, cx + 8, cy + 8, rad1X, rad1Y, rad2X, rad2Y);
+    }
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(pacBr); DeleteObject(nullPen);
+
+    SetPixel(hdc, cx + ((dx == -1) ? 2 : -2), cy - 4, RGB(0, 0, 0));
+    SetPixel(hdc, cx + ((dx == -1) ? 3 : -1), cy - 4, RGB(0, 0, 0));
+
+    if (speedTimer > 0) {
+        HPEN auraPen = CreatePen(PS_SOLID, 1, RGB(0, 229, 255));
+        HBRUSH nullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+        oldPen = (HPEN)SelectObject(hdc, auraPen);
+        oldBr = (HBRUSH)SelectObject(hdc, nullB);
+        Ellipse(hdc, cx - 10, cy - 10, cx + 10, cy + 10);
+        SelectObject(hdc, oldPen); SelectObject(hdc, oldBr);
+        DeleteObject(auraPen);
+    }
+}
+
+void DrawGhost(HDC hdc, Ghost *g, int frightTimer, int frame) {
+    int gx = g->x * TS + 2;
+    int gy = g->y * TS + 2;
+    int gw = TS - 4;
+    int cx = gx + gw / 2;
+    int cy = gy + gw / 2;
+
+    int isScared = frightTimer > 0;
+    int isFlashing = isScared && frightTimer < 15 && ((frightTimer / 2) % 2 == 0);
+    COLORREF c = isScared ? (isFlashing ? RGB(255, 255, 255) : RGB(30, 136, 229)) : g->c;
+
+    HBRUSH gBr = CreateSolidBrush(c);
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, gBr);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    Ellipse(hdc, gx, gy, gx + gw, gy + gw);
+    RECT bodyR = {gx, gy + gw / 2, gx + gw, gy + gw - 2};
+    FillRect(hdc, &bodyR, gBr);
+
+    SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+    DeleteObject(gBr); DeleteObject(nullPen);
+
+    if (!isScared) {
+        int eyeDx = g->dx * 2;
+        int eyeDy = g->dy * 2;
+
+        HBRUSH whiteBr = CreateSolidBrush(RGB(255, 255, 255));
+        oldBr = (HBRUSH)SelectObject(hdc, whiteBr);
+        oldPen = (HPEN)SelectObject(hdc, GetStockObject(NULL_PEN));
+
+        Ellipse(hdc, cx - 6, cy - 4, cx, cy + 2);
+        Ellipse(hdc, cx, cy - 4, cx + 6, cy + 2);
+
+        DeleteObject(whiteBr);
+
+        HBRUSH blueBr = CreateSolidBrush(RGB(13, 71, 161));
+        SelectObject(hdc, blueBr);
+        Ellipse(hdc, cx - 5 + eyeDx, cy - 3 + eyeDy, cx - 2 + eyeDx, cy + eyeDy);
+        Ellipse(hdc, cx + 1 + eyeDx, cy - 3 + eyeDy, cx + 4 + eyeDx, cy + eyeDy);
+
+        SelectObject(hdc, oldBr); SelectObject(hdc, oldPen);
+        DeleteObject(blueBr);
+    } else {
+        COLORREF mColor = isFlashing ? RGB(213, 0, 0) : RGB(255, 255, 255);
+        SetPixel(hdc, cx - 3, cy - 2, mColor);
+        SetPixel(hdc, cx + 3, cy - 2, mColor);
+        HPEN wPen = CreatePen(PS_SOLID, 1, mColor);
+        oldPen = (HPEN)SelectObject(hdc, wPen);
+        MoveToEx(hdc, cx - 4, cy + 2, NULL); LineTo(hdc, cx - 2, cy + 4);
+        LineTo(hdc, cx, cy + 2); LineTo(hdc, cx + 2, cy + 4); LineTo(hdc, cx + 4, cy + 2);
+        SelectObject(hdc, oldPen); DeleteObject(wPen);
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -546,60 +770,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(0, 0, 0));
+            HBRUSH bg = CreateSolidBrush(RGB(3, 6, 17));
             RECT rc = {0, 0, W, H};
             FillRect(memDC, &rc, bg);
             DeleteObject(bg);
             
-            HBRUSH wallBr = CreateSolidBrush(RGB(20, 20, 200));
-            HBRUSH dotBr = CreateSolidBrush(RGB(255, 200, 150));
+            int numGhosts = (level > 5) ? 5 : 4;
+
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
                     if (map[r][c] == 1) {
-                        RECT wr = {c * TS, r * TS, c * TS + TS, r * TS + TS};
-                        FillRect(memDC, &wr, wallBr);
+                        DrawArcadeWall(memDC, r, c);
                     } else if (map[r][c] == 2) {
-                        RECT dr = {c * TS + 8, r * TS + 8, c * TS + 12, r * TS + 12};
-                        FillRect(memDC, &dr, dotBr);
+                        DrawPellet(memDC, c, r);
                     } else if (map[r][c] == 3) {
-                        RECT dr = {c * TS + 6, r * TS + 6, c * TS + 14, r * TS + 14};
-                        FillRect(memDC, &dr, dotBr);
+                        DrawPowerPellet(memDC, c, r, frameCount);
                     } else if (map[r][c] == 4) {
-                        HBRUSH spBr = CreateSolidBrush(RGB(0, 255, 255));
-                        RECT dr = {c * TS + 7, r * TS + 7, c * TS + 13, r * TS + 13};
-                        FillRect(memDC, &dr, spBr);
-                        DeleteObject(spBr);
+                        DrawSpeedItem(memDC, c, r);
                     } else if (map[r][c] == 5) {
-                        HBRUSH frBr = CreateSolidBrush(RGB(255, 255, 255));
-                        RECT dr = {c * TS + 6, r * TS + 6, c * TS + 14, r * TS + 14};
-                        FillRect(memDC, &dr, frBr);
-                        DeleteObject(frBr);
+                        DrawFreezeItem(memDC, c, r);
                     }
                 }
             }
-            DeleteObject(wallBr); DeleteObject(dotBr);
-            
-            HBRUSH pacBr = CreateSolidBrush(RGB(255, 255, 0));
-            RECT pr = {px * TS + 2, py * TS + 2, px * TS + TS - 2, py * TS + TS - 2};
-            FillRect(memDC, &pr, pacBr);
-            DeleteObject(pacBr);
-            
-            for(int i=0; i<numGhosts; i++) {
-                COLORREF c = ghosts[i].c;
-                if (frightTimer > 0) {
-                    c = ((frightTimer / 2) % 2 == 0) ? RGB(0,0,255) : RGB(255,255,255);
-                }
-                HBRUSH gBr = CreateSolidBrush(c);
-                RECT gr = {ghosts[i].x * TS + 2, ghosts[i].y * TS + 2, ghosts[i].x * TS + TS - 2, ghosts[i].y * TS + TS - 2};
-                FillRect(memDC, &gr, gBr);
-                DeleteObject(gBr);
+
+            if (fruitActive) {
+                DrawFruit(memDC, 7, 12);
             }
             
-            if (fruitActive) {
-                HBRUSH fBr = CreateSolidBrush(RGB(0, 255, 0));
-                RECT fr = {7 * TS + 4, 12 * TS + 4, 7 * TS + TS - 4, 12 * TS + TS - 4};
-                FillRect(memDC, &fr, fBr);
-                DeleteObject(fBr);
+            DrawPacman(memDC, px, py, pdx, pdy, frameCount, speedTimer);
+            
+            for(int i=0; i<numGhosts; i++) {
+                DrawGhost(memDC, &ghosts[i], frightTimer, frameCount);
             }
             
             SetBkMode(memDC, TRANSPARENT);
@@ -609,14 +810,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 5, 5, sstr, lstrlenA(sstr));
             
             if (gameOver) {
-                SetTextColor(memDC, gameOver == 1 ? RGB(255,0,0) : RGB(0,255,0));
+                SetTextColor(memDC, gameOver == 1 ? RGB(255,23,68) : RGB(0,230,118));
                 TextOutA(memDC, W/2 - 50, H/2 - 20, gameOver == 1 ? "GAME OVER" : "YOU WIN!", 9);
                 char statStr[128];
                 wsprintfA(statStr, "Gms: %d Ghsts: %d Max: %d", statsGamesPlayed, statsGhostsEaten, statsMaxScore);
                 SetTextColor(memDC, RGB(255, 255, 255));
                 TextOutA(memDC, 10, H/2 + 10, statStr, lstrlenA(statStr));
             } else if (paused) {
-                SetTextColor(memDC, RGB(255, 255, 0));
+                SetTextColor(memDC, RGB(255, 235, 59));
                 TextOutA(memDC, W/2 - 30, H/2 - 10, "PAUSED", 6);
             }
             
