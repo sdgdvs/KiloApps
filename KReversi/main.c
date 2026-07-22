@@ -11,6 +11,7 @@
 #define IDM_EASY 1001
 #define IDM_MEDIUM 1002
 #define IDM_HARD 1003
+#define IDM_UNDO 1004
 
 const char g_szClassName[] = "KReversiClass";
 
@@ -19,12 +20,48 @@ int currentPlayer = BLACK;
 int dirs[8][2] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
 int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 
+typedef struct {
+    int board[64];
+    int currentPlayer;
+} HistoryState;
+
+HistoryState history[200];
+int historyCount = 0;
+
 
 void InitGame() {
     for(int i = 0; i < 64; i++) board[i] = EMPTY;
     board[27] = WHITE; board[28] = BLACK;
     board[35] = BLACK; board[36] = WHITE;
     currentPlayer = BLACK;
+    historyCount = 0;
+}
+
+void PushHistory() {
+    if (historyCount < 200) {
+        for (int i = 0; i < 64; i++) history[historyCount].board[i] = board[i];
+        history[historyCount].currentPlayer = currentPlayer;
+        historyCount++;
+    } else {
+        for(int i = 1; i < 200; i++) history[i-1] = history[i];
+        for(int i = 0; i < 64; i++) history[199].board[i] = board[i];
+        history[199].currentPlayer = currentPlayer;
+    }
+}
+
+void UndoMove(HWND hwnd) {
+    KillTimer(hwnd, 1); // Cancel AI timer if running
+    if (historyCount == 0) return;
+    
+    HistoryState lastState = history[--historyCount];
+    while(lastState.currentPlayer != BLACK && historyCount > 0) {
+        lastState = history[--historyCount];
+    }
+    
+    for(int i = 0; i < 64; i++) board[i] = lastState.board[i];
+    currentPlayer = lastState.currentPlayer;
+    
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 int GetFlippable(int index, int player, int* flippable) {
@@ -92,6 +129,7 @@ void AIMove(HWND hwnd) {
     }
     
     if (numMoves > 0) {
+        PushHistory();
         if (aiDifficulty == 0) { // Easy
             bestMove = moves[rand() % numMoves];
         } else if (aiDifficulty == 1) { // Medium
@@ -150,6 +188,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hSubMenu, MF_STRING | MF_CHECKED, IDM_MEDIUM, "Medium");
             AppendMenu(hSubMenu, MF_STRING, IDM_HARD, "Hard");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
+            
+            HMENU hActionMenu = CreatePopupMenu();
+            AppendMenu(hActionMenu, MF_STRING, IDM_UNDO, "Undo Move");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hActionMenu, "Actions");
+            
             SetMenu(hwnd, hMenu);
             InitGame();
             break;
@@ -165,6 +208,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CheckMenuItem(hMenu, IDM_MEDIUM, MF_UNCHECKED);
                     CheckMenuItem(hMenu, IDM_HARD, MF_UNCHECKED);
                     CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    break;
+                }
+                case IDM_UNDO: {
+                    UndoMove(hwnd);
                     break;
                 }
             }
@@ -183,6 +230,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int flips[64];
                 int count = GetFlippable(idx, BLACK, flips);
                 if (count > 0) {
+                    PushHistory();
                     DoMove(idx, BLACK);
                     currentPlayer = WHITE;
                     if (!HasValidMoves(WHITE)) {
