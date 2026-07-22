@@ -8,7 +8,7 @@
 #define ROWS 15
 #define TS 20
 
-char maps[10][ROWS][COLS] = {
+char maps[15][ROWS][COLS] = {
     {
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
         {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
@@ -178,6 +178,91 @@ char maps[10][ROWS][COLS] = {
         {1,2,1,2,1,1,1,2,1,1,1,2,1,2,1},
         {1,4,2,2,2,2,2,2,2,2,2,2,2,4,1},
         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,5,2,2,2,2,1,2,1,2,2,2,2,5,1},
+        {1,2,1,1,1,2,1,2,1,2,1,1,1,2,1},
+        {1,2,1,3,2,2,2,2,2,2,2,3,1,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,2,2,1,2,2,2,2,2,1,2,2,2,1},
+        {1,1,1,2,1,2,1,1,1,2,1,2,1,1,1},
+        {0,0,0,2,2,2,1,0,1,2,2,2,0,0,0},
+        {1,1,1,2,1,2,1,1,1,2,1,2,1,1,1},
+        {1,2,2,2,1,2,2,2,2,2,1,2,2,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,1,4,2,2,2,2,2,2,2,4,1,2,1},
+        {1,2,1,1,1,2,1,2,1,2,1,1,1,2,1},
+        {1,5,2,2,2,2,1,2,1,2,2,2,2,5,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,2,2,2,5,1,2,2,2,1,5,2,2,2,1},
+        {1,1,1,1,2,1,1,1,1,1,2,1,1,1,1},
+        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,2,1,0,1,2,1,0,1,2,1,0,1,2,1},
+        {1,2,1,1,1,2,1,1,1,2,1,1,1,2,1},
+        {1,2,2,2,2,2,2,2,2,2,2,2,2,2,1},
+        {1,1,1,1,2,1,1,1,1,1,2,1,1,1,1},
+        {1,2,2,2,4,1,2,2,2,1,4,2,2,2,1},
+        {1,2,1,1,1,1,2,1,2,1,1,1,1,2,1},
+        {1,3,2,2,2,2,2,1,2,2,2,2,2,3,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,5,2,1,2,2,2,2,2,2,2,1,2,5,1},
+        {1,1,2,1,2,1,1,1,1,1,2,1,2,1,1},
+        {1,2,2,2,2,1,3,2,3,1,2,2,2,2,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,2,1,2,2,2,2,1,2,2,2,2,1,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,2,2,1,0,0,0,0,0,1,2,2,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,1,2,2,2,2,1,2,2,2,2,1,2,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,2,2,2,2,1,4,2,4,1,2,2,2,2,1},
+        {1,1,2,1,2,1,1,1,1,1,2,1,2,1,1},
+        {1,5,2,1,2,2,2,2,2,2,2,1,2,5,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,3,2,2,2,1,2,5,2,1,2,2,2,3,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+        {1,1,1,1,1,2,1,1,1,2,1,1,1,1,1},
+        {1,2,2,2,1,2,2,2,2,2,1,2,2,2,1},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {0,2,1,2,2,2,2,0,2,2,2,2,1,2,0},
+        {1,2,1,2,1,1,1,1,1,1,1,2,1,2,1},
+        {1,2,2,2,1,2,2,2,2,2,1,2,2,2,1},
+        {1,1,1,1,1,2,1,1,1,2,1,1,1,1,1},
+        {1,2,2,2,2,2,2,1,2,2,2,2,2,2,1},
+        {1,2,1,1,2,1,2,1,2,1,2,1,1,2,1},
+        {1,3,2,2,2,1,2,5,2,1,2,2,2,3,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+    },
+    {
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+        {1,5,2,2,2,2,2,2,2,2,2,2,2,5,1},
+        {1,2,1,1,1,1,1,2,1,1,1,1,1,2,1},
+        {1,2,1,3,2,2,1,2,1,2,2,3,1,2,1},
+        {1,2,1,2,1,2,1,2,1,2,1,2,1,2,1},
+        {1,2,1,2,1,2,2,2,2,2,1,2,1,2,1},
+        {1,2,2,2,1,1,1,1,1,1,1,2,2,2,1},
+        {1,1,1,2,2,2,2,0,2,2,2,2,1,1,1},
+        {1,2,2,2,1,1,1,1,1,1,1,2,2,2,1},
+        {1,2,1,2,1,2,2,2,2,2,1,2,1,2,1},
+        {1,2,1,2,1,2,1,2,1,2,1,2,1,2,1},
+        {1,2,1,4,2,2,1,2,1,2,2,4,1,2,1},
+        {1,2,1,1,1,1,1,2,1,1,1,1,1,2,1},
+        {1,5,2,2,2,2,2,2,2,2,2,2,2,5,1},
+        {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
     }
 };
 char map[ROWS][COLS];
@@ -193,7 +278,8 @@ int pdx = 0, pdy = 0;
 int ndx = 0, ndy = 0;
 
 typedef struct { int x; int y; COLORREF c; } Ghost;
-Ghost ghosts[4];
+Ghost ghosts[5];
+int freezeTimer = 0;
 int score = 0;
 int highScore = 0;
 int gameOver = 0;
@@ -245,11 +331,11 @@ void Init(int keepScore) {
     gameOver = 0;
     paused = 0;
     dotCount = 0;
-    int mapIndex = (level - 1) % 10;
+    int mapIndex = (level - 1) % 15;
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
             map[r][c] = maps[mapIndex][r][c];
-            if (map[r][c] >= 2 && map[r][c] <= 4) dotCount++;
+            if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
         }
     }
     px = 7; py = 12;
@@ -259,7 +345,9 @@ void Init(int keepScore) {
     ghosts[1] = (Ghost){6, 7, RGB(255, 184, 255)};
     ghosts[2] = (Ghost){8, 7, RGB(0, 255, 255)};
     ghosts[3] = (Ghost){7, 7, RGB(255, 184, 82)};
+    ghosts[4] = (Ghost){7, 5, RGB(0, 255, 0)};
     frightTimer = 0;
+    freezeTimer = 0;
     fruitActive = 0;
     fruitTimer = 0;
     speedTimer = 0;
@@ -268,15 +356,18 @@ void Init(int keepScore) {
 void Update() {
     if (gameOver || paused) return;
     
+    if (freezeTimer > 0) freezeTimer--;
+    int numGhosts = (level > 5) ? 5 : 4;
+    
     // Ghost basic logic (random move)
     if (frightTimer > 0) frightTimer--;
     int ghostSpeed = 4 - (level / 3);
     if (ghostSpeed < 1) ghostSpeed = 1;
     if (frightTimer > 0) ghostSpeed *= 2;
 
-    if (frameCount % ghostSpeed == 0) {
+    if (freezeTimer == 0 && frameCount % ghostSpeed == 0) {
         int dirs[4][2] = {{1,0}, {-1,0}, {0,1}, {0,-1}};
-        for(int i=0; i<4; i++) {
+        for(int i=0; i<numGhosts; i++) {
             if (frightTimer == 0) {
                 int tx = px;
                 int ty = py;
@@ -295,6 +386,9 @@ void Update() {
                         tx = 0;
                         ty = ROWS - 1;
                     }
+                } else if (i == 4) { // Green ghost exactly tracks
+                    tx = px;
+                    ty = py;
                 }
                 int best_d = -1;
                 int min_dist = 9999;
@@ -358,9 +452,10 @@ void Update() {
         if (ny >= 0 && ny < ROWS && map[ny][nx] != 1) {
             px = nx;
             py = ny;
-            if (map[py][px] >= 2 && map[py][px] <= 4) {
+            if (map[py][px] >= 2 && map[py][px] <= 5) {
                 if (map[py][px] == 3) { score += 40; frightTimer = 50; MessageBeep(MB_OK); }
                 else if (map[py][px] == 4) { score += 20; speedTimer = 80; MessageBeep(MB_ICONEXCLAMATION); }
+                else if (map[py][px] == 5) { score += 30; freezeTimer = 100; MessageBeep(MB_ICONINFORMATION); }
                 else { score += 10; }
                 if (score > highScore) highScore = score;
                 map[py][px] = 0;
@@ -373,7 +468,7 @@ void Update() {
         }
     }
     
-    for(int i=0; i<4; i++) {
+    for(int i=0; i<numGhosts; i++) {
         if (px == ghosts[i].x && py == ghosts[i].y) {
             if (frightTimer > 0) {
                 score += 200;
@@ -398,6 +493,7 @@ void Update() {
                     ghosts[1].x = 6; ghosts[1].y = 7;
                     ghosts[2].x = 8; ghosts[2].y = 7;
                     ghosts[3].x = 7; ghosts[3].y = 7;
+                    ghosts[4].x = 7; ghosts[4].y = 5;
                 }
                 break;
             }
@@ -473,6 +569,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT dr = {c * TS + 7, r * TS + 7, c * TS + 13, r * TS + 13};
                         FillRect(memDC, &dr, spBr);
                         DeleteObject(spBr);
+                    } else if (map[r][c] == 5) {
+                        HBRUSH frBr = CreateSolidBrush(RGB(255, 255, 255));
+                        RECT dr = {c * TS + 6, r * TS + 6, c * TS + 14, r * TS + 14};
+                        FillRect(memDC, &dr, frBr);
+                        DeleteObject(frBr);
                     }
                 }
             }
@@ -483,7 +584,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &pr, pacBr);
             DeleteObject(pacBr);
             
-            for(int i=0; i<4; i++) {
+            for(int i=0; i<numGhosts; i++) {
                 COLORREF c = ghosts[i].c;
                 if (frightTimer > 0) {
                     c = ((frightTimer / 2) % 2 == 0) ? RGB(0,0,255) : RGB(255,255,255);
