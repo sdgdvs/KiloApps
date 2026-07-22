@@ -12,10 +12,23 @@
 #define IDM_MEDIUM 1002
 #define IDM_HARD 1003
 #define IDM_UNDO 1004
+#define IDM_SOUND 1005
 
 const char g_szClassName[] = "KReversiClass";
 
 int board[64];
+int soundEnabled = 1;
+int gameOverSoundPlayed = 0;
+
+void PlaySoundEffect(int type) {
+    if (!soundEnabled) return;
+    if (type == 1) { // Place
+        Beep(600, 50);
+    } else if (type == 2) { // Game Over
+        Beep(400, 150);
+        Beep(200, 150);
+    }
+}
 int currentPlayer = BLACK;
 int dirs[8][2] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
 int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
@@ -35,6 +48,7 @@ void InitGame() {
     board[35] = BLACK; board[36] = WHITE;
     currentPlayer = BLACK;
     historyCount = 0;
+    gameOverSoundPlayed = 0;
 }
 
 void PushHistory() {
@@ -61,6 +75,7 @@ void UndoMove(HWND hwnd) {
     for(int i = 0; i < 64; i++) board[i] = lastState.board[i];
     currentPlayer = lastState.currentPlayer;
     
+    gameOverSoundPlayed = 0;
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -107,6 +122,7 @@ void DoMove(int index, int player) {
         for(int i=0; i<count; i++) {
             board[flips[i]] = player;
         }
+        PlaySoundEffect(1);
     }
 }
 
@@ -191,6 +207,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HMENU hActionMenu = CreatePopupMenu();
             AppendMenu(hActionMenu, MF_STRING, IDM_UNDO, "Undo Move");
+            AppendMenu(hActionMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hActionMenu, MF_STRING | MF_CHECKED, IDM_SOUND, "Sound Effects");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hActionMenu, "Actions");
             
             SetMenu(hwnd, hMenu);
@@ -212,6 +230,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 case IDM_UNDO: {
                     UndoMove(hwnd);
+                    break;
+                }
+                case IDM_SOUND: {
+                    soundEnabled = !soundEnabled;
+                    CheckMenuItem(GetMenu(hwnd), IDM_SOUND, soundEnabled ? MF_CHECKED : MF_UNCHECKED);
                     break;
                 }
             }
@@ -273,6 +296,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (bCount > wCount) TextOut(hdc, 200, 10, "Black Wins!", 11);
                 else if (wCount > bCount) TextOut(hdc, 200, 10, "White Wins!", 11);
                 else TextOut(hdc, 200, 10, "Draw!", 5);
+                
+                if (!gameOverSoundPlayed) {
+                    gameOverSoundPlayed = 1;
+                    PlaySoundEffect(2);
+                }
             } else {
                 if (currentPlayer == BLACK) TextOut(hdc, 200, 10, "Turn: Black", 11);
                 else TextOut(hdc, 200, 10, "Turn: White", 11);

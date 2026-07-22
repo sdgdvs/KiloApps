@@ -60,11 +60,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - [x] Phase 5: Added Adjustable AI Difficulty (Easy, Medium, Hard) to both versions.
 - [x] Phase 6: Added Move History/Undo functionality to both versions.
+- [x] Phase 7: Added Sound Effects (Toggleable) to both versions.
 
 ## Next Priority (Before New Apps)
 
 **App:** KReversi
-**Goal:** Phase 7
+**Goal:** Phase 8
 
 
 ## App Lifecycle (14 phases per app)
