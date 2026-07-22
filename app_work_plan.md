@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KMine
+**Target App:** KPac
 **Status:** Feature Expansion (Completed)
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KPac
 - KNote
 - KPass
 - KMedia
@@ -76,3 +75,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KScript (Added Load and Save script functionality)
 - KMaze (Added Save/Load game functionality)
 - KMine (Added Safe First-Click, Chording, and Hint System)
+- KPac (Added Difficulty Levels and Save/Load Game State)
+- KQuest
+
+
