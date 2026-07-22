@@ -16,12 +16,25 @@
 #define IDM_STATS 1006
 #define IDM_SAVE 1007
 #define IDM_LOAD 1008
+#define IDM_HINT 1009
 
 const char g_szClassName[] = "KReversiClass";
 
 int board[64];
 int soundEnabled = 1;
+int showHint = 1;
 int stats[3] = {0, 0, 0}; // Wins, Losses, Draws
+
+static const int g_weights[64] = {
+    100, -20,  10,   5,   5,  10, -20, 100,
+    -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+     10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+      5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+      5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+     10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+    -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+    100, -20,  10,   5,   5,  10, -20, 100
+};
 
 void LoadStats() {
     FILE* f = fopen("kreversi_stats.dat", "rb");
@@ -186,6 +199,32 @@ int HasValidMoves(int player) {
     return 0;
 }
 
+int EvaluatePosition() {
+    int score = 0;
+    for (int i = 0; i < 64; i++) {
+        if (board[i] == BLACK) score += g_weights[i] + 1;
+        else if (board[i] == WHITE) score -= (g_weights[i] + 1);
+    }
+    return score;
+}
+
+int GetBestMoveForPlayer(int player) {
+    int maxVal = -999999;
+    int bestMove = -1;
+    for (int i = 0; i < 64; i++) {
+        int flips[64];
+        int count = GetFlippable(i, player, flips);
+        if (count > 0) {
+            int val = count * 2 + g_weights[i];
+            if (val > maxVal) {
+                maxVal = val;
+                bestMove = i;
+            }
+        }
+    }
+    return bestMove;
+}
+
 void DoMove(int index, int player, HWND hwnd) {
     int count = GetFlippable(index, player, animatingFlips);
     if (count > 0) {
@@ -288,6 +327,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hActionMenu, MF_STRING, IDM_STATS, "Statistics");
             AppendMenu(hActionMenu, MF_SEPARATOR, 0, NULL);
             AppendMenu(hActionMenu, MF_STRING | MF_CHECKED, IDM_SOUND, "Sound Effects");
+            AppendMenu(hActionMenu, MF_STRING | MF_CHECKED, IDM_HINT, "Show Hints");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hActionMenu, "Actions");
             
             SetMenu(hwnd, hMenu);
@@ -327,6 +367,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case IDM_SOUND: {
                     soundEnabled = !soundEnabled;
                     CheckMenuItem(GetMenu(hwnd), IDM_SOUND, soundEnabled ? MF_CHECKED : MF_UNCHECKED);
+                    break;
+                }
+                case IDM_HINT: {
+                    showHint = !showHint;
+                    CheckMenuItem(GetMenu(hwnd), IDM_HINT, showHint ? MF_CHECKED : MF_UNCHECKED);
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
             }
@@ -390,12 +436,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             char scoreStr[64];
             sprintf(scoreStr, "Black: %d   White: %d", bCount, wCount);
-            TextOut(hdc, 10, 10, scoreStr, strlen(scoreStr));
+            TextOut(hdc, 10, 8, scoreStr, strlen(scoreStr));
             
             if (!HasValidMoves(BLACK) && !HasValidMoves(WHITE)) {
-                if (bCount > wCount) TextOut(hdc, 200, 10, "Black Wins!", 11);
-                else if (wCount > bCount) TextOut(hdc, 200, 10, "White Wins!", 11);
-                else TextOut(hdc, 200, 10, "Draw!", 5);
+                if (bCount > wCount) TextOut(hdc, 200, 8, "Black Wins!", 11);
+                else if (wCount > bCount) TextOut(hdc, 200, 8, "White Wins!", 11);
+                else TextOut(hdc, 200, 8, "Draw!", 5);
                 
                 if (!gameOverSoundPlayed) {
                     gameOverSoundPlayed = 1;
@@ -403,9 +449,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     UpdateStats(bCount, wCount);
                 }
             } else {
-                if (currentPlayer == BLACK) TextOut(hdc, 200, 10, "Turn: Black", 11);
-                else TextOut(hdc, 200, 10, "Turn: White", 11);
+                if (currentPlayer == BLACK) TextOut(hdc, 200, 8, "Turn: Black", 11);
+                else TextOut(hdc, 200, 8, "Turn: White", 11);
             }
+
+            int evalScore = EvaluatePosition();
+            int bestMoveIdx = (currentPlayer == BLACK && HasValidMoves(BLACK)) ? GetBestMoveForPlayer(BLACK) : -1;
+            
+            char evalStr[128];
+            if (bestMoveIdx != -1 && showHint) {
+                int col = bestMoveIdx % 8;
+                int row = bestMoveIdx / 8;
+                sprintf(evalStr, "Eval: %+d (%s)  |  Best Move: %c%d", 
+                        evalScore, evalScore > 0 ? "Black" : (evalScore < 0 ? "White" : "Even"), 'A' + col, row + 1);
+            } else {
+                sprintf(evalStr, "Eval: %+d (%s)  |  Best Move: -", 
+                        evalScore, evalScore > 0 ? "Black" : (evalScore < 0 ? "White" : "Even"));
+            }
+            TextOut(hdc, 10, 24, evalStr, strlen(evalStr));
 
             HBRUSH boardBrush = CreateSolidBrush(RGB(26, 86, 44));
             HBRUSH blackBrush = CreateSolidBrush(RGB(20, 20, 20));
@@ -451,11 +512,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (currentPlayer == BLACK) {
                         int dummy[64];
                         if (GetFlippable(idx, BLACK, dummy) > 0) {
-                            SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                            HPEN hintPen = CreatePen(PS_SOLID, 1, RGB(180, 180, 180));
-                            SelectObject(hdc, hintPen);
-                            Ellipse(hdc, rect.left + 20, rect.top + 20, rect.right - 20, rect.bottom - 20);
-                            DeleteObject(hintPen);
+                            if (showHint && idx == bestMoveIdx) {
+                                HBRUSH hintBrush = CreateSolidBrush(RGB(255, 215, 0));
+                                HPEN hintPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+                                SelectObject(hdc, hintBrush);
+                                SelectObject(hdc, hintPen);
+                                Ellipse(hdc, rect.left + 14, rect.top + 14, rect.right - 14, rect.bottom - 14);
+                                DeleteObject(hintBrush);
+                                DeleteObject(hintPen);
+                            } else {
+                                SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                                HPEN hintPen = CreatePen(PS_SOLID, 1, RGB(180, 180, 180));
+                                SelectObject(hdc, hintPen);
+                                Ellipse(hdc, rect.left + 20, rect.top + 20, rect.right - 20, rect.bottom - 20);
+                                DeleteObject(hintPen);
+                            }
                         }
                     }
                 }

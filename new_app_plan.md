@@ -52,7 +52,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KReversi
-**Phase:** 8
+**Phase:** 11
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -65,11 +65,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Added Disc Flip Animations to both versions (and fixed AI flip bug in Web version).
 - [x] Phase 9: Added Game Statistics tracking (Wins, Losses, Draws) to both versions.
 - [x] Phase 10: Added Save/Load Game State functionality to both versions.
+- [x] Phase 11: Added Hint System and Move Recommendation Evaluator to both versions.
 
 ## Next Priority (Before New Apps)
 
 **App:** KReversi
-**Goal:** Phase 11
+**Goal:** Phase 12
 
 
 ## App Lifecycle (14 phases per app)
