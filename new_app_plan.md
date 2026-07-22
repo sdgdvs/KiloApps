@@ -51,28 +51,19 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KReversi
-**Phase:** 14
-**Status:** Complete
+**App:** KQuest
+**Phase:** 1
+**Status:** In Progress
 
-- [x] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [x] Phase 5: Added Adjustable AI Difficulty (Easy, Medium, Hard) to both versions.
-- [x] Phase 6: Added Move History/Undo functionality to both versions.
-- [x] Phase 7: Added Sound Effects (Toggleable) to both versions.
-- [x] Phase 8: Added Disc Flip Animations to both versions (and fixed AI flip bug in Web version).
-- [x] Phase 9: Added Game Statistics tracking (Wins, Losses, Draws) to both versions.
-- [x] Phase 10: Added Save/Load Game State functionality to both versions.
-- [x] Phase 11: Added Hint System and Move Recommendation Evaluator to both versions.
-- [x] Phase 12: Added Timed Game Modes (Untimed, Blitz 5s, Rapid 15s) and Handicap Start Options to both versions.
-- [x] Phase 13: Added Custom Board Themes & Piece Styles (Classic Emerald, Midnight Cyber, Obsidian Crimson, Retro Terminal) to both versions.
-- [x] Phase 14: Added Comprehensive Help / How-to-Play Modal & Strategy Guide (covering core rules, corner control strategy, mobility management, and edge traps) to both versions.
+- [x] Phase 1: Choose a unique app. Scaffold `KQuest/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
+- [ ] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
+- [ ] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
+- [ ] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 
 ## Next Priority (Before New Apps)
 
-None (KReversi Complete)
+**App:** KQuest
+**Goal:** Phase 2
 
 
 

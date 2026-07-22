@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KQuest - Fantasy Dungeon RPG</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #12121e;
+      color: #cdd6f4;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #313244;
+    }
+    header h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #cba6f7;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    header .badge {
+      background: #313244;
+      color: #a6e3a1;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Top Stats Bar */
+    .stats-bar {
+      background-color: #181825;
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid #313244;
+      font-size: 0.85rem;
+    }
+    .stat-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-label {
+      color: #a6adc8;
+    }
+    .stat-val {
+      font-weight: 600;
+      color: #f9e2af;
+    }
+    .bar-container {
+      width: 80px;
+      height: 10px;
+      background: #313244;
+      border-radius: 5px;
+      overflow: hidden;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .bar-fill-hp {
+      height: 100%;
+      background: #f38ba8;
+      width: 100%;
+      transition: width 0.3s;
+    }
+    .bar-fill-mp {
+      height: 100%;
+      background: #89b4fa;
+      width: 100%;
+      transition: width 0.3s;
+    }
+
+    /* Main Content Layout */
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left Narrative & Game View */
+    .game-view {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 12px;
+      border-right: 1px solid #313244;
+    }
+    .screen-panel {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .screen-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #89b4fa;
+      margin-bottom: 6px;
+    }
+    .screen-desc {
+      font-size: 0.9rem;
+      color: #bac2de;
+    }
+
+    .log-panel {
+      flex: 1;
+      background: #11111b;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 10px;
+      overflow-y: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-entry {
+      color: #cdd6f4;
+    }
+    .log-entry.system { color: #89b4fa; }
+    .log-entry.combat { color: #f38ba8; }
+    .log-entry.loot { color: #f9e2af; }
+    .log-entry.town { color: #a6e3a1; }
+
+    /* Action Controls Bar */
+    .controls-panel {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: #313244;
+      color: #cdd6f4;
+      border: 1px solid #45475a;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: #45475a;
+      color: #ffffff;
+      border-color: #585b70;
+    }
+    .btn-primary {
+      background: #89b4fa;
+      color: #11111b;
+      border-color: #b4befe;
+    }
+    .btn-primary:hover {
+      background: #b4befe;
+      color: #11111b;
+    }
+    .btn-accent {
+      background: #a6e3a1;
+      color: #11111b;
+      border-color: #a6e3a1;
+    }
+    .btn-accent:hover {
+      background: #94e2d5;
+    }
+
+    /* Right Sidebar (Quests / Inventory / Info) */
+    .sidebar {
+      flex: 1;
+      background: #181825;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      min-width: 240px;
+    }
+    .card {
+      background: #1e1e2e;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .card-header {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #cba6f7;
+      border-bottom: 1px solid #313244;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .card-body {
+      font-size: 0.85rem;
+      color: #a6adc8;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .quest-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px dashed #313244;
+    }
+    .quest-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1>🗡️ KQuest <span class="badge">v1.0</span></h1>
+    <div>Fantasy Text RPG & Dungeon Crawler</div>
+  </header>
+
+  <!-- Player Stats Header Bar -->
+  <div class="stats-bar">
+    <div class="stat-group">
+      <span class="stat-label">Hero:</span>
+      <span class="stat-val" id="hero-name">Valerius</span>
+      <span style="color:#a6adc8;">(Warrior)</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">Lvl:</span>
+      <span class="stat-val" id="hero-level">1</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">HP:</span>
+      <div class="bar-container">
+        <div class="bar-fill-hp" id="hp-bar"></div>
+      </div>
+      <span class="stat-val" id="hp-text">50/50</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">MP:</span>
+      <div class="bar-container">
+        <div class="bar-fill-mp" id="mp-bar"></div>
+      </div>
+      <span class="stat-val" id="mp-text">20/20</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">Gold:</span>
+      <span class="stat-val" id="hero-gold">50 🪙</span>
+    </div>
+    <div class="stat-group">
+      <span class="stat-label">Floor:</span>
+      <span class="stat-val" id="dungeon-floor">Floor 1</span>
+    </div>
+  </div>
+
+  <!-- Main Content Layout -->
+  <div class="main-container">
+    
+    <!-- Game View & Narrative Area -->
+    <div class="game-view">
+      
+      <!-- Current Location / Screen Banner -->
+      <div class="screen-panel" id="screen-panel">
+        <div class="screen-title" id="location-title">🏰 Oakhaven Town Square</div>
+        <div class="screen-desc" id="location-desc">A bustling sanctuary at the foot of the Obsidian Spire. Prepare your weapons and rest before venturing forth into the dark depths.</div>
+      </div>
+
+      <!-- Text Log Panel -->
+      <div class="log-panel" id="log-panel">
+        <div class="log-entry system">=== Welcome to KQuest: Fantasy Dungeon RPG ===</div>
+        <div class="log-entry system">Select an action below to commence your quest.</div>
+      </div>
+
+      <!-- Action Button Panel -->
+      <div class="controls-panel">
+        <button class="btn btn-primary" onclick="actionExplore()">⚔️ Explore Dungeon</button>
+        <button class="btn btn-accent" onclick="actionTown()">🏰 Visit Town</button>
+        <button class="btn" onclick="actionInventory()">🎒 Inventory</button>
+        <button class="btn" onclick="actionRest()">🍺 Rest at Inn</button>
+        <button class="btn" onclick="actionQuests()">📜 Quest Log</button>
+        <button class="btn" onclick="resetGame()">🔄 New Game</button>
+      </div>
+
+    </div>
+
+    <!-- Sidebar Info Panel -->
+    <div class="sidebar">
+      
+      <!-- Character Stats Card -->
+      <div class="card">
+        <div class="card-header">📊 Character Attributes</div>
+        <div class="card-body">
+          <div>Strength: <strong style="color:#f9e2af;">14</strong></div>
+          <div>Defense: <strong style="color:#f9e2af;">12</strong></div>
+          <div>Agility: <strong style="color:#f9e2af;">10</strong></div>
+          <div>Intelligence: <strong style="color:#f9e2af;">8</strong></div>
+          <div>XP Progress: <strong style="color:#a6e3a1;" id="xp-text">0 / 100</strong></div>
+        </div>
+      </div>
+
+      <!-- Active Quests Card -->
+      <div class="card">
+        <div class="card-header">📜 Active Quests</div>
+        <div class="card-body" id="quest-list">
+          <div class="quest-item">
+            <span>Slay the Goblin King</span>
+            <strong style="color:#f9e2af;">In Progress</strong>
+          </div>
+          <div class="quest-item">
+            <span>Collect 3 Crystal Shards</span>
+            <strong style="color:#f9e2af;">0/3</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Equipment Card -->
+      <div class="card">
+        <div class="card-header">🛡️ Equipment</div>
+        <div class="card-body">
+          <div>Weapon: <strong>Iron Shortsword</strong></div>
+          <div>Armor: <strong>Leather Armor</strong></div>
+          <div>Accessory: <strong>Wooden Charm</strong></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // Initial State
+    const player = {
+      name: 'Valerius',
+      class: 'Warrior',
+      level: 1,
+      hp: 50,
+      maxHp: 50,
+      mp: 20,
+      maxMp: 20,
+      gold: 50,
+      xp: 0,
+      nextXp: 100,
+      floor: 1,
+      location: 'Town'
+    };
+
+    function logMsg(msg, category = 'system') {
+      const logPanel = document.getElementById('log-panel');
+      const div = document.createElement('div');
+      div.className = `log-entry ${category}`;
+      div.textContent = msg;
+      logPanel.appendChild(div);
+      logPanel.scrollTop = logPanel.scrollHeight;
+    }
+
+    function updateStatsUI() {
+      document.getElementById('hero-name').textContent = player.name;
+      document.getElementById('hero-level').textContent = player.level;
+      document.getElementById('hp-text').textContent = `${player.hp}/${player.maxHp}`;
+      document.getElementById('mp-text').textContent = `${player.mp}/${player.maxMp}`;
+      document.getElementById('hero-gold').textContent = `${player.gold} 🪙`;
+      document.getElementById('dungeon-floor').textContent = `Floor ${player.floor}`;
+      document.getElementById('xp-text').textContent = `${player.xp} / ${player.nextXp}`;
+
+      const hpPercent = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+      const mpPercent = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
+      document.getElementById('hp-bar').style.width = `${hpPercent}%`;
+      document.getElementById('mp-bar').style.width = `${mpPercent}%`;
+    }
+
+    function setLocation(title, desc) {
+      document.getElementById('location-title').textContent = title;
+      document.getElementById('location-desc').textContent = desc;
+    }
+
+    function actionExplore() {
+      player.location = 'Dungeon';
+      setLocation(`💀 Dungeon Floor ${player.floor}`, `Dark stone corridors echo with distant growls. Shadows dance across mossy walls as you press onward into the gloom.`);
+      logMsg(`You step into Floor ${player.floor} of the Obsidian Spire...`, 'combat');
+    }
+
+    function actionTown() {
+      player.location = 'Town';
+      setLocation(`🏰 Oakhaven Town Square`, `A bustling sanctuary at the foot of the Obsidian Spire. Merchant stalls, blacksmith anvils, and warm tavern lights greet you.`);
+      logMsg(`You return to the safety of Oakhaven Town.`, 'town');
+    }
+
+    function actionInventory() {
+      logMsg(`Inventory: 1x Iron Shortsword, 1x Leather Armor, 2x Health Potion, 1x Mana Elixir.`, 'loot');
+    }
+
+    function actionRest() {
+      if (player.location !== 'Town') {
+        logMsg(`You can only rest at the inn while inside Oakhaven Town!`, 'system');
+        return;
+      }
+      player.hp = player.maxHp;
+      player.mp = player.maxMp;
+      updateStatsUI();
+      logMsg(`You spend 5 gold to rest at the Dragon's Rest Inn. HP and MP fully restored!`, 'town');
+    }
+
+    function actionQuests() {
+      logMsg(`Quests Active: [1] Slay the Goblin King on Floor 5. [2] Recover 3 Ancient Relics.`, 'system');
+    }
+
+    function resetGame() {
+      player.level = 1;
+      player.hp = 50;
+      player.maxHp = 50;
+      player.mp = 20;
+      player.maxMp = 20;
+      player.gold = 50;
+      player.xp = 0;
+      player.floor = 1;
+      player.location = 'Town';
+      updateStatsUI();
+      actionTown();
+      logMsg(`--- New Journey Begun ---`, 'system');
+    }
+
+    // Init
+    updateStatsUI();
+  </script>
+</body>
+</html>
