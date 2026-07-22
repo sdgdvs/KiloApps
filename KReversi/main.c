@@ -134,6 +134,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            SetBkMode(hdc, OPAQUE);
+            SetBkColor(hdc, RGB(18, 18, 18));
+            SetTextColor(hdc, RGB(220, 220, 220));
+            
             int bCount = 0, wCount = 0;
             for(int i=0; i<64; i++) {
                 if(board[i] == BLACK) bCount++;
@@ -153,10 +157,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else TextOut(hdc, 200, 10, "Turn: White", 11);
             }
 
-            HBRUSH boardBrush = CreateSolidBrush(RGB(27, 122, 55));
+            HBRUSH boardBrush = CreateSolidBrush(RGB(26, 86, 44));
             HBRUSH blackBrush = CreateSolidBrush(RGB(20, 20, 20));
-            HBRUSH whiteBrush = CreateSolidBrush(RGB(240, 240, 240));
-            HPEN gridPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 0));
+            HBRUSH whiteBrush = CreateSolidBrush(RGB(220, 220, 220));
+            HPEN gridPen = CreatePen(PS_SOLID, 2, RGB(34, 34, 34));
             
             SelectObject(hdc, gridPen);
             
@@ -174,7 +178,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int dummy[64];
                         if (GetFlippable(idx, BLACK, dummy) > 0) {
                             SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                            HPEN hintPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+                            HPEN hintPen = CreatePen(PS_SOLID, 1, RGB(180, 180, 180));
                             SelectObject(hdc, hintPen);
                             Ellipse(hdc, rect.left + 20, rect.top + 20, rect.right - 20, rect.bottom - 20);
                             DeleteObject(hintPen);
@@ -216,7 +220,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hInstance     = hInstance;
     wc.hIcon         = LoadIcon(NULL, IDI_APPLICATION);
     wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+    wc.hbrBackground = CreateSolidBrush(RGB(18, 18, 18));
     wc.lpszMenuName  = NULL;
     wc.lpszClassName = g_szClassName;
     wc.hIconSm       = LoadIcon(NULL, IDI_APPLICATION);
