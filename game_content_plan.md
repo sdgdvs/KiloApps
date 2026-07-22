@@ -184,7 +184,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KRogue     | Tier 2          | Feature-Expanded       | Loop 6 Completed | Web upgraded to basic playable version. EXE is a full roguelike. Loop 6 completed: Expanded to 25 levels, added Abyss biome. |
 | KSnake     | Tier 1          | Feature-Expanded       | Loop 6 Completed | Full parity. Loop 6 completed: Expanded to 15-level campaign win, added Portals, and Tracker Bug enemies. |
 | KTetris    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Bomb power-up, and Earthquake mechanics. |
-| KPong      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
+| KPong      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 levels, added Horizontal Obstacle, and Freeze power-up. |
 | KMaze      | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
 | KSolitaire | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
 | KSpace     | Tier 1          | Feature-Expanded       | Needs Improvement | Full parity. Loop 6 pending. |
@@ -209,6 +209,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KRogue (Expanded to 25 levels, added Abyss biome, and moved final boss to level 25 for both EXE and HTML)
 - [x] KSnake (Expanded to 15-level campaign win, added Portals, and Tracker Bug enemies to both EXE and HTML)
 - [x] KTetris (Expanded Campaign to 15 stages, added Bomb power-up, and Earthquake mechanics to both EXE and HTML)
+- [x] KPong (Expanded Campaign to 15 levels, added Horizontal Obstacle, and Freeze power-up to both EXE and HTML)
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)

@@ -27,6 +27,10 @@ int high_rally = 0;
 int lifetime_wins = 0;
 int obs_y = H / 2 - 20;
 int obs_dy = 3;
+int obs2_x = W / 2 - 20;
+int obs2_dx = 4;
+int p1_freeze_timer = 0;
+int p2_freeze_timer = 0;
 
 int p1_y = H / 2 - 25;
 int p2_y = H / 2 - 25;
@@ -94,12 +98,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(p2_buff_timer > 0) p2_buff_timer--;
             if(p1_debuff_timer > 0) p1_debuff_timer--;
             if(p2_debuff_timer > 0) p2_debuff_timer--;
+            if(p1_freeze_timer > 0) p1_freeze_timer--;
+            if(p2_freeze_timer > 0) p2_freeze_timer--;
             
             p1_pad_h = 50 - (rally * 2); if(p1_pad_h < 20) p1_pad_h = 20;
             p2_pad_h = 50 - (rally * 2); if(p2_pad_h < 20) p2_pad_h = 20;
             
             if(campaign_mode && campaign_level >= 3) { p2_pad_h -= 10; }
-            if(campaign_mode && campaign_level == 10) { p2_pad_h += 50; } // Boss paddle
+            if(campaign_mode && (campaign_level == 10 || campaign_level == 15)) { p2_pad_h += 50; } // Boss paddle
             
             if(p1_pad_h < 15) p1_pad_h = 15;
             if(p2_pad_h < 15) p2_pad_h = 15;
@@ -110,8 +116,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(p2_debuff_timer > 0) p2_pad_h = 15;
 
             // Input
-            if (GetAsyncKeyState(VK_UP) & 0x8000) p1_y -= 6;
-            if (GetAsyncKeyState(VK_DOWN) & 0x8000) p1_y += 6;
+            if (p1_freeze_timer == 0) {
+                if (GetAsyncKeyState(VK_UP) & 0x8000) p1_y -= 6;
+                if (GetAsyncKeyState(VK_DOWN) & 0x8000) p1_y += 6;
+            }
             if (p1_y < 0) p1_y = 0;
             if (p1_y > H - p1_pad_h) p1_y = H - p1_pad_h;
 
@@ -126,10 +134,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if(campaign_level == 7) ai_spd = 9;
                 else if(campaign_level == 8) ai_spd = 10;
                 else if(campaign_level == 9) ai_spd = 12;
-                else ai_spd = 15;
+                else if(campaign_level <= 11) ai_spd = 15;
+                else if(campaign_level <= 13) ai_spd = 17;
+                else ai_spd = 19;
             }
-            if (ball_y > p2_y + p2_pad_h / 2 + 10) p2_y += ai_spd;
-            if (ball_y < p2_y + p2_pad_h / 2 - 10) p2_y -= ai_spd;
+            if (p2_freeze_timer == 0) {
+                if (ball_y > p2_y + p2_pad_h / 2 + 10) p2_y += ai_spd;
+                if (ball_y < p2_y + p2_pad_h / 2 - 10) p2_y -= ai_spd;
+            }
             if (p2_y < 0) p2_y = 0;
             if (p2_y > H - p2_pad_h) p2_y = H - p2_pad_h;
 
@@ -137,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(powerup_active > 0) powerup_active--;
             if(powerup_x == -1 && rand() % 200 == 0) {
                 powerup_x = W/4 + rand()%(W/2); powerup_y = H/4 + rand()%(H/2); powerup_active = 250;
-                powerup_type = rand() % 2;
+                powerup_type = rand() % 3;
             }
             if(powerup_active == 0) { powerup_x = -1; powerup_y = -1; }
             
@@ -153,14 +165,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBeep(0xFFFFFFFF);
                 }
             }
+            if(campaign_mode && campaign_level >= 12) {
+                obs2_x += obs2_dx;
+                if(obs2_x < 50) { obs2_x = 50; obs2_dx = -obs2_dx; }
+                if(obs2_x > W - 90) { obs2_x = W - 90; obs2_dx = -obs2_dx; }
+                
+                if(ball_x + BALL_SIZE > obs2_x && ball_x < obs2_x + 40 && ball_y + BALL_SIZE > H/2 - 10 && ball_y < H/2 + 10) {
+                    ball_dy = -ball_dy;
+                    MessageBeep(0xFFFFFFFF);
+                }
+            }
 
             // Ball logic
             if(campaign_mode && campaign_level >= 5 && campaign_level < 10) { 
                 ball_x += (ball_dx > 0 ? ball_dx + 2 : ball_dx - 2); 
                 ball_y += (ball_dy > 0 ? ball_dy + 1 : ball_dy - 1); 
-            } else if (campaign_mode && campaign_level == 10) {
+            } else if (campaign_mode && campaign_level >= 10 && campaign_level < 15) {
                 ball_x += (ball_dx > 0 ? ball_dx + 3 : ball_dx - 3); 
                 ball_y += (ball_dy > 0 ? ball_dy + 2 : ball_dy - 2); 
+            } else if (campaign_mode && campaign_level == 15) {
+                ball_x += (ball_dx > 0 ? ball_dx + 4 : ball_dx - 4); 
+                ball_y += (ball_dy > 0 ? ball_dy + 3 : ball_dy - 3); 
             } else { 
                 ball_x += ball_dx; ball_y += ball_dy; 
             }
@@ -169,9 +194,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (powerup_type == 0) {
                     if(last_hitter == 1) p1_buff_timer = 200;
                     else if(last_hitter == 2) p2_buff_timer = 200;
-                } else {
+                } else if (powerup_type == 1) {
                     if(last_hitter == 1) p2_debuff_timer = 200;
                     else if(last_hitter == 2) p1_debuff_timer = 200;
+                } else if (powerup_type == 2) {
+                    if(last_hitter == 1) p2_freeze_timer = 100;
+                    else if(last_hitter == 2) p1_freeze_timer = 100;
                 }
                 powerup_x = -1; powerup_y = -1;
                 MessageBeep(MB_ICONASTERISK);
@@ -218,7 +246,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (p1_score >= target_score) {
                 if(campaign_mode) {
                     campaign_level++; p1_score = 0; p2_score = 0; rally = 0;
-                    if(campaign_level > 10) { 
+                    if(campaign_level > 15) { 
                         win_screen = 1; campaign_mode = 0; game_over = 1; 
                         lifetime_wins++; SaveStats();
                     }
@@ -262,7 +290,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rBall = { ball_x, ball_y, ball_x + BALL_SIZE, ball_y + BALL_SIZE };
             FillRect(memDC, &rBall, ball_brush);
             if(powerup_x != -1) {
-                HBRUSH pu_brush = CreateSolidBrush(powerup_type == 0 ? RGB(255, 255, 0) : RGB(255, 50, 50));
+                HBRUSH pu_brush = CreateSolidBrush(powerup_type == 0 ? RGB(255, 255, 0) : (powerup_type == 1 ? RGB(255, 50, 50) : RGB(50, 150, 255)));
                 RECT rPu = { powerup_x, powerup_y, powerup_x+15, powerup_y+15 };
                 FillRect(memDC, &rPu, pu_brush);
                 DeleteObject(pu_brush);
@@ -271,6 +299,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HBRUSH obs_brush = CreateSolidBrush(RGB(150, 150, 150));
                 RECT rObs = { W/2 - 10, obs_y, W/2 + 10, obs_y + 40 };
                 FillRect(memDC, &rObs, obs_brush);
+                
+                if(campaign_level >= 12) {
+                    RECT rObs2 = { obs2_x, H/2 - 10, obs2_x + 40, H/2 + 10 };
+                    FillRect(memDC, &rObs2, obs_brush);
+                }
+                
                 DeleteObject(obs_brush);
             }
             
