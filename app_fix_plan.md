@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KColor
+**Target App:** KSynth
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -141,4 +141,4 @@ Pass 1 Complete.
 
 - **KSolitaire**: Added ARIA labels and keyboard accessibility to cards, and added `localStorage` try-catch blocks in `ksolitaire.html`. Added missing `KillTimer` calls on `WM_DESTROY` in `main.c`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KSpace (or next in alphabetical order).
+- **KSpace**: Added ARIA labels, canvas accessibility attributes, arrow key scroll prevention, safe `localStorage` exception handling, and window blur key cleanup in `kspace.html`. Fixed thread handle leak in `PlaySnd` and added missing `KillTimer` call on `WM_DESTROY` in `main.c`.

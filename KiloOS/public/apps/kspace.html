@@ -8,7 +8,7 @@
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="320" height="480"></canvas>
+<canvas id="gameCanvas" width="320" height="480" tabindex="0" role="img" aria-label="KSpace space shooter game canvas"></canvas>
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -28,8 +28,15 @@
   let rapidTimer = 0;
   let timeStopTimer = 0;
   let score = 0;
-  let highScore = localStorage.getItem('kspace_highscore') || 0;
-  let totalKills = parseInt(localStorage.getItem('kspace_totalkills') || '0', 10);
+  let highScore = 0;
+  try { highScore = parseInt(localStorage.getItem('kspace_highscore') || '0', 10) || 0; } catch(e) {}
+  let totalKills = 0;
+  try { totalKills = parseInt(localStorage.getItem('kspace_totalkills') || '0', 10) || 0; } catch(e) {}
+
+  function saveStorage(key, val) {
+      try { localStorage.setItem(key, val); } catch(e) {}
+  }
+
   let gameOver = false;
   let frameCount = 0;
   let shieldActive = false;
@@ -87,8 +94,17 @@
   }
   
   const keys = {};
-  document.addEventListener('keydown', e => keys[e.key] = true);
+  document.addEventListener('keydown', e => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar'].includes(e.key)) {
+          e.preventDefault();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      keys[e.key] = true;
+  });
   document.addEventListener('keyup', e => keys[e.key] = false);
+  window.addEventListener('blur', () => {
+      for (let k in keys) keys[k] = false;
+  });
 
   function spawnEnemy() {
       let t = Math.floor(Math.random() * 100);
@@ -249,9 +265,9 @@
               playSound(1);
               if (score > highScore) {
                   highScore = score;
-                  localStorage.setItem('kspace_highscore', highScore);
+                  saveStorage('kspace_highscore', highScore);
               }
-              localStorage.setItem('kspace_totalkills', totalKills);
+              saveStorage('kspace_totalkills', totalKills);
               if (Math.random() < 0.15) {
                   powerups.push({x: enemies[i].x, y: enemies[i].y, dy: 2, type: Math.floor(Math.random() * 5)});
               }
@@ -300,7 +316,7 @@
                           enemies.splice(j, 1);
                       }
                   }
-                  localStorage.setItem('kspace_totalkills', totalKills);
+                  saveStorage('kspace_totalkills', totalKills);
                   playSound(1);
               } else if (powerups[i].type === 4) {
                   timeStopTimer = 300;

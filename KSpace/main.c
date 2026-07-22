@@ -94,7 +94,10 @@ DWORD WINAPI SndThread(LPVOID param) {
     else if (type == 3) { Beep(400, 100); Beep(600, 100); Beep(800, 150); } // wave
     return 0;
 }
-void PlaySnd(int type) { CreateThread(NULL, 0, SndThread, (LPVOID)(intptr_t)type, 0, NULL); }
+void PlaySnd(int type) {
+    HANDLE hThread = CreateThread(NULL, 0, SndThread, (LPVOID)(intptr_t)type, 0, NULL);
+    if (hThread) CloseHandle(hThread);
+}
 
 void Shoot() {
     PlaySnd(0);
@@ -482,6 +485,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             PostQuitMessage(0);
             break;
         default:
