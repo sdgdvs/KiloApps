@@ -146,23 +146,23 @@
     <div class="header">
         <h1>KScript</h1>
         <div style="display: flex; gap: 10px;">
-            <button id="btnLoad">Load</button>
-            <button id="btnSave">Save</button>
-            <button id="btnRun">Run Script</button>
+            <button id="btnLoad" aria-label="Load script">Load</button>
+            <button id="btnSave" aria-label="Save script">Save</button>
+            <button id="btnRun" aria-label="Run script">Run Script</button>
         </div>
     </div>
     
     <div class="panels">
         <div class="panel">
             <div class="panel-header">Input</div>
-            <textarea id="exprInput" spellcheck="false" placeholder="Enter script here...
+            <textarea id="exprInput" spellcheck="false" aria-label="Script input" placeholder="Enter script here...
 Variables: a = 10
 Math: a * 2 + 5
 print a % 3"></textarea>
         </div>
         <div class="panel">
             <div class="panel-header">Output</div>
-            <div id="outputArea" class="output"></div>
+            <div id="outputArea" class="output" aria-label="Script output" aria-live="polite" tabindex="0"></div>
         </div>
     </div>
 </div>
@@ -204,6 +204,7 @@ print a % 3"></textarea>
                 let start = idx;
                 while (peek() >= '0' && peek() <= '9') advance();
                 if (idx > start) val = parseInt(str.substring(start, idx), 10);
+                else if (idx < str.length) advance();
             }
             skipSpace();
             return val;

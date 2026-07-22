@@ -135,4 +135,6 @@ Pass 1 Complete.
 
 - **KRogue**: Added try/catch for `localStorage` in `saveGame` and `loadGame`, and fixed `ReferenceError` for `total_kills` assignment in `krogue.html`. Fixed GDI resource leaks in `main.c` by selecting original items into `memDC` before deletion and deleting `g_font` in `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KScript (or next in alphabetical order).
+- **KScript**: Added ARIA labels and `aria-live` to `kscript.html` for accessibility. Fixed critical infinite loop (hang) vulnerability in `kscript.html` and `main.c` when parsing unrecognized characters.
+
+Start Pass 2 (Deeper Quality checks). Next target: KSnake (or next in alphabetical order).

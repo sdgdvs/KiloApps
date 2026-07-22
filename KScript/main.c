@@ -35,8 +35,12 @@ int ParseFactor(const char** p) {
         (*p)++;
         val = vars[idx];
     } else {
-        while (**p >= '0' && **p <= '9') {
-            val = val * 10 + (**p - '0');
+        if (**p >= '0' && **p <= '9') {
+            while (**p >= '0' && **p <= '9') {
+                val = val * 10 + (**p - '0');
+                (*p)++;
+            }
+        } else if (**p != '\0') {
             (*p)++;
         }
     }
