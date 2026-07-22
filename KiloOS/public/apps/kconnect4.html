@@ -20,9 +20,24 @@
     margin-bottom: 10px;
   }
   #status {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     font-size: 1.2em;
     font-weight: bold;
+  }
+  #timerContainer {
+    width: 380px;
+    height: 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    display: none;
+  }
+  #timerBar {
+    width: 100%;
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.1s linear, background-color 0.3s;
   }
   #board {
     display: grid;
@@ -40,7 +55,7 @@
     height: 50px;
     background: #121212;
     border-radius: 50%;
-    pointer-events: none; /* Let board handle clicks */
+    pointer-events: none;
     box-shadow: inset 0 3px 6px rgba(0,0,0,0.6);
     box-sizing: border-box;
   }
@@ -49,8 +64,11 @@
   .cell.hover-p1 { background: rgba(255, 82, 82, 0.4); box-shadow: none; }
   .cell.hover-p2 { background: rgba(255, 235, 59, 0.4); box-shadow: none; }
   .cell.obstacle { background: #555; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.6); }
+  .cell.crackable { background: #8b4513; border: 2px dashed #d2691e; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.6); }
   .cell.bomb { background: #222; box-shadow: inset 0 -2px 4px #000; }
+  .cell.drill { background: #009688; box-shadow: inset 0 -2px 4px #000; }
   .cell.hover-bomb { background: rgba(30, 30, 30, 0.8); }
+  .cell.hover-drill { background: rgba(0, 150, 136, 0.8); }
   .cell.highlight {
     border: 3px solid white;
     box-shadow: 0 0 10px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.4);
@@ -62,20 +80,27 @@
   .dropping {
     animation: drop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
-  button {
-    margin-top: 20px;
-    padding: 10px 20px;
+  .controls-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+    max-width: 420px;
+  }
+  button, select {
+    padding: 8px 14px;
     background: #2a2a2a;
     color: #fff;
     border: 1px solid #444;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 0.9em;
   }
-  button:hover { background: #3a3a3a; }
+  button:hover, select:hover { background: #3a3a3a; }
   #stats {
     margin-top: 15px;
-    font-size: 0.9em;
+    font-size: 0.85em;
     color: #aaa;
     text-align: center;
     line-height: 1.5;
@@ -93,7 +118,7 @@
     border: 2px solid #fff;
     box-shadow: 0 0 20px rgba(0,0,0,0.8);
     z-index: 100;
-    max-width: 300px;
+    max-width: 320px;
   }
   #helpModal h2 { margin-top: 0; }
   #helpModal ul { padding-left: 20px; }
@@ -109,15 +134,15 @@
 <body>
   <h1>KConnect4</h1>
   <div id="status">Player 1's turn (Red)</div>
+  <div id="timerContainer"><div id="timerBar"></div></div>
   <div id="board"></div>
-  <div>
+  <div class="controls-row">
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
-    <button id="bombBtn" onclick="toggleBomb()">Bomb (1)</button>
-    <select id="diffSelect" onchange="changeDifficulty()" style="padding: 10px; background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; margin-top: 20px;">
-      <option value="0">Easy</option>
-      <option value="1">Medium</option>
-      <option value="2">Hard</option>
-    </select>
+    <button id="bombBtn" onclick="togglePowerup(1)">Bomb (1)</button>
+    <button id="drillBtn" onclick="togglePowerup(2)">Drill (1)</button>
+    <select id="diffSelect" onchange="changeDifficulty()"></select>
+  </div>
+  <div class="controls-row">
     <button onclick="undoMove()">Undo</button>
     <button onclick="initGame()">Reset Game</button>
     <button id="muteBtn" onclick="toggleMute()">Mute</button>
@@ -130,30 +155,33 @@
     Wins (Yellow): <span id="s-yellow">0</span> |
     Draws: <span id="s-draws">0</span> <br>
     Streak: <span id="s-streak">0</span> |
-    Best Streak: <span id="s-best">0</span>
+    Best Streak: <span id="s-best">0</span> |
+    Max Stage: <span id="s-stage">1</span>
   </div>
   
   <div id="helpModal">
     <h2>How to Play</h2>
-    <p><strong>Rules:</strong> Be the first to form a horizontal, vertical, or diagonal line of four of your discs.</p>
-    <p><strong>Controls:</strong> Click any column on the board to drop your disc. Use the buttons below to change modes or undo moves.</p>
-    <p><strong>Features:</strong></p>
+    <p><strong>Rules:</strong> Be the first to form a horizontal, vertical, or diagonal line of 4 discs.</p>
+    <p><strong>Modes:</strong> 2 Player, vs AI, 15-Stage Campaign, and Speed Mode.</p>
+    <p><strong>Power-Ups:</strong></p>
     <ul>
-      <li>2-Player or vs AI modes</li>
-      <li>Adjustable AI difficulty</li>
-      <li>Stat tracking (Wins, Streaks)</li>
-      <li>Save/Load your game</li>
+      <li><strong>Bomb:</strong> Clears 3x3 surrounding cells & drops floating discs.</li>
+      <li><strong>Drill:</strong> Clears all discs & crackable blocks in the column.</li>
     </ul>
     <button class="close" onclick="toggleHelp()">Close</button>
   </div>
 
   <script>
-    let gameMode = 1; // 0=2P, 1=vsAI, 2=Campaign
-    let aiDifficulty = 0;
+    let gameMode = 1; // 0=2P, 1=vsAI, 2=Campaign, 3=Speed
+    let aiDifficulty = 0; // 0=Easy, 1=Medium, 2=Hard, 3=Expert
     let campaignStage = 1;
     let p1Bombs = 1, p2Bombs = 1;
-    let isBombNext = false;
-    let animIsBomb = false;
+    let p1Drills = 1, p2Drills = 1;
+    let selectedPowerup = 0; // 0=normal, 1=bomb, 2=drill
+    let animPowerup = 0;
+    
+    let turnTimeLeftMs = 7000;
+    let speedTimer = null;
     
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let isMuted = false;
@@ -183,8 +211,7 @@
         osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
         gain.gain.setValueAtTime(0.5, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now);
-        osc.stop(now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
       } else if (type === 'win') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(400, now);
@@ -193,42 +220,50 @@
         osc.frequency.setValueAtTime(800, now + 0.3);
         gain.gain.setValueAtTime(0.5, now);
         gain.gain.linearRampToValueAtTime(0, now + 0.5);
-        osc.start(now);
-        osc.stop(now + 0.5);
+        osc.start(now); osc.stop(now + 0.5);
       } else if (type === 'lose') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(300, now);
         osc.frequency.linearRampToValueAtTime(200, now + 0.4);
         gain.gain.setValueAtTime(0.5, now);
         gain.gain.linearRampToValueAtTime(0, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
+        osc.start(now); osc.stop(now + 0.4);
       } else if (type === 'invalid') {
         osc.type = 'square';
         osc.frequency.setValueAtTime(150, now);
         gain.gain.setValueAtTime(0.3, now);
         gain.gain.linearRampToValueAtTime(0, now + 0.15);
-        osc.start(now);
-        osc.stop(now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
       } else if (type === 'draw') {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(300, now);
         gain.gain.setValueAtTime(0.3, now);
         gain.gain.linearRampToValueAtTime(0, now + 0.3);
-        osc.start(now);
-        osc.stop(now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      } else if (type === 'bomb') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.3);
+        gain.gain.setValueAtTime(0.6, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+      } else if (type === 'drill') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.linearRampToValueAtTime(200, now + 0.25);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.25);
+        osc.start(now); osc.stop(now + 0.25);
       }
     }
 
-    function changeDifficulty() {
-      aiDifficulty = parseInt(document.getElementById('diffSelect').value);
-    }
-
     function toggleMode() {
-      gameMode = (gameMode + 1) % 3;
+      gameMode = (gameMode + 1) % 4;
       if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2 Player';
       else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI';
-      else document.getElementById('modeBtn').textContent = 'Campaign';
+      else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign';
+      else document.getElementById('modeBtn').textContent = 'Mode: Speed';
+      
       updateDiffSelect();
       initGame();
     }
@@ -236,13 +271,13 @@
     function updateDiffSelect() {
       const sel = document.getElementById('diffSelect');
       sel.innerHTML = '';
-      if (gameMode === 1) {
+      if (gameMode === 1 || gameMode === 3) {
         sel.style.display = 'inline-block';
         ['Easy', 'Medium', 'Hard', 'Expert'].forEach((d, i) => sel.add(new Option(d, i)));
         sel.value = aiDifficulty;
       } else if (gameMode === 2) {
         sel.style.display = 'inline-block';
-        for(let i=1; i<=10; i++) {
+        for(let i=1; i<=15; i++) {
           if (i <= stats.maxCampaignStage) sel.add(new Option(`Stage ${i}`, i-1));
           else sel.add(new Option(`Locked ${i}`, i-1));
         }
@@ -253,7 +288,7 @@
     }
     
     function changeDifficulty() {
-      if (gameMode === 1) {
+      if (gameMode === 1 || gameMode === 3) {
         aiDifficulty = parseInt(document.getElementById('diffSelect').value);
       } else if (gameMode === 2) {
         let val = parseInt(document.getElementById('diffSelect').value) + 1;
@@ -266,20 +301,26 @@
       }
     }
     
-    function toggleBomb() {
+    function togglePowerup(type) {
       if (!gameActive || (gameMode > 0 && currentPlayer === 2)) return;
-      let bombs = currentPlayer === 1 ? p1Bombs : p2Bombs;
-      if (bombs > 0 && !isBombNext) isBombNext = true;
-      else if (isBombNext) isBombNext = false;
-      updateBombBtn();
-      renderBoard();
+      let count = (type === 1) ? (currentPlayer === 1 ? p1Bombs : p2Bombs) : (currentPlayer === 1 ? p1Drills : p2Drills);
+      if (count > 0) {
+        if (selectedPowerup === type) selectedPowerup = 0;
+        else selectedPowerup = type;
+        updatePowerupBtns();
+        renderBoard();
+      }
     }
     
-    function updateBombBtn() {
-      let bombs = currentPlayer === 1 ? p1Bombs : p2Bombs;
-      if (gameMode > 0 && currentPlayer === 2) bombs = 0;
-      document.getElementById('bombBtn').textContent = isBombNext ? '[Bomb]' : `Bomb (${bombs})`;
+    function updatePowerupBtns() {
+      let bCount = (currentPlayer === 1) ? p1Bombs : p2Bombs;
+      let dCount = (currentPlayer === 1) ? p1Drills : p2Drills;
+      if (gameMode > 0 && currentPlayer === 2) { bCount = 0; dCount = 0; }
+      
+      document.getElementById('bombBtn').textContent = (selectedPowerup === 1) ? '[Bomb]' : `Bomb (${bCount})`;
+      document.getElementById('drillBtn').textContent = (selectedPowerup === 2) ? '[Drill]' : `Drill (${dCount})`;
     }
+    
     const ROWS = 6;
     const COLS = 7;
     let board = [];
@@ -291,12 +332,17 @@
 
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
+    const timerContainer = document.getElementById('timerContainer');
+    const timerBar = document.getElementById('timerBar');
     let hoverCol = -1;
 
     let stats = { red: 0, yellow: 0, draws: 0, streak: 0, best: 0, lastWinner: 0, maxCampaignStage: 1 };
     function loadStats() {
       const s = localStorage.getItem('kconnect4_stats');
-      if(s) stats = JSON.parse(s);
+      if(s) {
+        stats = JSON.parse(s);
+        if(!stats.maxCampaignStage) stats.maxCampaignStage = 1;
+      }
       updateStatsUI();
     }
     function saveStats() {
@@ -309,6 +355,7 @@
       document.getElementById('s-draws').textContent = stats.draws;
       document.getElementById('s-streak').textContent = stats.streak;
       document.getElementById('s-best').textContent = stats.best;
+      document.getElementById('s-stage').textContent = stats.maxCampaignStage;
     }
 
     function loadCampaignStage(stage) {
@@ -326,6 +373,36 @@
       else if (stage == 8) { board[5][3] = 3; board[4][3] = 3; board[3][3] = 3; board[2][3] = 3; }
       else if (stage == 9) { board[5][1] = 3; board[4][1] = 3; board[5][5] = 3; board[4][5] = 3; board[2][3] = 3; }
       else if (stage == 10) { board[5][0]=3; board[5][6]=3; board[4][2]=3; board[4][4]=3; board[2][1]=3; board[2][5]=3; }
+      else if (stage == 11) { board[5][2]=4; board[5][4]=4; board[4][3]=3; }
+      else if (stage == 12) { board[4][3]=4; board[3][2]=3; board[3][4]=3; board[2][3]=4; }
+      else if (stage == 13) { board[5][2]=4; board[5][4]=4; board[4][2]=3; board[4][4]=3; board[1][3]=4; }
+      else if (stage == 14) { board[5][1]=3; board[5][5]=3; board[3][3]=4; board[1][2]=3; board[1][4]=3; }
+      else if (stage == 15) { board[5][0]=3; board[5][6]=3; board[4][3]=4; board[3][1]=3; board[3][5]=3; board[2][3]=4; }
+    }
+    
+    function startSpeedTimer() {
+      if (speedTimer) clearInterval(speedTimer);
+      turnTimeLeftMs = 7000;
+      if (gameMode !== 3 || !gameActive) {
+        timerContainer.style.display = 'none';
+        return;
+      }
+      timerContainer.style.display = 'block';
+      speedTimer = setInterval(() => {
+        if (!gameActive || (gameMode > 0 && currentPlayer === 2)) return;
+        turnTimeLeftMs -= 100;
+        let pct = Math.max(0, (turnTimeLeftMs / 7000) * 100);
+        timerBar.style.width = pct + '%';
+        timerBar.style.backgroundColor = (pct < 30) ? '#ff5252' : '#4caf50';
+        if (turnTimeLeftMs <= 0) {
+          turnTimeLeftMs = 7000;
+          let available = getAvailableCols();
+          if (available.length > 0) {
+            let col = available[Math.floor(Math.random() * available.length)];
+            dropPiece(col);
+          }
+        }
+      }, 100);
     }
     
     function initGame() {
@@ -335,8 +412,10 @@
       gameActive = true;
       winningCells = [];
       moveHistory = [];
-      p1Bombs = 1; p2Bombs = 1; isBombNext = false; animIsBomb = false;
-      updateBombBtn();
+      p1Bombs = 1; p2Bombs = 1;
+      p1Drills = 1; p2Drills = 1;
+      selectedPowerup = 0; animPowerup = 0;
+      updatePowerupBtns();
       if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
       
       if (boardEl.children.length === 0) {
@@ -351,6 +430,7 @@
       }
       renderBoard();
       updateStatus();
+      startSpeedTimer();
     }
 
     function renderBoard(animatedRow = -1, animatedCol = -1) {
@@ -361,16 +441,21 @@
           if (board[r][c] === 1) classes.push('p1');
           if (board[r][c] === 2) classes.push('p2');
           if (board[r][c] === 3) classes.push('obstacle');
+          if (board[r][c] === 4) classes.push('crackable');
           
           if (r === animatedRow && c === animatedCol) {
-            classes.push('dropping'); if (animIsBomb) classes.push('bomb');
+            classes.push('dropping');
+            if (animPowerup === 1) classes.push('bomb');
+            if (animPowerup === 2) classes.push('drill');
             cell.style.setProperty('--drop-dist', `-${(r + 1) * 55}px`);
           }
           
           if (winningCells.some(w => w[0] === r && w[1] === c)) {
             classes.push('highlight');
           } else if (hoverCol === c && board[r][c] === 0 && (r === ROWS - 1 || board[r+1][c] !== 0) && gameActive && !(gameMode > 0 && currentPlayer === 2)) {
-            classes.push(isBombNext ? 'hover-bomb' : (currentPlayer === 1 ? 'hover-p1' : 'hover-p2'));
+            if (selectedPowerup === 1) classes.push('hover-bomb');
+            else if (selectedPowerup === 2) classes.push('hover-drill');
+            else classes.push(currentPlayer === 1 ? 'hover-p1' : 'hover-p2');
           }
           cell.className = classes.join(' ');
         }
@@ -418,111 +503,128 @@
       if (!gameActive) return;
       if (gameMode > 0 && currentPlayer === 2) return;
       const rect = boardEl.getBoundingClientRect();
-      const x = e.clientX - rect.left - 10; // 10 is padding
-      const c = Math.floor(x / 55); // 50px width + 5px gap
+      const x = e.clientX - rect.left - 10;
+      const c = Math.floor(x / 55);
       
       if (c >= 0 && c < COLS) {
         dropPiece(c);
       }
     });
 
-        function dropPiece(col) {
+    function applyGravity() {
+      let changed = true;
+      while(changed) {
+        changed = false;
+        for (let c = 0; c < COLS; c++) {
+          for (let rr = ROWS - 2; rr >= 0; rr--) {
+            if ((board[rr][c] === 1 || board[rr][c] === 2) && board[rr+1][c] === 0) {
+              board[rr+1][c] = board[rr][c];
+              board[rr][c] = 0;
+              changed = true;
+            }
+          }
+        }
+      }
+    }
+
+    function dropPiece(col) {
       for (let r = ROWS - 1; r >= 0; r--) {
         if (board[r][col] === 0) {
-          playSound('drop');
-          moveHistory.push({board: JSON.stringify(board), stats: JSON.stringify(stats), p: currentPlayer, p1b: p1Bombs, p2b: p2Bombs});
-          board[r][col] = currentPlayer;
-          animIsBomb = isBombNext;
-          if (isBombNext) {
-            if (currentPlayer === 1) p1Bombs--; else p2Bombs--;
-            isBombNext = false;
-            updateBombBtn();
-          }
+          animPowerup = selectedPowerup;
+          if (animPowerup === 1) playSound('bomb');
+          else if (animPowerup === 2) playSound('drill');
+          else playSound('drop');
+
+          moveHistory.push({
+            board: JSON.stringify(board),
+            stats: JSON.stringify(stats),
+            p: currentPlayer,
+            p1b: p1Bombs, p2b: p2Bombs,
+            p1d: p1Drills, p2d: p2Drills
+          });
           
-          if (animIsBomb) {
-            setTimeout(() => {
-                playSound('lose'); // explosion sound
-                for(let dr=-1; dr<=1; dr++) {
-                    for(let dc=-1; dc<=1; dc++) {
-                        let nr = r+dr, nc = col+dc;
-                        if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && (board[nr][nc]===1 || board[nr][nc]===2)) board[nr][nc]=0;
-                    }
-                }
-                let changed = true;
-                while(changed) {
-                    changed = false;
-                    for (let c = 0; c < COLS; c++) {
-                        for (let rr = ROWS - 2; rr >= 0; rr--) {
-                            if ((board[rr][c] === 1 || board[rr][c] === 2) && board[rr+1][c] === 0) {
-                                board[rr+1][c] = board[rr][c];
-                                board[rr][c] = 0;
-                                changed = true;
-                            }
-                        }
-                    }
-                }
-                let w1 = checkWinBoard(board, 1);
-                let w2 = checkWinBoard(board, 2);
-                if (w1 || w2) {
-                    if (w1 && w2) {
-                        statusEl.textContent = `It's a Draw!`; gameActive = false; stats.draws++; stats.streak = 0; stats.lastWinner = 0;
-                    } else {
-                        let winner = w1 ? 1 : 2;
-                        if (gameMode > 0 && winner === 2) playSound('lose'); else playSound('win');
-                        const color = winner === 1 ? 'Red' : 'Yellow';
-                        statusEl.textContent = `Player ${winner} (${color}) Wins!`;
-                        gameActive = false;
-                        if (winner === 1) stats.red++; else stats.yellow++;
-                        if (stats.lastWinner === winner) stats.streak++; else stats.streak = 1;
-                        stats.lastWinner = winner;
-                        if (stats.streak > stats.best) stats.best = stats.streak;
-                        if (gameMode === 2 && winner === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 10) { stats.maxCampaignStage++; updateDiffSelect(); }
-                    }
-                    saveStats(); updateDiffSelect();
-                } else if (checkDraw()) {
-                    statusEl.textContent = `It's a Draw!`; gameActive = false; stats.draws++; stats.streak = 0; stats.lastWinner = 0; saveStats();
-                } else {
-                    currentPlayer = currentPlayer === 1 ? 2 : 1; updateStatus(); updateBombBtn();
-                    if (gameMode > 0 && currentPlayer === 2 && gameActive) aiTimeout = setTimeout(aiMove, 500);
-                }
-                animIsBomb = false;
-                renderBoard();
-            }, 400); // Wait for drop animation
-          } else {
-              if (checkWin(r, col)) {
-                if (gameMode > 0 && currentPlayer === 2) playSound('lose');
-                else playSound('win');
-                const color = currentPlayer === 1 ? 'Red' : 'Yellow';
-                statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
-                gameActive = false;
-                if (currentPlayer === 1) stats.red++;
-                else stats.yellow++;
-                if (stats.lastWinner === currentPlayer) stats.streak++;
-                else stats.streak = 1;
-                stats.lastWinner = currentPlayer;
-                if (stats.streak > stats.best) stats.best = stats.streak;
-                if (gameMode === 2 && currentPlayer === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 10) { stats.maxCampaignStage++; updateDiffSelect(); }
-                saveStats(); updateDiffSelect();
-                renderBoard(r, col);
-              } else if (checkDraw()) {
-                playSound('draw');
-                statusEl.textContent = `It's a Draw!`;
-                gameActive = false;
-                stats.draws++;
-                stats.streak = 0;
-                stats.lastWinner = 0;
-                saveStats();
-                renderBoard(r, col);
-              } else {
-                currentPlayer = currentPlayer === 1 ? 2 : 1;
-                updateStatus(); updateBombBtn();
-                renderBoard(r, col);
-                if (gameMode > 0 && currentPlayer === 2 && gameActive) {
-                  aiTimeout = setTimeout(aiMove, 500);
+          board[r][col] = currentPlayer;
+
+          if (animPowerup === 1) {
+            if (currentPlayer === 1) p1Bombs--; else p2Bombs--;
+            selectedPowerup = 0;
+            updatePowerupBtns();
+          } else if (animPowerup === 2) {
+            if (currentPlayer === 1) p1Drills--; else p2Drills--;
+            selectedPowerup = 0;
+            updatePowerupBtns();
+          }
+
+          renderBoard(r, col);
+          
+          setTimeout(() => {
+            if (animPowerup === 1) { // Bomb effect
+              for(let dr=-1; dr<=1; dr++) {
+                for(let dc=-1; dc<=1; dc++) {
+                  let nr = r+dr, nc = col+dc;
+                  if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && (board[nr][nc]===1 || board[nr][nc]===2 || board[nr][nc]===4)) {
+                    board[nr][nc]=0;
+                  }
                 }
               }
-          }
-          renderBoard(r, col);
+              applyGravity();
+            } else if (animPowerup === 2) { // Drill effect
+              for(let rr=0; rr<ROWS; rr++) {
+                if(board[rr][col]===1 || board[rr][col]===2 || board[rr][col]===4) {
+                  board[rr][col]=0;
+                }
+              }
+              applyGravity();
+            }
+            
+            animPowerup = 0;
+
+            let w1 = checkWinBoard(board, 1);
+            let w2 = checkWinBoard(board, 2);
+            
+            if (w1 || w2) {
+              if (w1 && w2) {
+                statusEl.textContent = `It's a Draw!`; gameActive = false; stats.draws++; stats.streak = 0; stats.lastWinner = 0;
+              } else {
+                let winner = w1 ? 1 : 2;
+                if (gameMode > 0 && winner === 2) playSound('lose'); else playSound('win');
+                const color = winner === 1 ? 'Red' : 'Yellow';
+                statusEl.textContent = `Player ${winner} (${color}) Wins!`;
+                gameActive = false;
+                if (winner === 1) stats.red++; else stats.yellow++;
+                if (stats.lastWinner === winner) stats.streak++; else stats.streak = 1;
+                stats.lastWinner = winner;
+                if (stats.streak > stats.best) stats.best = stats.streak;
+                if (gameMode === 2 && winner === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 15) { stats.maxCampaignStage++; updateDiffSelect(); }
+              }
+              saveStats(); updateDiffSelect();
+            } else if (checkWin(r, col)) {
+              if (gameMode > 0 && currentPlayer === 2) playSound('lose'); else playSound('win');
+              const color = currentPlayer === 1 ? 'Red' : 'Yellow';
+              statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
+              gameActive = false;
+              if (currentPlayer === 1) stats.red++; else stats.yellow++;
+              if (stats.lastWinner === currentPlayer) stats.streak++; else stats.streak = 1;
+              stats.lastWinner = currentPlayer;
+              if (stats.streak > stats.best) stats.best = stats.streak;
+              if (gameMode === 2 && currentPlayer === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 15) { stats.maxCampaignStage++; updateDiffSelect(); }
+              saveStats(); updateDiffSelect();
+            } else if (checkDraw()) {
+              playSound('draw');
+              statusEl.textContent = `It's a Draw!`;
+              gameActive = false;
+              stats.draws++; stats.streak = 0; stats.lastWinner = 0;
+              saveStats();
+            } else {
+              currentPlayer = currentPlayer === 1 ? 2 : 1;
+              turnTimeLeftMs = 7000;
+              updateStatus(); updatePowerupBtns();
+              if (gameMode > 0 && currentPlayer === 2 && gameActive) {
+                aiTimeout = setTimeout(aiMove, 500);
+              }
+            }
+            renderBoard();
+          }, 400);
           return;
         }
       }
@@ -536,7 +638,8 @@
         gameActive,
         winningCells,
         moveHistory,
-        gameMode, aiDifficulty, campaignStage, p1Bombs, p2Bombs
+        gameMode, aiDifficulty, campaignStage,
+        p1Bombs, p2Bombs, p1Drills, p2Drills
       };
       localStorage.setItem('kconnect4_save', JSON.stringify(state));
       alert('Game Saved!');
@@ -551,15 +654,22 @@
         gameActive = state.gameActive;
         winningCells = state.winningCells || [];
         moveHistory = state.moveHistory || [];
-        gameMode = state.gameMode; aiDifficulty = state.aiDifficulty; campaignStage = state.campaignStage || 1; p1Bombs = state.p1Bombs; p2Bombs = state.p2Bombs; updateDiffSelect(); updateBombBtn(); isBombNext=false; if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2 Player'; else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI'; else document.getElementById('modeBtn').textContent = 'Campaign';
+        gameMode = state.gameMode;
+        aiDifficulty = state.aiDifficulty;
+        campaignStage = state.campaignStage || 1;
+        p1Bombs = state.p1Bombs; p2Bombs = state.p2Bombs;
+        p1Drills = state.p1Drills || 1; p2Drills = state.p2Drills || 1;
         
-        document.getElementById('modeBtn').textContent = vsAI ? 'Mode: vs AI' : 'Mode: 2 Player';
-        document.getElementById('diffSelect').style.display = vsAI ? 'inline-block' : 'none';
-        document.getElementById('diffSelect').value = aiDifficulty;
+        updateDiffSelect(); updatePowerupBtns(); selectedPowerup = 0;
+        if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2 Player';
+        else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI';
+        else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign';
+        else document.getElementById('modeBtn').textContent = 'Mode: Speed';
         
         if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
         renderBoard();
         updateStatus();
+        startSpeedTimer();
         alert('Game Loaded!');
       } else {
         alert('No saved game found.');
@@ -585,15 +695,17 @@
           board = JSON.parse(m.board);
           stats = JSON.parse(m.stats);
           currentPlayer = m.p;
-          p1Bombs = m.p1b;
-          p2Bombs = m.p2b;
+          p1Bombs = m.p1b; p2Bombs = m.p2b;
+          p1Drills = m.p1d || 1; p2Drills = m.p2d || 1;
         }
       }
       
       saveStats();
       gameActive = true;
       winningCells = [];
+      turnTimeLeftMs = 7000;
       updateStatus();
+      updatePowerupBtns();
       renderBoard();
     }
 
@@ -709,7 +821,7 @@
             if(w[i] === piece) pc++;
             else if(w[i] === 0) ec++;
             else if(w[i] === oppPiece) oc++;
-            else if(w[i] === 3) obs++;
+            else if(w[i] === 3 || w[i] === 4) obs++;
         }
         if (obs > 0) return 0;
         if (pc === 4) score += 100;
@@ -767,6 +879,7 @@
         let column = validLocations[Math.floor(Math.random() * validLocations.length)];
         for (let c of validLocations) {
           let r = getNextOpenRow(b, c);
+          if (r === -1) continue;
           b[r][c] = 2;
           let newScore = minimax(b, depth - 1, alpha, beta, false).score;
           b[r][c] = 0;
@@ -783,6 +896,7 @@
         let column = validLocations[Math.floor(Math.random() * validLocations.length)];
         for (let c of validLocations) {
           let r = getNextOpenRow(b, c);
+          if (r === -1) continue;
           b[r][c] = 1;
           let newScore = minimax(b, depth - 1, alpha, beta, true).score;
           b[r][c] = 0;
@@ -819,8 +933,7 @@
         }
         dropPiece(bestCol);
       } else {
-        // Medium is depth 3, Hard is depth 6
-        let depth = aiDifficulty === 1 ? 3 : (aiDifficulty === 2 ? 6 : 7);
+        let depth = (aiDifficulty === 1) ? 3 : ((aiDifficulty === 2) ? 5 : 6);
         let res = minimax(board, depth, -Infinity, Infinity, true);
         if (res.column !== undefined && res.column !== -1) {
           dropPiece(res.column);

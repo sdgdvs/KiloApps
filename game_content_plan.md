@@ -195,7 +195,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KSudoku    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Fog mechanic, Rush Mode, and Shield powerup. |
 | KAsteroids | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-Sector Campaign, Mother Boss UFO, Armored Asteroids, EMP & Laser powerups, Hyperdrive. |
 | KFreecell  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, King-only empty tableau mechanic, Magic Wand & Extra Cell powerups, Time Attack Mode. |
-| KConnect4  | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KConnect4  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-Stage Campaign, Drill powerup, Speed mode, Crackable blocks. |
 | KHangman   | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KSimon     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KMatch3    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
@@ -218,13 +218,12 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KSpace (Added Boss Enemy, Time Stop power-up, and Dash mechanic to both EXE and HTML)
 - [x] KPac (Expanded Campaign to 15 maps, added Freeze power-up, and Green Tracker Ghost to both EXE and HTML)
 - [x] KChess (Expanded Campaign to 15 stages, added Freeze and Undo powerups to both EXE and HTML)
-- [x] KBreakout (Expanded Campaign to 10 layouts, added Sticky Paddle and Laser Paddle powerups, and fixed main.c rendering bugs to both EXE and HTML)
+- [x] KBreakout (Expanded Campaign with unique layouts, added Piercing Ball & Extra Life powerups, UFO enemies, and Lifetime Stats to both EXE and HTML)
 - [x] K2048 (Expanded Campaign to 30 stages, added Rotate and Upgrade Power-Ups, and mapped Undo in C version to both EXE and HTML)
 - [x] KSudoku (Expanded Campaign to 15 stages, added Fog mechanic, Rush Mode, and Shield powerup to both EXE and HTML)
 - [x] KAsteroids (Added 15-Sector Campaign, Mother Boss UFO, Armored Asteroids, EMP & Laser powerups, and Hyperdrive ability to both EXE and HTML)
 - [x] KFreecell (Expanded Campaign to 15 stages, added King-only empty tableau mechanic, Magic Wand & Extra Cell powerups, and Time Attack Mode to both EXE and HTML)
-
-
+- [x] KConnect4 (Expanded Campaign to 15 stages, added Drill power-up, Speed Mode, and Crackable blocks to both EXE and HTML)
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)
