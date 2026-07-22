@@ -15,6 +15,7 @@
     <option value="2">Expert</option>
   </select>
   <button onclick="initGame()">Restart</button>
+  <button onclick="giveHint()">Hint</button>
   <span id="status" style="margin-left: 10px; font-family: monospace; font-weight: bold;"></span>
 </div>
 <canvas id="cvs" width="200" height="200"></canvas>
@@ -90,26 +91,17 @@
       initGame();
   }
   
-  function initGame() {
-      gameOver = 0;
-      flags = 0;
-      timeElapsed = 0;
-      firstClick = true;
-      stopTimer();
-      updateStatus();
+  function generateMines(safeX, safeY) {
       grid = Array.from({length: rows}, () => Array(cols).fill(0));
-      state = Array.from({length: rows}, () => Array(cols).fill(0));
-      
       let mines = 0;
       while (mines < totalMines) {
           let x = Math.floor(Math.random() * cols);
           let y = Math.floor(Math.random() * rows);
-          if (grid[y][x] !== 9) {
+          if (grid[y][x] !== 9 && !(x === safeX && y === safeY)) {
               grid[y][x] = 9;
               mines++;
           }
       }
-      
       for (let y = 0; y < rows; y++) {
           for (let x = 0; x < cols; x++) {
               if (grid[y][x] === 9) continue;
@@ -126,6 +118,17 @@
               grid[y][x] = count;
           }
       }
+  }
+  
+  function initGame() {
+      gameOver = 0;
+      flags = 0;
+      timeElapsed = 0;
+      firstClick = true;
+      stopTimer();
+      updateStatus();
+      grid = Array.from({length: rows}, () => Array(cols).fill(0));
+      state = Array.from({length: rows}, () => Array(cols).fill(0));
       draw();
   }
   
@@ -149,6 +152,62 @@
                   reveal(x + dx, y + dy);
               }
           }
+      }
+  }
+  
+  function chord(x, y) {
+      if (state[y][x] !== 1 || grid[y][x] <= 0 || grid[y][x] >= 9) return;
+      let flagCount = 0;
+      for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+              let nx = x + dx;
+              let ny = y + dy;
+              if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                  if (state[ny][nx] === 2) flagCount++;
+              }
+          }
+      }
+      if (flagCount === grid[y][x]) {
+          for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                  let nx = x + dx;
+                  let ny = y + dy;
+                  if (nx >= 0 && nx < cols && ny >= 0 && ny < rows) {
+                      if (state[ny][nx] === 0) {
+                          reveal(nx, ny);
+                      }
+                  }
+              }
+          }
+      }
+  }
+  
+  function giveHint() {
+      if (gameOver !== 0) return;
+      if (firstClick) {
+          let safeX = Math.floor(cols / 2);
+          let safeY = Math.floor(rows / 2);
+          firstClick = false;
+          generateMines(safeX, safeY);
+          startTimer();
+          reveal(safeX, safeY);
+          checkWin();
+          draw();
+          return;
+      }
+      let safeCells = [];
+      for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+              if (state[y][x] === 0 && grid[y][x] !== 9) {
+                  safeCells.push({x, y});
+              }
+          }
+      }
+      if (safeCells.length > 0) {
+          let choice = safeCells[Math.floor(Math.random() * safeCells.length)];
+          reveal(choice.x, choice.y);
+          if (gameOver === 0) checkWin();
+          draw();
       }
   }
   
@@ -208,19 +267,24 @@
       let rect = cvs.getBoundingClientRect();
       let x = Math.floor((e.clientX - rect.left) / CELL);
       let y = Math.floor((e.clientY - rect.top) / CELL);
-      
-      if (firstClick) {
-          firstClick = false;
-          startTimer();
-      }
+      if (x < 0 || x >= cols || y < 0 || y >= rows) return;
       
       if (e.button === 0) {
-          reveal(x, y);
+          if (firstClick) {
+              firstClick = false;
+              generateMines(x, y);
+              startTimer();
+          }
+          if (state[y][x] === 1) {
+              chord(x, y);
+          } else if (state[y][x] === 0) {
+              reveal(x, y);
+          }
           if (gameOver === 0) {
               checkWin();
           }
       } else if (e.button === 2) {
-          if (x >= 0 && x < cols && y >= 0 && y < rows && state[y][x] !== 1) {
+          if (state[y][x] !== 1) {
               if (state[y][x] === 0) {
                   state[y][x] = 2;
                   flags++;
