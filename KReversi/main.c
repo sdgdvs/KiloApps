@@ -29,6 +29,7 @@
 #define IDM_THEME_CYBER 1021
 #define IDM_THEME_CRIMSON 1022
 #define IDM_THEME_TERMINAL 1023
+#define IDM_HELP 1024
 
 typedef struct {
     COLORREF bg;
@@ -124,6 +125,26 @@ void ShowStats(HWND hwnd) {
     char msg[256];
     sprintf(msg, "Games Played: %d\nWins: %d\nLosses: %d\nDraws: %d", stats[0]+stats[1]+stats[2], stats[0], stats[1], stats[2]);
     MessageBox(hwnd, msg, "Game Statistics", MB_OK | MB_ICONINFORMATION);
+}
+
+void ShowHelp(HWND hwnd) {
+    const char* helpText =
+        "=== KREVERSI HOW TO PLAY & STRATEGY GUIDE ===\n\n"
+        "1. CORE RULES & OBJECTIVE\n"
+        "• Objective: Have the majority of your colored discs on the 8x8 board when neither player has legal moves remaining.\n"
+        "• Sandwich & Flip: Place a disc to trap one or more opponent discs between your newly placed disc and an existing disc of your color (horizontally, vertically, or diagonally).\n"
+        "• Passing: If no valid moves exist, your turn is skipped. If neither player can move, the game ends.\n\n"
+        "2. CORNER CONTROL STRATEGY\n"
+        "• Immutable Anchors: The 4 corners (A1, H1, A8, H8) can NEVER be flipped once captured.\n"
+        "• Stable Discs: Corners let you build outward to create permanent un-flippable disc chains along edges.\n\n"
+        "3. MOBILITY MANAGEMENT\n"
+        "• Maximize Options: Keep many move choices while restricting opponent responses.\n"
+        "• Frontier Control: Keep disc clusters compact. Avoid outer perimeter ('frontier') placements early.\n\n"
+        "4. EDGE TRAPS & HAZARDS\n"
+        "• X-Squares (B2, G2, B7, G7): Extremely dangerous! Avoid playing here while adjacent corner is open.\n"
+        "• C-Squares (A2, B1, H2, G1, etc.): Edge squares adjacent to corners. Avoid unless controlling corner.";
+
+    MessageBox(hwnd, helpText, "KReversi Rules & Strategy Guide", MB_OK | MB_ICONINFORMATION);
 }
 
 int gameOverSoundPlayed = 0;
@@ -460,6 +481,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hActionMenu, MF_STRING | MF_CHECKED, IDM_HINT, "Show Hints");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hActionMenu, "Actions");
             
+            HMENU hHelpMenu = CreatePopupMenu();
+            AppendMenu(hHelpMenu, MF_STRING, IDM_HELP, "Strategy Guide & Rules");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, "Help");
+            
             SetMenu(hwnd, hMenu);
             LoadStats();
             InitGame(hwnd);
@@ -552,6 +577,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     showHint = !showHint;
                     CheckMenuItem(GetMenu(hwnd), IDM_HINT, showHint ? MF_CHECKED : MF_UNCHECKED);
                     InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                }
+                case IDM_HELP: {
+                    ShowHelp(hwnd);
                     break;
                 }
             }

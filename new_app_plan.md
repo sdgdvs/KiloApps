@@ -52,8 +52,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KReversi
-**Phase:** 13
-**Status:** In Progress
+**Phase:** 14
+**Status:** Complete
 
 - [x] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
@@ -68,11 +68,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 11: Added Hint System and Move Recommendation Evaluator to both versions.
 - [x] Phase 12: Added Timed Game Modes (Untimed, Blitz 5s, Rapid 15s) and Handicap Start Options to both versions.
 - [x] Phase 13: Added Custom Board Themes & Piece Styles (Classic Emerald, Midnight Cyber, Obsidian Crimson, Retro Terminal) to both versions.
+- [x] Phase 14: Added Comprehensive Help / How-to-Play Modal & Strategy Guide (covering core rules, corner control strategy, mobility management, and edge traps) to both versions.
 
 ## Next Priority (Before New Apps)
 
-**App:** KReversi
-**Goal:** Phase 14
+None (KReversi Complete)
 
 
 
@@ -130,6 +130,7 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 - KSudoku (Phase 14 completed: Added Auto-fill Notes / Magic Pencil feature to both versions)
 - KFreecell (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KTowers (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
+- KReversi (Phase 14 completed: Added Comprehensive Help / How-to-Play modal & Strategy Guide to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 

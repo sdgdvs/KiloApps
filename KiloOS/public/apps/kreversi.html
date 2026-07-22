@@ -104,6 +104,17 @@
             --text-color: #33ff33;
             --h1-color: #33ff33;
         }
+
+        /* Modal styling */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
+        .modal-content { background: var(--bg-color, #121212); border: 2px solid var(--board-bg, #333); border-radius: 8px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); color: var(--text-color, #e0e0e0); position: relative; font-size: 14px; line-height: 1.5; }
+        .modal-content h2 { color: var(--h1-color, #fff); margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 8px; font-size: 20px; text-align: center; }
+        .close-btn { position: absolute; right: 15px; top: 10px; font-size: 24px; cursor: pointer; color: #888; }
+        .close-btn:hover { color: #fff; }
+        .guide-section { background: var(--eval-bg, #1a1a1a); border-radius: 6px; padding: 12px; margin-bottom: 12px; border: 1px solid #333; }
+        .guide-section h3 { margin-top: 0; margin-bottom: 8px; font-size: 15px; color: var(--hint-outline, #ffd700); }
+        .guide-section p { margin: 0 0 6px 0; font-size: 13px; }
+        .guide-section p:last-child { margin-bottom: 0; }
     </style>
 </head>
 <body class="theme-classic">
@@ -172,7 +183,8 @@
         <button onclick="saveGame()" style="margin-right: 10px;">Save Game</button>
         <button onclick="loadGame()" style="margin-right: 10px;">Load Game</button>
         <button onclick="initGame()" style="margin-right: 10px;">Restart Game</button>
-        <button onclick="showStats()">Statistics</button>
+        <button onclick="showStats()" style="margin-right: 10px;">Statistics</button>
+        <button onclick="showHelp()">Help & Strategy</button>
     </div>
     <script>
         const boardEl = document.getElementById('board');
@@ -689,9 +701,49 @@
             }
         }
 
+        function showHelp() {
+            document.getElementById('help-modal').style.display = 'flex';
+        }
+
+        function closeHelp() {
+            document.getElementById('help-modal').style.display = 'none';
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeHelp();
+        });
+
         loadThemePref();
         loadStats();
         initGame();
     </script>
+    <div id="help-modal" class="modal" onclick="if(event.target===this) closeHelp()">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeHelp()">&times;</span>
+            <h2>KReversi Rules & Strategy Guide</h2>
+            <div class="guide-section">
+                <h3>1. Core Rules & Objective</h3>
+                <p><strong>Objective:</strong> Have the majority of your colored discs on the 8x8 board when neither player has any legal moves remaining.</p>
+                <p><strong>Placing Discs:</strong> A valid move consists of placing a disc to sandwich one or more opponent discs between your newly placed disc and an existing disc of your color (horizontally, vertically, or diagonally).</p>
+                <p><strong>Flipping & Passing:</strong> All sandwiched opponent discs flip to your color. If a player has no legal moves, their turn is automatically passed. If neither player can move, the game ends.</p>
+            </div>
+            <div class="guide-section">
+                <h3>2. Corner Control Strategy</h3>
+                <p><strong>Immutable Anchors:</strong> The 4 corner squares (A1, H1, A8, H8) can <em>never</em> be flipped once captured!</p>
+                <p><strong>Stable Discs:</strong> Securing a corner allows you to build outward and create permanent, un-flippable disc chains along the edges. Prioritize capturing corners whenever available.</p>
+            </div>
+            <div class="guide-section">
+                <h3>3. Mobility Management</h3>
+                <p><strong>Maximize Options:</strong> Early and mid-game strategy relies on having many move options while restricting your opponent's choices. Starving your opponent of moves forces them into bad placements.</p>
+                <p><strong>Frontier Control:</strong> Keep your disc cluster compact and avoid placing discs on the outer perimeter ("frontier") early, which exposes new moves to your opponent.</p>
+            </div>
+            <div class="guide-section">
+                <h3>4. Edge Traps & Hazards</h3>
+                <p><strong>X-Squares (B2, G2, B7, G7):</strong> Extremely dangerous! Placing a disc here while the adjacent corner is empty almost guarantees your opponent will take that corner.</p>
+                <p><strong>C-Squares (A2, B1, H2, G1, etc.):</strong> Edge squares next to corners. Hazardous without prior corner or edge control.</p>
+                <p><strong>Wedge Plays:</strong> Leaving gaps on edges allows opponents to wedge inside and take control of the border.</p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
