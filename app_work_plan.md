@@ -76,4 +76,6 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KMaze (Added Save/Load game functionality)
 - KMine (Added Safe First-Click, Chording, and Hint System)
 - KPac (Added Difficulty Levels and Save/Load Game State)
+- KQuest
+
 
