@@ -46,25 +46,44 @@
     </div>
     <div class="eval-panel" id="eval-panel">
         <span id="eval-score">Eval: +0</span>
+        <span id="clock-display" style="color: #ffaa00;">Clock: Unlimited</span>
         <span id="hint-text">Best Move: -</span>
     </div>
-    <div style="margin-bottom: 10px; display: flex; gap: 15px; align-items: center;">
+    <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; width: 360px;">
         <div>
-            <label for="ai-difficulty" style="font-size: 14px; margin-right: 5px;">AI Difficulty:</label>
-            <select id="ai-difficulty" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 4px;">
+            <label for="ai-difficulty" style="font-size: 13px;">AI:</label>
+            <select id="ai-difficulty" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
                 <option value="easy">Easy</option>
                 <option value="medium" selected>Medium</option>
                 <option value="hard">Hard</option>
             </select>
         </div>
         <div>
-            <label for="sound-toggle" style="font-size: 14px; display: flex; align-items: center; cursor: pointer;">
-                <input type="checkbox" id="sound-toggle" checked style="margin-right: 5px;"> Sound
+            <label for="time-mode" style="font-size: 13px;">Timer:</label>
+            <select id="time-mode" onchange="initGame()" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
+                <option value="0" selected>Untimed</option>
+                <option value="5">Blitz (5s)</option>
+                <option value="15">Rapid (15s)</option>
+            </select>
+        </div>
+        <div>
+            <label for="handicap-select" style="font-size: 13px;">Handicap:</label>
+            <select id="handicap-select" onchange="initGame()" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
+                <option value="std" selected>Standard</option>
+                <option value="b_corner">Black Corner</option>
+                <option value="w_corner">White Corner</option>
+                <option value="b_adv">Black Adv (+2)</option>
+                <option value="4_corners">4 Corners</option>
+            </select>
+        </div>
+        <div>
+            <label for="sound-toggle" style="font-size: 13px; cursor: pointer;">
+                <input type="checkbox" id="sound-toggle" checked style="margin-right: 2px;"> Sound
             </label>
         </div>
         <div>
-            <label for="hint-toggle" style="font-size: 14px; display: flex; align-items: center; cursor: pointer;">
-                <input type="checkbox" id="hint-toggle" checked onchange="renderBoard()" style="margin-right: 5px;"> Hints
+            <label for="hint-toggle" style="font-size: 13px; cursor: pointer;">
+                <input type="checkbox" id="hint-toggle" checked onchange="renderBoard()" style="margin-right: 2px;"> Hints
             </label>
         </div>
     </div>
@@ -83,6 +102,7 @@
         const scoreWhiteEl = document.getElementById('score-white');
         const turnDisplayEl = document.getElementById('turn-display');
         const messageEl = document.getElementById('message');
+        const clockDisplayEl = document.getElementById('clock-display');
 
         const EMPTY = 0;
         const BLACK = 1;
@@ -93,6 +113,9 @@
         let validMoves = [];
         let history = [];
         let aiTimeoutId = null;
+        let moveTimerInterval = null;
+        let moveTimeLimit = 0;
+        let moveTimeLeft = 0;
         let audioCtx = null;
         let stats = { wins: 0, losses: 0, draws: 0 };
         let gameEnded = false;
@@ -136,9 +159,11 @@
                     clearTimeout(aiTimeoutId);
                     aiTimeoutId = null;
                 }
+                stopTimer();
                 messageEl.textContent = 'Game Loaded!';
                 initBoardDOM();
                 renderBoard();
+                resetTimer();
             } else {
                 messageEl.textContent = 'No save found.';
             }
@@ -174,16 +199,76 @@
             } catch (e) {}
         }
 
-        const DIRS = [
-            [-1, -1], [-1, 0], [-1, 1],
-            [0, -1],           [0, 1],
-            [1, -1],  [1, 0],  [1, 1]
-        ];
+        function stopTimer() {
+            if (moveTimerInterval) {
+                clearInterval(moveTimerInterval);
+                moveTimerInterval = null;
+            }
+        }
 
-        function initGame() {
+        function updateClockDisplay() {
+            if (!clockDisplayEl) return;
+            const timeMode = parseInt(document.getElementById('time-mode').value);
+            if (timeMode === 0) {
+                clockDisplayEl.textContent = 'Clock: Unlimited';
+            } else {
+                const sec = (moveTimeLeft / 10).toFixed(1);
+                clockDisplayEl.textContent = `Clock: ${sec}s`;
+            }
+        }
+
+        function resetTimer() {
+            stopTimer();
+            const timeMode = parseInt(document.getElementById('time-mode').value);
+            if (timeMode > 0 && !gameEnded) {
+                moveTimeLeft = timeMode * 10;
+                updateClockDisplay();
+                moveTimerInterval = setInterval(tickTimer, 100);
+            } else {
+                updateClockDisplay();
+            }
+        }
+
+        function tickTimer() {
+            if (gameEnded) {
+                stopTimer();
+                return;
+            }
+            moveTimeLeft--;
+            updateClockDisplay();
+            if (moveTimeLeft <= 0) {
+                stopTimer();
+                gameEnded = true;
+                const timedOutPlayer = currentPlayer === BLACK ? 'Black' : 'White';
+                const winnerPlayer = currentPlayer === BLACK ? 'White' : 'Black';
+                messageEl.textContent = `${timedOutPlayer} ran out of time! ${winnerPlayer} wins!`;
+                if (currentPlayer === BLACK) stats.losses++;
+                else stats.wins++;
+                saveStats();
+                playSound('over');
+                renderBoard();
+            }
+        }
+
+        function applyHandicap() {
             boardState = Array(64).fill(EMPTY);
             boardState[27] = WHITE; boardState[28] = BLACK;
             boardState[35] = BLACK; boardState[36] = WHITE;
+            const h = document.getElementById('handicap-select').value;
+            if (h === 'b_corner') {
+                boardState[0] = BLACK;
+            } else if (h === 'w_corner') {
+                boardState[63] = WHITE;
+            } else if (h === 'b_adv') {
+                boardState[19] = BLACK; boardState[44] = BLACK;
+            } else if (h === '4_corners') {
+                boardState[0] = BLACK; boardState[7] = WHITE;
+                boardState[56] = WHITE; boardState[63] = BLACK;
+            }
+        }
+
+        function initGame() {
+            applyHandicap();
             currentPlayer = BLACK;
             history = [];
             gameEnded = false;
@@ -194,6 +279,7 @@
             messageEl.textContent = '';
             initBoardDOM();
             renderBoard();
+            resetTimer();
         }
 
         function initBoardDOM() {
@@ -208,7 +294,7 @@
                 disc.id = 'disc-' + i;
                 
                 cell.appendChild(disc);
-                cell.onclick = () => { if (currentPlayer === BLACK) handleCellClick(i); };
+                cell.onclick = () => { if (currentPlayer === BLACK && !gameEnded) handleCellClick(i); };
                 boardEl.appendChild(cell);
             }
         }
@@ -233,8 +319,10 @@
             }
             boardState = lastState.board;
             currentPlayer = lastState.player;
+            gameEnded = false;
             messageEl.textContent = '';
             renderBoard();
+            resetTimer();
         }
 
         function getFlippable(index, player) {
@@ -297,12 +385,14 @@
                     saveStats();
                     playSound('over');
                 }
+                stopTimer();
                 return true;
             }
             return false;
         }
 
         function handleCellClick(index) {
+            if (gameEnded) return;
             const flips = getFlippable(index, currentPlayer);
             if (flips.length > 0) {
                 pushHistory();
@@ -323,6 +413,7 @@
                     }
                 }
                 renderBoard(flips);
+                resetTimer();
                 
                 // Simple AI for White
                 if (currentPlayer === WHITE) {
@@ -384,6 +475,7 @@
                     currentPlayer = WHITE;
                 }
                 renderBoard(flips);
+                resetTimer();
             }
             checkEndGame();
         }

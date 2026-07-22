@@ -17,6 +17,14 @@
 #define IDM_SAVE 1007
 #define IDM_LOAD 1008
 #define IDM_HINT 1009
+#define IDM_TIME_UNTIMED 1010
+#define IDM_TIME_BLITZ 1011
+#define IDM_TIME_RAPID 1012
+#define IDM_HANDICAP_STD 1013
+#define IDM_HANDICAP_BLACK_CORNER 1014
+#define IDM_HANDICAP_WHITE_CORNER 1015
+#define IDM_HANDICAP_BLACK_ADV 1016
+#define IDM_HANDICAP_4CORNERS 1017
 
 const char g_szClassName[] = "KReversiClass";
 
@@ -24,6 +32,11 @@ int board[64];
 int soundEnabled = 1;
 int showHint = 1;
 int stats[3] = {0, 0, 0}; // Wins, Losses, Draws
+
+int moveTimeMode = 0; // 0=Untimed, 5=Blitz 5s, 15=Rapid 15s
+int handicapMode = 0; // 0=Std, 1=Black Corner, 2=White Corner, 3=Black Adv, 4=4 Corners
+int moveTimeLeftDeci = 0;
+int gameEnded = 0;
 
 static const int g_weights[64] = {
     100, -20,  10,   5,   5,  10, -20, 100,
@@ -64,11 +77,11 @@ void ShowStats(HWND hwnd) {
     sprintf(msg, "Games Played: %d\nWins: %d\nLosses: %d\nDraws: %d", stats[0]+stats[1]+stats[2], stats[0], stats[1], stats[2]);
     MessageBox(hwnd, msg, "Game Statistics", MB_OK | MB_ICONINFORMATION);
 }
+
 int gameOverSoundPlayed = 0;
 int animatingFlips[64];
 int numAnimatingFlips = 0;
 int flipProgress = 0;
-
 
 void PlaySoundEffect(int type) {
     if (!soundEnabled) return;
@@ -79,6 +92,7 @@ void PlaySoundEffect(int type) {
         Beep(200, 150);
     }
 }
+
 int currentPlayer = BLACK;
 int dirs[8][2] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
 int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
@@ -91,14 +105,43 @@ typedef struct {
 HistoryState history[200];
 int historyCount = 0;
 
-
-void InitGame() {
+void ApplyHandicap() {
     for(int i = 0; i < 64; i++) board[i] = EMPTY;
     board[27] = WHITE; board[28] = BLACK;
     board[35] = BLACK; board[36] = WHITE;
+
+    if (handicapMode == 1) { // Black Corner A1
+        board[0] = BLACK;
+    } else if (handicapMode == 2) { // White Corner H8
+        board[63] = WHITE;
+    } else if (handicapMode == 3) { // Black Adv (+2)
+        board[19] = BLACK; board[44] = BLACK;
+    } else if (handicapMode == 4) { // 4 Corners
+        board[0] = BLACK; board[7] = WHITE;
+        board[56] = WHITE; board[63] = BLACK;
+    }
+}
+
+void ResetMoveTimer(HWND hwnd) {
+    if (hwnd) KillTimer(hwnd, 3);
+    if (moveTimeMode > 0 && !gameEnded && hwnd) {
+        moveTimeLeftDeci = moveTimeMode * 10;
+        SetTimer(hwnd, 3, 100, NULL);
+    }
+}
+
+void InitGame(HWND hwnd) {
+    ApplyHandicap();
     currentPlayer = BLACK;
     historyCount = 0;
     gameOverSoundPlayed = 0;
+    gameEnded = 0;
+    if (hwnd) {
+        KillTimer(hwnd, 1);
+        KillTimer(hwnd, 2);
+        ResetMoveTimer(hwnd);
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
 }
 
 void PushHistory() {
@@ -114,8 +157,8 @@ void PushHistory() {
 }
 
 void UndoMove(HWND hwnd) {
-    KillTimer(hwnd, 1); // Cancel AI timer if running
-    KillTimer(hwnd, 2); // Cancel animation timer
+    KillTimer(hwnd, 1);
+    KillTimer(hwnd, 2);
     numAnimatingFlips = 0;
     if (historyCount == 0) return;
     
@@ -128,6 +171,8 @@ void UndoMove(HWND hwnd) {
     currentPlayer = lastState.currentPlayer;
     
     gameOverSoundPlayed = 0;
+    gameEnded = 0;
+    ResetMoveTimer(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -157,6 +202,8 @@ void LoadGame(HWND hwnd) {
         KillTimer(hwnd, 2);
         numAnimatingFlips = 0;
         gameOverSoundPlayed = 0;
+        gameEnded = 0;
+        ResetMoveTimer(hwnd);
         InvalidateRect(hwnd, NULL, TRUE);
         MessageBox(hwnd, "Game loaded successfully.", "Load Game", MB_OK | MB_ICONINFORMATION);
     } else {
@@ -241,8 +288,10 @@ void DoMove(int index, int player, HWND hwnd) {
 }
 
 void AIMove(HWND hwnd) {
+    if (gameEnded) return;
     if (!HasValidMoves(WHITE)) {
         currentPlayer = BLACK;
+        ResetMoveTimer(hwnd);
         InvalidateRect(hwnd, NULL, TRUE);
         return;
     }
@@ -305,6 +354,7 @@ void AIMove(HWND hwnd) {
     if (!HasValidMoves(BLACK)) {
         currentPlayer = WHITE;
     }
+    ResetMoveTimer(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -319,6 +369,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hSubMenu, MF_STRING, IDM_HARD, "Hard");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
             
+            HMENU hTimeMenu = CreatePopupMenu();
+            AppendMenu(hTimeMenu, MF_STRING | MF_CHECKED, IDM_TIME_UNTIMED, "Untimed");
+            AppendMenu(hTimeMenu, MF_STRING, IDM_TIME_BLITZ, "Blitz (5s)");
+            AppendMenu(hTimeMenu, MF_STRING, IDM_TIME_RAPID, "Rapid (15s)");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hTimeMenu, "Timer");
+
+            HMENU hHandicapMenu = CreatePopupMenu();
+            AppendMenu(hHandicapMenu, MF_STRING | MF_CHECKED, IDM_HANDICAP_STD, "Standard");
+            AppendMenu(hHandicapMenu, MF_STRING, IDM_HANDICAP_BLACK_CORNER, "Black Corner");
+            AppendMenu(hHandicapMenu, MF_STRING, IDM_HANDICAP_WHITE_CORNER, "White Corner");
+            AppendMenu(hHandicapMenu, MF_STRING, IDM_HANDICAP_BLACK_ADV, "Black Advantage");
+            AppendMenu(hHandicapMenu, MF_STRING, IDM_HANDICAP_4CORNERS, "4 Corners");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hHandicapMenu, "Handicap");
+
             HMENU hActionMenu = CreatePopupMenu();
             AppendMenu(hActionMenu, MF_STRING, IDM_SAVE, "Save Game");
             AppendMenu(hActionMenu, MF_STRING, IDM_LOAD, "Load Game");
@@ -332,7 +396,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetMenu(hwnd, hMenu);
             LoadStats();
-            InitGame();
+            InitGame(hwnd);
             break;
         }
         case WM_COMMAND: {
@@ -346,6 +410,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CheckMenuItem(hMenu, IDM_MEDIUM, MF_UNCHECKED);
                     CheckMenuItem(hMenu, IDM_HARD, MF_UNCHECKED);
                     CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    break;
+                }
+                case IDM_TIME_UNTIMED:
+                case IDM_TIME_BLITZ:
+                case IDM_TIME_RAPID: {
+                    if (LOWORD(wParam) == IDM_TIME_UNTIMED) moveTimeMode = 0;
+                    else if (LOWORD(wParam) == IDM_TIME_BLITZ) moveTimeMode = 5;
+                    else if (LOWORD(wParam) == IDM_TIME_RAPID) moveTimeMode = 15;
+                    
+                    HMENU hMenu = GetMenu(hwnd);
+                    CheckMenuItem(hMenu, IDM_TIME_UNTIMED, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_TIME_BLITZ, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_TIME_RAPID, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    
+                    ResetMoveTimer(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                }
+                case IDM_HANDICAP_STD:
+                case IDM_HANDICAP_BLACK_CORNER:
+                case IDM_HANDICAP_WHITE_CORNER:
+                case IDM_HANDICAP_BLACK_ADV:
+                case IDM_HANDICAP_4CORNERS: {
+                    handicapMode = LOWORD(wParam) - IDM_HANDICAP_STD;
+                    HMENU hMenu = GetMenu(hwnd);
+                    CheckMenuItem(hMenu, IDM_HANDICAP_STD, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_HANDICAP_BLACK_CORNER, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_HANDICAP_WHITE_CORNER, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_HANDICAP_BLACK_ADV, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_HANDICAP_4CORNERS, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    
+                    InitGame(hwnd);
                     break;
                 }
                 case IDM_UNDO: {
@@ -379,7 +477,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
-            if (currentPlayer != BLACK) break;
+            if (currentPlayer != BLACK || gameEnded) break;
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
             
@@ -400,6 +498,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         InvalidateRect(hwnd, NULL, TRUE);
                         SetTimer(hwnd, 1, 400, NULL); // small delay for AI
                     }
+                    ResetMoveTimer(hwnd);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
@@ -416,6 +515,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     KillTimer(hwnd, 2);
                     numAnimatingFlips = 0;
                     InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == 3) {
+                if (moveTimeMode > 0 && !gameEnded) {
+                    moveTimeLeftDeci--;
+                    if (moveTimeLeftDeci <= 0) {
+                        KillTimer(hwnd, 3);
+                        gameEnded = 1;
+                        int bCount = 0, wCount = 0;
+                        for(int i=0; i<64; i++) {
+                            if(board[i] == BLACK) bCount++;
+                            if(board[i] == WHITE) wCount++;
+                        }
+                        if (currentPlayer == BLACK) stats[1]++; else stats[0]++;
+                        SaveStats();
+                        PlaySoundEffect(2);
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    } else {
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
                 }
             }
             break;
@@ -438,7 +556,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             sprintf(scoreStr, "Black: %d   White: %d", bCount, wCount);
             TextOut(hdc, 10, 8, scoreStr, strlen(scoreStr));
             
-            if (!HasValidMoves(BLACK) && !HasValidMoves(WHITE)) {
+            if (gameEnded) {
+                if (moveTimeMode > 0 && moveTimeLeftDeci <= 0) {
+                    if (currentPlayer == BLACK) TextOut(hdc, 200, 8, "Black Timeout!", 14);
+                    else TextOut(hdc, 200, 8, "White Timeout!", 14);
+                } else if (bCount > wCount) TextOut(hdc, 200, 8, "Black Wins!", 11);
+                else if (wCount > bCount) TextOut(hdc, 200, 8, "White Wins!", 11);
+                else TextOut(hdc, 200, 8, "Draw!", 5);
+            } else if (!HasValidMoves(BLACK) && !HasValidMoves(WHITE)) {
+                gameEnded = 1;
+                KillTimer(hwnd, 3);
                 if (bCount > wCount) TextOut(hdc, 200, 8, "Black Wins!", 11);
                 else if (wCount > bCount) TextOut(hdc, 200, 8, "White Wins!", 11);
                 else TextOut(hdc, 200, 8, "Draw!", 5);
@@ -454,17 +581,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             int evalScore = EvaluatePosition();
-            int bestMoveIdx = (currentPlayer == BLACK && HasValidMoves(BLACK)) ? GetBestMoveForPlayer(BLACK) : -1;
+            int bestMoveIdx = (currentPlayer == BLACK && HasValidMoves(BLACK) && !gameEnded) ? GetBestMoveForPlayer(BLACK) : -1;
             
-            char evalStr[128];
+            char evalStr[160];
+            char clockStr[32];
+            if (moveTimeMode > 0) {
+                sprintf(clockStr, "Clock: %.1fs", moveTimeLeftDeci / 10.0);
+            } else {
+                sprintf(clockStr, "Clock: Off");
+            }
+
             if (bestMoveIdx != -1 && showHint) {
                 int col = bestMoveIdx % 8;
                 int row = bestMoveIdx / 8;
-                sprintf(evalStr, "Eval: %+d (%s)  |  Best Move: %c%d", 
-                        evalScore, evalScore > 0 ? "Black" : (evalScore < 0 ? "White" : "Even"), 'A' + col, row + 1);
+                sprintf(evalStr, "Eval: %+d | Best: %c%d | %s", 
+                        evalScore, 'A' + col, row + 1, clockStr);
             } else {
-                sprintf(evalStr, "Eval: %+d (%s)  |  Best Move: -", 
-                        evalScore, evalScore > 0 ? "Black" : (evalScore < 0 ? "White" : "Even"));
+                sprintf(evalStr, "Eval: %+d | Best: - | %s", 
+                        evalScore, clockStr);
             }
             TextOut(hdc, 10, 24, evalStr, strlen(evalStr));
 
@@ -509,7 +643,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SelectObject(hdc, board[idx] == BLACK ? blackBrush : whiteBrush);
                             Ellipse(hdc, rect.left + 5, rect.top + 5, rect.right - 5, rect.bottom - 5);
                         }
-                    } else if (currentPlayer == BLACK) {
+                    } else if (currentPlayer == BLACK && !gameEnded) {
                         int dummy[64];
                         if (GetFlippable(idx, BLACK, dummy) > 0) {
                             if (showHint && idx == bestMoveIdx) {
