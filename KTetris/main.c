@@ -12,6 +12,7 @@ int next_piece, next_rot;
 int hold_piece = -1;
 int hold_used = 0;
 int high_score = 0;
+int current_is_bomb = 0, next_is_bomb = 0, hold_is_bomb = 0;
 
 void load_high_score() {
     HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -57,7 +58,7 @@ const unsigned short tetrominos[7][4] = {
     {0x0C60, 0x4C80, 0xC600, 0x2640}  // Z
 };
 
-const COLORREF colors[9] = {
+const COLORREF colors[10] = {
     RGB(0,0,0),
     RGB(0,255,255), // I
     RGB(0,0,255),   // J
@@ -66,7 +67,8 @@ const COLORREF colors[9] = {
     RGB(0,255,0),   // S
     RGB(128,0,128), // T
     RGB(255,0,0),   // Z
-    RGB(128,128,128) // Garbage
+    RGB(128,128,128),// Garbage
+    RGB(255,64,64)  // Bomb
 };
 
 unsigned int rng_state = 12345;
@@ -110,17 +112,20 @@ int check_collision(int p, int rot, int px, int py) {
 
 void lock_piece() {
     unsigned short shape = tetrominos[current_piece][current_rot];
+    int block_val = current_is_bomb ? 9 : (current_piece + 1);
     for (int y = 0; y < 4; y++) {
         for (int x = 0; x < 4; x++) {
             if (shape & (1 << (15 - (y * 4 + x)))) {
                 if (current_y + y >= 0) {
-                    grid[current_y + y][current_x + x] = current_piece + 1;
+                    grid[current_y + y][current_x + x] = block_val;
                 }
             }
         }
     }
     // clear lines
     int lines_cleared = 0;
+    int explode_centers[H][W] = {0};
+    int has_bombs = 0;
     for (int y = H - 1; y >= 0; y--) {
         int full = 1;
         for (int x = 0; x < W; x++) {
@@ -128,13 +133,43 @@ void lock_piece() {
         }
         if (full) {
             lines_cleared++;
-            for (int yy = y; yy > 0; yy--) {
-                for (int x = 0; x < W; x++) grid[yy][x] = grid[yy-1][x];
+            for (int x = 0; x < W; x++) {
+                if (grid[y][x] == 9) {
+                    explode_centers[y][x] = 1;
+                    has_bombs = 1;
+                }
             }
-            for (int x = 0; x < W; x++) grid[0][x] = 0;
+            for (int yy = y; yy > 0; yy--) {
+                for (int x = 0; x < W; x++) {
+                    grid[yy][x] = grid[yy-1][x];
+                    explode_centers[yy][x] = explode_centers[yy-1][x];
+                }
+            }
+            for (int x = 0; x < W; x++) { grid[0][x] = 0; explode_centers[0][x] = 0; }
             y++; // check same line again
         }
     }
+    
+    if (has_bombs) {
+        for (int y = 0; y < H; y++) {
+            for (int x = 0; x < W; x++) {
+                if (explode_centers[y][x]) {
+                    for (int dy = -2; dy <= 2; dy++) {
+                        for (int dx = -2; dx <= 2; dx++) {
+                            int ny = y + dy;
+                            int nx = x + dx;
+                            if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
+                                grid[ny][nx] = 0;
+                            }
+                        }
+                    }
+                    score += 500;
+                    Beep(150, 100); Beep(100, 200);
+                }
+            }
+        }
+    }
+
     if (lines_cleared > 0) {
         if (lines_cleared >= 1 && lines_cleared <= 4) stat_lines[lines_cleared - 1]++;
         combo++;
@@ -146,7 +181,7 @@ void lock_piece() {
     lines += lines_cleared;
     
     pieces_placed++;
-    if (game_mode == 1 && campaign_level > 5) {
+    if (game_mode == 1 && campaign_level > 5 && campaign_level <= 10) {
         int threshold = 16 - campaign_level;
         if (threshold < 5) threshold = 5;
         if (pieces_placed % threshold == 0) {
@@ -159,6 +194,18 @@ void lock_piece() {
             }
             Beep(300, 100);
         }
+    } else if (game_mode == 1 && campaign_level > 10) {
+        int threshold = 18 - campaign_level;
+        if (threshold < 3) threshold = 3;
+        if (pieces_placed % threshold == 0) {
+            int cols = random_int(3) + 1;
+            for(int k=0; k<cols; k++) {
+                int c = random_int(W);
+                for(int y = 0; y < H - 1; y++) grid[y][c] = grid[y+1][c];
+                grid[H - 1][c] = 8;
+            }
+            Beep(250, 80); Beep(200, 80);
+        }
     }
 
     if (game_mode == 1) {
@@ -167,7 +214,7 @@ void lock_piece() {
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
         if (lines >= goal) {
             campaign_level++;
-            if (campaign_level > 10) {
+            if (campaign_level > 15) {
                 win_screen = 1;
                 Beep(800, 150); Beep(1000, 150); Beep(1200, 300);
                 return;
@@ -190,8 +237,10 @@ void spawn_piece() {
     current_rot = next_rot;
     current_x = W / 2 - 2;
     current_y = -2;
+    current_is_bomb = next_is_bomb;
     next_piece = get_next_pc();
     next_rot = 0;
+    next_is_bomb = (random_int(15) == 0) ? 1 : 0;
     hold_used = 0;
     if (check_collision(current_piece, current_rot, current_x, current_y + 1)) {
         game_over = 1;
@@ -232,8 +281,10 @@ void InitGame() {
     win_screen = 0;
     hold_piece = -1;
     hold_used = 0;
+    hold_is_bomb = 0;
     next_piece = get_next_pc();
     next_rot = 0;
+    next_is_bomb = (random_int(15) == 0) ? 1 : 0;
     spawn_piece();
 }
 
@@ -304,11 +355,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (!hold_used) {
                         if (hold_piece == -1) {
                             hold_piece = current_piece;
+                            hold_is_bomb = current_is_bomb;
                             spawn_piece();
                         } else {
                             int temp = current_piece;
+                            int temp_bomb = current_is_bomb;
                             current_piece = hold_piece;
+                            current_is_bomb = hold_is_bomb;
                             hold_piece = temp;
+                            hold_is_bomb = temp_bomb;
                             current_rot = 0;
                             current_x = W / 2 - 2;
                             current_y = -2;
@@ -347,8 +402,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
-            HBRUSH brushes[9];
-            for (int i = 0; i < 9; i++) brushes[i] = CreateSolidBrush(colors[i]);
+            HBRUSH brushes[10];
+            for (int i = 0; i < 10; i++) brushes[i] = CreateSolidBrush(colors[i]);
             
             // Draw grid
             for (int y = 0; y < H; y++) {
@@ -363,6 +418,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw current piece
             if (!game_over && !is_paused && !start_screen && !win_screen) {
                 unsigned short shape = tetrominos[current_piece][current_rot];
+                int draw_val = current_is_bomb ? 9 : (current_piece + 1);
                 // Draw Ghost piece
                 int ghost_y = current_y;
                 while (!check_collision(current_piece, current_rot, current_x, ghost_y + 1)) {
@@ -373,7 +429,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (shape & (1 << (15 - (y * 4 + x)))) {
                             if (ghost_y + y >= 0) {
                                 RECT r = { (current_x + x) * CELL_SIZE + 1, (ghost_y + y) * CELL_SIZE + 1, (current_x + x + 1) * CELL_SIZE - 1, (ghost_y + y + 1) * CELL_SIZE - 1 };
-                                FrameRect(memDC, &r, brushes[current_piece + 1]);
+                                FrameRect(memDC, &r, brushes[draw_val]);
                             }
                         }
                     }
@@ -385,7 +441,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int py = current_y + y;
                             if (py >= 0) {
                                 RECT r = { (current_x + x) * CELL_SIZE + 1, py * CELL_SIZE + 1, (current_x + x + 1) * CELL_SIZE - 1, (py + 1) * CELL_SIZE - 1 };
-                                FillRect(memDC, &r, brushes[current_piece + 1]);
+                                FillRect(memDC, &r, brushes[draw_val]);
                             }
                         }
                     }
@@ -423,7 +479,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, W * CELL_SIZE + 10, 40, hi_str, lstrlenA(hi_str));
             
             char level_str[32];
-            if (game_mode == 1) wsprintfA(level_str, "STAGE: %d/10", campaign_level);
+            if (game_mode == 1) wsprintfA(level_str, "STAGE: %d/15", campaign_level);
             else wsprintfA(level_str, "LEVEL: %d", level);
             TextOutA(memDC, W * CELL_SIZE + 10, 60, level_str, lstrlenA(level_str));
             
@@ -457,11 +513,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, W * CELL_SIZE + 10, 120, "NEXT:", 5);
             if (!game_over) {
                 unsigned short next_shape = tetrominos[next_piece][next_rot];
+                int next_draw_val = next_is_bomb ? 9 : (next_piece + 1);
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (next_shape & (1 << (15 - (y * 4 + x)))) {
                             RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 140 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 140 + (y + 1) * CELL_SIZE - 1 };
-                            FillRect(memDC, &r, brushes[next_piece + 1]);
+                            FillRect(memDC, &r, brushes[next_draw_val]);
                         }
                     }
                 }
@@ -470,11 +527,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, W * CELL_SIZE + 10, 230, "HOLD:", 5);
             if (hold_piece != -1) {
                 unsigned short hold_shape = tetrominos[hold_piece][0];
+                int hold_draw_val = hold_is_bomb ? 9 : (hold_piece + 1);
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (hold_shape & (1 << (15 - (y * 4 + x)))) {
                             RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 250 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 250 + (y + 1) * CELL_SIZE - 1 };
-                            FillRect(memDC, &r, brushes[hold_piece + 1]);
+                            FillRect(memDC, &r, brushes[hold_draw_val]);
                         }
                     }
                 }
@@ -487,7 +545,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, hOldPen);
             DeleteObject(hPen);
             
-            for (int i = 0; i < 9; i++) DeleteObject(brushes[i]);
+            for (int i = 0; i < 10; i++) DeleteObject(brushes[i]);
             
             BitBlt(hdc, 0, 0, W * CELL_SIZE + 120, H * CELL_SIZE, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);

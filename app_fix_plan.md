@@ -129,4 +129,6 @@ Pass 1 Complete.
 
 - **KPong**: Added ARIA labels and keyboard accessibility attributes in `kpong.html`, parsed `highRally` with `parseInt`, and prevented page scroll with arrow keys. Fixed `KillTimer` leak in `main.c` on `WM_DESTROY`.
 
-Start Pass 2 (Deeper Quality checks). Next target: KQuarantine (or next in alphabetical order).
+- **KQuarantine**: Fixed XSS vulnerability in terminal log input rendering in `kquarantine.html` by using `textContent` instead of `innerHTML`. (Web-only app).
+
+Start Pass 2 (Deeper Quality checks). Next target: KRead (or next in alphabetical order).
