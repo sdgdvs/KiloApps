@@ -13,6 +13,69 @@ static int xrand() {
     return (int)((rngSeed / 65536) % 32768);
 }
 
+static int ContainsSubstr(const char* str, const char* sub) {
+    if (!str || !sub) return 0;
+    int i, j;
+    for (i = 0; str[i] != '\0'; i++) {
+        for (j = 0; sub[j] != '\0' && str[i + j] == sub[j]; j++);
+        if (sub[j] == '\0') return 1;
+    }
+    return 0;
+}
+
+typedef struct {
+    char name[32];
+    int hp, maxHp;
+    int str, def;
+    int xp, gold;
+} MonsterDef;
+
+typedef struct {
+    char name[32];
+    char hazardName[32];
+    MonsterDef monsters[5];
+    MonsterDef boss;
+} BiomeDef;
+
+static const BiomeDef g_Biomes[3] = {
+    {
+        "Goblin Mines",
+        "Cave-In",
+        {
+            {"Cave Goblin", 30, 30, 8, 3, 30, 15},
+            {"Goblin Slinger", 25, 25, 10, 2, 35, 18},
+            {"Cave Spider", 38, 38, 11, 4, 45, 22},
+            {"Mine Taskmaster", 55, 55, 15, 6, 70, 40},
+            {"Rock Golem", 75, 75, 17, 10, 95, 55}
+        },
+        {"Goblin King (Boss)", 130, 130, 22, 10, 260, 160}
+    },
+    {
+        "Ancient Catacombs",
+        "Poison Fog",
+        {
+            {"Skeleton Archer", 32, 32, 11, 3, 38, 20},
+            {"Tomb Ghoul", 45, 45, 13, 5, 52, 28},
+            {"Crypt Necromancer", 50, 50, 16, 4, 75, 45},
+            {"Dread Wraith", 65, 65, 18, 7, 100, 60},
+            {"Bone Colossus", 85, 85, 20, 11, 120, 70}
+        },
+        {"Lich Lord (Boss)", 160, 160, 26, 12, 350, 220}
+    },
+    {
+        "Dragon Spire",
+        "Lava Burst",
+        {
+            {"Magma Imp", 40, 40, 14, 4, 50, 25},
+            {"Fire Drake", 60, 60, 17, 7, 80, 45},
+            {"Obsidian Elemental", 80, 80, 20, 12, 110, 65},
+            {"Wyvern Sentinel", 95, 95, 23, 10, 140, 85},
+            {"Hellhound", 70, 70, 21, 8, 105, 60}
+        },
+        {"Obsidian Dragon (Boss)", 250, 250, 32, 18, 600, 500}
+    }
+};
+
 typedef struct {
     char name[32];
     char heroClass[16];
@@ -23,6 +86,7 @@ typedef struct {
     int gold;
     int xp, nextXp;
     int floor;
+    int biome; // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
     char weaponName[32];
     int weaponBonusStr;
     char armorName[32];
@@ -70,6 +134,7 @@ void InitHero(int classIdx) {
     player.nextXp = 100;
     player.gold = 50;
     player.floor = 1;
+    player.biome = 0;
     player.hpPotions = 3;
     player.mpPotions = 2;
     player.questMonstersKilled = 0;
@@ -107,7 +172,7 @@ void UpdateUI() {
 
     const char* locStr = "Oakhaven Town";
     if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
-        locStr = "Obsidian Spire";
+        locStr = g_Biomes[player.biome].name;
     }
 
     wsprintfA(statusBuf, "Hero: %s (%s)  |  Lvl: %d  |  HP: %d/%d  |  MP: %d/%d  |  Gold: %d Gold  |  Loc: %s (Floor %d)",
@@ -115,14 +180,12 @@ void UpdateUI() {
         player.hp, player.maxHp, player.mp, player.maxMp,
         player.gold, locStr, player.floor);
 
-    int totalStr = player.str + player.weaponBonusStr;
-    int totalDef = player.def + player.armorBonusDef;
-
     wsprintfA(infoBuf,
+        "BIOME: %s (Hazard: %s)\r\n"
         "ATTRIBUTES: STR %d (+%d) | INT %d | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
         "EQUIPMENT: Weapon: %s | Armor: %s\r\n"
-        "INVENTORY: HP Potions x%d | MP Potions x%d\r\n"
-        "QUESTS: Clear Spire (%d/5 Mon) [%s] | Slay Goblin King (%d/1 Boss) [%s]",
+        "INVENTORY: HP Potions x%d | MP Potions x%d  |  QUESTS: Chambers (%d/5) [%s] | Boss (%d/1) [%s]",
+        g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName,
         player.str, player.weaponBonusStr, player.intStat, player.def, player.armorBonusDef, player.agi, player.xp, player.nextXp,
         player.weaponName, player.armorName,
         player.hpPotions, player.mpPotions,
@@ -151,14 +214,17 @@ void SetupButtons() {
             SetWindowTextA(hBtn6, "---");
             break;
 
-        case STATE_TOWN:
-            SetWindowTextA(hBtn1, "Enter Obsidian Spire");
-            SetWindowTextA(hBtn2, "Rest at Inn (10 Gold)");
-            SetWindowTextA(hBtn3, "Visit Shop");
-            SetWindowTextA(hBtn4, "Claim Quest Rewards");
-            SetWindowTextA(hBtn5, "Reset Game");
-            SetWindowTextA(hBtn6, "---");
+        case STATE_TOWN: {
+            char bBtn[64];
+            wsprintfA(bBtn, "Biome: %s", g_Biomes[player.biome].name);
+            SetWindowTextA(hBtn1, "Enter Dungeon");
+            SetWindowTextA(hBtn2, bBtn);
+            SetWindowTextA(hBtn3, "Rest at Inn (10G)");
+            SetWindowTextA(hBtn4, "Visit Shop");
+            SetWindowTextA(hBtn5, "Claim Rewards");
+            SetWindowTextA(hBtn6, "Reset Game");
             break;
+        }
 
         case STATE_SHOP:
             SetWindowTextA(hBtn1, "Buy HP Potion (15G)");
@@ -220,13 +286,15 @@ void CheckLevelUp() {
 
 void StartCombat() {
     gameState = STATE_COMBAT;
+    const BiomeDef* b = &g_Biomes[player.biome];
+
     if (player.floor == 5) {
-        lstrcpyA(currentEnemy.name, "Goblin King (Boss)");
-        currentEnemy.maxHp = 120;
-        currentEnemy.str = 22;
-        currentEnemy.def = 10;
-        currentEnemy.xp = 250;
-        currentEnemy.gold = 150;
+        lstrcpyA(currentEnemy.name, b->boss.name);
+        currentEnemy.maxHp = b->boss.maxHp;
+        currentEnemy.str = b->boss.str;
+        currentEnemy.def = b->boss.def;
+        currentEnemy.xp = b->boss.xp;
+        currentEnemy.gold = b->boss.gold;
     } else if (player.floor >= 10) {
         lstrcpyA(currentEnemy.name, "Obsidian Dragon (Final Boss)");
         currentEnemy.maxHp = 250;
@@ -236,11 +304,13 @@ void StartCombat() {
         currentEnemy.gold = 500;
     } else {
         int r = xrand() % 5;
-        if (r == 0) { lstrcpyA(currentEnemy.name, "Sewer Rat"); currentEnemy.maxHp = 20; currentEnemy.str = 6; currentEnemy.def = 2; currentEnemy.xp = 20; currentEnemy.gold = 10; }
-        else if (r == 1) { lstrcpyA(currentEnemy.name, "Cave Goblin"); currentEnemy.maxHp = 35; currentEnemy.str = 9; currentEnemy.def = 4; currentEnemy.xp = 35; currentEnemy.gold = 18; }
-        else if (r == 2) { lstrcpyA(currentEnemy.name, "Skeleton Warrior"); currentEnemy.maxHp = 45; currentEnemy.str = 12; currentEnemy.def = 6; currentEnemy.xp = 50; currentEnemy.gold = 25; }
-        else if (r == 3) { lstrcpyA(currentEnemy.name, "Dark Cultist"); currentEnemy.maxHp = 55; currentEnemy.str = 15; currentEnemy.def = 5; currentEnemy.xp = 65; currentEnemy.gold = 35; }
-        else { lstrcpyA(currentEnemy.name, "Shadow Beast"); currentEnemy.maxHp = 75; currentEnemy.str = 18; currentEnemy.def = 8; currentEnemy.xp = 90; currentEnemy.gold = 50; }
+        const MonsterDef* m = &b->monsters[r];
+        lstrcpyA(currentEnemy.name, m->name);
+        currentEnemy.maxHp = m->hp;
+        currentEnemy.str = m->str;
+        currentEnemy.def = m->def;
+        currentEnemy.xp = m->xp;
+        currentEnemy.gold = m->gold;
 
         // Scale monster stats with floor
         int floorBonus = player.floor - 1;
@@ -253,8 +323,8 @@ void StartCombat() {
     currentEnemy.hp = currentEnemy.maxHp;
 
     char msg[128];
-    wsprintfA(msg, "⚠️ Encounter! A hostile %s (HP: %d, STR: %d, DEF: %d) attacks on Floor %d!",
-        currentEnemy.name, currentEnemy.hp, currentEnemy.str, currentEnemy.def, player.floor);
+    wsprintfA(msg, "⚠️ Encounter in %s! A hostile %s (HP: %d, STR: %d, DEF: %d) attacks on Floor %d!",
+        b->name, currentEnemy.name, currentEnemy.hp, currentEnemy.str, currentEnemy.def, player.floor);
     LogMessage(msg);
     SetupButtons();
     UpdateUI();
@@ -271,6 +341,17 @@ void EnemyTurn() {
     char msg[128];
     wsprintfA(msg, "💥 %s attacks you for %d damage!", currentEnemy.name, dmg);
     LogMessage(msg);
+
+    // Environmental Hazard Ambient Tick during Combat (20% chance)
+    if ((xrand() % 100) < 20 && player.hp > 0) {
+        const BiomeDef* b = &g_Biomes[player.biome];
+        int hDmg = 3 + (player.floor * 3 / 2);
+        player.hp -= hDmg;
+        if (player.hp < 0) player.hp = 0;
+        char hmsg[128];
+        wsprintfA(hmsg, "⚠️ %s Ambient Hazard! %s environment deals %d damage!", b->hazardName, b->name, hDmg);
+        LogMessage(hmsg);
+    }
 
     if (player.hp <= 0) {
         player.hp = 0;
@@ -290,7 +371,9 @@ void CombatVictory() {
     player.gold += currentEnemy.gold;
 
     if (player.questMonstersKilled < 5) player.questMonstersKilled++;
-    if (lstrcmpA(currentEnemy.name, "Goblin King (Boss)") == 0) player.questBossKilled = 1;
+    if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon")) {
+        player.questBossKilled = 1;
+    }
 
     CheckLevelUp();
     gameState = STATE_DUNGEON;
@@ -306,7 +389,9 @@ void HandleButton1() {
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
         gameState = STATE_DUNGEON;
-        LogMessage("You venture into the mysterious Obsidian Spire...");
+        char msg[128];
+        wsprintfA(msg, "You venture into %s...", g_Biomes[player.biome].name);
+        LogMessage(msg);
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_SHOP) {
@@ -320,14 +405,34 @@ void HandleButton1() {
         }
     } else if (gameState == STATE_DUNGEON) {
         int r = xrand() % 100;
-        if (r < 65) {
+        if (r < 50) {
             StartCombat();
-        } else if (r < 85) {
+        } else if (r < 70) {
             int g = 15 + (xrand() % 25) + (player.floor * 10);
             player.gold += g;
             char msg[128];
-            wsprintfA(msg, "✨ Found an ornate chest with %d Gold!", g);
+            wsprintfA(msg, "✨ Found a treasure chest in %s with %d Gold!", g_Biomes[player.biome].name, g);
             LogMessage(msg);
+            UpdateUI();
+        } else if (r < 85) {
+            const BiomeDef* b = &g_Biomes[player.biome];
+            int hDmg = 6 + player.floor * 2 + (xrand() % 5);
+            player.hp -= hDmg;
+            char msg[128];
+            if (player.biome == 0) {
+                wsprintfA(msg, "🪨 CAVE-IN HAZARD! Loose rocks crash down! Took %d physical damage!", hDmg);
+            } else if (player.biome == 1) {
+                wsprintfA(msg, "☠️ POISON FOG HAZARD! Toxic miasma fills the vault! Took %d poison damage!", hDmg);
+            } else {
+                wsprintfA(msg, "🔥 LAVA BURST HAZARD! Erupting magma geysers shoot up! Took %d fire damage!", hDmg);
+            }
+            LogMessage(msg);
+            if (player.hp <= 0) {
+                player.hp = 0;
+                LogMessage("💀 Slain by environmental hazard!");
+                gameState = STATE_GAME_OVER;
+                SetupButtons();
+            }
             UpdateUI();
         } else {
             if ((xrand() % 2) == 0) {
@@ -379,15 +484,13 @@ void HandleButton2() {
         LogMessage("Selected Class: Mage (High Mana & Spell Power).");
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        if (player.gold >= 10) {
-            player.gold -= 10;
-            player.hp = player.maxHp;
-            player.mp = player.maxMp;
-            LogMessage("🍺 Rested at the Dragon's Rest Inn. HP and MP fully restored!");
-            UpdateUI();
-        } else {
-            LogMessage("Not enough gold for the Inn!");
-        }
+        player.biome = (player.biome + 1) % 3;
+        player.floor = 1;
+        char msg[128];
+        wsprintfA(msg, "🗺️ Selected Dungeon Biome: %s (Hazard: %s)", g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName);
+        LogMessage(msg);
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 15) {
             player.gold -= 15;
@@ -400,7 +503,7 @@ void HandleButton2() {
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
         char msg[128];
-        wsprintfA(msg, "🪜 Descended to Floor %d of the Obsidian Spire.", player.floor);
+        wsprintfA(msg, "🪜 Descended to Floor %d of %s.", player.floor, g_Biomes[player.biome].name);
         LogMessage(msg);
         UpdateUI();
     } else if (gameState == STATE_COMBAT) {
@@ -449,10 +552,15 @@ void HandleButton3() {
         LogMessage("Selected Class: Rogue (High Agility & Crits).");
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        gameState = STATE_SHOP;
-        LogMessage("Entered Oakhaven Shop.");
-        SetupButtons();
-        UpdateUI();
+        if (player.gold >= 10) {
+            player.gold -= 10;
+            player.hp = player.maxHp;
+            player.mp = player.maxMp;
+            LogMessage("🍺 Rested at the Dragon's Rest Inn. HP and MP fully restored!");
+            UpdateUI();
+        } else {
+            LogMessage("Not enough gold for the Inn!");
+        }
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 60) {
             player.gold -= 60;
@@ -483,22 +591,9 @@ void HandleButton4() {
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        int claimed = 0;
-        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
-            player.questMonstersDone = 1;
-            player.gold += 50;
-            LogMessage("📜 Quest Completed: 'Clear Spire'! Earned +50 Gold!");
-            claimed++;
-        }
-        if (player.questBossKilled >= 1 && !player.questBossDone) {
-            player.questBossDone = 1;
-            player.gold += 150;
-            LogMessage("📜 Quest Completed: 'Slay Goblin King'! Earned +150 Gold!");
-            claimed++;
-        }
-        if (claimed == 0) {
-            LogMessage("No completed quest rewards to claim right now.");
-        }
+        gameState = STATE_SHOP;
+        LogMessage("Entered Oakhaven Shop.");
+        SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 75) {
@@ -525,10 +620,22 @@ void HandleButton4() {
 
 void HandleButton5() {
     if (gameState == STATE_TOWN) {
-        InitHero(selectedClassIndex);
-        gameState = STATE_CHAR_CREATE;
-        LogMessage("--- Game Reset to Character Creation ---");
-        SetupButtons();
+        int claimed = 0;
+        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
+            player.questMonstersDone = 1;
+            player.gold += 50;
+            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!");
+            claimed++;
+        }
+        if (player.questBossKilled >= 1 && !player.questBossDone) {
+            player.questBossDone = 1;
+            player.gold += 150;
+            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!");
+            claimed++;
+        }
+        if (claimed == 0) {
+            LogMessage("No completed quest rewards to claim right now.");
+        }
         UpdateUI();
     } else if (gameState == STATE_SHOP) {
         gameState = STATE_TOWN;
@@ -550,6 +657,16 @@ void HandleButton5() {
             LogMessage("Failed to flee!");
             EnemyTurn();
         }
+    }
+}
+
+void HandleButton6() {
+    if (gameState == STATE_TOWN) {
+        InitHero(selectedClassIndex);
+        gameState = STATE_CHAR_CREATE;
+        LogMessage("--- Game Reset to Character Creation ---");
+        SetupButtons();
+        UpdateUI();
     }
 }
 
@@ -593,6 +710,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 203: HandleButton3(); break;
                 case 204: HandleButton4(); break;
                 case 205: HandleButton5(); break;
+                case 206: HandleButton6(); break;
             }
             break;
         }

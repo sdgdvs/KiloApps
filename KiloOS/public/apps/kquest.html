@@ -358,7 +358,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 2</span></h1>
+    <h1>🗡️ KQuest <span class="badge">Phase 5</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
   </header>
 
@@ -482,6 +482,58 @@
 
     let currentState = STATE.CHAR_CREATE;
 
+    // Dungeon Biomes Data Definition
+    const BIOMES = [
+      {
+        id: 'mines',
+        name: 'Goblin Mines',
+        icon: '⛏️',
+        desc: 'Unstable damp shafts teeming with goblins, cave spiders, and rock golems.',
+        hazard: 'Cave-In',
+        hazardIcon: '🪨',
+        monsters: [
+          { name: 'Cave Goblin', hp: 30, str: 8, def: 3, xp: 30, gold: 15 },
+          { name: 'Goblin Slinger', hp: 25, str: 10, def: 2, xp: 35, gold: 18 },
+          { name: 'Cave Spider', hp: 38, str: 11, def: 4, xp: 45, gold: 22 },
+          { name: 'Mine Taskmaster', hp: 55, str: 15, def: 6, xp: 70, gold: 40 },
+          { name: 'Rock Golem', hp: 75, str: 17, def: 10, xp: 95, gold: 55 }
+        ],
+        boss: { name: '👑 Goblin King (Boss)', hp: 130, str: 22, def: 10, xp: 260, gold: 160 }
+      },
+      {
+        id: 'catacombs',
+        name: 'Ancient Catacombs',
+        icon: '💀',
+        desc: 'Dark underground vaults infested with skeletal warriors and poisonous miasma.',
+        hazard: 'Poison Fog',
+        hazardIcon: '☠️',
+        monsters: [
+          { name: 'Skeleton Archer', hp: 32, str: 11, def: 3, xp: 38, gold: 20 },
+          { name: 'Tomb Ghoul', hp: 45, str: 13, def: 5, xp: 52, gold: 28 },
+          { name: 'Crypt Necromancer', hp: 50, str: 16, def: 4, xp: 75, gold: 45 },
+          { name: 'Dread Wraith', hp: 65, str: 18, def: 7, xp: 100, gold: 60 },
+          { name: 'Bone Colossus', hp: 85, str: 20, def: 11, xp: 120, gold: 70 }
+        ],
+        boss: { name: '☠️ Lich Lord (Boss)', hp: 160, str: 26, def: 12, xp: 350, gold: 220 }
+      },
+      {
+        id: 'spire',
+        name: 'Dragon Spire',
+        icon: '🐲',
+        desc: 'Blistering volcanic citadel inhabited by fire drakes and magma beasts.',
+        hazard: 'Lava Burst',
+        hazardIcon: '🔥',
+        monsters: [
+          { name: 'Magma Imp', hp: 40, str: 14, def: 4, xp: 50, gold: 25 },
+          { name: 'Fire Drake', hp: 60, str: 17, def: 7, xp: 80, gold: 45 },
+          { name: 'Obsidian Elemental', hp: 80, str: 20, def: 12, xp: 110, gold: 65 },
+          { name: 'Wyvern Sentinel', hp: 95, str: 23, def: 10, xp: 140, gold: 85 },
+          { name: 'Hellhound', hp: 70, str: 21, def: 8, xp: 105, gold: 60 }
+        ],
+        boss: { name: '🐲 Obsidian Dragon (Boss)', hp: 250, str: 32, def: 18, xp: 600, gold: 500 }
+      }
+    ];
+
     // Player Object
     let player = {
       name: 'Valerius',
@@ -499,6 +551,7 @@
       xp: 0,
       nextXp: 100,
       floor: 1,
+      biome: 0, // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
       weapon: { name: 'Iron Shortsword', bonusStr: 4 },
       armor: { name: 'Leather Armor', bonusDef: 3 },
       inventory: [
@@ -506,8 +559,8 @@
         { id: 'mp_potion', name: 'Mana Potion', count: 2, desc: 'Restores 25 MP' }
       ],
       quests: [
-        { id: 'slay_monsters', title: 'Clear the Dungeon', req: 5, current: 0, reward: 50, done: false },
-        { id: 'slay_boss', title: 'Defeat Goblin King (Floor 5)', req: 1, current: 0, reward: 150, done: false }
+        { id: 'slay_monsters', title: 'Clear Dungeon Chambers', req: 5, current: 0, reward: 50, done: false },
+        { id: 'slay_boss', title: 'Defeat Biome Boss (Floor 5)', req: 1, current: 0, reward: 150, done: false }
       ]
     };
 
@@ -547,7 +600,8 @@
       document.getElementById('hp-bar').style.width = `${hpPercent}%`;
       document.getElementById('mp-bar').style.width = `${mpPercent}%`;
 
-      document.getElementById('dungeon-floor').textContent = currentState === STATE.DUNGEON || currentState === STATE.COMBAT ? `Floor ${player.floor}` : 'Town Square';
+      const b = BIOMES[player.biome];
+      document.getElementById('dungeon-floor').textContent = (currentState === STATE.DUNGEON || currentState === STATE.COMBAT) ? `${b.name} (F${player.floor})` : 'Town Square';
 
       updateInventoryUI();
       updateQuestUI();
@@ -709,13 +763,38 @@
     }
 
     // --- TOWN HUB ---
+    function selectBiome(index) {
+      player.biome = index;
+      player.floor = 1;
+      logMsg(`🗺️ Selected Biome: ${BIOMES[player.biome].icon} ${BIOMES[player.biome].name} (Hazard: ${BIOMES[player.biome].hazardIcon} ${BIOMES[player.biome].hazard})`, 'system');
+      renderTown();
+      updateUI();
+    }
+
     function renderTown() {
+      const b = BIOMES[player.biome];
       document.getElementById('location-title').textContent = '🏰 Oakhaven Town Square';
-      document.getElementById('location-desc').textContent = 'The sanctuary town at the foot of the Obsidian Spire. Rest up, upgrade gear, and prepare for battle.';
+      document.getElementById('location-desc').textContent = 'The sanctuary town at the foot of the dungeon biomes. Choose your destination, rest, or prepare for battle.';
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="margin-top:6px; background:#181825; padding:12px; border-radius:8px; border:1px solid #313244;">
+          <h3 style="color:#cba6f7; font-size:0.95rem; margin-bottom:8px;">🗺️ Select Dungeon Biome:</h3>
+          <div class="class-grid">
+            ${BIOMES.map((biomeObj, idx) => `
+              <div class="class-card ${player.biome === idx ? 'selected' : ''}" onclick="selectBiome(${idx})">
+                <h3>${biomeObj.icon} ${biomeObj.name}</h3>
+                <p style="font-size:0.75rem;">${biomeObj.desc}</p>
+                <div style="font-size:0.75rem; color:#fab387; font-weight:600; margin-top:4px;">Hazard: ${biomeObj.hazardIcon} ${biomeObj.hazard}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
 
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
-        <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter Obsidian Spire</button>
+        <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
         <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
@@ -820,8 +899,9 @@
 
     // --- DUNGEON EXPLORATION ---
     function renderDungeon() {
-      document.getElementById('location-title').textContent = `💀 Obsidian Spire - Floor ${player.floor}`;
-      document.getElementById('location-desc').textContent = 'The air is cold and thick with ancient malevolence. Choose your next step carefully into the unknown.';
+      const b = BIOMES[player.biome];
+      document.getElementById('location-title').textContent = `${b.icon} ${b.name} - Floor ${player.floor}`;
+      document.getElementById('location-desc').textContent = `${b.desc} Ambient Hazard: ${b.hazardIcon} ${b.hazard}!`;
 
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
@@ -832,23 +912,48 @@
     }
 
     function nextFloor() {
+      const b = BIOMES[player.biome];
       player.floor++;
-      logMsg(`You descend deeper into Floor ${player.floor} of the Obsidian Spire...`, 'system');
+      logMsg(`You descend deeper into Floor ${player.floor} of ${b.name}...`, 'system');
       updateUI();
       renderDungeon();
     }
 
+    function triggerHazard() {
+      const b = BIOMES[player.biome];
+      let dmg = Math.floor(6 + player.floor * 2 + Math.random() * 5);
+      player.hp -= dmg;
+      if (b.id === 'mines') {
+        logMsg(`🪨 CAVE-IN HAZARD! Rocks collapse from the mine roof! Took ${dmg} physical damage!`, 'warning');
+      } else if (b.id === 'catacombs') {
+        logMsg(`☠️ POISON FOG HAZARD! Toxic miasma bursts from crypt walls! Took ${dmg} poison damage!`, 'warning');
+      } else if (b.id === 'spire') {
+        logMsg(`🔥 LAVA BURST HAZARD! Scorching magma geysers shoot up! Took ${dmg} fire damage!`, 'warning');
+      }
+
+      if (player.hp <= 0) {
+        player.hp = 0;
+        updateUI();
+        setGameState(STATE.GAME_OVER);
+        return;
+      }
+      updateUI();
+    }
+
     function exploreNextRoom() {
       const roll = Math.random();
-      if (roll < 0.65) {
+      if (roll < 0.50) {
         // Combat Encounter
         startCombat();
-      } else if (roll < 0.85) {
+      } else if (roll < 0.70) {
         // Treasure Chest
         const goldFound = Math.floor(Math.random() * 25 + 15 * player.floor);
         player.gold += goldFound;
-        logMsg(`✨ You discovered a dusty treasure chest! Found ${goldFound} Gold!`, 'loot');
+        logMsg(`✨ You discovered a dusty treasure chest in ${BIOMES[player.biome].name}! Found ${goldFound} Gold!`, 'loot');
         updateUI();
+      } else if (roll < 0.85) {
+        // Environmental Hazard Trigger
+        triggerHazard();
       } else {
         // Mysterious Shrine
         if (Math.random() < 0.5) {
@@ -863,23 +968,16 @@
     }
 
     // --- TURN BASED COMBAT ENGINE ---
-    const MONSTERS = [
-      { name: 'Sewer Rat', hp: 20, str: 6, def: 2, xp: 20, gold: 10 },
-      { name: 'Cave Goblin', hp: 35, str: 9, def: 4, xp: 35, gold: 18 },
-      { name: 'Skeleton Warrior', hp: 45, str: 12, def: 6, xp: 50, gold: 25 },
-      { name: 'Dark Cultist', hp: 55, str: 15, def: 5, xp: 65, gold: 35 },
-      { name: 'Shadow Beast', hp: 75, str: 18, def: 8, xp: 90, gold: 50 }
-    ];
-
     function startCombat() {
+      const b = BIOMES[player.biome];
       let baseM;
       if (player.floor === 5) {
-        baseM = { name: '👑 Goblin King (Boss)', hp: 120, str: 22, def: 10, xp: 250, gold: 150 };
+        baseM = b.boss;
       } else if (player.floor >= 10) {
         baseM = { name: '🐲 Obsidian Dragon (Final Boss)', hp: 250, str: 32, def: 18, xp: 600, gold: 500 };
       } else {
-        const idx = Math.min(MONSTERS.length - 1, Math.floor(Math.random() * MONSTERS.length));
-        baseM = MONSTERS[idx];
+        const idx = Math.floor(Math.random() * b.monsters.length);
+        baseM = b.monsters[idx];
       }
 
       // Scale with floor
@@ -894,7 +992,7 @@
         gold: Math.floor(baseM.gold * scale)
       };
 
-      logMsg(`⚠️ An enemy appears! A hostile ${currentEnemy.name} (HP: ${currentEnemy.hp}) blocks your path!`, 'combat');
+      logMsg(`⚠️ An enemy appears in ${b.name}! A hostile ${currentEnemy.name} (HP: ${currentEnemy.hp}) blocks your path!`, 'combat');
       setGameState(STATE.COMBAT);
     }
 
@@ -1014,6 +1112,14 @@
 
         player.hp -= enemyDmg;
         logMsg(`💥 ${currentEnemy.name} hits you for ${enemyDmg} damage!`, 'combat');
+
+        // Environmental Hazard Ambient Tick during Combat (20% chance)
+        if (Math.random() < 0.20 && player.hp > 0) {
+          const b = BIOMES[player.biome];
+          const hDmg = Math.floor(3 + player.floor * 1.5);
+          player.hp = Math.max(0, player.hp - hDmg);
+          logMsg(`⚠️ ${b.hazardIcon} ${b.hazard} Ambient Hazard! ${b.name} environment deals ${hDmg} damage!`, 'warning');
+        }
 
         if (player.hp <= 0) {
           player.hp = 0;
