@@ -192,7 +192,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KChess     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Freeze and Undo powerups. |
 | KBreakout  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 10 layouts, added Sticky and Laser power-ups. |
 | K2048      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 30 stages, added Rotate and Upgrade Power-Ups. |
-| KSudoku    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KSudoku    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Fog mechanic, Rush Mode, and Shield powerup. |
 | KAsteroids | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KFreecell  | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KConnect4  | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
@@ -220,6 +220,8 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KChess (Expanded Campaign to 15 stages, added Freeze and Undo powerups to both EXE and HTML)
 - [x] KBreakout (Expanded Campaign to 10 layouts, added Sticky Paddle and Laser Paddle powerups, and fixed main.c rendering bugs to both EXE and HTML)
 - [x] K2048 (Expanded Campaign to 30 stages, added Rotate and Upgrade Power-Ups, and mapped Undo in C version to both EXE and HTML)
+- [x] KSudoku (Expanded Campaign to 15 stages, added Fog mechanic, Rush Mode, and Shield powerup to both EXE and HTML)
+
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)

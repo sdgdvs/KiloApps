@@ -28,19 +28,22 @@ int fixed[9][9];
 int sel_r = -1, sel_c = -1;
 int error_cells[9][9];
 int notes[9][9][10];
+int fog_cells[9][9];
 int notesMode = 0;
-int elapsedTime = 0;
+int elapsedTime = 0; // In Rush mode, countdown from 180
 int score = 0;
 int awarded[9][9];
 int timerActive = 0;
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic;
+
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnRush;
 HFONT hFont, hFontSmall;
 
 typedef struct {
     int theme;
     int highlightSame;
+    int soundEnabled;
 } Prefs;
-Prefs prefs = {0, 1};
+Prefs prefs = {0, 1, 1};
 
 void LoadPrefs() {
     FILE *f = fopen("ksudoku_prefs.dat", "rb");
@@ -49,6 +52,23 @@ void LoadPrefs() {
 void SavePrefs() {
     FILE *f = fopen("ksudoku_prefs.dat", "wb");
     if(f) { fwrite(&prefs, sizeof(Prefs), 1, f); fclose(f); }
+}
+
+void PlaySudokuSound(int soundType) {
+    if (!prefs.soundEnabled) return;
+    switch(soundType) {
+        case 1: Beep(523, 20); break;  // Select cell
+        case 2: Beep(659, 30); break;  // Input note/number
+        case 3: Beep(784, 50); break;  // Correct placement
+        case 4: Beep(220, 150); break; // Error strike
+        case 5: Beep(1047, 80); break; // Wand / Shield powerup
+        case 6:                        // Win fanfare
+            Beep(523, 70); Beep(659, 70); Beep(784, 70); Beep(1047, 140);
+            break;
+        case 7:                        // Game Over / Fail
+            Beep(300, 90); Beep(250, 90); Beep(200, 180);
+            break;
+    }
 }
 
 typedef struct {
@@ -105,6 +125,7 @@ void Undo() {
             }
         }
         score = undoStack[undoCount].score;
+        PlaySudokuSound(1);
     }
 }
 
@@ -132,6 +153,7 @@ void Redo() {
             }
         }
         score = redoStack[redoCount].score;
+        PlaySudokuSound(1);
     }
 }
 
@@ -142,17 +164,35 @@ typedef struct {
     int bestScore;
 } DifficultyStats;
 
-DifficultyStats stats[3] = {0}; // 0: Easy (30), 1: Medium (40), 2: Hard (50)
+DifficultyStats stats[4] = {0}; // 0: Easy, 1: Medium, 2: Hard, 3: Rush Mode
 int currentDiffIdx = 1;
 int gameActive = 0;
+
+int dailyStreak = 0;
+int lastDailyDate = 0;
+int isDailyGame = 0;
+
+int isCampaignMode = 0;
+int campaignStage = 0; // 0 to 14 (15 stages total)
+int magicWands = 3;
+int shields = 1;
+int shieldActive = 0;
+int strikes = 0;
+int maxCampaignStage = 0;
+int totalWandsUsed = 0;
+int totalShieldsUsed = 0;
+
+int isRushMode = 0;
 
 void LoadStats() {
     FILE *f = fopen("ksudoku_stats.dat", "rb");
     if(f) {
-        fread(stats, sizeof(DifficultyStats), 3, f);
+        fread(stats, sizeof(DifficultyStats), 4, f);
+        fread(&totalWandsUsed, sizeof(int), 1, f);
+        fread(&totalShieldsUsed, sizeof(int), 1, f);
         fclose(f);
     } else {
-        for(int i=0; i<3; i++) {
+        for(int i=0; i<4; i++) {
             stats[i].played = 0;
             stats[i].won = 0;
             stats[i].bestTime = -1;
@@ -164,20 +204,12 @@ void LoadStats() {
 void SaveStats() {
     FILE *f = fopen("ksudoku_stats.dat", "wb");
     if(f) {
-        fwrite(stats, sizeof(DifficultyStats), 3, f);
+        fwrite(stats, sizeof(DifficultyStats), 4, f);
+        fwrite(&totalWandsUsed, sizeof(int), 1, f);
+        fwrite(&totalShieldsUsed, sizeof(int), 1, f);
         fclose(f);
     }
 }
-
-int dailyStreak = 0;
-int lastDailyDate = 0;
-int isDailyGame = 0;
-
-int isCampaignMode = 0;
-int campaignStage = 0;
-int magicWands = 3;
-int strikes = 0;
-int maxCampaignStage = 0;
 
 void LoadCampaignStats() {
     FILE *f = fopen("ksudoku_camp.dat", "rb");
@@ -212,6 +244,7 @@ typedef struct {
     int solution[9][9];
     int fixed[9][9];
     int notes[9][9][10];
+    int fog_cells[9][9];
     int elapsedTime;
     int score;
     int awarded[9][9];
@@ -221,7 +254,10 @@ typedef struct {
     int isCampaignMode;
     int campaignStage;
     int magicWands;
+    int shields;
+    int shieldActive;
     int strikes;
+    int isRushMode;
 } GameState;
 
 int LoadGameState() {
@@ -235,6 +271,7 @@ int LoadGameState() {
                 solution[r][c] = state.solution[r][c];
                 fixed[r][c] = state.fixed[r][c];
                 awarded[r][c] = state.awarded[r][c];
+                fog_cells[r][c] = state.fog_cells[r][c];
                 error_cells[r][c] = 0;
                 for(int i=0; i<10; i++) notes[r][c][i] = state.notes[r][c][i];
             }
@@ -247,7 +284,10 @@ int LoadGameState() {
         isCampaignMode = state.isCampaignMode;
         campaignStage = state.campaignStage;
         magicWands = state.magicWands;
+        shields = state.shields;
+        shieldActive = state.shieldActive;
         strikes = state.strikes;
+        isRushMode = state.isRushMode;
         timerActive = 1;
         undoCount = 0;
         redoCount = 0;
@@ -272,6 +312,7 @@ void SaveGameState() {
                 state.solution[r][c] = solution[r][c];
                 state.fixed[r][c] = fixed[r][c];
                 state.awarded[r][c] = awarded[r][c];
+                state.fog_cells[r][c] = fog_cells[r][c];
                 for(int i=0; i<10; i++) state.notes[r][c][i] = notes[r][c][i];
             }
         }
@@ -283,7 +324,10 @@ void SaveGameState() {
         state.isCampaignMode = isCampaignMode;
         state.campaignStage = campaignStage;
         state.magicWands = magicWands;
+        state.shields = shields;
+        state.shieldActive = shieldActive;
         state.strikes = strikes;
+        state.isRushMode = isRushMode;
         fwrite(&state, sizeof(GameState), 1, f);
         fclose(f);
     }
@@ -298,8 +342,40 @@ void ShuffleArray(int* arr, int len) {
     }
 }
 
-void GenerateBoard(int removal, int isDaily) {
+void ClearFogAround(int r, int c) {
+    fog_cells[r][c] = 0;
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+    for(int i=0; i<4; i++) {
+        int nr = r + dr[i];
+        int nc = c + dc[i];
+        if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) fog_cells[nr][nc] = 0;
+    }
+    int br = (r/3)*3, bc = (c/3)*3;
+    for(int i=0; i<3; i++) {
+        for(int j=0; j<3; j++) {
+            fog_cells[br+i][bc+j] = 0;
+        }
+    }
+}
+
+void UpdatePowerupButtons() {
+    if (hBtnMagic) {
+        char buf[32];
+        sprintf(buf, "Wand (%d)", magicWands);
+        SetWindowTextA(hBtnMagic, buf);
+    }
+    if (hBtnShield) {
+        char buf[32];
+        if (shieldActive) sprintf(buf, "Shield ON");
+        else sprintf(buf, "Shield (%d)", shields);
+        SetWindowTextA(hBtnShield, buf);
+    }
+}
+
+void GenerateBoardEx(int removal, int isDaily, int fogCount, int isRush) {
     isDailyGame = isDaily;
+    isRushMode = isRush;
     if (isDaily) {
         time_t t = time(NULL);
         struct tm* tm_info = localtime(&t);
@@ -350,6 +426,7 @@ void GenerateBoard(int removal, int isDaily) {
             board[r][c] = solution[r][c];
             fixed[r][c] = 1;
             error_cells[r][c] = 0;
+            fog_cells[r][c] = 0;
         }
     }
     
@@ -363,19 +440,80 @@ void GenerateBoard(int removal, int isDaily) {
         }
     }
     
+    // Apply fog cells among empty cells
+    if (fogCount > 0) {
+        int emptyCells[81][2];
+        int numEmpty = 0;
+        for(int r=0; r<9; r++) {
+            for(int c=0; c<9; c++) {
+                if(board[r][c] == 0) {
+                    emptyCells[numEmpty][0] = r;
+                    emptyCells[numEmpty][1] = c;
+                    numEmpty++;
+                }
+            }
+        }
+        for(int f=0; f<fogCount && numEmpty > 0; f++) {
+            int idx = rand() % numEmpty;
+            fog_cells[emptyCells[idx][0]][emptyCells[idx][1]] = 1;
+            emptyCells[idx][0] = emptyCells[numEmpty-1][0];
+            emptyCells[idx][1] = emptyCells[numEmpty-1][1];
+            numEmpty--;
+        }
+    }
+    
     for(int r=0; r<9; r++) {
         for(int c=0; c<9; c++) {
-            for(int i=0; i<10; i++) {
-                notes[r][c][i] = 0;
-            }
+            for(int i=0; i<10; i++) notes[r][c][i] = 0;
             awarded[r][c] = 0;
         }
     }
-    elapsedTime = 0;
+    
+    if (isRushMode) {
+        elapsedTime = 180; // 180s countdown timer
+    } else {
+        elapsedTime = 0;
+    }
+    
     score = 0;
     timerActive = 1;
     gameActive = 1;
+    UpdatePowerupButtons();
     SaveGameState();
+}
+
+void StartCampaignStage(HWND hwnd, int stage) {
+    isCampaignMode = 1;
+    isRushMode = 0;
+    campaignStage = stage;
+    if (campaignStage > 14) campaignStage = 14;
+    magicWands = 3;
+    shields = 1;
+    shieldActive = 0;
+    strikes = 0;
+    
+    int campaignRems[15] = {25, 30, 35, 40, 45, 48, 51, 54, 57, 60, 63, 65, 67, 69, 72};
+    int campaignFogCount[15] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8};
+    
+    GenerateBoardEx(campaignRems[campaignStage], 0, campaignFogCount[campaignStage], 0);
+    sel_r = -1; sel_c = -1;
+    UpdatePowerupButtons();
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void StartRushMode(HWND hwnd) {
+    isCampaignMode = 0;
+    isRushMode = 1;
+    shields = 1;
+    shieldActive = 0;
+    magicWands = 1;
+    currentDiffIdx = 3;
+    stats[3].played++;
+    SaveStats();
+    GenerateBoardEx(45, 0, 0, 1);
+    sel_r = -1; sel_c = -1;
+    UpdatePowerupButtons();
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 void CheckWin(HWND hwnd) {
@@ -384,6 +522,22 @@ void CheckWin(HWND hwnd) {
             if(board[r][c] != solution[r][c]) return;
             
     timerActive = 0;
+    PlaySudokuSound(6);
+    
+    if (isRushMode) {
+        score += elapsedTime * 10 + 500; // Completion bonus for Rush
+        stats[3].won++;
+        if (stats[3].bestTime == -1 || elapsedTime > stats[3].bestTime) stats[3].bestTime = elapsedTime; // For Rush, higher time left is better
+        if (score > stats[3].bestScore) stats[3].bestScore = score;
+        SaveStats();
+        gameActive = 0;
+        SaveGameState();
+        char msg[256];
+        sprintf(msg, "RUSH MODE VICTORY!\nTime Remaining: %02d:%02d\nFinal Score: %d", elapsedTime/60, elapsedTime%60, score);
+        MessageBoxA(hwnd, msg, "KSudoku Rush", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    
     int timeBonus = 3000 - elapsedTime * 2;
     if(timeBonus < 0) timeBonus = 0;
     score += timeBonus;
@@ -391,51 +545,49 @@ void CheckWin(HWND hwnd) {
     if (gameActive) {
         if (isCampaignMode) {
             if (campaignStage > maxCampaignStage) { maxCampaignStage = campaignStage; SaveCampaignStats(); }
-            if (campaignStage < 9) {
+            if (campaignStage < 14) {
                 char msg[256];
-                sprintf(msg, "Stage %d Clear!\nTime: %02d:%02d\nScore: %d\nReady for next stage?", campaignStage+1, elapsedTime/60, elapsedTime%60, score);
-                MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
+                sprintf(msg, "Stage %d Clear!\nTime: %02d:%02d\nScore: %d\nReady for Stage %d?", campaignStage+1, elapsedTime/60, elapsedTime%60, score, campaignStage+2);
+                MessageBoxA(hwnd, msg, "KSudoku Campaign", MB_OK);
                 int keepScore = score;
-                int rems[] = {25, 30, 35, 40, 45, 48, 51, 54, 57, 60};
                 campaignStage++;
-                magicWands = 3;
-                strikes = 0;
-                GenerateBoard(rems[campaignStage], 0);
+                StartCampaignStage(hwnd, campaignStage);
                 score = keepScore;
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
                 return;
             } else {
                 char msg[256];
-                sprintf(msg, "Campaign Complete!!\nTime: %02d:%02d\nScore: %d", elapsedTime/60, elapsedTime%60, score);
-                MessageBoxA(hwnd, msg, "KSudoku", MB_OK);
+                sprintf(msg, "CONGRATULATIONS!!\nYou completed all 15 Stages of the KSudoku Campaign!\nFinal Score: %d", score);
+                MessageBoxA(hwnd, msg, "Campaign Complete!", MB_OK);
                 gameActive = 0;
                 SaveGameState();
                 return;
             }
         } else {
             gameActive = 0;
-            SaveGameState(); // clear save
+            SaveGameState();
             if (isDailyGame) {
-            time_t t = time(NULL);
-            struct tm* tm_info = localtime(&t);
-            int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
-            if (lastDailyDate != todayStr) {
-                t -= 86400; // roughly yesterday
-                struct tm* ytm = localtime(&t);
-                int yestStr = (ytm->tm_year + 1900) * 10000 + (ytm->tm_mon + 1) * 100 + ytm->tm_mday;
-                if (lastDailyDate == yestStr) dailyStreak++;
-                else dailyStreak = 1;
-                lastDailyDate = todayStr;
-                SaveDailyStats();
+                time_t t = time(NULL);
+                struct tm* tm_info = localtime(&t);
+                int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
+                if (lastDailyDate != todayStr) {
+                    t -= 86400;
+                    struct tm* ytm = localtime(&t);
+                    int yestStr = (ytm->tm_year + 1900) * 10000 + (ytm->tm_mon + 1) * 100 + ytm->tm_mday;
+                    if (lastDailyDate == yestStr) dailyStreak++;
+                    else dailyStreak = 1;
+                    lastDailyDate = todayStr;
+                    SaveDailyStats();
+                }
+            } else {
+                stats[currentDiffIdx].won++;
+                if (stats[currentDiffIdx].bestTime == -1 || elapsedTime < stats[currentDiffIdx].bestTime) 
+                    stats[currentDiffIdx].bestTime = elapsedTime;
+                if (score > stats[currentDiffIdx].bestScore) 
+                    stats[currentDiffIdx].bestScore = score;
+                SaveStats();
             }
-        } else {
-            stats[currentDiffIdx].won++;
-            if (stats[currentDiffIdx].bestTime == -1 || elapsedTime < stats[currentDiffIdx].bestTime) 
-                stats[currentDiffIdx].bestTime = elapsedTime;
-            if (score > stats[currentDiffIdx].bestScore) 
-                stats[currentDiffIdx].bestScore = score;
-            SaveStats();
         }
     }
     
@@ -458,13 +610,17 @@ LRESULT CALLBACK SettingsWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
             CreateWindowA("BUTTON", "Highlight Same Numbers", WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, 10, 40, 180, 20, hwnd, (HMENU)2, NULL, NULL);
             SendDlgItemMessageA(hwnd, 2, BM_SETCHECK, prefs.highlightSame ? BST_CHECKED : BST_UNCHECKED, 0);
             
-            CreateWindowA("BUTTON", "Save & Close", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 50, 70, 100, 30, hwnd, (HMENU)3, NULL, NULL);
+            CreateWindowA("BUTTON", "Sound Effects", WS_CHILD|WS_VISIBLE|BS_AUTOCHECKBOX, 10, 65, 180, 20, hwnd, (HMENU)4, NULL, NULL);
+            SendDlgItemMessageA(hwnd, 4, BM_SETCHECK, prefs.soundEnabled ? BST_CHECKED : BST_UNCHECKED, 0);
+            
+            CreateWindowA("BUTTON", "Save & Close", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 50, 95, 100, 30, hwnd, (HMENU)3, NULL, NULL);
             break;
         }
         case WM_COMMAND:
             if(LOWORD(wParam) == 3) {
                 prefs.theme = SendDlgItemMessageA(hwnd, 1, CB_GETCURSEL, 0, 0);
                 prefs.highlightSame = SendDlgItemMessageA(hwnd, 2, BM_GETCHECK, 0, 0) == BST_CHECKED;
+                prefs.soundEnabled = SendDlgItemMessageA(hwnd, 4, BM_GETCHECK, 0, 0) == BST_CHECKED;
                 SavePrefs();
                 HWND hParent = GetWindow(hwnd, GW_OWNER);
                 InvalidateRect(hParent, NULL, TRUE);
@@ -491,33 +647,51 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentDiffIdx = 1;
                 stats[currentDiffIdx].played++;
                 SaveStats();
-                GenerateBoard(40, 0);
+                GenerateBoardEx(40, 0, 0, 0);
             }
-            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 75, 100, hwnd, (HMENU)4, NULL, NULL);
+            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 8, 70, 100, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
-            SendMessageA(hComboDifficulty, CB_SETCURSEL, currentDiffIdx, 0);
-            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 10, 45, 30, hwnd, (HMENU)1, NULL, NULL);
-            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 10, 45, 30, hwnd, (HMENU)10, NULL, NULL);
-            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 10, 45, 30, hwnd, (HMENU)6, NULL, NULL);
-            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 240, 10, 75, 30, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 320, 10, 55, 30, hwnd, (HMENU)2, NULL, NULL);
-            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 380, 10, 45, 30, hwnd, (HMENU)5, NULL, NULL);
-            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 50, 30, hwnd, (HMENU)7, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 65, 45, 50, 30, hwnd, (HMENU)8, NULL, NULL);
-            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 120, 45, 60, 30, hwnd, (HMENU)9, NULL, NULL);
-            hBtnAutoFill = CreateWindowA("BUTTON", "Auto", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 45, 45, 30, hwnd, (HMENU)11, NULL, NULL);
-            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 235, 45, 75, 30, hwnd, (HMENU)13, NULL, NULL);
-            hBtnMagic = CreateWindowA("BUTTON", "Wand", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 45, 55, 30, hwnd, (HMENU)12, NULL, NULL);
+            SendMessageA(hComboDifficulty, CB_SETCURSEL, currentDiffIdx < 3 ? currentDiffIdx : 1, 0);
+            
+            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 85, 8, 40, 28, hwnd, (HMENU)1, NULL, NULL);
+            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 8, 65, 28, hwnd, (HMENU)13, NULL, NULL);
+            hBtnRush = CreateWindowA("BUTTON", "Rush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 8, 45, 28, hwnd, (HMENU)14, NULL, NULL);
+            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 8, 40, 28, hwnd, (HMENU)10, NULL, NULL);
+            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 295, 8, 45, 28, hwnd, (HMENU)6, NULL, NULL);
+            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 8, 55, 28, hwnd, (HMENU)9, NULL, NULL);
+            
+            hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 40, 65, 28, hwnd, (HMENU)3, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 40, 55, 28, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 40, 40, 28, hwnd, (HMENU)5, NULL, NULL);
+            hBtnMagic = CreateWindowA("BUTTON", "Wand (3)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 40, 55, 28, hwnd, (HMENU)12, NULL, NULL);
+            hBtnShield = CreateWindowA("BUTTON", "Shield (1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 40, 55, 28, hwnd, (HMENU)15, NULL, NULL);
+            hBtnAutoFill = CreateWindowA("BUTTON", "Auto", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 40, 40, 28, hwnd, (HMENU)11, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 40, 40, 28, hwnd, (HMENU)7, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 40, 40, 28, hwnd, (HMENU)8, NULL, NULL);
+
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
+            UpdatePowerupButtons();
             break;
         }
         case WM_TIMER: {
             if(timerActive) {
-                elapsedTime++;
+                if (isRushMode) {
+                    elapsedTime--;
+                    if (elapsedTime <= 0) {
+                        elapsedTime = 0;
+                        timerActive = 0;
+                        gameActive = 0;
+                        PlaySudokuSound(7);
+                        SaveGameState();
+                        MessageBoxA(hwnd, "Time's Up! Rush Mode Failed.", "Rush Mode", MB_OK | MB_ICONWARNING);
+                    }
+                } else {
+                    elapsedTime++;
+                }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
@@ -533,12 +707,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if(sel == 2) { removal = 50; currentDiffIdx = 2; }
                 stats[currentDiffIdx].played++;
                 SaveStats();
-                undoCount = 0;
-                redoCount = 0;
-                isCampaignMode = 0;
-                GenerateBoard(removal, 0);
+                undoCount = 0; redoCount = 0;
+                isCampaignMode = 0; isRushMode = 0;
+                GenerateBoardEx(removal, 0, 0, 0);
                 sel_r = -1; sel_c = -1;
+                PlaySudokuSound(1);
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == 14) { // Rush Mode
+                StartRushMode(hwnd);
             } else if (LOWORD(wParam) == 10) { // Daily Challenge
                 time_t t = time(NULL);
                 struct tm* tm_info = localtime(&t);
@@ -547,11 +723,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     MessageBoxA(hwnd, "You have already completed today's challenge!", "Daily Challenge", MB_OK | MB_ICONINFORMATION);
                 } else {
                     currentDiffIdx = 1;
-                    undoCount = 0;
-                    redoCount = 0;
-                    isCampaignMode = 0;
-                    GenerateBoard(40, 1);
+                    undoCount = 0; redoCount = 0;
+                    isCampaignMode = 0; isRushMode = 0;
+                    GenerateBoardEx(40, 1, 0, 0);
                     sel_r = -1; sel_c = -1;
+                    PlaySudokuSound(1);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == 6) { // Stats
@@ -559,23 +735,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 time_t t = time(NULL);
                 struct tm* tm_info = localtime(&t);
                 int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
-                sprintf(msg, "[Daily Challenge]\nStreak: %d\nCompleted Today: %s\n\n", dailyStreak, (lastDailyDate == todayStr) ? "Yes" : "No");
+                sprintf(msg, "[Daily Challenge & Progress]\nDaily Streak: %d | Completed Today: %s\nCampaign Max Stage: %d / 15\nWands Used: %d | Shields Used: %d\n\n",
+                        dailyStreak, (lastDailyDate == todayStr) ? "Yes" : "No", maxCampaignStage + 1, totalWandsUsed, totalShieldsUsed);
 
-                const char* diffs[] = {"Easy", "Medium", "Hard"};
-                for(int i=0; i<3; i++) {
+                const char* diffs[] = {"Easy", "Medium", "Hard", "Rush Mode"};
+                for(int i=0; i<4; i++) {
                     int rate = stats[i].played > 0 ? (stats[i].won * 100) / stats[i].played : 0;
                     char bt[32];
                     if(stats[i].bestTime == -1) sprintf(bt, "--:--");
                     else sprintf(bt, "%02d:%02d", stats[i].bestTime/60, stats[i].bestTime%60);
                     char buf[128];
-                    sprintf(buf, "[%s]\nPlayed: %d | Won: %d | Win Rate: %d%%\nBest Time: %s | Best Score: %d\n\n", 
-                            diffs[i], stats[i].played, stats[i].won, rate, bt, stats[i].bestScore);
+                    sprintf(buf, "[%s]\nPlayed: %d | Won: %d | Win Rate: %d%%\nBest %s: %s | Best Score: %d\n\n", 
+                            diffs[i], stats[i].played, stats[i].won, rate, i == 3 ? "Time Left" : "Time", bt, stats[i].bestScore);
                     strcat(msg, buf);
                 }
                 MessageBoxA(hwnd, msg, "Statistics", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == 3) { // Toggle Notes
                 notesMode = !notesMode;
                 SetWindowTextA(hBtnNotes, notesMode ? "Notes: ON" : "Notes: OFF");
+                PlaySudokuSound(1);
             } else if (LOWORD(wParam) == 2) { // Validate
                 int errorCount = 0;
                 for(int r=0; r<9; r++) {
@@ -589,8 +767,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 if (errorCount > 0) {
-                    score -= errorCount * 20;
-                    if (score < 0) score = 0;
+                    score = max(0, score - errorCount * 20);
+                    PlaySudokuSound(4);
+                } else {
+                    PlaySudokuSound(3);
                 }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -598,11 +778,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (sel_r >= 0 && sel_c >= 0 && !fixed[sel_r][sel_c]) {
                     if (board[sel_r][sel_c] != solution[sel_r][sel_c]) {
                         PushState();
-                        score -= 150;
-                        if (score < 0) score = 0;
+                        score = max(0, score - 150);
                         board[sel_r][sel_c] = solution[sel_r][sel_c];
                         awarded[sel_r][sel_c] = 1;
                         error_cells[sel_r][sel_c] = 0;
+                        ClearFogAround(sel_r, sel_c);
+                        PlaySudokuSound(3);
                         CheckWin(hwnd);
                     }
                 }
@@ -621,7 +802,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for(int r=0; r<9; r++) {
                     for(int c=0; c<9; c++) {
                         if(board[r][c] == 0) {
-                            for(int i=1; i<=10; i++) notes[r][c][i] = 0;
+                            for(int i=1; i<=9; i++) notes[r][c][i] = 0;
                             for(int num=1; num<=9; num++) {
                                 int invalid = 0;
                                 for(int i=0; i<9; i++) {
@@ -634,20 +815,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         if((br+i != r || bc+j != c) && board[br+i][bc+j] == num) invalid = 1;
                                     }
                                 }
-                                if(!invalid) {
-                                    notes[r][c][num] = 1;
-                                }
+                                if(!invalid) notes[r][c][num] = 1;
                             }
                         }
                     }
                 }
+                PlaySudokuSound(2);
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 13) { // Campaign
-                StartCampaign(hwnd);
+                StartCampaignStage(hwnd, maxCampaignStage > 14 ? 14 : maxCampaignStage);
             } else if (LOWORD(wParam) == 12) { // Magic Wand
-                if (isCampaignMode && magicWands > 0) {
-                    // Find an empty cell or incorrect cell
+                if (magicWands > 0) {
                     int emptyCount = 0;
                     for(int r=0; r<9; r++)
                         for(int c=0; c<9; c++)
@@ -663,10 +842,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         board[r][c] = solution[r][c];
                                         awarded[r][c] = 1;
                                         error_cells[r][c] = 0;
+                                        ClearFogAround(r, c);
                                         magicWands--;
+                                        totalWandsUsed++;
                                         score += 50;
+                                        PlaySudokuSound(5);
+                                        UpdatePowerupButtons();
                                         CheckWin(hwnd);
                                         SaveGameState();
+                                        SaveStats();
                                         InvalidateRect(hwnd, NULL, TRUE);
                                         break;
                                     }
@@ -676,17 +860,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
+            } else if (LOWORD(wParam) == 15) { // Shield Power-up
+                if (shields > 0 && !shieldActive) {
+                    shields--;
+                    shieldActive = 1;
+                    totalShieldsUsed++;
+                    PlaySudokuSound(5);
+                    UpdatePowerupButtons();
+                    SaveStats();
+                    SaveGameState();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (LOWORD(wParam) == 9) { // Settings
                 if(!hSettingsWnd) {
                     RECT rc; GetWindowRect(hwnd, &rc);
                     hSettingsWnd = CreateWindowA("SettingsClass", "Settings", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU,
-                        rc.left + 50, rc.top + 50, 220, 150, hwnd, NULL, GetModuleHandle(NULL), NULL);
+                        rc.left + 50, rc.top + 50, 220, 170, hwnd, NULL, GetModuleHandle(NULL), NULL);
                     ShowWindow(hSettingsWnd, SW_SHOW);
                 }
                 SetFocus(hSettingsWnd);
-                return 0; // Don't focus main yet
+                return 0;
             }
-            // Set focus back to main window so keyboard works
             SetFocus(hwnd);
             break;
         }
@@ -698,6 +892,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if(wParam == VK_LEFT) sel_c = max(0, sel_c - 1);
                 if(wParam == VK_RIGHT) sel_c = min(8, sel_c + 1);
             }
+            PlaySudokuSound(1);
+            
             if(wParam >= '1' && wParam <= '9') {
                 if(!fixed[sel_r][sel_c]) {
                     int num = wParam - '0';
@@ -705,6 +901,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (board[sel_r][sel_c] == 0) {
                             PushState();
                             notes[sel_r][sel_c][num] = !notes[sel_r][sel_c][num];
+                            PlaySudokuSound(2);
                         }
                     } else {
                         if (board[sel_r][sel_c] != num) {
@@ -722,24 +919,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                             
                             if(invalid) {
-                                MessageBeep(MB_ICONWARNING);
-                                score -= 50;
-                                if (score < 0) score = 0;
-                                if (isCampaignMode) {
-                                    strikes++;
-                                    if (strikes >= 3) {
-                                        MessageBoxA(hwnd, "3 Strikes! Game Over. Restarting stage.", "Game Over", MB_OK);
-                                        StartCampaign(hwnd);
-                                        return 0;
+                                if (shieldActive) {
+                                    shieldActive = 0; // Shield absorbs error!
+                                    UpdatePowerupButtons();
+                                    PlaySudokuSound(5);
+                                } else {
+                                    PlaySudokuSound(4);
+                                    score = max(0, score - 50);
+                                    if (isRushMode) {
+                                        elapsedTime = max(0, elapsedTime - 15);
+                                    }
+                                    if (isCampaignMode) {
+                                        strikes++;
+                                        if (strikes >= 3) {
+                                            PlaySudokuSound(7);
+                                            MessageBoxA(hwnd, "3 Strikes! Stage Failed. Restarting stage.", "Game Over", MB_OK);
+                                            StartCampaignStage(hwnd, campaignStage);
+                                            return 0;
+                                        }
                                     }
                                 }
+                            } else {
+                                PlaySudokuSound(3);
                             }
                             board[sel_r][sel_c] = num;
                             error_cells[sel_r][sel_c] = 0;
+                            ClearFogAround(sel_r, sel_c);
+                            
                             if (num == solution[sel_r][sel_c]) {
                                 if (!awarded[sel_r][sel_c]) {
                                     awarded[sel_r][sel_c] = 1;
                                     score += 100;
+                                    if (isRushMode) elapsedTime += 10;
                                 }
                             }
                             CheckWin(hwnd);
@@ -753,12 +964,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         board[sel_r][sel_c] = 0;
                         error_cells[sel_r][sel_c] = 0;
                         for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                        PlaySudokuSound(2);
                     } else {
                         int hasNotes = 0;
                         for(int i=0; i<10; i++) if (notes[sel_r][sel_c][i]) hasNotes = 1;
                         if (hasNotes) {
                             PushState();
                             for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                            PlaySudokuSound(2);
                         }
                     }
                 }
@@ -776,13 +989,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            int start_x = 40, start_y = 80, cell_sz = 40;
+            int start_x = 40, start_y = 75, cell_sz = 40;
             if(x >= start_x && x < start_x + 9*cell_sz && y >= start_y && y < start_y + 9*cell_sz) {
                 sel_c = (x - start_x) / cell_sz;
                 sel_r = (y - start_y) / cell_sz;
+                PlaySudokuSound(1);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Ensure focus is on main window so keyboard works
             SetFocus(hwnd);
             break;
         }
@@ -800,24 +1013,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
+            
             char info[128];
             if (isCampaignMode) {
-                sprintf(info, "Stage: %d/10   Time: %02d:%02d   Score: %d\nStrikes: %d/3   Wands: %d", campaignStage+1, elapsedTime/60, elapsedTime%60, score, strikes, magicWands);
-                TextOutA(hdc, 40, 50, info, strlen(info));
-                // draw second line for strikes
-                char info2[64];
-                sprintf(info2, "Strikes: %d/3   Wands: %d", strikes, magicWands);
-                HFONT oldFnt = (HFONT)SelectObject(hdc, hFontSmall);
-                TextOutA(hdc, 220, 55, info2, strlen(info2));
-                SelectObject(hdc, oldFnt);
+                sprintf(info, "Stage: %d/15   Time: %02d:%02d   Score: %d", campaignStage+1, elapsedTime/60, elapsedTime%60, score);
+                TextOutA(hdc, 40, 48, info, strlen(info));
+            } else if (isRushMode) {
+                sprintf(info, "RUSH MODE   Time Left: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
+                TextOutA(hdc, 40, 48, info, strlen(info));
             } else {
                 sprintf(info, "Time: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
-                TextOutA(hdc, 40, 50, info, strlen(info));
+                TextOutA(hdc, 40, 48, info, strlen(info));
             }
             
-            int start_x = 40, start_y = 80, cell_sz = 40;
+            int start_x = 40, start_y = 75, cell_sz = 40;
             
-            // Determine highlight value
             int highlight_val = 0;
             if(sel_r >= 0 && sel_c >= 0 && board[sel_r][sel_c] != 0) {
                 highlight_val = board[sel_r][sel_c];
@@ -842,7 +1052,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(cellBg);
                     }
                     
-                    if(board[r][c] != 0) {
+                    if (fog_cells[r][c] && board[r][c] == 0) {
+                        // Shrouded / Fog Cell
+                        HFONT oldFnt = (HFONT)SelectObject(hdc, hFont);
+                        SetTextColor(hdc, RGB(148, 163, 184));
+                        RECT textRc = rc;
+                        textRc.top += 2;
+                        DrawTextA(hdc, "?", -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        SelectObject(hdc, oldFnt);
+                    } else if(board[r][c] != 0) {
                         char buf[2];
                         sprintf(buf, "%d", board[r][c]);
                         if(error_cells[r][c]) SetTextColor(hdc, themes[prefs.theme][T_ERR]);
@@ -850,7 +1068,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         else SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
                         
                         RECT textRc = rc;
-                        textRc.top += 2; // Visually center the Arial font
+                        textRc.top += 2;
                         DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     } else {
                         int hasNotes = 0;
@@ -928,7 +1146,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wcs.lpszClassName = "SettingsClass";
     RegisterClassA(&wcs);
     
-    // Calculate required window size
     RECT rc = {0, 0, 440, 480}; 
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX), FALSE);
     
@@ -944,3 +1161,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     return (int)msg.wParam;
 }
+
+void MainEntry() {
+    HINSTANCE hInst = GetModuleHandle(NULL);
+    int ret = WinMain(hInst, NULL, GetCommandLineA(), SW_SHOWDEFAULT);
+    ExitProcess(ret);
+}
+

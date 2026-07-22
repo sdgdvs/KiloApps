@@ -23,6 +23,7 @@
             --cell-bg: rgba(15, 23, 42, 0.6);
             --cell-selected: rgba(59, 130, 246, 0.6);
             --cell-highlight: rgba(59, 130, 246, 0.2);
+            --fog-color: #64748b;
         }
 
         [data-theme="neon-blue"] {
@@ -39,6 +40,7 @@
             --cell-bg: rgba(0, 10, 20, 0.6);
             --cell-selected: rgba(0, 255, 255, 0.5);
             --cell-highlight: rgba(0, 255, 255, 0.2);
+            --fog-color: #008888;
         }
 
         [data-theme="crimson-red"] {
@@ -55,6 +57,7 @@
             --cell-bg: rgba(30, 5, 5, 0.6);
             --cell-selected: rgba(244, 63, 94, 0.5);
             --cell-highlight: rgba(244, 63, 94, 0.2);
+            --fog-color: #991b1b;
         }
 
         body {
@@ -76,7 +79,7 @@
             width: 100%;
             max-width: 600px;
             height: 100%;
-            max-height: 850px;
+            max-height: 870px;
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -85,18 +88,18 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
-            padding: 24px;
+            padding: 20px;
             box-sizing: border-box;
         }
 
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         h1 {
             margin: 0;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 600;
             letter-spacing: -0.025em;
         }
@@ -104,26 +107,29 @@
         .info-bar {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             font-weight: 600;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--accent);
         }
 
         .controls {
             display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-bottom: 12px;
         }
 
         button {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--text-main);
-            padding: 8px 16px;
+            padding: 6px 12px;
             border-radius: 8px;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -140,10 +146,11 @@
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--text-main);
-            padding: 8px;
+            padding: 6px;
             border-radius: 8px;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
+            font-size: 0.85rem;
             outline: none;
         }
 
@@ -165,7 +172,7 @@
             grid-template-rows: repeat(3, 1fr);
             gap: 3px;
             width: 100%;
-            max-width: 400px;
+            max-width: 390px;
             aspect-ratio: 1;
             border: 3px solid var(--text-main);
             background: var(--text-main);
@@ -184,7 +191,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 400;
             cursor: pointer;
             color: var(--accent);
@@ -212,18 +219,24 @@
             color: var(--error);
         }
 
+        .cell.fog {
+            color: var(--fog-color);
+            font-weight: 600;
+            background: rgba(30, 41, 59, 0.9);
+        }
+
         .numpad {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
             width: 100%;
-            max-width: 400px;
-            margin-top: 24px;
+            max-width: 390px;
+            margin-top: 16px;
         }
 
         .numpad button {
-            padding: 12px 0;
-            font-size: 1.25rem;
+            padding: 10px 0;
+            font-size: 1.2rem;
             border-radius: 12px;
             transition: transform 0.1s, background 0.2s;
         }
@@ -295,16 +308,18 @@
             padding: 24px;
             border-radius: 12px;
             border: 1px solid var(--glass-border);
-            width: 80%;
-            max-width: 400px;
+            width: 85%;
+            max-width: 420px;
+            max-height: 80vh;
+            overflow-y: auto;
         }
         .modal-content h2 { margin-top: 0; }
         .modal-close { margin-top: 20px; width: 100%; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; font-size: 0.9rem; }
-        .stat-diff { margin-top: 15px; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; font-weight: bold; color: var(--accent); }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; font-size: 0.85rem; }
+        .stat-diff { margin-top: 12px; border-bottom: 1px solid var(--glass-border); padding-bottom: 4px; font-weight: bold; color: var(--accent); }
         .settings-group { margin-top: 15px; }
         .settings-group label { display: block; margin-bottom: 8px; font-weight: 600; }
-        .settings-group select, .settings-group input[type="checkbox"] { margin-bottom: 15px; }
+        .settings-group select, .settings-group input[type="checkbox"] { margin-bottom: 12px; }
         .settings-group select { width: 100%; }
     </style>
 </head>
@@ -325,18 +340,20 @@
             </select>
             <button id="btn-new">New</button>
             <button id="btn-campaign">Campaign</button>
+            <button id="btn-rush">Rush</button>
             <button id="btn-daily">Daily</button>
             <button id="btn-stats">Stats</button>
             <button id="btn-settings">Settings</button>
-            <button id="btn-notes">Notes: OFF</button>
         </div>
-        <div style="display:flex; justify-content:center; gap: 10px; margin-bottom: 20px;">
+        <div class="controls">
+            <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
             <button id="btn-hint">Hint</button>
             <button id="btn-magic">Wand (3)</button>
+            <button id="btn-shield">Shield (1)</button>
+            <button id="btn-autofill">Auto</button>
             <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
             <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
-            <button id="btn-autofill">Auto-fill</button>
         </div>
         <div class="main-content">
             <div class="sudoku-board" id="board">
@@ -381,6 +398,10 @@
                     <input type="checkbox" id="chk-highlight" checked>
                     Highlight Same Numbers
                 </label>
+                <label>
+                    <input type="checkbox" id="chk-sound" checked>
+                    Sound Effects
+                </label>
             </div>
             <button class="modal-close" id="btn-close-settings">Close</button>
         </div>
@@ -396,7 +417,9 @@
         const btnValidate = document.getElementById('btn-validate');
         const btnHint = document.getElementById('btn-hint');
         const btnMagic = document.getElementById('btn-magic');
+        const btnShield = document.getElementById('btn-shield');
         const btnCampaign = document.getElementById('btn-campaign');
+        const btnRush = document.getElementById('btn-rush');
         const btnUndo = document.getElementById('btn-undo');
         const btnRedo = document.getElementById('btn-redo');
         const btnAutofill = document.getElementById('btn-autofill');
@@ -406,10 +429,77 @@
         const btnCloseSettings = document.getElementById('btn-close-settings');
         const selTheme = document.getElementById('sel-theme');
         const chkHighlight = document.getElementById('chk-highlight');
+        const chkSound = document.getElementById('chk-sound');
+
+        // Web Audio Synthesizer
+        let audioCtx = null;
+        function playSound(type) {
+            if (!settings.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                let now = audioCtx.currentTime;
+
+                if (type === 'select') {
+                    osc.frequency.setValueAtTime(523, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now); osc.stop(now + 0.05);
+                } else if (type === 'input') {
+                    osc.frequency.setValueAtTime(659, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+                    osc.start(now); osc.stop(now + 0.07);
+                } else if (type === 'correct') {
+                    osc.frequency.setValueAtTime(784, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                } else if (type === 'powerup') {
+                    osc.frequency.setValueAtTime(1047, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    osc.start(now); osc.stop(now + 0.12);
+                } else if (type === 'win') {
+                    let freqs = [523, 659, 784, 1047];
+                    freqs.forEach((f, i) => {
+                        let o = audioCtx.createOscillator();
+                        let g = audioCtx.createGain();
+                        o.connect(g); g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(f, now + i * 0.08);
+                        g.gain.setValueAtTime(0.12, now + i * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.15);
+                        o.start(now + i * 0.08); o.stop(now + i * 0.08 + 0.15);
+                    });
+                } else if (type === 'fail') {
+                    let freqs = [300, 250, 200];
+                    freqs.forEach((f, i) => {
+                        let o = audioCtx.createOscillator();
+                        let g = audioCtx.createGain();
+                        o.type = 'sawtooth';
+                        o.connect(g); g.connect(audioCtx.destination);
+                        o.frequency.setValueAtTime(f, now + i * 0.1);
+                        g.gain.setValueAtTime(0.12, now + i * 0.1);
+                        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.18);
+                        o.start(now + i * 0.1); o.stop(now + i * 0.1 + 0.18);
+                    });
+                }
+            } catch(e) {}
+        }
         
         let board = [];
         let solution = [];
         let notes = [];
+        let fog = [];
         let notesMode = false;
         let selectedCell = null;
         let cells = []; // Array of length 81
@@ -423,49 +513,60 @@
         let awarded = [];
         let originalBoard = [];
 
-        
         let stats = JSON.parse(localStorage.getItem('ksudoku_stats')) || {
             30: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             40: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
             50: { played: 0, won: 0, bestTime: Infinity, bestScore: 0 },
+            rush: { played: 0, won: 0, bestTime: 0, bestScore: 0 },
             dailyStreak: 0,
             lastDailyDate: 0,
-            maxCampaignStage: 0
+            maxCampaignStage: 0,
+            totalWandsUsed: 0,
+            totalShieldsUsed: 0
         };
-        if (stats.dailyStreak === undefined) {
-            stats.dailyStreak = 0;
-            stats.lastDailyDate = 0;
-        }
+        if (!stats.rush) stats.rush = { played: 0, won: 0, bestTime: 0, bestScore: 0 };
+        if (stats.dailyStreak === undefined) stats.dailyStreak = 0;
+        if (stats.lastDailyDate === undefined) stats.lastDailyDate = 0;
         if (stats.maxCampaignStage === undefined) stats.maxCampaignStage = 0;
+        if (stats.totalWandsUsed === undefined) stats.totalWandsUsed = 0;
+        if (stats.totalShieldsUsed === undefined) stats.totalShieldsUsed = 0;
         
         let currentDifficulty = 40;
         let gameActive = false;
         let isDailyGame = false;
+        let isRushMode = false;
         
         let isCampaignMode = false;
-        let campaignStage = 0;
+        let campaignStage = 0; // 0 to 14
         let magicWands = 3;
+        let shields = 1;
+        let shieldActive = false;
         let strikes = 0;
 
         let settings = JSON.parse(localStorage.getItem('ksudoku_prefs')) || {
             theme: 'classic-dark',
-            highlightSame: true
+            highlightSame: true,
+            soundEnabled: true
         };
 
         function updateUIState() {
             if (isCampaignMode) {
-                document.getElementById('timer').textContent = `Stage: ${campaignStage+1}/10 | Strikes: ${strikes}/3 | Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+                document.getElementById('timer').textContent = `Stage: ${campaignStage+1}/15 | Strikes: ${strikes}/3 | Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+            } else if (isRushMode) {
+                document.getElementById('timer').textContent = `RUSH | Time Left: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
             } else {
                 document.getElementById('timer').textContent = `Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
             }
             document.getElementById('score').textContent = `Score: ${score}`;
             btnMagic.textContent = `Wand (${magicWands})`;
+            btnShield.textContent = shieldActive ? `Shield ON` : `Shield (${shields})`;
         }
 
         function applySettings() {
             document.documentElement.setAttribute('data-theme', settings.theme);
             selTheme.value = settings.theme;
             chkHighlight.checked = settings.highlightSame;
+            chkSound.checked = settings.soundEnabled;
             updateHighlights();
         }
 
@@ -480,8 +581,8 @@
                 return;
             }
             const state = {
-                board, solution, notes, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack, isDailyGame,
-                isCampaignMode, campaignStage, magicWands, strikes
+                board, solution, notes, fog, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack, isDailyGame,
+                isCampaignMode, campaignStage, magicWands, shields, shieldActive, strikes, isRushMode
             };
             localStorage.setItem('ksudoku_save', JSON.stringify(state));
         }
@@ -494,6 +595,7 @@
                 board = state.board;
                 solution = state.solution;
                 notes = state.notes;
+                fog = state.fog || Array(9).fill().map(() => Array(9).fill(false));
                 elapsedTime = state.elapsedTime;
                 score = state.score;
                 currentDifficulty = state.currentDifficulty;
@@ -506,20 +608,35 @@
                 isCampaignMode = state.isCampaignMode || false;
                 campaignStage = state.campaignStage || 0;
                 magicWands = state.magicWands !== undefined ? state.magicWands : 3;
+                shields = state.shields !== undefined ? state.shields : 1;
+                shieldActive = state.shieldActive || false;
                 strikes = state.strikes || 0;
+                isRushMode = state.isRushMode || false;
                 
                 let sel = document.getElementById('sel-difficulty');
                 if(sel) sel.value = currentDifficulty;
                 
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = setInterval(() => {
-                    elapsedTime++;
+                    if (isRushMode) {
+                        elapsedTime--;
+                        if (elapsedTime <= 0) {
+                            elapsedTime = 0;
+                            clearInterval(timerInterval);
+                            timerInterval = null;
+                            gameActive = false;
+                            playSound('fail');
+                            saveGameState();
+                            alert("Time's Up! Rush Mode Failed.");
+                        }
+                    } else {
+                        elapsedTime++;
+                    }
                     updateUIState();
                     saveGameState();
                 }, 1000);
                 
                 updateUIState();
-                
                 return true;
             } catch(e) {
                 return false;
@@ -538,10 +655,23 @@
             let todayStr = dObj.getFullYear() * 10000 + (dObj.getMonth() + 1) * 100 + dObj.getDate();
             let completedToday = (stats.lastDailyDate === todayStr) ? 'Yes' : 'No';
             
-            html += `<div class="stat-diff">Daily Challenge</div>
+            html += `<div class="stat-diff">Progress & Streaks</div>
             <div class="stat-grid">
-                <div>Current Streak: ${stats.dailyStreak}</div>
+                <div>Daily Streak: ${stats.dailyStreak}</div>
                 <div>Completed Today: ${completedToday}</div>
+                <div>Campaign Stage: ${stats.maxCampaignStage+1} / 15</div>
+                <div>Wands Used: ${stats.totalWandsUsed}</div>
+                <div>Shields Used: ${stats.totalShieldsUsed}</div>
+            </div>`;
+
+            let rs = stats.rush;
+            let rRate = rs.played > 0 ? Math.round((rs.won / rs.played) * 100) : 0;
+            let rBt = rs.bestTime === 0 ? '--:--' : `${Math.floor(rs.bestTime/60).toString().padStart(2, '0')}:${(rs.bestTime%60).toString().padStart(2, '0')}`;
+            html += `<div class="stat-diff">Rush Mode</div>
+            <div class="stat-grid">
+                <div>Played: ${rs.played}</div><div>Won: ${rs.won}</div>
+                <div>Win Rate: ${rRate}%</div><div>Best Score: ${rs.bestScore}</div>
+                <div>Best Time Left: ${rBt}</div>
             </div>`;
             
             for (let d of [30, 40, 50]) {
@@ -563,6 +693,7 @@
             undoStack.push({
                 board: JSON.parse(JSON.stringify(board)),
                 notes: JSON.parse(JSON.stringify(notes)),
+                fog: JSON.parse(JSON.stringify(fog)),
                 score: score
             });
             redoStack = [];
@@ -573,13 +704,16 @@
             redoStack.push({
                 board: JSON.parse(JSON.stringify(board)),
                 notes: JSON.parse(JSON.stringify(notes)),
+                fog: JSON.parse(JSON.stringify(fog)),
                 score: score
             });
             let prevState = undoStack.pop();
             board = prevState.board;
             notes = prevState.notes;
+            fog = prevState.fog;
             score = prevState.score;
             document.getElementById('score').textContent = `Score: ${score}`;
+            playSound('select');
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
                     renderCell(r, c);
@@ -595,13 +729,16 @@
             undoStack.push({
                 board: JSON.parse(JSON.stringify(board)),
                 notes: JSON.parse(JSON.stringify(notes)),
+                fog: JSON.parse(JSON.stringify(fog)),
                 score: score
             });
             let nextState = redoStack.pop();
             board = nextState.board;
             notes = nextState.notes;
+            fog = nextState.fog;
             score = nextState.score;
             document.getElementById('score').textContent = `Score: ${score}`;
+            playSound('select');
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
                     renderCell(r, c);
@@ -612,7 +749,22 @@
             saveGameState();
         }
 
-        // Base solved board
+        function clearFogAround(r, c) {
+            fog[r][c] = false;
+            let dr = [-1, 1, 0, 0];
+            let dc = [0, 0, -1, 1];
+            for(let i=0; i<4; i++) {
+                let nr = r + dr[i], nc = c + dc[i];
+                if (nr>=0 && nr<9 && nc>=0 && nc<9) fog[nr][nc] = false;
+            }
+            let br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
+            for(let i=0; i<3; i++) {
+                for(let j=0; j<3; j++) {
+                    fog[br+i][bc+j] = false;
+                }
+            }
+        }
+
         const baseSolution = [
             [1, 2, 3, 4, 5, 6, 7, 8, 9],
             [4, 5, 6, 7, 8, 9, 1, 2, 3],
@@ -632,8 +784,9 @@
             }
         }
 
-        function generateBoard(daily = false) {
+        function generateBoard(daily = false, rush = false) {
             isDailyGame = daily;
+            isRushMode = rush;
             let rng = Math.random;
             if (daily) {
                 let d = new Date();
@@ -645,10 +798,7 @@
                 };
             }
 
-            // Deep copy base solution
             let grid = JSON.parse(JSON.stringify(baseSolution));
-            
-            // Randomly swap numbers 1-9
             let nums = [1,2,3,4,5,6,7,8,9];
             shuffleArray(nums, rng);
             for(let r=0; r<9; r++) {
@@ -657,7 +807,6 @@
                 }
             }
             
-            // Randomly swap rows within 3x3 bands
             for(let band=0; band<3; band++) {
                 let rows = [0,1,2];
                 shuffleArray(rows, rng);
@@ -669,7 +818,6 @@
                 grid[band*3+2] = r2;
             }
             
-            // Randomly swap cols within 3x3 bands
             for(let band=0; band<3; band++) {
                 let cols = [0,1,2];
                 shuffleArray(cols, rng);
@@ -683,43 +831,73 @@
                 }
             }
             
-            // Save solution
             solution = JSON.parse(JSON.stringify(grid));
-            
             awarded = Array(9).fill().map(() => Array(9).fill(false));
-            elapsedTime = 0;
+            fog = Array(9).fill().map(() => Array(9).fill(false));
+
+            if (rush) elapsedTime = 180;
+            else elapsedTime = 0;
+            
             score = 0;
             if (timerInterval) clearInterval(timerInterval);
             updateUIState();
             timerInterval = setInterval(() => {
-                elapsedTime++;
+                if (isRushMode) {
+                    elapsedTime--;
+                    if (elapsedTime <= 0) {
+                        elapsedTime = 0;
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        gameActive = false;
+                        playSound('fail');
+                        saveGameState();
+                        alert("Time's Up! Rush Mode Failed.");
+                    }
+                } else {
+                    elapsedTime++;
+                }
                 updateUIState();
                 saveGameState();
             }, 1000);
             
-            // Remove cells to create puzzle
             let difficultySelect = document.getElementById('sel-difficulty');
             let removal = daily ? 40 : (difficultySelect ? parseInt(difficultySelect.value) : 40);
-            if (isCampaignMode) removal = [25, 30, 35, 40, 45, 48, 51, 54, 57, 60][campaignStage];
+            if (rush) removal = 45;
+            let fogCount = 0;
+            
+            if (isCampaignMode) {
+                let rems = [25, 30, 35, 40, 45, 48, 51, 54, 57, 60, 63, 65, 67, 69, 72];
+                let fogs = [0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8];
+                removal = rems[campaignStage];
+                fogCount = fogs[campaignStage];
+            }
             
             currentDifficulty = daily ? 40 : removal;
             
-            if (!daily && !isCampaignMode) {
+            if (!daily && !isCampaignMode && !rush) {
                 stats[currentDifficulty].played++;
                 saveStats();
             }
             gameActive = true;
 
             board = JSON.parse(JSON.stringify(grid));
+            let empties = [];
             while(removal > 0) {
                 let r = Math.floor(rng() * 9);
                 let c = Math.floor(rng() * 9);
                 if(board[r][c] !== 0) {
                     board[r][c] = 0;
+                    empties.push({r, c});
                     removal--;
                 }
             }
             
+            for(let f=0; f<fogCount && empties.length > 0; f++) {
+                let idx = Math.floor(rng() * empties.length);
+                fog[empties[idx].r][empties[idx].c] = true;
+                empties.splice(idx, 1);
+            }
+
             originalBoard = JSON.parse(JSON.stringify(board));
             notes = Array(9).fill().map(() => Array(9).fill().map(() => Array(10).fill(false)));
             undoStack = [];
@@ -730,7 +908,12 @@
         function renderCell(r, c) {
             let cell = cells[r * 9 + c];
             cell.innerHTML = '';
-            if (board[r][c] !== 0) {
+            cell.classList.remove('fog');
+
+            if (fog[r][c] && board[r][c] === 0) {
+                cell.classList.add('fog');
+                cell.textContent = '?';
+            } else if (board[r][c] !== 0) {
                 cell.textContent = board[r][c];
             } else {
                 let hasNotes = false;
@@ -778,6 +961,7 @@
         
         function selectCell(r, c) {
             selectedCell = {r, c};
+            playSound('select');
             updateHighlights();
         }
         
@@ -824,9 +1008,10 @@
             if (cell.classList.contains('fixed')) return;
             
             if (notesMode && num !== 0) {
-                if (board[selectedCell.r][selectedCell.c] !== 0) return; // Can't add notes if there's a big number
+                if (board[selectedCell.r][selectedCell.c] !== 0) return;
                 pushState();
                 notes[selectedCell.r][selectedCell.c][num] = !notes[selectedCell.r][selectedCell.c][num];
+                playSound('input');
                 renderCell(selectedCell.r, selectedCell.c);
                 return;
             }
@@ -835,39 +1020,58 @@
                 if (board[selectedCell.r][selectedCell.c] !== 0) {
                     pushState();
                     board[selectedCell.r][selectedCell.c] = 0;
+                    playSound('input');
                 } else {
                     let hasNotes = false;
                     for (let i = 1; i <= 9; i++) if (notes[selectedCell.r][selectedCell.c][i]) hasNotes = true;
                     if (hasNotes) {
                         pushState();
                         for (let i = 1; i <= 9; i++) notes[selectedCell.r][selectedCell.c][i] = false;
+                        playSound('input');
                     }
                 }
             } else {
                 if (board[selectedCell.r][selectedCell.c] !== num) {
                     pushState();
                     if (!isValidPlacement(selectedCell.r, selectedCell.c, num)) {
-                        cell.classList.remove('flash-error');
-                        void cell.offsetWidth; // trigger reflow
-                        cell.classList.add('flash-error');
-                        score = Math.max(0, score - 50);
-                        
-                        if (isCampaignMode) {
-                            strikes++;
+                        if (shieldActive) {
+                            shieldActive = false; // Shield absorbs error!
                             updateUIState();
-                            if (strikes >= 3) {
-                                alert("3 Strikes! Game Over. Restarting stage.");
-                                startCampaignStage(campaignStage);
-                                return;
+                            playSound('powerup');
+                        } else {
+                            cell.classList.remove('flash-error');
+                            void cell.offsetWidth;
+                            cell.classList.add('flash-error');
+                            score = Math.max(0, score - 50);
+                            playSound('error');
+
+                            if (isRushMode) {
+                                elapsedTime = Math.max(0, elapsedTime - 15);
+                            }
+                            
+                            if (isCampaignMode) {
+                                strikes++;
+                                updateUIState();
+                                if (strikes >= 3) {
+                                    playSound('fail');
+                                    alert("3 Strikes! Stage Failed. Restarting stage.");
+                                    startCampaignStage(campaignStage);
+                                    return;
+                                }
                             }
                         }
+                    } else {
+                        playSound('correct');
                     }
                     board[selectedCell.r][selectedCell.c] = num;
+                    clearFogAround(selectedCell.r, selectedCell.c);
+                    for (let r=0; r<9; r++) for (let c=0; c<9; c++) renderCell(r, c);
                     
                     if (num === solution[selectedCell.r][selectedCell.c]) {
                         if (!awarded[selectedCell.r][selectedCell.c]) {
                             awarded[selectedCell.r][selectedCell.c] = true;
                             score += 100;
+                            if (isRushMode) elapsedTime += 10;
                         }
                     }
                     updateUIState();
@@ -899,23 +1103,39 @@
                     clearInterval(timerInterval);
                     timerInterval = null;
                 }
+                playSound('win');
+                
+                if (isRushMode) {
+                    score += elapsedTime * 10 + 500;
+                    stats.rush.won++;
+                    if (elapsedTime > stats.rush.bestTime) stats.rush.bestTime = elapsedTime;
+                    if (score > stats.rush.bestScore) stats.rush.bestScore = score;
+                    saveStats();
+                    gameActive = false;
+                    saveGameState();
+                    setTimeout(() => {
+                        alert(`RUSH MODE VICTORY!\nTime Remaining: ${elapsedTime}s\nFinal Score: ${score}`);
+                    }, 500);
+                    return;
+                }
+
                 let timeBonus = Math.max(0, 3000 - elapsedTime * 2);
                 score += timeBonus;
                 updateUIState();
                 
                 if (gameActive) {
                     gameActive = false;
-                    saveGameState(); // this will clear the save
+                    saveGameState();
                     if (isCampaignMode) {
                         if (campaignStage > stats.maxCampaignStage) {
                             stats.maxCampaignStage = campaignStage;
                             saveStats();
                         }
-                        if (campaignStage < 9) {
+                        if (campaignStage < 14) {
                             setTimeout(() => {
                                 let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
                                 let s = (elapsedTime % 60).toString().padStart(2, '0');
-                                alert(`Stage ${campaignStage+1} Clear!\nTime: ${m}:${s}\nScore: ${score}\nReady for next stage?`);
+                                alert(`Stage ${campaignStage+1} Clear!\nTime: ${m}:${s}\nScore: ${score}\nReady for Stage ${campaignStage+2}?`);
                                 let keepScore = score;
                                 campaignStage++;
                                 startCampaignStage(campaignStage);
@@ -928,9 +1148,7 @@
                             return;
                         } else {
                             setTimeout(() => {
-                                let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-                                let s = (elapsedTime % 60).toString().padStart(2, '0');
-                                alert(`Campaign Complete!!\nTime: ${m}:${s}\nScore: ${score}`);
+                                alert(`CONGRATULATIONS!!\nYou completed all 15 Stages of the KSudoku Campaign!\nFinal Score: ${score}`);
                                 boardEl.classList.remove('board-win');
                             }, 500);
                             boardEl.classList.add('board-win');
@@ -1011,18 +1229,39 @@
         
         btnNew.addEventListener('click', () => {
             isCampaignMode = false;
-            generateBoard(false);
+            isRushMode = false;
+            generateBoard(false, false);
             initUI();
             selectedCell = null;
             updateHighlights();
         });
+
+        if (btnRush) {
+            btnRush.addEventListener('click', () => {
+                isCampaignMode = false;
+                isRushMode = true;
+                shields = 1;
+                shieldActive = false;
+                magicWands = 1;
+                stats.rush.played++;
+                saveStats();
+                generateBoard(false, true);
+                initUI();
+                selectedCell = null;
+                updateHighlights();
+                updateUIState();
+            });
+        }
         
         function startCampaignStage(stage) {
             isCampaignMode = true;
-            campaignStage = Math.min(9, stage);
+            isRushMode = false;
+            campaignStage = Math.min(14, stage);
             magicWands = 3;
+            shields = 1;
+            shieldActive = false;
             strikes = 0;
-            generateBoard(false);
+            generateBoard(false, false);
             initUI();
             selectedCell = null;
             updateHighlights();
@@ -1031,7 +1270,7 @@
 
         if (btnCampaign) {
             btnCampaign.addEventListener('click', () => {
-                startCampaignStage(stats.maxCampaignStage > 9 ? 9 : stats.maxCampaignStage);
+                startCampaignStage(stats.maxCampaignStage > 14 ? 14 : stats.maxCampaignStage);
             });
         }
         
@@ -1043,7 +1282,9 @@
                 if (stats.lastDailyDate === todayStr) {
                     alert("You have already completed today's challenge!");
                 } else {
-                    generateBoard(true);
+                    isCampaignMode = false;
+                    isRushMode = false;
+                    generateBoard(true, false);
                     initUI();
                     selectedCell = null;
                     updateHighlights();
@@ -1059,12 +1300,14 @@
             settingsModal.style.display = 'none';
             settings.theme = selTheme.value;
             settings.highlightSame = chkHighlight.checked;
+            settings.soundEnabled = chkSound.checked;
             savePrefs();
         });
         
         btnNotes.addEventListener('click', () => {
             notesMode = !notesMode;
             btnNotes.textContent = notesMode ? 'Notes: ON' : 'Notes: OFF';
+            playSound('select');
             if (notesMode) {
                 btnNotes.style.backgroundColor = 'var(--accent)';
                 btnNotes.style.color = '#fff';
@@ -1092,14 +1335,17 @@
             }
             if (errorCount > 0) {
                 score = Math.max(0, score - errorCount * 20);
+                playSound('error');
                 updateUIState();
+            } else {
+                playSound('correct');
             }
             saveGameState();
         });
 
         if (btnMagic) {
             btnMagic.addEventListener('click', () => {
-                if (isCampaignMode && magicWands > 0) {
+                if (magicWands > 0) {
                     let emptyOrWrong = [];
                     for(let r=0; r<9; r++) {
                         for(let c=0; c<9; c++) {
@@ -1115,14 +1361,32 @@
                         board[target.r][target.c] = solution[target.r][target.c];
                         awarded[target.r][target.c] = true;
                         magicWands--;
+                        stats.totalWandsUsed++;
                         score += 50;
-                        renderCell(target.r, target.c);
+                        clearFogAround(target.r, target.c);
+                        for(let r=0; r<9; r++) for(let c=0; c<9; c++) renderCell(r, c);
                         cells[target.r * 9 + target.c].classList.remove('error', 'flash-error');
+                        playSound('powerup');
                         updateHighlights();
                         updateUIState();
                         saveGameState();
+                        saveStats();
                         checkWin();
                     }
+                }
+            });
+        }
+
+        if (btnShield) {
+            btnShield.addEventListener('click', () => {
+                if (shields > 0 && !shieldActive) {
+                    shields--;
+                    shieldActive = true;
+                    stats.totalShieldsUsed++;
+                    playSound('powerup');
+                    updateUIState();
+                    saveStats();
+                    saveGameState();
                 }
             });
         }
@@ -1137,12 +1401,12 @@
             if (board[r][c] !== solution[r][c]) {
                 pushState();
                 score = Math.max(0, score - 150);
-                
                 board[r][c] = solution[r][c];
                 awarded[r][c] = true; 
-                
-                renderCell(r, c);
+                clearFogAround(r, c);
+                for(let row=0; row<9; row++) for(let col=0; col<9; col++) renderCell(row, col);
                 cell.classList.remove('error', 'flash-error');
+                playSound('correct');
                 updateHighlights();
                 updateUIState();
                 saveGameState();
@@ -1167,6 +1431,7 @@
                     }
                 }
             }
+            playSound('input');
             saveGameState();
             for (let r = 0; r < 9; r++) {
                 for (let c = 0; c < 9; c++) {
