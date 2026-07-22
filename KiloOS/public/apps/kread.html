@@ -106,20 +106,22 @@
 <body>
   <div class="toolbar">
     <div class="toolbar-group">
-      <label class="btn">
+      <label class="btn" tabindex="0" id="btnOpenLabel" aria-label="Open File" role="button">
         Open File
-        <input type="file" id="fileInp" class="file-input" accept=".txt,.md,.csv,.log">
+        <input type="file" id="fileInp" class="file-input" accept=".txt,.md,.csv,.log" tabindex="-1">
       </label>
-      <button id="btnClear">Clear</button>
+      <button id="btnClear" aria-label="Clear Document">Clear</button>
+
     </div>
     <div class="toolbar-group">
-      <button id="btnAUp">A+</button>
-      <button id="btnADown">A-</button>
-      <button id="btnTheme">Dark Mode</button>
+      <button id="btnAUp" aria-label="Increase Font Size">A+</button>
+      <button id="btnADown" aria-label="Decrease Font Size">A-</button>
+      <button id="btnTheme" aria-label="Toggle Dark Mode">Dark Mode</button>
+
     </div>
   </div>
   
-  <div class="reader-container" id="readerContainer">
+  <div class="reader-container" id="readerContainer" aria-live="polite">
     <div class="empty-state" id="emptyState">
       <h3>No Document Loaded</h3>
       <p>Open a text file to begin reading.</p>
@@ -148,10 +150,27 @@
     const statLines = document.getElementById('statLines');
     const statChars = document.getElementById('statChars');
 
-    let currentText = localStorage.getItem('kread_text') || '';
-    let currentScroll = parseInt(localStorage.getItem('kread_scroll') || '0');
-    let fontSize = parseInt(localStorage.getItem('kread_fontsize') || '18');
-    let isDark = localStorage.getItem('kread_dark') === 'true';
+    let currentText = '';
+    try { currentText = localStorage.getItem('kread_text') || ''; } catch(e) {}
+    let currentScroll = 0;
+    try { currentScroll = parseInt(localStorage.getItem('kread_scroll') || '0'); } catch(e) {}
+    let fontSize = 18;
+    try { fontSize = parseInt(localStorage.getItem('kread_fontsize') || '18'); } catch(e) {}
+    let isDark = false;
+    try { isDark = localStorage.getItem('kread_dark') === 'true'; } catch(e) {}
+
+    const btnOpenLabel = document.getElementById('btnOpenLabel');
+    btnOpenLabel.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInp.click();
+      }
+    });
+
+    function safeSetItem(k, v) {
+      try { localStorage.setItem(k, v); } catch(e) { console.warn("Storage full", e); }
+    }
+
 
     function updateStats() {
       if (!currentText) return;
@@ -189,8 +208,8 @@
       reader.onload = (ev) => {
         currentText = ev.target.result;
         currentScroll = 0;
-        localStorage.setItem('kread_text', currentText);
-        localStorage.setItem('kread_scroll', '0');
+        safeSetItem('kread_text', currentText);
+        safeSetItem('kread_scroll', '0');
         applyState();
       };
       reader.readAsText(file);
@@ -200,26 +219,26 @@
     btnClear.onclick = () => {
       currentText = '';
       currentScroll = 0;
-      localStorage.removeItem('kread_text');
-      localStorage.setItem('kread_scroll', '0');
+      try { localStorage.removeItem('kread_text'); } catch(e) {}
+      safeSetItem('kread_scroll', '0');
       applyState();
     };
 
     btnAUp.onclick = () => {
       fontSize = Math.min(fontSize + 2, 48);
-      localStorage.setItem('kread_fontsize', fontSize);
+      safeSetItem('kread_fontsize', fontSize);
       applyState();
     };
 
     btnADown.onclick = () => {
       fontSize = Math.max(fontSize - 2, 12);
-      localStorage.setItem('kread_fontsize', fontSize);
+      safeSetItem('kread_fontsize', fontSize);
       applyState();
     };
 
     btnTheme.onclick = () => {
       isDark = !isDark;
-      localStorage.setItem('kread_dark', isDark);
+      safeSetItem('kread_dark', isDark);
       applyState();
     };
 
@@ -228,7 +247,7 @@
       if (scrollTimeout) clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         if (currentText) {
-          localStorage.setItem('kread_scroll', readerContainer.scrollTop);
+          safeSetItem('kread_scroll', readerContainer.scrollTop);
         }
       }, 500);
     };

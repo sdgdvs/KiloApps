@@ -37,7 +37,7 @@ void OpenFileAndLoad(HWND hwnd) {
                 if (pszFileText) {
                     DWORD dwRead;
                     if (ReadFile(hFile, pszFileText, dwFileSize, &dwRead, NULL)) {
-                        pszFileText[dwFileSize] = 0;
+                        pszFileText[dwRead] = 0;
                         SetWindowTextA(hEdit, pszFileText);
                     }
                     VirtualFree(pszFileText, 0, MEM_RELEASE);
