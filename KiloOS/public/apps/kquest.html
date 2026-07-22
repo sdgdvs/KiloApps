@@ -13,13 +13,14 @@
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #12121e;
+      background-color: #11111b;
       color: #cdd6f4;
       display: flex;
       flex-direction: column;
       height: 100vh;
       overflow: hidden;
     }
+
     /* Header */
     header {
       background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
@@ -45,6 +46,10 @@
       font-size: 0.75rem;
       font-weight: 600;
     }
+    header .subtitle {
+      font-size: 0.85rem;
+      color: #a6adc8;
+    }
 
     /* Top Stats Bar */
     .stats-bar {
@@ -52,6 +57,7 @@
       padding: 8px 16px;
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 16px;
       border-bottom: 1px solid #313244;
       font-size: 0.85rem;
@@ -69,7 +75,7 @@
       color: #f9e2af;
     }
     .bar-container {
-      width: 80px;
+      width: 90px;
       height: 10px;
       background: #313244;
       border-radius: 5px;
@@ -81,23 +87,23 @@
       height: 100%;
       background: #f38ba8;
       width: 100%;
-      transition: width 0.3s;
+      transition: width 0.3s ease;
     }
     .bar-fill-mp {
       height: 100%;
       background: #89b4fa;
       width: 100%;
-      transition: width 0.3s;
+      transition: width 0.3s ease;
     }
 
-    /* Main Content Layout */
+    /* Main Content Area */
     .main-container {
       display: flex;
       flex: 1;
       overflow: hidden;
     }
 
-    /* Left Narrative & Game View */
+    /* Left Game View */
     .game-view {
       flex: 2;
       display: flex;
@@ -105,32 +111,91 @@
       padding: 12px;
       gap: 12px;
       border-right: 1px solid #313244;
+      overflow-y: auto;
     }
+
+    /* Screen Panels */
     .screen-panel {
       background: #1e1e2e;
       border: 1px solid #313244;
       border-radius: 8px;
-      padding: 12px;
-      min-height: 120px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
+      gap: 8px;
     }
     .screen-title {
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-size: 1.2rem;
+      font-weight: 700;
       color: #89b4fa;
-      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .screen-desc {
       font-size: 0.9rem;
       color: #bac2de;
+      line-height: 1.4;
     }
 
+    /* Character Creation Grid */
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .class-card {
+      background: #181825;
+      border: 2px solid #313244;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .class-card:hover {
+      border-color: #89b4fa;
+      background: #1e1e2e;
+    }
+    .class-card.selected {
+      border-color: #a6e3a1;
+      background: #24273a;
+    }
+    .class-card h3 {
+      font-size: 1rem;
+      color: #cba6f7;
+      margin-bottom: 6px;
+    }
+    .class-card p {
+      font-size: 0.8rem;
+      color: #a6adc8;
+      margin-bottom: 8px;
+    }
+
+    /* Enemy Combat View */
+    .enemy-card {
+      background: #24273a;
+      border: 1px solid #f38ba8;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .enemy-info h3 {
+      color: #f38ba8;
+      font-size: 1.1rem;
+    }
+    .enemy-info p {
+      color: #a6adc8;
+      font-size: 0.85rem;
+    }
+
+    /* Log Box */
     .log-panel {
       flex: 1;
+      min-height: 160px;
       background: #11111b;
       border: 1px solid #313244;
       border-radius: 8px;
@@ -138,20 +203,20 @@
       overflow-y: auto;
       font-family: 'Consolas', 'Courier New', monospace;
       font-size: 0.85rem;
-      line-height: 1.4;
+      line-height: 1.5;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
-    .log-entry {
-      color: #cdd6f4;
-    }
+    .log-entry { color: #cdd6f4; }
     .log-entry.system { color: #89b4fa; }
     .log-entry.combat { color: #f38ba8; }
     .log-entry.loot { color: #f9e2af; }
     .log-entry.town { color: #a6e3a1; }
+    .log-entry.spell { color: #cba6f7; }
+    .log-entry.warning { color: #fab387; }
 
-    /* Action Controls Bar */
+    /* Action Button Controls */
     .controls-panel {
       display: flex;
       gap: 8px;
@@ -167,18 +232,25 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .btn:hover {
+    .btn:hover:not(:disabled) {
       background: #45475a;
       color: #ffffff;
       border-color: #585b70;
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
     .btn-primary {
       background: #89b4fa;
       color: #11111b;
       border-color: #b4befe;
     }
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background: #b4befe;
       color: #11111b;
     }
@@ -187,11 +259,19 @@
       color: #11111b;
       border-color: #a6e3a1;
     }
-    .btn-accent:hover {
+    .btn-accent:hover:not(:disabled) {
       background: #94e2d5;
     }
+    .btn-danger {
+      background: #f38ba8;
+      color: #11111b;
+      border-color: #f38ba8;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: #f5e0dc;
+    }
 
-    /* Right Sidebar (Quests / Inventory / Info) */
+    /* Right Sidebar */
     .sidebar {
       flex: 1;
       background: #181825;
@@ -200,13 +280,13 @@
       flex-direction: column;
       gap: 12px;
       overflow-y: auto;
-      min-width: 240px;
+      min-width: 260px;
     }
     .card {
       background: #1e1e2e;
       border: 1px solid #313244;
       border-radius: 8px;
-      padding: 10px;
+      padding: 12px;
     }
     .card-header {
       font-size: 0.9rem;
@@ -215,6 +295,9 @@
       border-bottom: 1px solid #313244;
       padding-bottom: 6px;
       margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .card-body {
       font-size: 0.85rem;
@@ -223,15 +306,51 @@
       flex-direction: column;
       gap: 6px;
     }
-    .quest-item {
+    .item-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 0;
+      background: #181825;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #313244;
+    }
+    .item-row button {
+      padding: 2px 6px;
+      font-size: 0.75rem;
+    }
+    .quest-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 6px 0;
       border-bottom: 1px dashed #313244;
     }
     .quest-item:last-child {
       border-bottom: none;
+    }
+    .quest-title {
+      font-weight: 600;
+      color: #cdd6f4;
+    }
+    .quest-status {
+      font-size: 0.75rem;
+      color: #a6e3a1;
+    }
+
+    input[type="text"] {
+      background: #11111b;
+      border: 1px solid #45475a;
+      color: #cdd6f4;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      outline: none;
+      width: 100%;
+      margin-top: 6px;
+    }
+    input[type="text"]:focus {
+      border-color: #89b4fa;
     }
   </style>
 </head>
@@ -239,8 +358,8 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">v1.0</span></h1>
-    <div>Fantasy Text RPG & Dungeon Crawler</div>
+    <h1>🗡️ KQuest <span class="badge">Phase 2</span></h1>
+    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
   </header>
 
   <!-- Player Stats Header Bar -->
@@ -248,7 +367,7 @@
     <div class="stat-group">
       <span class="stat-label">Hero:</span>
       <span class="stat-val" id="hero-name">Valerius</span>
-      <span style="color:#a6adc8;">(Warrior)</span>
+      <span style="color:#a6adc8;" id="hero-class">(Warrior)</span>
     </div>
     <div class="stat-group">
       <span class="stat-label">Lvl:</span>
@@ -273,8 +392,8 @@
       <span class="stat-val" id="hero-gold">50 🪙</span>
     </div>
     <div class="stat-group">
-      <span class="stat-label">Floor:</span>
-      <span class="stat-val" id="dungeon-floor">Floor 1</span>
+      <span class="stat-label">Location:</span>
+      <span class="stat-val" id="dungeon-floor">Town Square</span>
     </div>
   </div>
 
@@ -287,23 +406,21 @@
       <!-- Current Location / Screen Banner -->
       <div class="screen-panel" id="screen-panel">
         <div class="screen-title" id="location-title">🏰 Oakhaven Town Square</div>
-        <div class="screen-desc" id="location-desc">A bustling sanctuary at the foot of the Obsidian Spire. Prepare your weapons and rest before venturing forth into the dark depths.</div>
+        <div class="screen-desc" id="location-desc">Welcome to Oakhaven. Create your hero or venture forth into the Obsidian Spire!</div>
+        
+        <!-- Dynamic Interactive Area (Character Creation, Shop, Combat card, etc.) -->
+        <div id="dynamic-content"></div>
       </div>
 
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
-        <div class="log-entry system">=== Welcome to KQuest: Fantasy Dungeon RPG ===</div>
-        <div class="log-entry system">Select an action below to commence your quest.</div>
+        <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
+        <div class="log-entry system">Create your character to begin your journey into the Obsidian Spire.</div>
       </div>
 
       <!-- Action Button Panel -->
-      <div class="controls-panel">
-        <button class="btn btn-primary" onclick="actionExplore()">⚔️ Explore Dungeon</button>
-        <button class="btn btn-accent" onclick="actionTown()">🏰 Visit Town</button>
-        <button class="btn" onclick="actionInventory()">🎒 Inventory</button>
-        <button class="btn" onclick="actionRest()">🍺 Rest at Inn</button>
-        <button class="btn" onclick="actionQuests()">📜 Quest Log</button>
-        <button class="btn" onclick="resetGame()">🔄 New Game</button>
+      <div class="controls-panel" id="controls-panel">
+        <!-- Buttons injected dynamically based on game state -->
       </div>
 
     </div>
@@ -313,28 +430,13 @@
       
       <!-- Character Stats Card -->
       <div class="card">
-        <div class="card-header">📊 Character Attributes</div>
+        <div class="card-header">📊 Hero Attributes</div>
         <div class="card-body">
-          <div>Strength: <strong style="color:#f9e2af;">14</strong></div>
-          <div>Defense: <strong style="color:#f9e2af;">12</strong></div>
-          <div>Agility: <strong style="color:#f9e2af;">10</strong></div>
-          <div>Intelligence: <strong style="color:#f9e2af;">8</strong></div>
-          <div>XP Progress: <strong style="color:#a6e3a1;" id="xp-text">0 / 100</strong></div>
-        </div>
-      </div>
-
-      <!-- Active Quests Card -->
-      <div class="card">
-        <div class="card-header">📜 Active Quests</div>
-        <div class="card-body" id="quest-list">
-          <div class="quest-item">
-            <span>Slay the Goblin King</span>
-            <strong style="color:#f9e2af;">In Progress</strong>
-          </div>
-          <div class="quest-item">
-            <span>Collect 3 Crystal Shards</span>
-            <strong style="color:#f9e2af;">0/3</strong>
-          </div>
+          <div>STR (Strength): <strong style="color:#f9e2af;" id="stat-str">14</strong></div>
+          <div>INT (Magic Power): <strong style="color:#89b4fa;" id="stat-int">8</strong></div>
+          <div>DEF (Defense): <strong style="color:#a6e3a1;" id="stat-def">12</strong></div>
+          <div>AGI (Speed/Crit): <strong style="color:#cba6f7;" id="stat-agi">10</strong></div>
+          <div>XP Progress: <strong style="color:#f9e2af;" id="xp-text">0 / 100</strong></div>
         </div>
       </div>
 
@@ -342,9 +444,24 @@
       <div class="card">
         <div class="card-header">🛡️ Equipment</div>
         <div class="card-body">
-          <div>Weapon: <strong>Iron Shortsword</strong></div>
-          <div>Armor: <strong>Leather Armor</strong></div>
-          <div>Accessory: <strong>Wooden Charm</strong></div>
+          <div>Weapon: <strong id="eq-weapon">Iron Sword (+5 STR)</strong></div>
+          <div>Armor: <strong id="eq-armor">Leather Armor (+3 DEF)</strong></div>
+        </div>
+      </div>
+
+      <!-- Inventory Card -->
+      <div class="card">
+        <div class="card-header">🎒 Inventory</div>
+        <div class="card-body" id="inventory-list">
+          <!-- Dynamic inventory list -->
+        </div>
+      </div>
+
+      <!-- Active Quests Card -->
+      <div class="card">
+        <div class="card-header">📜 Quest Log</div>
+        <div class="card-body" id="quest-list">
+          <!-- Dynamic quests -->
         </div>
       </div>
 
@@ -353,8 +470,20 @@
   </div>
 
   <script>
-    // Initial State
-    const player = {
+    // Game State Engine
+    const STATE = {
+      CHAR_CREATE: 'CHAR_CREATE',
+      TOWN: 'TOWN',
+      SHOP: 'SHOP',
+      DUNGEON: 'DUNGEON',
+      COMBAT: 'COMBAT',
+      GAME_OVER: 'GAME_OVER'
+    };
+
+    let currentState = STATE.CHAR_CREATE;
+
+    // Player Object
+    let player = {
       name: 'Valerius',
       class: 'Warrior',
       level: 1,
@@ -362,13 +491,30 @@
       maxHp: 50,
       mp: 20,
       maxMp: 20,
+      str: 14,
+      int: 8,
+      def: 12,
+      agi: 10,
       gold: 50,
       xp: 0,
       nextXp: 100,
       floor: 1,
-      location: 'Town'
+      weapon: { name: 'Iron Shortsword', bonusStr: 4 },
+      armor: { name: 'Leather Armor', bonusDef: 3 },
+      inventory: [
+        { id: 'hp_potion', name: 'Health Potion', count: 3, desc: 'Restores 35 HP' },
+        { id: 'mp_potion', name: 'Mana Potion', count: 2, desc: 'Restores 25 MP' }
+      ],
+      quests: [
+        { id: 'slay_monsters', title: 'Clear the Dungeon', req: 5, current: 0, reward: 50, done: false },
+        { id: 'slay_boss', title: 'Defeat Goblin King (Floor 5)', req: 1, current: 0, reward: 150, done: false }
+      ]
     };
 
+    // Current Enemy in Combat
+    let currentEnemy = null;
+
+    // Helper: Logging
     function logMsg(msg, category = 'system') {
       const logPanel = document.getElementById('log-panel');
       const div = document.createElement('div');
@@ -378,74 +524,582 @@
       logPanel.scrollTop = logPanel.scrollHeight;
     }
 
-    function updateStatsUI() {
+    // Update Header and Sidebar UI
+    function updateUI() {
       document.getElementById('hero-name').textContent = player.name;
+      document.getElementById('hero-class').textContent = `(${player.class})`;
       document.getElementById('hero-level').textContent = player.level;
       document.getElementById('hp-text').textContent = `${player.hp}/${player.maxHp}`;
       document.getElementById('mp-text').textContent = `${player.mp}/${player.maxMp}`;
       document.getElementById('hero-gold').textContent = `${player.gold} 🪙`;
-      document.getElementById('dungeon-floor').textContent = `Floor ${player.floor}`;
       document.getElementById('xp-text').textContent = `${player.xp} / ${player.nextXp}`;
+
+      document.getElementById('stat-str').textContent = player.str + (player.weapon ? player.weapon.bonusStr : 0);
+      document.getElementById('stat-int').textContent = player.int;
+      document.getElementById('stat-def').textContent = player.def + (player.armor ? player.armor.bonusDef : 0);
+      document.getElementById('stat-agi').textContent = player.agi;
+
+      document.getElementById('eq-weapon').textContent = player.weapon ? `${player.weapon.name} (+${player.weapon.bonusStr} STR)` : 'None';
+      document.getElementById('eq-armor').textContent = player.armor ? `${player.armor.name} (+${player.armor.bonusDef} DEF)` : 'None';
 
       const hpPercent = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
       const mpPercent = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
       document.getElementById('hp-bar').style.width = `${hpPercent}%`;
       document.getElementById('mp-bar').style.width = `${mpPercent}%`;
+
+      document.getElementById('dungeon-floor').textContent = currentState === STATE.DUNGEON || currentState === STATE.COMBAT ? `Floor ${player.floor}` : 'Town Square';
+
+      updateInventoryUI();
+      updateQuestUI();
     }
 
-    function setLocation(title, desc) {
-      document.getElementById('location-title').textContent = title;
-      document.getElementById('location-desc').textContent = desc;
-    }
-
-    function actionExplore() {
-      player.location = 'Dungeon';
-      setLocation(`💀 Dungeon Floor ${player.floor}`, `Dark stone corridors echo with distant growls. Shadows dance across mossy walls as you press onward into the gloom.`);
-      logMsg(`You step into Floor ${player.floor} of the Obsidian Spire...`, 'combat');
-    }
-
-    function actionTown() {
-      player.location = 'Town';
-      setLocation(`🏰 Oakhaven Town Square`, `A bustling sanctuary at the foot of the Obsidian Spire. Merchant stalls, blacksmith anvils, and warm tavern lights greet you.`);
-      logMsg(`You return to the safety of Oakhaven Town.`, 'town');
-    }
-
-    function actionInventory() {
-      logMsg(`Inventory: 1x Iron Shortsword, 1x Leather Armor, 2x Health Potion, 1x Mana Elixir.`, 'loot');
-    }
-
-    function actionRest() {
-      if (player.location !== 'Town') {
-        logMsg(`You can only rest at the inn while inside Oakhaven Town!`, 'system');
+    function updateInventoryUI() {
+      const invContainer = document.getElementById('inventory-list');
+      invContainer.innerHTML = '';
+      if (player.inventory.length === 0) {
+        invContainer.innerHTML = '<div style="font-size:0.8rem; color:#6c7086;">Inventory is empty.</div>';
         return;
       }
-      player.hp = player.maxHp;
-      player.mp = player.maxMp;
-      updateStatsUI();
-      logMsg(`You spend 5 gold to rest at the Dragon's Rest Inn. HP and MP fully restored!`, 'town');
+      player.inventory.forEach((item, index) => {
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+          <span>${item.name} (x${item.count})</span>
+          <button class="btn btn-primary" onclick="useItem(${index})">Use</button>
+        `;
+        invContainer.appendChild(row);
+      });
     }
 
-    function actionQuests() {
-      logMsg(`Quests Active: [1] Slay the Goblin King on Floor 5. [2] Recover 3 Ancient Relics.`, 'system');
+    function updateQuestUI() {
+      const qContainer = document.getElementById('quest-list');
+      qContainer.innerHTML = '';
+      player.quests.forEach(q => {
+        const item = document.createElement('div');
+        item.className = 'quest-item';
+        item.innerHTML = `
+          <span class="quest-title">${q.title}</span>
+          <span class="quest-status">${q.done ? '✅ Completed' : `${q.current}/${q.req} Progress (${q.reward} Gold)`}</span>
+        `;
+        qContainer.appendChild(item);
+      });
+    }
+
+    // Item Usage
+    function useItem(index) {
+      const item = player.inventory[index];
+      if (!item || item.count <= 0) return;
+
+      if (item.id === 'hp_potion') {
+        const heal = 35;
+        player.hp = Math.min(player.maxHp, player.hp + heal);
+        logMsg(`🧪 You drank a Health Potion and recovered ${heal} HP!`, 'loot');
+      } else if (item.id === 'mp_potion') {
+        const mana = 25;
+        player.mp = Math.min(player.maxMp, player.mp + mana);
+        logMsg(`🧪 You drank a Mana Potion and recovered ${mana} MP!`, 'loot');
+      } else {
+        logMsg(`Used ${item.name}.`, 'system');
+      }
+
+      item.count--;
+      if (item.count <= 0) {
+        player.inventory.splice(index, 1);
+      }
+      updateUI();
+      if (currentState === STATE.COMBAT && currentEnemy) {
+        enemyTurn();
+      }
+    }
+
+    // State Switcher
+    function setGameState(state) {
+      currentState = state;
+      const dyn = document.getElementById('dynamic-content');
+      const ctrl = document.getElementById('controls-panel');
+      dyn.innerHTML = '';
+      ctrl.innerHTML = '';
+
+      if (state === STATE.CHAR_CREATE) {
+        renderCharCreate();
+      } else if (state === STATE.TOWN) {
+        renderTown();
+      } else if (state === STATE.SHOP) {
+        renderShop();
+      } else if (state === STATE.DUNGEON) {
+        renderDungeon();
+      } else if (state === STATE.COMBAT) {
+        renderCombat();
+      } else if (state === STATE.GAME_OVER) {
+        renderGameOver();
+      }
+      updateUI();
+    }
+
+    // --- CHARACTER CREATION ---
+    let selectedClass = 'Warrior';
+    function renderCharCreate() {
+      document.getElementById('location-title').textContent = '⚔️ Hero Creation';
+      document.getElementById('location-desc').textContent = 'Choose your Hero Class and name to embark into the perilous Obsidian Spire.';
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="margin-top:8px;">
+          <label style="font-size:0.85rem; color:#a6adc8;">Hero Name:</label>
+          <input type="text" id="name-input" value="Valerius" placeholder="Enter hero name..." />
+        </div>
+        <div class="class-grid">
+          <div class="class-card selected" id="card-Warrior" onclick="selectClass('Warrior')">
+            <h3>🗡️ Warrior</h3>
+            <p>High HP & Defense. Specializes in heavy melee strikes and armor.</p>
+            <div style="font-size:0.75rem; color:#f9e2af;">HP: 60 | MP: 15 | STR: 15 | DEF: 12</div>
+          </div>
+          <div class="class-card" id="card-Mage" onclick="selectClass('Mage')">
+            <h3>🔮 Mage</h3>
+            <p>High Mana & Spell Power. Casts destructive Fireballs and healing spells.</p>
+            <div style="font-size:0.75rem; color:#89b4fa;">HP: 40 | MP: 45 | STR: 7 | DEF: 6</div>
+          </div>
+          <div class="class-card" id="card-Rogue" onclick="selectClass('Rogue')">
+            <h3>🗡️ Rogue</h3>
+            <p>High Agility & Critical Chance. Strikes rapidly with high mobility.</p>
+            <div style="font-size:0.75rem; color:#a6e3a1;">HP: 45 | MP: 25 | STR: 11 | DEF: 8</div>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-accent" onclick="confirmCharacter()">✨ Begin Quest</button>
+      `;
+    }
+
+    function selectClass(className) {
+      selectedClass = className;
+      document.querySelectorAll('.class-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById(`card-${className}`).classList.add('selected');
+    }
+
+    function confirmCharacter() {
+      const nameInput = document.getElementById('name-input').value.trim();
+      player.name = nameInput || 'Valerius';
+      player.class = selectedClass;
+
+      if (selectedClass === 'Warrior') {
+        player.maxHp = 60; player.hp = 60;
+        player.maxMp = 15; player.mp = 15;
+        player.str = 15; player.int = 6; player.def = 12; player.agi = 8;
+        player.weapon = { name: 'Iron Shortsword', bonusStr: 4 };
+        player.armor = { name: 'Chainmail Armor', bonusDef: 5 };
+      } else if (selectedClass === 'Mage') {
+        player.maxHp = 40; player.hp = 40;
+        player.maxMp = 45; player.mp = 45;
+        player.str = 7; player.int = 18; player.def = 6; player.agi = 10;
+        player.weapon = { name: 'Apprentice Staff', bonusStr: 2 };
+        player.armor = { name: 'Silk Robes', bonusDef: 2 };
+      } else if (selectedClass === 'Rogue') {
+        player.maxHp = 45; player.hp = 45;
+        player.maxMp = 25; player.mp = 25;
+        player.str = 11; player.int = 8; player.def = 8; player.agi = 16;
+        player.weapon = { name: 'Twin Daggers', bonusStr: 5 };
+        player.armor = { name: 'Leather Vest', bonusDef: 3 };
+      }
+
+      logMsg(`Welcome, ${player.name} the ${player.class}! Your journey begins in Oakhaven Town.`, 'system');
+      setGameState(STATE.TOWN);
+    }
+
+    // --- TOWN HUB ---
+    function renderTown() {
+      document.getElementById('location-title').textContent = '🏰 Oakhaven Town Square';
+      document.getElementById('location-desc').textContent = 'The sanctuary town at the foot of the Obsidian Spire. Rest up, upgrade gear, and prepare for battle.';
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter Obsidian Spire</button>
+        <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
+        <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
+        <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
+      `;
+    }
+
+    function restAtInn() {
+      const cost = 10;
+      if (player.gold < cost) {
+        logMsg(`You need ${cost} Gold to stay at the Inn!`, 'warning');
+        return;
+      }
+      player.gold -= cost;
+      player.hp = player.maxHp;
+      player.mp = player.maxMp;
+      logMsg(`🍺 Rested comfortably at the Dragon's Rest Inn. HP and MP fully restored!`, 'town');
+      updateUI();
+    }
+
+    function claimQuests() {
+      let claimedCount = 0;
+      player.quests.forEach(q => {
+        if (!q.done && q.current >= q.req) {
+          q.done = true;
+          player.gold += q.reward;
+          logMsg(`📜 Quest Complete: "${q.title}"! Received ${q.reward} Gold!`, 'loot');
+          claimedCount++;
+        }
+      });
+      if (claimedCount === 0) {
+        logMsg(`No completed quests to claim right now. Keep exploring!`, 'system');
+      }
+      updateUI();
+    }
+
+    // --- SHOP HUB ---
+    function renderShop() {
+      document.getElementById('location-title').textContent = '🛒 Oakhaven General Store & Blacksmith';
+      document.getElementById('location-desc').textContent = 'Buy essential potions or upgrade your weapons and armor with hard-earned gold.';
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+          <div class="item-row">
+            <span>🧪 Health Potion (+35 HP) - 15 Gold</span>
+            <button class="btn btn-accent" onclick="buyShopItem('hp_potion', 15)">Buy</button>
+          </div>
+          <div class="item-row">
+            <span>🧪 Mana Potion (+25 MP) - 15 Gold</span>
+            <button class="btn btn-accent" onclick="buyShopItem('mp_potion', 15)">Buy</button>
+          </div>
+          <div class="item-row">
+            <span>⚔️ Steel Longsword (+8 STR) - 60 Gold</span>
+            <button class="btn btn-accent" onclick="buyEquipment('Steel Longsword', 'weapon', 8, 60)">Buy</button>
+          </div>
+          <div class="item-row">
+            <span>🛡️ Plate Armor (+9 DEF) - 75 Gold</span>
+            <button class="btn btn-accent" onclick="buyEquipment('Plate Armor', 'armor', 9, 75)">Buy</button>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    function buyShopItem(itemId, cost) {
+      if (player.gold < cost) {
+        logMsg(`Not enough gold! You need ${cost} Gold.`, 'warning');
+        return;
+      }
+      player.gold -= cost;
+      let existing = player.inventory.find(i => i.id === itemId);
+      if (existing) {
+        existing.count++;
+      } else {
+        const name = itemId === 'hp_potion' ? 'Health Potion' : 'Mana Potion';
+        player.inventory.push({ id: itemId, name: name, count: 1 });
+      }
+      logMsg(`Purchased ${itemId === 'hp_potion' ? 'Health Potion' : 'Mana Potion'} for ${cost} Gold.`, 'loot');
+      updateUI();
+    }
+
+    function buyEquipment(eqName, type, val, cost) {
+      if (player.gold < cost) {
+        logMsg(`Not enough gold! You need ${cost} Gold.`, 'warning');
+        return;
+      }
+      player.gold -= cost;
+      if (type === 'weapon') {
+        player.weapon = { name: eqName, bonusStr: val };
+        logMsg(`Equipped new weapon: ${eqName} (+${val} STR)!`, 'loot');
+      } else {
+        player.armor = { name: eqName, bonusDef: val };
+        logMsg(`Equipped new armor: ${eqName} (+${val} DEF)!`, 'loot');
+      }
+      updateUI();
+      renderShop();
+    }
+
+    // --- DUNGEON EXPLORATION ---
+    function renderDungeon() {
+      document.getElementById('location-title').textContent = `💀 Obsidian Spire - Floor ${player.floor}`;
+      document.getElementById('location-desc').textContent = 'The air is cold and thick with ancient malevolence. Choose your next step carefully into the unknown.';
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-danger" onclick="exploreNextRoom()">🚶 Advance to Next Chamber</button>
+        <button class="btn btn-accent" onclick="nextFloor()">🪜 Descend Staircase (Floor ${player.floor + 1})</button>
+        <button class="btn" onclick="setGameState(STATE.TOWN)">🏰 Return to Town</button>
+      `;
+    }
+
+    function nextFloor() {
+      player.floor++;
+      logMsg(`You descend deeper into Floor ${player.floor} of the Obsidian Spire...`, 'system');
+      updateUI();
+      renderDungeon();
+    }
+
+    function exploreNextRoom() {
+      const roll = Math.random();
+      if (roll < 0.65) {
+        // Combat Encounter
+        startCombat();
+      } else if (roll < 0.85) {
+        // Treasure Chest
+        const goldFound = Math.floor(Math.random() * 25 + 15 * player.floor);
+        player.gold += goldFound;
+        logMsg(`✨ You discovered a dusty treasure chest! Found ${goldFound} Gold!`, 'loot');
+        updateUI();
+      } else {
+        // Mysterious Shrine
+        if (Math.random() < 0.5) {
+          player.hp = player.maxHp;
+          logMsg(`⛩️ You prayed at an ancient glowing shrine. Your wounds are completely healed!`, 'town');
+        } else {
+          player.mp = player.maxMp;
+          logMsg(`⛩️ An ethereal mist surrounds you at the shrine. Mana fully restored!`, 'spell');
+        }
+        updateUI();
+      }
+    }
+
+    // --- TURN BASED COMBAT ENGINE ---
+    const MONSTERS = [
+      { name: 'Sewer Rat', hp: 20, str: 6, def: 2, xp: 20, gold: 10 },
+      { name: 'Cave Goblin', hp: 35, str: 9, def: 4, xp: 35, gold: 18 },
+      { name: 'Skeleton Warrior', hp: 45, str: 12, def: 6, xp: 50, gold: 25 },
+      { name: 'Dark Cultist', hp: 55, str: 15, def: 5, xp: 65, gold: 35 },
+      { name: 'Shadow Beast', hp: 75, str: 18, def: 8, xp: 90, gold: 50 }
+    ];
+
+    function startCombat() {
+      let baseM;
+      if (player.floor === 5) {
+        baseM = { name: '👑 Goblin King (Boss)', hp: 120, str: 22, def: 10, xp: 250, gold: 150 };
+      } else if (player.floor >= 10) {
+        baseM = { name: '🐲 Obsidian Dragon (Final Boss)', hp: 250, str: 32, def: 18, xp: 600, gold: 500 };
+      } else {
+        const idx = Math.min(MONSTERS.length - 1, Math.floor(Math.random() * MONSTERS.length));
+        baseM = MONSTERS[idx];
+      }
+
+      // Scale with floor
+      const scale = 1 + (player.floor - 1) * 0.2;
+      currentEnemy = {
+        name: baseM.name,
+        maxHp: Math.floor(baseM.hp * scale),
+        hp: Math.floor(baseM.hp * scale),
+        str: Math.floor(baseM.str * scale),
+        def: Math.floor(baseM.def * scale),
+        xp: Math.floor(baseM.xp * scale),
+        gold: Math.floor(baseM.gold * scale)
+      };
+
+      logMsg(`⚠️ An enemy appears! A hostile ${currentEnemy.name} (HP: ${currentEnemy.hp}) blocks your path!`, 'combat');
+      setGameState(STATE.COMBAT);
+    }
+
+    function renderCombat() {
+      if (!currentEnemy) return;
+
+      document.getElementById('location-title').textContent = `⚔️ Turn-Based Combat - Floor ${player.floor}`;
+      document.getElementById('location-desc').textContent = `Engaged in battle with ${currentEnemy.name}. Choose your action!`;
+
+      const dyn = document.getElementById('dynamic-content');
+      const hpPercent = Math.max(0, Math.min(100, (currentEnemy.hp / currentEnemy.maxHp) * 100));
+
+      dyn.innerHTML = `
+        <div class="enemy-card">
+          <div class="enemy-info">
+            <h3>👾 ${currentEnemy.name}</h3>
+            <p>STR: ${currentEnemy.str} | DEF: ${currentEnemy.def}</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.85rem; font-weight:700; color:#f38ba8; margin-bottom:4px;">HP: ${currentEnemy.hp} / ${currentEnemy.maxHp}</div>
+            <div class="bar-container" style="width:120px; height:12px;">
+              <div class="bar-fill-hp" style="width:${hpPercent}%;"></div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-danger" onclick="playerAttack()">⚔️ Attack</button>
+        <button class="btn btn-primary" onclick="playerSpell()">🔮 Special / Spell</button>
+        <button class="btn" onclick="fleeCombat()">🏃 Flee</button>
+      `;
+    }
+
+    function playerAttack() {
+      if (!currentEnemy) return;
+
+      const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
+      let dmg = Math.max(2, Math.floor(totalStr * 1.2 - currentEnemy.def * 0.5));
+
+      // Crit chance based on agi
+      if (Math.random() < (player.agi * 0.02)) {
+        dmg = Math.floor(dmg * 1.75);
+        logMsg(`🎯 CRITICAL STRIKE! You strike ${currentEnemy.name} for ${dmg} damage!`, 'combat');
+      } else {
+        logMsg(`⚔️ You attack ${currentEnemy.name} dealing ${dmg} damage.`, 'combat');
+      }
+
+      currentEnemy.hp -= dmg;
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+
+      enemyTurn();
+    }
+
+    function playerSpell() {
+      if (!currentEnemy) return;
+
+      if (player.class === 'Warrior') {
+        // Shield Bash
+        const cost = 5;
+        if (player.mp < cost) {
+          logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
+          return;
+        }
+        player.mp -= cost;
+        const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
+        const dmg = Math.floor(totalStr * 1.5);
+        currentEnemy.hp -= dmg;
+        logMsg(`🛡️ You perform Shield Bash! Dealt ${dmg} physical damage to ${currentEnemy.name}!`, 'spell');
+      } else if (player.class === 'Mage') {
+        // Fireball
+        const cost = 10;
+        if (player.mp < cost) {
+          logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
+          return;
+        }
+        player.mp -= cost;
+        const dmg = Math.floor(player.int * 2.2);
+        currentEnemy.hp -= dmg;
+        logMsg(`🔥 You launch a flaming Fireball! Dealt ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
+      } else if (player.class === 'Rogue') {
+        // Shadow Strike
+        const cost = 8;
+        if (player.mp < cost) {
+          logMsg(`Not enough MP! Needs ${cost} MP.`, 'warning');
+          return;
+        }
+        player.mp -= cost;
+        const dmg = Math.floor(player.agi * 1.8);
+        currentEnemy.hp -= dmg;
+        logMsg(`🗡️ Shadow Strike! You strike from darkness for ${dmg} critical damage!`, 'spell');
+      }
+
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+
+      enemyTurn();
+    }
+
+    function enemyTurn() {
+      updateUI();
+      renderCombat();
+
+      setTimeout(() => {
+        if (!currentEnemy || currentEnemy.hp <= 0) return;
+
+        const totalDef = player.def + (player.armor ? player.armor.bonusDef : 0);
+        const enemyDmg = Math.max(2, Math.floor(currentEnemy.str - totalDef * 0.4));
+
+        player.hp -= enemyDmg;
+        logMsg(`💥 ${currentEnemy.name} hits you for ${enemyDmg} damage!`, 'combat');
+
+        if (player.hp <= 0) {
+          player.hp = 0;
+          updateUI();
+          setGameState(STATE.GAME_OVER);
+          return;
+        }
+        updateUI();
+        renderCombat();
+      }, 300);
+    }
+
+    function combatVictory() {
+      logMsg(`🎉 VICTORY! You defeated ${currentEnemy.name}!`, 'loot');
+      player.gold += currentEnemy.gold;
+      player.xp += currentEnemy.xp;
+      logMsg(`Gained +${currentEnemy.xp} XP and +${currentEnemy.gold} Gold!`, 'loot');
+
+      // Update quests
+      player.quests.forEach(q => {
+        if (!q.done) {
+          if (q.id === 'slay_monsters') q.current++;
+          if (q.id === 'slay_boss' && currentEnemy.name.includes('Goblin King')) q.current++;
+        }
+      });
+
+      // Level Up check
+      if (player.xp >= player.nextXp) {
+        player.level++;
+        player.xp -= player.nextXp;
+        player.nextXp = Math.floor(player.nextXp * 1.5);
+        player.maxHp += 15;
+        player.hp = player.maxHp;
+        player.maxMp += 10;
+        player.mp = player.maxMp;
+        player.str += 3;
+        player.int += 2;
+        player.def += 2;
+        player.agi += 2;
+        logMsg(`🌟 LEVEL UP! You reached Level ${player.level}! All stats increased & health restored!`, 'town');
+      }
+
+      currentEnemy = null;
+      updateUI();
+      setTimeout(() => {
+        setGameState(STATE.DUNGEON);
+      }, 500);
+    }
+
+    function fleeCombat() {
+      if (Math.random() < 0.6) {
+        logMsg(`🏃 You successfully fled from combat back to safe ground!`, 'system');
+        currentEnemy = null;
+        setGameState(STATE.DUNGEON);
+      } else {
+        logMsg(`❌ Escape failed! ${currentEnemy.name} strikes as you try to run!`, 'warning');
+        enemyTurn();
+      }
+    }
+
+    // --- GAME OVER ---
+    function renderGameOver() {
+      document.getElementById('location-title').textContent = '☠️ YOU HAVE FALLEN';
+      document.getElementById('location-desc').textContent = 'Your soul fades into the shadowy depths of the Obsidian Spire...';
+
+      logMsg(`💀 You were slain in combat. Your quest ends here.`, 'warning');
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-accent" onclick="resetGame()">🔄 Start New Quest</button>
+      `;
     }
 
     function resetGame() {
       player.level = 1;
-      player.hp = 50;
-      player.maxHp = 50;
-      player.mp = 20;
-      player.maxMp = 20;
-      player.gold = 50;
       player.xp = 0;
+      player.nextXp = 100;
+      player.gold = 50;
       player.floor = 1;
-      player.location = 'Town';
-      updateStatsUI();
-      actionTown();
-      logMsg(`--- New Journey Begun ---`, 'system');
+      player.quests.forEach(q => { q.current = 0; q.done = false; });
+      setGameState(STATE.CHAR_CREATE);
+      logMsg(`--- New Journey Initialized ---`, 'system');
     }
 
-    // Init
-    updateStatsUI();
+    // Start in Character Creation Mode
+    setGameState(STATE.CHAR_CREATE);
   </script>
 </body>
 </html>
