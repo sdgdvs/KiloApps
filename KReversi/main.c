@@ -1,16 +1,24 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define EMPTY 0
 #define BLACK 1
 #define WHITE 2
+
+#define IDM_EASY 1001
+#define IDM_MEDIUM 1002
+#define IDM_HARD 1003
 
 const char g_szClassName[] = "KReversiClass";
 
 int board[64];
 int currentPlayer = BLACK;
 int dirs[8][2] = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}};
+int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
+
 
 void InitGame() {
     for(int i = 0; i < 64; i++) board[i] = EMPTY;
@@ -73,15 +81,55 @@ void AIMove(HWND hwnd) {
     }
     
     int bestMove = -1;
-    int maxFlips = -1;
+    int moves[64];
+    int numMoves = 0;
+    
     for(int i = 0; i < 64; i++) {
-        int flips[64];
-        int count = GetFlippable(i, WHITE, flips);
-        if (count > maxFlips) {
-            maxFlips = count;
-            bestMove = i;
+        int dummy[64];
+        if (GetFlippable(i, WHITE, dummy) > 0) {
+            moves[numMoves++] = i;
         }
     }
+    
+    if (numMoves > 0) {
+        if (aiDifficulty == 0) { // Easy
+            bestMove = moves[rand() % numMoves];
+        } else if (aiDifficulty == 1) { // Medium
+            int maxFlips = -1;
+            for(int k = 0; k < numMoves; k++) {
+                int m = moves[k];
+                int flips[64];
+                int count = GetFlippable(m, WHITE, flips);
+                if (count > maxFlips) {
+                    maxFlips = count;
+                    bestMove = m;
+                }
+            }
+        } else { // Hard
+            int weights[64] = {
+                100, -20,  10,   5,   5,  10, -20, 100,
+                -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+                 10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+                  5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+                  5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+                 10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+                -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+                100, -20,  10,   5,   5,  10, -20, 100
+            };
+            int maxScore = -999999;
+            for(int k = 0; k < numMoves; k++) {
+                int m = moves[k];
+                int flips[64];
+                int count = GetFlippable(m, WHITE, flips);
+                int score = count + weights[m];
+                if (score > maxScore) {
+                    maxScore = score;
+                    bestMove = m;
+                }
+            }
+        }
+    }
+    
     if (bestMove != -1) {
         DoMove(bestMove, WHITE);
     }
@@ -94,9 +142,34 @@ void AIMove(HWND hwnd) {
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
-        case WM_CREATE:
+        case WM_CREATE: {
+            srand((unsigned int)time(NULL));
+            HMENU hMenu = CreateMenu();
+            HMENU hSubMenu = CreatePopupMenu();
+            AppendMenu(hSubMenu, MF_STRING, IDM_EASY, "Easy");
+            AppendMenu(hSubMenu, MF_STRING | MF_CHECKED, IDM_MEDIUM, "Medium");
+            AppendMenu(hSubMenu, MF_STRING, IDM_HARD, "Hard");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
+            SetMenu(hwnd, hMenu);
             InitGame();
             break;
+        }
+        case WM_COMMAND: {
+            switch(LOWORD(wParam)) {
+                case IDM_EASY:
+                case IDM_MEDIUM:
+                case IDM_HARD: {
+                    aiDifficulty = LOWORD(wParam) - IDM_EASY;
+                    HMENU hMenu = GetMenu(hwnd);
+                    CheckMenuItem(hMenu, IDM_EASY, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_MEDIUM, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_HARD, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    break;
+                }
+            }
+            break;
+        }
         case WM_LBUTTONDOWN: {
             if (currentPlayer != BLACK) break;
             int x = LOWORD(lParam);

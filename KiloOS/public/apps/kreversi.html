@@ -27,6 +27,14 @@
         <div id="turn-display">Turn: Black</div>
         <div id="score-white">White: 2</div>
     </div>
+    <div style="margin-bottom: 10px;">
+        <label for="ai-difficulty" style="font-size: 14px; margin-right: 5px;">AI Difficulty:</label>
+        <select id="ai-difficulty" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 4px;">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+        </select>
+    </div>
     <div id="board" class="board"></div>
     <div id="message"></div>
     <button onclick="initGame()">Restart Game</button>
@@ -147,15 +155,42 @@
             if (checkEndGame()) return;
             const moves = getValidMoves(WHITE);
             if (moves.length > 0) {
+                const diff = document.getElementById('ai-difficulty').value;
                 let bestMove = moves[0];
-                let maxFlips = 0;
-                for(let m of moves) {
-                    let flips = getFlippable(m, WHITE).length;
-                    if(flips > maxFlips) {
-                        maxFlips = flips;
-                        bestMove = m;
+                
+                if (diff === 'easy') {
+                    bestMove = moves[Math.floor(Math.random() * moves.length)];
+                } else if (diff === 'medium') {
+                    let maxFlips = -1;
+                    for(let m of moves) {
+                        let flips = getFlippable(m, WHITE).length;
+                        if(flips > maxFlips) {
+                            maxFlips = flips;
+                            bestMove = m;
+                        }
+                    }
+                } else { // hard
+                    const weights = [
+                        100, -20,  10,   5,   5,  10, -20, 100,
+                        -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+                         10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+                          5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+                          5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+                         10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+                        -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+                        100, -20,  10,   5,   5,  10, -20, 100
+                    ];
+                    let maxScore = -Infinity;
+                    for(let m of moves) {
+                        let flips = getFlippable(m, WHITE).length;
+                        let score = flips + weights[m];
+                        if(score > maxScore) {
+                            maxScore = score;
+                            bestMove = m;
+                        }
                     }
                 }
+
                 boardState[bestMove] = WHITE;
                 for (let f of getFlippable(bestMove, WHITE)) {
                     boardState[f] = WHITE;
