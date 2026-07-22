@@ -16,11 +16,12 @@
 - **Conflict resolution:** If `git push` fails → `git pull --rebase` → resolve conservatively (prefer remote for code you didn't write) → push again.
 - **Logging discipline:** Keep this plan file concise. Brief notes per completed phase. Do NOT dump file contents.
 
-## DIRECTOR NOTE (2026-07-20): ALMOST THERE — 4 MORE GAMES
+## DIRECTOR NOTE (2026-07-22): DEEP FANTASY & SCI-FI GAMES
 
-**Current: 21 games. Target: 25+. Gap: 4 games.** Great progress! After KGo completes, pick 3 more games from the list below. Once you hit 25, you may alternate 1 utility per 2 games. Priority: KDarts, KTowers, KReversi, KCheckers.
+**Current: 21+ games. We have enough board/puzzle games.** After KReversi completes, switch to creating **deep, clever, creative fantasy and science fiction games** — NOT more board games or simple puzzles. Think roguelikes, RPGs, survival, space exploration, dungeon crawlers, text adventures with real depth. These should feel like miniature worlds players can get lost in. Use procedural generation, inventory systems, crafting, storylines, lore, enemy variety, and progression systems to fill the 999KB budget. Each game should be meaningfully different from KRogue (our existing roguelike).
 
-**WARNING for KGo:** Phase 6 says "Add Visual Polish" — SKIP THIS. Visual polish is explicitly out of scope per fleet rules. Replace Phase 6 with a functional feature (e.g., Ko Rule enforcement, or Territory Preview).
+**NO MORE:** Board games (chess, checkers, go, connect4), pattern games (simon, match3), simple arcade clones. We have plenty.
+**YES MORE:** Games with emergent gameplay, narrative, exploration, strategy, resource management, survival.
 
 When creating games, think about what makes them **deeply replayable**:
 - Multiple game modes (classic, timed, endless, puzzle)
@@ -126,15 +127,15 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 
 ## Possible Future Apps (pick from here or invent your own)
 
-### 🎮 GAMES (PRIORITY — create these first)
-- **KWords** — Word search puzzle. Generate grids with hidden words. Multiple difficulties. Timer. Category themes.
-- **KMemory** — Card memory matching. Multiple themes. Timed mode. Pair count options (8-32 pairs). Best time tracking.
-- **KTrivia** — Quiz game. Multiple categories. Multiple choice. Score tracking. Timed rounds.
-- **KReversi** — Othello/Reversi board game. AI with adjustable strength. Disc flip animations. Score display.
-- **KCheckers** — Classic checkers with king promotion. AI opponent. Force-jump rules. Move highlighting.
-- **KBattleship** — Naval combat. Place ships, call shots. Simple AI opponent. Hit/miss animations.
-- **KLightsOut** — Logic puzzle. Toggle lights in a grid. Multiple board sizes. Level progression. Move counter.
-- **KPinball** — Simplified pinball. Flipper physics. Bumpers and targets. Score multipliers. Ball launcher.
+### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
+- **KQuest** — Fantasy text RPG with procedural dungeons. Character creation (warrior/mage/rogue). Inventory, equipment, spells. Turn-based combat with enemy AI. Town hub with shop, inn, quest board. Multiple dungeon biomes. Boss fights. Save/load. 20+ enemy types. Loot tables. XP and leveling.
+- **KStarship** — Sci-fi exploration. Navigate a star map, discover planets, manage fuel/hull/crew. Random encounters (pirates, anomalies, traders). Ship upgrades. Crew management. Text-based with ASCII star maps. Permadeath mode.
+- **KAlchemy** — Fantasy crafting/discovery game. Combine elements to discover new ones. 100+ discoverable recipes. Procedural hints. Encyclopedia tracking. Multiple tiers of complexity (earth+fire=lava, lava+water=obsidian). Score by discoveries.
+- **KFortress** — Tower defense with fantasy theme. Place towers on a grid path. Multiple tower types (archer, mage, cannon). Enemy waves with varying resistances. Upgrade system. Gold economy. 15+ levels with different maps. Boss waves.
+- **KColony** — Sci-fi colony survival. Manage resources (food, power, materials) on an alien planet. Build structures. Research tech tree. Random events (storms, alien encounters, equipment failures). Population management. Day/night cycle.
+- **KWizard** — Fantasy dueling card game. Build a hand from a spell deck. Turn-based combat vs AI. Mana system. 30+ unique spells (fireball, shield, heal, summon). AI opponents with different strategies. Campaign with progressive difficulty.
+- **KVoid** — Sci-fi horror survival. Explore a derelict space station room by room. Limited oxygen and battery. Find keycards, solve puzzles, avoid or fight creatures. Procedural station layout. Multiple endings based on choices. Tension through resource scarcity.
+- **KDragon** — Fantasy creature-raising sim. Hatch, feed, train, and evolve a dragon. Multiple dragon types with different abilities. Arena battles vs AI dragons. Stat management (strength, speed, fire, loyalty). Aging system. Treasure hoarding mechanic.
 
 ### 🛠️ Utilities (lower priority — create 1 for every 2-3 games)
 - **KPomodoro** — Focus timer with work/break cycles, session history, daily stats.
