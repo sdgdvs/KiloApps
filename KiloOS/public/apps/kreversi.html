@@ -4,40 +4,109 @@
     <meta charset="utf-8">
     <title>KReversi</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: #121212; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; }
-        h1 { font-size: 24px; color: #fff; margin-bottom: 10px; }
+        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: var(--bg-color, #121212); color: var(--text-color, #e0e0e0); display: flex; flex-direction: column; align-items: center; transition: background-color 0.3s, color 0.3s; }
+        h1 { font-size: 24px; color: var(--h1-color, #fff); margin-bottom: 10px; }
         .info { display: flex; justify-content: space-between; width: 340px; margin-bottom: 10px; font-weight: bold; }
-        .board { display: grid; grid-template-columns: repeat(8, 40px); grid-template-rows: repeat(8, 40px); gap: 2px; background: #222; padding: 2px; border-radius: 4px; }
-        .cell { background: #1a562c; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .cell:hover { background: #23783b; }
+        .board { display: grid; grid-template-columns: repeat(8, 40px); grid-template-rows: repeat(8, 40px); gap: 2px; background: var(--board-bg, #222); padding: 2px; border-radius: 4px; transition: background 0.3s; }
+        .cell { background: var(--cell-bg, #1a562c); width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; }
+        .cell:hover { background: var(--cell-hover, #23783b); }
         .disc { width: 32px; height: 32px; border-radius: 50%; display: none; }
-        .disc.black { display: block; background: #111; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .disc.white { display: block; background: #eee; box-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .disc.black { display: block; background: var(--disc-black, #111); box-shadow: var(--disc-black-shadow, 1px 1px 2px rgba(0,0,0,0.8)); }
+        .disc.white { display: block; background: var(--disc-white, #eee); box-shadow: var(--disc-white-shadow, 1px 1px 2px rgba(0,0,0,0.8)); }
         .valid-move { position: relative; }
-        .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: rgba(255,255,255,0.3); border-radius: 50%; }
+        .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: var(--valid-dot, rgba(255,255,255,0.3)); border-radius: 50%; }
         @keyframes flipToWhite {
-            0% { transform: scaleX(1); background: #111; }
-            50% { transform: scaleX(0); background: #111; }
-            51% { transform: scaleX(0); background: #eee; }
-            100% { transform: scaleX(1); background: #eee; }
+            0% { transform: scaleX(1); background: var(--disc-black, #111); }
+            50% { transform: scaleX(0); background: var(--disc-black, #111); }
+            51% { transform: scaleX(0); background: var(--disc-white, #eee); }
+            100% { transform: scaleX(1); background: var(--disc-white, #eee); }
         }
         @keyframes flipToBlack {
-            0% { transform: scaleX(1); background: #eee; }
-            50% { transform: scaleX(0); background: #eee; }
-            51% { transform: scaleX(0); background: #111; }
-            100% { transform: scaleX(1); background: #111; }
+            0% { transform: scaleX(1); background: var(--disc-white, #eee); }
+            50% { transform: scaleX(0); background: var(--disc-white, #eee); }
+            51% { transform: scaleX(0); background: var(--disc-black, #111); }
+            100% { transform: scaleX(1); background: var(--disc-black, #111); }
         }
         .disc.flip-to-white { animation: flipToWhite 0.3s forwards; }
         .disc.flip-to-black { animation: flipToBlack 0.3s forwards; }
         #message { margin-top: 15px; font-size: 18px; font-weight: bold; }
         button { padding: 8px 16px; font-size: 14px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
         button:hover { background: #444; }
-        .recommended-hint { outline: 3px solid #ffd700; box-shadow: 0 0 10px #ffd700 inset; background: #3c7349 !important; }
-        .recommended-hint::after { background: #ffd700 !important; width: 14px !important; height: 14px !important; box-shadow: 0 0 6px #ffd700; }
-        .eval-panel { margin-bottom: 10px; font-size: 14px; font-weight: bold; color: #ffd700; display: flex; gap: 20px; justify-content: center; width: 340px; background: #1a1a1a; padding: 6px 12px; border-radius: 4px; border: 1px solid #333; box-sizing: border-box; }
+        .recommended-hint { outline: 3px solid var(--hint-outline, #ffd700); box-shadow: 0 0 10px var(--hint-outline, #ffd700) inset; background: var(--hint-bg, #3c7349) !important; }
+        .recommended-hint::after { background: var(--hint-outline, #ffd700) !important; width: 14px !important; height: 14px !important; box-shadow: 0 0 6px var(--hint-outline, #ffd700); }
+        .eval-panel { margin-bottom: 10px; font-size: 14px; font-weight: bold; color: var(--hint-outline, #ffd700); display: flex; gap: 20px; justify-content: center; width: 340px; background: var(--eval-bg, #1a1a1a); padding: 6px 12px; border-radius: 4px; border: 1px solid #333; box-sizing: border-box; }
+
+        /* Themes */
+        body.theme-classic {
+            --bg-color: #121212;
+            --board-bg: #222222;
+            --cell-bg: #1a562c;
+            --cell-hover: #23783b;
+            --disc-black: #111111;
+            --disc-white: #eeeeee;
+            --disc-black-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            --disc-white-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            --valid-dot: rgba(255,255,255,0.35);
+            --hint-outline: #ffd700;
+            --hint-bg: #3c7349;
+            --eval-bg: #1a1a1a;
+            --text-color: #e0e0e0;
+            --h1-color: #ffffff;
+        }
+
+        body.theme-cyber {
+            --bg-color: #060b19;
+            --board-bg: #00f5d4;
+            --cell-bg: #0b132b;
+            --cell-hover: #1c2541;
+            --disc-black: #00f5d4;
+            --disc-white: #ff007f;
+            --disc-black-shadow: 0 0 10px #00f5d4;
+            --disc-white-shadow: 0 0 10px #ff007f;
+            --valid-dot: rgba(0,245,212,0.45);
+            --hint-outline: #ff007f;
+            --hint-bg: #152f5e;
+            --eval-bg: #0d1b2a;
+            --text-color: #e0e6ed;
+            --h1-color: #00f5d4;
+        }
+
+        body.theme-crimson {
+            --bg-color: #140306;
+            --board-bg: #5a0c18;
+            --cell-bg: #3a0810;
+            --cell-hover: #540c17;
+            --disc-black: #ffd700;
+            --disc-white: #d90429;
+            --disc-black-shadow: 0 0 8px #ffd700;
+            --disc-white-shadow: 0 0 8px #d90429;
+            --valid-dot: rgba(255,215,0,0.45);
+            --hint-outline: #ffd700;
+            --hint-bg: #6e101f;
+            --eval-bg: #28060c;
+            --text-color: #f7d6d8;
+            --h1-color: #ffd700;
+        }
+
+        body.theme-terminal {
+            --bg-color: #020b02;
+            --board-bg: #00ff66;
+            --cell-bg: #071c07;
+            --cell-hover: #113611;
+            --disc-black: #ffb000;
+            --disc-white: #33ff33;
+            --disc-black-shadow: 0 0 8px #ffb000;
+            --disc-white-shadow: 0 0 8px #33ff33;
+            --valid-dot: rgba(51,255,51,0.45);
+            --hint-outline: #ffb000;
+            --hint-bg: #1a4a1a;
+            --eval-bg: #092009;
+            --text-color: #33ff33;
+            --h1-color: #33ff33;
+        }
     </style>
 </head>
-<body>
+<body class="theme-classic">
     <h1>KReversi</h1>
     <div class="info">
         <div id="score-black">Black: 2</div>
@@ -50,6 +119,15 @@
         <span id="hint-text">Best Move: -</span>
     </div>
     <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; width: 360px;">
+        <div>
+            <label for="theme-select" style="font-size: 13px;">Theme:</label>
+            <select id="theme-select" onchange="changeTheme()" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
+                <option value="classic" selected>Classic Emerald</option>
+                <option value="cyber">Midnight Cyber</option>
+                <option value="crimson">Obsidian Crimson</option>
+                <option value="terminal">Retro Terminal</option>
+            </select>
+        </div>
         <div>
             <label for="ai-difficulty" style="font-size: 13px;">AI:</label>
             <select id="ai-difficulty" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
@@ -107,7 +185,21 @@
         const EMPTY = 0;
         const BLACK = 1;
         const WHITE = 2;
-        
+
+        const DIRS = [
+            [-1,-1], [-1,0], [-1,1],
+            [0,-1],          [0,1],
+            [1,-1],  [1,0],  [1,1]
+        ];
+
+        const THEMES = {
+            classic: { p1: 'Black', p2: 'White' },
+            cyber: { p1: 'Cyan', p2: 'Pink' },
+            crimson: { p1: 'Gold', p2: 'Ruby' },
+            terminal: { p1: 'Amber', p2: 'Green' }
+        };
+
+        let currentThemeKey = 'classic';
         let boardState = [];
         let currentPlayer = BLACK;
         let validMoves = [];
@@ -119,6 +211,25 @@
         let audioCtx = null;
         let stats = { wins: 0, losses: 0, draws: 0 };
         let gameEnded = false;
+
+        function loadThemePref() {
+            const saved = localStorage.getItem('kreversi_theme');
+            if (saved && THEMES[saved]) {
+                currentThemeKey = saved;
+            } else {
+                currentThemeKey = 'classic';
+            }
+            document.getElementById('theme-select').value = currentThemeKey;
+            document.body.className = 'theme-' + currentThemeKey;
+        }
+
+        function changeTheme() {
+            const sel = document.getElementById('theme-select').value;
+            currentThemeKey = sel;
+            document.body.className = 'theme-' + sel;
+            localStorage.setItem('kreversi_theme', sel);
+            renderBoard();
+        }
 
         function loadStats() {
             const saved = localStorage.getItem('kreversi_stats');
@@ -141,7 +252,8 @@
                 boardState,
                 currentPlayer,
                 history,
-                gameEnded
+                gameEnded,
+                theme: currentThemeKey
             };
             localStorage.setItem('kreversi_save', JSON.stringify(state));
             messageEl.textContent = 'Game Saved!';
@@ -155,6 +267,11 @@
                 currentPlayer = state.currentPlayer;
                 history = state.history || [];
                 gameEnded = state.gameEnded || false;
+                if (state.theme && THEMES[state.theme]) {
+                    currentThemeKey = state.theme;
+                    document.getElementById('theme-select').value = currentThemeKey;
+                    document.body.className = 'theme-' + currentThemeKey;
+                }
                 if (aiTimeoutId) {
                     clearTimeout(aiTimeoutId);
                     aiTimeoutId = null;
@@ -239,8 +356,9 @@
             if (moveTimeLeft <= 0) {
                 stopTimer();
                 gameEnded = true;
-                const timedOutPlayer = currentPlayer === BLACK ? 'Black' : 'White';
-                const winnerPlayer = currentPlayer === BLACK ? 'White' : 'Black';
+                const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
+                const timedOutPlayer = currentPlayer === BLACK ? themeInfo.p1 : themeInfo.p2;
+                const winnerPlayer = currentPlayer === BLACK ? themeInfo.p2 : themeInfo.p1;
                 messageEl.textContent = `${timedOutPlayer} ran out of time! ${winnerPlayer} wins!`;
                 if (currentPlayer === BLACK) stats.losses++;
                 else stats.wins++;
@@ -363,8 +481,9 @@
                 if (c === BLACK) b++;
                 if (c === WHITE) w++;
             }
-            scoreBlackEl.textContent = `Black: ${b}`;
-            scoreWhiteEl.textContent = `White: ${w}`;
+            const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
+            scoreBlackEl.textContent = `${themeInfo.p1}: ${b}`;
+            scoreWhiteEl.textContent = `${themeInfo.p2}: ${w}`;
             return {b, w};
         }
 
@@ -373,8 +492,9 @@
             const movesW = getValidMoves(WHITE);
             if (movesB.length === 0 && movesW.length === 0) {
                 const {b, w} = updateScores();
-                if (b > w) messageEl.textContent = 'Black wins!';
-                else if (w > b) messageEl.textContent = 'White wins!';
+                const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
+                if (b > w) messageEl.textContent = `${themeInfo.p1} wins!`;
+                else if (w > b) messageEl.textContent = `${themeInfo.p2} wins!`;
                 else messageEl.textContent = 'Draw!';
                 
                 if (!gameEnded) {
@@ -415,7 +535,6 @@
                 renderBoard(flips);
                 resetTimer();
                 
-                // Simple AI for White
                 if (currentPlayer === WHITE) {
                     aiTimeoutId = setTimeout(makeAIMove, 400);
                 }
@@ -527,6 +646,7 @@
             validMoves = getValidMoves(currentPlayer);
             const showHints = document.getElementById('hint-toggle').checked;
             const bestMoveIdx = (currentPlayer === BLACK && !gameEnded) ? getBestMove(BLACK) : null;
+            const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
             
             for (let i = 0; i < 64; i++) {
                 const cell = document.getElementById('cell-' + i);
@@ -549,7 +669,7 @@
                     }
                 }
             }
-            turnDisplayEl.textContent = `Turn: ${currentPlayer === BLACK ? 'Black' : 'White'}`;
+            turnDisplayEl.textContent = `Turn: ${currentPlayer === BLACK ? themeInfo.p1 : themeInfo.p2}`;
             updateScores();
 
             const evalScore = evaluatePosition();
@@ -557,7 +677,7 @@
             const hintTextEl = document.getElementById('hint-text');
             if (evalScoreEl) {
                 const sign = evalScore > 0 ? '+' : '';
-                const leading = evalScore > 0 ? 'Black ▲' : (evalScore < 0 ? 'White ▼' : 'Even');
+                const leading = evalScore > 0 ? `${themeInfo.p1} ▲` : (evalScore < 0 ? `${themeInfo.p2} ▼` : 'Even');
                 evalScoreEl.textContent = `Eval: ${sign}${evalScore} (${leading})`;
             }
             if (hintTextEl) {
@@ -569,6 +689,7 @@
             }
         }
 
+        loadThemePref();
         loadStats();
         initGame();
     </script>

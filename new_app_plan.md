@@ -52,7 +52,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KReversi
-**Phase:** 12
+**Phase:** 13
 **Status:** In Progress
 
 - [x] Phase 1: Choose a unique app. Scaffold `KReversi/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
@@ -67,11 +67,13 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Added Save/Load Game State functionality to both versions.
 - [x] Phase 11: Added Hint System and Move Recommendation Evaluator to both versions.
 - [x] Phase 12: Added Timed Game Modes (Untimed, Blitz 5s, Rapid 15s) and Handicap Start Options to both versions.
+- [x] Phase 13: Added Custom Board Themes & Piece Styles (Classic Emerald, Midnight Cyber, Obsidian Crimson, Retro Terminal) to both versions.
 
 ## Next Priority (Before New Apps)
 
 **App:** KReversi
-**Goal:** Phase 13
+**Goal:** Phase 14
+
 
 
 ## App Lifecycle (14 phases per app)

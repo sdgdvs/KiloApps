@@ -25,6 +25,37 @@
 #define IDM_HANDICAP_WHITE_CORNER 1015
 #define IDM_HANDICAP_BLACK_ADV 1016
 #define IDM_HANDICAP_4CORNERS 1017
+#define IDM_THEME_CLASSIC 1020
+#define IDM_THEME_CYBER 1021
+#define IDM_THEME_CRIMSON 1022
+#define IDM_THEME_TERMINAL 1023
+
+typedef struct {
+    COLORREF bg;
+    COLORREF boardCell;
+    COLORREF cellHover;
+    COLORREF gridPen;
+    COLORREF disc1;
+    COLORREF disc2;
+    COLORREF text;
+    COLORREF evalPanelBg;
+    COLORREF hintPen;
+    const char* p1Name;
+    const char* p2Name;
+} BoardTheme;
+
+static const BoardTheme g_themes[4] = {
+    // 0: Classic Emerald
+    { RGB(18, 18, 18), RGB(26, 86, 44), RGB(35, 120, 59), RGB(34, 34, 34), RGB(20, 20, 20), RGB(220, 220, 220), RGB(220, 220, 220), RGB(26, 26, 26), RGB(255, 215, 0), "Black", "White" },
+    // 1: Midnight Cyber
+    { RGB(6, 11, 25), RGB(11, 19, 43), RGB(28, 37, 65), RGB(0, 245, 212), RGB(0, 245, 212), RGB(255, 0, 127), RGB(224, 230, 237), RGB(13, 27, 42), RGB(255, 0, 127), "Cyan", "Pink" },
+    // 2: Obsidian Crimson
+    { RGB(20, 3, 6), RGB(58, 8, 16), RGB(84, 12, 23), RGB(90, 12, 24), RGB(255, 215, 0), RGB(217, 4, 41), RGB(247, 214, 216), RGB(40, 6, 12), RGB(255, 215, 0), "Gold", "Ruby" },
+    // 3: Retro Terminal
+    { RGB(2, 11, 2), RGB(7, 28, 7), RGB(17, 54, 17), RGB(0, 255, 102), RGB(255, 176, 0), RGB(51, 255, 51), RGB(51, 255, 51), RGB(9, 32, 9), RGB(255, 176, 0), "Amber", "Green" }
+};
+
+int currentTheme = 0; // 0=Classic, 1=Cyber, 2=Crimson, 3=Terminal
 
 const char g_szClassName[] = "KReversiClass";
 
@@ -48,6 +79,23 @@ static const int g_weights[64] = {
     -20, -50,  -2,  -2,  -2,  -2, -50, -20,
     100, -20,  10,   5,   5,  10, -20, 100
 };
+
+void LoadTheme() {
+    FILE* f = fopen("kreversi_theme.dat", "rb");
+    if (f) {
+        fread(&currentTheme, sizeof(int), 1, f);
+        fclose(f);
+        if (currentTheme < 0 || currentTheme > 3) currentTheme = 0;
+    }
+}
+
+void SaveTheme() {
+    FILE* f = fopen("kreversi_theme.dat", "wb");
+    if (f) {
+        fwrite(&currentTheme, sizeof(int), 1, f);
+        fclose(f);
+    }
+}
 
 void LoadStats() {
     FILE* f = fopen("kreversi_stats.dat", "rb");
@@ -183,6 +231,7 @@ void SaveGame(HWND hwnd) {
         fwrite(&currentPlayer, sizeof(int), 1, f);
         fwrite(&historyCount, sizeof(int), 1, f);
         fwrite(history, sizeof(HistoryState), historyCount, f);
+        fwrite(&currentTheme, sizeof(int), 1, f);
         fclose(f);
         MessageBox(hwnd, "Game saved successfully.", "Save Game", MB_OK | MB_ICONINFORMATION);
     } else {
@@ -197,6 +246,15 @@ void LoadGame(HWND hwnd) {
         fread(&currentPlayer, sizeof(int), 1, f);
         fread(&historyCount, sizeof(int), 1, f);
         fread(history, sizeof(HistoryState), historyCount, f);
+        if (fread(&currentTheme, sizeof(int), 1, f) == 1) {
+            if (currentTheme < 0 || currentTheme > 3) currentTheme = 0;
+            HMENU hMenu = GetMenu(hwnd);
+            CheckMenuItem(hMenu, IDM_THEME_CLASSIC, MF_UNCHECKED);
+            CheckMenuItem(hMenu, IDM_THEME_CYBER, MF_UNCHECKED);
+            CheckMenuItem(hMenu, IDM_THEME_CRIMSON, MF_UNCHECKED);
+            CheckMenuItem(hMenu, IDM_THEME_TERMINAL, MF_UNCHECKED);
+            CheckMenuItem(hMenu, IDM_THEME_CLASSIC + currentTheme, MF_CHECKED);
+        }
         fclose(f);
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2);
@@ -362,12 +420,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
             srand((unsigned int)time(NULL));
+            LoadTheme();
             HMENU hMenu = CreateMenu();
             HMENU hSubMenu = CreatePopupMenu();
             AppendMenu(hSubMenu, MF_STRING, IDM_EASY, "Easy");
             AppendMenu(hSubMenu, MF_STRING | MF_CHECKED, IDM_MEDIUM, "Medium");
             AppendMenu(hSubMenu, MF_STRING, IDM_HARD, "Hard");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSubMenu, "Difficulty");
+
+            HMENU hThemeMenu = CreatePopupMenu();
+            AppendMenu(hThemeMenu, MF_STRING | (currentTheme == 0 ? MF_CHECKED : 0), IDM_THEME_CLASSIC, "Classic Emerald");
+            AppendMenu(hThemeMenu, MF_STRING | (currentTheme == 1 ? MF_CHECKED : 0), IDM_THEME_CYBER, "Midnight Cyber");
+            AppendMenu(hThemeMenu, MF_STRING | (currentTheme == 2 ? MF_CHECKED : 0), IDM_THEME_CRIMSON, "Obsidian Crimson");
+            AppendMenu(hThemeMenu, MF_STRING | (currentTheme == 3 ? MF_CHECKED : 0), IDM_THEME_TERMINAL, "Retro Terminal");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hThemeMenu, "Theme");
             
             HMENU hTimeMenu = CreatePopupMenu();
             AppendMenu(hTimeMenu, MF_STRING | MF_CHECKED, IDM_TIME_UNTIMED, "Untimed");
@@ -410,6 +476,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CheckMenuItem(hMenu, IDM_MEDIUM, MF_UNCHECKED);
                     CheckMenuItem(hMenu, IDM_HARD, MF_UNCHECKED);
                     CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    break;
+                }
+                case IDM_THEME_CLASSIC:
+                case IDM_THEME_CYBER:
+                case IDM_THEME_CRIMSON:
+                case IDM_THEME_TERMINAL: {
+                    currentTheme = LOWORD(wParam) - IDM_THEME_CLASSIC;
+                    HMENU hMenu = GetMenu(hwnd);
+                    CheckMenuItem(hMenu, IDM_THEME_CLASSIC, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_THEME_CYBER, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_THEME_CRIMSON, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, IDM_THEME_TERMINAL, MF_UNCHECKED);
+                    CheckMenuItem(hMenu, LOWORD(wParam), MF_CHECKED);
+                    SaveTheme();
+                    InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
                 case IDM_TIME_UNTIMED:
@@ -542,9 +623,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            const BoardTheme* theme = &g_themes[currentTheme];
+
+            HBRUSH bgBrush = CreateSolidBrush(theme->bg);
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            FillRect(hdc, &clientRect, bgBrush);
+            DeleteObject(bgBrush);
+
             SetBkMode(hdc, OPAQUE);
-            SetBkColor(hdc, RGB(18, 18, 18));
-            SetTextColor(hdc, RGB(220, 220, 220));
+            SetBkColor(hdc, theme->bg);
+            SetTextColor(hdc, theme->text);
             
             int bCount = 0, wCount = 0;
             for(int i=0; i<64; i++) {
@@ -553,22 +642,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             char scoreStr[64];
-            sprintf(scoreStr, "Black: %d   White: %d", bCount, wCount);
+            sprintf(scoreStr, "%s: %d   %s: %d", theme->p1Name, bCount, theme->p2Name, wCount);
             TextOut(hdc, 10, 8, scoreStr, strlen(scoreStr));
             
             if (gameEnded) {
                 if (moveTimeMode > 0 && moveTimeLeftDeci <= 0) {
-                    if (currentPlayer == BLACK) TextOut(hdc, 200, 8, "Black Timeout!", 14);
-                    else TextOut(hdc, 200, 8, "White Timeout!", 14);
-                } else if (bCount > wCount) TextOut(hdc, 200, 8, "Black Wins!", 11);
-                else if (wCount > bCount) TextOut(hdc, 200, 8, "White Wins!", 11);
-                else TextOut(hdc, 200, 8, "Draw!", 5);
+                    char timeoutStr[64];
+                    sprintf(timeoutStr, "%s Timeout!", currentPlayer == BLACK ? theme->p1Name : theme->p2Name);
+                    TextOut(hdc, 220, 8, timeoutStr, strlen(timeoutStr));
+                } else if (bCount > wCount) {
+                    char winStr[64];
+                    sprintf(winStr, "%s Wins!", theme->p1Name);
+                    TextOut(hdc, 220, 8, winStr, strlen(winStr));
+                } else if (wCount > bCount) {
+                    char winStr[64];
+                    sprintf(winStr, "%s Wins!", theme->p2Name);
+                    TextOut(hdc, 220, 8, winStr, strlen(winStr));
+                } else TextOut(hdc, 220, 8, "Draw!", 5);
             } else if (!HasValidMoves(BLACK) && !HasValidMoves(WHITE)) {
                 gameEnded = 1;
                 KillTimer(hwnd, 3);
-                if (bCount > wCount) TextOut(hdc, 200, 8, "Black Wins!", 11);
-                else if (wCount > bCount) TextOut(hdc, 200, 8, "White Wins!", 11);
-                else TextOut(hdc, 200, 8, "Draw!", 5);
+                if (bCount > wCount) {
+                    char winStr[64];
+                    sprintf(winStr, "%s Wins!", theme->p1Name);
+                    TextOut(hdc, 220, 8, winStr, strlen(winStr));
+                } else if (wCount > bCount) {
+                    char winStr[64];
+                    sprintf(winStr, "%s Wins!", theme->p2Name);
+                    TextOut(hdc, 220, 8, winStr, strlen(winStr));
+                } else TextOut(hdc, 220, 8, "Draw!", 5);
                 
                 if (!gameOverSoundPlayed) {
                     gameOverSoundPlayed = 1;
@@ -576,8 +678,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     UpdateStats(bCount, wCount);
                 }
             } else {
-                if (currentPlayer == BLACK) TextOut(hdc, 200, 8, "Turn: Black", 11);
-                else TextOut(hdc, 200, 8, "Turn: White", 11);
+                char turnStr[64];
+                sprintf(turnStr, "Turn: %s", currentPlayer == BLACK ? theme->p1Name : theme->p2Name);
+                TextOut(hdc, 220, 8, turnStr, strlen(turnStr));
             }
 
             int evalScore = EvaluatePosition();
@@ -602,10 +705,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             TextOut(hdc, 10, 24, evalStr, strlen(evalStr));
 
-            HBRUSH boardBrush = CreateSolidBrush(RGB(26, 86, 44));
-            HBRUSH blackBrush = CreateSolidBrush(RGB(20, 20, 20));
-            HBRUSH whiteBrush = CreateSolidBrush(RGB(220, 220, 220));
-            HPEN gridPen = CreatePen(PS_SOLID, 2, RGB(34, 34, 34));
+            HBRUSH boardBrush = CreateSolidBrush(theme->boardCell);
+            HBRUSH disc1Brush = CreateSolidBrush(theme->disc1);
+            HBRUSH disc2Brush = CreateSolidBrush(theme->disc2);
+            HPEN gridPen = CreatePen(PS_SOLID, 2, theme->gridPen);
             
             SelectObject(hdc, gridPen);
             
@@ -628,7 +731,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int oldColor = (board[idx] == BLACK) ? WHITE : BLACK;
                             int newColor = board[idx];
                             int displayColor = (flipProgress < 5) ? oldColor : newColor;
-                            SelectObject(hdc, displayColor == BLACK ? blackBrush : whiteBrush);
+                            SelectObject(hdc, displayColor == BLACK ? disc1Brush : disc2Brush);
                             
                             int currentWidth = 40;
                             if (flipProgress < 5) {
@@ -640,15 +743,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             int margin = (40 - currentWidth) / 2;
                             Ellipse(hdc, rect.left + 5 + margin, rect.top + 5, rect.right - 5 - margin, rect.bottom - 5);
                         } else {
-                            SelectObject(hdc, board[idx] == BLACK ? blackBrush : whiteBrush);
+                            SelectObject(hdc, board[idx] == BLACK ? disc1Brush : disc2Brush);
                             Ellipse(hdc, rect.left + 5, rect.top + 5, rect.right - 5, rect.bottom - 5);
                         }
                     } else if (currentPlayer == BLACK && !gameEnded) {
                         int dummy[64];
                         if (GetFlippable(idx, BLACK, dummy) > 0) {
                             if (showHint && idx == bestMoveIdx) {
-                                HBRUSH hintBrush = CreateSolidBrush(RGB(255, 215, 0));
-                                HPEN hintPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+                                HBRUSH hintBrush = CreateSolidBrush(theme->hintPen);
+                                HPEN hintPen = CreatePen(PS_SOLID, 2, theme->hintPen);
                                 SelectObject(hdc, hintBrush);
                                 SelectObject(hdc, hintPen);
                                 Ellipse(hdc, rect.left + 14, rect.top + 14, rect.right - 14, rect.bottom - 14);
@@ -656,7 +759,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 DeleteObject(hintPen);
                             } else {
                                 SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                                HPEN hintPen = CreatePen(PS_SOLID, 1, RGB(180, 180, 180));
+                                HPEN hintPen = CreatePen(PS_SOLID, 1, theme->hintPen);
                                 SelectObject(hdc, hintPen);
                                 Ellipse(hdc, rect.left + 20, rect.top + 20, rect.right - 20, rect.bottom - 20);
                                 DeleteObject(hintPen);
@@ -667,8 +770,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             DeleteObject(boardBrush);
-            DeleteObject(blackBrush);
-            DeleteObject(whiteBrush);
+            DeleteObject(disc1Brush);
+            DeleteObject(disc2Brush);
             DeleteObject(gridPen);
             
             EndPaint(hwnd, &ps);
