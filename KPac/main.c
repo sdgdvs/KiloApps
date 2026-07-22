@@ -2,6 +2,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#pragma comment(lib, "msvcrt.lib")
+
 #define W 300
 #define H 300
 #define COLS 15
@@ -273,6 +275,10 @@ int MyRand() {
     return (unsigned int)(randSeed / 65536) % 32768;
 }
 
+int Abs(int x) {
+    return (x < 0) ? -x : x;
+}
+
 int px = 7, py = 12;
 int pdx = 0, pdy = 0;
 int ndx = 0, ndy = 0;
@@ -293,41 +299,121 @@ int fruitActive = 0;
 int fruitTimer = 0;
 int speedTimer = 0;
 
+int diffMode = 1; // 0 = Easy, 1 = Normal, 2 = Hard
+char saveMsgText[64] = "";
+int saveMsgTimer = 0;
+int numGhosts = 4;
+
 int statsGamesPlayed = 0;
 int statsGhostsEaten = 0;
 int statsMaxScore = 0;
 
-void LoadHighScore() {
-    FILE *f = fopen("kpac_hi.dat", "rb");
-    if (f) {
-        fread(&highScore, sizeof(int), 1, f);
-        fclose(f);
+typedef struct {
+    int px, py, pdx, pdy, ndx, ndy;
+    Ghost ghosts[5];
+    char map[ROWS][COLS];
+    int score, level, lives, diffMode;
+    int frightTimer, freezeTimer, speedTimer;
+    int dotCount, frameCount, fruitActive, fruitTimer, gameOver;
+} SaveState;
+
+void SaveGame() {
+    SaveState st;
+    st.px = px; st.py = py; st.pdx = pdx; st.pdy = pdy; st.ndx = ndx; st.ndy = ndy;
+    for (int i = 0; i < 5; i++) st.ghosts[i] = ghosts[i];
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            st.map[r][c] = map[r][c];
+        }
     }
-    f = fopen("kpac_stats.dat", "rb");
-    if (f) {
-        fread(&statsGamesPlayed, sizeof(int), 1, f);
-        fread(&statsGhostsEaten, sizeof(int), 1, f);
-        fread(&statsMaxScore, sizeof(int), 1, f);
-        fclose(f);
-    }
-}
-void SaveHighScore() {
-    FILE *f = fopen("kpac_hi.dat", "wb");
-    if (f) {
-        fwrite(&highScore, sizeof(int), 1, f);
-        fclose(f);
-    }
-    f = fopen("kpac_stats.dat", "wb");
-    if (f) {
-        fwrite(&statsGamesPlayed, sizeof(int), 1, f);
-        fwrite(&statsGhostsEaten, sizeof(int), 1, f);
-        fwrite(&statsMaxScore, sizeof(int), 1, f);
-        fclose(f);
+    st.score = score; st.level = level; st.lives = lives; st.diffMode = diffMode;
+    st.frightTimer = frightTimer; st.freezeTimer = freezeTimer; st.speedTimer = speedTimer;
+    st.dotCount = dotCount; st.frameCount = frameCount;
+    st.fruitActive = fruitActive; st.fruitTimer = fruitTimer; st.gameOver = gameOver;
+
+    HANDLE hFile = CreateFileA("kpac_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &st, sizeof(SaveState), &written, NULL);
+        CloseHandle(hFile);
+        lstrcpyA(saveMsgText, "GAME SAVED");
+        saveMsgTimer = 20;
+        MessageBeep(MB_OK);
     }
 }
 
+void LoadGame() {
+    HANDLE hFile = CreateFileA("kpac_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        lstrcpyA(saveMsgText, "NO SAVE FOUND");
+        saveMsgTimer = 20;
+        MessageBeep(MB_ICONHAND);
+        return;
+    }
+    SaveState st;
+    DWORD readBytes = 0;
+    if (ReadFile(hFile, &st, sizeof(SaveState), &readBytes, NULL) && readBytes == sizeof(SaveState)) {
+        px = st.px; py = st.py; pdx = st.pdx; pdy = st.pdy; ndx = st.ndx; ndy = st.ndy;
+        for (int i = 0; i < 5; i++) ghosts[i] = st.ghosts[i];
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                map[r][c] = st.map[r][c];
+            }
+        }
+        score = st.score; level = st.level; lives = st.lives; diffMode = st.diffMode;
+        frightTimer = st.frightTimer; freezeTimer = st.freezeTimer; speedTimer = st.speedTimer;
+        dotCount = st.dotCount; frameCount = st.frameCount;
+        fruitActive = st.fruitActive; fruitTimer = st.fruitTimer; gameOver = st.gameOver;
+        paused = 0;
+        lstrcpyA(saveMsgText, "GAME LOADED");
+        saveMsgTimer = 20;
+        MessageBeep(MB_OK);
+    }
+    CloseHandle(hFile);
+}
+
+void LoadHighScore() {
+    HANDLE hFile = CreateFileA("kpac_hi.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes;
+        ReadFile(hFile, &highScore, sizeof(int), &readBytes, NULL);
+        CloseHandle(hFile);
+    }
+    hFile = CreateFileA("kpac_stats.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes;
+        ReadFile(hFile, &statsGamesPlayed, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &statsGhostsEaten, sizeof(int), &readBytes, NULL);
+        ReadFile(hFile, &statsMaxScore, sizeof(int), &readBytes, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void SaveHighScore() {
+    HANDLE hFile = CreateFileA("kpac_hi.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &highScore, sizeof(int), &written, NULL);
+        CloseHandle(hFile);
+    }
+    hFile = CreateFileA("kpac_stats.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &statsGamesPlayed, sizeof(int), &written, NULL);
+        WriteFile(hFile, &statsGhostsEaten, sizeof(int), &written, NULL);
+        WriteFile(hFile, &statsMaxScore, sizeof(int), &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+int GetInitLives() {
+    if (diffMode == 0) return 5;
+    if (diffMode == 2) return 2;
+    return 3;
+}
+
 void Init(int keepScore) {
-    if (!keepScore) { score = 0; level = 1; lives = 3; }
+    if (!keepScore) { score = 0; level = 1; lives = GetInitLives(); }
     gameOver = 0;
     paused = 0;
     dotCount = 0;
@@ -354,14 +440,17 @@ void Init(int keepScore) {
 }
 
 void Update() {
+    if (saveMsgTimer > 0) saveMsgTimer--;
     if (gameOver || paused) return;
     
     if (freezeTimer > 0) freezeTimer--;
-    int numGhosts = (level > 5) ? 5 : 4;
+    numGhosts = (level > 5) ? 5 : 4;
     
     // Ghost basic logic (random move)
     if (frightTimer > 0) frightTimer--;
     int ghostSpeed = 4 - (level / 3);
+    if (diffMode == 0) ghostSpeed += 1;
+    else if (diffMode == 2) ghostSpeed = (ghostSpeed > 1) ? (ghostSpeed - 1) : 1;
     if (ghostSpeed < 1) ghostSpeed = 1;
     if (frightTimer > 0) ghostSpeed *= 2;
 
@@ -378,7 +467,7 @@ void Update() {
                     tx = px - pdx * 2;
                     ty = py - pdy * 2;
                 } else if (i == 3) { // Orange ghost scatters if too close
-                    int distToPac = abs(ghosts[i].x - px) + abs(ghosts[i].y - py);
+                    int distToPac = Abs(ghosts[i].x - px) + Abs(ghosts[i].y - py);
                     if (distToPac > 6) {
                         tx = px;
                         ty = py;
@@ -401,7 +490,7 @@ void Update() {
                         if (nx < 0) nx = COLS - 1;
                         if (nx >= COLS) nx = 0;
                         if (map[ny][nx] != 1) {
-                            int dist = abs(nx - tx) + abs(ny - ty);
+                            int dist = Abs(nx - tx) + Abs(ny - ty);
                             if (dist < min_dist) { min_dist = dist; best_d = d; }
                         }
                     }
@@ -453,7 +542,11 @@ void Update() {
             px = nx;
             py = ny;
             if (map[py][px] >= 2 && map[py][px] <= 5) {
-                if (map[py][px] == 3) { score += 40; frightTimer = 50; MessageBeep(MB_OK); }
+                if (map[py][px] == 3) {
+                    score += 40;
+                    frightTimer = (diffMode == 0) ? 75 : ((diffMode == 2) ? 30 : 50);
+                    MessageBeep(MB_OK);
+                }
                 else if (map[py][px] == 4) { score += 20; speedTimer = 80; MessageBeep(MB_ICONEXCLAMATION); }
                 else if (map[py][px] == 5) { score += 30; freezeTimer = 100; MessageBeep(MB_ICONINFORMATION); }
                 else { score += 10; }
@@ -534,6 +627,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == VK_DOWN) { ndx = 0; ndy = 1; }
             if (wParam == VK_RETURN && gameOver) Init(0);
             if (wParam == 'P' && !gameOver) paused = !paused;
+            if (wParam == '1') { diffMode = 0; lstrcpyA(saveMsgText, "DIFF: EASY"); saveMsgTimer = 20; MessageBeep(MB_OK); }
+            if (wParam == '2') { diffMode = 1; lstrcpyA(saveMsgText, "DIFF: NORMAL"); saveMsgTimer = 20; MessageBeep(MB_OK); }
+            if (wParam == '3') { diffMode = 2; lstrcpyA(saveMsgText, "DIFF: HARD"); saveMsgTimer = 20; MessageBeep(MB_OK); }
+            if ((wParam == 'S' || wParam == 's') && !gameOver) SaveGame();
+            if (wParam == 'L' || wParam == 'l') LoadGame();
             break;
         case WM_TIMER:
             Update();
@@ -605,8 +703,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(255, 255, 255));
             char sstr[64];
+            const char* diffNames[] = {"EASY", "NORM", "HARD"};
             wsprintfA(sstr, "Lv:%d Sc:%d HI:%d Lvs:%d", level, score, highScore, lives);
-            TextOutA(memDC, 5, 5, sstr, lstrlenA(sstr));
+            TextOutA(memDC, 2, 0, sstr, lstrlenA(sstr));
+            wsprintfA(sstr, "Diff:%s [1-3:Diff S:Save L:Load]", diffNames[diffMode]);
+            TextOutA(memDC, 2, 10, sstr, lstrlenA(sstr));
+            
+            if (saveMsgTimer > 0) {
+                SetTextColor(memDC, RGB(255, 255, 0));
+                TextOutA(memDC, W/2 - 40, H/2 + 25, saveMsgText, lstrlenA(saveMsgText));
+            }
             
             if (gameOver) {
                 SetTextColor(memDC, gameOver == 1 ? RGB(255,0,0) : RGB(0,255,0));
