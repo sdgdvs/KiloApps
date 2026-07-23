@@ -379,7 +379,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 7</span></h1>
+    <h1>🗡️ KQuest <span class="badge">Phase 8</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
   </header>
 
@@ -436,7 +436,7 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 7: Party Companions & Mercenary Hire System Enabled!</div>
+        <div class="log-entry system">Phase 8: Procedural Bounty Contracts & Quest Tracking System Enabled!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -520,6 +520,7 @@
       SHOP: 'SHOP',
       CRAFTING: 'CRAFTING',
       MERCENARY: 'MERCENARY',
+      QUEST_BOARD: 'QUEST_BOARD',
       DUNGEON: 'DUNGEON',
       COMBAT: 'COMBAT',
       GAME_OVER: 'GAME_OVER'
@@ -612,7 +613,8 @@
       quests: [
         { id: 'slay_monsters', title: 'Clear Dungeon Chambers', req: 5, current: 0, reward: 50, done: false },
         { id: 'slay_boss', title: 'Defeat Biome Boss (Floor 5)', req: 1, current: 0, reward: 150, done: false }
-      ]
+      ],
+      bountyContracts: []
     };
 
     // Current Enemy in Combat
@@ -708,12 +710,38 @@
     function updateQuestUI() {
       const qContainer = document.getElementById('quest-list');
       qContainer.innerHTML = '';
+      
       player.quests.forEach(q => {
         const item = document.createElement('div');
         item.className = 'quest-item';
         item.innerHTML = `
           <span class="quest-title">${q.title}</span>
           <span class="quest-status">${q.done ? '✅ Completed' : `${q.current}/${q.req} Progress (${q.reward} Gold)`}</span>
+        `;
+        qContainer.appendChild(item);
+      });
+
+      player.bountyContracts.forEach(b => {
+        const item = document.createElement('div');
+        item.className = 'quest-item';
+        const tierBadge = b.tier === 1 ? '[Bronze]' : (b.tier === 2 ? '[Silver]' : '[Gold]');
+        const badgeColor = b.tier === 1 ? '#cd7f32' : (b.tier === 2 ? '#c0c0c0' : '#ffd700');
+        
+        if (b.type === 'fetch' && !b.done) {
+          if (b.targetMat === 'iron') b.current = Math.min(b.req, player.materials.iron);
+          if (b.targetMat === 'dust') b.current = Math.min(b.req, player.materials.dust);
+          if (b.targetMat === 'core') b.current = Math.min(b.req, player.materials.core);
+          if (b.current >= b.req) b.done = true;
+        }
+
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span class="quest-title" style="font-size:0.8rem;"><span style="color:${badgeColor}; font-weight:700;">${tierBadge}</span> ${b.title}</span>
+          </div>
+          <div style="font-size:0.75rem; color:${b.done ? '#a6e3a1' : '#bac2de'}; margin-top:2px;">
+            ${b.done ? '✅ READY TO CLAIM' : `${b.current}/${b.req} Progress`}
+          </div>
+          ${b.done ? `<button class="btn btn-accent" style="font-size:0.7rem; padding:2px 6px; margin-top:4px;" onclick="claimBounty('${b.id}')">🎁 Claim ${b.chestName}</button>` : ''}
         `;
         qContainer.appendChild(item);
       });
@@ -790,6 +818,8 @@
         renderCrafting();
       } else if (state === STATE.MERCENARY) {
         renderMercenary();
+      } else if (state === STATE.QUEST_BOARD) {
+        renderQuestBoard();
       } else if (state === STATE.DUNGEON) {
         renderDungeon();
       } else if (state === STATE.COMBAT) {
@@ -905,6 +935,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
+        <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounty Board</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
         <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
@@ -944,6 +975,191 @@
         logMsg(`No completed quests to claim right now. Keep exploring!`, 'system');
       }
       updateUI();
+    }
+
+    // --- PHASE 8: PROCEDURAL BOUNTY CONTRACTS & QUEST TRACKING SYSTEM ---
+    let boardBounties = [];
+
+    function generateTownBounties() {
+      boardBounties = [
+        generateBountyContract(1, 'slay_goblins', '⛏️ Slay 5 Cave Beasts', 'Defeat 5 monsters in dungeon chambers.', 'slay', 5, 'none', 60, 50, 'Bronze Rune Chest'),
+        generateBountyContract(2, 'floor_depth', '🪜 Reach Floor 4', 'Descend to dungeon floor 4 or higher.', 'floor', 4, 'none', 140, 100, 'Silver Rune Chest'),
+        generateBountyContract(2, 'collect_iron', '⚙️ Gather 4 Iron Scrap', 'Collect 4 Iron Scrap crafting materials.', 'fetch', 4, 'iron', 120, 90, 'Silver Rune Chest'),
+        generateBountyContract(3, 'boss_conqueror', '👑 Elite Bounty: Slay 10 Foes', 'Purge 10 monsters from any dungeon biome.', 'slay', 10, 'none', 300, 240, 'Gold Rune Chest')
+      ];
+    }
+
+    function generateBountyContract(tier, idPrefix, title, desc, type, req, targetMat, rewardGold, rewardXp, chestName) {
+      return {
+        id: idPrefix + '_' + Math.floor(Math.random() * 10000),
+        tier: tier, // 1: Bronze, 2: Silver, 3: Gold
+        title: title,
+        desc: desc,
+        type: type, // slay, floor, fetch
+        targetMat: targetMat,
+        req: req,
+        current: 0,
+        rewardGold: rewardGold,
+        rewardXp: rewardXp,
+        chestName: chestName,
+        done: false,
+        claimed: false
+      };
+    }
+
+    function renderQuestBoard() {
+      if (boardBounties.length === 0) {
+        generateTownBounties();
+      }
+
+      document.getElementById('location-title').textContent = '📜 Oakhaven Quest & Bounty Board';
+      document.getElementById('location-desc').textContent = 'Accept procedural bounty contracts, track objectives, and earn Gold, XP, and Tiered Rune Chests!';
+
+      const dyn = document.getElementById('dynamic-content');
+      const activeCount = player.bountyContracts.length;
+      
+      dyn.innerHTML = `
+        <div style="margin-bottom:12px; background:#181825; padding:10px; border-radius:6px; border:1px solid #313244; font-size:0.85rem;">
+          <strong>Active Bounties:</strong> <span style="color:#a6e3a1;">${activeCount} / 3 Max Slots</span>
+        </div>
+
+        <h4 style="color:#cba6f7; font-size:0.95rem; margin-bottom:6px;">📋 Available Town Bounties</h4>
+        <div class="craft-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); margin-bottom:14px;">
+          ${boardBounties.map((b, idx) => {
+            const isAccepted = player.bountyContracts.some(ab => ab.id === b.id);
+            const tierColor = b.tier === 1 ? '#cd7f32' : (b.tier === 2 ? '#c0c0c0' : '#ffd700');
+            const tierBadge = b.tier === 1 ? '🧰 Bronze Tier' : (b.tier === 2 ? '🛡️ Silver Tier' : '👑 Gold Tier');
+            return `
+              <div class="craft-card ${isAccepted ? 'selected' : ''}">
+                <div style="font-size:0.75rem; color:${tierColor}; font-weight:700;">${tierBadge}</div>
+                <h3>${b.title}</h3>
+                <p>${b.desc}</p>
+                <div class="mats-req">Req: ${b.req} | Reward: ${b.rewardGold}G, ${b.rewardXp}XP</div>
+                <div style="font-size:0.75rem; color:#a6e3a1; font-weight:600; margin-bottom:6px;">🎁 ${b.chestName}</div>
+                ${isAccepted ? `
+                  <button class="btn" disabled>Accepted</button>
+                ` : `
+                  <button class="btn btn-accent" onclick="acceptBounty(${idx})" ${activeCount >= 3 ? 'disabled' : ''}>Accept Contract</button>
+                `}
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <h4 style="color:#89b4fa; font-size:0.95rem; margin-bottom:6px;">📜 Active Accepted Contracts</h4>
+        <div class="craft-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+          ${player.bountyContracts.length === 0 ? `
+            <div style="font-size:0.85rem; color:#6c7086; grid-column: 1 / -1;">No active bounty contracts accepted. Select a bounty above!</div>
+          ` : player.bountyContracts.map((ab) => {
+            const pct = Math.min(100, Math.floor((ab.current / ab.req) * 100));
+            return `
+              <div class="craft-card">
+                <h3>${ab.title}</h3>
+                <p>${ab.desc}</p>
+                <div style="font-size:0.8rem; color:#f9e2af; margin-bottom:4px;">Progress: ${ab.current} / ${ab.req} (${pct}%)</div>
+                <div class="bar-container" style="width:100%; height:8px; margin-bottom:8px;">
+                  <div class="bar-fill-hp" style="width:${pct}%; background:#a6e3a1;"></div>
+                </div>
+                ${ab.done ? `
+                  <button class="btn btn-accent" onclick="claimBounty('${ab.id}')">🎁 Claim Reward & ${ab.chestName}</button>
+                ` : `
+                  <button class="btn" disabled>In Progress</button>
+                `}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn" onclick="rerollBounties()">🎲 Reroll Board (10 Gold)</button>
+      `;
+    }
+
+    function acceptBounty(index) {
+      if (player.bountyContracts.length >= 3) {
+        logMsg(`⚠️ Maximum 3 active bounty contracts allowed at a time!`, 'warning');
+        return;
+      }
+      const b = boardBounties[index];
+      if (!b || player.bountyContracts.some(ab => ab.id === b.id)) return;
+
+      const activeB = JSON.parse(JSON.stringify(b));
+      if (activeB.type === 'fetch') {
+        if (activeB.targetMat === 'iron') activeB.current = Math.min(activeB.req, player.materials.iron);
+        if (activeB.targetMat === 'dust') activeB.current = Math.min(activeB.req, player.materials.dust);
+        if (activeB.targetMat === 'core') activeB.current = Math.min(activeB.req, player.materials.core);
+        if (activeB.current >= activeB.req) activeB.done = true;
+      } else if (activeB.type === 'floor') {
+        activeB.current = Math.min(activeB.req, player.floor);
+        if (activeB.current >= activeB.req) activeB.done = true;
+      }
+
+      player.bountyContracts.push(activeB);
+      logMsg(`📜 Accepted Bounty Contract: "${activeB.title}"! Track progress in Quest Log.`, 'town');
+      updateUI();
+      renderQuestBoard();
+    }
+
+    function claimBounty(bountyId) {
+      const idx = player.bountyContracts.findIndex(b => b.id === bountyId);
+      if (idx === -1) return;
+      const b = player.bountyContracts[idx];
+      if (!b.done) return;
+
+      player.gold += b.rewardGold;
+      player.xp += b.rewardXp;
+      logMsg(`🎉 Claimed Bounty: "${b.title}"! Received +${b.rewardGold} Gold & +${b.rewardXp} XP!`, 'loot');
+
+      if (b.tier === 1) { // Bronze
+        player.gold += 25;
+        player.materials.iron += 1;
+        player.hp = Math.min(player.maxHp, player.hp + 15);
+        logMsg(`🧰 OPENED BRONZE RUNE CHEST! Found +25 Gold, +1 Iron Scrap & +15 HP restored!`, 'spell');
+      } else if (b.tier === 2) { // Silver
+        player.gold += 60;
+        player.materials.dust += 2;
+        let pot = player.inventory.find(i => i.id === 'hp_potion');
+        if (pot) pot.count++;
+        else player.inventory.push({ id: 'hp_potion', name: 'Health Potion', count: 1, desc: 'Restores 35 HP' });
+        logMsg(`🛡️ OPENED SILVER RUNE CHEST! Found +60 Gold, +2 Arcane Dust & +1 Health Potion!`, 'spell');
+      } else { // Gold Tier
+        player.gold += 150;
+        player.materials.core += 1;
+        player.str += 2;
+        player.def += 2;
+        logMsg(`👑 OPENED GOLD RUNE CHEST! Found +150 Gold, +1 Elemental Core & Permanent +2 STR / +2 DEF Bonus!`, 'spell');
+      }
+
+      player.bountyContracts.splice(idx, 1);
+
+      if (player.xp >= player.nextXp) {
+        player.level++;
+        player.xp -= player.nextXp;
+        player.nextXp = Math.floor(player.nextXp * 1.5);
+        player.maxHp += 15; player.hp = player.maxHp;
+        player.maxMp += 10; player.mp = player.maxMp;
+        player.str += 3; player.int += 2; player.def += 2; player.agi += 2;
+        logMsg(`🌟 LEVEL UP! You reached Level ${player.level}! All stats increased & health restored!`, 'town');
+      }
+
+      updateUI();
+      if (currentState === STATE.QUEST_BOARD) renderQuestBoard();
+    }
+
+    function rerollBounties() {
+      const allDone = boardBounties.every(b => player.bountyContracts.some(ab => ab.id === b.id));
+      if (!allDone && player.gold < 10) {
+        logMsg(`Need 10 Gold to reroll town bounty board contracts!`, 'warning');
+        return;
+      }
+      if (!allDone) player.gold -= 10;
+      generateTownBounties();
+      logMsg(`🎲 Rerolled Town Bounty Board contracts! New bounties available.`, 'town');
+      updateUI();
+      renderQuestBoard();
     }
 
     // --- PHASE 7: MERCENARY GUILD & PARTY COMPANION SYSTEM ---
@@ -1390,6 +1606,17 @@
       const b = BIOMES[player.biome];
       player.floor++;
       payCompanionUpkeep();
+
+      player.bountyContracts.forEach(bc => {
+        if (!bc.done && bc.type === 'floor') {
+          bc.current = Math.max(bc.current, player.floor);
+          if (bc.current >= bc.req) {
+            bc.done = true;
+            logMsg(`📜 Bounty Complete: "${bc.title}"! Claim reward & ${bc.chestName}!`, 'loot');
+          }
+        }
+      });
+
       logMsg(`You descend deeper into Floor ${player.floor} of ${b.name}...`, 'system');
       updateUI();
       renderDungeon();
@@ -1728,6 +1955,17 @@
         if (!q.done) {
           if (q.id === 'slay_monsters') q.current++;
           if (q.id === 'slay_boss' && currentEnemy.name.includes('Goblin King')) q.current++;
+        }
+      });
+
+      // Update active bounty contracts
+      player.bountyContracts.forEach(bc => {
+        if (!bc.done && bc.type === 'slay') {
+          bc.current++;
+          if (bc.current >= bc.req) {
+            bc.done = true;
+            logMsg(`📜 Bounty Complete: "${bc.title}"! Claim reward & ${bc.chestName}!`, 'loot');
+          }
         }
       });
 

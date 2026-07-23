@@ -8,6 +8,24 @@
 #define STATE_GAME_OVER   5
 #define STATE_CRAFTING    6
 #define STATE_MERCENARY   7
+#define STATE_QUEST_BOARD 8
+
+typedef struct {
+    int id;
+    int tier; // 1: Bronze, 2: Silver, 3: Gold
+    int type; // 0: slay, 1: floor, 2: fetch
+    char title[48];
+    char desc[80];
+    int req;
+    int current;
+    int rewardGold;
+    int rewardXp;
+    char chestName[32];
+    char targetMat[16];
+    int accepted;
+    int done;
+    int claimed;
+} BountyContract;
 
 static unsigned int rngSeed = 54321;
 static int xrand() {
@@ -141,6 +159,173 @@ HWND hBtn1, hBtn2, hBtn3, hBtn4, hBtn5, hBtn6;
 HBRUSH hBgBrush = NULL;
 HBRUSH hPanelBrush = NULL;
 
+static BountyContract g_BoardBounties[4];
+static BountyContract g_ActiveBounties[3];
+static int g_ActiveBountyCount = 0;
+
+void GenerateBounties() {
+    g_BoardBounties[0].id = 1;
+    g_BoardBounties[0].tier = 1;
+    g_BoardBounties[0].type = 0; // slay
+    lstrcpyA(g_BoardBounties[0].title, "Slay 5 Dungeon Beasts");
+    lstrcpyA(g_BoardBounties[0].desc, "Defeat 5 monsters in dungeon chambers.");
+    g_BoardBounties[0].req = 5;
+    g_BoardBounties[0].current = 0;
+    g_BoardBounties[0].rewardGold = 60;
+    g_BoardBounties[0].rewardXp = 50;
+    lstrcpyA(g_BoardBounties[0].chestName, "Bronze Rune Chest");
+    g_BoardBounties[0].accepted = 0; g_BoardBounties[0].done = 0; g_BoardBounties[0].claimed = 0;
+
+    g_BoardBounties[1].id = 2;
+    g_BoardBounties[1].tier = 2;
+    g_BoardBounties[1].type = 1; // floor
+    lstrcpyA(g_BoardBounties[1].title, "Reach Floor 4 Depth");
+    lstrcpyA(g_BoardBounties[1].desc, "Descend to dungeon floor 4 or higher.");
+    g_BoardBounties[1].req = 4;
+    g_BoardBounties[1].current = 0;
+    g_BoardBounties[1].rewardGold = 140;
+    g_BoardBounties[1].rewardXp = 100;
+    lstrcpyA(g_BoardBounties[1].chestName, "Silver Rune Chest");
+    g_BoardBounties[1].accepted = 0; g_BoardBounties[1].done = 0; g_BoardBounties[1].claimed = 0;
+
+    g_BoardBounties[2].id = 3;
+    g_BoardBounties[2].tier = 2;
+    g_BoardBounties[2].type = 2; // fetch
+    lstrcpyA(g_BoardBounties[2].title, "Gather 4 Iron Scrap");
+    lstrcpyA(g_BoardBounties[2].desc, "Collect 4 Iron Scrap crafting materials.");
+    lstrcpyA(g_BoardBounties[2].targetMat, "iron");
+    g_BoardBounties[2].req = 4;
+    g_BoardBounties[2].current = 0;
+    g_BoardBounties[2].rewardGold = 120;
+    g_BoardBounties[2].rewardXp = 90;
+    lstrcpyA(g_BoardBounties[2].chestName, "Silver Rune Chest");
+    g_BoardBounties[2].accepted = 0; g_BoardBounties[2].done = 0; g_BoardBounties[2].claimed = 0;
+
+    g_BoardBounties[3].id = 4;
+    g_BoardBounties[3].tier = 3;
+    g_BoardBounties[3].type = 0; // slay
+    lstrcpyA(g_BoardBounties[3].title, "Elite Bounty: Slay 10 Foes");
+    lstrcpyA(g_BoardBounties[3].desc, "Purge 10 monsters from any dungeon biome.");
+    g_BoardBounties[3].req = 10;
+    g_BoardBounties[3].current = 0;
+    g_BoardBounties[3].rewardGold = 300;
+    g_BoardBounties[3].rewardXp = 240;
+    lstrcpyA(g_BoardBounties[3].chestName, "Gold Rune Chest");
+    g_BoardBounties[3].accepted = 0; g_BoardBounties[3].done = 0; g_BoardBounties[3].claimed = 0;
+}
+
+void AcceptBounty(int boardIdx) {
+    if (boardIdx < 0 || boardIdx >= 4) return;
+    if (g_ActiveBountyCount >= 3) {
+        if (hLogEdit) {
+            int len = GetWindowTextLength(hLogEdit);
+            SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+            SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"⚠️ Max 3 active bounties allowed!\r\n");
+        }
+        return;
+    }
+    if (g_BoardBounties[boardIdx].accepted) {
+        if (hLogEdit) {
+            int len = GetWindowTextLength(hLogEdit);
+            SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+            SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"Bounty already accepted!\r\n");
+        }
+        return;
+    }
+    g_BoardBounties[boardIdx].accepted = 1;
+    g_ActiveBounties[g_ActiveBountyCount] = g_BoardBounties[boardIdx];
+    
+    if (g_ActiveBounties[g_ActiveBountyCount].type == 2) {
+        if (lstrcmpA(g_ActiveBounties[g_ActiveBountyCount].targetMat, "iron") == 0) {
+            g_ActiveBounties[g_ActiveBountyCount].current = player.ironScrap;
+        }
+        if (g_ActiveBounties[g_ActiveBountyCount].current >= g_ActiveBounties[g_ActiveBountyCount].req) {
+            g_ActiveBounties[g_ActiveBountyCount].done = 1;
+        }
+    } else if (g_ActiveBounties[g_ActiveBountyCount].type == 1) {
+        g_ActiveBounties[g_ActiveBountyCount].current = player.floor;
+        if (g_ActiveBounties[g_ActiveBountyCount].current >= g_ActiveBounties[g_ActiveBountyCount].req) {
+            g_ActiveBounties[g_ActiveBountyCount].done = 1;
+        }
+    }
+
+    g_ActiveBountyCount++;
+    if (hLogEdit) {
+        char msg[128];
+        wsprintfA(msg, "📜 Accepted Bounty Contract: %s!\r\n", g_BoardBounties[boardIdx].title);
+        int len = GetWindowTextLength(hLogEdit);
+        SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+        SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)msg);
+    }
+}
+
+void ClaimBounty(int activeIdx) {
+    if (activeIdx < 0 || activeIdx >= g_ActiveBountyCount) return;
+    BountyContract* b = &g_ActiveBounties[activeIdx];
+    if (!b->done) return;
+
+    player.gold += b->rewardGold;
+    player.xp += b->rewardXp;
+    if (hLogEdit) {
+        char msg[128];
+        wsprintfA(msg, "🎉 Claimed Bounty: %s! +%d Gold, +%d XP!\r\n", b->title, b->rewardGold, b->rewardXp);
+        int len = GetWindowTextLength(hLogEdit);
+        SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+        SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)msg);
+    }
+
+    if (b->tier == 1) {
+        player.gold += 25;
+        player.ironScrap += 1;
+        player.hp += 15;
+        if (player.hp > player.maxHp) player.hp = player.maxHp;
+        if (hLogEdit) {
+            int len = GetWindowTextLength(hLogEdit);
+            SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+            SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"🧰 OPENED BRONZE RUNE CHEST! +25 Gold, +1 Iron Scrap, +15 HP!\r\n");
+        }
+    } else if (b->tier == 2) {
+        player.gold += 60;
+        player.arcaneDust += 2;
+        player.hpPotions += 1;
+        if (hLogEdit) {
+            int len = GetWindowTextLength(hLogEdit);
+            SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+            SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"🛡️ OPENED SILVER RUNE CHEST! +60 Gold, +2 Arcane Dust, +1 HP Potion!\r\n");
+        }
+    } else {
+        player.gold += 150;
+        player.elementalCore += 1;
+        player.str += 2;
+        player.def += 2;
+        if (hLogEdit) {
+            int len = GetWindowTextLength(hLogEdit);
+            SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+            SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"👑 OPENED GOLD RUNE CHEST! +150 Gold, +1 Core, +2 STR/DEF!\r\n");
+        }
+    }
+
+    for (int i = activeIdx; i < g_ActiveBountyCount - 1; i++) {
+        g_ActiveBounties[i] = g_ActiveBounties[i + 1];
+    }
+    g_ActiveBountyCount--;
+}
+
+void ClaimAllCompletedBounties() {
+    int claimed = 0;
+    for (int i = g_ActiveBountyCount - 1; i >= 0; i--) {
+        if (g_ActiveBounties[i].done) {
+            ClaimBounty(i);
+            claimed++;
+        }
+    }
+    if (claimed == 0 && hLogEdit) {
+        int len = GetWindowTextLength(hLogEdit);
+        SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+        SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"No completed bounties ready to claim right now.\r\n");
+    }
+}
+
 void LogMessage(const char* msg) {
     if (!hLogEdit) return;
     int len = GetWindowTextLength(hLogEdit);
@@ -229,18 +414,37 @@ void UpdateUI() {
         lstrcpyA(compBuf, "None (Hire at Mercenary Guild)");
     }
 
+    char bProgressBuf[256];
+    if (g_ActiveBountyCount == 0) {
+        lstrcpyA(bProgressBuf, "None active (Accept at Quest Board)");
+    } else {
+        bProgressBuf[0] = '\0';
+        for (int i = 0; i < g_ActiveBountyCount; i++) {
+            if (g_ActiveBounties[i].type == 2) { // fetch
+                if (lstrcmpA(g_ActiveBounties[i].targetMat, "iron") == 0) {
+                    g_ActiveBounties[i].current = player.ironScrap;
+                }
+                if (g_ActiveBounties[i].current >= g_ActiveBounties[i].req) g_ActiveBounties[i].done = 1;
+            }
+            char itemBuf[96];
+            const char* tStr = g_ActiveBounties[i].tier == 1 ? "[Bronze]" : (g_ActiveBounties[i].tier == 2 ? "[Silver]" : "[Gold]");
+            wsprintfA(itemBuf, "%s%s %s(%d/%d%s) ", i > 0 ? " | " : "", tStr, g_ActiveBounties[i].title, g_ActiveBounties[i].current, g_ActiveBounties[i].req, g_ActiveBounties[i].done ? " READY" : "");
+            lstrcatA(bProgressBuf, itemBuf);
+        }
+    }
+
     wsprintfA(infoBuf,
         "BIOME: %s (Hazard: %s)  |  COMPANION: %s\r\n"
         "ATTRIBUTES: STR %d (+%d) | INT %d (+%d) | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
         "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s\r\n"
         "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Elemental Core x%d\r\n"
-        "INVENTORY: HP Pot x%d | MP Pot x%d | Bomb x%d | Gr.HP x%d | Elixir x%d",
+        "BOUNTIES: %s",
         g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf,
         player.str, player.weaponBonusStr, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
         player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
         player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
         player.ironScrap, player.arcaneDust, player.elementalCore,
-        player.hpPotions, player.mpPotions, player.fireBombs, player.greaterHpPotions, player.powerElixirs);
+        bProgressBuf);
 
     if (hStatusText) SetWindowTextA(hStatusText, statusBuf);
     if (hInfoText) SetWindowTextA(hInfoText, infoBuf);
@@ -272,16 +476,25 @@ void SetupButtons() {
             SetWindowTextA(hBtn3, "Rest at Inn (10G)");
             SetWindowTextA(hBtn4, "Visit Shop");
             SetWindowTextA(hBtn5, "Craft & Enchant");
-            SetWindowTextA(hBtn6, "Mercenary Guild");
+            SetWindowTextA(hBtn6, "📜 Quest Board");
             break;
         }
 
+        case STATE_QUEST_BOARD:
+            SetWindowTextA(hBtn1, "Accept B1 (Bronze)");
+            SetWindowTextA(hBtn2, "Accept B2 (Silver)");
+            SetWindowTextA(hBtn3, "Accept B3 (Silver)");
+            SetWindowTextA(hBtn4, "Accept B4 (Gold)");
+            SetWindowTextA(hBtn5, "🎁 Claim Rewards");
+            SetWindowTextA(hBtn6, "Back to Town");
+            break;
+
         case STATE_MERCENARY:
-            SetWindowTextA(hBtn1, "Hire Paladin Tank (80G)");
-            SetWindowTextA(hBtn2, "Hire Archmage DPS (100G)");
-            SetWindowTextA(hBtn3, "Hire Cleric Healer (70G)");
-            SetWindowTextA(hBtn4, player.companion.isDown ? "Revive Companion (20G)" : "Dismiss Companion");
-            SetWindowTextA(hBtn5, "Claim Quests");
+            SetWindowTextA(hBtn1, "Hire Paladin (80G)");
+            SetWindowTextA(hBtn2, "Hire Archmage (100G)");
+            SetWindowTextA(hBtn3, "Hire Cleric (70G)");
+            SetWindowTextA(hBtn4, player.companion.isDown ? "Revive Comp (20G)" : "Dismiss Comp");
+            SetWindowTextA(hBtn5, "Merc Guild Info");
             SetWindowTextA(hBtn6, "Back to Town");
             break;
 
@@ -540,6 +753,18 @@ void CombatVictory() {
         player.questBossKilled = 1;
     }
 
+    for (int i = 0; i < g_ActiveBountyCount; i++) {
+        if (!g_ActiveBounties[i].done && g_ActiveBounties[i].type == 0) { // slay
+            g_ActiveBounties[i].current++;
+            if (g_ActiveBounties[i].current >= g_ActiveBounties[i].req) {
+                g_ActiveBounties[i].done = 1;
+                char bmsg[128];
+                wsprintfA(bmsg, "📜 Bounty Completed: %s! Claim at Town Quest Board!", g_ActiveBounties[i].title);
+                LogMessage(bmsg);
+            }
+        }
+    }
+
     CheckLevelUp();
     gameState = STATE_DUNGEON;
     SetupButtons();
@@ -547,6 +772,10 @@ void CombatVictory() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_QUEST_BOARD) {
+        AcceptBounty(0);
+        return;
+    }
     if (gameState == STATE_CHAR_CREATE) {
         selectedClassIndex = 0;
         InitHero(0);
@@ -701,6 +930,10 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_QUEST_BOARD) {
+        AcceptBounty(1);
+        return;
+    }
     if (gameState == STATE_CHAR_CREATE) {
         selectedClassIndex = 1;
         InitHero(1);
@@ -754,6 +987,19 @@ void HandleButton2() {
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
         PayCompanionUpkeep();
+
+        for (int i = 0; i < g_ActiveBountyCount; i++) {
+            if (!g_ActiveBounties[i].done && g_ActiveBounties[i].type == 1) { // floor
+                if (player.floor > g_ActiveBounties[i].current) g_ActiveBounties[i].current = player.floor;
+                if (g_ActiveBounties[i].current >= g_ActiveBounties[i].req) {
+                    g_ActiveBounties[i].done = 1;
+                    char bmsg[128];
+                    wsprintfA(bmsg, "📜 Bounty Completed: %s! Claim at Town Quest Board!", g_ActiveBounties[i].title);
+                    LogMessage(bmsg);
+                }
+            }
+        }
+
         char msg[128];
         wsprintfA(msg, "🪜 Descended to Floor %d of %s.", player.floor, g_Biomes[player.biome].name);
         LogMessage(msg);
@@ -807,6 +1053,10 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_QUEST_BOARD) {
+        AcceptBounty(2);
+        return;
+    }
     if (gameState == STATE_CHAR_CREATE) {
         selectedClassIndex = 2;
         InitHero(2);
@@ -884,6 +1134,10 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_QUEST_BOARD) {
+        AcceptBounty(3);
+        return;
+    }
     if (gameState == STATE_CHAR_CREATE) {
         LogMessage("✨ Character created! Welcome to Oakhaven Town.");
         gameState = STATE_TOWN;
@@ -974,6 +1228,10 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_QUEST_BOARD) {
+        ClaimAllCompletedBounties();
+        return;
+    }
     if (gameState == STATE_TOWN) {
         gameState = STATE_CRAFTING;
         LogMessage("Entered Enchanter's Forge & Alchemy Bench.");
@@ -1051,8 +1309,14 @@ void HandleButton5() {
 
 void HandleButton6() {
     if (gameState == STATE_TOWN) {
-        gameState = STATE_MERCENARY;
-        LogMessage("Entered Oakhaven Mercenary Guild.");
+        gameState = STATE_QUEST_BOARD;
+        GenerateBounties();
+        LogMessage("Entered Oakhaven Town Quest Board & Bounty Hub.");
+        SetupButtons();
+        UpdateUI();
+    } else if (gameState == STATE_QUEST_BOARD) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
@@ -1097,7 +1361,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 7: Party Companions & Mercenary Hire System Active!");
+            LogMessage("Phase 8: Procedural Bounty Contracts & Quest Tracking System Active!");
             break;
         }
         case WM_COMMAND: {
