@@ -11,18 +11,21 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: #1a1a1a;
     color: #e0e0e0;
   }
   #game-container {
     text-align: center;
+    max-width: 500px;
+    width: 100%;
+    padding: 10px;
   }
   .simon-board {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-gap: 10px;
-    margin: 20px auto;
+    margin: 15px auto;
     width: 330px;
     height: 220px;
   }
@@ -66,16 +69,16 @@
   }
   
   #controls {
-    margin-top: 20px;
+    margin-top: 15px;
   }
   #mode-select {
     background-color: #333;
     color: #e0e0e0;
     border: 1px solid #555;
-    padding: 10px;
+    padding: 8px 12px;
     border-radius: 5px;
     margin-right: 10px;
-    font-size: 16px;
+    font-size: 15px;
     cursor: pointer;
   }
   #mode-select:disabled {
@@ -86,10 +89,10 @@
     background-color: #333;
     color: #e0e0e0;
     border: 1px solid #555;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
     transition: background-color 0.2s;
   }
   #start-btn:hover, .action-btn:hover {
@@ -103,24 +106,34 @@
   }
   .action-btn {
     padding: 5px 10px;
-    font-size: 14px;
-    margin: 0 5px;
+    font-size: 13px;
+    margin: 3px;
+  }
+  .pwr-btn {
+    background-color: #1a3a4b;
+    border-color: #0088cc;
+    color: #79d2ff;
+  }
+  .pwr-btn:hover {
+    background-color: #26546c;
   }
   #status {
     margin-top: 10px;
     font-weight: bold;
-    height: 20px;
+    min-height: 22px;
+    color: #00ffcc;
   }
-  #hints-display {
+  #powerups-display {
     color: #ffd700;
-    margin-top: 5px;
+    margin-top: 6px;
     font-weight: bold;
+    font-size: 14px;
   }
   #help-modal {
     display: none;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     justify-content: center;
     align-items: center;
     z-index: 10;
@@ -129,11 +142,11 @@
     background: #222;
     padding: 20px;
     border-radius: 10px;
-    max-width: 400px;
+    max-width: 440px;
     text-align: left;
     border: 1px solid #555;
   }
-  .modal-content h2 { margin-top: 0; }
+  .modal-content h2 { margin-top: 0; color: #00ffcc; }
   .close-btn {
     background-color: #555; color: white; border: none; padding: 5px 10px; cursor: pointer; float: right; border-radius: 3px;
   }
@@ -144,8 +157,12 @@
 <div id="game-container">
   <h1>KSimon</h1>
   <div>Score: <span id="score">0</span> | High Score (<span id="high-score-mode">Classic</span>): <span id="high-score">0</span></div>
-  <div id="campaign-stage" style="display:none; color:#00ffcc; margin-top:5px; font-weight:bold;">Campaign Stage: <span id="stage-val">1</span>/10</div>
-  <div id="hints-display">Hints (H): <span id="hints-val">3</span></div>
+  <div id="campaign-stage" style="display:none; color:#00ffcc; margin-top:5px; font-weight:bold;">
+    Campaign Stage: <span id="stage-val">1</span>/15 [<span id="stage-mod-val">NORMAL</span>] (Target: <span id="stage-target-val">3</span>)
+  </div>
+  <div id="powerups-display">
+    Hints (H): <span id="hints-val">3</span> | Slow (F): <span id="slowmo-val">2</span> | Shields (J): <span id="shields-val">1</span>
+  </div>
   <div class="simon-board">
     <button id="btn-0" class="simon-btn"></button>
     <button id="btn-1" class="simon-btn"></button>
@@ -161,18 +178,23 @@
       <option value="speed">Mode: Speed</option>
       <option value="endless">Mode: Endless</option>
       <option value="campaign">Mode: Campaign</option>
+      <option value="chaos">Mode: Chaos</option>
     </select>
     <button id="start-btn">Start Game</button>
-    <div style="margin-top: 10px;">
-      <button id="hint-btn" class="action-btn" disabled>Use Hint (H)</button>
+    <div style="margin-top: 8px;">
+      <button id="hint-btn" class="action-btn pwr-btn" disabled>Hint (H)</button>
+      <button id="slowmo-btn" class="action-btn pwr-btn" disabled>Slow (F)</button>
+      <button id="shield-btn" class="action-btn pwr-btn" disabled>Shield (J)</button>
+    </div>
+    <div style="margin-top: 6px;">
       <button id="save-btn" class="action-btn" disabled>Save Game</button>
       <button id="load-btn" class="action-btn">Load Game</button>
       <button id="reset-btn" class="action-btn">Reset Stats</button>
       <button id="help-btn" class="action-btn">Help</button>
     </div>
   </div>
-  <div id="status">Press Start</div>
-  <div id="stats" style="margin-top: 15px; font-size: 14px; color: #aaa;">
+  <div id="status">Press Start (or Space)</div>
+  <div id="stats" style="margin-top: 12px; font-size: 14px; color: #aaa;">
     Games: <span id="stat-games">0</span> | Streak: <span id="stat-streak">0</span> | Best Time: <span id="stat-time">0</span>s
   </div>
 </div>
@@ -181,20 +203,24 @@
   <div class="modal-content">
     <button class="close-btn" id="close-help-btn">X</button>
     <h2>How to Play KSimon</h2>
-    <p><strong>Rules:</strong> Observe the pattern of colors/sounds and repeat it back. The sequence gets longer each round.</p>
+    <p><strong>Rules:</strong> Observe the pattern of colors/sounds and repeat it back. The sequence grows each round.</p>
     <p><strong>Controls:</strong></p>
     <ul>
       <li>Mouse: Click the colored buttons.</li>
-      <li>Keyboard: Q, W, E (Top Row), A, S, D (Bottom Row).</li>
-      <li>H: Use a Hint to replay the sequence.</li>
+      <li>Keyboard: Q, W, E (Top Row), A, S, D (Bottom Row) or 1-6 keys.</li>
+      <li>Space: Start game.</li>
+      <li>H: Use Hint to replay sequence.</li>
+      <li>F: Use Slow-Mo for 2x slower replay.</li>
+      <li>J: Shield (absorbs 1 player mistake).</li>
     </ul>
     <p><strong>Modes:</strong></p>
     <ul>
-      <li><strong>Classic:</strong> Normal gameplay (6 colors).</li>
-      <li><strong>Reverse:</strong> Repeat the sequence in reverse order.</li>
-      <li><strong>Speed:</strong> Flashing gets much faster over time.</li>
+      <li><strong>Classic:</strong> Standard 6 color memory game.</li>
+      <li><strong>Reverse:</strong> Repeat sequence in reverse order.</li>
+      <li><strong>Speed:</strong> Fast flashing playback.</li>
       <li><strong>Endless:</strong> Only the newest color flashes each round.</li>
-      <li><strong>Campaign:</strong> 10 stages. Later stages unlock more colors and require longer sequences.</li>
+      <li><strong>Campaign:</strong> 15 stages with varying speeds, target sequence lengths, and Reverse/Chaos modifiers.</li>
+      <li><strong>Chaos:</strong> Unpredictable flash speeds and pitch variations!</li>
     </ul>
   </div>
 </div>
@@ -218,17 +244,43 @@
   const statGamesDisplay = document.getElementById('stat-games');
   const statStreakDisplay = document.getElementById('stat-streak');
   const statTimeDisplay = document.getElementById('stat-time');
+  
   const hintsVal = document.getElementById('hints-val');
+  const slowmoVal = document.getElementById('slowmo-val');
+  const shieldsVal = document.getElementById('shields-val');
+  
   const campaignStage = document.getElementById('campaign-stage');
   const stageVal = document.getElementById('stage-val');
+  const stageModVal = document.getElementById('stage-mod-val');
+  const stageTargetVal = document.getElementById('stage-target-val');
 
   const saveBtn = document.getElementById('save-btn');
   const loadBtn = document.getElementById('load-btn');
   const resetBtn = document.getElementById('reset-btn');
   const helpBtn = document.getElementById('help-btn');
   const hintBtn = document.getElementById('hint-btn');
+  const slowmoBtn = document.getElementById('slowmo-btn');
+  const shieldBtn = document.getElementById('shield-btn');
   const helpModal = document.getElementById('help-modal');
   const closeHelpBtn = document.getElementById('close-help-btn');
+
+  const campaignStages = [
+      { targetLen: 3, numColors: 4, speedMs: 400, modifier: 0 }, // Stage 1
+      { targetLen: 4, numColors: 4, speedMs: 380, modifier: 0 }, // Stage 2
+      { targetLen: 5, numColors: 4, speedMs: 350, modifier: 0 }, // Stage 3
+      { targetLen: 5, numColors: 5, speedMs: 350, modifier: 0 }, // Stage 4
+      { targetLen: 6, numColors: 5, speedMs: 250, modifier: 0 }, // Stage 5
+      { targetLen: 6, numColors: 5, speedMs: 350, modifier: 1 }, // Stage 6 (Reverse)
+      { targetLen: 7, numColors: 5, speedMs: 320, modifier: 0 }, // Stage 7
+      { targetLen: 8, numColors: 6, speedMs: 300, modifier: 0 }, // Stage 8
+      { targetLen: 8, numColors: 6, speedMs: 280, modifier: 2 }, // Stage 9 (Chaos)
+      { targetLen: 9, numColors: 6, speedMs: 220, modifier: 0 }, // Stage 10
+      { targetLen: 10, numColors: 6, speedMs: 280, modifier: 0 }, // Stage 11
+      { targetLen: 10, numColors: 6, speedMs: 300, modifier: 1 }, // Stage 12 (Reverse)
+      { targetLen: 11, numColors: 6, speedMs: 250, modifier: 2 }, // Stage 13 (Chaos)
+      { targetLen: 12, numColors: 6, speedMs: 220, modifier: 1 }, // Stage 14 (Reverse Speed)
+      { targetLen: 14, numColors: 6, speedMs: 180, modifier: 2 }  // Stage 15 (Final Chaos Boss)
+  ];
 
   function getStat(key) { return parseInt(localStorage.getItem('KSimon_Stat_' + key)) || 0; }
   function setStat(key, value) { localStorage.setItem('KSimon_Stat_' + key, value); }
@@ -252,7 +304,11 @@
   let isPlayingSequence = false;
   let currentMode = 'classic';
   let currentStage = 1;
+  
   let hintsRemaining = 3;
+  let slowmoRemaining = 2;
+  let shieldsRemaining = 1;
+  let isSlowmoActive = false;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   const freqs = [415, 329, 261, 196, 493, 146];
@@ -287,6 +343,10 @@
     
     if (modeSelect.value === 'campaign') {
         campaignStage.style.display = 'block';
+        let stg = campaignStages[currentStage - 1] || campaignStages[0];
+        stageVal.innerText = currentStage;
+        stageTargetVal.innerText = stg.targetLen;
+        stageModVal.innerText = stg.modifier === 1 ? 'REVERSE' : (stg.modifier === 2 ? 'CHAOS' : 'NORMAL');
     } else {
         campaignStage.style.display = 'none';
     }
@@ -312,7 +372,27 @@
           playSequence();
       }
   }
+
+  function useSlowmo() {
+      if (!isPlayingSequence && sequence.length > 0 && slowmoRemaining > 0) {
+          slowmoRemaining--;
+          isSlowmoActive = true;
+          updateDisplays();
+          statusDisplay.innerText = "Slow-Mo Active! Watch...";
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          playSequence();
+      }
+  }
+
+  function useShield() {
+      if (shieldsRemaining > 0) {
+          statusDisplay.innerText = `Shield Ready! (${shieldsRemaining} available)`;
+      }
+  }
+
   hintBtn.addEventListener('click', useHint);
+  slowmoBtn.addEventListener('click', useSlowmo);
+  shieldBtn.addEventListener('click', useShield);
 
   function saveGameState() {
     if (sequence.length === 0 || isPlayingSequence) return;
@@ -321,6 +401,8 @@
       currentMode: currentMode,
       currentStage: currentStage,
       hintsRemaining: hintsRemaining,
+      slowmoRemaining: slowmoRemaining,
+      shieldsRemaining: shieldsRemaining,
       elapsedTime: Date.now() - startTime
     };
     localStorage.setItem('KSimon_GameState', JSON.stringify(gameState));
@@ -338,6 +420,8 @@
     currentMode = gameState.currentMode;
     currentStage = gameState.currentStage || 1;
     hintsRemaining = gameState.hintsRemaining !== undefined ? gameState.hintsRemaining : 3;
+    slowmoRemaining = gameState.slowmoRemaining !== undefined ? gameState.slowmoRemaining : 2;
+    shieldsRemaining = gameState.shieldsRemaining !== undefined ? gameState.shieldsRemaining : 1;
     startTime = Date.now() - gameState.elapsedTime;
     
     modeSelect.value = currentMode;
@@ -374,19 +458,32 @@
   });
 
   document.addEventListener('keydown', (e) => {
+    if (e.key === ' ' && sequence.length === 0) {
+        e.preventDefault();
+        startGame();
+        return;
+    }
     if (e.key.toLowerCase() === 'h') {
         useHint();
+        return;
+    }
+    if (e.key.toLowerCase() === 'f') {
+        useSlowmo();
+        return;
+    }
+    if (e.key.toLowerCase() === 'j') {
+        useShield();
         return;
     }
     if (isPlayingSequence || sequence.length === 0) return;
     let index = -1;
     switch(e.key.toLowerCase()) {
-      case 'q': index = 0; break;
-      case 'w': index = 1; break;
-      case 'e': index = 2; break;
-      case 'a': index = 3; break;
-      case 's': index = 4; break;
-      case 'd': index = 5; break;
+      case 'q': case '1': index = 0; break;
+      case 'w': case '2': index = 1; break;
+      case 'e': case '3': index = 2; break;
+      case 'a': case '4': index = 3; break;
+      case 's': case '5': index = 4; break;
+      case 'd': case '6': index = 5; break;
     }
     if (index !== -1) {
       e.preventDefault();
@@ -396,8 +493,17 @@
 
   function updateDisplays() {
       hintsVal.innerText = hintsRemaining;
+      slowmoVal.innerText = slowmoRemaining;
+      shieldsVal.innerText = shieldsRemaining;
+      
+      let stg = campaignStages[currentStage - 1] || campaignStages[0];
       stageVal.innerText = currentStage;
-      hintBtn.disabled = hintsRemaining <= 0 || isPlayingSequence;
+      stageTargetVal.innerText = stg.targetLen;
+      stageModVal.innerText = stg.modifier === 1 ? 'REVERSE' : (stg.modifier === 2 ? 'CHAOS' : 'NORMAL');
+      
+      hintBtn.disabled = hintsRemaining <= 0 || isPlayingSequence || sequence.length === 0;
+      slowmoBtn.disabled = slowmoRemaining <= 0 || isPlayingSequence || sequence.length === 0;
+      shieldBtn.disabled = shieldsRemaining <= 0 || sequence.length === 0;
   }
 
   function startGame() {
@@ -410,6 +516,9 @@
     sequence = [];
     currentStage = 1;
     hintsRemaining = 3;
+    slowmoRemaining = 2;
+    shieldsRemaining = 1;
+    isSlowmoActive = false;
     scoreDisplay.innerText = "0";
     statusDisplay.innerText = "Get Ready...";
     startBtn.disabled = true;
@@ -423,8 +532,8 @@
     
     let numColors = 6;
     if (currentMode === 'campaign') {
-        numColors = 4 + Math.floor(currentStage / 4);
-        if (numColors > 6) numColors = 6;
+        let stg = campaignStages[currentStage - 1] || campaignStages[0];
+        numColors = stg.numColors;
     }
     
     sequence.push(Math.floor(Math.random() * numColors));
@@ -436,17 +545,43 @@
     isPlayingSequence = true;
     saveBtn.disabled = true;
     updateDisplays();
-    statusDisplay.innerText = "Watch...";
+    statusDisplay.innerText = isSlowmoActive ? "Watch (Slow-Mo)..." : "Watch...";
     let i = currentMode === 'endless' ? Math.max(0, sequence.length - 1) : 0;
     
     let speedFactor = Math.max(0, sequence.length - 1);
-    let flashDuration = currentMode === 'speed' ? Math.max(80, 200 - (speedFactor * 10)) : Math.max(150, 400 - (speedFactor * 20));
-    let pauseDuration = currentMode === 'speed' ? Math.max(40, 100 - (speedFactor * 5)) : Math.max(75, 200 - (speedFactor * 10));
+    let flashDuration = 400 - (speedFactor * 20);
+    if (currentMode === 'speed') {
+        flashDuration = Math.max(80, 200 - (speedFactor * 10));
+    } else if (currentMode === 'campaign') {
+        let stg = campaignStages[currentStage - 1] || campaignStages[0];
+        flashDuration = Math.max(100, stg.speedMs - (speedFactor * 8));
+    } else if (currentMode === 'chaos') {
+        flashDuration = 150 + Math.floor(Math.random() * 250);
+    } else {
+        flashDuration = Math.max(150, flashDuration);
+    }
+
+    let pauseDuration = Math.max(75, 200 - (speedFactor * 10));
+    if (currentMode === 'speed') {
+        pauseDuration = Math.max(40, 100 - (speedFactor * 5));
+    } else if (currentMode === 'campaign') {
+        let stg = campaignStages[currentStage - 1] || campaignStages[0];
+        pauseDuration = Math.max(50, Math.floor(stg.speedMs / 2) - (speedFactor * 4));
+    } else if (currentMode === 'chaos') {
+        pauseDuration = 80 + Math.floor(Math.random() * 120);
+    }
+
+    if (isSlowmoActive) {
+        flashDuration *= 2;
+        pauseDuration *= 2;
+    }
 
     function flashNext() {
       if (i >= sequence.length) {
         isPlayingSequence = false;
-        statusDisplay.innerText = currentMode === 'reverse' ? "Your Turn (Reverse)!" : "Your Turn!";
+        isSlowmoActive = false;
+        let isRev = currentMode === 'reverse' || (currentMode === 'campaign' && campaignStages[currentStage-1].modifier === 1);
+        statusDisplay.innerText = isRev ? "Your Turn (REVERSE)!" : "Your Turn!";
         saveBtn.disabled = false;
         updateDisplays();
         return;
@@ -454,7 +589,14 @@
       const index = sequence[i];
       const btn = btns[index];
       btn.classList.add('active');
-      playTone(freqs[index], flashDuration);
+      
+      let toneFreq = freqs[index];
+      let isChaos = currentMode === 'chaos' || (currentMode === 'campaign' && campaignStages[currentStage-1].modifier === 2);
+      if (isChaos) {
+          toneFreq += Math.floor(Math.random() * 160) - 80;
+      }
+      
+      playTone(toneFreq, flashDuration);
       setTimeout(() => {
         btn.classList.remove('active');
         i++;
@@ -475,14 +617,19 @@
     playerSequence.push(index);
 
     const currentStep = playerSequence.length - 1;
-    let expectedIndex;
-    if (currentMode === 'reverse') {
-      expectedIndex = sequence[sequence.length - 1 - currentStep];
-    } else {
-      expectedIndex = sequence[currentStep];
-    }
+    let isRev = currentMode === 'reverse' || (currentMode === 'campaign' && campaignStages[currentStage-1].modifier === 1);
+    let expectedIndex = isRev ? sequence[sequence.length - 1 - currentStep] : sequence[currentStep];
 
     if (playerSequence[currentStep] !== expectedIndex) {
+      if (shieldsRemaining > 0) {
+          shieldsRemaining--;
+          playTone(750, 300);
+          playerSequence = [];
+          statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} Shields left)`;
+          updateDisplays();
+          return;
+      }
+
       // Game Over
       document.body.classList.add('game-over-flash');
       setTimeout(() => document.body.classList.remove('game-over-flash'), 500);
@@ -509,22 +656,21 @@
       startBtn.disabled = false;
       modeSelect.disabled = false;
       saveBtn.disabled = true;
-      hintBtn.disabled = true;
+      updateDisplays();
       return;
     }
 
     playTone(freqs[index], 200);
 
     if (playerSequence.length === sequence.length) {
-      
       if (currentMode === 'campaign') {
-          let target = 4 + currentStage * 2;
-          if (sequence.length >= target) {
+          let stg = campaignStages[currentStage - 1] || campaignStages[0];
+          if (sequence.length >= stg.targetLen) {
               currentStage++;
-              if (currentStage > 10) {
-                  statusDisplay.innerText = "Campaign Complete! You Win!";
+              if (currentStage > 15) {
+                  statusDisplay.innerText = "Campaign Complete! YOU WIN!";
                   isPlayingSequence = true;
-                  let finalScore = sequence.length - 1 + 50; // Bonus
+                  let finalScore = sequence.length - 1 + 100; // Bonus
                   if (finalScore > getHighScore(currentMode)) {
                       setHighScore(currentMode, finalScore);
                       updateHighScoreDisplay();
@@ -541,11 +687,13 @@
                   startBtn.disabled = false;
                   modeSelect.disabled = false;
                   saveBtn.disabled = true;
-                  hintBtn.disabled = true;
+                  updateDisplays();
                   return;
               } else {
-                  statusDisplay.innerText = "Stage " + (currentStage - 1) + " Cleared! +1 Hint";
+                  statusDisplay.innerText = "Stage " + (currentStage - 1) + " Cleared! +1 Powerups";
                   hintsRemaining++;
+                  slowmoRemaining++;
+                  shieldsRemaining++;
                   sequence = [];
               }
           } else {
