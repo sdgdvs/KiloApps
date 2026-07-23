@@ -36,7 +36,7 @@ void UpdateInfo() {
     mem.dwLength = sizeof(mem);
     GlobalMemoryStatusEx(&mem);
     
-    char buf[2048] = {0};
+    char buf[4096] = {0};
     char numBuf[64];
     
     strcatA(buf, "--- System Information ---\r\n\r\n");
@@ -174,6 +174,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
             if (hFont) DeleteObject(hFont);
             PostQuitMessage(0);
             break;

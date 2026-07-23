@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
+<title>KPass - Password Generator & Vault</title>
 <style>
   body {
     background: #1e1e1e;
@@ -49,8 +50,37 @@
     font-size: 24px;
     color: #e74c3c;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     word-break: break-all;
+  }
+  .strength-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding: 8px 12px;
+    background: #252525;
+    border-radius: 6px;
+    border: 1px solid #333;
+  }
+  .strength-bar-bg {
+    flex: 1;
+    height: 8px;
+    background: #333;
+    border-radius: 4px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+  .strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #e74c3c;
+    transition: width 0.3s, background-color 0.3s;
+  }
+  .strength-text {
+    font-size: 13px;
+    font-weight: bold;
+    color: #aaa;
   }
   .controls {
     display: flex;
@@ -75,7 +105,7 @@
     background: #333;
     color: white;
     border: 1px solid #444;
-    padding: 10px 24px;
+    padding: 10px 18px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
@@ -96,6 +126,11 @@
     background: #c0392b;
     border-color: #c0392b;
   }
+  .vault-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
   .vault-list {
     display: flex;
     flex-direction: column;
@@ -103,24 +138,63 @@
   }
   .vault-item {
     background: #2a2a2a;
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
+    border-left: 4px solid #e74c3c;
   }
-  .vault-label { font-weight: bold; color: #fff; }
-  .vault-pass { font-family: monospace; color: #aaa; }
+  .vault-info {
+    flex: 1;
+    overflow: hidden;
+  }
+  .vault-label { font-weight: bold; color: #fff; font-size: 15px; }
+  .vault-pass { font-family: monospace; color: #aaa; font-size: 14px; word-break: break-all; }
+  .vault-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #444;
+    color: #ddd;
+    margin-left: 8px;
+    font-weight: normal;
+  }
+  .item-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .btn-danger {
+    background: #7f8c8d;
+  }
+  .btn-danger:hover {
+    background: #c0392b;
+  }
 </style>
 </head>
 <body>
   <div class="tabs">
     <div class="tab active" id="tabGen">Generator</div>
-    <div class="tab" id="tabVault">Vault</div>
+    <div class="tab" id="tabVault">Vault (<span id="vaultCount">0</span>)</div>
   </div>
   
   <div class="content" id="contentGen">
     <div class="display" id="pwdDisplay">...</div>
+    
+    <!-- Password Strength Meter -->
+    <div class="strength-container">
+      <span class="strength-text" id="lblStrength">Strength: -</span>
+      <div class="strength-bar-bg">
+        <div class="strength-bar-fill" id="barStrength"></div>
+      </div>
+      <span class="strength-text" id="lblEntropy">0 bits</span>
+    </div>
+
     <div class="controls">
       <div class="control-row">
         <label><input type="checkbox" id="chkUpper" checked> Uppercase</label>
@@ -135,8 +209,8 @@
         <input type="range" id="rngLen" min="8" max="64" value="16" style="flex: 2;">
       </div>
       <div class="control-row">
-        <input type="text" id="labelInput" placeholder="Label (e.g. Email)">
-        <button id="btnSave">Save</button>
+        <input type="text" id="labelInput" placeholder="Label (e.g. Work Email)">
+        <button id="btnSave">Save to Vault</button>
       </div>
       <div class="control-row" style="margin-top: 10px;">
         <button class="primary" id="btnGen" style="flex: 1;">Generate</button>
@@ -146,6 +220,12 @@
   </div>
   
   <div class="content" id="contentVault" style="display: none;">
+    <div class="vault-actions">
+      <input type="text" id="vaultSearch" placeholder="Search vault entries...">
+      <button class="btn-sm" id="btnExport" title="Export Vault to JSON">Export</button>
+      <button class="btn-sm" id="btnImport" title="Import Vault from JSON">Import</button>
+      <input type="file" id="fileImport" accept=".json" style="display:none;">
+    </div>
     <div class="vault-list" id="vaultList">
       <!-- Vault items go here -->
     </div>
@@ -162,6 +242,14 @@
     const btnSave = document.getElementById('btnSave');
     const labelInput = document.getElementById('labelInput');
     const vaultList = document.getElementById('vaultList');
+    const vaultCount = document.getElementById('vaultCount');
+    const vaultSearch = document.getElementById('vaultSearch');
+    const lblStrength = document.getElementById('lblStrength');
+    const lblEntropy = document.getElementById('lblEntropy');
+    const barStrength = document.getElementById('barStrength');
+    const btnExport = document.getElementById('btnExport');
+    const btnImport = document.getElementById('btnImport');
+    const fileImport = document.getElementById('fileImport');
     
     let vault = JSON.parse(localStorage.getItem('kpass_vault') || '[]');
 
@@ -174,6 +262,11 @@
             contentVault.style.display = 'flex'; contentGen.style.display = 'none';
             renderVault();
         }
+        updateVaultCount();
+    }
+    
+    function updateVaultCount() {
+        vaultCount.innerText = vault.length;
     }
     
     tabGen.addEventListener('click', () => switchTab(true));
@@ -195,6 +288,45 @@
     chkNum.addEventListener('change', generate);
     chkSym.addEventListener('change', generate);
 
+    function evaluateStrength(pass) {
+        if(!pass || pass === '...') {
+            lblStrength.innerText = "Strength: -";
+            lblEntropy.innerText = "0 bits";
+            barStrength.style.width = "0%";
+            barStrength.style.backgroundColor = "#e74c3c";
+            return { rating: "-", entropy: 0 };
+        }
+        let pool = 0;
+        if(/[A-Z]/.test(pass)) pool += 26;
+        if(/[a-z]/.test(pass)) pool += 26;
+        if(/[0-9]/.test(pass)) pool += 10;
+        if(/[^A-Za-z0-9]/.test(pass)) pool += 12;
+        if(pool === 0) pool = 26;
+
+        let entropy = Math.round(pass.length * Math.log2(pool));
+        let rating = "Weak";
+        let color = "#e74c3c";
+        let pct = Math.min(100, Math.max(10, Math.round((entropy / 100) * 100)));
+
+        if(entropy >= 80) {
+            rating = "Very Strong";
+            color = "#1abc9c";
+        } else if(entropy >= 60) {
+            rating = "Strong";
+            color = "#2ecc71";
+        } else if(entropy >= 40) {
+            rating = "Fair";
+            color = "#f39c12";
+        }
+
+        lblStrength.innerText = "Strength: " + rating;
+        lblEntropy.innerText = entropy + " bits";
+        barStrength.style.width = pct + "%";
+        barStrength.style.backgroundColor = color;
+
+        return { rating, entropy };
+    }
+
     function generate() {
         let chars = "";
         if (chkUpper.checked) chars += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -209,6 +341,7 @@
             pass += chars[Math.floor(Math.random() * chars.length)];
         }
         pwdDisplay.innerText = pass;
+        evaluateStrength(pass);
     }
 
     btnGen.addEventListener('click', generate);
@@ -227,29 +360,49 @@
         const label = labelInput.value.trim();
         const pass = pwdDisplay.innerText;
         if (label && pass && pass !== '...') {
-            vault.push({label, pass});
+            const strInfo = evaluateStrength(pass);
+            vault.push({label, pass, strength: strInfo.rating, date: new Date().toLocaleDateString()});
             localStorage.setItem('kpass_vault', JSON.stringify(vault));
             labelInput.value = '';
+            updateVaultCount();
             alert("Saved to Vault!");
         } else {
             alert("Please enter a label and generate a password.");
         }
     });
 
+    vaultSearch.addEventListener('input', renderVault);
+
     function renderVault() {
         vaultList.innerHTML = '';
-        if (vault.length === 0) {
-            vaultList.innerHTML = '<div style="text-align:center;color:#666;margin-top:20px;">Vault is empty</div>';
+        const query = vaultSearch.value.trim().toLowerCase();
+        const filtered = vault.filter(item => 
+            item.label.toLowerCase().includes(query) || 
+            item.pass.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            vaultList.innerHTML = '<div style="text-align:center;color:#666;margin-top:20px;">' + 
+                (vault.length === 0 ? 'Vault is empty' : 'No matching entries found') + '</div>';
+            return;
         }
-        vault.forEach((item, index) => {
+
+        filtered.forEach((item) => {
+            const realIndex = vault.indexOf(item);
             const div = document.createElement('div');
             div.className = 'vault-item';
             div.innerHTML = `
-                <div>
-                    <div class="vault-label"></div>
+                <div class="vault-info">
+                    <div>
+                        <span class="vault-label"></span>
+                        <span class="vault-badge">${item.strength || 'Saved'}</span>
+                    </div>
                     <div class="vault-pass"></div>
                 </div>
-                <button onclick="deleteItem(${index})">X</button>
+                <div class="item-btns">
+                    <button class="btn-sm" onclick="copyVaultItem('${encodeURIComponent(item.pass)}')">Copy</button>
+                    <button class="btn-sm btn-danger" onclick="deleteItem(${realIndex})">X</button>
+                </div>
             `;
             div.querySelector('.vault-label').textContent = item.label;
             div.querySelector('.vault-pass').textContent = item.pass;
@@ -257,13 +410,61 @@
         });
     }
 
+    window.copyVaultItem = (encodedPass) => {
+        const pass = decodeURIComponent(encodedPass);
+        navigator.clipboard.writeText(pass).then(() => {
+            alert("Password copied to clipboard!");
+        });
+    };
+
     window.deleteItem = (index) => {
         vault.splice(index, 1);
         localStorage.setItem('kpass_vault', JSON.stringify(vault));
         renderVault();
-    }
+        updateVaultCount();
+    };
+
+    btnExport.addEventListener('click', () => {
+        if(vault.length === 0) {
+            alert("Vault is empty!");
+            return;
+        }
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vault, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "kpass_vault.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    });
+
+    btnImport.addEventListener('click', () => fileImport.click());
+
+    fileImport.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const imported = JSON.parse(event.target.result);
+                if(Array.isArray(imported)) {
+                    vault = vault.concat(imported);
+                    localStorage.setItem('kpass_vault', JSON.stringify(vault));
+                    renderVault();
+                    updateVaultCount();
+                    alert("Imported " + imported.length + " entries successfully!");
+                } else {
+                    alert("Invalid vault JSON format.");
+                }
+            } catch(err) {
+                alert("Failed to parse JSON file.");
+            }
+        };
+        reader.readAsText(file);
+    });
 
     generate();
+    updateVaultCount();
   </script>
 </body>
 </html>

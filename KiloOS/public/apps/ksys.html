@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KSys</title>
 <style>
   body { margin: 0; background-color: #f0f0f0; display: flex; height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
@@ -8,7 +10,7 @@
 </style>
 </head>
 <body>
-  <textarea id="out" readonly></textarea>
+  <textarea id="out" readonly aria-label="System Information"></textarea>
 <script>
   const out = document.getElementById('out');
   
@@ -17,9 +19,9 @@
       
       const cores = navigator.hardwareConcurrency || "Unknown";
       info += `Processor Cores: ${cores}\n`;
-      info += `Platform: ${navigator.platform}\n`;
-      info += `Language: ${navigator.language}\n`;
-      info += `User Agent:\n${navigator.userAgent}\n\n`;
+      info += `Platform: ${navigator.platform || "Unknown"}\n`;
+      info += `Language: ${navigator.language || "Unknown"}\n`;
+      info += `User Agent:\n${navigator.userAgent || "Unknown"}\n\n`;
       
       info += "--- Memory Information ---\n\n";
       
@@ -42,8 +44,8 @@
       if (navigator.storage && navigator.storage.estimate) {
           try {
               const estimate = await navigator.storage.estimate();
-              const totalMB = Math.round(estimate.quota / (1024 * 1024));
-              const usedMB = Math.round(estimate.usage / (1024 * 1024));
+              const totalMB = Math.round((estimate.quota || 0) / (1024 * 1024));
+              const usedMB = Math.round((estimate.usage || 0) / (1024 * 1024));
               info += `Estimated Quota: ${totalMB} MB\n`;
               info += `Estimated Usage: ${usedMB} MB\n\n`;
           } catch(e) {
@@ -54,16 +56,20 @@
       }
 
       info += "--- Display Information ---\n\n";
-      info += `Screen Resolution: ${window.screen.width}x${window.screen.height}\n`;
-      info += `Color Depth: ${window.screen.colorDepth} bits\n`;
-      info += `Pixel Ratio: ${window.devicePixelRatio}\n\n`;
+      if (window.screen) {
+          info += `Screen Resolution: ${window.screen.width || 0}x${window.screen.height || 0}\n`;
+          info += `Color Depth: ${window.screen.colorDepth || 0} bits\n`;
+      } else {
+          info += "Screen Resolution: Unknown\nColor Depth: Unknown\n";
+      }
+      info += `Pixel Ratio: ${window.devicePixelRatio || 1}\n\n`;
 
       info += "--- Power Status ---\n\n";
       if (navigator.getBattery) {
           try {
               const battery = await navigator.getBattery();
               info += `Charging: ${battery.charging ? "Yes" : "No"}\n`;
-              info += `Battery Level: ${Math.round(battery.level * 100)}%\n\n`;
+              info += `Battery Level: ${Math.round((battery.level || 0) * 100)}%\n\n`;
           } catch(e) {
               info += "Power Status: Unavailable\n\n";
           }
@@ -71,7 +77,7 @@
           info += "Power Status: Unsupported by Browser\n\n";
       }
 
-      out.value = info;
+      if (out) out.value = info;
   }
   
   update();
