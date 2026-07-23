@@ -3,53 +3,78 @@
 <head>
 <meta charset="utf-8">
 <title>KMines</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #1a1b26;
-    --card-bg: #24283b;
-    --tile-hidden: linear-gradient(135deg, #3b4261, #292e42);
-    --tile-revealed: #1a1b26;
+    --bg: #13141f;
+    --card-bg: #1e2230;
+    --tile-hidden: linear-gradient(135deg, #3d4663, #272c40);
+    --tile-revealed: #161824;
     --primary: #7aa2f7;
     --danger: #f7768e;
     --success: #9ece6a;
     --warning: #e0af68;
-    --border: #414868;
+    --border: #3b4261;
   }
   body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: #c0caf5; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   
-  .game-container { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
+  .game-container { position: relative; background: var(--card-bg); padding: 20px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; }
   
-  .diff-bar { display: flex; justify-content: center; gap: 10px; }
-  .diff-bar button { background: var(--tile-hidden); border: 1px solid var(--border); color: #c0caf5; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-family: 'Inter', sans-serif; }
-  .diff-bar button.active { background: var(--primary); color: #000; border-color: var(--primary); }
+  .diff-bar { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+  .diff-bar button { background: #292e42; border: 1px solid var(--border); color: #a9b1d6; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .diff-bar button:hover { background: #3b4261; color: #fff; }
+  .diff-bar button.active { background: var(--primary); color: #15161e; border-color: var(--primary); box-shadow: 0 0 12px rgba(122, 162, 247, 0.4); }
 
-  .toolbar { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+  .toolbar { display: flex; justify-content: space-between; align-items: center; background: #12131c; padding: 10px 18px; border-radius: 10px; border: 1px solid #292e42; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
   
-  .counter { font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--danger); text-shadow: 0 0 10px rgba(247, 118, 142, 0.5); background: #000; padding: 4px 12px; border-radius: 4px; border: 1px solid #333; }
+  .counter { font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--danger); text-shadow: 0 0 10px rgba(247, 118, 142, 0.6); background: #090a0f; padding: 4px 12px; border-radius: 6px; border: 1px solid #24283b; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); min-width: 50px; text-align: center; }
   
-  .face-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--tile-hidden); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s; border: 2px solid var(--border); }
-  .face-btn:active { transform: scale(0.9); }
+  .face-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #414868; background: linear-gradient(135deg, #2e344e, #1a1d2e); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.1s, box-shadow 0.1s; padding: 0; outline: none; }
+  .face-btn:active { transform: scale(0.92); box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
+  .face-btn svg { width: 34px; height: 34px; }
+
+  .board-wrapper { position: relative; display: flex; justify-content: center; }
+
+  .board { display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 2px; background: #12141d; padding: 4px; border-radius: 8px; border: 1px solid #2d334a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); }
   
-  .board { display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 2px; background: var(--border); padding: 2px; border-radius: 6px; }
+  .cell { width: 30px; height: 30px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
+    box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.35), inset -1px -1px 0px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+    border-right: 1px solid rgba(0, 0, 0, 0.4);
+  }
+  .cell:hover:not(.revealed) { filter: brightness(1.25); }
+  .cell:active:not(.revealed) { transform: scale(0.93); }
   
-  .cell { width: 30px; height: 30px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s, transform 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-  .cell:hover:not(.revealed) { filter: brightness(1.2); }
-  .cell:active:not(.revealed) { transform: scale(0.9); }
+  .cell.revealed { background: var(--tile-revealed); border: none; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.7), inset -1px -1px 0 rgba(255,255,255,0.04); cursor: default; }
   
-  .cell.revealed { background: var(--tile-revealed); box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); cursor: default; }
+  .cell.mine { background: radial-gradient(circle, #f7768e 0%, #7a1d2e 100%); box-shadow: 0 0 14px rgba(247, 118, 142, 0.8); }
   
-  .cell.mine { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-  .cell.flag { color: var(--danger); text-shadow: 0 0 5px rgba(247, 118, 142, 0.5); }
-  
-  .c1 { color: var(--primary); } 
-  .c2 { color: var(--success); } 
-  .c3 { color: var(--danger); } 
-  .c4 { color: #bb9af7; } 
-  .c5 { color: var(--warning); } 
-  .c6 { color: #7dcfff; } 
-  .c7 { color: #c0caf5; } 
-  .c8 { color: #565f89; }
+  /* Digit custom vivid retro colors */
+  .c1 { color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); } 
+  .c2 { color: #4ade80; text-shadow: 0 0 8px rgba(74, 222, 128, 0.4); } 
+  .c3 { color: #f87171; text-shadow: 0 0 8px rgba(248, 113, 113, 0.4); } 
+  .c4 { color: #c084fc; text-shadow: 0 0 8px rgba(192, 132, 252, 0.4); } 
+  .c5 { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.4); } 
+  .c6 { color: #2dd4bf; text-shadow: 0 0 8px rgba(45, 212, 191, 0.4); } 
+  .c7 { color: #e2e8f0; text-shadow: 0 0 8px rgba(226, 232, 240, 0.4); } 
+  .c8 { color: #94a3b8; text-shadow: 0 0 8px rgba(148, 163, 184, 0.4); }
+
+  /* SVG Animations */
+  @keyframes spark-flicker {
+    0%, 100% { fill: #ef4444; filter: drop-shadow(0 0 3px #ef4444); transform: scale(1); }
+    50% { fill: #fbbf24; filter: drop-shadow(0 0 6px #fbbf24); transform: scale(1.4); }
+  }
+  .fuse-spark { animation: spark-flicker 0.25s infinite alternate; transform-origin: 22px 5px; }
+
+  @keyframes flag-wave {
+    0%, 100% { fill: #ef4444; transform: skewY(0deg); }
+    50% { fill: #f87171; transform: skewY(-4deg); }
+  }
+  .flag-cloth { animation: flag-wave 0.8s ease-in-out infinite; transform-origin: 11px 10px; }
+
+  #fx-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 10; }
 </style>
 </head>
 <body>
@@ -65,20 +90,23 @@
     </div>
     <div class="toolbar">
       <div class="counter" id="flag-count" title="Mines">010</div>
-      <button class="face-btn" id="face" onclick="resetLevel()">🙂</button>
+      <button class="face-btn" id="face" onclick="resetLevel()"></button>
       <div class="counter" id="time-count" title="Time">000</div>
       <div class="counter" id="best-count" title="Best Time" style="color:var(--warning);">999</div>
-      <div class="counter" id="stats-count" title="Played / Wins" style="color:#c0caf5; font-size:16px;">P:0 W:0</div>
+      <div class="counter" id="stats-count" title="Played / Wins" style="color:#c0caf5; font-size:14px;">P:0 W:0</div>
       <div class="counter" id="shield-count" title="Shields" style="color:var(--primary); display:none;">000</div>
     </div>
-    <div class="board" id="board" oncontextmenu="return false;"></div>
+    <div class="board-wrapper">
+      <div class="board" id="board" oncontextmenu="return false;"></div>
+      <canvas id="fx-canvas"></canvas>
+    </div>
   </div>
 
   <script>
     let ROWS = 10;
     let COLS = 10;
     let MINES = 10;
-    let grid = [];
+    let grid = []; // 0:empty, 1:mine, 2:revealed, 4:flagged, 8:mine(hidden), 16:question
     let gameOver = false;
     let initialized = false;
     let flags = 0;
@@ -97,7 +125,86 @@
     let rushTime = 0;
     let rushScore = 0;
     let bestRush = parseInt(localStorage.getItem('kmines_bestRush') || '0');
+    let currentFaceState = 'idle';
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Particle Canvas FX System
+    const fxCanvas = document.getElementById('fx-canvas');
+    const fxCtx = fxCanvas.getContext('2d');
+    let particles = [];
+    let fxAnimFrame = null;
+
+    function resizeFxCanvas() {
+      const board = document.getElementById('board');
+      fxCanvas.width = board.offsetWidth;
+      fxCanvas.height = board.offsetHeight;
+    }
+
+    function spawnExplosionFX(cx, cy) {
+      const colors = ['#f7768e', '#fbbf24', '#ff9e64', '#9ece6a', '#ffffff', '#414868'];
+      for (let i = 0; i < 35; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 4.5;
+        particles.push({
+          x: cx,
+          y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1.5,
+          size: 2 + Math.random() * 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1.0,
+          decay: 0.02 + Math.random() * 0.03
+        });
+      }
+      if (!fxAnimFrame) updateFX();
+    }
+
+    function spawnVictoryFX() {
+      const colors = ['#7aa2f7', '#9ece6a', '#e0af68', '#bb9af7', '#7dcfff', '#f7768e'];
+      for (let i = 0; i < 60; i++) {
+        particles.push({
+          x: Math.random() * fxCanvas.width,
+          y: Math.random() * (fxCanvas.height * 0.5),
+          vx: (Math.random() - 0.5) * 3,
+          vy: Math.random() * 2 + 1,
+          size: 3 + Math.random() * 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1.0,
+          decay: 0.01 + Math.random() * 0.015
+        });
+      }
+      if (!fxAnimFrame) updateFX();
+    }
+
+    function updateFX() {
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.12; // gravity
+        p.vx *= 0.97;
+        p.life -= p.decay;
+
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        fxCtx.globalAlpha = Math.max(0, p.life);
+        fxCtx.fillStyle = p.color;
+        fxCtx.beginPath();
+        fxCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        fxCtx.fill();
+      }
+      fxCtx.globalAlpha = 1.0;
+
+      if (particles.length > 0) {
+        fxAnimFrame = requestAnimationFrame(updateFX);
+      } else {
+        fxAnimFrame = null;
+      }
+    }
     
     function playSound(freq, duration, type='sine') {
       if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -114,22 +221,94 @@
     }
 
     function formatNumber(num) {
-      return num.toString().padStart(3, '0');
+      return Math.max(0, num).toString().padStart(3, '0');
     }
 
+    // SVG Sprite Builders
+    function renderSmileySVG(state) {
+      if (state === 'pressed') {
+        return `<svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="16" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+          <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fef08a" opacity="0.6"/>
+          <circle cx="12" cy="14" r="3" fill="#1e293b"/>
+          <circle cx="24" cy="14" r="3" fill="#1e293b"/>
+          <circle cx="12" cy="13" r="1" fill="#ffffff"/>
+          <circle cx="24" cy="13" r="1" fill="#ffffff"/>
+          <ellipse cx="18" cy="24" rx="4" ry="5" fill="#1e293b"/>
+        </svg>`;
+      } else if (state === 'dead') {
+        return `<svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="16" fill="#f87171" stroke="#dc2626" stroke-width="2"/>
+          <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fca5a5" opacity="0.6"/>
+          <path d="M10 11 L16 17 M16 11 L10 17" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M20 11 L26 17 M26 11 L20 17" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M12 26 Q 18 20 24 26" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>`;
+      } else if (state === 'win') {
+        return `<svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="16" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+          <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fef08a" opacity="0.6"/>
+          <!-- Sunglasses -->
+          <polygon points="6,12 17,12 16,19 8,19" fill="#0f172a"/>
+          <polygon points="19,12 30,12 28,19 20,19" fill="#0f172a"/>
+          <line x1="16" y1="14" x2="20" y2="14" stroke="#0f172a" stroke-width="2"/>
+          <line x1="8" y1="14" x2="13" y2="14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="21" y1="14" x2="26" y2="14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M12 24 Q 18 29 24 23" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>`;
+      } else { // Idle
+        return `<svg viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="16" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
+          <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fef08a" opacity="0.6"/>
+          <circle cx="13" cy="14" r="2.5" fill="#1e293b"/>
+          <circle cx="23" cy="14" r="2.5" fill="#1e293b"/>
+          <path d="M11 22 Q 18 28 25 22" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>`;
+      }
+    }
+
+    function setFaceState(state) {
+      currentFaceState = state;
+      document.getElementById('face').innerHTML = renderSmileySVG(state);
+    }
+
+    const MINE_SVG = `<svg class="mine-svg" viewBox="0 0 32 32" width="22" height="22">
+      <g stroke="#121520" stroke-width="2.5" stroke-linecap="round">
+        <line x1="16" y1="4" x2="16" y2="28"/><line x1="4" y1="16" x2="28" y2="16"/>
+        <line x1="7.5" y1="7.5" x2="24.5" y2="24.5"/><line x1="24.5" y1="7.5" x2="7.5" y2="24.5"/>
+      </g>
+      <circle cx="16" cy="16" r="8" fill="#2a2e3d" stroke="#0e1017" stroke-width="1.5"/>
+      <circle cx="13.5" cy="13.5" r="2.5" fill="#a6b4c9" opacity="0.7"/>
+      <path d="M16 8 Q 18 4 22 5" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="22" cy="5" r="2.5" class="fuse-spark"/>
+    </svg>`;
+
+    const FLAG_SVG = `<svg class="flag-svg" viewBox="0 0 32 32" width="22" height="22">
+      <ellipse cx="16" cy="27" rx="6" ry="2" fill="#121520"/>
+      <line x1="11" y1="27" x2="11" y2="5" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="11" cy="4" r="2" fill="#fbbf24"/>
+      <path d="M12 6 Q 18 4, 25 7 L 25 16 Q 18 13, 12 15 Z" fill="#ef4444" stroke="#991b1b" stroke-width="1" class="flag-cloth"/>
+    </svg>`;
+
+    const QUESTION_SVG = `<svg class="question-svg" viewBox="0 0 32 32" width="22" height="22">
+      <text x="16" y="23" text-anchor="middle" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="20" filter="drop-shadow(0 0 4px rgba(56,189,248,0.6))">?</text>
+    </svg>`;
+
     function init() {
-      grid = Array(ROWS).fill().map(() => Array(COLS).fill(0)); // 0:empty, 1:mine, 2:revealed, 4:flagged, 8:mine(hidden)
+      grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
       gameOver = false;
       initialized = false;
       flags = 0;
       time = 0;
+      particles = [];
       bestTime = localStorage.getItem('kmines_bestTime_' + currentDiff) || 999;
       totalPlayed = parseInt(localStorage.getItem('kmines_totalPlayed') || '0');
       totalWins = parseInt(localStorage.getItem('kmines_totalWins') || '0');
       clearInterval(timer);
-      document.getElementById('face').innerText = '🙂';
+      setFaceState('idle');
       document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
       document.getElementById('time-count').innerText = formatNumber(rushMode ? rushTime : time);
+      
       if (rushMode) {
           document.getElementById('best-count').innerText = formatNumber(bestRush);
           document.getElementById('best-count').title = "Best Rush Score";
@@ -162,6 +341,7 @@
       board.style.gridTemplateColumns = `repeat(${COLS}, 30px)`;
       board.style.gridTemplateRows = `repeat(${ROWS}, 30px)`;
       render();
+      setTimeout(resizeFxCanvas, 50);
     }
 
     function useRadar() {
@@ -169,7 +349,7 @@
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 if ((grid[r][c] & 8) && !(grid[r][c] & 4) && !(grid[r][c] & 2)) {
-                    grid[r][c] |= 4; // flag it
+                    grid[r][c] |= 4;
                     flags++;
                     scans--;
                     document.getElementById('btn-radar').innerText = "Radar (" + scans + ")";
@@ -202,7 +382,7 @@
                     if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
                         if (grid[nr][nc] & 8) {
                             if (!(grid[nr][nc] & 4)) {
-                                grid[nr][nc] |= 4; // flag it
+                                grid[nr][nc] |= 4;
                                 flags++;
                             }
                         } else {
@@ -221,6 +401,8 @@
                 clearInterval(timer);
                 totalWins++;
                 localStorage.setItem('kmines_totalWins', totalWins);
+                setFaceState('win');
+                spawnVictoryFX();
                 playSound(800, 0.5, 'square');
                 setTimeout(() => {
                     alert("Level Complete!");
@@ -323,7 +505,7 @@
                 gameOver = true;
                 clearInterval(timer);
                 for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
-                document.getElementById('face').innerText = '😵';
+                setFaceState('dead');
                 playSound(150, 0.5, 'sawtooth');
                 render();
             }
@@ -342,7 +524,7 @@
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
         if (grid[r][c] === 0 && (r < firstR - 1 || r > firstR + 1 || c < firstC - 1 || c > firstC + 1)) {
-          grid[r][c] = 8; // Mine
+          grid[r][c] = 8;
           placed++;
         }
       }
@@ -372,6 +554,11 @@
       grid[r][c] |= 2; // set revealed
       
       if (grid[r][c] & 8) {
+        // Particle explosion on cell!
+        const px = c * 30 + 15;
+        const py = r * 30 + 15;
+        spawnExplosionFX(px, py);
+
         if (shields > 0) {
           shields--;
           grid[r][c] &= ~8; // Destroy mine
@@ -443,10 +630,11 @@
         playSound(150, 0.5, 'sawtooth');
         clearInterval(timer);
         for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
-        document.getElementById('face').innerText = '😵';
+        setFaceState('dead');
         render();
       } else if (checkWin()) {
         playSound(800, 0.5, 'square');
+        spawnVictoryFX();
         if (rushMode) {
             rushScore++;
             rushTime += 15;
@@ -455,7 +643,7 @@
                 bestRush = rushScore;
                 localStorage.setItem('kmines_bestRush', bestRush);
             }
-            init(); // restart immediately for rush
+            init();
             return;
         }
         
@@ -469,10 +657,10 @@
             document.getElementById('best-count').innerText = formatNumber(bestTime);
         }
         document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
-        document.getElementById('face').innerText = '😎';
+        setFaceState('win');
         flags = MINES;
         document.getElementById('flag-count').innerText = formatNumber(0);
-        for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4; // flag all
+        for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4;
         render();
         if (campaignMode) {
             setTimeout(() => {
@@ -491,11 +679,18 @@
       if (gameOver || !initialized) return;
       if (!(grid[r][c] & 2)) {
         if (grid[r][c] & 4) {
-          grid[r][c] ^= 4; // remove flag
+          // Flagged -> Question
+          grid[r][c] &= ~4;
+          grid[r][c] |= 16;
           flags--;
           playSound(600, 0.1, 'triangle');
+        } else if (grid[r][c] & 16) {
+          // Question -> Unrevealed
+          grid[r][c] &= ~16;
+          playSound(500, 0.1, 'triangle');
         } else {
-          grid[r][c] |= 4; // add flag
+          // Unrevealed -> Flagged
+          grid[r][c] |= 4;
           flags++;
           playSound(800, 0.1, 'triangle');
         }
@@ -503,6 +698,19 @@
         render();
       }
     }
+
+    // Mouse Press Shock Reaction
+    window.addEventListener('mousedown', (e) => {
+      if (!gameOver && !checkWin() && e.target.classList.contains('cell')) {
+        setFaceState('pressed');
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!gameOver && !checkWin()) {
+        setFaceState('idle');
+      }
+    });
 
     function render() {
       const board = document.getElementById('board');
@@ -516,7 +724,7 @@
             div.classList.add('revealed');
             if (grid[r][c] & 8) {
               div.classList.add('mine');
-              div.innerText = '💣';
+              div.innerHTML = MINE_SVG;
             } else {
               let m = countMines(r, c);
               if (m > 0) {
@@ -525,8 +733,9 @@
               }
             }
           } else if (grid[r][c] & 4) {
-            div.innerText = '🚩';
-            div.classList.add('flag');
+            div.innerHTML = FLAG_SVG;
+          } else if (grid[r][c] & 16) {
+            div.innerHTML = QUESTION_SVG;
           }
           
           div.onmousedown = (e) => {
@@ -536,6 +745,7 @@
           board.appendChild(div);
         }
       }
+      resizeFxCanvas();
     }
 
     init();

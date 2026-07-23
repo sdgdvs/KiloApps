@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KMines
 - KAsteroids
 - K2048
 - KSolitaire
@@ -107,6 +106,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KRogue
 - KChess
 - KPong
+- KMines
 
 ## Completed Work Log
 
@@ -119,6 +119,8 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **KRogue (Loop 1):** Implemented custom knight player sprite (with helmet, visor slit, cape, sword, shield), 12 distinct animated monster sprites (giant rat, bat, orc, zombie, cave troll, ghost, gelatinous cube with inner skull, hydra, balrog with horns, titan, beholder with eyestalks, mind flayer with tentacles), 3D stone brick wall tiles with biome color palettes (Mossy green, Volcanic red, Void purple, Abyss gold-dark), stairs, doors, shrines, food, gold coins, floating damage numbers, hit spark particles, attack stroke animations, and responsive HUD bars for both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
 - **KChess (Loop 1):** Implemented custom 2D vector chess piece sprites for all 6 piece types (Pawn, Knight, Bishop, Rook, Queen, King) for White & Black, 3D wood grain & mahogany tiles with rank/file coordinates, smooth piece sliding animation, capture particle sparks, glowing move highlights, and check warning auras for both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 - **KPong (Loop 1):** Implemented futuristic neon metallic paddles with glowing center core lines and directional thruster flame effects, glowing energy ball with color-coded motion trails, powerup capsules with distinct badges (Golden Expand, Red Shrink, Ice Freeze), laser hazard obstacles, wall & goal impact particle bursts with expanding shockwave rings, and retro arcade CRT scanlines for both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
+- **KMines (Loop 1):** Implemented 3D raised/beveled cell tiles with sunken revealed state, detailed iron mine bomb sprite with flickering fuse spark animation, animated crimson silk flag sprite on silver pole, cyan glowing question mark badge tile, interactive smiley status button with 4 animated expression states (normal happy, shocked click, wounded loss, cool sunglasses win), colored number tile texturing, and multi-color particle explosion debris & smoke burst FX for both Web Canvas/DOM (kmines.html) and Native C Win32 GDI (KMines/main.c).
+
 
 
 
