@@ -3,7 +3,7 @@
 <head>
 <title>KMaze</title>
 <style>
-  body { margin: 0; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  body { margin: 0; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: monospace; }
   canvas { image-rendering: pixelated; width: 100%; height: 100%; max-width: 640px; max-height: 480px; }
 </style>
 </head>
@@ -179,7 +179,101 @@
   
   let msgText = "";
   let msgTimer = 0;
-  
+  let frameCount = 0;
+
+  // Particle System
+  let particles = [];
+  function addParticles(x, y, color, count = 15) {
+      for (let i = 0; i < count; i++) {
+          let angle = Math.random() * Math.PI * 2;
+          let speed = 0.5 + Math.random() * 2.5;
+          particles.push({
+              x: x + (Math.random() - 0.5) * 20,
+              y: y + (Math.random() - 0.5) * 20,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 15 + Math.random() * 15,
+              maxLife: 30,
+              color: color
+          });
+      }
+  }
+
+  // Procedural 16x16 Texture Generator
+  const textures = new Array(14);
+  function initTextures() {
+      for (let t = 0; t < 14; t++) {
+          textures[t] = new Uint32Array(256);
+          for (let y = 0; y < 16; y++) {
+              for (let x = 0; x < 16; x++) {
+                  let r = 0, g = 0, b = 0;
+                  if (t === 1 || t === 7) { // Stone Wall
+                      let isMortar = (y === 3 || y === 7 || y === 11 || y === 15);
+                      if (!isMortar) {
+                          let rowShift = (Math.floor(y / 4) % 2) * 8;
+                          if (((x + rowShift) % 8) === 7) isMortar = true;
+                      }
+                      if (isMortar) { r = 50; g = 50; b = 50; }
+                      else {
+                          let noise = ((x * 13 + y * 37) % 30) - 15;
+                          r = Math.min(255, Math.max(0, 160 + noise));
+                          g = Math.min(255, Math.max(0, 40 + noise / 2));
+                          b = Math.min(255, Math.max(0, 40 + noise / 2));
+                      }
+                  } else if (t === 2) { // Exit Portal
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      if (dist < 3.0) { r = 255; g = 255; b = 255; }
+                      else if (dist < 5.5) { r = 0; g = 255; b = 100; }
+                      else if (dist < 7.5) { r = 0; g = 150; b = 50; }
+                      else { r = 0; g = 50; b = 20; }
+                  } else if (t === 3) { // Key Block
+                      let isKey = (x >= 6 && x <= 9 && y >= 2 && y <= 5) || (x === 7 && y >= 6 && y <= 12) || (x >= 8 && x <= 10 && y >= 10 && y <= 12);
+                      if (isKey) { r = 255; g = 255; b = 0; }
+                      else { r = 184; g = 134; b = 11; }
+                  } else if (t === 4) { // Door Block
+                      if (x === 0 || x === 15 || y === 0 || y === 15) { r = 20; g = 40; b = 60; }
+                      else if (y === 4 || y === 11) { r = 120; g = 140; b = 160; }
+                      else if (x === 7 || x === 8) { r = (y >= 7 && y <= 9) ? 0 : 20; g = (y >= 7 && y <= 9) ? 0 : 80; b = (y >= 7 && y <= 9) ? 0 : 160; }
+                      else { r = 0; g = 70; b = 140; }
+                  } else if (t === 5) { // Coin Chest
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      if (dist < 4.5) {
+                          if (dist < 2.0) { r = 255; g = 255; b = 255; }
+                          else { r = 255; g = 200; b = 0; }
+                      } else { r = 139; g = 69; b = 19; }
+                  } else if (t === 6) { // Trap
+                      if (y >= 12 && (x % 4 === 1 || x % 4 === 2)) { r = 200; g = 200; b = 200; }
+                      else if ((x + y) % 6 < 2) { r = 255; g = 0; b = 255; }
+                      else { r = 26; g = 16; b = 37; }
+                  } else if (t === 8) { // Compass Block
+                      if (x === 7 || y === 7 || Math.abs(x - 7) + Math.abs(y - 7) <= 4) { r = 0; g = 255; b = 255; }
+                      else { r = 0; g = 68; b = 85; }
+                  } else if (t === 9) { // Speed Boost
+                      if ((x >= 6 && x <= 10 && y >= 2 && y <= 6) || (x >= 4 && x <= 8 && y >= 7 && y <= 13)) { r = 255; g = 255; b = 0; }
+                      else { r = 112; g = 128; b = 144; }
+                  } else if (t === 10 || t === 11) { // Teleporter Vortex
+                      let dist = Math.sqrt((x - 7.5)**2 + (y - 7.5)**2);
+                      if (dist < 6.0 && (Math.floor(dist * 2) % 2 === 0)) { r = 255; g = 0; b = 255; }
+                      else { r = 48; g = 0; b = 68; }
+                  } else if (t === 12) { // Minotaur Monster
+                      if ((x >= 2 && x <= 5 && y <= 4) || (x >= 10 && x <= 13 && y <= 4)) { r = 50; g = 50; b = 50; }
+                      else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) { r = 255; g = 255; b = 0; }
+                      else if (y >= 10 && y <= 12 && x >= 5 && x <= 10) { r = 255; g = 255; b = 255; }
+                      else { r = 153; g = 0; b = 0; }
+                  } else if (t === 13) { // Pickaxe Block
+                      if ((x + y === 15 || x + y === 14) && (x >= 3 && x <= 12)) { r = 136; g = 153; b = 170; }
+                      else if (x === y && x >= 4 && x <= 11) { r = 139; g = 69; b = 19; }
+                      else { r = 92; g = 58; b = 30; }
+                  } else {
+                      r = 170; g = 0; b = 0;
+                  }
+                  textures[t][y * 16 + x] = (255 << 24) | (b << 16) | (g << 8) | r;
+              }
+          }
+      }
+  }
+  initTextures();
+
   function generateMaze(w, h) {
       let m = Array.from({length: w}, () => Array(h).fill(1));
       let stack = [];
@@ -380,8 +474,16 @@
 
   function update() {
       if (gameState !== 1) return;
+      frameCount++;
       
       if (msgTimer > 0) msgTimer--;
+      
+      // Update particles
+      particles = particles.filter(p => {
+          p.x += p.vx; p.y += p.vy;
+          p.life--;
+          return p.life > 0;
+      });
       
       minotaurTimer += 30;
       if (minotaurTimer >= 1000) {
@@ -435,6 +537,7 @@
                   keysHeld--;
                   map[Math.floor(mx)][Math.floor(my)] = 0;
                   playTone(400, 'square', 0.1);
+                  addParticles(W/2, H/2, '#0099ff', 20);
                   return true;
               }
           }
@@ -443,6 +546,7 @@
                   hasPickaxe--;
                   map[Math.floor(mx)][Math.floor(my)] = 0;
                   playTone(400, 'square', 0.1);
+                  addParticles(W/2, H/2, '#a06030', 25);
                   return true;
               }
           }
@@ -463,29 +567,36 @@
           keysHeld++;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(600, 'square', 0.1);
+          addParticles(W/2, H/2, '#ffff00', 15);
       } else if (curVal === 2) {
           playTone(800, 'square', 0.2);
+          addParticles(W/2, H/2, '#00ff66', 30);
           nextLevel();
       } else if (curVal === 5) {
           score += 100;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(500, 'square', 0.1);
+          addParticles(W/2, H/2, '#ffcc00', 15);
       } else if (curVal === 6) {
           playTone(200, 'sawtooth', 0.2);
           score = Math.max(0, score - 50);
           pX = 1.5; pY = 1.5;
+          addParticles(W/2, H/2, '#ff00ff', 20);
       } else if (curVal === 7) {
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(400, 'square', 0.1);
+          addParticles(W/2, H/2, '#aaaaaa', 10);
       } else if (curVal === 8) {
           hasCompass = 1;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(700, 'square', 0.2);
+          addParticles(W/2, H/2, '#00ffff', 15);
       } else if (curVal === 9) {
           speedBoost = 1;
           score += 50;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(600, 'sine', 0.2);
+          addParticles(W/2, H/2, '#ffffff', 15);
       } else if (curVal === 10) {
           let found = false;
           for(let i=0; i<map.length; i++) {
@@ -493,6 +604,7 @@
                   if (map[i][j] === 11) {
                       pX = i + 0.5; pY = j + 0.5;
                       playTone(300, 'square', 0.3);
+                      addParticles(W/2, H/2, '#ff00ff', 25);
                       found = true; break;
                   }
               }
@@ -505,6 +617,7 @@
                   if (map[i][j] === 10) {
                       pX = i + 0.5; pY = j + 0.5;
                       playTone(300, 'square', 0.3);
+                      addParticles(W/2, H/2, '#ff00ff', 25);
                       found = true; break;
                   }
               }
@@ -519,6 +632,7 @@
           hasPickaxe++;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(700, 'square', 0.2);
+          addParticles(W/2, H/2, '#8b4513', 15);
       }
 
       if (keys['ArrowRight'] || keys['d']) {
@@ -539,12 +653,26 @@
       }
   }
 
+  const imgData = ctx.createImageData(W, H);
+  const buf32 = new Uint32Array(imgData.data.buffer);
+
   function draw() {
-      ctx.fillStyle = '#323232'; // Ceil
-      ctx.fillRect(0, 0, W, H/2);
-      ctx.fillStyle = '#646464'; // Floor
-      ctx.fillRect(0, H/2, W, H/2);
-      
+      // Software Raycasting into buf32
+      // 1. Ceiling & Floor
+      for (let y = 0; y < H / 2; y++) {
+          let ceilFog = y / (H / 2);
+          let c = Math.floor(20 + ceilFog * 30);
+          let col = (255 << 24) | (Math.floor(c * 1.2) << 16) | (c << 8) | c;
+          for (let x = 0; x < W; x++) buf32[y * W + x] = col;
+      }
+      for (let y = H / 2; y < H; y++) {
+          let floorFog = 1.0 - (y - H / 2) / (H / 2);
+          let f = Math.floor(20 + (1.0 - floorFog) * 40);
+          let col = (255 << 24) | (f << 16) | (Math.floor(f * 1.1) << 8) | f;
+          for (let x = 0; x < W; x++) buf32[y * W + x] = col;
+      }
+
+      // 2. Raycaster Walls
       for (let x = 0; x < W; x++) {
           let cameraX = 2 * x / W - 1;
           let rayDX = dX + planeX * cameraX;
@@ -558,7 +686,7 @@
           let deltaDistY = (rayDY === 0) ? 1e30 : Math.abs(1 / rayDY);
           let perpWallDist;
           
-          let stepX, stepY, hit = 0, side;
+          let stepX, stepY, hit = 0, side = 0;
           
           if (rayDX < 0) { stepX = -1; sideDistX = (pX - mapX) * deltaDistX; }
           else           { stepX = 1;  sideDistX = (mapX + 1.0 - pX) * deltaDistX; }
@@ -583,48 +711,108 @@
           
           let lineHeight = Math.floor(H / perpWallDist);
           let drawStart = -lineHeight / 2 + H / 2;
-          if (drawStart < 0) drawStart = 0;
           let drawEnd = lineHeight / 2 + H / 2;
-          if (drawEnd >= H) drawEnd = H - 1;
+          let actualStart = Math.max(0, Math.floor(drawStart));
+          let actualEnd = Math.min(H - 1, Math.floor(drawEnd));
           
           let wallX;
           if (side === 0) wallX = pY + perpWallDist * rayDY;
           else            wallX = pX + perpWallDist * rayDX;
           wallX -= Math.floor(wallX);
-          let tex = Math.floor(wallX * 8) % 2;
-
-          if (currentLevel >= 15 && perpWallDist > 4.5) {
-              ctx.fillStyle = '#000000';
-          } else {
-              if (hit === 7) hit = 1;
-              if (hit === 2) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#009900' : '#00cc00') : (tex ? '#00cc00' : '#00ff00');
-              } else if (hit === 3) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#996600' : '#cc9900') : (tex ? '#cc9900' : '#ffcc00');
-              } else if (hit === 4) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#003399' : '#0066cc') : (tex ? '#0066cc' : '#0099ff');
-              } else if (hit === 5) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#994c00' : '#cc6600') : (tex ? '#cc6600' : '#ff8000');
-              } else if (hit === 6) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#660066' : '#990099') : (tex ? '#990099' : '#cc00cc');
-              } else if (hit === 8) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#009999' : '#00cccc') : (tex ? '#00cccc' : '#00ffff');
-              } else if (hit === 9) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#aaaaaa' : '#cccccc') : (tex ? '#cccccc' : '#ffffff');
-              } else if (hit === 10 || hit === 11) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#990099' : '#cc00cc') : (tex ? '#cc00cc' : '#ff00ff');
-              } else if (hit === 12) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#963232' : '#c83232') : (tex ? '#c83232' : '#ff3232');
-              } else if (hit === 13) {
-                  ctx.fillStyle = side === 1 ? (tex ? '#643200' : '#783c00') : (tex ? '#783c00' : '#964b00');
-              } else {
-                  ctx.fillStyle = side === 1 ? (tex ? '#770000' : '#960000') : (tex ? '#aa0000' : '#c80000');
-              }
+          let texX = Math.floor(wallX * 16) & 15;
+          
+          if (hit === 7) hit = 1;
+          if (hit < 1 || hit > 13) hit = 1;
+          let tex = textures[hit];
+          
+          let step = 16 / lineHeight;
+          let texPos = (actualStart - H / 2 + lineHeight / 2) * step;
+          
+          let fog = 1.0 - perpWallDist / 12.0;
+          fog = Math.max(0.1, Math.min(1.0, fog));
+          if (currentLevel >= 15 && perpWallDist > 4.5) fog = 0.0;
+          let sideMult = (side === 1) ? 0.75 : 1.0;
+          
+          for (let y = actualStart; y <= actualEnd; y++) {
+              let texY = Math.floor(texPos) & 15;
+              texPos += step;
+              
+              let srcCol = tex[texY * 16 + texX];
+              let r = (srcCol & 0xFF) * sideMult * fog;
+              let g = ((srcCol >> 8) & 0xFF) * sideMult * fog;
+              let b = ((srcCol >> 16) & 0xFF) * sideMult * fog;
+              
+              buf32[y * W + x] = (255 << 24) | (Math.floor(b) << 16) | (Math.floor(g) << 8) | Math.floor(r);
           }
-          ctx.fillRect(x, drawStart, 1, drawEnd - drawStart);
       }
       
-      // Draw UI
+      ctx.putImageData(imgData, 0, 0);
+      
+      // 3. Draw Particles
+      for (let p of particles) {
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x, p.y, 2, 2);
+      }
+      
+      // 4. Equipment HUD & Overlay
+      if (gameState === 1) {
+          // Held Compass
+          if (hasCompass) {
+              ctx.save();
+              ctx.beginPath();
+              ctx.arc(27, H - 27, 16, 0, Math.PI * 2);
+              ctx.fillStyle = '#c89632';
+              ctx.fill();
+              ctx.lineWidth = 2;
+              ctx.strokeStyle = '#ffd700';
+              ctx.stroke();
+              
+              ctx.beginPath();
+              ctx.arc(27, H - 27, 13, 0, Math.PI * 2);
+              ctx.fillStyle = '#0f1e2d';
+              ctx.fill();
+              
+              // Target direction needle
+              let ex = 8, ey = 8;
+              for (let i = 0; i < map.length; i++) {
+                  for (let j = 0; j < map[0].length; j++) {
+                      if (map[i][j] === 2) { ex = i; ey = j; break; }
+                  }
+              }
+              let targetAngle = Math.atan2(ey - pY, ex - pX) - Math.atan2(dY, dX);
+              ctx.translate(27, H - 27);
+              ctx.rotate(targetAngle);
+              ctx.beginPath();
+              ctx.moveTo(0, 0);
+              ctx.lineTo(10, 0);
+              ctx.strokeStyle = '#ff3333';
+              ctx.lineWidth = 2;
+              ctx.stroke();
+              ctx.restore();
+          }
+          
+          // Held Pickaxe
+          if (hasPickaxe > 0) {
+              let swing = Math.sin(frameCount * 0.3) * 4;
+              let bx = W - 45 + swing, by = H - 40 - swing;
+              
+              ctx.strokeStyle = '#8b4513';
+              ctx.lineWidth = 4;
+              ctx.beginPath();
+              ctx.moveTo(bx, by + 30);
+              ctx.lineTo(bx + 20, by);
+              ctx.stroke();
+              
+              ctx.strokeStyle = '#b4b4c8';
+              ctx.lineWidth = 3;
+              ctx.beginPath();
+              ctx.moveTo(bx + 10, by - 5);
+              ctx.lineTo(bx + 28, by + 12);
+              ctx.stroke();
+          }
+      }
+      
+      // 5. Draw UI
       ctx.fillStyle = 'white';
       ctx.font = '12px monospace';
       if (gameState === 0) {
@@ -651,7 +839,7 @@
               ctx.fillStyle = 'white';
           }
           
-          // Minimap
+          // 6. Minimap
           if (hasCompass) {
               let mmW = map.length;
               let mmH = map[0].length;
@@ -660,6 +848,10 @@
               if (mmW > 23) mmS = 3;
               const mmX = W - 10 - mmW * mmS;
               const mmY = 10;
+              
+              ctx.fillStyle = '#282832';
+              ctx.fillRect(mmX - 2, mmY - 2, mmW * mmS + 4, mmH * mmS + 4);
+              
               for (let i = 0; i < mmW; i++) {
                   for (let j = 0; j < mmH; j++) {
                       let v = map[i][j];
@@ -674,7 +866,7 @@
                       else if (v === 10 || v === 11) ctx.fillStyle = '#f0f';
                       else if (v === 12) ctx.fillStyle = '#ff3232';
                       else if (v === 13) ctx.fillStyle = '#964b00';
-                      else ctx.fillStyle = '#222';
+                      else ctx.fillStyle = '#141419';
                       ctx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }
               }
