@@ -3,8 +3,8 @@
 <head>
 <title>KTetris</title>
 <style>
-  body { margin: 0; background-color: #1e1e1e; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: monospace; }
-  canvas { background-color: #1e1e1e; border: 1px solid #333; }
+  body { margin: 0; background-color: #121216; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: monospace; }
+  canvas { background-color: #121216; border: 2px solid #2a2a35; box-shadow: 0 0 20px rgba(0,255,255,0.15); border-radius: 4px; }
 </style>
 </head>
 <body>
@@ -29,7 +29,10 @@
   const CELL = 20;
   const W = 10, H = 20;
   
-  const colors = ['#000', '#0ff', '#00f', '#fa0', '#ff0', '#0f0', '#808', '#f00', '#888', '#ff4040'];
+  const colors = ['#000000', '#00f0f0', '#0000f0', '#f0a000', '#f0f000', '#00f000', '#a000f0', '#f00000', '#888899', '#ff3333'];
+  const bevelHi = ['', '#99ffff', '#6666ff', '#ffcc66', '#ffff99', '#66ff66', '#d999ff', '#ff6666', '#bbbbcc', '#ff9999'];
+  const bevelSh = ['', '#008888', '#000088', '#995500', '#999900', '#008800', '#550088', '#880000', '#444455', '#880000'];
+
   const tetrominos = [
       [0x0F00, 0x2222, 0x00F0, 0x4444],
       [0x44C0, 0x8E00, 0x6220, 0x0710],
@@ -48,6 +51,44 @@
   let isBomb = false, nextIsBomb = false, holdIsBomb = false;
   let holdPc = -1, holdUsed = false;
   let highScore = parseInt(localStorage.getItem('ktetris_hiscore') || '0', 10);
+
+  // FX & Animation arrays
+  let particles = [];
+  let popups = [];
+  let lineFlashes = [];
+
+  function addParticle(x, y, vx, vy, color, size = 3, life = 20) {
+      particles.push({x, y, vx, vy, color, size, life, maxLife: life});
+  }
+
+  function addPopup(x, y, text, color = '#ffffff') {
+      popups.push({x, y, text, color, life: 45, maxLife: 45});
+  }
+
+  function triggerLineFlash(yRow) {
+      lineFlashes.push({y: yRow, life: 18, maxLife: 18});
+      for (let i = 0; i < 25; i++) {
+          let px = Math.random() * (W * CELL);
+          let py = yRow * CELL + CELL / 2;
+          let vx = (Math.random() - 0.5) * 7;
+          let vy = (Math.random() - 0.5) * 7;
+          let pColors = ['#ffffff', '#ffff55', '#00ffff', '#ff9900', '#ff33ff'];
+          addParticle(px, py, vx, vy, pColors[Math.floor(Math.random() * pColors.length)], Math.random() * 3 + 2, 25);
+      }
+  }
+
+  function spawnDropParticles(gridX, startY, endY, colorVal) {
+      const pColor = colors[colorVal] || '#ffffff';
+      for (let y = Math.max(0, startY); y <= endY; y++) {
+          for (let i = 0; i < 2; i++) {
+              addParticle((gridX + Math.random()) * CELL, y * CELL + Math.random() * CELL, (Math.random() - 0.5) * 2, -Math.random() * 2 - 1, pColor, 2, 14);
+          }
+      }
+      // Impact burst at landing
+      for (let i = 0; i < 16; i++) {
+          addParticle((gridX + 0.5) * CELL + (Math.random() - 0.5) * CELL * 2, endY * CELL + CELL, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4 - 2, pColor, 3, 20);
+      }
+  }
 
   let bag = [];
   function getNextPc() {
@@ -105,8 +146,10 @@
       let linesCleared = 0;
       let explodeCenters = Array(H).fill().map(() => Array(W).fill(false));
       let hasBombs = false;
+      let clearedRows = [];
       for (let y = H - 1; y >= 0; y--) {
           if (grid[y].every(c => c > 0)) {
+              clearedRows.push(y);
               for (let x = 0; x < W; x++) {
                   if (grid[y][x] === 9) {
                       explodeCenters[y][x] = true;
@@ -121,6 +164,10 @@
               y++;
           }
       }
+
+      for (let rY of clearedRows) {
+          triggerLineFlash(rY);
+      }
       
       if (hasBombs) {
           for (let y = 0; y < H; y++) {
@@ -130,11 +177,16 @@
                           for (let dx = -2; dx <= 2; dx++) {
                               let ny = y + dy, nx = x + dx;
                               if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
+                                  if (grid[ny][nx] > 0) {
+                                      let pCol = colors[grid[ny][nx]];
+                                      for(let k=0; k<4; k++) addParticle((nx + 0.5)*CELL, (ny + 0.5)*CELL, (Math.random()-0.5)*8, (Math.random()-0.5)*8, pCol, 3, 20);
+                                  }
                                   grid[ny][nx] = 0;
                               }
                           }
                       }
                       score += 500;
+                      addPopup(W * CELL / 2, H * CELL / 2, "BOMB BOOM! +500", "#ff3333");
                       playSound(150, 'sawtooth', 0.1); setTimeout(() => playSound(100, 'square', 0.2), 100);
                   }
               }
@@ -145,6 +197,13 @@
           if (linesCleared >= 1 && linesCleared <= 4) statLines[linesCleared - 1]++;
           combo++;
           playSound(1000 + linesCleared * 200 + combo * 100, 'square', 0.1);
+          
+          let popupText = ["", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800"][linesCleared] || "CLEARED!";
+          let popupColor = ["", "#00ffff", "#00ff00", "#ffa500", "#ff00ff"][linesCleared] || "#ffffff";
+          addPopup(W * CELL / 2 - 20, (cy + 2) * CELL, popupText, popupColor);
+          if (combo > 1) {
+              addPopup(W * CELL / 2 - 10, (cy + 2) * CELL + 16, "COMBO x" + combo + "!", "#ff4444");
+          }
       } else {
           combo = 0;
           playSound(500, 'square', 0.05);
@@ -226,6 +285,9 @@
       winScreen = false;
       combo = 0;
       bag = [];
+      particles = [];
+      popups = [];
+      lineFlashes = [];
       nextPc = getNextPc();
       nextRot = 0;
       nextIsBomb = (Math.floor(Math.random() * 15) === 0);
@@ -283,101 +345,242 @@
                   rot = 0; cx = 3; cy = -2;
               }
               holdUsed = true;
-              draw();
           }
       }
       if (e.key === ' ') {
+          let startY = cy;
           let dropDist = 0;
           while (!checkCol(pc, rot, cx, cy + 1)) { cy++; dropDist++; }
           score += dropDist * 2;
+          spawnDropParticles(cx, startY, cy, isBomb ? 9 : (pc + 1));
           let oldLevel = campaignLevel;
           lock();
           if (!winScreen && (gameMode === 0 || campaignLevel === oldLevel)) spawn();
       }
-      draw();
   });
 
+  // Sprite / 3D Beveled Gem Block Renderer
+  function drawBlock(ctx, px, py, colorIdx, size = CELL, isGhost = false) {
+      if (!colorIdx || colorIdx <= 0) return;
+      const baseColor = colors[colorIdx] || '#888899';
+      
+      if (isGhost) {
+          ctx.save();
+          const pulse = 0.35 + 0.2 * Math.sin(Date.now() * 0.008);
+          ctx.globalAlpha = pulse;
+          ctx.strokeStyle = baseColor;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(px + 1.5, py + 1.5, size - 3, size - 3);
+          ctx.fillStyle = baseColor;
+          ctx.globalAlpha = pulse * 0.15;
+          ctx.fillRect(px + 2, py + 2, size - 4, size - 4);
+          ctx.restore();
+          return;
+      }
+
+      ctx.save();
+      const bHi = bevelHi[colorIdx] || '#ffffff';
+      const bSh = bevelSh[colorIdx] || '#222222';
+      const bSize = Math.max(2, Math.floor(size / 6));
+
+      // Main Background
+      ctx.fillStyle = baseColor;
+      ctx.fillRect(px + 1, py + 1, size - 2, size - 2);
+
+      // Top-Left Bevel Highlight
+      ctx.fillStyle = bHi;
+      ctx.beginPath();
+      ctx.moveTo(px + 1, py + 1);
+      ctx.lineTo(px + size - 1, py + 1);
+      ctx.lineTo(px + size - 1 - bSize, py + 1 + bSize);
+      ctx.lineTo(px + 1 + bSize, py + 1 + bSize);
+      ctx.lineTo(px + 1 + bSize, py + size - 1 - bSize);
+      ctx.lineTo(px + 1, py + size - 1);
+      ctx.closePath();
+      ctx.fill();
+
+      // Bottom-Right Bevel Shadow
+      ctx.fillStyle = bSh;
+      ctx.beginPath();
+      ctx.moveTo(px + size - 1, py + 1);
+      ctx.lineTo(px + size - 1, py + size - 1);
+      ctx.lineTo(px + 1, py + size - 1);
+      ctx.lineTo(px + 1 + bSize, py + size - 1 - bSize);
+      ctx.lineTo(px + size - 1 - bSize, py + size - 1 - bSize);
+      ctx.lineTo(px + size - 1 - bSize, py + 1 + bSize);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner Gem Texture / Center Box
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(px + bSize + 1, py + bSize + 1, size - (bSize + 1) * 2, size - (bSize + 1) * 2);
+
+      // Gem Corner Flare
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.beginPath();
+      ctx.moveTo(px + bSize + 1, py + bSize + 1);
+      ctx.lineTo(px + bSize + 4, py + bSize + 1);
+      ctx.lineTo(px + bSize + 1, py + bSize + 4);
+      ctx.closePath();
+      ctx.fill();
+
+      // Special details
+      if (colorIdx === 9) { // Bomb
+          ctx.fillStyle = '#ffff00';
+          ctx.beginPath();
+          ctx.arc(px + size / 2, py + size / 2, Math.max(2, size / 4), 0, Math.PI * 2);
+          ctx.fill();
+          if (Math.random() < 0.6) {
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(px + size / 2 - 1, py + 2, 2, 2);
+          }
+      } else if (colorIdx === 8) { // Garbage
+          ctx.fillStyle = '#222233';
+          ctx.fillRect(px + 3, py + 3, 2, 2);
+          ctx.fillRect(px + size - 5, py + size - 5, 2, 2);
+      }
+
+      ctx.restore();
+  }
+
   function draw() {
-      ctx.fillStyle = '#1e1e1e';
+      ctx.fillStyle = '#121216';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
+      // Grid background lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= W; x++) {
+          ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, H * CELL); ctx.stroke();
+      }
+      for (let y = 0; y <= H; y++) {
+          ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(W * CELL, y * CELL); ctx.stroke();
+      }
+
+      // Grid blocks
       for (let y = 0; y < H; y++) {
           for (let x = 0; x < W; x++) {
               if (grid[y][x]) {
-                  ctx.fillStyle = colors[grid[y][x]];
-                  ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+                  drawBlock(ctx, x * CELL, y * CELL, grid[y][x], CELL);
               }
           }
       }
 
       if (!gameOver && !isPaused && !startScreen && !winScreen) {
           let drawVal = isBomb ? 9 : (pc + 1);
-          // Draw Ghost piece
+          // Ghost piece
           let ghost_y = cy;
-          while (!checkCol(pc, rot, cx, ghost_y + 1)) {
-              ghost_y++;
-          }
+          while (!checkCol(pc, rot, cx, ghost_y + 1)) ghost_y++;
           let shape = tetrominos[pc][rot];
-          ctx.strokeStyle = colors[drawVal];
-          ctx.lineWidth = 1;
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (shape & (1 << (15 - (i * 4 + j)))) {
                       if (ghost_y + i >= 0) {
-                          ctx.strokeRect((cx + j) * CELL + 1.5, (ghost_y + i) * CELL + 1.5, CELL - 3, CELL - 3);
+                          drawBlock(ctx, (cx + j) * CELL, (ghost_y + i) * CELL, drawVal, CELL, true);
                       }
                   }
               }
           }
           
-          ctx.fillStyle = colors[drawVal];
+          // Current active piece
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (shape & (1 << (15 - (i * 4 + j)))) {
                       if (cy + i >= 0) {
-                          ctx.fillRect((cx + j) * CELL + 1, (cy + i) * CELL + 1, CELL - 2, CELL - 2);
+                          drawBlock(ctx, (cx + j) * CELL, (cy + i) * CELL, drawVal, CELL, false);
                       }
                   }
               }
           }
-      } else if (gameOver) {
-          ctx.fillStyle = 'red';
-          ctx.font = '20px monospace';
-          ctx.fillText('GAME OVER', 50, 200);
+      }
+
+      // Line flashes
+      for (let f of lineFlashes) {
+          let alpha = f.life / f.maxLife;
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+          ctx.fillRect(0, f.y * CELL, W * CELL, CELL);
+      }
+
+      // Particles
+      for (let p of particles) {
+          let alpha = p.life / p.maxLife;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+      }
+
+      // Popups
+      for (let pop of popups) {
+          let alpha = pop.life / pop.maxLife;
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = pop.color;
+          ctx.font = 'bold 13px monospace';
+          ctx.shadowColor = '#000000';
+          ctx.shadowBlur = 4;
+          ctx.fillText(pop.text, pop.x, pop.y);
+          ctx.restore();
+      }
+
+      // Screens
+      if (gameOver) {
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(10, 150, W * CELL - 20, 100);
+          ctx.fillStyle = '#ff3333';
+          ctx.font = 'bold 20px monospace';
+          ctx.fillText('GAME OVER', 45, 195);
+          ctx.fillStyle = '#aaaaaa';
+          ctx.font = '12px monospace';
+          ctx.fillText('PRESS ENTER', 55, 220);
       } else if (winScreen) {
-          ctx.fillStyle = '#0f0';
-          ctx.font = '20px monospace';
-          ctx.fillText('YOU WIN!', 60, 190);
-          ctx.font = '14px monospace';
-          ctx.fillText('ENTER TO MENU', 50, 210);
-      } else if (startScreen) {
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(10, 140, W * CELL - 20, 110);
+          ctx.fillStyle = '#00ff66';
+          ctx.font = 'bold 20px monospace';
+          ctx.fillText('YOU WIN!', 55, 185);
           ctx.fillStyle = 'white';
-          ctx.font = '20px monospace';
-          ctx.fillText('KTETRIS', 65, 170);
-          ctx.font = '14px monospace';
-          ctx.fillText('1. Endless', 65, 200);
-          ctx.fillText('2. Campaign', 65, 220);
+          ctx.font = '12px monospace';
+          ctx.fillText('PRESS ENTER TO MENU', 25, 215);
+      } else if (startScreen) {
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(15, 120, W * CELL - 30, 140);
+          ctx.fillStyle = '#00ffff';
+          ctx.font = 'bold 22px monospace';
+          ctx.fillText('K-TETRIS', 50, 160);
+          ctx.fillStyle = 'white';
+          ctx.font = '13px monospace';
+          ctx.fillText('1. Endless Mode', 35, 195);
+          ctx.fillText('2. Campaign Mode', 35, 225);
       } else if (isPaused) {
-          ctx.fillStyle = 'yellow';
-          ctx.font = '20px monospace';
-          ctx.fillText('PAUSED', 65, 200);
+          ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          ctx.fillRect(20, 160, W * CELL - 40, 60);
+          ctx.fillStyle = '#ffff00';
+          ctx.font = 'bold 20px monospace';
+          ctx.fillText('PAUSED', 60, 198);
       }
       
-      ctx.strokeStyle = '#333';
+      // Divider bar
+      ctx.strokeStyle = '#2a2a35';
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(W * CELL, 0);
       ctx.lineTo(W * CELL, H * CELL);
       ctx.stroke();
 
-      ctx.fillStyle = 'white';
+      // UI Panel
+      ctx.fillStyle = '#ffffff';
       ctx.font = '12px monospace';
-      ctx.fillText('SCORE: ' + score, 210, 20);
-      ctx.fillText('HI: ' + highScore, 210, 40);
-      ctx.fillText(gameMode === 1 ? 'STAGE: ' + campaignLevel + '/15' : 'LEVEL: ' + level, 210, 60);
-      ctx.fillText(gameMode === 1 ? 'LINES: ' + lines + '/' + (campaignLevel*10) : 'LINES: ' + lines, 210, 80);
+      ctx.fillText('SCORE: ' + score, 210, 25);
+      ctx.fillText('HI: ' + highScore, 210, 45);
+      ctx.fillText(gameMode === 1 ? 'STAGE: ' + campaignLevel + '/15' : 'LEVEL: ' + level, 210, 65);
+      ctx.fillText(gameMode === 1 ? 'LINES: ' + lines + '/' + (campaignLevel*10) : 'LINES: ' + lines, 210, 85);
       
       if (gameMode === 0 && !startScreen) {
-          ctx.fillStyle = '#99f';
+          ctx.fillStyle = '#8888ff';
           ctx.fillText('SGL: ' + statLines[0], 210, 290);
           ctx.fillText('DBL: ' + statLines[1], 210, 310);
           ctx.fillText('TPL: ' + statLines[2], 210, 330);
@@ -386,35 +589,33 @@
       }
       
       if (combo > 1) {
-          ctx.fillStyle = '#ff6464';
-          ctx.fillText('COMBO x' + combo + '!', 210, 100);
+          ctx.fillStyle = '#ff5555';
+          ctx.fillText('COMBO x' + combo + '!', 210, 105);
           ctx.fillStyle = 'white';
       }
 
-      ctx.fillText('NEXT:', 210, 120);
+      ctx.fillText('NEXT:', 210, 125);
       
       if (!gameOver) {
           let nextShape = tetrominos[nextPc][nextRot];
           let nextDrawVal = nextIsBomb ? 9 : (nextPc + 1);
-          ctx.fillStyle = colors[nextDrawVal];
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (nextShape & (1 << (15 - (i * 4 + j)))) {
-                      ctx.fillRect(210 + j * CELL + 1, 140 + i * CELL + 1, CELL - 2, CELL - 2);
+                      drawBlock(ctx, 210 + j * 16, 140 + i * 16, nextDrawVal, 16);
                   }
               }
           }
       }
 
-      ctx.fillText('HOLD:', 210, 240);
+      ctx.fillText('HOLD:', 210, 225);
       if (holdPc !== -1) {
           let holdShape = tetrominos[holdPc][0];
           let holdDrawVal = holdIsBomb ? 9 : (holdPc + 1);
-          ctx.fillStyle = colors[holdDrawVal];
           for (let i = 0; i < 4; i++) {
               for (let j = 0; j < 4; j++) {
                   if (holdShape & (1 << (15 - (i * 4 + j)))) {
-                      ctx.fillRect(210 + j * CELL + 1, 260 + i * CELL + 1, CELL - 2, CELL - 2);
+                      drawBlock(ctx, 210 + j * 16, 240 + i * 16, holdDrawVal, 16);
                   }
               }
           }
@@ -429,6 +630,31 @@
       const deltaTime = time - lastTime;
       lastTime = time;
       if (!isPaused) dropCounter += deltaTime;
+
+      // Update particle physics
+      for (let i = particles.length - 1; i >= 0; i--) {
+          let p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.15; // subtle gravity
+          p.life--;
+          if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Update popups
+      for (let i = popups.length - 1; i >= 0; i--) {
+          let pop = popups[i];
+          pop.y -= 0.6;
+          pop.life--;
+          if (pop.life <= 0) popups.splice(i, 1);
+      }
+
+      // Update line flashes
+      for (let i = lineFlashes.length - 1; i >= 0; i--) {
+          let f = lineFlashes[i];
+          f.life--;
+          if (f.life <= 0) lineFlashes.splice(i, 1);
+      }
       
       if (dropCounter > dropInterval) {
           if (!gameOver && !isPaused && !startScreen && !winScreen) {
@@ -438,11 +664,11 @@
                   lock(); 
                   if (!winScreen && (gameMode === 0 || campaignLevel === oldLevel)) spawn(); 
               }
-              draw();
           }
           dropCounter = 0;
       }
-      if (isPaused || startScreen || winScreen) draw();
+      
+      draw();
       requestAnimationFrame(update);
   }
 

@@ -1,11 +1,21 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    unsigned char* bytes = (unsigned char*)dest;
+    while (count--) {
+        *bytes++ = (unsigned char)c;
+    }
+    return dest;
+}
+
 #define CELL_SIZE 20
 #define W 10
 #define H 20
 #define TIMER_ID 1
 
+// Global state declarations
 int grid[H][W];
 int current_piece, current_rot, current_x, current_y;
 int next_piece, next_rot;
@@ -13,6 +23,22 @@ int hold_piece = -1;
 int hold_used = 0;
 int high_score = 0;
 int current_is_bomb = 0, next_is_bomb = 0, hold_is_bomb = 0;
+int game_over = 0;
+int is_paused = 0;
+int start_screen = 1;
+int win_screen = 0;
+int game_mode = 0;
+int campaign_level = 1;
+int pieces_placed = 0;
+int stat_lines[4] = {0, 0, 0, 0};
+int score = 0;
+int lines = 0;
+int level = 1;
+int combo = 0;
+int timer_speed = 500;
+int gravity_timer = 0;
+
+void InitGame();
 
 void load_high_score() {
     HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -34,19 +60,6 @@ void save_high_score() {
         }
     }
 }
-int game_over = 0;
-int is_paused = 0;
-int start_screen = 1;
-int win_screen = 0;
-int game_mode = 0;
-int campaign_level = 1;
-int pieces_placed = 0;
-int stat_lines[4] = {0, 0, 0, 0};
-int score = 0;
-int lines = 0;
-int level = 1;
-int combo = 0;
-int timer_speed = 500;
 
 const unsigned short tetrominos[7][4] = {
     {0x0F00, 0x2222, 0x00F0, 0x4444}, // I
@@ -60,21 +73,142 @@ const unsigned short tetrominos[7][4] = {
 
 const COLORREF colors[10] = {
     RGB(0,0,0),
-    RGB(0,255,255), // I
-    RGB(0,0,255),   // J
-    RGB(255,165,0), // L
-    RGB(255,255,0), // O
-    RGB(0,255,0),   // S
-    RGB(128,0,128), // T
-    RGB(255,0,0),   // Z
-    RGB(128,128,128),// Garbage
-    RGB(255,64,64)  // Bomb
+    RGB(0,240,240),   // I - Cyan
+    RGB(0,0,240),     // J - Blue
+    RGB(240,160,0),   // L - Orange
+    RGB(240,240,0),   // O - Yellow
+    RGB(0,240,0),     // S - Green
+    RGB(160,0,240),   // T - Purple
+    RGB(240,0,0),     // Z - Red
+    RGB(136,136,153), // Garbage - Grey
+    RGB(255,51,51)    // Bomb - Bright Red
 };
+
+const COLORREF bevel_hi[10] = {
+    RGB(0,0,0),
+    RGB(153,255,255), // I
+    RGB(102,102,255), // J
+    RGB(255,204,102), // L
+    RGB(255,255,153), // O
+    RGB(102,255,102), // S
+    RGB(217,153,255), // T
+    RGB(255,102,102), // Z
+    RGB(187,187,204), // Garbage
+    RGB(255,153,153)  // Bomb
+};
+
+const COLORREF bevel_sh[10] = {
+    RGB(0,0,0),
+    RGB(0,136,136),   // I
+    RGB(0,0,136),     // J
+    RGB(153,85,0),    // L
+    RGB(153,153,0),   // O
+    RGB(0,136,0),     // S
+    RGB(85,0,136),    // T
+    RGB(136,0,0),     // Z
+    RGB(68,68,85),    // Garbage
+    RGB(136,0,0)      // Bomb
+};
+
+// Particle and animation structures
+typedef struct {
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int size;
+    int life;
+    int max_life;
+} Particle;
+#define MAX_PARTICLES 128
+Particle particles[MAX_PARTICLES];
+int num_particles = 0;
+
+typedef struct {
+    int y;
+    int life;
+    int max_life;
+} LineFlash;
+#define MAX_FLASHES 10
+LineFlash line_flashes[MAX_FLASHES];
+int num_flashes = 0;
+
+typedef struct {
+    float x, y;
+    char text[32];
+    COLORREF color;
+    int life;
+    int max_life;
+} TextPopup;
+#define MAX_POPUPS 8
+TextPopup text_popups[MAX_POPUPS];
+int num_popups = 0;
 
 unsigned int rng_state = 12345;
 int random_int(int max) {
+    if (max <= 0) return 0;
     rng_state = rng_state * 1103515245 + 12345;
     return ((rng_state >> 16) & 0x7FFF) % max;
+}
+
+void AddParticle(float x, float y, float vx, float vy, COLORREF color, int size, int life) {
+    if (num_particles < MAX_PARTICLES) {
+        particles[num_particles].x = x;
+        particles[num_particles].y = y;
+        particles[num_particles].vx = vx;
+        particles[num_particles].vy = vy;
+        particles[num_particles].color = color;
+        particles[num_particles].size = size;
+        particles[num_particles].life = life;
+        particles[num_particles].max_life = life;
+        num_particles++;
+    }
+}
+
+void AddPopup(float x, float y, const char* text, COLORREF color) {
+    if (num_popups < MAX_POPUPS) {
+        text_popups[num_popups].x = x;
+        text_popups[num_popups].y = y;
+        lstrcpynA(text_popups[num_popups].text, text, 32);
+        text_popups[num_popups].color = color;
+        text_popups[num_popups].life = 40;
+        text_popups[num_popups].max_life = 40;
+        num_popups++;
+    }
+}
+
+void AddLineFlash(int yRow) {
+    if (num_flashes < MAX_FLASHES) {
+        line_flashes[num_flashes].y = yRow;
+        line_flashes[num_flashes].life = 15;
+        line_flashes[num_flashes].max_life = 15;
+        num_flashes++;
+    }
+    for (int i = 0; i < 25; i++) {
+        float px = (float)(random_int(W * CELL_SIZE));
+        float py = (float)(yRow * CELL_SIZE + CELL_SIZE / 2);
+        float vx = (float)((random_int(100) - 50) / 7.0f);
+        float vy = (float)((random_int(100) - 50) / 7.0f);
+        COLORREF pColors[4] = { RGB(255,255,255), RGB(255,255,0), RGB(0,255,255), RGB(255,100,255) };
+        AddParticle(px, py, vx, vy, pColors[random_int(4)], random_int(3) + 2, 20);
+    }
+}
+
+void SpawnDropParticles(int gridX, int startY, int endY, int colorIdx) {
+    COLORREF pColor = colors[colorIdx];
+    for (int y = (startY < 0 ? 0 : startY); y <= endY; y++) {
+        for (int i = 0; i < 2; i++) {
+            float px = (float)(gridX * CELL_SIZE + random_int(CELL_SIZE));
+            float py = (float)(y * CELL_SIZE + random_int(CELL_SIZE));
+            AddParticle(px, py, (float)((random_int(20) - 10) / 10.0f), (float)(-random_int(20) / 10.0f - 1.0f), pColor, 2, 12);
+        }
+    }
+    for (int i = 0; i < 16; i++) {
+        float px = (float)(gridX * CELL_SIZE + CELL_SIZE / 2 + random_int(CELL_SIZE * 2) - CELL_SIZE);
+        float py = (float)(endY * CELL_SIZE + CELL_SIZE);
+        float vx = (float)((random_int(60) - 30) / 10.0f);
+        float vy = (float)((random_int(40) - 20) / 10.0f - 2.0f);
+        AddParticle(px, py, vx, vy, pColor, 3, 18);
+    }
 }
 
 int bag[7];
@@ -133,6 +267,7 @@ void lock_piece() {
         }
         if (full) {
             lines_cleared++;
+            AddLineFlash(y);
             for (int x = 0; x < W; x++) {
                 if (grid[y][x] == 9) {
                     explode_centers[y][x] = 1;
@@ -159,11 +294,16 @@ void lock_piece() {
                             int ny = y + dy;
                             int nx = x + dx;
                             if (ny >= 0 && ny < H && nx >= 0 && nx < W) {
+                                if (grid[ny][nx] > 0) {
+                                    COLORREF pCol = colors[grid[ny][nx]];
+                                    for (int k = 0; k < 4; k++) AddParticle((float)((nx + 0.5)*CELL_SIZE), (float)((ny + 0.5)*CELL_SIZE), (float)(random_int(8) - 4), (float)(random_int(8) - 4), pCol, 3, 20);
+                                }
                                 grid[ny][nx] = 0;
                             }
                         }
                     }
                     score += 500;
+                    AddPopup((float)(W * CELL_SIZE / 2 - 20), (float)(H * CELL_SIZE / 2), "BOMB BOOM! +500", RGB(255, 50, 50));
                     Beep(150, 100); Beep(100, 200);
                 }
             }
@@ -174,6 +314,17 @@ void lock_piece() {
         if (lines_cleared >= 1 && lines_cleared <= 4) stat_lines[lines_cleared - 1]++;
         combo++;
         Beep(1000 + lines_cleared * 200 + combo * 100, 100);
+
+        const char* popText[5] = {"", "SINGLE! +100", "DOUBLE! +300", "TRIPLE! +500", "TETRIS! +800"};
+        COLORREF popCol[5] = {RGB(0,0,0), RGB(0,255,255), RGB(0,255,0), RGB(255,165,0), RGB(255,0,255)};
+        if (lines_cleared <= 4) {
+            AddPopup((float)(W * CELL_SIZE / 2 - 25), (float)((current_y + 2) * CELL_SIZE), popText[lines_cleared], popCol[lines_cleared]);
+        }
+        if (combo > 1) {
+            char comboStr[32];
+            wsprintfA(comboStr, "COMBO x%d!", combo);
+            AddPopup((float)(W * CELL_SIZE / 2 - 15), (float)((current_y + 2) * CELL_SIZE + 16), comboStr, RGB(255, 68, 68));
+        }
     } else {
         combo = 0;
         Beep(500, 50);
@@ -256,6 +407,11 @@ void InitGame() {
             grid[y][x] = 0;
             
     pieces_placed = 0;
+    num_particles = 0;
+    num_flashes = 0;
+    num_popups = 0;
+    gravity_timer = 0;
+
     if (game_mode == 1) {
         int garbage = campaign_level * 2;
         if (garbage > 12) garbage = 12;
@@ -288,25 +444,140 @@ void InitGame() {
     spawn_piece();
 }
 
+void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhost) {
+    if (colorIdx <= 0 || colorIdx >= 10) return;
+    if (isGhost) {
+        HPEN pen = CreatePen(PS_SOLID, 1, colors[colorIdx]);
+        HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+        HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Rectangle(hdc, px + 1, py + 1, px + size - 1, py + size - 1);
+        MoveToEx(hdc, px + 4, py + size / 2, NULL); LineTo(hdc, px + size - 4, py + size / 2);
+        MoveToEx(hdc, px + size / 2, py + 4, NULL); LineTo(hdc, px + size / 2, py + size - 4);
+        SelectObject(hdc, oldPen);
+        SelectObject(hdc, oldBrush);
+        DeleteObject(pen);
+        return;
+    }
+
+    int bSize = size / 6;
+    if (bSize < 2) bSize = 2;
+
+    // Main background
+    HBRUSH bgBrush = CreateSolidBrush(colors[colorIdx]);
+    RECT rMain = { px + 1, py + 1, px + size - 1, py + size - 1 };
+    FillRect(hdc, &rMain, bgBrush);
+    DeleteObject(bgBrush);
+
+    // Top-Left bevel (Highlight)
+    HBRUSH hiBrush = CreateSolidBrush(bevel_hi[colorIdx]);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, hiBrush);
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    POINT ptHi[6] = {
+        { px + 1, py + 1 },
+        { px + size - 1, py + 1 },
+        { px + size - 1 - bSize, py + 1 + bSize },
+        { px + 1 + bSize, py + 1 + bSize },
+        { px + 1 + bSize, py + size - 1 - bSize },
+        { px + 1, py + size - 1 }
+    };
+    Polygon(hdc, ptHi, 6);
+
+    // Bottom-Right bevel (Shadow)
+    HBRUSH shBrush = CreateSolidBrush(bevel_sh[colorIdx]);
+    SelectObject(hdc, shBrush);
+    POINT ptSh[6] = {
+        { px + size - 1, py + 1 },
+        { px + size - 1, py + size - 1 },
+        { px + 1, py + size - 1 },
+        { px + 1 + bSize, py + size - 1 - bSize },
+        { px + size - 1 - bSize, py + size - 1 - bSize },
+        { px + size - 1 - bSize, py + 1 + bSize }
+    };
+    Polygon(hdc, ptSh, 6);
+
+    // Center shine box
+    HBRUSH innerBrush = CreateSolidBrush(colors[colorIdx]);
+    RECT rInner = { px + bSize + 1, py + bSize + 1, px + size - 1 - bSize, py + size - 1 - bSize };
+    FillRect(hdc, &rInner, innerBrush);
+    DeleteObject(innerBrush);
+
+    // Corner flare dot
+    HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
+    RECT rFlare = { px + bSize + 1, py + bSize + 1, px + bSize + 4, py + bSize + 4 };
+    FillRect(hdc, &rFlare, whiteBrush);
+    DeleteObject(whiteBrush);
+
+    // Special Bomb symbol
+    if (colorIdx == 9) {
+        HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
+        SelectObject(hdc, yellowBrush);
+        Ellipse(hdc, px + size / 4, py + size / 4, px + size * 3 / 4, py + size * 3 / 4);
+        DeleteObject(yellowBrush);
+    }
+
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(hiBrush);
+    DeleteObject(shBrush);
+    DeleteObject(nullPen);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
             load_high_score();
             InitGame();
-            SetTimer(hwnd, TIMER_ID, 500, NULL);
+            SetTimer(hwnd, TIMER_ID, 20, NULL);
             break;
         case WM_TIMER:
             if (!game_over && !is_paused && !start_screen && !win_screen) {
-                if (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
-                    current_y++;
-                } else {
-                    int old_level = campaign_level;
-                    lock_piece();
-                    if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
-                        spawn_piece();
+                gravity_timer += 20;
+                if (gravity_timer >= timer_speed) {
+                    gravity_timer = 0;
+                    if (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
+                        current_y++;
+                    } else {
+                        int old_level = campaign_level;
+                        lock_piece();
+                        if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
+                            spawn_piece();
+                        }
                     }
-                    SetTimer(hwnd, TIMER_ID, timer_speed, NULL);
                 }
+
+                // Update particle physics
+                for (int i = num_particles - 1; i >= 0; i--) {
+                    particles[i].x += particles[i].vx;
+                    particles[i].y += particles[i].vy;
+                    particles[i].vy += 0.15f;
+                    particles[i].life--;
+                    if (particles[i].life <= 0) {
+                        particles[i] = particles[num_particles - 1];
+                        num_particles--;
+                    }
+                }
+
+                // Update popups
+                for (int i = num_popups - 1; i >= 0; i--) {
+                    text_popups[i].y -= 0.5f;
+                    text_popups[i].life--;
+                    if (text_popups[i].life <= 0) {
+                        text_popups[i] = text_popups[num_popups - 1];
+                        num_popups--;
+                    }
+                }
+
+                // Update line flashes
+                for (int i = num_flashes - 1; i >= 0; i--) {
+                    line_flashes[i].life--;
+                    if (line_flashes[i].life <= 0) {
+                        line_flashes[i] = line_flashes[num_flashes - 1];
+                        num_flashes--;
+                    }
+                }
+
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -372,18 +643,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 if (wParam == VK_SPACE) {
+                    int start_y = current_y;
                     int drop_dist = 0;
                     while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
                         current_y++;
                         drop_dist++;
                     }
                     score += drop_dist * 2;
+                    SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 9 : (current_piece + 1));
                     int old_level = campaign_level;
                     lock_piece();
                     if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
                         spawn_piece();
                     }
-                    SetTimer(hwnd, TIMER_ID, timer_speed, NULL);
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -392,34 +664,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            // double buffering (rudimentary)
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W * CELL_SIZE + 120, H * CELL_SIZE);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(30, 30, 30));
+            HBRUSH bg = CreateSolidBrush(RGB(18, 18, 22));
             RECT fullRc = {0, 0, W * CELL_SIZE + 120, H * CELL_SIZE};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
-            HBRUSH brushes[10];
-            for (int i = 0; i < 10; i++) brushes[i] = CreateSolidBrush(colors[i]);
-            
-            // Draw grid
+            // Draw grid lines
+            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(35, 35, 45));
+            HPEN oldPen = (HPEN)SelectObject(memDC, gridPen);
+            for (int x = 0; x <= W; x++) {
+                MoveToEx(memDC, x * CELL_SIZE, 0, NULL); LineTo(memDC, x * CELL_SIZE, H * CELL_SIZE);
+            }
+            for (int y = 0; y <= H; y++) {
+                MoveToEx(memDC, 0, y * CELL_SIZE, NULL); LineTo(memDC, W * CELL_SIZE, y * CELL_SIZE);
+            }
+            SelectObject(memDC, oldPen);
+            DeleteObject(gridPen);
+
+            // Draw locked grid blocks
             for (int y = 0; y < H; y++) {
                 for (int x = 0; x < W; x++) {
                     if (grid[y][x]) {
-                        RECT r = { x * CELL_SIZE + 1, y * CELL_SIZE + 1, (x + 1) * CELL_SIZE - 1, (y + 1) * CELL_SIZE - 1 };
-                        FillRect(memDC, &r, brushes[grid[y][x]]);
+                        DrawTetrisBlock(memDC, x * CELL_SIZE, y * CELL_SIZE, grid[y][x], CELL_SIZE, 0);
                     }
                 }
             }
             
-            // Draw current piece
+            // Draw current piece & Ghost piece
             if (!game_over && !is_paused && !start_screen && !win_screen) {
                 unsigned short shape = tetrominos[current_piece][current_rot];
                 int draw_val = current_is_bomb ? 9 : (current_piece + 1);
-                // Draw Ghost piece
+                
+                // Ghost piece
                 int ghost_y = current_y;
                 while (!check_collision(current_piece, current_rot, current_x, ghost_y + 1)) {
                     ghost_y++;
@@ -428,48 +708,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     for (int x = 0; x < 4; x++) {
                         if (shape & (1 << (15 - (y * 4 + x)))) {
                             if (ghost_y + y >= 0) {
-                                RECT r = { (current_x + x) * CELL_SIZE + 1, (ghost_y + y) * CELL_SIZE + 1, (current_x + x + 1) * CELL_SIZE - 1, (ghost_y + y + 1) * CELL_SIZE - 1 };
-                                FrameRect(memDC, &r, brushes[draw_val]);
+                                DrawTetrisBlock(memDC, (current_x + x) * CELL_SIZE, (ghost_y + y) * CELL_SIZE, draw_val, CELL_SIZE, 1);
                             }
                         }
                     }
                 }
 
+                // Active piece
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (shape & (1 << (15 - (y * 4 + x)))) {
                             int py = current_y + y;
                             if (py >= 0) {
-                                RECT r = { (current_x + x) * CELL_SIZE + 1, py * CELL_SIZE + 1, (current_x + x + 1) * CELL_SIZE - 1, (py + 1) * CELL_SIZE - 1 };
-                                FillRect(memDC, &r, brushes[draw_val]);
+                                DrawTetrisBlock(memDC, (current_x + x) * CELL_SIZE, py * CELL_SIZE, draw_val, CELL_SIZE, 0);
                             }
                         }
                     }
                 }
-            } else if (game_over) {
-                SetTextColor(memDC, RGB(255, 0, 0));
-                SetBkMode(memDC, TRANSPARENT);
-                TextOutA(memDC, 20, H * CELL_SIZE / 2, "GAME OVER", 9);
+            }
+
+            // Draw Line Flashes
+            for (int i = 0; i < num_flashes; i++) {
+                HBRUSH flashBrush = CreateSolidBrush(RGB(255, 255, 255));
+                RECT rFlash = { 0, line_flashes[i].y * CELL_SIZE, W * CELL_SIZE, (line_flashes[i].y + 1) * CELL_SIZE };
+                FillRect(memDC, &rFlash, flashBrush);
+                DeleteObject(flashBrush);
+            }
+
+            // Draw Particles
+            for (int i = 0; i < num_particles; i++) {
+                HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                RECT rP = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size };
+                FillRect(memDC, &rP, pBrush);
+                DeleteObject(pBrush);
+            }
+
+            // Draw Text Popups
+            SetBkMode(memDC, TRANSPARENT);
+            for (int i = 0; i < num_popups; i++) {
+                SetTextColor(memDC, text_popups[i].color);
+                TextOutA(memDC, (int)text_popups[i].x, (int)text_popups[i].y, text_popups[i].text, lstrlenA(text_popups[i].text));
+            }
+
+            // UI Screens
+            if (game_over) {
+                SetTextColor(memDC, RGB(255, 51, 51));
+                TextOutA(memDC, 45, H * CELL_SIZE / 2 - 10, "GAME OVER", 9);
+                SetTextColor(memDC, RGB(180, 180, 180));
+                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 10, "PRESS ENTER", 11);
             } else if (win_screen) {
-                SetTextColor(memDC, RGB(0, 255, 0));
-                SetBkMode(memDC, TRANSPARENT);
-                TextOutA(memDC, 20, H * CELL_SIZE / 2, "YOU WIN!", 8);
-                TextOutA(memDC, 20, H * CELL_SIZE / 2 + 20, "ENTER TO MENU", 13);
-            } else if (start_screen) {
+                SetTextColor(memDC, RGB(0, 255, 100));
+                TextOutA(memDC, 50, H * CELL_SIZE / 2 - 10, "YOU WIN!", 8);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                SetBkMode(memDC, TRANSPARENT);
-                TextOutA(memDC, 40, H * CELL_SIZE / 2 - 40, "KTETRIS", 7);
-                TextOutA(memDC, 40, H * CELL_SIZE / 2, "1. Endless", 10);
-                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 20, "2. Campaign", 11);
+                TextOutA(memDC, 25, H * CELL_SIZE / 2 + 10, "ENTER TO MENU", 13);
+            } else if (start_screen) {
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, 45, H * CELL_SIZE / 2 - 40, "K-TETRIS", 8);
+                SetTextColor(memDC, RGB(255, 255, 255));
+                TextOutA(memDC, 35, H * CELL_SIZE / 2 - 10, "1. Endless Mode", 15);
+                TextOutA(memDC, 35, H * CELL_SIZE / 2 + 10, "2. Campaign Mode", 16);
             } else if (is_paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
-                SetBkMode(memDC, TRANSPARENT);
-                TextOutA(memDC, 20, H * CELL_SIZE / 2, "PAUSED", 6);
+                TextOutA(memDC, 55, H * CELL_SIZE / 2, "PAUSED", 6);
             }
             
-            // Draw UI panel
+            // UI Panel
             SetTextColor(memDC, RGB(255, 255, 255));
-            SetBkMode(memDC, TRANSPARENT);
             char score_str[32];
             wsprintfA(score_str, "SCORE: %d", score);
             TextOutA(memDC, W * CELL_SIZE + 10, 20, score_str, lstrlenA(score_str));
@@ -494,7 +798,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 wsprintfA(stat2, "DBL: %d", stat_lines[1]);
                 wsprintfA(stat3, "TPL: %d", stat_lines[2]);
                 wsprintfA(stat4, "TET: %d", stat_lines[3]);
-                SetTextColor(memDC, RGB(150, 150, 255));
+                SetTextColor(memDC, RGB(136, 136, 255));
                 TextOutA(memDC, W * CELL_SIZE + 10, 290, stat1, lstrlenA(stat1));
                 TextOutA(memDC, W * CELL_SIZE + 10, 310, stat2, lstrlenA(stat2));
                 TextOutA(memDC, W * CELL_SIZE + 10, 330, stat3, lstrlenA(stat3));
@@ -503,7 +807,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if (combo > 1) {
-                SetTextColor(memDC, RGB(255, 100, 100));
+                SetTextColor(memDC, RGB(255, 85, 85));
                 char combo_str[32];
                 wsprintfA(combo_str, "COMBO x%d!", combo);
                 TextOutA(memDC, W * CELL_SIZE + 10, 100, combo_str, lstrlenA(combo_str));
@@ -517,35 +821,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (next_shape & (1 << (15 - (y * 4 + x)))) {
-                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 140 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 140 + (y + 1) * CELL_SIZE - 1 };
-                            FillRect(memDC, &r, brushes[next_draw_val]);
+                            DrawTetrisBlock(memDC, W * CELL_SIZE + 10 + x * 16, 140 + y * 16, next_draw_val, 16, 0);
                         }
                     }
                 }
             }
             
-            TextOutA(memDC, W * CELL_SIZE + 10, 230, "HOLD:", 5);
+            TextOutA(memDC, W * CELL_SIZE + 10, 220, "HOLD:", 5);
             if (hold_piece != -1) {
                 unsigned short hold_shape = tetrominos[hold_piece][0];
                 int hold_draw_val = hold_is_bomb ? 9 : (hold_piece + 1);
                 for (int y = 0; y < 4; y++) {
                     for (int x = 0; x < 4; x++) {
                         if (hold_shape & (1 << (15 - (y * 4 + x)))) {
-                            RECT r = { W * CELL_SIZE + 10 + x * CELL_SIZE + 1, 250 + y * CELL_SIZE + 1, W * CELL_SIZE + 10 + (x + 1) * CELL_SIZE - 1, 250 + (y + 1) * CELL_SIZE - 1 };
-                            FillRect(memDC, &r, brushes[hold_draw_val]);
+                            DrawTetrisBlock(memDC, W * CELL_SIZE + 10 + x * 16, 240 + y * 16, hold_draw_val, 16, 0);
                         }
                     }
                 }
             }
             
-            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(100, 100, 100));
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(42, 42, 53));
             HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
             MoveToEx(memDC, W * CELL_SIZE, 0, NULL);
             LineTo(memDC, W * CELL_SIZE, H * CELL_SIZE);
             SelectObject(memDC, hOldPen);
             DeleteObject(hPen);
-            
-            for (int i = 0; i < 10; i++) DeleteObject(brushes[i]);
             
             BitBlt(hdc, 0, 0, W * CELL_SIZE + 120, H * CELL_SIZE, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
