@@ -1,174 +1,605 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KTask Monitor</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: hsl(210, 15%, 12%);
     --card-bg: hsl(210, 15%, 16%);
     --card-hover: hsl(210, 15%, 22%);
     --primary: hsl(200, 85%, 60%);
+    --primary-muted: rgba(56, 189, 248, 0.15);
     --danger: hsl(0, 85%, 60%);
+    --danger-hover: hsl(0, 85%, 50%);
     --border-color: rgba(255, 255, 255, 0.08);
     --text-main: #ffffff;
-    --text-muted: #858585;
+    --text-muted: #94a3b8;
+    --success: #34d399;
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); user-select: none; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; }
   
-  .header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); }
-  .header h1 { margin: 0; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-  .header button { padding: 6px 12px; cursor: pointer; border: 1px solid var(--border-color); border-radius: 6px; background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px; transition: all 0.2s ease; }
-  .header button:hover { background: var(--primary); color: #111; border-color: var(--primary); }
+  * { box-sizing: border-box; }
 
-  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px 20px; border-bottom: 1px solid var(--border-color); }
-  .metric { display: flex; flex-direction: column; gap: 8px; }
-  .metric-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
-  .progress-bg { height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.5s ease-out; }
-  
-  .task-list { flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
-  .task-list::-webkit-scrollbar { width: 8px; }
-  .task-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-  
-  .task-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; }
-  .task-card:hover { background: var(--card-hover); border-color: rgba(255,255,255,0.15); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-  
-  .task-info { display: flex; flex-direction: column; gap: 4px; }
-  .task-title { font-size: 14px; font-weight: 600; }
-  .task-id { font-size: 11px; color: var(--text-muted); font-family: 'Consolas', monospace; }
-  
-  .btn-kill { background: rgba(255, 0, 0, 0.1); color: var(--danger); border: 1px solid rgba(255, 0, 0, 0.2); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
-  .btn-kill:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
-  
-  .empty-state { text-align: center; color: var(--text-muted); font-size: 14px; padding: 40px; font-style: italic; }
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header h1 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .select-ctrl, .input-ctrl {
+    padding: 7px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .select-ctrl option {
+    background: #1e293b;
+    color: #fff;
+  }
+
+  .select-ctrl:focus-visible, .input-ctrl:focus-visible {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-muted);
+  }
+
+  .btn-primary {
+    padding: 7px 14px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary);
+    color: #0f172a;
+    border-color: var(--primary);
+  }
+
+  .btn-primary:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  /* Dashboard Metrics */
+  .dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: var(--card-bg);
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .metric-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .metric-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .progress-bg {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: width 0.5s ease-out, background-color 0.3s ease;
+  }
+
+  /* Task List */
+  .task-list {
+    flex: 1;
+    padding: 15px 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .task-list::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .task-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  .task-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+    gap: 15px;
+  }
+
+  .task-card:hover {
+    background: var(--card-hover);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .task-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .task-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .task-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .task-title {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Consolas', monospace;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .btn-kill {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .btn-kill:hover {
+    background: var(--danger);
+    color: #ffffff;
+    border-color: var(--danger);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+
+  .btn-kill:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--danger);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 50px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 <body>
   <div class="header">
     <h1>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
       System Monitor
     </h1>
-    <div style="display:flex; gap: 8px;">
-      <select id="sortSelect" style="padding: 6px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px;" onchange="renderTasks()">
-        <option value="name">Sort by Name</option>
-        <option value="mem">Sort by Memory</option>
-        <option value="cpu">Sort by CPU</option>
-      </select>
-      <input type="text" id="searchInput" placeholder="Filter tasks..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 13px;" oninput="renderTasks()">
-      <button onclick="refresh()">Refresh Tasks</button>
+    
+    <div class="header-actions">
+      <div class="input-group">
+        <label for="sortSelect" class="sr-only" style="display:none;">Sort tasks</label>
+        <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="renderTasks()">
+          <option value="name">Sort by Name</option>
+          <option value="mem">Sort by Memory</option>
+          <option value="cpu">Sort by CPU</option>
+          <option value="pid">Sort by PID</option>
+        </select>
+        
+        <label for="searchInput" class="sr-only" style="display:none;">Filter tasks</label>
+        <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter tasks (Name or PID)..." aria-label="Filter tasks" oninput="renderTasks()">
+      </div>
+      
+      <label class="toggle-label">
+        <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"> Auto-refresh
+      </label>
+
+      <button class="btn-primary" onclick="refresh()" aria-label="Refresh task list (Shortcut: R)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        Refresh
+      </button>
     </div>
   </div>
   
-  <div class="dashboard">
+  <div class="dashboard" role="region" aria-label="System Metrics">
+    <div class="metric">
+      <div class="metric-header">
+        <span>Active Tasks</span>
+        <span id="task-count-val">0</span>
+      </div>
+      <div class="metric-val" id="task-count-text">0 Running</div>
+    </div>
+
     <div class="metric">
       <div class="metric-header">
         <span>CPU Usage</span>
-        <span id="cpu-val">14%</span>
+        <span id="cpu-val">0%</span>
       </div>
-      <div class="progress-bg"><div class="progress-fill" id="cpu-fill" style="width: 14%"></div></div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="cpu-fill" style="width: 0%"></div>
+      </div>
     </div>
+
     <div class="metric">
       <div class="metric-header">
         <span>Memory Allocation</span>
-        <span id="mem-val">2.4 GB</span>
+        <span id="mem-val">0.0 GB</span>
       </div>
-      <div class="progress-bg"><div class="progress-fill" id="mem-fill" style="width: 60%; background: #a277ff;"></div></div>
+      <div class="progress-bg">
+        <div class="progress-fill" id="mem-fill" style="width: 0%; background: #a277ff;"></div>
+      </div>
     </div>
   </div>
 
-  <div class="task-list" id="tasklist">
+  <div class="task-list" id="tasklist" role="region" aria-label="Task List" aria-live="polite">
     <!-- Tasks injected here -->
   </div>
 
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
   <script>
     let reqIdCounter = 0;
-    
-    // Fake telemetry for visual flair
+    let autoRefreshInterval = null;
+    let allTasks = [];
+    let taskStats = {};
+
+    // Periodic CPU/Memory simulation for system overview
     setInterval(() => {
-      const cpu = Math.floor(Math.random() * 30) + 5; // 5 - 35%
-      document.getElementById('cpu-val').innerText = cpu + '%';
-      document.getElementById('cpu-fill').style.width = cpu + '%';
-      
-      const memBase = 2.0;
-      const mem = (memBase + Math.random() * 0.8).toFixed(1);
-      document.getElementById('mem-val').innerText = mem + ' GB';
-      document.getElementById('mem-fill').style.width = Math.floor((mem / 4.0) * 100) + '%';
+      const cpu = Math.floor(Math.random() * 25) + 5;
+      const cpuVal = document.getElementById('cpu-val');
+      const cpuFill = document.getElementById('cpu-fill');
+      if (cpuVal) cpuVal.innerText = cpu + '%';
+      if (cpuFill) {
+        cpuFill.style.width = cpu + '%';
+        cpuFill.style.backgroundColor = cpu > 80 ? 'hsl(0, 85%, 60%)' : (cpu > 50 ? 'hsl(40, 85%, 55%)' : 'hsl(200, 85%, 60%)');
+      }
+
+      const memBase = 2.1;
+      const mem = (memBase + Math.random() * 0.6).toFixed(1);
+      const memVal = document.getElementById('mem-val');
+      const memFill = document.getElementById('mem-fill');
+      if (memVal) memVal.innerText = mem + ' GB';
+      if (memFill) memFill.style.width = Math.floor((mem / 8.0) * 100) + '%';
     }, 2000);
-    
+
     function refresh() {
       const reqId = ++reqIdCounter;
       window.parent.postMessage({ type: 'OS_LIST_TASKS', requestId: reqId }, '*');
     }
 
-    function endTask(taskId) {
-      const reqId = ++reqIdCounter;
-      window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: taskId }, '*');
-      setTimeout(refresh, 50); // slight delay to let it close
+    function toggleAutoRefresh() {
+      const isChecked = document.getElementById('autoRefreshToggle')?.checked;
+      if (isChecked) {
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
     }
 
-    let allTasks = [];
-    let taskStats = {};
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      autoRefreshInterval = setInterval(refresh, 3000);
+    }
+
+    function stopAutoRefresh() {
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function endTask(taskId, taskTitle) {
+      const reqId = ++reqIdCounter;
+      window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: taskId }, '*');
+      showToast(`Terminating task ${taskTitle || taskId}...`);
+      setTimeout(refresh, 100);
+    }
 
     window.addEventListener('message', (e) => {
-      if (e.data.type === 'OS_LIST_TASKS_DONE') {
-        allTasks = e.data.tasks;
+      if (e.data && e.data.type === 'OS_LIST_TASKS_DONE') {
+        allTasks = Array.isArray(e.data.tasks) ? e.data.tasks : [];
         renderTasks();
       }
     });
 
     function renderTasks() {
-        const list = document.getElementById('tasklist');
-        list.innerHTML = '';
-        
-        const filterText = (document.getElementById('searchInput')?.value || '').toLowerCase();
-        let filteredTasks = allTasks.filter(t => t.title.toLowerCase().includes(filterText) || t.id.toLowerCase().includes(filterText));
+      const list = document.getElementById('tasklist');
+      if (!list) return;
 
-        if (filteredTasks.length === 0) {
-          list.innerHTML = '<div class="empty-state">No tasks match.</div>';
-          return;
+      list.innerHTML = '';
+      
+      const filterInput = document.getElementById('searchInput');
+      const filterText = (filterInput ? filterInput.value : '').trim().toLowerCase();
+
+      // Memory leak cleanup: retain stats only for active tasks
+      const currentTaskIds = new Set(allTasks.map(t => String(t.id || '')));
+      Object.keys(taskStats).forEach(id => {
+        if (!currentTaskIds.has(id)) {
+          delete taskStats[id];
         }
-        
-        filteredTasks.forEach(task => {
-          if (!taskStats[task.id]) {
-            taskStats[task.id] = {
-              mem: (Math.random() * 50 + 10).toFixed(1),
-              cpu: (Math.random() * 5).toFixed(1)
-            };
-          }
-          taskStats[task.id].cpu = Math.max(0, (parseFloat(taskStats[task.id].cpu) + (Math.random() - 0.5) * 2)).toFixed(1);
-        });
+      });
 
-        const sortBy = document.getElementById('sortSelect')?.value || 'name';
-        filteredTasks.sort((a, b) => {
-          if (sortBy === 'name') return a.title.localeCompare(b.title);
-          if (sortBy === 'mem') return parseFloat(taskStats[b.id].mem) - parseFloat(taskStats[a.id].mem);
-          if (sortBy === 'cpu') return parseFloat(taskStats[b.id].cpu) - parseFloat(taskStats[a.id].cpu);
-          return 0;
-        });
+      let filteredTasks = allTasks.filter(t => {
+        const title = String(t.title || '').toLowerCase();
+        const id = String(t.id || '').toLowerCase();
+        return title.includes(filterText) || id.includes(filterText);
+      });
+
+      // Update Active Tasks metric
+      const taskCountVal = document.getElementById('task-count-val');
+      const taskCountText = document.getElementById('task-count-text');
+      if (taskCountVal) taskCountVal.innerText = allTasks.length;
+      if (taskCountText) taskCountText.innerText = `${filteredTasks.length} shown of ${allTasks.length}`;
+
+      if (filteredTasks.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div>${allTasks.length === 0 ? 'No running tasks found.' : 'No tasks match your search filter.'}</div>
+          </div>`;
+        return;
+      }
+      
+      // Ensure statistics exist for filtered tasks
+      filteredTasks.forEach(task => {
+        const taskId = String(task.id || '');
+        if (!taskStats[taskId]) {
+          taskStats[taskId] = {
+            mem: (Math.random() * 45 + 12).toFixed(1),
+            cpu: (Math.random() * 4.5).toFixed(1)
+          };
+        } else {
+          taskStats[taskId].cpu = Math.max(0, (parseFloat(taskStats[taskId].cpu) + (Math.random() - 0.5) * 1.5)).toFixed(1);
+        }
+      });
+
+      const sortBy = document.getElementById('sortSelect')?.value || 'name';
+      filteredTasks.sort((a, b) => {
+        const idA = String(a.id || '');
+        const idB = String(b.id || '');
+        const titleA = String(a.title || '');
+        const titleB = String(b.title || '');
+
+        if (sortBy === 'name') return titleA.localeCompare(titleB);
+        if (sortBy === 'mem') return parseFloat(taskStats[idB]?.mem || 0) - parseFloat(taskStats[idA]?.mem || 0);
+        if (sortBy === 'cpu') return parseFloat(taskStats[idB]?.cpu || 0) - parseFloat(taskStats[idA]?.cpu || 0);
+        if (sortBy === 'pid') return idA.localeCompare(idB, undefined, { numeric: true });
+        return 0;
+      });
+      
+      filteredTasks.forEach(task => {
+        const taskId = String(task.id || 'N/A');
+        const taskTitle = String(task.title || 'Untitled Process');
+        const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5' };
         
-        filteredTasks.forEach(task => {
-          const card = document.createElement('div');
-          card.className = 'task-card';
-          
-          card.innerHTML = `
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        
+        const initial = taskTitle.charAt(0).toUpperCase() || 'P';
+
+        card.innerHTML = `
+          <div class="task-left">
+            <div class="task-icon" aria-hidden="true">${initial}</div>
             <div class="task-info">
               <div class="task-title"></div>
-              <div class="task-id"></div>
+              <div class="task-meta">
+                <span>PID: ${taskId}</span>
+                <span>Mem: ${stats.mem} MB</span>
+                <span>CPU: ${stats.cpu}%</span>
+                <span class="status-badge">Active</span>
+              </div>
             </div>
-            <button class="btn-kill">End Task</button>
-          `;
-          card.querySelector('.task-title').textContent = task.title;
-          card.querySelector('.task-id').textContent = `PID: ${task.id} | Mem: ${taskStats[task.id].mem} MB | CPU: ${taskStats[task.id].cpu}%`;
-          card.querySelector('.btn-kill').onclick = () => endTask(task.id);
-          list.appendChild(card);
-        });
+          </div>
+          <button class="btn-kill" aria-label="End task ${taskTitle} with PID ${taskId}">End Task</button>
+        `;
+
+        card.querySelector('.task-title').textContent = taskTitle;
+        card.querySelector('.btn-kill').onclick = () => endTask(taskId, taskTitle);
+        list.appendChild(card);
+      });
     }
 
-    // Initial load
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
+        e.preventDefault();
+        refresh();
+      } else if (e.key === 'Escape') {
+        const search = document.getElementById('searchInput');
+        if (search && search.value) {
+          search.value = '';
+          renderTasks();
+        }
+      }
+    });
+
+    // Initial load and start auto refresh
     setTimeout(refresh, 100);
+    startAutoRefresh();
   </script>
 </body>
 </html>
+
