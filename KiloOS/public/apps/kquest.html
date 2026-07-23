@@ -370,8 +370,145 @@
       width: 100%;
       margin-top: 6px;
     }
-    input[type="text"]:focus {
-      border-color: #89b4fa;
+    /* Phase 14: Help & Codex Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(17, 17, 27, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-card {
+      background: #1e1e2e;
+      border: 1px solid #45475a;
+      border-radius: 12px;
+      width: 92%;
+      max-width: 880px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .modal-header {
+      background: #181825;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #313244;
+    }
+    .btn-close-modal {
+      background: #313244;
+      color: #f38ba8;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-close-modal:hover {
+      background: #f38ba8;
+      color: #11111b;
+    }
+    .modal-tabs {
+      display: flex;
+      background: #181825;
+      border-bottom: 1px solid #313244;
+      overflow-x: auto;
+    }
+    .modal-tab-btn {
+      flex: 1;
+      padding: 10px 14px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: #a6adc8;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .modal-tab-btn:hover {
+      color: #cdd6f4;
+      background: rgba(255,255,255,0.03);
+    }
+    .modal-tab-btn.active {
+      color: #cba6f7;
+      border-bottom: 2px solid #cba6f7;
+      background: #1e1e2e;
+    }
+    .modal-body {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+    .modal-footer {
+      background: #181825;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #313244;
+    }
+    .help-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #89b4fa;
+      margin: 12px 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid #313244;
+      padding-bottom: 4px;
+    }
+    .help-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .help-card {
+      background: #181825;
+      border: 1px solid #313244;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .help-card h4 {
+      color: #f9e2af;
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .codex-badge {
+      background: #313244;
+      color: #89b4fa;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    kbd {
+      background: #313244;
+      color: #a6e3a1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      border: 1px solid #45475a;
     }
   </style>
 </head>
@@ -379,9 +516,12 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 13</span></h1>
-    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API Sound Effects, Save Slots & NG+)</div>
-    <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
+    <h1>🗡️ KQuest <span class="badge">Phase 14</span></h1>
+    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API, Save Slots, Comprehensive Help & Lore Codex)</div>
+    <div style="display:flex; gap:6px; align-items:center;">
+      <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
+      <button class="btn btn-primary" onclick="openHelpModal()" style="font-size:0.75rem; padding:4px 8px;">❓ Help & Codex (H)</button>
+    </div>
   </header>
 
   <!-- Player Stats Header Bar -->
@@ -3007,8 +3147,350 @@
       logMsg(`--- New Journey Initialized ---`, 'system');
     }
 
+    // --- PHASE 14: HELP & CODEX MODAL CONTROLS ---
+    function openHelpModal(defaultTab = 'play') {
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal) {
+        modal.style.display = 'flex';
+        switchHelpTab(defaultTab);
+      }
+    }
+
+    function closeHelpModal() {
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function toggleHelpModal() {
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal) {
+        if (modal.style.display === 'flex') closeHelpModal();
+        else openHelpModal();
+      }
+    }
+
+    function switchHelpTab(tabName) {
+      const tabs = ['play', 'controls', 'bestiary', 'crafting'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const pane = document.getElementById(`tab-content-${t}`);
+        if (btn) btn.classList.toggle('active', t === tabName);
+        if (pane) pane.style.display = (t === tabName) ? 'block' : 'none';
+      });
+    }
+
+    function filterCodex(query) {
+      query = query.toLowerCase().trim();
+      const cards = document.querySelectorAll('.codex-searchable');
+      cards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (!query || text.includes(query)) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Global Hotkey Listener for Quick Help & Action Keys
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'h' || e.key === 'H' || e.key === 'F1' || e.key === '?') {
+        e.preventDefault();
+        toggleHelpModal();
+      } else if (e.key === 'Escape') {
+        closeHelpModal();
+      } else if (e.key === 's' || e.key === 'S') {
+        if (typeof saveToSlot === 'function') {
+          saveToSlot(0);
+          logMsg('⚡ Quick Saved game to Slot 1!', 'system');
+        }
+      } else if (e.key === 'l' || e.key === 'L') {
+        setGameState(STATE.SAVE_LOAD);
+      } else if (e.key === 'i' || e.key === 'I') {
+        setGameState(STATE.INVENTORY);
+      }
+    });
+
     // Start in Character Creation Mode
     setGameState(STATE.CHAR_CREATE);
   </script>
+
+  <!-- Phase 14: Comprehensive Help & Codex Overlay -->
+  <div id="help-modal-overlay" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeHelpModal();">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:1.4rem;">❓</span>
+          <div>
+            <h2 style="font-size:1.05rem; color:#cba6f7; margin:0;">KQuest Guide & Lore Codex</h2>
+            <div style="font-size:0.75rem; color:#a6adc8;">Comprehensive How-to-Play, Controls, Bestiary & Crafting Reference</div>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="text" id="codex-search-input" placeholder="🔍 Search Codex..." oninput="filterCodex(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:6px; font-size:0.75rem; padding:4px 8px; width:170px;">
+          <button class="btn-close-modal" onclick="closeHelpModal()" title="Close (Esc)">✖</button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" id="tab-btn-play" onclick="switchHelpTab('play')">🎮 How to Play</button>
+        <button class="modal-tab-btn" id="tab-btn-controls" onclick="switchHelpTab('controls')">⌨️ Controls & Hotkeys</button>
+        <button class="modal-tab-btn" id="tab-btn-bestiary" onclick="switchHelpTab('bestiary')">🐉 Bestiary & World Lore</button>
+        <button class="modal-tab-btn" id="tab-btn-crafting" onclick="switchHelpTab('crafting')">⚒️ Crafting & Recipes</button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="modal-body">
+        <!-- Tab 1: How to Play -->
+        <div id="tab-content-play" class="help-tab-pane" style="display:block;">
+          <div class="help-section-title">🛡️ Hero Selection & Attributes</div>
+          <div class="help-grid">
+            <div class="help-card">
+              <h4>🗡️ Warrior Class</h4>
+              <p>High HP & Defense. Excels at physical melee combat and absorbing damage. Abilities: <strong style="color:#f9e2af;">Shield Bash</strong> & <strong style="color:#a6e3a1;">Iron Will</strong> barrier.</p>
+            </div>
+            <div class="help-card">
+              <h4>🔥 Mage Class</h4>
+              <p>High Mana & Spell Power. Devastating elemental damage. Abilities: <strong style="color:#f38ba8;">Fireball</strong> & <strong style="color:#89b4fa;">Mana Surge</strong> cost discount.</p>
+            </div>
+            <div class="help-card">
+              <h4>🗡️ Rogue Class</h4>
+              <p>High Speed & Critical Strike. Agile assassin. Abilities: <strong style="color:#cba6f7;">Shadow Strike</strong> & evasion boosts.</p>
+            </div>
+          </div>
+
+          <div class="help-section-title">🏰 Town Facilities & Gameplay Loop</div>
+          <div class="help-grid">
+            <div class="help-card">
+              <h4>🏰 Obsidian Spire Dungeon</h4>
+              <p>Delve into 3 biomes (Mines F1-5, Catacombs F6-10, Dragon Spire F11-15). Encounter monsters, treasure chests, altars, and floor bosses.</p>
+            </div>
+            <div class="help-card">
+              <h4>🏟️ Boss Rush Arena</h4>
+              <p>Battle 5 brutal boss waves in the Grand Colosseum. Earn Arena Trophies to unlock Legendary Artifacts (Conqueror's Blade, Runic Plate).</p>
+            </div>
+            <div class="help-card">
+              <h4>⚒️ Forge & Alchemy Bench</h4>
+              <p>Salvage unwanted equipment into raw materials. Craft Fire Bombs, Greater HP potions, and Elixirs of Might. Imbue gear with elemental effects.</p>
+            </div>
+            <div class="help-card">
+              <h4>📜 Quest Board & Talent Hall</h4>
+              <p>Accept daily bounties for XP & Gold. Allocate Skill Points into Offense, Defense, and Utility talent trees to unlock master passive buffs.</p>
+            </div>
+            <div class="help-card">
+              <h4>🛡️ Mercenary Guild</h4>
+              <p>Recruit loyal companions: Paladin Tank (damage absorption), Archmage DPS (spells), or Cleric Healer (turn health regeneration).</p>
+            </div>
+            <div class="help-card">
+              <h4>💾 Save Slots & New Game+ (NG+)</h4>
+              <p>Manage 4 persistent save slots. Defeat the final Spire Boss or conquer the Arena to activate NG+ for higher rewards and scaled foes!</p>
+            </div>
+          </div>
+
+          <div class="help-section-title">⚔️ Combat & Environmental Hazards</div>
+          <div class="help-card" style="margin-bottom:10px;">
+            <p><strong>Turn-Based Battles:</strong> Attack with equipped weapon, cast class spells, throw Fire Bombs or drink HP potions, command companion actions, or attempt to flee back to safety.</p>
+            <p style="margin-top:6px;"><strong>Environmental Hazards:</strong> Biomes feature ambient hazards (<span style="color:#f9e2af;">🪨 Cave-In</span> in Mines, <span style="color:#a6e3a1;">☠️ Poison Fog</span> in Catacombs, <span style="color:#f38ba8;">🔥 Lava Burst</span> in Spire) that deal damage each turn!</p>
+          </div>
+        </div>
+
+        <!-- Tab 2: Controls & Shortcuts -->
+        <div id="tab-content-controls" class="help-tab-pane" style="display:none;">
+          <div class="help-section-title">⌨️ Keyboard Shortcuts Reference</div>
+          <div class="help-grid">
+            <div class="help-card">
+              <h4><kbd>H</kbd> / <kbd>F1</kbd> / <kbd>?</kbd> Toggle Guide</h4>
+              <p>Opens or closes this Comprehensive Help & Codex overlay at any point in the game.</p>
+            </div>
+            <div class="help-card">
+              <h4><kbd>1</kbd> - <kbd>6</kbd> Action Hotkeys</h4>
+              <p>Triggers action buttons 1 through 6 in town screens, dungeon exploration, and battle commands.</p>
+            </div>
+            <div class="help-card">
+              <h4><kbd>S</kbd> Quick Save</h4>
+              <p>Instantly saves your current hero state and inventory into Save Slot 1.</p>
+            </div>
+            <div class="help-card">
+              <h4><kbd>L</kbd> Save / Load Screen</h4>
+              <p>Opens the Save Slot Manager to save, load, or clear any of the 4 save slots.</p>
+            </div>
+            <div class="help-card">
+              <h4><kbd>I</kbd> Open Inventory</h4>
+              <p>Opens the Inventory Hub to equip gear, drink potions, filter items, and quick-sell commons.</p>
+            </div>
+            <div class="help-card">
+              <h4><kbd>Esc</kbd> Close / Return</h4>
+              <p>Closes open modal dialogs or returns from sub-menus back to Oakhaven Town Square.</p>
+            </div>
+          </div>
+
+          <div class="help-section-title">🖱️ Interactive Controls</div>
+          <div class="help-card">
+            <p>• <strong>Filter & Sort Inventory:</strong> Use the dropdown menus in the Inventory panel to filter by Consumable, Equipment, or Material, and sort by Rarity, Name, or Value.</p>
+            <p style="margin-top:6px;">• <strong>Codex Search Filter:</strong> Type in the top search bar inside this overlay to instantly filter monsters, lore, and crafting recipes!</p>
+          </div>
+        </div>
+
+        <!-- Tab 3: Bestiary & Lore Codex -->
+        <div id="tab-content-bestiary" class="help-tab-pane" style="display:none;">
+          <div class="help-section-title">🐉 Bestiary of the Obsidian Spire</div>
+          <div class="help-grid">
+            <!-- Mines -->
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Mines</span> Cave Goblin</h4>
+              <p><strong>Stats:</strong> HP 30 | STR 8 | DEF 3 | XP 30 | 15G</p>
+              <p>Fast subterranean goblin worker armed with a crude pickaxe.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Mines</span> Goblin Slinger</h4>
+              <p><strong>Stats:</strong> HP 25 | STR 10 | DEF 2 | XP 35 | 18G</p>
+              <p>Ranged goblin scout that hurls jagged cave stones.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Mines</span> Cave Spider</h4>
+              <p><strong>Stats:</strong> HP 38 | STR 11 | DEF 4 | XP 45 | 22G</p>
+              <p>Venomous arachnid lurking in webbed mine shafts.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Mines</span> Rock Golem</h4>
+              <p><strong>Stats:</strong> HP 75 | STR 17 | DEF 10 | XP 95 | 55G</p>
+              <p>Enormous stone construct with massive physical defense.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Mines Boss</span> 👑 Goblin King</h4>
+              <p><strong>Stats:</strong> HP 130 | STR 22 | DEF 10 | XP 260 | 160G</p>
+              <p>Monarch of the Abandoned Mines. High health and heavy swings.</p>
+            </div>
+
+            <!-- Catacombs -->
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Catacombs</span> Skeleton Archer</h4>
+              <p><strong>Stats:</strong> HP 32 | STR 11 | DEF 3 | XP 38 | 20G</p>
+              <p>Undead bowman firing bone-tipped arrows from shadows.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Catacombs</span> Tomb Ghoul</h4>
+              <p><strong>Stats:</strong> HP 45 | STR 13 | DEF 5 | XP 52 | 28G</p>
+              <p>Frenzied flesh-eater that haunts ancient sarcophagi.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Catacombs</span> Crypt Necromancer</h4>
+              <p><strong>Stats:</strong> HP 50 | STR 16 | DEF 4 | XP 75 | 45G</p>
+              <p>Dark spellcaster channeling shadow bolts and necromantic curses.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Catacombs</span> Dread Wraith</h4>
+              <p><strong>Stats:</strong> HP 65 | STR 18 | DEF 7 | XP 100 | 60G</p>
+              <p>Spectral phantom that siphons life force from intruders.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Catacombs Boss</span> ☠️ Lich Lord</h4>
+              <p><strong>Stats:</strong> HP 160 | STR 26 | DEF 12 | XP 350 | 220G</p>
+              <p>Master of dark sorcery commanding necrotic frost and life drain.</p>
+            </div>
+
+            <!-- Spire -->
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Spire</span> Magma Imp</h4>
+              <p><strong>Stats:</strong> HP 40 | STR 14 | DEF 4 | XP 50 | 25G</p>
+              <p>Volcanic fiend shooting magma sparks.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Spire</span> Fire Drake</h4>
+              <p><strong>Stats:</strong> HP 60 | STR 17 | DEF 7 | XP 80 | 45G</p>
+              <p>Lesser dragon-kin breathing blistering flame.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Spire</span> Obsidian Elemental</h4>
+              <p><strong>Stats:</strong> HP 80 | STR 20 | DEF 12 | XP 110 | 65G</p>
+              <p>Crystalline titan forged from molten glass and dark quartz.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Spire Boss</span> 🐲 Obsidian Dragon</h4>
+              <p><strong>Stats:</strong> HP 250 | STR 32 | DEF 18 | XP 600 | 500G</p>
+              <p>Ancient terror dwelling atop the Spire apex. Devastating fire damage.</p>
+            </div>
+          </div>
+
+          <div class="help-section-title">📜 World Lore & History</div>
+          <div class="help-card codex-searchable">
+            <h4>📖 The Obsidian Spire Monolith</h4>
+            <p>Erected thousands of years ago during the Great Cataclysm, the Obsidian Spire connects the mortal realm to dark elemental nexuses deep within the earth. Ancient legends speak of an arcanist named Malakor who sealed his soul into the Spire's apex, seeking immortal dominance.</p>
+          </div>
+        </div>
+
+        <!-- Tab 4: Crafting & Recipes -->
+        <div id="tab-content-crafting" class="help-tab-pane" style="display:none;">
+          <div class="help-section-title">🧪 Alchemy Bench Consumables</div>
+          <div class="help-grid">
+            <div class="help-card codex-searchable">
+              <h4>💣 Fire Bomb</h4>
+              <p>Deals 45 instant fire damage to an enemy in battle.</p>
+              <p style="color:#a6e3a1; font-weight:600; margin-top:4px;">Req: 1x Iron Scrap, 1x Elemental Core</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>🧪 Greater HP Elixir</h4>
+              <p>Restores 70 HP instantly in battle or dungeon exploration.</p>
+              <p style="color:#a6e3a1; font-weight:600; margin-top:4px;">Req: 2x Arcane Dust, 1x Iron Scrap</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>⚡ Elixir of Might</h4>
+              <p>Restores 40 MP & permanently increases STR stat by +3.</p>
+              <p style="color:#a6e3a1; font-weight:600; margin-top:4px;">Req: 2x Arcane Dust, 1x Elemental Core</p>
+            </div>
+          </div>
+
+          <div class="help-section-title">🔥 Enchanter's Forge Imbuing</div>
+          <div class="help-grid">
+            <div class="help-card codex-searchable">
+              <h4>🔥 Flaming Weapon Imbue</h4>
+              <p>Imbues weapon with fire elemental aura: +6 Fire Damage per hit.</p>
+              <p style="color:#89b4fa; font-weight:600; margin-top:4px;">Req: 2x Elemental Core, 1x Arcane Dust</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>🩸 Vampiric Weapon Imbue</h4>
+              <p>Imbues weapon with shadow siphoning: Heals 25% damage back as HP.</p>
+              <p style="color:#89b4fa; font-weight:600; margin-top:4px;">Req: 2x Arcane Dust, 1x Iron Scrap</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>⚡ Thunderous Weapon Imbue</h4>
+              <p>Imbues weapon: +6 STR and 30% chance for Lightning Strike.</p>
+              <p style="color:#89b4fa; font-weight:600; margin-top:4px;">Req: 2x Elemental Core, 1x Iron Scrap</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>🛡️ Fortified Armor Imbue</h4>
+              <p>Imbues armor: +5 DEF and +20 Maximum HP boost.</p>
+              <p style="color:#cba6f7; font-weight:600; margin-top:4px;">Req: 2x Iron Scrap, 1x Arcane Dust</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>🔮 Warded Armor Imbue</h4>
+              <p>Imbues armor: +4 DEF and +15 Maximum MP boost.</p>
+              <p style="color:#cba6f7; font-weight:600; margin-top:4px;">Req: 2x Arcane Dust, 1x Elemental Core</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>🌵 Spiked Armor Imbue</h4>
+              <p>Imbues armor: Reflects 35% of incoming physical damage back to attacker.</p>
+              <p style="color:#cba6f7; font-weight:600; margin-top:4px;">Req: 2x Iron Scrap, 1x Elemental Core</p>
+            </div>
+          </div>
+
+          <div class="help-section-title">⚙️ Material Sourcing & Salvaging</div>
+          <div class="help-card codex-searchable">
+            <p>• <strong>⚙️ Iron Scrap:</strong> Obtained from Mine & Catacomb foes, chest loot, or via Salvaging.</p>
+            <p style="margin-top:4px;">• <strong>✨ Arcane Dust:</strong> Dropped by spellcasters, phantoms, or praying at blue dungeon altars.</p>
+            <p style="margin-top:4px;">• <strong>🔥 Elemental Core:</strong> Harvested from volcanic beasts, elementals, and floor bosses.</p>
+            <p style="margin-top:4px;">• <strong>♻️ Salvage Station:</strong> Pay 20 Gold at the Forge to break down spare loot into +2 Iron Scrap & +1 Arcane Dust.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <span style="font-size:0.75rem; color:#a6adc8;">Tip: Press <kbd>H</kbd> or <kbd>F1</kbd> anytime during gameplay to toggle this Help Overlay.</span>
+        <button class="btn btn-primary" onclick="closeHelpModal()" style="font-size:0.8rem; padding:4px 14px;">Resume Game</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

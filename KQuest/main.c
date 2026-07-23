@@ -28,6 +28,10 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 #define STATE_INVENTORY     11
 #define STATE_SAVE_LOAD     12
 #define STATE_ACHIEVEMENTS   13
+#define STATE_HELP          14
+
+static int g_HelpTab = 0; // 0: How to Play, 1: Controls, 2: Bestiary, 3: Crafting
+void RenderHelpTabLog();
 
 #define MAX_INV_SLOTS 30
 
@@ -807,6 +811,105 @@ void InitHero(int classIdx) {
     }
 }
 
+void RenderHelpTabLog() {
+    if (!hLogEdit) return;
+    if (g_HelpTab == 0) {
+        SetWindowTextA(hLogEdit,
+            "=========================================================================\r\n"
+            "                      🎮 KQUEST - HOW TO PLAY OVERVIEW                   \r\n"
+            "=========================================================================\r\n\r\n"
+            "1. HERO CLASSES & ATTRIBUTES:\r\n"
+            "   - Warrior : Starts with 60 HP, 15 MP, 14 STR, 12 DEF. Shield Bash ability.\r\n"
+            "   - Mage    : Starts with 40 HP, 35 MP, 10 INT, 8 DEF. Fireball spell & Mana Surge.\r\n"
+            "   - Rogue   : Starts with 45 HP, 20 MP, 14 AGI, 9 DEF. High Crit & Shadow Strike.\r\n"
+            "   - Attributes: STR increases physical dmg, INT boosts spell dmg & max MP,\r\n"
+            "                 DEF reduces incoming dmg, AGI increases crit chance.\r\n\r\n"
+            "2. TOWN FACILITIES:\r\n"
+            "   - Dungeon Entrance : Explore 3 distinct Biomes (Mines, Catacombs, Spire).\r\n"
+            "   - Boss Rush Arena  : Battle 5 consecutive boss waves for Trophies & Gear.\r\n"
+            "   - Inventory Hub    : Filter/sort items, compare stats, quick-sell, expand slots.\r\n"
+            "   - Quest & Training : Accept daily contracts & spend Skill Points (Off/Def/Util).\r\n"
+            "   - Forge & Alchemy  : Salvage spare gear, brew potions, & enchant weapons/armor.\r\n"
+            "   - Mercenary Guild  : Hire Paladin Tank, Archmage DPS, or Cleric Healer companions.\r\n"
+            "   - Save/Load & NG+  : Save up to 4 slots. Complete floor 15 or Arena to start NG+.\r\n\r\n"
+            "3. COMBAT & HAZARD MECHANICS:\r\n"
+            "   - Combat Turn : Attack with weapon, cast Class Spells, use Items, or Flee.\r\n"
+            "   - Companions  : Companions automatically attack, heal, or absorb damage each turn.\r\n"
+            "   - Hazards     : Cave-In (Mines), Poison Fog (Catacombs), & Lava Burst (Spire)\r\n"
+            "                   deal environmental tick damage during exploration & battles.\r\n");
+    } else if (g_HelpTab == 1) {
+        SetWindowTextA(hLogEdit,
+            "=========================================================================\r\n"
+            "                    ⌨️ KQUEST - CONTROLS & SHORTCUTS REFERENCE           \r\n"
+            "=========================================================================\r\n\r\n"
+            "KEYBOARD SHORTCUTS:\r\n"
+            "   - [1] - [6] : Select action buttons 1 through 6 in all screens.\r\n"
+            "   - [F1] / [H]: Toggle Comprehensive Help & Lore Codex screen anytime.\r\n"
+            "   - [S]       : Quick Save Game to Slot 1.\r\n"
+            "   - [L]       : Open Save / Load Manager Screen.\r\n"
+            "   - [I]       : Open Inventory Hub Screen.\r\n"
+            "   - [Esc]     : Exit Help Overlay or return to Oakhaven Town Square.\r\n\r\n"
+            "MOUSE NAVIGATION:\r\n"
+            "   - Click any Action Button at bottom of window to select options.\r\n"
+            "   - Inventory: Select slots to inspect item details, values, & stat comparisons.\r\n"
+            "   - Quest Board: Click contract buttons to accept daily bounties.\r\n");
+    } else if (g_HelpTab == 2) {
+        SetWindowTextA(hLogEdit,
+            "=========================================================================\r\n"
+            "                   🐉 KQUEST - BESTIARY & WORLD LORE CODEX                \r\n"
+            "=========================================================================\r\n\r\n"
+            "MONSTERS & BOSSES:\r\n"
+            " • ABANDONED MINES (Floors 1-5):\r\n"
+            "   - Cave Goblin        : HP 30  | STR 8   | DEF 3  | Dropped: Scrap, Gold\r\n"
+            "   - Goblin Slinger     : HP 25  | STR 10  | DEF 2  | Ranged stone thrower\r\n"
+            "   - Cave Spider        : HP 38  | STR 11  | DEF 4  | Venomous attack\r\n"
+            "   - Mine Taskmaster    : HP 55  | STR 15  | DEF 6  | Iron whip wielder\r\n"
+            "   - Rock Golem         : HP 75  | STR 17  | DEF 10 | Animated stone monolith\r\n"
+            "   - 👑 Goblin King     : HP 130 | STR 22  | DEF 10 | Mine Biome Boss\r\n\r\n"
+            " • ANCIENT CATACOMBS (Floors 6-10):\r\n"
+            "   - Skeleton Archer    : HP 32  | STR 11  | DEF 3  | Undead marksman\r\n"
+            "   - Tomb Ghoul         : HP 45  | STR 13  | DEF 5  | Vault corpse eater\r\n"
+            "   - Crypt Necromancer  : HP 50  | STR 16  | DEF 4  | Dark magic caster\r\n"
+            "   - Dread Wraith       : HP 65  | STR 18  | DEF 7  | Life-draining phantom\r\n"
+            "   - Bone Colossus      : HP 85  | STR 20  | DEF 11 | Skeletal giant\r\n"
+            "   - ☠️ Lich Lord       : HP 160 | STR 26  | DEF 12 | Catacombs Biome Boss\r\n\r\n"
+            " • DRAGON SPIRE (Floors 11-15):\r\n"
+            "   - Magma Imp          : HP 40  | STR 14  | DEF 4  | Volcanic fiend\r\n"
+            "   - Fire Drake         : HP 60  | STR 17  | DEF 7  | Dragon-kin predator\r\n"
+            "   - Obsidian Elemental : HP 80  | STR 20  | DEF 12 | Molten glass titan\r\n"
+            "   - Wyvern Sentinel    : HP 95  | STR 23  | DEF 10 | Apex spire guardian\r\n"
+            "   - Hellhound          : HP 70  | STR 21  | DEF 8  | Demonic dual-head hound\r\n"
+            "   - 🐲 Obsidian Dragon  : HP 250 | STR 32  | DEF 18 | Final Spire Boss\r\n\r\n"
+            "WORLD LORE:\r\n"
+            "   The Obsidian Spire is an ancient black tower towering over Oakhaven.\r\n"
+            "   For centuries, dark elemental energies have brewed within its chambers.\r\n"
+            "   Only brave champions who master martial prowess, magic, & crafting\r\n"
+            "   can conquer the Spire and save Oakhaven from eternal shadow.\r\n");
+    } else if (g_HelpTab == 3) {
+        SetWindowTextA(hLogEdit,
+            "=========================================================================\r\n"
+            "                ⚒️ KQUEST - CRAFTING & RECIPE REFERENCE                 \r\n"
+            "=========================================================================\r\n\r\n"
+            "ALCHEMY BENCH (Consumables):\r\n"
+            "   - 💣 Fire Bomb        : Req 1x Iron Scrap, 1x Core | Deals 45 Fire Damage in battle.\r\n"
+            "   - 🧪 Greater HP Elixir: Req 2x Arcane Dust, 1x Iron | Restores 70 HP instantly.\r\n"
+            "   - ⚡ Elixir of Might  : Req 2x Arcane Dust, 1x Core | Restores 40 MP & +3 STR.\r\n\r\n"
+            "ENCHANTER'S FORGE (Weapon Imbuing):\r\n"
+            "   - 🔥 Flaming Weapon   : Req 2x Core, 1x Dust | +6 Fire Damage per strike.\r\n"
+            "   - 🩸 Vampiric Weapon  : Req 2x Dust, 1x Iron | Siphons 25% attack damage as HP.\r\n"
+            "   - ⚡ Thunderous Weapon: Req 2x Core, 1x Iron | +6 STR & 30% Lightning chance.\r\n\r\n"
+            "ENCHANTER'S FORGE (Armor Imbuing):\r\n"
+            "   - 🛡️ Fortified Armor  : Req 2x Iron, 1x Dust | +5 DEF & +20 Maximum HP.\r\n"
+            "   - 🔮 Warded Armor     : Req 2x Dust, 1x Core | +4 DEF & +15 Maximum MP.\r\n"
+            "   - 🌵 Spiked Armor     : Req 2x Iron, 1x Core | Reflects 35% damage to attacker.\r\n\r\n"
+            "MATERIAL SOURCES & SALVAGE:\r\n"
+            "   - ⚙️ Iron Scrap   : Dropped by dungeon beasts, chests, or salvaging loot.\r\n"
+            "   - ✨ Arcane Dust  : Dropped by spellcasters, specters, or praying at altars.\r\n"
+            "   - 🔥 Elemental Core: Harvested from Spire drakes, elementals, & bosses.\r\n"
+            "   - ♻️ Salvage Hub  : Pay 20 Gold at Forge to gain +2 Iron Scrap & +1 Arcane Dust.\r\n");
+    }
+}
+
 void UpdateUI() {
     char statusBuf[512];
     char infoBuf[1024];
@@ -822,6 +925,8 @@ void UpdateUI() {
         locStr = "Save/Load Manager";
     } else if (gameState == STATE_ACHIEVEMENTS) {
         locStr = "Achievements Hub";
+    } else if (gameState == STATE_HELP) {
+        locStr = "Help & Lore Codex";
     }
 
     char ngStr[32] = "";
@@ -839,7 +944,41 @@ void UpdateUI() {
         if (player.companion.active == 2) bonusInt += 5;
     }
 
-    if (gameState == STATE_SAVE_LOAD) {
+    if (gameState == STATE_HELP) {
+        wsprintfA(statusBuf, "=== COMPREHENSIVE HELP & LORE CODEX (Tab %d/4: %s) ===",
+            g_HelpTab + 1,
+            g_HelpTab == 0 ? "How to Play" : (g_HelpTab == 1 ? "Controls Ref" : (g_HelpTab == 2 ? "Bestiary & Lore" : "Crafting Recipes")));
+
+        if (g_HelpTab == 0) {
+            wsprintfA(infoBuf,
+                "🎮 HOW TO PLAY GUIDE  [Press 1: How to Play | 2: Controls | 3: Bestiary | 4: Crafting | 5: Next Tab | 6: Back]\r\n"
+                "• Hero Setup: Choose Warrior (High HP/DEF), Mage (High MP/Spell Power), or Rogue (High AGI/Crits).\r\n"
+                "• Town Facilities: Spire Dungeon (F1-15), Boss Rush Arena (5 Waves), Forge & Alchemy, Mercenary Guild.\r\n"
+                "• Progression: Defeat foes, claim Bounties, allocate Skill Points, master Crafting & launch New Game+ (NG+)!");
+        } else if (g_HelpTab == 1) {
+            wsprintfA(infoBuf,
+                "⌨️ CONTROLS & SHORTCUTS REFERENCE\r\n"
+                "• Action Buttons [1 - 6]: Execute current screen options / combat choices.\r\n"
+                "• Hotkey [F1] or [H]: Toggle Help & Lore Codex overlay from anywhere in the game.\r\n"
+                "• Hotkey [S]: Quick Save Game (Slot 1)  |  Hotkey [L]: Open Save / Load Manager\r\n"
+                "• Hotkey [I]: Focus Inventory Hub  |  Hotkey [Esc]: Return to Town Square");
+        } else if (g_HelpTab == 2) {
+            wsprintfA(infoBuf,
+                "🐉 BESTIARY & WORLD LORE CODEX\r\n"
+                "• Biome 1 (Abandoned Mines): Cave Goblin, Goblin Slinger, Cave Spider, Taskmaster, Rock Golem, Goblin King.\r\n"
+                "• Biome 2 (Ancient Catacombs): Skeleton Archer, Tomb Ghoul, Crypt Necromancer, Dread Wraith, Bone Colossus, Lich Lord.\r\n"
+                "• Biome 3 (Dragon Spire): Magma Imp, Fire Drake, Obsidian Elemental, Wyvern Sentinel, Hellhound, Obsidian Dragon.\r\n"
+                "• Lore: The Obsidian Spire is an ancient monolithic citadel sealing dark elemental nexuses beneath Oakhaven.");
+        } else if (g_HelpTab == 3) {
+            wsprintfA(infoBuf,
+                "⚒️ CRAFTING RECIPES & MATERIAL DROPS\r\n"
+                "• Consumables: Fire Bomb (1 Iron + 1 Core), Greater HP (2 Dust + 1 Iron), Elixir of Might (2 Dust + 1 Core).\r\n"
+                "• Weapon Imbuing: Flaming (+6 Fire Dmg), Vampiric (25%% HP Siphon), Thunderous (+6 STR & 30%% Lightning).\r\n"
+                "• Armor Imbuing: Fortified (+5 DEF & +20 Max HP), Warded (+4 DEF & +15 MP), Spiked (Reflects 35%% Dmg).\r\n"
+                "• Sourcing: Salvage spare loot for 20G (+2 Iron, +1 Dust). Foes & Altars drop Iron, Dust, & Cores.");
+        }
+        RenderHelpTabLog();
+    } else if (gameState == STATE_SAVE_LOAD) {
         char slot1[128], slot2[128], slot3[128], slot4[128];
         GetSlotSummary(0, slot1, 128);
         GetSlotSummary(1, slot2, 128);
@@ -1031,10 +1170,20 @@ void SetupButtons() {
             char ngBtn[64];
             wsprintfA(ngBtn, "✨ Start NG+ (NG+ %d)", player.ngLevel + 1);
             SetWindowTextA(hBtn1, "Refresh");
-            SetWindowTextA(hBtn2, "---");
+            SetWindowTextA(hBtn2, "❓ Help & Codex");
             SetWindowTextA(hBtn3, "---");
             SetWindowTextA(hBtn4, "---");
             SetWindowTextA(hBtn5, ngBtn);
+            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+            break;
+        }
+
+        case STATE_HELP: {
+            SetWindowTextA(hBtn1, "🎮 How to Play");
+            SetWindowTextA(hBtn2, "⌨️ Controls");
+            SetWindowTextA(hBtn3, "🐉 Bestiary");
+            SetWindowTextA(hBtn4, "⚒️ Recipes");
+            SetWindowTextA(hBtn5, "❓ Next Tab");
             SetWindowTextA(hBtn6, "⬅️ Back to Town");
             break;
         }
@@ -1443,6 +1592,12 @@ void CombatVictory() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_HELP) {
+        g_HelpTab = 0;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_SAVE_LOAD) {
         g_SelectedSaveSlot = (g_SelectedSaveSlot + 1) % 4;
         SetupButtons();
@@ -1663,6 +1818,19 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_HELP) {
+        g_HelpTab = 1;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_ACHIEVEMENTS) {
+        gameState = STATE_HELP;
+        g_HelpTab = 0;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_SAVE_LOAD) {
         SaveToSlot(g_SelectedSaveSlot);
         SetupButtons();
@@ -1876,6 +2044,12 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_HELP) {
+        g_HelpTab = 2;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_SAVE_LOAD) {
         LoadFromSlot(g_SelectedSaveSlot);
         return;
@@ -2001,6 +2175,12 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_HELP) {
+        g_HelpTab = 3;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_SAVE_LOAD) {
         DeleteSlot(g_SelectedSaveSlot);
         SetupButtons();
@@ -2156,6 +2336,12 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_HELP) {
+        g_HelpTab = (g_HelpTab + 1) % 4;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_SAVE_LOAD) {
         SaveToSlot(0);
         SetupButtons();
@@ -2280,7 +2466,7 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
-    if (gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS) {
+    if (gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_HELP) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
         SetupButtons();
@@ -2423,7 +2609,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 13: Native Win32 Sound Effects Engine Active!");
+            LogMessage("Phase 14: Comprehensive Help & Lore Codex Active (Press F1 / H or click Help)!");
+            break;
+        }
+        case WM_KEYDOWN: {
+            if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
+                if (gameState == STATE_HELP) {
+                    gameState = STATE_TOWN;
+                    LogMessage("Closed Help Overlay. Returned to Town.");
+                } else {
+                    g_HelpTab = 0;
+                    gameState = STATE_HELP;
+                    LogMessage("=== Opened Help & Lore Codex (F1 / H) ===");
+                }
+                SetupButtons();
+                UpdateUI();
+            } else if (wParam >= '1' && wParam <= '6') {
+                int btnIndex = (int)(wParam - '1');
+                switch (btnIndex) {
+                    case 0: HandleButton1(); break;
+                    case 1: HandleButton2(); break;
+                    case 2: HandleButton3(); break;
+                    case 3: HandleButton4(); break;
+                    case 4: HandleButton5(); break;
+                    case 5: HandleButton6(); break;
+                }
+            } else if (wParam == 'S' || wParam == 's') {
+                SaveToSlot(0);
+                LogMessage("⚡ Quick Saved game to Slot 1!");
+                SetupButtons();
+                UpdateUI();
+            } else if (wParam == 'L' || wParam == 'l') {
+                gameState = STATE_SAVE_LOAD;
+                SetupButtons();
+                UpdateUI();
+            } else if (wParam == 'I' || wParam == 'i') {
+                gameState = STATE_INVENTORY;
+                SetupButtons();
+                UpdateUI();
+            } else if (wParam == VK_ESCAPE) {
+                if (gameState == STATE_HELP || gameState == STATE_INVENTORY || gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_QUEST_BOARD || gameState == STATE_TRAINING_HALL || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_MERCENARY || gameState == STATE_BOSS_RUSH) {
+                    gameState = STATE_TOWN;
+                    LogMessage("Returned to Town Square.");
+                    SetupButtons();
+                    UpdateUI();
+                }
+            }
             break;
         }
         case WM_COMMAND: {
