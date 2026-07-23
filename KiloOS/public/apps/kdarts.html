@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KDarts</title>
+<title>KDarts - Loop 6 Campaign Expansion</title>
 <style>
+  * { box-sizing: border-box; }
   body {
     margin: 0;
     padding: 0;
@@ -14,97 +15,196 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
     user-select: none;
   }
   #ui {
-    margin-top: 20px;
+    margin-top: 15px;
     text-align: center;
-    background: #1e1e1e;
-    padding: 15px 40px;
+    background: #1e1e24;
+    padding: 12px 25px;
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
     border: 1px solid #333;
-    min-width: 300px;
+    width: 680px;
+    max-width: 95vw;
+  }
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  button, select {
+    padding: 6px 12px;
+    cursor: pointer;
+    background: #2a2a35;
+    color: #e0e0e0;
+    border: 1px solid #444;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  button:hover, select:hover {
+    background: #3a3a48;
+    border-color: #00d2ff;
+    color: #fff;
+  }
+  button:active { transform: scale(0.96); }
+  button.active-pwr {
+    background: #0088cc !important;
+    border-color: #00d2ff !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px rgba(0,210,255,0.6);
+  }
+  #title-bar {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffd700;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
   }
   #score {
-    font-size: 48px;
-    font-weight: bold;
-    margin: 5px 0;
+    font-size: 32px;
+    font-weight: 800;
+    margin: 4px 0;
     color: #ffffff;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.8);
   }
   #status {
-    font-size: 20px;
+    font-size: 16px;
+    color: #00d2ff;
+    font-weight: 600;
+    min-height: 22px;
+  }
+  #badges {
+    display: flex;
+    justify-content: space-around;
+    font-size: 12px;
     color: #aaaaaa;
-    min-height: 25px;
+    margin-top: 6px;
+    background: #141418;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #2a2a30;
   }
   #canvas-container {
     position: relative;
-    margin-top: 20px;
+    margin-top: 15px;
+    margin-bottom: 20px;
   }
   canvas {
-    background: #1a1a1a;
+    background: #18181c;
     border-radius: 50%;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    box-shadow: 0 12px 35px rgba(0,0,0,0.85);
     cursor: crosshair;
+  }
+  .panel {
+    display: none;
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e1e24;
+    padding: 20px 25px;
+    border-radius: 10px;
+    border: 1px solid #444;
+    z-index: 20;
+    color: white;
+    text-align: left;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+    max-width: 480px;
+    width: 90vw;
   }
 </style>
 </head>
 <body>
   <div id="ui">
-    <div style="margin-bottom: 10px;">
-      <button onclick="setMode('501')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">501</button>
-      <button onclick="setMode('cricket')" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px;">Cricket</button>
-      <button onclick="saveState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">Save</button>
-      <button onclick="loadState()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Load</button>
-      <button onclick="undo()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Undo</button>
-      <button onclick="redo()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Redo</button>
-      <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Settings</button>
-      <button onclick="toggleHelp()" style="padding: 5px 15px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 5px;">Help</button>
-      <select id="diff" onchange="setDifficulty(this.value)" style="padding: 5px; background: #333; color: white; border: 1px solid #555; border-radius: 4px; margin-left: 10px;">
-        <option value="Human">Vs Human</option>
+    <div class="btn-group">
+      <button onclick="setMode('501')">501</button>
+      <button onclick="setMode('301')">301</button>
+      <button onclick="setMode('cricket')">Cricket</button>
+      <button onclick="setMode('atc')">ATC</button>
+      <button onclick="setMode('blitz')">Blitz</button>
+      <button onclick="startCampaign(0)" style="background:#0055aa; border-color:#0077ff;">Campaign (15 Stages)</button>
+    </div>
+    <div class="btn-group">
+      <button id="btnFocus" onclick="activateFocus()">Focus (F)</button>
+      <button id="btnMagnet" onclick="activateMagnet()">Magnet (M)</button>
+      <button id="btnUndoDart" onclick="activateUndoDart()">Undo Dart (U)</button>
+      <button onclick="saveState()">Save</button>
+      <button onclick="loadState()">Load</button>
+      <button onclick="undo()">Undo Turn</button>
+      <button onclick="redo()">Redo Turn</button>
+    </div>
+    <div class="btn-group">
+      <select id="diff" onchange="setDifficulty(this.value)">
         <option value="Easy">Vs AI: Easy</option>
         <option value="Medium" selected>Vs AI: Medium</option>
         <option value="Hard">Vs AI: Hard</option>
+        <option value="Legend">Vs AI: Legend</option>
+        <option value="Human">Vs Human</option>
       </select>
+      <select id="dartStyle" onchange="changeDartStyle()">
+        <option value="cyan">Style: Cyan</option>
+        <option value="red">Style: Red</option>
+        <option value="gold">Style: Gold</option>
+      </select>
+      <button onclick="toggleSound()">Sound: ON</button>
+      <button onclick="toggleHelp()">Help</button>
     </div>
-    <div id="score">501</div>
-    <div id="status">Game On! Throw 3 Darts</div>
-    <div id="stats" style="font-size: 16px; color: #aaaaaa; margin-top: 5px;"></div>
+    
+    <div id="title-bar">QUICK MATCH - Mode: 501</div>
+    <div id="score">P1: 501 | AI: 501</div>
+    <div id="status">Game On! Player 1 Turn - Throw 3 Darts</div>
+    <div id="badges">
+      <span id="badgeFocus">Focus: 2/2</span>
+      <span id="badgeMagnet">Magnet: 2/2</span>
+      <span id="badgeUndo">Undo: 1/1</span>
+      <span id="badgeWind">Wind: 0 mph</span>
+    </div>
   </div>
+
   <div id="canvas-container">
     <canvas id="gameCanvas" width="600" height="600"></canvas>
-    <div id="settingsPanel" style="display:none; position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: #222; padding: 20px; border-radius: 8px; border: 1px solid #555; z-index: 10; color: white; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8);">
-      <h3 style="margin-top: 0;">Settings</h3>
-      <label><input type="checkbox" id="soundToggle" checked onchange="toggleSound()"> Sound Effects</label><br><br>
-      <label>Dart Style:
-        <select id="dartStyle" onchange="changeDartStyle()" style="background: #333; color: white; border: 1px solid #555; padding: 3px;">
-          <option value="cyan">Cyan</option>
-          <option value="red">Red</option>
-          <option value="gold">Gold</option>
-        </select>
-      </label><br><br>
-      <div style="text-align: right;">
-        <button onclick="toggleSettings()" style="padding: 5px 15px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 4px;">Close</button>
-      </div>
-    </div>
-    <div id="helpPanel" style="display:none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); background: #222; padding: 20px; border-radius: 8px; border: 1px solid #555; z-index: 10; color: white; text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.8); max-width: 400px;">
-      <h3 style="margin-top: 0;">How to Play KDarts</h3>
-      <h4>General Controls</h4>
-      <p style="font-size: 14px;">Aim with the mouse cursor and click to throw a dart. Your aim will wobble automatically over time. You have 3 darts per turn.</p>
-      <h4>501 Mode</h4>
-      <p style="font-size: 14px;">Start with 501 points. Subtract your throw scores from the total. The goal is to reach exactly 0. If a throw reduces your score below 0 (or to 1), you <strong>bust</strong> and your score resets to what it was at the start of the turn.</p>
-      <h4>Cricket Mode</h4>
-      <p style="font-size: 14px;">The objective is to "close" the numbers 15, 16, 17, 18, 19, 20, and the Bullseye. To close a number, hit it 3 times (Singles = 1 hit, Doubles = 2 hits, Triples = 3 hits). The first player to close all numbers wins the game.</p>
+    
+    <div id="helpPanel" class="panel">
+      <h3 style="margin-top:0; color:#00d2ff;">KDarts - Loop 6 Expansion</h3>
+      <h4 style="margin-bottom:4px; color:#ffd700;">General Controls</h4>
+      <p style="font-size:13px; margin-top:0;">Aim with mouse and click to throw. Aim wobbles dynamically over time. Throw 3 darts per turn.</p>
+      
+      <h4 style="margin-bottom:4px; color:#ffd700;">Power-Ups & Shortcuts</h4>
+      <ul style="font-size:13px; padding-left:20px; margin-top:0;">
+        <li><strong>Focus (F):</strong> Slows crosshair wobble speed by 50%. (2 uses)</li>
+        <li><strong>Magnet (M):</strong> Expands hit tolerance for Double and Triple rings. (2 uses)</li>
+        <li><strong>Undo Dart (U):</strong> Cancel and re-throw 1 bad dart in current turn. (1 use/leg)</li>
+        <li><strong>1-5 Keys:</strong> Switch Modes | <strong>C Key:</strong> Campaign Mode</li>
+      </ul>
+
+      <h4 style="margin-bottom:4px; color:#ffd700;">Game Modes</h4>
+      <p style="font-size:13px; margin-top:0;">
+        <strong>501 / 301:</strong> Reach exactly 0. Bust if < 0 or = 1.<br>
+        <strong>Cricket:</strong> Close 15-20 and Bullseye (3 hits each).<br>
+        <strong>Around the Clock (ATC):</strong> Hit numbers 1 through 20 in sequence.<br>
+        <strong>Bullseye Blitz:</strong> First to score 10 Bullseye hits (Outer=1, Inner=2).
+      </p>
+
+      <h4 style="margin-bottom:4px; color:#ffd700;">15-Stage Campaign</h4>
+      <p style="font-size:13px; margin-top:0;">Progressive AI difficulty, dynamic wind drift, and wobble mechanics across 15 distinct stages!</p>
+      
       <div style="text-align: right; margin-top: 15px;">
-        <button onclick="toggleHelp()" style="padding: 5px 15px; cursor: pointer; background: #444; color: white; border: 1px solid #666; border-radius: 4px;">Close</button>
+        <button onclick="toggleHelp()">Close</button>
       </div>
     </div>
   </div>
+
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+const titleEl = document.getElementById('title-bar');
 const scoreEl = document.getElementById('score');
 const statusEl = document.getElementById('status');
 
@@ -114,16 +214,13 @@ const audioCtx = new AudioContext();
 let soundEnabled = true;
 let dartColor = '#0ff';
 
-function toggleSettings() {
-    const p = document.getElementById('settingsPanel');
-    p.style.display = p.style.display === 'none' ? 'block' : 'none';
-}
 function toggleHelp() {
     const p = document.getElementById('helpPanel');
     p.style.display = p.style.display === 'none' ? 'block' : 'none';
 }
 function toggleSound() {
-    soundEnabled = document.getElementById('soundToggle').checked;
+    soundEnabled = !soundEnabled;
+    event.target.innerText = `Sound: ${soundEnabled ? 'ON' : 'OFF'}`;
 }
 function changeDartStyle() {
     const style = document.getElementById('dartStyle').value;
@@ -139,55 +236,97 @@ function playSound(type) {
     if (type === 'whoosh') {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        osc.connect(gain); gain.connect(audioCtx.destination);
         osc.type = 'sine';
         osc.frequency.setValueAtTime(800, now);
         osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
         gain.gain.setValueAtTime(0.3, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-        osc.start(now);
-        osc.stop(now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
     } else if (type === 'thud') {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        osc.connect(gain); gain.connect(audioCtx.destination);
         osc.type = 'triangle';
-        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.setValueAtTime(120, now);
         osc.frequency.exponentialRampToValueAtTime(20, now + 0.1);
         gain.gain.setValueAtTime(0.8, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now);
-        osc.stop(now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
     } else if (type === 'cheer') {
         const playTone = (freq, time, dur) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+            osc.connect(gain); gain.connect(audioCtx.destination);
             osc.type = 'square';
             osc.frequency.value = freq;
             gain.gain.setValueAtTime(0.1, time);
             gain.gain.exponentialRampToValueAtTime(0.01, time + dur);
-            osc.start(time);
-            osc.stop(time + dur);
+            osc.start(time); osc.stop(time + dur);
         };
-        playTone(440, now, 0.1);
-        playTone(554, now + 0.1, 0.1);
-        playTone(659, now + 0.2, 0.3);
+        playTone(440, now, 0.08);
+        playTone(554, now + 0.08, 0.08);
+        playTone(659, now + 0.16, 0.2);
+    } else if (type === 'powerup') {
+        const playTone = (freq, time, dur) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.15, time);
+            gain.gain.exponentialRampToValueAtTime(0.01, time + dur);
+            osc.start(time); osc.stop(time + dur);
+        };
+        playTone(523, now, 0.06);
+        playTone(659, now + 0.06, 0.06);
+        playTone(784, now + 0.12, 0.12);
     }
 }
 
+const CAMPAIGN_STAGES = [
+    {name: "Local Pub", opponent: "Rookie Rick", mode: "301", aiErr: 120, wobble: 10, wind: 0},
+    {name: "Amateur Open", opponent: "Amateur Andy", mode: "atc", aiErr: 105, wobble: 12, wind: 2},
+    {name: "League Qualifier", opponent: "Pub Regular Pete", mode: "301", aiErr: 90, wobble: 14, wind: 3},
+    {name: "Town Championship", opponent: "Local Hero Luke", mode: "cricket", aiErr: 80, wobble: 15, wind: 4},
+    {name: "County Clash", opponent: "District Champ Dave", mode: "blitz", aiErr: 70, wobble: 16, wind: 5},
+    {name: "Regional Cup", opponent: "Regional Ace Ray", mode: "501", aiErr: 62, wobble: 18, wind: 6},
+    {name: "State Invitational", opponent: "State Master Sam", mode: "atc", aiErr: 54, wobble: 20, wind: 7},
+    {name: "National Qualifier", opponent: "Pro Qualifier Phil", mode: "blitz", aiErr: 46, wobble: 22, wind: 8},
+    {name: "National Semifinal", opponent: "National Pro Ned", mode: "cricket", aiErr: 38, wobble: 24, wind: 9},
+    {name: "National Final", opponent: "National Champ Nick", mode: "501", aiErr: 32, wobble: 26, wind: 10},
+    {name: "International Masters", opponent: "Euro Champ Eric", mode: "301", aiErr: 26, wobble: 28, wind: 11},
+    {name: "Grand Prix", opponent: "Grand Prix Finalist Gary", mode: "cricket", aiErr: 20, wobble: 30, wind: 12},
+    {name: "Premier League", opponent: "Premier Star Paul", mode: "atc", aiErr: 15, wobble: 32, wind: 13},
+    {name: "World Semis", opponent: "World Contender Will", mode: "blitz", aiErr: 10, wobble: 34, wind: 14},
+    {name: "World Final", opponent: "World Champion Vic", mode: "501", aiErr: 5, wobble: 36, wind: 15}
+];
+
+let isCampaign = false;
+let campaignStage = 0;
 let gameMode = '501';
 let aiDifficulty = 'Medium';
 let currentPlayer = 0;
-let cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
-let totalDarts = [0, 0];
-let highestCheckout = [0, 0];
 
 let scores = [501, 501];
 let prevScores = [501, 501];
+let cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
+let atcTarget = [1, 1];
+let blitzHits = [0, 0];
+
+let totalDarts = [0, 0];
+let highestCheckout = [0, 0];
+
+let focusActive = [false, false];
+let focusUses = [2, 2];
+let magnetActive = [false, false];
+let magnetUses = [2, 2];
+let undoUses = [1, 1];
+
+let windX = 0, windY = 0;
+let windSpeed = 0, windAngle = 0;
+let currentWobbleAmp = 15;
+
 let dartsLeft = 3;
 let darts = [];
 let state = 'PLAYING';
@@ -199,28 +338,125 @@ let historyStack = [];
 let redoStack = [];
 let aiTimeoutId = null;
 
+const CX = 300;
+const CY = 300;
+const R = 190;
+const BOARD_R = 260;
+
+function updateWind() {
+    let maxWind = isCampaign ? CAMPAIGN_STAGES[campaignStage].wind : (aiDifficulty === 'Easy' ? 2 : (aiDifficulty === 'Medium' ? 4 : (aiDifficulty === 'Hard' ? 6 : 8)));
+    currentWobbleAmp = isCampaign ? CAMPAIGN_STAGES[campaignStage].wobble : 15;
+    
+    if (maxWind === 0) {
+        windSpeed = 0; windX = 0; windY = 0;
+    } else {
+        windSpeed = Math.floor(Math.random() * (maxWind + 1));
+        windAngle = Math.random() * Math.PI * 2;
+        windX = Math.cos(windAngle) * windSpeed * 2.2;
+        windY = Math.sin(windAngle) * windSpeed * 2.2;
+    }
+    updateBadges();
+}
+
+function updateBadges() {
+    document.getElementById('badgeFocus').innerText = `Focus(F): ${focusUses[currentPlayer]}/2 ${focusActive[currentPlayer]?'[ACTIVE]':''}`;
+    document.getElementById('badgeMagnet').innerText = `Magnet(M): ${magnetUses[currentPlayer]}/2 ${magnetActive[currentPlayer]?'[ACTIVE]':''}`;
+    document.getElementById('badgeUndo').innerText = `Undo(U): ${undoUses[currentPlayer]}/1`;
+    document.getElementById('badgeWind').innerText = `Wind: ${windSpeed} mph`;
+    
+    document.getElementById('btnFocus').className = focusActive[currentPlayer] ? 'active-pwr' : '';
+    document.getElementById('btnMagnet').className = magnetActive[currentPlayer] ? 'active-pwr' : '';
+}
+
+function activateFocus() {
+    if (focusUses[currentPlayer] > 0 && !focusActive[currentPlayer]) {
+        focusActive[currentPlayer] = true;
+        focusUses[currentPlayer]--;
+        playSound('powerup');
+        statusEl.innerText = "Precision Focus Active! Aim wobble slowed by 50%";
+        updateBadges();
+    }
+}
+
+function activateMagnet() {
+    if (magnetUses[currentPlayer] > 0 && !magnetActive[currentPlayer]) {
+        magnetActive[currentPlayer] = true;
+        magnetUses[currentPlayer]--;
+        playSound('powerup');
+        statusEl.innerText = "Ring Magnet Active! Double & Triple zones expanded";
+        updateBadges();
+    }
+}
+
+function activateUndoDart() {
+    if (undoUses[currentPlayer] > 0 && darts.length > 0) {
+        undoUses[currentPlayer]--;
+        playSound('powerup');
+        const lastDart = darts.pop();
+        dartsLeft++;
+        totalDarts[currentPlayer]--;
+        
+        const pts = lastDart.pts;
+        const number = lastDart.number;
+        const mult = lastDart.mult;
+        
+        if (gameMode === '501' || gameMode === '301') {
+            scores[currentPlayer] += pts;
+        } else if (gameMode === 'cricket') {
+            if (mult > 0 && cricketHits[currentPlayer][number] !== undefined) {
+                cricketHits[currentPlayer][number] = Math.max(0, cricketHits[currentPlayer][number] - mult);
+            }
+        } else if (gameMode === 'atc') {
+            if (number === atcTarget[currentPlayer] - mult || number === atcTarget[currentPlayer] - 1) {
+                atcTarget[currentPlayer] = Math.max(1, atcTarget[currentPlayer] - mult);
+            }
+        } else if (gameMode === 'blitz') {
+            if (number === 25) {
+                blitzHits[currentPlayer] = Math.max(0, blitzHits[currentPlayer] - mult);
+            }
+        }
+        
+        if (state === 'TURN_END') state = 'PLAYING';
+        statusEl.innerText = "Dart Undone! Re-throw last dart.";
+        updateScoreUI();
+        updateBadges();
+    }
+}
+
 function getSnapshot() {
     return JSON.stringify({
-        gameMode, aiDifficulty, currentPlayer, cricketHits,
-        totalDarts, highestCheckout, scores, prevScores, dartsLeft, state, darts: darts.map(d => ({...d}))
+        isCampaign, campaignStage, gameMode, aiDifficulty, currentPlayer,
+        cricketHits, atcTarget, blitzHits, totalDarts, highestCheckout,
+        scores, prevScores, focusActive, focusUses, magnetActive, magnetUses, undoUses,
+        dartsLeft, state, darts: darts.map(d => ({...d}))
     });
 }
 
 function restoreSnapshot(snap) {
     const s = JSON.parse(snap);
+    isCampaign = s.isCampaign;
+    campaignStage = s.campaignStage;
     gameMode = s.gameMode;
     aiDifficulty = s.aiDifficulty;
     currentPlayer = s.currentPlayer;
     cricketHits = s.cricketHits;
+    atcTarget = s.atcTarget;
+    blitzHits = s.blitzHits;
     totalDarts = s.totalDarts;
     highestCheckout = s.highestCheckout;
     scores = s.scores;
     prevScores = s.prevScores;
+    focusActive = s.focusActive;
+    focusUses = s.focusUses;
+    magnetActive = s.magnetActive;
+    magnetUses = s.magnetUses;
+    undoUses = s.undoUses;
     dartsLeft = s.dartsLeft;
     state = s.state;
     darts = s.darts;
     updateScoreUI();
-    let turnName = currentPlayer === 0 ? "Player 1" : (aiDifficulty === 'Human' ? "Player 2" : "AI");
+    updateBadges();
+    let turnName = currentPlayer === 0 ? "Player 1" : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? "Player 2" : "AI"));
     statusEl.innerText = `${turnName}'s Turn - Darts left: ${dartsLeft}`;
 }
 
@@ -243,16 +479,11 @@ function redo() {
             if (state === 'PLAYING') {
                 aiTimeoutId = setTimeout(aiThrow, 1000);
             } else if (state === 'TURN_END') {
-                aiTimeoutId = setTimeout(nextTurn, 2000);
+                aiTimeoutId = setTimeout(nextTurn, 1800);
             }
         }
     }
 }
-
-const CX = 300;
-const CY = 300;
-const R = 220; // scoring radius
-const BOARD_R = 300;
 
 function setDifficulty(diff) {
     aiDifficulty = diff;
@@ -260,45 +491,53 @@ function setDifficulty(diff) {
 
 function saveState() {
     const stateObj = {
-        gameMode, aiDifficulty, currentPlayer, cricketHits,
-        totalDarts, highestCheckout, scores, prevScores, dartsLeft, state
+        isCampaign, campaignStage, gameMode, aiDifficulty, currentPlayer,
+        cricketHits, atcTarget, blitzHits, totalDarts, highestCheckout,
+        scores, prevScores, focusUses, magnetUses, undoUses, dartsLeft, state
     };
-    localStorage.setItem('kdarts_save', JSON.stringify(stateObj));
+    localStorage.setItem('kdarts_save_loop6', JSON.stringify(stateObj));
     const oldMsg = statusEl.innerText;
-    statusEl.innerText = "Game Saved!";
-    setTimeout(() => { if (statusEl.innerText === "Game Saved!") statusEl.innerText = oldMsg; }, 1500);
+    statusEl.innerText = "Game Saved Successfully!";
+    setTimeout(() => { if (statusEl.innerText === "Game Saved Successfully!") statusEl.innerText = oldMsg; }, 1500);
 }
 
 function loadState() {
-    const saved = localStorage.getItem('kdarts_save');
+    const saved = localStorage.getItem('kdarts_save_loop6');
     if (saved) {
         try {
             const stateObj = JSON.parse(saved);
+            isCampaign = stateObj.isCampaign || false;
+            campaignStage = stateObj.campaignStage || 0;
             gameMode = stateObj.gameMode;
             aiDifficulty = stateObj.aiDifficulty;
             currentPlayer = stateObj.currentPlayer;
             cricketHits = stateObj.cricketHits;
+            atcTarget = stateObj.atcTarget || [1, 1];
+            blitzHits = stateObj.blitzHits || [0, 0];
             totalDarts = stateObj.totalDarts;
             highestCheckout = stateObj.highestCheckout || [0, 0];
             scores = stateObj.scores;
             prevScores = stateObj.prevScores;
+            focusUses = stateObj.focusUses || [2, 2];
+            magnetUses = stateObj.magnetUses || [2, 2];
+            undoUses = stateObj.undoUses || [1, 1];
             dartsLeft = stateObj.dartsLeft;
             state = stateObj.state;
             darts = [];
             
             document.getElementById('diff').value = aiDifficulty;
             updateScoreUI();
+            updateBadges();
             
             if (state === 'PLAYING' && currentPlayer === 1 && aiDifficulty !== 'Human') {
                 clearTimeout(aiTimeoutId);
                 aiTimeoutId = setTimeout(aiThrow, 1000);
             } else if (state === 'TURN_END' && currentPlayer === 1 && aiDifficulty !== 'Human') {
                 clearTimeout(aiTimeoutId);
-                aiTimeoutId = setTimeout(nextTurn, 2000);
+                aiTimeoutId = setTimeout(nextTurn, 1800);
             }
             
             statusEl.innerText = "Game Loaded!";
-            setTimeout(() => { if (statusEl.innerText === "Game Loaded!") statusEl.innerText = currentPlayer === 0 ? "Player 1's Turn" : (aiDifficulty === 'Human' ? "Player 2's Turn" : "AI's Turn"); }, 1500);
         } catch (e) {
             console.error("Load failed", e);
         }
@@ -306,6 +545,7 @@ function loadState() {
 }
 
 function setMode(mode) {
+    isCampaign = false;
     gameMode = mode;
     state = 'PLAYING';
     darts = [];
@@ -316,50 +556,76 @@ function setMode(mode) {
     currentPlayer = 0;
     scores = [501, 501];
     prevScores = [501, 501];
-    cricketHits = [
-        {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0},
-        {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}
-    ];
+    if (mode === '301') { scores = [301, 301]; prevScores = [301, 301]; }
+    cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
+    atcTarget = [1, 1];
+    blitzHits = [0, 0];
     totalDarts = [0, 0];
     highestCheckout = [0, 0];
-    if (mode === '501') {
-        scoreEl.style.fontSize = "32px";
-        statusEl.innerText = "Game On! Player 1 Turn - Throw 3 Darts";
-    } else {
-        scoreEl.style.fontSize = "20px";
-        statusEl.innerText = "Player 1 Turn - Close 15-20 and Bullseye";
-    }
+    focusUses = [2, 2]; magnetUses = [2, 2]; undoUses = [1, 1];
+    focusActive = [false, false]; magnetActive = [false, false];
+    
+    updateWind();
+    statusEl.innerText = "Game On! Player 1 Turn - Throw 3 Darts";
+    updateScoreUI();
+}
+
+function startCampaign(stage) {
+    isCampaign = true;
+    campaignStage = stage;
+    gameMode = CAMPAIGN_STAGES[stage].mode;
+    state = 'PLAYING';
+    darts = [];
+    dartsLeft = 3;
+    historyStack = [];
+    redoStack = [];
+    clearTimeout(aiTimeoutId);
+    currentPlayer = 0;
+    scores = [501, 501];
+    prevScores = [501, 501];
+    if (gameMode === '301') { scores = [301, 301]; prevScores = [301, 301]; }
+    cricketHits = [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
+    atcTarget = [1, 1];
+    blitzHits = [0, 0];
+    totalDarts = [0, 0];
+    highestCheckout = [0, 0];
+    focusUses = [2, 2]; magnetUses = [2, 2]; undoUses = [1, 1];
+    focusActive = [false, false]; magnetActive = [false, false];
+    
+    updateWind();
+    statusEl.innerText = `Stage ${stage+1}/15: ${CAMPAIGN_STAGES[stage].name} vs ${CAMPAIGN_STAGES[stage].opponent}`;
     updateScoreUI();
 }
 
 function updateScoreUI() {
-    if (gameMode === '501') {
-        let p2Name = aiDifficulty === 'Human' ? 'P2' : 'AI';
-        scoreEl.innerHTML = `P1: ${scores[0]} | ${p2Name}: ${scores[1]}`;
-        let pAvg = totalDarts[0] > 0 ? ((501 - scores[0]) / totalDarts[0]).toFixed(1) : "0.0";
-        let aAvg = totalDarts[1] > 0 ? ((501 - scores[1]) / totalDarts[1]).toFixed(1) : "0.0";
-        document.getElementById('stats').innerHTML = `P1 Avg: ${pAvg} | High Out: ${highestCheckout[0]} &nbsp;&nbsp;&nbsp; ${p2Name} Avg: ${aAvg} | High Out: ${highestCheckout[1]}`;
+    let p2Name = isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? 'P2' : 'AI');
+    
+    if (isCampaign) {
+        titleEl.innerText = `CAMPAIGN STAGE ${campaignStage+1}/15 - ${CAMPAIGN_STAGES[campaignStage].name} (${p2Name})`;
     } else {
-        let str = "P: ";
+        const mNames = { '501': '501', '301': '301', 'cricket': 'Cricket', 'atc': 'Around the Clock', 'blitz': 'Bullseye Blitz' };
+        titleEl.innerText = `QUICK MATCH - Mode: ${mNames[gameMode]} vs ${p2Name}`;
+    }
+
+    if (gameMode === '501' || gameMode === '301') {
+        scoreEl.innerHTML = `P1: ${scores[0]} | ${p2Name}: ${scores[1]}`;
+    } else if (gameMode === 'cricket') {
+        let str = "P1: ";
         const targets = [20,19,18,17,16,15,25];
-        let pMarks = 0;
         for (let t of targets) {
             let hits = cricketHits[0][t];
-            pMarks += hits;
             str += `${t===25?'B':t}:${hits===0?'-':(hits===1?'/':(hits===2?'X':'O'))} `;
         }
-        let p2Name = aiDifficulty === 'Human' ? 'P2' : 'AI';
         str += `<br>${p2Name}: `;
-        let aMarks = 0;
         for (let t of targets) {
             let hits = cricketHits[1][t];
-            aMarks += hits;
             str += `${t===25?'B':t}:${hits===0?'-':(hits===1?'/':(hits===2?'X':'O'))} `;
         }
         scoreEl.innerHTML = str;
-        let pAvg = totalDarts[0] > 0 ? (pMarks / totalDarts[0]).toFixed(2) : "0.00";
-        let aAvg = totalDarts[1] > 0 ? (aMarks / totalDarts[1]).toFixed(2) : "0.00";
-        document.getElementById('stats').innerHTML = `P1 Marks/Dart: ${pAvg} &nbsp;&nbsp;&nbsp; ${p2Name} Marks/Dart: ${aAvg}`;
+    } else if (gameMode === 'atc') {
+        scoreEl.innerHTML = `P1 Target: ${atcTarget[0]}/20 | ${p2Name} Target: ${atcTarget[1]}/20`;
+    } else if (gameMode === 'blitz') {
+        scoreEl.innerHTML = `P1 Bulls: ${blitzHits[0]}/10 | ${p2Name} Bulls: ${blitzHits[1]}/10`;
     }
 }
 
@@ -374,34 +640,61 @@ function nextTurn() {
         darts = [];
         dartsLeft = 3;
         prevScores[currentPlayer] = scores[currentPlayer];
+        focusActive[currentPlayer] = false;
+        magnetActive[currentPlayer] = false;
         currentPlayer = 1 - currentPlayer;
         state = 'PLAYING';
-        statusEl.innerText = currentPlayer === 0 ? "Player 1's Turn - Throw Dart 1" : (aiDifficulty === 'Human' ? "Player 2's Turn - Throw Dart 1" : "AI's Turn");
-        if (currentPlayer === 1 && aiDifficulty !== 'Human') {
+        updateWind();
+        
+        let turnName = currentPlayer === 0 ? "Player 1" : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? "Player 2" : "AI"));
+        statusEl.innerText = `${turnName}'s Turn - Throw 3 Darts`;
+        
+        if (currentPlayer === 1 && (isCampaign || aiDifficulty !== 'Human')) {
             clearTimeout(aiTimeoutId);
             aiTimeoutId = setTimeout(aiThrow, 1000);
         }
     } else if (state === 'WON') {
-        setMode(gameMode);
+        if (isCampaign) {
+            if (currentPlayer === 0) {
+                if (campaignStage < 14) {
+                    startCampaign(campaignStage + 1);
+                } else {
+                    statusEl.innerText = "CAMPAIGN VICTORY! You are the World Champion!";
+                    state = 'CAMPAIGN_OVER';
+                }
+            } else {
+                statusEl.innerText = "Defeated! Click Campaign to retry stage.";
+                state = 'CAMPAIGN_OVER';
+            }
+        } else {
+            setMode(gameMode);
+        }
+    } else if (state === 'CAMPAIGN_OVER') {
+        if (isCampaign) startCampaign(campaignStage);
+        else setMode(gameMode);
     }
 }
 
-function throwDart(targetX, targetY) {
+function throwDart(rawX, rawY) {
     historyStack.push(getSnapshot());
     redoStack = [];
-    const hit = getHitDetails(targetX, targetY);
+    
+    const finalX = rawX + windX;
+    const finalY = rawY + windY;
+    
+    const hit = getHitDetails(finalX, finalY);
     const pts = hit.number * hit.mult;
     
     playSound('whoosh');
-    darts.push({targetX: targetX, targetY: targetY, x: 300, y: 600, pts: pts, number: hit.number, progress: 0, animating: true});
+    darts.push({targetX: finalX, targetY: finalY, x: 300, y: 600, pts: pts, number: hit.number, mult: hit.mult, progress: 0, animating: true});
     dartsLeft--;
     totalDarts[currentPlayer]++;
 
-    let turnName = currentPlayer === 0 ? "Player 1" : (aiDifficulty === 'Human' ? "Player 2" : "AI");
+    let turnName = currentPlayer === 0 ? "Player 1" : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? "Player 2" : "AI"));
 
-    if (gameMode === '501') {
+    if (gameMode === '501' || gameMode === '301') {
         scores[currentPlayer] -= pts;
-        if (scores[currentPlayer] < 0) {
+        if (scores[currentPlayer] < 0 || scores[currentPlayer] === 1) {
             statusEl.innerText = `${turnName} Bust!`;
             scores[currentPlayer] = prevScores[currentPlayer];
             state = 'TURN_END';
@@ -417,7 +710,7 @@ function throwDart(targetX, targetY) {
         } else {
             statusEl.innerText = `${turnName} Hit ${pts}! Darts left: ${dartsLeft}`;
         }
-    } else {
+    } else if (gameMode === 'cricket') {
         let hitMsg = hit.mult > 0 ? (hit.mult === 1 ? "Single " : (hit.mult === 2 ? "Double " : "Triple ")) + (hit.number===25?"Bull":hit.number) : "Miss!";
         if (cricketHits[currentPlayer][hit.number] !== undefined) {
             cricketHits[currentPlayer][hit.number] += hit.mult;
@@ -438,15 +731,46 @@ function throwDart(targetX, targetY) {
         } else {
             statusEl.innerText = `${turnName}: ${hitMsg} - Darts left: ${dartsLeft}`;
         }
+    } else if (gameMode === 'atc') {
+        if (hit.number === atcTarget[currentPlayer]) {
+            atcTarget[currentPlayer] += hit.mult;
+            if (atcTarget[currentPlayer] > 20) {
+                statusEl.innerText = `${turnName} Completed Around the Clock!`;
+                state = 'WON';
+            } else {
+                statusEl.innerText = `${turnName} Hit ${hit.number}! Next target: ${atcTarget[currentPlayer]}`;
+            }
+        } else if (dartsLeft === 0) {
+            statusEl.innerText = `${turnName} Turn Over. Target: ${atcTarget[currentPlayer]}`;
+            state = 'TURN_END';
+        } else {
+            statusEl.innerText = `Miss Target ${atcTarget[currentPlayer]}! Darts left: ${dartsLeft}`;
+        }
+    } else if (gameMode === 'blitz') {
+        if (hit.number === 25) {
+            blitzHits[currentPlayer] += hit.mult;
+            if (blitzHits[currentPlayer] >= 10) {
+                statusEl.innerText = `${turnName} Blitz Victory! 10 Bullseyes!`;
+                state = 'WON';
+            } else {
+                statusEl.innerText = `${turnName} Bullseye Hit! Total: ${blitzHits[currentPlayer]}/10`;
+            }
+        } else if (dartsLeft === 0) {
+            statusEl.innerText = `${turnName} Turn Over. Bullseyes: ${blitzHits[currentPlayer]}/10`;
+            state = 'TURN_END';
+        } else {
+            statusEl.innerText = `Miss Bullseye! Darts left: ${dartsLeft}`;
+        }
     }
     updateScoreUI();
 
-    if (state === 'PLAYING' && currentPlayer === 1 && aiDifficulty !== 'Human') {
+    let isP2AI = (isCampaign || aiDifficulty !== 'Human');
+    if (state === 'PLAYING' && currentPlayer === 1 && isP2AI) {
         clearTimeout(aiTimeoutId);
         aiTimeoutId = setTimeout(aiThrow, 1000);
-    } else if (state === 'TURN_END' && currentPlayer === 1 && aiDifficulty !== 'Human') {
+    } else if (state === 'TURN_END' && currentPlayer === 1 && isP2AI) {
         clearTimeout(aiTimeoutId);
-        aiTimeoutId = setTimeout(nextTurn, 2000);
+        aiTimeoutId = setTimeout(nextTurn, 1800);
     }
 }
 
@@ -456,15 +780,16 @@ function aiThrow() {
     let targetNum = 20;
     let targetMult = 3;
     
-    if (gameMode === '501') {
+    if (gameMode === '501' || gameMode === '301') {
         if (scores[1] > 60) {
             targetNum = 20; targetMult = 3;
         } else {
             let s = scores[1];
-            if (s <= 20) { targetNum = s; targetMult = 1; }
+            if (s <= 40 && s % 2 === 0) { targetNum = s / 2; targetMult = 2; }
+            else if (s <= 20) { targetNum = s; targetMult = 1; }
             else { targetNum = 20; targetMult = 1; }
         }
-    } else {
+    } else if (gameMode === 'cricket') {
         let targets = [20,19,18,17,16,15,25];
         for (let t of targets) {
             if (cricketHits[1][t] < 3) {
@@ -473,6 +798,12 @@ function aiThrow() {
                 break;
             }
         }
+    } else if (gameMode === 'atc') {
+        targetNum = atcTarget[1];
+        targetMult = (targetNum === 20) ? 1 : 2;
+    } else if (gameMode === 'blitz') {
+        targetNum = 25;
+        targetMult = 2;
     }
     
     let rad = 0;
@@ -493,8 +824,14 @@ function aiThrow() {
     }
     
     let errorMag = 50;
-    if (aiDifficulty === 'Easy') errorMag = 120;
-    else if (aiDifficulty === 'Hard') errorMag = 20;
+    if (isCampaign) {
+        errorMag = CAMPAIGN_STAGES[campaignStage].aiErr;
+    } else {
+        if (aiDifficulty === 'Easy') errorMag = 120;
+        else if (aiDifficulty === 'Medium') errorMag = 70;
+        else if (aiDifficulty === 'Hard') errorMag = 30;
+        else if (aiDifficulty === 'Legend') errorMag = 10;
+    }
     
     let rx = (Math.random() + Math.random() + Math.random() - 1.5) * errorMag;
     let ry = (Math.random() + Math.random() + Math.random() - 1.5) * errorMag;
@@ -503,28 +840,46 @@ function aiThrow() {
 }
 
 canvas.addEventListener('mousedown', (e) => {
-    // If clicking over UI panel roughly (y < 100), ignore
-    if (mouseY < 100) return;
-    if (state === 'PLAYING' && (currentPlayer === 0 || aiDifficulty === 'Human')) {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (state === 'PLAYING' && isP1OrHuman) {
         throwDart(mouseX + wobbleX, mouseY + wobbleY);
-    } else if (state === 'TURN_END' && (currentPlayer === 0 || aiDifficulty === 'Human')) {
-        nextTurn();
-    } else if (state === 'WON') {
+    } else if ((state === 'TURN_END' || state === 'WON' || state === 'CAMPAIGN_OVER') && isP1OrHuman) {
         nextTurn();
     }
+});
+
+window.addEventListener('keydown', (e) => {
+    const k = e.key.toUpperCase();
+    if (k === 'F') activateFocus();
+    else if (k === 'M') activateMagnet();
+    else if (k === 'U') activateUndoDart();
+    else if (k === 'C') startCampaign(0);
+    else if (k === '1') setMode('501');
+    else if (k === '2') setMode('301');
+    else if (k === '3') setMode('cricket');
+    else if (k === '4') setMode('atc');
+    else if (k === '5') setMode('blitz');
 });
 
 function getHitDetails(x, y) {
     const dx = x - CX;
     const dy = y - CY;
     const d = Math.sqrt(dx*dx + dy*dy) / R;
-    if (d > 1.0) return {number: 0, mult: 0};
+    if (d > 1.05) return {number: 0, mult: 0};
     if (d <= 0.037) return {number: 25, mult: 2};
     if (d <= 0.093) return {number: 25, mult: 1};
     
     let mult = 1;
-    if (d >= 0.582 && d <= 0.629) mult = 3;
-    if (d >= 0.952 && d <= 1.0) mult = 2;
+    let tripMin = 0.582, tripMax = 0.629;
+    let dblMin = 0.952, dblMax = 1.0;
+    
+    if (magnetActive[currentPlayer]) {
+        tripMin = 0.52; tripMax = 0.69;
+        dblMin = 0.91; dblMax = 1.04;
+    }
+    
+    if (d >= tripMin && d <= tripMax) mult = 3;
+    else if (d >= dblMin && d <= dblMax) mult = 2;
     
     let angle = Math.atan2(dy, dx) + Math.PI / 2.0;
     if (angle < 0) angle += 2 * Math.PI;
@@ -539,7 +894,7 @@ function drawPie(cx, cy, r, a1, a2, color) {
     ctx.arc(cx, cy, r, a1, a2);
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
     ctx.lineWidth = 1;
     ctx.stroke();
 }
@@ -549,25 +904,24 @@ function drawCircle(cx, cy, r, color) {
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
     ctx.lineWidth = 1;
     ctx.stroke();
 }
 
 function update() {
-    t += 0.05;
+    let speedMult = focusActive[currentPlayer] ? 0.5 : 1.0;
+    t += 0.05 * speedMult;
     
-    // Wobble based on time
-    wobbleX = Math.sin(t * 1.3) * 15 + Math.sin(t * 0.8) * 10;
-    wobbleY = Math.cos(t * 1.5) * 15 + Math.sin(t * 0.9) * 10;
+    let amp = currentWobbleAmp * (focusActive[currentPlayer] ? 0.5 : 1.0);
+    wobbleX = Math.sin(t * 1.3) * amp + Math.sin(t * 0.8) * (amp * 0.6);
+    wobbleY = Math.cos(t * 1.5) * amp + Math.sin(t * 0.9) * (amp * 0.6);
     
-    // Clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Board background (black)
     ctx.beginPath();
     ctx.arc(CX, CY, BOARD_R, 0, Math.PI * 2);
-    ctx.fillStyle = '#111';
+    ctx.fillStyle = '#0c0c0e';
     ctx.fill();
     
     const segments = 20;
@@ -580,19 +934,24 @@ function update() {
         const a2 = a1 + angleStep;
         const isRed = (i % 2 === 0);
         
-        // Painter's algorithm
-        drawPie(CX, CY, R * 1.0, a1, a2, isRed ? '#d00000' : '#00a300');   // Double
+        let colorRed = '#d00000';
+        let colorGreen = '#00a300';
+        if (magnetActive[currentPlayer]) {
+            colorRed = '#ff5050';
+            colorGreen = '#50dc50';
+        }
+        
+        drawPie(CX, CY, R * 1.0, a1, a2, isRed ? colorRed : colorGreen);   // Double
         drawPie(CX, CY, R * 0.952, a1, a2, isRed ? '#111' : '#e8e6d1');    // Outer Single
-        drawPie(CX, CY, R * 0.629, a1, a2, isRed ? '#d00000' : '#00a300'); // Triple
+        drawPie(CX, CY, R * 0.629, a1, a2, isRed ? colorRed : colorGreen); // Triple
         drawPie(CX, CY, R * 0.582, a1, a2, isRed ? '#111' : '#e8e6d1');    // Inner Single
     }
     
-    drawCircle(CX, CY, R * 0.093, '#00a300'); // Single Bull
-    drawCircle(CX, CY, R * 0.037, '#d00000'); // Double Bull
+    drawCircle(CX, CY, R * 0.093, '#00a300');
+    drawCircle(CX, CY, R * 0.037, '#d00000');
     
-    // Draw numbers
     ctx.fillStyle = '#fff';
-    ctx.font = '24px sans-serif';
+    ctx.font = 'bold 22px "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let i = 0; i < segments; i++) {
@@ -602,7 +961,6 @@ function update() {
         ctx.fillText(scores[i], nx, ny);
     }
     
-    // Draw thrown darts
     for (let i = 0; i < darts.length; i++) {
         let d = darts[i];
         if (d.animating) {
@@ -623,7 +981,6 @@ function update() {
         
         let scale = d.animating ? (1.5 - d.progress * 0.5) : 1.0;
         
-        // shaft
         ctx.beginPath();
         ctx.moveTo(d.x, d.y);
         ctx.lineTo(d.x + 15 * scale, d.y + 25 * scale);
@@ -631,7 +988,6 @@ function update() {
         ctx.lineWidth = 2 * scale;
         ctx.stroke();
         
-        // flight
         ctx.beginPath();
         ctx.moveTo(d.x + 15 * scale, d.y + 25 * scale);
         ctx.lineTo(d.x + 25 * scale, d.y + 15 * scale);
@@ -644,15 +1000,14 @@ function update() {
         ctx.lineWidth = 1 * scale;
         ctx.stroke();
         
-        // tip point
         ctx.beginPath();
         ctx.arc(d.x, d.y, 2 * scale, 0, Math.PI * 2);
         ctx.fillStyle = '#fff';
         ctx.fill();
     }
     
-    // Draw crosshair if playing
-    if (state === 'PLAYING' && (currentPlayer === 0 || aiDifficulty === 'Human')) {
+    let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
+    if (state === 'PLAYING' && isP1OrHuman) {
         const tx = mouseX + wobbleX;
         const ty = mouseY + wobbleY;
         
@@ -661,13 +1016,23 @@ function update() {
         ctx.lineTo(tx + 15, ty);
         ctx.moveTo(tx, ty - 15);
         ctx.lineTo(tx, ty + 15);
-        ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)';
+        ctx.strokeStyle = focusActive[currentPlayer] ? '#00ff88' : '#ffff00';
         ctx.lineWidth = 2;
         ctx.stroke();
         
         ctx.beginPath();
         ctx.arc(tx, ty, 10, 0, Math.PI * 2);
         ctx.stroke();
+        
+        if (windSpeed > 0) {
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx + windX, ty + windY);
+            ctx.strokeStyle = '#ff6464';
+            ctx.setLineDash([3, 3]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
     }
     
     requestAnimationFrame(update);

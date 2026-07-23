@@ -107,7 +107,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KMatch3    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Stone obstacles, 3x3 Bomb gems, Rainbow gems, and 3 powerups (Hammer, Extra Moves, Shuffle). |
 | KWords     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 3 new themes (Elements, Sci-Fi, Myth), Radar, Freeze Timer, Hint powerups, and Frozen tile obstacles. |
 | KGo        | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 3 AI personalities (Territorial, Influence, Grandmaster), Tsumego puzzles, AI Hint (H), Territory Estimator (T), and Undo (U). |
-| KDarts     | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
+| KDarts     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-stage campaign, 5 game modes, Focus/Magnet/Undo powerups, wind & wobble mechanics. |
 | KTowers    | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
 | KReversi   | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
 | KQuest     | Tier 1          | Creator (in progress)  | Needs Improvement | RPG — Creator building (Phase 9). Needs Games agent loop when complete. |
@@ -136,6 +136,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KMatch3 (Expanded Campaign to 15 stages, added Stone obstacles, 3x3 Bomb gems, Rainbow gems, and 3 powerups (Hammer, Extra Moves, Shuffle) to both EXE and HTML)
 - [x] KWords (Expanded Campaign to 15 stages, added 3 new themes (Elements, Sci-Fi, Myth), Radar, Freeze Timer, Hint powerups, and Frozen tile obstacles to both EXE and HTML)
 - [x] KGo (Expanded Campaign to 15 stages, added 3 AI personalities (Territorial, Influence, Grandmaster), Tsumego puzzles, AI Hint (H), Territory Estimator (T), and Undo (U) to both EXE and HTML)
+- [x] KDarts (Expanded Campaign to 15 stages, added 5 game modes (501, 301, Cricket, ATC, Blitz), Focus/Magnet/Undo powerups, wind and wobble mechanics to both EXE and HTML)
 
 **Loop 5**
 - [x] KMines (Expanded Campaign to 10 levels, added Radar powerup and Lifetime Stats tracking to both EXE and HTML)
