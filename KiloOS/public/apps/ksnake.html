@@ -1,133 +1,258 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>KSnake</title>
+    <title>KSnake - Advanced Arcade</title>
     <style>
-        body { margin: 0; padding: 0; background: #1e1e1e; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: sans-serif; color: white; }
-        canvas { background: #1e1e1e; border: 2px solid #666; box-sizing: content-box; }
-        #message { position: absolute; text-align: center; display: none; }
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; background: #0f0f1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #fff; user-select: none; }
+        #gameContainer { position: relative; width: 340px; background: #161626; border: 3px solid #2e2e4a; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        #header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; color: #4cd137; }
+        #header span { background: #22223b; padding: 4px 8px; border-radius: 6px; border: 1px solid #3d3d5c; }
+        canvas { background: #0a0a12; border: 2px solid #3d3d5c; border-radius: 8px; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); }
+        .overlay { position: absolute; top: 15px; left: 15px; width: 300px; height: 300px; background: rgba(15, 15, 26, 0.95); border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px; z-index: 10; border: 1px solid #3d3d5c; }
+        h2 { margin: 0 0 10px 0; color: #00d2d3; text-transform: uppercase; letter-spacing: 2px; font-size: 20px; text-shadow: 0 0 8px rgba(0,210,211,0.5); }
+        p { margin: 4px 0; font-size: 13px; color: #c8d6e5; }
+        .menu-opt { color: #fbc531; font-weight: bold; }
+        .btn { background: #2e2e4a; color: #fff; border: 1px solid #48dbfb; border-radius: 6px; padding: 6px 14px; font-weight: bold; cursor: pointer; margin-top: 8px; transition: all 0.2s; font-size: 12px; }
+        .btn:hover { background: #48dbfb; color: #0f0f1a; }
+        input[type="text"] { background: #0a0a12; border: 1px solid #48dbfb; color: #fff; padding: 5px; border-radius: 4px; text-align: center; font-weight: bold; width: 120px; font-size: 14px; text-transform: uppercase; }
+        table { width: 100%; font-size: 11px; border-collapse: collapse; margin-top: 6px; }
+        th { border-bottom: 1px solid #48dbfb; color: #00d2d3; padding: 3px; }
+        td { padding: 3px; text-align: center; border-bottom: 1px solid #22223b; }
+        textarea { width: 100%; height: 90px; background: #0a0a12; border: 1px solid #3d3d5c; color: #4cd137; font-family: monospace; font-size: 10px; border-radius: 4px; padding: 5px; resize: none; margin-top: 5px; }
+        #controlsHint { margin-top: 10px; font-size: 11px; color: #8395a7; text-align: center; }
+        .powerup-legend { display: flex; justify-content: space-around; width: 100%; margin-top: 6px; font-size: 10px; background: #0a0a12; padding: 4px; border-radius: 4px; border: 1px solid #22223b; }
+        .legend-item { display: flex; align-items: center; gap: 3px; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="300" height="300" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
-    <div id="message">
-        <h2 style="color: red; margin:0">GAME OVER</h2>
-        <p style="margin:5px 0">Press ENTER to return</p>
+    <div id="gameContainer">
+        <div id="header">
+            <span id="scoreDisplay">Score: 0</span>
+            <span id="modeDisplay">Mode: Classic</span>
+            <span id="highDisplay">High: 0</span>
+        </div>
+
+        <canvas id="gameCanvas" width="300" height="300" aria-label="KSnake Game" role="application" tabindex="0"></canvas>
+
+        <!-- MENU OVERLAY -->
+        <div id="menuOverlay" class="overlay">
+            <h2>KSNAKE ARCADE</h2>
+            <p>Mode: <span id="currentModeText" class="menu-opt">Classic</span> (Press <b style="color:#00d2d3">M</b>)</p>
+            <p>Difficulty: <span id="diffText" class="menu-opt">Medium</span> (Press <b style="color:#00d2d3">1-3</b>)</p>
+            <p>Wrap Walls: <span id="wrapStatus" class="menu-opt">OFF</span> (Press <b style="color:#00d2d3">W</b>)</p>
+            <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+                <button class="btn" onclick="startNewGame()">[ENTER] Play</button>
+                <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
+                <button class="btn" onclick="showLeaderboard()">[H] High Scores</button>
+                <button class="btn" onclick="showExportImport()">[E] Data Ex/Imp</button>
+            </div>
+            <p id="statsDisplay" style="margin-top: 10px; font-size: 11px; color: #8395a7;"></p>
+        </div>
+
+        <!-- GAME OVER OVERLAY -->
+        <div id="gameOverOverlay" class="overlay" style="display:none;">
+            <h2 style="color: #ff4757;">GAME OVER</h2>
+            <p id="finalScoreText" style="font-size: 16px; font-weight: bold; color: #fbc531;"></p>
+            <div id="highScoreEntry" style="display:none; margin: 8px 0;">
+                <p style="color: #4cd137; font-weight: bold;">New High Score Rank!</p>
+                <label for="initialsInput" style="font-size:11px;">Initials: </label>
+                <input type="text" id="initialsInput" maxlength="3" value="AAA">
+                <button class="btn" onclick="saveScoreEntry()">Save</button>
+            </div>
+            <p style="margin-top: 10px;">Press <b style="color:#00d2d3">ENTER</b> to Return</p>
+        </div>
+
+        <!-- PAUSE OVERLAY -->
+        <div id="pauseOverlay" class="overlay" style="display:none;">
+            <h2 style="color: #fbc531;">PAUSED</h2>
+            <p>Press <b style="color:#00d2d3">P</b> to Resume</p>
+            <p>Press <b style="color:#4cd137">S</b> to Save & Exit</p>
+        </div>
+
+        <!-- LEADERBOARD OVERLAY -->
+        <div id="leaderboardOverlay" class="overlay" style="display:none;">
+            <h2>TOP 5 LEADERBOARD</h2>
+            <table id="leaderboardTable">
+                <thead>
+                    <tr><th>#</th><th>NAME</th><th>SCORE</th><th>MODE</th><th>DATE</th></tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+            </table>
+            <button class="btn" onclick="hideOverlays()">Back to Menu</button>
+        </div>
+
+        <!-- EXPORT / IMPORT OVERLAY -->
+        <div id="exportImportOverlay" class="overlay" style="display:none;">
+            <h2>DATA EXPORT / IMPORT</h2>
+            <p>Export JSON Data or Paste JSON to Import:</p>
+            <textarea id="dataBox" placeholder="Stats JSON will appear here..."></textarea>
+            <div style="display: flex; gap: 6px; margin-top: 6px;">
+                <button class="btn" onclick="exportData()">Export File</button>
+                <button class="btn" onclick="copyDataText()">Copy JSON</button>
+                <button class="btn" onclick="importData()">Import JSON</button>
+            </div>
+            <button class="btn" onclick="hideOverlays()" style="margin-top: 6px;">Back</button>
+        </div>
+
+        <div class="powerup-legend">
+            <div class="legend-item"><span class="dot" style="background:#ff4757"></span>Apple</div>
+            <div class="legend-item"><span class="dot" style="background:#f1c40f"></span>Shrink</div>
+            <div class="legend-item"><span class="dot" style="background:#74b9ff"></span>Ice</div>
+            <div class="legend-item"><span class="dot" style="background:#00d2d3"></span>Ghost</div>
+            <div class="legend-item"><span class="dot" style="background:#9b59b6"></span>3x Mult</div>
+        </div>
+
+        <div id="controlsHint">Arrows / WASD to Move &bull; P: Pause &bull; S: Save</div>
     </div>
-    <div id="menu">
-        <h2 style="color: white; margin:0 0 20px 0">KSNAKE</h2>
-        <p style="margin:5px 0">Select Difficulty:</p>
-        <p style="margin:5px 0">1 - Easy</p>
-        <p style="margin:5px 0">2 - Medium</p>
-        <p style="margin:5px 0">3 - Hard</p>
-        <p style="margin:5px 0">4 - Campaign</p>
-        <p style="margin:5px 0">W - Toggle Wrap: <span id="wrapStatus">OFF</span></p>
-        <p style="margin:15px 0 5px 0; font-size: 14px; color: #aaa;" id="statsDisplay"></p>
-    </div>
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const msgBox = document.getElementById('message');
-        const menuBox = document.getElementById('menu');
         const CELL = 15;
         const WIDTH = 20;
         const HEIGHT = 20;
 
-        let snake, food, dir, lastDir, gameState = 0; // 0=Menu, 1=Playing, 2=GameOver
+        // UI Overlay Elements
+        const menuOverlay = document.getElementById('menuOverlay');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const pauseOverlay = document.getElementById('pauseOverlay');
+        const leaderboardOverlay = document.getElementById('leaderboardOverlay');
+        const exportImportOverlay = document.getElementById('exportImportOverlay');
+        const resumeBtn = document.getElementById('resumeBtn');
+
+        // State Variables
+        let snake = [], food = null, dir = {x: 1, y: 0}, lastDir = {x: 1, y: 0};
+        let gameState = 0; // 0=Menu, 1=Playing, 2=GameOver, 3=Paused, 4=Victory
+        let gameMode = 'classic'; // 'classic', 'maze', 'ramp', 'wrap', 'campaign'
+        const modesList = ['classic', 'maze', 'ramp', 'wrap', 'campaign'];
         let wrapMode = false;
-        let specialFood = null;
-        let ghostFood = null;
-        let ghostFoodTimer = 0;
-        let ghostActiveTimer = 0;
-        let campaignMode = false;
-        let campaignLevel = 1;
-        let applesEaten = 0;
-        let specialFoodTimer = 0;
-        let iceFood = null;
-        let iceFoodTimer = 0;
-        let iceActiveTimer = 0;
-        let spiders = [];
-        let portal1 = null;
-        let portal2 = null;
+        let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
+        let score = 0, scoreMult = 10;
+        let currentSpeed = 150;
+        let gameLoop = null;
+
+        // Powerups & Entities
+        let specialFood = null, specialFoodTimer = 0; // Shrink
+        let ghostFood = null, ghostFoodTimer = 0, ghostActiveTimer = 0; // Ghost
+        let iceFood = null, iceFoodTimer = 0, iceActiveTimer = 0; // Ice Slowdown
+        let multFood = null, multFoodTimer = 0, multActiveTimer = 0; // 3x Bonus Multiplier
+
+        let obstacles = [];
+        let spiders = [], spiderTick = 0;
+        let portal1 = null, portal2 = null;
         let trackers = [];
-        
+        let campaignLevel = 1, applesEaten = 0;
+
+        // Stats & Leaderboard
         let totalApples = parseInt(localStorage.getItem('ksnakeTotalApples')) || 0;
         let gamesPlayed = parseInt(localStorage.getItem('ksnakeGamesPlayed')) || 0;
-        let difficulty = 1; // 0=Easy, 1=Medium, 2=Hard
-        let score = 0;
-        let scoreMult = 10;
-        let highScore = localStorage.getItem('ksnakeHighScore') || 0;
-        let currentSpeed = 150;
-        let gameLoop;
-        let spiderTick = 0;
-        let obstacles = [];
+        let leaderboard = JSON.parse(localStorage.getItem('ksnakeLeaderboard')) || [
+            { name: 'ACE', score: 250, mode: 'Classic', date: '2026-07-01' },
+            { name: 'SNA', score: 180, mode: 'Maze', date: '2026-07-05' },
+            { name: 'VIP', score: 120, mode: 'Ramp', date: '2026-07-10' },
+            { name: 'BOB', score: 80, mode: 'Wrap', date: '2026-07-15' },
+            { name: 'NEO', score: 50, mode: 'Campaign', date: '2026-07-20' }
+        ];
 
+        // Audio Effects
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function safeSetItem(key, val) {
-            try { localStorage.setItem(key, val); } catch (e) { console.error(e); }
-        }
         function playSound(type) {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            if (type === 'eat') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
-            } else if (type === 'die') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.3);
-            }
+            try {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'eat') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1100, audioCtx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'powerup') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+                } else if (type === 'die') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.35);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+                }
+            } catch(e){}
         }
 
-        function init() {
+        function safeSetItem(key, val) {
+            try { localStorage.setItem(key, typeof val === 'object' ? JSON.stringify(val) : val); } catch (e) {}
+        }
+
+        function updateMenuUI() {
+            document.getElementById('currentModeText').innerText = gameMode.toUpperCase();
+            const diffs = ['Easy', 'Medium', 'Hard'];
+            document.getElementById('diffText').innerText = diffs[difficulty];
+            document.getElementById('wrapStatus').innerText = (wrapMode || gameMode === 'wrap') ? 'ON' : 'OFF';
+            document.getElementById('statsDisplay').innerText = `Games: ${gamesPlayed} | Apples: ${totalApples}`;
+            document.getElementById('modeDisplay').innerText = `Mode: ${gameMode.charAt(0).toUpperCase() + gameMode.slice(1)}`;
+            
+            const highest = leaderboard.length > 0 ? Math.max(...leaderboard.map(l => l.score)) : 0;
+            document.getElementById('highDisplay').innerText = `High: ${highest}`;
+            
+            // Check for saved state
+            const savedState = localStorage.getItem('ksnakeSaveState');
+            resumeBtn.style.display = savedState ? 'inline-block' : 'none';
+        }
+
+        function cycleMode() {
+            let idx = modesList.indexOf(gameMode);
+            gameMode = modesList[(idx + 1) % modesList.length];
+            updateMenuUI();
+        }
+
+        function hideOverlays() {
+            menuOverlay.style.display = 'none';
+            gameOverOverlay.style.display = 'none';
+            pauseOverlay.style.display = 'none';
+            leaderboardOverlay.style.display = 'none';
+            exportImportOverlay.style.display = 'none';
+            if (gameState === 0) menuOverlay.style.display = 'flex';
+        }
+
+        function startNewGame() {
+            hideOverlays();
             gamesPlayed++;
             safeSetItem('ksnakeGamesPlayed', gamesPlayed);
-            document.getElementById('statsDisplay').innerText = `Games: ${gamesPlayed}  Total Apples: ${totalApples}`;
             
             snake = [{x: 5, y: 5}, {x: 4, y: 5}, {x: 3, y: 5}];
-            dir = {x: 1, y: 0};
-            lastDir = {x: 1, y: 0};
+            dir = {x: 1, y: 0}; lastDir = {x: 1, y: 0};
             gameState = 1;
-            score = 0;
-            applesEaten = 0;
-            ghostFood = null;
-            ghostFoodTimer = 0;
-            ghostActiveTimer = 0;
-            iceFood = null;
-            iceFoodTimer = 0;
-            iceActiveTimer = 0;
-            spiderTick = 0;
-            portal1 = null;
-            portal2 = null;
-            trackers = [];
+            score = 0; applesEaten = 0; campaignLevel = 1;
             
-            specialFood = null;
-            specialFoodTimer = 0;
-            if (campaignMode) { difficulty = 1; }
+            specialFood = null; specialFoodTimer = 0;
+            ghostFood = null; ghostFoodTimer = 0; ghostActiveTimer = 0;
+            iceFood = null; iceFoodTimer = 0; iceActiveTimer = 0;
+            multFood = null; multFoodTimer = 0; multActiveTimer = 0;
+            spiderTick = 0; portal1 = null; portal2 = null; trackers = [];
+
             if (difficulty === 0) { currentSpeed = 200; scoreMult = 5; }
             else if (difficulty === 1) { currentSpeed = 150; scoreMult = 10; }
             else { currentSpeed = 100; scoreMult = 20; }
-            
+            if (gameMode === 'ramp') currentSpeed = 160;
+
             obstacles = [];
-            let numObs = difficulty * 10;
-            if (campaignMode) {
-                numObs = campaignLevel * 4;
-                if (numObs > 45) numObs = 45;
-            }
+            let numObs = 0;
+            if (gameMode === 'maze') numObs = (difficulty + 1) * 8;
+            else if (gameMode === 'campaign') numObs = campaignLevel * 4;
+
             for(let i=0; i<numObs; i++) {
                 let ok = false;
                 while(!ok) {
@@ -138,45 +263,22 @@
                     if (ok) obstacles.push({x: ox, y: oy});
                 }
             }
-            
+
             spiders = [];
-            let numSpiders = difficulty;
-            if (campaignMode) { numSpiders = Math.floor(campaignLevel / 2); }
-            if (numSpiders > 10) numSpiders = 10;
+            let numSpiders = (gameMode === 'maze' || gameMode === 'campaign') ? difficulty : 0;
             for(let i=0; i<numSpiders; i++) {
                 spiders.push({x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT)});
             }
-            
-            if (campaignMode && campaignLevel >= 6) {
-                let ok = false;
-                while(!ok) {
-                    portal1 = {x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT)};
-                    portal2 = {x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT)};
-                    ok = true;
-                    if (portal1.x === portal2.x && portal1.y === portal2.y) ok = false;
-                    if (obstacles.some(o => (o.x === portal1.x && o.y === portal1.y) || (o.x === portal2.x && o.y === portal2.y))) ok = false;
-                    if (portal1.y === 5 && portal1.x >= 2 && portal1.x <= 6) ok = false;
-                    if (portal2.y === 5 && portal2.x >= 2 && portal2.x <= 6) ok = false;
-                }
-            }
-            
-            let numTrackers = 0;
-            if (campaignMode && campaignLevel >= 11) {
-                numTrackers = campaignLevel - 10;
-            } else if (!campaignMode && difficulty === 2) {
-                numTrackers = 1;
-            }
-            if (numTrackers > 5) numTrackers = 5;
-            for(let i=0; i<numTrackers; i++) {
-                trackers.push({x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT)});
-            }
-            
-            msgBox.style.display = 'none';
-            menuBox.style.display = 'none';
-            canvas.style.display = 'block';
+
             placeFood();
             startGameLoop();
             requestAnimationFrame(animLoop);
+            updateHeader();
+        }
+
+        function updateHeader() {
+            document.getElementById('scoreDisplay').innerText = `Score: ${score}`;
+            document.getElementById('highDisplay').innerText = `High: ${leaderboard.length > 0 ? Math.max(...leaderboard.map(l => l.score)) : 0}`;
         }
 
         function startGameLoop() {
@@ -185,11 +287,11 @@
         }
 
         function loop() {
-            update();
-            draw();
             if (gameState === 1) {
+                update();
+                draw();
                 let spd = currentSpeed;
-                if (iceActiveTimer > 0) spd += 100;
+                if (iceActiveTimer > 0) spd += 90;
                 gameLoop = setTimeout(loop, spd);
             }
         }
@@ -197,31 +299,21 @@
         function placeFood() {
             let ok = false;
             while(!ok) {
-                food = {
-                    x: Math.floor(Math.random() * WIDTH),
-                    y: Math.floor(Math.random() * HEIGHT)
-                };
+                food = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === food.x && o.y === food.y)) ok = false;
                 if (snake.some(s => s.x === food.x && s.y === food.y)) ok = false;
-                if (portal1 && food.x === portal1.x && food.y === portal1.y) ok = false;
-                if (portal2 && food.x === portal2.x && food.y === portal2.y) ok = false;
             }
         }
 
         function placeSpecialFood() {
             let ok = false;
             while(!ok) {
-                specialFood = {
-                    x: Math.floor(Math.random() * WIDTH),
-                    y: Math.floor(Math.random() * HEIGHT)
-                };
+                specialFood = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === specialFood.x && o.y === specialFood.y)) ok = false;
                 if (snake.some(s => s.x === specialFood.x && s.y === specialFood.y)) ok = false;
                 if (specialFood.x === food.x && specialFood.y === food.y) ok = false;
-                if (portal1 && specialFood.x === portal1.x && specialFood.y === portal1.y) ok = false;
-                if (portal2 && specialFood.x === portal2.x && specialFood.y === portal2.y) ok = false;
             }
             specialFoodTimer = 40;
         }
@@ -229,17 +321,11 @@
         function placeGhostFood() {
             let ok = false;
             while(!ok) {
-                ghostFood = {
-                    x: Math.floor(Math.random() * WIDTH),
-                    y: Math.floor(Math.random() * HEIGHT)
-                };
+                ghostFood = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === ghostFood.x && o.y === ghostFood.y)) ok = false;
                 if (snake.some(s => s.x === ghostFood.x && s.y === ghostFood.y)) ok = false;
                 if (ghostFood.x === food.x && ghostFood.y === food.y) ok = false;
-                if (specialFood && ghostFood.x === specialFood.x && ghostFood.y === specialFood.y) ok = false;
-                if (portal1 && ghostFood.x === portal1.x && ghostFood.y === portal1.y) ok = false;
-                if (portal2 && ghostFood.x === portal2.x && ghostFood.y === portal2.y) ok = false;
             }
             ghostFoodTimer = 40;
         }
@@ -247,23 +333,30 @@
         function placeIceFood() {
             let ok = false;
             while(!ok) {
-                iceFood = {
-                    x: Math.floor(Math.random() * WIDTH),
-                    y: Math.floor(Math.random() * HEIGHT)
-                };
+                iceFood = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
                 ok = true;
                 if (obstacles.some(o => o.x === iceFood.x && o.y === iceFood.y)) ok = false;
                 if (snake.some(s => s.x === iceFood.x && s.y === iceFood.y)) ok = false;
                 if (iceFood.x === food.x && iceFood.y === food.y) ok = false;
-                if (portal1 && iceFood.x === portal1.x && iceFood.y === portal1.y) ok = false;
-                if (portal2 && iceFood.x === portal2.x && iceFood.y === portal2.y) ok = false;
             }
             iceFoodTimer = 40;
         }
 
+        function placeMultFood() {
+            let ok = false;
+            while(!ok) {
+                multFood = { x: Math.floor(Math.random() * WIDTH), y: Math.floor(Math.random() * HEIGHT) };
+                ok = true;
+                if (obstacles.some(o => o.x === multFood.x && o.y === multFood.y)) ok = false;
+                if (snake.some(s => s.x === multFood.x && s.y === multFood.y)) ok = false;
+                if (multFood.x === food.x && multFood.y === food.y) ok = false;
+            }
+            multFoodTimer = 40;
+        }
+
         function update() {
             if (gameState !== 1) return;
-            
+
             spiderTick++;
             if (spiderTick >= 2) {
                 spiderTick = 0;
@@ -271,194 +364,264 @@
                     let r = Math.floor(Math.random() * 4);
                     let dx = 0, dy = 0;
                     if (r === 0) dx = 1; else if (r === 1) dx = -1; else if (r === 2) dy = 1; else if (r === 3) dy = -1;
-                    let nx = spiders[i].x + dx;
-                    let ny = spiders[i].y + dy;
-                    if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
-                        if (!obstacles.some(o => o.x === nx && o.y === ny)) {
-                            spiders[i].x = nx; spiders[i].y = ny;
-                        }
-                    }
-                }
-                
-                for(let i=0; i<trackers.length; i++) {
-                    let dx = 0, dy = 0;
-                    if (snake[0].x > trackers[i].x) dx = 1;
-                    else if (snake[0].x < trackers[i].x) dx = -1;
-                    if (snake[0].y > trackers[i].y) dy = 1;
-                    else if (snake[0].y < trackers[i].y) dy = -1;
-                    
-                    let nx = trackers[i].x + dx;
-                    let ny = trackers[i].y;
-                    let blocked = obstacles.some(o => o.x === nx && o.y === ny);
-                    if (!blocked && dx !== 0) { trackers[i].x = nx; }
-                    else {
-                        nx = trackers[i].x; ny = trackers[i].y + dy; blocked = obstacles.some(o => o.x === nx && o.y === ny);
-                        if (!blocked && dy !== 0) { trackers[i].y = ny; }
+                    let nx = spiders[i].x + dx, ny = spiders[i].y + dy;
+                    if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && !obstacles.some(o => o.x === nx && o.y === ny)) {
+                        spiders[i].x = nx; spiders[i].y = ny;
                     }
                 }
             }
 
             lastDir = {x: dir.x, y: dir.y};
             const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
-            
-            if (portal1) {
-                if (head.x === portal1.x && head.y === portal1.y) {
-                    head.x = portal2.x; head.y = portal2.y;
-                } else if (head.x === portal2.x && head.y === portal2.y) {
-                    head.x = portal1.x; head.y = portal1.y;
+
+            const effectiveWrap = wrapMode || gameMode === 'wrap';
+            if (effectiveWrap) {
+                if (head.x < 0) head.x = WIDTH - 1;
+                else if (head.x >= WIDTH) head.x = 0;
+                if (head.y < 0) head.y = HEIGHT - 1;
+                else if (head.y >= HEIGHT) head.y = 0;
+            } else {
+                if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT) {
+                    triggerGameOver(); return;
                 }
             }
 
-            if (wrapMode) {
-                if (head.x < 0) head.x = WIDTH - 1;
-                else if (head.x >= WIDTH) head.x = 0;
-                
-                if (head.y < 0) head.y = HEIGHT - 1;
-                else if (head.y >= HEIGHT) head.y = 0;
-                
-                if (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y) || spiders.some(sp => sp.x === head.x && sp.y === head.y) || trackers.some(tr => tr.x === head.x && tr.y === head.y))) {
-                    playSound('die');
-                    gameState = 2;
-                    msgBox.innerHTML = '<h2 style="color: red; margin:0">GAME OVER</h2><p style="margin:5px 0">Press ENTER to return</p>';
-                    msgBox.style.display = 'block';
-                    return;
-                }
-            } else {
-                if (head.x < 0 || head.x >= WIDTH || head.y < 0 || head.y >= HEIGHT || (ghostActiveTimer === 0 && (snake.some(s => s.x === head.x && s.y === head.y) || obstacles.some(o => o.x === head.x && o.y === head.y) || spiders.some(sp => sp.x === head.x && sp.y === head.y) || trackers.some(tr => tr.x === head.x && tr.y === head.y)))) {
-                    playSound('die');
-                    gameState = 2;
-                    msgBox.innerHTML = '<h2 style="color: red; margin:0">GAME OVER</h2><p style="margin:5px 0">Press ENTER to return</p>';
-                    msgBox.style.display = 'block';
-                    return;
+            // Collisions (unless Ghost active)
+            if (ghostActiveTimer === 0) {
+                if (snake.some(s => s.x === head.x && s.y === head.y) || 
+                    obstacles.some(o => o.x === head.x && o.y === head.y) || 
+                    spiders.some(sp => sp.x === head.x && sp.y === head.y)) {
+                    triggerGameOver(); return;
                 }
             }
 
             snake.unshift(head);
 
+            // Eat regular food
             if (head.x === food.x && head.y === food.y) {
                 playSound('eat');
                 addEatParticles(food.x, food.y, '#ff4757');
-                score += scoreMult;
+                
+                let gain = scoreMult * (multActiveTimer > 0 ? 3 : 1);
+                score += gain;
                 totalApples++;
                 safeSetItem('ksnakeTotalApples', totalApples);
-                if (score > highScore) {
-                    highScore = score;
-                    safeSetItem('ksnakeHighScore', highScore);
-                }
-                if (currentSpeed > 30) currentSpeed -= 2;
-                placeFood();
-                if (!specialFood && Math.random() < 0.2) {
-                    placeSpecialFood();
-                }
-                if (!ghostFood && Math.random() < 0.15) {
-                    placeGhostFood();
-                }
-                if (!iceFood && Math.random() < 0.15) {
-                    placeIceFood();
+
+                if (gameMode === 'ramp' && currentSpeed > 35) {
+                    currentSpeed -= 5;
+                } else if (currentSpeed > 40) {
+                    currentSpeed -= 2;
                 }
                 
+                placeFood();
+                
+                // Random powerup spawn chances
+                if (!specialFood && Math.random() < 0.22) placeSpecialFood();
+                if (!ghostFood && Math.random() < 0.18) placeGhostFood();
+                if (!iceFood && Math.random() < 0.18) placeIceFood();
+                if (!multFood && Math.random() < 0.18) placeMultFood();
+
                 applesEaten++;
-                if (campaignMode && applesEaten >= 10) {
+                if (gameMode === 'campaign' && applesEaten >= 10) {
                     campaignLevel++;
                     if (campaignLevel > 15) {
-                        gameState = 3;
-                        msgBox.innerHTML = '<h2 style="color: #0f0; margin:0">YOU WIN!</h2><p style="margin:5px 0">Press ENTER to return</p>';
-                        msgBox.style.display = 'block';
-                        return;
+                        triggerVictory(); return;
                     } else {
-                        let newSpd = 150 - campaignLevel * 10;
-                        if(newSpd < 40) newSpd = 40;
-                        currentSpeed = newSpd;
-                        init();
+                        currentSpeed = Math.max(40, 150 - campaignLevel * 8);
+                        startNewGame(); return;
                     }
                 }
             } else {
                 snake.pop();
             }
 
+            // Power-up Timers & Collections
             if (ghostActiveTimer > 0) ghostActiveTimer--;
-            if (ghostFoodTimer > 0) {
-                ghostFoodTimer--;
-                if (ghostFoodTimer === 0) ghostFood = null;
-            }
+            if (ghostFoodTimer > 0 && --ghostFoodTimer === 0) ghostFood = null;
             if (ghostFood && head.x === ghostFood.x && head.y === ghostFood.y) {
-                playSound('eat');
+                playSound('powerup');
                 addEatParticles(ghostFood.x, ghostFood.y, '#00d2d3');
-                score += scoreMult * 2;
-                if (score > highScore) {
-                    highScore = score;
-                    safeSetItem('ksnakeHighScore', highScore);
-                }
-                ghostActiveTimer = 50;
-                ghostFood = null;
+                score += scoreMult * 2 * (multActiveTimer > 0 ? 3 : 1);
+                ghostActiveTimer = 50; ghostFood = null;
             }
 
-            if (specialFoodTimer > 0) {
-                specialFoodTimer--;
-                if (specialFoodTimer === 0) specialFood = null;
-            }
-
+            if (specialFoodTimer > 0 && --specialFoodTimer === 0) specialFood = null;
             if (specialFood && head.x === specialFood.x && head.y === specialFood.y) {
-                playSound('eat');
-                addEatParticles(specialFood.x, specialFood.y, '#ffd700');
-                score += scoreMult * 5;
-                if (score > highScore) {
-                    highScore = score;
-                    safeSetItem('ksnakeHighScore', highScore);
-                }
-                for (let i = 0; i < 3 && snake.length > 3; i++) {
-                    snake.pop();
-                }
+                playSound('powerup');
+                addEatParticles(specialFood.x, specialFood.y, '#f1c40f');
+                score += scoreMult * 4 * (multActiveTimer > 0 ? 3 : 1);
+                for (let i = 0; i < 3 && snake.length > 3; i++) snake.pop();
                 specialFood = null;
             }
-            
+
             if (iceActiveTimer > 0) iceActiveTimer--;
-            if (iceFoodTimer > 0) {
-                iceFoodTimer--;
-                if (iceFoodTimer === 0) iceFood = null;
-            }
+            if (iceFoodTimer > 0 && --iceFoodTimer === 0) iceFood = null;
             if (iceFood && head.x === iceFood.x && head.y === iceFood.y) {
-                playSound('eat');
+                playSound('powerup');
                 addEatParticles(iceFood.x, iceFood.y, '#74b9ff');
-                score += scoreMult * 2;
-                if (score > highScore) {
-                    highScore = score;
-                    safeSetItem('ksnakeHighScore', highScore);
-                }
-                iceActiveTimer = 50;
-                iceFood = null;
+                score += scoreMult * 2 * (multActiveTimer > 0 ? 3 : 1);
+                iceActiveTimer = 50; iceFood = null;
             }
+
+            if (multActiveTimer > 0) multActiveTimer--;
+            if (multFoodTimer > 0 && --multFoodTimer === 0) multFood = null;
+            if (multFood && head.x === multFood.x && head.y === multFood.y) {
+                playSound('powerup');
+                addEatParticles(multFood.x, multFood.y, '#9b59b6');
+                score += scoreMult * 3;
+                multActiveTimer = 50; multFood = null;
+            }
+
+            updateHeader();
         }
 
+        function triggerGameOver() {
+            playSound('die');
+            gameState = 2;
+            if (gameLoop) clearTimeout(gameLoop);
+            
+            document.getElementById('finalScoreText').innerText = `Final Score: ${score}`;
+            
+            // Check if score qualifies for Top 5 Leaderboard
+            let isTopScore = leaderboard.length < 5 || score > leaderboard[leaderboard.length - 1].score;
+            document.getElementById('highScoreEntry').style.display = isTopScore ? 'block' : 'none';
+            
+            gameOverOverlay.style.display = 'flex';
+        }
+
+        function triggerVictory() {
+            playSound('powerup');
+            gameState = 4;
+            if (gameLoop) clearTimeout(gameLoop);
+            document.getElementById('finalScoreText').innerText = `CAMPAIGN CONQUERED! Score: ${score}`;
+            document.getElementById('highScoreEntry').style.display = 'block';
+            gameOverOverlay.style.display = 'flex';
+        }
+
+        function saveScoreEntry() {
+            const initials = (document.getElementById('initialsInput').value || 'AAA').toUpperCase().substring(0, 3);
+            const dateStr = new Date().toISOString().split('T')[0];
+            const entry = {
+                name: initials,
+                score: score,
+                mode: gameMode.charAt(0).toUpperCase() + gameMode.slice(1),
+                date: dateStr
+            };
+            leaderboard.push(entry);
+            leaderboard.sort((a, b) => b.score - a.score);
+            if (leaderboard.length > 5) leaderboard = leaderboard.slice(0, 5);
+            
+            safeSetItem('ksnakeLeaderboard', leaderboard);
+            document.getElementById('highScoreEntry').style.display = 'none';
+            showLeaderboard();
+        }
+
+        function showLeaderboard() {
+            hideOverlays();
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+            leaderboard.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${index+1}</td><td>${item.name}</td><td>${item.score}</td><td>${item.mode}</td><td>${item.date}</td>`;
+                tbody.appendChild(tr);
+            });
+            leaderboardOverlay.style.display = 'flex';
+        }
+
+        function saveGame() {
+            if (gameState !== 1 && gameState !== 3) return;
+            const state = {
+                snake, food, dir, lastDir, gameMode, wrapMode, difficulty, score, scoreMult,
+                currentSpeed, specialFood, ghostFood, iceFood, multFood, obstacles, spiders,
+                ghostActiveTimer, iceActiveTimer, multActiveTimer, campaignLevel, applesEaten
+            };
+            safeSetItem('ksnakeSaveState', state);
+            alert('Game State Saved Successfully!');
+            gameState = 0;
+            hideOverlays();
+            updateMenuUI();
+        }
+
+        function resumeGame() {
+            const raw = localStorage.getItem('ksnakeSaveState');
+            if (!raw) return;
+            try {
+                const state = JSON.parse(raw);
+                snake = state.snake; food = state.food; dir = state.dir; lastDir = state.lastDir;
+                gameMode = state.gameMode; wrapMode = state.wrapMode; difficulty = state.difficulty;
+                score = state.score; scoreMult = state.scoreMult; currentSpeed = state.currentSpeed;
+                specialFood = state.specialFood; ghostFood = state.ghostFood; iceFood = state.iceFood; multFood = state.multFood;
+                obstacles = state.obstacles; spiders = state.spiders;
+                ghostActiveTimer = state.ghostActiveTimer; iceActiveTimer = state.iceActiveTimer; multActiveTimer = state.multActiveTimer;
+                campaignLevel = state.campaignLevel; applesEaten = state.applesEaten;
+
+                localStorage.removeItem('ksnakeSaveState');
+                hideOverlays();
+                gameState = 1;
+                startGameLoop();
+                requestAnimationFrame(animLoop);
+                updateHeader();
+            } catch(e) { alert('Failed to restore saved game.'); }
+        }
+
+        function showExportImport() {
+            hideOverlays();
+            const data = {
+                gamesPlayed, totalApples, leaderboard
+            };
+            document.getElementById('dataBox').value = JSON.stringify(data, null, 2);
+            exportImportOverlay.style.display = 'flex';
+        }
+
+        function exportData() {
+            const dataStr = document.getElementById('dataBox').value;
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'ksnake_stats.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function copyDataText() {
+            const txt = document.getElementById('dataBox');
+            txt.select();
+            document.execCommand('copy');
+            alert('Data copied to clipboard!');
+        }
+
+        function importData() {
+            try {
+                const raw = document.getElementById('dataBox').value;
+                const parsed = JSON.parse(raw);
+                if (parsed.gamesPlayed !== undefined) gamesPlayed = parsed.gamesPlayed;
+                if (parsed.totalApples !== undefined) totalApples = parsed.totalApples;
+                if (parsed.leaderboard && Array.isArray(parsed.leaderboard)) leaderboard = parsed.leaderboard;
+                
+                safeSetItem('ksnakeGamesPlayed', gamesPlayed);
+                safeSetItem('ksnakeTotalApples', totalApples);
+                safeSetItem('ksnakeLeaderboard', leaderboard);
+                alert('Data Imported Successfully!');
+                updateMenuUI();
+                hideOverlays();
+            } catch(e) { alert('Invalid JSON format!'); }
+        }
+
+        // Particle System
         let particles = [];
         function addEatParticles(gx, gy, color) {
-            let cx = (gx + 0.5) * CELL;
-            let cy = (gy + 0.5) * CELL;
-            for (let i = 0; i < 12; i++) {
-                let angle = Math.random() * Math.PI * 2;
-                let speed = Math.random() * 2.5 + 1;
-                particles.push({
-                    x: cx,
-                    y: cy,
-                    vx: Math.cos(angle) * speed,
-                    vy: Math.sin(angle) * speed,
-                    size: Math.random() * 3 + 2,
-                    color: color,
-                    life: 1.0
-                });
+            let cx = (gx + 0.5) * CELL, cy = (gy + 0.5) * CELL;
+            for (let i = 0; i < 10; i++) {
+                let angle = Math.random() * Math.PI * 2, speed = Math.random() * 2.5 + 1;
+                particles.push({ x: cx, y: cy, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, size: Math.random()*3+2, color: color, life: 1.0 });
             }
         }
 
         function updateParticles() {
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.size *= 0.92;
-                p.life -= 0.06;
-                if (p.life <= 0 || p.size < 0.5) {
-                    particles.splice(i, 1);
-                }
+                p.x += p.vx; p.y += p.vy; p.size *= 0.91; p.life -= 0.06;
+                if (p.life <= 0 || p.size < 0.5) particles.splice(i, 1);
             }
         }
 
@@ -467,364 +630,74 @@
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, p.life);
                 ctx.fillStyle = p.color;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                 ctx.restore();
             }
         }
 
+        // Drawing Rendering Logic
         function drawSnakeSegment(s, index, total, ghost) {
-            let cx = s.x * CELL + CELL / 2;
-            let cy = s.y * CELL + CELL / 2;
-            let r = CELL / 2 - 1;
-            let time = performance.now() * 0.005;
-
+            let cx = s.x * CELL + CELL / 2, cy = s.y * CELL + CELL / 2, r = CELL / 2 - 1;
             if (index === 0) {
-                // HEAD
                 ctx.save();
                 ctx.translate(cx, cy);
-
                 let angle = 0;
-                if (dir.x === 1) angle = 0;
-                else if (dir.x === -1) angle = Math.PI;
-                else if (dir.y === 1) angle = Math.PI / 2;
-                else if (dir.y === -1) angle = -Math.PI / 2;
+                if (dir.x === 1) angle = 0; else if (dir.x === -1) angle = Math.PI;
+                else if (dir.y === 1) angle = Math.PI / 2; else if (dir.y === -1) angle = -Math.PI / 2;
                 ctx.rotate(angle);
 
                 ctx.beginPath();
                 ctx.ellipse(0, 0, r, r * 0.85, 0, 0, Math.PI * 2);
-                if (ghost) {
-                    let grad = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
-                    grad.addColorStop(0, '#74b9ff');
-                    grad.addColorStop(1, '#0984e3');
-                    ctx.fillStyle = grad;
-                    ctx.shadowColor = '#00d2d3';
-                    ctx.shadowBlur = 8;
-                } else {
-                    let grad = ctx.createRadialGradient(-2, -2, 2, 0, 0, r);
-                    grad.addColorStop(0, '#2ecc71');
-                    grad.addColorStop(1, '#27ae60');
-                    ctx.fillStyle = grad;
-                }
+                ctx.fillStyle = ghost ? '#00d2d3' : (multActiveTimer > 0 ? '#9b59b6' : '#2ecc71');
                 ctx.fill();
 
-                // Eyes
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath();
-                ctx.arc(r * 0.3, -r * 0.35, 2.5, 0, Math.PI * 2);
-                ctx.arc(r * 0.3, r * 0.35, 2.5, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Pupils
-                ctx.fillStyle = ghost ? '#0984e3' : '#1e272e';
-                ctx.beginPath();
-                ctx.arc(r * 0.4, -r * 0.35, 1.2, 0, Math.PI * 2);
-                ctx.arc(r * 0.4, r * 0.35, 1.2, 0, Math.PI * 2);
-                ctx.fill();
-
-                // Flickering Tongue
-                let tongueFlicker = Math.sin(time * 12) > 0.1;
-                if (tongueFlicker) {
-                    ctx.strokeStyle = '#ff3838';
-                    ctx.lineWidth = 1.5;
-                    ctx.beginPath();
-                    ctx.moveTo(r * 0.8, 0);
-                    ctx.lineTo(r * 1.35, 0);
-                    ctx.lineTo(r * 1.55, -2);
-                    ctx.moveTo(r * 1.35, 0);
-                    ctx.lineTo(r * 1.55, 2);
-                    ctx.stroke();
-                }
-
+                ctx.fillStyle = '#fff';
+                ctx.beginPath(); ctx.arc(r * 0.3, -r * 0.35, 2.5, 0, Math.PI * 2); ctx.arc(r * 0.3, r * 0.35, 2.5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#1e272e';
+                ctx.beginPath(); ctx.arc(r * 0.4, -r * 0.35, 1.2, 0, Math.PI * 2); ctx.arc(r * 0.4, r * 0.35, 1.2, 0, Math.PI * 2); ctx.fill();
                 ctx.restore();
             } else {
-                // BODY
                 ctx.save();
-                let scaleFactor = 1 - (index / (total * 2.5));
-                let bodyR = r * Math.max(0.65, scaleFactor);
-
-                ctx.beginPath();
-                ctx.arc(cx, cy, bodyR, 0, Math.PI * 2);
-                if (ghost) {
-                    ctx.fillStyle = index % 2 === 0 ? '#48dbfb' : '#00d2d3';
-                    ctx.shadowColor = '#00d2d3';
-                    ctx.shadowBlur = 4;
-                } else {
-                    ctx.fillStyle = index % 2 === 0 ? '#2ecc71' : '#218c74';
-                }
+                let bodyR = r * Math.max(0.65, 1 - (index / (total * 2.5)));
+                ctx.beginPath(); ctx.arc(cx, cy, bodyR, 0, Math.PI * 2);
+                ctx.fillStyle = ghost ? '#48dbfb' : (multActiveTimer > 0 ? '#8e44ad' : (index % 2 === 0 ? '#2ecc71' : '#218c74'));
                 ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(cx - 1, cy - 1, bodyR * 0.4, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255,255,255,0.25)';
-                ctx.fill();
-
                 ctx.restore();
             }
         }
 
-        function drawApple(foodX, foodY) {
-            let cx = foodX * CELL + CELL / 2;
-            let cy = foodY * CELL + CELL / 2;
-            let time = performance.now() * 0.006;
-            let bounce = Math.sin(time) * 1.2;
-            let scale = 1 + Math.sin(time * 2) * 0.06;
-
-            ctx.save();
-            ctx.translate(cx, cy + bounce);
-            ctx.scale(scale, scale);
-
-            let r = CELL / 2 - 1.5;
-            let grad = ctx.createRadialGradient(-2, -2, 1, 0, 0, r);
-            grad.addColorStop(0, '#ff6b6b');
-            grad.addColorStop(0.8, '#ee5253');
-            grad.addColorStop(1, '#c0392b');
-
-            ctx.beginPath();
-            ctx.arc(0, 1, r, 0, Math.PI * 2);
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(-r * 0.35, -r * 0.35, r * 0.3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            ctx.fill();
-
-            ctx.strokeStyle = '#574b90';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(0, -r + 1);
-            ctx.quadraticCurveTo(2, -r - 3, 3, -r - 4);
-            ctx.stroke();
-
-            ctx.fillStyle = '#2ecc71';
-            ctx.beginPath();
-            ctx.ellipse(3, -r - 2, 3, 1.5, Math.PI / 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        function drawSpecialFood(foodX, foodY) {
-            let cx = foodX * CELL + CELL / 2;
-            let cy = foodY * CELL + CELL / 2;
-            let time = performance.now() * 0.008;
-
+        function drawGem(foodX, foodY, color, isStar) {
+            let cx = foodX * CELL + CELL / 2, cy = foodY * CELL + CELL / 2;
             ctx.save();
             ctx.translate(cx, cy);
-            ctx.rotate(time);
-
-            ctx.fillStyle = '#f1c40f';
-            ctx.shadowColor = '#f39c12';
-            ctx.shadowBlur = 10;
+            ctx.fillStyle = color;
+            ctx.shadowColor = color; ctx.shadowBlur = 8;
             ctx.beginPath();
-            let spikes = 5;
-            let outerR = CELL / 2 - 1;
-            let innerR = outerR * 0.5;
-            for (let i = 0; i < spikes * 2; i++) {
-                let r = i % 2 === 0 ? outerR : innerR;
-                let a = (i * Math.PI) / spikes;
-                let x = Math.cos(a) * r;
-                let y = Math.sin(a) * r;
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+            if (isStar) {
+                let spikes = 5, outerR = CELL/2 - 1, innerR = outerR * 0.5;
+                for (let i = 0; i < spikes * 2; i++) {
+                    let r = i % 2 === 0 ? outerR : innerR;
+                    let a = (i * Math.PI) / spikes;
+                    ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                }
+            } else {
+                ctx.arc(0, 0, CELL/2 - 2, 0, Math.PI * 2);
             }
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        function drawGhostFood(foodX, foodY) {
-            let cx = foodX * CELL + CELL / 2;
-            let cy = foodY * CELL + CELL / 2;
-            let time = performance.now() * 0.007;
-            let floatY = Math.sin(time * 2) * 1.5;
-
-            ctx.save();
-            ctx.translate(cx, cy + floatY);
-
-            ctx.shadowColor = '#00d2d3';
-            ctx.shadowBlur = 12;
-
-            let grad = ctx.createRadialGradient(0, 0, 1, 0, 0, CELL / 2 - 2);
-            grad.addColorStop(0, '#ffffff');
-            grad.addColorStop(0.5, '#48dbfb');
-            grad.addColorStop(1, '#00d2d3');
-
-            ctx.fillStyle = grad;
-            ctx.beginPath();
-            ctx.arc(0, 0, CELL / 2 - 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#10ac84';
-            ctx.beginPath();
-            ctx.arc(-2, -1, 1.2, 0, Math.PI * 2);
-            ctx.arc(2, -1, 1.2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        function drawIceFood(foodX, foodY) {
-            let cx = foodX * CELL + CELL / 2;
-            let cy = foodY * CELL + CELL / 2;
-
-            ctx.save();
-            ctx.translate(cx, cy);
-
-            ctx.shadowColor = '#74b9ff';
-            ctx.shadowBlur = 8;
-
-            let r = CELL / 2 - 2;
-            ctx.fillStyle = '#a29bfe';
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(r, 0);
-            ctx.lineTo(0, r);
-            ctx.lineTo(-r, 0);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.moveTo(0, -r);
-            ctx.lineTo(0, 0);
-            ctx.lineTo(-r, 0);
-            ctx.closePath();
-            ctx.fill();
-
+            ctx.closePath(); ctx.fill();
             ctx.restore();
         }
 
         function drawObstacle(obsX, obsY) {
-            let x = obsX * CELL;
-            let y = obsY * CELL;
-
             ctx.save();
-            ctx.fillStyle = '#4b6584';
-            ctx.fillRect(x, y, CELL - 1, CELL - 1);
-
-            ctx.fillStyle = '#778ca3';
-            ctx.fillRect(x, y, CELL - 1, 2);
-            ctx.fillRect(x, y, 2, CELL - 1);
-
-            ctx.fillStyle = '#2d98da';
-            ctx.fillRect(x, y + CELL - 3, CELL - 1, 2);
-            ctx.fillRect(x + CELL - 3, y, 2, CELL - 1);
-
-            ctx.strokeStyle = '#26de81';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x + 3, y + 5);
-            ctx.lineTo(x + 7, y + 10);
-            ctx.lineTo(x + 12, y + 8);
-            ctx.stroke();
-
+            ctx.fillStyle = '#4b6584'; ctx.fillRect(obsX * CELL, obsY * CELL, CELL - 1, CELL - 1);
             ctx.restore();
         }
 
         function drawSpider(spX, spY) {
-            let cx = spX * CELL + CELL / 2;
-            let cy = spY * CELL + CELL / 2;
-            let time = performance.now() * 0.01;
-            let legWiggle = Math.sin(time * 4) * 2;
-
+            let cx = spX * CELL + CELL / 2, cy = spY * CELL + CELL / 2;
             ctx.save();
             ctx.translate(cx, cy);
-
-            ctx.strokeStyle = '#a55eea';
-            ctx.lineWidth = 1.5;
-            for (let side = -1; side <= 1; side += 2) {
-                for (let i = -1; i <= 1; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, i * 2);
-                    ctx.lineTo(side * 6, i * 4 + legWiggle);
-                    ctx.lineTo(side * 8, i * 5 + (side * legWiggle));
-                    ctx.stroke();
-                }
-            }
-
-            ctx.fillStyle = '#4b4b4b';
-            ctx.beginPath();
-            ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#2d3436';
-            ctx.beginPath();
-            ctx.arc(0, -3, 3, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ff3838';
-            ctx.beginPath();
-            ctx.arc(-1.2, -4, 0.9, 0, Math.PI * 2);
-            ctx.arc(1.2, -4, 0.9, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.restore();
-        }
-
-        function drawPortal(pX, pY, isSecondary) {
-            let cx = pX * CELL + CELL / 2;
-            let cy = pY * CELL + CELL / 2;
-            let time = performance.now() * 0.005;
-
-            ctx.save();
-            ctx.translate(cx, cy);
-
-            let mainColor = isSecondary ? '#e67e22' : '#f39c12';
-            ctx.shadowColor = mainColor;
-            ctx.shadowBlur = 10;
-
-            for (let i = 3; i >= 1; i--) {
-                let r = (CELL / 2 - 1) * (i / 3);
-                let rot = time * (i % 2 === 0 ? 2 : -2);
-                ctx.save();
-                ctx.rotate(rot);
-                ctx.strokeStyle = i === 1 ? '#ffffff' : mainColor;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.arc(0, 0, r, 0, Math.PI * 1.5);
-                ctx.stroke();
-                ctx.restore();
-            }
-
-            ctx.restore();
-        }
-
-        function drawTracker(trX, trY) {
-            let cx = trX * CELL + CELL / 2;
-            let cy = trY * CELL + CELL / 2;
-            let time = performance.now() * 0.008;
-
-            ctx.save();
-            ctx.translate(cx, cy);
-
-            ctx.shadowColor = '#ff3838';
-            ctx.shadowBlur = 8;
-
-            ctx.fillStyle = '#2c3e50';
-            ctx.beginPath();
-            ctx.arc(0, 0, CELL / 2 - 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            let eyePulse = 1.5 + Math.sin(time * 3) * 0.8;
-            ctx.fillStyle = '#ff3838';
-            ctx.beginPath();
-            ctx.arc(0, 0, eyePulse + 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath();
-            ctx.arc(0, 0, eyePulse, 0, Math.PI * 2);
-            ctx.fill();
-
+            ctx.fillStyle = '#ff3838'; ctx.beginPath(); ctx.arc(0, 0, 4, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         }
 
@@ -843,61 +716,67 @@
             drawParticles();
 
             for (let o of obstacles) drawObstacle(o.x, o.y);
-
-            if (portal1) {
-                drawPortal(portal1.x, portal1.y, false);
-                drawPortal(portal2.x, portal2.y, true);
-            }
-
-            drawApple(food.x, food.y);
-            if (ghostFood) drawGhostFood(ghostFood.x, ghostFood.y);
-            if (specialFood) drawSpecialFood(specialFood.x, specialFood.y);
-            if (iceFood) drawIceFood(iceFood.x, iceFood.y);
-
             for (let sp of spiders) drawSpider(sp.x, sp.y);
 
-            for (let tr of trackers) drawTracker(tr.x, tr.y);
+            // Draw regular Food
+            let cx = food.x * CELL + CELL / 2, cy = food.y * CELL + CELL / 2;
+            ctx.save(); ctx.translate(cx, cy);
+            ctx.fillStyle = '#ff4757'; ctx.beginPath(); ctx.arc(0, 0, CELL/2 - 1.5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+
+            if (specialFood) drawGem(specialFood.x, specialFood.y, '#f1c40f', true);
+            if (ghostFood) drawGem(ghostFood.x, ghostFood.y, '#00d2d3', false);
+            if (iceFood) drawGem(iceFood.x, iceFood.y, '#74b9ff', false);
+            if (multFood) drawGem(multFood.x, multFood.y, '#9b59b6', false);
 
             for (let i = snake.length - 1; i >= 0; i--) {
                 drawSnakeSegment(snake[i], i, snake.length, ghostActiveTimer > 0);
             }
-
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 12px sans-serif';
-            ctx.fillText(campaignMode ? `Lvl: ${campaignLevel}  Score: ${score}  High: ${highScore}` : `Score: ${score}  High: ${highScore}`, 5, 15);
         }
 
         window.addEventListener('keydown', e => {
-            if (gameState === 0) {
-                if (e.key === '1') { difficulty = 0; campaignMode = false; init(); }
-                if (e.key === '2') { difficulty = 1; campaignMode = false; init(); }
-                if (e.key === '3') { difficulty = 2; campaignMode = false; init(); }
-                if (e.key === '4') { campaignMode = true; campaignLevel = 1; init(); }
-                if (e.key.toLowerCase() === 'w') {
-                    wrapMode = !wrapMode;
-                    document.getElementById('wrapStatus').innerText = wrapMode ? 'ON' : 'OFF';
+            const key = e.key.toLowerCase();
+
+            if (gameState === 0) { // Menu
+                if (key === 'm') cycleMode();
+                if (key === '1') { difficulty = 0; updateMenuUI(); }
+                if (key === '2') { difficulty = 1; updateMenuUI(); }
+                if (key === '3') { difficulty = 2; updateMenuUI(); }
+                if (key === 'w') { wrapMode = !wrapMode; updateMenuUI(); }
+                if (key === 'h') showLeaderboard();
+                if (key === 'e') showExportImport();
+                if (key === 'r') resumeGame();
+                if (key === 'enter') startNewGame();
+            } else if (gameState === 1) { // Playing
+                if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'w', 'a', 's', 'd'].includes(key)) e.preventDefault();
+                if ((key === 'arrowup' || key === 'w') && lastDir.y !== 1) dir = {x: 0, y: -1};
+                if ((key === 'arrowdown' || key === 's') && lastDir.y !== -1) dir = {x: 0, y: 1};
+                if ((key === 'arrowleft' || key === 'a') && lastDir.x !== 1) dir = {x: -1, y: 0};
+                if ((key === 'arrowright' || key === 'd') && lastDir.x !== -1) dir = {x: 1, y: 0};
+                if (key === 'p') {
+                    gameState = 3;
+                    pauseOverlay.style.display = 'flex';
                 }
-            } else if ((gameState === 2 || gameState === 3) && e.key === 'Enter') {
-                gameState = 0;
-                msgBox.style.display = 'none';
-                document.getElementById('statsDisplay').innerText = `Games: ${parseInt(localStorage.getItem('ksnakeGamesPlayed'))||0}  Total Apples: ${parseInt(localStorage.getItem('ksnakeTotalApples'))||0}`;
-                menuBox.style.display = 'block';
-                canvas.style.display = 'none';
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            } else if (gameState === 1) {
-                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
-                if (e.key === 'ArrowUp' && lastDir.y !== 1) dir = {x: 0, y: -1};
-                if (e.key === 'ArrowDown' && lastDir.y !== -1) dir = {x: 0, y: 1};
-                if (e.key === 'ArrowLeft' && lastDir.x !== 1) dir = {x: -1, y: 0};
-                if (e.key === 'ArrowRight' && lastDir.x !== -1) dir = {x: 1, y: 0};
+            } else if (gameState === 3) { // Paused
+                if (key === 'p') {
+                    gameState = 1;
+                    pauseOverlay.style.display = 'none';
+                    startGameLoop();
+                    requestAnimationFrame(animLoop);
+                } else if (key === 's') {
+                    saveGame();
+                }
+            } else if (gameState === 2 || gameState === 4) { // Game Over / Victory
+                if (key === 'enter') {
+                    gameState = 0;
+                    hideOverlays();
+                    updateMenuUI();
+                }
             }
         });
 
-        // initial state
-        document.getElementById('statsDisplay').innerText = `Games: ${parseInt(localStorage.getItem('ksnakeGamesPlayed'))||0}  Total Apples: ${parseInt(localStorage.getItem('ksnakeTotalApples'))||0}`;
-        canvas.style.display = 'none';
-        msgBox.style.display = 'none';
-        menuBox.style.display = 'block';
+        // Initialize UI
+        updateMenuUI();
     </script>
 </body>
 </html>
