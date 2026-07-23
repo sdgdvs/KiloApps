@@ -15,17 +15,30 @@
     flex-direction: column;
     align-items: center;
   }
-  h1 { margin-top: 0; color: #fff; }
+  h1 { margin-top: 0; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .status-container {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .status {
+    font-size: 1.25em;
+    font-weight: 600;
+    color: #ffd700;
+  }
+  .stage-info {
+    font-size: 0.95em;
+    color: #aaa;
+    margin-top: 4px;
+  }
   .board {
     display: grid;
-    grid-template-columns: repeat(9, 30px);
-    grid-template-rows: repeat(9, 30px);
     background-color: #cda756;
     padding: 15px;
     gap: 0;
-    border: 2px solid #222;
-    border-radius: 4px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    border: 3px solid #222;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    position: relative;
   }
   .cell {
     width: 30px;
@@ -54,7 +67,6 @@
     background-color: #111;
     z-index: 1;
   }
-  /* Edge adjustments can go here */
   .cell.top::after { top: 50%; }
   .cell.bottom::after { bottom: 50%; }
   .cell.left::before { left: 50%; }
@@ -67,7 +79,7 @@
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    z-index: 2;
+    z-index: 3;
     box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
   }
   .stone.new {
@@ -84,38 +96,73 @@
   .stone.captured {
     animation: captureAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
   }
+  .stone.atari {
+    box-shadow: 0 0 0 3px #ffcc00, inset -2px -2px 4px rgba(0,0,0,0.5);
+  }
   .black { background-color: #111; box-shadow: inset -2px -2px 4px rgba(255,255,255,0.1), 2px 2px 4px rgba(0,0,0,0.5); }
   .white { background-color: #eee; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 2px 2px 4px rgba(0,0,0,0.5); }
+  
   .stone.ghost {
     opacity: 0.4;
     display: none;
     box-shadow: none;
+    z-index: 2;
   }
   .cell:hover .stone.ghost {
     display: block;
   }
+
+  .territory-marker {
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    z-index: 2;
+  }
+  .territory-marker.B { background-color: rgba(0, 150, 255, 0.8); }
+  .territory-marker.W { background-color: rgba(255, 60, 60, 0.8); }
+
+  .hint-ring {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 3px solid #ffd700;
+    box-shadow: 0 0 8px #ffd700;
+    z-index: 4;
+    animation: pulseHint 1s infinite alternate;
+  }
+  @keyframes pulseHint {
+    0% { transform: scale(0.9); opacity: 0.7; }
+    100% { transform: scale(1.1); opacity: 1; }
+  }
+
   .controls {
-    margin-top: 20px;
+    margin-top: 18px;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
+    justify-content: center;
+    max-width: 680px;
   }
   button, select {
     background-color: #2a2a2a;
     color: #fff;
     border: 1px solid #444;
-    padding: 6px 16px;
+    padding: 6px 14px;
     cursor: pointer;
     border-radius: 4px;
-    font-size: 14px;
-  }
-  button:hover, select:hover { background-color: #3a3a3a; }
-  .status {
-    margin-top: 15px;
-    font-size: 1.2em;
-    margin-bottom: 10px;
+    font-size: 13px;
     font-weight: 500;
+    transition: all 0.15s ease;
   }
+  button:hover, select:hover { background-color: #3a3a3a; border-color: #666; }
+  button.active { background-color: #1a5fb4; border-color: #3584e4; }
+
   .modal {
     display: none;
     position: fixed;
@@ -134,11 +181,11 @@
     border: 1px solid #444;
     border-radius: 8px;
     width: 80%;
-    max-width: 500px;
+    max-width: 520px;
     max-height: 80%;
     overflow-y: auto;
   }
-  .modal-content h2 { margin-top: 0; }
+  .modal-content h2 { margin-top: 0; color: #ffd700; }
   .close-btn {
     background-color: #d32f2f;
     float: right;
@@ -148,30 +195,35 @@
 </head>
 <body>
   <h1>KGo</h1>
-  <div class="status">Current Turn: Black</div>
+  <div class="status-container">
+    <div class="status">Current Turn: Black</div>
+    <div class="stage-info" id="stage-info">Komi: 6.5</div>
+  </div>
   <div class="board" id="board"></div>
   <div class="controls">
     <button id="btn-pass">Pass</button>
     <button id="btn-resign">Resign</button>
-    <button id="btn-undo">Undo</button>
+    <button id="btn-undo">Undo (U)</button>
     <button id="btn-redo">Redo</button>
+    <button id="btn-hint">Hint (H)</button>
+    <button id="btn-estimate">Territory (T)</button>
     <button id="btn-score">Score Game</button>
+    <button id="btn-campaign">Campaign</button>
     <button id="btn-save">Save</button>
     <button id="btn-load">Load</button>
     <button id="btn-stats">Stats</button>
     <button id="btn-help">Help</button>
-    <button id="btn-campaign">Campaign</button>
     <select id="board-size">
       <option value="9">9x9</option>
       <option value="13">13x13</option>
       <option value="19">19x19</option>
     </select>
     <button id="btn-new">New Game</button>
-    <label style="display:flex;align-items:center;margin-left:10px;cursor:pointer;"><input type="checkbox" id="ai-toggle" checked> Play vs AI (White)</label>
+    <label style="display:flex;align-items:center;margin-left:6px;cursor:pointer;font-size:13px;"><input type="checkbox" id="ai-toggle" checked> VS AI (White)</label>
     <select id="ai-difficulty">
-      <option value="easy">Easy AI</option>
-      <option value="medium" selected>Medium AI</option>
-      <option value="hard">Hard AI</option>
+      <option value="territorial">Territorial AI</option>
+      <option value="influence">Influence AI</option>
+      <option value="grandmaster" selected>Grandmaster AI</option>
     </select>
   </div>
 
@@ -181,13 +233,17 @@
       <h2>How to Play KGo</h2>
       <p><strong>Goal:</strong> Control more territory (empty points) than your opponent.</p>
       <ul>
-        <li>Players (Black and White) take turns placing stones on the intersections of the board.</li>
-        <li>Once placed, a stone cannot be moved.</li>
-        <li><strong>Liberties & Capture:</strong> Stones must have at least one empty adjacent point (liberty). If a stone or connected group of stones is completely surrounded by the opponent, it is captured and removed from the board.</li>
-        <li><strong>Ko Rule:</strong> You cannot make a move that recreates the exact board position from the previous turn.</li>
-        <li><strong>Suicide Rule:</strong> You cannot place a stone in a position with no liberties, unless that move immediately captures opponent stones.</li>
-        <li><strong>Passing:</strong> If a player believes there are no more profitable moves, they can "Pass". If both players pass consecutively, the game ends and scoring begins.</li>
-        <li><strong>Scoring (Territory):</strong> Score is calculated by counting the empty intersections surrounded by a player's stones, plus the number of captured opponent stones. White also receives an extra 6.5 points (Komi) to compensate for Black playing first.</li>
+        <li>Players (Black and White) take turns placing stones on board intersections.</li>
+        <li><strong>Liberties & Capture:</strong> Stones must have at least 1 empty adjacent point (liberty). If surrounded, they are captured.</li>
+        <li><strong>Ko Rule:</strong> Cannot recreate the exact previous board state.</li>
+        <li><strong>Suicide Rule:</strong> Cannot place a stone with 0 liberties unless it captures opponent stones.</li>
+        <li><strong>Scoring:</strong> Empty intersections surrounded + captured stones + Komi (White bonus).</li>
+      </ul>
+      <h3>Hotkeys & Features:</h3>
+      <ul>
+        <li><strong>U Key:</strong> Undo last move pair (VS AI).</li>
+        <li><strong>H Key:</strong> AI Hint - Evaluates and highlights the optimal move.</li>
+        <li><strong>T Key:</strong> Territory Estimator - Overlays current territory estimation & flags stones in Atari (yellow border).</li>
       </ul>
     </div>
   </div>
@@ -197,24 +253,43 @@
   let size = 9;
   let board = [];
   let currentPlayer = 'B';
-  let history = []; // for ko rule
+  let history = [];
   let captures = { B: 0, W: 0 };
   let lastMove = {x: -1, y: -1};
   let capturedStonesForAnim = [];
   let undoStack = [];
   let redoStack = [];
 
+  let currentKomi = 6.5;
+  let hintCell = null;
+  let showEstimator = false;
+  let territoryMap = [];
+  let atariStones = [];
+
   const campaign = [
-    {size: 9, handicap: 5, difficulty: 'easy'},
-    {size: 9, handicap: 3, difficulty: 'easy'},
-    {size: 9, handicap: 0, difficulty: 'medium'},
-    {size: 13, handicap: 5, difficulty: 'medium'},
-    {size: 13, handicap: 3, difficulty: 'medium'},
-    {size: 13, handicap: 0, difficulty: 'hard'},
-    {size: 19, handicap: 9, difficulty: 'medium'},
-    {size: 19, handicap: 5, difficulty: 'hard'},
-    {size: 19, handicap: 3, difficulty: 'hard'},
-    {size: 19, handicap: 0, difficulty: 'hard'}
+    {size: 9, handicap: 5, komi: 0.5, aiPersonality: 'territorial', name: "Stage 1: Novice Field", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 9, handicap: 3, komi: 0.5, aiPersonality: 'influence', name: "Stage 2: Corner Skirmish", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 9, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 3: Tsumego - Corner Snapback", isTsumego: true, 
+     initialStones: [{x:1,y:0,color:'W'}, {x:1,y:1,color:'W'}, {x:0,y:1,color:'W'}, {x:2,y:0,color:'B'}, {x:2,y:1,color:'B'}, {x:1,y:2,color:'B'}, {x:0,y:2,color:'B'}], 
+     targetDesc: "Capture White's corner group at (0,0)!"},
+    {size: 9, handicap: 2, komi: 0.5, aiPersonality: 'influence', name: "Stage 4: Tactical Border", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 9, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 5: 9x9 Master Duel", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 5, komi: 0.5, aiPersonality: 'territorial', name: "Stage 6: Medium Horizon", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 0, komi: 0.5, aiPersonality: 'influence', name: "Stage 7: Tsumego - Side Crane's Nest", isTsumego: true, 
+     initialStones: [{x:3,y:2,color:'W'}, {x:4,y:2,color:'W'}, {x:5,y:2,color:'W'}, {x:3,y:3,color:'B'}, {x:6,y:2,color:'B'}, {x:4,y:1,color:'B'}, {x:5,y:1,color:'B'}, {x:4,y:3,color:'W'}], 
+     targetDesc: "Expose White's weakness on the side!"},
+    {size: 13, handicap: 3, komi: 0.5, aiPersonality: 'territorial', name: "Stage 8: Pincer Conflict", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 1, komi: 6.5, aiPersonality: 'influence', name: "Stage 9: Influence Battle", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 13, handicap: 0, komi: 6.5, aiPersonality: 'grandmaster', name: "Stage 10: 13x13 Grandmaster", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'territorial', name: "Stage 11: Tsumego - Making Two Eyes", isTsumego: true, 
+     initialStones: [{x:1,y:1,color:'B'}, {x:2,y:1,color:'B'}, {x:3,y:1,color:'B'}, {x:3,y:0,color:'B'}, {x:0,y:2,color:'W'}, {x:1,y:2,color:'W'}, {x:2,y:2,color:'W'}, {x:3,y:2,color:'W'}], 
+     targetDesc: "Play the vital point to secure two eyes for Black!"},
+    {size: 19, handicap: 6, komi: 0.5, aiPersonality: 'influence', name: "Stage 12: Great Wall Siege", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 3, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 13: Dragon Slayer", isTsumego: false, initialStones: [], targetDesc: ""},
+    {size: 19, handicap: 0, komi: 0.5, aiPersonality: 'grandmaster', name: "Stage 14: Tsumego - Under the Stones", isTsumego: true, 
+     initialStones: [{x:9,y:9,color:'W'}, {x:10,y:9,color:'W'}, {x:9,y:10,color:'W'}, {x:10,y:10,color:'W'}, {x:8,y:9,color:'B'}, {x:11,y:9,color:'B'}, {x:8,y:10,color:'B'}, {x:11,y:10,color:'B'}, {x:9,y:11,color:'B'}], 
+     targetDesc: "Surround and collapse White's central shape!"},
+    {size: 19, handicap: 0, komi: 7.5, aiPersonality: 'grandmaster', name: "Stage 15: KGo Championship", isTsumego: false, initialStones: [], targetDesc: ""}
   ];
   let currentCampaignStage = -1;
 
@@ -235,19 +310,28 @@
   }
 
   function startCampaignStage() {
-    if (currentCampaignStage >= 10 || currentCampaignStage < 0) return;
+    if (currentCampaignStage >= 15 || currentCampaignStage < 0) return;
     let stage = campaign[currentCampaignStage];
     size = stage.size;
+    currentKomi = stage.komi;
     document.getElementById('board-size').value = size;
     document.getElementById('ai-toggle').checked = true;
-    document.getElementById('ai-difficulty').value = stage.difficulty;
+    document.getElementById('ai-difficulty').value = stage.aiPersonality;
     
     initBoard();
-    placeHandicapStones(size, stage.handicap);
+    if (stage.isTsumego) {
+      stage.initialStones.forEach(s => {
+        board[s.y][s.x] = s.color;
+      });
+      history = [boardToString()];
+    } else {
+      placeHandicapStones(size, stage.handicap);
+    }
     updateStatus();
     drawBoard();
     
-    alert(`Stage ${currentCampaignStage + 1}\nBoard: ${size}x${size}\nHandicap: ${stage.handicap}\nDifficulty: ${stage.difficulty === 'easy' ? 'Easy' : (stage.difficulty === 'medium' ? 'Medium' : 'Hard')}`);
+    let info = `${stage.name}\nBoard: ${size}x${size} | Handicap: ${stage.handicap} | Komi: ${stage.komi}\nAI Personality: ${stage.aiPersonality.toUpperCase()}\n\n${stage.isTsumego ? stage.targetDesc : 'Goal: Control more territory than White!'}`;
+    alert(info);
   }
 
   let stats = { played: 0, aiWins: 0, aiLosses: 0, localB: 0, localW: 0 };
@@ -316,8 +400,69 @@
     capturedStonesForAnim = [];
     undoStack = [];
     redoStack = [];
+    hintCell = null;
     updateStatus();
     drawBoard();
+  }
+
+  function computeTerritoryAndAtari() {
+    territoryMap = Array(size).fill(null).map(() => Array(size).fill(null));
+    atariStones = [];
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (board[y][x] === null && !visited[y][x]) {
+          let emptyGroup = [];
+          let touchesB = false;
+          let touchesW = false;
+          let queue = [{x, y}];
+          visited[y][x] = true;
+
+          while (queue.length > 0) {
+            let p = queue.shift();
+            emptyGroup.push(p);
+
+            const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+            for (let d of dirs) {
+              let nx = p.x + d[0];
+              let ny = p.y + d[1];
+              if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+                if (board[ny][nx] === 'B') touchesB = true;
+                else if (board[ny][nx] === 'W') touchesW = true;
+                else if (!visited[ny][nx]) {
+                  visited[ny][nx] = true;
+                  queue.push({x: nx, y: ny});
+                }
+              }
+            }
+          }
+
+          let owner = null;
+          if (touchesB && !touchesW) owner = 'B';
+          else if (touchesW && !touchesB) owner = 'W';
+
+          if (owner) {
+            emptyGroup.forEach(p => territoryMap[p.y][p.x] = owner);
+          }
+        }
+      }
+    }
+
+    let groupVisited = Array(size).fill(null).map(() => Array(size).fill(false));
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        if (board[y][x] !== null && !groupVisited[y][x]) {
+          let vLib = Array(size).fill(null).map(() => Array(size).fill(false));
+          let libCount = getLiberties(x, y, board[y][x], vLib);
+          if (libCount === 1) {
+            let group = [];
+            getGroup(x, y, board[y][x], groupVisited, group);
+            atariStones.push(...group);
+          }
+        }
+      }
+    }
   }
 
   function drawBoard() {
@@ -325,6 +470,10 @@
     boardEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
     boardEl.style.gridTemplateRows = `repeat(${size}, 30px)`;
     
+    if (showEstimator) {
+      computeTerritoryAndAtari();
+    }
+
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         const cell = document.createElement('div');
@@ -337,10 +486,17 @@
         cell.dataset.x = x;
         cell.dataset.y = y;
         
+        if (showEstimator && board[y][x] === null && territoryMap[y][x]) {
+          const tm = document.createElement('div');
+          tm.className = `territory-marker ${territoryMap[y][x]}`;
+          cell.appendChild(tm);
+        }
+
         if (board[y][x]) {
           const stone = document.createElement('div');
           let classes = `stone ${board[y][x] === 'B' ? 'black' : 'white'}`;
           if (lastMove.x === x && lastMove.y === y) classes += ' new';
+          if (showEstimator && atariStones.some(s => s.x === x && s.y === y)) classes += ' atari';
           stone.className = classes;
           cell.appendChild(stone);
         } else {
@@ -353,6 +509,12 @@
           const ghost = document.createElement('div');
           ghost.className = `stone ghost ${currentPlayer === 'B' ? 'black' : 'white'}`;
           cell.appendChild(ghost);
+        }
+
+        if (hintCell && hintCell.x === x && hintCell.y === y && board[y][x] === null) {
+          const hr = document.createElement('div');
+          hr.className = 'hint-ring';
+          cell.appendChild(hr);
         }
         
         cell.addEventListener('click', () => placeStone(x, y));
@@ -395,7 +557,6 @@
         if (board[y][x] === color) {
           let visited = Array(size).fill(null).map(() => Array(size).fill(false));
           if (getLiberties(x, y, color, visited) === 0) {
-            // Capture group
             let groupVisited = Array(size).fill(null).map(() => Array(size).fill(false));
             let group = [];
             getGroup(x, y, color, groupVisited, group);
@@ -456,10 +617,10 @@
     }
     
     let totalB = captures.B + terrB;
-    let totalW = captures.W + terrW + 6.5; // komi
+    let totalW = captures.W + terrW + currentKomi;
     
     let msg = `Black: ${terrB} territory + ${captures.B} captures = ${totalB}\n`;
-    msg += `White: ${terrW} territory + ${captures.W} captures + 6.5 komi = ${totalW}\n\n`;
+    msg += `White: ${terrW} territory + ${captures.W} captures + ${currentKomi} komi = ${totalW}\n\n`;
     if (totalB > totalW) {
       msg += `Black wins by ${totalB - totalW}!`;
       recordGameEnd('B');
@@ -473,8 +634,8 @@
       if (currentCampaignStage !== -1) {
         if (totalB > totalW) {
           currentCampaignStage++;
-          if (currentCampaignStage >= 10) {
-            alert(msg + "\n\nCongratulations! You completed the 10-Stage Campaign!");
+          if (currentCampaignStage >= 15) {
+            alert(msg + "\n\nCongratulations! You completed all 15 Campaign Stages!");
             currentCampaignStage = -1;
             initBoard();
           } else {
@@ -482,7 +643,7 @@
             startCampaignStage();
           }
         } else {
-          alert(msg + `\n\nYou failed Campaign Stage ${currentCampaignStage + 1}. Try again.`);
+          alert(msg + `\n\nYou failed Campaign Stage ${currentCampaignStage + 1} (${campaign[currentCampaignStage].name}). Try again.`);
           startCampaignStage();
         }
       } else {
@@ -538,6 +699,7 @@
     history.push(boardToString());
     currentPlayer = opp;
     lastMove = {x, y};
+    hintCell = null;
     
     if (caps > 0) playSound('capture');
     else playSound('place');
@@ -587,7 +749,81 @@
     return {valid: true, captures: capturedCount};
   }
 
-  function evaluateMove(x, y, color) {
+  function evaluateMoveTerritorial(x, y, color) {
+    let opp = color === 'B' ? 'W' : 'B';
+    let boardBackup = deepCopy(board);
+    let capBackup = { ...captures };
+    
+    board[y][x] = color;
+    let caps = checkCaptures(opp, false);
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    let myLiberties = getLiberties(x, y, color, visited);
+    
+    let score = caps * 40 + myLiberties * 3;
+    
+    let distEdgeX = Math.min(x, size - 1 - x);
+    let distEdgeY = Math.min(y, size - 1 - y);
+    if ((distEdgeX === 2 || distEdgeX === 3) && (distEdgeY === 2 || distEdgeY === 3)) {
+      score += 25;
+    }
+    
+    const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+    for (let d of dirs) {
+      let nx = x + d[0];
+      let ny = y + d[1];
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        if (board[ny][nx] === color) {
+          score += 15;
+          let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
+          if (getLiberties(nx, ny, color, v2) <= 2) {
+            score += 35;
+          }
+        }
+      }
+    }
+    
+    board = boardBackup;
+    captures = capBackup;
+    return score;
+  }
+
+  function evaluateMoveInfluence(x, y, color) {
+    let opp = color === 'B' ? 'W' : 'B';
+    let boardBackup = deepCopy(board);
+    let capBackup = { ...captures };
+    
+    board[y][x] = color;
+    let caps = checkCaptures(opp, false);
+    let visited = Array(size).fill(null).map(() => Array(size).fill(false));
+    let myLiberties = getLiberties(x, y, color, visited);
+    
+    let score = caps * 60 + myLiberties * 2;
+    
+    let cx = Math.floor(size / 2);
+    let cy = Math.floor(size / 2);
+    let distFromCenter = Math.abs(x - cx) + Math.abs(y - cy);
+    score += (size - distFromCenter) * 3;
+    
+    const dirs = [[0,1], [1,0], [0,-1], [-1,0]];
+    for (let d of dirs) {
+      let nx = x + d[0];
+      let ny = y + d[1];
+      if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
+        if (board[ny][nx] === opp) {
+          let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
+          if (getLiberties(nx, ny, opp, v2) <= 2) {
+            score += 30;
+          }
+        }
+      }
+    }
+    
+    board = boardBackup;
+    captures = capBackup;
+    return score;
+  }
+
+  function evaluateMoveGrandmaster(x, y, color) {
     let opp = color === 'B' ? 'W' : 'B';
     let boardBackup = deepCopy(board);
     let capBackup = { ...captures };
@@ -613,10 +849,10 @@
     let score = caps * 50;
     let visited = Array(size).fill(null).map(() => Array(size).fill(false));
     let myLiberties = getLiberties(x, y, color, visited);
-    score += myLiberties;
+    score += myLiberties * 4;
     
     if (savingAtari && myLiberties > 1) {
-      score += 30;
+      score += 35;
     }
     
     for (let d of dirs) {
@@ -625,9 +861,9 @@
       if (nx >= 0 && nx < size && ny >= 0 && ny < size) {
         if (board[ny][nx] === opp) {
           let v2 = Array(size).fill(null).map(() => Array(size).fill(false));
-          if (getLiberties(nx, ny, opp, v2) === 1) {
-            score += 15;
-          }
+          let oppLib = getLiberties(nx, ny, opp, v2);
+          if (oppLib === 1) score += 25;
+          else if (oppLib === 2) score += 15;
         }
       }
     }
@@ -645,27 +881,29 @@
   function makeAIMove() {
     if (currentPlayer !== 'W') return;
     
-    let difficulty = document.getElementById('ai-difficulty').value;
+    let personality = document.getElementById('ai-difficulty').value;
+    if (currentCampaignStage >= 0 && currentCampaignStage < 15) {
+      personality = campaign[currentCampaignStage].aiPersonality;
+    }
     
     let validMoves = [];
-    let captureMoves = [];
-    
     for (let y = 0; y < size; y++) {
       for (let x = 0; x < size; x++) {
         let res = isValidMove(x, y, 'W');
-        if (res.valid) {
-          validMoves.push({x, y});
-          if (res.captures > 0) captureMoves.push({x, y});
-        }
+        if (res.valid) validMoves.push({x, y});
       }
     }
     
     let move = null;
-    if (difficulty === 'hard' && validMoves.length > 0) {
-      let bestScore = -1;
+    if (validMoves.length > 0) {
+      let bestScore = -9999;
       let bestMoves = [];
       for (let m of validMoves) {
-        let score = evaluateMove(m.x, m.y, 'W');
+        let score = 0;
+        if (personality === 'territorial') score = evaluateMoveTerritorial(m.x, m.y, 'W');
+        else if (personality === 'influence') score = evaluateMoveInfluence(m.x, m.y, 'W');
+        else score = evaluateMoveGrandmaster(m.x, m.y, 'W');
+
         if (score > bestScore) {
           bestScore = score;
           bestMoves = [m];
@@ -674,10 +912,6 @@
         }
       }
       move = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-    } else if (difficulty === 'medium' && captureMoves.length > 0) {
-      move = captureMoves[Math.floor(Math.random() * captureMoves.length)];
-    } else if (validMoves.length > 0) {
-      move = validMoves[Math.floor(Math.random() * validMoves.length)];
     }
     
     if (move) {
@@ -687,12 +921,35 @@
     }
   }
 
+  function calculateHint() {
+    let bestScore = -9999;
+    hintCell = null;
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        let res = isValidMove(x, y, currentPlayer);
+        if (res.valid) {
+          let score = evaluateMoveGrandmaster(x, y, currentPlayer);
+          if (score > bestScore) {
+            bestScore = score;
+            hintCell = {x, y};
+          }
+        }
+      }
+    }
+    drawBoard();
+  }
+
   function deepCopy(arr) {
     return arr.map(row => [...row]);
   }
 
   function updateStatus() {
-    document.querySelector('.status').innerText = `Current Turn: ${currentPlayer === 'B' ? 'Black' : 'White'}`;
+    let statusText = `Current Turn: ${currentPlayer === 'B' ? 'Black' : 'White'}`;
+    if (currentCampaignStage !== -1) {
+      statusText = `${campaign[currentCampaignStage].name} - ${statusText}`;
+    }
+    document.querySelector('.status').innerText = statusText;
+    document.getElementById('stage-info').innerText = `Komi: ${currentKomi}${hintCell ? ' | HINT ACTIVE' : ''}${showEstimator ? ' | TERRITORY ESTIMATOR ON' : ''}`;
   }
 
   document.getElementById('btn-pass').addEventListener('click', () => {
@@ -704,32 +961,42 @@
       currentPlayer: currentPlayer
     });
     redoStack = [];
-
     currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
+    hintCell = null;
     updateStatus();
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
       setTimeout(makeAIMove, 500);
     }
   });
-  document.getElementById('btn-undo').addEventListener('click', () => {
-    if (undoStack.length === 0) return;
-    redoStack.push({
-      board: deepCopy(board),
-      currentPlayer,
-      captures: { ...captures },
-      lastMove: { ...lastMove },
-      history: [...history]
-    });
-    let state = undoStack.pop();
-    board = state.board;
-    currentPlayer = state.currentPlayer;
-    captures = state.captures;
-    lastMove = state.lastMove;
-    history = state.history;
+
+  function doUndo() {
+    let isVsAI = document.getElementById('ai-toggle').checked;
+    let stepsToUndo = (isVsAI && undoStack.length >= 2) ? 2 : 1;
+    
+    while (stepsToUndo > 0 && undoStack.length > 0) {
+      redoStack.push({
+        board: deepCopy(board),
+        currentPlayer,
+        captures: { ...captures },
+        lastMove: { ...lastMove },
+        history: [...history]
+      });
+      let state = undoStack.pop();
+      board = state.board;
+      currentPlayer = state.currentPlayer;
+      captures = state.captures;
+      lastMove = state.lastMove;
+      history = state.history;
+      stepsToUndo--;
+    }
     capturedStonesForAnim = [];
+    hintCell = null;
     updateStatus();
     drawBoard();
-  });
+  }
+
+  document.getElementById('btn-undo').addEventListener('click', doUndo);
+
   document.getElementById('btn-redo').addEventListener('click', () => {
     if (redoStack.length === 0) return;
     undoStack.push({
@@ -746,16 +1013,27 @@
     lastMove = state.lastMove;
     history = state.history;
     capturedStonesForAnim = [];
+    hintCell = null;
     updateStatus();
     drawBoard();
   });
+
+  document.getElementById('btn-hint').addEventListener('click', calculateHint);
+  
+  document.getElementById('btn-estimate').addEventListener('click', () => {
+    showEstimator = !showEstimator;
+    document.getElementById('btn-estimate').classList.toggle('active', showEstimator);
+    updateStatus();
+    drawBoard();
+  });
+
   document.getElementById('btn-resign').addEventListener('click', () => {
     playSound('over');
     setTimeout(() => {
       let winner = currentPlayer === 'B' ? 'W' : 'B';
       let msg = `${currentPlayer === 'B' ? 'White' : 'Black'} wins by resignation!`;
       if (currentCampaignStage !== -1) {
-        msg += `\n\nYou failed Campaign Stage ${currentCampaignStage + 1}. Try again.`;
+        msg += `\n\nYou failed Campaign Stage ${currentCampaignStage + 1} (${campaign[currentCampaignStage].name}). Try again.`;
       }
       alert(msg);
       recordGameEnd(winner);
@@ -766,13 +1044,15 @@
       }
     }, 50);
   });
-  document.getElementById('btn-score').addEventListener('click', () => {
-    calculateScore();
-  });
+
+  document.getElementById('btn-score').addEventListener('click', calculateScore);
+  
   document.getElementById('btn-new').addEventListener('click', () => {
     currentCampaignStage = -1;
+    currentKomi = 6.5;
     initBoard();
   });
+
   document.getElementById('btn-save').addEventListener('click', () => {
     const state = {
       size,
@@ -782,11 +1062,13 @@
       captures,
       lastMove,
       undoStack,
-      redoStack
+      redoStack,
+      currentKomi
     };
     localStorage.setItem('kgo_save', JSON.stringify(state));
     alert('Game saved.');
   });
+
   document.getElementById('btn-load').addEventListener('click', () => {
     const data = localStorage.getItem('kgo_save');
     if (data) {
@@ -800,7 +1082,9 @@
         lastMove = state.lastMove || {x: -1, y: -1};
         undoStack = state.undoStack || [];
         redoStack = state.redoStack || [];
+        currentKomi = state.currentKomi || 6.5;
         document.getElementById('board-size').value = size;
+        hintCell = null;
         updateStatus();
         drawBoard();
         alert('Game loaded.');
@@ -811,6 +1095,7 @@
       alert('No saved game found.');
     }
   });
+
   document.getElementById('board-size').addEventListener('change', (e) => {
     size = parseInt(e.target.value);
     initBoard();
@@ -830,6 +1115,16 @@
   });
   document.getElementById('btn-close-help').addEventListener('click', () => {
     document.getElementById('help-modal').style.display = 'none';
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'u' || e.key === 'U') {
+      doUndo();
+    } else if (e.key === 'h' || e.key === 'H') {
+      calculateHint();
+    } else if (e.key === 't' || e.key === 'T') {
+      document.getElementById('btn-estimate').click();
+    }
   });
 
   loadStats();
