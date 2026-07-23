@@ -52,8 +52,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KQuest
-**Phase:** 8
-**Status:** Phase 8 Complete
+**Phase:** 9
+**Status:** Phase 9 Complete
 
 - [x] Phase 1: Choose a unique app. Scaffold `KQuest/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
@@ -63,11 +63,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 6: Add Crafting & Equipment Enchanting System (Alchemy Bench/Enchanter's Forge in Town Hub to salvage loot into materials, craft consumable battle items like Bombs/Elixirs, and enchant weapons/armor with elemental prefixes like Flaming/Vampiric/Fortified) to web & native versions.
 - [x] Phase 7: Add Party Companions & Mercenary Hire System (Mercenary Guild in Town Hub to hire AI party companions: Paladin Tank, Archmage DPS, Cleric Healer with combat turn actions, passive buffs, level scaling, and gold upkeep) to web & native versions.
 - [x] Phase 8: Add Procedural Bounty Contracts & Quest Tracking System (Quest Board in Town Hub with monster slay bounties, floor clearance challenges, item collection quests, active quest tracker HUD, and tiered rewards like Gold/XP/Rune chests) to web & native versions.
+- [x] Phase 9: Add Skill Tree & Specialization Mastery System (Training Hall in Town Hub to allocate Skill Points gained per level into Offense/Defense/Utility trees, unlocking active battle abilities like Execute/Iron Will/Mana Surge and passive stat multipliers) to web & native versions.
 
 ## Next Priority (Before New Apps)
 
 **App:** KQuest
-**Goal:** Phase 9 (Deep Expansion: Add fifth substantial expansion feature)
+**Goal:** Phase 10 (Deep Expansion: Add sixth substantial expansion feature)
 
 
 

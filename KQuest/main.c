@@ -1,14 +1,15 @@
 #include <windows.h>
 
-#define STATE_CHAR_CREATE 0
-#define STATE_TOWN        1
-#define STATE_SHOP        2
-#define STATE_DUNGEON     3
-#define STATE_COMBAT      4
-#define STATE_GAME_OVER   5
-#define STATE_CRAFTING    6
-#define STATE_MERCENARY   7
-#define STATE_QUEST_BOARD 8
+#define STATE_CHAR_CREATE   0
+#define STATE_TOWN          1
+#define STATE_SHOP          2
+#define STATE_DUNGEON       3
+#define STATE_COMBAT        4
+#define STATE_GAME_OVER     5
+#define STATE_CRAFTING      6
+#define STATE_MERCENARY     7
+#define STATE_QUEST_BOARD   8
+#define STATE_TRAINING_HALL 9
 
 typedef struct {
     int id;
@@ -116,6 +117,12 @@ typedef struct {
     int str, intStat, def, agi;
     int gold;
     int xp, nextXp;
+    int skillPoints;
+    int offensePoints;
+    int defensePoints;
+    int utilityPoints;
+    int ironWillTurns;
+    int manaSurgeActive;
     int floor;
     int biome; // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
     char weaponName[32];
@@ -340,6 +347,12 @@ void InitHero(int classIdx) {
     player.xp = 0;
     player.nextXp = 100;
     player.gold = 50;
+    player.skillPoints = 0;
+    player.offensePoints = 0;
+    player.defensePoints = 0;
+    player.utilityPoints = 0;
+    player.ironWillTurns = 0;
+    player.manaSurgeActive = 0;
     player.floor = 1;
     player.biome = 0;
     player.hpPotions = 3;
@@ -397,7 +410,7 @@ void UpdateUI() {
         player.hp, player.maxHp, player.mp, player.maxMp,
         player.gold, locStr, player.floor);
 
-    int bonusDef = player.armorBonusDef;
+    int bonusDef = player.armorBonusDef + (player.defensePoints * 3);
     int bonusInt = 0;
     if (player.companion.active > 0 && !player.companion.isDown) {
         if (player.companion.active == 1) bonusDef += 4;
@@ -433,17 +446,19 @@ void UpdateUI() {
         }
     }
 
+    int offBonusDmg = player.offensePoints * 2;
     wsprintfA(infoBuf,
         "BIOME: %s (Hazard: %s)  |  COMPANION: %s\r\n"
         "ATTRIBUTES: STR %d (+%d) | INT %d (+%d) | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
         "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s\r\n"
-        "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Elemental Core x%d\r\n"
+        "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Core x%d  |  SKILLS: %d SP (Off:%d Def:%d Util:%d)\r\n"
         "BOUNTIES: %s",
         g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf,
-        player.str, player.weaponBonusStr, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
+        player.str, player.weaponBonusStr + offBonusDmg, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
         player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
         player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
         player.ironScrap, player.arcaneDust, player.elementalCore,
+        player.skillPoints, player.offensePoints, player.defensePoints, player.utilityPoints,
         bProgressBuf);
 
     if (hStatusText) SetWindowTextA(hStatusText, statusBuf);
@@ -471,12 +486,28 @@ void SetupButtons() {
         case STATE_TOWN: {
             char bBtn[64];
             wsprintfA(bBtn, "Biome: %s", g_Biomes[player.biome].name);
+            char spBtn[64];
+            wsprintfA(spBtn, "🏋️ Training (%d SP)", player.skillPoints);
             SetWindowTextA(hBtn1, "Enter Dungeon");
             SetWindowTextA(hBtn2, bBtn);
-            SetWindowTextA(hBtn3, "Rest at Inn (10G)");
-            SetWindowTextA(hBtn4, "Visit Shop");
-            SetWindowTextA(hBtn5, "Craft & Enchant");
-            SetWindowTextA(hBtn6, "📜 Quest Board");
+            SetWindowTextA(hBtn3, "Rest Inn / Shop");
+            SetWindowTextA(hBtn4, "Craft / Merc Guild");
+            SetWindowTextA(hBtn5, "📜 Quest Board");
+            SetWindowTextA(hBtn6, spBtn);
+            break;
+        }
+
+        case STATE_TRAINING_HALL: {
+            char oBtn[64], dBtn[64], uBtn[64];
+            wsprintfA(oBtn, "Offense (%d/3)", player.offensePoints);
+            wsprintfA(dBtn, "Defense (%d/3)", player.defensePoints);
+            wsprintfA(uBtn, "Utility (%d/3)", player.utilityPoints);
+            SetWindowTextA(hBtn1, oBtn);
+            SetWindowTextA(hBtn2, dBtn);
+            SetWindowTextA(hBtn3, uBtn);
+            SetWindowTextA(hBtn4, "Respec (30G)");
+            SetWindowTextA(hBtn5, "Merc Guild");
+            SetWindowTextA(hBtn6, "Back to Town");
             break;
         }
 
@@ -541,7 +572,15 @@ void SetupButtons() {
                 SetWindowTextA(hBtn4, "Use MP Potion");
             }
             SetWindowTextA(hBtn5, "Flee Battle");
-            SetWindowTextA(hBtn6, "---");
+            if (player.offensePoints >= 3) {
+                SetWindowTextA(hBtn6, "Execute (12 MP)");
+            } else if (player.defensePoints >= 3) {
+                SetWindowTextA(hBtn6, "Iron Will (8 MP)");
+            } else if (player.utilityPoints >= 3) {
+                SetWindowTextA(hBtn6, "Mana Surge (0 MP)");
+            } else {
+                SetWindowTextA(hBtn6, "---");
+            }
             break;
 
         case STATE_GAME_OVER:
@@ -599,13 +638,14 @@ void PayCompanionUpkeep() {
 void CheckLevelUp() {
     if (player.xp >= player.nextXp) {
         player.level++;
+        player.skillPoints += 2;
         player.xp -= player.nextXp;
         player.nextXp = (int)(player.nextXp * 1.5);
         player.maxHp += 15; player.hp = player.maxHp;
         player.maxMp += 10; player.mp = player.maxMp;
         player.str += 3; player.intStat += 2; player.def += 2; player.agi += 2;
         char msg[128];
-        wsprintfA(msg, "🌟 LEVEL UP! Reached Level %d! HP/MP restored and attributes increased!", player.level);
+        wsprintfA(msg, "🌟 LEVEL UP! Reached Level %d! Gained +2 Skill Points! Visit Training Hall in Town.", player.level);
         LogMessage(msg);
 
         if (player.companion.active > 0) {
@@ -669,9 +709,18 @@ void EnemyTurn() {
     if (currentEnemy.hp <= 0) return;
 
     int bonusDef = (player.companion.active == 1 && !player.companion.isDown) ? 4 : 0;
+    bonusDef += (player.defensePoints * 3);
     int totalDef = player.def + player.armorBonusDef + bonusDef;
     int dmg = currentEnemy.str - (totalDef / 2);
+    if (player.defensePoints >= 2) dmg = (dmg * 90) / 100;
     if (dmg < 2) dmg = 2;
+
+    if (player.ironWillTurns > 0) {
+        dmg = dmg / 2;
+        if (dmg < 1) dmg = 1;
+        player.ironWillTurns--;
+        LogMessage("🛡️ Iron Will barrier absorbs 50% incoming damage!");
+    }
 
     if (player.companion.active == 1 && !player.companion.isDown) {
         int absorbed = (dmg * 40) / 100;
@@ -724,12 +773,14 @@ void EnemyTurn() {
 }
 
 void CombatVictory() {
+    int rewardGold = currentEnemy.gold;
+    if (player.utilityPoints >= 2) rewardGold = (rewardGold * 125) / 100;
     char msg[128];
-    wsprintfA(msg, "🎉 VICTORY! Defeated %s! Gained +%d XP and +%d Gold!", currentEnemy.name, currentEnemy.xp, currentEnemy.gold);
+    wsprintfA(msg, "🎉 VICTORY! Defeated %s! Gained +%d XP and +%d Gold!", currentEnemy.name, currentEnemy.xp, rewardGold);
     LogMessage(msg);
 
     player.xp += currentEnemy.xp;
-    player.gold += currentEnemy.gold;
+    player.gold += rewardGold;
 
     PayCompanionUpkeep();
 
@@ -772,6 +823,21 @@ void CombatVictory() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_TRAINING_HALL) {
+        if (player.skillPoints > 0 && player.offensePoints < 3) {
+            player.offensePoints++;
+            player.skillPoints--;
+            LogMessage("⚔️ Allocated 1 SP into Offense Tree!");
+            if (player.offensePoints == 3) LogMessage("🔥 UNLOCKED: Execute (3x Damage Finisher, 12 MP)!");
+            SetupButtons();
+            UpdateUI();
+        } else if (player.offensePoints >= 3) {
+            LogMessage("Offense Tree already at max rank!");
+        } else {
+            LogMessage("No Skill Points available! Level up to earn more.");
+        }
+        return;
+    }
     if (gameState == STATE_QUEST_BOARD) {
         AcceptBounty(0);
         return;
@@ -869,11 +935,12 @@ void HandleButton1() {
             UpdateUI();
         }
     } else if (gameState == STATE_COMBAT) {
+        int offMult = 100 + (player.offensePoints * 8);
         int totalStr = player.str + player.weaponBonusStr;
-        int dmg = (int)(totalStr * 1.2) - (currentEnemy.def / 2);
+        int dmg = (int)(((totalStr * 12 - currentEnemy.def * 5) * offMult) / 1000);
         if (dmg < 2) dmg = 2;
 
-        BOOL isCrit = ((xrand() % 100) < (player.agi * 2));
+        BOOL isCrit = ((xrand() % 100) < ((player.agi * 2) + (player.offensePoints >= 2 ? 10 : 0)));
         if (isCrit) {
             dmg = (int)(dmg * 1.75);
             char msg[128];
@@ -930,6 +997,22 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_TRAINING_HALL) {
+        if (player.skillPoints > 0 && player.defensePoints < 3) {
+            player.defensePoints++;
+            player.skillPoints--;
+            player.maxHp += 10; player.hp += 10;
+            LogMessage("🛡️ Allocated 1 SP into Defense Tree (+10 Max HP & +3 DEF)!");
+            if (player.defensePoints == 3) LogMessage("🔥 UNLOCKED: Iron Will (50% Damage Reduction Barrier, 8 MP)!");
+            SetupButtons();
+            UpdateUI();
+        } else if (player.defensePoints >= 3) {
+            LogMessage("Defense Tree already at max rank!");
+        } else {
+            LogMessage("No Skill Points available! Level up to earn more.");
+        }
+        return;
+    }
     if (gameState == STATE_QUEST_BOARD) {
         AcceptBounty(1);
         return;
@@ -1011,21 +1094,27 @@ void HandleButton2() {
 
         if (player.mp >= cost) {
             player.mp -= cost;
+            int surgeMult = player.manaSurgeActive ? 150 : 100;
+            if (player.manaSurgeActive) {
+                LogMessage("⚡ Mana Surge empowers your spell power by +50%!");
+                player.manaSurgeActive = 0;
+            }
+
             int dmg = 0;
             if (lstrcmpA(player.heroClass, "Mage") == 0) {
                 int bonusInt = (player.companion.active == 2 && !player.companion.isDown) ? 5 : 0;
-                dmg = (int)((player.intStat + bonusInt) * 2.2);
+                dmg = (int)(((player.intStat + bonusInt) * 22 * surgeMult) / 1000);
                 char msg[128];
                 wsprintfA(msg, "🔥 Cast Fireball! Dealt %d magic damage to %s!", dmg, currentEnemy.name);
                 LogMessage(msg);
             } else if (lstrcmpA(player.heroClass, "Rogue") == 0) {
-                dmg = (int)(player.agi * 1.8);
+                dmg = (int)((player.agi * 18 * surgeMult) / 1000);
                 char msg[128];
                 wsprintfA(msg, "🗡️ Shadow Strike! Dealt %d critical damage to %s!", dmg, currentEnemy.name);
                 LogMessage(msg);
             } else {
                 int totalStr = player.str + player.weaponBonusStr;
-                dmg = (int)(totalStr * 1.5);
+                dmg = (int)((totalStr * 15 * surgeMult) / 1000);
                 char msg[128];
                 wsprintfA(msg, "🛡️ Shield Bash! Dealt %d physical damage to %s!", dmg, currentEnemy.name);
                 LogMessage(msg);
@@ -1053,6 +1142,22 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_TRAINING_HALL) {
+        if (player.skillPoints > 0 && player.utilityPoints < 3) {
+            player.utilityPoints++;
+            player.skillPoints--;
+            player.maxMp += 10; player.mp += 10;
+            LogMessage("⚡ Allocated 1 SP into Utility Tree (+10 Max MP & Loot Boost)!");
+            if (player.utilityPoints == 3) LogMessage("🔥 UNLOCKED: Mana Surge (Free Mana Restore & Spell Boost, 0 MP)!");
+            SetupButtons();
+            UpdateUI();
+        } else if (player.utilityPoints >= 3) {
+            LogMessage("Utility Tree already at max rank!");
+        } else {
+            LogMessage("No Skill Points available! Level up to earn more.");
+        }
+        return;
+    }
     if (gameState == STATE_QUEST_BOARD) {
         AcceptBounty(2);
         return;
@@ -1134,6 +1239,30 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_TRAINING_HALL) {
+        int total = player.offensePoints + player.defensePoints + player.utilityPoints;
+        if (total == 0) {
+            LogMessage("No skills allocated to respec!");
+            return;
+        }
+        if (player.gold >= 30) {
+            player.gold -= 30;
+            player.skillPoints += total;
+            player.maxHp -= player.defensePoints * 10;
+            if (player.hp > player.maxHp) player.hp = player.maxHp;
+            player.maxMp -= player.utilityPoints * 10;
+            if (player.mp > player.maxMp) player.mp = player.maxMp;
+            player.offensePoints = 0;
+            player.defensePoints = 0;
+            player.utilityPoints = 0;
+            LogMessage("🔄 Respec completed! Refunded Skill Points for 30 Gold.");
+            SetupButtons();
+            UpdateUI();
+        } else {
+            LogMessage("Need 30 Gold to respec skills!");
+        }
+        return;
+    }
     if (gameState == STATE_QUEST_BOARD) {
         AcceptBounty(3);
         return;
@@ -1228,6 +1357,13 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_TRAINING_HALL) {
+        gameState = STATE_MERCENARY;
+        LogMessage("Entered Mercenary Guild.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_QUEST_BOARD) {
         ClaimAllCompletedBounties();
         return;
@@ -1308,27 +1444,100 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
+    if (gameState == STATE_TRAINING_HALL) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_TOWN) {
-        gameState = STATE_QUEST_BOARD;
-        GenerateBounties();
-        LogMessage("Entered Oakhaven Town Quest Board & Bounty Hub.");
+        gameState = STATE_TRAINING_HALL;
+        LogMessage("Entered Master Instructor's Training Hall.");
         SetupButtons();
         UpdateUI();
-    } else if (gameState == STATE_QUEST_BOARD) {
+        return;
+    }
+    if (gameState == STATE_QUEST_BOARD) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
         SetupButtons();
         UpdateUI();
-    } else if (gameState == STATE_MERCENARY) {
+        return;
+    }
+    if (gameState == STATE_MERCENARY) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
         SetupButtons();
         UpdateUI();
-    } else if (gameState == STATE_CRAFTING) {
+        return;
+    }
+    if (gameState == STATE_CRAFTING) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
         SetupButtons();
         UpdateUI();
+        return;
+    }
+    if (gameState == STATE_COMBAT) {
+        if (player.offensePoints >= 3) {
+            // Execute Ability
+            if (player.mp >= 12) {
+                player.mp -= 12;
+                int offMult = 100 + (player.offensePoints * 8);
+                int totalStr = player.str + player.weaponBonusStr;
+                int dmg = (int)(totalStr * 3 * offMult / 100);
+                if (currentEnemy.hp < (currentEnemy.maxHp * 40 / 100)) {
+                    dmg *= 2;
+                    char emsg[128];
+                    wsprintfA(emsg, "💀 EXECUTE CRITICAL! Target HP < 40%! Dealt %d fatal physical damage to %s!", dmg, currentEnemy.name);
+                    LogMessage(emsg);
+                } else {
+                    char emsg[128];
+                    wsprintfA(emsg, "⚔️ Executed heavy strike dealing %d physical damage to %s!", dmg, currentEnemy.name);
+                    LogMessage(emsg);
+                }
+                currentEnemy.hp -= dmg;
+                if (currentEnemy.hp <= 0) {
+                    currentEnemy.hp = 0;
+                    CombatVictory();
+                    return;
+                }
+                TriggerCompanionCombatTurn();
+                if (currentEnemy.hp <= 0) {
+                    currentEnemy.hp = 0;
+                    CombatVictory();
+                    return;
+                }
+                EnemyTurn();
+            } else {
+                LogMessage("Not enough MP for Execute (Requires 12 MP)!");
+            }
+        } else if (player.defensePoints >= 3) {
+            // Iron Will Ability
+            if (player.mp >= 8) {
+                player.mp -= 8;
+                player.ironWillTurns = 2;
+                player.hp += 20;
+                if (player.hp > player.maxHp) player.hp = player.maxHp;
+                LogMessage("🛡️ Activated IRON WILL! Restored +20 HP and granted 50% damage reduction for 2 turns!");
+                UpdateUI();
+                EnemyTurn();
+            } else {
+                LogMessage("Not enough MP for Iron Will (Requires 8 MP)!");
+            }
+        } else if (player.utilityPoints >= 3) {
+            // Mana Surge Ability
+            player.mp += 35;
+            if (player.mp > player.maxMp) player.mp = player.maxMp;
+            player.manaSurgeActive = 1;
+            LogMessage("⚡ Activated MANA SURGE! Recovered +35 MP! Next spell power boosted by +50%!");
+            UpdateUI();
+            SetupButtons();
+        } else {
+            LogMessage("No Specialization Mastery Ability unlocked yet!");
+        }
+        return;
     }
 }
 
@@ -1361,7 +1570,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 8: Procedural Bounty Contracts & Quest Tracking System Active!");
+            LogMessage("Phase 9: Skill Tree & Specialization Mastery System Active!");
             break;
         }
         case WM_COMMAND: {

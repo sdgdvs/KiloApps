@@ -379,7 +379,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 8</span></h1>
+    <h1>🗡️ KQuest <span class="badge">Phase 9</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
   </header>
 
@@ -436,7 +436,7 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 8: Procedural Bounty Contracts & Quest Tracking System Enabled!</div>
+        <div class="log-entry system">Phase 9: Skill Tree & Specialization Mastery System Enabled!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -458,6 +458,7 @@
           <div>DEF (Defense): <strong style="color:#a6e3a1;" id="stat-def">12</strong></div>
           <div>AGI (Speed/Crit): <strong style="color:#cba6f7;" id="stat-agi">10</strong></div>
           <div>XP Progress: <strong style="color:#f9e2af;" id="xp-text">0 / 100</strong></div>
+          <div>Skill Points: <strong style="color:#cba6f7;" id="sp-text">0 SP</strong></div>
         </div>
       </div>
 
@@ -521,6 +522,7 @@
       CRAFTING: 'CRAFTING',
       MERCENARY: 'MERCENARY',
       QUEST_BOARD: 'QUEST_BOARD',
+      TRAINING_HALL: 'TRAINING_HALL',
       DUNGEON: 'DUNGEON',
       COMBAT: 'COMBAT',
       GAME_OVER: 'GAME_OVER'
@@ -596,6 +598,12 @@
       gold: 50,
       xp: 0,
       nextXp: 100,
+      skillPoints: 0,
+      offensePoints: 0,
+      defensePoints: 0,
+      utilityPoints: 0,
+      ironWillTurns: 0,
+      manaSurgeActive: false,
       floor: 1,
       biome: 0,
       weapon: { name: 'Iron Shortsword', bonusStr: 4, prefix: '' },
@@ -639,20 +647,22 @@
       document.getElementById('mp-text').textContent = `${player.mp}/${player.maxMp}`;
       document.getElementById('hero-gold').textContent = `${player.gold} 🪙`;
       document.getElementById('xp-text').textContent = `${player.xp} / ${player.nextXp}`;
+      if (document.getElementById('sp-text')) {
+        document.getElementById('sp-text').textContent = `${player.skillPoints} SP`;
+      }
 
-      let bonusDef = player.armor ? player.armor.bonusDef : 0;
+      let bonusDef = (player.armor ? player.armor.bonusDef : 0) + (player.defensePoints * 3);
       let bonusInt = 0;
-      let bonusMaxHp = 0;
       if (player.companion && !player.companion.isDown) {
         if (player.companion.id === 'paladin') bonusDef += 4;
         if (player.companion.id === 'archmage') bonusInt += 5;
-        if (player.companion.id === 'cleric') bonusMaxHp += 10;
       }
 
-      document.getElementById('stat-str').textContent = player.str + (player.weapon ? player.weapon.bonusStr : 0);
+      const offBonusDmg = player.offensePoints * 2;
+      document.getElementById('stat-str').textContent = player.str + (player.weapon ? player.weapon.bonusStr : 0) + offBonusDmg;
       document.getElementById('stat-int').textContent = player.int + bonusInt;
       document.getElementById('stat-def').textContent = player.def + bonusDef;
-      document.getElementById('stat-agi').textContent = player.agi;
+      document.getElementById('stat-agi').textContent = player.agi + (player.offensePoints >= 2 ? player.offensePoints * 2 : 0);
 
       if (player.companion) {
         document.getElementById('comp-name').textContent = player.companion.name;
@@ -820,6 +830,8 @@
         renderMercenary();
       } else if (state === STATE.QUEST_BOARD) {
         renderQuestBoard();
+      } else if (state === STATE.TRAINING_HALL) {
+        renderTrainingHall();
       } else if (state === STATE.DUNGEON) {
         renderDungeon();
       } else if (state === STATE.COMBAT) {
@@ -935,6 +947,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
+        <button class="btn" style="background:#cba6f7; color:#11111b;" onclick="setGameState(STATE.TRAINING_HALL)">🏋️ Training Hall (${player.skillPoints} SP)</button>
         <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounty Board</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
@@ -942,6 +955,138 @@
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
         <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
       `;
+    }
+
+    // --- PHASE 9: SKILL TREE & SPECIALIZATION MASTERY SYSTEM ---
+    function renderTrainingHall() {
+      document.getElementById('location-title').textContent = '🏋️ Master Instructor\'s Training Hall';
+      document.getElementById('location-desc').textContent = 'Allocate Skill Points earned per level into Offense, Defense, and Utility specializations to unlock active abilities and passive stat multipliers.';
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="background:#181825; padding:10px; border-radius:6px; border:1px solid #313244; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+          <div><strong>Unallocated Skill Points:</strong> <span style="color:#f9e2af; font-size:1.1rem; font-weight:700;">${player.skillPoints} SP</span></div>
+          <button class="btn btn-danger" onclick="respecSkills()">🔄 Respec All Skills (30 Gold)</button>
+        </div>
+
+        <div class="craft-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+          <!-- Offense Tree -->
+          <div class="craft-card ${player.offensePoints > 0 ? 'selected' : ''}">
+            <h3>⚔️ Offense Tree (${player.offensePoints}/3)</h3>
+            <p>Enhances physical strike power, critical chance, and unlocks the Execute finisher ability.</p>
+            <div style="font-size:0.75rem; color:${player.offensePoints >= 1 ? '#a6e3a1' : '#a6adc8'}; margin-bottom:4px;">
+              ${player.offensePoints >= 1 ? '✅' : '🔒'} Tier 1: War Strike (+8% Dmg/pt)
+            </div>
+            <div style="font-size:0.75rem; color:${player.offensePoints >= 2 ? '#a6e3a1' : '#a6adc8'}; margin-bottom:4px;">
+              ${player.offensePoints >= 2 ? '✅' : '🔒'} Tier 2: Critical Mastery (+5% Crit/pt)
+            </div>
+            <div style="font-size:0.75rem; color:${player.offensePoints >= 3 ? '#a6e3a1' : '#f38ba8'}; font-weight:700; margin-bottom:8px;">
+              ${player.offensePoints >= 3 ? '✅ UNLOCKED' : '🔒 Tier 3'}: ⚔️ Execute Ability (3x Dmg, 2x execute if enemy HP<40%, 12 MP)
+            </div>
+            <button class="btn btn-primary" onclick="allocateSkill('offense')" ${player.skillPoints <= 0 || player.offensePoints >= 3 ? 'disabled' : ''}>
+              ${player.offensePoints >= 3 ? 'Max Rank' : 'Allocate Point (+1 SP)'}
+            </button>
+          </div>
+
+          <!-- Defense Tree -->
+          <div class="craft-card ${player.defensePoints > 0 ? 'selected' : ''}">
+            <h3>🛡️ Defense Tree (${player.defensePoints}/3)</h3>
+            <p>Increases armor toughness, maximum health pool, and unlocks the Iron Will defensive barrier.</p>
+            <div style="font-size:0.75rem; color:${player.defensePoints >= 1 ? '#a6e3a1' : '#a6adc8'}; margin-bottom:4px;">
+              ${player.defensePoints >= 1 ? '✅' : '🔒'} Tier 1: Toughness (+10 Max HP & +3 DEF/pt)
+            </div>
+            <div style="font-size:0.75rem; color:${player.defensePoints >= 2 ? '#a6e3a1' : '#a6adc8'}; margin-bottom:4px;">
+              ${player.defensePoints >= 2 ? '✅' : '🔒'} Tier 2: Thick Armor (+4 DEF & +10% Dmg Reduc)
+            </div>
+            <div style="font-size:0.75rem; color:${player.defensePoints >= 3 ? '#a6e3a1' : '#f38ba8'}; font-weight:700; margin-bottom:8px;">
+              ${player.defensePoints >= 3 ? '✅ UNLOCKED' : '🔒 Tier 3'}: 🛡️ Iron Will Ability (Restores 20 HP, 50% Dmg Reduc for 2 turns, 8 MP)
+            </div>
+            <button class="btn btn-accent" onclick="allocateSkill('defense')" ${player.skillPoints <= 0 || player.defensePoints >= 3 ? 'disabled' : ''}>
+              ${player.defensePoints >= 3 ? 'Max Rank' : 'Allocate Point (+1 SP)'}
+            </button>
+          </div>
+
+          <!-- Utility Tree -->
+          <div class="craft-card ${player.utilityPoints > 0 ? 'selected' : ''}">
+            <h3>⚡ Utility Tree (${player.utilityPoints}/3)</h3>
+            <p>Expands mana capacity, gold & crafting material loot yields, and unlocks Mana Surge.</p>
+            <div style="font-size:0.75rem; color:${player.utilityPoints >= 1 ? '#a6e3a1' : '#a6adc8'}; margin-bottom:4px;">
+              ${player.utilityPoints >= 1 ? '✅' : '🔒'} Tier 1: Arcane Flow (+10 Max MP & +2 MP/turn)
+            </div>
+            <div style="font-size:0.75rem; color:${player.utilityPoints >= 2 ? '#a6e3a1' : '#a6adc8'}; margin-bottom:4px;">
+              ${player.utilityPoints >= 2 ? '✅' : '🔒'} Tier 2: Treasure Hunter (+25% Gold & Materials)
+            </div>
+            <div style="font-size:0.75rem; color:${player.utilityPoints >= 3 ? '#a6e3a1' : '#f38ba8'}; font-weight:700; margin-bottom:8px;">
+              ${player.utilityPoints >= 3 ? '✅ UNLOCKED' : '🔒 Tier 3'}: ⚡ Mana Surge Ability (Free action, restores 35 MP, +50% next spell dmg, 0 MP)
+            </div>
+            <button class="btn btn-craft" onclick="allocateSkill('utility')" ${player.skillPoints <= 0 || player.utilityPoints >= 3 ? 'disabled' : ''}>
+              ${player.utilityPoints >= 3 ? 'Max Rank' : 'Allocate Point (+1 SP)'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    function allocateSkill(tree) {
+      if (player.skillPoints <= 0) {
+        logMsg(`⚠️ No unallocated Skill Points remaining! Gain more points by leveling up.`, 'warning');
+        return;
+      }
+      if (tree === 'offense') {
+        if (player.offensePoints >= 3) return;
+        player.offensePoints++;
+        player.skillPoints--;
+        logMsg(`⚔️ Allocated 1 SP into Offense Tree (Rank ${player.offensePoints})!`, 'spell');
+        if (player.offensePoints === 3) logMsg(`🔥 UNLOCKED ACTIVE ABILITY: Execute (3x Damage Finisher)!`, 'loot');
+      } else if (tree === 'defense') {
+        if (player.defensePoints >= 3) return;
+        player.defensePoints++;
+        player.skillPoints--;
+        player.maxHp += 10;
+        player.hp += 10;
+        logMsg(`🛡️ Allocated 1 SP into Defense Tree (Rank ${player.defensePoints})! (+10 Max HP & +3 DEF)`, 'spell');
+        if (player.defensePoints === 3) logMsg(`🔥 UNLOCKED ACTIVE ABILITY: Iron Will (Defensive Barrier & Damage Reduction)!`, 'loot');
+      } else if (tree === 'utility') {
+        if (player.utilityPoints >= 3) return;
+        player.utilityPoints++;
+        player.skillPoints--;
+        player.maxMp += 10;
+        player.mp += 10;
+        logMsg(`⚡ Allocated 1 SP into Utility Tree (Rank ${player.utilityPoints})! (+10 Max MP & Loot Boost)`, 'spell');
+        if (player.utilityPoints === 3) logMsg(`🔥 UNLOCKED ACTIVE ABILITY: Mana Surge (Free Mana Restore & Spell Boost)!`, 'loot');
+      }
+      updateUI();
+      renderTrainingHall();
+    }
+
+    function respecSkills() {
+      const totalAllocated = player.offensePoints + player.defensePoints + player.utilityPoints;
+      if (totalAllocated === 0) {
+        logMsg(`No skills allocated to respec!`, 'warning');
+        return;
+      }
+      if (player.gold < 30) {
+        logMsg(`Requires 30 Gold to respec skill trees!`, 'warning');
+        return;
+      }
+      player.gold -= 30;
+      player.skillPoints += totalAllocated;
+      player.maxHp -= player.defensePoints * 10;
+      player.hp = Math.min(player.hp, player.maxHp);
+      player.maxMp -= player.utilityPoints * 10;
+      player.mp = Math.min(player.mp, player.maxMp);
+
+      player.offensePoints = 0;
+      player.defensePoints = 0;
+      player.utilityPoints = 0;
+      logMsg(`🔄 Respec completed! Refunded ${totalAllocated} Skill Points for 30 Gold.`, 'town');
+      updateUI();
+      renderTrainingHall();
     }
 
     function restAtInn() {
@@ -1730,6 +1875,9 @@
       ctrl.innerHTML = `
         <button class="btn btn-danger" onclick="playerAttack()">⚔️ Attack</button>
         <button class="btn btn-primary" onclick="playerSpell()">🔮 Special / Spell</button>
+        ${player.offensePoints >= 3 ? `<button class="btn btn-danger" onclick="castExecute()">⚔️ Execute (12 MP)</button>` : ''}
+        ${player.defensePoints >= 3 ? `<button class="btn btn-accent" onclick="castIronWill()">🛡️ Iron Will (8 MP)</button>` : ''}
+        ${player.utilityPoints >= 3 ? `<button class="btn btn-craft" onclick="castManaSurge()">⚡ Mana Surge (0 MP)</button>` : ''}
         ${hasBomb ? `<button class="btn btn-craft" onclick="throwBombInCombat()">💣 Fire Bomb</button>` : ''}
         <button class="btn" onclick="fleeCombat()">🏃 Flee</button>
       `;
@@ -1740,6 +1888,60 @@
       if (idx !== -1) {
         useItem(idx);
       }
+    }
+
+    function castExecute() {
+      if (!currentEnemy) return;
+      const cost = 12;
+      if (player.mp < cost) {
+        logMsg(`Not enough MP for Execute! Required: ${cost} MP.`, 'warning');
+        return;
+      }
+      player.mp -= cost;
+      const offMult = 1.0 + (player.offensePoints * 0.08);
+      const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
+      let dmg = Math.floor(totalStr * 3.0 * offMult);
+      if ((currentEnemy.hp / currentEnemy.maxHp) < 0.40) {
+        dmg = Math.floor(dmg * 2.0);
+        logMsg(`💀 EXECUTE CRITICAL! Target is below 40% HP! Dealt ${dmg} fatal physical damage to ${currentEnemy.name}!`, 'combat');
+      } else {
+        logMsg(`⚔️ You execute a heavy finisher! Dealt ${dmg} physical damage to ${currentEnemy.name}!`, 'spell');
+      }
+      currentEnemy.hp -= dmg;
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+      triggerCompanionTurn();
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+      enemyTurn();
+    }
+
+    function castIronWill() {
+      const cost = 8;
+      if (player.mp < cost) {
+        logMsg(`Not enough MP for Iron Will! Required: ${cost} MP.`, 'warning');
+        return;
+      }
+      player.mp -= cost;
+      player.ironWillTurns = 2;
+      player.hp = Math.min(player.maxHp, player.hp + 20);
+      logMsg(`🛡️ Activated IRON WILL! Restored +20 HP and granted 50% damage reduction for 2 turns!`, 'spell');
+      updateUI();
+      enemyTurn();
+    }
+
+    function castManaSurge() {
+      player.mp = Math.min(player.maxMp, player.mp + 35);
+      player.manaSurgeActive = true;
+      logMsg(`⚡ Activated MANA SURGE! Recovered +35 MP! Next spell power increased by +50%!`, 'spell');
+      updateUI();
+      renderCombat();
     }
 
     function triggerCompanionTurn() {
@@ -1764,11 +1966,12 @@
     function playerAttack() {
       if (!currentEnemy) return;
 
+      const offMult = 1.0 + (player.offensePoints * 0.08);
       const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
-      let dmg = Math.max(2, Math.floor(totalStr * 1.2 - currentEnemy.def * 0.5));
+      let dmg = Math.max(2, Math.floor((totalStr * 1.2 - currentEnemy.def * 0.5) * offMult));
 
-      // Crit chance based on agi
-      if (Math.random() < (player.agi * 0.02)) {
+      const critChance = (player.agi * 0.02) + (player.offensePoints >= 2 ? 0.10 : 0);
+      if (Math.random() < critChance) {
         dmg = Math.floor(dmg * 1.75);
         logMsg(`🎯 CRITICAL STRIKE! You strike ${currentEnemy.name} for ${dmg} damage!`, 'combat');
       } else {
@@ -1816,6 +2019,11 @@
       if (!currentEnemy) return;
 
       let bonusInt = (player.companion && !player.companion.isDown && player.companion.id === 'archmage') ? 5 : 0;
+      let surgeMult = player.manaSurgeActive ? 1.5 : 1.0;
+      if (player.manaSurgeActive) {
+        logMsg(`⚡ Mana Surge empowers your spell power by +50%!`, 'spell');
+        player.manaSurgeActive = false;
+      }
 
       if (player.class === 'Warrior') {
         const cost = 5;
@@ -1825,7 +2033,7 @@
         }
         player.mp -= cost;
         const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
-        const dmg = Math.floor(totalStr * 1.5);
+        const dmg = Math.floor(totalStr * 1.5 * surgeMult);
         currentEnemy.hp -= dmg;
         logMsg(`🛡️ You perform Shield Bash! Dealt ${dmg} physical damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Mage') {
@@ -1835,7 +2043,7 @@
           return;
         }
         player.mp -= cost;
-        const dmg = Math.floor((player.int + bonusInt) * 2.2);
+        const dmg = Math.floor((player.int + bonusInt) * 2.2 * surgeMult);
         currentEnemy.hp -= dmg;
         logMsg(`🔥 You launch a flaming Fireball! Dealt ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Rogue') {
@@ -1845,7 +2053,7 @@
           return;
         }
         player.mp -= cost;
-        const dmg = Math.floor(player.agi * 1.8);
+        const dmg = Math.floor(player.agi * 1.8 * surgeMult);
         currentEnemy.hp -= dmg;
         logMsg(`🗡️ Shadow Strike! You strike from darkness for ${dmg} critical damage!`, 'spell');
       }
@@ -1875,8 +2083,16 @@
         if (!currentEnemy || currentEnemy.hp <= 0) return;
 
         let bonusDef = (player.companion && !player.companion.isDown && player.companion.id === 'paladin') ? 4 : 0;
+        bonusDef += (player.defensePoints * 3);
         const totalDef = player.def + (player.armor ? player.armor.bonusDef : 0) + bonusDef;
         let enemyDmg = Math.max(2, Math.floor(currentEnemy.str - totalDef * 0.4));
+        if (player.defensePoints >= 2) enemyDmg = Math.max(1, Math.floor(enemyDmg * 0.90));
+
+        if (player.ironWillTurns > 0) {
+          enemyDmg = Math.max(1, Math.floor(enemyDmg * 0.50));
+          player.ironWillTurns--;
+          logMsg(`🛡️ Iron Will barrier absorbs 50% incoming damage! (${player.ironWillTurns} turns remain)`, 'spell');
+        }
 
         // Paladin companion absorbs 40% damage
         if (player.companion && player.companion.id === 'paladin' && !player.companion.isDown) {
@@ -1972,6 +2188,7 @@
       // Level Up check
       if (player.xp >= player.nextXp) {
         player.level++;
+        player.skillPoints += 2;
         player.xp -= player.nextXp;
         player.nextXp = Math.floor(player.nextXp * 1.5);
         player.maxHp += 15;
@@ -1982,7 +2199,7 @@
         player.int += 2;
         player.def += 2;
         player.agi += 2;
-        logMsg(`🌟 LEVEL UP! You reached Level ${player.level}! All stats increased & health restored!`, 'town');
+        logMsg(`🌟 LEVEL UP! You reached Level ${player.level}! Gained +2 Skill Points! All stats increased & health restored!`, 'town');
 
         if (player.companion) {
           player.companion.level = player.level;
@@ -2029,6 +2246,12 @@
       player.nextXp = 100;
       player.gold = 50;
       player.floor = 1;
+      player.skillPoints = 0;
+      player.offensePoints = 0;
+      player.defensePoints = 0;
+      player.utilityPoints = 0;
+      player.ironWillTurns = 0;
+      player.manaSurgeActive = false;
       player.materials = { iron: 2, dust: 2, core: 1 };
       player.quests.forEach(q => { q.current = 0; q.done = false; });
       setGameState(STATE.CHAR_CREATE);
