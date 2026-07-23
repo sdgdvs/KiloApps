@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KTaskMgr
+**Target App:** KTerm
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -148,3 +148,5 @@ Pass 1 Complete.
 - **KSys**: Added ARIA labels, HTML lang/meta tags, and safe navigator/screen property fallbacks in `ksys.html`. Fixed missing `KillTimer` call on `WM_DESTROY` and increased string buffer capacity in `main.c`.
 
 - **KTask**: Added `Array.isArray` type guards, title/id normalization, ARIA accessibility attributes, keyboard shortcuts, memory leak cleanup for taskStats, and auto-refresh in `ktask.html`. Replaced signed `my_itoa` with `my_utoa` for process IDs > 2GB, added dynamic `WM_SIZE` resizing, listbox selection preservation, shortcuts/timers, and clean process handle management in `main.c`.
+
+- **KTaskMgr**: Added XSS protection with `textContent`, ARIA grid accessibility, `visibilityState` auto-refresh throttling, and `R`/`F5`/`Delete` hotkeys in `ktaskmgr.html` & `ktask.html`. Added flicker-free listbox redraws, global keyboard subclassing, status bar process counter, and System/Idle PID termination protections in `main.c`.
