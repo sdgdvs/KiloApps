@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KTask
+**Target App:** KTaskMgr
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -146,3 +146,5 @@ Pass 1 Complete.
 - **KSynth**: Added ARIA labels, `<label>` elements, try-catch audio playback error handling, noise buffer frame calculation bounds in `ksynth.html`, and input/select element checks before keyboard shortcut execution. Fixed missing `rand()` CRT link error in `main.c` by implementing `fast_rand()`, added focus checks on edit controls before keyboard note processing, zero-initialized `waveHdr`, and enforced minimum sample bounds.
 
 - **KSys**: Added ARIA labels, HTML lang/meta tags, and safe navigator/screen property fallbacks in `ksys.html`. Fixed missing `KillTimer` call on `WM_DESTROY` and increased string buffer capacity in `main.c`.
+
+- **KTask**: Added `Array.isArray` type guards, title/id normalization, ARIA accessibility attributes, keyboard shortcuts, memory leak cleanup for taskStats, and auto-refresh in `ktask.html`. Replaced signed `my_itoa` with `my_utoa` for process IDs > 2GB, added dynamic `WM_SIZE` resizing, listbox selection preservation, shortcuts/timers, and clean process handle management in `main.c`.
