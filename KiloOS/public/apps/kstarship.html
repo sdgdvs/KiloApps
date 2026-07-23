@@ -7,13 +7,14 @@
   <style>
     :root {
       --bg-dark: #050811;
-      --panel-bg: rgba(10, 20, 38, 0.85);
+      --panel-bg: rgba(10, 20, 38, 0.88);
       --border-color: #1e3a5f;
       --cyan-glow: #00f0ff;
       --cyan-dim: #008b9b;
       --amber-alert: #ffaa00;
       --green-status: #39ff14;
       --red-alert: #ff3366;
+      --purple-anomaly: #b026ff;
       --text-main: #c0daf5;
       --font-mono: 'Consolas', 'Courier New', monospace;
     }
@@ -41,7 +42,7 @@
     header {
       background: rgba(8, 16, 30, 0.95);
       border-bottom: 1px solid var(--cyan-dim);
-      padding: 10px 20px;
+      padding: 8px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -55,7 +56,7 @@
     }
 
     .title-logo {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: var(--cyan-glow);
       text-shadow: 0 0 8px var(--cyan-glow);
@@ -63,60 +64,83 @@
     }
 
     .subtitle {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--cyan-dim);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+    }
+
+    .audio-toggle {
+      background: transparent;
+      border: 1px solid var(--cyan-dim);
+      color: var(--cyan-glow);
+      padding: 3px 8px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .audio-toggle:hover {
+      background: rgba(0, 240, 255, 0.2);
+    }
+
     .main-layout {
       display: grid;
       grid-template-columns: 280px 1fr 300px;
-      grid-template-rows: 1fr 180px;
-      gap: 12px;
-      padding: 12px;
+      grid-template-rows: 1fr 170px;
+      gap: 10px;
+      padding: 10px;
       flex: 1;
-      height: calc(100vh - 55px);
+      height: calc(100vh - 48px);
     }
 
     .card-panel {
       background: var(--panel-bg);
       border: 1px solid var(--border-color);
       border-radius: 4px;
-      padding: 14px;
+      padding: 12px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.05);
       position: relative;
+      overflow: hidden;
     }
 
     .panel-header {
       color: var(--cyan-glow);
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       text-transform: uppercase;
       letter-spacing: 1px;
       border-bottom: 1px dashed var(--border-color);
-      padding-bottom: 6px;
+      padding-bottom: 4px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
 
     /* Left Panel: Ship Vitals & Resources */
     .stat-row {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
     .stat-label-val {
       display: flex;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
     }
 
     .bar-bg {
-      height: 10px;
+      height: 9px;
       background: #081220;
       border: 1px solid var(--border-color);
       border-radius: 2px;
@@ -136,26 +160,26 @@
     .resource-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
+      gap: 6px;
+      margin-top: 4px;
     }
 
     .res-card {
       background: rgba(15, 30, 55, 0.6);
       border: 1px solid #162c4a;
-      padding: 8px;
+      padding: 6px;
       border-radius: 4px;
       text-align: center;
     }
 
     .res-val {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: bold;
       color: var(--cyan-glow);
     }
 
     .res-name {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: #7b9bb9;
       text-transform: uppercase;
     }
@@ -172,6 +196,52 @@
       overflow: hidden;
       background: #03060d;
       border: 1px solid var(--cyan-dim);
+      padding: 0;
+    }
+
+    .view-toggle-bar {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 10;
+      display: flex;
+      gap: 6px;
+    }
+
+    .mode-btn {
+      background: rgba(8, 16, 30, 0.85);
+      border: 1px solid var(--cyan-dim);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .mode-btn.active {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--cyan-glow);
+      color: var(--cyan-glow);
+      font-weight: bold;
+    }
+
+    .hud-overlay {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      pointer-events: none;
+      font-size: 0.75rem;
+    }
+
+    .hud-box {
+      background: rgba(5, 12, 24, 0.85);
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      border-radius: 3px;
     }
 
     .star-map-canvas {
@@ -180,49 +250,109 @@
       display: block;
     }
 
-    .hud-overlay {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      justify-content: space-between;
-      pointer-events: none;
-      font-size: 0.8rem;
+    /* ASCII Matrix View */
+    .ascii-matrix-container {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #020409;
+      padding: 16px;
+      box-sizing: border-box;
+      font-family: var(--font-mono);
     }
 
-    .hud-box {
-      background: rgba(5, 12, 24, 0.8);
-      border: 1px solid var(--border-color);
-      padding: 6px 12px;
-      border-radius: 3px;
+    .ascii-grid-table {
+      border-collapse: collapse;
+      margin: 0 auto;
     }
+
+    .ascii-grid-table td, .ascii-grid-table th {
+      width: 36px;
+      height: 36px;
+      text-align: center;
+      vertical-align: middle;
+      border: 1px solid #0d223a;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .ascii-grid-table th {
+      font-size: 0.75rem;
+      color: var(--cyan-dim);
+      background: rgba(10, 25, 45, 0.5);
+      cursor: default;
+    }
+
+    .ascii-grid-table td:hover {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--cyan-glow);
+    }
+
+    .ascii-cell-empty { color: #1e3a5f; }
+    .ascii-cell-ship { color: var(--cyan-glow); font-weight: bold; text-shadow: 0 0 6px var(--cyan-glow); }
+    .ascii-cell-star { color: #ffee55; text-shadow: 0 0 6px #ffee55; }
+    .ascii-cell-station { color: #3b82f6; text-shadow: 0 0 6px #3b82f6; }
+    .ascii-cell-asteroid { color: var(--amber-alert); }
+    .ascii-cell-anomaly { color: var(--purple-anomaly); text-shadow: 0 0 6px var(--purple-anomaly); }
+    .ascii-cell-pirate { color: var(--red-alert); text-shadow: 0 0 6px var(--red-alert); }
 
     /* Right Panel: Controls & System Actions */
     .action-btn {
       background: rgba(12, 30, 58, 0.8);
       border: 1px solid var(--cyan-dim);
       color: var(--cyan-glow);
-      padding: 10px 14px;
+      padding: 8px 10px;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       border-radius: 4px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
 
     .action-btn:hover {
-      background: rgba(0, 240, 255, 0.15);
+      background: rgba(0, 240, 255, 0.18);
       border-color: var(--cyan-glow);
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
-      transform: translateY(-1px);
     }
 
-    .action-btn:active {
-      transform: translateY(1px);
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #1e3a5f;
+    }
+
+    /* D-Pad Navigation Controls */
+    .dpad-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .dpad-btn {
+      background: rgba(10, 25, 45, 0.9);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      padding: 6px 0;
+      text-align: center;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .dpad-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: var(--cyan-glow);
+      color: var(--cyan-glow);
     }
 
     /* Bottom Panel: Event Log / Terminal */
@@ -231,7 +361,7 @@
       grid-row: 2 / 3;
       background: rgba(4, 8, 16, 0.95);
       border: 1px solid var(--border-color);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       display: flex;
       flex-direction: column;
     }
@@ -239,26 +369,23 @@
     .log-content {
       flex: 1;
       overflow-y: auto;
-      padding: 10px;
+      padding: 8px 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
 
-    .log-entry {
-      line-height: 1.4;
-    }
-
+    .log-entry { line-height: 1.35; }
     .log-sys { color: #5f87b8; }
     .log-warn { color: var(--amber-alert); }
     .log-alert { color: var(--red-alert); }
     .log-good { color: var(--green-status); }
 
-    /* Modal dialog */
+    /* Modals */
     .modal-overlay {
-      position: absolute;
+      position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(2, 5, 12, 0.85);
+      background: rgba(2, 5, 12, 0.88);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -269,13 +396,38 @@
       background: #0a1426;
       border: 2px solid var(--cyan-glow);
       border-radius: 6px;
-      padding: 24px;
-      width: 420px;
+      padding: 20px;
+      width: 480px;
+      max-width: 92vw;
       box-shadow: 0 0 25px rgba(0, 240, 255, 0.4);
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 12px;
     }
+
+    .class-selector {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .class-option {
+      border: 1px solid var(--border-color);
+      background: rgba(12, 25, 48, 0.6);
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .class-option.selected {
+      border-color: var(--cyan-glow);
+      background: rgba(0, 240, 255, 0.15);
+      box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+    }
+
+    .class-name { font-weight: bold; color: var(--cyan-glow); font-size: 0.85rem; }
+    .class-desc { font-size: 0.68rem; color: #8ba9c9; margin-top: 2px; }
 
     .input-field {
       background: #040914;
@@ -283,9 +435,10 @@
       color: var(--cyan-glow);
       padding: 8px 12px;
       font-family: var(--font-mono);
-      font-size: 1rem;
+      font-size: 0.95rem;
       outline: none;
       border-radius: 4px;
+      width: 100%;
     }
 
     .input-field:focus {
@@ -299,10 +452,12 @@
   <header>
     <div class="title-container">
       <span class="title-logo">🚀 KSTARSHIP</span>
-      <span class="subtitle">Sci-Fi Sector Command v1.0</span>
+      <span class="subtitle">Sci-Fi Sector Command v2.0</span>
     </div>
-    <div style="font-size: 0.8rem; color: var(--cyan-dim);">
-      SECTOR: <span id="currentSectorLabel" style="color: var(--cyan-glow);">ALPHA-01</span>
+    <div class="header-info">
+      <button class="audio-toggle" id="btnAudioToggle" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+      <div>SECTOR: <span id="currentSectorLabel" style="color: var(--cyan-glow);">ALPHA-01</span></div>
+      <div>GRID: <span id="gridCoordsLabel" style="color: var(--amber-alert);">D4</span></div>
     </div>
   </header>
 
@@ -336,25 +491,25 @@
         <div class="bar-bg"><div class="bar-fill bar-shields" id="barShields" style="width: 100%;"></div></div>
       </div>
 
-      <div class="panel-header" style="margin-top: 6px;">
+      <div class="panel-header" style="margin-top: 4px;">
         <span>Manifest & Inventory</span>
       </div>
 
       <div class="resource-grid">
         <div class="res-card">
-          <div class="res-val" id="resCredits">1,200</div>
+          <div class="res-val" id="resCredits">1,000</div>
           <div class="res-name">Credits</div>
         </div>
         <div class="res-card">
-          <div class="res-val" id="resOre">25</div>
+          <div class="res-val" id="resOre">0</div>
           <div class="res-name">Ore (Tons)</div>
         </div>
         <div class="res-card">
-          <div class="res-val" id="resCrew">12</div>
+          <div class="res-val" id="resCrew">10</div>
           <div class="res-name">Crew Count</div>
         </div>
         <div class="res-card">
-          <div class="res-val" id="resScraps">40</div>
+          <div class="res-val" id="resScraps">25</div>
           <div class="res-name">Tech Scrap</div>
         </div>
       </div>
@@ -363,107 +518,289 @@
     <!-- Center: Sector Star Map Viewport -->
     <div class="card-panel viewport-panel">
       <div class="hud-overlay">
-        <div class="hud-box">SYSTEM: SOLARIS PRIME</div>
-        <div class="hud-box" style="color: var(--amber-alert);">BEACON: ACTIVE</div>
+        <div class="hud-box" id="hudSystemLabel">SYSTEM: SOLARIS PRIME</div>
+        <div class="hud-box" id="hudCellType" style="color: var(--amber-alert);">OBJECT: DEEP SPACE</div>
       </div>
+
+      <div class="view-toggle-bar">
+        <button class="mode-btn active" id="btnModeCanvas" onclick="setMapMode('canvas')">🌌 GRAPHICAL</button>
+        <button class="mode-btn" id="btnModeAscii" onclick="setMapMode('ascii')">📟 ASCII MATRIX</button>
+      </div>
+
       <canvas id="starMapCanvas" class="star-map-canvas"></canvas>
+
+      <div id="asciiMatrixContainer" class="ascii-matrix-container">
+        <table class="ascii-grid-table" id="asciiGridTable"></table>
+      </div>
     </div>
 
     <!-- Right: Command Deck Controls -->
     <div class="card-panel">
       <div class="panel-header">
-        <span>Bridge Controls</span>
+        <span>Sector Navigation Grid</span>
+      </div>
+
+      <!-- Navigation D-Pad -->
+      <div class="dpad-container">
+        <button class="dpad-btn" onclick="moveShip(-1, -1)">NW</button>
+        <button class="dpad-btn" onclick="moveShip(0, -1)">N ▲</button>
+        <button class="dpad-btn" onclick="moveShip(1, -1)">NE</button>
+        <button class="dpad-btn" onclick="moveShip(-1, 0)">◄ W</button>
+        <button class="dpad-btn" style="color: var(--cyan-glow); font-weight:bold;" onclick="centerView()">●</button>
+        <button class="dpad-btn" onclick="moveShip(1, 0)">E ►</button>
+        <button class="dpad-btn" onclick="moveShip(-1, 1)">SW</button>
+        <button class="dpad-btn" onclick="moveShip(0, 1)">S ▼</button>
+        <button class="dpad-btn" onclick="moveShip(1, 1)">SE</button>
+      </div>
+
+      <div class="panel-header" style="margin-top: 4px;">
+        <span>Bridge Actions</span>
       </div>
 
       <button class="action-btn" onclick="btnScanSector()">
-        <span>📡 SCAN SYSTEM</span>
-        <small>[E-10]</small>
+        <span>📡 SCAN SECTOR GRID</span>
+        <small>-10 E</small>
       </button>
 
       <button class="action-btn" onclick="btnWarpJump()">
-        <span>🌌 WARP JUMP</span>
-        <small>[F-15]</small>
+        <span>🌌 HYPER WARP JUMP</span>
+        <small>-15 F</small>
       </button>
 
-      <button class="action-btn" onclick="btnMineAsteroids()">
-        <span>⛏️ MINE ASTEROIDS</span>
-        <small>[E-15]</small>
+      <button class="action-btn" onclick="btnMineAsteroids()" id="btnMine">
+        <span>⛏️ MINE ASTEROID</span>
+        <small>-15 E</small>
       </button>
 
-      <button class="action-btn" onclick="btnDockStation()">
+      <button class="action-btn" onclick="btnDockStation()" id="btnDock">
         <span>⚓ DOCK AT OUTPOST</span>
-        <small>FREE</small>
+        <small>STATION</small>
+      </button>
+
+      <button class="action-btn" onclick="btnShieldBoost()">
+        <span>🛡️ BOOST DEFLECTORS</span>
+        <small>-15 E</small>
       </button>
 
       <button class="action-btn" onclick="btnRepairShip()">
         <span>🛠️ REPAIR HULL</span>
-        <small>50 CREDITS</small>
+        <small>50 CR / 10 SCRAP</small>
       </button>
-
-      <div class="panel-header" style="margin-top: 10px;">
-        <span>Subsystems</span>
-      </div>
-
-      <div style="font-size: 0.75rem; display: flex; flex-direction: column; gap: 4px;">
-        <div style="display: flex; justify-content: space-between;">
-          <span>Sublight Thrusters</span><span style="color: var(--green-status);">NOMINAL</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span>Long Range Sensors</span><span style="color: var(--green-status);">NOMINAL</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span>Life Support Array</span><span style="color: var(--green-status);">NOMINAL</span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span>Deflector Array</span><span style="color: var(--amber-alert);">STABLE</span>
-        </div>
-      </div>
     </div>
 
     <!-- Bottom: Event Console Log -->
     <div class="card-panel log-panel">
-      <div class="panel-header" style="padding: 6px 10px; border-bottom: 1px solid var(--border-color);">
+      <div class="panel-header" style="padding: 4px 10px; border-bottom: 1px solid var(--border-color);">
         <span>Captain's Tactical Feed & Terminal Log</span>
       </div>
-      <div class="log-content" id="logConsole">
-        <div class="log-entry log-sys">[SYSTEM] Subsystems initialized. Command deck online.</div>
-        <div class="log-entry log-good">[LOG] Starship commissioned. Awaiting captain's commands.</div>
-      </div>
+      <div class="log-content" id="logConsole"></div>
     </div>
   </div>
 
-  <!-- Initial Ship Naming Modal -->
+  <!-- Outpost Services Modal -->
+  <div class="modal-overlay" id="stationModal" style="display: none;">
+    <div class="modal-card">
+      <div class="panel-header" style="font-size: 1rem;">
+        <span>⚓ ORBITAL OUTPOST SERVICES</span>
+        <button class="audio-toggle" onclick="closeStationModal()">✕ CLOSE</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #a0c0e0;">Welcome Captain. Outpost supplies and refueling docks are open.</p>
+      
+      <button class="action-btn" onclick="stationRefuel()">
+        <span>⛽ REFUEL HYPER TANK (+30 Fuel)</span>
+        <small>40 CREDITS</small>
+      </button>
+      <button class="action-btn" onclick="stationRepair()">
+        <span>🛠️ HULL RECONDITIONING (+40 Hull)</span>
+        <small>80 CREDITS</small>
+      </button>
+      <button class="action-btn" onclick="stationSellOre()">
+        <span>💰 SELL ALL MINED ORE</span>
+        <small>+25 CR / TON</small>
+      </button>
+      <button class="action-btn" onclick="stationRecruitCrew()">
+        <span>👨‍🚀 RECRUIT CREW OFFICERS (+3 Crew)</span>
+        <small>100 CREDITS</small>
+      </button>
+    </div>
+  </div>
+
+  <!-- Initial Ship Creation Modal -->
   <div class="modal-overlay" id="initModal">
     <div class="modal-card">
-      <div class="panel-header" style="font-size: 1.1rem;">
-        <span>Commission Starship</span>
+      <div class="panel-header" style="font-size: 1.05rem;">
+        <span>COMMISSION STARSHIP</span>
       </div>
-      <p style="font-size: 0.85rem; color: #a0c0e0; line-height: 1.4;">
-        Welcome Captain. Assign a registry designation to your vessel to launch operations into the unknown frontier.
+      <p style="font-size: 0.8rem; color: #a0c0e0; line-height: 1.3;">
+        Captain, enter vessel designation and select vessel blueprint to launch frontier sector exploration.
       </p>
+
       <input type="text" id="shipNameInput" class="input-field" value="SS ANTIGRAVITY" maxlength="24">
-      <button class="action-btn" style="justify-content: center;" onclick="confirmShipName()">
-        INITIALIZE COMMAND DECK
+
+      <div class="class-selector">
+        <div class="class-option selected" id="optCorvette" onclick="selectClass('corvette')">
+          <div class="class-name">EXPLORER CORVETTE</div>
+          <div class="class-desc">Balanced vessel. High fuel capacity & versatile sensors.</div>
+        </div>
+        <div class="class-option" id="optFrigate" onclick="selectClass('frigate')">
+          <div class="class-name">MINING FRIGATE</div>
+          <div class="class-desc">Reinforced hull, heavy mining lasers & bonus ore storage.</div>
+        </div>
+        <div class="class-option" id="optInterceptor" onclick="selectClass('interceptor')">
+          <div class="class-name">TACTICAL INTERCEPTOR</div>
+          <div class="class-desc">High reactor energy, powerful deflectors & speed.</div>
+        </div>
+        <div class="class-option" id="optCruiser" onclick="selectClass('cruiser')">
+          <div class="class-name">DEEP SPACE CRUISER</div>
+          <div class="class-desc">Large crew quarters, extended warp range & extra credits.</div>
+        </div>
+      </div>
+
+      <button class="action-btn" style="justify-content: center; margin-top: 6px;" onclick="confirmShipName()">
+        🚀 INITIALIZE COMMAND DECK
       </button>
     </div>
   </div>
 
   <script>
-    // State management
+    // Web Audio Synthesizer
+    let audioCtx = null;
+    let audioMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      document.getElementById('btnAudioToggle').innerText = audioMuted ? '🔇 AUDIO: OFF' : '🔊 AUDIO: ON';
+    }
+
+    function playSound(type) {
+      if (audioMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'move') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(700, now + 0.05);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'scan') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.linearRampToValueAtTime(1600, now + 0.15);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        } else if (type === 'mine') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(250, now);
+          osc.frequency.linearRampToValueAtTime(120, now + 0.2);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'warp') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.4);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === 'dock') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.setValueAtTime(659.25, now + 0.08);
+          osc.frequency.setValueAtTime(783.99, now + 0.16);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'alert') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(300, now);
+          osc.frequency.setValueAtTime(200, now + 0.1);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'good') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(1000, now + 0.15);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      } catch (e) { }
+    }
+
+    // Game State
     const state = {
       shipName: 'SS ANTIGRAVITY',
+      shipClass: 'CORVETTE',
       sector: 'ALPHA-01',
       hull: 100, maxHull: 100,
-      fuel: 80, maxFuel: 100,
+      fuel: 100, maxFuel: 100,
       energy: 100, maxEnergy: 100,
       shields: 75, maxShields: 75,
-      credits: 1200,
-      ore: 25,
-      crew: 12,
-      scraps: 40,
-      stars: [],
-      shipX: 0, shipY: 0
+      credits: 1000,
+      ore: 0,
+      crew: 10,
+      scraps: 25,
+      shipX: 3, shipY: 3, // 0..7 grid
+      gridSize: 8,
+      gridMap: [], // 8x8 matrix of object types: 'empty', 'star', 'station', 'asteroid', 'anomaly', 'pirate'
+      mapMode: 'canvas', // 'canvas' or 'ascii'
+      moveCount: 0
     };
+
+    const CELL_TYPES = {
+      EMPTY: { code: 'empty', symbol: '.', asciiClass: 'ascii-cell-empty', name: 'DEEP SPACE' },
+      STAR: { code: 'star', symbol: '★', asciiClass: 'ascii-cell-star', name: 'SOLAR STAR' },
+      STATION: { code: 'station', symbol: '⚓', asciiClass: 'ascii-cell-station', name: 'ORBITAL OUTPOST' },
+      ASTEROID: { code: 'asteroid', symbol: '⬢', asciiClass: 'ascii-cell-asteroid', name: 'ASTEROID FIELD' },
+      ANOMALY: { code: 'anomaly', symbol: '🗲', asciiClass: 'ascii-cell-anomaly', name: 'QUANTUM ANOMALY' },
+      PIRATE: { code: 'pirate', symbol: '☠', asciiClass: 'ascii-cell-pirate', name: 'HOSTILE PIRATE' }
+    };
+
+    function generateSectorGrid() {
+      state.gridMap = [];
+      for (let y = 0; y < state.gridSize; y++) {
+        const row = [];
+        for (let x = 0; x < state.gridSize; x++) {
+          if (x === state.shipX && y === state.shipY) {
+            row.push(CELL_TYPES.EMPTY);
+            continue;
+          }
+          const rand = Math.random();
+          if (rand < 0.06) row.push(CELL_TYPES.STATION);
+          else if (rand < 0.16) row.push(CELL_TYPES.STAR);
+          else if (rand < 0.32) row.push(CELL_TYPES.ASTEROID);
+          else if (rand < 0.42) row.push(CELL_TYPES.ANOMALY);
+          else if (rand < 0.50) row.push(CELL_TYPES.PIRATE);
+          else row.push(CELL_TYPES.EMPTY);
+        }
+        state.gridMap.push(row);
+      }
+    }
 
     function addLog(msg, type = 'sys') {
       const consoleEl = document.getElementById('logConsole');
@@ -475,9 +812,69 @@
       consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 
+    function selectClass(cls) {
+      document.querySelectorAll('.class-option').forEach(el => el.classList.remove('selected'));
+      if (cls === 'corvette') {
+        document.getElementById('optCorvette').classList.add('selected');
+        state.shipClass = 'CORVETTE';
+      } else if (cls === 'frigate') {
+        document.getElementById('optFrigate').classList.add('selected');
+        state.shipClass = 'FRIGATE';
+      } else if (cls === 'interceptor') {
+        document.getElementById('optInterceptor').classList.add('selected');
+        state.shipClass = 'INTERCEPTOR';
+      } else if (cls === 'cruiser') {
+        document.getElementById('optCruiser').classList.add('selected');
+        state.shipClass = 'CRUISER';
+      }
+    }
+
+    function confirmShipName() {
+      const nameInput = document.getElementById('shipNameInput').value.trim();
+      if (nameInput) state.shipName = nameInput.toUpperCase();
+
+      if (state.shipClass === 'CORVETTE') {
+        state.maxHull = 100; state.hull = 100;
+        state.maxFuel = 120; state.fuel = 120;
+        state.maxEnergy = 100; state.energy = 100;
+        state.maxShields = 75; state.shields = 75;
+        state.credits = 1000; state.crew = 10;
+      } else if (state.shipClass === 'FRIGATE') {
+        state.maxHull = 150; state.hull = 150;
+        state.maxFuel = 90; state.fuel = 90;
+        state.maxEnergy = 90; state.energy = 90;
+        state.maxShields = 50; state.shields = 50;
+        state.credits = 800; state.crew = 16; state.ore = 20;
+      } else if (state.shipClass === 'INTERCEPTOR') {
+        state.maxHull = 80; state.hull = 80;
+        state.maxFuel = 100; state.fuel = 100;
+        state.maxEnergy = 130; state.energy = 130;
+        state.maxShields = 100; state.shields = 100;
+        state.credits = 1200; state.crew = 8;
+      } else if (state.shipClass === 'CRUISER') {
+        state.maxHull = 110; state.hull = 110;
+        state.maxFuel = 140; state.fuel = 140;
+        state.maxEnergy = 110; state.energy = 110;
+        state.maxShields = 85; state.shields = 85;
+        state.credits = 1500; state.crew = 20;
+      }
+
+      document.getElementById('initModal').style.display = 'none';
+      generateSectorGrid();
+      updateUI();
+      playSound('good');
+      addLog(`Commissioned ${state.shipClass} [${state.shipName}]. Command assumed.`, 'good');
+    }
+
     function updateUI() {
       document.getElementById('shipNameDisplay').innerText = state.shipName;
+      document.getElementById('shipClassTag').innerText = state.shipClass;
       document.getElementById('currentSectorLabel').innerText = state.sector;
+
+      const colChar = String.fromCharCode(65 + state.shipX);
+      const rowNum = state.shipY + 1;
+      const coordStr = `${colChar}${rowNum}`;
+      document.getElementById('gridCoordsLabel').innerText = coordStr;
 
       document.getElementById('valHull').innerText = `${state.hull}/${state.maxHull}`;
       document.getElementById('barHull').style.width = `${(state.hull / state.maxHull) * 100}%`;
@@ -495,150 +892,480 @@
       document.getElementById('resOre').innerText = state.ore;
       document.getElementById('resCrew').innerText = state.crew;
       document.getElementById('resScraps').innerText = state.scraps;
+
+      // Current cell object
+      const currentCell = state.gridMap[state.shipY][state.shipX];
+      document.getElementById('hudCellType').innerText = `OBJECT: ${currentCell.name}`;
+
+      renderAsciiGrid();
     }
 
-    function confirmShipName() {
-      const input = document.getElementById('shipNameInput').value.trim();
-      if (input) state.shipName = input;
-      document.getElementById('initModal').style.display = 'none';
+    // Sector Movement & Navigation
+    function moveShip(dx, dy) {
+      if (state.hull <= 0) {
+        addLog('SHIP DESTROYED! Cannot navigate.', 'alert');
+        playSound('alert');
+        return;
+      }
+
+      if (state.fuel < 1) {
+        addLog('FUEL EXHAUSTED! Starship drifting in deep space.', 'warn');
+        playSound('alert');
+        return;
+      }
+
+      const newX = state.shipX + dx;
+      const newY = state.shipY + dy;
+
+      if (newX < 0 || newX >= state.gridSize || newY < 0 || newY >= state.gridSize) {
+        addLog('Sector boundary reached. Engage Warp Jump to leave system.', 'warn');
+        return;
+      }
+
+      state.shipX = newX;
+      state.shipY = newY;
+      state.fuel = Math.max(0, state.fuel - 1);
+      state.energy = Math.max(0, state.energy - 1);
+
+      state.moveCount++;
+      if (state.moveCount % 6 === 0) {
+        // Crew consumption
+        if (state.crew > 0) addLog('Life support consumed 1 unit supplies for crew.', 'sys');
+      }
+
+      playSound('move');
+
+      // Trigger cell events
+      const cell = state.gridMap[state.shipY][state.shipX];
+      if (cell === CELL_TYPES.STAR) {
+        const recharged = Math.min(state.maxEnergy - state.energy, 25);
+        state.energy += recharged;
+        addLog(`[SOLAR] Harvesting energy from star radiation (+${recharged} Energy).`, 'good');
+        playSound('good');
+      } else if (cell === CELL_TYPES.STATION) {
+        addLog(`[OUTPOST] Entering station dock perimeter. Station services online.`, 'good');
+        playSound('dock');
+        openStationModal();
+      } else if (cell === CELL_TYPES.ASTEROID) {
+        addLog(`[ASTEROID] Entered dense asteroid belt. Use Mine Asteroids command.`, 'warn');
+        if (Math.random() < 0.25) {
+          const dmg = Math.floor(Math.random() * 8) + 4;
+          if (state.shields >= dmg) {
+            state.shields -= dmg;
+            addLog(`Asteroid fragment impact! Shields absorbed ${dmg} damage.`, 'warn');
+          } else {
+            const remainder = dmg - state.shields;
+            state.shields = 0;
+            state.hull = Math.max(0, state.hull - remainder);
+            addLog(`Asteroid impact breached shields! Hull took ${remainder} damage!`, 'alert');
+            playSound('alert');
+          }
+        }
+      } else if (cell === CELL_TYPES.ANOMALY) {
+        playSound('scan');
+        const randEvent = Math.random();
+        if (randEvent < 0.4) {
+          const scrapFound = Math.floor(Math.random() * 15) + 5;
+          state.scraps += scrapFound;
+          addLog(`[ANOMALY] Salvaged derelict probe! (+${scrapFound} Tech Scrap)`, 'good');
+        } else if (randEvent < 0.7) {
+          state.energy = state.maxEnergy;
+          addLog(`[ANOMALY] Cosmic ion surge! Reactor energy fully recharged!`, 'good');
+        } else {
+          state.shields = Math.max(0, state.shields - 15);
+          addLog(`[ANOMALY] Spatial distortion flare! Shield matrix drained (-15 Shields).`, 'warn');
+        }
+      } else if (cell === CELL_TYPES.PIRATE) {
+        playSound('alert');
+        addLog(`[HOSTILE] PIRATE RAIDER AMBUSH! Red Alert active!`, 'alert');
+        const pDmg = Math.floor(Math.random() * 14) + 8;
+        if (state.shields >= pDmg) {
+          state.shields -= pDmg;
+          addLog(`Pirate disruptor fire hit shields (-${pDmg} Shields).`, 'warn');
+        } else {
+          const rem = pDmg - state.shields;
+          state.shields = 0;
+          state.hull = Math.max(0, state.hull - rem);
+          addLog(`Shields collapsed! Hull took ${rem} combat damage!`, 'alert');
+        }
+      }
+
       updateUI();
-      addLog(`Command assumed by Captain on board the ${state.shipName}.`, 'good');
     }
 
-    // Star Map Canvas rendering
+    function centerView() {
+      addLog(`Current location locked: [${String.fromCharCode(65 + state.shipX)}${state.shipY + 1}]`, 'sys');
+    }
+
+    // Actions
+    function btnScanSector() {
+      if (state.energy < 10) {
+        addLog('Insufficient energy for sensor scan.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 10;
+      playSound('scan');
+      
+      let counts = { station: 0, asteroid: 0, anomaly: 0, pirate: 0 };
+      for (let y = 0; y < state.gridSize; y++) {
+        for (let x = 0; x < state.gridSize; x++) {
+          const code = state.gridMap[y][x].code;
+          if (counts[code] !== undefined) counts[code]++;
+        }
+      }
+      addLog(`[SCAN COMPLETE] Outposts: ${counts.station} | Asteroids: ${counts.asteroid} | Anomalies: ${counts.anomaly} | Hostiles: ${counts.pirate}`, 'sys');
+      updateUI();
+    }
+
+    function btnWarpJump() {
+      if (state.fuel < 15) {
+        addLog('Insufficient Hyper Fuel for sector jump!', 'alert');
+        playSound('alert');
+        return;
+      }
+      state.fuel -= 15;
+      playSound('warp');
+
+      const sectors = ['ALPHA-01', 'BETA-07', 'GAMMA-09', 'NEBULA-X', 'SOLARIS-IV', 'ORION-9', 'OMEGA-99'];
+      state.sector = sectors[Math.floor(Math.random() * sectors.length)];
+
+      state.shipX = Math.floor(Math.random() * 8);
+      state.shipY = Math.floor(Math.random() * 8);
+
+      generateSectorGrid();
+      updateUI();
+      addLog(`[WARP JUMP] Disengaged hyperdrive. Arrived at sector ${state.sector}.`, 'good');
+    }
+
+    function btnMineAsteroids() {
+      const currentCell = state.gridMap[state.shipY][state.shipX];
+      if (currentCell !== CELL_TYPES.ASTEROID) {
+        addLog('No mining targets detected in immediate grid space.', 'warn');
+        return;
+      }
+      if (state.energy < 15) {
+        addLog('Insufficient reactor energy for mining lasers.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 15;
+      playSound('mine');
+      const minedOre = Math.floor(Math.random() * 10) + 4;
+      const minedScrap = Math.floor(Math.random() * 4) + 1;
+      state.ore += minedOre;
+      state.scraps += minedScrap;
+      updateUI();
+      addLog(`[MINING LASER] Extracted ${minedOre} tons rare ore & ${minedScrap} tech scrap!`, 'good');
+    }
+
+    function btnDockStation() {
+      const currentCell = state.gridMap[state.shipY][state.shipX];
+      if (currentCell !== CELL_TYPES.STATION) {
+        addLog('Outpost docking clearance unavailable outside station grid.', 'warn');
+        return;
+      }
+      openStationModal();
+    }
+
+    function btnShieldBoost() {
+      if (state.energy < 15) {
+        addLog('Insufficient energy to charge shield matrix.', 'warn');
+        playSound('alert');
+        return;
+      }
+      if (state.shields >= state.maxShields) {
+        addLog('Shield matrix already at maximum capacity.', 'sys');
+        return;
+      }
+      state.energy -= 15;
+      state.shields = Math.min(state.maxShields, state.shields + 25);
+      playSound('good');
+      updateUI();
+      addLog(`[DEFLECTORS] Diverted energy to shields (+25 Shields).`, 'good');
+    }
+
+    function btnRepairShip() {
+      if (state.hull >= state.maxHull) {
+        addLog('Hull integrity already nominal (100%).', 'sys');
+        return;
+      }
+      if (state.credits >= 50) {
+        state.credits -= 50;
+        state.hull = Math.min(state.maxHull, state.hull + 25);
+        playSound('good');
+        updateUI();
+        addLog(`[REPAIR] Nanite welding repaired hull (+25 HP). Cost: 50 Cr.`, 'good');
+      } else if (state.scraps >= 10) {
+        state.scraps -= 10;
+        state.hull = Math.min(state.maxHull, state.hull + 20);
+        playSound('good');
+        updateUI();
+        addLog(`[REPAIR] Used 10 Tech Scrap to patch hull (+20 HP).`, 'good');
+      } else {
+        addLog('Insufficient credits or scrap to conduct hull repairs.', 'warn');
+        playSound('alert');
+      }
+    }
+
+    // Outpost Modal Actions
+    function openStationModal() {
+      playSound('dock');
+      document.getElementById('stationModal').style.display = 'flex';
+    }
+    function closeStationModal() {
+      document.getElementById('stationModal').style.display = 'none';
+    }
+
+    function stationRefuel() {
+      if (state.credits < 40) {
+        addLog('Insufficient credits for refueling.', 'warn');
+        return;
+      }
+      state.credits -= 40;
+      state.fuel = Math.min(state.maxFuel, state.fuel + 30);
+      updateUI();
+      playSound('good');
+      addLog('[STATION] Refueled hyper tanks (+30 Fuel).', 'good');
+    }
+
+    function stationRepair() {
+      if (state.credits < 80) {
+        addLog('Insufficient credits for full hull repair.', 'warn');
+        return;
+      }
+      state.credits -= 80;
+      state.hull = Math.min(state.maxHull, state.hull + 40);
+      updateUI();
+      playSound('good');
+      addLog('[STATION] Drydock hull reconditioning (+40 HP).', 'good');
+    }
+
+    function stationSellOre() {
+      if (state.ore <= 0) {
+        addLog('No ore in cargo bay to sell.', 'warn');
+        return;
+      }
+      const earned = state.ore * 25;
+      state.credits += earned;
+      addLog(`[STATION] Sold ${state.ore} tons of rare ore for +${earned} Cr!`, 'good');
+      state.ore = 0;
+      updateUI();
+      playSound('good');
+    }
+
+    function stationRecruitCrew() {
+      if (state.credits < 100) {
+        addLog('Insufficient credits to hire crew officers.', 'warn');
+        return;
+      }
+      state.credits -= 100;
+      state.crew += 3;
+      updateUI();
+      playSound('good');
+      addLog('[STATION] Recruited 3 veteran crew officers.', 'good');
+    }
+
+    // View Mode Switching
+    function setMapMode(mode) {
+      state.mapMode = mode;
+      document.getElementById('btnModeCanvas').classList.toggle('active', mode === 'canvas');
+      document.getElementById('btnModeAscii').classList.toggle('active', mode === 'ascii');
+
+      const canvasEl = document.getElementById('starMapCanvas');
+      const asciiEl = document.getElementById('asciiMatrixContainer');
+
+      if (mode === 'canvas') {
+        canvasEl.style.display = 'block';
+        asciiEl.style.display = 'none';
+      } else {
+        canvasEl.style.display = 'none';
+        asciiEl.style.display = 'flex';
+        renderAsciiGrid();
+      }
+    }
+
+    function renderAsciiGrid() {
+      const table = document.getElementById('asciiGridTable');
+      table.innerHTML = '';
+
+      // Header row
+      const headRow = document.createElement('tr');
+      const cornerTh = document.createElement('th');
+      cornerTh.innerText = '#';
+      headRow.appendChild(cornerTh);
+
+      for (let x = 0; x < state.gridSize; x++) {
+        const th = document.createElement('th');
+        th.innerText = String.fromCharCode(65 + x);
+        headRow.appendChild(th);
+      }
+      table.appendChild(headRow);
+
+      // Grid rows
+      for (let y = 0; y < state.gridSize; y++) {
+        const tr = document.createElement('tr');
+        const labelTd = document.createElement('th');
+        labelTd.innerText = (y + 1).toString();
+        tr.appendChild(labelTd);
+
+        for (let x = 0; x < state.gridSize; x++) {
+          const td = document.createElement('td');
+          if (x === state.shipX && y === state.shipY) {
+            td.innerText = '▲';
+            td.className = 'ascii-cell-ship';
+          } else {
+            const cell = state.gridMap[y][x];
+            td.innerText = cell.symbol;
+            td.className = cell.asciiClass;
+          }
+          td.onclick = () => {
+            const dx = x - state.shipX;
+            const dy = y - state.shipY;
+            if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (dx !== 0 || dy !== 0)) {
+              moveShip(dx, dy);
+            }
+          };
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+    }
+
+    // Graphical Canvas Rendering
     const canvas = document.getElementById('starMapCanvas');
     const ctx = canvas.getContext('2d');
+    let stars = [];
 
-    function initStars() {
+    function initCanvasStars() {
       const w = canvas.width = canvas.parentElement.clientWidth;
       const h = canvas.height = canvas.parentElement.clientHeight;
-      state.stars = [];
-      for (let i = 0; i < 80; i++) {
-        state.stars.push({
+      stars = [];
+      for (let i = 0; i < 90; i++) {
+        stars.push({
           x: Math.random() * w,
           y: Math.random() * h,
           size: Math.random() * 2 + 0.5,
           alpha: Math.random()
         });
       }
-      state.shipX = w / 2;
-      state.shipY = h / 2;
     }
 
-    function drawStarMap() {
+    function renderCanvasMap() {
+      if (state.mapMode !== 'canvas') {
+        requestAnimationFrame(renderCanvasMap);
+        return;
+      }
+
       const w = canvas.width;
       const h = canvas.height;
       ctx.fillStyle = '#03060d';
       ctx.fillRect(0, 0, w, h);
 
-      // Grid lines
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
-      ctx.lineWidth = 1;
-      const gridSize = 40;
-      for (let x = 0; x < w; x += gridSize) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-      }
-      for (let y = 0; y < h; y += gridSize) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      }
-
-      // Stars
-      state.stars.forEach(s => {
+      // Background stars
+      stars.forEach(s => {
         ctx.fillStyle = `rgba(200, 230, 255, ${s.alpha})`;
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
         ctx.fill();
-        s.alpha += (Math.random() - 0.5) * 0.05;
+        s.alpha += (Math.random() - 0.5) * 0.04;
         if (s.alpha < 0.2) s.alpha = 0.2;
         if (s.alpha > 1.0) s.alpha = 1.0;
       });
 
-      // Ship icon (triangle)
-      ctx.save();
-      ctx.translate(state.shipX, state.shipY);
-      ctx.fillStyle = '#00f0ff';
-      ctx.shadowColor = '#00f0ff';
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      ctx.moveTo(0, -12);
-      ctx.lineTo(8, 10);
-      ctx.lineTo(0, 6);
-      ctx.lineTo(-8, 10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
+      // Render 8x8 Grid
+      const margin = 40;
+      const gridW = w - margin * 2;
+      const gridH = h - margin * 2;
+      const cellW = gridW / state.gridSize;
+      const cellH = gridH / state.gridSize;
 
-      requestAnimationFrame(drawStarMap);
-    }
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+      ctx.lineWidth = 1;
 
-    // Action button handlers
-    function btnScanSector() {
-      if (state.energy < 10) {
-        addLog('Insufficient energy for sensor scan.', 'warn');
-        return;
+      for (let y = 0; y <= state.gridSize; y++) {
+        ctx.beginPath();
+        ctx.moveTo(margin, margin + y * cellH);
+        ctx.lineTo(w - margin, margin + y * cellH);
+        ctx.stroke();
       }
-      state.energy -= 10;
-      updateUI();
-      const findings = [
-        'Dense asteroid cluster detected nearby with iron & titanium deposits.',
-        'Derelict cargo vessel signature picked up on long-range radar.',
-        'Space outpost broadcasting trade offers in sector.',
-        'Minor cosmic radiation flare detected. Deflectors holding.'
-      ];
-      const picked = findings[Math.floor(Math.random() * findings.length)];
-      addLog(`[SCAN] ${picked}`, 'sys');
-    }
-
-    function btnWarpJump() {
-      if (state.fuel < 15) {
-        addLog('Hyper fuel exhausted! Cannot engage warp drive.', 'alert');
-        return;
+      for (let x = 0; x <= state.gridSize; x++) {
+        ctx.beginPath();
+        ctx.moveTo(margin + x * cellW, margin);
+        ctx.lineTo(margin + x * cellW, h - margin);
+        ctx.stroke();
       }
-      state.fuel -= 15;
-      const sectors = ['BETA-02', 'GAMMA-09', 'NEBULA-X', 'SOLARIS-IV', 'ORION-7'];
-      state.sector = sectors[Math.floor(Math.random() * sectors.length)];
-      updateUI();
-      addLog(`[WARP] Jump engaged! Arrived in sector ${state.sector}.`, 'good');
-    }
 
-    function btnMineAsteroids() {
-      if (state.energy < 15) {
-        addLog('Insufficient energy to power mining lasers.', 'warn');
-        return;
+      // Draw Grid Contents & Coordinates
+      ctx.font = '11px Consolas';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      for (let y = 0; y < state.gridSize; y++) {
+        // Row labels
+        ctx.fillStyle = '#008b9b';
+        ctx.fillText((y + 1).toString(), margin / 2, margin + y * cellH + cellH / 2);
+
+        for (let x = 0; x < state.gridSize; x++) {
+          // Column labels at top
+          if (y === 0) {
+            ctx.fillStyle = '#008b9b';
+            ctx.fillText(String.fromCharCode(65 + x), margin + x * cellW + cellW / 2, margin / 2);
+          }
+
+          const cx = margin + x * cellW + cellW / 2;
+          const cy = margin + y * cellH + cellH / 2;
+
+          if (x === state.shipX && y === state.shipY) {
+            // Player Starship (Glowing Triangle)
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.lineTo(7, 8);
+            ctx.lineTo(0, 4);
+            ctx.lineTo(-7, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+          } else {
+            const cell = state.gridMap[y][x];
+            if (cell !== CELL_TYPES.EMPTY) {
+              ctx.font = '16px Consolas';
+              if (cell === CELL_TYPES.STAR) ctx.fillStyle = '#ffee55';
+              else if (cell === CELL_TYPES.STATION) ctx.fillStyle = '#3b82f6';
+              else if (cell === CELL_TYPES.ASTEROID) ctx.fillStyle = '#ffaa00';
+              else if (cell === CELL_TYPES.ANOMALY) ctx.fillStyle = '#b026ff';
+              else if (cell === CELL_TYPES.PIRATE) ctx.fillStyle = '#ff3366';
+              ctx.fillText(cell.symbol, cx, cy);
+            }
+          }
+        }
       }
-      state.energy -= 15;
-      const mined = Math.floor(Math.random() * 8) + 3;
-      state.ore += mined;
-      updateUI();
-      addLog(`[MINING] Lasers active. Extracted ${mined} tons of rare ore.`, 'good');
+
+      requestAnimationFrame(renderCanvasMap);
     }
 
-    function btnDockStation() {
-      state.fuel = Math.min(state.maxFuel, state.fuel + 20);
-      state.energy = state.maxEnergy;
-      updateUI();
-      addLog('[STATION] Docked at deep space outpost. Recharged energy and refueled 20 units.', 'sys');
-    }
+    // Keyboard Navigation Listener
+    window.addEventListener('keydown', (e) => {
+      if (document.getElementById('initModal').style.display !== 'none' ||
+          document.getElementById('stationModal').style.display !== 'none') return;
 
-    function btnRepairShip() {
-      if (state.credits < 50) {
-        addLog('Insufficient credits for hull repair.', 'warn');
-        return;
-      }
-      if (state.hull >= state.maxHull) {
-        addLog('Hull integrity already at maximum capacity.', 'sys');
-        return;
-      }
-      state.credits -= 50;
-      state.hull = Math.min(state.maxHull, state.hull + 25);
-      updateUI();
-      addLog('[ENGINEERING] Hull plating reinforced (+25 HP).', 'good');
-    }
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveShip(0, -1);
+      else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') moveShip(0, 1);
+      else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveShip(-1, 0);
+      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveShip(1, 0);
+      else if (e.key === ' ') btnScanSector();
+    });
 
-    window.addEventListener('resize', initStars);
+    window.addEventListener('resize', initCanvasStars);
     window.addEventListener('load', () => {
-      initStars();
-      drawStarMap();
+      initCanvasStars();
+      generateSectorGrid();
+      renderCanvasMap();
       updateUI();
     });
   </script>
