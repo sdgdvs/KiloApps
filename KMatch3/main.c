@@ -8,17 +8,51 @@
 #define COLS 8
 #define CELL_SIZE 50
 #define BOARD_X 50
-#define BOARD_Y 50
+#define BOARD_Y 70
+
+#define TYPE_NONE 0
+#define TYPE_HORIZ 1
+#define TYPE_VERT 2
+#define TYPE_RAINBOW 3
+#define TYPE_BOMB 4
+
+typedef struct {
+    int targetScore;
+    int moves;
+    int timeLimit;
+    int iceCount;
+    int stoneCount;
+    const char* name;
+} StageConfig;
+
+static const StageConfig CAMPAIGN_STAGES[15] = {
+    {  800, 20,  0,  0,  0, "1: Gem Starter" },
+    { 1200, 22,  0,  4,  0, "2: Frosty Fields" },
+    { 1500, 20,  0,  6,  2, "3: Stony Path" },
+    { 1800,  0, 60,  5,  2, "4: Speed Rush" },
+    { 2200, 20,  0,  8,  4, "5: Frozen Quarry" },
+    { 2600, 18,  0, 10,  4, "6: Ice Castle" },
+    { 3000,  0, 55,  8,  6, "7: Clockwork Cavern" },
+    { 3500, 22,  0, 12,  6, "8: Stone Fortress" },
+    { 4000, 20,  0, 14,  8, "9: Deep Freeze" },
+    { 4500,  0, 50, 10,  8, "10: Blizzard Blitz" },
+    { 5000, 20,  0, 16, 10, "11: Glacier Ridge" },
+    { 5500, 18,  0, 18, 10, "12: Titan's Vault" },
+    { 6000,  0, 45, 15, 12, "13: Time Vortex" },
+    { 7000, 22,  0, 20, 14, "14: Crystal Mine" },
+    { 8500, 25,  0, 24, 16, "15: Grand Master" }
+};
 
 int grid[ROWS][COLS];
 int typeGrid[ROWS][COLS] = {0};
 int iceGrid[ROWS][COLS] = {0};
-int powerupMode = 0;
+int stoneGrid[ROWS][COLS] = {0};
+int powerupMode = 0; // 0 = none, 1 = hammer
 int score = 0;
 int moves = 20;
 int level = 1;
-int gameMode = 0;
-int targetScore = 1000;
+int gameMode = 0; // 0 = Campaign (15 Stages), 1 = Zen, 2 = Timed Rush
+int targetScore = 800;
 int selR = -1, selC = -1;
 int isProcessing = 0;
 
@@ -34,23 +68,14 @@ int statsGamesPlayed = 0;
 int statsBestScore = 0;
 int statsMaxCombo = 0;
 
-void SaveStats() {
-    FILE *f = fopen("kmatch3_stats.dat", "wb");
-    if (!f) return;
-    fwrite(&statsGamesPlayed, sizeof(int), 1, f);
-    fwrite(&statsBestScore, sizeof(int), 1, f);
-    fwrite(&statsMaxCombo, sizeof(int), 1, f);
-    fclose(f);
-}
-
-void LoadStats() {
-    FILE *f = fopen("kmatch3_stats.dat", "rb");
-    if (!f) return;
-    fread(&statsGamesPlayed, sizeof(int), 1, f);
-    fread(&statsBestScore, sizeof(int), 1, f);
-    fread(&statsMaxCombo, sizeof(int), 1, f);
-    fclose(f);
-}
+COLORREF colors[] = {
+    RGB(255, 64, 64),   // Red
+    RGB(64, 255, 64),   // Green
+    RGB(64, 64, 255),   // Blue
+    RGB(255, 255, 64),  // Yellow
+    RGB(255, 64, 255),  // Purple
+    RGB(64, 255, 255)   // Cyan
+};
 
 #define MAX_PARTICLES 200
 
@@ -92,32 +117,124 @@ void UpdateParticles() {
     }
 }
 
-void PlaySwapSound() { Beep(300, 100); }
-void PlayMatchSound(int combo) { Beep(400 + combo * 100, 150); }
-void PlayBadSwapSound() { Beep(150, 150); }
+void SaveStats() {
+    FILE *f = fopen("kmatch3_stats.dat", "wb");
+    if (!f) return;
+    fwrite(&statsGamesPlayed, sizeof(int), 1, f);
+    fwrite(&statsBestScore, sizeof(int), 1, f);
+    fwrite(&statsMaxCombo, sizeof(int), 1, f);
+    fclose(f);
+}
 
-COLORREF colors[] = {
-    RGB(255, 64, 64),
-    RGB(64, 255, 64),
-    RGB(64, 64, 255),
-    RGB(255, 255, 64),
-    RGB(255, 64, 255),
-    RGB(64, 255, 255)
-};
+void LoadStats() {
+    FILE *f = fopen("kmatch3_stats.dat", "rb");
+    if (!f) return;
+    fread(&statsGamesPlayed, sizeof(int), 1, f);
+    fread(&statsBestScore, sizeof(int), 1, f);
+    fread(&statsMaxCombo, sizeof(int), 1, f);
+    fclose(f);
+}
+
+void PlaySwapSound() { Beep(300, 80); }
+void PlayMatchSound(int combo) { Beep(400 + combo * 100, 120); }
+void PlayBadSwapSound() { Beep(150, 120); }
+void PlayPowerupSound() { Beep(700, 150); }
+
+void InitStage(int stageIdx) {
+    if (gameMode == 0) {
+        if (stageIdx < 1) stageIdx = 1;
+        if (stageIdx > 15) stageIdx = 15;
+        level = stageIdx;
+        targetScore = CAMPAIGN_STAGES[level - 1].targetScore;
+        if (CAMPAIGN_STAGES[level - 1].timeLimit > 0) {
+            moves = CAMPAIGN_STAGES[level - 1].timeLimit;
+        } else {
+            moves = CAMPAIGN_STAGES[level - 1].moves;
+        }
+    } else if (gameMode == 1) {
+        level = 1;
+        targetScore = 2000;
+        moves = 0;
+    } else if (gameMode == 2) {
+        level = 1;
+        targetScore = 1000;
+        moves = 60;
+    }
+
+    selR = -1; selC = -1;
+    memset(typeGrid, 0, sizeof(typeGrid));
+    memset(iceGrid, 0, sizeof(iceGrid));
+    memset(stoneGrid, 0, sizeof(stoneGrid));
+
+    int iceToPlace = (gameMode == 0) ? CAMPAIGN_STAGES[level - 1].iceCount : (gameMode == 1 ? 0 : 4);
+    int stoneToPlace = (gameMode == 0) ? CAMPAIGN_STAGES[level - 1].stoneCount : 0;
+
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            int color;
+            do {
+                color = rand() % 6;
+            } while (
+                (r >= 2 && grid[r-1][c] == color && grid[r-2][c] == color) ||
+                (c >= 2 && grid[r][c-1] == color && grid[r][c-2] == color)
+            );
+            grid[r][c] = color;
+        }
+    }
+
+    while (stoneToPlace > 0) {
+        int r = rand() % ROWS;
+        int c = rand() % COLS;
+        if (!stoneGrid[r][c]) {
+            stoneGrid[r][c] = 1;
+            grid[r][c] = -1;
+            stoneToPlace--;
+        }
+    }
+
+    while (iceToPlace > 0) {
+        int r = rand() % ROWS;
+        int c = rand() % COLS;
+        if (!stoneGrid[r][c] && !iceGrid[r][c]) {
+            iceGrid[r][c] = 1;
+            iceToPlace--;
+        }
+    }
+}
 
 void DrawBoard(HDC hdc) {
     char buf[128];
-    if (gameMode == 0) sprintf(buf, "Lvl: %d  Score: %d/%d  Moves: %d", level, score, targetScore, moves);
-    else if (gameMode == 1) sprintf(buf, "Lvl: %d  Score: %d  Zen Mode", level, score);
-    else if (gameMode == 2) sprintf(buf, "Lvl: %d  Score: %d/%d  Time: %ds", level, score, targetScore, moves);
+    int isTimedStage = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
+    
+    if (gameMode == 0) {
+        sprintf(buf, "Stage %s | Score: %d/%d | %s: %d", CAMPAIGN_STAGES[level-1].name, score, targetScore, isTimedStage ? "Time" : "Moves", moves);
+    } else if (gameMode == 1) {
+        sprintf(buf, "Zen Mode | Score: %d | Level %d", score, level);
+    } else if (gameMode == 2) {
+        sprintf(buf, "Timed Rush | Score: %d/%d | Time: %ds", score, targetScore, moves);
+    }
+
     SetTextColor(hdc, RGB(255, 255, 255));
     SetBkMode(hdc, TRANSPARENT);
-    TextOut(hdc, BOARD_X, 10, buf, strlen(buf));
+    TextOut(hdc, BOARD_X, 8, buf, strlen(buf));
     
+    int iceCount = 0, stoneCount = 0;
+    for (int r = 0; r < ROWS; r++) {
+        for (int c = 0; c < COLS; c++) {
+            if (iceGrid[r][c]) iceCount++;
+            if (stoneGrid[r][c]) stoneCount++;
+        }
+    }
+
     char statsBuf[128];
-    sprintf(statsBuf, "[1] Classic [2] Zen [3] Timed | Best: %d | [S]huffle [B]omb | [H] Help", statsBestScore);
+    sprintf(statsBuf, "Ice: %d | Stone: %d | Best: %d | Combo: x%d", iceCount, stoneCount, statsBestScore, statsMaxCombo);
     SetTextColor(hdc, RGB(200, 200, 200));
-    TextOut(hdc, BOARD_X, 30, statsBuf, strlen(statsBuf));
+    TextOut(hdc, BOARD_X, 28, statsBuf, strlen(statsBuf));
+
+    char powerupBuf[128];
+    sprintf(powerupBuf, "[H] Hammer(500) [M] +Moves/+15s(500) [S] Shuffle(500) [1-3] Mode", powerupMode ? " (ACTIVE)" : "");
+    SetTextColor(hdc, powerupMode ? RGB(255, 100, 100) : RGB(255, 215, 0));
+    TextOut(hdc, BOARD_X, 46, powerupBuf, strlen(powerupBuf));
 
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
@@ -137,8 +254,6 @@ void DrawBoard(HDC hdc) {
 
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
-            if (grid[r][c] == -1) continue;
-
             int drawX = BOARD_X + c * CELL_SIZE;
             int drawY = BOARD_Y + r * CELL_SIZE;
 
@@ -166,28 +281,59 @@ void DrawBoard(HDC hdc) {
                 if (rect.right <= rect.left) continue;
             }
 
-            HBRUSH brush = CreateSolidBrush(typeGrid[r][c] == 3 ? RGB(255,255,255) : colors[grid[r][c]]);
+            if (stoneGrid[r][c]) {
+                HBRUSH stoneBrush = CreateSolidBrush(RGB(100, 100, 100));
+                FillRect(hdc, &rect, stoneBrush);
+                DeleteObject(stoneBrush);
+
+                HBRUSH stoneBorder = CreateSolidBrush(RGB(60, 60, 60));
+                FrameRect(hdc, &rect, stoneBorder);
+                DeleteObject(stoneBorder);
+
+                HPEN pen = CreatePen(PS_SOLID, 2, RGB(140, 140, 140));
+                HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+                MoveToEx(hdc, rect.left + 5, rect.top + 5, NULL);
+                LineTo(hdc, rect.right - 5, rect.bottom - 5);
+                MoveToEx(hdc, rect.right - 5, rect.top + 5, NULL);
+                LineTo(hdc, rect.left + 5, rect.bottom - 5);
+                SelectObject(hdc, oldPen);
+                DeleteObject(pen);
+                continue;
+            }
+
+            if (grid[r][c] == -1) continue;
+
+            HBRUSH brush = CreateSolidBrush(typeGrid[r][c] == TYPE_RAINBOW ? RGB(255, 255, 255) : colors[grid[r][c]]);
             FillRect(hdc, &rect, brush);
             DeleteObject(brush);
 
-            if (typeGrid[r][c] == 1) { // horiz
+            if (typeGrid[r][c] == TYPE_HORIZ) {
                 RECT hRect = { rect.left, rect.top + CELL_SIZE/2 - 4, rect.right, rect.top + CELL_SIZE/2 + 4 };
-                HBRUSH b = CreateSolidBrush(RGB(255,255,255));
+                HBRUSH b = CreateSolidBrush(RGB(255, 255, 255));
                 FillRect(hdc, &hRect, b);
                 DeleteObject(b);
-            } else if (typeGrid[r][c] == 2) { // vert
+            } else if (typeGrid[r][c] == TYPE_VERT) {
                 RECT vRect = { rect.left + CELL_SIZE/2 - 4, rect.top, rect.left + CELL_SIZE/2 + 4, rect.bottom };
-                HBRUSH b = CreateSolidBrush(RGB(255,255,255));
+                HBRUSH b = CreateSolidBrush(RGB(255, 255, 255));
                 FillRect(hdc, &vRect, b);
                 DeleteObject(b);
-            } else if (typeGrid[r][c] == 3) { // color
+            } else if (typeGrid[r][c] == TYPE_RAINBOW) {
                 RECT cRect = { rect.left + 12, rect.top + 12, rect.right - 12, rect.bottom - 12 };
-                HBRUSH b = CreateSolidBrush(RGB(0,0,0));
+                HBRUSH b = CreateSolidBrush(RGB(255, 215, 0));
                 FillRect(hdc, &cRect, b);
                 DeleteObject(b);
+            } else if (typeGrid[r][c] == TYPE_BOMB) {
+                HBRUSH b = CreateSolidBrush(RGB(40, 40, 40));
+                RECT bRect = { rect.left + 10, rect.top + 10, rect.right - 10, rect.bottom - 10 };
+                FillRect(hdc, &bRect, b);
+                DeleteObject(b);
+
+                HBRUSH dot = CreateSolidBrush(RGB(255, 50, 50));
+                RECT dRect = { rect.left + 18, rect.top + 18, rect.right - 18, rect.bottom - 18 };
+                FillRect(hdc, &dRect, dot);
+                DeleteObject(dot);
             }
 
-            
             if (iceGrid[r][c]) {
                 RECT iRect = { rect.left + 2, rect.top + 2, rect.right - 2, rect.bottom - 2 };
                 HBRUSH b = CreateHatchBrush(HS_BDIAGONAL, RGB(0, 255, 255));
@@ -196,7 +342,7 @@ void DrawBoard(HDC hdc) {
             }
 
             if (r == selR && c == selC) {
-                HBRUSH border = CreateSolidBrush((powerupMode == 1 && r == selR && c == selC) ? RGB(255, 0, 0) : RGB(255, 255, 255));
+                HBRUSH border = CreateSolidBrush((powerupMode == 1) ? RGB(255, 0, 0) : RGB(255, 255, 255));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
                 
@@ -221,22 +367,44 @@ void DrawBoard(HDC hdc) {
 }
 
 int toDestroy[ROWS][COLS] = {0};
+int stoneToBreak[ROWS][COLS] = {0};
 
 void AddDestroy(int r, int c) {
     if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+    if (stoneGrid[r][c]) {
+        stoneToBreak[r][c] = 1;
+        return;
+    }
     if (grid[r][c] == -1) return;
     if (toDestroy[r][c]) return;
     
     toDestroy[r][c] = 1;
-    if (typeGrid[r][c] == 1) {
+
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+    for (int i = 0; i < 4; i++) {
+        int nr = r + dr[i];
+        int nc = c + dc[i];
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS && stoneGrid[nr][nc]) {
+            stoneToBreak[nr][nc] = 1;
+        }
+    }
+
+    if (typeGrid[r][c] == TYPE_HORIZ) {
         for (int i = 0; i < COLS; i++) AddDestroy(r, i);
-    } else if (typeGrid[r][c] == 2) {
+    } else if (typeGrid[r][c] == TYPE_VERT) {
         for (int i = 0; i < ROWS; i++) AddDestroy(i, c);
-    } else if (typeGrid[r][c] == 3) {
+    } else if (typeGrid[r][c] == TYPE_RAINBOW) {
         int tcolor = rand() % 6;
-        for(int i=0; i<ROWS; i++) {
-            for(int j=0; j<COLS; j++) {
-                if (grid[i][j] == tcolor && typeGrid[i][j] != 3) AddDestroy(i, j);
+        for (int i = 0; i < ROWS; i++) {
+            for (int j = 0; j < COLS; j++) {
+                if (grid[i][j] == tcolor && typeGrid[i][j] != TYPE_RAINBOW && !stoneGrid[i][j]) AddDestroy(i, j);
+            }
+        }
+    } else if (typeGrid[r][c] == TYPE_BOMB) {
+        for (int dr2 = -1; dr2 <= 1; dr2++) {
+            for (int dc2 = -1; dc2 <= 1; dc2++) {
+                AddDestroy(r + dr2, c + dc2);
             }
         }
     }
@@ -246,13 +414,17 @@ int CheckMatchPossible() {
     for (int r=0; r<ROWS; r++) {
         for (int c=0; c<COLS-2; c++) {
             int color = grid[r][c];
-            if (color != -1 && typeGrid[r][c] != 3 && grid[r][c+1] == color && typeGrid[r][c+1] != 3 && grid[r][c+2] == color && typeGrid[r][c+2] != 3) return 1;
+            if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW &&
+                grid[r][c+1] == color && !stoneGrid[r][c+1] && typeGrid[r][c+1] != TYPE_RAINBOW &&
+                grid[r][c+2] == color && !stoneGrid[r][c+2] && typeGrid[r][c+2] != TYPE_RAINBOW) return 1;
         }
     }
     for (int c=0; c<COLS; c++) {
         for (int r=0; r<ROWS-2; r++) {
             int color = grid[r][c];
-            if (color != -1 && typeGrid[r][c] != 3 && grid[r+1][c] == color && typeGrid[r+1][c] != 3 && grid[r+2][c] == color && typeGrid[r+2][c] != 3) return 1;
+            if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW &&
+                grid[r+1][c] == color && !stoneGrid[r+1][c] && typeGrid[r+1][c] != TYPE_RAINBOW &&
+                grid[r+2][c] == color && !stoneGrid[r+2][c] && typeGrid[r+2][c] != TYPE_RAINBOW) return 1;
         }
     }
     return 0;
@@ -276,20 +448,26 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
     
     while (hasMatches) {
         memset(toDestroy, 0, sizeof(toDestroy));
+        memset(stoneToBreak, 0, sizeof(stoneToBreak));
         int newSpecials[ROWS][COLS] = {0}; 
 
         if (triggerR != -1) {
-            toDestroy[triggerR][triggerC] = 1;
-            if (triggerColor == 999) {
-                for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) if(grid[i][j]!=-1) AddDestroy(i, j);
-            } else if (triggerColor == 888) {
-                typeGrid[triggerR][triggerC] = 1; AddDestroy(triggerR, triggerC);
-                typeGrid[lastSwapR1][lastSwapC1] = 2; AddDestroy(lastSwapR1, lastSwapC1);
-            } else if (triggerColor == 777) {
+            if (stoneGrid[triggerR][triggerC]) {
+                stoneToBreak[triggerR][triggerC] = 1;
+            } else {
+                toDestroy[triggerR][triggerC] = 1;
+            }
+
+            if (triggerColor == 999) { // Rainbow + Rainbow
+                for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) if(!stoneGrid[i][j]) AddDestroy(i, j);
+            } else if (triggerColor == 888) { // Line + Line
+                typeGrid[triggerR][triggerC] = TYPE_HORIZ; AddDestroy(triggerR, triggerC);
+                typeGrid[lastSwapR1][lastSwapC1] = TYPE_VERT; AddDestroy(lastSwapR1, lastSwapC1);
+            } else if (triggerColor == 777) { // Hammer
                 AddDestroy(triggerR, triggerC);
-            } else if (triggerColor >= 0 && triggerColor < 6) {
+            } else if (triggerColor >= 0 && triggerColor < 6) { // Rainbow + Color
                 for(int i=0; i<ROWS; i++) for(int j=0; j<COLS; j++) {
-                    if (grid[i][j] == triggerColor) AddDestroy(i, j);
+                    if (grid[i][j] == triggerColor && !stoneGrid[i][j]) AddDestroy(i, j);
                 }
             }
             triggerR = -1; 
@@ -301,9 +479,11 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         for (int r=0; r<ROWS; r++) {
             for (int c=0; c<COLS-2; c++) {
                 int color = grid[r][c];
-                if (color != -1 && typeGrid[r][c] != 3 && grid[r][c+1] == color && typeGrid[r][c+1] != 3 && grid[r][c+2] == color && typeGrid[r][c+2] != 3) {
+                if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW && 
+                    grid[r][c+1] == color && !stoneGrid[r][c+1] && typeGrid[r][c+1] != TYPE_RAINBOW && 
+                    grid[r][c+2] == color && !stoneGrid[r][c+2] && typeGrid[r][c+2] != TYPE_RAINBOW) {
                     int k = c;
-                    while(k < COLS && grid[r][k] == color && typeGrid[r][k] != 3) k++;
+                    while(k < COLS && grid[r][k] == color && !stoneGrid[r][k] && typeGrid[r][k] != TYPE_RAINBOW) k++;
                     int len = k - c;
                     for(int i = c; i < k; i++) hMatchLen[r][i] = len;
                     c = k - 1;
@@ -313,9 +493,11 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         for (int c=0; c<COLS; c++) {
             for (int r=0; r<ROWS-2; r++) {
                 int color = grid[r][c];
-                if (color != -1 && typeGrid[r][c] != 3 && grid[r+1][c] == color && typeGrid[r+1][c] != 3 && grid[r+2][c] == color && typeGrid[r+2][c] != 3) {
+                if (color != -1 && !stoneGrid[r][c] && typeGrid[r][c] != TYPE_RAINBOW && 
+                    grid[r+1][c] == color && !stoneGrid[r+1][c] && typeGrid[r+1][c] != TYPE_RAINBOW && 
+                    grid[r+2][c] == color && !stoneGrid[r+2][c] && typeGrid[r+2][c] != TYPE_RAINBOW) {
                     int k = r;
-                    while(k < ROWS && grid[k][c] == color && typeGrid[k][c] != 3) k++;
+                    while(k < ROWS && grid[k][c] == color && !stoneGrid[k][c] && typeGrid[k][c] != TYPE_RAINBOW) k++;
                     int len = k - r;
                     for(int i = r; i < k; i++) vMatchLen[i][c] = len;
                     r = k - 1;
@@ -333,24 +515,26 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
 
         for(int r=0; r<ROWS; r++) {
             for(int c=0; c<COLS; c++) {
-                if (hMatchLen[r][c] >= 5) {
+                if (hMatchLen[r][c] >= 3 && vMatchLen[r][c] >= 3) { // T / L Bomb Gem
+                    newSpecials[r][c] = TYPE_BOMB;
+                } else if (hMatchLen[r][c] >= 5) {
                     int sC = c;
                     for (int k = c; k < c + hMatchLen[r][c]; k++) {
                         if ((r == lastSwapR1 && k == lastSwapC1) || (r == lastSwapR2 && k == lastSwapC2)) sC = k;
                     }
-                    newSpecials[r][sC] = 3;
+                    newSpecials[r][sC] = TYPE_RAINBOW;
                     c += hMatchLen[r][c] - 1;
                 }
             }
         }
         for(int c=0; c<COLS; c++) {
             for(int r=0; r<ROWS; r++) {
-                if (vMatchLen[r][c] >= 5) {
+                if (vMatchLen[r][c] >= 5 && !newSpecials[r][c]) {
                     int sR = r;
                     for (int k = r; k < r + vMatchLen[r][c]; k++) {
                         if ((k == lastSwapR1 && c == lastSwapC1) || (k == lastSwapR2 && c == lastSwapC2)) sR = k;
                     }
-                    newSpecials[sR][c] = 3;
+                    newSpecials[sR][c] = TYPE_RAINBOW;
                     r += vMatchLen[r][c] - 1;
                 }
             }
@@ -362,7 +546,7 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                     for (int k = c; k < c + 4; k++) {
                         if ((r == lastSwapR1 && k == lastSwapC1) || (r == lastSwapR2 && k == lastSwapC2)) sC = k;
                     }
-                    if (!newSpecials[r][sC]) newSpecials[r][sC] = 1;
+                    if (!newSpecials[r][sC]) newSpecials[r][sC] = TYPE_HORIZ;
                     c += 3;
                 }
             }
@@ -374,7 +558,7 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                     for (int k = r; k < r + 4; k++) {
                         if ((k == lastSwapR1 && c == lastSwapC1) || (k == lastSwapR2 && c == lastSwapC2)) sR = k;
                     }
-                    if (!newSpecials[sR][c]) newSpecials[sR][c] = 2;
+                    if (!newSpecials[sR][c]) newSpecials[sR][c] = TYPE_VERT;
                     r += 3;
                 }
             }
@@ -383,7 +567,7 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         int anyDestroy = 0;
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c < COLS; c++) {
-                if (toDestroy[r][c]) {
+                if (toDestroy[r][c] || stoneToBreak[r][c]) {
                     anyDestroy = 1;
                 }
             }
@@ -407,8 +591,12 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
                 if (toDestroy[r][c]) {
                     popGrid[r][c] = 1;
                     matchCount++;
-                    COLORREF pc = (typeGrid[r][c] == 3) ? RGB(255,255,255) : colors[grid[r][c]];
+                    COLORREF pc = (typeGrid[r][c] == TYPE_RAINBOW) ? RGB(255,255,255) : colors[grid[r][c]];
                     CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, pc);
+                } else if (stoneToBreak[r][c]) {
+                    popGrid[r][c] = 1;
+                    score += 20;
+                    CreateParticles(BOARD_X + c * CELL_SIZE + CELL_SIZE / 2, BOARD_Y + r * CELL_SIZE + CELL_SIZE / 2, RGB(160, 160, 160));
                 }
             }
         }
@@ -432,8 +620,12 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
             for (int c = 0; c < COLS; c++) {
                 if (popGrid[r][c]) {
                     if (iceGrid[r][c] > 0) iceGrid[r][c] = 0;
+                    if (stoneToBreak[r][c]) {
+                        stoneGrid[r][c] = 0;
+                        stoneToBreak[r][c] = 0;
+                    }
                     grid[r][c] = -1;
-                    typeGrid[r][c] = 0;
+                    typeGrid[r][c] = TYPE_NONE;
                     popGrid[r][c] = 0;
                 }
             }
@@ -454,25 +646,34 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
         }
 
         for (int c = 0; c < COLS; c++) {
-            int emptyR = ROWS - 1;
+            int targetR = ROWS - 1;
             for (int r = ROWS - 1; r >= 0; r--) {
+                if (stoneGrid[r][c]) {
+                    targetR = r - 1;
+                    continue;
+                }
                 if (grid[r][c] != -1) {
-                    if (emptyR != r) {
-                        grid[emptyR][c] = grid[r][c];
-                        typeGrid[emptyR][c] = typeGrid[r][c];
+                    if (targetR != r) {
+                        grid[targetR][c] = grid[r][c];
+                        typeGrid[targetR][c] = typeGrid[r][c];
+                        iceGrid[targetR][c] = iceGrid[r][c];
                         grid[r][c] = -1;
-                        typeGrid[r][c] = 0;
-                        dropCount[emptyR][c] = emptyR - r;
+                        typeGrid[r][c] = TYPE_NONE;
+                        iceGrid[r][c] = 0;
+                        dropCount[targetR][c] = targetR - r;
                     } else {
-                        dropCount[emptyR][c] = 0;
+                        dropCount[targetR][c] = 0;
                     }
-                    emptyR--;
+                    targetR--;
                 }
             }
-            for (int r = emptyR; r >= 0; r--) {
-                grid[r][c] = rand() % 6;
-                typeGrid[r][c] = 0;
-                dropCount[r][c] = emptyR + 1;
+            for (int r = targetR; r >= 0; r--) {
+                if (!stoneGrid[r][c]) {
+                    grid[r][c] = rand() % 6;
+                    typeGrid[r][c] = TYPE_NONE;
+                    iceGrid[r][c] = 0;
+                    dropCount[r][c] = targetR + 1;
+                }
             }
         }
 
@@ -494,23 +695,6 @@ void ProcessMatches(HWND hwnd, int triggerR, int triggerC, int triggerColor) {
     }
 }
 
-void InitGame() {
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS; c++) {
-            int color;
-            do {
-                color = rand() % 6;
-            } while (
-                (r >= 2 && grid[r-1][c] == color && grid[r-2][c] == color) ||
-                (c >= 2 && grid[r][c-1] == color && grid[r][c-2] == color)
-            );
-            grid[r][c] = color;
-            typeGrid[r][c] = 0;
-            iceGrid[r][c] = (level >= 3 && (rand() % 5 == 0)) ? 1 : 0;
-        }
-    }
-}
-
 void SaveGame() {
     FILE *f = fopen("kmatch3_save.dat", "wb");
     if (!f) return;
@@ -522,6 +706,7 @@ void SaveGame() {
     fwrite(grid, sizeof(int), ROWS * COLS, f);
     fwrite(typeGrid, sizeof(int), ROWS * COLS, f);
     fwrite(iceGrid, sizeof(int), ROWS * COLS, f);
+    fwrite(stoneGrid, sizeof(int), ROWS * COLS, f);
     fclose(f);
 }
 
@@ -536,6 +721,7 @@ int LoadGame() {
     fread(grid, sizeof(int), ROWS * COLS, f);
     fread(typeGrid, sizeof(int), ROWS * COLS, f);
     if (fread(iceGrid, sizeof(int), ROWS * COLS, f) != ROWS * COLS) memset(iceGrid, 0, sizeof(iceGrid));
+    if (fread(stoneGrid, sizeof(int), ROWS * COLS, f) != ROWS * COLS) memset(stoneGrid, 0, sizeof(stoneGrid));
     fclose(f);
     return 1;
 }
@@ -543,12 +729,8 @@ int LoadGame() {
 void GameOver(HWND hwnd) {
     statsGamesPlayed++;
     SaveStats();
-    MessageBox(hwnd, "Game Over!", "KMatch3", MB_OK | MB_ICONWARNING);
-    level = 1; score = 0;
-    if (gameMode == 0) { moves = 20; targetScore = 1000; }
-    else if (gameMode == 1) { moves = 0; targetScore = 0; }
-    else if (gameMode == 2) { moves = 60; targetScore = 1000; }
-    InitGame();
+    MessageBox(hwnd, "Game Over! Stage failed.", "KMatch3", MB_OK | MB_ICONWARNING);
+    InitStage(level);
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
@@ -559,16 +741,52 @@ void CheckLevelProgress(HWND hwnd) {
         return;
     }
     if (score >= targetScore) {
-        level++;
-        if (gameMode == 0) moves += 15;
-        if (gameMode == 2) moves += 30;
-        targetScore += 1000 + (level * 500);
-        MessageBox(hwnd, "Level Up!", "KMatch3", MB_OK | MB_ICONINFORMATION);
+        PlayPowerupSound();
+        if (gameMode == 0) {
+            if (level < 15) {
+                MessageBox(hwnd, "Stage Cleared! Advancing to next stage.", "KMatch3", MB_OK | MB_ICONINFORMATION);
+                level++;
+                InitStage(level);
+            } else {
+                MessageBox(hwnd, "CONGRATULATIONS!\nYou have completed all 15 stages of KMatch3 Campaign Mode!", "Victory!", MB_OK | MB_ICONINFORMATION);
+                level = 1;
+                InitStage(1);
+            }
+        } else if (gameMode == 2) {
+            level++;
+            moves += 30;
+            targetScore += 1000 + (level * 500);
+            MessageBox(hwnd, "Level Up!", "KMatch3", MB_OK | MB_ICONINFORMATION);
+        }
+        SaveGame();
         InvalidateRect(hwnd, NULL, FALSE);
-    } else if ((gameMode == 0 || gameMode == 2) && moves <= 0) {
+    } else if (((gameMode == 0) || (gameMode == 2)) && moves <= 0) {
         GameOver(hwnd);
     }
     SaveGame();
+}
+
+void UseExtraMoves() {
+    if (score >= 500) {
+        score -= 500;
+        PlayPowerupSound();
+        int isTimed = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
+        moves += isTimed ? 15 : 5;
+    }
+}
+
+void UseShuffle() {
+    if (score >= 500) {
+        score -= 500;
+        PlayPowerupSound();
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                if (!stoneGrid[r][c] && !iceGrid[r][c]) {
+                    grid[r][c] = rand() % 6;
+                }
+            }
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -577,7 +795,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             srand((unsigned)time(NULL));
             LoadStats();
             if (!LoadGame()) {
-                InitGame();
+                InitStage(1);
                 SaveGame();
             }
             SetTimer(hwnd, 1, 30, NULL);
@@ -585,7 +803,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         case WM_TIMER: {
             if (wParam == 2) {
-                if (gameMode == 2 && moves > 0 && !isProcessing) {
+                int isTimed = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
+                if (isTimed && moves > 0 && !isProcessing) {
                     moves--;
                     InvalidateRect(hwnd, NULL, FALSE);
                     if (moves <= 0) GameOver(hwnd);
@@ -632,29 +851,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == '1' || wParam == VK_NUMPAD1) {
-                gameMode = 0; level = 1; score = 0; moves = 20; targetScore = 1000; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+                gameMode = 0; InitStage(1); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == '2' || wParam == VK_NUMPAD2) {
-                gameMode = 1; level = 1; score = 0; moves = 0; targetScore = 0; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+                gameMode = 1; InitStage(1); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == '3' || wParam == VK_NUMPAD3) {
-                gameMode = 2; level = 1; score = 0; moves = 60; targetScore = 1000; InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+                gameMode = 2; InitStage(1); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'S' || wParam == 's') {
+                UseShuffle(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'M' || wParam == 'm') {
+                UseExtraMoves(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'H' || wParam == 'h') {
                 if (score >= 500) {
-                    score -= 500;
-                    InitGame(); SaveGame(); InvalidateRect(hwnd, NULL, FALSE);
+                    powerupMode = 1; PlayPowerupSound(); InvalidateRect(hwnd, NULL, FALSE);
                 }
-            } else if (wParam == 'B' || wParam == 'b') {
-                if (score >= 500) {
-                    powerupMode = 1; InvalidateRect(hwnd, NULL, FALSE);
-                }
-            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
-                MessageBox(hwnd, "How to Play:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Bomb (destroys row/col).\n- Match 5: Color Bomb (destroys all of one color).\n- Swap two specials for big effects!\n\nModes:
-- [1] Classic: Target score in limited moves.
-- [2] Zen: Infinite play.
-- [3] Timed: Target score in time limit.
-
-Power-ups:
-- [S]huffle (Cost 500)
-- [B]omb (Cost 500) click to break one gem.", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+            } else if (wParam == VK_F1) {
+                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Bomb (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone Tiles: Break by adjacent matches or bombs!\n- Ice Tiles: Break by matching internal gem.\n\nPower-ups (Cost 500):\n- [H] Hammer: Smash any single tile/gem.\n- [M] +Moves/+15s: Add extra moves or timer seconds.\n- [S] Shuffle: Rearrange all board gems.\n\nModes:\n- [1] Campaign (15 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             }
             break;
         }
@@ -676,6 +887,8 @@ Power-ups:
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
+                if (stoneGrid[r][c]) break;
+
                 if (selR == -1) {
                     selR = r; selC = c;
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -684,6 +897,12 @@ Power-ups:
                         selR = -1; selC = -1;
                         InvalidateRect(hwnd, NULL, FALSE);
                     } else if (abs(selR - r) + abs(selC - c) == 1) {
+                        if (stoneGrid[selR][selC] || stoneGrid[r][c] || iceGrid[selR][selC] || iceGrid[r][c]) {
+                            PlayBadSwapSound();
+                            selR = -1; selC = -1;
+                            InvalidateRect(hwnd, NULL, FALSE);
+                            break;
+                        }
                         isProcessing = 1;
                         int origR = selR, origC = selC;
                         selR = -1; selC = -1;
@@ -700,18 +919,19 @@ Power-ups:
                         typeGrid[r][c] = tempT;
 
                         int triggerR = -1, triggerC = -1, triggerColor = -1;
-                        if (typeGrid[origR][origC] == 3 && typeGrid[r][c] == 3) {
+                        if (typeGrid[origR][origC] == TYPE_RAINBOW && typeGrid[r][c] == TYPE_RAINBOW) {
                             triggerR = origR; triggerC = origC; triggerColor = 999;
-                        } else if (typeGrid[origR][origC] == 3 && typeGrid[r][c] != 3) {
+                        } else if (typeGrid[origR][origC] == TYPE_RAINBOW && typeGrid[r][c] != TYPE_RAINBOW) {
                             triggerR = origR; triggerC = origC; triggerColor = grid[r][c];
-                        } else if (typeGrid[r][c] == 3 && typeGrid[origR][origC] != 3) {
+                        } else if (typeGrid[r][c] == TYPE_RAINBOW && typeGrid[origR][origC] != TYPE_RAINBOW) {
                             triggerR = r; triggerC = c; triggerColor = grid[origR][origC];
-                        } else if (typeGrid[origR][origC] > 0 && typeGrid[r][c] > 0 && typeGrid[origR][origC] < 3 && typeGrid[r][c] < 3) {
-                            triggerR = r; triggerC = c; triggerColor = 888; // cross
+                        } else if (typeGrid[origR][origC] > 0 && typeGrid[r][c] > 0 && typeGrid[origR][origC] < TYPE_RAINBOW && typeGrid[r][c] < TYPE_RAINBOW) {
+                            triggerR = r; triggerC = c; triggerColor = 888;
                         }
 
                         if (triggerR != -1 || CheckMatchPossible()) {
-                            if (gameMode == 0) moves--;
+                            int isTimed = (gameMode == 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode == 2);
+                            if (!isTimed && gameMode == 0) moves--;
                             ProcessMatches(hwnd, triggerR, triggerC, triggerColor);
                             CheckLevelProgress(hwnd);
                             SaveGame();
@@ -744,7 +964,8 @@ Power-ups:
     return 0;
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+void MainEntry() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
     WNDCLASSEX wc = {0};
     wc.cbSize = sizeof(WNDCLASSEX);
     wc.lpfnWndProc = WndProc;
@@ -753,17 +974,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
     wc.lpszClassName = "KMatch3Class";
 
-    if(!RegisterClassEx(&wc)) return 0;
+    if(!RegisterClassEx(&wc)) ExitProcess(0);
 
     HWND hwnd = CreateWindowEx(
         0, "KMatch3Class", "KMatch3",
-        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 500, 550,
+        WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 500, 560,
         NULL, NULL, hInstance, NULL
     );
 
-    if(!hwnd) return 0;
+    if(!hwnd) ExitProcess(0);
 
-    ShowWindow(hwnd, nCmdShow);
+    ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
     MSG msg;
@@ -771,5 +992,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-    return msg.wParam;
+    ExitProcess(0);
 }
+
