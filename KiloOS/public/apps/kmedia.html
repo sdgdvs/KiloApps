@@ -5,14 +5,18 @@
 <style>
   body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; flex-direction: column; height: 100vh; }
   .header { padding: 10px; text-align: center; background: #e0e0e0; border-bottom: 1px solid #ccc; }
-  .title { margin-bottom: 10px; color: #333; font-size: 14px; text-align: center; word-break: break-all; font-weight: bold; }
-  .controls { display: flex; gap: 5px; justify-content: center; margin-bottom: 5px; flex-wrap: wrap; }
-  button { padding: 5px 10px; font-size: 13px; cursor: pointer; border: 1px solid #ccc; background: #f9f9f9; border-radius: 2px; }
+  .title { margin-bottom: 8px; color: #333; font-size: 14px; text-align: center; word-break: break-all; font-weight: bold; }
+  .controls { display: flex; gap: 4px; justify-content: center; margin-bottom: 6px; flex-wrap: wrap; }
+  button { padding: 4px 8px; font-size: 12px; cursor: pointer; border: 1px solid #ccc; background: #f9f9f9; border-radius: 2px; }
   button:hover { background: #e9e9e9; }
   button:active { background: #d9d9d9; }
   input[type="file"] { display: none; }
+  .search-box { width: 95%; margin: 4px auto; padding: 4px 8px; font-size: 12px; border: 1px solid #ccc; border-radius: 2px; box-sizing: border-box; }
+  .seek-bar-container { display: flex; align-items: center; gap: 8px; padding: 4px 10px; font-size: 11px; color: #555; background: #e8e8e8; }
+  .seek-slider { flex: 1; height: 14px; }
+  .vol-slider { width: 60px; height: 14px; }
   .playlist { flex: 1; overflow-y: auto; background: #fff; padding: 0; margin: 0; list-style: none; }
-  .playlist-item { padding: 8px 15px; border-bottom: 1px solid #eee; cursor: pointer; color: #444; font-size: 14px; }
+  .playlist-item { padding: 8px 15px; border-bottom: 1px solid #eee; cursor: pointer; color: #444; font-size: 13px; }
   .playlist-item:hover { background: #f0f8ff; }
   .playlist-item.active { background: #0078d7; color: white; }
 </style>
@@ -28,6 +32,15 @@
     <button id="btnNext">Next</button>
     <button id="btnRemove">Remove</button>
     <button id="btnClear">Clear</button>
+    <button id="btnMode">Mode: Normal</button>
+    <button id="btnSpeed">Speed: 1.0x</button>
+  </div>
+  <input type="text" id="searchInput" class="search-box" placeholder="Filter playlist..." />
+  <div class="seek-bar-container">
+    <span id="timeDisplay">0:00 / 0:00</span>
+    <input type="range" id="seekSlider" class="seek-slider" min="0" max="100" value="0" step="0.1" />
+    <span>Vol:</span>
+    <input type="range" id="volumeSlider" class="vol-slider" min="0" max="1" step="0.05" value="1" />
   </div>
 </div>
 <ul class="playlist" id="playlist"></ul>
@@ -42,12 +55,26 @@
   const btnNext = document.getElementById('btnNext');
   const btnRemove = document.getElementById('btnRemove');
   const btnClear = document.getElementById('btnClear');
+  const btnMode = document.getElementById('btnMode');
+  const btnSpeed = document.getElementById('btnSpeed');
+  const searchInput = document.getElementById('searchInput');
+  const seekSlider = document.getElementById('seekSlider');
+  const volumeSlider = document.getElementById('volumeSlider');
+  const timeDisplay = document.getElementById('timeDisplay');
   const fileInput = document.getElementById('fileInput');
   const audioPlayer = document.getElementById('audioPlayer');
   const playlistEl = document.getElementById('playlist');
 
   let playlist = [];
   let currentIndex = -1;
+
+  // Playback Modes: 0: Normal, 1: Repeat All, 2: Repeat 1, 3: Shuffle
+  const modes = ['Normal', 'Repeat All', 'Repeat 1', 'Shuffle'];
+  let currentModeIndex = 0;
+
+  // Playback Speeds: 1.0, 1.25, 1.5, 2.0, 0.5
+  const speeds = [1.0, 1.25, 1.5, 2.0, 0.5];
+  let currentSpeedIndex = 0;
 
   btnAdd.onclick = () => fileInput.click();
 
@@ -60,10 +87,26 @@
       }
       renderPlaylist();
   };
-  
+
+  searchInput.oninput = () => renderPlaylist();
+
+  btnMode.onclick = () => {
+      currentModeIndex = (currentModeIndex + 1) % modes.length;
+      btnMode.textContent = 'Mode: ' + modes[currentModeIndex];
+  };
+
+  btnSpeed.onclick = () => {
+      currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+      const rate = speeds[currentSpeedIndex];
+      btnSpeed.textContent = 'Speed: ' + rate.toFixed(1) + 'x';
+      audioPlayer.playbackRate = rate;
+  };
+
   function renderPlaylist() {
       playlistEl.innerHTML = '';
+      const filter = searchInput.value.toLowerCase();
       playlist.forEach((item, index) => {
+          if (filter && !item.name.toLowerCase().includes(filter)) return;
           const li = document.createElement('li');
           li.className = 'playlist-item' + (index === currentIndex ? ' active' : '');
           li.textContent = item.name;
@@ -71,23 +114,26 @@
           playlistEl.appendChild(li);
       });
   }
-  
+
   function playTrack(index) {
       if (index >= 0 && index < playlist.length) {
           currentIndex = index;
           const track = playlist[index];
           title.textContent = track.name;
           audioPlayer.src = track.url;
+          audioPlayer.playbackRate = speeds[currentSpeedIndex];
           audioPlayer.play();
           renderPlaylist();
       }
   }
 
   btnPlay.onclick = () => {
-      if (audioPlayer.src) {
+      if (audioPlayer.paused && audioPlayer.src) {
           audioPlayer.play();
-      } else if (playlist.length > 0) {
+      } else if (!audioPlayer.src && playlist.length > 0) {
           playTrack(0);
+      } else if (!audioPlayer.paused) {
+          audioPlayer.pause();
       }
   };
 
@@ -103,7 +149,7 @@
   };
 
   btnNext.onclick = () => {
-      if (currentIndex + 1 < playlist.length) playTrack(currentIndex + 1);
+      playNextTrackAuto();
   };
 
   btnRemove.onclick = () => {
@@ -130,12 +176,74 @@
       currentIndex = -1;
       renderPlaylist();
   };
-  
+
+  function playNextTrackAuto() {
+      if (playlist.length === 0) return;
+      if (currentModeIndex === 2) { // Repeat 1
+          if (currentIndex >= 0) playTrack(currentIndex);
+          else playTrack(0);
+      } else if (currentModeIndex === 3) { // Shuffle
+          const next = Math.floor(Math.random() * playlist.length);
+          playTrack(next);
+      } else if (currentModeIndex === 1) { // Repeat All
+          const next = (currentIndex + 1) % playlist.length;
+          playTrack(next);
+      } else { // Normal
+          if (currentIndex + 1 < playlist.length) {
+              playTrack(currentIndex + 1);
+          }
+      }
+  }
+
   audioPlayer.onended = () => {
-      if (currentIndex + 1 < playlist.length) {
-          playTrack(currentIndex + 1);
+      playNextTrackAuto();
+  };
+
+  // Seeker & Volume handlers
+  audioPlayer.ontimeupdate = () => {
+      if (audioPlayer.duration) {
+          const pct = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+          seekSlider.value = pct;
+          timeDisplay.textContent = formatTime(audioPlayer.currentTime) + ' / ' + formatTime(audioPlayer.duration);
+      } else {
+          seekSlider.value = 0;
+          timeDisplay.textContent = '0:00 / 0:00';
       }
   };
+
+  seekSlider.oninput = () => {
+      if (audioPlayer.duration) {
+          audioPlayer.currentTime = (seekSlider.value / 100) * audioPlayer.duration;
+      }
+  };
+
+  volumeSlider.oninput = () => {
+      audioPlayer.volume = volumeSlider.value;
+  };
+
+  function formatTime(secs) {
+      if (isNaN(secs)) return '0:00';
+      const m = Math.floor(secs / 60);
+      const s = Math.floor(secs % 60);
+      return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+
+  // Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+      if (document.activeElement === searchInput) return;
+      if (e.code === 'Space') {
+          e.preventDefault();
+          btnPlay.click();
+      } else if (e.code === 'ArrowLeft' || e.key.toLowerCase() === 'p') {
+          btnPrev.click();
+      } else if (e.code === 'ArrowRight' || e.key.toLowerCase() === 'n') {
+          btnNext.click();
+      } else if (e.key.toLowerCase() === 's') {
+          btnStop.click();
+      } else if (e.key.toLowerCase() === 'm') {
+          btnMode.click();
+      }
+  });
 </script>
 </body>
 </html>
