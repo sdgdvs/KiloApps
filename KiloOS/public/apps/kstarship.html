@@ -794,6 +794,11 @@
         <small>SHOP</small>
       </button>
 
+      <button class="action-btn" onclick="openCrewModal()" style="border-color: var(--green-status); color: var(--green-status);">
+        <span>👨‍✈️ OFFICER ROSTER</span>
+        <small>CREW</small>
+      </button>
+
       <button class="action-btn" onclick="btnRepairShip()">
         <span>🛠️ REPAIR HULL</span>
         <small>50 CR / 10 SCRAP</small>
@@ -993,6 +998,10 @@
         <span>👨‍🚀 RECRUIT CREW OFFICERS (+3 Crew)</span>
         <small>100 CREDITS</small>
       </button>
+      <button class="action-btn" onclick="openCrewModal(); closeStationModal();" style="border-color: var(--green-status); color: var(--green-status);">
+        <span>👨‍✈️ OFFICER MANAGEMENT BAY</span>
+        <small>ROSTER</small>
+      </button>
       <button class="action-btn" onclick="openUpgradeModal(); closeStationModal();" style="border-color: var(--cyan-glow); color: var(--cyan-glow);">
         <span>🔧 SHIP SYSTEMS UPGRADE BAY</span>
         <small>UPGRADE SHOP</small>
@@ -1061,6 +1070,32 @@
 
       <button class="action-btn" style="justify-content: center; margin-top: 4px;" onclick="closeUpgradeModal()">
         ✅ EXIT UPGRADE BAY
+      </button>
+    </div>
+  </div>
+
+  <!-- Officer Roster & Crew Management Modal (Phase 9) -->
+  <div class="modal-overlay" id="crewModal" style="display: none;">
+    <div class="modal-card" style="border-color: var(--green-status); width: 680px;">
+      <div class="panel-header" style="font-size: 1rem; border-color: var(--green-status); color: var(--green-status);">
+        <span>👨‍✈️ CREW MANAGEMENT &amp; OFFICER ROSTER</span>
+        <button class="audio-toggle" style="border-color: var(--green-status); color: var(--green-status);" onclick="closeCrewModal()">✕ CLOSE</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #a0c0e0;">
+        Recruit specialized Officers to grant passive starship bonuses and powerful tactical special abilities.
+      </p>
+
+      <div style="display: flex; gap: 18px; font-size: 0.82rem; background: rgba(4, 12, 24, 0.8); padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border-cyan);">
+        <div>COMMAND FUNDS: 💰 CREDITS: <span id="crewCreditsVal" style="color: var(--cyan-glow); font-weight: bold;">1,000</span></div>
+        <div>ACTIVE OFFICERS: <span id="crewActiveVal" style="color: var(--green-status); font-weight: bold;">0 / 4</span></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;" id="officerCardsGrid">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button class="action-btn" style="justify-content: center; margin-top: 4px;" onclick="closeCrewModal()">
+        ✅ RETURN TO COMMAND DECK
       </button>
     </div>
   </div>
@@ -1246,7 +1281,14 @@
         shields: 0,
         warp: 0,
         sensors: 0
-      }
+      },
+      officers: [
+        { id: 'pilot', name: 'Cmdr. Vance', role: 'PILOT', cost: 250, hired: false, assigned: false, passive: '+15% Evasion & -1 Move Fuel', ability: 'Hyper-Evade (Free Dodge / 10 E)' },
+        { id: 'engineer', name: 'Chief Logan', role: 'ENGINEER', cost: 300, hired: false, assigned: false, passive: '+20% Shield Boost (+30 SH) & +10 Hull', ability: 'Emergency Repair (+40 SH / +20 H / 20 E)' },
+        { id: 'gunner', name: 'Lt. Cross', role: 'GUNNER', cost: 350, hired: false, assigned: false, passive: '+25% Phaser DMG (+10 DMG)', ability: 'Plasma Salvo (2x Phaser DMG / 20 E)' },
+        { id: 'science', name: 'Dr. Astra', role: 'SCIENCE OFFICER', cost: 300, hired: false, assigned: false, passive: '+50% Scan & Mining Resource Yields', ability: 'Deep Sensor Pulse (Reveal All Grid & +25 E / 15 E)' }
+      ],
+      salvoActive: false
     };
 
     function generateSectorGrid() {
@@ -1451,7 +1493,9 @@
 
       state.shipX = newX;
       state.shipY = newY;
-      state.fuel = Math.max(0, state.fuel - 1);
+      let fuelCost = 1;
+      if (state.officers && state.officers[0].assigned && Math.random() < 0.5) fuelCost = 0;
+      state.fuel = Math.max(0, state.fuel - fuelCost);
       state.energy = Math.max(0, state.energy - 1);
 
       state.moveCount++;
@@ -1641,11 +1685,19 @@
 
       if (!planet.scanned) {
         planet.scanned = true;
-        state.ore += planet.minerals;
-        state.gas += planet.gas;
-        state.artifacts += planet.artifacts;
+        let mins = planet.minerals;
+        let gas = planet.gas;
+        let arts = planet.artifacts;
+        if (state.officers && state.officers[3].assigned) {
+          mins = Math.floor(mins * 1.5);
+          gas = Math.floor(gas * 1.5);
+          arts = Math.floor(arts * 1.5);
+        }
+        state.ore += mins;
+        state.gas += gas;
+        state.artifacts += arts;
 
-        addLog(`[ORBITAL SCAN] ${planet.name} surveyed! Extracted +${planet.minerals} Minerals, +${planet.gas} Gas, +${planet.artifacts} Artifacts!`, 'good');
+        addLog(`[ORBITAL SCAN] ${planet.name} surveyed! Extracted +${mins} Minerals, +${gas} Gas, +${arts} Artifacts!`, 'good');
       } else {
         addLog(`[ORBITAL SURVEY RE-READ] ${planet.name} surveyed earlier. Minerals: ${planet.minerals} | Gas: ${planet.gas} | Artifacts: ${planet.artifacts}`, 'sys');
       }
@@ -1701,8 +1753,12 @@
       }
       state.energy -= 15;
       playSound('mine');
-      const minedOre = Math.floor(Math.random() * 10) + 4;
-      const minedScrap = Math.floor(Math.random() * 4) + 1;
+      let minedOre = Math.floor(Math.random() * 10) + 4;
+      let minedScrap = Math.floor(Math.random() * 4) + 1;
+      if (state.officers && state.officers[3].assigned) {
+        minedOre = Math.floor(minedOre * 1.5);
+        minedScrap = Math.floor(minedScrap * 1.5);
+      }
       state.ore += minedOre;
       state.scraps += minedScrap;
       updateUI();
@@ -1729,10 +1785,11 @@
         return;
       }
       state.energy -= 15;
-      state.shields = Math.min(state.maxShields, state.shields + 25);
+      const boostAmt = (state.officers && state.officers[1].assigned) ? 30 : 25;
+      state.shields = Math.min(state.maxShields, state.shields + boostAmt);
       playSound('good');
       updateUI();
-      addLog(`[DEFLECTORS] Diverted energy to shields (+25 Shields).`, 'good');
+      addLog(`[DEFLECTORS] Diverted energy to shields (+${boostAmt} Shields).`, 'good');
     }
 
     function btnRepairShip() {
@@ -1840,6 +1897,159 @@
       updateUI();
       playSound('good');
       addLog('[STATION] Recruited 3 veteran crew officers.', 'good');
+    }
+
+    // Phase 9: Officer Roster & Crew Management Functions
+    function openCrewModal() {
+      playSound('dock');
+      document.getElementById('crewModal').style.display = 'flex';
+      renderCrewModal();
+    }
+
+    function closeCrewModal() {
+      document.getElementById('crewModal').style.display = 'none';
+    }
+
+    function renderCrewModal() {
+      document.getElementById('crewCreditsVal').innerText = state.credits.toLocaleString();
+      const activeCount = state.officers.filter(o => o.assigned).length;
+      document.getElementById('crewActiveVal').innerText = `${activeCount} / 4`;
+
+      const container = document.getElementById('officerCardsGrid');
+      container.innerHTML = '';
+
+      state.officers.forEach((off, idx) => {
+        const card = document.createElement('div');
+        card.style.background = 'rgba(8, 20, 38, 0.9)';
+        card.style.border = off.assigned ? '1px solid var(--green-status)' : (off.hired ? '1px solid var(--cyan-glow)' : '1px solid var(--border-color)');
+        card.style.borderRadius = '4px';
+        card.style.padding = '10px';
+        card.style.display = 'flex';
+        card.style.flexDirection = 'column';
+        card.style.gap = '6px';
+        if (off.assigned) {
+          card.style.boxShadow = '0 0 10px rgba(57, 255, 20, 0.25)';
+        }
+
+        const badgeColor = off.assigned ? 'var(--green-status)' : (off.hired ? 'var(--cyan-glow)' : 'var(--text-muted)');
+        const statusText = off.assigned ? '● ASSIGNED TO BRIDGE' : (off.hired ? '✓ HIRED (OFF DUTY)' : 'AVAILABLE FOR HIRE');
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: bold; color: var(--cyan-glow); font-size: 0.85rem;">${off.name}</span>
+            <span style="font-size: 0.65rem; color: ${badgeColor}; border: 1px solid ${badgeColor}; padding: 1px 5px; border-radius: 2px; text-transform: uppercase;">${off.role}</span>
+          </div>
+          <div style="font-size: 0.7rem; color: ${badgeColor}; font-weight: bold;">${statusText}</div>
+          <div style="font-size: 0.68rem; color: var(--amber-glow);">⚡ PASSIVE: ${off.passive}</div>
+          <div style="font-size: 0.68rem; color: var(--purple-anomaly);">🔥 ABILITY: ${off.ability}</div>
+          <div style="display: flex; gap: 6px; margin-top: 4px;">
+            ${!off.hired ? `
+              <button class="action-btn" style="flex: 1; padding: 4px; font-size: 0.72rem; justify-content: center; border-color: var(--amber-alert); color: var(--amber-alert);" onclick="hireOfficer(${idx})">
+                💰 RECRUIT (${off.cost} Cr)
+              </button>
+            ` : `
+              <button class="action-btn" style="flex: 1; padding: 4px; font-size: 0.72rem; justify-content: center; border-color: ${off.assigned ? 'var(--amber-alert)' : 'var(--green-status)'}; color: ${off.assigned ? 'var(--amber-alert)' : 'var(--green-status)'};" onclick="toggleAssignOfficer(${idx})">
+                ${off.assigned ? '⏸️ UNASSIGN' : '▶ ASSIGN'}
+              </button>
+              ${off.assigned ? `
+                <button class="action-btn" style="flex: 1; padding: 4px; font-size: 0.72rem; justify-content: center; border-color: var(--purple-anomaly); color: var(--purple-anomaly);" onclick="useOfficerAbility(${idx})">
+                  🔥 SPECIAL
+                </button>
+              ` : ''}
+            `}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function hireOfficer(idx) {
+      const off = state.officers[idx];
+      if (state.credits < off.cost) {
+        addLog(`[RECRUIT FAIL] Insufficient credits to hire ${off.role} ${off.name}!`, 'warn');
+        playSound('alert');
+        return;
+      }
+      state.credits -= off.cost;
+      off.hired = true;
+      off.assigned = true;
+      if (off.id === 'engineer') state.maxHull += 10;
+      playSound('good');
+      addLog(`[RECRUIT SUCCESS] Hired & assigned ${off.role} ${off.name} to starship command!`, 'good');
+      updateUI();
+      renderCrewModal();
+    }
+
+    function toggleAssignOfficer(idx) {
+      const off = state.officers[idx];
+      if (!off.hired) return;
+      off.assigned = !off.assigned;
+      playSound('good');
+      addLog(`[CREW ROSTER] ${off.name} is now ${off.assigned ? 'ASSIGNED to bridge' : 'UNASSIGNED'}.`, 'sys');
+      updateUI();
+      renderCrewModal();
+    }
+
+    function useOfficerAbility(idx) {
+      const off = state.officers[idx];
+      if (!off.hired || !off.assigned) {
+        addLog(`[ABILITY FAIL] Officer ${off.name} must be assigned to bridge to activate ability!`, 'warn');
+        return;
+      }
+
+      if (off.id === 'pilot') {
+        if (state.energy < 10) {
+          addLog('[ABILITY FAIL] Need 10 Reactor Energy for Evasive Flight ability.', 'warn');
+          playSound('alert');
+          return;
+        }
+        state.energy -= 10;
+        if (combatState.active) {
+          combatState.playerEvading = true;
+          addCombatFeed(`[PILOT SPECIAL: HYPER-EVADE] Cmdr. Vance executes emergency dodge thrusters (100% Dodge)!`, 'good');
+        } else {
+          state.fuel = Math.min(state.maxFuel, state.fuel + 20);
+          addLog(`[PILOT SPECIAL: HYPER-EVADE] Cmdr. Vance optimized hyper-burn trajectories (+20 Fuel)!`, 'good');
+        }
+        playSound('warp');
+      } else if (off.id === 'engineer') {
+        if (state.energy < 20) {
+          addLog('[ABILITY FAIL] Need 20 Reactor Energy for Emergency Repair ability.', 'warn');
+          playSound('alert');
+          return;
+        }
+        state.energy -= 20;
+        state.shields = Math.min(state.maxShields, state.shields + 40);
+        state.hull = Math.min(state.maxHull, state.hull + 20);
+        addLog(`[ENGINEER SPECIAL: EMERGENCY REPAIR] Chief Logan routed emergency power matrix! (+40 Shields, +20 Hull HP)`, 'good');
+        if (combatState.active) addCombatFeed(`[ENGINEER SPECIAL: REPAIR] Chief Logan restored +40 Shields & +20 Hull!`, 'good');
+        playSound('good');
+      } else if (off.id === 'gunner') {
+        if (state.energy < 20) {
+          addLog('[ABILITY FAIL] Need 20 Reactor Energy for Plasma Salvo ability.', 'warn');
+          playSound('alert');
+          return;
+        }
+        state.energy -= 20;
+        state.salvoActive = true;
+        addLog(`[GUNNER SPECIAL: PLASMA SALVO] Lt. Cross charged super-overheated plasma coils! Next phaser fire deals 2x DMG!`, 'good');
+        if (combatState.active) addCombatFeed(`[GUNNER SPECIAL: SALVO] Lt. Cross locked weapons! Next phaser strike deals 2x DMG!`, 'good');
+        playSound('good');
+      } else if (off.id === 'science') {
+        if (state.energy < 15) {
+          addLog('[ABILITY FAIL] Need 15 Reactor Energy for Deep Sensor Pulse ability.', 'warn');
+          playSound('alert');
+          return;
+        }
+        state.energy -= 15;
+        state.energy = Math.min(state.maxEnergy, state.energy + 25);
+        addLog(`[SCIENCE SPECIAL: DEEP SENSOR PULSE] Dr. Astra emitted tachyon sensor wave! Map scan completed & +25 Energy!`, 'good');
+        playSound('good');
+      }
+
+      updateUI();
+      if (combatState.active) updateCombatUI();
+      renderCrewModal();
     }
 
     // Phase 6: Random Encounter Engine
@@ -2493,6 +2703,12 @@
       } else {
         const sys = combatState.targetSubsystem;
         let baseDmg = Math.floor(Math.random() * 12) + 18 + (((state.upgradeLevels && state.upgradeLevels.cannons) || 0) * 10);
+        if (state.officers && state.officers[2].assigned) baseDmg += 10;
+        if (state.salvoActive) {
+          baseDmg *= 2;
+          state.salvoActive = false;
+          addCombatFeed(`[PLASMA SALVO] Lt. Cross' supercharged salvo dealt DOUBLE DAMAGE!`, 'good');
+        }
 
         if (sys === 'SHIELDS') {
           if (e.shields > 0) {
@@ -2637,7 +2853,7 @@
         return;
       }
 
-      const hitChance = combatState.playerEvading ? 0.45 : 0.85;
+      const hitChance = combatState.playerEvading ? 0.45 : ((state.officers && state.officers[0].assigned) ? 0.70 : 0.85);
       combatState.playerEvading = false;
 
       if (Math.random() > hitChance) {
