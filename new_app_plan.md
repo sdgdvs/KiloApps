@@ -54,14 +54,14 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi space exploration)
-**Phase:** 5 (next to do)
-**Status:** Phases 1-4 complete
+**Phase:** 6 (next to do)
+**Status:** Phases 1-5 complete
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML sci-fi exploration game (ship creation/naming, sector navigation grid with ASCII star map, fuel/hull/crew/energy resource management).
 - [x] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
 - [x] Phase 4: Dark theme UI styling (cybernetic sci-fi theme: deep space dark background, cyan/amber accent highlights, crisp terminal font layout).
-- [ ] Phase 5: Star System Biomes & Planet Scanning — Add 4 star system biomes (Terran, Volcanic, Nebula, Asteroid Belt) with orbital planet scanning for minerals, gas, and artifacts.
+- [x] Phase 5: Star System Biomes & Planet Scanning — Add 4 star system biomes (Terran, Volcanic, Nebula, Asteroid Belt) with orbital planet scanning for minerals, gas, and artifacts.
 - [ ] Phase 6: Random Encounter Engine — Add procedural space events: pirate attacks, derelict ships, space anomalies, alien traders, and distress calls with choice-driven outcomes.
 - [ ] Phase 7: Turn-based Tactical Ship Combat — Add tactical combat system against enemy starships (Shields, Weapons, Targeting, Evasion, Repairing systems).
 - [ ] Phase 8: Ship Systems Upgrade Bay — Add upgrade shop for Hull plating, Plasma cannons, Particle shields, Warp drive range, and Sensor arrays using collected Credits and Ore.
