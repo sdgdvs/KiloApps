@@ -2,157 +2,701 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KTowers</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; text-align: center; }
-        h1 { margin-top: 0; margin-bottom: 5px; }
-        .info { margin-bottom: 20px; font-size: 18px; }
-        .game-area { display: flex; justify-content: center; margin-top: 20px; gap: 40px; }
-        .peg-container { display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 10px; border-radius: 8px; transition: background 0.2s; min-width: 140px; }
-        .peg-container:hover { background: #2a2a2a; }
-        .peg-container.selected { background: #1e3a5f; outline: 2px solid #3b82f6; }
-        .peg { width: 140px; height: 180px; border-bottom: 8px solid #888; position: relative; display: flex; flex-direction: column-reverse; align-items: center; }
-        .peg-pole { position: absolute; width: 12px; height: 100%; background: #555; bottom: 0; z-index: 0; border-radius: 6px 6px 0 0; }
-        .disc { height: 24px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.5); margin-bottom: 2px; z-index: 1; transition: bottom 0.2s; }
-        .controls { margin-top: 40px; }
-        button { padding: 8px 16px; font-size: 14px; cursor: pointer; border: 1px solid #444; background: #333; color: #e0e0e0; border-radius: 4px; }
-        button:hover { background: #444; }
-        .message { margin-top: 20px; font-weight: bold; color: #4ade80; font-size: 20px; min-height: 24px;}
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --border-color: #334155;
+            --accent-color: #38bdf8;
+            --accent-hover: #0284c7;
+            --text-color: #f8fafc;
+            --text-dim: #94a3b8;
+            --success-color: #22c55e;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --freeze-color: #06b6d4;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 15px;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: var(--accent-color);
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            background: var(--panel-bg);
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .mode-toggle {
+            display: flex;
+            background: #0f172a;
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mode-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active {
+            background: var(--accent-color);
+            color: #0f172a;
+        }
+
+        .stage-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select, button {
+            background: #0f172a;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        select:focus, button:focus {
+            outline: 2px solid var(--accent-color);
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--border-color);
+            border-color: var(--accent-color);
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-powerup {
+            background: #1e1b4b;
+            border-color: #4338ca;
+            color: #c7d2fe;
+        }
+
+        .btn-powerup:hover:not(:disabled) {
+            background: #312e81;
+            border-color: #6366f1;
+        }
+
+        .btn-freeze {
+            background: #083344;
+            border-color: #0891b2;
+            color: #cffaff;
+        }
+
+        .btn-freeze:hover:not(:disabled) {
+            background: #155e75;
+            border-color: #22d3ee;
+        }
+
+        .stage-banner {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #e2e8f0;
+            margin-bottom: 12px;
+            max-width: 900px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stage-title {
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+
+        .stage-rules {
+            font-size: 13px;
+            color: var(--warning-color);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            font-size: 15px;
+            font-weight: 600;
+            background: var(--panel-bg);
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .frozen-badge {
+            background: var(--freeze-color);
+            color: #042f2e;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 700;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; transform: scale(1); }
+            100% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .game-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 16px;
+            margin: 10px 0 20px 0;
+            min-height: 280px;
+            padding: 20px 30px;
+            background: var(--panel-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            max-width: 900px;
+            width: 100%;
+            position: relative;
+        }
+
+        .peg-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 12px;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 160px;
+            min-width: 110px;
+        }
+
+        .peg-wrapper:hover {
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .peg-wrapper.selected {
+            background: rgba(56, 189, 248, 0.15);
+            outline: 2px dashed var(--accent-color);
+        }
+
+        .peg-wrapper.hint-from {
+            outline: 2px solid var(--warning-color);
+            background: rgba(245, 158, 11, 0.15);
+        }
+
+        .peg-wrapper.hint-to {
+            outline: 2px solid var(--success-color);
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .peg-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+
+        .peg-area {
+            width: 100%;
+            height: 220px;
+            position: relative;
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            border-bottom: 8px solid #475569;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .peg-pole {
+            position: absolute;
+            width: 10px;
+            height: 100%;
+            background: linear-gradient(180deg, #64748b 0%, #334155 100%);
+            bottom: 0;
+            z-index: 0;
+            border-radius: 5px 5px 0 0;
+        }
+
+        .disc {
+            height: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 0, 0, 0.4);
+            margin-bottom: 2px;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: transform 0.15s ease, bottom 0.2s ease;
+            position: relative;
+        }
+
+        .disc.locked {
+            background: #475569 !important;
+            border: 2px solid var(--danger-color);
+            color: #f87171;
+        }
+
+        .disc.locked::after {
+            content: '🔒';
+            font-size: 10px;
+            position: absolute;
+            right: 4px;
+        }
+
+        .controls-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-content {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 480px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .modal-stars {
+            font-size: 32px;
+            color: #f59e0b;
+            margin: 10px 0;
+        }
+
+        .modal-body {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            text-align: left;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .message-toast {
+            min-height: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--danger-color);
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
-    <h1>KTowers</h1>
-    <div class="info">Time: <span id="timeDisplay">00:00</span> | Moves: <span id="moveCount">0</span> / Optimal: <span id="optimalMoves">0</span> | Best: <span id="bestStats">--:-- (-- moves)</span></div>
-    
-    <div class="game-area" id="gameArea">
-        <!-- Rendered by JS -->
-    </div>
-    
-    <div class="message" id="message"></div>
 
-    <div class="controls">
-        <label for="difficulty">Discs: </label>
-        <select id="difficulty" onchange="changeDifficulty()" style="background:#333; color:#e0e0e0; border:1px solid #444; padding:7px; border-radius:4px; margin-right:10px;">
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-            <option value="8">8</option>
-        </select>
-        <button onclick="undoMove()" id="undoBtn" disabled>Undo</button>
-        <button onclick="applyHint()" id="hintBtn">Hint</button>
-        <button onclick="toggleAutoSolve()" id="autoBtn">Auto-Solve</button>
-        <button onclick="initGame()">Restart Game</button>
-        <button onclick="showHelp()">Help</button>
+    <h1>🏰 KTowers</h1>
+
+    <div class="header-bar">
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="modeCampaignBtn" onclick="setMode('campaign')">Campaign</button>
+            <button class="mode-btn" id="modeFreeBtn" onclick="setMode('free')">Free Play</button>
+        </div>
+
+        <div id="campaignControls" class="stage-selector">
+            <label for="stageSelect">Stage: </label>
+            <select id="stageSelect" onchange="changeStage()"></select>
+        </div>
+
+        <div id="freeControls" class="stage-selector" style="display: none;">
+            <label for="freePegs">Pegs: </label>
+            <select id="freePegs" onchange="initGame()">
+                <option value="3">3 Pegs</option>
+                <option value="4">4 Pegs</option>
+                <option value="5">5 Pegs</option>
+            </select>
+            <label for="freeDiscs" style="margin-left: 8px;">Discs: </label>
+            <select id="freeDiscs" onchange="initGame()">
+                <option value="3">3 Discs</option>
+                <option value="4" selected>4 Discs</option>
+                <option value="5">5 Discs</option>
+                <option value="6">6 Discs</option>
+                <option value="7">7 Discs</option>
+                <option value="8">8 Discs</option>
+                <option value="9">9 Discs</option>
+                <option value="10">10 Discs</option>
+            </select>
+        </div>
     </div>
 
-    <div id="helpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; align-items:center; justify-content:center;">
-        <div style="background:#222; padding:30px; border-radius:8px; max-width:500px; text-align:left; border:1px solid #444;">
-            <h2 style="margin-top:0;">How to Play KTowers</h2>
-            <p><strong>Goal:</strong> Move all discs from the first peg to the last peg.</p>
-            <p><strong>Rules:</strong></p>
-            <ul>
-                <li>You can only move one disc at a time.</li>
-                <li>Only the top disc on any peg can be moved.</li>
-                <li>You cannot place a larger disc on top of a smaller disc.</li>
-            </ul>
-            <p><strong>Controls:</strong></p>
-            <ul>
-                <li>Click a peg to select the top disc, then click another peg to drop it.</li>
-                <li>Alternatively, use keys <strong>1, 2, 3</strong> to select and move discs.</li>
-            </ul>
-            <div style="text-align:right; margin-top:20px;">
-                <button onclick="hideHelp()">Close</button>
-            </div>
+    <div class="stage-banner">
+        <div class="stage-title" id="stageTitle">Stage 1: Beginner's Stack</div>
+        <div class="stage-rules" id="stageRules"></div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">⏱️ Time: <span id="timeDisplay">00:00</span> <span id="frozenBadge" class="frozen-badge" style="display:none;">FROZEN</span></div>
+        <div class="stat-item">🎯 Moves: <span id="moveDisplay">0</span> / <span id="parDisplay">7</span></div>
+        <div class="stat-item">⭐ Best: <span id="bestDisplay">--</span></div>
+    </div>
+
+    <div class="message-toast" id="messageToast"></div>
+
+    <div class="game-container" id="gameArea"></div>
+
+    <div class="controls-grid">
+        <button class="btn-powerup" onclick="undoMove()" id="undoBtn" disabled>↩️ Undo [U]</button>
+        <button class="btn-powerup" onclick="applyHint()" id="hintBtn">💡 Hint [H]</button>
+        <button class="btn-freeze" onclick="useTimeFreeze()" id="freezeBtn">🧊 Freeze [F] (<span id="freezeChargesDisplay">3</span>)</button>
+        <button onclick="toggleAutoSolve()" id="autoBtn">🤖 Auto-Solve [A]</button>
+        <button onclick="initGame()">🔄 Restart [R]</button>
+        <button onclick="showHelp()">❓ Help</button>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal-overlay" id="modalOverlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">STAGE CLEARED!</div>
+            <div class="modal-stars" id="modalStars">⭐⭐⭐</div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-btns" id="modalBtns"></div>
         </div>
     </div>
 
     <script>
-        let numDiscs = 4;
-        let audioCtx = null;
+        // ----------------------------------------------------
+        // Stage Definitions (15 Campaign Stages)
+        // ----------------------------------------------------
+        const CAMPAIGN_STAGES = [
+            { id: 1,  name: "Beginner's Stack", disks: 3, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 7 },
+            { id: 2,  name: "Step Up",          disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 3,  name: "Linear Steps",      disks: 3, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  lockedDisk: 0, lockDuration: 0, par: 26 },
+            { id: 4,  name: "Reve's Intro",      disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 13 },
+            { id: 5,  name: "Sprint Trial",      disks: 4, pegs: 3, timeLimit: 40, moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 6,  name: "Move Efficiency",  disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 20, adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 7,  name: "Quad Towers",       disks: 6, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 17 },
+            { id: 8,  name: "Locked Foundation", disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 4, lockDuration: 5, par: 15 },
+            { id: 9,  name: "Penta Realm",       disks: 7, pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 19 },
+            { id: 10, name: "Chain Migration",   disks: 4, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 11, name: "Clockwork Tower",   disks: 5, pegs: 3, timeLimit: 60, moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 },
+            { id: 12, name: "Reve's Master",     disks: 8, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 33 },
+            { id: 13, name: "Precision Stack",   disks: 5, pegs: 3, timeLimit: 0,  moveLimit: 38, adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 },
+            { id: 14, name: "Heavy Chains",      disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  lockedDisk: 5, lockDuration: 8, par: 21 },
+            { id: 15, name: "Grandmaster Summit",disks: 10,pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 }
+        ];
 
-        function playSound(type) {
-            if (!window.AudioContext && !window.webkitAudioContext) return;
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            let now = audioCtx.currentTime;
-            if (type === 'win') {
-                const freqs = [440, 554, 659, 880];
-                for(let i=0; i<freqs.length; i++){
-                    const o = audioCtx.createOscillator();
-                    const g = audioCtx.createGain();
-                    o.type = 'sine';
-                    o.connect(g);
-                    g.connect(audioCtx.destination);
-                    o.frequency.value = freqs[i];
-                    g.gain.setValueAtTime(0, now + i*0.1);
-                    g.gain.linearRampToValueAtTime(0.3, now + i*0.1 + 0.02);
-                    g.gain.exponentialRampToValueAtTime(0.01, now + i*0.1 + 0.3);
-                    o.start(now + i*0.1);
-                    o.stop(now + i*0.1 + 0.3);
+        const DISK_COLORS = [
+            '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', 
+            '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
+        ];
+
+        // ----------------------------------------------------
+        // Frame-Stewart & Optimal Solvers
+        // ----------------------------------------------------
+        const FS_DP = Array.from({ length: 12 }, () => Array(6).fill(0));
+        const FS_SPLIT = Array.from({ length: 12 }, () => Array(6).fill(0));
+
+        function initFrameStewartDP() {
+            for (let k = 3; k <= 5; k++) {
+                FS_DP[1][k] = 1;
+                FS_SPLIT[1][k] = 1;
+            }
+            for (let n = 1; n <= 10; n++) {
+                FS_DP[n][3] = (1 << n) - 1;
+                FS_SPLIT[n][3] = 1;
+            }
+            for (let k = 4; k <= 5; k++) {
+                for (let n = 2; n <= 10; n++) {
+                    let minCost = 999999;
+                    let bestK = 1;
+                    for (let r = 1; r < n; r++) {
+                        let cost = 2 * FS_DP[n - r][k] + FS_DP[r][k - 1];
+                        if (cost < minCost) {
+                            minCost = cost;
+                            bestK = r;
+                        }
+                    }
+                    FS_DP[n][k] = minCost;
+                    FS_SPLIT[n][k] = bestK;
                 }
-                return;
             }
-            
-            const osc = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-            osc.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            if (type === 'pickup') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
-                gainNode.gain.setValueAtTime(0.5, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'drop') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(600, now);
-                osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
-                gainNode.gain.setValueAtTime(0.5, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
-            } else if (type === 'error') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.linearRampToValueAtTime(150, now + 0.2);
-                gainNode.gain.setValueAtTime(0.3, now);
-                gainNode.gain.linearRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            }
+        }
+        initFrameStewartDP();
+
+        function getOptimalMovesCount(n, k, adjOnly = false) {
+            if (adjOnly && k === 3) return Math.pow(3, n) - 1;
+            return FS_DP[n][k] || (1 << n) - 1;
         }
 
-        function changeDifficulty() {
-            const select = document.getElementById('difficulty');
-            numDiscs = parseInt(select.value, 10);
-            initGame();
-        }
-        let pegs = [[], [], []];
+        // ----------------------------------------------------
+        // Game State Variables
+        // ----------------------------------------------------
+        let currentMode = 'campaign'; // 'campaign' | 'free'
+        let currentStageIdx = 0;
+        let numPegs = 3;
+        let numDiscs = 4;
+        
+        let pegs = [];
         let selectedPeg = null;
         let moves = 0;
         let won = false;
+        let gameOver = false;
         let moveHistory = [];
+        
+        let elapsedSeconds = 0;
+        let freezeSeconds = 0;
+        let freezeCharges = 3;
         let timerInterval = null;
         let autoSolveInterval = null;
-        let elapsedSeconds = 0;
-        let stats = JSON.parse(localStorage.getItem('ktowers_stats') || '{}');
+        let hintHighlight = null; // { from, to }
 
-        function updateStatsDisplay() {
-            const currentStats = stats[numDiscs];
-            if (currentStats) {
-                document.getElementById('bestStats').innerText = `${formatTime(currentStats.bestTime)} (${currentStats.fewestMoves} moves)`;
+        // Local Storage
+        let campaignStats = JSON.parse(localStorage.getItem('ktowers_campaign_v2') || '{}');
+
+        // Audio System
+        let audioCtx = null;
+        function playSound(type) {
+            try {
+                if (!window.AudioContext && !window.webkitAudioContext) return;
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                let now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'pickup') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    osc.frequency.exponentialRampToValueAtTime(900, now + 0.08);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                } else if (type === 'drop') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(700, now);
+                    osc.frequency.exponentialRampToValueAtTime(450, now + 0.08);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(120, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'freeze') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                } else if (type === 'win') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, i) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g); g.connect(audioCtx.destination);
+                        o.frequency.value = f;
+                        g.gain.setValueAtTime(0, now + i*0.1);
+                        g.gain.linearRampToValueAtTime(0.25, now + i*0.1 + 0.02);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + i*0.1 + 0.25);
+                        o.start(now + i*0.1); o.stop(now + i*0.1 + 0.25);
+                    });
+                }
+            } catch(e) {}
+        }
+
+        // ----------------------------------------------------
+        // Initialization & Mode Setup
+        // ----------------------------------------------------
+        function populateStageDropdown() {
+            const select = document.getElementById('stageSelect');
+            select.innerHTML = '';
+            CAMPAIGN_STAGES.forEach((s, idx) => {
+                const opt = document.createElement('option');
+                opt.value = idx;
+                const stats = campaignStats[s.id];
+                const stars = stats ? '★'.repeat(stats.stars) : '';
+                const isUnlocked = idx === 0 || campaignStats[CAMPAIGN_STAGES[idx - 1].id];
+                opt.textContent = `${s.id}. ${s.name} ${stars} ${!isUnlocked ? '🔒' : ''}`;
+                opt.disabled = !isUnlocked;
+                select.appendChild(opt);
+            });
+            select.value = currentStageIdx;
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('modeCampaignBtn').classList.toggle('active', mode === 'campaign');
+            document.getElementById('modeFreeBtn').classList.toggle('active', mode === 'free');
+            document.getElementById('campaignControls').style.display = mode === 'campaign' ? 'flex' : 'none';
+            document.getElementById('freeControls').style.display = mode === 'free' ? 'flex' : 'none';
+            if (mode === 'campaign') populateStageDropdown();
+            initGame();
+        }
+
+        function changeStage() {
+            currentStageIdx = parseInt(document.getElementById('stageSelect').value, 10);
+            initGame();
+        }
+
+        function getCurrentStageConfig() {
+            if (currentMode === 'campaign') {
+                return CAMPAIGN_STAGES[currentStageIdx];
             } else {
-                document.getElementById('bestStats').innerText = `--:-- (-- moves)`;
+                const p = parseInt(document.getElementById('freePegs').value, 10);
+                const d = parseInt(document.getElementById('freeDiscs').value, 10);
+                return {
+                    id: 0, name: `Free Play (${d} Discs, ${p} Pegs)`,
+                    disks: d, pegs: p, timeLimit: 0, moveLimit: 0,
+                    adjOnly: false, lockedDisk: 0, lockDuration: 0,
+                    par: getOptimalMovesCount(d, p)
+                };
             }
         }
 
-        const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6', '#FF2D55'];
+        function initGame() {
+            const config = getCurrentStageConfig();
+            numPegs = config.pegs;
+            numDiscs = config.disks;
+
+            pegs = Array.from({ length: numPegs }, () => []);
+            for (let i = numDiscs; i >= 1; i--) {
+                pegs[0].push(i);
+            }
+
+            selectedPeg = null;
+            moves = 0;
+            won = false;
+            gameOver = false;
+            moveHistory = [];
+            elapsedSeconds = 0;
+            freezeSeconds = 0;
+            freezeCharges = 3;
+            hintHighlight = null;
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            if (autoSolveInterval) {
+                clearInterval(autoSolveInterval);
+                autoSolveInterval = null;
+                document.getElementById('autoBtn').innerText = "🤖 Auto-Solve [A]";
+            }
+
+            // Update UI
+            document.getElementById('stageTitle').innerText = config.name;
+            let rulesText = [];
+            if (config.adjOnly) rulesText.push("⚡ Adjacent Pegs Only");
+            if (config.moveLimit > 0) rulesText.push(`🎯 Max ${config.moveLimit} Moves`);
+            if (config.timeLimit > 0) rulesText.push(`⏳ ${config.timeLimit}s Time Limit`);
+            if (config.lockedDisk > 0) rulesText.push(`🔒 Disk ${config.lockedDisk} Locked for ${config.lockDuration} moves`);
+            document.getElementById('stageRules').innerHTML = rulesText.join(' | ') || 'Standard Rules';
+
+            document.getElementById('parDisplay').innerText = config.par;
+            document.getElementById('freezeChargesDisplay').innerText = freezeCharges;
+            document.getElementById('messageToast').innerText = '';
+            document.getElementById('modalOverlay').style.display = 'none';
+
+            updateStatsDisplay();
+            render();
+        }
+
+        function updateStatsDisplay() {
+            const config = getCurrentStageConfig();
+            if (currentMode === 'campaign') {
+                const stats = campaignStats[config.id];
+                document.getElementById('bestDisplay').innerText = stats ? `${'★'.repeat(stats.stars)} (${stats.moves}m, ${formatTime(stats.time)})` : '--';
+            } else {
+                document.getElementById('bestDisplay').innerText = 'Free Play Mode';
+            }
+        }
 
         function formatTime(secs) {
             const m = Math.floor(secs / 60).toString().padStart(2, '0');
@@ -161,100 +705,119 @@
         }
 
         function updateTimer() {
-            elapsedSeconds++;
+            if (won || gameOver) return;
+
+            if (freezeSeconds > 0) {
+                freezeSeconds--;
+                document.getElementById('frozenBadge').style.display = 'inline-block';
+                document.getElementById('frozenBadge').innerText = `FROZEN (${freezeSeconds}s)`;
+            } else {
+                document.getElementById('frozenBadge').style.display = 'none';
+                elapsedSeconds++;
+            }
+
             document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
-            saveState();
-        }
 
-        function saveState() {
-            localStorage.setItem('ktowers_save', JSON.stringify({
-                numDiscs: numDiscs,
-                pegs: pegs,
-                moves: moves,
-                won: won,
-                moveHistory: moveHistory,
-                elapsedSeconds: elapsedSeconds
-            }));
-        }
-
-        function loadState() {
-            try {
-                const saved = localStorage.getItem('ktowers_save');
-                if (saved) {
-                    const state = JSON.parse(saved);
-                    if (state && state.pegs && state.numDiscs) {
-                        numDiscs = state.numDiscs;
-                        pegs = state.pegs;
-                        moves = state.moves;
-                        won = state.won;
-                        moveHistory = state.moveHistory || [];
-                        elapsedSeconds = state.elapsedSeconds || 0;
-                        document.getElementById('difficulty').value = numDiscs;
-                        return true;
-                    }
-                }
-            } catch (e) {}
-            return false;
-        }
-
-        function initGame() {
-            pegs = [[], [], []];
-            for (let i = numDiscs; i >= 1; i--) {
-                pegs[0].push(i);
+            const config = getCurrentStageConfig();
+            if (config.timeLimit > 0 && elapsedSeconds >= config.timeLimit) {
+                triggerGameOver("Time limit expired!");
             }
+        }
+
+        // ----------------------------------------------------
+        // Power-ups & Gameplay Mechanics
+        // ----------------------------------------------------
+        function useTimeFreeze() {
+            if (won || gameOver) return;
+            if (freezeCharges <= 0) {
+                document.getElementById('messageToast').innerText = "No Freeze charges remaining!";
+                playSound('error');
+                return;
+            }
+            freezeCharges--;
+            freezeSeconds += 15;
+            document.getElementById('freezeChargesDisplay').innerText = freezeCharges;
+            document.getElementById('frozenBadge').style.display = 'inline-block';
+            document.getElementById('frozenBadge').innerText = `FROZEN (${freezeSeconds}s)`;
+            playSound('freeze');
+            if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function undoMove() {
+            if (moveHistory.length === 0 || won || gameOver) return;
+            const lastMove = moveHistory.pop();
+            pegs[lastMove.from].push(pegs[lastMove.to].pop());
+            moves--;
             selectedPeg = null;
-            moves = 0;
-            won = false;
-            moveHistory = [];
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = null;
-            if (autoSolveInterval) {
-                clearInterval(autoSolveInterval);
-                autoSolveInterval = null;
-                document.getElementById('autoBtn').innerText = "Auto-Solve";
-            }
-            elapsedSeconds = 0;
-            document.getElementById('timeDisplay').innerText = "00:00";
-            document.getElementById('message').innerText = '';
-            document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
-            updateStatsDisplay();
+            hintHighlight = null;
             render();
-            saveState();
+            playSound('drop');
         }
 
-        function handlePegClick(index) {
-            if (won) return;
+        function handlePegClick(pegIdx) {
+            if (won || gameOver) return;
+            document.getElementById('messageToast').innerText = '';
+
+            const config = getCurrentStageConfig();
 
             if (selectedPeg === null) {
-                if (pegs[index].length > 0) {
-                    selectedPeg = index;
+                // Pick up top disc
+                if (pegs[pegIdx].length > 0) {
+                    const topDisc = pegs[pegIdx][pegs[pegIdx].length - 1];
+                    // Check locked disk rule
+                    if (config.lockedDisk > 0 && topDisc === config.lockedDisk && moves < config.lockDuration) {
+                        document.getElementById('messageToast').innerText = `🔒 Disk ${config.lockedDisk} is locked for ${config.lockDuration - moves} more moves!`;
+                        playSound('error');
+                        return;
+                    }
+                    selectedPeg = pegIdx;
+                    hintHighlight = null;
                     playSound('pickup');
                     render();
                 } else {
                     playSound('error');
                 }
-            } else if (selectedPeg === index) {
+            } else if (selectedPeg === pegIdx) {
+                // Deselect
                 selectedPeg = null;
                 playSound('drop');
                 render();
             } else {
+                // Move disk from selectedPeg to pegIdx
+                if (config.adjOnly && Math.abs(selectedPeg - pegIdx) !== 1) {
+                    document.getElementById('messageToast').innerText = "⚡ Adjacent pegs only!";
+                    playSound('error');
+                    selectedPeg = null;
+                    render();
+                    return;
+                }
+
                 const fromPeg = pegs[selectedPeg];
-                const toPeg = pegs[index];
-                
-                if (toPeg.length === 0 || toPeg[toPeg.length - 1] > fromPeg[fromPeg.length - 1]) {
-                    moveHistory.push({ from: selectedPeg, to: index });
+                const toPeg = pegs[pegIdx];
+                const movingDisc = fromPeg[fromPeg.length - 1];
+
+                if (toPeg.length === 0 || toPeg[toPeg.length - 1] > movingDisc) {
+                    moveHistory.push({ from: selectedPeg, to: pegIdx });
                     toPeg.push(fromPeg.pop());
                     moves++;
                     selectedPeg = null;
-                    render();
-                    if (!timerInterval && !won) {
-                        timerInterval = setInterval(updateTimer, 1000);
+                    hintHighlight = null;
+
+                    if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
+
+                    // Check Move Limit constraint
+                    if (config.moveLimit > 0 && moves > config.moveLimit && pegs[numPegs - 1].length !== numDiscs) {
+                        render();
+                        triggerGameOver(`Exceeded move limit of ${config.moveLimit}!`);
+                        return;
                     }
+
                     if (!checkWin()) {
                         playSound('drop');
                     }
-                    saveState();
+                    render();
                 } else {
+                    document.getElementById('messageToast').innerText = "Cannot place larger disc on smaller disc!";
                     selectedPeg = null;
                     playSound('error');
                     render();
@@ -262,60 +825,84 @@
             }
         }
 
-        function undoMove() {
-            if (moveHistory.length === 0 || won) return;
-            const lastMove = moveHistory.pop();
-            const fromPeg = lastMove.from;
-            const toPeg = lastMove.to;
-            
-            pegs[fromPeg].push(pegs[toPeg].pop());
-            moves--;
-            selectedPeg = null;
-            render();
-            playSound('drop');
-            saveState();
-        }
+        // ----------------------------------------------------
+        // Optimal Solver & Hint Engine (Frame-Stewart + BFS)
+        // ----------------------------------------------------
+        function getBFSNextMove() {
+            const targetPeg = numPegs - 1;
+            const config = getCurrentStageConfig();
 
-        function getNextOptimalMove(d, target) {
-            if (d === 0) return null;
-            let current = -1;
-            for (let p = 0; p < 3; p++) {
-                if (pegs[p].includes(d)) { current = p; break; }
-            }
-            if (current === target) {
-                return getNextOptimalMove(d - 1, target);
-            } else {
-                let aux = 3 - current - target;
-                let move = getNextOptimalMove(d - 1, aux);
-                if (move) return move;
-                return { from: current, to: target };
-            }
-        }
+            // Check if win state
+            if (pegs[targetPeg].length === numDiscs) return null;
 
-        function getHintMove() {
-            let target = 2;
-            for (let d = numDiscs; d >= 1; d--) {
-                let current = -1;
-                for (let p = 0; p < 3; p++) {
-                    if (pegs[p].includes(d)) { current = p; break; }
+            // Simple BFS solver for any state
+            const queue = [];
+            const visited = new Set();
+
+            function encodeState(pState) {
+                let code = [];
+                for (let d = 1; d <= numDiscs; d++) {
+                    for (let p = 0; p < numPegs; p++) {
+                        if (pState[p].includes(d)) {
+                            code.push(p);
+                            break;
+                        }
+                    }
                 }
-                if (current !== target) {
-                    let aux = 3 - current - target;
-                    let move = getNextOptimalMove(d - 1, aux);
-                    if (move) return move;
-                    return { from: current, to: target };
+                return code.join(',');
+            }
+
+            const initialCode = encodeState(pegs);
+            queue.push({ state: pegs.map(p => [...p]), path: [] });
+            visited.add(initialCode);
+
+            let steps = 0;
+            while (queue.length > 0 && steps < 4000) {
+                steps++;
+                const { state, path } = queue.shift();
+
+                if (state[targetPeg].length === numDiscs) {
+                    return path[0];
+                }
+
+                for (let from = 0; from < numPegs; from++) {
+                    if (state[from].length === 0) continue;
+                    const topDisc = state[from][state[from].length - 1];
+
+                    // Lock check
+                    if (config.lockedDisk > 0 && topDisc === config.lockedDisk && (moves + path.length) < config.lockDuration) {
+                        continue;
+                    }
+
+                    for (let to = 0; to < numPegs; to++) {
+                        if (from === to) continue;
+                        if (config.adjOnly && Math.abs(from - to) !== 1) continue;
+
+                        if (state[to].length === 0 || state[to][state[to].length - 1] > topDisc) {
+                            // Create next state
+                            const nextState = state.map(p => [...p]);
+                            nextState[to].push(nextState[from].pop());
+                            const nextCode = encodeState(nextState);
+
+                            if (!visited.has(nextCode)) {
+                                visited.add(nextCode);
+                                queue.push({ state: nextState, path: [...path, { from, to }] });
+                            }
+                        }
+                    }
                 }
             }
             return null;
         }
 
         function applyHint() {
-            if (won) return;
-            let move = getHintMove();
-            if (move) {
-                selectedPeg = null;
-                handlePegClick(move.from);
-                handlePegClick(move.to);
+            if (won || gameOver) return;
+            const nextMove = getBFSNextMove();
+            if (nextMove) {
+                hintHighlight = nextMove;
+                render();
+            } else {
+                document.getElementById('messageToast').innerText = "No hint available!";
             }
         }
 
@@ -323,113 +910,203 @@
             if (autoSolveInterval) {
                 clearInterval(autoSolveInterval);
                 autoSolveInterval = null;
-                document.getElementById('autoBtn').innerText = "Auto-Solve";
-                render();
+                document.getElementById('autoBtn').innerText = "🤖 Auto-Solve [A]";
             } else {
-                if (won) return;
-                document.getElementById('autoBtn').innerText = "Stop Auto";
+                if (won || gameOver) return;
+                document.getElementById('autoBtn').innerText = "🛑 Stop Auto";
                 autoSolveInterval = setInterval(() => {
-                    if (won) {
+                    if (won || gameOver) {
                         toggleAutoSolve();
-                    } else {
-                        applyHint();
+                        return;
                     }
-                }, 500);
-                render();
+                    const nextMove = getBFSNextMove();
+                    if (nextMove) {
+                        selectedPeg = null;
+                        handlePegClick(nextMove.from);
+                        handlePegClick(nextMove.to);
+                    } else {
+                        toggleAutoSolve();
+                    }
+                }, 400);
             }
         }
 
+        // ----------------------------------------------------
+        // Win / Game Over Checks & Modals
+        // ----------------------------------------------------
         function checkWin() {
-            if (pegs[2].length === numDiscs) {
+            const targetPeg = numPegs - 1;
+            if (pegs[targetPeg].length === numDiscs) {
                 won = true;
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = null;
-                
-                let newBest = false;
-                if (!stats[numDiscs]) {
-                    stats[numDiscs] = { bestTime: elapsedSeconds, fewestMoves: moves };
-                    newBest = true;
-                } else {
-                    if (elapsedSeconds < stats[numDiscs].bestTime || 
-                       (elapsedSeconds === stats[numDiscs].bestTime && moves < stats[numDiscs].fewestMoves)) {
-                        stats[numDiscs].bestTime = elapsedSeconds;
-                        stats[numDiscs].fewestMoves = moves;
-                        newBest = true;
+
+                const config = getCurrentStageConfig();
+                let stars = 1;
+                if (moves <= config.par * 1.2) stars = 3;
+                else if (moves <= config.par * 1.6) stars = 2;
+
+                if (currentMode === 'campaign') {
+                    const existing = campaignStats[config.id];
+                    if (!existing || stars > existing.stars || (stars === existing.stars && moves < existing.moves)) {
+                        campaignStats[config.id] = { stars, moves, time: elapsedSeconds };
+                        localStorage.setItem('ktowers_campaign_v2', JSON.stringify(campaignStats));
+                        populateStageDropdown();
                     }
                 }
-                if (newBest) {
-                    localStorage.setItem('ktowers_stats', JSON.stringify(stats));
-                    updateStatsDisplay();
-                }
 
-                document.getElementById('message').innerText = `You won in ${moves} moves!`;
                 playSound('win');
+                showWinModal(stars);
                 return true;
             }
             return false;
         }
 
+        function triggerGameOver(reason) {
+            gameOver = true;
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = null;
+            playSound('error');
+
+            document.getElementById('modalTitle').innerText = "STAGE FAILED!";
+            document.getElementById('modalTitle').style.color = "var(--danger-color)";
+            document.getElementById('modalStars').innerText = "❌";
+            document.getElementById('modalBody').innerHTML = `<strong>Reason:</strong> ${reason}<br><br>Moves used: ${moves} | Time: ${formatTime(elapsedSeconds)}`;
+            document.getElementById('modalBtns').innerHTML = `
+                <button onclick="initGame()" style="background: var(--accent-color); color: #0f172a;">🔄 Retry Stage</button>
+            `;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function showWinModal(stars) {
+            const config = getCurrentStageConfig();
+            document.getElementById('modalTitle').innerText = "STAGE CLEARED!";
+            document.getElementById('modalTitle').style.color = "var(--success-color)";
+            document.getElementById('modalStars').innerText = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+            document.getElementById('modalBody').innerHTML = `
+                <strong>${config.name} Completed!</strong><br><br>
+                🎯 <strong>Moves:</strong> ${moves} (Par: ${config.par})<br>
+                ⏱️ <strong>Time:</strong> ${formatTime(elapsedSeconds)}
+            `;
+
+            let btnsHtml = `<button onclick="initGame()">🔄 Replay</button>`;
+            if (currentMode === 'campaign' && currentStageIdx < CAMPAIGN_STAGES.length - 1) {
+                btnsHtml += `<button onclick="nextStage()" style="background: var(--success-color); color: #0f172a;">➡️ Next Stage</button>`;
+            }
+            document.getElementById('modalBtns').innerHTML = btnsHtml;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function nextStage() {
+            if (currentStageIdx < CAMPAIGN_STAGES.length - 1) {
+                currentStageIdx++;
+                document.getElementById('stageSelect').value = currentStageIdx;
+                initGame();
+            }
+        }
+
+        // ----------------------------------------------------
+        // Rendering Engine
+        // ----------------------------------------------------
         function render() {
-            document.getElementById('moveCount').innerText = moves;
-            document.getElementById('undoBtn').disabled = moveHistory.length === 0 || won;
-            document.getElementById('hintBtn').disabled = won || !!autoSolveInterval;
+            document.getElementById('moveDisplay').innerText = moves;
+            document.getElementById('undoBtn').disabled = moveHistory.length === 0 || won || gameOver;
+            document.getElementById('hintBtn').disabled = won || gameOver || !!autoSolveInterval;
+            document.getElementById('freezeBtn').disabled = won || gameOver || freezeCharges <= 0;
+
             const gameArea = document.getElementById('gameArea');
             gameArea.innerHTML = '';
 
-            pegs.forEach((peg, index) => {
-                const pegContainer = document.createElement('div');
-                pegContainer.className = 'peg-container' + (selectedPeg === index ? ' selected' : '');
-                pegContainer.onclick = () => handlePegClick(index);
+            const config = getCurrentStageConfig();
 
-                const pegDiv = document.createElement('div');
-                pegDiv.className = 'peg';
-                
+            pegs.forEach((peg, pIdx) => {
+                const wrapper = document.createElement('div');
+                let wrapperClasses = 'peg-wrapper';
+                if (selectedPeg === pIdx) wrapperClasses += ' selected';
+                if (hintHighlight && hintHighlight.from === pIdx) wrapperClasses += ' hint-from';
+                if (hintHighlight && hintHighlight.to === pIdx) wrapperClasses += ' hint-to';
+                wrapper.className = wrapperClasses;
+                wrapper.onclick = () => handlePegClick(pIdx);
+
+                const pegArea = document.createElement('div');
+                pegArea.className = 'peg-area';
+
                 const pole = document.createElement('div');
                 pole.className = 'peg-pole';
-                pegDiv.appendChild(pole);
+                pegArea.appendChild(pole);
 
                 peg.forEach(discSize => {
                     const disc = document.createElement('div');
-                    disc.className = 'disc';
-                    // max width 140px, min width 40px
-                    const width = 40 + (discSize / 8) * 80;
-                    disc.style.width = width + 'px';
-                    disc.style.backgroundColor = colors[(discSize - 1) % colors.length];
-                    pegDiv.appendChild(disc);
+                    let isLocked = (config.lockedDisk > 0 && discSize === config.lockedDisk && moves < config.lockDuration);
+                    disc.className = 'disc' + (isLocked ? ' locked' : '');
+
+                    // Calculate width proportionally (30px to 140px)
+                    const widthPct = 30 + ((discSize) / numDiscs) * 70;
+                    disc.style.width = widthPct + '%';
+                    disc.style.backgroundColor = DISK_COLORS[(discSize - 1) % DISK_COLORS.length];
+                    disc.innerText = discSize;
+
+                    pegArea.appendChild(disc);
                 });
 
-                pegContainer.appendChild(pegDiv);
-                gameArea.appendChild(pegContainer);
+                const label = document.createElement('div');
+                label.className = 'peg-label';
+                label.innerText = `Peg ${pIdx + 1}` + (pIdx === numPegs - 1 ? ' (Target)' : '');
+
+                wrapper.appendChild(pegArea);
+                wrapper.appendChild(label);
+                gameArea.appendChild(wrapper);
             });
         }
 
-        if (loadState()) {
-            document.getElementById('optimalMoves').innerText = (1 << numDiscs) - 1;
-            document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
-            updateStatsDisplay();
-            render();
-            if (won) {
-                document.getElementById('message').innerText = `You won in ${moves} moves!`;
-            } else if (moves > 0) {
-                if (timerInterval) clearInterval(timerInterval);
-                timerInterval = setInterval(updateTimer, 1000);
-            }
-        } else {
-            initGame();
-        }
-
+        // ----------------------------------------------------
+        // Keyboard Hotkeys
+        // ----------------------------------------------------
         document.addEventListener('keydown', (e) => {
-            if (e.key === '1') handlePegClick(0);
-            if (e.key === '2') handlePegClick(1);
-            if (e.key === '3') handlePegClick(2);
+            if (e.key >= '1' && e.key <= '5') {
+                const idx = parseInt(e.key, 10) - 1;
+                if (idx < numPegs) handlePegClick(idx);
+            } else if (e.key === 'u' || e.key === 'U') {
+                undoMove();
+            } else if (e.key === 'h' || e.key === 'H') {
+                applyHint();
+            } else if (e.key === 'f' || e.key === 'F') {
+                useTimeFreeze();
+            } else if (e.key === 'r' || e.key === 'R') {
+                initGame();
+            } else if (e.key === 'a' || e.key === 'A') {
+                toggleAutoSolve();
+            }
         });
 
         function showHelp() {
-            document.getElementById('helpModal').style.display = 'flex';
+            document.getElementById('modalTitle').innerText = "How to Play KTowers";
+            document.getElementById('modalTitle').style.color = "var(--accent-color)";
+            document.getElementById('modalStars').innerText = "🏰";
+            document.getElementById('modalBody').innerHTML = `
+                <p><strong>Goal:</strong> Move all discs to the target peg (last peg).</p>
+                <p><strong>Rules:</strong></p>
+                <ul>
+                    <li>Only top discs can be moved.</li>
+                    <li>Cannot place a larger disc on a smaller disc.</li>
+                    <li><strong>Adjacent Only:</strong> Disks can only move to neighboring pegs.</li>
+                    <li><strong>Locked Disks:</strong> Certain disks cannot move until turn requirement is met.</li>
+                </ul>
+                <p><strong>Power-ups & Keys:</strong></p>
+                <ul>
+                    <li><strong>1-5:</strong> Select / Move to Peg 1..5</li>
+                    <li><strong>[U] Undo:</strong> Takes back last move.</li>
+                    <li><strong>[H] Hint:</strong> Highlights optimal next move.</li>
+                    <li><strong>[F] Freeze:</strong> Pauses timer for 15s.</li>
+                </ul>
+            `;
+            document.getElementById('modalBtns').innerHTML = `<button onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>`;
+            document.getElementById('modalOverlay').style.display = 'flex';
         }
-        function hideHelp() {
-            document.getElementById('helpModal').style.display = 'none';
-        }
+
+        // Start initial game
+        populateStageDropdown();
+        initGame();
     </script>
 </body>
 </html>
