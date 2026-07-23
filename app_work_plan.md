@@ -24,7 +24,7 @@
 
 ---
 
-**Target App:** KSynth
+**Target App:** KTask
 **Status:** In Queue
 **Current Phase:** In Queue
 
