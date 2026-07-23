@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KChess
 - KPong
 - KMines
 - KAsteroids
@@ -107,6 +106,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KBreakout
 - KMaze
 - KRogue
+- KChess
 
 ## Completed Work Log
 
@@ -117,6 +117,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **KBreakout (Loop 1):** Implemented futuristic metallic paddle with side lights and animated energy core, energy ball with motion trail, 3D beveled bricks (silver metal, reinforced armor, row-tiered colors), powerup capsules with letter badges (Expand, Extra life, Pierce, Sticky, Laser), flying saucer UFO sprite, and brick destruction particle bursts for both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 - **KMaze (Loop 1):** Implemented custom 16x16 procedural wall textures (stone bricks, glowing exit portal, gold key block, steel door, coin chest, spike trap, cyan compass plate, speed boost bolt, teleporter vortex, red minotaur beast, crossed pickaxe block), distance fog & side shading, held equipment 3D HUD (swinging pickaxe and brass compass with target direction needle), particle bursts, and polished minimap with player direction arrow for both Web Canvas (kmaze.html) and Native C (KMaze/main.c).
 - **KRogue (Loop 1):** Implemented custom knight player sprite (with helmet, visor slit, cape, sword, shield), 12 distinct animated monster sprites (giant rat, bat, orc, zombie, cave troll, ghost, gelatinous cube with inner skull, hydra, balrog with horns, titan, beholder with eyestalks, mind flayer with tentacles), 3D stone brick wall tiles with biome color palettes (Mossy green, Volcanic red, Void purple, Abyss gold-dark), stairs, doors, shrines, food, gold coins, floating damage numbers, hit spark particles, attack stroke animations, and responsive HUD bars for both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
+- **KChess (Loop 1):** Implemented custom 2D vector chess piece sprites for all 6 piece types (Pawn, Knight, Bishop, Rook, Queen, King) for White & Black, 3D wood grain & mahogany tiles with rank/file coordinates, smooth piece sliding animation, capture particle sparks, glowing move highlights, and check warning auras for both Web Canvas (kchess.html) and Native C Win32 GDI (KChess/main.c).
 
 
 

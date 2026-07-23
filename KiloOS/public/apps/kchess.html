@@ -14,10 +14,10 @@
     height: 100vh; user-select: none; color: var(--text-main);
   }
   canvas { 
-    background-color: rgba(0, 0, 0, 0.2); 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-    border: 1px solid rgba(255,255,255,0.1); 
-    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.4); 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(99, 102, 241, 0.15); 
+    border: 1px solid rgba(255,255,255,0.12); 
+    border-radius: 12px;
     cursor: pointer; 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -25,14 +25,14 @@
 </style>
 </head>
 <body>
-<canvas id="cvs" width="480" height="500" tabindex="0" role="application" aria-label="Chess game"></canvas>
+<canvas id="cvs" width="540" height="540" tabindex="0" role="application" aria-label="Chess game"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
   const TS = 50;
-  const OX = 30;
-  const OY = 30;
+  const OX = 70;
+  const OY = 70;
 
   let board = [
       [10, 8, 9, 11, 12, 9, 8, 10],
@@ -45,16 +45,11 @@
       [4,  2, 3,  5,  6, 3, 2,  4]
   ];
 
-  const pieceChars = [
-      "", "P", "N", "B", "R", "Q", "K",
-      "p", "n", "b", "r", "q", "k"
-  ];
-
   let selX = -1;
   let selY = -1;
   let whiteTurn = true;
   let gameOver = false;
-  let winner = 0; // 1 = White, 2 = Black
+  let winner = 0; // 1 = White, 2 = Black, 3 = Draw
   let aiMode = true;
   let campaignMode = false;
   let currentStage = 1;
@@ -69,6 +64,15 @@
   let undoBoard = [];
   let undoWKM = false, undoWRL = false, undoWRR = false, undoBKM = false, undoBRL = false, undoBRR = false, undoEpX = -1, undoEpY = -1;
 
+  let wKingMoved = false, wRookLMoved = false, wRookRMoved = false;
+  let bKingMoved = false, bRookLMoved = false, bRookRMoved = false;
+  let epX = -1, epY = -1;
+  let lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
+
+  // Animation & Particle state
+  let particles = [];
+  let moveAnimation = null; // { p, fromX, fromY, toX, toY, startTime, duration }
+
   function saveStats() {
       try {
           localStorage.setItem('kchess_wins', statsWins);
@@ -76,10 +80,6 @@
           localStorage.setItem('kchess_draws', statsDraws);
       } catch (e) {}
   }
-
-  let wKingMoved = false, wRookLMoved = false, wRookRMoved = false;
-  let bKingMoved = false, bRookLMoved = false, bRookRMoved = false;
-  let epX = -1, epY = -1;
 
   function getPST(pType, x, y, isWhite) {
       let row = isWhite ? y : 7 - y;
@@ -92,22 +92,54 @@
       return 0;
   }
   const pieceValues = [0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000];
-  let lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playSound() {
+  function playSound(type = 'move') {
       if (audioCtx.state === 'suspended') audioCtx.resume();
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.connect(gain);
       gain.connect(audioCtx.destination);
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
+      
+      if (type === 'capture') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+      } else if (type === 'check') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+      } else {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(160, audioCtx.currentTime + 0.08);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+          osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+      }
+  }
+
+  function spawnCaptureSparks(px, py) {
+      for (let i = 0; i < 22; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 1.5 + Math.random() * 4.5;
+          const colors = ['#f59e0b', '#ef4444', '#fef08a', '#ffffff', '#38bdf8'];
+          particles.push({
+              x: px, y: py,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - 0.5,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              size: 2.5 + Math.random() * 3.5,
+              life: 1.0,
+              decay: 0.03 + Math.random() * 0.04
+          });
+      }
   }
 
   function isValidMove(sx, sy, tx, ty, isAttackCheck=false) {
@@ -256,7 +288,6 @@
       return false;
   }
 
-
   function resetGame() {
       board = [
           [10, 8, 9, 11, 12, 9, 8, 10],
@@ -319,17 +350,16 @@
           freezePowerups = 1;
           undoPowerups = 1;
       }
-      selX = -1;
-      selY = -1;
+      selX = -1; selY = -1;
       whiteTurn = true;
       gameOver = false;
       winner = 0;
       blackFrozen = false;
       canUndo = false;
       lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
-      draw();
+      moveAnimation = null;
+      particles = [];
   }
-
 
   window.addEventListener('keydown', (e) => {
       if (e.key.toLowerCase() === 'r') {
@@ -351,8 +381,7 @@
           if (!gameOver && whiteTurn && aiMode && freezePowerups > 0) {
               freezePowerups--;
               blackFrozen = true;
-              playSound();
-              draw();
+              playSound('check');
           }
       } else if (e.key.toLowerCase() === 'u') {
           if (!gameOver && whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
@@ -363,18 +392,99 @@
               epX = undoEpX; epY = undoEpY;
               selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
               canUndo = false;
-              playSound();
-              draw();
+              moveAnimation = null;
+              playSound('move');
           }
       }
   });
+
+  function performMove(sx, sy, tx, ty) {
+      let isCaptured = board[ty][tx] !== 0;
+      let p = board[sy][sx];
+      let pType = p > 6 ? p - 6 : p;
+      let isWhiteMove = p <= 6;
+
+      if (pType === 1 && tx === epX && ty === (isWhiteMove ? epY - 1 : epY + 1)) {
+          board[epY][epX] = 0;
+          isCaptured = true;
+      }
+
+      // Start slide animation
+      moveAnimation = {
+          p: p,
+          fromX: OX + sx * TS + TS / 2,
+          fromY: OY + sy * TS + TS / 2,
+          toX: OX + tx * TS + TS / 2,
+          toY: OY + ty * TS + TS / 2,
+          startTime: performance.now(),
+          duration: 150
+      };
+
+      board[ty][tx] = p;
+      if (pType === 1) {
+          if (isWhiteMove && ty === 0) board[ty][tx] = 5;
+          else if (!isWhiteMove && ty === 7) board[ty][tx] = 11;
+      }
+      if (pType === 6 && Math.abs(tx - sx) === 2) {
+          if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
+          else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
+      }
+      if (pType === 6) {
+          if (isWhiteMove) wKingMoved = true; else bKingMoved = true;
+      }
+      if (pType === 4) {
+          if (isWhiteMove) { if (sx === 0) wRookLMoved = true; if (sx === 7) wRookRMoved = true; }
+          else { if (sx === 0) bRookLMoved = true; if (sx === 7) bRookRMoved = true; }
+      }
+      if (pType === 1 && Math.abs(ty - sy) === 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
+      
+      board[sy][sx] = 0;
+      lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
+
+      if (isCaptured) {
+          spawnCaptureSparks(OX + tx * TS + TS / 2, OY + ty * TS + TS / 2);
+          playSound('capture');
+      } else {
+          playSound('move');
+      }
+
+      whiteTurn = !whiteTurn;
+
+      if (!hasLegalMoves(whiteTurn)) {
+          gameOver = true;
+          let kx = -1, ky = -1;
+          for(let cy=0; cy<8; cy++) {
+              for(let cx=0; cx<8; cx++) {
+                  if(board[cy][cx] === (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
+              }
+          }
+          if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
+              winner = !whiteTurn ? 1 : 2;
+              playSound('check');
+              if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
+          } else {
+              winner = 3;
+              if (aiMode) { statsDraws++; saveStats(); }
+          }
+      } else {
+          // Check sound if enemy King in check
+          let kx = -1, ky = -1;
+          for(let cy=0; cy<8; cy++) {
+              for(let cx=0; cx<8; cx++) {
+                  if(board[cy][cx] === (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
+              }
+          }
+          if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
+              playSound('check');
+          }
+      }
+  }
 
   function doBlackAIMove() {
       if (gameOver || whiteTurn || !aiMode) return;
       if (blackFrozen) {
           blackFrozen = false;
           whiteTurn = true;
-          draw();
           return;
       }
       
@@ -424,10 +534,7 @@
                                       baseScore -= maxOppScore;
                                   }
                                   
-                                  moves.push({
-                                      sx: sx, sy: sy, tx: tx, ty: ty,
-                                      score: baseScore
-                                  });
+                                  moves.push({ sx: sx, sy: sy, tx: tx, ty: ty, score: baseScore });
                               }
                           }
                       }
@@ -438,58 +545,256 @@
       
       if (moves.length > 0) {
           let bestScore = -9999999;
-          for (let m of moves) {
-              if (m.score > bestScore) bestScore = m.score;
-          }
+          for (let m of moves) { if (m.score > bestScore) bestScore = m.score; }
           let bestMoves = moves.filter(m => m.score === bestScore);
           let chosen = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-          
-          let sx = chosen.sx, sy = chosen.sy, tx = chosen.tx, ty = chosen.ty;
-          
-          let pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
-          if (pType === 1 && tx === epX && ty === epY + 1) board[epY][epX] = 0;
-          board[ty][tx] = board[sy][sx];
-          if (pType === 1 && ty === 7) board[ty][tx] = 11;
-          if (pType === 6 && Math.abs(tx - sx) === 2) {
-              if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
-              else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
-          }
-          if (pType === 6) bKingMoved = true;
-          if (pType === 4) { if (sx === 0) bRookLMoved = true; if (sx === 7) bRookRMoved = true; }
-          if (pType === 1 && Math.abs(ty - sy) === 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
-          board[sy][sx] = 0;
-          
-          whiteTurn = true;
-          lastMoveSx = sx; lastMoveSy = sy; lastMoveTx = tx; lastMoveTy = ty;
-          playSound();
-          
-          if (!hasLegalMoves(whiteTurn)) {
-              gameOver = true;
-              let kx = -1, ky = -1;
-              for(let cy=0; cy<8; cy++) {
-                  for(let cx=0; cx<8; cx++) {
-                      if(board[cy][cx] === (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
-                  }
-              }
-              if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
-                  winner = !whiteTurn ? 1 : 2;
-                  if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
-              } else {
-                  winner = 3;
-                  if (aiMode) { statsDraws++; saveStats(); }
-              }
-          }
-          draw();
+          performMove(chosen.sx, chosen.sy, chosen.tx, chosen.ty);
       }
   }
 
-  function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
-      
-      ctx.font = "bold 32px Arial";
+  // --- 2D VECTOR CHESS PIECE ART ---
+  function drawChessPieceSprite(ctx, p, x, y, size, alpha = 1.0, scale = 1.0) {
+      if (p === 0) return;
+      const isWhite = p <= 6;
+      const pType = isWhite ? p : p - 6;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(x, y);
+      if (scale !== 1.0) ctx.scale(scale, scale);
+
+      const r = size * 0.42;
+
+      // Color Palette & Gradients
+      const whiteGrad = ctx.createRadialGradient(-r*0.3, -r*0.4, r*0.1, 0, 0, r*1.2);
+      whiteGrad.addColorStop(0, '#ffffff');
+      whiteGrad.addColorStop(0.6, '#f8fafc');
+      whiteGrad.addColorStop(1, '#cbd5e1');
+
+      const blackGrad = ctx.createRadialGradient(-r*0.3, -r*0.4, r*0.1, 0, 0, r*1.2);
+      blackGrad.addColorStop(0, '#334155');
+      blackGrad.addColorStop(0.6, '#1e293b');
+      blackGrad.addColorStop(1, '#0f172a');
+
+      ctx.fillStyle = isWhite ? whiteGrad : blackGrad;
+      ctx.strokeStyle = isWhite ? '#0f172a' : '#94a3b8';
+      ctx.lineWidth = Math.max(1.5, size * 0.04);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      ctx.shadowBlur = size * 0.1;
+      ctx.shadowOffsetY = size * 0.06;
+
+      const drawBase = () => {
+          ctx.beginPath();
+          ctx.ellipse(0, r * 0.72, r * 0.72, r * 0.22, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.ellipse(0, r * 0.58, r * 0.58, r * 0.16, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+      };
+
+      if (pType === 1) { // PAWN
+          drawBase();
+          // Stem
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.38, r * 0.58);
+          ctx.quadraticCurveTo(-r * 0.18, r * 0.1, -r * 0.28, -r * 0.1);
+          ctx.lineTo(r * 0.28, -r * 0.1);
+          ctx.quadraticCurveTo(r * 0.18, r * 0.1, r * 0.38, r * 0.58);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Collar ring
+          ctx.beginPath();
+          ctx.ellipse(0, -r * 0.1, r * 0.38, r * 0.12, 0, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          // Head Orb
+          ctx.beginPath();
+          ctx.arc(0, -r * 0.42, r * 0.34, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          // Top bead
+          ctx.beginPath();
+          ctx.arc(0, -r * 0.8, r * 0.08, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+      } else if (pType === 2) { // KNIGHT
+          drawBase();
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.52, r * 0.58);
+          ctx.quadraticCurveTo(-r * 0.58, -r * 0.1, -r * 0.22, -r * 0.68); // back & ear tip
+          ctx.lineTo(-r * 0.1, -r * 0.48); // ear notch
+          ctx.quadraticCurveTo(r * 0.22, -r * 0.58, r * 0.58, -r * 0.25); // snout top
+          ctx.quadraticCurveTo(r * 0.68, -r * 0.05, r * 0.45, 0.0); // muzzle
+          ctx.lineTo(r * 0.15, -r * 0.05); // mouth cut
+          ctx.quadraticCurveTo(r * 0.38, r * 0.25, r * 0.52, r * 0.58); // chest
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Eye & Mane cutouts
+          ctx.beginPath();
+          ctx.fillStyle = isWhite ? '#0f172a' : '#cbd5e1';
+          ctx.arc(r * 0.2, -r * 0.3, r * 0.07, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.35, -r * 0.35); ctx.lineTo(-r * 0.2, -r * 0.25);
+          ctx.moveTo(-r * 0.4, -r * 0.15); ctx.lineTo(-r * 0.25, -r * 0.08);
+          ctx.strokeStyle = isWhite ? '#475569' : '#e2e8f0';
+          ctx.stroke();
+      } else if (pType === 3) { // BISHOP
+          drawBase();
+          // Stem
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, r * 0.58);
+          ctx.quadraticCurveTo(-r * 0.2, r * 0.2, -r * 0.28, -r * 0.15);
+          ctx.lineTo(r * 0.28, -r * 0.15);
+          ctx.quadraticCurveTo(r * 0.2, r * 0.2, r * 0.4, r * 0.58);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Mitre Body
+          ctx.beginPath();
+          ctx.ellipse(0, -r * 0.45, r * 0.42, r * 0.46, 0, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          // Mitre Cut
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.2, -r * 0.6);
+          ctx.lineTo(r * 0.15, -r * 0.35);
+          ctx.strokeStyle = isWhite ? '#0f172a' : '#e2e8f0';
+          ctx.stroke();
+          // Top Cross Orb
+          ctx.beginPath();
+          ctx.fillStyle = isWhite ? whiteGrad : blackGrad;
+          ctx.arc(0, -r * 0.95, r * 0.12, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+      } else if (pType === 4) { // ROOK
+          drawBase();
+          // Castle body
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.45, r * 0.58);
+          ctx.lineTo(-r * 0.36, -r * 0.25);
+          ctx.lineTo(r * 0.36, -r * 0.25);
+          ctx.lineTo(r * 0.45, r * 0.58);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Battlement head
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.48, -r * 0.25);
+          ctx.lineTo(-r * 0.48, -r * 0.72);
+          ctx.lineTo(-r * 0.28, -r * 0.72);
+          ctx.lineTo(-r * 0.28, -r * 0.52);
+          ctx.lineTo(-r * 0.1, -r * 0.52);
+          ctx.lineTo(-r * 0.1, -r * 0.72);
+          ctx.lineTo(r * 0.1, -r * 0.72);
+          ctx.lineTo(r * 0.1, -r * 0.52);
+          ctx.lineTo(r * 0.28, -r * 0.52);
+          ctx.lineTo(r * 0.28, -r * 0.72);
+          ctx.lineTo(r * 0.48, -r * 0.72);
+          ctx.lineTo(r * 0.48, -r * 0.25);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Masonry line
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.4, 0); ctx.lineTo(r * 0.4, 0);
+          ctx.strokeStyle = isWhite ? '#64748b' : '#94a3b8';
+          ctx.stroke();
+      } else if (pType === 5) { // QUEEN
+          drawBase();
+          // Waist Stem
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.42, r * 0.58);
+          ctx.quadraticCurveTo(-r * 0.22, 0, -r * 0.5, -r * 0.25);
+          ctx.lineTo(r * 0.5, -r * 0.25);
+          ctx.quadraticCurveTo(r * 0.22, 0, r * 0.42, r * 0.58);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Crown spikes
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.5, -r * 0.25);
+          ctx.lineTo(-r * 0.52, -r * 0.65);
+          ctx.lineTo(-r * 0.26, -r * 0.35);
+          ctx.lineTo(0, -r * 0.82);
+          ctx.lineTo(r * 0.26, -r * 0.35);
+          ctx.lineTo(r * 0.52, -r * 0.65);
+          ctx.lineTo(r * 0.5, -r * 0.25);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Crown jewels/orbs
+          const jewels = [[-r * 0.52, -r * 0.65], [0, -r * 0.82], [r * 0.52, -r * 0.65]];
+          for (let j of jewels) {
+              ctx.beginPath();
+              ctx.fillStyle = '#f59e0b';
+              ctx.arc(j[0], j[1], r * 0.09, 0, Math.PI * 2);
+              ctx.fill(); ctx.stroke();
+          }
+      } else if (pType === 6) { // KING
+          drawBase();
+          // Waist Stem & Robe Collar
+          ctx.beginPath();
+          ctx.moveTo(-r * 0.45, r * 0.58);
+          ctx.quadraticCurveTo(-r * 0.22, 0, -r * 0.45, -r * 0.25);
+          ctx.lineTo(r * 0.45, -r * 0.25);
+          ctx.quadraticCurveTo(r * 0.22, 0, r * 0.45, r * 0.58);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          // Crown Rim
+          ctx.beginPath();
+          ctx.rect(-r * 0.45, -r * 0.55, r * 0.9, r * 0.3);
+          ctx.fill(); ctx.stroke();
+          // Regal Cross emblem
+          ctx.beginPath();
+          ctx.fillStyle = '#f59e0b';
+          // Vertical bar
+          ctx.rect(-r * 0.1, -r * 0.96, r * 0.2, r * 0.42);
+          // Horizontal bar
+          ctx.rect(-r * 0.24, -r * 0.84, r * 0.48, r * 0.16);
+          ctx.fill(); ctx.stroke();
+      }
+
+      ctx.restore();
+  }
+
+  function drawBoard() {
+      // Clear background
+      ctx.fillStyle = "#0a0a0f";
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+      // Wood frame border
+      const frameGrad = ctx.createLinearGradient(0, 0, cvs.width, cvs.height);
+      frameGrad.addColorStop(0, '#2d1810');
+      frameGrad.addColorStop(0.5, '#1e100a');
+      frameGrad.addColorStop(1, '#150a06');
+      ctx.fillStyle = frameGrad;
+      ctx.beginPath();
+      ctx.roundRect(15, 15, cvs.width - 30, cvs.height - 30, 16);
+      ctx.fill();
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Outer gold inlay ring
+      ctx.beginPath();
+      ctx.roundRect(OX - 6, OY - 6, TS * 8 + 12, TS * 8 + 12, 6);
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Board file (A-H) & rank (1-8) annotations
+      ctx.font = "bold 13px 'Inter', sans-serif";
+      ctx.fillStyle = "#d4af37";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
+      const files = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+      for (let i = 0; i < 8; i++) {
+          let fx = OX + i * TS + TS / 2;
+          let ry = OY + i * TS + TS / 2;
+          ctx.fillText(files[i], fx, OY - 22);
+          ctx.fillText(files[i], fx, OY + TS * 8 + 22);
+          ctx.fillText(8 - i, OX - 22, ry);
+          ctx.fillText(8 - i, OX + TS * 8 + 22, ry);
+      }
+
+      // Check state detection
       let inCheckX = -1, inCheckY = -1;
       for (let cy = 0; cy < 8; cy++) {
           for (let cx = 0; cx < 8; cx++) {
@@ -504,63 +809,159 @@
           }
       }
 
+      // Draw Squares
       for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
               let px = OX + x * TS;
               let py = OY + y * TS;
+              let isLight = (x + y) % 2 === 0;
 
-              if (x === inCheckX && y === inCheckY) {
-                  ctx.fillStyle = "rgba(239, 68, 68, 0.8)";
-              } else if (x === selX && y === selY) {
-                  ctx.fillStyle = "rgba(245, 158, 11, 0.6)";
-              } else if ((x === lastMoveSx && y === lastMoveSy) || (x === lastMoveTx && y === lastMoveTy)) {
-                  ctx.fillStyle = "rgba(253, 230, 138, 0.6)"; // yellow-200 with transparency
-              } else if ((x + y) % 2 === 0) {
-                  ctx.fillStyle = "rgb(203, 213, 225)";
+              // Tile colors with wood grain feel
+              let tileGrad = ctx.createLinearGradient(px, py, px + TS, py + TS);
+              if (isLight) {
+                  tileGrad.addColorStop(0, '#e8dac1');
+                  tileGrad.addColorStop(1, '#d4c2a5');
               } else {
-                  ctx.fillStyle = "rgb(30, 41, 59)";
+                  tileGrad.addColorStop(0, '#4a2c1b');
+                  tileGrad.addColorStop(1, '#351e12');
               }
-              
+              ctx.fillStyle = tileGrad;
               ctx.fillRect(px, py, TS, TS);
 
+              // Subtle inner wood bevel highlight
+              ctx.strokeStyle = isLight ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.08)';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(px + 1, py + 1, TS - 2, TS - 2);
+
+              // Freeze Frost Overlay
+              if (blackFrozen) {
+                  ctx.fillStyle = 'rgba(186, 230, 253, 0.15)';
+                  ctx.fillRect(px, py, TS, TS);
+              }
+
+              // Highlights
+              if (x === inCheckX && y === inCheckY) {
+                  // Danger Check Aura
+                  const pulse = (Math.sin(performance.now() * 0.01) + 1) * 0.5;
+                  ctx.fillStyle = `rgba(239, 68, 68, ${0.5 + pulse * 0.3})`;
+                  ctx.fillRect(px, py, TS, TS);
+                  ctx.strokeStyle = '#ef4444';
+                  ctx.lineWidth = 3;
+                  ctx.strokeRect(px + 2, py + 2, TS - 4, TS - 4);
+              } else if (x === selX && y === selY) {
+                  // Selected square glowing aura
+                  ctx.fillStyle = "rgba(245, 158, 11, 0.45)";
+                  ctx.fillRect(px, py, TS, TS);
+                  ctx.strokeStyle = "#f59e0b";
+                  ctx.lineWidth = 3;
+                  ctx.strokeRect(px + 2, py + 2, TS - 4, TS - 4);
+              } else if ((x === lastMoveSx && y === lastMoveSy) || (x === lastMoveTx && y === lastMoveTy)) {
+                  // Last move golden trail
+                  ctx.fillStyle = "rgba(253, 230, 138, 0.35)";
+                  ctx.fillRect(px, py, TS, TS);
+                  ctx.strokeStyle = "rgba(245, 158, 11, 0.6)";
+                  ctx.lineWidth = 1.5;
+                  ctx.strokeRect(px + 1, py + 1, TS - 2, TS - 2);
+              }
+
+              // Valid Move Targets
               if (selX !== -1 && isValidMove(selX, selY, x, y, false)) {
                   if (!simulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {
-                      ctx.fillStyle = "rgba(134, 239, 172, 0.6)";
+                      const isCaptureTarget = board[y][x] !== 0 || (x === epX && y === (whiteTurn ? epY - 1 : epY + 1));
                       ctx.beginPath();
-                      ctx.arc(px + TS / 2, py + TS / 2, 10, 0, Math.PI * 2);
-                      ctx.fill();
+                      if (isCaptureTarget) {
+                          ctx.strokeStyle = "rgba(239, 68, 68, 0.85)";
+                          ctx.lineWidth = 3;
+                          ctx.arc(px + TS / 2, py + TS / 2, 18, 0, Math.PI * 2);
+                          ctx.stroke();
+                      } else {
+                          ctx.fillStyle = "rgba(74, 222, 128, 0.75)";
+                          ctx.arc(px + TS / 2, py + TS / 2, 8, 0, Math.PI * 2);
+                          ctx.fill();
+                      }
                   }
               }
 
+              // Static piece drawing (skip piece currently sliding in moveAnimation)
               let p = board[y][x];
-              if (p !== 0) {
-                  ctx.fillStyle = (p <= 6) ? "rgb(255, 255, 255)" : "rgb(0, 0, 0)";
-                  ctx.fillText(pieceChars[p], px + TS / 2, py + TS / 2);
+              let isAnimatingThisPiece = moveAnimation && Math.floor((moveAnimation.toX - OX) / TS) === x && Math.floor((moveAnimation.toY - OY) / TS) === y;
+              if (p !== 0 && !isAnimatingThisPiece) {
+                  drawChessPieceSprite(ctx, p, px + TS / 2, py + TS / 2, TS);
               }
           }
       }
-      
-      ctx.font = "16px 'Inter'";
-      ctx.fillStyle = "rgb(255, 255, 255)";
+
+      // Draw sliding animated piece
+      if (moveAnimation) {
+          const now = performance.now();
+          const elapsed = now - moveAnimation.startTime;
+          const t = Math.min(1.0, elapsed / moveAnimation.duration);
+          // Ease-out quad
+          const easeT = 1 - (1 - t) * (1 - t);
+          const curX = moveAnimation.fromX + (moveAnimation.toX - moveAnimation.fromX) * easeT;
+          const curY = moveAnimation.fromY + (moveAnimation.toY - moveAnimation.fromY) * easeT;
+
+          drawChessPieceSprite(ctx, moveAnimation.p, curX, curY, TS, 1.0, 1.1);
+
+          if (t >= 1.0) {
+              moveAnimation = null;
+          }
+      }
+
+      // Update & Draw Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+          let pt = particles[i];
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.vy += 0.15; // Gravity
+          pt.life -= pt.decay;
+
+          if (pt.life <= 0) {
+              particles.splice(i, 1);
+              continue;
+          }
+
+          ctx.save();
+          ctx.globalAlpha = pt.life;
+          ctx.fillStyle = pt.color;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, pt.size * pt.life, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+      }
+
+      // UI Headers & Footers
+      ctx.font = "bold 14px 'Inter', sans-serif";
+      ctx.fillStyle = "#ffffff";
       ctx.textAlign = "left";
-      
-      if (gameOver) {
-          if (winner === 1) ctx.fillText(campaignMode && currentStage < 15 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", 10, cvs.height - 30);
-          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R'", 10, cvs.height - 30);
-          else ctx.fillText("Stalemate! Draw! Press 'R'", 10, cvs.height - 30);
-      } else {
-          ctx.fillText(whiteTurn ? "White's Turn" : "Black's Turn", 10, cvs.height - 30);
-      }
-      
-      if (campaignMode) {
-          ctx.fillText(`Campaign: Stage ${currentStage} | F:Freeze(${freezePowerups}) U:Undo(${undoPowerups})`, 10, 20);
-      } else {
-          ctx.fillText(aiMode ? `vs AI ('M') | F:Freeze(${freezePowerups}) U:Undo(${undoPowerups}) | 'C' Cmpn` : `vs Player ('M') | 'C' Campaign`, 10, 20);
-      }
-      
+
+      // Top Status Bar
+      let modeText = campaignMode ? `Campaign: Stage ${currentStage}` : (aiMode ? "vs AI ('M')" : "vs Player ('M')");
+      let pwrText = `F:Freeze(${freezePowerups}) U:Undo(${undoPowerups})`;
+      ctx.fillText(`${modeText} | ${pwrText}`, 25, 42);
+
       ctx.textAlign = "right";
-      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, cvs.width - 10, 20);
-      ctx.textAlign = "left"; // reset for other text
+      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, cvs.width - 25, 42);
+
+      // Bottom Status Bar
+      ctx.textAlign = "center";
+      if (gameOver) {
+          ctx.fillStyle = "#f59e0b";
+          ctx.font = "bold 16px 'Inter', sans-serif";
+          if (winner === 1) ctx.fillText(campaignMode && currentStage < 15 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R' to Restart", cvs.width / 2, cvs.height - 28);
+          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", cvs.width / 2, cvs.height - 28);
+          else ctx.fillText("Stalemate! Draw Game! Press 'R' to Restart", cvs.width / 2, cvs.height - 28);
+      } else {
+          ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
+          let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
+          if (blackFrozen) turnStr += " (Black Frozen!)";
+          ctx.fillText(turnStr, cvs.width / 2, cvs.height - 28);
+      }
+  }
+
+  function gameLoop() {
+      drawBoard();
+      requestAnimationFrame(gameLoop);
   }
 
   cvs.onmousedown = (e) => {
@@ -606,62 +1007,26 @@
                                   undoEpX = epX; undoEpY = epY;
                                   canUndo = true;
                               }
-                              let pType = board[selY][selX] > 6 ? board[selY][selX] - 6 : board[selY][selX];
-                              let isWhiteMove = isWhite;
-                              if (pType === 1 && tx === epX && ty === (isWhiteMove ? epY - 1 : epY + 1)) board[epY][epX] = 0;
-                              board[ty][tx] = board[selY][selX];
-                              if (pType === 1) {
-                                  if (isWhiteMove && ty === 0) board[ty][tx] = 5;
-                                  else if (!isWhiteMove && ty === 7) board[ty][tx] = 11;
-                              }
-                              if (pType === 6 && Math.abs(tx - selX) === 2) {
-                                  if (tx === 6) { board[ty][5] = board[ty][7]; board[ty][7] = 0; }
-                                  else if (tx === 2) { board[ty][3] = board[ty][0]; board[ty][0] = 0; }
-                              }
-                              if (pType === 6) {
-                                  if (isWhiteMove) wKingMoved = true; else bKingMoved = true;
-                              }
-                              if (pType === 4) {
-                                  if (isWhiteMove) { if (selX === 0) wRookLMoved = true; if (selX === 7) wRookRMoved = true; }
-                                  else { if (selX === 0) bRookLMoved = true; if (selX === 7) bRookRMoved = true; }
-                              }
-                              if (pType === 1 && Math.abs(ty - selY) === 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
-                              lastMoveSx = selX; lastMoveSy = selY; lastMoveTx = tx; lastMoveTy = ty;
-                              board[selY][selX] = 0;
+
+                              let curSelX = selX;
+                              let curSelY = selY;
                               selX = -1;
                               selY = -1;
-                              whiteTurn = !whiteTurn;
-                              playSound();
 
-                              if (!hasLegalMoves(whiteTurn)) {
-                                  gameOver = true;
-                                  let kx = -1, ky = -1;
-                                  for(let cy=0; cy<8; cy++) {
-                                      for(let cx=0; cx<8; cx++) {
-                                          if(board[cy][cx] === (whiteTurn ? 6 : 12)) { kx = cx; ky = cy; }
-                                      }
-                                  }
-                                  if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
-                                      winner = !whiteTurn ? 1 : 2;
-                                      if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
-                                  } else {
-                                      winner = 3;
-                                      if (aiMode) { statsDraws++; saveStats(); }
-                                  }
-                              }
+                              performMove(curSelX, curSelY, tx, ty);
+
                               if (aiMode && !whiteTurn && !gameOver) {
-                                  setTimeout(doBlackAIMove, 300);
+                                  setTimeout(doBlackAIMove, 350);
                               }
                           }
                       }
                   }
               }
           }
-          draw();
       }
   };
 
-  draw();
+  requestAnimationFrame(gameLoop);
 </script>
 </body>
 </html>
