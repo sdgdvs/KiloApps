@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KQuest (Fantasy text RPG)
-**Phase:** 11 (next to do)
-**Status:** Phases 1-10 complete
+**Phase:** 12 (next to do)
+**Status:** Phases 1-11 complete
 
 - [x] Phase 1: Scaffold, register in App.jsx.
 - [x] Phase 2: Core web HTML RPG (character creation, dungeon, combat, town hub).
@@ -67,7 +67,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 8: Procedural bounty contracts & quest tracking.
 - [x] Phase 9: Skill tree & specialization mastery system.
 - [x] Phase 10: Add a Boss Rush / Arena Mode — a standalone challenge mode accessible from the town hub where the player fights waves of bosses with increasing difficulty, earning unique rewards.
-- [ ] Phase 11: Add an Inventory Management upgrade — expandable backpack slots, item sorting/filtering, item comparison tooltips, quick-sell, and item rarity tiers (Common/Uncommon/Rare/Epic/Legendary).
+- [x] Phase 11: Add an Inventory Management upgrade — expandable backpack slots, item sorting/filtering, item comparison tooltips, quick-sell, and item rarity tiers (Common/Uncommon/Rare/Epic/Legendary).
 - [ ] Phase 12: Add Save Slots & New Game Plus — multiple save file slots, a New Game+ mode that carries over stats/equipment with harder enemies, and an achievements/milestone tracker.
 - [ ] Phase 13: Add Sound Effects — Web Audio API tones for combat hits, spell casts, level ups, item pickups, door opens, death. Native: Beep()/PlaySound equivalents.
 - [ ] Phase 14: Add Comprehensive Help — How-to-play overlay, controls reference, bestiary/lore codex, crafting recipe reference.
