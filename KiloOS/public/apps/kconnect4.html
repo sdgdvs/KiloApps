@@ -6,9 +6,9 @@
 <title>KConnect4</title>
 <style>
   body {
-    background: #121212;
+    background: #10141d;
     color: #e0e0e0;
-    font-family: sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 20px;
     display: flex;
@@ -18,20 +18,27 @@
   h1 {
     margin-top: 0;
     margin-bottom: 10px;
+    background: linear-gradient(135deg, #ff5252, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
   }
   #status {
     margin-bottom: 10px;
     font-size: 1.2em;
     font-weight: bold;
+    color: #4fc3f7;
+    text-shadow: 0 0 8px rgba(79,195,247,0.3);
   }
   #timerContainer {
     width: 380px;
     height: 8px;
-    background: #2a2a2a;
+    background: #1a2233;
     border-radius: 4px;
     margin-bottom: 15px;
     overflow: hidden;
     display: none;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
   }
   #timerBar {
     width: 100%;
@@ -39,46 +46,149 @@
     background: #4caf50;
     transition: width 0.1s linear, background-color 0.3s;
   }
+  #boardWrapper {
+    position: relative;
+    padding: 12px;
+    background: linear-gradient(135deg, #183b82 0%, #0d214d 50%, #15336e 100%);
+    border-radius: 16px;
+    box-shadow: 
+      inset 0 2px 4px rgba(255,255,255,0.4),
+      inset 0 -6px 12px rgba(0,0,0,0.8),
+      0 14px 28px rgba(0,0,0,0.6),
+      0 0 0 5px #0a1738;
+    border: 2px solid #3c6edb;
+    margin-bottom: 10px;
+  }
+  #boardWrapper::before, #boardWrapper::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #888888 60%, #333333 100%);
+    box-shadow: inset 0 1px 1px #fff, 0 1px 3px rgba(0,0,0,0.8);
+    top: 6px;
+  }
+  #boardWrapper::before { left: 6px; }
+  #boardWrapper::after { right: 6px; }
+
   #board {
     display: grid;
     grid-template-columns: repeat(7, 50px);
     grid-template-rows: repeat(6, 50px);
-    gap: 5px;
-    background: #1f4287;
+    gap: 6px;
+    background: linear-gradient(180deg, #15387a 0%, #1c479c 100%);
     padding: 10px;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.7), 0 2px 4px rgba(255,255,255,0.1);
+  }
+  #fxCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    border-radius: 16px;
   }
   .cell {
     width: 50px;
     height: 50px;
-    background: #121212;
+    background: #090c14;
     border-radius: 50%;
     pointer-events: none;
-    box-shadow: inset 0 3px 6px rgba(0,0,0,0.6);
+    box-shadow: 
+      inset 0 5px 8px rgba(0,0,0,0.95),
+      inset 0 -2px 4px rgba(255,255,255,0.15),
+      0 0 0 1px rgba(0,0,0,0.5);
     box-sizing: border-box;
+    position: relative;
   }
-  .cell.p1 { background: #ff5252; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4); }
-  .cell.p2 { background: #ffeb3b; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.4); }
-  .cell.hover-p1 { background: rgba(255, 82, 82, 0.4); box-shadow: none; }
-  .cell.hover-p2 { background: rgba(255, 235, 59, 0.4); box-shadow: none; }
-  .cell.obstacle { background: #555; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.6); }
-  .cell.crackable { background: #8b4513; border: 2px dashed #d2691e; box-shadow: inset 0 -2px 4px rgba(0,0,0,0.6); }
-  .cell.bomb { background: #222; box-shadow: inset 0 -2px 4px #000; }
-  .cell.drill { background: #009688; box-shadow: inset 0 -2px 4px #000; }
-  .cell.hover-bomb { background: rgba(30, 30, 30, 0.8); }
-  .cell.hover-drill { background: rgba(0, 150, 136, 0.8); }
+  .cell.p1 {
+    background: radial-gradient(circle at 35% 30%, #ff8080 0%, #e61c1c 45%, #990000 85%, #590000 100%);
+    box-shadow: 
+      inset 0 0 0 2px #7a0000,
+      inset 0 3px 5px rgba(255,255,255,0.7),
+      inset 0 -4px 6px rgba(0,0,0,0.8),
+      0 4px 8px rgba(0,0,0,0.6);
+  }
+  .cell.p1::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px; height: 22px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+    opacity: 0.95;
+  }
+  .cell.p2 {
+    background: radial-gradient(circle at 35% 30%, #ffffa0 0%, #ffd700 45%, #d49b00 85%, #7a5400 100%);
+    box-shadow: 
+      inset 0 0 0 2px #a37200,
+      inset 0 3px 5px rgba(255,255,255,0.8),
+      inset 0 -4px 6px rgba(0,0,0,0.8),
+      0 4px 8px rgba(0,0,0,0.6);
+  }
+  .cell.p2::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 22px; height: 22px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a365d'><path d='M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    opacity: 0.95;
+  }
+
+  .cell.hover-p1 {
+    background: radial-gradient(circle at 35% 30%, rgba(255,128,128,0.5) 0%, rgba(230,28,28,0.4) 100%);
+    box-shadow: 0 0 8px rgba(255,82,82,0.6);
+  }
+  .cell.hover-p2 {
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,160,0.5) 0%, rgba(255,215,0,0.4) 100%);
+    box-shadow: 0 0 8px rgba(255,235,59,0.6);
+  }
+  .cell.obstacle {
+    background: repeating-linear-gradient(45deg, #3a3a3a, #3a3a3a 8px, #1a1a1a 8px, #1a1a1a 16px);
+    box-shadow: inset 0 0 0 2px #555, inset 0 3px 5px rgba(255,255,255,0.2), inset 0 -4px 6px #000;
+  }
+  .cell.crackable {
+    background: radial-gradient(circle, #a0522d 0%, #8b4513 100%);
+    box-shadow: inset 0 0 0 2px #d2691e, inset 0 -4px 6px #000;
+    border: 2px dashed #ffaa44;
+  }
+  .cell.bomb {
+    background: radial-gradient(circle at 35% 30%, #555 0%, #111 70%, #000 100%);
+    box-shadow: inset 0 0 0 2px #ff4400, 0 0 10px rgba(255,68,0,0.5);
+  }
+  .cell.drill {
+    background: radial-gradient(circle at 35% 30%, #80deea 0%, #00838f 70%, #004d40 100%);
+    box-shadow: inset 0 0 0 2px #00ffff, 0 0 10px rgba(0,255,255,0.5);
+  }
   .cell.highlight {
-    border: 3px solid white;
-    box-shadow: 0 0 10px rgba(255,255,255,0.8), inset 0 -2px 4px rgba(0,0,0,0.4);
+    box-shadow: 0 0 18px #fff, 0 0 30px #00ffff, inset 0 0 0 3px #ffffff !important;
+    animation: winPulse 0.8s infinite alternate ease-in-out;
   }
-  @keyframes drop {
-    0% { transform: translateY(var(--drop-dist, -300px)); }
-    100% { transform: translateY(0); }
+  @keyframes winPulse {
+    0% { transform: scale(1); filter: brightness(1); }
+    100% { transform: scale(1.08); filter: brightness(1.3); }
+  }
+
+  @keyframes dropBounce {
+    0% { transform: translateY(var(--drop-dist, -300px)) scaleY(1.1) scaleX(0.9); }
+    65% { transform: translateY(0) scaleY(0.85) scaleX(1.15); }
+    80% { transform: translateY(-14px) scaleY(1.05) scaleX(0.95); }
+    92% { transform: translateY(0) scaleY(0.95) scaleX(1.03); }
+    100% { transform: translateY(0) scaleY(1) scaleX(1); }
   }
   .dropping {
-    animation: drop 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: dropBounce 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
   .controls-row {
     display: flex;
@@ -90,14 +200,20 @@
   }
   button, select {
     padding: 8px 14px;
-    background: #2a2a2a;
+    background: #1f2a3e;
     color: #fff;
-    border: 1px solid #444;
-    border-radius: 4px;
+    border: 1px solid #3b4e70;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.2s ease;
   }
-  button:hover, select:hover { background: #3a3a3a; }
+  button:hover, select:hover {
+    background: #2c3e5e;
+    border-color: #5c78aa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
   #stats {
     margin-top: 15px;
     font-size: 0.85em;
@@ -111,22 +227,23 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #1f4287;
+    background: #152d61;
     color: #fff;
     padding: 20px;
-    border-radius: 8px;
-    border: 2px solid #fff;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    border-radius: 12px;
+    border: 2px solid #3c6edb;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
     z-index: 100;
     max-width: 320px;
   }
-  #helpModal h2 { margin-top: 0; }
+  #helpModal h2 { margin-top: 0; color: #4fc3f7; }
   #helpModal ul { padding-left: 20px; }
   #helpModal button.close {
     margin-top: 10px;
     background: #ff5252;
     border: none;
     width: 100%;
+    font-weight: bold;
   }
   #helpModal button.close:hover { background: #ff7070; }
 </style>
@@ -135,7 +252,10 @@
   <h1>KConnect4</h1>
   <div id="status">Player 1's turn (Red)</div>
   <div id="timerContainer"><div id="timerBar"></div></div>
-  <div id="board"></div>
+  <div id="boardWrapper">
+    <div id="board"></div>
+    <canvas id="fxCanvas"></canvas>
+  </div>
   <div class="controls-row">
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
     <button id="bombBtn" onclick="togglePowerup(1)">Bomb (1)</button>
@@ -587,7 +707,7 @@
                 statusEl.textContent = `It's a Draw!`; gameActive = false; stats.draws++; stats.streak = 0; stats.lastWinner = 0;
               } else {
                 let winner = w1 ? 1 : 2;
-                if (gameMode > 0 && winner === 2) playSound('lose'); else playSound('win');
+                if (gameMode > 0 && winner === 2) playSound('lose'); else { playSound('win'); spawnConfetti(); }
                 const color = winner === 1 ? 'Red' : 'Yellow';
                 statusEl.textContent = `Player ${winner} (${color}) Wins!`;
                 gameActive = false;
@@ -599,7 +719,7 @@
               }
               saveStats(); updateDiffSelect();
             } else if (checkWin(r, col)) {
-              if (gameMode > 0 && currentPlayer === 2) playSound('lose'); else playSound('win');
+              if (gameMode > 0 && currentPlayer === 2) playSound('lose'); else { playSound('win'); spawnConfetti(); }
               const color = currentPlayer === 1 ? 'Red' : 'Yellow';
               statusEl.textContent = `Player ${currentPlayer} (${color}) Wins!`;
               gameActive = false;
@@ -944,9 +1064,117 @@
       }
     }
 
+    const fxCanvas = document.getElementById('fxCanvas');
+    const fxCtx = fxCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeFxCanvas() {
+      const wrapper = document.getElementById('boardWrapper');
+      if (wrapper) {
+        fxCanvas.width = wrapper.clientWidth || 400;
+        fxCanvas.height = wrapper.clientHeight || 350;
+      }
+    }
+    window.addEventListener('resize', resizeFxCanvas);
+
+    function spawnConfetti() {
+      particles = [];
+      const colors = ['#ff5252', '#ffd700', '#4fc3f7', '#69f0ae', '#e040fb', '#ffffff'];
+      const w = fxCanvas.width || 400;
+      for (let i = 0; i < 90; i++) {
+        particles.push({
+          x: Math.random() * w,
+          y: -10 - Math.random() * 40,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 4 + 2,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.2,
+          life: 1.0,
+          decay: Math.random() * 0.006 + 0.003
+        });
+      }
+    }
+
+    function renderFx() {
+      fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+      if (winningCells && winningCells.length >= 4) {
+        const pts = winningCells.map(([r, c]) => {
+          const x = 12 + 10 + c * (50 + 6) + 25;
+          const y = 12 + 10 + r * (50 + 6) + 25;
+          return { x, y };
+        });
+
+        let pStart = pts[0], pEnd = pts[0];
+        let maxDistSq = -1;
+        for (let i = 0; i < pts.length; i++) {
+          for (let j = i + 1; j < pts.length; j++) {
+            let dSq = (pts[i].x - pts[j].x)**2 + (pts[i].y - pts[j].y)**2;
+            if (dSq > maxDistSq) {
+              maxDistSq = dSq;
+              pStart = pts[i];
+              pEnd = pts[j];
+            }
+          }
+        }
+
+        const time = Date.now() * 0.005;
+        const auraWidth = 14 + Math.sin(time * 3) * 4;
+
+        fxCtx.shadowColor = '#00ffff';
+        fxCtx.shadowBlur = 15;
+        fxCtx.strokeStyle = 'rgba(0, 255, 255, 0.7)';
+        fxCtx.lineWidth = auraWidth;
+        fxCtx.lineCap = 'round';
+        fxCtx.beginPath();
+        fxCtx.moveTo(pStart.x, pStart.y);
+        fxCtx.lineTo(pEnd.x, pEnd.y);
+        fxCtx.stroke();
+
+        fxCtx.shadowColor = '#ffffff';
+        fxCtx.shadowBlur = 8;
+        fxCtx.strokeStyle = '#ffffff';
+        fxCtx.lineWidth = 4;
+        fxCtx.beginPath();
+        fxCtx.moveTo(pStart.x, pStart.y);
+        fxCtx.lineTo(pEnd.x, pEnd.y);
+        fxCtx.stroke();
+
+        fxCtx.shadowBlur = 0;
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.08;
+        p.rotation += p.vRot;
+        p.life -= p.decay;
+
+        if (p.life <= 0 || p.y > fxCanvas.height + 20) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        fxCtx.save();
+        fxCtx.globalAlpha = Math.max(0, p.life);
+        fxCtx.translate(p.x, p.y);
+        fxCtx.rotate(p.rotation);
+        fxCtx.fillStyle = p.color;
+        fxCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        fxCtx.restore();
+      }
+
+      requestAnimationFrame(renderFx);
+    }
+
     loadStats();
     updateDiffSelect();
     initGame();
+    resizeFxCanvas();
+    requestAnimationFrame(renderFx);
   </script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 
 const char g_szClassName[] = "KConnect4WindowClass";
 #define ROWS 6
@@ -33,8 +34,56 @@ int animPlayer = 0;
 int animRow = -1;
 int animCol = -1;
 int animY = 0;
+float animY_float = 50.0f;
+float animVY = 0.0f;
+int animBounceCount = 0;
 int animTargetY = 0;
 int animType = 0; // 0=normal drop, 1=bomb drop, 2=drill drop
+
+// Particle structure for confetti FX
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float rotation, vRot;
+    COLORREF color;
+    int size;
+    int life;
+} Particle;
+
+#define MAX_PARTICLES 70
+Particle g_particles[MAX_PARTICLES];
+int g_particleCount = 0;
+
+void SpawnConfetti() {
+    COLORREF palette[] = {
+        RGB(255, 82, 82), RGB(255, 215, 0), RGB(79, 195, 247),
+        RGB(105, 240, 174), RGB(224, 64, 251), RGB(255, 255, 255)
+    };
+    g_particleCount = MAX_PARTICLES;
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        g_particles[i].x = (float)(rand() % 350 + 10);
+        g_particles[i].y = (float)(-(rand() % 40));
+        g_particles[i].vx = ((float)(rand() % 100) - 50.0f) / 15.0f;
+        g_particles[i].vy = ((float)(rand() % 100)) / 25.0f + 2.0f;
+        g_particles[i].rotation = ((float)(rand() % 360)) * 3.14159f / 180.0f;
+        g_particles[i].vRot = ((float)(rand() % 100) - 50.0f) / 100.0f;
+        g_particles[i].color = palette[rand() % 6];
+        g_particles[i].size = rand() % 6 + 4;
+        g_particles[i].life = rand() % 60 + 60;
+    }
+}
+
+void UpdateParticles() {
+    for (int i = 0; i < g_particleCount; i++) {
+        if (g_particles[i].life > 0) {
+            g_particles[i].x += g_particles[i].vx;
+            g_particles[i].y += g_particles[i].vy;
+            g_particles[i].vy += 0.15f; // Gravity
+            g_particles[i].rotation += g_particles[i].vRot;
+            g_particles[i].life--;
+        }
+    }
+}
 
 int hoverCol = -1;
 
@@ -60,6 +109,207 @@ void PlaySoundEffect(int type) {
         Beep(120, 150); Beep(80, 200);
     } else if (type == 7) { // Drill
         Beep(600, 50); Beep(450, 50); Beep(300, 100);
+    }
+}
+
+void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
+    int cx = x + 20;
+    int cy = y + 20;
+
+    if (cellType == 0) { // Empty cutout hole
+        HBRUSH bgBrush = CreateSolidBrush(RGB(9, 12, 20));
+        HPEN darkPen = CreatePen(PS_SOLID, 1, RGB(4, 6, 10));
+        SelectObject(hdc, bgBrush);
+        SelectObject(hdc, darkPen);
+        Ellipse(hdc, x, y, x + 40, y + 40);
+        DeleteObject(bgBrush);
+        DeleteObject(darkPen);
+
+        // Top-left inner shadow arc
+        HPEN shadowPen = CreatePen(PS_SOLID, 2, RGB(2, 3, 6));
+        SelectObject(hdc, shadowPen);
+        Arc(hdc, x + 2, y + 2, x + 38, y + 38, x + 38, y + 2, x + 2, y + 38);
+        DeleteObject(shadowPen);
+        return;
+    }
+
+    if (isWinCell) {
+        // Glowing cyan aura ring
+        HPEN glowPen = CreatePen(PS_SOLID, 4, RGB(0, 255, 255));
+        HBRUSH nullBrush = GetStockObject(NULL_BRUSH);
+        SelectObject(hdc, glowPen);
+        SelectObject(hdc, nullBrush);
+        Ellipse(hdc, x - 2, y - 2, x + 42, y + 42);
+        DeleteObject(glowPen);
+    }
+
+    if (cellType == 1 || cellType == 100) { // Red Disc (100 = hover)
+        COLORREF borderColor = (cellType == 100) ? RGB(140, 40, 40) : RGB(120, 0, 0);
+        COLORREF bodyColor   = (cellType == 100) ? RGB(200, 70, 70) : RGB(220, 30, 30);
+        COLORREF innerRing   = (cellType == 100) ? RGB(220, 90, 90) : RGB(180, 20, 20);
+
+        HPEN bPen = CreatePen(PS_SOLID, 2, borderColor);
+        HBRUSH bBrush = CreateSolidBrush(bodyColor);
+        SelectObject(hdc, bPen);
+        SelectObject(hdc, bBrush);
+        Ellipse(hdc, x, y, x + 40, y + 40);
+        DeleteObject(bPen);
+        DeleteObject(bBrush);
+
+        // Outer ridged ring detail
+        HPEN rPen = CreatePen(PS_SOLID, 1, innerRing);
+        HBRUSH nBrush = GetStockObject(NULL_BRUSH);
+        SelectObject(hdc, rPen);
+        SelectObject(hdc, nBrush);
+        Ellipse(hdc, x + 3, y + 3, x + 37, y + 37);
+        DeleteObject(rPen);
+
+        // 3D Glossy Specular Highlight
+        HBRUSH hlBrush = CreateSolidBrush((cellType == 100) ? RGB(255, 200, 200) : RGB(255, 170, 170));
+        HPEN nPen = GetStockObject(NULL_PEN);
+        SelectObject(hdc, nPen);
+        SelectObject(hdc, hlBrush);
+        Ellipse(hdc, x + 7, y + 5, x + 25, y + 17);
+        DeleteObject(hlBrush);
+
+        // White core highlight dot
+        HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wBrush);
+        Ellipse(hdc, x + 10, y + 7, x + 18, y + 13);
+        DeleteObject(wBrush);
+
+        // Gold 5-point star emblem
+        POINT starPts[10];
+        float outerR = 8.5f, innerR = 3.5f;
+        for (int i = 0; i < 10; i++) {
+            float angle = (i * 36 - 90) * 3.14159f / 180.0f;
+            float r_curr = (i % 2 == 0) ? outerR : innerR;
+            starPts[i].x = cx + (long)(cosf(angle) * r_curr);
+            starPts[i].y = cy + (long)(sinf(angle) * r_curr);
+        }
+        HBRUSH starBrush = CreateSolidBrush(RGB(255, 215, 0));
+        HPEN starPen = CreatePen(PS_SOLID, 1, RGB(180, 140, 0));
+        SelectObject(hdc, starPen);
+        SelectObject(hdc, starBrush);
+        Polygon(hdc, starPts, 10);
+        DeleteObject(starBrush);
+        DeleteObject(starPen);
+    }
+    else if (cellType == 2 || cellType == 200) { // Yellow Disc (200 = hover)
+        COLORREF borderColor = (cellType == 200) ? RGB(160, 140, 40) : RGB(160, 100, 0);
+        COLORREF bodyColor   = (cellType == 200) ? RGB(230, 210, 80) : RGB(255, 210, 30);
+        COLORREF innerRing   = (cellType == 200) ? RGB(240, 220, 100) : RGB(220, 160, 0);
+
+        HPEN bPen = CreatePen(PS_SOLID, 2, borderColor);
+        HBRUSH bBrush = CreateSolidBrush(bodyColor);
+        SelectObject(hdc, bPen);
+        SelectObject(hdc, bBrush);
+        Ellipse(hdc, x, y, x + 40, y + 40);
+        DeleteObject(bPen);
+        DeleteObject(bBrush);
+
+        // Inner ridged ring
+        HPEN rPen = CreatePen(PS_SOLID, 1, innerRing);
+        HBRUSH nBrush = GetStockObject(NULL_BRUSH);
+        SelectObject(hdc, rPen);
+        SelectObject(hdc, nBrush);
+        Ellipse(hdc, x + 3, y + 3, x + 37, y + 37);
+        DeleteObject(rPen);
+
+        // 3D Glossy Highlight
+        HBRUSH hlBrush = CreateSolidBrush(RGB(255, 255, 200));
+        HPEN nPen = GetStockObject(NULL_PEN);
+        SelectObject(hdc, nPen);
+        SelectObject(hdc, hlBrush);
+        Ellipse(hdc, x + 7, y + 5, x + 25, y + 17);
+        DeleteObject(hlBrush);
+
+        // White core highlight
+        HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, wBrush);
+        Ellipse(hdc, x + 10, y + 7, x + 18, y + 13);
+        DeleteObject(wBrush);
+
+        // Royal Blue Crown Emblem
+        POINT crownPts[7] = {
+            {cx - 8, cy + 5}, {cx - 8, cy - 3}, {cx - 4, cy + 1},
+            {cx, cy - 6}, {cx + 4, cy + 1}, {cx + 8, cy - 3}, {cx + 8, cy + 5}
+        };
+        HBRUSH crownBrush = CreateSolidBrush(RGB(24, 60, 150));
+        HPEN crownPen = CreatePen(PS_SOLID, 1, RGB(10, 25, 80));
+        SelectObject(hdc, crownPen);
+        SelectObject(hdc, crownBrush);
+        Polygon(hdc, crownPts, 7);
+        DeleteObject(crownBrush);
+        DeleteObject(crownPen);
+    }
+    else if (cellType == 3) { // Obstacle
+        HBRUSH obsBrush = CreateSolidBrush(RGB(45, 45, 52));
+        HPEN obsPen = CreatePen(PS_SOLID, 2, RGB(80, 80, 90));
+        SelectObject(hdc, obsPen);
+        SelectObject(hdc, obsBrush);
+        Ellipse(hdc, x, y, x + 40, y + 40);
+        DeleteObject(obsBrush);
+        DeleteObject(obsPen);
+
+        // Warning diagonal hazard line
+        HPEN warnPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
+        SelectObject(hdc, warnPen);
+        MoveToEx(hdc, x + 10, y + 30, NULL);
+        LineTo(hdc, x + 30, y + 10);
+        DeleteObject(warnPen);
+    }
+    else if (cellType == 4) { // Crackable Block
+        HBRUSH woodBrush = CreateSolidBrush(RGB(139, 69, 19));
+        HPEN woodPen = CreatePen(PS_SOLID, 2, RGB(210, 130, 40));
+        SelectObject(hdc, woodPen);
+        SelectObject(hdc, woodBrush);
+        Ellipse(hdc, x, y, x + 40, y + 40);
+        DeleteObject(woodBrush);
+
+        // Crack line overlay
+        HPEN crackPen = CreatePen(PS_SOLID, 2, RGB(50, 25, 5));
+        SelectObject(hdc, crackPen);
+        MoveToEx(hdc, cx - 6, cy - 10, NULL);
+        LineTo(hdc, cx, cy);
+        LineTo(hdc, cx - 4, cy + 6);
+        LineTo(hdc, cx + 8, cy + 10);
+        DeleteObject(crackPen);
+        DeleteObject(woodPen);
+    }
+    else if (cellType == 5 || cellType == 500) { // Bomb
+        HBRUSH bBrush = CreateSolidBrush(RGB(25, 25, 25));
+        HPEN bPen = CreatePen(PS_SOLID, 2, RGB(255, 68, 0));
+        SelectObject(hdc, bPen);
+        SelectObject(hdc, bBrush);
+        Ellipse(hdc, x + 2, y + 2, x + 38, y + 38);
+        DeleteObject(bBrush);
+        DeleteObject(bPen);
+
+        // Fuse spark
+        HPEN sparkPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+        SelectObject(hdc, sparkPen);
+        MoveToEx(hdc, cx, cy - 15, NULL);
+        LineTo(hdc, cx + 4, cy - 20);
+        DeleteObject(sparkPen);
+    }
+    else if (cellType == 6 || cellType == 600) { // Drill
+        HBRUSH dBrush = CreateSolidBrush(RGB(0, 150, 180));
+        HPEN dPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        SelectObject(hdc, dPen);
+        SelectObject(hdc, dBrush);
+        Ellipse(hdc, x + 2, y + 2, x + 38, y + 38);
+        DeleteObject(dBrush);
+        DeleteObject(dPen);
+
+        // Spiral drill line
+        HPEN drillLine = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        SelectObject(hdc, drillLine);
+        MoveToEx(hdc, cx - 10, cy - 10, NULL);
+        LineTo(hdc, cx + 10, cy + 10);
+        MoveToEx(hdc, cx - 8, cy, NULL);
+        LineTo(hdc, cx, cy + 8);
+        DeleteObject(drillLine);
     }
 }
 
@@ -548,6 +798,9 @@ void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
             animRow = r;
             animCol = col;
             animY = 50;
+            animY_float = 50.0f;
+            animVY = 0.0f;
+            animBounceCount = 0;
             animTargetY = 50 + 5 + r * 45;
             animType = powerType;
             isAnimating = true;
@@ -639,7 +892,7 @@ void FinishTurnEffects(HWND hwnd) {
         } else {
             int winner = w1 ? 1 : 2;
             if (gameMode > 0 && winner == 2) PlaySoundEffect(3);
-            else PlaySoundEffect(2);
+            else { PlaySoundEffect(2); SpawnConfetti(); SetTimer(hwnd, 4, 25, NULL); }
             gameActive = false;
             if(winner == 1) stats.redWins++;
             else stats.yellowWins++;
@@ -657,7 +910,7 @@ void FinishTurnEffects(HWND hwnd) {
         SaveStats();
     } else if (CheckWin(animRow, animCol, animPlayer)) {
         if (gameMode > 0 && animPlayer == 2) PlaySoundEffect(3);
-        else PlaySoundEffect(2);
+        else { PlaySoundEffect(2); SpawnConfetti(); SetTimer(hwnd, 4, 25, NULL); }
         gameActive = false;
         if(animPlayer == 1) stats.redWins++;
         else stats.yellowWins++;
@@ -821,22 +1074,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) { // AI turn timer
                 KillTimer(hwnd, 1);
                 AIMove(hwnd);
-            } else if (wParam == 2) { // Drop animation timer
-                animY += 25;
-                if (animY >= animTargetY) {
-                    animY = animTargetY;
-                    isAnimating = false;
-                    KillTimer(hwnd, 2);
-                    FinishTurnEffects(hwnd);
+            } else if (wParam == 2) { // Drop animation timer with bounce physics
+                animVY += 3.0f;
+                animY_float += animVY;
+                if (animY_float >= animTargetY) {
+                    animY_float = (float)animTargetY;
+                    if (animVY > 5.0f && animBounceCount < 2) {
+                        animVY = -animVY * 0.38f;
+                        animBounceCount++;
+                    } else {
+                        animY = animTargetY;
+                        isAnimating = false;
+                        KillTimer(hwnd, 2);
+                        FinishTurnEffects(hwnd);
+                    }
                 }
-                InvalidateRect(hwnd, NULL, TRUE);
+                animY = (int)animY_float;
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 3) { // Speed mode countdown timer
                 if (gameMode == 3 && gameActive && !isAnimating) {
                     if (!(gameMode > 0 && currentPlayer == 2)) {
                         turnTimeLeftMs -= 100;
                         if (turnTimeLeftMs <= 0) {
                             turnTimeLeftMs = 7000;
-                            // Auto drop in random open column
                             int validLocations[COLS];
                             int count = getValidLocations(board, validLocations);
                             if (count > 0) {
@@ -847,6 +1107,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         InvalidateRect(hwnd, NULL, TRUE);
                     }
                 }
+            } else if (wParam == 4) { // Confetti particle timer
+                UpdateParticles();
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
             
@@ -855,12 +1118,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             RECT rect;
             GetClientRect(hwnd, &rect);
-            HBRUSH bg = CreateSolidBrush(RGB(18, 18, 18));
+            
+            // Dark futuristic background fill
+            HBRUSH bg = CreateSolidBrush(RGB(16, 20, 29));
             FillRect(hdc, &rect, bg);
             DeleteObject(bg);
             
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(224, 224, 224));
+            SetTextColor(hdc, RGB(79, 195, 247));
             
             char statusText[64];
             if (!gameActive) {
@@ -871,11 +1136,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             TextOut(hdc, 20, 15, statusText, lstrlen(statusText));
             
-            // Draw Time Attack bar if Speed mode
+            // Speed mode timer bar
             if (gameMode == 3 && gameActive) {
                 int barWidth = (315 * turnTimeLeftMs) / 7000;
                 RECT timerBg = {20, 38, 335, 44};
-                HBRUSH tBg = CreateSolidBrush(RGB(40, 40, 40));
+                HBRUSH tBg = CreateSolidBrush(RGB(30, 40, 55));
                 FillRect(hdc, &timerBg, tBg);
                 DeleteObject(tBg);
                 
@@ -885,31 +1150,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DeleteObject(tFg);
             }
             
+            SetTextColor(hdc, RGB(170, 170, 170));
             char statsStr[128];
             wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d) | Max Stage: %d",
                      stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak, stats.maxCampaignStage);
             TextOut(hdc, 10, 445, statsStr, lstrlen(statsStr));
             
-            // Draw board background
-            HBRUSH boardBg = CreateSolidBrush(RGB(31, 66, 135));
+            // --- 3D Blue Plastic Grid Board Frame ---
+            RECT frameOuter = {14, 44, 341, 331};
+            HBRUSH frameBg = CreateSolidBrush(RGB(19, 45, 105));
+            FillRect(hdc, &frameOuter, frameBg);
+            DeleteObject(frameBg);
+
+            // Bevel edges for plastic frame
+            HPEN topLight = CreatePen(PS_SOLID, 2, RGB(60, 115, 220));
+            HPEN botDark  = CreatePen(PS_SOLID, 2, RGB(10, 22, 55));
+            SelectObject(hdc, topLight);
+            MoveToEx(hdc, 14, 331, NULL); LineTo(hdc, 14, 44); LineTo(hdc, 341, 44);
+            SelectObject(hdc, botDark);
+            MoveToEx(hdc, 341, 44, NULL); LineTo(hdc, 341, 331); LineTo(hdc, 14, 331);
+            DeleteObject(topLight);
+            DeleteObject(botDark);
+
+            // Inner grid board surface
             RECT boardRect = {20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5};
+            HBRUSH boardBg = CreateSolidBrush(RGB(24, 60, 138));
             FillRect(hdc, &boardRect, boardBg);
             DeleteObject(boardBg);
+
+            // Corner silver metallic screws
+            int screwCoords[4][2] = {{17, 47}, {333, 47}, {17, 323}, {333, 323}};
+            HBRUSH screwBrush = CreateSolidBrush(RGB(180, 185, 195));
+            HPEN screwPen = CreatePen(PS_SOLID, 1, RGB(60, 65, 75));
+            SelectObject(hdc, screwBrush);
+            SelectObject(hdc, screwPen);
+            for(int k=0; k<4; k++) {
+                Ellipse(hdc, screwCoords[k][0], screwCoords[k][1], screwCoords[k][0] + 6, screwCoords[k][1] + 6);
+            }
+            DeleteObject(screwBrush);
+            DeleteObject(screwPen);
             
             HRGN hRgn = CreateRectRgn(20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5);
             SelectClipRgn(hdc, hRgn);
-
-            HBRUSH emptyCell = CreateSolidBrush(RGB(18, 18, 18));
-            HBRUSH p1Cell = CreateSolidBrush(RGB(255, 82, 82));
-            HBRUSH p2Cell = CreateSolidBrush(RGB(255, 235, 59));
-            HBRUSH obsCell = CreateSolidBrush(RGB(85, 85, 85));
-            HBRUSH crackCell = CreateSolidBrush(RGB(139, 69, 19));
-            HBRUSH hoverP1 = CreateSolidBrush(RGB(120, 40, 40));
-            HBRUSH hoverP2 = CreateSolidBrush(RGB(120, 110, 20));
-            HBRUSH hoverBomb = CreateSolidBrush(RGB(50, 50, 50));
-            HBRUSH hoverDrill = CreateSolidBrush(RGB(0, 150, 200));
-            HPEN hlPen = CreatePen(PS_SOLID, 3, RGB(255, 255, 255));
-            HPEN nullPen = GetStockObject(NULL_PEN);
 
             int hoverRow = -1;
             if (hoverCol != -1 && !isAnimating && gameActive && !(gameMode > 0 && currentPlayer == 2)) {
@@ -921,6 +1203,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
+            // Draw grid cells with 3D Glossy Discs
             for (int r = 0; r < ROWS; r++) {
                 for (int c = 0; c < COLS; c++) {
                     int x = 20 + 5 + c * 45;
@@ -934,53 +1217,69 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
+                    int typeToDraw = board[r][c];
                     if (isAnimating && r == animRow && c == animCol) {
-                        SelectObject(hdc, emptyCell);
-                    } else if (board[r][c] == 1) SelectObject(hdc, p1Cell);
-                    else if (board[r][c] == 2) SelectObject(hdc, p2Cell);
-                    else if (board[r][c] == 3) SelectObject(hdc, obsCell);
-                    else if (board[r][c] == 4) SelectObject(hdc, crackCell);
-                    else if (r == hoverRow && c == hoverCol) {
-                        if (selectedPowerup == 1) SelectObject(hdc, hoverBomb);
-                        else if (selectedPowerup == 2) SelectObject(hdc, hoverDrill);
-                        else SelectObject(hdc, currentPlayer == 1 ? hoverP1 : hoverP2);
-                    } else SelectObject(hdc, emptyCell);
-                    
-                    if (isWinCell) {
-                        SelectObject(hdc, hlPen);
-                    } else {
-                        SelectObject(hdc, nullPen);
+                        typeToDraw = 0;
+                    } else if (board[r][c] == 0 && r == hoverRow && c == hoverCol) {
+                        if (selectedPowerup == 1) typeToDraw = 500;
+                        else if (selectedPowerup == 2) typeToDraw = 600;
+                        else typeToDraw = (currentPlayer == 1) ? 100 : 200;
                     }
                     
-                    Ellipse(hdc, x, y, x + 40, y + 40);
+                    DrawDisc3D(hdc, x, y, typeToDraw, isWinCell);
                 }
             }
             
+            // Draw dropping disc
             if (isAnimating) {
                 int x = 20 + 5 + animCol * 45;
-                if (animType == 1) SelectObject(hdc, hoverBomb);
-                else if (animType == 2) SelectObject(hdc, hoverDrill);
-                else if (animPlayer == 1) SelectObject(hdc, p1Cell);
-                else SelectObject(hdc, p2Cell);
-                
-                SelectObject(hdc, nullPen);
-                Ellipse(hdc, x, animY, x + 40, animY + 40);
+                int dropType = (animType == 1) ? 5 : ((animType == 2) ? 6 : animPlayer);
+                DrawDisc3D(hdc, x, animY, dropType, false);
+            }
+
+            // Draw Winning 4-in-a-row Neon Beam Line
+            if (winCellCount >= 4) {
+                int x1 = 20 + 5 + winCells[0][1] * 45 + 20;
+                int y1 = 50 + 5 + winCells[0][0] * 45 + 20;
+                int x2 = 20 + 5 + winCells[winCellCount - 1][1] * 45 + 20;
+                int y2 = 50 + 5 + winCells[winCellCount - 1][0] * 45 + 20;
+
+                // Outer cyan aura beam
+                HPEN auraPen = CreatePen(PS_SOLID, 12, RGB(0, 220, 255));
+                SelectObject(hdc, auraPen);
+                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
+                DeleteObject(auraPen);
+
+                // Mid cyan beam
+                HPEN midPen = CreatePen(PS_SOLID, 6, RGB(160, 245, 255));
+                SelectObject(hdc, midPen);
+                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
+                DeleteObject(midPen);
+
+                // Inner white laser core
+                HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                SelectObject(hdc, corePen);
+                MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
+                DeleteObject(corePen);
             }
             
             SelectClipRgn(hdc, NULL);
             DeleteObject(hRgn);
 
-            SelectObject(hdc, nullPen);
-            DeleteObject(emptyCell);
-            DeleteObject(p1Cell);
-            DeleteObject(p2Cell);
-            DeleteObject(obsCell);
-            DeleteObject(crackCell);
-            DeleteObject(hoverP1);
-            DeleteObject(hoverP2);
-            DeleteObject(hoverBomb);
-            DeleteObject(hoverDrill);
-            DeleteObject(hlPen);
+            // Draw Confetti Particles
+            for (int i = 0; i < g_particleCount; i++) {
+                if (g_particles[i].life > 0) {
+                    HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
+                    HPEN pPen = GetStockObject(NULL_PEN);
+                    SelectObject(hdc, pBrush);
+                    SelectObject(hdc, pPen);
+                    int px = (int)g_particles[i].x;
+                    int py = (int)g_particles[i].y;
+                    int sz = g_particles[i].size;
+                    Rectangle(hdc, px - sz/2, py - sz/2, px + sz/2, py + sz/2);
+                    DeleteObject(pBrush);
+                }
+            }
             
             EndPaint(hwnd, &ps);
             break;
