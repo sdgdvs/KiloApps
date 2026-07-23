@@ -510,8 +510,8 @@ void DrawBar(HDC hdc, int x, int y, int w, int h, int cur, int max, COLORREF col
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hBgBrush = CreateSolidBrush(RGB(5, 8, 17));
-            hPanelBrush = CreateSolidBrush(RGB(10, 20, 38));
+            hBgBrush = CreateSolidBrush(RGB(3, 6, 13));
+            hPanelBrush = CreateSolidBrush(RGB(6, 14, 28));
             hTitleFont = CreateFontA(17, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             hMonoFont = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
             hBoldFont = CreateFontA(13, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
@@ -657,6 +657,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
+            HBRUSH hBorderCyanB = CreateSolidBrush(RGB(0, 139, 155));
+            HBRUSH hBorderAmberB = CreateSolidBrush(RGB(255, 170, 0));
+
             // Header Bar
             SelectObject(hdc, hTitleFont);
             SetTextColor(hdc, RGB(0, 240, 255));
@@ -664,19 +667,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(hdc, 12, 10, "🚀 KSTARSHIP", 14);
 
             SelectObject(hdc, hMonoFont);
-            SetTextColor(hdc, RGB(0, 139, 155));
-            TextOutA(hdc, 160, 14, "SECTOR COMMAND V2.0", 19);
+            SetTextColor(hdc, RGB(255, 170, 0));
+            TextOutA(hdc, 160, 14, "[CYBERNETIC SECTOR COMMAND v4.0]", 32);
 
             char sectorBuf[64];
             char colChar = (char)('A' + g_State.shipX);
             wsprintfA(sectorBuf, "SECTOR: %s   GRID: %c%d", g_State.sector, colChar, g_State.shipY + 1);
-            SetTextColor(hdc, RGB(255, 170, 0));
-            TextOutA(hdc, 640, 14, sectorBuf, (int)lstrlenA(sectorBuf));
+            SetTextColor(hdc, RGB(0, 240, 255));
+            TextOutA(hdc, 635, 14, sectorBuf, (int)lstrlenA(sectorBuf));
 
             // Left Panel: Ship Vitals & Manifest
             RECT leftPanel = {10, 48, 250, 393};
             FillRect(hdc, &leftPanel, hPanelBrush);
-            FrameRect(hdc, &leftPanel, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            FrameRect(hdc, &leftPanel, hBorderCyanB);
 
             SetTextColor(hdc, RGB(0, 240, 255));
             TextOutA(hdc, 20, 56, "[ SHIP VITALS ]", 15);
@@ -721,7 +724,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT resCard3 = {20, 320, 120, 380};
             RECT resCard4 = {130, 320, 230, 380};
 
-            HBRUSH hResBg = CreateSolidBrush(RGB(15, 30, 55));
+            HBRUSH hResBg = CreateSolidBrush(RGB(10, 24, 48));
             FillRect(hdc, &resCard1, hResBg);
             FillRect(hdc, &resCard2, hResBg);
             FillRect(hdc, &resCard3, hResBg);
@@ -749,10 +752,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Center Viewport: Star Map Grid
             RECT centerPanel = {260, 48, 615, 393};
-            HBRUSH hMapBg = CreateSolidBrush(RGB(3, 6, 13));
+            HBRUSH hMapBg = CreateSolidBrush(RGB(2, 4, 8));
             FillRect(hdc, &centerPanel, hMapBg);
             DeleteObject(hMapBg);
-            FrameRect(hdc, &centerPanel, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            FrameRect(hdc, &centerPanel, hBorderCyanB);
 
             // HUD Info
             SetTextColor(hdc, RGB(0, 240, 255));
@@ -959,7 +962,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Right Panel Frame (Controls Header)
             RECT rightPanel = {620, 48, 830, 393};
             FillRect(hdc, &rightPanel, hPanelBrush);
-            FrameRect(hdc, &rightPanel, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            FrameRect(hdc, &rightPanel, hBorderCyanB);
 
             SetTextColor(hdc, RGB(0, 240, 255));
             TextOutA(hdc, 630, 222, "[ NAVIGATION GRID ]", 19);
@@ -967,7 +970,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Bottom Panel: Log Console
             RECT logPanel = {10, 402, 830, 545};
             FillRect(hdc, &logPanel, hPanelBrush);
-            FrameRect(hdc, &logPanel, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            FrameRect(hdc, &logPanel, hBorderAmberB);
 
             SetTextColor(hdc, RGB(0, 240, 255));
             TextOutA(hdc, 20, 408, "--- CAPTAIN'S TACTICAL FEED & TERMINAL LOG ---", 46);
@@ -982,8 +985,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (g_Logs[logIdx].type == 2) SetTextColor(hdc, RGB(255, 51, 102));// Alert / red
                 else if (g_Logs[logIdx].type == 3) SetTextColor(hdc, RGB(57, 255, 20)); // Good / green
 
-                TextOutA(hdc, 20, 426 + (i * 16), g_Logs[logIdx].msg, (int)lstrlenA(g_Logs[logIdx].msg));
+                char logLine[160];
+                wsprintfA(logLine, "> %s", g_Logs[logIdx].msg);
+                TextOutA(hdc, 20, 426 + (i * 16), logLine, (int)lstrlenA(logLine));
             }
+
+            DeleteObject(hBorderCyanB);
+            DeleteObject(hBorderAmberB);
 
             // Render Active Modals (Commissioning / Outpost)
             if (g_State.inInitModal) {
