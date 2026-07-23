@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KPaint
+**Target App:** KSnake
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KPaint
 - KSnake
 - KTetris
 - KSpace
@@ -77,6 +76,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KMedia (Added Playback Modes, Speed Controls, Playlist Search Filter, Seeker & Volume, and Keyboard Shortcuts)
 - KNet (Added Traffic Logging, Ping Stats Engine & Port Inspector)
 - KZip (Added Archive Search, Checksum Integrity Verification, Compression Methods, and Encryption Simulation)
+- KPaint (Added Image Filters, Canvas Transforms, Undo/Redo Stack, Brush Shapes and Color Palette Presets)
 
 
 
