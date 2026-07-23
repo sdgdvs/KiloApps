@@ -85,6 +85,14 @@ typedef struct {
     int inCrewModal;
     int salvoActive;
     OfficerData officers[4];
+    // Phase 10 Deep Space Trading & Economy State
+    int meds;
+    int cyberware;
+    int luxury;
+    int maxCargo;
+    int inTradeModal;
+    int marketBuy[5];
+    int marketSell[5];
 } StarshipState;
 
 static StarshipState g_State = {
@@ -107,7 +115,10 @@ static StarshipState g_State = {
         {0, 0, "Chief Logan", "ENGINEER", "+20% Shield Boost & +10 Hull", "Emergency Repair (+40 SH / +20 H)", 300},
         {0, 0, "Lt. Cross", "GUNNER", "+25% Phaser DMG (+10 DMG)", "Plasma Salvo (2x Phaser DMG)", 350},
         {0, 0, "Dr. Astra", "SCIENCE", "+50% Scan & Mining Yields", "Deep Sensor Pulse (Reveal & +25 E)", 300}
-    }
+    },
+    0, 0, 0, 100, 0,
+    {30, 45, 25, 120, 200},
+    {25, 38, 20, 100, 160}
 };
 
 static const char* g_BiomeNames[] = {"TERRAN SYSTEM", "VOLCANIC SYSTEM", "NEBULA SYSTEM", "ASTEROID BELT"};
@@ -250,6 +261,132 @@ static HWND hBtnCombatFire, hBtnCombatShield, hBtnCombatEvade, hBtnCombatRepair,
 static HWND hBtnTgtHull, hBtnTgtShield, hBtnTgtWeap, hBtnTgtEng;
 static HWND hBtnUpgHull, hBtnUpgCannons, hBtnUpgShields, hBtnUpgWarp, hBtnUpgSensors, hBtnUpgClose;
 static HWND hBtnCrewHire[4], hBtnCrewAssign[4], hBtnCrewAbility[4], hBtnCrewClose;
+// Phase 10 Trade Market Controls & Economy
+static HWND hBtnTrade = NULL;
+static HWND hBtnStTrade = NULL;
+static HWND hBtnTradeBuy1[5] = {NULL};
+static HWND hBtnTradeBuy5[5] = {NULL};
+static HWND hBtnTradeSell1[5] = {NULL};
+static HWND hBtnTradeSellAll[5] = {NULL};
+static HWND hBtnTradeClose = NULL;
+
+typedef struct {
+    const char* sectorName;
+    double mult[5];
+    const char* intel;
+} SectorEconomy;
+
+static SectorEconomy g_Sectors[7] = {
+    {"ALPHA-01",   {1.0, 1.0, 1.0, 1.0, 1.0}, "Central Sector Hub: Balanced galactic market prices."},
+    {"BETA-07",    {0.9, 1.5, 0.5, 1.1, 1.4}, "Mining Hub: ORE SURPLUS (Cheap), MEDS & LUXURY high demand!"},
+    {"GAMMA-09",   {1.0, 0.9, 1.5, 0.6, 1.2}, "Tech Synth: CYBERWARE SURPLUS (Cheap), ORE in critical demand!"},
+    {"NEBULA-X",   {1.6, 0.6, 0.8, 1.3, 1.5}, "Frontier Hazard: MEDS SURPLUS (Cheap), FUEL in high demand!"},
+    {"SOLARIS-IV", {1.1, 0.8, 1.4, 1.2, 0.5}, "Pleasure Resort: LUXURY GOODS SURPLUS (Cheap), ORE high demand!"},
+    {"ORION-9",    {0.7, 1.2, 0.9, 1.5, 1.6}, "Outer Rim Refinery: FUEL SURPLUS (Cheap), CYBERWARE high demand!"},
+    {"OMEGA-99",   {1.2, 1.3, 1.1, 1.4, 1.3}, "Quantum Void: Highly volatile black market exchange rates."}
+};
+
+int GetUsedCargo() {
+    return g_State.meds + g_State.ore + g_State.cyberware + g_State.luxury;
+}
+
+void UpdateMarketPrices() {
+    int sIdx = 0;
+    int i;
+    for (i = 0; i < 7; i++) {
+        if (lstrcmpA(g_State.sector, g_Sectors[i].sectorName) == 0) {
+            sIdx = i;
+            break;
+        }
+    }
+    int basePrices[5] = {30, 45, 25, 120, 200};
+    for (i = 0; i < 5; i++) {
+        double mult = g_Sectors[sIdx].mult[i];
+        int jitterPercent = (xrand() % 31) - 15;
+        double jitter = 1.0 + (jitterPercent / 100.0);
+        int buyP = (int)(basePrices[i] * mult * jitter);
+        if (buyP < 5) buyP = 5;
+        int sellP = (int)(buyP * 0.85);
+        if (sellP < 3) sellP = 3;
+        g_State.marketBuy[i] = buyP;
+        g_State.marketSell[i] = sellP;
+    }
+}
+
+void BuyCommodity(HWND hwnd, int type, int qty) {
+    UpdateMarketPrices();
+    int cost = g_State.marketBuy[type] * qty;
+    const char* cNames[5] = {"Hyper Fuel", "Medical Supplies", "Titanium Ore", "Cyber Augments", "Luxury Goods"};
+    
+    if (g_State.credits < cost) {
+        AddLog("[MARKET WARN] Insufficient credits to execute trade!", 1);
+        PlayGameSound(6);
+        return;
+    }
+
+    if (type != 0) {
+        int used = GetUsedCargo();
+        if (used + qty > g_State.maxCargo) {
+            AddLog("[MARKET WARN] Cargo Hold full! Cannot store additional cargo.", 1);
+            PlayGameSound(6);
+            return;
+        }
+    } else {
+        if (g_State.fuel + qty > g_State.maxFuel) {
+            AddLog("[MARKET WARN] Hyper fuel tanks full.", 1);
+            PlayGameSound(6);
+            return;
+        }
+    }
+
+    g_State.credits -= cost;
+    if (type == 0) g_State.fuel += qty;
+    else if (type == 1) g_State.meds += qty;
+    else if (type == 2) g_State.ore += qty;
+    else if (type == 3) g_State.cyberware += qty;
+    else if (type == 4) g_State.luxury += qty;
+
+    char buf[128];
+    wsprintfA(buf, "[MARKET BOUGHT] Purchased +%d %s for %d Cr.", qty, cNames[type], cost);
+    AddLog(buf, 3);
+    PlayGameSound(5);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void SellCommodity(HWND hwnd, int type, int qty) {
+    UpdateMarketPrices();
+    const char* cNames[5] = {"Hyper Fuel", "Medical Supplies", "Titanium Ore", "Cyber Augments", "Luxury Goods"};
+    int currentQty = 0;
+    if (type == 0) currentQty = g_State.fuel;
+    else if (type == 1) currentQty = g_State.meds;
+    else if (type == 2) currentQty = g_State.ore;
+    else if (type == 3) currentQty = g_State.cyberware;
+    else if (type == 4) currentQty = g_State.luxury;
+
+    if (qty < 0) qty = currentQty;
+    if (qty > currentQty) qty = currentQty;
+
+    if (qty <= 0) {
+        AddLog("[MARKET WARN] No commodity quantity available to sell!", 1);
+        PlayGameSound(6);
+        return;
+    }
+
+    int earnings = g_State.marketSell[type] * qty;
+    g_State.credits += earnings;
+
+    if (type == 0) g_State.fuel -= qty;
+    else if (type == 1) g_State.meds -= qty;
+    else if (type == 2) g_State.ore -= qty;
+    else if (type == 3) g_State.cyberware -= qty;
+    else if (type == 4) g_State.luxury -= qty;
+
+    char buf[128];
+    wsprintfA(buf, "[MARKET SOLD] Sold %d %s for +%d Cr.", qty, cNames[type], earnings);
+    AddLog(buf, 3);
+    PlayGameSound(5);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -258,7 +395,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -345,6 +482,18 @@ void UpdateControlVisibility(HWND hwnd) {
             ShowWindow(hBtnCrewAbility[i], (g_State.inCrewModal && o->assigned) ? SW_SHOW : SW_HIDE);
         }
     }
+
+    // Trade Modal Buttons (Phase 10)
+    ShowWindow(hBtnTrade,   inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStTrade, g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    int c;
+    for (c = 0; c < 5; c++) {
+        ShowWindow(hBtnTradeBuy1[c],    g_State.inTradeModal ? SW_SHOW : SW_HIDE);
+        ShowWindow(hBtnTradeBuy5[c],    g_State.inTradeModal ? SW_SHOW : SW_HIDE);
+        ShowWindow(hBtnTradeSell1[c],   g_State.inTradeModal ? SW_SHOW : SW_HIDE);
+        ShowWindow(hBtnTradeSellAll[c], g_State.inTradeModal ? SW_SHOW : SW_HIDE);
+    }
+    ShowWindow(hBtnTradeClose, g_State.inTradeModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -1519,6 +1668,7 @@ void DrawBar(HDC hdc, int x, int y, int w, int h, int cur, int max, COLORREF col
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            int k;
             hBgBrush = CreateSolidBrush(RGB(3, 6, 13));
             hPanelBrush = CreateSolidBrush(RGB(6, 14, 28));
             hTitleFont = CreateFontA(17, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Consolas");
@@ -1547,19 +1697,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnCombat     = CreateWindowA("BUTTON", "⚔️ TACTICAL COMBAT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 208, 195, 19, hwnd, (HMENU)110, NULL, NULL);
             hBtnUpgrade    = CreateWindowA("BUTTON", "🔧 SHIP UPGRADE BAY",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 228, 195, 19, hwnd, (HMENU)111, NULL, NULL);
             hBtnCrew       = CreateWindowA("BUTTON", "👨‍✈️ OFFICER ROSTER", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 248, 195, 19, hwnd, (HMENU)112, NULL, NULL);
+            hBtnTrade      = CreateWindowA("BUTTON", "📈 COMMODITY MARKET", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 268, 195, 19, hwnd, (HMENU)113, NULL, NULL);
 
             // D-Pad Navigation Buttons
-            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 272, 60, 21, hwnd, (HMENU)201, NULL, NULL);
-            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 272, 60, 21, hwnd, (HMENU)202, NULL, NULL);
-            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 272, 60, 21, hwnd, (HMENU)203, NULL, NULL);
+            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 292, 60, 21, hwnd, (HMENU)201, NULL, NULL);
+            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 292, 60, 21, hwnd, (HMENU)202, NULL, NULL);
+            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 292, 60, 21, hwnd, (HMENU)203, NULL, NULL);
 
-            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 295, 60, 21, hwnd, (HMENU)204, NULL, NULL);
-            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 295, 60, 21, hwnd, (HMENU)205, NULL, NULL);
-            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 295, 60, 21, hwnd, (HMENU)206, NULL, NULL);
+            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 315, 60, 21, hwnd, (HMENU)204, NULL, NULL);
+            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 315, 60, 21, hwnd, (HMENU)205, NULL, NULL);
+            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 315, 60, 21, hwnd, (HMENU)206, NULL, NULL);
 
-            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 318, 60, 21, hwnd, (HMENU)207, NULL, NULL);
-            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 318, 60, 21, hwnd, (HMENU)208, NULL, NULL);
-            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 318, 60, 21, hwnd, (HMENU)209, NULL, NULL);
+            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 338, 60, 21, hwnd, (HMENU)207, NULL, NULL);
+            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 338, 60, 21, hwnd, (HMENU)208, NULL, NULL);
+            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 338, 60, 21, hwnd, (HMENU)209, NULL, NULL);
 
             // Init Modal Buttons
             hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)301, NULL, NULL);
@@ -1577,7 +1728,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnStRecruit       = CreateWindowA("BUTTON", "👨‍🚀 RECRUIT CREW OFFICERS (+3 - 100 Cr)",   WS_CHILD | BS_PUSHBUTTON, 230, 260, 380, 24, hwnd, (HMENU)404, NULL, NULL);
             hBtnStUpgrade       = CreateWindowA("BUTTON", "🔧 SHIP SYSTEMS UPGRADE BAY",             WS_CHILD | BS_PUSHBUTTON, 230, 286, 380, 24, hwnd, (HMENU)408, NULL, NULL);
             hBtnStCrew          = CreateWindowA("BUTTON", "👨‍✈️ OFFICER MANAGEMENT BAY",             WS_CHILD | BS_PUSHBUTTON, 230, 312, 380, 24, hwnd, (HMENU)409, NULL, NULL);
-            hBtnStClose         = CreateWindowA("BUTTON", "✕ CLOSE / UNDOCK STATION",               WS_CHILD | BS_PUSHBUTTON, 230, 338, 380, 24, hwnd, (HMENU)405, NULL, NULL);
+            hBtnStTrade         = CreateWindowA("BUTTON", "📈 INTERSTELLAR COMMODITY EXCHANGE",     WS_CHILD | BS_PUSHBUTTON, 230, 338, 380, 24, hwnd, (HMENU)410, NULL, NULL);
+            hBtnStClose         = CreateWindowA("BUTTON", "✕ CLOSE / UNDOCK STATION",               WS_CHILD | BS_PUSHBUTTON, 230, 364, 380, 24, hwnd, (HMENU)405, NULL, NULL);
+
+            // Trade Modal Buttons (Phase 10)
+            for (k = 0; k < 5; k++) {
+                int rY = 135 + (k * 42);
+                hBtnTradeBuy1[k]   = CreateWindowA("BUTTON", "+1 BUY",  WS_CHILD | BS_PUSHBUTTON, 435, rY + 4, 52, 24, hwnd, (HMENU)(1001 + k), NULL, NULL);
+                hBtnTradeBuy5[k]   = CreateWindowA("BUTTON", "+5 BUY",  WS_CHILD | BS_PUSHBUTTON, 490, rY + 4, 52, 24, hwnd, (HMENU)(1006 + k), NULL, NULL);
+                hBtnTradeSell1[k]  = CreateWindowA("BUTTON", "-1 SELL", WS_CHILD | BS_PUSHBUTTON, 548, rY + 4, 55, 24, hwnd, (HMENU)(1011 + k), NULL, NULL);
+                hBtnTradeSellAll[k]= CreateWindowA("BUTTON", "SELL ALL",WS_CHILD | BS_PUSHBUTTON, 606, rY + 4, 58, 24, hwnd, (HMENU)(1016 + k), NULL, NULL);
+            }
+            hBtnTradeClose = CreateWindowA("BUTTON", "✅ RETURN TO COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 200, 355, 468, 26, hwnd, (HMENU)1021, NULL, NULL);
 
             // Planet Telemetry Modal Button
             hBtnPlanetClose     = CreateWindowA("BUTTON", "✅ LOG SURVEY DATA & RESUME COMMAND",     WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 32, hwnd, (HMENU)501, NULL, NULL);
@@ -1609,7 +1771,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnUpgClose   = CreateWindowA("BUTTON", "✕ EXIT UPGRADE BAY",  WS_CHILD | BS_PUSHBUTTON, 210, 316, 420, 28, hwnd, (HMENU)806, NULL, NULL);
 
             // Crew Modal Buttons (Phase 9)
-            int k;
             for (k = 0; k < 4; k++) {
                 int cardY = 115 + (k * 60);
                 hBtnCrewHire[k]   = CreateWindowA("BUTTON", "💰 RECRUIT",  WS_CHILD | BS_PUSHBUTTON, 520, cardY + 14, 115, 26, hwnd, (HMENU)(901 + k), NULL, NULL);
@@ -1719,6 +1880,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 OpenUpgradeModal(hwnd);
             } else if (id == 112 || id == 409) {
                 OpenCrewModal(hwnd);
+            } else if (id == 113) {
+                g_State.inTradeModal = 1;
+                UpdateMarketPrices();
+                UpdateControlVisibility(hwnd);
+                AddLog("[MARKET] Interstellar Commodity Exchange accessed.", 0);
+            } else if (id == 410) {
+                g_State.inStationModal = 0;
+                g_State.inTradeModal = 1;
+                UpdateMarketPrices();
+                UpdateControlVisibility(hwnd);
+            } else if (id >= 1001 && id <= 1005) {
+                BuyCommodity(hwnd, id - 1001, 1);
+            } else if (id >= 1006 && id <= 1010) {
+                BuyCommodity(hwnd, id - 1006, 5);
+            } else if (id >= 1011 && id <= 1015) {
+                SellCommodity(hwnd, id - 1011, 1);
+            } else if (id >= 1016 && id <= 1020) {
+                SellCommodity(hwnd, id - 1016, -1);
+            } else if (id == 1021) {
+                g_State.inTradeModal = 0;
+                UpdateControlVisibility(hwnd);
+                AddLog("[MARKET] Returned to command deck.", 0);
             } else if (id >= 901 && id <= 904) {
                 HireOfficer(hwnd, id - 901);
             } else if (id >= 905 && id <= 908) {
@@ -2495,6 +2678,62 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char abilStr[96];
                     wsprintfA(abilStr, "ABILITY: %s", o->ability);
                     TextOutA(hdc, 205, cardY + 36, abilStr, (int)lstrlenA(abilStr));
+                }
+            } else if (g_State.inTradeModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {180, 52, 670, 388};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hAmberBorder = CreateSolidBrush(RGB(255, 170, 0));
+                FrameRect(hdc, &modalCard, hAmberBorder);
+                DeleteObject(hAmberBorder);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(255, 200, 0));
+                TextOutA(hdc, 200, 60, "📈 INTERSTELLAR COMMODITY EXCHANGE", 35);
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(160, 190, 220));
+                TextOutA(hdc, 200, 82, "Sector commodity market index. Buy low, sell high across sectors.", 65);
+
+                char headerBar[128];
+                wsprintfA(headerBar, "CREDITS: %d Cr | CARGO: %d/%d TONS | SECTOR: %s", g_State.credits, GetUsedCargo(), g_State.maxCargo, g_State.sector);
+                SetTextColor(hdc, RGB(57, 255, 20));
+                TextOutA(hdc, 200, 100, headerBar, (int)lstrlenA(headerBar));
+
+                int sIdx = 0;
+                int i;
+                for (i = 0; i < 7; i++) {
+                    if (lstrcmpA(g_State.sector, g_Sectors[i].sectorName) == 0) { sIdx = i; break; }
+                }
+                char intelBuf[160];
+                wsprintfA(intelBuf, "INTEL: %s", g_Sectors[sIdx].intel);
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 200, 116, intelBuf, (int)lstrlenA(intelBuf));
+
+                const char* cNames[5] = {"HYPER FUEL", "MED SUPPLIES", "TITANIUM ORE", "CYBER AUGMENTS", "LUXURY GOODS"};
+                for (i = 0; i < 5; i++) {
+                    int rY = 135 + (i * 42);
+                    RECT rBox = {195, rY - 2, 428, rY + 36};
+                    FrameRect(hdc, &rBox, hBorderCyanB);
+
+                    int qty = 0;
+                    if (i == 0) qty = g_State.fuel;
+                    else if (i == 1) qty = g_State.meds;
+                    else if (i == 2) qty = g_State.ore;
+                    else if (i == 3) qty = g_State.cyberware;
+                    else if (i == 4) qty = g_State.luxury;
+
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    TextOutA(hdc, 202, rY + 2, cNames[i], (int)lstrlenA(cNames[i]));
+
+                    char pStr[64];
+                    wsprintfA(pStr, "BUY: %d Cr | SELL: %d Cr | HOLD: %d", g_State.marketBuy[i], g_State.marketSell[i], qty);
+                    SetTextColor(hdc, RGB(180, 210, 240));
+                    TextOutA(hdc, 202, rY + 18, pStr, (int)lstrlenA(pStr));
                 }
             }
 
