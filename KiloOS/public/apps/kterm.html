@@ -3,15 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KTerm - KiloOS Terminal</title>
+<title>KTerm - KiloOS Advanced Terminal</title>
 <style>
   :root {
-    --term-bg: #0c0c0c;
-    --term-fg: #00ff00;
-    --term-err: #ff3333;
-    --term-sys: #00ccff;
-    --term-op: #cc00ff;
-    --term-dim: #008800;
+    --term-bg: #090b10;
+    --term-header-bg: #121620;
+    --term-tab-bg: #181d2a;
+    --term-tab-active: #222938;
+    --term-fg: #00ff66;
+    --term-fg-dim: #00993d;
+    --term-err: #ff4444;
+    --term-sys: #00d9ff;
+    --term-op: #d946ef;
+    --term-warn: #ffaa00;
+    --term-border: rgba(0, 255, 102, 0.15);
+    --term-font: 'Consolas', 'Monaco', 'Courier New', monospace;
   }
   
   * {
@@ -22,46 +28,167 @@
     margin: 0; 
     background-color: var(--term-bg); 
     color: var(--term-fg); 
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+    font-family: var(--term-font); 
     display: flex; 
     flex-direction: column; 
     height: 100vh; 
     overflow: hidden; 
   }
+
+  /* Header & Tab Bar */
+  #header {
+    background: var(--term-header-bg);
+    border-bottom: 1px solid var(--term-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+    user-select: none;
+    height: 38px;
+    flex-shrink: 0;
+  }
+
+  #tabStrip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  #tabStrip::-webkit-scrollbar { display: none; }
+
+  .tab {
+    background: var(--term-tab-bg);
+    color: #8a99ad;
+    padding: 6px 12px;
+    border-radius: 6px 6px 0 0;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+
+  .tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+  }
+
+  .tab.active {
+    background: var(--term-tab-active);
+    color: var(--term-fg);
+    border-color: var(--term-border);
+    font-weight: bold;
+    box-shadow: 0 -2px 8px rgba(0,255,102,0.1);
+  }
+
+  .tab-close {
+    font-size: 14px;
+    line-height: 1;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+  }
+  .tab-close:hover {
+    opacity: 1;
+    background: rgba(255, 68, 68, 0.3);
+    color: #ff4444;
+  }
+
+  .tab-add {
+    background: transparent;
+    border: 1px dashed var(--term-border);
+    color: var(--term-fg);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s ease;
+  }
+  .tab-add:hover {
+    background: rgba(0, 255, 102, 0.1);
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+  }
+
+  .btn-action {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: var(--term-font);
+    transition: all 0.15s ease;
+  }
+  .btn-action:hover {
+    background: rgba(0, 255, 102, 0.15);
+    color: var(--term-fg);
+    border-color: var(--term-border);
+  }
   
+  /* Output Screen */
   #output { 
     flex: 1; 
     overflow-y: auto; 
-    padding: 10px; 
+    padding: 12px; 
     white-space: pre-wrap; 
     word-wrap: break-word; 
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.45;
   }
   
   #output::-webkit-scrollbar { width: 8px; }
-  #output::-webkit-scrollbar-thumb { background: var(--term-dim); border-radius: 4px; }
+  #output::-webkit-scrollbar-thumb { background: rgba(0,255,102,0.2); border-radius: 4px; }
+  #output::-webkit-scrollbar-thumb:hover { background: rgba(0,255,102,0.4); }
   
-  .log-line {
-    margin-bottom: 2px;
-  }
-  .log-error { color: var(--term-err); font-weight: bold; text-shadow: 0 0 5px rgba(255,51,51,0.5); }
-  .log-system { color: var(--term-sys); font-weight: bold; text-shadow: 0 0 5px rgba(0,204,255,0.5); }
+  .log-line { margin-bottom: 2px; }
+  .log-error { color: var(--term-err); font-weight: bold; text-shadow: 0 0 4px rgba(255,68,68,0.4); }
+  .log-system { color: var(--term-sys); font-weight: bold; text-shadow: 0 0 4px rgba(0,217,255,0.4); }
   .log-operator { color: var(--term-op); font-style: italic; }
-  .log-dim { color: var(--term-dim); }
+  .log-warn { color: var(--term-warn); }
+  .log-dim { color: var(--term-fg-dim); }
+  .log-cmd { color: #ffffff; font-weight: bold; }
   
+  /* Input Area */
   #inputLine { 
     display: flex; 
-    padding: 10px; 
+    padding: 10px 12px; 
     align-items: center;
-    background: rgba(0,255,0,0.05);
-    border-top: 1px solid rgba(0,255,0,0.1);
+    background: rgba(0,255,102,0.03);
+    border-top: 1px solid var(--term-border);
+    flex-shrink: 0;
   }
   
   #prompt { 
     margin-right: 8px; 
     font-weight: bold;
     user-select: none;
+    color: var(--term-sys);
+  }
+
+  #searchPrompt {
+    color: var(--term-warn);
+    font-weight: bold;
+    margin-right: 8px;
+    display: none;
   }
   
   .input-container {
@@ -76,7 +203,7 @@
     background: transparent; 
     border: none; 
     color: var(--term-fg); 
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
+    font-family: var(--term-font); 
     font-size: 14px;
     outline: none; 
     caret-color: transparent;
@@ -88,7 +215,7 @@
     height: 0;
     overflow: hidden;
     white-space: pre;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-family: var(--term-font);
     font-size: 14px;
   }
   
@@ -99,7 +226,6 @@
     background-color: var(--term-fg);
     animation: blink 1s step-end infinite;
     vertical-align: middle;
-    margin-left: 2px;
     pointer-events: none;
   }
   
@@ -107,28 +233,81 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
   }
+
+  /* Footer Status Bar */
+  #statusbar {
+    background: var(--term-header-bg);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 4px 12px;
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .shortcut-tag {
+    color: #94a3b8;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-right: 3px;
+  }
 </style>
 </head>
 <body>
+
+<header id="header">
+  <div id="tabStrip">
+    <!-- Dynamic Tabs -->
+    <button class="tab-add" id="btnNewTab" title="New Session Tab (Ctrl+T)">+ New</button>
+  </div>
+  <div class="toolbar-actions">
+    <button class="btn-action" id="btnExportLog" title="Download Session Log">💾 Export Log</button>
+    <button class="btn-action" id="btnClear" title="Clear Screen (Ctrl+L)">🧹 Clear</button>
+    <button class="btn-action" id="btnHelp" title="Show Help">❓ Help</button>
+  </div>
+</header>
+
 <main id="output" role="log" aria-live="polite" aria-atomic="false" aria-label="Terminal Output"></main>
+
 <footer id="inputLine" role="region" aria-label="Command Line Input">
   <span id="prompt">C:\&gt;</span>
+  <span id="searchPrompt">(reverse-i-search)&#39;&#39;: </span>
   <div class="input-container">
     <input type="text" id="input" autofocus autocomplete="off" spellcheck="false" aria-label="Terminal input" title="Type a command">
     <span id="measurer"></span>
     <span id="cursor" style="position: absolute;"></span>
   </div>
 </footer>
+
+<div id="statusbar">
+  <div>
+    <span><span class="shortcut-tag">Ctrl+R</span>Reverse Search</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Tab</span>Autocomplete</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+T</span>New Tab</span> &nbsp;|&nbsp; 
+    <span><span class="shortcut-tag">Ctrl+L</span>Clear</span>
+  </div>
+  <div id="tabStatusInfo">Tab 1/1</div>
+</div>
+
 <script>
   const output = document.getElementById('output');
   const input = document.getElementById('input');
   const prompt = document.getElementById('prompt');
+  const searchPrompt = document.getElementById('searchPrompt');
   const cursor = document.getElementById('cursor');
   const measurer = document.getElementById('measurer');
+  const tabStrip = document.getElementById('tabStrip');
+  const btnNewTab = document.getElementById('btnNewTab');
+  const btnExportLog = document.getElementById('btnExportLog');
+  const btnClear = document.getElementById('btnClear');
+  const btnHelp = document.getElementById('btnHelp');
+  const tabStatusInfo = document.getElementById('tabStatusInfo');
   
   const MAX_LOG_LINES = 1000;
-  let currentPath = '/';
-  
+
   // Local Fallback VFS for standalone mode
   const fallbackVFS = {
     tree: {
@@ -139,14 +318,16 @@
           type: 'dir',
           name: 'Documents',
           children: {
-            'readme.txt': { type: 'file', name: 'readme.txt', content: 'Welcome to KTerm Terminal.' }
+            'readme.txt': { type: 'file', name: 'readme.txt', content: 'Welcome to KTerm Terminal.' },
+            'notes.log': { type: 'file', name: 'notes.log', content: 'System checks passed cleanly.' }
           }
         },
         'System': {
           type: 'dir',
           name: 'System',
           children: {
-            'config.sys': { type: 'file', name: 'config.sys', content: 'FILES=40\nBUFFERS=20' }
+            'config.sys': { type: 'file', name: 'config.sys', content: 'FILES=40\nBUFFERS=20' },
+            'autoexec.bat': { type: 'file', name: 'autoexec.bat', content: '@ECHO OFF\nPROMPT $P$G' }
           }
         }
       }
@@ -162,10 +343,146 @@
       return curr;
     }
   };
-  
+
   function getVFS() {
     if (window.parent && window.parent.vfs) return window.parent.vfs;
     return fallbackVFS;
+  }
+
+  // Multi-Tab Terminal Session State Manager
+  class TerminalSession {
+    constructor(id, name) {
+      this.id = id;
+      this.name = name;
+      this.currentPath = '/';
+      this.history = [];
+      this.historyPos = 0;
+      this.currentDraft = '';
+      this.outputHTML = '';
+      this.aliases = {
+        'll': 'dir',
+        'cls': 'clear',
+        'cat': 'type',
+        'sysinfo': 'ver'
+      };
+      this.env = {
+        'USER': 'kilo_user',
+        'OS': 'KiloOS Web v1.2',
+        'HOME': '/',
+        'PATH': '/System:/Documents',
+        'TERM': 'kterm-v1.2'
+      };
+    }
+  }
+
+  let sessions = [];
+  let activeSessionId = null;
+  let nextSessionNum = 1;
+
+  // Reverse Search state
+  let isReverseSearch = false;
+  let reverseSearchQuery = '';
+  let reverseSearchMatch = '';
+  let reverseSearchMatchIndex = -1;
+
+  function createNewTab(title = null) {
+    const id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    const sessionName = title || ('Tab ' + nextSessionNum++);
+    const session = new TerminalSession(id, sessionName);
+    sessions.push(session);
+    
+    // Add default banner to new session
+    const tempDiv = document.createElement('div');
+    const p = (txt, cls) => {
+      const line = document.createElement('div');
+      line.className = 'log-line ' + (cls || '');
+      line.textContent = txt;
+      tempDiv.appendChild(line);
+    };
+    p("KiloOS Web Terminal v1.2 - " + sessionName, "log-system");
+    p("Features: Multi-Tab | Reverse Search (Ctrl+R) | Aliases | Env Vars | Log Export");
+    p("Type 'help' for a list of available commands.\n");
+    session.outputHTML = tempDiv.innerHTML;
+
+    switchTab(id);
+    renderTabs();
+  }
+
+  function getActiveSession() {
+    return sessions.find(s => s.id === activeSessionId) || sessions[0];
+  }
+
+  function switchTab(id) {
+    if (activeSessionId) {
+      const curr = getActiveSession();
+      if (curr) {
+        curr.outputHTML = output.innerHTML;
+        curr.currentDraft = input.value;
+      }
+    }
+    activeSessionId = id;
+    const active = getActiveSession();
+    if (active) {
+      output.innerHTML = active.outputHTML;
+      input.value = active.currentDraft || '';
+      updatePrompt();
+      updateCursor();
+      output.scrollTop = output.scrollHeight;
+    }
+    renderTabs();
+  }
+
+  function closeTab(id, e) {
+    if (e) e.stopPropagation();
+    if (sessions.length <= 1) return; // keep at least 1 tab open
+    
+    const index = sessions.findIndex(s => s.id === id);
+    if (index !== -1) {
+      sessions.splice(index, 1);
+      if (activeSessionId === id) {
+        const nextActive = sessions[Math.min(index, sessions.length - 1)];
+        switchTab(nextActive.id);
+      } else {
+        renderTabs();
+      }
+    }
+  }
+
+  function renderTabs() {
+    // Clear old tab elements except button
+    const tabEls = tabStrip.querySelectorAll('.tab');
+    tabEls.forEach(el => el.remove());
+
+    sessions.forEach((s, idx) => {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (s.id === activeSessionId ? ' active' : '');
+      
+      const titleSpan = document.createElement('span');
+      titleSpan.textContent = s.name;
+      tab.appendChild(titleSpan);
+
+      if (sessions.length > 1) {
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'tab-close';
+        closeBtn.innerHTML = '&times;';
+        closeBtn.title = 'Close tab';
+        closeBtn.onclick = (e) => closeTab(s.id, e);
+        tab.appendChild(closeBtn);
+      }
+
+      tab.onclick = () => switchTab(s.id);
+      tabStrip.insertBefore(tab, btnNewTab);
+    });
+
+    const activeIdx = sessions.findIndex(s => s.id === activeSessionId) + 1;
+    tabStatusInfo.textContent = `Tab ${activeIdx}/${sessions.length}`;
+  }
+
+  function updatePrompt() {
+    const s = getActiveSession();
+    if (!s) return;
+    const pathStr = s.currentPath === '/' ? 'C:\\' : 'C:' + s.currentPath.replace(/\//g, '\\');
+    prompt.textContent = pathStr + '>';
   }
 
   function print(text, forceClass = null) {
@@ -185,20 +502,16 @@
       line.textContent = text;
       output.appendChild(line);
 
-      // Prune old log lines to prevent unbounded DOM memory growth
       while (output.childNodes.length > MAX_LOG_LINES) {
           output.removeChild(output.firstChild);
       }
       
       output.scrollTop = output.scrollHeight;
+
+      const active = getActiveSession();
+      if (active) active.outputHTML = output.innerHTML;
   }
   
-  // Initial Boot Sequence Logs
-  print("KiloOS Web Terminal v1.1", "log-system");
-  print("Type 'help' for a list of commands.");
-  print("");
-  
-  // Optimized Cursor positioning logic using pre-existing hidden span
   function updateCursor() {
       const val = input.value || '';
       const selStart = input.selectionStart !== null ? input.selectionStart : val.length;
@@ -206,12 +519,19 @@
       cursor.style.left = measurer.getBoundingClientRect().width + 'px';
   }
   
-  input.addEventListener('input', updateCursor);
+  input.addEventListener('input', () => {
+    if (isReverseSearch) {
+      performReverseSearch(input.value);
+    }
+    updateCursor();
+  });
   input.addEventListener('keyup', updateCursor);
   input.addEventListener('click', updateCursor);
   input.addEventListener('select', updateCursor);
-  
+
   function resolvePath(path) {
+      const s = getActiveSession();
+      const currentPath = s ? s.currentPath : '/';
       if (!path) return currentPath;
       if (path.startsWith('/')) return path;
       let parts = currentPath.split('/').filter(Boolean);
@@ -223,28 +543,177 @@
       return '/' + parts.join('/');
   }
 
+  // Environment variable expansion: replaces %VAR% or $VAR
+  function expandEnvVars(cmdStr) {
+    const s = getActiveSession();
+    if (!s || !s.env) return cmdStr;
+
+    // Expand %VAR%
+    let result = cmdStr.replace(/%([A-Za-z0-9_]+)%/g, (match, varName) => {
+      const upper = varName.toUpperCase();
+      return s.env[upper] !== undefined ? s.env[upper] : match;
+    });
+
+    // Expand $VAR
+    result = result.replace(/\$([A-Za-z0-9_]+)/g, (match, varName) => {
+      const upper = varName.toUpperCase();
+      return s.env[upper] !== undefined ? s.env[upper] : match;
+    });
+
+    return result;
+  }
+
+  // Alias expansion
+  function expandAlias(cmdStr) {
+    const s = getActiveSession();
+    if (!s || !s.aliases) return cmdStr;
+
+    const trimmed = cmdStr.trim();
+    const spaceIdx = trimmed.indexOf(' ');
+    const firstWord = spaceIdx === -1 ? trimmed : trimmed.substring(0, spaceIdx);
+    const rest = spaceIdx === -1 ? '' : trimmed.substring(spaceIdx);
+
+    if (s.aliases[firstWord.toLowerCase()]) {
+      return s.aliases[firstWord.toLowerCase()] + rest;
+    }
+    return cmdStr;
+  }
+
+  function exportSessionLog(filename = 'kterm_log.txt') {
+    const s = getActiveSession();
+    const plainText = output.innerText || output.textContent;
+    const blob = new Blob([plainText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (s ? s.name.replace(/\s+/g, '_').toLowerCase() : 'kterm') + '_log.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    print(`Session log exported successfully.`, "log-system");
+  }
+
   function execute(cmdStr) {
-      print(prompt.textContent + ' ' + cmdStr, "log-dim");
-      let trimmed = cmdStr.trim();
+      print(prompt.textContent + ' ' + cmdStr, "log-cmd");
+      let expanded = expandAlias(cmdStr);
+      expanded = expandEnvVars(expanded);
+
+      let trimmed = expanded.trim();
       if (!trimmed) return;
 
       let args = trimmed.split(/\s+/);
       let cmd = args[0].toLowerCase();
       let vfs = getVFS();
+      let s = getActiveSession();
 
       if (cmd === 'help') {
-          print("Commands:");
-          print("  help   - Show available commands");
-          print("  ver    - Display OS version");
-          print("  clear  - Clear screen");
-          print("  dir    - List directory contents");
-          print("  cd     - Change directory");
-          print("  type   - Read file contents");
-          print("  echo   - Print text");
-          print("  mkdir  - Create directory");
-          print("  date   - Show system date");
-          print("  time   - Show system time");
-          print("  whoami - Current user name");
+          print("Available KTerm Commands:");
+          print("  help          - Show available commands");
+          print("  ver           - Display OS version");
+          print("  clear / cls   - Clear screen");
+          print("  dir / ls      - List directory contents");
+          print("  cd            - Change directory");
+          print("  type / cat    - Read file contents");
+          print("  echo          - Print text (supports $VAR / %VAR%)");
+          print("  mkdir         - Create directory");
+          print("  date          - Show system date");
+          print("  time          - Show system time");
+          print("  whoami        - Display current user");
+          print("  alias         - Manage command aliases (alias [name=cmd], unalias)");
+          print("  env / export  - Environment variables (export VAR=VAL, unset VAR)");
+          print("  export-log    - Download terminal session log");
+          print("  newtab        - Open a new terminal tab session");
+      } else if (cmd === 'ver') {
+          print("KiloOS Web Terminal v1.2 (Multi-Tab & Deep Utilities)");
+      } else if (cmd === 'date') {
+          let d = new Date();
+          print(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
+      } else if (cmd === 'time') {
+          let d = new Date();
+          print(String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0'));
+      } else if (cmd === 'whoami') {
+          print(s.env['USER'] || "kilo_user");
+      } else if (cmd === 'clear' || cmd === 'cls') {
+          output.innerHTML = '';
+          if (s) s.outputHTML = '';
+      } else if (cmd === 'export-log') {
+          exportSessionLog(args[1] || 'kterm_log.txt');
+      } else if (cmd === 'newtab') {
+          createNewTab(args.slice(1).join(' ') || null);
+      } else if (cmd === 'alias') {
+          if (args.length === 1) {
+              print("Current Aliases:");
+              const keys = Object.keys(s.aliases);
+              if (keys.length === 0) {
+                  print("  (none)");
+              } else {
+                  keys.forEach(k => print(`  ${k} -> "${s.aliases[k]}"`));
+              }
+          } else {
+              const expr = trimmed.substring(5).trim();
+              let name = '', val = '';
+              if (expr.includes('=')) {
+                  const parts = expr.split('=');
+                  name = parts[0].trim().toLowerCase();
+                  val = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
+              } else {
+                  const parts = expr.split(/\s+/);
+                  name = parts[0].trim().toLowerCase();
+                  val = parts.slice(1).join(' ').trim().replace(/^["']|["']$/g, '');
+              }
+              if (name && val) {
+                  s.aliases[name] = val;
+                  print(`Alias added: ${name} -> "${val}"`);
+              } else {
+                  print("Usage: alias name=\"command\" or alias name command");
+              }
+          }
+      } else if (cmd === 'unalias') {
+          if (!args[1]) {
+              print("Usage: unalias <name>");
+          } else {
+              const target = args[1].toLowerCase();
+              if (s.aliases[target]) {
+                  delete s.aliases[target];
+                  print(`Alias '${target}' removed.`);
+              } else {
+                  print(`Alias '${target}' not found.`);
+              }
+          }
+      } else if (cmd === 'env' || (cmd === 'export' && args.length === 1)) {
+          print("Environment Variables:");
+          Object.keys(s.env).forEach(k => print(`  ${k}=${s.env[k]}`));
+      } else if (cmd === 'export') {
+          const expr = trimmed.substring(6).trim();
+          let name = '', val = '';
+          if (expr.includes('=')) {
+              const parts = expr.split('=');
+              name = parts[0].trim().toUpperCase();
+              val = parts.slice(1).join('=').trim().replace(/^["']|["']$/g, '');
+          } else {
+              const parts = expr.split(/\s+/);
+              name = parts[0].trim().toUpperCase();
+              val = parts.slice(1).join(' ').trim().replace(/^["']|["']$/g, '');
+          }
+          if (name) {
+              s.env[name] = val;
+              print(`Env set: ${name}=${val}`);
+          } else {
+              print("Usage: export VAR=VALUE");
+          }
+      } else if (cmd === 'unset') {
+          if (!args[1]) {
+              print("Usage: unset <VAR>");
+          } else {
+              const varName = args[1].toUpperCase();
+              if (s.env[varName] !== undefined) {
+                  delete s.env[varName];
+                  print(`Variable '${varName}' unset.`);
+              } else {
+                  print(`Variable '${varName}' not found.`);
+              }
+          }
       } else if (cmd === 'cerberus') {
           if (args[1] === 'status') {
               print("[CERBERUS WATCHDOG]");
@@ -299,20 +768,8 @@
           } else {
               print("Usage: operator --help");
           }
-      } else if (cmd === 'ver') {
-          print("KiloOS Web v1.1");
-      } else if (cmd === 'date') {
-          let d = new Date();
-          print(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
-      } else if (cmd === 'time') {
-          let d = new Date();
-          print(String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0'));
-      } else if (cmd === 'whoami') {
-          print("kilo_user");
-      } else if (cmd === 'clear' || cmd === 'cls') {
-          output.innerHTML = '';
       } else if (cmd === 'dir' || cmd === 'ls') {
-          let targetPath = args[1] ? resolvePath(args[1]) : currentPath;
+          let targetPath = args[1] ? resolvePath(args[1]) : s.currentPath;
           let node = vfs.getNode(targetPath);
           if (node && node.type === 'dir') {
               let keys = Object.keys(node.children || {});
@@ -329,13 +786,18 @@
           }
       } else if (cmd === 'cd') {
           if (!args[1]) {
-              print((currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')));
+              print((s.currentPath === '/' ? 'C:\\' : 'C:' + s.currentPath.replace(/\//g, '\\')));
           } else {
               let target = resolvePath(args[1]);
               let node = vfs.getNode(target);
               if (node && node.type === 'dir') {
-                  currentPath = target;
-                  prompt.textContent = (currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')) + '>';
+                  s.currentPath = target;
+                  updatePrompt();
+                  // Update tab label basename
+                  const parts = target.split('/').filter(Boolean);
+                  const lastFolder = parts.length > 0 ? parts[parts.length - 1] : 'Root';
+                  s.name = lastFolder;
+                  renderTabs();
               } else {
                   print("ERROR: Path not found.");
               }
@@ -385,76 +847,180 @@
       }
   }
 
-  const history = [];
-  let historyPos = 0;
-  let currentDraft = '';
+  // Reverse Search Mode logic (Ctrl+R)
+  function startReverseSearch() {
+    isReverseSearch = true;
+    reverseSearchQuery = '';
+    reverseSearchMatch = '';
+    reverseSearchMatchIndex = -1;
+    prompt.style.display = 'none';
+    searchPrompt.style.display = 'inline';
+    searchPrompt.textContent = "(reverse-i-search)''': ";
+    input.value = '';
+    updateCursor();
+  }
+
+  function exitReverseSearch(acceptMatch = false) {
+    isReverseSearch = false;
+    prompt.style.display = 'inline';
+    searchPrompt.style.display = 'none';
+    if (!acceptMatch) {
+      input.value = '';
+    } else if (reverseSearchMatch) {
+      input.value = reverseSearchMatch;
+    }
+    updateCursor();
+  }
+
+  function performReverseSearch(query, cycleOlder = false) {
+    const s = getActiveSession();
+    if (!s || s.history.length === 0) return;
+
+    reverseSearchQuery = query;
+    let startIdx = cycleOlder && reverseSearchMatchIndex > 0 ? reverseSearchMatchIndex - 1 : s.history.length - 1;
+
+    let foundMatch = '';
+    let foundIdx = -1;
+
+    for (let i = startIdx; i >= 0; i--) {
+      if (s.history[i].toLowerCase().includes(query.toLowerCase())) {
+        foundMatch = s.history[i];
+        foundIdx = i;
+        break;
+      }
+    }
+
+    if (foundMatch) {
+      reverseSearchMatch = foundMatch;
+      reverseSearchMatchIndex = foundIdx;
+      searchPrompt.textContent = `(reverse-i-search)'${query}': `;
+      input.value = foundMatch;
+    } else {
+      searchPrompt.textContent = `(failed reverse-i-search)'${query}': `;
+    }
+  }
 
   input.addEventListener('keydown', (e) => {
+      const s = getActiveSession();
+
+      // Handle Reverse Search Active Mode Key Events
+      if (isReverseSearch) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          exitReverseSearch(false);
+          return;
+        }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const match = reverseSearchMatch;
+          exitReverseSearch(true);
+          if (match) {
+            s.history.push(match);
+            s.historyPos = s.history.length;
+            execute(match);
+            input.value = '';
+            updateCursor();
+          }
+          return;
+        }
+        if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+          e.preventDefault();
+          performReverseSearch(input.value, true);
+          return;
+        }
+      }
+
+      // Ctrl+R trigger reverse search
+      if (e.ctrlKey && e.key.toLowerCase() === 'r') {
+          e.preventDefault();
+          startReverseSearch();
+          return;
+      }
+
+      // Ctrl+T to open new session tab
+      if (e.ctrlKey && e.key.toLowerCase() === 't') {
+          e.preventDefault();
+          createNewTab();
+          return;
+      }
+
       // Ctrl+L to clear output
       if (e.ctrlKey && e.key.toLowerCase() === 'l') {
           e.preventDefault();
           output.innerHTML = '';
+          if (s) s.outputHTML = '';
           return;
       }
+      
       // Ctrl+C to cancel command input line
       if (e.ctrlKey && e.key.toLowerCase() === 'c') {
           e.preventDefault();
-          print(prompt.textContent + ' ' + input.value + '^C', "log-dim");
-          input.value = '';
-          updateCursor();
+          if (isReverseSearch) {
+            exitReverseSearch(false);
+          } else {
+            print(prompt.textContent + ' ' + input.value + '^C', "log-dim");
+            input.value = '';
+            updateCursor();
+          }
           return;
       }
+      
       // Tab completion
       if (e.key === 'Tab') {
           e.preventDefault();
           handleTabCompletion();
           return;
       }
+
       if (e.key === 'Enter') {
           const val = input.value;
           if (val.trim()) {
-              if (history.length === 0 || history[history.length - 1] !== val) {
-                  history.push(val);
+              if (s.history.length === 0 || s.history[s.history.length - 1] !== val) {
+                  s.history.push(val);
               }
-              historyPos = history.length;
+              s.historyPos = s.history.length;
           }
-          currentDraft = '';
+          s.currentDraft = '';
           execute(val);
           input.value = '';
           updateCursor();
       } else if (e.key === 'ArrowUp') {
           e.preventDefault();
-          if (history.length === 0) return;
-          if (historyPos === history.length) {
-              currentDraft = input.value;
+          if (s.history.length === 0) return;
+          if (s.historyPos === s.history.length) {
+              s.currentDraft = input.value;
           }
-          if (historyPos > 0) {
-              historyPos--;
-              input.value = history[historyPos];
+          if (s.historyPos > 0) {
+              s.historyPos--;
+              input.value = s.history[s.historyPos];
               updateCursor();
           }
       } else if (e.key === 'ArrowDown') {
           e.preventDefault();
-          if (historyPos < history.length - 1) {
-              historyPos++;
-              input.value = history[historyPos];
+          if (s.historyPos < s.history.length - 1) {
+              s.historyPos++;
+              input.value = s.history[s.historyPos];
               updateCursor();
-          } else if (historyPos === history.length - 1) {
-              historyPos++;
-              input.value = currentDraft;
+          } else if (s.historyPos === s.history.length - 1) {
+              s.historyPos++;
+              input.value = s.currentDraft;
               updateCursor();
           }
       }
   });
 
   function handleTabCompletion() {
+      const s = getActiveSession();
       const val = input.value;
-      const commands = ['help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'date', 'time', 'whoami', 'cls', 'ls', 'cat'];
+      const builtins = ['help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'date', 'time', 'whoami', 'cls', 'ls', 'cat', 'alias', 'unalias', 'env', 'export', 'unset', 'export-log', 'newtab'];
+      const aliasKeys = Object.keys(s.aliases || {});
+      const allCmds = Array.from(new Set([...builtins, ...aliasKeys]));
+
       const vfs = getVFS();
       const trimmed = val.trimStart();
       
       if (!trimmed.includes(' ')) {
-          const matches = commands.filter(c => c.startsWith(trimmed.toLowerCase()));
+          const matches = allCmds.filter(c => c.startsWith(trimmed.toLowerCase()));
           if (matches.length === 1) {
               input.value = matches[0] + ' ';
               updateCursor();
@@ -464,7 +1030,7 @@
       } else {
           const parts = trimmed.split(/\s+/);
           const lastArg = parts[parts.length - 1];
-          const node = vfs.getNode(currentPath);
+          const node = vfs.getNode(s.currentPath);
           if (node && node.type === 'dir' && node.children) {
               const matches = Object.keys(node.children).filter(k => k.toLowerCase().startsWith(lastArg.toLowerCase()));
               if (matches.length === 1) {
@@ -477,17 +1043,28 @@
           }
       }
   }
-  
+
+  // Header Buttons Click Listeners
+  btnNewTab.addEventListener('click', () => createNewTab());
+  btnExportLog.addEventListener('click', () => exportSessionLog());
+  btnClear.addEventListener('click', () => {
+    output.innerHTML = '';
+    const s = getActiveSession();
+    if (s) s.outputHTML = '';
+  });
+  btnHelp.addEventListener('click', () => execute('help'));
+
   document.addEventListener('click', (e) => {
-      // Focus input if not highlighting text
+      // Focus input if not text selected and not clicking on header buttons
+      if (e.target.closest('#header')) return;
       const selection = window.getSelection();
       if (!selection || selection.toString().length === 0) {
           input.focus();
       }
   });
-  
-  // Initial cursor setup
-  updateCursor();
+
+  // Initialize first session tab
+  createNewTab("Tab 1");
 </script>
 </body>
 </html>
