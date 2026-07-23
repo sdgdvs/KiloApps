@@ -47,7 +47,7 @@ int timeRemaining = 60;
 int gameStarted = 0;
 int timerActive = 0;
 
-int ruleset = 0; // 0=Classic, 1=Fibonacci
+int ruleset = 0; // 0=Classic, 1=Fibonacci, 2=Threes
 
 int autoPlayEnabled = 0;
 int autoPlayTimerActive = 0;
@@ -79,9 +79,412 @@ int stats_tilesMerged = 0;
 int stats_highestTile = 0;
 int stats_timePlayed = 0;
 
+int frameAnimCount = 0;
+
+// Particle Spark Explosion FX
+#define MAX_PARTICLES 250
+typedef struct {
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int life;
+    int maxLife;
+    int size;
+} Particle;
+
+Particle particles[MAX_PARTICLES];
+int particleCount = 0;
+
 int my_rand() {
     seed = seed * 214013 + 2531011;
     return (seed >> 16) & 0x7FFF;
+}
+
+void SpawnMergeParticles(int centerX, int centerY, COLORREF color) {
+    int count = 18;
+    for (int k = 0; k < count; k++) {
+        if (particleCount >= MAX_PARTICLES) break;
+        Particle* p = &particles[particleCount++];
+        p->x = (float)centerX;
+        p->y = (float)centerY;
+        p->vx = (float)((my_rand() % 13) - 6);
+        p->vy = (float)((my_rand() % 13) - 8);
+        p->color = color;
+        p->life = 12 + (my_rand() % 12);
+        p->maxLife = p->life;
+        p->size = 2 + (my_rand() % 4);
+    }
+}
+
+void UpdateAndDrawParticles(HDC hdc) {
+    for (int i = 0; i < particleCount; i++) {
+        Particle* p = &particles[i];
+        p->x += p->vx;
+        p->y += p->vy;
+        p->vy += 0.25f; // Gravity
+        p->life--;
+        if (p->life <= 0) {
+            particles[i] = particles[particleCount - 1];
+            particleCount--;
+            i--;
+            continue;
+        }
+        HBRUSH b = CreateSolidBrush(p->color);
+        RECT r = { (int)p->x - p->size/2, (int)p->y - p->size/2, (int)p->x + p->size/2 + 1, (int)p->y + p->size/2 + 1 };
+        FillRect(hdc, &r, b);
+        DeleteObject(b);
+    }
+}
+
+COLORREF GetTileColor(int val) {
+    int rCol = 200, gCol = 200, bCol = 200;
+    int normalized = val;
+    if (ruleset == 1 && val > 0) {
+        if (val == 1) normalized = 2;
+        else if (val == 3) normalized = 4;
+        else if (val == 5) normalized = 8;
+        else if (val == 13) normalized = 16;
+        else if (val == 21) normalized = 32;
+        else if (val == 34) normalized = 64;
+        else if (val == 55) normalized = 128;
+        else if (val == 89) normalized = 256;
+        else if (val == 144) normalized = 512;
+        else if (val == 233) normalized = 1024;
+        else if (val >= 377) normalized = 2048;
+    } else if (ruleset == 2 && val > 0) {
+        if (val == 1) normalized = 2;
+        else if (val == 2) normalized = 4;
+        else if (val == 3) normalized = 8;
+        else if (val == 6) normalized = 16;
+        else if (val == 12) normalized = 32;
+        else if (val == 24) normalized = 64;
+        else if (val == 48) normalized = 128;
+        else if (val == 96) normalized = 256;
+        else if (val == 192) normalized = 512;
+        else if (val == 384) normalized = 1024;
+        else if (val >= 768) normalized = 2048;
+    }
+
+    if (theme == 0) { // Dark / Metallic
+        if (normalized == 2) { rCol=75; gCol=70; bCol=85; }
+        else if (normalized == 4) { rCol=95; gCol=90; bCol=110; }
+        else if (normalized == 8) { rCol=242; gCol=177; bCol=121; }
+        else if (normalized == 16) { rCol=245; gCol=149; bCol=99; }
+        else if (normalized == 32) { rCol=246; gCol=124; bCol=95; }
+        else if (normalized == 64) { rCol=246; gCol=94; bCol=59; }
+        else if (normalized == 128) { rCol=237; gCol=207; bCol=114; }
+        else if (normalized == 256) { rCol=237; gCol=204; bCol=97; }
+        else if (normalized == 512) { rCol=70; gCol=200; bCol=120; }
+        else if (normalized == 1024) { rCol=70; gCol=170; bCol=240; }
+        else if (normalized == 2048) { rCol=240; gCol=190; bCol=40; }
+        else if (normalized > 2048) { rCol=170; gCol=70; bCol=240; }
+        if (val == -3) { rCol=220; gCol=30; bCol=30; }
+        if (val == -2) { rCol=255; gCol=215; bCol=0; }
+        if (val == -1) { rCol=90; gCol=90; bCol=95; }
+        if (val == 0) { rCol = 45; gCol = 45; bCol = 50; }
+    } else if (theme == 1) { // Classic
+        if (normalized == 2) { rCol=238; gCol=228; bCol=218; }
+        else if (normalized == 4) { rCol=237; gCol=224; bCol=200; }
+        else if (normalized == 8) { rCol=242; gCol=177; bCol=121; }
+        else if (normalized == 16) { rCol=245; gCol=149; bCol=99; }
+        else if (normalized == 32) { rCol=246; gCol=124; bCol=95; }
+        else if (normalized == 64) { rCol=246; gCol=94; bCol=59; }
+        else if (normalized == 128) { rCol=237; gCol=207; bCol=114; }
+        else if (normalized == 256) { rCol=237; gCol=204; bCol=97; }
+        else if (normalized == 512) { rCol=90; gCol=200; bCol=130; }
+        else if (normalized == 1024) { rCol=70; gCol=180; bCol=230; }
+        else if (normalized == 2048) { rCol=240; gCol=195; bCol=40; }
+        else if (normalized > 2048) { rCol=180; gCol=80; bCol=240; }
+        if (val == -3) { rCol=220; gCol=30; bCol=30; }
+        if (val == -2) { rCol=255; gCol=215; bCol=0; }
+        if (val == -1) { rCol=100; gCol=100; bCol=100; }
+        if (val == 0) { rCol = 204; gCol = 192; bCol = 179; }
+    } else { // Pastel
+        if (normalized == 2) { rCol=225; gCol=190; bCol=231; }
+        else if (normalized == 4) { rCol=209; gCol=196; bCol=233; }
+        else if (normalized == 8) { rCol=197; gCol=202; bCol=233; }
+        else if (normalized == 16) { rCol=187; gCol=222; bCol=251; }
+        else if (normalized == 32) { rCol=179; gCol=229; bCol=252; }
+        else if (normalized == 64) { rCol=178; gCol=235; bCol=242; }
+        else if (normalized == 128) { rCol=178; gCol=223; bCol=219; }
+        else if (normalized == 256) { rCol=200; gCol=230; bCol=201; }
+        else if (normalized == 512) { rCol=160; gCol=230; bCol=175; }
+        else if (normalized == 1024) { rCol=150; gCol=210; bCol=250; }
+        else if (normalized == 2048) { rCol=255; gCol=225; bCol=130; }
+        else if (normalized > 2048) { rCol=210; gCol=160; bCol=250; }
+        if (val == -3) { rCol=240; gCol=100; bCol=100; }
+        if (val == -2) { rCol=255; gCol=215; bCol=0; }
+        if (val == -1) { rCol=150; gCol=150; bCol=160; }
+        if (val == 0) { rCol = 245; gCol = 240; bCol = 245; }
+    }
+    return RGB(rCol, gCol, bCol);
+}
+
+void DrawBadgeIcon(HDC hdc, int x, int y, int size, int val) {
+    int normalized = val;
+    if (ruleset == 1 && val > 0) {
+        if (val >= 377) normalized = 2048;
+        else if (val >= 233) normalized = 1024;
+        else if (val >= 144) normalized = 512;
+        else if (val >= 89) normalized = 256;
+    } else if (ruleset == 2 && val > 0) {
+        if (val >= 768) normalized = 2048;
+        else if (val >= 384) normalized = 1024;
+        else if (val >= 192) normalized = 512;
+        else if (val >= 96) normalized = 256;
+    }
+
+    if (normalized >= 2048) {
+        // Golden Crown Icon
+        POINT points[7];
+        int w = size / 4;
+        int h = size / 5;
+        int px = x + size - w - 6;
+        int py = y + 6;
+
+        points[0].x = px;           points[0].y = py + h;
+        points[1].x = px;           points[1].y = py;
+        points[2].x = px + w / 3;   points[2].y = py + h / 2;
+        points[3].x = px + w / 2;   points[3].y = py - 2;
+        points[4].x = px + 2*w / 3; points[4].y = py + h / 2;
+        points[5].x = px + w;       points[5].y = py;
+        points[6].x = px + w;       points[6].y = py + h;
+
+        HBRUSH crownBrush = CreateSolidBrush(RGB(255, 220, 0));
+        HPEN crownPen = CreatePen(PS_SOLID, 1, RGB(180, 140, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, crownBrush);
+        HPEN oldP = (HPEN)SelectObject(hdc, crownPen);
+        Polygon(hdc, points, 7);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(crownBrush);
+        DeleteObject(crownPen);
+    } else if (normalized == 1024) {
+        // Diamond Gem Icon
+        POINT points[4];
+        int w = size / 5;
+        int px = x + size - w - 6;
+        int py = y + 6 + w/2;
+
+        points[0].x = px;        points[0].y = py;
+        points[1].x = px + w/2;  points[1].y = py - w/2;
+        points[2].x = px + w;    points[2].y = py;
+        points[3].x = px + w/2;  points[3].y = py + w/2;
+
+        HBRUSH diaBrush = CreateSolidBrush(RGB(180, 240, 255));
+        HPEN diaPen = CreatePen(PS_SOLID, 1, RGB(50, 150, 220));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, diaBrush);
+        HPEN oldP = (HPEN)SelectObject(hdc, diaPen);
+        Polygon(hdc, points, 4);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(diaBrush);
+        DeleteObject(diaPen);
+    } else if (val == -3) { // Bomb
+        int r = size / 8;
+        int cx = x + size / 2;
+        int cy = y + size / 3;
+        HBRUSH bBrush = CreateSolidBrush(RGB(20, 20, 20));
+        HPEN bPen = CreatePen(PS_SOLID, 1, RGB(255, 60, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, bBrush);
+        HPEN oldP = (HPEN)SelectObject(hdc, bPen);
+        Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+
+        MoveToEx(hdc, cx, cy - r, NULL);
+        LineTo(hdc, cx + r/2, cy - r - 4);
+        SetPixel(hdc, cx + r/2, cy - r - 5, RGB(255, 220, 0));
+
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(bBrush);
+        DeleteObject(bPen);
+    } else if (val == -2) { // Wildcard Star
+        int cx = x + size / 2;
+        int cy = y + size / 3;
+        int s = size / 7;
+        POINT star[10] = {
+            {cx, cy - s}, {cx + s/3, cy - s/3}, {cx + s, cy - s/3}, {cx + s/2, cy + s/4},
+            {cx + 2*s/3, cy + s}, {cx, cy + s/2}, {cx - 2*s/3, cy + s}, {cx - s/2, cy + s/4},
+            {cx - s, cy - s/3}, {cx - s/3, cy - s/3}
+        };
+        HBRUSH sBrush = CreateSolidBrush(RGB(255, 230, 50));
+        HPEN sPen = CreatePen(PS_SOLID, 1, RGB(200, 150, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, sBrush);
+        HPEN oldP = (HPEN)SelectObject(hdc, sPen);
+        Polygon(hdc, star, 10);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(sBrush);
+        DeleteObject(sPen);
+    } else if (val == -1) { // Obstacle
+        int cx = x + size / 2;
+        int cy = y + size / 2;
+        int r = size / 6;
+        HPEN p = CreatePen(PS_SOLID, 3, RGB(220, 60, 60));
+        HPEN oldP = (HPEN)SelectObject(hdc, p);
+        MoveToEx(hdc, cx - r, cy - r, NULL);
+        LineTo(hdc, cx + r, cy + r);
+        MoveToEx(hdc, cx + r, cy - r, NULL);
+        LineTo(hdc, cx - r, cy + r);
+        SelectObject(hdc, oldP);
+        DeleteObject(p);
+    }
+}
+
+void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
+    COLORREF baseColor = GetTileColor(val);
+    int rCol = GetRValue(baseColor);
+    int gCol = GetGValue(baseColor);
+    int bCol = GetBValue(baseColor);
+    int txtCol = 0x000000;
+
+    int originalVal = val;
+    int normalized = val;
+    if (ruleset == 1 && val > 0) {
+        if (val == 1) normalized = 2;
+        else if (val == 3) normalized = 4;
+        else if (val == 5) normalized = 8;
+        else if (val == 13) normalized = 16;
+        else if (val == 21) normalized = 32;
+        else if (val == 34) normalized = 64;
+        else if (val == 55) normalized = 128;
+        else if (val == 89) normalized = 256;
+        else if (val == 144) normalized = 512;
+        else if (val == 233) normalized = 1024;
+        else if (val >= 377) normalized = 2048;
+    } else if (ruleset == 2 && val > 0) {
+        if (val == 1) normalized = 2;
+        else if (val == 2) normalized = 4;
+        else if (val == 3) normalized = 8;
+        else if (val == 6) normalized = 16;
+        else if (val == 12) normalized = 32;
+        else if (val == 24) normalized = 64;
+        else if (val == 48) normalized = 128;
+        else if (val == 96) normalized = 256;
+        else if (val == 192) normalized = 512;
+        else if (val == 384) normalized = 1024;
+        else if (val >= 768) normalized = 2048;
+    }
+
+    if (normalized == 2 || normalized == 4) {
+        txtCol = (theme == 1) ? RGB(119,110,101) : ((theme == 2) ? RGB(74,20,140) : RGB(220,220,220));
+    } else {
+        txtCol = (theme == 2) ? RGB(74,20,140) : RGB(255,255,255);
+    }
+
+    int tileMargin = 4;
+    int rx1 = x + tileMargin;
+    int ry1 = y + tileMargin;
+    int rx2 = x + cell_size - tileMargin;
+    int ry2 = y + cell_size - tileMargin;
+    RECT r = { rx1, ry1, rx2, ry2 };
+
+    if (val == 0) {
+        // Recessed empty cell slot
+        HBRUSH bg = CreateSolidBrush(baseColor);
+        FillRect(hdc, &r, bg);
+        DeleteObject(bg);
+
+        HPEN darkPen = CreatePen(PS_SOLID, 2, RGB(max(0, rCol - 30), max(0, gCol - 30), max(0, bCol - 30)));
+        HPEN oldP = (HPEN)SelectObject(hdc, darkPen);
+        MoveToEx(hdc, rx1, ry2, NULL);
+        LineTo(hdc, rx1, ry1);
+        LineTo(hdc, rx2, ry1);
+        SelectObject(hdc, oldP);
+        DeleteObject(darkPen);
+        return;
+    }
+
+    // Glowing Aura for Milestone Tiles (2048, 1024)
+    if (normalized >= 2048) {
+        int pulse = (frameAnimCount % 12) - 6;
+        if (pulse < 0) pulse = -pulse;
+        int auraSpread = 3 + pulse;
+        RECT auraRect = { rx1 - auraSpread, ry1 - auraSpread, rx2 + auraSpread, ry2 + auraSpread };
+        HBRUSH auraB = CreateSolidBrush(RGB(255, 215, 0));
+        FillRect(hdc, &auraRect, auraB);
+        DeleteObject(auraB);
+    } else if (normalized >= 1024) {
+        RECT auraRect = { rx1 - 3, ry1 - 3, rx2 + 3, ry2 + 3 };
+        HBRUSH auraB = CreateSolidBrush(RGB(80, 180, 255));
+        FillRect(hdc, &auraRect, auraB);
+        DeleteObject(auraB);
+    }
+
+    // 3D Tile Fill
+    HBRUSH bg = CreateSolidBrush(baseColor);
+    FillRect(hdc, &r, bg);
+    DeleteObject(bg);
+
+    // 3D Top/Left Light Highlight Bevel
+    int hlR = min(255, rCol + 70);
+    int hlG = min(255, gCol + 70);
+    int hlB = min(255, bCol + 70);
+    HPEN lightPen = CreatePen(PS_SOLID, 3, RGB(hlR, hlG, hlB));
+    HPEN oldPen = (HPEN)SelectObject(hdc, lightPen);
+    MoveToEx(hdc, rx1 + 1, ry2 - 2, NULL);
+    LineTo(hdc, rx1 + 1, ry1 + 1);
+    LineTo(hdc, rx2 - 2, ry1 + 1);
+
+    // 3D Bottom/Right Dark Shadow Bevel
+    int shR = max(0, rCol - 70);
+    int shG = max(0, gCol - 70);
+    int shB = max(0, bCol - 70);
+    HPEN darkPen = CreatePen(PS_SOLID, 3, RGB(shR, shG, shB));
+    SelectObject(hdc, darkPen);
+    MoveToEx(hdc, rx2 - 2, ry1 + 2, NULL);
+    LineTo(hdc, rx2 - 2, ry2 - 2);
+    LineTo(hdc, rx1 + 2, ry2 - 2);
+
+    // Glossy metallic sheen line
+    HPEN sheenPen = CreatePen(PS_SOLID, 1, RGB(min(255, rCol + 90), min(255, gCol + 90), min(255, bCol + 90)));
+    SelectObject(hdc, sheenPen);
+    MoveToEx(hdc, rx1 + 4, ry1 + 4, NULL);
+    LineTo(hdc, rx2 - 4, ry1 + 4);
+
+    SelectObject(hdc, oldPen);
+    DeleteObject(lightPen);
+    DeleteObject(darkPen);
+    DeleteObject(sheenPen);
+
+    // Draw Badge Icon if applicable
+    DrawBadgeIcon(hdc, rx1, ry1, cell_size - tileMargin*2, originalVal);
+
+    // Draw Text Value with Drop Shadow
+    if (originalVal != 0) {
+        SetBkMode(hdc, TRANSPARENT);
+        char buf[16];
+        if (originalVal == -3) { buf[0] = 'B'; buf[1] = 0; }
+        else if (originalVal == -2) { buf[0] = 'W'; buf[1] = 0; }
+        else if (originalVal == -1) { buf[0] = 'X'; buf[1] = 0; }
+        else {
+            int temp = originalVal;
+            int len = 0;
+            char rev[16];
+            int rlen = 0;
+            while(temp > 0) { rev[rlen++] = '0' + (temp % 10); temp /= 10; }
+            while(rlen > 0) buf[len++] = rev[--rlen];
+            buf[len] = 0;
+        }
+
+        int fontSize = cell_size / 3;
+        if (fontSize < 12) fontSize = 12;
+        HFONT hFont = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+            CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
+        HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
+
+        // Text Drop Shadow
+        RECT rShadow = { r.left + 1, r.top + 1, r.right + 1, r.bottom + 1 };
+        SetTextColor(hdc, RGB(20, 20, 20));
+        DrawTextA(hdc, buf, -1, &rShadow, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        // Main Text
+        SetTextColor(hdc, txtCol);
+        DrawTextA(hdc, buf, -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+        SelectObject(hdc, oldFont);
+        DeleteObject(hFont);
+    }
 }
 
 void LoadBest() {
@@ -236,6 +639,7 @@ void InitGame() {
     powerups_hammers = 3;
     powerups_rotates = 3;
     powerups_upgrades = 1;
+    particleCount = 0;
     if (timerActive) {
         KillTimer(mainHwnd, 1);
         timerActive = 0;
@@ -300,7 +704,6 @@ void StartCampaignLevel() {
         else if (campaignLevel == 28) timeRemaining = 150;
         else if (campaignLevel == 29) timeRemaining = 120;
         else if (campaignLevel >= 30) timeRemaining = 180;
-
     }
 }
 
@@ -353,130 +756,6 @@ int CheckGameOver() {
         }
     }
     return 1;
-}
-
-void DrawCell(HDC hdc, int x, int y, int val, int cell_size) {
-    RECT r = { x, y, x + cell_size - 8, y + cell_size - 8 };
-    
-    int rCol = 200, gCol = 200, bCol = 200;
-    int txtCol = 0x000000;
-    
-    int originalVal = val;
-    if (ruleset == 1 && val > 0) {
-        if (val == 1) val = 2;
-        else if (val == 3) val = 4;
-        else if (val == 5) val = 8;
-        else if (val == 13) val = 16;
-        else if (val == 21) val = 32;
-        else if (val == 34) val = 64;
-        else if (val == 55) val = 128;
-        else if (val == 89) val = 256;
-        else if (val == 144) val = 512;
-        else if (val == 233) val = 1024;
-        else if (val >= 377) val = 2048;
-    } else if (ruleset == 2 && val > 0) {
-        if (val == 1) val = 2;
-        else if (val == 2) val = 4;
-        else if (val == 3) val = 8;
-        else if (val == 6) val = 16;
-        else if (val == 12) val = 32;
-        else if (val == 24) val = 64;
-        else if (val == 48) val = 128;
-        else if (val == 96) val = 256;
-        else if (val == 192) val = 512;
-        else if (val == 384) val = 1024;
-        else if (val >= 768) val = 2048;
-    }
-
-    if (theme == 0) { // Dark
-        if (val == 2) { rCol=60; gCol=60; bCol=70; txtCol=0xdddddd; }
-        else if (val == 4) { rCol=80; gCol=80; bCol=90; txtCol=0xeeeeee; }
-        else if (val == 8) { rCol=242; gCol=177; bCol=121; txtCol=0xFFFFFF; }
-        else if (val == 16) { rCol=245; gCol=149; bCol=99; txtCol=0xFFFFFF; }
-        else if (val == 32) { rCol=246; gCol=124; bCol=95; txtCol=0xFFFFFF; }
-        else if (val == 64) { rCol=246; gCol=94; bCol=59; txtCol=0xFFFFFF; }
-        else if (val == 128) { rCol=237; gCol=207; bCol=114; txtCol=0xFFFFFF; }
-        else if (val == 256) { rCol=237; gCol=204; bCol=97; txtCol=0xFFFFFF; }
-        else if (val == 512) { rCol=237; gCol=200; bCol=80; txtCol=0xFFFFFF; }
-        else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
-        else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
-        else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
-        if (val == -3) { rCol=220; gCol=20; bCol=20; txtCol=0xFFFFFF; }
-        if (val == -2) { rCol=255; gCol=215; bCol=0; txtCol=0x000000; }
-        if (val == -1) { rCol=85; gCol=85; bCol=85; txtCol=0xFFFFFF; }
-        if (val == 0) { rCol = 40; gCol = 40; bCol = 40; }
-    } else if (theme == 1) { // Classic
-        if (val == 2) { rCol=238; gCol=228; bCol=218; txtCol=RGB(119,110,101); }
-        else if (val == 4) { rCol=237; gCol=224; bCol=200; txtCol=RGB(119,110,101); }
-        else if (val == 8) { rCol=242; gCol=177; bCol=121; txtCol=0xFFFFFF; }
-        else if (val == 16) { rCol=245; gCol=149; bCol=99; txtCol=0xFFFFFF; }
-        else if (val == 32) { rCol=246; gCol=124; bCol=95; txtCol=0xFFFFFF; }
-        else if (val == 64) { rCol=246; gCol=94; bCol=59; txtCol=0xFFFFFF; }
-        else if (val == 128) { rCol=237; gCol=207; bCol=114; txtCol=0xFFFFFF; }
-        else if (val == 256) { rCol=237; gCol=204; bCol=97; txtCol=0xFFFFFF; }
-        else if (val == 512) { rCol=237; gCol=200; bCol=80; txtCol=0xFFFFFF; }
-        else if (val == 1024) { rCol=237; gCol=197; bCol=63; txtCol=0xFFFFFF; }
-        else if (val == 2048) { rCol=237; gCol=194; bCol=46; txtCol=0xFFFFFF; }
-        else if (val > 2048) { rCol=60; gCol=58; bCol=50; txtCol=0xFFFFFF; }
-        if (val == -3) { rCol=220; gCol=20; bCol=20; txtCol=0xFFFFFF; }
-        if (val == -2) { rCol=255; gCol=215; bCol=0; txtCol=0x000000; }
-        if (val == -1) { rCol=85; gCol=85; bCol=85; txtCol=0xFFFFFF; }
-        if (val == 0) { rCol = 204; gCol = 192; bCol = 179; }
-    } else { // Pastel
-        if (val == 2) { rCol=225; gCol=190; bCol=231; txtCol=RGB(74,20,140); }
-        else if (val == 4) { rCol=209; gCol=196; bCol=233; txtCol=RGB(74,20,140); }
-        else if (val == 8) { rCol=197; gCol=202; bCol=233; txtCol=RGB(74,20,140); }
-        else if (val == 16) { rCol=187; gCol=222; bCol=251; txtCol=RGB(74,20,140); }
-        else if (val == 32) { rCol=179; gCol=229; bCol=252; txtCol=RGB(74,20,140); }
-        else if (val == 64) { rCol=178; gCol=235; bCol=242; txtCol=RGB(74,20,140); }
-        else if (val == 128) { rCol=178; gCol=223; bCol=219; txtCol=RGB(74,20,140); }
-        else if (val == 256) { rCol=200; gCol=230; bCol=201; txtCol=RGB(74,20,140); }
-        else if (val == 512) { rCol=220; gCol=237; bCol=200; txtCol=RGB(74,20,140); }
-        else if (val == 1024) { rCol=240; gCol=244; bCol=195; txtCol=RGB(74,20,140); }
-        else if (val == 2048) { rCol=255; gCol=249; bCol=196; txtCol=RGB(74,20,140); }
-        else if (val > 2048) { rCol=150; gCol=150; bCol=150; txtCol=RGB(74,20,140); }
-        if (val == -3) { rCol=220; gCol=20; bCol=20; txtCol=0xFFFFFF; }
-        if (val == -2) { rCol=255; gCol=215; bCol=0; txtCol=0x000000; }
-        if (val == -1) { rCol=100; gCol=100; bCol=100; txtCol=0xFFFFFF; }
-        if (val == 0) { rCol = 255; gCol = 255; bCol = 255; }
-    }
-
-    HBRUSH bg = CreateSolidBrush(RGB(rCol, gCol, bCol));
-    FillRect(hdc, &r, bg);
-    DeleteObject(bg);
-
-    if (originalVal != 0) {
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, txtCol);
-        char buf[16];
-        if (originalVal == -3) {
-            buf[0] = 'B';
-            buf[1] = 0;
-        } else if (originalVal == -2) {
-            buf[0] = 'W';
-            buf[1] = 0;
-        } else if (originalVal == -1) {
-            buf[0] = 'X';
-            buf[1] = 0;
-        } else {
-            int temp = originalVal;
-            int len = 0;
-            char rev[16];
-            int rlen = 0;
-            while(temp > 0) { rev[rlen++] = '0' + (temp % 10); temp /= 10; }
-            while(rlen > 0) buf[len++] = rev[--rlen];
-            buf[len] = 0;
-        }
-
-        int fontSize = cell_size / 3;
-        if (fontSize < 12) fontSize = 12;
-        HFONT hFont = CreateFontA(fontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-            CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Arial");
-        HFONT oldFont = (HFONT)SelectObject(hdc, hFont);
-        DrawTextA(hdc, buf, -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-        SelectObject(hdc, oldFont);
-        DeleteObject(hFont);
-    }
 }
 
 void DrawBoard(HDC hdc) {
@@ -552,20 +831,38 @@ void DrawBoard(HDC hdc) {
     RECT helpRect2 = { MARGIN, HEADER_HEIGHT / 2, 250, HEADER_HEIGHT };
     DrawTextA(hdc, helpBuf2, -1, &helpRect2, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
+    // 3D Board Outer Frame
     RECT boardBg = { MARGIN, HEADER_HEIGHT, MARGIN + grid_size*cell_size + 8, HEADER_HEIGHT + grid_size*cell_size + 8 };
     HBRUSH boardBrush = CreateSolidBrush(RGB(boardR, boardG, boardB));
     FillRect(hdc, &boardBg, boardBrush);
     DeleteObject(boardBrush);
 
+    // 3D Frame Edge Highlights & Shadow
+    HPEN fLight = CreatePen(PS_SOLID, 3, RGB(min(255, boardR + 50), min(255, boardG + 50), min(255, boardB + 50)));
+    HPEN fDark = CreatePen(PS_SOLID, 3, RGB(max(0, boardR - 50), max(0, boardG - 50), max(0, boardB - 50)));
+    HPEN oldP = (HPEN)SelectObject(hdc, fLight);
+    MoveToEx(hdc, boardBg.left - 2, boardBg.bottom + 2, NULL);
+    LineTo(hdc, boardBg.left - 2, boardBg.top - 2);
+    LineTo(hdc, boardBg.right + 2, boardBg.top - 2);
+    SelectObject(hdc, fDark);
+    LineTo(hdc, boardBg.right + 2, boardBg.bottom + 2);
+    LineTo(hdc, boardBg.left - 2, boardBg.bottom + 2);
+    SelectObject(hdc, oldP);
+    DeleteObject(fLight);
+    DeleteObject(fDark);
+
+    // Draw Cells
     for (int i = 0; i < grid_size; i++) {
         for (int j = 0; j < grid_size; j++) {
             DrawCell(hdc, MARGIN + 8 + j*cell_size, HEADER_HEIGHT + 8 + i*cell_size, grid[i][j], cell_size);
         }
     }
 
+    // Draw Particles on Top
+    UpdateAndDrawParticles(hdc);
+
     if (gameOver || win) {
         HBRUSH overlay = CreateSolidBrush(gameOver ? RGB(238,228,218) : RGB(237,194,46));
-        // Pseudo-transparency is hard in basic GDI, we just draw a solid rect in the middle
         RECT msgRect = { MARGIN + 20, HEADER_HEIGHT + 100, MARGIN + grid_size*cell_size - 12, HEADER_HEIGHT + 200 };
         FillRect(hdc, &msgRect, overlay);
         DeleteObject(overlay);
@@ -619,7 +916,7 @@ int Move(int dx, int dy) {
                         if (mergeRes == -100) {
                             grid[ni][nj] = 0;
                             grid[ci][cj] = 0;
-                            score += 10; // small bonus
+                            score += 10;
                         } else {
                             grid[ni][nj] = mergeRes;
                             grid[ci][cj] = 0;
@@ -633,6 +930,14 @@ int Move(int dx, int dy) {
                                 hasWon = 1;
                             }
                         }
+
+                        // Spawn Merge Particle Explosions!
+                        int cell_size = 320 / grid_size;
+                        int px = MARGIN + 8 + nj * cell_size + cell_size / 2;
+                        int py = HEADER_HEIGHT + 8 + ni * cell_size + cell_size / 2;
+                        COLORREF pColor = GetTileColor(mergeRes);
+                        SpawnMergeParticles(px, py, pColor);
+
                         if (score > bestScore) {
                             bestScore = score;
                             SaveBest();
@@ -735,11 +1040,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             LoadStats();
             InitGame();
             SetTimer(hwnd, 3, 1000, NULL);
+            SetTimer(hwnd, 4, 30, NULL); // Particle & Animation timer loop
             return 0;
         case WM_ERASEBKGND:
-            return 1; // Prevent background clear to fix flickering
+            return 1; // Prevent flickering
         case WM_TIMER:
-            if (wParam == 3) {
+            if (wParam == 4) {
+                frameAnimCount++;
+                if (particleCount > 0) {
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+                return 0;
+            } else if (wParam == 3) {
                 if (!gameOver && gameStarted && !win) {
                     stats_timePlayed++;
                     if (stats_timePlayed % 10 == 0) SaveStats();
@@ -789,13 +1101,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (wParam == 'U' || wParam == 'u' || (wParam == 'Z' && (GetKeyState(VK_CONTROL) & 0x8000))) {
-                if (historyCount > 0 && !gameOver && !win) {
-                    historyCount--;
-                    memcpy(grid, &history[historyCount].grid, sizeof(grid));
-                    score = history[historyCount].score;
-                    InvalidateRect(hwnd, NULL, TRUE);
-                } } else if (wParam == 'P' || wParam == 'p') {
+            } else if (wParam == 'P' || wParam == 'p') {
                 autoPlayEnabled = !autoPlayEnabled;
                 if (autoPlayEnabled) {
                     SetTimer(hwnd, 2, 250, NULL);
@@ -845,7 +1151,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         grid[maxI][maxJ] = nextVal;
                         InvalidateRect(hwnd, NULL, TRUE);
                     }
-                } } else if (wParam == 'F' || wParam == 'f') {
+                }
+            } else if (wParam == 'F' || wParam == 'f') {
                 ruleset = (ruleset + 1) % 3;
                 InitGame();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -953,7 +1260,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if (wParam == VK_DOWN || wParam == 'S') moved = Move(0, 1);
                 if (moved) InvalidateRect(hwnd, NULL, TRUE);
             } else if (win) {
-                // allow playing past 2048
                 if (wParam == VK_SPACE || wParam == VK_RETURN) {
                     win = 0;
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -990,9 +1296,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 #ifndef EXCLUDE_MAIN
-void __stdcall WINUSERAPI PostQuitMessage(int nExitCode);
-LRESULT __stdcall WINUSERAPI DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
-
 int WINAPI MainEntry() {
     HINSTANCE hInstance = GetModuleHandleA(NULL);
     WNDCLASSA wc = {0};

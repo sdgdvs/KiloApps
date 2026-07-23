@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- K2048
 - KSolitaire
 - KConnect4
 - KHangman
@@ -107,6 +106,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPong
 - KMines
 - KAsteroids
+- K2048
 
 ## Completed Work Log
 
@@ -121,6 +121,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **KPong (Loop 1):** Implemented futuristic neon metallic paddles with glowing center core lines and directional thruster flame effects, glowing energy ball with color-coded motion trails, powerup capsules with distinct badges (Golden Expand, Red Shrink, Ice Freeze), laser hazard obstacles, wall & goal impact particle bursts with expanding shockwave rings, and retro arcade CRT scanlines for both Web Canvas (kpong.html) and Native C Win32 GDI (KPong/main.c).
 - **KMines (Loop 1):** Implemented 3D raised/beveled cell tiles with sunken revealed state, detailed iron mine bomb sprite with flickering fuse spark animation, animated crimson silk flag sprite on silver pole, cyan glowing question mark badge tile, interactive smiley status button with 4 animated expression states (normal happy, shocked click, wounded loss, cool sunglasses win), colored number tile texturing, and multi-color particle explosion debris & smoke burst FX for both Web Canvas/DOM (kmines.html) and Native C Win32 GDI (KMines/main.c).
 - **KAsteroids (Loop 1):** Implemented detailed space fighter spaceship sprite with animated twin thruster flames & glowing shield bubble aura, 3 distinct rotating asteroid rock texture designs (Basalt Slate, Iron Rust, Cryo Ice) with inner craters & surface facets, alien saucer UFO enemy sprites with pulsing glass domes & blinking rim LEDs, Boss Mother UFO with satellite energy orbs & health bar, glowing plasma laser bullets, shockwave explosion FX, and twinkling parallax space starfield background for both Web Canvas (kasteroids.html) and Native C Win32 GDI (KAsteroids/main.c).
+- **K2048 (Loop 1):** Implemented 3D metallic & gem tile texturing with distinct color themes for values 2 through 4096+, custom SVG and GDI badge icons (Crown for 2048+, Diamond for 1024, Stars for 256/512, Bomb & Wildcard badges), smooth merge pop animations with micro-wobble, 3D wooden/brushed metal board frame styling, milestone glowing aura rings, and interactive merge particle spark explosions for both Web Canvas/HTML (k2048.html) and Native C Win32 GDI (K2048/main.c).
 
 
 
