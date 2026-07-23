@@ -1,57 +1,300 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Task Manager</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: hsl(210, 15%, 12%);
-    --card-bg: hsl(210, 15%, 20%);
-    --primary: hsl(0, 85%, 60%); /* Red accent for kill */
+    --card-bg: hsl(210, 15%, 18%);
+    --card-hover: hsl(210, 15%, 23%);
+    --primary: hsl(200, 85%, 60%);
+    --primary-muted: rgba(56, 189, 248, 0.15);
+    --danger: hsl(0, 85%, 60%);
     --border-color: rgba(255, 255, 255, 0.1);
     --text-main: #ffffff;
+    --text-muted: #94a3b8;
+    --success: #34d399;
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); }
-  .toolbar { background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 8px; font-size: 13px; display: flex; gap: 10px; align-items: center;}
-  .toolbar button { cursor: pointer; padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; transition: all 0.15s ease; }
-  .toolbar button:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { text-align: left; padding: 10px 15px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
-  th { background: var(--card-bg); font-weight: 600; color: #aaa; position: sticky; top: 0; }
-  tr:hover { background: rgba(255,255,255,0.05); }
-  .kill-btn { background: rgba(255, 85, 85, 0.2); color: #ff6b6b; border: 1px solid rgba(255, 85, 85, 0.4); border-radius: 4px; cursor: pointer; padding: 4px 12px; font-size: 12px; transition: all 0.2s; }
-  .kill-btn:hover { background: #ff5555; color: white; }
-  .table-container { height: calc(100% - 41px); overflow-y: auto; }
+  
+  * { box-sizing: border-box; }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .toolbar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 16px;
+    font-size: 13px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-title {
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-main);
+  }
+
+  .controls-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .input-ctrl, .select-ctrl {
+    padding: 5px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.15s ease;
+  }
+
+  .select-ctrl option {
+    background: #1e293b;
+    color: #fff;
+  }
+
+  .input-ctrl:focus-visible, .select-ctrl:focus-visible {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-muted);
+  }
+
+  .btn {
+    cursor: pointer;
+    padding: 5px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .metrics-bar {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 16px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .table-container {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .table-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  .table-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 13px;
+  }
+
+  th {
+    background: var(--card-bg);
+    font-weight: 600;
+    color: var(--text-muted);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  tr {
+    transition: background 0.1s ease;
+    cursor: pointer;
+  }
+
+  tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  tr.selected {
+    background: rgba(56, 189, 248, 0.12);
+  }
+
+  .kill-btn {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ff6b6b;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .kill-btn:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+  }
+
+  .kill-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--danger);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    background: #1e293b;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s ease;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 <body>
   <div class="toolbar">
-    <button onclick="refresh()">Refresh Tasks</button>
-    <div style="flex:1"></div>
-    <div style="font-size: 11px; color: #888;">CPU: ~3% | RAM: ~14MB</div>
+    <div class="toolbar-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      Task Manager
+    </div>
+
+    <div class="controls-group">
+      <label for="searchInput" class="sr-only">Search processes</label>
+      <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter tasks..." aria-label="Filter tasks" oninput="render()">
+
+      <label for="sortSelect" class="sr-only">Sort by</label>
+      <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="render()">
+        <option value="name">Sort: Title</option>
+        <option value="pid">Sort: PID</option>
+      </select>
+
+      <label class="toggle-label">
+        <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"> Auto
+      </label>
+
+      <button class="btn" onclick="refresh()" aria-label="Refresh Task List (Hotkey: R or F5)">Refresh</button>
+    </div>
   </div>
-  <div class="table-container">
-    <table id="task-table">
+
+  <div class="metrics-bar">
+    <span id="status-info">Loading active tasks...</span>
+    <span>CPU: ~3% | RAM: ~14MB</span>
+  </div>
+
+  <div class="table-container" tabindex="0" aria-label="Tasks list container" onkeydown="handleTableKeyDown(event)">
+    <table id="task-table" role="grid" aria-label="Running Tasks List">
       <thead>
         <tr>
-          <th>Application Title</th>
-          <th style="width: 150px;">Process ID</th>
-          <th style="width: 100px; text-align: right;">Action</th>
+          <th scope="col">Application Title</th>
+          <th scope="col" style="width: 160px;">Process ID</th>
+          <th scope="col" style="width: 110px; text-align: right;">Action</th>
         </tr>
       </thead>
-      <tbody id="task-list">
+      <tbody id="task-list" aria-live="polite">
       </tbody>
     </table>
   </div>
 
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
   <script>
     let currentReqId = 0;
     const callbacks = {};
+    let tasksData = [];
+    let selectedTaskId = null;
+    let autoInterval = null;
 
     window.addEventListener('message', (e) => {
       const msg = e.data;
-      if (msg.type === 'OS_LIST_TASKS_DONE' && callbacks[msg.requestId]) {
+      if (msg && msg.type === 'OS_LIST_TASKS_DONE' && callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg.tasks);
         delete callbacks[msg.requestId];
       }
@@ -65,38 +308,152 @@
       });
     }
 
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
     async function refresh() {
-      const tasks = await sendToOS({ type: 'OS_LIST_TASKS' });
+      try {
+        const res = await sendToOS({ type: 'OS_LIST_TASKS' });
+        tasksData = Array.isArray(res) ? res : [];
+        render();
+      } catch (err) {
+        console.error('Failed to list tasks:', err);
+      }
+    }
+
+    function render() {
       const tbody = document.getElementById('task-list');
+      const statusInfo = document.getElementById('status-info');
+      const filter = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      const sortBy = document.getElementById('sortSelect')?.value || 'name';
+
       tbody.innerHTML = '';
-      
-      if (tasks.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #888;">No tasks running</td></tr>';
+
+      let filtered = tasksData.filter(t => {
+        const title = String(t.title || '').toLowerCase();
+        const id = String(t.id || '').toLowerCase();
+        return title.includes(filter) || id.includes(filter);
+      });
+
+      filtered.sort((a, b) => {
+        const tA = String(a.title || '');
+        const tB = String(b.title || '');
+        const idA = String(a.id || '');
+        const idB = String(b.id || '');
+        if (sortBy === 'name') return tA.localeCompare(tB);
+        return idA.localeCompare(idB, undefined, { numeric: true });
+      });
+
+      if (statusInfo) {
+        statusInfo.textContent = `Tasks: ${filtered.length} shown (${tasksData.length} total)`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #888; padding: 20px;">No matching tasks running</td></tr>';
         return;
       }
 
-      tasks.forEach(task => {
+      filtered.forEach(task => {
+        const taskId = String(task.id || 'N/A');
+        const taskTitle = String(task.title || 'Untitled Process');
+
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="task-title-cell"></td>
-          <td class="task-id-cell" style="font-family: monospace; color: #888;"></td>
-          <td style="text-align: right;"><button class="kill-btn">End Task</button></td>
-        `;
-        tr.querySelector('.task-title-cell').textContent = task.title;
-        tr.querySelector('.task-id-cell').textContent = task.id.slice(0,8) + '...';
-        tr.querySelector('.kill-btn').onclick = () => killTask(task.id);
+        if (taskId === selectedTaskId) tr.classList.add('selected');
+
+        tr.onclick = () => {
+          document.querySelectorAll('#task-list tr').forEach(r => r.classList.remove('selected'));
+          tr.classList.add('selected');
+          selectedTaskId = taskId;
+        };
+
+        const tdTitle = document.createElement('td');
+        tdTitle.textContent = taskTitle;
+
+        const tdId = document.createElement('td');
+        tdId.style.fontFamily = 'monospace';
+        tdId.style.color = '#94a3b8';
+        tdId.textContent = taskId.length > 12 ? taskId.slice(0, 12) + '...' : taskId;
+
+        const tdAction = document.createElement('td');
+        tdAction.style.textAlign = 'right';
+
+        const btnKill = document.createElement('button');
+        btnKill.className = 'kill-btn';
+        btnKill.textContent = 'End Task';
+        btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
+        btnKill.onclick = (e) => {
+          e.stopPropagation();
+          killTask(taskId, taskTitle);
+        };
+
+        tdAction.appendChild(btnKill);
+        tr.appendChild(tdTitle);
+        tr.appendChild(tdId);
+        tr.appendChild(tdAction);
         tbody.appendChild(tr);
       });
     }
 
-    function killTask(taskId) {
+    function killTask(taskId, taskTitle) {
+      if (!taskId) return;
       window.parent.postMessage({ type: 'OS_KILL_TASK', taskId: taskId }, '*');
-      setTimeout(refresh, 100);
+      showToast(`Terminating ${taskTitle || taskId}...`);
+      setTimeout(refresh, 150);
     }
 
-    // Auto-refresh periodically
+    function handleTableKeyDown(e) {
+      if (e.key === 'Delete' && selectedTaskId) {
+        const task = tasksData.find(t => String(t.id) === selectedTaskId);
+        killTask(selectedTaskId, task ? task.title : selectedTaskId);
+      }
+    }
+
+    function toggleAutoRefresh() {
+      const isChecked = document.getElementById('autoRefreshToggle')?.checked;
+      if (isChecked) startAutoRefresh();
+      else stopAutoRefresh();
+    }
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      autoInterval = setInterval(() => {
+        if (!document.hidden) refresh();
+      }, 2500);
+    }
+
+    function stopAutoRefresh() {
+      if (autoInterval) {
+        clearInterval(autoInterval);
+        autoInterval = null;
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
+        e.preventDefault();
+        refresh();
+      } else if (e.key === 'Escape') {
+        const search = document.getElementById('searchInput');
+        if (search && search.value) {
+          search.value = '';
+          render();
+        }
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopAutoRefresh();
+      else if (document.getElementById('autoRefreshToggle')?.checked) startAutoRefresh();
+    });
+
     refresh();
-    setInterval(refresh, 2000);
+    startAutoRefresh();
   </script>
 </body>
 </html>
