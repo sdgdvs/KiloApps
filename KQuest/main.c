@@ -276,6 +276,50 @@ static void my_memset(void* dest, int val, size_t n) {
     while (n--) *d++ = (char)val;
 }
 
+// Phase 13: Native Win32 Sound Effects Engine
+static int g_SoundEnabled = 1;
+
+void SfxCombatHit() {
+    if (!g_SoundEnabled) return;
+    Beep(160, 60);
+    Beep(100, 70);
+}
+
+void SfxSpellCast() {
+    if (!g_SoundEnabled) return;
+    Beep(350, 60);
+    Beep(550, 70);
+    Beep(750, 80);
+}
+
+void SfxLevelUp() {
+    if (!g_SoundEnabled) return;
+    Beep(262, 80);  // C4
+    Beep(330, 80);  // E4
+    Beep(392, 80);  // G4
+    Beep(523, 150); // C5
+}
+
+void SfxItemPickup() {
+    if (!g_SoundEnabled) return;
+    Beep(587, 50); // D5
+    Beep(880, 80); // A5
+}
+
+void SfxDoorOpen() {
+    if (!g_SoundEnabled) return;
+    Beep(180, 70);
+    Beep(320, 100);
+}
+
+void SfxDeath() {
+    if (!g_SoundEnabled) return;
+    Beep(300, 100);
+    Beep(220, 120);
+    Beep(160, 140);
+    Beep(100, 200);
+}
+
 void UnlockAchievement(int id) {
     if (id < 0 || id >= 10) return;
     if (!g_Achievements[id]) {
@@ -621,6 +665,7 @@ int AddInvItem(const char* name, int type, int eqType, int bonusStr, int bonusDe
     lstrcpyA(it->desc, desc);
 
     player.invCount++;
+    SfxItemPickup();
     return 1;
 }
 
@@ -1163,6 +1208,7 @@ void CheckLevelUp() {
         player.maxHp += 15; player.hp = player.maxHp;
         player.maxMp += 10; player.mp = player.maxMp;
         player.str += 3; player.intStat += 2; player.def += 2; player.agi += 2;
+        SfxLevelUp();
         char msg[128];
         wsprintfA(msg, "🌟 LEVEL UP! Reached Level %d! Gained +2 Skill Points! Visit Training Hall in Town.", player.level);
         LogMessage(msg);
@@ -1269,6 +1315,7 @@ void EnemyTurn() {
     }
 
     player.hp -= dmg;
+    SfxCombatHit();
     char msg[128];
     wsprintfA(msg, "💥 %s attacks you for %d damage!", currentEnemy.name, dmg);
     LogMessage(msg);
@@ -1296,6 +1343,7 @@ void EnemyTurn() {
 
     if (player.hp <= 0) {
         player.hp = 0;
+        SfxDeath();
         if (player.arenaActive) {
             player.arenaActive = 0;
             char fmsg[128];
@@ -1462,6 +1510,7 @@ void HandleButton1() {
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
         gameState = STATE_DUNGEON;
+        SfxDoorOpen();
         char msg[128];
         wsprintfA(msg, "You venture into %s...", g_Biomes[player.biome].name);
         LogMessage(msg);
@@ -1514,6 +1563,7 @@ void HandleButton1() {
             player.gold += g;
             player.ironScrap += 1;
             player.arcaneDust += 1;
+            SfxItemPickup();
             char msg[128];
             wsprintfA(msg, "✨ Found a treasure chest in %s with %d Gold, +1 Iron Scrap, +1 Arcane Dust!", g_Biomes[player.biome].name, g);
             LogMessage(msg);
@@ -1533,6 +1583,7 @@ void HandleButton1() {
             LogMessage(msg);
             if (player.hp <= 0) {
                 player.hp = 0;
+                SfxDeath();
                 LogMessage("💀 Slain by environmental hazard!");
                 gameState = STATE_GAME_OVER;
                 SetupButtons();
@@ -1549,6 +1600,7 @@ void HandleButton1() {
             UpdateUI();
         }
     } else if (gameState == STATE_COMBAT) {
+        SfxCombatHit();
         int offMult = 100 + (player.offensePoints * 8);
         int totalStr = player.str + player.weaponBonusStr;
         int dmg = (int)(((totalStr * 12 - currentEnemy.def * 5) * offMult) / 1000);
@@ -1749,6 +1801,7 @@ void HandleButton2() {
         }
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
+        SfxDoorOpen();
         PayCompanionUpkeep();
 
         for (int i = 0; i < g_ActiveBountyCount; i++) {
@@ -1774,6 +1827,7 @@ void HandleButton2() {
 
         if (player.mp >= cost) {
             player.mp -= cost;
+            SfxSpellCast();
             int surgeMult = player.manaSurgeActive ? 150 : 100;
             if (player.manaSurgeActive) {
                 LogMessage("⚡ Mana Surge empowers your spell power by +50%!");
@@ -1880,6 +1934,7 @@ void HandleButton3() {
     } else if (gameState == STATE_TOWN) {
         player.biome = (player.biome + 1) % 3;
         player.floor = 1;
+        SfxDoorOpen();
         char msg[128];
         wsprintfA(msg, "MAP Selected Dungeon Biome: %s (Hazard: %s)", g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName);
         LogMessage(msg);
@@ -1928,12 +1983,14 @@ void HandleButton3() {
         if (player.greaterHpPotions > 0) {
             player.greaterHpPotions--;
             player.hp = (player.hp + 70 > player.maxHp) ? player.maxHp : player.hp + 70;
+            SfxSpellCast();
             LogMessage("🧪 Drank Greater HP Elixir (+70 HP)!");
             UpdateUI();
             if (gameState == STATE_COMBAT) EnemyTurn();
         } else if (player.hpPotions > 0) {
             player.hpPotions--;
             player.hp = (player.hp + 35 > player.maxHp) ? player.maxHp : player.hp + 35;
+            SfxSpellCast();
             LogMessage("🧪 Drank Health Potion (+35 HP)!");
             UpdateUI();
             if (gameState == STATE_COMBAT) EnemyTurn();
@@ -2172,11 +2229,13 @@ void HandleButton5() {
             player.elementalCore -= 2;
             player.arcaneDust -= 1;
             lstrcpyA(player.weaponPrefix, "Flaming");
+            SfxSpellCast();
             LogMessage("🔥 Imbued weapon with Flaming Enchantment (+6 Fire Dmg)!");
         } else if (lstrcmpA(player.weaponPrefix, "Vampiric") != 0 && player.arcaneDust >= 2 && player.ironScrap >= 1) {
             player.arcaneDust -= 2;
             player.ironScrap -= 1;
             lstrcpyA(player.weaponPrefix, "Vampiric");
+            SfxSpellCast();
             LogMessage("🩸 Imbued weapon with Vampiric Enchantment (25% Lifesteal)!");
         } else if (lstrcmpA(player.armorPrefix, "Fortified") != 0 && player.ironScrap >= 2 && player.arcaneDust >= 1) {
             player.ironScrap -= 2;
@@ -2184,12 +2243,14 @@ void HandleButton5() {
             lstrcpyA(player.armorPrefix, "Fortified");
             player.armorBonusDef += 5;
             player.maxHp += 20; player.hp += 20;
+            SfxSpellCast();
             LogMessage("🛡️ Imbued armor with Fortified Enchantment (+5 DEF, +20 Max HP)!");
         } else if (lstrcmpA(player.armorPrefix, "Spiked") != 0 && player.ironScrap >= 2 && player.elementalCore >= 1) {
             player.ironScrap -= 2;
             player.elementalCore -= 1;
             lstrcpyA(player.armorPrefix, "Spiked");
             player.armorBonusDef += 3;
+            SfxSpellCast();
             LogMessage("🌵 Imbued armor with Spiked Enchantment (Reflects 35% damage)!");
         } else {
             LogMessage("Need materials for next imbuing tier (e.g. 2 Cores/Dust & 1 Scrap/Dust)!");
@@ -2273,6 +2334,7 @@ void HandleButton6() {
             // Execute Ability
             if (player.mp >= 12) {
                 player.mp -= 12;
+                SfxCombatHit();
                 int offMult = 100 + (player.offensePoints * 8);
                 int totalStr = player.str + player.weaponBonusStr;
                 int dmg = (int)(totalStr * 3 * offMult / 100);
@@ -2306,6 +2368,7 @@ void HandleButton6() {
             // Iron Will Ability
             if (player.mp >= 8) {
                 player.mp -= 8;
+                SfxSpellCast();
                 player.ironWillTurns = 2;
                 player.hp += 20;
                 if (player.hp > player.maxHp) player.hp = player.maxHp;
@@ -2320,6 +2383,7 @@ void HandleButton6() {
             player.mp += 35;
             if (player.mp > player.maxMp) player.mp = player.maxMp;
             player.manaSurgeActive = 1;
+            SfxSpellCast();
             LogMessage("⚡ Activated MANA SURGE! Recovered +35 MP! Next spell power boosted by +50%!");
             UpdateUI();
             SetupButtons();
@@ -2359,7 +2423,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 11: Inventory Management Upgrade Active!");
+            LogMessage("Phase 13: Native Win32 Sound Effects Engine Active!");
             break;
         }
         case WM_COMMAND: {

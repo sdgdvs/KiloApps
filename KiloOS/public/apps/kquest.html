@@ -379,8 +379,9 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 12</span></h1>
-    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Save Slots, NG+ Mode & Achievements)</div>
+    <h1>🗡️ KQuest <span class="badge">Phase 13</span></h1>
+    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API Sound Effects, Save Slots & NG+)</div>
+    <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
   </header>
 
   <!-- Player Stats Header Bar -->
@@ -436,7 +437,7 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 12: Save Slots & New Game Plus (Multiple Save Slots, NG+ Mode with Scaled Enemies & Achievements Tracker)!</div>
+        <div class="log-entry system">Phase 13: Web Audio API Sound Effects (Combat hits, Spell casts, Level ups, Item pickups, Door opens, Death tones)!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -532,6 +533,136 @@
   </div>
 
   <script>
+    // --- PHASE 13: WEB AUDIO API SOUND EFFECTS ENGINE ---
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleAudio() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('audio-toggle-btn');
+      if (btn) {
+        btn.textContent = soundEnabled ? '🔊 SFX: ON' : '🔇 SFX: OFF';
+      }
+      logMsg(`Audio Sound Effects ${soundEnabled ? 'ENABLED 🔊' : 'DISABLED 🔇'}.`, 'system');
+      if (soundEnabled) sfxItemPickup();
+    }
+
+    function playTone(freq, duration, type = 'sine', startVol = 0.15, endVol = 0.001) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(startVol, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(Math.max(endVol, 0.0001), ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // 1. Combat Hit SFX (Low pitch drop)
+    function sfxCombatHit() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+      } catch (e) {}
+    }
+
+    // 2. Spell Cast SFX (Rising pitch sweep)
+    function sfxSpellCast() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.25);
+      } catch (e) {}
+    }
+
+    // 3. Level Up SFX (Fanfare major arpeggio C4-E4-G4-C5)
+    function sfxLevelUp() {
+      if (!soundEnabled) return;
+      const notes = [261.63, 329.63, 392.00, 523.25];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => playTone(freq, 0.15, 'sine', 0.2), idx * 90);
+      });
+    }
+
+    // 4. Item Pickup / Gold / Crafting SFX (High double chime)
+    function sfxItemPickup() {
+      if (!soundEnabled) return;
+      playTone(587.33, 0.08, 'sine', 0.15);
+      setTimeout(() => playTone(880.00, 0.12, 'sine', 0.15), 70);
+    }
+
+    // 5. Door Open / Dungeon Transition SFX (Deep warm rise)
+    function sfxDoorOpen() {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(160, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(340, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      } catch (e) {}
+    }
+
+    // 6. Death / Game Over SFX (Descending tragic tones)
+    function sfxDeath() {
+      if (!soundEnabled) return;
+      const notes = [300, 220, 160, 100];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => playTone(freq, 0.25, 'sawtooth', 0.25), idx * 140);
+      });
+    }
+
     // Game State Engine
     const STATE = {
       CHAR_CREATE: 'CHAR_CREATE',
@@ -767,6 +898,7 @@
         value: item.value || 10,
         desc: item.desc || ''
       });
+      sfxItemPickup();
       updateUI();
       return true;
     }
@@ -1020,18 +1152,22 @@
       if (item.id === 'hp_potion') {
         const heal = 35;
         player.hp = Math.min(player.maxHp, player.hp + heal);
+        sfxSpellCast();
         logMsg(`🧪 You drank a Health Potion and recovered ${heal} HP!`, 'loot');
       } else if (item.id === 'mp_potion') {
         const mana = 25;
         player.mp = Math.min(player.maxMp, player.mp + mana);
+        sfxSpellCast();
         logMsg(`🧪 You drank a Mana Potion and recovered ${mana} MP!`, 'loot');
       } else if (item.id === 'greater_hp') {
         const heal = 70;
         player.hp = Math.min(player.maxHp, player.hp + heal);
+        sfxSpellCast();
         logMsg(`🧪 You drank a Greater Health Elixir and recovered ${heal} HP!`, 'loot');
       } else if (item.id === 'power_elixir') {
         player.mp = Math.min(player.maxMp, player.mp + 40);
         player.str += 3;
+        sfxSpellCast();
         logMsg(`⚡ You drank Elixir of Might! Recovered 40 MP & gained +3 STR permanently!`, 'loot');
       } else if (item.id === 'fire_bomb') {
         if (currentState !== STATE.COMBAT || !currentEnemy) {
@@ -1040,6 +1176,7 @@
         }
         const bombDmg = 45;
         currentEnemy.hp -= bombDmg;
+        sfxCombatHit();
         logMsg(`💣 FIRE BOMB EXPLOSION! Threw a Fire Bomb dealing ${bombDmg} fire damage to ${currentEnemy.name}!`, 'spell');
         item.count--;
         if (item.count <= 0) player.inventory.splice(index, 1);
@@ -1090,10 +1227,12 @@
       } else if (state === STATE.BOSS_RUSH) {
         renderBossRush();
       } else if (state === STATE.DUNGEON) {
+        sfxDoorOpen();
         renderDungeon();
       } else if (state === STATE.COMBAT) {
         renderCombat();
       } else if (state === STATE.GAME_OVER) {
+        sfxDeath();
         renderGameOver();
       } else if (state === STATE.SAVE_LOAD) {
         renderSaveLoad();
@@ -2374,6 +2513,7 @@
         player.gold += goldFound;
         player.materials.iron += 1;
         player.materials.dust += 1;
+        sfxItemPickup();
         logMsg(`✨ You discovered a dusty treasure chest in ${BIOMES[player.biome].name}! Found ${goldFound} Gold, +1 Iron Scrap, +1 Arcane Dust!`, 'loot');
         updateUI();
       } else if (roll < 0.85) {
@@ -2475,6 +2615,7 @@
         return;
       }
       player.mp -= cost;
+      sfxCombatHit();
       const offMult = 1.0 + (player.offensePoints * 0.08);
       const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
       let dmg = Math.floor(totalStr * 3.0 * offMult);
@@ -2506,6 +2647,7 @@
         return;
       }
       player.mp -= cost;
+      sfxSpellCast();
       player.ironWillTurns = 2;
       player.hp = Math.min(player.maxHp, player.hp + 20);
       logMsg(`🛡️ Activated IRON WILL! Restored +20 HP and granted 50% damage reduction for 2 turns!`, 'spell');
@@ -2516,6 +2658,7 @@
     function castManaSurge() {
       player.mp = Math.min(player.maxMp, player.mp + 35);
       player.manaSurgeActive = true;
+      sfxSpellCast();
       logMsg(`⚡ Activated MANA SURGE! Recovered +35 MP! Next spell power increased by +50%!`, 'spell');
       updateUI();
       renderCombat();
@@ -2543,6 +2686,7 @@
     function playerAttack() {
       if (!currentEnemy) return;
 
+      sfxCombatHit();
       const offMult = 1.0 + (player.offensePoints * 0.08);
       const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
       let dmg = Math.max(2, Math.floor((totalStr * 1.2 - currentEnemy.def * 0.5) * offMult));
@@ -2595,6 +2739,7 @@
     function playerSpell() {
       if (!currentEnemy) return;
 
+      sfxSpellCast();
       let bonusInt = (player.companion && !player.companion.isDown && player.companion.id === 'archmage') ? 5 : 0;
       let surgeMult = player.manaSurgeActive ? 1.5 : 1.0;
       if (player.manaSurgeActive) {
@@ -2658,6 +2803,8 @@
 
       setTimeout(() => {
         if (!currentEnemy || currentEnemy.hp <= 0) return;
+
+        sfxCombatHit();
 
         let bonusDef = (player.companion && !player.companion.isDown && player.companion.id === 'paladin') ? 4 : 0;
         bonusDef += (player.defensePoints * 3);
@@ -2776,6 +2923,7 @@
         player.int += 2;
         player.def += 2;
         player.agi += 2;
+        sfxLevelUp();
         logMsg(`🌟 LEVEL UP! You reached Level ${player.level}! Gained +2 Skill Points! All stats increased & health restored!`, 'town');
 
         if (player.companion) {
