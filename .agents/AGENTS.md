@@ -2,9 +2,8 @@
 
 ## Environment Setup
 
-- **`git`, `node`, `npm`, `rg` (ripgrep), `fd`, and `uv` are available on PATH**. The system PATH has been fixed globally. No manual PATH restoration is needed.
+- **`git`, `node`, `npm`, `rg` (ripgrep), `fd`, and `uv` are available**.
 - **Agent Efficiency Tools (CRITICAL):** When operating in this workspace, you MUST use `rg` (ripgrep) for searching file contents (it is magnitudes faster than grep/findstr). You MUST use `fd` for finding files (faster than dir/ls). You MUST use `uv` for any Python package management.
-- <!-- Fallback rule removed: this caused agents to waste tokens endlessly trying to reset the PATH whenever any command (like crinkler or cl.exe) naturally failed to be found. -->
 
 ## Commit & Deploy Protocol
 

@@ -10,6 +10,23 @@
 #define STATE_MERCENARY     7
 #define STATE_QUEST_BOARD   8
 #define STATE_TRAINING_HALL 9
+#define STATE_BOSS_RUSH     10
+
+typedef struct {
+    char name[48];
+    int hp, maxHp;
+    int str, def;
+    int xp, gold;
+    int trophies;
+} ArenaBossDef;
+
+static const ArenaBossDef g_ArenaBosses[5] = {
+    {"👑 Goblin King Prime (Boss Rush)", 150, 150, 24, 10, 250, 200, 2},
+    {"☠️ Lich Lord Revenant (Boss Rush)", 200, 200, 30, 14, 400, 350, 3},
+    {"🐲 Infernal Dragon (Boss Rush)", 280, 280, 38, 18, 700, 550, 4},
+    {"⚡ Storm Titan Sovereign (Boss Rush)", 360, 360, 45, 22, 1000, 800, 5},
+    {"🌌 Void Overlord Malakor (Boss Rush)", 480, 480, 54, 26, 1600, 1200, 8}
+};
 
 typedef struct {
     int id;
@@ -125,6 +142,10 @@ typedef struct {
     int manaSurgeActive;
     int floor;
     int biome; // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
+    int arenaWave;
+    int arenaBestWave;
+    int arenaActive;
+    int arenaTokens;
     char weaponName[32];
     int weaponBonusStr;
     char weaponPrefix[16]; // "", "Flaming", "Vampiric", "Thunderous"
@@ -355,6 +376,10 @@ void InitHero(int classIdx) {
     player.manaSurgeActive = 0;
     player.floor = 1;
     player.biome = 0;
+    player.arenaWave = 1;
+    player.arenaBestWave = 0;
+    player.arenaActive = 0;
+    player.arenaTokens = 0;
     player.hpPotions = 3;
     player.mpPotions = 2;
     player.greaterHpPotions = 0;
@@ -401,8 +426,10 @@ void UpdateUI() {
     char infoBuf[512];
 
     const char* locStr = "Oakhaven Town";
-    if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
-        locStr = g_Biomes[player.biome].name;
+    if (gameState == STATE_BOSS_RUSH) {
+        locStr = "Boss Rush Arena";
+    } else if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+        locStr = player.arenaActive ? "Boss Rush Arena" : g_Biomes[player.biome].name;
     }
 
     wsprintfA(statusBuf, "Hero: %s (%s)  |  Lvl: %d  |  HP: %d/%d  |  MP: %d/%d  |  Gold: %d Gold  |  Loc: %s (Floor %d)",
@@ -448,12 +475,12 @@ void UpdateUI() {
 
     int offBonusDmg = player.offensePoints * 2;
     wsprintfA(infoBuf,
-        "BIOME: %s (Hazard: %s)  |  COMPANION: %s\r\n"
+        "BIOME: %s (Hazard: %s)  |  COMPANION: %s  |  ARENA RECORD: Wave %d (🏆 %d Trophies)\r\n"
         "ATTRIBUTES: STR %d (+%d) | INT %d (+%d) | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
         "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s\r\n"
         "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Core x%d  |  SKILLS: %d SP (Off:%d Def:%d Util:%d)\r\n"
         "BOUNTIES: %s",
-        g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf,
+        g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf, player.arenaBestWave, player.arenaTokens,
         player.str, player.weaponBonusStr + offBonusDmg, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
         player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
         player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
@@ -489,11 +516,23 @@ void SetupButtons() {
             char spBtn[64];
             wsprintfA(spBtn, "🏋️ Training (%d SP)", player.skillPoints);
             SetWindowTextA(hBtn1, "Enter Dungeon");
-            SetWindowTextA(hBtn2, bBtn);
-            SetWindowTextA(hBtn3, "Rest Inn / Shop");
-            SetWindowTextA(hBtn4, "Craft / Merc Guild");
+            SetWindowTextA(hBtn2, "🏟️ Boss Rush");
+            SetWindowTextA(hBtn3, bBtn);
+            SetWindowTextA(hBtn4, "Rest Inn / Shop");
             SetWindowTextA(hBtn5, "📜 Quest Board");
             SetWindowTextA(hBtn6, spBtn);
+            break;
+        }
+
+        case STATE_BOSS_RUSH: {
+            char wBtn[64];
+            wsprintfA(wBtn, "Fight Wave %d", player.arenaWave > 0 ? player.arenaWave : 1);
+            SetWindowTextA(hBtn1, wBtn);
+            SetWindowTextA(hBtn2, "Sword (5 Tr)");
+            SetWindowTextA(hBtn3, "Armor (5 Tr)");
+            SetWindowTextA(hBtn4, "Ring (8 Tr)");
+            SetWindowTextA(hBtn5, "Elixir (4 Tr)");
+            SetWindowTextA(hBtn6, "Back to Town");
             break;
         }
 
@@ -765,7 +804,14 @@ void EnemyTurn() {
 
     if (player.hp <= 0) {
         player.hp = 0;
-        LogMessage("💀 YOU HAVE FALLEN IN COMBAT! Your soul vanishes into darkness.");
+        if (player.arenaActive) {
+            player.arenaActive = 0;
+            char fmsg[128];
+            wsprintfA(fmsg, "💔 Slain in Arena Wave %d! Arena Streak Ended.", player.arenaWave);
+            LogMessage(fmsg);
+        } else {
+            LogMessage("💀 YOU HAVE FALLEN IN COMBAT! Your soul vanishes into darkness.");
+        }
         gameState = STATE_GAME_OVER;
         SetupButtons();
     }
@@ -817,12 +863,62 @@ void CombatVictory() {
     }
 
     CheckLevelUp();
+
+    if (player.arenaActive) {
+        int trophies = (player.arenaWave <= 5) ? g_ArenaBosses[player.arenaWave - 1].trophies : (player.arenaWave + 3);
+        player.arenaTokens += trophies;
+        if (player.arenaWave > player.arenaBestWave) player.arenaBestWave = player.arenaWave;
+        
+        char amsg[128];
+        wsprintfA(amsg, "🏆 ARENA WAVE %d CLEARED! +%d Arena Trophies awarded! Best Record: Wave %d!", player.arenaWave, trophies, player.arenaBestWave);
+        LogMessage(amsg);
+
+        int healHp = (player.maxHp * 40) / 100;
+        int healMp = (player.maxMp * 40) / 100;
+        player.hp += healHp; if (player.hp > player.maxHp) player.hp = player.maxHp;
+        player.mp += healMp; if (player.mp > player.maxMp) player.mp = player.maxMp;
+        LogMessage("🍷 Arena Champion's Rest: Recovered 40% HP & MP!");
+
+        Beep(523, 100); Beep(659, 100); Beep(784, 150);
+
+        player.arenaWave++;
+        player.arenaActive = 0;
+        gameState = STATE_BOSS_RUSH;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+
     gameState = STATE_DUNGEON;
     SetupButtons();
     UpdateUI();
 }
 
 void HandleButton1() {
+    if (gameState == STATE_BOSS_RUSH) {
+        if (!player.arenaWave) player.arenaWave = 1;
+        player.arenaActive = 1;
+        if (player.arenaWave <= 5) {
+            const ArenaBossDef* b = &g_ArenaBosses[player.arenaWave - 1];
+            lstrcpyA(currentEnemy.name, b->name);
+            currentEnemy.maxHp = b->hp; currentEnemy.hp = b->hp;
+            currentEnemy.str = b->str; currentEnemy.def = b->def;
+            currentEnemy.xp = b->xp; currentEnemy.gold = b->gold;
+        } else {
+            wsprintfA(currentEnemy.name, "Wave %d Apex Titan (Boss Rush)", player.arenaWave);
+            currentEnemy.maxHp = 200 + player.arenaWave * 70; currentEnemy.hp = currentEnemy.maxHp;
+            currentEnemy.str = 20 + player.arenaWave * 7; currentEnemy.def = 10 + player.arenaWave * 3;
+            currentEnemy.xp = player.arenaWave * 350; currentEnemy.gold = player.arenaWave * 250;
+        }
+        gameState = STATE_COMBAT;
+        Beep(523, 120); Beep(659, 120);
+        char wmsg[128];
+        wsprintfA(wmsg, "🏟️ ARENA BOSS RUSH - WAVE %d! Challenging %s!", player.arenaWave, currentEnemy.name);
+        LogMessage(wmsg);
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_TRAINING_HALL) {
         if (player.skillPoints > 0 && player.offensePoints < 3) {
             player.offensePoints++;
@@ -997,6 +1093,19 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_BOSS_RUSH) {
+        if (player.arenaTokens >= 5) {
+            player.arenaTokens -= 5;
+            lstrcpyA(player.weaponName, "Conqueror's Blade");
+            player.weaponBonusStr = 15;
+            Beep(880, 150);
+            LogMessage("🗡️ Purchased Conqueror's Blade (+15 STR) with 5 Arena Trophies!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 5 Arena Trophies for Conqueror's Blade!");
+        }
+        return;
+    }
     if (gameState == STATE_TRAINING_HALL) {
         if (player.skillPoints > 0 && player.defensePoints < 3) {
             player.defensePoints++;
@@ -1023,11 +1132,9 @@ void HandleButton2() {
         LogMessage("Selected Class: Mage (High Mana & Spell Power).");
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        player.biome = (player.biome + 1) % 3;
-        player.floor = 1;
-        char msg[128];
-        wsprintfA(msg, "🗺️ Selected Dungeon Biome: %s (Hazard: %s)", g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName);
-        LogMessage(msg);
+        gameState = STATE_BOSS_RUSH;
+        Beep(440, 100); Beep(554, 100); Beep(659, 150);
+        LogMessage("🏟️ Entered Grand Colosseum - Boss Rush Arena!");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
@@ -1142,6 +1249,19 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_BOSS_RUSH) {
+        if (player.arenaTokens >= 5) {
+            player.arenaTokens -= 5;
+            lstrcpyA(player.armorName, "Champion Plate");
+            player.armorBonusDef = 14;
+            Beep(880, 150);
+            LogMessage("🛡️ Purchased Champion Plate (+14 DEF) with 5 Arena Trophies!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 5 Arena Trophies for Champion Plate!");
+        }
+        return;
+    }
     if (gameState == STATE_TRAINING_HALL) {
         if (player.skillPoints > 0 && player.utilityPoints < 3) {
             player.utilityPoints++;
@@ -1168,19 +1288,13 @@ void HandleButton3() {
         LogMessage("Selected Class: Rogue (High Agility & Crits).");
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        if (player.gold >= 10) {
-            player.gold -= 10;
-            player.hp = player.maxHp;
-            player.mp = player.maxMp;
-            if (player.companion.active > 0) {
-                player.companion.isDown = 0;
-                player.companion.hp = player.companion.maxHp;
-            }
-            LogMessage("🍺 Rested at Dragon's Rest Inn. HP, MP, & Party fully restored!");
-            UpdateUI();
-        } else {
-            LogMessage("Not enough gold for the Inn!");
-        }
+        player.biome = (player.biome + 1) % 3;
+        player.floor = 1;
+        char msg[128];
+        wsprintfA(msg, "MAP Selected Dungeon Biome: %s (Hazard: %s)", g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName);
+        LogMessage(msg);
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
         if (player.gold >= 70) {
             player.gold -= 70;
@@ -1239,6 +1353,20 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_BOSS_RUSH) {
+        if (player.arenaTokens >= 8) {
+            player.arenaTokens -= 8;
+            player.str += 8;
+            player.intStat += 8;
+            player.agi += 8;
+            Beep(880, 150);
+            LogMessage("💍 Equipping Gladiator Ring boosted STR, INT, & AGI by +8!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 8 Arena Trophies for Gladiator Ring!");
+        }
+        return;
+    }
     if (gameState == STATE_TRAINING_HALL) {
         int total = player.offensePoints + player.defensePoints + player.utilityPoints;
         if (total == 0) {
@@ -1273,10 +1401,22 @@ void HandleButton4() {
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        gameState = STATE_SHOP;
-        LogMessage("Entered Oakhaven Shop.");
-        SetupButtons();
-        UpdateUI();
+        if (player.gold >= 10) {
+            player.gold -= 10;
+            player.hp = player.maxHp;
+            player.mp = player.maxMp;
+            if (player.companion.active > 0) {
+                player.companion.isDown = 0;
+                player.companion.hp = player.companion.maxHp;
+            }
+            LogMessage("🍺 Rested at Dragon's Rest Inn. HP, MP, & Party fully restored!");
+            UpdateUI();
+        } else {
+            gameState = STATE_SHOP;
+            LogMessage("Entered Oakhaven Shop.");
+            SetupButtons();
+            UpdateUI();
+        }
     } else if (gameState == STATE_MERCENARY) {
         if (player.companion.active > 0) {
             if (player.companion.isDown) {
@@ -1357,6 +1497,19 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_BOSS_RUSH) {
+        if (player.arenaTokens >= 4) {
+            player.arenaTokens -= 4;
+            player.maxHp += 30; player.hp += 30;
+            player.maxMp += 20; player.mp += 20;
+            Beep(880, 150);
+            LogMessage("🧪 Drank Elixir of Valor! Permanently gained +30 Max HP & +20 Max MP!");
+            UpdateUI();
+        } else {
+            LogMessage("Need 4 Arena Trophies for Elixir of Valor!");
+        }
+        return;
+    }
     if (gameState == STATE_TRAINING_HALL) {
         gameState = STATE_MERCENARY;
         LogMessage("Entered Mercenary Guild.");
@@ -1433,7 +1586,12 @@ void HandleButton5() {
     } else if (gameState == STATE_COMBAT) {
         if ((xrand() % 100) < 60) {
             LogMessage("🏃 Fled safely from combat!");
-            gameState = STATE_DUNGEON;
+            if (player.arenaActive) {
+                player.arenaActive = 0;
+                gameState = STATE_BOSS_RUSH;
+            } else {
+                gameState = STATE_DUNGEON;
+            }
             SetupButtons();
             UpdateUI();
         } else {
@@ -1444,7 +1602,7 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
-    if (gameState == STATE_TRAINING_HALL) {
+    if (gameState == STATE_BOSS_RUSH) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
         SetupButtons();
@@ -1570,7 +1728,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 9: Skill Tree & Specialization Mastery System Active!");
+            LogMessage("Phase 10: Boss Rush / Arena Challenge Mode Active!");
             break;
         }
         case WM_COMMAND: {

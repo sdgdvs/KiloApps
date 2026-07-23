@@ -379,8 +379,8 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 9</span></h1>
-    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
+    <h1>🗡️ KQuest <span class="badge">Phase 10</span></h1>
+    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Boss Rush Arena)</div>
   </header>
 
   <!-- Player Stats Header Bar -->
@@ -459,6 +459,7 @@
           <div>AGI (Speed/Crit): <strong style="color:#cba6f7;" id="stat-agi">10</strong></div>
           <div>XP Progress: <strong style="color:#f9e2af;" id="xp-text">0 / 100</strong></div>
           <div>Skill Points: <strong style="color:#cba6f7;" id="sp-text">0 SP</strong></div>
+          <div>Arena Record: <strong style="color:#f38ba8;" id="arena-record">Wave 0 (🏆 0 Trophies)</strong></div>
         </div>
       </div>
 
@@ -523,6 +524,7 @@
       MERCENARY: 'MERCENARY',
       QUEST_BOARD: 'QUEST_BOARD',
       TRAINING_HALL: 'TRAINING_HALL',
+      BOSS_RUSH: 'BOSS_RUSH',
       DUNGEON: 'DUNGEON',
       COMBAT: 'COMBAT',
       GAME_OVER: 'GAME_OVER'
@@ -606,6 +608,10 @@
       manaSurgeActive: false,
       floor: 1,
       biome: 0,
+      arenaWave: 1,
+      arenaBestWave: 0,
+      arenaActive: false,
+      arenaTokens: 0,
       weapon: { name: 'Iron Shortsword', bonusStr: 4, prefix: '' },
       armor: { name: 'Leather Armor', bonusDef: 3, prefix: '' },
       materials: {
@@ -650,6 +656,9 @@
       if (document.getElementById('sp-text')) {
         document.getElementById('sp-text').textContent = `${player.skillPoints} SP`;
       }
+      if (document.getElementById('arena-record')) {
+        document.getElementById('arena-record').textContent = `Wave ${player.arenaBestWave} (🏆 ${player.arenaTokens} Tr)`;
+      }
 
       let bonusDef = (player.armor ? player.armor.bonusDef : 0) + (player.defensePoints * 3);
       let bonusInt = 0;
@@ -693,7 +702,7 @@
       document.getElementById('mp-bar').style.width = `${mpPercent}%`;
 
       const b = BIOMES[player.biome];
-      document.getElementById('dungeon-floor').textContent = (currentState === STATE.DUNGEON || currentState === STATE.COMBAT) ? `${b.name} (F${player.floor})` : 'Town Square';
+      document.getElementById('dungeon-floor').textContent = (currentState === STATE.DUNGEON || currentState === STATE.COMBAT) ? (player.arenaActive ? `Boss Rush (W${player.arenaWave})` : `${b.name} (F${player.floor})`) : (currentState === STATE.BOSS_RUSH ? 'Boss Rush Arena' : 'Town Square');
 
       updateInventoryUI();
       updateQuestUI();
@@ -832,6 +841,8 @@
         renderQuestBoard();
       } else if (state === STATE.TRAINING_HALL) {
         renderTrainingHall();
+      } else if (state === STATE.BOSS_RUSH) {
+        renderBossRush();
       } else if (state === STATE.DUNGEON) {
         renderDungeon();
       } else if (state === STATE.COMBAT) {
@@ -947,6 +958,7 @@
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
         <button class="btn btn-primary" onclick="setGameState(STATE.DUNGEON)">⚔️ Enter ${b.name}</button>
+        <button class="btn btn-danger" onclick="setGameState(STATE.BOSS_RUSH)">🏟️ Boss Rush Arena</button>
         <button class="btn" style="background:#cba6f7; color:#11111b;" onclick="setGameState(STATE.TRAINING_HALL)">🏋️ Training Hall (${player.skillPoints} SP)</button>
         <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.QUEST_BOARD)">📜 Bounty Board</button>
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
@@ -955,6 +967,146 @@
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
         <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
       `;
+    }
+
+    // --- PHASE 10: BOSS RUSH / ARENA MODE ---
+    const ARENA_BOSSES = [
+      { wave: 1, name: '👑 Goblin King Prime (Boss Rush)', hp: 150, str: 24, def: 10, xp: 250, gold: 200, trophies: 2, desc: 'Supreme chieftain of the goblin hordes.' },
+      { wave: 2, name: '☠️ Lich Lord Revenant (Boss Rush)', hp: 200, str: 30, def: 14, xp: 400, gold: 350, trophies: 3, desc: 'Master of necromancy risen from the grave.' },
+      { wave: 3, name: '🐲 Infernal Obsidian Dragon (Boss Rush)', hp: 280, str: 38, def: 18, xp: 700, gold: 550, trophies: 4, desc: 'Volcanic apex predator breathing ruinous fire.' },
+      { wave: 4, name: '⚡ Storm Titan Sovereign (Boss Rush)', hp: 360, str: 45, def: 22, xp: 1000, gold: 800, trophies: 5, desc: 'Colossal elemental giant wielding thunderbolts.' },
+      { wave: 5, name: '🌌 Void Overlord Malakor (Boss Rush)', hp: 480, str: 54, def: 26, xp: 1600, gold: 1200, trophies: 8, desc: 'Cosmic entity of pure dark power.' }
+    ];
+
+    function getArenaBoss(wave) {
+      if (wave <= 5) return { ...ARENA_BOSSES[wave - 1] };
+      return {
+        wave: wave,
+        name: `🌌 Wave ${wave} Apex Titan (Boss Rush)`,
+        hp: 200 + wave * 70,
+        str: 20 + wave * 7,
+        def: 10 + wave * 3,
+        xp: wave * 350,
+        gold: wave * 250,
+        trophies: wave + 3,
+        desc: 'Relentless arena champion scaled to extraordinary power.'
+      };
+    }
+
+    function renderBossRush() {
+      document.getElementById('location-title').textContent = '🏟️ Grand Colosseum - Boss Rush Arena';
+      document.getElementById('location-desc').textContent = 'Battle relentless waves of legendary bosses with escalating power! Victory awards XP, Gold, and Arena Trophies for unique equipment.';
+
+      const nextBoss = getArenaBoss(player.arenaWave || 1);
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div style="background:#181825; padding:12px; border-radius:8px; border:1px solid #f38ba8; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="color:#f38ba8; font-size:1.05rem;">⚔️ Current Challenge: Wave ${player.arenaWave || 1}</h3>
+            <span style="font-size:0.85rem; color:#f9e2af; font-weight:700;">🏆 Arena Trophies: ${player.arenaTokens} | Best Record: Wave ${player.arenaBestWave}</span>
+          </div>
+          <div style="background:#24273a; padding:10px; border-radius:6px; border:1px solid #313244;">
+            <h4 style="color:#cba6f7; font-size:0.95rem;">${nextBoss.name}</h4>
+            <p style="font-size:0.8rem; color:#a6adc8; margin:4px 0;">${nextBoss.desc}</p>
+            <div style="font-size:0.8rem; color:#bac2de;">
+              <strong>Stats:</strong> HP: ${nextBoss.hp} | STR: ${nextBoss.str} | DEF: ${nextBoss.def} | Reward: +${nextBoss.gold} Gold, +${nextBoss.xp} XP, 🏆 +${nextBoss.trophies} Trophies
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#181825; padding:10px; border-radius:8px; border:1px solid #313244;">
+          <h3 style="color:#cba6f7; font-size:0.95rem; margin-bottom:8px;">🛒 Arena Trophies Shop:</h3>
+          <div class="craft-grid" style="grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));">
+            <div class="craft-card">
+              <h3>🗡️ Conqueror's Blade</h3>
+              <p>Legendary Arena Sword (+15 STR)</p>
+              <div class="mats-req">Cost: 🏆 5 Trophies</div>
+              <button class="btn btn-accent" onclick="buyArenaItem('weapon')" ${player.arenaTokens < 5 ? 'disabled' : ''}>Claim Sword</button>
+            </div>
+            <div class="craft-card">
+              <h3>🛡️ Champion Plate</h3>
+              <p>Impervious Heavy Armor (+14 DEF)</p>
+              <div class="mats-req">Cost: 🏆 5 Trophies</div>
+              <button class="btn btn-accent" onclick="buyArenaItem('armor')" ${player.arenaTokens < 5 ? 'disabled' : ''}>Claim Armor</button>
+            </div>
+            <div class="craft-card">
+              <h3>💍 Gladiator Ring</h3>
+              <p>Relic of Power (+8 STR, +8 INT, +8 AGI)</p>
+              <div class="mats-req">Cost: 🏆 8 Trophies</div>
+              <button class="btn btn-accent" onclick="buyArenaItem('ring')" ${player.arenaTokens < 8 ? 'disabled' : ''}>Claim Ring</button>
+            </div>
+            <div class="craft-card">
+              <h3>🧪 Elixir of Valor</h3>
+              <p>Permanently +30 Max HP & +20 Max MP</p>
+              <div class="mats-req">Cost: 🏆 4 Trophies</div>
+              <button class="btn btn-accent" onclick="buyArenaItem('elixir')" ${player.arenaTokens < 4 ? 'disabled' : ''}>Drink Elixir</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-danger" onclick="startBossRushWave()">⚔️ Fight Wave ${player.arenaWave || 1}</button>
+        <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="resetArenaStreak()">🔄 Reset Wave to 1</button>
+        <button class="btn" onclick="setGameState(STATE.TOWN)">🏰 Return to Town</button>
+      `;
+    }
+
+    function startBossRushWave() {
+      if (!player.arenaWave) player.arenaWave = 1;
+      player.arenaActive = true;
+      const b = getArenaBoss(player.arenaWave);
+      currentEnemy = {
+        name: b.name,
+        hp: b.hp,
+        maxHp: b.hp,
+        str: b.str,
+        def: b.def,
+        xp: b.xp,
+        gold: b.gold,
+        trophies: b.trophies
+      };
+      logMsg(`🏟️ ARENA BOSS RUSH - WAVE ${player.arenaWave}! Challenging ${currentEnemy.name}!`, 'warning');
+      setGameState(STATE.COMBAT);
+    }
+
+    function resetArenaStreak() {
+      player.arenaWave = 1;
+      logMsg(`🔄 Arena streak reset to Wave 1.`, 'system');
+      renderBossRush();
+    }
+
+    function buyArenaItem(type) {
+      if (type === 'weapon') {
+        if (player.arenaTokens < 5) return;
+        player.arenaTokens -= 5;
+        player.weapon = { name: "Conqueror's Blade", bonusStr: 15, prefix: player.weapon ? player.weapon.prefix : '' };
+        logMsg(`🗡️ Purchased Conqueror's Blade (+15 STR) with 5 Arena Trophies!`, 'loot');
+      } else if (type === 'armor') {
+        if (player.arenaTokens < 5) return;
+        player.arenaTokens -= 5;
+        player.armor = { name: 'Champion Plate', bonusDef: 14, prefix: player.armor ? player.armor.prefix : '' };
+        logMsg(`🛡️ Purchased Champion Plate (+14 DEF) with 5 Arena Trophies!`, 'loot');
+      } else if (type === 'ring') {
+        if (player.arenaTokens < 8) return;
+        player.arenaTokens -= 8;
+        player.str += 8;
+        player.int += 8;
+        player.agi += 8;
+        logMsg(`💍 Equipping Gladiator Ring permanently increased STR, INT, and AGI by +8!`, 'loot');
+      } else if (type === 'elixir') {
+        if (player.arenaTokens < 4) return;
+        player.arenaTokens -= 4;
+        player.maxHp += 30;
+        player.hp += 30;
+        player.maxMp += 20;
+        player.mp += 20;
+        logMsg(`🧪 Drank Elixir of Valor! Permanently gained +30 Max HP & +20 Max MP!`, 'loot');
+      }
+      updateUI();
+      renderBossRush();
     }
 
     // --- PHASE 9: SKILL TREE & SPECIALIZATION MASTERY SYSTEM ---
@@ -2209,10 +2361,29 @@
         }
       }
 
+      const wasArena = player.arenaActive;
+      const arenaTrophies = currentEnemy ? (currentEnemy.trophies || (player.arenaWave + 2)) : 2;
       currentEnemy = null;
       updateUI();
       setTimeout(() => {
-        setGameState(STATE.DUNGEON);
+        if (wasArena) {
+          player.arenaTokens += arenaTrophies;
+          player.arenaBestWave = Math.max(player.arenaBestWave, player.arenaWave);
+          logMsg(`🏆 ARENA WAVE ${player.arenaWave} CLEARED! Awarded +${arenaTrophies} Arena Trophies! Best Record: Wave ${player.arenaBestWave}!`, 'loot');
+
+          const healHp = Math.floor(player.maxHp * 0.4);
+          const healMp = Math.floor(player.maxMp * 0.4);
+          player.hp = Math.min(player.maxHp, player.hp + healHp);
+          player.mp = Math.min(player.maxMp, player.mp + healMp);
+          logMsg(`🍷 Arena Champion's Rest: Recovered +${healHp} HP & +${healMp} MP!`, 'town');
+
+          player.arenaWave++;
+          player.arenaActive = false;
+          updateUI();
+          setGameState(STATE.BOSS_RUSH);
+        } else {
+          setGameState(STATE.DUNGEON);
+        }
       }, 500);
     }
 
@@ -2220,7 +2391,12 @@
       if (Math.random() < 0.6) {
         logMsg(`🏃 You successfully fled from combat back to safe ground!`, 'system');
         currentEnemy = null;
-        setGameState(STATE.DUNGEON);
+        if (player.arenaActive) {
+          player.arenaActive = false;
+          setGameState(STATE.BOSS_RUSH);
+        } else {
+          setGameState(STATE.DUNGEON);
+        }
       } else {
         logMsg(`❌ Escape failed! ${currentEnemy.name} strikes as you try to run!`, 'warning');
         enemyTurn();

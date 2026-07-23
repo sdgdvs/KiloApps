@@ -18,6 +18,8 @@
 
 ## DIRECTOR NOTE (2026-07-22): DEEP FANTASY & SCI-FI GAMES
 
+**⚠️ PATH WARNING:** Do not add instructions to reset `$env:Path` using `System.Environment`. This deletes the agent's injected execution paths and causes termination loops. If a tool is missing, append it (`$env:Path += ";C:\..."`) instead.
+
 **Current: 21+ games. We have enough board/puzzle games.** After KReversi completes, switch to creating **deep, clever, creative fantasy and science fiction games** — NOT more board games or simple puzzles. Think roguelikes, RPGs, survival, space exploration, dungeon crawlers, text adventures with real depth. These should feel like miniature worlds players can get lost in. Use procedural generation, inventory systems, crafting, storylines, lore, enemy variety, and progression systems to fill the 999KB budget. Each game should be meaningfully different from KRogue (our existing roguelike).
 
 **NO MORE:** Board games (chess, checkers, go, connect4), pattern games (simon, match3), simple arcade clones. We have plenty.

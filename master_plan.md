@@ -8,6 +8,9 @@ The project aims to return software development to the lightweight, compute-effi
 - Maintain a minimal web-based OS environment (`KiloOS`) — a React-based desktop shell deployed to Firebase Hosting at `kiloapps.web.app`.
 - Keep dependencies and framework overhead to an absolute minimum.
 
+## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
+**ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
+
 ## Current State (as of 2026-07-23)
 - **Total Apps:** 71 registered in App.jsx.
 - **KiloOS Version:** 0.3.60
