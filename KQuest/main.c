@@ -110,12 +110,12 @@ typedef struct {
     char hazardName[32];
     MonsterDef monsters[5];
     MonsterDef boss;
+    int maxPhases;
 } BiomeDef;
 
-static const BiomeDef g_Biomes[3] = {
+static const BiomeDef g_Biomes[15] = {
     {
-        "Goblin Mines",
-        "Cave-In",
+        "Goblin Outpost", "Cave-In",
         {
             {"Cave Goblin", 30, 30, 8, 3, 30, 15},
             {"Goblin Slinger", 25, 25, 10, 2, 35, 18},
@@ -123,11 +123,11 @@ static const BiomeDef g_Biomes[3] = {
             {"Mine Taskmaster", 55, 55, 15, 6, 70, 40},
             {"Rock Golem", 75, 75, 17, 10, 95, 55}
         },
-        {"Goblin King (Boss)", 130, 130, 22, 10, 260, 160}
+        {"Goblin King Prime (Boss)", 140, 140, 22, 10, 280, 180},
+        1
     },
     {
-        "Ancient Catacombs",
-        "Poison Fog",
+        "Skeleton Crypt", "Poison Fog",
         {
             {"Skeleton Archer", 32, 32, 11, 3, 38, 20},
             {"Tomb Ghoul", 45, 45, 13, 5, 52, 28},
@@ -135,19 +135,164 @@ static const BiomeDef g_Biomes[3] = {
             {"Dread Wraith", 65, 65, 18, 7, 100, 60},
             {"Bone Colossus", 85, 85, 20, 11, 120, 70}
         },
-        {"Lich Lord (Boss)", 160, 160, 26, 12, 350, 220}
+        {"Lich Lord Malakor (Boss)", 180, 180, 26, 12, 380, 240},
+        2
     },
     {
-        "Dragon Spire",
-        "Lava Burst",
+        "Sunken Temple", "Tidal Miasma",
         {
-            {"Magma Imp", 40, 40, 14, 4, 50, 25},
-            {"Fire Drake", 60, 60, 17, 7, 80, 45},
-            {"Obsidian Elemental", 80, 80, 20, 12, 110, 65},
-            {"Wyvern Sentinel", 95, 95, 23, 10, 140, 85},
-            {"Hellhound", 70, 70, 21, 8, 105, 60}
+            {"Drowned Zealot", 40, 40, 13, 4, 45, 24},
+            {"Coral Naga", 52, 52, 15, 6, 60, 32},
+            {"Deep Scuttler", 60, 60, 17, 8, 80, 42},
+            {"Mire Siren", 72, 72, 19, 7, 105, 55},
+            {"Tidal Elemental", 90, 90, 22, 12, 130, 75}
         },
-        {"Obsidian Dragon (Boss)", 250, 250, 32, 18, 600, 500}
+        {"Abyssal Leviathan (Boss)", 220, 220, 30, 14, 480, 300},
+        1
+    },
+    {
+        "Dark Forest", "Toxic Spores",
+        {
+            {"Venom Stalker", 48, 48, 15, 5, 55, 28},
+            {"Shadow Wolf", 58, 58, 17, 6, 72, 38},
+            {"Brier Dryad", 68, 68, 19, 8, 92, 50},
+            {"Moss Golem", 85, 85, 22, 13, 120, 65},
+            {"Corrupted Ent", 105, 105, 25, 15, 150, 85}
+        },
+        {"Ancient Treant (Boss)", 260, 260, 34, 16, 580, 360},
+        1
+    },
+    {
+        "Orc Fortress", "Boiling Oil",
+        {
+            {"Orc Grunt", 55, 55, 17, 6, 68, 35},
+            {"War Berserker", 70, 70, 20, 7, 88, 48},
+            {"Iron Shaman", 78, 78, 22, 9, 110, 60},
+            {"Siege Ogre", 98, 98, 25, 14, 145, 80},
+            {"Thunder Beast", 120, 120, 28, 16, 180, 100}
+        },
+        {"Orc Warlord Grommash (Boss)", 300, 300, 38, 18, 700, 420},
+        2
+    },
+    {
+        "Haunted Mine", "Spectral Chill",
+        {
+            {"Tomb Banshee", 60, 60, 19, 6, 78, 40},
+            {"Phantom Miner", 75, 75, 22, 8, 100, 52},
+            {"Spectral Shade", 88, 88, 24, 10, 125, 68},
+            {"Curse Spectre", 108, 108, 27, 12, 160, 88},
+            {"Phantom Colossus", 130, 130, 30, 17, 200, 110}
+        },
+        {"Wraith Sovereign Nocturne (Boss)", 340, 340, 42, 20, 820, 500},
+        1
+    },
+    {
+        "Frostpeak Caverns", "Blizzard Frostbite",
+        {
+            {"Ice Yeti", 70, 70, 21, 8, 90, 48},
+            {"Frost Wisp", 82, 82, 23, 7, 112, 58},
+            {"Glacial Golem", 100, 100, 26, 14, 140, 75},
+            {"Snow Drake", 120, 120, 29, 12, 180, 95},
+            {"Frozen Stalker", 142, 142, 32, 18, 220, 120}
+        },
+        {"Frost Giant King Ymir (Boss)", 380, 380, 46, 22, 950, 580},
+        1
+    },
+    {
+        "Serpent Swamps", "Acidic Miasma",
+        {
+            {"Marsh Basilisk", 78, 78, 23, 9, 102, 55},
+            {"Poison Viper", 90, 90, 25, 8, 125, 66},
+            {"Swamp Troll", 112, 112, 28, 13, 160, 85},
+            {"Acid Elemental", 132, 132, 31, 16, 200, 105},
+            {"Venomous Hydra", 155, 155, 34, 19, 245, 135}
+        },
+        {"Hydra Matriarch Gorgon (Boss)", 420, 420, 50, 24, 1100, 660},
+        2
+    },
+    {
+        "Infernal Volcano", "Magma Eruption",
+        {
+            {"Lava Fiend", 85, 85, 25, 9, 115, 60},
+            {"Fire Drake", 100, 100, 27, 11, 140, 75},
+            {"Pyro Fiend", 120, 120, 30, 13, 178, 95},
+            {"Molten Golem", 145, 145, 33, 18, 225, 120},
+            {"Magma Charger", 168, 168, 36, 16, 270, 145}
+        },
+        {"Magma Archon Ignis (Boss)", 460, 460, 54, 26, 1250, 750},
+        1
+    },
+    {
+        "Dragon Cavern", "Dragon Flame",
+        {
+            {"Magma Imp", 95, 95, 27, 10, 130, 70},
+            {"Fire Drake Prime", 115, 115, 30, 13, 160, 88},
+            {"Obsidian Elemental", 138, 138, 33, 18, 200, 110},
+            {"Wyvern Sentinel", 160, 160, 36, 16, 250, 135},
+            {"Hellhound Alpha", 185, 185, 39, 20, 300, 160}
+        },
+        {"Wyrm Overlord Bahamut (Boss)", 520, 520, 60, 28, 1450, 850},
+        2
+    },
+    {
+        "Shadow Realm", "Void Decay",
+        {
+            {"Void Walker", 105, 105, 29, 11, 145, 78},
+            {"Shadow Fiend", 128, 128, 32, 14, 180, 98},
+            {"Nether Hound", 150, 150, 35, 16, 225, 122},
+            {"Abyss Stalker", 175, 175, 38, 19, 280, 150},
+            {"Dark Archon", 200, 200, 41, 22, 335, 180}
+        },
+        {"Shadow Monarch Erebus (Boss)", 580, 580, 65, 30, 1650, 980},
+        1
+    },
+    {
+        "Celestial Ruins", "Solar Flare",
+        {
+            {"Radiant Sentry", 118, 118, 31, 12, 160, 85},
+            {"Solar Specter", 140, 140, 34, 15, 200, 110},
+            {"Heavenly Sentinel", 165, 165, 37, 18, 250, 135},
+            {"Prism Golem", 192, 192, 40, 22, 310, 165},
+            {"Archangel Remnant", 220, 220, 44, 25, 375, 200}
+        },
+        {"Fallen Seraph Gabriel (Boss)", 640, 640, 70, 32, 1900, 1100},
+        1
+    },
+    {
+        "Blood Citadel", "Vampiric Drain",
+        {
+            {"Blood Thrall", 130, 130, 33, 13, 178, 95},
+            {"Crimson Bat", 155, 155, 36, 15, 220, 120},
+            {"Flesh Golem", 182, 182, 40, 20, 280, 150},
+            {"Vampire Knight", 210, 210, 43, 23, 340, 180},
+            {"Blood Mage", 240, 240, 47, 26, 410, 220}
+        },
+        {"Blood Emperor Dracula (Boss)", 700, 700, 75, 34, 2200, 1250},
+        2
+    },
+    {
+        "Abyssal Trench", "Crushing Pressure",
+        {
+            {"Trench Kraken", 145, 145, 36, 15, 200, 110},
+            {"Abyss Crawler", 172, 172, 39, 17, 250, 135},
+            {"Depth Fiend", 200, 200, 43, 21, 310, 165},
+            {"Void Leviathan", 232, 232, 46, 24, 380, 200},
+            {"Dark Siren", 265, 265, 50, 28, 450, 240}
+        },
+        {"Abyssal Titan Oceanus (Boss)", 780, 780, 80, 36, 2500, 1400},
+        2
+    },
+    {
+        "Void Citadel", "Dimensional Collapse",
+        {
+            {"Void Fiend", 160, 160, 39, 16, 230, 125},
+            {"Dimensional Anomaly", 190, 190, 43, 19, 290, 155},
+            {"Cosmos Weaver", 222, 222, 47, 22, 360, 190},
+            {"Oblivion Sentinel", 258, 258, 51, 26, 440, 230},
+            {"Void Behemoth", 300, 300, 56, 30, 530, 280}
+        },
+        {"Void Overlord Malakor (Boss)", 900, 900, 90, 40, 3000, 1800},
+        3
     }
 };
 
@@ -178,7 +323,7 @@ typedef struct {
     int ironWillTurns;
     int manaSurgeActive;
     int floor;
-    int biome; // 0: Goblin Mines, 1: Ancient Catacombs, 2: Dragon Spire
+    int biome;
     int arenaWave;
     int arenaBestWave;
     int arenaActive;
@@ -194,6 +339,10 @@ typedef struct {
     int greaterHpPotions;
     int powerElixirs;
     int fireBombs;
+    int phoenixElixirs;
+    int holyShieldTurns;
+    int berserkTurns;
+    int lightningDazeTurns;
     int ironScrap;
     int arcaneDust;
     int elementalCore;
@@ -212,10 +361,12 @@ typedef struct {
 } Hero;
 
 typedef struct {
-    char name[32];
+    char name[64];
     int hp, maxHp;
     int str, def;
     int xp, gold;
+    int phase;
+    int maxPhases;
 } Enemy;
 
 static Hero player;
@@ -767,6 +918,10 @@ void InitHero(int classIdx) {
     player.greaterHpPotions = 0;
     player.powerElixirs = 0;
     player.fireBombs = 0;
+    player.phoenixElixirs = 1;
+    player.holyShieldTurns = 0;
+    player.berserkTurns = 0;
+    player.lightningDazeTurns = 0;
     player.ironScrap = 2;
     player.arcaneDust = 2;
     player.elementalCore = 1;
@@ -785,6 +940,7 @@ void InitHero(int classIdx) {
 
     AddInvItem("Health Potion", 0, 0, 0, 0, 0, 3, 8, "Restores 35 HP");
     AddInvItem("Mana Potion", 0, 0, 0, 0, 0, 2, 8, "Restores 25 MP");
+    AddInvItem("Phoenix Elixir", 0, 0, 0, 0, 3, 1, 35, "Restores 100% HP & MP or Auto-Revives");
     AddInvItem("Iron Scrap", 2, 0, 0, 0, 0, 2, 5, "Crafting material");
 
     if (classIdx == 0) { // Warrior
@@ -1377,6 +1533,9 @@ void StartCombat() {
     gameState = STATE_COMBAT;
     const BiomeDef* b = &g_Biomes[player.biome];
 
+    currentEnemy.phase = 1;
+    currentEnemy.maxPhases = 1;
+
     if (player.floor == 5) {
         lstrcpyA(currentEnemy.name, b->boss.name);
         currentEnemy.maxHp = b->boss.maxHp;
@@ -1384,6 +1543,7 @@ void StartCombat() {
         currentEnemy.def = b->boss.def;
         currentEnemy.xp = b->boss.xp;
         currentEnemy.gold = b->boss.gold;
+        currentEnemy.maxPhases = b->maxPhases;
     } else if (player.floor >= 10) {
         lstrcpyA(currentEnemy.name, "Obsidian Dragon (Final Boss)");
         currentEnemy.maxHp = 250;
@@ -1391,6 +1551,7 @@ void StartCombat() {
         currentEnemy.def = 18;
         currentEnemy.xp = 600;
         currentEnemy.gold = 500;
+        currentEnemy.maxPhases = 2;
     } else {
         int r = xrand() % 5;
         const MonsterDef* m = &b->monsters[r];
@@ -1433,6 +1594,20 @@ void StartCombat() {
 
 void EnemyTurn() {
     if (currentEnemy.hp <= 0) return;
+
+    if (player.lightningDazeTurns > 0) {
+        player.lightningDazeTurns--;
+        LogMessage("⚡ Target is DAZED by Lightning Storm and misses its turn!");
+        UpdateUI();
+        return;
+    }
+
+    if (player.holyShieldTurns > 0) {
+        player.holyShieldTurns--;
+        LogMessage("🛡️ HOLY SHIELD completely absorbs incoming attack! (0 Damage taken)");
+        UpdateUI();
+        return;
+    }
 
     int bonusDef = (player.companion.active == 1 && !player.companion.isDown) ? 4 : 0;
     bonusDef += (player.defensePoints * 3);
@@ -1491,6 +1666,15 @@ void EnemyTurn() {
     }
 
     if (player.hp <= 0) {
+        if (player.phoenixElixirs > 0) {
+            player.phoenixElixirs--;
+            player.hp = player.maxHp / 2;
+            player.mp = player.maxMp / 2;
+            SfxLevelUp();
+            LogMessage("🔥 PHOENIX ELIXIR AUTO-REVIVE! Rising from the ashes, Hero is restored to 50% HP & MP!");
+            UpdateUI();
+            return;
+        }
         player.hp = 0;
         SfxDeath();
         if (player.arenaActive) {
@@ -1508,6 +1692,21 @@ void EnemyTurn() {
 }
 
 void CombatVictory() {
+    if (currentEnemy.phase < currentEnemy.maxPhases) {
+        currentEnemy.phase++;
+        currentEnemy.maxHp = (int)(currentEnemy.maxHp * 1.4f);
+        currentEnemy.hp = currentEnemy.maxHp;
+        currentEnemy.str = (int)(currentEnemy.str * 1.35f);
+        currentEnemy.def = (int)(currentEnemy.def * 1.25f);
+        char phaseMsg[128];
+        wsprintfA(phaseMsg, "🔥 LEGENDARY BOSS PHASE %d TRANSITION! %s enrages into Phase %d with full HP and +35%% power!", currentEnemy.phase, currentEnemy.name, currentEnemy.phase);
+        LogMessage(phaseMsg);
+        SfxSpellCast();
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+
     int rewardGold = currentEnemy.gold;
     if (player.utilityPoints >= 2) rewardGold = (rewardGold * 125) / 100;
     char msg[128];
@@ -1518,7 +1717,7 @@ void CombatVictory() {
     player.gold += rewardGold;
 
     UnlockAchievement(0); // First Blood
-    if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon")) {
+    if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon") || ContainsSubstr(currentEnemy.name, "Titan") || ContainsSubstr(currentEnemy.name, "Overlord")) {
         UnlockAchievement(2); // Dragon Slayer
     }
     if (player.floor >= 5) UnlockAchievement(1); // Dungeon Explorer
@@ -1542,7 +1741,7 @@ void CombatVictory() {
     }
 
     if (player.questMonstersKilled < 5) player.questMonstersKilled++;
-    if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon")) {
+    if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon") || ContainsSubstr(currentEnemy.name, "Titan") || ContainsSubstr(currentEnemy.name, "Overlord")) {
         player.questBossKilled = 1;
     }
 
@@ -1589,6 +1788,91 @@ void CombatVictory() {
     gameState = STATE_DUNGEON;
     SetupButtons();
     UpdateUI();
+}
+
+void CastLightningStorm() {
+    if (gameState != STATE_COMBAT || currentEnemy.hp <= 0) return;
+    int cost = 18;
+    if (player.mp < cost) {
+        LogMessage("Not enough MP for Lightning Storm (Requires 18 MP)!");
+        return;
+    }
+    player.mp -= cost;
+    SfxSpellCast();
+    int bonusInt = (player.companion.active == 2 && !player.companion.isDown) ? 5 : 0;
+    int dmg = (int)((player.intStat + bonusInt) * 25 + player.str * 8);
+    if (player.berserkTurns > 0) dmg *= 2;
+    if (player.manaSurgeActive) {
+        dmg = (int)(dmg * 1.5f);
+        player.manaSurgeActive = 0;
+        LogMessage("⚡ Mana Surge empowers Lightning Storm by +50%!");
+    }
+    char msg[128];
+    wsprintfA(msg, "⚡ LIGHTNING STORM! Heavy thunder strikes %s for %d magic damage!", currentEnemy.name, dmg);
+    LogMessage(msg);
+    currentEnemy.hp -= dmg;
+    if ((xrand() % 100) < 45) {
+        player.lightningDazeTurns = 1;
+        LogMessage("⚡ Target is DAZED by the electrical shockwave!");
+    }
+    if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        CombatVictory();
+        return;
+    }
+    TriggerCompanionCombatTurn();
+    if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        CombatVictory();
+        return;
+    }
+    EnemyTurn();
+}
+
+void CastHolyShield() {
+    if (gameState != STATE_COMBAT || currentEnemy.hp <= 0) return;
+    int cost = 14;
+    if (player.mp < cost) {
+        LogMessage("Not enough MP for Holy Shield (Requires 14 MP)!");
+        return;
+    }
+    player.mp -= cost;
+    SfxSpellCast();
+    player.holyShieldTurns = 2;
+    player.hp += 25;
+    if (player.hp > player.maxHp) player.hp = player.maxHp;
+    LogMessage("🛡️ HOLY SHIELD ACTIVATED! Granted 100% invulnerability barrier for 2 turns and +25 HP recovery!");
+    UpdateUI();
+    EnemyTurn();
+}
+
+void CastBerserkMight() {
+    if (gameState != STATE_COMBAT || currentEnemy.hp <= 0) return;
+    int cost = 12;
+    if (player.mp < cost) {
+        LogMessage("Not enough MP for Berserk Might (Requires 12 MP)!");
+        return;
+    }
+    player.mp -= cost;
+    SfxSpellCast();
+    player.berserkTurns = 3;
+    LogMessage("🔥 BERSERK MIGHT ACTIVATED! Attack damage doubled (+100%) for 3 turns!");
+    UpdateUI();
+    EnemyTurn();
+}
+
+void UsePhoenixElixir() {
+    if (player.phoenixElixirs <= 0) {
+        LogMessage("No Phoenix Elixirs in inventory!");
+        return;
+    }
+    player.phoenixElixirs--;
+    player.hp = player.maxHp;
+    player.mp = player.maxMp;
+    SfxLevelUp();
+    LogMessage("🔥 DRANK PHOENIX ELIXIR! Restored 100% Max HP and 100% Max MP!");
+    UpdateUI();
+    if (gameState == STATE_COMBAT) EnemyTurn();
 }
 
 void HandleButton1() {
@@ -2106,7 +2390,7 @@ void HandleButton3() {
         LogMessage("Selected Class: Rogue (High Agility & Crits).");
         UpdateUI();
     } else if (gameState == STATE_TOWN) {
-        player.biome = (player.biome + 1) % 3;
+        player.biome = (player.biome + 1) % 15;
         player.floor = 1;
         SfxDoorOpen();
         char msg[128];
@@ -2635,14 +2919,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     case 5: HandleButton6(); break;
                 }
             } else if (wParam == 'S' || wParam == 's') {
-                SaveToSlot(0);
-                LogMessage("⚡ Quick Saved game to Slot 1!");
-                SetupButtons();
-                UpdateUI();
+                if (gameState == STATE_COMBAT) {
+                    CastHolyShield();
+                } else {
+                    SaveToSlot(0);
+                    LogMessage("⚡ Quick Saved game to Slot 1!");
+                    SetupButtons();
+                    UpdateUI();
+                }
             } else if (wParam == 'L' || wParam == 'l') {
-                gameState = STATE_SAVE_LOAD;
-                SetupButtons();
-                UpdateUI();
+                if (gameState == STATE_COMBAT) {
+                    CastLightningStorm();
+                } else {
+                    gameState = STATE_SAVE_LOAD;
+                    SetupButtons();
+                    UpdateUI();
+                }
+            } else if (wParam == 'P' || wParam == 'p') {
+                UsePhoenixElixir();
+            } else if (wParam == 'B' || wParam == 'b') {
+                if (gameState == STATE_COMBAT) {
+                    CastBerserkMight();
+                }
             } else if (wParam == 'I' || wParam == 'i') {
                 gameState = STATE_INVENTORY;
                 SetupButtons();

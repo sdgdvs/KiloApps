@@ -822,15 +822,16 @@
 
     let currentState = STATE.CHAR_CREATE;
 
-    // Dungeon Biomes Data Definition
+    // Dungeon Biomes Data Definition (15 Chapter Dungeons)
     const BIOMES = [
       {
-        id: 'mines',
-        name: 'Goblin Mines',
+        id: 'outpost',
+        name: 'Goblin Outpost',
         icon: '⛏️',
         desc: 'Unstable damp shafts teeming with goblins, cave spiders, and rock golems.',
         hazard: 'Cave-In',
         hazardIcon: '🪨',
+        maxPhases: 1,
         monsters: [
           { name: 'Cave Goblin', hp: 30, str: 8, def: 3, xp: 30, gold: 15 },
           { name: 'Goblin Slinger', hp: 25, str: 10, def: 2, xp: 35, gold: 18 },
@@ -838,15 +839,16 @@
           { name: 'Mine Taskmaster', hp: 55, str: 15, def: 6, xp: 70, gold: 40 },
           { name: 'Rock Golem', hp: 75, str: 17, def: 10, xp: 95, gold: 55 }
         ],
-        boss: { name: '👑 Goblin King (Boss)', hp: 130, str: 22, def: 10, xp: 260, gold: 160 }
+        boss: { name: '👑 Goblin King Prime (Boss)', hp: 140, str: 22, def: 10, xp: 280, gold: 180 }
       },
       {
-        id: 'catacombs',
-        name: 'Ancient Catacombs',
+        id: 'crypt',
+        name: 'Skeleton Crypt',
         icon: '💀',
         desc: 'Dark underground vaults infested with skeletal warriors and poisonous miasma.',
         hazard: 'Poison Fog',
         hazardIcon: '☠️',
+        maxPhases: 2,
         monsters: [
           { name: 'Skeleton Archer', hp: 32, str: 11, def: 3, xp: 38, gold: 20 },
           { name: 'Tomb Ghoul', hp: 45, str: 13, def: 5, xp: 52, gold: 28 },
@@ -854,23 +856,228 @@
           { name: 'Dread Wraith', hp: 65, str: 18, def: 7, xp: 100, gold: 60 },
           { name: 'Bone Colossus', hp: 85, str: 20, def: 11, xp: 120, gold: 70 }
         ],
-        boss: { name: '☠️ Lich Lord (Boss)', hp: 160, str: 26, def: 12, xp: 350, gold: 220 }
+        boss: { name: '☠️ Lich Lord Malakor (Boss)', hp: 180, str: 26, def: 12, xp: 380, gold: 240 }
+      },
+      {
+        id: 'temple',
+        name: 'Sunken Temple',
+        icon: '🌊',
+        desc: 'Ancient aquatic ruins submerged beneath treacherous tidal currents.',
+        hazard: 'Tidal Miasma',
+        hazardIcon: '💧',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Drowned Zealot', hp: 40, str: 13, def: 4, xp: 45, gold: 24 },
+          { name: 'Coral Naga', hp: 52, str: 15, def: 6, xp: 60, gold: 32 },
+          { name: 'Deep Scuttler', hp: 60, str: 17, def: 8, xp: 80, gold: 42 },
+          { name: 'Mire Siren', hp: 72, str: 19, def: 7, xp: 105, gold: 55 },
+          { name: 'Tidal Elemental', hp: 90, str: 22, def: 12, xp: 130, gold: 75 }
+        ],
+        boss: { name: '🐙 Abyssal Leviathan (Boss)', hp: 220, str: 30, def: 14, xp: 480, gold: 300 }
+      },
+      {
+        id: 'forest',
+        name: 'Dark Forest',
+        icon: '🌲',
+        desc: 'Entangled shadowy woodland filled with venomous predators and ancient dryads.',
+        hazard: 'Toxic Spores',
+        hazardIcon: '🍄',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Venom Stalker', hp: 48, str: 15, def: 5, xp: 55, gold: 28 },
+          { name: 'Shadow Wolf', hp: 58, str: 17, def: 6, xp: 72, gold: 38 },
+          { name: 'Brier Dryad', hp: 68, str: 19, def: 8, xp: 92, gold: 50 },
+          { name: 'Moss Golem', hp: 85, str: 22, def: 13, xp: 120, gold: 65 },
+          { name: 'Corrupted Ent', hp: 105, str: 25, def: 15, xp: 150, gold: 85 }
+        ],
+        boss: { name: '🌲 Ancient Treant (Boss)', hp: 260, str: 34, def: 16, xp: 580, gold: 360 }
+      },
+      {
+        id: 'fortress',
+        name: 'Orc Fortress',
+        icon: '🏰',
+        desc: 'Heavily fortified military stronghold of brutal war chiefs and siege beasts.',
+        hazard: 'Boiling Oil',
+        hazardIcon: '🛢️',
+        maxPhases: 2,
+        monsters: [
+          { name: 'Orc Grunt', hp: 55, str: 17, def: 6, xp: 68, gold: 35 },
+          { name: 'War Berserker', hp: 70, str: 20, def: 7, xp: 88, gold: 48 },
+          { name: 'Iron Shaman', hp: 78, str: 22, def: 9, xp: 110, gold: 60 },
+          { name: 'Siege Ogre', hp: 98, str: 25, def: 14, xp: 145, gold: 80 },
+          { name: 'Thunder Beast', hp: 120, str: 28, def: 16, xp: 180, gold: 100 }
+        ],
+        boss: { name: '🪓 Orc Warlord Grommash (Boss)', hp: 300, str: 38, def: 18, xp: 700, gold: 420 }
+      },
+      {
+        id: 'haunted_mine',
+        name: 'Haunted Mine',
+        icon: '👻',
+        desc: 'Forsaken mineral shafts haunted by restless spectres and phantom colossi.',
+        hazard: 'Spectral Chill',
+        hazardIcon: '❄️',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Tomb Banshee', hp: 60, str: 19, def: 6, xp: 78, gold: 40 },
+          { name: 'Phantom Miner', hp: 75, str: 22, def: 8, xp: 100, gold: 52 },
+          { name: 'Spectral Shade', hp: 88, str: 24, def: 10, xp: 125, gold: 68 },
+          { name: 'Curse Spectre', hp: 108, str: 27, def: 12, xp: 160, gold: 88 },
+          { name: 'Phantom Colossus', hp: 130, str: 30, def: 17, xp: 200, gold: 110 }
+        ],
+        boss: { name: '👻 Wraith Sovereign Nocturne (Boss)', hp: 340, str: 42, def: 20, xp: 820, gold: 500 }
+      },
+      {
+        id: 'frostpeak',
+        name: 'Frostpeak Caverns',
+        icon: '❄️',
+        desc: 'Frozen sub-zero labyrinth dominated by ice yetis and glacial monoliths.',
+        hazard: 'Blizzard Frostbite',
+        hazardIcon: '🌬️',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Ice Yeti', hp: 70, str: 21, def: 8, xp: 90, gold: 48 },
+          { name: 'Frost Wisp', hp: 82, str: 23, def: 7, xp: 112, gold: 58 },
+          { name: 'Glacial Golem', hp: 100, str: 26, def: 14, xp: 140, gold: 75 },
+          { name: 'Snow Drake', hp: 120, str: 29, def: 12, xp: 180, gold: 95 },
+          { name: 'Frozen Stalker', hp: 142, str: 32, def: 18, xp: 220, gold: 120 }
+        ],
+        boss: { name: '❄️ Frost Giant King Ymir (Boss)', hp: 380, str: 46, def: 22, xp: 950, gold: 580 }
+      },
+      {
+        id: 'serpent_swamp',
+        name: 'Serpent Swamps',
+        icon: '🐍',
+        desc: 'Murky quagmire harboring venomous vipers, basilisks, and multi-headed hydras.',
+        hazard: 'Acidic Miasma',
+        hazardIcon: '🧪',
+        maxPhases: 2,
+        monsters: [
+          { name: 'Marsh Basilisk', hp: 78, str: 23, def: 9, xp: 102, gold: 55 },
+          { name: 'Poison Viper', hp: 90, str: 25, def: 8, xp: 125, gold: 66 },
+          { name: 'Swamp Troll', hp: 112, str: 28, def: 13, xp: 160, gold: 85 },
+          { name: 'Acid Elemental', hp: 132, str: 31, def: 16, xp: 200, gold: 105 },
+          { name: 'Venomous Hydra', hp: 155, str: 34, def: 19, xp: 245, gold: 135 }
+        ],
+        boss: { name: '🐍 Hydra Matriarch Gorgon (Boss)', hp: 420, str: 50, def: 24, xp: 1100, gold: 660 }
+      },
+      {
+        id: 'infernal_volcano',
+        name: 'Infernal Volcano',
+        icon: '🔥',
+        desc: 'Scorching molten crater filled with pyro fiends and elemental magma lords.',
+        hazard: 'Magma Eruption',
+        hazardIcon: '🌋',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Lava Fiend', hp: 85, str: 25, def: 9, xp: 115, gold: 60 },
+          { name: 'Fire Drake', hp: 100, str: 27, def: 11, xp: 140, gold: 75 },
+          { name: 'Pyro Fiend', hp: 120, str: 30, def: 13, xp: 178, gold: 95 },
+          { name: 'Molten Golem', hp: 145, str: 33, def: 18, xp: 225, gold: 120 },
+          { name: 'Magma Charger', hp: 168, str: 36, def: 16, xp: 270, gold: 145 }
+        ],
+        boss: { name: '🔥 Magma Archon Ignis (Boss)', hp: 460, str: 54, def: 26, xp: 1250, gold: 750 }
       },
       {
         id: 'spire',
-        name: 'Dragon Spire',
+        name: 'Dragon Cavern',
         icon: '🐲',
-        desc: 'Blistering volcanic citadel inhabited by fire drakes and magma beasts.',
-        hazard: 'Lava Burst',
+        desc: 'Blistering volcanic citadel inhabited by fire drakes and wyrm overlords.',
+        hazard: 'Dragon Flame',
         hazardIcon: '🔥',
+        maxPhases: 2,
         monsters: [
-          { name: 'Magma Imp', hp: 40, str: 14, def: 4, xp: 50, gold: 25 },
-          { name: 'Fire Drake', hp: 60, str: 17, def: 7, xp: 80, gold: 45 },
-          { name: 'Obsidian Elemental', hp: 80, str: 20, def: 12, xp: 110, gold: 65 },
-          { name: 'Wyvern Sentinel', hp: 95, str: 23, def: 10, xp: 140, gold: 85 },
-          { name: 'Hellhound', hp: 70, str: 21, def: 8, xp: 105, gold: 60 }
+          { name: 'Magma Imp', hp: 95, str: 27, def: 10, xp: 130, gold: 70 },
+          { name: 'Fire Drake Prime', hp: 115, str: 30, def: 13, xp: 160, gold: 88 },
+          { name: 'Obsidian Elemental', hp: 138, str: 33, def: 18, xp: 200, gold: 110 },
+          { name: 'Wyvern Sentinel', hp: 160, str: 36, def: 16, xp: 250, gold: 135 },
+          { name: 'Hellhound Alpha', hp: 185, str: 39, def: 20, xp: 300, gold: 160 }
         ],
-        boss: { name: '🐲 Obsidian Dragon (Boss)', hp: 250, str: 32, def: 18, xp: 600, gold: 500 }
+        boss: { name: '🐲 Wyrm Overlord Bahamut (Boss)', hp: 520, str: 60, def: 28, xp: 1450, gold: 850 }
+      },
+      {
+        id: 'shadow_realm',
+        name: 'Shadow Realm',
+        icon: '🌑',
+        desc: 'Dimensional abyss overflowing with void walkers, shadow fiends, and dark archons.',
+        hazard: 'Void Decay',
+        hazardIcon: '🌌',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Void Walker', hp: 105, str: 29, def: 11, xp: 145, gold: 78 },
+          { name: 'Shadow Fiend', hp: 128, str: 32, def: 14, xp: 180, gold: 98 },
+          { name: 'Nether Hound', hp: 150, str: 35, def: 16, xp: 225, gold: 122 },
+          { name: 'Abyss Stalker', hp: 175, str: 38, def: 19, xp: 280, gold: 150 },
+          { name: 'Dark Archon', hp: 200, str: 41, def: 22, xp: 335, gold: 180 }
+        ],
+        boss: { name: '🌑 Shadow Monarch Erebus (Boss)', hp: 580, str: 65, def: 30, xp: 1650, gold: 980 }
+      },
+      {
+        id: 'celestial_ruins',
+        name: 'Celestial Ruins',
+        icon: '🪽',
+        desc: 'Shattered holy temple where fallen seraphs and radiant sentries patrol sacred altars.',
+        hazard: 'Solar Flare',
+        hazardIcon: '✨',
+        maxPhases: 1,
+        monsters: [
+          { name: 'Radiant Sentry', hp: 118, str: 31, def: 12, xp: 160, gold: 85 },
+          { name: 'Solar Specter', hp: 140, str: 34, def: 15, xp: 200, gold: 110 },
+          { name: 'Heavenly Sentinel', hp: 165, str: 37, def: 18, xp: 250, gold: 135 },
+          { name: 'Prism Golem', hp: 192, str: 40, def: 22, xp: 310, gold: 165 },
+          { name: 'Archangel Remnant', hp: 220, str: 44, def: 25, xp: 375, gold: 200 }
+        ],
+        boss: { name: '🪽 Fallen Seraph Gabriel (Boss)', hp: 640, str: 70, def: 32, xp: 1900, gold: 1100 }
+      },
+      {
+        id: 'blood_citadel',
+        name: 'Blood Citadel',
+        icon: '🩸',
+        desc: 'Gothic crimson castle ruled by ancient vampire knights and blood mages.',
+        hazard: 'Vampiric Drain',
+        hazardIcon: '🦇',
+        maxPhases: 2,
+        monsters: [
+          { name: 'Blood Thrall', hp: 130, str: 33, def: 13, xp: 178, gold: 95 },
+          { name: 'Crimson Bat', hp: 155, str: 36, def: 15, xp: 220, gold: 120 },
+          { name: 'Flesh Golem', hp: 182, str: 40, def: 20, xp: 280, gold: 150 },
+          { name: 'Vampire Knight', hp: 210, str: 43, def: 23, xp: 340, gold: 180 },
+          { name: 'Blood Mage', hp: 240, str: 47, def: 26, xp: 410, gold: 220 }
+        ],
+        boss: { name: '🩸 Blood Emperor Dracula (Boss)', hp: 700, str: 75, def: 34, xp: 2200, gold: 1250 }
+      },
+      {
+        id: 'abyssal_trench',
+        name: 'Abyssal Trench',
+        icon: '⚓',
+        desc: 'Crushing deep sea trench harboring trench kraken, void leviathans, and abyssal titans.',
+        hazard: 'Crushing Pressure',
+        hazardIcon: '🌊',
+        maxPhases: 2,
+        monsters: [
+          { name: 'Trench Kraken', hp: 145, str: 36, def: 15, xp: 200, gold: 110 },
+          { name: 'Abyss Crawler', hp: 172, str: 39, def: 17, xp: 250, gold: 135 },
+          { name: 'Depth Fiend', hp: 200, str: 43, def: 21, xp: 310, gold: 165 },
+          { name: 'Void Leviathan', hp: 232, str: 46, def: 24, xp: 380, gold: 200 },
+          { name: 'Dark Siren', hp: 265, str: 50, def: 28, xp: 450, gold: 240 }
+        ],
+        boss: { name: '⚓ Abyssal Titan Oceanus (Boss)', hp: 780, str: 80, def: 36, xp: 2500, gold: 1400 }
+      },
+      {
+        id: 'void_citadel',
+        name: 'Void Citadel',
+        icon: '🌌',
+        desc: 'The ultimate nexus of oblivion where space and time shatter before Void Overlord Malakor.',
+        hazard: 'Dimensional Collapse',
+        hazardIcon: '🌀',
+        maxPhases: 3,
+        monsters: [
+          { name: 'Void Fiend', hp: 160, str: 39, def: 16, xp: 230, gold: 125 },
+          { name: 'Dimensional Anomaly', hp: 190, str: 43, def: 19, xp: 290, gold: 155 },
+          { name: 'Cosmos Weaver', hp: 222, str: 47, def: 22, xp: 360, gold: 190 },
+          { name: 'Oblivion Sentinel', hp: 258, str: 51, def: 26, xp: 440, gold: 230 },
+          { name: 'Void Behemoth', hp: 300, str: 56, def: 30, xp: 530, gold: 280 }
+        ],
+        boss: { name: '🌌 Void Overlord Malakor (Boss)', hp: 900, str: 90, def: 40, xp: 3000, gold: 1800 }
       }
     ];
 
@@ -896,6 +1103,10 @@
       utilityPoints: 0,
       ironWillTurns: 0,
       manaSurgeActive: false,
+      holyShieldTurns: 0,
+      berserkTurns: 0,
+      lightningDazeTurns: 0,
+      phoenixElixirs: 1,
       floor: 1,
       biome: 0,
       arenaWave: 1,
@@ -914,7 +1125,8 @@
       invSort: 'rarity',
       inventory: [
         { id: 'hp_potion', name: 'Health Potion', type: 'consumable', rarity: 0, count: 3, value: 8, desc: 'Restores 35 HP' },
-        { id: 'mp_potion', name: 'Mana Potion', type: 'consumable', rarity: 0, count: 2, value: 8, desc: 'Restores 25 MP' }
+        { id: 'mp_potion', name: 'Mana Potion', type: 'consumable', rarity: 0, count: 2, value: 8, desc: 'Restores 25 MP' },
+        { id: 'phoenix_elixir', name: 'Phoenix Elixir', type: 'consumable', rarity: 3, count: 1, value: 35, desc: 'Restores 100% HP & MP or Auto-Revives' }
       ],
       quests: [
         { id: 'slay_monsters', title: 'Clear Dungeon Chambers', req: 5, current: 0, reward: 50, done: false },
@@ -2297,6 +2509,10 @@
             <button class="btn btn-accent" onclick="buyShopItem('mp_potion', 15)">Buy</button>
           </div>
           <div class="item-row">
+            <span>🔥 Phoenix Elixir (100% HP/MP / Auto-Revive) - 60 Gold</span>
+            <button class="btn btn-accent" onclick="buyShopItem('phoenix_elixir', 60)">Buy</button>
+          </div>
+          <div class="item-row">
             <span>⚔️ Steel Longsword (+8 STR) - 60 Gold</span>
             <button class="btn btn-accent" onclick="buyEquipment('Steel Longsword', 'weapon', 8, 60)">Buy</button>
           </div>
@@ -2319,14 +2535,22 @@
         return;
       }
       player.gold -= cost;
-      let existing = player.inventory.find(i => i.id === itemId);
-      if (existing) {
-        existing.count++;
+      if (itemId === 'phoenix_elixir') {
+        player.phoenixElixirs = (player.phoenixElixirs || 0) + 1;
+        let existing = player.inventory.find(i => i.id === itemId);
+        if (existing) existing.count++;
+        else player.inventory.push({ id: itemId, name: 'Phoenix Elixir', type: 'consumable', rarity: 3, count: 1, value: 35, desc: 'Restores 100% HP & MP or Auto-Revives' });
+        logMsg(`Purchased Phoenix Elixir for ${cost} Gold.`, 'loot');
       } else {
-        const name = itemId === 'hp_potion' ? 'Health Potion' : 'Mana Potion';
-        player.inventory.push({ id: itemId, name: name, count: 1 });
+        let existing = player.inventory.find(i => i.id === itemId);
+        if (existing) {
+          existing.count++;
+        } else {
+          const name = itemId === 'hp_potion' ? 'Health Potion' : 'Mana Potion';
+          player.inventory.push({ id: itemId, name: name, count: 1 });
+        }
+        logMsg(`Purchased ${itemId === 'hp_potion' ? 'Health Potion' : 'Mana Potion'} for ${cost} Gold.`, 'loot');
       }
-      logMsg(`Purchased ${itemId === 'hp_potion' ? 'Health Potion' : 'Mana Potion'} for ${cost} Gold.`, 'loot');
       updateUI();
     }
 
@@ -2679,7 +2903,7 @@
       if (player.floor === 5) {
         baseM = b.boss;
       } else if (player.floor >= 10) {
-        baseM = { name: '🐲 Obsidian Dragon (Final Boss)', hp: 250, str: 32, def: 18, xp: 600, gold: 500 };
+        baseM = { name: '🐲 Obsidian Dragon (Final Boss)', hp: 250, str: 32, def: 18, xp: 600, gold: 500, maxPhases: 2 };
       } else {
         const idx = Math.floor(Math.random() * b.monsters.length);
         baseM = b.monsters[idx];
@@ -2696,7 +2920,9 @@
         str: Math.floor(baseM.str * scale * ngMult),
         def: Math.floor(baseM.def * scale * ngMult),
         xp: Math.floor(baseM.xp * scale * ngRewardMult),
-        gold: Math.floor(baseM.gold * scale * ngRewardMult)
+        gold: Math.floor(baseM.gold * scale * ngRewardMult),
+        phase: 1,
+        maxPhases: baseM.maxPhases || 1
       };
 
       logMsg(`⚠️ An enemy appears in ${b.name}! A hostile ${currentEnemy.name} (HP: ${currentEnemy.hp}) blocks your path!`, 'combat');
@@ -2716,7 +2942,7 @@
         <div class="enemy-card">
           <div class="enemy-info">
             <h3>👾 ${currentEnemy.name}</h3>
-            <p>STR: ${currentEnemy.str} | DEF: ${currentEnemy.def}</p>
+            <p>STR: ${currentEnemy.str} | DEF: ${currentEnemy.def} ${currentEnemy.maxPhases > 1 ? `| Phase: ${currentEnemy.phase}/${currentEnemy.maxPhases}` : ''}</p>
           </div>
           <div style="text-align:right;">
             <div style="font-size:0.85rem; font-weight:700; color:#f38ba8; margin-bottom:4px;">HP: ${currentEnemy.hp} / ${currentEnemy.maxHp}</div>
@@ -2731,13 +2957,99 @@
       const hasBomb = player.inventory.find(i => i.id === 'fire_bomb' && i.count > 0);
       ctrl.innerHTML = `
         <button class="btn btn-danger" onclick="playerAttack()">⚔️ Attack</button>
-        <button class="btn btn-primary" onclick="playerSpell()">🔮 Special / Spell</button>
+        <button class="btn btn-primary" onclick="playerSpell()">🔮 Class Skill</button>
+        <button class="btn btn-craft" onclick="castLightningStorm()">⚡ Lightning Storm (L) (18 MP)</button>
+        <button class="btn btn-accent" onclick="castHolyShield()">🛡️ Holy Shield (S) (14 MP)</button>
+        <button class="btn btn-danger" onclick="castBerserkMight()">🔥 Berserk Might (B) (12 MP)</button>
+        ${(player.phoenixElixirs || 0) > 0 ? `<button class="btn btn-accent" onclick="usePhoenixElixir()">🧪 Phoenix Elixir (P) (${player.phoenixElixirs})</button>` : ''}
         ${player.offensePoints >= 3 ? `<button class="btn btn-danger" onclick="castExecute()">⚔️ Execute (12 MP)</button>` : ''}
         ${player.defensePoints >= 3 ? `<button class="btn btn-accent" onclick="castIronWill()">🛡️ Iron Will (8 MP)</button>` : ''}
         ${player.utilityPoints >= 3 ? `<button class="btn btn-craft" onclick="castManaSurge()">⚡ Mana Surge (0 MP)</button>` : ''}
         ${hasBomb ? `<button class="btn btn-craft" onclick="throwBombInCombat()">💣 Fire Bomb</button>` : ''}
         <button class="btn" onclick="fleeCombat()">🏃 Flee</button>
       `;
+    }
+
+    function castLightningStorm() {
+      if (!currentEnemy || currentEnemy.hp <= 0) return;
+      const cost = 18;
+      if (player.mp < cost) {
+        logMsg(`Not enough MP for Lightning Storm! Required: ${cost} MP.`, 'warning');
+        return;
+      }
+      player.mp -= cost;
+      sfxSpellCast();
+      const bonusInt = (player.companion && !player.companion.isDown && player.companion.id === 'archmage') ? 5 : 0;
+      let dmg = Math.floor((player.int + bonusInt) * 25 + player.str * 8);
+      if (player.berserkTurns > 0) dmg *= 2;
+      if (player.manaSurgeActive) {
+        dmg = Math.floor(dmg * 1.5);
+        player.manaSurgeActive = false;
+        logMsg(`⚡ Mana Surge empowers Lightning Storm by +50%!`, 'spell');
+      }
+      logMsg(`⚡ LIGHTNING STORM! Heavy thunder strikes ${currentEnemy.name} for ${dmg} magic damage!`, 'spell');
+      currentEnemy.hp -= dmg;
+      if (Math.random() < 0.45) {
+        player.lightningDazeTurns = 1;
+        logMsg(`⚡ Target is DAZED by the electrical shockwave!`, 'warning');
+      }
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+      triggerCompanionTurn();
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+      enemyTurn();
+    }
+
+    function castHolyShield() {
+      if (!currentEnemy || currentEnemy.hp <= 0) return;
+      const cost = 14;
+      if (player.mp < cost) {
+        logMsg(`Not enough MP for Holy Shield! Required: ${cost} MP.`, 'warning');
+        return;
+      }
+      player.mp -= cost;
+      sfxSpellCast();
+      player.holyShieldTurns = 2;
+      player.hp = Math.min(player.maxHp, player.hp + 25);
+      logMsg(`🛡️ HOLY SHIELD ACTIVATED! Granted 100% invulnerability barrier for 2 turns and +25 HP recovery!`, 'spell');
+      updateUI();
+      enemyTurn();
+    }
+
+    function castBerserkMight() {
+      if (!currentEnemy || currentEnemy.hp <= 0) return;
+      const cost = 12;
+      if (player.mp < cost) {
+        logMsg(`Not enough MP for Berserk Might! Required: ${cost} MP.`, 'warning');
+        return;
+      }
+      player.mp -= cost;
+      sfxSpellCast();
+      player.berserkTurns = 3;
+      logMsg(`🔥 BERSERK MIGHT ACTIVATED! Attack damage doubled (+100%) for 3 turns!`, 'spell');
+      updateUI();
+      enemyTurn();
+    }
+
+    function usePhoenixElixir() {
+      if ((player.phoenixElixirs || 0) <= 0) {
+        logMsg(`No Phoenix Elixirs in inventory!`, 'warning');
+        return;
+      }
+      player.phoenixElixirs--;
+      player.hp = player.maxHp;
+      player.mp = player.maxMp;
+      sfxLevelUp();
+      logMsg(`🔥 DRANK PHOENIX ELIXIR! Restored 100% Max HP and 100% Max MP!`, 'loot');
+      updateUI();
+      if (currentState === STATE.COMBAT) enemyTurn();
     }
 
     function throwBombInCombat() {
@@ -2759,6 +3071,7 @@
       const offMult = 1.0 + (player.offensePoints * 0.08);
       const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
       let dmg = Math.floor(totalStr * 3.0 * offMult);
+      if (player.berserkTurns > 0) dmg *= 2;
       if ((currentEnemy.hp / currentEnemy.maxHp) < 0.40) {
         dmg = Math.floor(dmg * 2.0);
         logMsg(`💀 EXECUTE CRITICAL! Target is below 40% HP! Dealt ${dmg} fatal physical damage to ${currentEnemy.name}!`, 'combat');
@@ -2831,6 +3144,8 @@
       const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
       let dmg = Math.max(2, Math.floor((totalStr * 1.2 - currentEnemy.def * 0.5) * offMult));
 
+      if (player.berserkTurns > 0) dmg *= 2;
+
       const critChance = (player.agi * 0.02) + (player.offensePoints >= 2 ? 0.10 : 0);
       if (Math.random() < critChance) {
         dmg = Math.floor(dmg * 1.75);
@@ -2887,6 +3202,7 @@
         player.manaSurgeActive = false;
       }
 
+      let dmg = 0;
       if (player.class === 'Warrior') {
         const cost = 5;
         if (player.mp < cost) {
@@ -2895,7 +3211,8 @@
         }
         player.mp -= cost;
         const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
-        const dmg = Math.floor(totalStr * 1.5 * surgeMult);
+        dmg = Math.floor(totalStr * 1.5 * surgeMult);
+        if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
         logMsg(`🛡️ You perform Shield Bash! Dealt ${dmg} physical damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Mage') {
@@ -2905,7 +3222,8 @@
           return;
         }
         player.mp -= cost;
-        const dmg = Math.floor((player.int + bonusInt) * 2.2 * surgeMult);
+        dmg = Math.floor((player.int + bonusInt) * 2.2 * surgeMult);
+        if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
         logMsg(`🔥 You launch a flaming Fireball! Dealt ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Rogue') {
@@ -2915,7 +3233,8 @@
           return;
         }
         player.mp -= cost;
-        const dmg = Math.floor(player.agi * 1.8 * surgeMult);
+        dmg = Math.floor(player.agi * 1.8 * surgeMult);
+        if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
         logMsg(`🗡️ Shadow Strike! You strike from darkness for ${dmg} critical damage!`, 'spell');
       }
@@ -2943,6 +3262,24 @@
 
       setTimeout(() => {
         if (!currentEnemy || currentEnemy.hp <= 0) return;
+
+        if (player.lightningDazeTurns > 0) {
+          player.lightningDazeTurns--;
+          logMsg(`⚡ Target is DAZED by Lightning Storm and skips its turn!`, 'spell');
+          updateUI();
+          return;
+        }
+
+        if (player.holyShieldTurns > 0) {
+          player.holyShieldTurns--;
+          logMsg(`🛡️ HOLY SHIELD completely absorbs incoming attack! (0 Damage taken)`, 'spell');
+          updateUI();
+          return;
+        }
+
+        if (player.berserkTurns > 0) {
+          player.berserkTurns--;
+        }
 
         sfxCombatHit();
 
@@ -2995,6 +3332,15 @@
         }
 
         if (player.hp <= 0) {
+          if ((player.phoenixElixirs || 0) > 0) {
+            player.phoenixElixirs--;
+            player.hp = Math.floor(player.maxHp / 2);
+            player.mp = Math.floor(player.maxMp / 2);
+            sfxLevelUp();
+            logMsg(`🔥 PHOENIX ELIXIR AUTO-REVIVE! Rising from the ashes, Hero is restored to 50% HP & MP!`, 'loot');
+            updateUI();
+            return;
+          }
           player.hp = 0;
           updateUI();
           setGameState(STATE.GAME_OVER);
@@ -3006,6 +3352,19 @@
     }
 
     function combatVictory() {
+      if (currentEnemy && currentEnemy.phase && currentEnemy.phase < currentEnemy.maxPhases) {
+        currentEnemy.phase++;
+        currentEnemy.maxHp = Math.floor(currentEnemy.maxHp * 1.4);
+        currentEnemy.hp = currentEnemy.maxHp;
+        currentEnemy.str = Math.floor(currentEnemy.str * 1.35);
+        currentEnemy.def = Math.floor(currentEnemy.def * 1.25);
+        logMsg(`🔥 LEGENDARY BOSS PHASE ${currentEnemy.phase} TRANSITION! ${currentEnemy.name} enrages into Phase ${currentEnemy.phase} with full HP and +35% power!`, 'warning');
+        sfxSpellCast();
+        updateUI();
+        renderCombat();
+        return;
+      }
+
       logMsg(`🎉 VICTORY! You defeated ${currentEnemy.name}!`, 'loot');
       player.gold += currentEnemy.gold;
       player.xp += currentEnemy.xp;
@@ -3034,7 +3393,7 @@
       player.quests.forEach(q => {
         if (!q.done) {
           if (q.id === 'slay_monsters') q.current++;
-          if (q.id === 'slay_boss' && currentEnemy.name.includes('Goblin King')) q.current++;
+          if (q.id === 'slay_boss' && (currentEnemy.name.includes('Boss') || currentEnemy.name.includes('King') || currentEnemy.name.includes('Lord') || currentEnemy.name.includes('Titan') || currentEnemy.name.includes('Overlord'))) q.current++;
         }
       });
 
@@ -3298,31 +3657,31 @@
 
         <!-- Tab 2: Controls & Shortcuts -->
         <div id="tab-content-controls" class="help-tab-pane" style="display:none;">
-          <div class="help-section-title">⌨️ Keyboard Shortcuts Reference</div>
+          <div class="help-section-title">⌨️ Keyboard Shortcuts & Battle Spells Reference</div>
           <div class="help-grid">
+            <div class="help-card">
+              <h4>⚡ <kbd>L</kbd> Lightning Storm</h4>
+              <p>In combat: Casts Lightning Storm (18 MP) dealing massive magic damage with 45% chance to DAZE target.</p>
+            </div>
+            <div class="help-card">
+              <h4>🛡️ <kbd>S</kbd> Holy Shield</h4>
+              <p>In combat: Casts Holy Shield (14 MP) granting 2 turns 100% invulnerability barrier & +25 HP recovery.</p>
+            </div>
+            <div class="help-card">
+              <h4>🔥 <kbd>P</kbd> Phoenix Elixir</h4>
+              <p>In or out of combat: Consumes Phoenix Elixir restoring 100% HP & MP (or auto-revives hero at 50% HP/MP upon defeat).</p>
+            </div>
+            <div class="help-card">
+              <h4>💥 <kbd>B</kbd> Berserk Might</h4>
+              <p>In combat: Casts Berserk Might (12 MP) doubling damage output (+100%) for 3 turns.</p>
+            </div>
             <div class="help-card">
               <h4><kbd>H</kbd> / <kbd>F1</kbd> / <kbd>?</kbd> Toggle Guide</h4>
               <p>Opens or closes this Comprehensive Help & Codex overlay at any point in the game.</p>
             </div>
             <div class="help-card">
-              <h4><kbd>1</kbd> - <kbd>6</kbd> Action Hotkeys</h4>
-              <p>Triggers action buttons 1 through 6 in town screens, dungeon exploration, and battle commands.</p>
-            </div>
-            <div class="help-card">
-              <h4><kbd>S</kbd> Quick Save</h4>
-              <p>Instantly saves your current hero state and inventory into Save Slot 1.</p>
-            </div>
-            <div class="help-card">
-              <h4><kbd>L</kbd> Save / Load Screen</h4>
-              <p>Opens the Save Slot Manager to save, load, or clear any of the 4 save slots.</p>
-            </div>
-            <div class="help-card">
               <h4><kbd>I</kbd> Open Inventory</h4>
               <p>Opens the Inventory Hub to equip gear, drink potions, filter items, and quick-sell commons.</p>
-            </div>
-            <div class="help-card">
-              <h4><kbd>Esc</kbd> Close / Return</h4>
-              <p>Closes open modal dialogs or returns from sub-menus back to Oakhaven Town Square.</p>
             </div>
           </div>
 
@@ -3335,89 +3694,89 @@
 
         <!-- Tab 3: Bestiary & Lore Codex -->
         <div id="tab-content-bestiary" class="help-tab-pane" style="display:none;">
-          <div class="help-section-title">🐉 Bestiary of the Obsidian Spire</div>
+          <div class="help-section-title">🐉 Bestiary & 15 Chapter Dungeons</div>
           <div class="help-grid">
-            <!-- Mines -->
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Mines</span> Cave Goblin</h4>
-              <p><strong>Stats:</strong> HP 30 | STR 8 | DEF 3 | XP 30 | 15G</p>
-              <p>Fast subterranean goblin worker armed with a crude pickaxe.</p>
+              <h4><span class="codex-badge">Ch. 1 Outpost</span> ⛏️ Goblin Outpost</h4>
+              <p><strong>Boss:</strong> 👑 Goblin King Prime (1 Phase)</p>
+              <p>Unstable damp shafts teeming with goblins, cave spiders, and rock golems. Hazard: 🪨 Cave-In.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Mines</span> Goblin Slinger</h4>
-              <p><strong>Stats:</strong> HP 25 | STR 10 | DEF 2 | XP 35 | 18G</p>
-              <p>Ranged goblin scout that hurls jagged cave stones.</p>
+              <h4><span class="codex-badge">Ch. 2 Crypt</span> 💀 Skeleton Crypt</h4>
+              <p><strong>Boss:</strong> ☠️ Lich Lord Malakor (2 Multi-Stage Phases)</p>
+              <p>Dark underground vaults infested with skeletal archers and tomb ghouls. Hazard: ☠️ Poison Fog.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Mines</span> Cave Spider</h4>
-              <p><strong>Stats:</strong> HP 38 | STR 11 | DEF 4 | XP 45 | 22G</p>
-              <p>Venomous arachnid lurking in webbed mine shafts.</p>
+              <h4><span class="codex-badge">Ch. 3 Temple</span> 🌊 Sunken Temple</h4>
+              <p><strong>Boss:</strong> 🐙 Abyssal Leviathan (1 Phase)</p>
+              <p>Submerged ancient ruins guarded by drowned zealots and coral nagas. Hazard: 💧 Tidal Miasma.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Mines</span> Rock Golem</h4>
-              <p><strong>Stats:</strong> HP 75 | STR 17 | DEF 10 | XP 95 | 55G</p>
-              <p>Enormous stone construct with massive physical defense.</p>
+              <h4><span class="codex-badge">Ch. 4 Forest</span> 🌲 Dark Forest</h4>
+              <p><strong>Boss:</strong> 🌲 Ancient Treant (1 Phase)</p>
+              <p>Entangled woodland filled with shadow wolves and venom stalkers. Hazard: 🍄 Toxic Spores.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Mines Boss</span> 👑 Goblin King</h4>
-              <p><strong>Stats:</strong> HP 130 | STR 22 | DEF 10 | XP 260 | 160G</p>
-              <p>Monarch of the Abandoned Mines. High health and heavy swings.</p>
-            </div>
-
-            <!-- Catacombs -->
-            <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Catacombs</span> Skeleton Archer</h4>
-              <p><strong>Stats:</strong> HP 32 | STR 11 | DEF 3 | XP 38 | 20G</p>
-              <p>Undead bowman firing bone-tipped arrows from shadows.</p>
+              <h4><span class="codex-badge">Ch. 5 Fortress</span> 🏰 Orc Fortress</h4>
+              <p><strong>Boss:</strong> 🪓 Orc Warlord Grommash (2 Multi-Stage Phases)</p>
+              <p>Heavily fortified stronghold of war berserkers and siege ogres. Hazard: 🛢️ Boiling Oil.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Catacombs</span> Tomb Ghoul</h4>
-              <p><strong>Stats:</strong> HP 45 | STR 13 | DEF 5 | XP 52 | 28G</p>
-              <p>Frenzied flesh-eater that haunts ancient sarcophagi.</p>
+              <h4><span class="codex-badge">Ch. 6 Mine</span> 👻 Haunted Mine</h4>
+              <p><strong>Boss:</strong> 👻 Wraith Sovereign Nocturne (1 Phase)</p>
+              <p>Forsaken shafts haunted by tomb banshees and phantom colossi. Hazard: ❄️ Spectral Chill.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Catacombs</span> Crypt Necromancer</h4>
-              <p><strong>Stats:</strong> HP 50 | STR 16 | DEF 4 | XP 75 | 45G</p>
-              <p>Dark spellcaster channeling shadow bolts and necromantic curses.</p>
+              <h4><span class="codex-badge">Ch. 7 Frostpeak</span> ❄️ Frostpeak Caverns</h4>
+              <p><strong>Boss:</strong> ❄️ Frost Giant King Ymir (1 Phase)</p>
+              <p>Frozen sub-zero labyrinth dominated by ice yetis and glacial golems. Hazard: 🌬️ Blizzard Frostbite.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Catacombs</span> Dread Wraith</h4>
-              <p><strong>Stats:</strong> HP 65 | STR 18 | DEF 7 | XP 100 | 60G</p>
-              <p>Spectral phantom that siphons life force from intruders.</p>
+              <h4><span class="codex-badge">Ch. 8 Swamps</span> 🐍 Serpent Swamps</h4>
+              <p><strong>Boss:</strong> 🐍 Hydra Matriarch Gorgon (2 Multi-Stage Phases)</p>
+              <p>Murky quagmire harboring basilisks, swamp trolls, and venomous hydras. Hazard: 🧪 Acidic Miasma.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Catacombs Boss</span> ☠️ Lich Lord</h4>
-              <p><strong>Stats:</strong> HP 160 | STR 26 | DEF 12 | XP 350 | 220G</p>
-              <p>Master of dark sorcery commanding necrotic frost and life drain.</p>
-            </div>
-
-            <!-- Spire -->
-            <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Spire</span> Magma Imp</h4>
-              <p><strong>Stats:</strong> HP 40 | STR 14 | DEF 4 | XP 50 | 25G</p>
-              <p>Volcanic fiend shooting magma sparks.</p>
+              <h4><span class="codex-badge">Ch. 9 Volcano</span> 🔥 Infernal Volcano</h4>
+              <p><strong>Boss:</strong> 🔥 Magma Archon Ignis (1 Phase)</p>
+              <p>Scorching molten crater filled with pyro fiends and magma chargers. Hazard: 🌋 Magma Eruption.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Spire</span> Fire Drake</h4>
-              <p><strong>Stats:</strong> HP 60 | STR 17 | DEF 7 | XP 80 | 45G</p>
-              <p>Lesser dragon-kin breathing blistering flame.</p>
+              <h4><span class="codex-badge">Ch. 10 Cavern</span> 🐲 Dragon Cavern</h4>
+              <p><strong>Boss:</strong> 🐲 Wyrm Overlord Bahamut (2 Multi-Stage Phases)</p>
+              <p>Volcanic citadel inhabited by fire drakes and hellhounds. Hazard: 🔥 Dragon Flame.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Spire</span> Obsidian Elemental</h4>
-              <p><strong>Stats:</strong> HP 80 | STR 20 | DEF 12 | XP 110 | 65G</p>
-              <p>Crystalline titan forged from molten glass and dark quartz.</p>
+              <h4><span class="codex-badge">Ch. 11 Shadow</span> 🌑 Shadow Realm</h4>
+              <p><strong>Boss:</strong> 🌑 Shadow Monarch Erebus (1 Phase)</p>
+              <p>Dimensional abyss with void walkers and dark archons. Hazard: 🌌 Void Decay.</p>
             </div>
             <div class="help-card codex-searchable">
-              <h4><span class="codex-badge">Spire Boss</span> 🐲 Obsidian Dragon</h4>
-              <p><strong>Stats:</strong> HP 250 | STR 32 | DEF 18 | XP 600 | 500G</p>
-              <p>Ancient terror dwelling atop the Spire apex. Devastating fire damage.</p>
+              <h4><span class="codex-badge">Ch. 12 Ruins</span> 🪽 Celestial Ruins</h4>
+              <p><strong>Boss:</strong> 🪽 Fallen Seraph Gabriel (1 Phase)</p>
+              <p>Shattered holy temple of radiant sentries and solar specters. Hazard: ✨ Solar Flare.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Ch. 13 Citadel</span> 🩸 Blood Citadel</h4>
+              <p><strong>Boss:</strong> 🩸 Blood Emperor Dracula (2 Multi-Stage Phases)</p>
+              <p>Gothic castle ruled by vampire knights and blood mages. Hazard: 🦇 Vampiric Drain.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Ch. 14 Trench</span> ⚓ Abyssal Trench</h4>
+              <p><strong>Boss:</strong> ⚓ Abyssal Titan Oceanus (2 Multi-Stage Phases)</p>
+              <p>Crushing deep sea trench harboring trench kraken and void leviathans. Hazard: 🌊 Crushing Pressure.</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4><span class="codex-badge">Ch. 15 Void</span> 🌌 Void Citadel</h4>
+              <p><strong>Boss:</strong> 🌌 Void Overlord Malakor (3 Multi-Stage Phases)</p>
+              <p>The ultimate nexus of oblivion where space and time shatter. Hazard: 🌀 Dimensional Collapse.</p>
             </div>
           </div>
 
           <div class="help-section-title">📜 World Lore & History</div>
           <div class="help-card codex-searchable">
             <h4>📖 The Obsidian Spire Monolith</h4>
-            <p>Erected thousands of years ago during the Great Cataclysm, the Obsidian Spire connects the mortal realm to dark elemental nexuses deep within the earth. Ancient legends speak of an arcanist named Malakor who sealed his soul into the Spire's apex, seeking immortal dominance.</p>
+            <p>Erected thousands of years ago during the Great Cataclysm, the Obsidian Spire connects 15 dimensional realm chapters to dark elemental nexuses deep within the earth. Arcanist Malakor sealed his soul into the Void Citadel apex, seeking immortal dominance over all biomes.</p>
           </div>
         </div>
 
@@ -3439,6 +3798,11 @@
               <h4>⚡ Elixir of Might</h4>
               <p>Restores 40 MP & permanently increases STR stat by +3.</p>
               <p style="color:#a6e3a1; font-weight:600; margin-top:4px;">Req: 2x Arcane Dust, 1x Elemental Core</p>
+            </div>
+            <div class="help-card codex-searchable">
+              <h4>🔥 Phoenix Elixir</h4>
+              <p>Restores 100% Max HP & 100% Max MP or auto-revives hero upon defeat.</p>
+              <p style="color:#a6e3a1; font-weight:600; margin-top:4px;">Req: 2x Arcane Dust, 2x Elemental Core</p>
             </div>
           </div>
 
