@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KTetris
+**Target App:** KTimer
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)

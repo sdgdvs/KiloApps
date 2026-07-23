@@ -15,19 +15,58 @@ void* memset(void* dest, int c, size_t count) {
 #define H 20
 #define TIMER_ID 1
 
-// Global state declarations
+#define MODE_MARATHON 0
+#define MODE_SPRINT   1
+#define MODE_ULTRA    2
+#define MODE_CAMPAIGN 3
+
+const char* mode_names[4] = { "MARATHON", "SPRINT 40L", "ULTRA 2-MIN", "CAMPAIGN" };
+
+typedef struct {
+    int pc;
+    int is_bomb;
+} PieceQueueItem;
+
+typedef struct {
+    int score;
+    int mode;
+    int lines;
+    DWORD time_ms;
+    char date[16];
+} LeaderboardEntry;
+#define MAX_LEADERBOARD 5
+LeaderboardEntry leaderboard[MAX_LEADERBOARD];
+int num_leaderboard_entries = 0;
+
+typedef struct {
+    int grid[H][W];
+    int current_piece, current_rot, current_x, current_y, current_is_bomb;
+    PieceQueueItem next_queue[3];
+    int hold_piece, hold_is_bomb, hold_used;
+    int score, lines, level, combo, pieces_placed;
+    int game_mode, campaign_level;
+    int stat_lines[4];
+    DWORD mode_timer_ms;
+    int ultra_time_left_ms;
+    int is_valid;
+} GameSaveState;
+
+// Global state
 int grid[H][W];
-int current_piece, current_rot, current_x, current_y;
-int next_piece, next_rot;
+int current_piece, current_rot, current_x, current_y, current_is_bomb;
+PieceQueueItem next_queue[3];
 int hold_piece = -1;
 int hold_used = 0;
+int hold_is_bomb = 0;
 int high_score = 0;
-int current_is_bomb = 0, next_is_bomb = 0, hold_is_bomb = 0;
+
 int game_over = 0;
 int is_paused = 0;
 int start_screen = 1;
 int win_screen = 0;
-int game_mode = 0;
+int show_leaderboard = 0;
+
+int game_mode = MODE_MARATHON;
 int campaign_level = 1;
 int pieces_placed = 0;
 int stat_lines[4] = {0, 0, 0, 0};
@@ -35,35 +74,165 @@ int score = 0;
 int lines = 0;
 int level = 1;
 int combo = 0;
+
+DWORD mode_timer_ms = 0;
+int ultra_time_left_ms = 120000;
+
 int timer_speed = 500;
 int gravity_timer = 0;
 
 void InitGame();
+void SpawnPiece();
 
-void load_high_score() {
+// Persistent Storage Helpers
+void LoadLeaderboard() {
+    num_leaderboard_entries = 0;
     HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD bytesRead = 0;
-        int loaded_score = 0;
-        if (ReadFile(hFile, &loaded_score, sizeof(int), &bytesRead, NULL) && bytesRead == sizeof(int)) {
-            if (loaded_score >= 0 && loaded_score <= 9999999) {
-                high_score = loaded_score;
-            }
+        DWORD bytesRead;
+        ReadFile(hFile, &high_score, sizeof(int), &bytesRead, NULL);
+        ReadFile(hFile, &num_leaderboard_entries, sizeof(int), &bytesRead, NULL);
+        if (num_leaderboard_entries > 0 && num_leaderboard_entries <= MAX_LEADERBOARD) {
+            ReadFile(hFile, leaderboard, sizeof(LeaderboardEntry) * num_leaderboard_entries, &bytesRead, NULL);
+        } else {
+            num_leaderboard_entries = 0;
         }
         CloseHandle(hFile);
     }
 }
 
-void save_high_score() {
-    if (score > high_score) {
-        high_score = score;
-        HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            DWORD bytesWritten;
-            WriteFile(hFile, &high_score, sizeof(int), &bytesWritten, NULL);
-            CloseHandle(hFile);
+void SaveLeaderboardEntry(int newScore, int modeIdx, int linesCleared, DWORD timeMs) {
+    if (newScore > high_score) {
+        high_score = newScore;
+    }
+    
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    LeaderboardEntry newEntry;
+    newEntry.score = newScore;
+    newEntry.mode = modeIdx;
+    newEntry.lines = linesCleared;
+    newEntry.time_ms = timeMs;
+    wsprintfA(newEntry.date, "%02d/%02d/%04d", st.wMonth, st.wDay, st.wYear);
+
+    // Insert sorted
+    int inserted = 0;
+    for (int i = 0; i < num_leaderboard_entries; i++) {
+        if (newScore > leaderboard[i].score) {
+            for (int j = num_leaderboard_entries; j > i; j--) {
+                if (j < MAX_LEADERBOARD) leaderboard[j] = leaderboard[j - 1];
+            }
+            leaderboard[i] = newEntry;
+            if (num_leaderboard_entries < MAX_LEADERBOARD) num_leaderboard_entries++;
+            inserted = 1;
+            break;
         }
     }
+    if (!inserted && num_leaderboard_entries < MAX_LEADERBOARD) {
+        leaderboard[num_leaderboard_entries++] = newEntry;
+    }
+
+    HANDLE hFile = CreateFileA("ktetris_hiscore.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten;
+        WriteFile(hFile, &high_score, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, &num_leaderboard_entries, sizeof(int), &bytesWritten, NULL);
+        WriteFile(hFile, leaderboard, sizeof(LeaderboardEntry) * num_leaderboard_entries, &bytesWritten, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+int HasSavedGame() {
+    HANDLE hFile = CreateFileA("ktetris_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return 1;
+    }
+    return 0;
+}
+
+void SaveGameStateToFile() {
+    if (start_screen || game_over || win_screen || show_leaderboard) return;
+    GameSaveState state;
+    for (int y = 0; y < H; y++)
+        for (int x = 0; x < W; x++)
+            state.grid[y][x] = grid[y][x];
+
+    state.current_piece = current_piece;
+    state.current_rot = current_rot;
+    state.current_x = current_x;
+    state.current_y = current_y;
+    state.current_is_bomb = current_is_bomb;
+    for (int i = 0; i < 3; i++) state.next_queue[i] = next_queue[i];
+    state.hold_piece = hold_piece;
+    state.hold_is_bomb = hold_is_bomb;
+    state.hold_used = hold_used;
+    state.score = score;
+    state.lines = lines;
+    state.level = level;
+    state.combo = combo;
+    state.pieces_placed = pieces_placed;
+    state.game_mode = game_mode;
+    state.campaign_level = campaign_level;
+    for (int i = 0; i < 4; i++) state.stat_lines[i] = stat_lines[i];
+    state.mode_timer_ms = mode_timer_ms;
+    state.ultra_time_left_ms = ultra_time_left_ms;
+    state.is_valid = 12345;
+
+    HANDLE hFile = CreateFileA("ktetris_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD bytesWritten;
+        WriteFile(hFile, &state, sizeof(GameSaveState), &bytesWritten, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+int LoadGameStateFromFile() {
+    HANDLE hFile = CreateFileA("ktetris_save.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    
+    GameSaveState state;
+    DWORD bytesRead;
+    ReadFile(hFile, &state, sizeof(GameSaveState), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (bytesRead < sizeof(GameSaveState) || state.is_valid != 12345) return 0;
+
+    for (int y = 0; y < H; y++)
+        for (int x = 0; x < W; x++)
+            grid[y][x] = state.grid[y][x];
+
+    current_piece = state.current_piece;
+    current_rot = state.current_rot;
+    current_x = state.current_x;
+    current_y = state.current_y;
+    current_is_bomb = state.current_is_bomb;
+    for (int i = 0; i < 3; i++) next_queue[i] = state.next_queue[i];
+    hold_piece = state.hold_piece;
+    hold_is_bomb = state.hold_is_bomb;
+    hold_used = state.hold_used;
+    score = state.score;
+    lines = state.lines;
+    level = state.level;
+    combo = state.combo;
+    pieces_placed = state.pieces_placed;
+    game_mode = state.game_mode;
+    campaign_level = state.campaign_level;
+    for (int i = 0; i < 4; i++) stat_lines[i] = state.stat_lines[i];
+    mode_timer_ms = state.mode_timer_ms;
+    ultra_time_left_ms = state.ultra_time_left_ms;
+
+    start_screen = 0;
+    game_over = 0;
+    win_screen = 0;
+    is_paused = 0;
+    show_leaderboard = 0;
+    
+    int new_speed = 500 - (level - 1) * 30;
+    if (new_speed < 50) new_speed = 50;
+    timer_speed = new_speed;
+
+    return 1;
 }
 
 const unsigned short tetrominos[7][4] = {
@@ -91,31 +260,31 @@ const COLORREF colors[10] = {
 
 const COLORREF bevel_hi[10] = {
     RGB(0,0,0),
-    RGB(153,255,255), // I
-    RGB(102,102,255), // J
-    RGB(255,204,102), // L
-    RGB(255,255,153), // O
-    RGB(102,255,102), // S
-    RGB(217,153,255), // T
-    RGB(255,102,102), // Z
-    RGB(187,187,204), // Garbage
-    RGB(255,153,153)  // Bomb
+    RGB(153,255,255),
+    RGB(102,102,255),
+    RGB(255,204,102),
+    RGB(255,255,153),
+    RGB(102,255,102),
+    RGB(217,153,255),
+    RGB(255,102,102),
+    RGB(187,187,204),
+    RGB(255,153,153)
 };
 
 const COLORREF bevel_sh[10] = {
     RGB(0,0,0),
-    RGB(0,136,136),   // I
-    RGB(0,0,136),     // J
-    RGB(153,85,0),    // L
-    RGB(153,153,0),   // O
-    RGB(0,136,0),     // S
-    RGB(85,0,136),    // T
-    RGB(136,0,0),     // Z
-    RGB(68,68,85),    // Garbage
-    RGB(136,0,0)      // Bomb
+    RGB(0,136,136),
+    RGB(0,0,136),
+    RGB(153,85,0),
+    RGB(153,153,0),
+    RGB(0,136,0),
+    RGB(85,0,136),
+    RGB(136,0,0),
+    RGB(68,68,85),
+    RGB(136,0,0)
 };
 
-// Particle and animation structures
+// FX structures
 typedef struct {
     float x, y;
     float vx, vy;
@@ -188,7 +357,7 @@ void AddLineFlash(int yRow) {
         line_flashes[num_flashes].max_life = 15;
         num_flashes++;
     }
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 25; i++) {
         float px = (float)(random_int(W * CELL_SIZE));
         float py = (float)(yRow * CELL_SIZE + CELL_SIZE / 2);
         float vx = (float)((random_int(100) - 50) / 7.0f);
@@ -207,7 +376,7 @@ void SpawnDropParticles(int gridX, int startY, int endY, int colorIdx) {
             AddParticle(px, py, (float)((random_int(20) - 10) / 10.0f), (float)(-random_int(20) / 10.0f - 1.0f), pColor, 2, 12);
         }
     }
-    for (int i = 0; i < 14; i++) {
+    for (int i = 0; i < 16; i++) {
         float px = (float)(gridX * CELL_SIZE + CELL_SIZE / 2 + random_int(CELL_SIZE * 2) - CELL_SIZE);
         float py = (float)(endY * CELL_SIZE + CELL_SIZE);
         float vx = (float)((random_int(60) - 30) / 10.0f);
@@ -229,9 +398,18 @@ void fill_bag() {
     bag_index = 0;
 }
 
-int get_next_pc() {
+int get_random_piece() {
     if (bag_index >= 7) fill_bag();
     return bag[bag_index++];
+}
+
+void FillNextQueue() {
+    for (int i = 0; i < 3; i++) {
+        if (next_queue[i].pc == -1) {
+            next_queue[i].pc = get_random_piece();
+            next_queue[i].is_bomb = (random_int(15) == 0) ? 1 : 0;
+        }
+    }
 }
 
 int check_collision(int p, int rot, int px, int py) {
@@ -249,22 +427,6 @@ int check_collision(int p, int rot, int px, int py) {
     return 0;
 }
 
-int try_rotate(int dir) {
-    int next_r = (current_rot + dir + 4) % 4;
-    int offsets[6][2] = {{0,0}, {-1,0}, {1,0}, {0,-1}, {-2,0}, {2,0}};
-    for (int i = 0; i < 6; i++) {
-        int test_x = current_x + offsets[i][0];
-        int test_y = current_y + offsets[i][1];
-        if (!check_collision(current_piece, next_r, test_x, test_y)) {
-            current_x = test_x;
-            current_y = test_y;
-            current_rot = next_r;
-            return 1;
-        }
-    }
-    return 0;
-}
-
 void lock_piece() {
     unsigned short shape = tetrominos[current_piece][current_rot];
     int block_val = current_is_bomb ? 9 : (current_piece + 1);
@@ -277,6 +439,7 @@ void lock_piece() {
             }
         }
     }
+    
     // clear lines
     int lines_cleared = 0;
     int explode_centers[H][W] = {0};
@@ -302,7 +465,7 @@ void lock_piece() {
                 }
             }
             for (int x = 0; x < W; x++) { grid[0][x] = 0; explode_centers[0][x] = 0; }
-            y++; // check same line again
+            y++;
         }
     }
     
@@ -351,51 +514,59 @@ void lock_piece() {
         Beep(500, 50);
     }
     lines += lines_cleared;
-    
     pieces_placed++;
-    if (game_mode == 1 && campaign_level > 5 && campaign_level <= 10) {
-        int threshold = 16 - campaign_level;
-        if (threshold < 5) threshold = 5;
-        if (pieces_placed % threshold == 0) {
-            for (int y = 0; y < H - 1; y++) {
-                for (int x = 0; x < W; x++) grid[y][x] = grid[y+1][x];
-            }
-            int hole = random_int(W);
-            for (int x = 0; x < W; x++) {
-                grid[H - 1][x] = (x == hole) ? 0 : 8;
-            }
-            Beep(300, 100);
-        }
-    } else if (game_mode == 1 && campaign_level > 10) {
-        int threshold = 18 - campaign_level;
-        if (threshold < 3) threshold = 3;
-        if (pieces_placed % threshold == 0) {
-            int cols = random_int(3) + 1;
-            for(int k=0; k<cols; k++) {
-                int c = random_int(W);
-                for(int y = 0; y < H - 1; y++) grid[y][c] = grid[y+1][c];
-                grid[H - 1][c] = 8;
-            }
-            Beep(250, 80); Beep(200, 80);
-        }
-    }
 
-    if (game_mode == 1) {
+    if (game_mode == MODE_CAMPAIGN) {
         int goal = campaign_level * 10;
         level = campaign_level;
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
+        
+        if (campaign_level > 5 && campaign_level <= 10) {
+            int threshold = 16 - campaign_level;
+            if (threshold < 5) threshold = 5;
+            if (pieces_placed % threshold == 0) {
+                for (int y = 0; y < H - 1; y++) {
+                    for (int x = 0; x < W; x++) grid[y][x] = grid[y+1][x];
+                }
+                int hole = random_int(W);
+                for (int x = 0; x < W; x++) grid[H - 1][x] = (x == hole) ? 0 : 8;
+                Beep(300, 100);
+            }
+        } else if (campaign_level > 10) {
+            int threshold = 18 - campaign_level;
+            if (threshold < 3) threshold = 3;
+            if (pieces_placed % threshold == 0) {
+                int cols = random_int(3) + 1;
+                for (int k = 0; k < cols; k++) {
+                    int c = random_int(W);
+                    for (int y = 0; y < H - 1; y++) grid[y][c] = grid[y+1][c];
+                    grid[H - 1][c] = 8;
+                }
+                Beep(250, 80);
+            }
+        }
+
         if (lines >= goal) {
             campaign_level++;
             if (campaign_level > 15) {
                 win_screen = 1;
                 Beep(800, 150); Beep(1000, 150); Beep(1200, 300);
+                SaveLeaderboardEntry(score, game_mode, lines, mode_timer_ms);
                 return;
             } else {
                 InitGame();
                 return;
             }
         }
-    } else {
+    } else if (game_mode == MODE_SPRINT) {
+        score += lines_cleared * 100 * (combo > 0 ? combo : 1);
+        if (lines >= 40) {
+            win_screen = 1;
+            Beep(800, 150); Beep(1200, 300);
+            SaveLeaderboardEntry(score, game_mode, lines, mode_timer_ms);
+            return;
+        }
+    } else { // MARATHON & ULTRA
         level = (lines / 10) + 1;
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
         int new_speed = 500 - (level - 1) * 30;
@@ -404,20 +575,24 @@ void lock_piece() {
     }
 }
 
-void spawn_piece() {
-    current_piece = next_piece;
-    current_rot = next_rot;
+void SpawnPiece() {
+    current_piece = next_queue[0].pc;
+    current_rot = 0;
     current_x = W / 2 - 2;
     current_y = -2;
-    current_is_bomb = next_is_bomb;
-    next_piece = get_next_pc();
-    next_rot = 0;
-    next_is_bomb = (random_int(15) == 0) ? 1 : 0;
+    current_is_bomb = next_queue[0].is_bomb;
+
+    // Shift next queue
+    next_queue[0] = next_queue[1];
+    next_queue[1] = next_queue[2];
+    next_queue[2].pc = get_random_piece();
+    next_queue[2].is_bomb = (random_int(15) == 0) ? 1 : 0;
+
     hold_used = 0;
     if (check_collision(current_piece, current_rot, current_x, current_y + 1)) {
         game_over = 1;
         Beep(200, 500);
-        save_high_score();
+        SaveLeaderboardEntry(score, game_mode, lines, mode_timer_ms);
     }
 }
 
@@ -432,8 +607,10 @@ void InitGame() {
     num_flashes = 0;
     num_popups = 0;
     gravity_timer = 0;
+    mode_timer_ms = 0;
+    ultra_time_left_ms = 120000;
 
-    if (game_mode == 1) {
+    if (game_mode == MODE_CAMPAIGN) {
         int garbage = campaign_level * 2;
         if (garbage > 12) garbage = 12;
         for (int r = 0; r < garbage; r++) {
@@ -451,18 +628,24 @@ void InitGame() {
         timer_speed = 500;
         for (int i=0; i<4; i++) stat_lines[i] = 0;
     }
+
     combo = 0;
     bag_index = 7;
     game_over = 0;
     is_paused = 0;
     win_screen = 0;
+    show_leaderboard = 0;
+
     hold_piece = -1;
     hold_used = 0;
     hold_is_bomb = 0;
-    next_piece = get_next_pc();
-    next_rot = 0;
-    next_is_bomb = (random_int(15) == 0) ? 1 : 0;
-    spawn_piece();
+
+    for (int i = 0; i < 3; i++) {
+        next_queue[i].pc = get_random_piece();
+        next_queue[i].is_bomb = (random_int(15) == 0) ? 1 : 0;
+    }
+
+    SpawnPiece();
 }
 
 void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhost) {
@@ -483,17 +666,15 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhos
     int bSize = size / 6;
     if (bSize < 2) bSize = 2;
 
-    // Main background
     HBRUSH bgBrush = CreateSolidBrush(colors[colorIdx]);
     RECT rMain = { px + 1, py + 1, px + size - 1, py + size - 1 };
     FillRect(hdc, &rMain, bgBrush);
     DeleteObject(bgBrush);
 
-    // Top-Left bevel (Highlight)
     HBRUSH hiBrush = CreateSolidBrush(bevel_hi[colorIdx]);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, hiBrush);
     HPEN nullPen = CreatePen(PS_NULL, 0, 0);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
-    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, hiBrush);
 
     POINT ptHi[6] = {
         { px + 1, py + 1 },
@@ -505,7 +686,6 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhos
     };
     Polygon(hdc, ptHi, 6);
 
-    // Bottom-Right bevel (Shadow)
     HBRUSH shBrush = CreateSolidBrush(bevel_sh[colorIdx]);
     SelectObject(hdc, shBrush);
     POINT ptSh[6] = {
@@ -518,48 +698,61 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhos
     };
     Polygon(hdc, ptSh, 6);
 
-    // Unselect custom brushes & pens before deleting them
-    SelectObject(hdc, oldPen);
-    SelectObject(hdc, oldBrush);
-    DeleteObject(hiBrush);
-    DeleteObject(shBrush);
-    DeleteObject(nullPen);
-
-    // Center shine box
     HBRUSH innerBrush = CreateSolidBrush(colors[colorIdx]);
     RECT rInner = { px + bSize + 1, py + bSize + 1, px + size - 1 - bSize, py + size - 1 - bSize };
     FillRect(hdc, &rInner, innerBrush);
     DeleteObject(innerBrush);
 
-    // Corner flare dot
     HBRUSH whiteBrush = CreateSolidBrush(RGB(255, 255, 255));
     RECT rFlare = { px + bSize + 1, py + bSize + 1, px + bSize + 4, py + bSize + 4 };
     FillRect(hdc, &rFlare, whiteBrush);
     DeleteObject(whiteBrush);
 
-    // Special Bomb symbol
-    if (colorIdx == 9) {
+    if (colorIdx == 9) { // Bomb
         HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
-        HBRUSH bOld = (HBRUSH)SelectObject(hdc, yellowBrush);
-        HPEN pNull = CreatePen(PS_NULL, 0, 0);
-        HPEN pOld = (HPEN)SelectObject(hdc, pNull);
+        SelectObject(hdc, yellowBrush);
         Ellipse(hdc, px + size / 4, py + size / 4, px + size * 3 / 4, py + size * 3 / 4);
-        SelectObject(hdc, bOld);
-        SelectObject(hdc, pOld);
         DeleteObject(yellowBrush);
-        DeleteObject(pNull);
     }
+
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(hiBrush);
+    DeleteObject(shBrush);
+    DeleteObject(nullPen);
+}
+
+void FormatTimeString(DWORD ms, char* buf, int bufSize) {
+    DWORD secTotal = ms / 1000;
+    DWORD mins = secTotal / 60;
+    DWORD secs = secTotal % 60;
+    DWORD tenths = (ms % 1000) / 100;
+    wsprintfA(buf, "%02d:%02d.%d", mins, secs, tenths);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
-            load_high_score();
+            LoadLeaderboard();
             InitGame();
             SetTimer(hwnd, TIMER_ID, 20, NULL);
             break;
+
         case WM_TIMER:
-            if (!game_over && !is_paused && !start_screen && !win_screen) {
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
+                mode_timer_ms += 20;
+
+                if (game_mode == MODE_ULTRA) {
+                    ultra_time_left_ms -= 20;
+                    if (ultra_time_left_ms <= 0) {
+                        ultra_time_left_ms = 0;
+                        game_over = 1;
+                        Beep(200, 500);
+                        AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2), "TIME EXPIRED!", RGB(255, 50, 50));
+                        SaveLeaderboardEntry(score, game_mode, lines, 120000);
+                    }
+                }
+
                 gravity_timer += 20;
                 if (gravity_timer >= timer_speed) {
                     gravity_timer = 0;
@@ -568,8 +761,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else {
                         int old_level = campaign_level;
                         lock_piece();
-                        if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
-                            spawn_piece();
+                        if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) {
+                            SpawnPiece();
                         }
                     }
                 }
@@ -608,93 +801,122 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
-        case WM_KEYDOWN: {
-            WPARAM k = wParam;
+
+        case WM_KEYDOWN:
             if (start_screen) {
-                if (k == '1') { game_mode = 0; start_screen = 0; score = 0; InitGame(); }
-                if (k == '2') { game_mode = 1; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
+                if (wParam == '1') { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); }
+                if (wParam == '2') { game_mode = MODE_SPRINT;   start_screen = 0; score = 0; InitGame(); }
+                if (wParam == '3') { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); }
+                if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
+                if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
+                if (wParam == 'R') { LoadGameStateFromFile(); }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
-            if ((win_screen || game_over) && (k == VK_RETURN || k == 'R' || k == 'r')) {
-                start_screen = 1; win_screen = 0; game_over = 0;
+
+            if (show_leaderboard) {
+                if (wParam == VK_RETURN || wParam == VK_ESCAPE || wParam == 'B') {
+                    show_leaderboard = 0; start_screen = 1;
+                }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
-            if (game_over || win_screen) return 0;
 
-            if (k == 'P' || k == 'p') {
-                is_paused = !is_paused;
+            if (win_screen && wParam == VK_RETURN) {
+                start_screen = 1; win_screen = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
-                break;
+                return 0;
             }
-            if (k == 'R' || k == 'r') {
-                start_screen = 1;
+            if (game_over && wParam == VK_RETURN) {
+                start_screen = 1; game_over = 0;
                 InvalidateRect(hwnd, NULL, FALSE);
-                break;
+                return 0;
             }
-            if (is_paused) break;
 
-            if ((k == VK_LEFT || k == 'A' || k == 'a') && !check_collision(current_piece, current_rot, current_x - 1, current_y)) current_x--;
-            if ((k == VK_RIGHT || k == 'D' || k == 'd') && !check_collision(current_piece, current_rot, current_x + 1, current_y)) current_x++;
-            if ((k == VK_DOWN || k == 'S' || k == 's') && !check_collision(current_piece, current_rot, current_x, current_y + 1)) {
-                current_y++; score += 1; gravity_timer = 0;
-            }
-            if (k == VK_UP || k == 'W' || k == 'w' || k == 'X' || k == 'x') {
-                try_rotate(1);
-            }
-            if (k == 'Z' || k == 'z') {
-                try_rotate(-1);
-            }
-            if (k == 'C' || k == 'c' || k == VK_SHIFT) {
-                if (!hold_used) {
-                    if (hold_piece == -1) {
-                        hold_piece = current_piece;
-                        hold_is_bomb = current_is_bomb;
-                        spawn_piece();
-                    } else {
-                        int temp = current_piece;
-                        int temp_bomb = current_is_bomb;
-                        current_piece = hold_piece;
-                        current_is_bomb = hold_is_bomb;
-                        hold_piece = temp;
-                        hold_is_bomb = temp_bomb;
-                        current_rot = 0;
-                        current_x = W / 2 - 2;
-                        current_y = -2;
+            if (!game_over && !win_screen) {
+                if (wParam == 'P') {
+                    is_paused = !is_paused;
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                if (wParam == 'S') {
+                    SaveGameStateToFile();
+                    AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255));
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                if (is_paused) break;
+
+                if (wParam == VK_LEFT && !check_collision(current_piece, current_rot, current_x - 1, current_y)) current_x--;
+                if (wParam == VK_RIGHT && !check_collision(current_piece, current_rot, current_x + 1, current_y)) current_x++;
+                if (wParam == VK_DOWN && !check_collision(current_piece, current_rot, current_x, current_y + 1)) current_y++;
+                if (wParam == VK_UP || wParam == 'Z' || wParam == 'X') {
+                    int next_r = (current_rot + 1) % 4;
+                    if (!check_collision(current_piece, next_r, current_x, current_y)) {
+                        current_rot = next_r;
+                    } else if (!check_collision(current_piece, next_r, current_x - 1, current_y)) {
+                        current_x--; current_rot = next_r;
+                    } else if (!check_collision(current_piece, next_r, current_x + 1, current_y)) {
+                        current_x++; current_rot = next_r;
+                    } else if (current_piece == 0 && !check_collision(current_piece, next_r, current_x - 2, current_y)) {
+                        current_x -= 2; current_rot = next_r;
+                    } else if (current_piece == 0 && !check_collision(current_piece, next_r, current_x + 2, current_y)) {
+                        current_x += 2; current_rot = next_r;
                     }
-                    hold_used = 1;
                 }
+                if (wParam == 'C' || wParam == VK_SHIFT) {
+                    if (!hold_used) {
+                        if (hold_piece == -1) {
+                            hold_piece = current_piece;
+                            hold_is_bomb = current_is_bomb;
+                            SpawnPiece();
+                        } else {
+                            int temp = current_piece;
+                            int temp_bomb = current_is_bomb;
+                            current_piece = hold_piece;
+                            current_is_bomb = hold_is_bomb;
+                            hold_piece = temp;
+                            hold_is_bomb = temp_bomb;
+                            current_rot = 0;
+                            current_x = W / 2 - 2;
+                            current_y = -2;
+                        }
+                        hold_used = 1;
+                        Beep(700, 30);
+                    }
+                }
+                if (wParam == VK_SPACE) {
+                    int start_y = current_y;
+                    int drop_dist = 0;
+                    while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
+                        current_y++;
+                        drop_dist++;
+                    }
+                    score += drop_dist * 2;
+                    SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 9 : (current_piece + 1));
+                    int old_level = campaign_level;
+                    lock_piece();
+                    if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) {
+                        SpawnPiece();
+                    }
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
             }
-            if (k == VK_SPACE) {
-                int start_y = current_y;
-                int drop_dist = 0;
-                while (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
-                    current_y++;
-                    drop_dist++;
-                }
-                score += drop_dist * 2;
-                SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 9 : (current_piece + 1));
-                int old_level = campaign_level;
-                lock_piece();
-                gravity_timer = 0;
-                if (!win_screen && (game_mode == 0 || campaign_level == old_level)) {
-                    spawn_piece();
-                }
-            }
-            InvalidateRect(hwnd, NULL, FALSE);
             break;
-        }
+
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
+            int total_w = W * CELL_SIZE + 170;
+            int total_h = H * CELL_SIZE + 40;
+
             HDC memDC = CreateCompatibleDC(hdc);
-            HBITMAP hbm = CreateCompatibleBitmap(hdc, W * CELL_SIZE + 120, H * CELL_SIZE);
+            HBITMAP hbm = CreateCompatibleBitmap(hdc, total_w, total_h);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
             
-            HBRUSH bg = CreateSolidBrush(RGB(18, 18, 22));
-            RECT fullRc = {0, 0, W * CELL_SIZE + 120, H * CELL_SIZE};
+            HBRUSH bg = CreateSolidBrush(RGB(18, 18, 24));
+            RECT fullRc = {0, 0, total_w, total_h};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
             
@@ -710,7 +932,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(gridPen);
 
-            // Draw locked grid blocks
+            // Draw grid blocks
             for (int y = 0; y < H; y++) {
                 for (int x = 0; x < W; x++) {
                     if (grid[y][x]) {
@@ -719,8 +941,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw current piece & Ghost piece
-            if (!game_over && !is_paused && !start_screen && !win_screen) {
+            // Draw active & Ghost piece
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
                 unsigned short shape = tetrominos[current_piece][current_rot];
                 int draw_val = current_is_bomb ? 9 : (current_piece + 1);
                 
@@ -775,104 +997,220 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, (int)text_popups[i].x, (int)text_popups[i].y, text_popups[i].text, lstrlenA(text_popups[i].text));
             }
 
-            // UI Screens
-            if (game_over) {
+            // Sidebar Panel
+            int sideX = W * CELL_SIZE + 15;
+
+            SetTextColor(memDC, RGB(0, 240, 240));
+            TextOutA(memDC, sideX, 15, mode_names[game_mode], lstrlenA(mode_names[game_mode]));
+
+            SetTextColor(memDC, RGB(170, 170, 170));
+            TextOutA(memDC, sideX, 35, "SCORE:", 6);
+            SetTextColor(memDC, RGB(255, 255, 255));
+            char score_str[32];
+            wsprintfA(score_str, "%d", score);
+            TextOutA(memDC, sideX, 50, score_str, lstrlenA(score_str));
+
+            SetTextColor(memDC, RGB(170, 170, 170));
+            TextOutA(memDC, sideX, 70, "HIGH SCORE:", 11);
+            SetTextColor(memDC, RGB(255, 255, 85));
+            char hi_str[32];
+            wsprintfA(hi_str, "%d", high_score);
+            TextOutA(memDC, sideX, 85, hi_str, lstrlenA(hi_str));
+
+            // Timers & Stats
+            SetTextColor(memDC, RGB(170, 170, 170));
+            if (game_mode == MODE_SPRINT) {
+                TextOutA(memDC, sideX, 105, "TIME:", 5);
+                char tStr[32];
+                FormatTimeString(mode_timer_ms, tStr, 32);
+                SetTextColor(memDC, RGB(85, 255, 85));
+                TextOutA(memDC, sideX, 120, tStr, lstrlenA(tStr));
+                
+                SetTextColor(memDC, RGB(170, 170, 170));
+                char line_str[32];
+                wsprintfA(line_str, "LINES: %d/40", lines);
+                TextOutA(memDC, sideX, 137, line_str, lstrlenA(line_str));
+            } else if (game_mode == MODE_ULTRA) {
+                TextOutA(memDC, sideX, 105, "TIME LEFT:", 10);
+                char tStr[32];
+                FormatTimeString(ultra_time_left_ms > 0 ? ultra_time_left_ms : 0, tStr, 32);
+                SetTextColor(memDC, ultra_time_left_ms <= 10000 ? RGB(255, 68, 68) : RGB(85, 255, 85));
+                TextOutA(memDC, sideX, 120, tStr, lstrlenA(tStr));
+
+                SetTextColor(memDC, RGB(170, 170, 170));
+                char line_str[32];
+                wsprintfA(line_str, "LINES: %d", lines);
+                TextOutA(memDC, sideX, 137, line_str, lstrlenA(line_str));
+            } else if (game_mode == MODE_CAMPAIGN) {
+                char lvl_str[32], line_str[32];
+                wsprintfA(lvl_str, "STAGE: %d/15", campaign_level);
+                wsprintfA(line_str, "LINES: %d/%d", lines, campaign_level * 10);
+                TextOutA(memDC, sideX, 105, lvl_str, lstrlenA(lvl_str));
+                TextOutA(memDC, sideX, 122, line_str, lstrlenA(line_str));
+            } else {
+                char lvl_str[32], line_str[32];
+                wsprintfA(lvl_str, "LEVEL: %d", level);
+                wsprintfA(line_str, "LINES: %d", lines);
+                TextOutA(memDC, sideX, 105, lvl_str, lstrlenA(lvl_str));
+                TextOutA(memDC, sideX, 122, line_str, lstrlenA(line_str));
+            }
+
+            // Next 3 Queue Preview
+            SetTextColor(memDC, RGB(0, 240, 240));
+            TextOutA(memDC, sideX, 160, "NEXT (3):", 9);
+
+            if (!game_over) {
+                // Item 0
+                unsigned short n0 = tetrominos[next_queue[0].pc][0];
+                int v0 = next_queue[0].is_bomb ? 9 : (next_queue[0].pc + 1);
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (n0 & (1 << (15 - (y * 4 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + x * 14, 178 + y * 14, v0, 14, 0);
+                        }
+                    }
+                }
+
+                // Item 1
+                unsigned short n1 = tetrominos[next_queue[1].pc][0];
+                int v1 = next_queue[1].is_bomb ? 9 : (next_queue[1].pc + 1);
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (n1 & (1 << (15 - (y * 4 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + x * 10, 242 + y * 10, v1, 10, 0);
+                        }
+                    }
+                }
+
+                // Item 2
+                unsigned short n2 = tetrominos[next_queue[2].pc][0];
+                int v2 = next_queue[2].is_bomb ? 9 : (next_queue[2].pc + 1);
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (n2 & (1 << (15 - (y * 4 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + 65 + x * 10, 242 + y * 10, v2, 10, 0);
+                        }
+                    }
+                }
+            }
+
+            // Hold Piece
+            SetTextColor(memDC, RGB(0, 240, 240));
+            TextOutA(memDC, sideX, 295, hold_used ? "HOLD (LOCKED):" : "HOLD [C]:", hold_used ? 14 : 9);
+
+            if (hold_piece != -1) {
+                unsigned short h0 = tetrominos[hold_piece][0];
+                int hv = hold_is_bomb ? 9 : (hold_piece + 1);
+                for (int y = 0; y < 4; y++) {
+                    for (int x = 0; x < 4; x++) {
+                        if (h0 & (1 << (15 - (y * 4 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + x * 13, 312 + y * 13, hv, 13, 0);
+                        }
+                    }
+                }
+            }
+
+            // Hints
+            SetTextColor(memDC, RGB(100, 100, 120));
+            TextOutA(memDC, sideX, 385, "[P] Pause | [S] Save", 20);
+            TextOutA(memDC, sideX, 400, "[Space] Hard Drop", 17);
+
+            // Overlays & Screens
+            if (show_leaderboard) {
+                HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
+                RECT ovRc = {0, 0, total_w, total_h};
+                FillRect(memDC, &ovRc, ov);
+                DeleteObject(ov);
+
+                SetTextColor(memDC, RGB(0, 255, 255));
+                TextOutA(memDC, total_w / 2 - 45, 30, "LEADERBOARD", 11);
+
+                SetTextColor(memDC, RGB(136, 136, 170));
+                TextOutA(memDC, 20, 65, "RANK  SCORE   MODE      TIME", 28);
+
+                HPEN hP = CreatePen(PS_SOLID, 1, RGB(40, 42, 54));
+                HPEN oP = (HPEN)SelectObject(memDC, hP);
+                MoveToEx(memDC, 20, 85, NULL); LineTo(memDC, total_w - 20, 85);
+                SelectObject(memDC, oP); DeleteObject(hP);
+
+                if (num_leaderboard_entries == 0) {
+                    SetTextColor(memDC, RGB(120, 120, 140));
+                    TextOutA(memDC, total_w / 2 - 60, 130, "No scores recorded!", 19);
+                } else {
+                    for (int i = 0; i < num_leaderboard_entries; i++) {
+                        int yPos = 105 + i * 32;
+                        char rBuf[16], sBuf[16], mBuf[16], tBuf[16];
+                        wsprintfA(rBuf, "#%d", i + 1);
+                        wsprintfA(sBuf, "%d", leaderboard[i].score);
+                        lstrcpynA(mBuf, mode_names[leaderboard[i].mode], 9);
+                        FormatTimeString(leaderboard[i].time_ms, tBuf, 16);
+
+                        SetTextColor(memDC, i == 0 ? RGB(255, 234, 0) : (i == 1 ? RGB(220, 220, 220) : (i == 2 ? RGB(205, 127, 50) : RGB(255, 255, 255))));
+                        TextOutA(memDC, 25, yPos, rBuf, lstrlenA(rBuf));
+                        TextOutA(memDC, 70, yPos, sBuf, lstrlenA(sBuf));
+
+                        SetTextColor(memDC, RGB(0, 240, 240));
+                        TextOutA(memDC, 140, yPos, mBuf, lstrlenA(mBuf));
+
+                        SetTextColor(memDC, RGB(170, 170, 170));
+                        TextOutA(memDC, 240, yPos, tBuf, lstrlenA(tBuf));
+                    }
+                }
+
+                SetTextColor(memDC, RGB(170, 170, 170));
+                TextOutA(memDC, total_w / 2 - 80, 380, "Press ENTER or ESC to return", 28);
+            } else if (game_over) {
                 SetTextColor(memDC, RGB(255, 51, 51));
                 TextOutA(memDC, 45, H * CELL_SIZE / 2 - 10, "GAME OVER", 9);
                 SetTextColor(memDC, RGB(180, 180, 180));
-                TextOutA(memDC, 35, H * CELL_SIZE / 2 + 10, "PRESS ENTER / R", 15);
+                TextOutA(memDC, 40, H * CELL_SIZE / 2 + 10, "PRESS ENTER", 11);
             } else if (win_screen) {
                 SetTextColor(memDC, RGB(0, 255, 100));
                 TextOutA(memDC, 50, H * CELL_SIZE / 2 - 10, "YOU WIN!", 8);
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 30, H * CELL_SIZE / 2 + 10, "PRESS ENTER / R", 15);
+                TextOutA(memDC, 25, H * CELL_SIZE / 2 + 10, "ENTER TO MENU", 13);
             } else if (start_screen) {
+                HBRUSH ov = CreateSolidBrush(RGB(10, 11, 16));
+                RECT ovRc = {0, 0, total_w, total_h};
+                FillRect(memDC, &ovRc, ov);
+                DeleteObject(ov);
+
                 SetTextColor(memDC, RGB(0, 255, 255));
-                TextOutA(memDC, 45, H * CELL_SIZE / 2 - 40, "K-TETRIS", 8);
+                TextOutA(memDC, total_w / 2 - 40, 40, "K-TETRIS", 8);
+
+                SetTextColor(memDC, RGB(136, 136, 170));
+                TextOutA(memDC, total_w / 2 - 60, 75, "Select Game Mode:", 17);
+
                 SetTextColor(memDC, RGB(255, 255, 255));
-                TextOutA(memDC, 35, H * CELL_SIZE / 2 - 10, "1. Endless Mode", 15);
-                TextOutA(memDC, 35, H * CELL_SIZE / 2 + 10, "2. Campaign Mode", 16);
+                TextOutA(memDC, 45, 115, "1. Marathon (Endless)", 21);
+                TextOutA(memDC, 45, 145, "2. Sprint (40-Lines Race)", 25);
+                TextOutA(memDC, 45, 175, "3. Ultra (2-Minute Timed)", 25);
+                TextOutA(memDC, 45, 205, "4. Campaign (15 Stages)", 23);
+
+                SetTextColor(memDC, RGB(0, 255, 102));
+                TextOutA(memDC, 45, 235, "5 / [L]. High Scores", 20);
+
+                if (HasSavedGame()) {
+                    SetTextColor(memDC, RGB(255, 0, 255));
+                    TextOutA(memDC, 45, 270, "[R]. Resume Saved Game", 22);
+                }
+
+                SetTextColor(memDC, RGB(100, 100, 120));
+                TextOutA(memDC, total_w / 2 - 80, 390, "Use keys (1-5), L, or R", 22);
             } else if (is_paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
                 TextOutA(memDC, 55, H * CELL_SIZE / 2, "PAUSED", 6);
             }
             
-            // UI Panel
-            SetTextColor(memDC, RGB(255, 255, 255));
-            char score_str[32];
-            wsprintfA(score_str, "SCORE: %d", score);
-            TextOutA(memDC, W * CELL_SIZE + 10, 20, score_str, lstrlenA(score_str));
-            
-            char hi_str[32];
-            wsprintfA(hi_str, "HI: %d", high_score);
-            TextOutA(memDC, W * CELL_SIZE + 10, 40, hi_str, lstrlenA(hi_str));
-            
-            char level_str[32];
-            if (game_mode == 1) wsprintfA(level_str, "STAGE: %d/15", campaign_level);
-            else wsprintfA(level_str, "LEVEL: %d", level);
-            TextOutA(memDC, W * CELL_SIZE + 10, 60, level_str, lstrlenA(level_str));
-            
-            char lines_str[32];
-            if (game_mode == 1) wsprintfA(lines_str, "LINES: %d/%d", lines, campaign_level * 10);
-            else wsprintfA(lines_str, "LINES: %d", lines);
-            TextOutA(memDC, W * CELL_SIZE + 10, 80, lines_str, lstrlenA(lines_str));
-            
-            if (game_mode == 0 && !start_screen) {
-                char stat1[32], stat2[32], stat3[32], stat4[32];
-                wsprintfA(stat1, "SGL: %d", stat_lines[0]);
-                wsprintfA(stat2, "DBL: %d", stat_lines[1]);
-                wsprintfA(stat3, "TPL: %d", stat_lines[2]);
-                wsprintfA(stat4, "TET: %d", stat_lines[3]);
-                SetTextColor(memDC, RGB(136, 136, 255));
-                TextOutA(memDC, W * CELL_SIZE + 10, 290, stat1, lstrlenA(stat1));
-                TextOutA(memDC, W * CELL_SIZE + 10, 310, stat2, lstrlenA(stat2));
-                TextOutA(memDC, W * CELL_SIZE + 10, 330, stat3, lstrlenA(stat3));
-                TextOutA(memDC, W * CELL_SIZE + 10, 350, stat4, lstrlenA(stat4));
-                SetTextColor(memDC, RGB(255, 255, 255));
-            }
-            
-            if (combo > 1) {
-                SetTextColor(memDC, RGB(255, 85, 85));
-                char combo_str[32];
-                wsprintfA(combo_str, "COMBO x%d!", combo);
-                TextOutA(memDC, W * CELL_SIZE + 10, 100, combo_str, lstrlenA(combo_str));
-                SetTextColor(memDC, RGB(255, 255, 255));
-            }
-            
-            TextOutA(memDC, W * CELL_SIZE + 10, 120, "NEXT:", 5);
-            if (!game_over) {
-                unsigned short next_shape = tetrominos[next_piece][next_rot];
-                int next_draw_val = next_is_bomb ? 9 : (next_piece + 1);
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (next_shape & (1 << (15 - (y * 4 + x)))) {
-                            DrawTetrisBlock(memDC, W * CELL_SIZE + 10 + x * 16, 140 + y * 16, next_draw_val, 16, 0);
-                        }
-                    }
-                }
-            }
-            
-            TextOutA(memDC, W * CELL_SIZE + 10, 220, "HOLD:", 5);
-            if (hold_piece != -1) {
-                unsigned short hold_shape = tetrominos[hold_piece][0];
-                int hold_draw_val = hold_is_bomb ? 9 : (hold_piece + 1);
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (hold_shape & (1 << (15 - (y * 4 + x)))) {
-                            DrawTetrisBlock(memDC, W * CELL_SIZE + 10 + x * 16, 240 + y * 16, hold_draw_val, 16, 0);
-                        }
-                    }
-                }
-            }
-            
-            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(42, 42, 53));
+            // Divider bar
+            HPEN hPen = CreatePen(PS_SOLID, 2, RGB(40, 42, 54));
             HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
             MoveToEx(memDC, W * CELL_SIZE, 0, NULL);
             LineTo(memDC, W * CELL_SIZE, H * CELL_SIZE);
             SelectObject(memDC, hOldPen);
             DeleteObject(hPen);
             
-            BitBlt(hdc, 0, 0, W * CELL_SIZE + 120, H * CELL_SIZE, memDC, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, total_w, total_h, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, hOld);
             DeleteObject(hbm);
             DeleteDC(memDC);
@@ -881,7 +1219,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
-            KillTimer(hwnd, TIMER_ID);
             PostQuitMessage(0);
             break;
         default:
@@ -900,7 +1237,7 @@ void MainEntry() {
     wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(1));
     RegisterClass(&wc);
 
-    int winWidth = W * CELL_SIZE + 120 + 16;
+    int winWidth = W * CELL_SIZE + 170 + 16;
     int winHeight = H * CELL_SIZE + 39;
 
     HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
