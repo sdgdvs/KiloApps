@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KQuest (Fantasy text RPG)
-**Phase:** 14 (next to do)
-**Status:** Phases 1-13 complete
+**App:** KStarship (Sci-fi space exploration)
+**Phase:** 1 (next to do)
+**Status:** Ready to start Phase 1
 
-- [x] Phase 1: Scaffold, register in App.jsx.
-- [x] Phase 2: Core web HTML RPG (character creation, dungeon, combat, town hub).
-- [x] Phase 3: Native C version with functional parity.
-- [x] Phase 4: Dark theme.
-- [x] Phase 5: Multiple dungeon biomes & environmental hazards.
-- [x] Phase 6: Crafting & equipment enchanting system.
-- [x] Phase 7: Party companions & mercenary hire system.
-- [x] Phase 8: Procedural bounty contracts & quest tracking.
-- [x] Phase 9: Skill tree & specialization mastery system.
-- [x] Phase 10: Add a Boss Rush / Arena Mode — a standalone challenge mode accessible from the town hub where the player fights waves of bosses with increasing difficulty, earning unique rewards.
-- [x] Phase 11: Add an Inventory Management upgrade — expandable backpack slots, item sorting/filtering, item comparison tooltips, quick-sell, and item rarity tiers (Common/Uncommon/Rare/Epic/Legendary).
-- [x] Phase 12: Add Save Slots & New Game Plus — multiple save file slots, a New Game+ mode that carries over stats/equipment with harder enemies, and an achievements/milestone tracker.
-- [x] Phase 13: Add Sound Effects — Web Audio API tones for combat hits, spell casts, level ups, item pickups, door opens, death. Native: Beep()/PlaySound equivalents.
-- [ ] Phase 14: Add Comprehensive Help — How-to-play overlay, controls reference, bestiary/lore codex, crafting recipe reference.
+- [ ] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
+- [ ] Phase 2: Core web HTML sci-fi exploration game (ship creation/naming, sector navigation grid with ASCII star map, fuel/hull/crew/energy resource management).
+- [ ] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
+- [ ] Phase 4: Dark theme UI styling (cybernetic sci-fi theme: deep space dark background, cyan/amber accent highlights, crisp terminal font layout).
+- [ ] Phase 5: Star System Biomes & Planet Scanning — Add 4 star system biomes (Terran, Volcanic, Nebula, Asteroid Belt) with orbital planet scanning for minerals, gas, and artifacts.
+- [ ] Phase 6: Random Encounter Engine — Add procedural space events: pirate attacks, derelict ships, space anomalies, alien traders, and distress calls with choice-driven outcomes.
+- [ ] Phase 7: Turn-based Tactical Ship Combat — Add tactical combat system against enemy starships (Shields, Weapons, Targeting, Evasion, Repairing systems).
+- [ ] Phase 8: Ship Systems Upgrade Bay — Add upgrade shop for Hull plating, Plasma cannons, Particle shields, Warp drive range, and Sensor arrays using collected Credits and Ore.
+- [ ] Phase 9: Crew Management & Officer Roster — Hire and assign officers (Pilot, Engineer, Gunner, Science Officer) with passive stat bonuses and unique special abilities.
+- [ ] Phase 10: Deep Space Trading & Economy — Interstellar commodity market across sectors with fluctuating buy/sell prices for Fuel, Meds, Ore, Cyberware, and Luxury Goods.
+- [ ] Phase 11: Permadeath, High Score Leaderboard & Captain's Log — Permadeath mode option, persistent hall of fame with score categories (Distance, Credits, Battles Won), and automatic event log.
+- [ ] Phase 12: Multiple Game Modes & Difficulty Levels — Add 3 Game Modes (Explorer, Survival, Permadeath Iron Captain) and 3 Difficulty Settings adjusting resource consumption and enemy difficulty.
+- [ ] Phase 13: Add Sound Effects — Web Audio API laser blasts, shield hums, warp drives, alarm klaxons, item pickups, explosion rumbles. Native: Win32 Beep() equivalents.
+- [ ] Phase 14: Add Comprehensive Help & Star Captain Codex — How-to-play modal overlay, controls reference, sector guide, alien species encyclopedia, and ship system manual.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kquest.html` AND `KQuest/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kstarship.html` AND `KStarship/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -154,6 +154,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - KFreecell (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KTowers (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KReversi (Phase 14 completed: Added Comprehensive Help / How-to-Play modal & Strategy Guide to both versions)
+- KQuest (Phase 14 completed: Added Comprehensive Help / Lore Codex & Recipe Reference to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
