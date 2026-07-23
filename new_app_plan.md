@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi space exploration)
-**Phase:** 10 (next to do)
-**Status:** Phases 1-9 complete
+**Phase:** 11 (next to do)
+**Status:** Phases 1-10 complete
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML sci-fi exploration game (ship creation/naming, sector navigation grid with ASCII star map, fuel/hull/crew/energy resource management).
@@ -66,7 +66,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 7: Turn-based Tactical Ship Combat — Add tactical combat system against enemy starships (Shields, Weapons, Targeting, Evasion, Repairing systems).
 - [x] Phase 8: Ship Systems Upgrade Bay — Add upgrade shop for Hull plating, Plasma cannons, Particle shields, Warp drive range, and Sensor arrays using collected Credits and Ore.
 - [x] Phase 9: Crew Management & Officer Roster — Hire and assign officers (Pilot, Engineer, Gunner, Science Officer) with passive stat bonuses and unique special abilities.
-- [ ] Phase 10: Deep Space Trading & Economy — Interstellar commodity market across sectors with fluctuating buy/sell prices for Fuel, Meds, Ore, Cyberware, and Luxury Goods.
+- [x] Phase 10: Deep Space Trading & Economy — Interstellar commodity market across sectors with fluctuating buy/sell prices for Fuel, Meds, Ore, Cyberware, and Luxury Goods.
 - [ ] Phase 11: Permadeath, High Score Leaderboard & Captain's Log — Permadeath mode option, persistent hall of fame with score categories (Distance, Credits, Battles Won), and automatic event log.
 - [ ] Phase 12: Multiple Game Modes & Difficulty Levels — Add 3 Game Modes (Explorer, Survival, Permadeath Iron Captain) and 3 Difficulty Settings adjusting resource consumption and enemy difficulty.
 - [ ] Phase 13: Add Sound Effects — Web Audio API laser blasts, shield hums, warp drives, alarm klaxons, item pickups, explosion rumbles. Native: Win32 Beep() equivalents.
