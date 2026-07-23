@@ -379,7 +379,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 6</span></h1>
+    <h1>🗡️ KQuest <span class="badge">Phase 7</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler</div>
   </header>
 
@@ -436,7 +436,7 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 6: Crafting & Equipment Enchanting System Enabled!</div>
+        <div class="log-entry system">Phase 7: Party Companions & Mercenary Hire System Enabled!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -458,6 +458,18 @@
           <div>DEF (Defense): <strong style="color:#a6e3a1;" id="stat-def">12</strong></div>
           <div>AGI (Speed/Crit): <strong style="color:#cba6f7;" id="stat-agi">10</strong></div>
           <div>XP Progress: <strong style="color:#f9e2af;" id="xp-text">0 / 100</strong></div>
+        </div>
+      </div>
+
+      <!-- Party Companion Card -->
+      <div class="card">
+        <div class="card-header">🛡️ Party Companion</div>
+        <div class="card-body" id="companion-info">
+          <div>Companion: <strong style="color:#f9e2af;" id="comp-name">None</strong></div>
+          <div>Role: <span id="comp-role" style="color:#bac2de;">-</span></div>
+          <div>HP: <span id="comp-hp" style="color:#f38ba8;">-</span></div>
+          <div>Buff: <span style="color:#a6e3a1;" id="comp-buff">-</span></div>
+          <div>Upkeep: <span style="color:#fab387;" id="comp-upkeep">-</span></div>
         </div>
       </div>
 
@@ -507,6 +519,7 @@
       TOWN: 'TOWN',
       SHOP: 'SHOP',
       CRAFTING: 'CRAFTING',
+      MERCENARY: 'MERCENARY',
       DUNGEON: 'DUNGEON',
       COMBAT: 'COMBAT',
       GAME_OVER: 'GAME_OVER'
@@ -591,6 +604,7 @@
         dust: 2,
         core: 1
       },
+      companion: null, // { id, name, role, level, hp, maxHp, upkeep, cost, passive, isDown }
       inventory: [
         { id: 'hp_potion', name: 'Health Potion', count: 3, desc: 'Restores 35 HP' },
         { id: 'mp_potion', name: 'Mana Potion', count: 2, desc: 'Restores 25 MP' }
@@ -624,10 +638,33 @@
       document.getElementById('hero-gold').textContent = `${player.gold} 🪙`;
       document.getElementById('xp-text').textContent = `${player.xp} / ${player.nextXp}`;
 
+      let bonusDef = player.armor ? player.armor.bonusDef : 0;
+      let bonusInt = 0;
+      let bonusMaxHp = 0;
+      if (player.companion && !player.companion.isDown) {
+        if (player.companion.id === 'paladin') bonusDef += 4;
+        if (player.companion.id === 'archmage') bonusInt += 5;
+        if (player.companion.id === 'cleric') bonusMaxHp += 10;
+      }
+
       document.getElementById('stat-str').textContent = player.str + (player.weapon ? player.weapon.bonusStr : 0);
-      document.getElementById('stat-int').textContent = player.int;
-      document.getElementById('stat-def').textContent = player.def + (player.armor ? player.armor.bonusDef : 0);
+      document.getElementById('stat-int').textContent = player.int + bonusInt;
+      document.getElementById('stat-def').textContent = player.def + bonusDef;
       document.getElementById('stat-agi').textContent = player.agi;
+
+      if (player.companion) {
+        document.getElementById('comp-name').textContent = player.companion.name;
+        document.getElementById('comp-role').textContent = player.companion.role;
+        document.getElementById('comp-hp').textContent = player.companion.isDown ? '😵 Downed' : `${player.companion.hp}/${player.companion.maxHp}`;
+        document.getElementById('comp-buff').textContent = player.companion.passive;
+        document.getElementById('comp-upkeep').textContent = `${player.companion.upkeep} Gold`;
+      } else {
+        document.getElementById('comp-name').textContent = 'None';
+        document.getElementById('comp-role').textContent = '-';
+        document.getElementById('comp-hp').textContent = '-';
+        document.getElementById('comp-buff').textContent = '-';
+        document.getElementById('comp-upkeep').textContent = '-';
+      }
 
       const wPrefix = player.weapon && player.weapon.prefix ? `[${player.weapon.prefix}] ` : '';
       const aPrefix = player.armor && player.armor.prefix ? `[${player.armor.prefix}] ` : '';
@@ -751,6 +788,8 @@
         renderShop();
       } else if (state === STATE.CRAFTING) {
         renderCrafting();
+      } else if (state === STATE.MERCENARY) {
+        renderMercenary();
       } else if (state === STATE.DUNGEON) {
         renderDungeon();
       } else if (state === STATE.COMBAT) {
@@ -869,6 +908,7 @@
         <button class="btn" onclick="restAtInn()">🍺 Rest at Inn (10 Gold)</button>
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
         <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
+        <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
         <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
       `;
     }
@@ -882,7 +922,11 @@
       player.gold -= cost;
       player.hp = player.maxHp;
       player.mp = player.maxMp;
-      logMsg(`🍺 Rested comfortably at the Dragon's Rest Inn. HP and MP fully restored!`, 'town');
+      if (player.companion) {
+        player.companion.isDown = false;
+        player.companion.hp = player.companion.maxHp;
+      }
+      logMsg(`🍺 Rested comfortably at the Dragon's Rest Inn. HP, MP & Party restored!`, 'town');
       updateUI();
     }
 
@@ -900,6 +944,127 @@
         logMsg(`No completed quests to claim right now. Keep exploring!`, 'system');
       }
       updateUI();
+    }
+
+    // --- PHASE 7: MERCENARY GUILD & PARTY COMPANION SYSTEM ---
+    function renderMercenary() {
+      document.getElementById('location-title').textContent = '🛡️ Oakhaven Mercenary Guild';
+      document.getElementById('location-desc').textContent = 'Hire battle-tested AI companions to fight alongside you in the dungeons! Companions level up with you and provide passive aura buffs.';
+
+      const mercenaries = [
+        {
+          id: 'paladin',
+          name: 'Sir Gareth',
+          role: 'Paladin Tank',
+          cost: 80,
+          upkeep: 10,
+          passive: 'Devotion Aura (+4 DEF)',
+          action: 'Holy Taunt (Melee Dmg & absorbs 40% enemy dmg)',
+          baseHp: 70,
+          desc: 'Heavy armored knight who shields the hero and absorbs incoming monster damage.'
+        },
+        {
+          id: 'archmage',
+          name: 'Lady Pyra',
+          role: 'Archmage DPS',
+          cost: 100,
+          upkeep: 15,
+          passive: 'Arcane Intellect (+5 INT)',
+          action: 'Arcane Burst (Deals 35-45 magic dmg each turn)',
+          baseHp: 45,
+          desc: 'Master of pyromancy who unleashes devastating elemental spells every combat turn.'
+        },
+        {
+          id: 'cleric',
+          name: 'Brother Tobias',
+          role: 'Cleric Healer',
+          cost: 70,
+          upkeep: 8,
+          passive: 'Blessed Grace (+10 Max HP)',
+          action: 'Divine Heal (Restores 20-30 HP to hero each turn)',
+          baseHp: 55,
+          desc: 'Holy priest who continuously heals the hero during dangerous boss encounters.'
+        }
+      ];
+
+      const dyn = document.getElementById('dynamic-content');
+      dyn.innerHTML = `
+        <div class="craft-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+          ${mercenaries.map(m => {
+            const isHired = player.companion && player.companion.id === m.id;
+            const scaledHp = m.baseHp + (player.level - 1) * 12;
+            return `
+              <div class="craft-card ${isHired ? 'selected' : ''}">
+                <h3>${m.role}: ${m.name}</h3>
+                <p>${m.desc}</p>
+                <div style="font-size:0.75rem; color:#89b4fa; font-weight:600; margin-bottom:4px;">✨ Passive: ${m.passive}</div>
+                <div style="font-size:0.75rem; color:#f38ba8; margin-bottom:4px;">⚔️ Action: ${m.action}</div>
+                <div style="font-size:0.75rem; color:#f9e2af; margin-bottom:8px;">Cost: ${m.cost} Gold | Upkeep: ${m.upkeep} Gold/floor</div>
+                ${isHired ? `
+                  <button class="btn btn-danger" onclick="dismissMercenary()">Dismiss Companion</button>
+                  ${player.companion.isDown ? `<button class="btn btn-accent" style="margin-top:4px;" onclick="reviveMercenary()">Revive (20G)</button>` : ''}
+                ` : `
+                  <button class="btn btn-accent" onclick="hireMercenary('${m.id}', '${m.name}', '${m.role}', ${m.cost}, ${m.upkeep}, '${m.passive}', ${scaledHp})">Hire Companion (${m.cost}G)</button>
+                `}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+      `;
+    }
+
+    function hireMercenary(id, name, role, cost, upkeep, passive, maxHp) {
+      if (player.gold < cost) {
+        logMsg(`Not enough gold! You need ${cost} Gold to hire ${name}.`, 'warning');
+        return;
+      }
+      if (player.companion) {
+        logMsg(`Dismissed active companion ${player.companion.name}.`, 'system');
+      }
+      player.gold -= cost;
+      player.companion = {
+        id: id,
+        name: name,
+        role: role,
+        level: player.level,
+        hp: maxHp,
+        maxHp: maxHp,
+        upkeep: upkeep,
+        cost: cost,
+        passive: passive,
+        isDown: false
+      };
+      logMsg(`🛡️ Hired companion ${name} the ${role}! Passive Buff Active: ${passive}`, 'town');
+      updateUI();
+      renderMercenary();
+    }
+
+    function dismissMercenary() {
+      if (player.companion) {
+        logMsg(`Dismissed ${player.companion.name} from your party.`, 'system');
+        player.companion = null;
+        updateUI();
+        renderMercenary();
+      }
+    }
+
+    function reviveMercenary() {
+      if (!player.companion || !player.companion.isDown) return;
+      if (player.gold < 20) {
+        logMsg(`You need 20 Gold to revive ${player.companion.name}!`, 'warning');
+        return;
+      }
+      player.gold -= 20;
+      player.companion.isDown = false;
+      player.companion.hp = player.companion.maxHp;
+      logMsg(`✨ Revived companion ${player.companion.name}! Health fully restored!`, 'town');
+      updateUI();
+      renderMercenary();
     }
 
     // --- SHOP HUB ---
@@ -1209,9 +1374,22 @@
       `;
     }
 
+    function payCompanionUpkeep() {
+      if (player.companion && !player.companion.isDown) {
+        if (player.gold >= player.companion.upkeep) {
+          player.gold -= player.companion.upkeep;
+          logMsg(`🪙 Paid ${player.companion.upkeep} Gold upkeep for companion ${player.companion.name}.`, 'system');
+        } else {
+          logMsg(`⚠️ Cannot afford ${player.companion.upkeep} Gold upkeep! Companion ${player.companion.name} has departed your party.`, 'warning');
+          player.companion = null;
+        }
+      }
+    }
+
     function nextFloor() {
       const b = BIOMES[player.biome];
       player.floor++;
+      payCompanionUpkeep();
       logMsg(`You descend deeper into Floor ${player.floor} of ${b.name}...`, 'system');
       updateUI();
       renderDungeon();
@@ -1337,6 +1515,25 @@
       }
     }
 
+    function triggerCompanionTurn() {
+      if (!player.companion || player.companion.isDown || !currentEnemy || currentEnemy.hp <= 0) return;
+
+      const comp = player.companion;
+      if (comp.id === 'paladin') {
+        const dmg = Math.floor(14 + player.level * 4);
+        currentEnemy.hp -= dmg;
+        logMsg(`🛡️ Companion ${comp.name} performs Holy Taunt for ${dmg} melee damage!`, 'spell');
+      } else if (comp.id === 'archmage') {
+        const dmg = Math.floor(25 + player.level * 6);
+        currentEnemy.hp -= dmg;
+        logMsg(`🔮 Companion ${comp.name} casts Arcane Burst dealing ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
+      } else if (comp.id === 'cleric') {
+        const heal = Math.floor(18 + player.level * 4);
+        player.hp = Math.min(player.maxHp, player.hp + heal);
+        logMsg(`✨ Companion ${comp.name} casts Divine Heal, restoring +${heal} HP to Hero!`, 'town');
+      }
+    }
+
     function playerAttack() {
       if (!currentEnemy) return;
 
@@ -1377,11 +1574,21 @@
         return;
       }
 
+      // Active Companion Turn
+      triggerCompanionTurn();
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+
       enemyTurn();
     }
 
     function playerSpell() {
       if (!currentEnemy) return;
+
+      let bonusInt = (player.companion && !player.companion.isDown && player.companion.id === 'archmage') ? 5 : 0;
 
       if (player.class === 'Warrior') {
         const cost = 5;
@@ -1401,7 +1608,7 @@
           return;
         }
         player.mp -= cost;
-        const dmg = Math.floor(player.int * 2.2);
+        const dmg = Math.floor((player.int + bonusInt) * 2.2);
         currentEnemy.hp -= dmg;
         logMsg(`🔥 You launch a flaming Fireball! Dealt ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Rogue') {
@@ -1422,6 +1629,14 @@
         return;
       }
 
+      // Active Companion Turn
+      triggerCompanionTurn();
+      if (currentEnemy.hp <= 0) {
+        currentEnemy.hp = 0;
+        combatVictory();
+        return;
+      }
+
       enemyTurn();
     }
 
@@ -1432,8 +1647,22 @@
       setTimeout(() => {
         if (!currentEnemy || currentEnemy.hp <= 0) return;
 
-        const totalDef = player.def + (player.armor ? player.armor.bonusDef : 0);
-        const enemyDmg = Math.max(2, Math.floor(currentEnemy.str - totalDef * 0.4));
+        let bonusDef = (player.companion && !player.companion.isDown && player.companion.id === 'paladin') ? 4 : 0;
+        const totalDef = player.def + (player.armor ? player.armor.bonusDef : 0) + bonusDef;
+        let enemyDmg = Math.max(2, Math.floor(currentEnemy.str - totalDef * 0.4));
+
+        // Paladin companion absorbs 40% damage
+        if (player.companion && player.companion.id === 'paladin' && !player.companion.isDown) {
+          const absorbed = Math.max(1, Math.floor(enemyDmg * 0.40));
+          enemyDmg -= absorbed;
+          player.companion.hp -= absorbed;
+          logMsg(`🛡️ Companion Sir Gareth absorbs ${absorbed} damage meant for Hero!`, 'combat');
+          if (player.companion.hp <= 0) {
+            player.companion.hp = 0;
+            player.companion.isDown = true;
+            logMsg(`😵 Companion ${player.companion.name} fell unconscious in battle!`, 'warning');
+          }
+        }
 
         player.hp -= enemyDmg;
         logMsg(`💥 ${currentEnemy.name} hits you for ${enemyDmg} damage!`, 'combat');
@@ -1474,6 +1703,9 @@
       player.gold += currentEnemy.gold;
       player.xp += currentEnemy.xp;
       
+      // Pay companion upkeep after combat victory
+      payCompanionUpkeep();
+
       // Crafting Material Loot Drops
       let matMsg = `Gained +${currentEnemy.xp} XP and +${currentEnemy.gold} Gold!`;
       if (Math.random() < 0.60) {
@@ -1513,6 +1745,13 @@
         player.def += 2;
         player.agi += 2;
         logMsg(`🌟 LEVEL UP! You reached Level ${player.level}! All stats increased & health restored!`, 'town');
+
+        if (player.companion) {
+          player.companion.level = player.level;
+          player.companion.maxHp += 12;
+          player.companion.hp = player.companion.maxHp;
+          logMsg(`🛡️ Companion ${player.companion.name} leveled up to Level ${player.level}!`, 'town');
+        }
       }
 
       currentEnemy = null;

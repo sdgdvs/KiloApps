@@ -52,8 +52,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KQuest
-**Phase:** 6
-**Status:** Phase 6 Complete
+**Phase:** 7
+**Status:** Phase 7 Complete
 
 - [x] Phase 1: Choose a unique app. Scaffold `KQuest/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
 - [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
@@ -61,11 +61,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
 - [x] Phase 5: Add Multiple Dungeon Biomes & Environmental Hazards (Goblin Mines, Ancient Catacombs, Dragon Spire, unique monster pools, ambient hazards, and town biome selector) to web & native versions.
 - [x] Phase 6: Add Crafting & Equipment Enchanting System (Alchemy Bench/Enchanter's Forge in Town Hub to salvage loot into materials, craft consumable battle items like Bombs/Elixirs, and enchant weapons/armor with elemental prefixes like Flaming/Vampiric/Fortified) to web & native versions.
+- [x] Phase 7: Add Party Companions & Mercenary Hire System (Mercenary Guild in Town Hub to hire AI party companions: Paladin Tank, Archmage DPS, Cleric Healer with combat turn actions, passive buffs, level scaling, and gold upkeep) to web & native versions.
 
 ## Next Priority (Before New Apps)
 
 **App:** KQuest
-**Goal:** Phase 7 (Deep Expansion: Add third substantial expansion feature)
+**Goal:** Phase 8 (Deep Expansion: Add fourth substantial expansion feature)
 
 
 

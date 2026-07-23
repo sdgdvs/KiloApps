@@ -7,6 +7,7 @@
 #define STATE_COMBAT      4
 #define STATE_GAME_OVER   5
 #define STATE_CRAFTING    6
+#define STATE_MERCENARY   7
 
 static unsigned int rngSeed = 54321;
 static int xrand() {
@@ -78,6 +79,17 @@ static const BiomeDef g_Biomes[3] = {
 };
 
 typedef struct {
+    int active; // 0: none, 1: Paladin, 2: Archmage, 3: Cleric
+    char name[32];
+    char role[32];
+    int level;
+    int hp, maxHp;
+    int upkeep;
+    int cost;
+    int isDown;
+} Companion;
+
+typedef struct {
     char name[32];
     char heroClass[16];
     int level;
@@ -106,6 +118,7 @@ typedef struct {
     int questMonstersDone;
     int questBossKilled;
     int questBossDone;
+    Companion companion;
 } Hero;
 
 typedef struct {
@@ -158,6 +171,8 @@ void InitHero(int classIdx) {
     player.questMonstersDone = 0;
     player.questBossKilled = 0;
     player.questBossDone = 0;
+    player.companion.active = 0;
+    player.companion.isDown = 0;
 
     if (classIdx == 0) { // Warrior
         lstrcpyA(player.heroClass, "Warrior");
@@ -197,14 +212,31 @@ void UpdateUI() {
         player.hp, player.maxHp, player.mp, player.maxMp,
         player.gold, locStr, player.floor);
 
+    int bonusDef = player.armorBonusDef;
+    int bonusInt = 0;
+    if (player.companion.active > 0 && !player.companion.isDown) {
+        if (player.companion.active == 1) bonusDef += 4;
+        if (player.companion.active == 2) bonusInt += 5;
+    }
+
+    char compBuf[128];
+    if (player.companion.active > 0) {
+        wsprintfA(compBuf, "%s (%s Lvl %d, HP: %d/%d, Upkeep: %dG) %s",
+            player.companion.name, player.companion.role, player.companion.level,
+            player.companion.hp, player.companion.maxHp, player.companion.upkeep,
+            player.companion.isDown ? "[DOWNED]" : "[ACTIVE]");
+    } else {
+        lstrcpyA(compBuf, "None (Hire at Mercenary Guild)");
+    }
+
     wsprintfA(infoBuf,
-        "BIOME: %s (Hazard: %s)\r\n"
-        "ATTRIBUTES: STR %d (+%d) | INT %d | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
+        "BIOME: %s (Hazard: %s)  |  COMPANION: %s\r\n"
+        "ATTRIBUTES: STR %d (+%d) | INT %d (+%d) | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
         "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s\r\n"
         "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Elemental Core x%d\r\n"
         "INVENTORY: HP Pot x%d | MP Pot x%d | Bomb x%d | Gr.HP x%d | Elixir x%d",
-        g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName,
-        player.str, player.weaponBonusStr, player.intStat, player.def, player.armorBonusDef, player.agi, player.xp, player.nextXp,
+        g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf,
+        player.str, player.weaponBonusStr, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
         player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
         player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
         player.ironScrap, player.arcaneDust, player.elementalCore,
@@ -240,9 +272,18 @@ void SetupButtons() {
             SetWindowTextA(hBtn3, "Rest at Inn (10G)");
             SetWindowTextA(hBtn4, "Visit Shop");
             SetWindowTextA(hBtn5, "Craft & Enchant");
-            SetWindowTextA(hBtn6, "Claim Rewards");
+            SetWindowTextA(hBtn6, "Mercenary Guild");
             break;
         }
+
+        case STATE_MERCENARY:
+            SetWindowTextA(hBtn1, "Hire Paladin Tank (80G)");
+            SetWindowTextA(hBtn2, "Hire Archmage DPS (100G)");
+            SetWindowTextA(hBtn3, "Hire Cleric Healer (70G)");
+            SetWindowTextA(hBtn4, player.companion.isDown ? "Revive Companion (20G)" : "Dismiss Companion");
+            SetWindowTextA(hBtn5, "Claim Quests");
+            SetWindowTextA(hBtn6, "Back to Town");
+            break;
 
         case STATE_SHOP:
             SetWindowTextA(hBtn1, "Buy HP Potion (15G)");
@@ -301,6 +342,47 @@ void SetupButtons() {
     }
 }
 
+void TriggerCompanionCombatTurn() {
+    if (player.companion.active == 0 || player.companion.isDown || currentEnemy.hp <= 0) return;
+
+    if (player.companion.active == 1) { // Paladin
+        int dmg = 14 + player.level * 4;
+        currentEnemy.hp -= dmg;
+        char msg[128];
+        wsprintfA(msg, "🛡️ Companion Sir Gareth performs Holy Taunt for %d melee damage!", dmg);
+        LogMessage(msg);
+    } else if (player.companion.active == 2) { // Archmage
+        int dmg = 25 + player.level * 6;
+        currentEnemy.hp -= dmg;
+        char msg[128];
+        wsprintfA(msg, "🔮 Companion Lady Pyra casts Arcane Burst dealing %d magic damage!", dmg);
+        LogMessage(msg);
+    } else if (player.companion.active == 3) { // Cleric
+        int heal = 18 + player.level * 4;
+        player.hp += heal;
+        if (player.hp > player.maxHp) player.hp = player.maxHp;
+        char msg[128];
+        wsprintfA(msg, "✨ Companion Brother Tobias casts Divine Heal, restoring +%d HP to Hero!", heal);
+        LogMessage(msg);
+    }
+}
+
+void PayCompanionUpkeep() {
+    if (player.companion.active > 0 && !player.companion.isDown) {
+        if (player.gold >= player.companion.upkeep) {
+            player.gold -= player.companion.upkeep;
+            char msg[128];
+            wsprintfA(msg, "🪙 Paid %d Gold upkeep for companion %s.", player.companion.upkeep, player.companion.name);
+            LogMessage(msg);
+        } else {
+            char msg[128];
+            wsprintfA(msg, "⚠️ Cannot afford %d Gold upkeep! Companion %s departed your party.", player.companion.upkeep, player.companion.name);
+            LogMessage(msg);
+            player.companion.active = 0;
+        }
+    }
+}
+
 void CheckLevelUp() {
     if (player.xp >= player.nextXp) {
         player.level++;
@@ -312,6 +394,15 @@ void CheckLevelUp() {
         char msg[128];
         wsprintfA(msg, "🌟 LEVEL UP! Reached Level %d! HP/MP restored and attributes increased!", player.level);
         LogMessage(msg);
+
+        if (player.companion.active > 0) {
+            player.companion.level = player.level;
+            player.companion.maxHp += 12;
+            player.companion.hp = player.companion.maxHp;
+            char cmsg[128];
+            wsprintfA(cmsg, "🛡️ Companion %s leveled up to Level %d!", player.companion.name, player.level);
+            LogMessage(cmsg);
+        }
     }
 }
 
@@ -364,9 +455,25 @@ void StartCombat() {
 void EnemyTurn() {
     if (currentEnemy.hp <= 0) return;
 
-    int totalDef = player.def + player.armorBonusDef;
+    int bonusDef = (player.companion.active == 1 && !player.companion.isDown) ? 4 : 0;
+    int totalDef = player.def + player.armorBonusDef + bonusDef;
     int dmg = currentEnemy.str - (totalDef / 2);
     if (dmg < 2) dmg = 2;
+
+    if (player.companion.active == 1 && !player.companion.isDown) {
+        int absorbed = (dmg * 40) / 100;
+        if (absorbed < 1) absorbed = 1;
+        dmg -= absorbed;
+        player.companion.hp -= absorbed;
+        char pmsg[128];
+        wsprintfA(pmsg, "🛡️ Companion Sir Gareth absorbs %d damage meant for Hero!", absorbed);
+        LogMessage(pmsg);
+        if (player.companion.hp <= 0) {
+            player.companion.hp = 0;
+            player.companion.isDown = 1;
+            LogMessage("😵 Companion Sir Gareth fell unconscious in battle!");
+        }
+    }
 
     player.hp -= dmg;
     char msg[128];
@@ -411,6 +518,8 @@ void CombatVictory() {
     player.xp += currentEnemy.xp;
     player.gold += currentEnemy.gold;
 
+    PayCompanionUpkeep();
+
     // Material Drops
     if ((xrand() % 100) < 60) {
         int iGot = 1 + (xrand() % 2);
@@ -450,6 +559,24 @@ void HandleButton1() {
         LogMessage(msg);
         SetupButtons();
         UpdateUI();
+    } else if (gameState == STATE_MERCENARY) {
+        if (player.gold >= 80) {
+            player.gold -= 80;
+            player.companion.active = 1; // Paladin
+            lstrcpyA(player.companion.name, "Sir Gareth");
+            lstrcpyA(player.companion.role, "Paladin Tank");
+            player.companion.level = player.level;
+            player.companion.maxHp = 70 + (player.level - 1) * 12;
+            player.companion.hp = player.companion.maxHp;
+            player.companion.upkeep = 10;
+            player.companion.cost = 80;
+            player.companion.isDown = 0;
+            LogMessage("🛡️ Hired Paladin Tank Sir Gareth! Devotion Aura Active (+4 DEF)!");
+            SetupButtons();
+            UpdateUI();
+        } else {
+            LogMessage("Need 80 Gold to hire Paladin Tank!");
+        }
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 15) {
             player.gold -= 15;
@@ -553,9 +680,17 @@ void HandleButton1() {
         if (currentEnemy.hp <= 0) {
             currentEnemy.hp = 0;
             CombatVictory();
-        } else {
-            EnemyTurn();
+            return;
         }
+
+        TriggerCompanionCombatTurn();
+        if (currentEnemy.hp <= 0) {
+            currentEnemy.hp = 0;
+            CombatVictory();
+            return;
+        }
+
+        EnemyTurn();
     } else if (gameState == STATE_GAME_OVER) {
         InitHero(selectedClassIndex);
         gameState = STATE_CHAR_CREATE;
@@ -579,6 +714,24 @@ void HandleButton2() {
         LogMessage(msg);
         SetupButtons();
         UpdateUI();
+    } else if (gameState == STATE_MERCENARY) {
+        if (player.gold >= 100) {
+            player.gold -= 100;
+            player.companion.active = 2; // Archmage
+            lstrcpyA(player.companion.name, "Lady Pyra");
+            lstrcpyA(player.companion.role, "Archmage DPS");
+            player.companion.level = player.level;
+            player.companion.maxHp = 45 + (player.level - 1) * 12;
+            player.companion.hp = player.companion.maxHp;
+            player.companion.upkeep = 15;
+            player.companion.cost = 100;
+            player.companion.isDown = 0;
+            LogMessage("🔮 Hired Archmage DPS Lady Pyra! Arcane Intellect Active (+5 INT)!");
+            SetupButtons();
+            UpdateUI();
+        } else {
+            LogMessage("Need 100 Gold to hire Archmage DPS!");
+        }
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 15) {
             player.gold -= 15;
@@ -600,6 +753,7 @@ void HandleButton2() {
         }
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
+        PayCompanionUpkeep();
         char msg[128];
         wsprintfA(msg, "🪜 Descended to Floor %d of %s.", player.floor, g_Biomes[player.biome].name);
         LogMessage(msg);
@@ -613,7 +767,8 @@ void HandleButton2() {
             player.mp -= cost;
             int dmg = 0;
             if (lstrcmpA(player.heroClass, "Mage") == 0) {
-                dmg = (int)(player.intStat * 2.2);
+                int bonusInt = (player.companion.active == 2 && !player.companion.isDown) ? 5 : 0;
+                dmg = (int)((player.intStat + bonusInt) * 2.2);
                 char msg[128];
                 wsprintfA(msg, "🔥 Cast Fireball! Dealt %d magic damage to %s!", dmg, currentEnemy.name);
                 LogMessage(msg);
@@ -634,9 +789,17 @@ void HandleButton2() {
             if (currentEnemy.hp <= 0) {
                 currentEnemy.hp = 0;
                 CombatVictory();
-            } else {
-                EnemyTurn();
+                return;
             }
+
+            TriggerCompanionCombatTurn();
+            if (currentEnemy.hp <= 0) {
+                currentEnemy.hp = 0;
+                CombatVictory();
+                return;
+            }
+
+            EnemyTurn();
         } else {
             LogMessage("Not enough MP!");
         }
@@ -654,10 +817,32 @@ void HandleButton3() {
             player.gold -= 10;
             player.hp = player.maxHp;
             player.mp = player.maxMp;
-            LogMessage("🍺 Rested at the Dragon's Rest Inn. HP and MP fully restored!");
+            if (player.companion.active > 0) {
+                player.companion.isDown = 0;
+                player.companion.hp = player.companion.maxHp;
+            }
+            LogMessage("🍺 Rested at Dragon's Rest Inn. HP, MP, & Party fully restored!");
             UpdateUI();
         } else {
             LogMessage("Not enough gold for the Inn!");
+        }
+    } else if (gameState == STATE_MERCENARY) {
+        if (player.gold >= 70) {
+            player.gold -= 70;
+            player.companion.active = 3; // Cleric
+            lstrcpyA(player.companion.name, "Brother Tobias");
+            lstrcpyA(player.companion.role, "Cleric Healer");
+            player.companion.level = player.level;
+            player.companion.maxHp = 55 + (player.level - 1) * 12;
+            player.companion.hp = player.companion.maxHp;
+            player.companion.upkeep = 8;
+            player.companion.cost = 70;
+            player.companion.isDown = 0;
+            LogMessage("✨ Hired Cleric Healer Brother Tobias! Blessed Grace Active (+10 Max HP)!");
+            SetupButtons();
+            UpdateUI();
+        } else {
+            LogMessage("Need 70 Gold to hire Cleric Healer!");
         }
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 60) {
@@ -709,6 +894,30 @@ void HandleButton4() {
         LogMessage("Entered Oakhaven Shop.");
         SetupButtons();
         UpdateUI();
+    } else if (gameState == STATE_MERCENARY) {
+        if (player.companion.active > 0) {
+            if (player.companion.isDown) {
+                if (player.gold >= 20) {
+                    player.gold -= 20;
+                    player.companion.isDown = 0;
+                    player.companion.hp = player.companion.maxHp;
+                    LogMessage("✨ Revived companion! Health fully restored.");
+                    SetupButtons();
+                    UpdateUI();
+                } else {
+                    LogMessage("Need 20 Gold to revive companion!");
+                }
+            } else {
+                char msg[128];
+                wsprintfA(msg, "Dismissed companion %s.", player.companion.name);
+                LogMessage(msg);
+                player.companion.active = 0;
+                SetupButtons();
+                UpdateUI();
+            }
+        } else {
+            LogMessage("No active companion to dismiss or revive.");
+        }
     } else if (gameState == STATE_SHOP) {
         if (player.gold >= 75) {
             player.gold -= 75;
@@ -770,6 +979,24 @@ void HandleButton5() {
         LogMessage("Entered Enchanter's Forge & Alchemy Bench.");
         SetupButtons();
         UpdateUI();
+    } else if (gameState == STATE_MERCENARY) {
+        int claimed = 0;
+        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
+            player.questMonstersDone = 1;
+            player.gold += 50;
+            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!");
+            claimed++;
+        }
+        if (player.questBossKilled >= 1 && !player.questBossDone) {
+            player.questBossDone = 1;
+            player.gold += 150;
+            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!");
+            claimed++;
+        }
+        if (claimed == 0) {
+            LogMessage("No completed quest rewards to claim right now.");
+        }
+        UpdateUI();
     } else if (gameState == STATE_SHOP) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town.");
@@ -824,22 +1051,14 @@ void HandleButton5() {
 
 void HandleButton6() {
     if (gameState == STATE_TOWN) {
-        int claimed = 0;
-        if (player.questMonstersKilled >= 5 && !player.questMonstersDone) {
-            player.questMonstersDone = 1;
-            player.gold += 50;
-            LogMessage("📜 Quest Completed: Clear Dungeon Chambers! +50 Gold!");
-            claimed++;
-        }
-        if (player.questBossKilled >= 1 && !player.questBossDone) {
-            player.questBossDone = 1;
-            player.gold += 150;
-            LogMessage("📜 Quest Completed: Slay Biome Boss! +150 Gold!");
-            claimed++;
-        }
-        if (claimed == 0) {
-            LogMessage("No completed quest rewards to claim right now.");
-        }
+        gameState = STATE_MERCENARY;
+        LogMessage("Entered Oakhaven Mercenary Guild.");
+        SetupButtons();
+        UpdateUI();
+    } else if (gameState == STATE_MERCENARY) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_CRAFTING) {
         gameState = STATE_TOWN;
@@ -861,7 +1080,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             hInfoText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                15, 40, 755, 65, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
+                15, 35, 755, 75, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
 
             hLogEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
@@ -878,7 +1097,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 6: Crafting & Equipment Enchanting System Active!");
+            LogMessage("Phase 7: Party Companions & Mercenary Hire System Active!");
             break;
         }
         case WM_COMMAND: {
