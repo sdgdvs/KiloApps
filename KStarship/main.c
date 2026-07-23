@@ -48,6 +48,8 @@ typedef struct {
     int inInitModal;   // 1: Commission Modal Active
     int inStationModal;// 1: Outpost Services Active
     int inPlanetModal; // 1: Planet Telemetry Active
+    int inEncounterModal; // 1: Random Encounter Active
+    int encounterType; // 0: Pirate, 1: Derelict, 2: Anomaly, 3: Trader, 4: Distress
     int selectedClass; // 0: Corvette, 1: Frigate, 2: Interceptor, 3: Cruiser
 } StarshipState;
 
@@ -60,7 +62,7 @@ static StarshipState g_State = {
     1000, 0, 0, 0, 10, 25,
     3, 3,
     {{0}}, {{{0}}}, 0, 0,
-    0, 0, 1, 0, 0, 0
+    0, 0, 1, 0, 0, 0, 0, 0
 };
 
 static const char* g_BiomeNames[] = {"TERRAN SYSTEM", "VOLCANIC SYSTEM", "NEBULA SYSTEM", "ASTEROID BELT"};
@@ -179,15 +181,19 @@ void InitStars() {
     }
 }
 
+void TriggerRandomEncounter(HWND hwnd, int type);
+void ResolveEncounterChoice(HWND hwnd, int choiceIdx);
+
 // Window Controls & Handles
 static HWND hBtnAudioToggle, hBtnModeToggle;
-static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair;
+static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair, hBtnEncScan;
 static HWND hBtnNW, hBtnN, hBtnNE, hBtnW, hBtnCenter, hBtnE, hBtnSW, hBtnS, hBtnSE;
 
 // Modal Controls
 static HWND hBtnClass0, hBtnClass1, hBtnClass2, hBtnClass3, hBtnConfirmInit;
 static HWND hBtnStRefuel, hBtnStRepair, hBtnStSellOre, hBtnStSellGas, hBtnStSellArtifacts, hBtnStRecruit, hBtnStClose;
 static HWND hBtnPlanetClose;
+static HWND hBtnEncChoice1, hBtnEncChoice2, hBtnEncChoice3, hBtnEncClose;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -196,7 +202,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -206,6 +212,7 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnDock,       inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnShield,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnRepair,     inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnEncScan,    inMain ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnNW,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnN,      inMain ? SW_SHOW : SW_HIDE);
@@ -235,6 +242,12 @@ void UpdateControlVisibility(HWND hwnd) {
 
     // Planet Telemetry Modal Buttons
     ShowWindow(hBtnPlanetClose, g_State.inPlanetModal ? SW_SHOW : SW_HIDE);
+
+    // Encounter Modal Buttons
+    ShowWindow(hBtnEncChoice1, g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnEncChoice2, g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnEncChoice3, g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnEncClose,   g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -272,7 +285,7 @@ void ApplyShipClassStats() {
 }
 
 void MoveShip(HWND hwnd, int dx, int dy) {
-    if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal) return;
+    if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal || g_State.inEncounterModal) return;
 
     if (g_State.hull <= 0) {
         AddLog("[ALERT] SHIP DESTROYED! Subsystems unresponsive.", 2);
@@ -348,35 +361,17 @@ void MoveShip(HWND hwnd, int dx, int dy) {
             }
         }
     } else if (cell == 4) { // Anomaly
-        PlayGameSound(2);
-        int ev = xrand() % 3;
-        if (ev == 0) {
-            g_State.scraps += 10;
-            AddLog("[ANOMALY] Salvaged derelict probe! (+10 Tech Scrap)", 3);
-        } else if (ev == 1) {
-            g_State.energy = g_State.maxEnergy;
-            AddLog("[ANOMALY] Cosmic ion surge! Reactor energy fully recharged!", 3);
-        } else {
-            g_State.shields = (g_State.shields > 15) ? g_State.shields - 15 : 0;
-            AddLog("[ANOMALY] Spatial distortion flare! Shield matrix drained (-15).", 1);
-        }
+        TriggerRandomEncounter(hwnd, 2);
     } else if (cell == 5) { // Pirate
-        PlayGameSound(6);
-        AddLog("[ALERT] PIRATE RAIDER AMBUSH! Red Alert active!", 2);
-        int dmg = (xrand() % 14) + 8;
-        if (g_State.shields >= dmg) {
-            g_State.shields -= dmg;
-            AddLog("[WARN] Pirate disruptor fire hit shields.", 1);
-        } else {
-            int rem = dmg - g_State.shields;
-            g_State.shields = 0;
-            g_State.hull = (g_State.hull > rem) ? g_State.hull - rem : 0;
-            AddLog("[ALERT] Shields collapsed! Hull took combat damage!", 2);
-        }
+        TriggerRandomEncounter(hwnd, 0);
     } else if (cell == 6) { // Planet
         char buf[128];
         wsprintfA(buf, "[ORBIT] Entered orbit around %s. Execute Planet Scan.", g_State.planetData[g_State.shipY][g_State.shipX].name);
         AddLog(buf, 0);
+    } else if (cell == 0 && (xrand() % 100) < 20) {
+        int r = xrand() % 3;
+        int enc = (r == 0) ? 1 : ((r == 1) ? 3 : 4);
+        TriggerRandomEncounter(hwnd, enc);
     }
 
     InvalidateRect(hwnd, NULL, TRUE);
@@ -622,6 +617,219 @@ void StationRecruitCrew(HWND hwnd) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
+// Phase 6: Random Encounter Engine
+void TriggerRandomEncounter(HWND hwnd, int type) {
+    g_State.inEncounterModal = 1;
+    g_State.encounterType = type;
+
+    if (type == 0) { // PIRATE
+        SetWindowTextA(hBtnEncChoice1, "[1] ENGAGE PHASERS (-15 Energy)");
+        SetWindowTextA(hBtnEncChoice2, "[2] PAY TRIBUTE TOLL (-80 Credits)");
+        SetWindowTextA(hBtnEncChoice3, "[3] EVASIVE MANEUVERS (-10 Fuel)");
+    } else if (type == 1) { // DERELICT
+        SetWindowTextA(hBtnEncChoice1, "[1] SEND SALVAGE CREW (+30 Scrap, +1 Relic)");
+        SetWindowTextA(hBtnEncChoice2, "[2] SIPHON FUEL MATRIX (+30 Fuel, +20 Energy)");
+        SetWindowTextA(hBtnEncChoice3, "[3] DOWNLOAD SHIP LOGS (+100 Credits)");
+    } else if (type == 2) { // ANOMALY
+        SetWindowTextA(hBtnEncChoice1, "[1] HARVEST ION CORE (100% Energy, +20 Shield)");
+        SetWindowTextA(hBtnEncChoice2, "[2] STABILIZE GRAVITY CORE (-15 Energy)");
+        SetWindowTextA(hBtnEncChoice3, "[3] OVERCHARGE DEFLECTORS (-10 Fuel)");
+    } else if (type == 3) { // TRADER
+        SetWindowTextA(hBtnEncChoice1, "[1] TRADE 20 ORE FOR ANCIENT RELIC");
+        SetWindowTextA(hBtnEncChoice2, "[2] TRADE 10 GAS FOR 35 HYPER FUEL");
+        SetWindowTextA(hBtnEncChoice3, "[3] BUY TECH SCRAP PACK (-100 Credits)");
+    } else if (type == 4) { // DISTRESS
+        SetWindowTextA(hBtnEncChoice1, "[1] ASSIST REPAIRS (-15 Scrap)");
+        SetWindowTextA(hBtnEncChoice2, "[2] BEAM HYPER FUEL (-20 Fuel)");
+        SetWindowTextA(hBtnEncChoice3, "[3] IGNORE DISTRESS SIGNAL");
+    }
+
+    PlayGameSound(6);
+    UpdateControlVisibility(hwnd);
+}
+
+void ResolveEncounterChoice(HWND hwnd, int choiceIdx) {
+    if (!g_State.inEncounterModal) return;
+    int type = g_State.encounterType;
+    int resolved = 0;
+
+    if (type == 0) { // PIRATE
+        if (choiceIdx == 0) {
+            if (g_State.energy < 15) {
+                AddLog("[WARN] Insufficient reactor energy to power phasers!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.energy -= 15;
+            if (g_State.shields >= 10) {
+                g_State.shields -= 10;
+                g_State.credits += 80;
+                g_State.scraps += 15;
+                AddLog("[COMBAT VICTORY] Pirate destroyed! Claimed +80 Cr & +15 Scrap (-10 Shields).", 3);
+                PlayGameSound(7);
+            } else {
+                g_State.hull = (g_State.hull > 20) ? g_State.hull - 20 : 0;
+                AddLog("[COMBAT BREACH] Hull took 20 combat damage during engagement!", 2);
+                PlayGameSound(6);
+            }
+            resolved = 1;
+        } else if (choiceIdx == 1) {
+            if (g_State.credits < 80) {
+                AddLog("[ALERT] Insufficient credits! Pirates open fire!", 2);
+                g_State.hull = (g_State.hull > 15) ? g_State.hull - 15 : 0;
+                PlayGameSound(6);
+            } else {
+                g_State.credits -= 80;
+                AddLog("[PIRATE TOLL] Paid 80 Credits tribute for safe passage.", 1);
+                PlayGameSound(7);
+            }
+            resolved = 1;
+        } else if (choiceIdx == 2) {
+            if (g_State.fuel < 10) {
+                AddLog("[WARN] Insufficient hyper fuel for evasive burn!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.fuel -= 10;
+            if ((xrand() % 100) < 70) {
+                AddLog("[EVASION SUCCESS] Outmaneuvered pirate raider cleanly!", 3);
+                PlayGameSound(4);
+            } else {
+                g_State.shields = (g_State.shields > 12) ? g_State.shields - 12 : 0;
+                AddLog("[EVASION FAILURE] Took 12 shield damage while escaping!", 1);
+                PlayGameSound(6);
+            }
+            resolved = 1;
+        }
+    } else if (type == 1) { // DERELICT
+        if (choiceIdx == 0) {
+            g_State.scraps += 30;
+            g_State.artifacts += 1;
+            if ((xrand() % 100) < 20 && g_State.crew > 1) {
+                g_State.crew -= 1;
+                AddLog("[SALVAGE HAZARD] Recovered +30 Scrap & +1 Relic, but lost 1 crew member!", 2);
+                PlayGameSound(6);
+            } else {
+                AddLog("[SALVAGE SUCCESS] Recovered +30 Tech Scrap & +1 Ancient Relic!", 3);
+                PlayGameSound(7);
+            }
+            resolved = 1;
+        } else if (choiceIdx == 1) {
+            g_State.fuel = (g_State.fuel + 30 > g_State.maxFuel) ? g_State.maxFuel : g_State.fuel + 30;
+            g_State.energy = (g_State.energy + 20 > g_State.maxEnergy) ? g_State.maxEnergy : g_State.energy + 20;
+            AddLog("[SIPHON] Siphoned +30 Hyper Fuel & +20 Energy from derelict reactor!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 2) {
+            g_State.credits += 100;
+            AddLog("[DATA LOGS] Uploaded vessel telemetry database for +100 Credits bounty!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        }
+    } else if (type == 2) { // ANOMALY
+        if (choiceIdx == 0) {
+            g_State.energy = g_State.maxEnergy;
+            g_State.shields = (g_State.shields + 20 > g_State.maxShields) ? g_State.maxShields : g_State.shields + 20;
+            AddLog("[QUANTUM SURGE] Reactor fully recharged & +20 Deflector Boost!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 1) {
+            if (g_State.energy < 15) {
+                AddLog("[WARN] Insufficient energy to stabilize gravity core!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.energy -= 15;
+            g_State.artifacts += 2;
+            g_State.scraps += 20;
+            AddLog("[GRAVITY STABILIZED] Extracted +2 Ancient Relics & +20 Scrap!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 2) {
+            if (g_State.fuel < 10) {
+                AddLog("[WARN] Insufficient fuel for shield overcharge!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.fuel -= 10;
+            g_State.shields = (g_State.shields + 40 > g_State.maxShields) ? g_State.maxShields : g_State.shields + 40;
+            AddLog("[DEFLECTOR SURGE] Shield matrix overcharged (+40 Shields)!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        }
+    } else if (type == 3) { // TRADER
+        if (choiceIdx == 0) {
+            if (g_State.ore < 20) {
+                AddLog("[WARN] Insufficient minerals to trade for alien relic!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.ore -= 20;
+            g_State.artifacts += 1;
+            AddLog("[ALIEN BARTER] Traded 20 Minerals for +1 Ancient Relic!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 1) {
+            if (g_State.gas < 10) {
+                AddLog("[WARN] Insufficient plasma gas to trade for fuel!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.gas -= 10;
+            g_State.fuel = (g_State.fuel + 35 > g_State.maxFuel) ? g_State.maxFuel : g_State.fuel + 35;
+            AddLog("[ALIEN BARTER] Traded 10 Plasma Gas for +35 Hyper Fuel!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 2) {
+            if (g_State.credits < 100) {
+                AddLog("[WARN] Insufficient credits to buy tech scrap!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.credits -= 100;
+            g_State.scraps += 30;
+            AddLog("[ALIEN COMMERCE] Purchased +30 Tech Scrap for 100 Credits!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        }
+    } else if (type == 4) { // DISTRESS
+        if (choiceIdx == 0) {
+            if (g_State.scraps < 15) {
+                AddLog("[WARN] Insufficient tech scrap to assist repairs!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.scraps -= 15;
+            g_State.credits += 200;
+            g_State.crew += 2;
+            AddLog("[RESCUE SUCCESS] Repaired freighter! Awarded +200 Cr & +2 Crew!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 1) {
+            if (g_State.fuel < 20) {
+                AddLog("[WARN] Insufficient hyper fuel to beam to stranded vessel!", 1);
+                PlayGameSound(6);
+                return;
+            }
+            g_State.fuel -= 20;
+            g_State.credits += 150;
+            g_State.gas += 15;
+            AddLog("[RESCUE SUCCESS] Transferred fuel! Awarded +150 Cr & +15 Gas!", 3);
+            PlayGameSound(7);
+            resolved = 1;
+        } else if (choiceIdx == 2) {
+            AddLog("[DISTRESS IGNORED] Bypassed SOS beacon signal.", 0);
+            resolved = 1;
+        }
+    }
+
+    if (resolved) {
+        g_State.inEncounterModal = 0;
+        UpdateControlVisibility(hwnd);
+        InvalidateRect(hwnd, NULL, TRUE);
+    }
+}
+
 // Drawing Utilities
 void DrawBar(HDC hdc, int x, int y, int w, int h, int cur, int max, COLORREF col) {
     RECT bgRect = {x, y, x + w, y + h};
@@ -669,25 +877,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Right Panel Action Buttons
             hBtnScan       = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 24, hwnd, (HMENU)102, NULL, NULL);
-            hBtnScanPlanet = CreateWindowA("BUTTON", "🪐 PLANET SCAN", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 74, 195, 24, hwnd, (HMENU)108, NULL, NULL);
-            hBtnWarp       = CreateWindowA("BUTTON", "🌌 HYPER WARP",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 100, 195, 24, hwnd, (HMENU)103, NULL, NULL);
-            hBtnMine       = CreateWindowA("BUTTON", "⛏️ MINE ASTEROID", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 126, 195, 24, hwnd, (HMENU)104, NULL, NULL);
-            hBtnDock       = CreateWindowA("BUTTON", "⚓ DOCK OUTPOST", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 152, 195, 24, hwnd, (HMENU)105, NULL, NULL);
-            hBtnShield     = CreateWindowA("BUTTON", "🛡️ BOOST DEFLECT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 178, 195, 24, hwnd, (HMENU)106, NULL, NULL);
-            hBtnRepair     = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 204, 195, 24, hwnd, (HMENU)107, NULL, NULL);
+            hBtnScanPlanet = CreateWindowA("BUTTON", "🪐 PLANET SCAN", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 72, 195, 24, hwnd, (HMENU)108, NULL, NULL);
+            hBtnWarp       = CreateWindowA("BUTTON", "🌌 HYPER WARP",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 96, 195, 24, hwnd, (HMENU)103, NULL, NULL);
+            hBtnMine       = CreateWindowA("BUTTON", "⛏️ MINE ASTEROID", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 120, 195, 24, hwnd, (HMENU)104, NULL, NULL);
+            hBtnDock       = CreateWindowA("BUTTON", "⚓ DOCK OUTPOST", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 144, 195, 24, hwnd, (HMENU)105, NULL, NULL);
+            hBtnShield     = CreateWindowA("BUTTON", "🛡️ BOOST DEFLECT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 168, 195, 24, hwnd, (HMENU)106, NULL, NULL);
+            hBtnRepair     = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 192, 195, 24, hwnd, (HMENU)107, NULL, NULL);
+            hBtnEncScan    = CreateWindowA("BUTTON", "🎲 ENCOUNTER SCAN",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 216, 195, 24, hwnd, (HMENU)109, NULL, NULL);
 
             // D-Pad Navigation Buttons
-            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 238, 60, 24, hwnd, (HMENU)201, NULL, NULL);
-            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 238, 60, 24, hwnd, (HMENU)202, NULL, NULL);
-            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 238, 60, 24, hwnd, (HMENU)203, NULL, NULL);
+            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 246, 60, 24, hwnd, (HMENU)201, NULL, NULL);
+            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 246, 60, 24, hwnd, (HMENU)202, NULL, NULL);
+            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 246, 60, 24, hwnd, (HMENU)203, NULL, NULL);
 
-            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 266, 60, 24, hwnd, (HMENU)204, NULL, NULL);
-            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 266, 60, 24, hwnd, (HMENU)205, NULL, NULL);
-            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 266, 60, 24, hwnd, (HMENU)206, NULL, NULL);
+            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 274, 60, 24, hwnd, (HMENU)204, NULL, NULL);
+            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 274, 60, 24, hwnd, (HMENU)205, NULL, NULL);
+            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 274, 60, 24, hwnd, (HMENU)206, NULL, NULL);
 
-            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 294, 60, 24, hwnd, (HMENU)207, NULL, NULL);
-            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 294, 60, 24, hwnd, (HMENU)208, NULL, NULL);
-            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 294, 60, 24, hwnd, (HMENU)209, NULL, NULL);
+            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 302, 60, 24, hwnd, (HMENU)207, NULL, NULL);
+            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 302, 60, 24, hwnd, (HMENU)208, NULL, NULL);
+            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 302, 60, 24, hwnd, (HMENU)209, NULL, NULL);
 
             // Init Modal Buttons
             hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)301, NULL, NULL);
@@ -708,6 +917,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Planet Telemetry Modal Button
             hBtnPlanetClose     = CreateWindowA("BUTTON", "✅ LOG SURVEY DATA & RESUME COMMAND",     WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 32, hwnd, (HMENU)501, NULL, NULL);
 
+            // Encounter Modal Buttons
+            hBtnEncChoice1 = CreateWindowA("BUTTON", "[1] CHOICE 1", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)601, NULL, NULL);
+            hBtnEncChoice2 = CreateWindowA("BUTTON", "[2] CHOICE 2", WS_CHILD | BS_PUSHBUTTON, 230, 185, 380, 28, hwnd, (HMENU)602, NULL, NULL);
+            hBtnEncChoice3 = CreateWindowA("BUTTON", "[3] CHOICE 3", WS_CHILD | BS_PUSHBUTTON, 230, 220, 380, 28, hwnd, (HMENU)603, NULL, NULL);
+            hBtnEncClose   = CreateWindowA("BUTTON", "✕ DISENGAGE ENCOUNTER", WS_CHILD | BS_PUSHBUTTON, 230, 270, 380, 28, hwnd, (HMENU)604, NULL, NULL);
+
             UpdateControlVisibility(hwnd);
             SetTimer(hwnd, 1, 50, NULL);
             break;
@@ -725,7 +940,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_Stars[i].speed = -g_Stars[i].speed;
                 }
             }
-            if (g_State.mapMode == 0 && !g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal) {
+            if (g_State.mapMode == 0 && !g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal) {
                 RECT rectMap = {260, 48, 615, 393};
                 InvalidateRect(hwnd, &rectMap, FALSE);
             }
@@ -733,7 +948,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal) break;
+            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal || g_State.inEncounterModal) break;
 
             switch (wParam) {
                 case VK_UP:    MoveShip(hwnd, 0, -1); break;
@@ -766,6 +981,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 105) ExecuteDock(hwnd);
             else if (id == 106) ExecuteShieldBoost(hwnd);
             else if (id == 107) ExecuteRepair(hwnd);
+            else if (id == 109) {
+                if (g_State.energy >= 8) {
+                    g_State.energy -= 8;
+                    TriggerRandomEncounter(hwnd, xrand() % 5);
+                } else {
+                    AddLog("[WARN] Insufficient energy for tactical encounter scan.", 1);
+                    PlayGameSound(6);
+                }
+            }
             else if (id >= 201 && id <= 209) {
                 int dx = 0, dy = 0;
                 if (id == 201) { dx = -1; dy = -1; }
@@ -803,6 +1027,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_State.inPlanetModal = 0;
                 UpdateControlVisibility(hwnd);
                 AddLog("[ORBIT] Planetary telemetry logged.", 0);
+            } else if (id == 601) ResolveEncounterChoice(hwnd, 0);
+            else if (id == 602) ResolveEncounterChoice(hwnd, 1);
+            else if (id == 603) ResolveEncounterChoice(hwnd, 2);
+            else if (id == 604) {
+                g_State.inEncounterModal = 0;
+                UpdateControlVisibility(hwnd);
+                AddLog("[ENCOUNTER] Disengaged tactical event.", 0);
             }
             SetFocus(hwnd);
             break;
@@ -1271,6 +1502,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 SetTextColor(hdc, RGB(180, 200, 220));
                 TextOutA(hdc, 230, 250, "SURVEY STATUS: ANALYSIS COMPLETE & CARGO LOGGED", 47);
+            } else if (g_State.inEncounterModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {210, 65, 630, 370};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                FrameRect(hdc, &modalCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+                SelectObject(hdc, hTitleFont);
+                COLORREF titleCol = RGB(255, 170, 0);
+                const char* titleText = "🚨 RANDOM SPACE ENCOUNTER";
+                const char* descText = "Deep space tactical event detected. Select command decision:";
+
+                if (g_State.encounterType == 0) {
+                    titleCol = RGB(255, 51, 102);
+                    titleText = "🚨 HOSTILE PIRATE AMBUSH";
+                    descText = "A heavily armed raider locks weapons and demands tribute!";
+                } else if (g_State.encounterType == 1) {
+                    titleCol = RGB(255, 170, 0);
+                    titleText = "🚢 DERELICT SHIP ADRIFT";
+                    descText = "An abandoned vessel is drifting with salvageable components.";
+                } else if (g_State.encounterType == 2) {
+                    titleCol = RGB(176, 38, 255);
+                    titleText = "🌀 QUANTUM SPATIAL ANOMALY";
+                    descText = "A localized tachyon rift distorts space-time around your sensors.";
+                } else if (g_State.encounterType == 3) {
+                    titleCol = RGB(0, 255, 170);
+                    titleText = "👽 XENON ALIEN TRADER";
+                    descText = "A benevolent alien merchant ship offers exotic barter.";
+                } else if (g_State.encounterType == 4) {
+                    titleCol = RGB(0, 240, 255);
+                    titleText = "📻 SOS DISTRESS BEACON";
+                    descText = "A stranded civilian freighter broadcasts an urgent SOS!";
+                }
+
+                SetTextColor(hdc, titleCol);
+                TextOutA(hdc, 230, 80, titleText, (int)lstrlenA(titleText));
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(160, 190, 220));
+                TextOutA(hdc, 230, 110, descText, (int)lstrlenA(descText));
             }
 
             EndPaint(hwnd, &ps);
