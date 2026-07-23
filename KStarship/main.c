@@ -51,6 +51,19 @@ typedef struct {
     int inEncounterModal; // 1: Random Encounter Active
     int encounterType; // 0: Pirate, 1: Derelict, 2: Anomaly, 3: Trader, 4: Distress
     int selectedClass; // 0: Corvette, 1: Frigate, 2: Interceptor, 3: Cruiser
+    // Phase 7 Tactical Combat State
+    int inCombatModal;
+    char enemyName[32];
+    int enemyHull, enemyMaxHull;
+    int enemyShields, enemyMaxShields;
+    int enemyWeaponPower;
+    int enemyWeaponsDamaged;
+    int enemyEvasion;
+    int enemyEnginesDamaged;
+    int playerEvading;
+    int targetSubsystem; // 0: Hull, 1: Shields, 2: Weapons, 3: Engines
+    char combatFeed[4][128];
+    int combatFeedCount;
 } StarshipState;
 
 static StarshipState g_State = {
@@ -62,7 +75,10 @@ static StarshipState g_State = {
     1000, 0, 0, 0, 10, 25,
     3, 3,
     {{0}}, {{{0}}}, 0, 0,
-    0, 0, 1, 0, 0, 0, 0, 0
+    0, 0, 1, 0, 0, 0, 0, 0,
+    0, "CYBERNETIC PIRATE RAIDER",
+    90, 90, 50, 50, 16, 0, 15, 0, 0, 0,
+    {{0}}, 0
 };
 
 static const char* g_BiomeNames[] = {"TERRAN SYSTEM", "VOLCANIC SYSTEM", "NEBULA SYSTEM", "ASTEROID BELT"};
@@ -183,10 +199,16 @@ void InitStars() {
 
 void TriggerRandomEncounter(HWND hwnd, int type);
 void ResolveEncounterChoice(HWND hwnd, int choiceIdx);
+void StartTacticalCombat(HWND hwnd, int presetIdx);
+void CombatPlayerFire(HWND hwnd);
+void CombatPlayerShield(HWND hwnd);
+void CombatPlayerEvade(HWND hwnd);
+void CombatPlayerRepair(HWND hwnd);
+void CombatPlayerFlee(HWND hwnd);
 
 // Window Controls & Handles
 static HWND hBtnAudioToggle, hBtnModeToggle;
-static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair, hBtnEncScan;
+static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair, hBtnEncScan, hBtnCombat;
 static HWND hBtnNW, hBtnN, hBtnNE, hBtnW, hBtnCenter, hBtnE, hBtnSW, hBtnS, hBtnSE;
 
 // Modal Controls
@@ -194,6 +216,8 @@ static HWND hBtnClass0, hBtnClass1, hBtnClass2, hBtnClass3, hBtnConfirmInit;
 static HWND hBtnStRefuel, hBtnStRepair, hBtnStSellOre, hBtnStSellGas, hBtnStSellArtifacts, hBtnStRecruit, hBtnStClose;
 static HWND hBtnPlanetClose;
 static HWND hBtnEncChoice1, hBtnEncChoice2, hBtnEncChoice3, hBtnEncClose;
+static HWND hBtnCombatFire, hBtnCombatShield, hBtnCombatEvade, hBtnCombatRepair, hBtnCombatFlee;
+static HWND hBtnTgtHull, hBtnTgtShield, hBtnTgtWeap, hBtnTgtEng;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -202,7 +226,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -213,6 +237,7 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnShield,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnRepair,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnEncScan,    inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCombat,     inMain ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnNW,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnN,      inMain ? SW_SHOW : SW_HIDE);
@@ -248,6 +273,17 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnEncChoice2, g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnEncChoice3, g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnEncClose,   g_State.inEncounterModal ? SW_SHOW : SW_HIDE);
+
+    // Tactical Combat Modal Buttons (Phase 7)
+    ShowWindow(hBtnTgtHull,       g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnTgtShield,     g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnTgtWeap,       g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnTgtEng,        g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCombatFire,   g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCombatShield, g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCombatEvade,  g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCombatRepair, g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCombatFlee,   g_State.inCombatModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -623,7 +659,7 @@ void TriggerRandomEncounter(HWND hwnd, int type) {
     g_State.encounterType = type;
 
     if (type == 0) { // PIRATE
-        SetWindowTextA(hBtnEncChoice1, "[1] ENGAGE PHASERS (-15 Energy)");
+        SetWindowTextA(hBtnEncChoice1, "[1] ENTER TACTICAL COMBAT (-12 Energy)");
         SetWindowTextA(hBtnEncChoice2, "[2] PAY TRIBUTE TOLL (-80 Credits)");
         SetWindowTextA(hBtnEncChoice3, "[3] EVASIVE MANEUVERS (-10 Fuel)");
     } else if (type == 1) { // DERELICT
@@ -655,24 +691,13 @@ void ResolveEncounterChoice(HWND hwnd, int choiceIdx) {
 
     if (type == 0) { // PIRATE
         if (choiceIdx == 0) {
-            if (g_State.energy < 15) {
-                AddLog("[WARN] Insufficient reactor energy to power phasers!", 1);
+            if (g_State.energy < 12) {
+                AddLog("[WARN] Insufficient reactor energy for tactical combat!", 1);
                 PlayGameSound(6);
                 return;
             }
-            g_State.energy -= 15;
-            if (g_State.shields >= 10) {
-                g_State.shields -= 10;
-                g_State.credits += 80;
-                g_State.scraps += 15;
-                AddLog("[COMBAT VICTORY] Pirate destroyed! Claimed +80 Cr & +15 Scrap (-10 Shields).", 3);
-                PlayGameSound(7);
-            } else {
-                g_State.hull = (g_State.hull > 20) ? g_State.hull - 20 : 0;
-                AddLog("[COMBAT BREACH] Hull took 20 combat damage during engagement!", 2);
-                PlayGameSound(6);
-            }
-            resolved = 1;
+            StartTacticalCombat(hwnd, 0);
+            return;
         } else if (choiceIdx == 1) {
             if (g_State.credits < 80) {
                 AddLog("[ALERT] Insufficient credits! Pirates open fire!", 2);
@@ -830,6 +855,308 @@ void ResolveEncounterChoice(HWND hwnd, int choiceIdx) {
     }
 }
 
+// Phase 7: Turn-based Tactical Ship Combat Engine
+void AddCombatFeed(const char* msg) {
+    if (g_State.combatFeedCount < 4) {
+        int i;
+        for (i = 0; msg[i] != '\0' && i < 127; i++) g_State.combatFeed[g_State.combatFeedCount][i] = msg[i];
+        g_State.combatFeed[g_State.combatFeedCount][i] = '\0';
+        g_State.combatFeedCount++;
+    } else {
+        int i;
+        for (i = 0; i < 3; i++) {
+            int k;
+            for (k = 0; g_State.combatFeed[i + 1][k] != '\0'; k++) g_State.combatFeed[i][k] = g_State.combatFeed[i + 1][k];
+            g_State.combatFeed[i][k] = '\0';
+        }
+        int k;
+        for (k = 0; msg[k] != '\0' && k < 127; k++) g_State.combatFeed[3][k] = msg[k];
+        g_State.combatFeed[3][k] = '\0';
+    }
+}
+
+void StartTacticalCombat(HWND hwnd, int presetIdx) {
+    if (g_State.energy < 12) {
+        AddLog("[WARN] Insufficient reactor energy to power tactical weapon targeting matrix!", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 12;
+    g_State.inCombatModal = 1;
+    g_State.inEncounterModal = 0;
+    g_State.targetSubsystem = 0;
+    g_State.playerEvading = 0;
+    g_State.combatFeedCount = 0;
+
+    const char* names[] = {"CYBERNETIC PIRATE RAIDER", "VOID CRUISER DREADNOUGHT", "OBSIDIAN RAVAGER INTERCEPTOR", "IMPERIAL STAR DESTROYER"};
+    int hulls[] = {85, 120, 65, 140};
+    int shields[] = {45, 75, 55, 90};
+    int powers[] = {15, 22, 18, 26};
+    int evasions[] = {15, 8, 30, 5};
+
+    int p = presetIdx % 4;
+    int i;
+    for (i = 0; names[p][i] != '\0'; i++) g_State.enemyName[i] = names[p][i];
+    g_State.enemyName[i] = '\0';
+
+    g_State.enemyHull = hulls[p]; g_State.enemyMaxHull = hulls[p];
+    g_State.enemyShields = shields[p]; g_State.enemyMaxShields = shields[p];
+    g_State.enemyWeaponPower = powers[p];
+    g_State.enemyWeaponsDamaged = 0;
+    g_State.enemyEvasion = evasions[p];
+    g_State.enemyEnginesDamaged = 0;
+
+    char buf[128];
+    wsprintfA(buf, "TACTICAL LOCK: %s in visual space!", g_State.enemyName);
+    AddCombatFeed(buf);
+    AddCombatFeed("Targeting matrix engaged. Choose target subsystem & fire!");
+
+    PlayGameSound(6);
+    UpdateControlVisibility(hwnd);
+}
+
+void CombatVictory(HWND hwnd) {
+    g_State.credits += 120;
+    g_State.scraps += 25;
+    g_State.fuel = (g_State.fuel + 20 > g_State.maxFuel) ? g_State.maxFuel : g_State.fuel + 20;
+    g_State.artifacts += 1;
+
+    char buf[160];
+    wsprintfA(buf, "[COMBAT VICTORY] Destroyed %s! Claimed +120 Cr, +25 Scrap, +20 Fuel & +1 Relic!", g_State.enemyName);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+
+    if (g_State.gridMap[g_State.shipY][g_State.shipX] == 5) {
+        g_State.gridMap[g_State.shipY][g_State.shipX] = 0;
+    }
+
+    g_State.inCombatModal = 0;
+    UpdateControlVisibility(hwnd);
+}
+
+void CombatDefeat(HWND hwnd) {
+    AddLog("[CRITICAL BREACH] Hull compromised! Emergency escape pod activated.", 2);
+    g_State.hull = 25;
+    g_State.shields = 0;
+    PlayGameSound(6);
+
+    g_State.inCombatModal = 0;
+    UpdateControlVisibility(hwnd);
+}
+
+void CombatEnemyTurn(HWND hwnd) {
+    if (!g_State.inCombatModal || g_State.enemyHull <= 0) return;
+
+    if (g_State.enemyShields <= 0 && (xrand() % 100) < 25) {
+        g_State.enemyShields = 25;
+        char buf[128];
+        wsprintfA(buf, "[ENEMY ACTION] %s recharged deflector shields (+25 HP)!", g_State.enemyName);
+        AddCombatFeed(buf);
+        InvalidateRect(hwnd, NULL, TRUE);
+        return;
+    }
+
+    int hitChance = g_State.playerEvading ? 45 : 85;
+    g_State.playerEvading = 0;
+
+    if ((xrand() % 100) >= hitChance) {
+        char buf[128];
+        wsprintfA(buf, "[ENEMY ATTACK] %s fired weapons, but MISSED due to evasion!", g_State.enemyName);
+        AddCombatFeed(buf);
+        PlayGameSound(4);
+    } else {
+        int dmg = g_State.enemyWeaponPower + (xrand() % 8) - 3;
+        if (dmg < 5) dmg = 5;
+
+        if (g_State.shields > 0) {
+            if (g_State.shields >= dmg) {
+                g_State.shields -= dmg;
+                char buf[128];
+                wsprintfA(buf, "[ENEMY ATTACK] %s struck shields for %d DMG!", g_State.enemyName, dmg);
+                AddCombatFeed(buf);
+            } else {
+                int rem = dmg - g_State.shields;
+                g_State.shields = 0;
+                g_State.hull = (g_State.hull > rem) ? g_State.hull - rem : 0;
+                char buf[128];
+                wsprintfA(buf, "[SHIELD BREACH] %s breached shields! Took %d HULL DMG!", g_State.enemyName, rem);
+                AddCombatFeed(buf);
+            }
+        } else {
+            g_State.hull = (g_State.hull > dmg) ? g_State.hull - dmg : 0;
+            char buf[128];
+            wsprintfA(buf, "[HULL BREACH] %s struck hull for %d DMG!", g_State.enemyName, dmg);
+            AddCombatFeed(buf);
+        }
+        PlayGameSound(6);
+    }
+
+    if (g_State.hull <= 0) {
+        CombatDefeat(hwnd);
+    }
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void CombatPlayerFire(HWND hwnd) {
+    if (!g_State.inCombatModal) return;
+    if (g_State.energy < 12) {
+        AddCombatFeed("[WARN] Need 12 Energy to fire phaser cannons!");
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 12;
+
+    int currentEnemyEvasion = g_State.enemyEnginesDamaged ? 0 : g_State.enemyEvasion;
+    int hitRoll = xrand() % 100;
+
+    if (hitRoll < currentEnemyEvasion) {
+        char buf[128];
+        wsprintfA(buf, "[PLAYER FIRE] Phasers missed! %s executed evasive roll!", g_State.enemyName);
+        AddCombatFeed(buf);
+        PlayGameSound(4);
+    } else {
+        int baseDmg = (xrand() % 12) + 18;
+        int sys = g_State.targetSubsystem;
+
+        if (sys == 1) { // SHIELDS
+            if (g_State.enemyShields > 0) {
+                int shDmg = (int)(baseDmg * 1.5);
+                g_State.enemyShields = (g_State.enemyShields > shDmg) ? g_State.enemyShields - shDmg : 0;
+                char buf[128];
+                wsprintfA(buf, "[TARGET: SHIELD CORE] Heavy ion beam struck shields for %d DMG!", shDmg);
+                AddCombatFeed(buf);
+            } else {
+                g_State.enemyHull = (g_State.enemyHull > baseDmg) ? g_State.enemyHull - baseDmg : 0;
+                char buf[128];
+                wsprintfA(buf, "[TARGET: SHIELD CORE] Shields down! Phaser struck hull for %d DMG!", baseDmg);
+                AddCombatFeed(buf);
+            }
+        } else if (sys == 2) { // WEAPONS
+            int actualDmg = baseDmg;
+            if (g_State.enemyShields > 0) {
+                int shDmg = (int)(baseDmg * 0.7);
+                g_State.enemyShields = (g_State.enemyShields > shDmg) ? g_State.enemyShields - shDmg : 0;
+                actualDmg = (int)(baseDmg * 0.3);
+            }
+            g_State.enemyHull = (g_State.enemyHull > actualDmg) ? g_State.enemyHull - actualDmg : 0;
+            g_State.enemyWeaponsDamaged = 1;
+            g_State.enemyWeaponPower = (int)(g_State.enemyWeaponPower * 0.7);
+            if (g_State.enemyWeaponPower < 6) g_State.enemyWeaponPower = 6;
+            char buf[128];
+            wsprintfA(buf, "[TARGET: WEAPONS] Disrupted weapon array! (%d Hull DMG, -30%% Pwr)", actualDmg);
+            AddCombatFeed(buf);
+        } else if (sys == 3) { // ENGINES
+            int actualDmg = baseDmg;
+            if (g_State.enemyShields > 0) {
+                int shDmg = (int)(baseDmg * 0.7);
+                g_State.enemyShields = (g_State.enemyShields > shDmg) ? g_State.enemyShields - shDmg : 0;
+                actualDmg = (int)(baseDmg * 0.3);
+            }
+            g_State.enemyHull = (g_State.enemyHull > actualDmg) ? g_State.enemyHull - actualDmg : 0;
+            g_State.enemyEnginesDamaged = 1;
+            char buf[128];
+            wsprintfA(buf, "[TARGET: THRUSTERS] Scorched thrusters! Evasion reduced to 0%%! (%d Hull DMG)", actualDmg);
+            AddCombatFeed(buf);
+        } else { // HULL
+            if (g_State.enemyShields > 0) {
+                int shDmg = (int)(baseDmg * 0.6);
+                int hDmg = (int)(baseDmg * 0.5);
+                g_State.enemyShields = (g_State.enemyShields > shDmg) ? g_State.enemyShields - shDmg : 0;
+                g_State.enemyHull = (g_State.enemyHull > hDmg) ? g_State.enemyHull - hDmg : 0;
+                char buf[128];
+                wsprintfA(buf, "[TARGET: CORE HULL] Pierced deflectors! (%d Shield / %d Hull DMG)", shDmg, hDmg);
+                AddCombatFeed(buf);
+            } else {
+                g_State.enemyHull = (g_State.enemyHull > baseDmg) ? g_State.enemyHull - baseDmg : 0;
+                char buf[128];
+                wsprintfA(buf, "[TARGET: CORE HULL] DIRECT HIT ON HULL! Dealt %d critical DMG!", baseDmg);
+                AddCombatFeed(buf);
+            }
+        }
+        PlayGameSound(7);
+    }
+
+    if (g_State.enemyHull <= 0) {
+        CombatVictory(hwnd);
+    } else {
+        CombatEnemyTurn(hwnd);
+    }
+}
+
+void CombatPlayerShield(HWND hwnd) {
+    if (!g_State.inCombatModal) return;
+    if (g_State.energy < 15) {
+        AddCombatFeed("[WARN] Need 15 Energy for deflector overcharge!");
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 15;
+    g_State.shields = (g_State.shields + 30 > g_State.maxShields) ? g_State.maxShields : g_State.shields + 30;
+    AddCombatFeed("[DEFLECTOR OVERCHARGE] Overcharged shields (+30 HP)!");
+    PlayGameSound(7);
+
+    CombatEnemyTurn(hwnd);
+}
+
+void CombatPlayerEvade(HWND hwnd) {
+    if (!g_State.inCombatModal) return;
+    if (g_State.energy < 10 || g_State.fuel < 5) {
+        AddCombatFeed("[WARN] Need 10 Energy & 5 Fuel for evasive burn!");
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 10;
+    g_State.fuel -= 5;
+    g_State.playerEvading = 1;
+    AddCombatFeed("[EVASIVE BURN] Lateral thrusters active (+35% Evasion)!");
+    PlayGameSound(4);
+
+    CombatEnemyTurn(hwnd);
+}
+
+void CombatPlayerRepair(HWND hwnd) {
+    if (!g_State.inCombatModal) return;
+    if (g_State.scraps >= 10) {
+        g_State.scraps -= 10;
+        g_State.hull = (g_State.hull + 25 > g_State.maxHull) ? g_State.maxHull : g_State.hull + 25;
+        AddCombatFeed("[EMERGENCY REPAIR] Used 10 Tech Scrap (+25 Hull HP)!");
+        PlayGameSound(7);
+    } else if (g_State.energy >= 15) {
+        g_State.energy -= 15;
+        g_State.hull = (g_State.hull + 20 > g_State.maxHull) ? g_State.maxHull : g_State.hull + 20;
+        AddCombatFeed("[EMERGENCY REPAIR] Diverted energy to nanites (+20 Hull HP)!");
+        PlayGameSound(7);
+    } else {
+        AddCombatFeed("[WARN] Insufficient Scrap / Energy for damage control!");
+        PlayGameSound(6);
+        return;
+    }
+
+    CombatEnemyTurn(hwnd);
+}
+
+void CombatPlayerFlee(HWND hwnd) {
+    if (!g_State.inCombatModal) return;
+    if (g_State.fuel < 15) {
+        AddCombatFeed("[WARN] Need 15 Hyper Fuel to charge emergency warp flee!");
+        PlayGameSound(6);
+        return;
+    }
+    g_State.fuel -= 15;
+    if ((xrand() % 100) < 65) {
+        char buf[128];
+        wsprintfA(buf, "[TACTICAL RETREAT] Outmaneuvered %s and engaged hyperdrive!", g_State.enemyName);
+        AddLog(buf, 3);
+        PlayGameSound(4);
+        g_State.inCombatModal = 0;
+        UpdateControlVisibility(hwnd);
+    } else {
+        AddCombatFeed("[WARP RETREAT FAILED] Tractor beam disrupted warp startup!");
+        PlayGameSound(6);
+        CombatEnemyTurn(hwnd);
+    }
+}
+
 // Drawing Utilities
 void DrawBar(HDC hdc, int x, int y, int w, int h, int cur, int max, COLORREF col) {
     RECT bgRect = {x, y, x + w, y + h};
@@ -876,27 +1203,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnModeToggle  = CreateWindowA("BUTTON", "🌌 GRAPHICAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 515, 8, 115, 24, hwnd, (HMENU)101, NULL, NULL);
 
             // Right Panel Action Buttons
-            hBtnScan       = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 24, hwnd, (HMENU)102, NULL, NULL);
-            hBtnScanPlanet = CreateWindowA("BUTTON", "🪐 PLANET SCAN", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 72, 195, 24, hwnd, (HMENU)108, NULL, NULL);
-            hBtnWarp       = CreateWindowA("BUTTON", "🌌 HYPER WARP",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 96, 195, 24, hwnd, (HMENU)103, NULL, NULL);
-            hBtnMine       = CreateWindowA("BUTTON", "⛏️ MINE ASTEROID", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 120, 195, 24, hwnd, (HMENU)104, NULL, NULL);
-            hBtnDock       = CreateWindowA("BUTTON", "⚓ DOCK OUTPOST", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 144, 195, 24, hwnd, (HMENU)105, NULL, NULL);
-            hBtnShield     = CreateWindowA("BUTTON", "🛡️ BOOST DEFLECT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 168, 195, 24, hwnd, (HMENU)106, NULL, NULL);
-            hBtnRepair     = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 192, 195, 24, hwnd, (HMENU)107, NULL, NULL);
-            hBtnEncScan    = CreateWindowA("BUTTON", "🎲 ENCOUNTER SCAN",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 216, 195, 24, hwnd, (HMENU)109, NULL, NULL);
+            hBtnScan       = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 21, hwnd, (HMENU)102, NULL, NULL);
+            hBtnScanPlanet = CreateWindowA("BUTTON", "🪐 PLANET SCAN", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 70, 195, 21, hwnd, (HMENU)108, NULL, NULL);
+            hBtnWarp       = CreateWindowA("BUTTON", "🌌 HYPER WARP",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 92, 195, 21, hwnd, (HMENU)103, NULL, NULL);
+            hBtnMine       = CreateWindowA("BUTTON", "⛏️ MINE ASTEROID", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 114, 195, 21, hwnd, (HMENU)104, NULL, NULL);
+            hBtnDock       = CreateWindowA("BUTTON", "⚓ DOCK OUTPOST", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 136, 195, 21, hwnd, (HMENU)105, NULL, NULL);
+            hBtnShield     = CreateWindowA("BUTTON", "🛡️ BOOST DEFLECT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 158, 195, 21, hwnd, (HMENU)106, NULL, NULL);
+            hBtnRepair     = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 180, 195, 21, hwnd, (HMENU)107, NULL, NULL);
+            hBtnEncScan    = CreateWindowA("BUTTON", "🎲 ENCOUNTER SCAN",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 202, 195, 21, hwnd, (HMENU)109, NULL, NULL);
+            hBtnCombat     = CreateWindowA("BUTTON", "⚔️ TACTICAL COMBAT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 224, 195, 21, hwnd, (HMENU)110, NULL, NULL);
 
             // D-Pad Navigation Buttons
-            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 246, 60, 24, hwnd, (HMENU)201, NULL, NULL);
-            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 246, 60, 24, hwnd, (HMENU)202, NULL, NULL);
-            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 246, 60, 24, hwnd, (HMENU)203, NULL, NULL);
+            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 250, 60, 22, hwnd, (HMENU)201, NULL, NULL);
+            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 250, 60, 22, hwnd, (HMENU)202, NULL, NULL);
+            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 250, 60, 22, hwnd, (HMENU)203, NULL, NULL);
 
-            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 274, 60, 24, hwnd, (HMENU)204, NULL, NULL);
-            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 274, 60, 24, hwnd, (HMENU)205, NULL, NULL);
-            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 274, 60, 24, hwnd, (HMENU)206, NULL, NULL);
+            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 275, 60, 22, hwnd, (HMENU)204, NULL, NULL);
+            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 275, 60, 22, hwnd, (HMENU)205, NULL, NULL);
+            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 275, 60, 22, hwnd, (HMENU)206, NULL, NULL);
 
-            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 302, 60, 24, hwnd, (HMENU)207, NULL, NULL);
-            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 302, 60, 24, hwnd, (HMENU)208, NULL, NULL);
-            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 302, 60, 24, hwnd, (HMENU)209, NULL, NULL);
+            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 300, 60, 22, hwnd, (HMENU)207, NULL, NULL);
+            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 300, 60, 22, hwnd, (HMENU)208, NULL, NULL);
+            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 300, 60, 22, hwnd, (HMENU)209, NULL, NULL);
 
             // Init Modal Buttons
             hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)301, NULL, NULL);
@@ -923,6 +1251,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnEncChoice3 = CreateWindowA("BUTTON", "[3] CHOICE 3", WS_CHILD | BS_PUSHBUTTON, 230, 220, 380, 28, hwnd, (HMENU)603, NULL, NULL);
             hBtnEncClose   = CreateWindowA("BUTTON", "✕ DISENGAGE ENCOUNTER", WS_CHILD | BS_PUSHBUTTON, 230, 270, 380, 28, hwnd, (HMENU)604, NULL, NULL);
 
+            // Tactical Combat Modal Buttons (Phase 7)
+            hBtnTgtHull    = CreateWindowA("BUTTON", "[1] CORE HULL",    WS_CHILD | BS_PUSHBUTTON, 185, 218, 112, 22, hwnd, (HMENU)706, NULL, NULL);
+            hBtnTgtShield  = CreateWindowA("BUTTON", "[2] SHIELD CORE",  WS_CHILD | BS_PUSHBUTTON, 301, 218, 112, 22, hwnd, (HMENU)707, NULL, NULL);
+            hBtnTgtWeap    = CreateWindowA("BUTTON", "[3] WEAPONS",      WS_CHILD | BS_PUSHBUTTON, 417, 218, 112, 22, hwnd, (HMENU)708, NULL, NULL);
+            hBtnTgtEng     = CreateWindowA("BUTTON", "[4] THRUSTERS",    WS_CHILD | BS_PUSHBUTTON, 533, 218, 112, 22, hwnd, (HMENU)709, NULL, NULL);
+
+            hBtnCombatFire   = CreateWindowA("BUTTON", "⚔️ FIRE PHASERS (-12 E)",         WS_CHILD | BS_PUSHBUTTON, 185, 245, 226, 26, hwnd, (HMENU)701, NULL, NULL);
+            hBtnCombatShield = CreateWindowA("BUTTON", "🛡️ OVERCHARGE SHIELDS (-15 E)",   WS_CHILD | BS_PUSHBUTTON, 417, 245, 226, 26, hwnd, (HMENU)702, NULL, NULL);
+            hBtnCombatEvade  = CreateWindowA("BUTTON", "⚡ EVASIVE MANEUVER (-10 E, -5 F)",WS_CHILD | BS_PUSHBUTTON, 185, 275, 226, 26, hwnd, (HMENU)703, NULL, NULL);
+            hBtnCombatRepair = CreateWindowA("BUTTON", "🛠️ DAMAGE CONTROL (-10 Scrap)",   WS_CHILD | BS_PUSHBUTTON, 417, 275, 226, 26, hwnd, (HMENU)704, NULL, NULL);
+            hBtnCombatFlee   = CreateWindowA("BUTTON", "🚀 TACTICAL WARP FLEE (-15 Fuel)",WS_CHILD | BS_PUSHBUTTON, 185, 305, 458, 26, hwnd, (HMENU)705, NULL, NULL);
+
             UpdateControlVisibility(hwnd);
             SetTimer(hwnd, 1, 50, NULL);
             break;
@@ -940,7 +1280,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_Stars[i].speed = -g_Stars[i].speed;
                 }
             }
-            if (g_State.mapMode == 0 && !g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal) {
+            if (g_State.mapMode == 0 && !g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal) {
                 RECT rectMap = {260, 48, 615, 393};
                 InvalidateRect(hwnd, &rectMap, FALSE);
             }
@@ -948,7 +1288,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal || g_State.inEncounterModal) break;
+            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal || g_State.inEncounterModal || g_State.inCombatModal) break;
 
             switch (wParam) {
                 case VK_UP:    MoveShip(hwnd, 0, -1); break;
@@ -989,6 +1329,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     AddLog("[WARN] Insufficient energy for tactical encounter scan.", 1);
                     PlayGameSound(6);
                 }
+            } else if (id == 110) {
+                StartTacticalCombat(hwnd, xrand() % 4);
+            } else if (id == 701) CombatPlayerFire(hwnd);
+            else if (id == 702) CombatPlayerShield(hwnd);
+            else if (id == 703) CombatPlayerEvade(hwnd);
+            else if (id == 704) CombatPlayerRepair(hwnd);
+            else if (id == 705) CombatPlayerFlee(hwnd);
+            else if (id >= 706 && id <= 709) {
+                g_State.targetSubsystem = id - 706;
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (id >= 201 && id <= 209) {
                 int dx = 0, dy = 0;
@@ -1545,6 +1895,115 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, hMonoFont);
                 SetTextColor(hdc, RGB(160, 190, 220));
                 TextOutA(hdc, 230, 110, descText, (int)lstrlenA(descText));
+            } else if (g_State.inCombatModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {170, 50, 670, 390};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hRedPen = CreateSolidBrush(RGB(255, 51, 102));
+                FrameRect(hdc, &modalCard, hRedPen);
+                DeleteObject(hRedPen);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(255, 51, 102));
+                TextOutA(hdc, 185, 60, "⚔️ TURN-BASED TACTICAL SHIP COMBAT", 34);
+
+                SelectObject(hdc, hMonoFont);
+                // Player Vitals (Left Card)
+                RECT playerCard = {185, 82, 410, 195};
+                HBRUSH hCardBg = CreateSolidBrush(RGB(4, 12, 24));
+                FillRect(hdc, &playerCard, hCardBg);
+                DeleteObject(hCardBg);
+                FrameRect(hdc, &playerCard, hBorderCyanB);
+
+                SelectObject(hdc, hBoldFont);
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 195, 88, g_State.shipName, (int)lstrlenA(g_State.shipName));
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(180, 210, 240));
+                char pVal[32];
+                wsprintfA(pVal, "HULL: %d/%d", g_State.hull, g_State.maxHull);
+                TextOutA(hdc, 195, 108, pVal, (int)lstrlenA(pVal));
+                DrawBar(hdc, 195, 122, 200, 6, g_State.hull, g_State.maxHull, RGB(57, 255, 20));
+
+                wsprintfA(pVal, "SHIELD: %d/%d", g_State.shields, g_State.maxShields);
+                TextOutA(hdc, 195, 132, pVal, (int)lstrlenA(pVal));
+                DrawBar(hdc, 195, 146, 200, 6, g_State.shields, g_State.maxShields, RGB(59, 130, 246));
+
+                wsprintfA(pVal, "ENERGY: %d/%d", g_State.energy, g_State.maxEnergy);
+                TextOutA(hdc, 195, 156, pVal, (int)lstrlenA(pVal));
+                DrawBar(hdc, 195, 170, 200, 6, g_State.energy, g_State.maxEnergy, RGB(0, 240, 255));
+
+                if (g_State.playerEvading) {
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    TextOutA(hdc, 195, 180, "STATUS: +35% EVASION ACTIVE", 27);
+                } else {
+                    SetTextColor(hdc, RGB(100, 140, 180));
+                    TextOutA(hdc, 195, 180, "STATUS: STANCE ONLINE", 21);
+                }
+
+                // Enemy Vitals (Right Card)
+                RECT enemyCard = {430, 82, 655, 195};
+                HBRUSH hEnemyCardBg = CreateSolidBrush(RGB(4, 12, 24));
+                FillRect(hdc, &enemyCard, hEnemyCardBg);
+                DeleteObject(hEnemyCardBg);
+                HBRUSH hRedBorder = CreateSolidBrush(RGB(255, 51, 102));
+                FrameRect(hdc, &enemyCard, hRedBorder);
+                DeleteObject(hRedBorder);
+
+                SelectObject(hdc, hBoldFont);
+                SetTextColor(hdc, RGB(255, 51, 102));
+                TextOutA(hdc, 440, 88, g_State.enemyName, (int)lstrlenA(g_State.enemyName));
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(180, 210, 240));
+                wsprintfA(pVal, "HULL: %d/%d", (g_State.enemyHull > 0) ? g_State.enemyHull : 0, g_State.enemyMaxHull);
+                TextOutA(hdc, 440, 108, pVal, (int)lstrlenA(pVal));
+                DrawBar(hdc, 440, 122, 200, 6, g_State.enemyHull, g_State.enemyMaxHull, RGB(255, 51, 102));
+
+                wsprintfA(pVal, "SHIELD: %d/%d", (g_State.enemyShields > 0) ? g_State.enemyShields : 0, g_State.enemyMaxShields);
+                TextOutA(hdc, 440, 132, pVal, (int)lstrlenA(pVal));
+                DrawBar(hdc, 440, 146, 200, 6, g_State.enemyShields, g_State.enemyMaxShields, RGB(59, 130, 246));
+
+                if (g_State.enemyWeaponsDamaged) {
+                    SetTextColor(hdc, RGB(255, 170, 0));
+                    TextOutA(hdc, 440, 160, "WEAPONS: DAMAGED (-30% PWR)", 27);
+                } else {
+                    SetTextColor(hdc, RGB(57, 255, 20));
+                    TextOutA(hdc, 440, 160, "WEAPONS: ONLINE (100%)", 22);
+                }
+
+                if (g_State.enemyEnginesDamaged) {
+                    SetTextColor(hdc, RGB(255, 51, 102));
+                    TextOutA(hdc, 440, 178, "ENGINES: THRUSTERS DISABLED", 27);
+                } else {
+                    SetTextColor(hdc, RGB(0, 255, 170));
+                    wsprintfA(pVal, "ENGINES: ACTIVE (%d%% EVASION)", g_State.enemyEvasion);
+                    TextOutA(hdc, 440, 178, pVal, (int)lstrlenA(pVal));
+                }
+
+                // Subsystem Target Header
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 185, 200, "TARGET SUBSYSTEM:", 17);
+
+                // Combat Feed Log Box (Bottom of Modal)
+                RECT combatLogRect = {185, 336, 655, 385};
+                HBRUSH hFeedBg = CreateSolidBrush(RGB(2, 6, 12));
+                FillRect(hdc, &combatLogRect, hFeedBg);
+                DeleteObject(hFeedBg);
+                FrameRect(hdc, &combatLogRect, hBorderCyanB);
+
+                int c;
+                for (c = 0; c < g_State.combatFeedCount; c++) {
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    char feedLine[140];
+                    wsprintfA(feedLine, "> %s", g_State.combatFeed[c]);
+                    TextOutA(hdc, 192, 340 + (c * 11), feedLine, (int)lstrlenA(feedLine));
+                }
             }
 
             EndPaint(hwnd, &ps);

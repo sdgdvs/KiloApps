@@ -564,6 +564,69 @@
       margin-top: 2px;
       text-transform: uppercase;
     }
+
+    /* Tactical Combat Modal Styles (Phase 7) */
+    .combat-modal-card {
+      width: 680px;
+      max-width: 96vw;
+      border-color: var(--red-alert);
+      box-shadow: 0 0 40px rgba(255, 51, 102, 0.45);
+    }
+    .combat-ships-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .combat-ship-card {
+      background: rgba(4, 12, 24, 0.95);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .target-select-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .target-btn {
+      background: rgba(12, 28, 52, 0.85);
+      border: 1px solid var(--border-cyan);
+      color: var(--text-main);
+      padding: 5px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      border-radius: 3px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .target-btn.selected {
+      border-color: var(--red-alert);
+      color: var(--red-alert);
+      background: rgba(255, 51, 102, 0.2);
+      box-shadow: 0 0 8px rgba(255, 51, 102, 0.4);
+      font-weight: bold;
+    }
+    .combat-actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .combat-log-console {
+      height: 90px;
+      background: #02060c;
+      border: 1px solid #142840;
+      border-radius: 3px;
+      padding: 6px 10px;
+      font-size: 0.74rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
   </style>
 </head>
 <body>
@@ -721,6 +784,11 @@
         <small>-8 E</small>
       </button>
 
+      <button class="action-btn" onclick="startTacticalCombat()" style="border-color: var(--red-alert); color: var(--red-alert);">
+        <span>⚔️ TACTICAL COMBAT</span>
+        <small>-12 E</small>
+      </button>
+
       <button class="action-btn" onclick="btnRepairShip()">
         <span>🛠️ REPAIR HULL</span>
         <small>50 CR / 10 SCRAP</small>
@@ -733,6 +801,91 @@
         <span>Captain's Tactical Feed & Terminal Log</span>
       </div>
       <div class="log-content" id="logConsole"></div>
+    </div>
+  </div>
+
+  <!-- Tactical Ship Combat Modal (Phase 7) -->
+  <div class="modal-overlay" id="combatModal" style="display: none;">
+    <div class="modal-card combat-modal-card">
+      <div class="panel-header" style="font-size: 1rem; border-color: var(--red-alert); color: var(--red-alert);">
+        <span id="combatTitle">⚔️ TURN-BASED TACTICAL SHIP COMBAT</span>
+        <button class="audio-toggle" style="border-color: var(--red-alert); color: var(--red-alert);" onclick="combatPlayerFlee()">🚀 RETREAT</button>
+      </div>
+
+      <div class="combat-ships-grid">
+        <!-- Player Ship Status Card -->
+        <div class="combat-ship-card" style="border-color: var(--cyan-dim);">
+          <div style="font-weight: bold; color: var(--cyan-glow); font-size: 0.85rem;" id="combatPlayerName">SS ANTIGRAVITY</div>
+          <div class="stat-row">
+            <div class="stat-label-val"><span>HULL INTEGRITY</span><span id="combatPlayerHullVal">100/100</span></div>
+            <div class="bar-bg"><div class="bar-fill" id="combatPlayerHullBar" style="width: 100%; background: var(--green-status);"></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label-val"><span>SHIELD MATRIX</span><span id="combatPlayerShieldVal">75/75</span></div>
+            <div class="bar-bg"><div class="bar-fill" id="combatPlayerShieldBar" style="width: 100%; background: var(--blue-station);"></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label-val"><span>REACTOR ENERGY</span><span id="combatPlayerEnergyVal">100/100</span></div>
+            <div class="bar-bg"><div class="bar-fill" id="combatPlayerEnergyBar" style="width: 100%; background: var(--cyan-glow);"></div></div>
+          </div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);" id="combatPlayerStatus">STATUS: COMBAT STANCE ONLINE</div>
+        </div>
+
+        <!-- Enemy Ship Status Card -->
+        <div class="combat-ship-card" style="border-color: var(--red-alert);">
+          <div style="font-weight: bold; color: var(--red-alert); font-size: 0.85rem;" id="combatEnemyName">CYBERNETIC PIRATE RAIDER</div>
+          <div class="stat-row">
+            <div class="stat-label-val"><span>HULL INTEGRITY</span><span id="combatEnemyHullVal">90/90</span></div>
+            <div class="bar-bg"><div class="bar-fill" id="combatEnemyHullBar" style="width: 100%; background: var(--red-alert);"></div></div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-label-val"><span>DEFLECTOR SHIELD</span><span id="combatEnemyShieldVal">50/50</span></div>
+            <div class="bar-bg"><div class="bar-fill" id="combatEnemyShieldBar" style="width: 100%; background: var(--blue-station);"></div></div>
+          </div>
+          <div style="font-size: 0.72rem; display: flex; flex-direction: column; gap: 2px; margin-top: 2px;">
+            <div style="color: var(--amber-alert);" id="combatEnemyWeaponsStatus">⚡ WEAPONS: ONLINE (100%)</div>
+            <div style="color: var(--planet-glow);" id="combatEnemyEnginesStatus">🚀 ENGINES: ACTIVE (15% EVASION)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Selection -->
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 0.74rem; color: var(--cyan-glow); font-weight: bold;">🎯 TARGET SUBSYSTEM:</div>
+        <div class="target-select-grid">
+          <button class="target-btn selected" id="tgtBtnHull" onclick="selectTargetSubsystem('HULL')">🎯 CORE HULL</button>
+          <button class="target-btn" id="tgtBtnShield" onclick="selectTargetSubsystem('SHIELDS')">🛡️ SHIELD CORE</button>
+          <button class="target-btn" id="tgtBtnWeap" onclick="selectTargetSubsystem('WEAPONS')">⚡ WEAPONS</button>
+          <button class="target-btn" id="tgtBtnEng" onclick="selectTargetSubsystem('ENGINES')">🚀 THRUSTERS</button>
+        </div>
+      </div>
+
+      <!-- Combat Action Buttons -->
+      <div class="combat-actions-grid">
+        <button class="action-btn" onclick="combatPlayerFire()" style="border-color: var(--red-alert); color: var(--red-alert);">
+          <span>⚔️ FIRE PHASERS</span>
+          <small>-12 ENERGY</small>
+        </button>
+        <button class="action-btn" onclick="combatPlayerShield()">
+          <span>🛡️ OVERCHARGE SHIELDS</span>
+          <small>-15 ENERGY</small>
+        </button>
+        <button class="action-btn" onclick="combatPlayerEvade()">
+          <span>⚡ EVASIVE MANEUVER</span>
+          <small>-10 E / -5 FUEL</small>
+        </button>
+        <button class="action-btn" onclick="combatPlayerRepair()">
+          <span>🛠️ EMERGENCY REPAIRS</span>
+          <small>-10 SCRAP / -15 E</small>
+        </button>
+      </div>
+
+      <!-- Combat Feed Log -->
+      <div class="combat-log-console" id="combatFeedLog"></div>
+
+      <button class="action-btn" style="justify-content: center; border-color: var(--text-muted);" onclick="combatPlayerFlee()">
+        🚀 DISENGAGE & TACTICAL WARP RETREAT (-15 Fuel)
+      </button>
     </div>
   </div>
 
@@ -1544,26 +1697,15 @@
         desc: 'A heavily armed raider locks weapons on your starship and demands tribute!',
         choices: [
           {
-            label: '⚔️ ENGAGE PHASERS (-15 Energy)',
-            sub: 'High Risk Combat | Reward: Scrap & Credits',
+            label: '⚔️ ENTER TACTICAL COMBAT (-12 Energy)',
+            sub: 'Turn-Based Ship Combat | Target Systems & Disarm',
             action: () => {
-              if (state.energy < 15) {
-                addLog('Insufficient energy to power phase cannons!', 'warn');
+              if (state.energy < 12) {
+                addLog('Insufficient energy for tactical combat system!', 'warn');
                 playSound('alert');
                 return false;
               }
-              state.energy -= 15;
-              if (state.shields >= 10) {
-                state.shields -= 10;
-                state.credits += 80;
-                state.scraps += 15;
-                addLog('[COMBAT VICTORY] Pirate destroyed! Claimed +80 Cr & +15 Scrap (-10 Shields).', 'good');
-                playSound('good');
-              } else {
-                state.hull = Math.max(0, state.hull - 20);
-                addLog('[COMBAT BREACH] Hull took 20 damage during engagement!', 'alert');
-                playSound('alert');
-              }
+              startTacticalCombat('CYBERNETIC PIRATE RAIDER');
               return true;
             }
           },
@@ -2067,11 +2209,353 @@
       requestAnimationFrame(renderCanvasMap);
     }
 
+    // Phase 7: Turn-based Tactical Ship Combat Engine
+    let combatState = {
+      active: false,
+      targetSubsystem: 'HULL',
+      playerEvading: false,
+      enemy: {
+        name: 'CYBERNETIC PIRATE RAIDER',
+        hull: 90, maxHull: 90,
+        shields: 50, maxShields: 50,
+        weaponPower: 16,
+        weaponsDamaged: false,
+        evasion: 15,
+        enginesDamaged: false
+      }
+    };
+
+    const ENEMY_PRESETS = [
+      { name: 'CYBERNETIC PIRATE RAIDER', hull: 85, shields: 45, weaponPower: 15, evasion: 15 },
+      { name: 'VOID CRUISER DREADNOUGHT', hull: 120, shields: 75, weaponPower: 22, evasion: 8 },
+      { name: 'OBSIDIAN RAVAGER INTERCEPTOR', hull: 65, shields: 55, weaponPower: 18, evasion: 30 },
+      { name: 'IMPERIAL STAR DESTROYER', hull: 140, shields: 90, weaponPower: 26, evasion: 5 }
+    ];
+
+    function addCombatFeed(msg, type = 'sys') {
+      const feed = document.getElementById('combatFeedLog');
+      if (!feed) return;
+      const div = document.createElement('div');
+      div.className = `log-entry log-${type}`;
+      div.innerText = `> ${msg}`;
+      feed.appendChild(div);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function selectTargetSubsystem(sys) {
+      combatState.targetSubsystem = sys;
+      document.getElementById('tgtBtnHull').classList.toggle('selected', sys === 'HULL');
+      document.getElementById('tgtBtnShield').classList.toggle('selected', sys === 'SHIELDS');
+      document.getElementById('tgtBtnWeap').classList.toggle('selected', sys === 'WEAPONS');
+      document.getElementById('tgtBtnEng').classList.toggle('selected', sys === 'ENGINES');
+      playSound('move');
+    }
+
+    function startTacticalCombat(presetName) {
+      if (state.energy < 12) {
+        addLog('Insufficient energy to power tactical weapon targeting matrix!', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 12;
+
+      let preset = ENEMY_PRESETS.find(p => p.name === presetName);
+      if (!preset) {
+        preset = ENEMY_PRESETS[Math.floor(Math.random() * ENEMY_PRESETS.length)];
+      }
+
+      combatState.active = true;
+      combatState.targetSubsystem = 'HULL';
+      combatState.playerEvading = false;
+      combatState.enemy = {
+        name: preset.name,
+        hull: preset.hull, maxHull: preset.hull,
+        shields: preset.shields, maxShields: preset.shields,
+        weaponPower: preset.weaponPower,
+        weaponsDamaged: false,
+        evasion: preset.evasion,
+        enginesDamaged: false
+      };
+
+      document.getElementById('combatFeedLog').innerHTML = '';
+      selectTargetSubsystem('HULL');
+      document.getElementById('combatModal').style.display = 'flex';
+      playSound('alert');
+
+      addCombatFeed(`TACTICAL SENSORS LOCK: ${combatState.enemy.name} in visual range!`, 'warn');
+      addCombatFeed(`Targeting computers active. Select target subsystem & fire phasers!`, 'sys');
+      updateCombatUI();
+      updateUI();
+    }
+
+    function updateCombatUI() {
+      if (!combatState.active) return;
+      const e = combatState.enemy;
+
+      document.getElementById('combatPlayerName').innerText = `${state.shipName} [${state.shipClass}]`;
+      document.getElementById('combatPlayerHullVal').innerText = `${state.hull}/${state.maxHull}`;
+      document.getElementById('combatPlayerHullBar').style.width = `${(state.hull / state.maxHull) * 100}%`;
+      document.getElementById('combatPlayerShieldVal').innerText = `${state.shields}/${state.maxShields}`;
+      document.getElementById('combatPlayerShieldBar').style.width = `${(state.shields / state.maxShields) * 100}%`;
+      document.getElementById('combatPlayerEnergyVal').innerText = `${state.energy}/${state.maxEnergy}`;
+      document.getElementById('combatPlayerEnergyBar').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
+
+      document.getElementById('combatPlayerStatus').innerText = combatState.playerEvading ? 
+        'STATUS: ⚡ EVASIVE THRUSTERS OVERCHARGED (+35% EVASION)' : 'STATUS: COMBAT STANCE ONLINE';
+      document.getElementById('combatPlayerStatus').style.color = combatState.playerEvading ? 'var(--cyan-glow)' : 'var(--text-muted)';
+
+      document.getElementById('combatEnemyName').innerText = e.name;
+      document.getElementById('combatEnemyHullVal').innerText = `${Math.max(0, e.hull)}/${e.maxHull}`;
+      document.getElementById('combatEnemyHullBar').style.width = `${Math.max(0, (e.hull / e.maxHull) * 100)}%`;
+      document.getElementById('combatEnemyShieldVal').innerText = `${Math.max(0, e.shields)}/${e.maxShields}`;
+      document.getElementById('combatEnemyShieldBar').style.width = `${Math.max(0, (e.shields / e.maxShields) * 100)}%`;
+
+      document.getElementById('combatEnemyWeaponsStatus').innerText = e.weaponsDamaged ?
+        `⚡ WEAPONS: DAMAGED (${e.weaponPower} PWR)` : `⚡ WEAPONS: ONLINE (${e.weaponPower} PWR)`;
+      document.getElementById('combatEnemyWeaponsStatus').style.color = e.weaponsDamaged ? 'var(--amber-alert)' : 'var(--green-status)';
+
+      document.getElementById('combatEnemyEnginesStatus').innerText = e.enginesDamaged ?
+        `🚀 ENGINES: THRUSTERS DISABLED (0% EVASION)` : `🚀 ENGINES: ACTIVE (${e.evasion}% EVASION)`;
+      document.getElementById('combatEnemyEnginesStatus').style.color = e.enginesDamaged ? 'var(--red-alert)' : 'var(--planet-glow)';
+    }
+
+    function combatPlayerFire() {
+      if (!combatState.active) return;
+      if (state.energy < 12) {
+        addCombatFeed('INSUFFICIENT ENERGY! Need 12 Energy to fire phaser cannons.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 12;
+
+      const e = combatState.enemy;
+      const hitRoll = Math.random() * 100;
+      const currentEnemyEvasion = e.enginesDamaged ? 0 : e.evasion;
+
+      if (hitRoll < currentEnemyEvasion) {
+        addCombatFeed(`[PLAYER FIRE] Phasers missed! ${e.name} executed evasive roll!`, 'warn');
+        playSound('warp');
+      } else {
+        const sys = combatState.targetSubsystem;
+        let baseDmg = Math.floor(Math.random() * 12) + 18;
+
+        if (sys === 'SHIELDS') {
+          if (e.shields > 0) {
+            const shDmg = Math.floor(baseDmg * 1.5);
+            e.shields = Math.max(0, e.shields - shDmg);
+            addCombatFeed(`[TARGET: SHIELD CORE] Heavy ion beam struck shield matrix for ${shDmg} DMG!`, 'good');
+          } else {
+            e.hull = Math.max(0, e.hull - baseDmg);
+            addCombatFeed(`[TARGET: SHIELD CORE] Shields down! Phaser beam struck hull for ${baseDmg} DMG!`, 'good');
+          }
+        } else if (sys === 'WEAPONS') {
+          let actualDmg = baseDmg;
+          if (e.shields > 0) {
+            e.shields = Math.max(0, e.shields - Math.floor(baseDmg * 0.7));
+            actualDmg = Math.floor(baseDmg * 0.3);
+          }
+          e.hull = Math.max(0, e.hull - actualDmg);
+          e.weaponsDamaged = true;
+          e.weaponPower = Math.max(6, Math.floor(e.weaponPower * 0.7));
+          addCombatFeed(`[TARGET: WEAPONS] Phaser beam disrupted weapon array! (${actualDmg} Hull DMG, -30% Weapon Pwr)`, 'good');
+        } else if (sys === 'ENGINES') {
+          let actualDmg = baseDmg;
+          if (e.shields > 0) {
+            e.shields = Math.max(0, e.shields - Math.floor(baseDmg * 0.7));
+            actualDmg = Math.floor(baseDmg * 0.3);
+          }
+          e.hull = Math.max(0, e.hull - actualDmg);
+          e.enginesDamaged = true;
+          addCombatFeed(`[TARGET: THRUSTERS] Targeted thrusters scorched! Enemy evasion reduced to 0%! (${actualDmg} Hull DMG)`, 'good');
+        } else {
+          if (e.shields > 0) {
+            const shDmg = Math.floor(baseDmg * 0.6);
+            const hDmg = Math.floor(baseDmg * 0.5);
+            e.shields = Math.max(0, e.shields - shDmg);
+            e.hull = Math.max(0, e.hull - hDmg);
+            addCombatFeed(`[TARGET: CORE HULL] Phaser beam pierced deflectors! (${shDmg} Shield DMG / ${hDmg} Hull DMG)`, 'good');
+          } else {
+            e.hull = Math.max(0, e.hull - baseDmg);
+            addCombatFeed(`[TARGET: CORE HULL] DIRECT HIT ON HULL! Dealt ${baseDmg} critical DMG!`, 'good');
+          }
+        }
+        playSound('good');
+      }
+
+      updateCombatUI();
+      updateUI();
+
+      if (e.hull <= 0) {
+        combatVictory();
+      } else {
+        setTimeout(combatEnemyTurn, 600);
+      }
+    }
+
+    function combatPlayerShield() {
+      if (!combatState.active) return;
+      if (state.energy < 15) {
+        addCombatFeed('INSUFFICIENT ENERGY! Need 15 Energy for deflector overcharge.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 15;
+      const boost = 30;
+      state.shields = Math.min(state.maxShields, state.shields + boost);
+      addCombatFeed(`[DEFLECTOR OVERCHARGE] Diverted power to shield matrix! +${boost} HP restored.`, 'sys');
+      playSound('good');
+      updateCombatUI();
+      updateUI();
+
+      setTimeout(combatEnemyTurn, 600);
+    }
+
+    function combatPlayerEvade() {
+      if (!combatState.active) return;
+      if (state.energy < 10 || state.fuel < 5) {
+        addCombatFeed('INSUFFICIENT RESOURCES! Need 10 Energy & 5 Fuel for evasive burn.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 10;
+      state.fuel -= 5;
+      combatState.playerEvading = true;
+      addCombatFeed(`[EVASIVE BURN] Engaged lateral thrusters! Evasion boosted by +35% for next turn!`, 'sys');
+      playSound('warp');
+      updateCombatUI();
+      updateUI();
+
+      setTimeout(combatEnemyTurn, 600);
+    }
+
+    function combatPlayerRepair() {
+      if (!combatState.active) return;
+      if (state.scraps >= 10) {
+        state.scraps -= 10;
+        state.hull = Math.min(state.maxHull, state.hull + 25);
+        addCombatFeed(`[EMERGENCY REPAIR] Used 10 Tech Scrap to weld hull breach (+25 Hull HP).`, 'sys');
+        playSound('good');
+      } else if (state.energy >= 15) {
+        state.energy -= 15;
+        state.hull = Math.min(state.maxHull, state.hull + 20);
+        addCombatFeed(`[EMERGENCY REPAIR] Diverted energy to nanite repair matrix (+20 Hull HP).`, 'sys');
+        playSound('good');
+      } else {
+        addCombatFeed('INSUFFICIENT SCRAP / ENERGY for damage control repairs!', 'warn');
+        playSound('alert');
+        return;
+      }
+      updateCombatUI();
+      updateUI();
+
+      setTimeout(combatEnemyTurn, 600);
+    }
+
+    function combatPlayerFlee() {
+      if (!combatState.active) return;
+      if (state.fuel < 15) {
+        addCombatFeed('INSUFFICIENT FUEL! Need 15 Hyper Fuel to charge emergency warp flee.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.fuel -= 15;
+      if (Math.random() < 0.65) {
+        addLog(`[TACTICAL RETREAT] Outmaneuvered ${combatState.enemy.name} and engaged hyperdrive!`, 'good');
+        playSound('warp');
+        closeCombatModal();
+      } else {
+        addCombatFeed(`[WARP RETREAT FAILED] Enemy tractor beam disrupted hyperdrive startup!`, 'alert');
+        playSound('alert');
+        setTimeout(combatEnemyTurn, 600);
+      }
+      updateUI();
+    }
+
+    function combatEnemyTurn() {
+      if (!combatState.active || combatState.enemy.hull <= 0) return;
+
+      const e = combatState.enemy;
+      if (e.shields <= 0 && Math.random() < 0.25) {
+        e.shields = 25;
+        addCombatFeed(`[ENEMY ACTION] ${e.name} recharged deflector shield matrix (+25 Shields)!`, 'warn');
+        updateCombatUI();
+        return;
+      }
+
+      const hitChance = combatState.playerEvading ? 0.45 : 0.85;
+      combatState.playerEvading = false;
+
+      if (Math.random() > hitChance) {
+        addCombatFeed(`[ENEMY ATTACK] ${e.name} fired weapons, but MISSED due to evasive maneuvering!`, 'sys');
+        playSound('warp');
+      } else {
+        let dmg = e.weaponPower + Math.floor(Math.random() * 8) - 3;
+        dmg = Math.max(5, dmg);
+
+        if (state.shields > 0) {
+          if (state.shields >= dmg) {
+            state.shields -= dmg;
+            addCombatFeed(`[ENEMY ATTACK] ${e.name} plasma cannon struck shields for ${dmg} DMG!`, 'alert');
+          } else {
+            const rem = dmg - state.shields;
+            state.shields = 0;
+            state.hull = Math.max(0, state.hull - rem);
+            addCombatFeed(`[SHIELD BREACH] ${e.name} breached deflectors! Took ${rem} HULL DMG!`, 'alert');
+          }
+        } else {
+          state.hull = Math.max(0, state.hull - dmg);
+          addCombatFeed(`[HULL BREACH] ${e.name} heavy fire struck hull structure for ${dmg} DMG!`, 'alert');
+        }
+        playSound('alert');
+      }
+
+      updateCombatUI();
+      updateUI();
+
+      if (state.hull <= 0) {
+        combatDefeat();
+      }
+    }
+
+    function combatVictory() {
+      const e = combatState.enemy;
+      state.credits += 120;
+      state.scraps += 25;
+      state.fuel = Math.min(state.maxFuel, state.fuel + 20);
+      state.artifacts += 1;
+
+      addLog(`[COMBAT VICTORY] Destroyed ${e.name}! Recovered +120 Cr, +25 Scrap, +20 Fuel & +1 Ancient Relic!`, 'good');
+      playSound('good');
+
+      if (state.gridMap[state.shipY][state.shipX] === CELL_TYPES.PIRATE) {
+        state.gridMap[state.shipY][state.shipX] = CELL_TYPES.EMPTY;
+      }
+
+      closeCombatModal();
+      updateUI();
+    }
+
+    function combatDefeat() {
+      addLog(`[CRITICAL BREACH] Starship hull compromised in combat! Emergency distress pod activated.`, 'alert');
+      state.hull = 25;
+      state.shields = 0;
+      playSound('alert');
+      closeCombatModal();
+      updateUI();
+    }
+
+    function closeCombatModal() {
+      combatState.active = false;
+      document.getElementById('combatModal').style.display = 'none';
+      if (currentEncounterKey) closeEncounterModal();
+    }
+
     // Keyboard Navigation Listener
     window.addEventListener('keydown', (e) => {
       if (document.getElementById('initModal').style.display !== 'none' ||
           document.getElementById('stationModal').style.display !== 'none' ||
           document.getElementById('planetModal').style.display !== 'none' ||
+          document.getElementById('combatModal').style.display !== 'none' ||
           document.getElementById('encounterModal').style.display !== 'none') return;
 
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveShip(0, -1);
