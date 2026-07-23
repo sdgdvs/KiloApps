@@ -5,6 +5,7 @@ void PlayGameSound(int type);
 void AddCombatFeed(const char* msg);
 void CombatVictory(HWND hwnd);
 void CheckSectorObjectiveProgress(HWND hwnd, int eventType, int amount);
+void UpdateControlVisibility(HWND hwnd);
 
 
 #pragma function(memset, memcpy)
@@ -118,6 +119,15 @@ typedef struct {
     int hyperShieldTurns;
     int enemyType;
     int bossStage;
+    // Phase 11 Permadeath, Leaderboard & Captain's Log
+    int permadeath;
+    int distanceTraveled;
+    int battlesWon;
+    int inLeaderboardModal;
+    int inCaptainsLogModal;
+    int inGameOverModal;
+    char gameOverReason[64];
+    int leaderboardCategory;
 } StarshipState;
 
 static StarshipState g_State = {
@@ -148,7 +158,8 @@ static StarshipState g_State = {
     0, {0}, 0, 0, 2, 0,
     2, 2, 2,
     100, 100, 100, 100,
-    0, 0, 0, 1
+    0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, "", 0
 };
 
 
@@ -177,6 +188,84 @@ static CampaignSectorDef g_CampaignSectors[15] = {
     {"SECTOR 14: HIVE MINEFIELD", "Neutralize 6 Hive Mine Drones in deep orbit.", 13, 6, "+950 Cr, +50 Scrap"},
     {"SECTOR 15: OMEGA CORE", "FINAL BOSS: Destroy Alien Mothership Overlord!", 14, 1, "VICTORY & GALACTIC PEACE"}
 };
+
+typedef struct {
+    char captain[32];
+    char ship[32];
+    char classStr[16];
+    int score;
+    int distance;
+    int credits;
+    int battles;
+    int permadeath;
+    char dateStr[16];
+} LeaderboardEntry;
+
+static LeaderboardEntry g_Leaderboard[10] = {
+    {"Cmdr. Shepard", "SS NORMANDE", "CRUISER", 32400, 142, 18500, 18, 1, "SD 4982.1"},
+    {"Capt. Picard", "SS ENTERPRISE", "CRUISER", 24800, 120, 14200, 12, 1, "SD 4810.4"},
+    {"Capt. Kirk", "SS VICTORY", "INTERCEPTOR", 21500, 98, 11000, 15, 0, "SD 4720.0"},
+    {"Cmdr. Antigravity", "SS ANTIGRAVITY", "CORVETTE", 17300, 85, 9400, 10, 1, "SD 4600.2"},
+    {"Capt. Reynolds", "SS SERENITY", "FRIGATE", 12900, 64, 8200, 6, 0, "SD 4450.8"}
+};
+static int g_LeaderboardCount = 5;
+
+typedef struct {
+    char stardate[32];
+    char msg[128];
+    int type;
+} CaptainsLogEntry;
+
+static CaptainsLogEntry g_CaptainsLog[64];
+static int g_CaptainsLogCount = 0;
+
+int CalculateCurrentScore() {
+    return (g_State.moveCount * 100) + g_State.credits + (g_State.battlesWon * 500) + (g_State.artifacts * 800) + (g_State.permadeath ? 2000 : 0);
+}
+
+void RecordHighScore() {
+    LeaderboardEntry newEntry;
+    lstrcpyA(newEntry.captain, g_State.shipName);
+    lstrcpyA(newEntry.ship, g_State.shipName);
+    lstrcpyA(newEntry.classStr, g_State.shipClass);
+    newEntry.score = CalculateCurrentScore();
+    newEntry.distance = g_State.moveCount;
+    newEntry.credits = g_State.credits;
+    newEntry.battles = g_State.battlesWon;
+    newEntry.permadeath = g_State.permadeath;
+    wsprintfA(newEntry.dateStr, "SD %d.1", 4100 + g_State.moveCount / 2);
+
+    int inserted = 0;
+    int i, j;
+    for (i = 0; i < g_LeaderboardCount; i++) {
+        if (newEntry.score > g_Leaderboard[i].score) {
+            for (j = (g_LeaderboardCount < 10 ? g_LeaderboardCount : 9); j > i; j--) {
+                g_Leaderboard[j] = g_Leaderboard[j - 1];
+            }
+            g_Leaderboard[i] = newEntry;
+            if (g_LeaderboardCount < 10) g_LeaderboardCount++;
+            inserted = 1;
+            break;
+        }
+    }
+    if (!inserted && g_LeaderboardCount < 10) {
+        g_Leaderboard[g_LeaderboardCount] = newEntry;
+        g_LeaderboardCount++;
+    }
+}
+
+void TriggerGameOver(HWND hwnd, const char* reason) {
+    g_State.inGameOverModal = 1;
+    g_State.inCombatModal = 0;
+    g_State.inEncounterModal = 0;
+    g_State.inStationModal = 0;
+    int i;
+    for (i = 0; reason[i] != '\0' && i < 63; i++) g_State.gameOverReason[i] = reason[i];
+    g_State.gameOverReason[i] = '\0';
+    RecordHighScore();
+    PlayGameSound(6);
+    UpdateControlVisibility(hwnd);
+}
 
 void CheckSectorObjectiveProgress(HWND hwnd, int eventType, int amount) {
     int curSec = g_State.currentSectorIdx;
@@ -379,6 +468,23 @@ void AddLog(const char* msg, int type) {
         g_Logs[15].msg[k] = '\0';
         g_Logs[15].type = type;
     }
+
+    if (g_CaptainsLogCount < 64) {
+        wsprintfA(g_CaptainsLog[g_CaptainsLogCount].stardate, "SD %d.%d [%s]", 4100 + g_State.moveCount / 2 + g_State.currentSectorIdx * 12, (g_State.moveCount % 2) * 5, g_State.sector);
+        int m;
+        for (m = 0; msg[m] != '\0' && m < 127; m++) g_CaptainsLog[g_CaptainsLogCount].msg[m] = msg[m];
+        g_CaptainsLog[g_CaptainsLogCount].msg[m] = '\0';
+        g_CaptainsLog[g_CaptainsLogCount].type = type;
+        g_CaptainsLogCount++;
+    } else {
+        int i;
+        for (i = 0; i < 63; i++) g_CaptainsLog[i] = g_CaptainsLog[i + 1];
+        wsprintfA(g_CaptainsLog[63].stardate, "SD %d.%d [%s]", 4100 + g_State.moveCount / 2 + g_State.currentSectorIdx * 12, (g_State.moveCount % 2) * 5, g_State.sector);
+        int m;
+        for (m = 0; msg[m] != '\0' && m < 127; m++) g_CaptainsLog[63].msg[m] = msg[m];
+        g_CaptainsLog[63].msg[m] = '\0';
+        g_CaptainsLog[63].type = type;
+    }
 }
 
 void PlayGameSound(int type) {
@@ -492,6 +598,14 @@ static HWND hBtnTradeBuy5[5] = {NULL};
 static HWND hBtnTradeSell1[5] = {NULL};
 static HWND hBtnTradeSellAll[5] = {NULL};
 static HWND hBtnTradeClose = NULL;
+
+// Phase 11 Leaderboard, Captain's Log & Game Over Controls
+static HWND hBtnHallOfFame = NULL;
+static HWND hBtnCaptainsLog = NULL;
+static HWND hBtnToggleMode = NULL;
+static HWND hBtnLdbCatAll = NULL, hBtnLdbCatDist = NULL, hBtnLdbCatCr = NULL, hBtnLdbCatBat = NULL, hBtnLdbClose = NULL;
+static HWND hBtnLogClose = NULL;
+static HWND hBtnGameOverRestart = NULL;
 
 typedef struct {
     const char* sectorName;
@@ -618,7 +732,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal && !g_State.inSectorMapModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal && !g_State.inSectorMapModal && !g_State.inLeaderboardModal && !g_State.inCaptainsLogModal && !g_State.inGameOverModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -649,6 +763,7 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnClass2,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnClass3,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnConfirmInit, g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnToggleMode,  g_State.inInitModal ? SW_SHOW : SW_HIDE);
 
     // Station Modal Buttons
     ShowWindow(hBtnStRefuel,        g_State.inStationModal ? SW_SHOW : SW_HIDE);
@@ -729,6 +844,17 @@ void UpdateControlVisibility(HWND hwnd) {
         ShowWindow(hBtnSecJump[s], g_State.inSectorMapModal ? SW_SHOW : SW_HIDE);
     }
     ShowWindow(hBtnSecMapClose, g_State.inSectorMapModal ? SW_SHOW : SW_HIDE);
+
+    // Phase 11 Modal Buttons
+    ShowWindow(hBtnLdbCatAll,  g_State.inLeaderboardModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnLdbCatDist, g_State.inLeaderboardModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnLdbCatCr,   g_State.inLeaderboardModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnLdbCatBat,  g_State.inLeaderboardModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnLdbClose,   g_State.inLeaderboardModal ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnLogClose, g_State.inCaptainsLogModal ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnGameOverRestart, g_State.inGameOverModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -1649,6 +1775,7 @@ void CombatVictory(HWND hwnd) {
     g_State.scraps += rewardScrap;
     g_State.fuel = (g_State.fuel + 20 > g_State.maxFuel) ? g_State.maxFuel : g_State.fuel + 20;
     g_State.artifacts += rewardRelic;
+    g_State.battlesWon++;
 
     char buf[160];
     wsprintfA(buf, "[COMBAT VICTORY] Destroyed %s! Claimed +%d Cr, +%d Scrap & +%d Relics!", g_State.enemyName, rewardCr, rewardScrap, rewardRelic);
@@ -1674,13 +1801,17 @@ void CombatVictory(HWND hwnd) {
 }
 
 void CombatDefeat(HWND hwnd) {
-    AddLog("[CRITICAL BREACH] Hull compromised! Emergency escape pod activated.", 2);
-    g_State.hull = 25;
-    g_State.shields = 0;
-    PlayGameSound(6);
-
-    g_State.inCombatModal = 0;
-    UpdateControlVisibility(hwnd);
+    AddLog("[CRITICAL BREACH] Starship hull compromised in combat!", 2);
+    if (g_State.permadeath) {
+        TriggerGameOver(hwnd, "Starship Destroyed in Tactical Combat");
+    } else {
+        AddLog("[EMERGENCY POD] Distress pod deployed! Vessel patched to 25 HP.", 1);
+        g_State.hull = 25;
+        g_State.shields = 0;
+        PlayGameSound(6);
+        g_State.inCombatModal = 0;
+        UpdateControlVisibility(hwnd);
+    }
 }
 
 void CombatEnemyTurn(HWND hwnd) {
@@ -1984,8 +2115,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AddLog("Commission vessel to launch sector exploration.", 3);
 
             // Header Toggles
-            hBtnAudioToggle = CreateWindowA("BUTTON", "🔊 AUDIO: ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 8, 110, 24, hwnd, (HMENU)100, NULL, NULL);
-            hBtnModeToggle  = CreateWindowA("BUTTON", "🌌 GRAPHICAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 515, 8, 115, 24, hwnd, (HMENU)101, NULL, NULL);
+            hBtnAudioToggle = CreateWindowA("BUTTON", "🔊 AUDIO: ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 8, 100, 24, hwnd, (HMENU)100, NULL, NULL);
+            hBtnModeToggle  = CreateWindowA("BUTTON", "🌌 GRAPHICAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 8, 105, 24, hwnd, (HMENU)101, NULL, NULL);
+            hBtnHallOfFame  = CreateWindowA("BUTTON", "🏆 HALL OF FAME", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 8, 115, 24, hwnd, (HMENU)119, NULL, NULL);
+            hBtnCaptainsLog = CreateWindowA("BUTTON", "📖 LOG",           WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 205, 8, 65, 24, hwnd, (HMENU)120, NULL, NULL);
 
             // Right Panel Action Buttons
             hBtnScan       = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 19, hwnd, (HMENU)102, NULL, NULL);
@@ -2034,7 +2167,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnClass1 = CreateWindowA("BUTTON", "[2] FRIGATE (Mining)",    WS_CHILD | BS_PUSHBUTTON, 230, 184, 380, 28, hwnd, (HMENU)302, NULL, NULL);
             hBtnClass2 = CreateWindowA("BUTTON", "[3] INTERCEPTOR (Tactical)",WS_CHILD | BS_PUSHBUTTON, 230, 218, 380, 28, hwnd, (HMENU)303, NULL, NULL);
             hBtnClass3 = CreateWindowA("BUTTON", "[4] CRUISER (Deep Space)",WS_CHILD | BS_PUSHBUTTON, 230, 252, 380, 28, hwnd, (HMENU)304, NULL, NULL);
-            hBtnConfirmInit = CreateWindowA("BUTTON", "🚀 INITIALIZE COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 34, hwnd, (HMENU)305, NULL, NULL);
+            hBtnToggleMode  = CreateWindowA("BUTTON", "[MODE: 🛡️ STANDARD VOYAGE]", WS_CHILD | BS_PUSHBUTTON, 230, 286, 380, 26, hwnd, (HMENU)306, NULL, NULL);
+            hBtnConfirmInit = CreateWindowA("BUTTON", "🚀 INITIALIZE COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 230, 318, 380, 32, hwnd, (HMENU)305, NULL, NULL);
+
+            // Leaderboard Modal Buttons
+            hBtnLdbCatAll  = CreateWindowA("BUTTON", "🌟 OVERALL",  WS_CHILD | BS_PUSHBUTTON, 210, 80, 95, 24, hwnd, (HMENU)1201, NULL, NULL);
+            hBtnLdbCatDist = CreateWindowA("BUTTON", "🌌 DISTANCE", WS_CHILD | BS_PUSHBUTTON, 310, 80, 95, 24, hwnd, (HMENU)1202, NULL, NULL);
+            hBtnLdbCatCr   = CreateWindowA("BUTTON", "💎 CREDITS",  WS_CHILD | BS_PUSHBUTTON, 410, 80, 95, 24, hwnd, (HMENU)1203, NULL, NULL);
+            hBtnLdbCatBat  = CreateWindowA("BUTTON", "⚔️ BATTLES",  WS_CHILD | BS_PUSHBUTTON, 510, 80, 95, 24, hwnd, (HMENU)1204, NULL, NULL);
+            hBtnLdbClose   = CreateWindowA("BUTTON", "✅ RETURN TO COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 210, 360, 395, 26, hwnd, (HMENU)1205, NULL, NULL);
+
+            // Captain's Log Modal Close Button
+            hBtnLogClose   = CreateWindowA("BUTTON", "✅ CLOSE TERMINAL LOG", WS_CHILD | BS_PUSHBUTTON, 200, 360, 445, 26, hwnd, (HMENU)1206, NULL, NULL);
+
+            // Game Over Restart Button
+            hBtnGameOverRestart = CreateWindowA("BUTTON", "🚀 COMMISSION NEW VOYAGE", WS_CHILD | BS_PUSHBUTTON, 230, 320, 380, 34, hwnd, (HMENU)1301, NULL, NULL);
 
             // Station Modal Buttons
             hBtnStRefuel        = CreateWindowA("BUTTON", "⛽ REFUEL HYPER TANK (+30 Fuel - 40 Cr)",  WS_CHILD | BS_PUSHBUTTON, 230, 130, 380, 24, hwnd, (HMENU)401, NULL, NULL);
@@ -2323,6 +2470,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_State.inEncounterModal = 0;
                 UpdateControlVisibility(hwnd);
                 AddLog("[ENCOUNTER] Disengaged tactical event.", 0);
+            } else if (id == 119) {
+                g_State.inLeaderboardModal = 1;
+                UpdateControlVisibility(hwnd);
+            } else if (id == 120) {
+                g_State.inCaptainsLogModal = 1;
+                UpdateControlVisibility(hwnd);
+            } else if (id == 306) {
+                g_State.permadeath = !g_State.permadeath;
+                SetWindowTextA(hBtnToggleMode, g_State.permadeath ? "[MODE: 💀 PERMADEATH MODE]" : "[MODE: 🛡️ STANDARD VOYAGE]");
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id >= 1201 && id <= 1204) {
+                g_State.leaderboardCategory = id - 1201;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 1205) {
+                g_State.inLeaderboardModal = 0;
+                UpdateControlVisibility(hwnd);
+            } else if (id == 1206) {
+                g_State.inCaptainsLogModal = 0;
+                UpdateControlVisibility(hwnd);
+            } else if (id == 1301) {
+                g_State.inGameOverModal = 0;
+                g_State.inInitModal = 1;
+                g_State.moveCount = 0;
+                g_State.battlesWon = 0;
+                UpdateControlVisibility(hwnd);
             }
             SetFocus(hwnd);
             break;
@@ -3108,6 +3280,104 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, RGB(180, 210, 240));
                     TextOutA(hdc, 202, rY + 18, pStr, (int)lstrlenA(pStr));
                 }
+            } else if (g_State.inLeaderboardModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {190, 52, 660, 388};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hAmberBorder = CreateSolidBrush(RGB(255, 170, 0));
+                FrameRect(hdc, &modalCard, hAmberBorder);
+                DeleteObject(hAmberBorder);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(255, 200, 0));
+                TextOutA(hdc, 210, 60, "🏆 HALL OF FAME — LEADERBOARD", 30);
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 210, 110, "RANK  CAPTAIN / CLASS       SCORE   DIST  CREDITS BATTLES MODE", 62);
+
+                int idx;
+                int yPos = 130;
+                for (idx = 0; idx < g_LeaderboardCount && idx < 8; idx++) {
+                    LeaderboardEntry* e = &g_Leaderboard[idx];
+                    char lRow[128];
+                    wsprintfA(lRow, "#%d    %-14s %-6s  %-6d  %-4d  %-6d  %-3d     %s", idx + 1, e->captain, e->classStr, e->score, e->distance, e->credits, e->battles, e->permadeath ? "PERMADEATH" : "STANDARD");
+                    SetTextColor(hdc, (idx == 0) ? RGB(255, 200, 0) : RGB(190, 220, 255));
+                    TextOutA(hdc, 210, yPos, lRow, (int)lstrlenA(lRow));
+                    yPos += 26;
+                }
+            } else if (g_State.inCaptainsLogModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {180, 52, 670, 388};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hGreenBorder = CreateSolidBrush(RGB(57, 255, 20));
+                FrameRect(hdc, &modalCard, hGreenBorder);
+                DeleteObject(hGreenBorder);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(57, 255, 20));
+                TextOutA(hdc, 200, 60, "📖 CAPTAIN'S AUTOMATIC EVENT LOG", 34);
+
+                SelectObject(hdc, hMonoFont);
+                int idx;
+                int yPos = 90;
+                int startIdx = (g_CaptainsLogCount > 10) ? g_CaptainsLogCount - 10 : 0;
+                for (idx = startIdx; idx < g_CaptainsLogCount; idx++) {
+                    char logLine[160];
+                    wsprintfA(logLine, "[%s] %s", g_CaptainsLog[idx].stardate, g_CaptainsLog[idx].msg);
+                    COLORREF cCol = RGB(160, 190, 220);
+                    if (g_CaptainsLog[idx].type == 1) cCol = RGB(255, 170, 0);
+                    else if (g_CaptainsLog[idx].type == 2) cCol = RGB(255, 51, 102);
+                    else if (g_CaptainsLog[idx].type == 3) cCol = RGB(57, 255, 20);
+                    SetTextColor(hdc, cCol);
+                    TextOutA(hdc, 200, yPos, logLine, (int)lstrlenA(logLine));
+                    yPos += 26;
+                }
+            } else if (g_State.inGameOverModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(20, 4, 8));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {200, 52, 650, 388};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hRedBorder = CreateSolidBrush(RGB(255, 51, 102));
+                FrameRect(hdc, &modalCard, hRedBorder);
+                DeleteObject(hRedBorder);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(255, 51, 102));
+                TextOutA(hdc, 220, 65, "💀 COMMAND DECK LOST — DESTROYED", 33);
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(255, 120, 150));
+                TextOutA(hdc, 220, 100, g_State.gameOverReason, (int)lstrlenA(g_State.gameOverReason));
+
+                char stat1[64], stat2[64], stat3[64], stat4[64];
+                wsprintfA(stat1, "DISTANCE: %d LY", g_State.moveCount);
+                wsprintfA(stat2, "CREDITS:  %d Cr", g_State.credits);
+                wsprintfA(stat3, "BATTLES:  %d WON", g_State.battlesWon);
+                wsprintfA(stat4, "FINAL SCORE: %d PTS", CalculateCurrentScore());
+
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 240, 140, stat1, (int)lstrlenA(stat1));
+                SetTextColor(hdc, RGB(255, 170, 0));
+                TextOutA(hdc, 240, 170, stat2, (int)lstrlenA(stat2));
+                SetTextColor(hdc, RGB(255, 51, 102));
+                TextOutA(hdc, 240, 200, stat3, (int)lstrlenA(stat3));
+                SetTextColor(hdc, RGB(57, 255, 20));
+                TextOutA(hdc, 240, 230, stat4, (int)lstrlenA(stat4));
+
+                SetTextColor(hdc, RGB(255, 200, 0));
+                TextOutA(hdc, 220, 280, "🏆 High Score Saved into Hall of Fame!", 38);
             }
 
             EndPaint(hwnd, &ps);

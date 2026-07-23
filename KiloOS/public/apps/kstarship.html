@@ -702,6 +702,8 @@
     </div>
     <div class="header-info">
       <button class="audio-toggle" id="btnAudioToggle" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+      <button class="audio-toggle" style="border-color: var(--amber-glow); color: var(--amber-glow);" onclick="openLeaderboardModal()">🏆 HALL OF FAME</button>
+      <button class="audio-toggle" style="border-color: var(--green-status); color: var(--green-status);" onclick="openCaptainsLogModal()">📖 CAPTAIN'S LOG</button>
       <button class="audio-toggle" style="border-color: var(--cyan-glow); color: var(--cyan-glow);" onclick="openSectorMapModal()">🗺️ SECTOR MAP (15 S)</button>
       <div>SECTOR: <span id="currentSectorLabel" style="color: var(--cyan-glow);">ALPHA-01</span></div>
       <div>BIOME: <span id="currentBiomeHeaderLabel" style="color: var(--green-status); font-weight:bold;">TERRAN</span></div>
@@ -714,7 +716,10 @@
     <div class="card-panel">
       <div class="panel-header">
         <span>Ship Vitals</span>
-        <span id="shipClassTag">CORVETTE</span>
+        <div style="display: flex; gap: 4px; align-items: center;">
+          <span id="modeTagDisplay" style="font-size: 0.65rem; color: var(--amber-alert); border: 1px solid var(--amber-alert); padding: 1px 4px; border-radius: 2px;">STANDARD</span>
+          <span id="shipClassTag">CORVETTE</span>
+        </div>
       </div>
 
       <div style="font-weight: bold; color: var(--cyan-glow);" id="shipNameDisplay">SS ANTIGRAVITY</div>
@@ -1332,8 +1337,107 @@
         </div>
       </div>
 
+      <div style="font-size: 0.76rem; color: var(--cyan-glow); font-weight: bold; margin-top: 6px;">🎮 VOYAGE MODE:</div>
+      <div class="class-selector" style="grid-template-columns: 1fr 1fr;">
+        <div class="class-option selected" id="optModeNormal" onclick="selectGameMode(false)">
+          <div class="class-name">🛡️ STANDARD VOYAGE</div>
+          <div class="class-desc">Distress pod emergency escape on hull breach.</div>
+        </div>
+        <div class="class-option" id="optModePermadeath" onclick="selectGameMode(true)">
+          <div class="class-name">💀 PERMADEATH MODE</div>
+          <div class="class-desc">Total ship destruction is permanent. Hall of Fame leaderboard score saved.</div>
+        </div>
+      </div>
+
       <button class="action-btn" style="justify-content: center; margin-top: 6px;" onclick="confirmShipName()">
         🚀 INITIALIZE COMMAND DECK
+      </button>
+    </div>
+  </div>
+
+  <!-- High Score Leaderboard Modal (Phase 11) -->
+  <div class="modal-overlay" id="leaderboardModal" style="display: none;">
+    <div class="modal-card" style="width: 660px; max-width: 95vw; border-color: var(--amber-glow);">
+      <div class="panel-header" style="font-size: 1rem; border-color: var(--amber-glow); color: var(--amber-glow);">
+        <span>🏆 HALL OF FAME — HIGH SCORE LEADERBOARD</span>
+        <button class="audio-toggle" style="border-color: var(--amber-glow); color: var(--amber-glow);" onclick="closeLeaderboardModal()">✕ CLOSE</button>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 4px;">
+        <button class="mode-btn active" id="btnLdbCategoryAll" onclick="renderLeaderboard('all')">🌟 OVERALL SCORE</button>
+        <button class="mode-btn" id="btnLdbCategoryDistance" onclick="renderLeaderboard('distance')">🌌 DISTANCE</button>
+        <button class="mode-btn" id="btnLdbCategoryCredits" onclick="renderLeaderboard('credits')">💎 CREDITS</button>
+        <button class="mode-btn" id="btnLdbCategoryBattles" onclick="renderLeaderboard('battles')">⚔️ BATTLES</button>
+      </div>
+
+      <div style="max-height: 330px; overflow-y: auto; background: rgba(3, 8, 16, 0.95); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px;" id="leaderboardTableContainer">
+      </div>
+
+      <button class="action-btn" style="justify-content: center; margin-top: 4px; border-color: var(--text-muted);" onclick="closeLeaderboardModal()">
+        ✅ RETURN TO COMMAND DECK
+      </button>
+    </div>
+  </div>
+
+  <!-- Captain's Log Terminal Modal (Phase 11) -->
+  <div class="modal-overlay" id="captainsLogModal" style="display: none;">
+    <div class="modal-card" style="width: 680px; max-width: 95vw; border-color: var(--green-status);">
+      <div class="panel-header" style="font-size: 1rem; border-color: var(--green-status); color: var(--green-status);">
+        <span>📖 CAPTAIN'S AUTOMATIC EVENT LOG</span>
+        <button class="audio-toggle" style="border-color: var(--green-status); color: var(--green-status);" onclick="closeCaptainsLogModal()">✕ CLOSE</button>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 4px;">
+        <button class="mode-btn active" id="btnLogFilterAll" onclick="renderCaptainsLog('all')">ALL LOGS</button>
+        <button class="mode-btn" id="btnLogFilterCombat" onclick="renderCaptainsLog('combat')">⚔️ COMBAT</button>
+        <button class="mode-btn" id="btnLogFilterNav" onclick="renderCaptainsLog('nav')">🚀 JUMPS</button>
+        <button class="mode-btn" id="btnLogFilterTrade" onclick="renderCaptainsLog('trade')">📈 TRADE/STATION</button>
+      </div>
+
+      <div style="height: 330px; overflow-y: auto; background: #02060c; border: 1px solid var(--border-cyan); border-radius: 4px; padding: 10px; font-family: var(--font-mono); font-size: 0.76rem;" id="captainsLogContainer">
+      </div>
+
+      <button class="action-btn" style="justify-content: center; margin-top: 4px; border-color: var(--text-muted);" onclick="closeCaptainsLogModal()">
+        ✅ CLOSE TERMINAL LOG
+      </button>
+    </div>
+  </div>
+
+  <!-- Game Over Screen (Permadeath / Destruction) Modal (Phase 11) -->
+  <div class="modal-overlay" id="gameOverModal" style="display: none;">
+    <div class="modal-card" style="width: 580px; max-width: 95vw; border-color: var(--red-alert); box-shadow: 0 0 45px rgba(255, 51, 102, 0.6);">
+      <div class="panel-header" style="font-size: 1.1rem; border-color: var(--red-alert); color: var(--red-alert);">
+        <span id="gameOverTitle">💀 COMMAND DECK LOST — STARSHIP DESTROYED</span>
+      </div>
+      <p style="font-size: 0.85rem; color: #ff6688; line-height: 1.4;" id="gameOverReason">
+        Catastrophic structural failure! Vessel destroyed in frontier sector.
+      </p>
+
+      <div class="scan-telemetry-grid" style="grid-template-columns: repeat(2, 1fr); gap: 10px;">
+        <div class="telemetry-item">
+          <div class="telemetry-val" id="goValDistance">0 LY</div>
+          <div class="telemetry-lbl">Distance Traveled</div>
+        </div>
+        <div class="telemetry-item">
+          <div class="telemetry-val" style="color: var(--amber-glow);" id="goValCredits">0 Cr</div>
+          <div class="telemetry-lbl">Final Credits</div>
+        </div>
+        <div class="telemetry-item">
+          <div class="telemetry-val" style="color: var(--red-alert);" id="goValBattles">0</div>
+          <div class="telemetry-lbl">Battles Won</div>
+        </div>
+        <div class="telemetry-item">
+          <div class="telemetry-val" style="color: var(--cyan-glow);" id="goValScore">0 PTS</div>
+          <div class="telemetry-lbl">Final Score</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.78rem; color: var(--green-status); text-align: center;" id="goLeaderboardStatus">
+        🏆 High Score Recorded in Hall of Fame!
+      </div>
+
+      <button class="action-btn" style="justify-content: center; margin-top: 8px; border-color: var(--cyan-glow); color: var(--cyan-glow);" onclick="restartGameNewVoyage()">
+        🚀 COMMISSION NEW VOYAGE
       </button>
     </div>
   </div>
@@ -1550,7 +1654,11 @@
       timeDilationTurns: 0,
       hyperShieldTurns: 0,
       enemyType: 0,
-      bossStage: 1
+      bossStage: 1,
+      // Phase 11 State
+      permadeath: false,
+      battlesWon: 0,
+      captainsLog: []
     };
 
     
@@ -1948,6 +2056,15 @@
       entry.innerText = `[${time}] ${msg}`;
       consoleEl.appendChild(entry);
       consoleEl.scrollTop = consoleEl.scrollHeight;
+
+      if (!state.captainsLog) state.captainsLog = [];
+      const stardate = (4100 + (state.moveCount || 0) * 0.4 + (state.currentSectorIdx || 0) * 12.5).toFixed(1);
+      state.captainsLog.push({
+        stardate: `SD ${stardate} [${state.sector || 'ALPHA-01'}]`,
+        message: msg,
+        type: type
+      });
+      if (state.captainsLog.length > 150) state.captainsLog.shift();
     }
 
     function selectClass(cls) {
@@ -2057,6 +2174,12 @@
         document.getElementById('barSubEngines').style.width = `${state.subEngines}%`;
         document.getElementById('valSubDrones').innerText = `${state.subDrones}%`;
         document.getElementById('barSubDrones').style.width = `${state.subDrones}%`;
+      }
+
+      if (document.getElementById('modeTagDisplay')) {
+        document.getElementById('modeTagDisplay').innerText = state.permadeath ? 'PERMADEATH' : 'STANDARD';
+        document.getElementById('modeTagDisplay').style.borderColor = state.permadeath ? 'var(--red-alert)' : 'var(--amber-alert)';
+        document.getElementById('modeTagDisplay').style.color = state.permadeath ? 'var(--red-alert)' : 'var(--amber-alert)';
       }
 
       // Current cell object
@@ -3545,6 +3668,7 @@
       state.scraps += rewardScrap;
       state.fuel = Math.min(state.maxFuel, state.fuel + 20);
       state.artifacts += rewardRelic;
+      state.battlesWon = (state.battlesWon || 0) + 1;
 
       if (type === 0 || type === 1) checkSectorObjectiveProgress(0, 1);
       if (type === 1) checkSectorObjectiveProgress(2, 1);
@@ -3568,18 +3692,215 @@
     }
 
     function combatDefeat() {
-      addLog(`[CRITICAL BREACH] Starship hull compromised in combat! Emergency distress pod activated.`, 'alert');
-      state.hull = 25;
-      state.shields = 0;
-      playSound('alert');
-      closeCombatModal();
-      updateUI();
+      addLog(`[CRITICAL BREACH] Starship hull compromised in combat!`, 'alert');
+      if (state.permadeath) {
+        closeCombatModal();
+        triggerGameOver('Starship Destroyed in Tactical Combat');
+      } else {
+        addLog(`[EMERGENCY POD] Distress pod deployed! Vessel patched to 25 HP.`, 'warn');
+        state.hull = 25;
+        state.shields = 0;
+        playSound('alert');
+        closeCombatModal();
+        updateUI();
+      }
     }
 
     function closeCombatModal() {
       combatState.active = false;
       document.getElementById('combatModal').style.display = 'none';
       if (currentEncounterKey) closeEncounterModal();
+    }
+
+    // Phase 11: Permadeath, Leaderboard & Captain's Log Logic
+    const LEADERBOARD_KEY = 'kstarship_hall_of_fame_v1';
+
+    const DEFAULT_LEADERBOARD = [
+      { captain: 'Cmdr. Shepard', ship: 'SS NORMANDE', class: 'CRUISER', distance: 142, credits: 18500, battles: 18, score: 32400, permadeath: true, date: 'SD 4982.1' },
+      { captain: 'Capt. Picard', ship: 'SS ENTERPRISE', class: 'CRUISER', distance: 120, credits: 14200, battles: 12, score: 24800, permadeath: true, date: 'SD 4810.4' },
+      { captain: 'Capt. Kirk', ship: 'SS VICTORY', class: 'INTERCEPTOR', distance: 98, credits: 11000, battles: 15, score: 21500, permadeath: false, date: 'SD 4720.0' },
+      { captain: 'Cmdr. Antigravity', ship: 'SS ANTIGRAVITY', class: 'CORVETTE', distance: 85, credits: 9400, battles: 10, score: 17300, permadeath: true, date: 'SD 4600.2' },
+      { captain: 'Capt. Reynolds', ship: 'SS SERENITY', class: 'FRIGATE', distance: 64, credits: 8200, battles: 6, score: 12900, permadeath: false, date: 'SD 4450.8' }
+    ];
+
+    function getLeaderboard() {
+      try {
+        const stored = localStorage.getItem(LEADERBOARD_KEY);
+        if (stored) return JSON.parse(stored);
+      } catch (e) {}
+      return DEFAULT_LEADERBOARD;
+    }
+
+    function saveLeaderboard(list) {
+      try {
+        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(list));
+      } catch (e) {}
+    }
+
+    function calculateCurrentScore() {
+      const distScore = (state.moveCount || 0) * 100;
+      const crScore = state.credits || 0;
+      const batScore = (state.battlesWon || 0) * 500;
+      const relicScore = (state.artifacts || 0) * 800;
+      const permBonus = state.permadeath ? 2000 : 0;
+      return distScore + crScore + batScore + relicScore + permBonus;
+    }
+
+    function recordHighScore() {
+      const finalScore = calculateCurrentScore();
+      const stardate = (4100 + (state.moveCount || 0) * 0.4 + (state.currentSectorIdx || 0) * 12.5).toFixed(1);
+      const entry = {
+        captain: state.shipName,
+        ship: state.shipName,
+        class: state.shipClass,
+        distance: state.moveCount || 0,
+        credits: state.credits || 0,
+        battles: state.battlesWon || 0,
+        score: finalScore,
+        permadeath: !!state.permadeath,
+        date: `SD ${stardate}`
+      };
+      let list = getLeaderboard();
+      list.push(entry);
+      list.sort((a, b) => b.score - a.score);
+      if (list.length > 10) list = list.slice(0, 10);
+      saveLeaderboard(list);
+      return entry;
+    }
+
+    function selectGameMode(isPermadeath) {
+      state.permadeath = isPermadeath;
+      document.getElementById('optModeNormal').classList.toggle('selected', !isPermadeath);
+      document.getElementById('optModePermadeath').classList.toggle('selected', isPermadeath);
+    }
+
+    function openLeaderboardModal() {
+      renderLeaderboard('all');
+      playSound('dock');
+      document.getElementById('leaderboardModal').style.display = 'flex';
+    }
+
+    function closeLeaderboardModal() {
+      document.getElementById('leaderboardModal').style.display = 'none';
+    }
+
+    function renderLeaderboard(category) {
+      const container = document.getElementById('leaderboardTableContainer');
+      if (!container) return;
+
+      ['All', 'Distance', 'Credits', 'Battles'].forEach(cat => {
+        const btn = document.getElementById(`btnLdbCategory${cat}`);
+        if (btn) btn.classList.toggle('active', category.toLowerCase() === cat.toLowerCase());
+      });
+
+      let list = getLeaderboard();
+      if (category === 'distance') list.sort((a, b) => b.distance - a.distance);
+      else if (category === 'credits') list.sort((a, b) => b.credits - a.credits);
+      else if (category === 'battles') list.sort((a, b) => b.battles - a.battles);
+      else list.sort((a, b) => b.score - a.score);
+
+      let html = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.74rem; text-align: left;">
+          <thead>
+            <tr style="color: var(--cyan-glow); border-bottom: 1px solid var(--border-cyan);">
+              <th style="padding: 4px;">RANK</th>
+              <th style="padding: 4px;">CAPTAIN / VESSEL</th>
+              <th style="padding: 4px;">CLASS</th>
+              <th style="padding: 4px;">SCORE</th>
+              <th style="padding: 4px;">DIST</th>
+              <th style="padding: 4px;">CREDITS</th>
+              <th style="padding: 4px;">BATTLES</th>
+              <th style="padding: 4px;">MODE</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      list.forEach((item, idx) => {
+        const permBadge = item.permadeath
+          ? `<span style="color: var(--red-alert); border: 1px solid var(--red-alert); padding: 1px 4px; border-radius: 2px;">PERMADEATH</span>`
+          : `<span style="color: var(--text-muted);">STANDARD</span>`;
+        html += `
+          <tr style="border-bottom: 1px solid #0a182b; color: ${idx === 0 ? 'var(--amber-glow)' : 'var(--text-main)'};">
+            <td style="padding: 6px; font-weight: bold;">#${idx + 1}</td>
+            <td style="padding: 6px;">
+              <div style="font-weight: bold; color: var(--cyan-glow);">${item.captain}</div>
+              <div style="font-size: 0.65rem; color: var(--text-muted);">${item.date}</div>
+            </td>
+            <td style="padding: 6px;">${item.class}</td>
+            <td style="padding: 6px; font-weight: bold; color: var(--green-status);">${item.score.toLocaleString()}</td>
+            <td style="padding: 6px;">${item.distance} LY</td>
+            <td style="padding: 6px;">${item.credits.toLocaleString()} Cr</td>
+            <td style="padding: 6px;">${item.battles}</td>
+            <td style="padding: 6px;">${permBadge}</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function openCaptainsLogModal() {
+      renderCaptainsLog('all');
+      playSound('dock');
+      document.getElementById('captainsLogModal').style.display = 'flex';
+    }
+
+    function closeCaptainsLogModal() {
+      document.getElementById('captainsLogModal').style.display = 'none';
+    }
+
+    function renderCaptainsLog(filter) {
+      const container = document.getElementById('captainsLogContainer');
+      if (!container) return;
+
+      ['All', 'Combat', 'Nav', 'Trade'].forEach(f => {
+        const btn = document.getElementById(`btnLogFilter${f}`);
+        if (btn) btn.classList.toggle('active', filter.toLowerCase() === f.toLowerCase());
+      });
+
+      const logs = state.captainsLog || [];
+      let filtered = logs;
+
+      if (filter === 'combat') filtered = logs.filter(l => l.message.includes('COMBAT') || l.message.includes('VICTORY') || l.message.includes('ATTACK') || l.type === 'alert');
+      else if (filter === 'nav') filtered = logs.filter(l => l.message.includes('WARP') || l.message.includes('Sector') || l.message.includes('ORBIT'));
+      else if (filter === 'trade') filtered = logs.filter(l => l.message.includes('MARKET') || l.message.includes('OUTPOST') || l.message.includes('BARTER') || l.message.includes('REPAIR'));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="color: var(--text-muted); text-align: center; margin-top: 40px;">No Captain's Log entries recorded for this category yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(l => `
+        <div style="margin-bottom: 6px; line-height: 1.35; border-bottom: 1px dashed rgba(0, 240, 255, 0.1); padding-bottom: 4px;">
+          <span style="color: var(--amber-alert); font-weight: bold;">[${l.stardate}]</span>
+          <span class="log-${l.type}">${l.message}</span>
+        </div>
+      `).join('');
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function triggerGameOver(reason) {
+      recordHighScore();
+      playSound('alert');
+      document.getElementById('gameOverReason').innerText = reason || 'Vessel destroyed in deep space.';
+      document.getElementById('goValDistance').innerText = `${state.moveCount || 0} LY`;
+      document.getElementById('goValCredits').innerText = `${(state.credits || 0).toLocaleString()} Cr`;
+      document.getElementById('goValBattles').innerText = `${state.battlesWon || 0}`;
+      document.getElementById('goValScore').innerText = `${calculateCurrentScore().toLocaleString()} PTS`;
+      document.getElementById('gameOverModal').style.display = 'flex';
+    }
+
+    function restartGameNewVoyage() {
+      document.getElementById('gameOverModal').style.display = 'none';
+      document.getElementById('initModal').style.display = 'flex';
+      state.moveCount = 0;
+      state.battlesWon = 0;
+      state.currentSectorIdx = 0;
+      state.sectorCompleted = new Array(15).fill(false);
+      state.captainsLog = [];
     }
 
     // Keyboard Navigation Listener
@@ -3590,6 +3911,9 @@
           document.getElementById('combatModal').style.display !== 'none' ||
           document.getElementById('encounterModal').style.display !== 'none' ||
           document.getElementById('upgradeModal').style.display !== 'none' ||
+          document.getElementById('leaderboardModal').style.display !== 'none' ||
+          document.getElementById('captainsLogModal').style.display !== 'none' ||
+          document.getElementById('gameOverModal').style.display !== 'none' ||
           document.getElementById('tradeModal').style.display !== 'none') return;
 
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveShip(0, -1);
