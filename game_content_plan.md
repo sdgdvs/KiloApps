@@ -196,7 +196,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KAsteroids | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-Sector Campaign, Mother Boss UFO, Armored Asteroids, EMP & Laser powerups, Hyperdrive. |
 | KFreecell  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, King-only empty tableau mechanic, Magic Wand & Extra Cell powerups, Time Attack Mode. |
 | KConnect4  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-Stage Campaign, Drill powerup, Speed mode, Crackable blocks. |
-| KHangman   | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KHangman   | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 5 new categories, Time Attack Blitz mode, and Shield power-up. |
 | KSimon     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KMatch3    | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KWords     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
@@ -224,6 +224,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KAsteroids (Added 15-Sector Campaign, Mother Boss UFO, Armored Asteroids, EMP & Laser powerups, and Hyperdrive ability to both EXE and HTML)
 - [x] KFreecell (Expanded Campaign to 15 stages, added King-only empty tableau mechanic, Magic Wand & Extra Cell powerups, and Time Attack Mode to both EXE and HTML)
 - [x] KConnect4 (Expanded Campaign to 15 stages, added Drill power-up, Speed Mode, and Crackable blocks to both EXE and HTML)
+- [x] KHangman (Expanded Campaign to 15 stages, added 5 new categories, Time Attack Blitz mode, and Shield power-up to both EXE and HTML)
 
 **Loop 1**
 - [x] KRogue (EXE: Added Skeleton, Centipede, Gargoyle, Demon, Amulet of Life)

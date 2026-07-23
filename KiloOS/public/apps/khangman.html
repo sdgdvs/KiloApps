@@ -15,27 +15,29 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             box-sizing: border-box;
         }
         #game-container {
             background-color: #1e1e1e;
             border: 1px solid #333;
             border-radius: 8px;
-            padding: 30px;
+            padding: 25px;
             width: 100%;
-            max-width: 500px;
+            max-width: 520px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
         }
         #stats {
             background-color: #2c2c2c;
             padding: 10px;
             border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            margin-bottom: 15px;
+            font-size: 13px;
             display: flex;
             justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
             width: 100%;
             box-sizing: border-box;
         }
@@ -45,36 +47,39 @@
         }
         h1 {
             margin-top: 0;
+            margin-bottom: 15px;
             color: #4facfe;
             font-size: 24px;
         }
         #hangman-canvas {
             background-color: #121212;
             border-radius: 4px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: inline-block;
         }
         #word-display {
             font-size: 32px;
             letter-spacing: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: bold;
+            min-height: 42px;
         }
         #keyboard {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .key {
             background-color: #2c2c2c;
             color: #e0e0e0;
             border: 1px solid #444;
             border-radius: 4px;
-            padding: 10px 0;
+            padding: 8px 0;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.2s;
+            font-size: 15px;
+            transition: background-color 0.15s;
         }
         .key:hover:not(:disabled) {
             background-color: #3a3a3a;
@@ -91,42 +96,23 @@
             margin-bottom: 15px;
             font-weight: bold;
         }
-        button.restart {
-            background-color: #007acc;
+        .btn {
             color: white;
             border: none;
             border-radius: 4px;
-            padding: 10px 20px;
+            padding: 8px 14px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
-            transition: background-color 0.2s;
+            font-size: 14px;
+            transition: background-color 0.2s, opacity 0.2s;
         }
-        button.restart:hover {
-            background-color: #005999;
+        .btn:hover:not(:disabled) {
+            opacity: 0.9;
         }
-        button.hint-btn {
-            background-color: #ff9800;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            margin-right: 10px;
-            transition: background-color 0.2s;
-        }
-        button.hint-btn:hover:not(:disabled) {
-            background-color: #f57c00;
-        }
-        button.hint-btn:disabled {
-            background-color: #444;
-            color: #777;
+        .btn:disabled {
+            background-color: #444 !important;
+            color: #777 !important;
             cursor: not-allowed;
-        }
-        button.mute-btn:hover {
-            background-color: #777 !important;
         }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -157,9 +143,10 @@
         <div>Losses: <span id="stat-losses">0</span></div>
         <div>Streak: <span id="stat-streak">0</span></div>
         <div>Best: <span id="stat-best">0</span></div>
+        <div>Blitz Best: <span id="stat-blitz-best">0</span></div>
     </div>
     
-    <select id="category" onchange="handleCategoryChange()" style="margin-bottom: 20px; padding: 5px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 16px; cursor: pointer;">
+    <select id="category" onchange="handleCategoryChange()" style="margin-bottom: 15px; padding: 6px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 15px; cursor: pointer; width: 100%;">
         <option value="Technology">Technology</option>
         <option value="Animals">Animals</option>
         <option value="Countries">Countries</option>
@@ -169,15 +156,20 @@
         <option value="Food">Food</option>
         <option value="Music">Music</option>
         <option value="History">History</option>
+        <option value="Mythology">Mythology</option>
+        <option value="Space">Space</option>
+        <option value="Literature">Literature</option>
+        <option value="Geography">Geography</option>
+        <option value="Pop Culture">Pop Culture</option>
         <option value="Custom">Custom</option>
     </select>
     
-    <div id="custom-container" style="display: none; margin-bottom: 20px;">
-        <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA, CHERRY" style="padding: 5px; width: 250px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 14px;">
-        <button onclick="initGame()" style="background-color: #007acc; color: white; border: none; border-radius: 4px; padding: 6px 12px; cursor: pointer; font-weight: bold;">Play</button>
+    <div id="custom-container" style="display: none; margin-bottom: 15px;">
+        <input type="text" id="custom-words" placeholder="e.g. APPLE, BANANA, CHERRY" style="padding: 6px; width: 260px; background: #2c2c2c; color: white; border: 1px solid #444; border-radius: 4px; font-size: 14px;">
+        <button onclick="initGame()" class="btn" style="background-color: #007acc; margin-left: 5px;">Play Custom</button>
     </div>
     
-    <canvas id="hangman-canvas" width="200" height="200"></canvas>
+    <canvas id="hangman-canvas" width="200" height="180"></canvas>
     
     <div id="word-display">_ _ _ _ _</div>
     
@@ -185,29 +177,42 @@
     
     <div id="keyboard"></div>
     
-    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;">
-        <button class="hint-btn" onclick="useBomb()" id="bomb-btn" style="background-color: #f44336; margin-right: 0;">Bomb(1)</button>
-        <button class="hint-btn" onclick="useHint()" id="hint-btn" style="margin-right: 0;">Hint</button>
-        <button class="restart" onclick="startCampaign()" id="campaign-btn" style="background-color: #009688;">Campaign</button>
-        <button class="restart" onclick="isCampaign = false; initGame()">Freeplay</button>
-        <button class="action-btn" onclick="saveGameState()" style="background-color: #4caf50; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Save</button>
-        <button class="action-btn" onclick="loadGameState()" style="background-color: #9c27b0; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Load</button>
-        <button class="action-btn" onclick="showHelp()" style="background-color: #2196f3; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">Help</button>
-        <button class="mute-btn" onclick="toggleMute()" id="mute-btn" style="background-color: #555; color: white; border: none; border-radius: 4px; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 16px;">🔊 Sound</button>
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+        <button class="btn" onclick="useBomb()" id="bomb-btn" style="background-color: #f44336;">Bomb(1)</button>
+        <button class="btn" onclick="useHint()" id="hint-btn" style="background-color: #ff9800;">Hint</button>
+        <button class="btn" onclick="useShield()" id="shield-btn" style="background-color: #9c27b0;">Shield(1)</button>
+        <button class="btn" onclick="startCampaign()" id="campaign-btn" style="background-color: #009688;">Campaign</button>
+        <button class="btn" onclick="startBlitz()" id="blitz-btn" style="background-color: #e91e63;">Blitz Mode</button>
+        <button class="btn" onclick="gameMode = 0; initGame()" style="background-color: #007acc;">Freeplay</button>
+    </div>
+
+    <div style="display: flex; justify-content: center; flex-wrap: wrap; gap: 8px;">
+        <button class="btn" onclick="saveGameState()" style="background-color: #4caf50;">Save</button>
+        <button class="btn" onclick="loadGameState()" style="background-color: #7b1fa2;">Load</button>
+        <button class="btn" onclick="showHelp()" style="background-color: #2196f3;">Help</button>
+        <button class="btn" onclick="toggleMute()" id="mute-btn" style="background-color: #555;">🔊 Sound</button>
+        <button class="btn" onclick="resetStats()" style="background-color: #616161;">Reset Stats</button>
     </div>
 </div>
 
-<div id="help-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
-    <div style="background: #1e1e1e; padding: 20px; border-radius: 8px; max-width: 400px; text-align: left; border: 1px solid #444; color: #e0e0e0;">
+<div id="help-modal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; flex-direction: column;">
+    <div style="background: #1e1e1e; padding: 25px; border-radius: 8px; max-width: 440px; text-align: left; border: 1px solid #444; color: #e0e0e0; box-shadow: 0 4px 20px rgba(0,0,0,0.6);">
         <h2 style="color: #4facfe; margin-top: 0;">How to Play KHangman</h2>
-        <p><strong>Rules:</strong> Guess the hidden word one letter at a time. You have up to 6 lives.</p>
-        <p><strong>Controls:</strong> Click the on-screen keyboard or type using your physical keyboard (A-Z).</p>
-        <p><strong>Campaign Mode:</strong> 10 stages of increasing difficulty.</p>
-        <p><strong>Bomb:</strong> Eliminates up to 3 incorrect letters from the keyboard.</p>
-        <p><strong>Categories:</strong> Select from predefined categories or choose Custom.</p>
-        <p><strong>Hint:</strong> Reveals one correct letter. Can only be used once per game.</p>
+        <p><strong>Rules:</strong> Guess the hidden word one letter at a time. Keyboard or screen clicks.</p>
+        <p><strong>Game Modes:</strong></p>
+        <ul>
+            <li><strong>Freeplay:</strong> Classic un-timed Hangman mode.</li>
+            <li><strong>Campaign Mode:</strong> 15 stages of increasing difficulty across categories.</li>
+            <li><strong>Time Attack Blitz:</strong> 60s timer! +2s per correct letter, +15s per word solved!</li>
+        </ul>
+        <p><strong>Power-Ups:</strong></p>
+        <ul>
+            <li><strong>Bomb:</strong> Eliminates 3 incorrect letters from keyboard.</li>
+            <li><strong>Hint:</strong> Reveals 1 correct letter in word.</li>
+            <li><strong>Shield:</strong> Absorbs 1 wrong letter guess penalty automatically.</li>
+        </ul>
         <div style="text-align: right; margin-top: 20px;">
-            <button onclick="hideHelp()" style="background-color: #f44336; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold;">Close</button>
+            <button onclick="hideHelp()" class="btn" style="background-color: #f44336;">Close</button>
         </div>
     </div>
 </div>
@@ -222,19 +227,29 @@
         "Sports": ["BASKETBALL", "FOOTBALL", "BASEBALL", "SOCCER", "TENNIS", "CRICKET", "VOLLEYBALL", "RUGBY", "GOLF", "HOCKEY", "BADMINTON", "SWIMMING", "BOXING", "WRESTLING", "CYCLING", "ARCHERY", "FENCING", "GYMNASTICS", "MARATHON", "SURFING"],
         "Food": ["PIZZA", "BURGER", "SUSHI", "PASTA", "TACO", "STEAK", "SALAD", "SOUP", "SANDWICH", "NOODLES", "PANCAKE", "WAFFLE", "CHICKEN", "CHEESE", "BREAD", "RICE", "POTATO", "APPLE", "BANANA", "CHOCOLATE"],
         "Music": ["GUITAR", "PIANO", "DRUMS", "VIOLIN", "FLUTE", "TRUMPET", "SAXOPHONE", "CELLO", "BASS", "VOCALS", "MELODY", "RHYTHM", "CHORD", "ORCHESTRA", "SYMPHONY", "JAZZ", "ROCK", "BLUES", "CLASSICAL", "POP"],
-        "History": ["ROME", "GREECE", "EGYPT", "EMPIRE", "REVOLUTION", "WAR", "KING", "QUEEN", "KNIGHT", "CASTLE", "PYRAMID", "PHARAOH", "GLADIATOR", "SAMURAI", "NINJA", "VIKING", "PIRATE", "COLONY", "TREATY", "DISCOVERY"]
+        "History": ["ROME", "GREECE", "EGYPT", "EMPIRE", "REVOLUTION", "WAR", "KING", "QUEEN", "KNIGHT", "CASTLE", "PYRAMID", "PHARAOH", "GLADIATOR", "SAMURAI", "NINJA", "VIKING", "PIRATE", "COLONY", "TREATY", "DISCOVERY"],
+        "Mythology": ["ZEUS", "HERCULES", "ODYSSEY", "VALHALLA", "PEGASUS", "MINOTAUR", "POSEIDON", "HADES", "ATHENA", "THOR", "LOKI", "ANUBIS", "PHOENIX", "CENTAUR", "CHIMERA", "CERBERUS", "KRAKEN", "TITAN", "MEDUSA", "SPHINX"],
+        "Space": ["SUPERNOVA", "NEBULA", "ASTEROID", "EXOPLANET", "BLACKHOLE", "GALAXY", "METEOR", "SATELLITE", "ECLIPSE", "COSMOS", "TACHYON", "HUBBLE", "QUASAR", "PULSAR", "LIGHTYEAR", "ORBIT", "COMET", "STARDUST", "PARSEC", "GRAVITY"],
+        "Literature": ["SHAKESPEARE", "SHERLOCK", "DRACULA", "ORWELL", "HOMER", "TOLKIEN", "DICKENS", "NOVEL", "FICTION", "POETRY", "MONTAGUE", "GATSBY", "MOBYCOLD", "ODYSSEY", "INFERNO", "UTOPIA", "HAMLET", "MACBETH", "BEOWULF", "ILIAD"],
+        "Geography": ["AMAZON", "EVEREST", "SAHARA", "HIMALAYAS", "PACIFIC", "ATLANTIC", "ANDES", "ARCHIPELAGO", "CANYON", "PENINSULA", "CONTINENT", "EQUATOR", "GLACIER", "VOLCANO", "REEF", "TUNDRA", "SAVANNA", "ISTHMUS", "ISLAND", "PLATEAU"],
+        "Pop Culture": ["NETFLIX", "TIKTOK", "PODCAST", "GAMING", "STREAMING", "ANIME", "MARVEL", "DISNEY", "ESPORTS", "MEME", "COSPLAY", "SPOTIFY", "FANDOM", "BINGE", "TRENDING", "VLOGGER", "INFLUENCER", "REELS", "YOUTUBE", "AVATAR"]
     };
-    const CATEGORY_NAMES = ["Technology", "Animals", "Countries", "Science", "Movies", "Sports", "Food", "Music", "History"];
+    const CATEGORY_NAMES = ["Technology", "Animals", "Countries", "Science", "Movies", "Sports", "Food", "Music", "History", "Mythology", "Space", "Literature", "Geography", "Pop Culture"];
+    
+    let gameMode = 0; // 0: Freeplay, 1: Campaign (15 Stages), 2: Time Attack Blitz
     let maxErrors = 6;
     let word = "";
     let guessed = new Set();
     let errors = 0;
     let gameEnded = false;
     let hintUsed = false;
-    let isCampaign = false;
     let campaignLevel = 1;
     let bombs = 1;
-    let stats = { wins: 0, losses: 0, streak: 0, best: 0 };
+    let shields = 1;
+    let blitzTime = 60;
+    let blitzWords = 0;
+    let blitzTimerId = null;
+    let stats = { wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0 };
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
@@ -306,6 +321,22 @@
             gain.gain.linearRampToValueAtTime(0, now + 0.6);
             osc.start(now);
             osc.stop(now + 0.6);
+        } else if (type === 'shield') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.25);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        } else if (type === 'bomb') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, now);
+            osc.frequency.exponentialRampToValueAtTime(60, now + 0.25);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
         }
     }
 
@@ -314,6 +345,7 @@
         if (saved) {
             try {
                 stats = JSON.parse(saved);
+                if (stats.blitzBest === undefined) stats.blitzBest = 0;
             } catch (e) {}
         }
         updateStatsDisplay();
@@ -329,6 +361,14 @@
         document.getElementById('stat-losses').innerText = stats.losses;
         document.getElementById('stat-streak').innerText = stats.streak;
         document.getElementById('stat-best').innerText = stats.best;
+        document.getElementById('stat-blitz-best').innerText = stats.blitzBest;
+    }
+
+    function resetStats() {
+        if (confirm("Reset all lifetime statistics?")) {
+            stats = { wins: 0, losses: 0, streak: 0, best: 0, blitzBest: 0 };
+            saveStats();
+        }
     }
 
     function saveGameState() {
@@ -342,10 +382,13 @@
             guessed: Array.from(guessed),
             errors: errors,
             hintUsed: hintUsed,
-            isCampaign: isCampaign,
+            gameMode: gameMode,
             campaignLevel: campaignLevel,
             maxErrors: maxErrors,
-            bombs: bombs
+            bombs: bombs,
+            shields: shields,
+            blitzTime: blitzTime,
+            blitzWords: blitzWords
         };
         localStorage.setItem('khangman_save', JSON.stringify(state));
         alert("Game saved!");
@@ -366,15 +409,20 @@
                 guessed = new Set(state.guessed);
                 errors = state.errors;
                 hintUsed = state.hintUsed;
-                isCampaign = state.isCampaign || false;
+                gameMode = state.gameMode || 0;
                 campaignLevel = state.campaignLevel || 1;
                 maxErrors = state.maxErrors || 6;
                 bombs = state.bombs !== undefined ? state.bombs : 1;
+                shields = state.shields !== undefined ? state.shields : 1;
+                blitzTime = state.blitzTime || 60;
+                blitzWords = state.blitzWords || 0;
                 gameEnded = false;
                 
                 document.getElementById('hint-btn').disabled = hintUsed;
                 document.getElementById('bomb-btn').disabled = bombs <= 0;
                 document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
+                document.getElementById('shield-btn').disabled = shields <= 0;
+                document.getElementById('shield-btn').innerText = `Shield(${shields})`;
                 document.getElementById('message').innerText = "Game loaded. Guess a letter";
                 document.getElementById('message').style.color = "#e0e0e0";
                 document.getElementById('word-display').classList.remove('win-animation');
@@ -387,6 +435,7 @@
                     }
                 });
                 
+                if (gameMode === 2) startBlitzTimer();
                 updateDisplay();
             } catch (e) {
                 alert("Failed to load game.");
@@ -407,62 +456,62 @@
         
         // Base gallows
         ctx.beginPath();
-        ctx.moveTo(20, 180);
-        ctx.lineTo(180, 180); // Base
-        ctx.moveTo(50, 180);
-        ctx.lineTo(50, 20); // Pole
-        ctx.lineTo(120, 20); // Top
-        ctx.lineTo(120, 40); // Rope
+        ctx.moveTo(20, 165);
+        ctx.lineTo(180, 165); // Base
+        ctx.moveTo(50, 165);
+        ctx.lineTo(50, 15); // Pole
+        ctx.lineTo(120, 15); // Top
+        ctx.lineTo(120, 35); // Rope
         ctx.stroke();
         
         if (errors > 0) {
             // Head
             ctx.beginPath();
-            ctx.arc(120, 60, 20, 0, Math.PI * 2);
+            ctx.arc(120, 55, 18, 0, Math.PI * 2);
             ctx.stroke();
         }
         if (errors > 1) {
             // Body
             ctx.beginPath();
-            ctx.moveTo(120, 80);
-            ctx.lineTo(120, 130);
+            ctx.moveTo(120, 73);
+            ctx.lineTo(120, 118);
             ctx.stroke();
         }
         if (errors > 2) {
             // Left arm
             ctx.beginPath();
-            ctx.moveTo(120, 90);
-            ctx.lineTo(90, 120);
+            ctx.moveTo(120, 83);
+            ctx.lineTo(95, 108);
             ctx.stroke();
         }
         if (errors > 3) {
             // Right arm
             ctx.beginPath();
-            ctx.moveTo(120, 90);
-            ctx.lineTo(150, 120);
+            ctx.moveTo(120, 83);
+            ctx.lineTo(145, 108);
             ctx.stroke();
         }
         if (errors > 4) {
             // Left leg
             ctx.beginPath();
-            ctx.moveTo(120, 130);
-            ctx.lineTo(90, 160);
+            ctx.moveTo(120, 118);
+            ctx.lineTo(95, 145);
             ctx.stroke();
         }
         if (errors > 5) {
             // Right leg
             ctx.beginPath();
-            ctx.moveTo(120, 130);
-            ctx.lineTo(150, 160);
+            ctx.moveTo(120, 118);
+            ctx.lineTo(145, 145);
             ctx.stroke();
         }
         if (errors > 6) {
-            // Extra error (Campaign mode 7 errors)
+            // Extra error (Campaign 7 errors)
             ctx.beginPath();
-            ctx.moveTo(110, 70);
-            ctx.lineTo(115, 75);
-            ctx.moveTo(115, 70);
-            ctx.lineTo(110, 75);
+            ctx.moveTo(112, 63);
+            ctx.lineTo(117, 68);
+            ctx.moveTo(117, 63);
+            ctx.lineTo(112, 68);
             ctx.stroke();
         }
     }
@@ -488,20 +537,54 @@
         } else {
             document.getElementById('custom-container').style.display = 'none';
         }
+        gameMode = 0; // Manual selection switches to Freeplay
         initGame();
     }
 
     function startCampaign() {
-        if (gameEnded && isWin() && isCampaign && campaignLevel < 10) {
+        if (gameEnded && isWin() && gameMode === 1 && campaignLevel < 15) {
             campaignLevel++;
         } else {
-            isCampaign = true;
+            gameMode = 1;
             campaignLevel = 1;
         }
         initGame();
     }
 
-    function initGame() {
+    function startBlitz() {
+        gameMode = 2;
+        blitzTime = 60;
+        blitzWords = 0;
+        initGame();
+    }
+
+    function startBlitzTimer() {
+        if (blitzTimerId) clearInterval(blitzTimerId);
+        blitzTimerId = setInterval(() => {
+            if (gameMode === 2 && !gameEnded) {
+                blitzTime--;
+                const msgEl = document.getElementById('message');
+                msgEl.innerText = `⚡ Blitz Time: ${blitzTime}s | Words Solved: ${blitzWords}`;
+                msgEl.style.color = (blitzTime <= 10) ? "#f44336" : "#4facfe";
+                if (blitzTime <= 0) {
+                    clearInterval(blitzTimerId);
+                    gameEnded = true;
+                    msgEl.innerText = `⚡ Time Expired! Final Words Solved: ${blitzWords}`;
+                    msgEl.style.color = "#f44336";
+                    playSound('lose');
+                    disableAllKeys();
+                    stats.losses++;
+                    stats.streak = 0;
+                    if (blitzWords > stats.blitzBest) stats.blitzBest = blitzWords;
+                    saveStats();
+                }
+            } else {
+                clearInterval(blitzTimerId);
+            }
+        }, 1000);
+    }
+
+    function selectNewWord() {
         const category = document.getElementById('category').value;
         let words = CATEGORIES[category];
         
@@ -522,35 +605,68 @@
                 }
                 words = CATEGORIES["Custom"];
             }
-        } else if (isCampaign) {
-            document.getElementById('category').value = CATEGORY_NAMES[(campaignLevel - 1) % 9];
-            words = CATEGORIES[CATEGORY_NAMES[(campaignLevel - 1) % 9]];
-            maxErrors = Math.max(4, 7 - Math.floor(campaignLevel / 2));
-            if (campaignLevel === 1) bombs = 3;
-            document.getElementById('campaign-btn').innerText = (gameEnded && isWin() && campaignLevel < 10) ? "Next Stage" : "Campaign";
-        } else {
-            maxErrors = 6;
-            bombs = 1;
-            document.getElementById('campaign-btn').innerText = "Campaign";
         }
-        
         word = words[Math.floor(Math.random() * words.length)];
         guessed.clear();
         errors = 0;
-        gameEnded = false;
         hintUsed = false;
-        if(document.getElementById('hint-btn')) document.getElementById('hint-btn').disabled = false;
-        if(document.getElementById('bomb-btn')) {
+    }
+
+    function initGame() {
+        if (blitzTimerId) clearInterval(blitzTimerId);
+        
+        if (gameMode === 1) { // Campaign
+            const catName = CATEGORY_NAMES[(campaignLevel - 1) % CATEGORY_NAMES.length];
+            document.getElementById('category').value = catName;
+            
+            if (campaignLevel <= 3) maxErrors = 7;
+            else if (campaignLevel <= 7) maxErrors = 6;
+            else if (campaignLevel <= 11) maxErrors = 5;
+            else maxErrors = 4;
+            
+            if (campaignLevel === 1) {
+                bombs = 3;
+                shields = 2;
+            }
+            document.getElementById('campaign-btn').innerText = (gameEnded && isWin() && campaignLevel < 15) ? "Next Stage" : "Campaign";
+        } else if (gameMode === 2) { // Time Attack Blitz
+            maxErrors = 6;
+            bombs = 2;
+            shields = 1;
+            document.getElementById('campaign-btn').innerText = "Campaign";
+        } else { // Freeplay
+            maxErrors = 6;
+            bombs = 1;
+            shields = 1;
+            document.getElementById('campaign-btn').innerText = "Campaign";
+        }
+        
+        selectNewWord();
+        gameEnded = false;
+        
+        if (document.getElementById('hint-btn')) document.getElementById('hint-btn').disabled = false;
+        if (document.getElementById('bomb-btn')) {
             document.getElementById('bomb-btn').disabled = bombs <= 0;
             document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
         }
-        if(isCampaign) {
-            document.getElementById('message').innerText = `Campaign Stage ${campaignLevel} / 10`;
-            document.getElementById('message').style.color = "#ffc107";
-        } else {
-            document.getElementById('message').innerText = "Guess a letter";
-            document.getElementById('message').style.color = "#e0e0e0";
+        if (document.getElementById('shield-btn')) {
+            document.getElementById('shield-btn').disabled = shields <= 0;
+            document.getElementById('shield-btn').innerText = `Shield(${shields})`;
         }
+        
+        const msgEl = document.getElementById('message');
+        if (gameMode === 1) {
+            msgEl.innerText = `Campaign Stage ${campaignLevel} / 15`;
+            msgEl.style.color = "#ffc107";
+        } else if (gameMode === 2) {
+            msgEl.innerText = `⚡ Blitz Time: ${blitzTime}s | Words Solved: ${blitzWords}`;
+            msgEl.style.color = "#4facfe";
+            startBlitzTimer();
+        } else {
+            msgEl.innerText = "Guess a letter";
+            msgEl.style.color = "#e0e0e0";
+        }
+        
         document.getElementById('word-display').classList.remove('win-animation');
         document.getElementById('hangman-canvas').classList.remove('shake-animation');
         initKeyboard();
@@ -580,10 +696,8 @@
         bombs--;
         document.getElementById('bomb-btn').innerText = `Bomb(${bombs})`;
         if (bombs <= 0) document.getElementById('bomb-btn').disabled = true;
+        playSound('bomb');
         
-        initAudio();
-        
-        let elims = 0;
         let available = [];
         for (let i = 0; i < 26; i++) {
             let letter = String.fromCharCode(65 + i);
@@ -592,7 +706,6 @@
             }
         }
         
-        // Shuffle and pick up to 3
         available.sort(() => 0.5 - Math.random());
         let toEliminate = available.slice(0, 3);
         
@@ -606,22 +719,39 @@
         updateDisplay();
     }
 
+    function useShield() {
+        if (shields <= 0 || gameEnded) return;
+        alert("Shield absorbs 1 wrong guess automatically!");
+    }
+
     function guess(letter) {
-        if (guessed.has(letter) || errors >= maxErrors || isWin()) return;
+        if (guessed.has(letter) || errors >= maxErrors || isWin() || gameEnded) return;
         
-        initAudio(); // Initialize audio context on first user interaction
+        initAudio();
         
         guessed.add(letter);
-        document.getElementById('key-' + letter).disabled = true;
+        if (document.getElementById('key-' + letter)) {
+            document.getElementById('key-' + letter).disabled = true;
+        }
         
         if (!word.includes(letter)) {
-            errors++;
-            if (errors < maxErrors) playSound('invalid');
-            const canvas = document.getElementById('hangman-canvas');
-            canvas.classList.remove('shake-animation');
-            void canvas.offsetWidth;
-            canvas.classList.add('shake-animation');
+            if (shields > 0) {
+                shields--;
+                if (document.getElementById('shield-btn')) {
+                    document.getElementById('shield-btn').innerText = `Shield(${shields})`;
+                    if (shields <= 0) document.getElementById('shield-btn').disabled = true;
+                }
+                playSound('shield');
+            } else {
+                errors++;
+                if (errors < maxErrors) playSound('invalid');
+                const canvas = document.getElementById('hangman-canvas');
+                canvas.classList.remove('shake-animation');
+                void canvas.offsetWidth;
+                canvas.classList.add('shake-animation');
+            }
         } else {
+            if (gameMode === 2) blitzTime += 2; // +2s per correct letter in Blitz
             if (!isWin()) playSound('valid');
         }
         
@@ -646,7 +776,22 @@
     function checkGameState() {
         const msgEl = document.getElementById('message');
         if (isWin()) {
-            if (isCampaign && campaignLevel === 10) {
+            if (gameMode === 2) { // Time Attack Blitz continuation
+                blitzWords++;
+                blitzTime += 15; // +15s bonus for word solve
+                playSound('win');
+                stats.wins++;
+                stats.streak++;
+                if (stats.streak > stats.best) stats.best = stats.streak;
+                if (blitzWords > stats.blitzBest) stats.blitzBest = blitzWords;
+                saveStats();
+                selectNewWord();
+                initKeyboard();
+                updateDisplay();
+                return;
+            }
+
+            if (gameMode === 1 && campaignLevel === 15) {
                 msgEl.innerText = "Campaign Complete!";
             } else {
                 msgEl.innerText = "You Win!";
@@ -656,7 +801,7 @@
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
-                if(isCampaign) document.getElementById('campaign-btn').innerText = (campaignLevel < 10) ? "Next Stage" : "Campaign";
+                if (gameMode === 1) document.getElementById('campaign-btn').innerText = (campaignLevel < 15) ? "Next Stage" : "Campaign";
                 playSound('win');
                 stats.wins++;
                 stats.streak++;
@@ -669,14 +814,16 @@
             disableAllKeys();
             if (!gameEnded) {
                 gameEnded = true;
-                if(isCampaign) {
-                    isCampaign = false;
+                if (blitzTimerId) clearInterval(blitzTimerId);
+                if (gameMode === 1) {
+                    gameMode = 0;
                     campaignLevel = 1;
                     document.getElementById('campaign-btn').innerText = "Campaign";
                 }
                 playSound('lose');
                 stats.losses++;
                 stats.streak = 0;
+                if (gameMode === 2 && blitzWords > stats.blitzBest) stats.blitzBest = blitzWords;
                 saveStats();
             }
         }
@@ -688,6 +835,7 @@
 
     document.addEventListener('keydown', (e) => {
         if (e.ctrlKey || e.altKey || e.metaKey) return;
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
         if (e.key >= 'a' && e.key <= 'z') {
             guess(e.key.toUpperCase());
         } else if (e.key >= 'A' && e.key <= 'Z') {
