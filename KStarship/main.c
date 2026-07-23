@@ -64,6 +64,13 @@ typedef struct {
     int targetSubsystem; // 0: Hull, 1: Shields, 2: Weapons, 3: Engines
     char combatFeed[4][128];
     int combatFeedCount;
+    // Phase 8 Upgrade Bay State
+    int inUpgradeModal;
+    int upgradeHullLvl;
+    int upgradeCannonsLvl;
+    int upgradeShieldsLvl;
+    int upgradeWarpLvl;
+    int upgradeSensorsLvl;
 } StarshipState;
 
 static StarshipState g_State = {
@@ -78,7 +85,8 @@ static StarshipState g_State = {
     0, 0, 1, 0, 0, 0, 0, 0,
     0, "CYBERNETIC PIRATE RAIDER",
     90, 90, 50, 50, 16, 0, 15, 0, 0, 0,
-    {{0}}, 0
+    {{0}}, 0,
+    0, 0, 0, 0, 0, 0
 };
 
 static const char* g_BiomeNames[] = {"TERRAN SYSTEM", "VOLCANIC SYSTEM", "NEBULA SYSTEM", "ASTEROID BELT"};
@@ -208,16 +216,17 @@ void CombatPlayerFlee(HWND hwnd);
 
 // Window Controls & Handles
 static HWND hBtnAudioToggle, hBtnModeToggle;
-static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair, hBtnEncScan, hBtnCombat;
+static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair, hBtnEncScan, hBtnCombat, hBtnUpgrade;
 static HWND hBtnNW, hBtnN, hBtnNE, hBtnW, hBtnCenter, hBtnE, hBtnSW, hBtnS, hBtnSE;
 
 // Modal Controls
 static HWND hBtnClass0, hBtnClass1, hBtnClass2, hBtnClass3, hBtnConfirmInit;
-static HWND hBtnStRefuel, hBtnStRepair, hBtnStSellOre, hBtnStSellGas, hBtnStSellArtifacts, hBtnStRecruit, hBtnStClose;
+static HWND hBtnStRefuel, hBtnStRepair, hBtnStSellOre, hBtnStSellGas, hBtnStSellArtifacts, hBtnStRecruit, hBtnStUpgrade, hBtnStClose;
 static HWND hBtnPlanetClose;
 static HWND hBtnEncChoice1, hBtnEncChoice2, hBtnEncChoice3, hBtnEncClose;
 static HWND hBtnCombatFire, hBtnCombatShield, hBtnCombatEvade, hBtnCombatRepair, hBtnCombatFlee;
 static HWND hBtnTgtHull, hBtnTgtShield, hBtnTgtWeap, hBtnTgtEng;
+static HWND hBtnUpgHull, hBtnUpgCannons, hBtnUpgShields, hBtnUpgWarp, hBtnUpgSensors, hBtnUpgClose;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -226,7 +235,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -238,6 +247,7 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnRepair,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnEncScan,    inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnCombat,     inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnUpgrade,    inMain ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnNW,     inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnN,      inMain ? SW_SHOW : SW_HIDE);
@@ -263,6 +273,7 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnStSellGas,       g_State.inStationModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnStSellArtifacts, g_State.inStationModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnStRecruit,       g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStUpgrade,       g_State.inStationModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnStClose,         g_State.inStationModal ? SW_SHOW : SW_HIDE);
 
     // Planet Telemetry Modal Buttons
@@ -284,6 +295,14 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnCombatEvade,  g_State.inCombatModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnCombatRepair, g_State.inCombatModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnCombatFlee,   g_State.inCombatModal ? SW_SHOW : SW_HIDE);
+
+    // Upgrade Modal Buttons (Phase 8)
+    ShowWindow(hBtnUpgHull,    g_State.inUpgradeModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnUpgCannons, g_State.inUpgradeModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnUpgShields, g_State.inUpgradeModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnUpgWarp,    g_State.inUpgradeModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnUpgSensors, g_State.inUpgradeModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnUpgClose,   g_State.inUpgradeModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -318,6 +337,153 @@ void ApplyShipClassStats() {
         g_State.maxShields = 85; g_State.shields = 85;
         g_State.credits = 1500; g_State.crew = 20; g_State.ore = 0; g_State.gas = 0; g_State.artifacts = 0; g_State.scraps = 25;
     }
+    g_State.upgradeHullLvl = 0;
+    g_State.upgradeCannonsLvl = 0;
+    g_State.upgradeShieldsLvl = 0;
+    g_State.upgradeWarpLvl = 0;
+    g_State.upgradeSensorsLvl = 0;
+}
+
+// Phase 8: Upgrade Bay Functions
+void UpdateUpgradeButtonLabels() {
+    char buf[128];
+    int c, o;
+
+    c = 200 + g_State.upgradeHullLvl * 150;
+    o = 15 + g_State.upgradeHullLvl * 10;
+    wsprintfA(buf, "[1] HULL PLATING (Lvl %d) - %d Cr + %d Ore (+25 Max HP)", g_State.upgradeHullLvl, c, o);
+    SetWindowTextA(hBtnUpgHull, buf);
+
+    c = 250 + g_State.upgradeCannonsLvl * 180;
+    o = 20 + g_State.upgradeCannonsLvl * 12;
+    wsprintfA(buf, "[2] PLASMA CANNONS (Lvl %d) - %d Cr + %d Ore (+10 DMG)", g_State.upgradeCannonsLvl, c, o);
+    SetWindowTextA(hBtnUpgCannons, buf);
+
+    c = 220 + g_State.upgradeShieldsLvl * 160;
+    o = 15 + g_State.upgradeShieldsLvl * 10;
+    wsprintfA(buf, "[3] PARTICLE SHIELDS (Lvl %d) - %d Cr + %d Ore (+20 Max Shield)", g_State.upgradeShieldsLvl, c, o);
+    SetWindowTextA(hBtnUpgShields, buf);
+
+    c = 300 + g_State.upgradeWarpLvl * 200;
+    o = 25 + g_State.upgradeWarpLvl * 15;
+    wsprintfA(buf, "[4] WARP DRIVE RANGE (Lvl %d) - %d Cr + %d Ore (+30 Fuel / -2 Jump)", g_State.upgradeWarpLvl, c, o);
+    SetWindowTextA(hBtnUpgWarp, buf);
+
+    c = 180 + g_State.upgradeSensorsLvl * 140;
+    o = 10 + g_State.upgradeSensorsLvl * 8;
+    wsprintfA(buf, "[5] SENSOR ARRAYS (Lvl %d) - %d Cr + %d Ore (+25 E / -2 Scan)", g_State.upgradeSensorsLvl, c, o);
+    SetWindowTextA(hBtnUpgSensors, buf);
+}
+
+void OpenUpgradeModal(HWND hwnd) {
+    g_State.inUpgradeModal = 1;
+    g_State.inStationModal = 0;
+    UpdateUpgradeButtonLabels();
+    UpdateControlVisibility(hwnd);
+    PlayGameSound(5);
+}
+
+void BuyHullUpgrade(HWND hwnd) {
+    int c = 200 + g_State.upgradeHullLvl * 150;
+    int o = 15 + g_State.upgradeHullLvl * 10;
+    if (g_State.credits < c || g_State.ore < o) {
+        AddLog("[WARN] Insufficient Credits or Ore for Hull upgrade!", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.credits -= c;
+    g_State.ore -= o;
+    g_State.upgradeHullLvl++;
+    g_State.maxHull += 25;
+    g_State.hull += 25;
+    char buf[128];
+    wsprintfA(buf, "[UPGRADE BAY] Hull Plating upgraded to Lvl %d! (+25 Max HP)", g_State.upgradeHullLvl);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+    UpdateUpgradeButtonLabels();
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void BuyCannonsUpgrade(HWND hwnd) {
+    int c = 250 + g_State.upgradeCannonsLvl * 180;
+    int o = 20 + g_State.upgradeCannonsLvl * 12;
+    if (g_State.credits < c || g_State.ore < o) {
+        AddLog("[WARN] Insufficient Credits or Ore for Plasma Cannons upgrade!", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.credits -= c;
+    g_State.ore -= o;
+    g_State.upgradeCannonsLvl++;
+    char buf[128];
+    wsprintfA(buf, "[UPGRADE BAY] Plasma Cannons upgraded to Lvl %d! (+10 Phaser DMG)", g_State.upgradeCannonsLvl);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+    UpdateUpgradeButtonLabels();
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void BuyShieldsUpgrade(HWND hwnd) {
+    int c = 220 + g_State.upgradeShieldsLvl * 160;
+    int o = 15 + g_State.upgradeShieldsLvl * 10;
+    if (g_State.credits < c || g_State.ore < o) {
+        AddLog("[WARN] Insufficient Credits or Ore for Particle Shields upgrade!", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.credits -= c;
+    g_State.ore -= o;
+    g_State.upgradeShieldsLvl++;
+    g_State.maxShields += 20;
+    g_State.shields += 20;
+    char buf[128];
+    wsprintfA(buf, "[UPGRADE BAY] Particle Shields upgraded to Lvl %d! (+20 Max Shields)", g_State.upgradeShieldsLvl);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+    UpdateUpgradeButtonLabels();
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void BuyWarpUpgrade(HWND hwnd) {
+    int c = 300 + g_State.upgradeWarpLvl * 200;
+    int o = 25 + g_State.upgradeWarpLvl * 15;
+    if (g_State.credits < c || g_State.ore < o) {
+        AddLog("[WARN] Insufficient Credits or Ore for Warp Drive upgrade!", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.credits -= c;
+    g_State.ore -= o;
+    g_State.upgradeWarpLvl++;
+    g_State.maxFuel += 30;
+    g_State.fuel += 30;
+    char buf[128];
+    wsprintfA(buf, "[UPGRADE BAY] Warp Drive Range upgraded to Lvl %d! (+30 Fuel / -2 Jump Fuel)", g_State.upgradeWarpLvl);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+    UpdateUpgradeButtonLabels();
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void BuySensorsUpgrade(HWND hwnd) {
+    int c = 180 + g_State.upgradeSensorsLvl * 140;
+    int o = 10 + g_State.upgradeSensorsLvl * 8;
+    if (g_State.credits < c || g_State.ore < o) {
+        AddLog("[WARN] Insufficient Credits or Ore for Sensor Arrays upgrade!", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.credits -= c;
+    g_State.ore -= o;
+    g_State.upgradeSensorsLvl++;
+    g_State.maxEnergy += 25;
+    g_State.energy += 25;
+    char buf[128];
+    wsprintfA(buf, "[UPGRADE BAY] Sensor Arrays upgraded to Lvl %d! (+25 Energy / -2 Scan Energy)", g_State.upgradeSensorsLvl);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+    UpdateUpgradeButtonLabels();
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 void MoveShip(HWND hwnd, int dx, int dy) {
@@ -414,11 +580,12 @@ void MoveShip(HWND hwnd, int dx, int dy) {
 }
 
 void ExecuteScan(HWND hwnd) {
-    if (g_State.energy < 10) {
+    int cost = (10 - g_State.upgradeSensorsLvl * 2 < 3) ? 3 : (10 - g_State.upgradeSensorsLvl * 2);
+    if (g_State.energy < cost) {
         AddLog("[WARN] Insufficient energy for sensor scan.", 1);
         PlayGameSound(6);
     } else {
-        g_State.energy -= 10;
+        g_State.energy -= cost;
         int st = 0, ast = 0, anom = 0, pir = 0, plan = 0, x, y;
         for (y = 0; y < 8; y++) {
             for (x = 0; x < 8; x++) {
@@ -445,13 +612,14 @@ void ExecutePlanetScan(HWND hwnd) {
         PlayGameSound(6);
         return;
     }
-    if (g_State.energy < 12) {
+    int cost = (12 - g_State.upgradeSensorsLvl * 2 < 4) ? 4 : (12 - g_State.upgradeSensorsLvl * 2);
+    if (g_State.energy < cost) {
         AddLog("[WARN] Insufficient reactor energy for orbital planet scan.", 1);
         PlayGameSound(6);
         return;
     }
 
-    g_State.energy -= 12;
+    g_State.energy -= cost;
     PlayGameSound(8);
 
     PlanetCellData* p = &g_State.planetData[g_State.shipY][g_State.shipX];
@@ -476,11 +644,12 @@ void ExecutePlanetScan(HWND hwnd) {
 }
 
 void ExecuteWarp(HWND hwnd) {
-    if (g_State.fuel < 15) {
+    int cost = (15 - g_State.upgradeWarpLvl * 2 < 5) ? 5 : (15 - g_State.upgradeWarpLvl * 2);
+    if (g_State.fuel < cost) {
         AddLog("[ALERT] Insufficient Hyper Fuel for sector jump!", 2);
         PlayGameSound(6);
     } else {
-        g_State.fuel -= 15;
+        g_State.fuel -= cost;
         const char* sectors[] = {"ALPHA-01", "BETA-07", "GAMMA-09", "NEBULA-X", "SOLARIS-IV", "ORION-9", "OMEGA-99"};
         int idx = xrand() % 7;
         int i;
@@ -1015,7 +1184,7 @@ void CombatPlayerFire(HWND hwnd) {
         AddCombatFeed(buf);
         PlayGameSound(4);
     } else {
-        int baseDmg = (xrand() % 12) + 18;
+        int baseDmg = (xrand() % 12) + 18 + (g_State.upgradeCannonsLvl * 10);
         int sys = g_State.targetSubsystem;
 
         if (sys == 1) { // SHIELDS
@@ -1212,19 +1381,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnRepair     = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 180, 195, 21, hwnd, (HMENU)107, NULL, NULL);
             hBtnEncScan    = CreateWindowA("BUTTON", "🎲 ENCOUNTER SCAN",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 202, 195, 21, hwnd, (HMENU)109, NULL, NULL);
             hBtnCombat     = CreateWindowA("BUTTON", "⚔️ TACTICAL COMBAT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 224, 195, 21, hwnd, (HMENU)110, NULL, NULL);
+            hBtnUpgrade    = CreateWindowA("BUTTON", "🔧 SHIP UPGRADE BAY",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 246, 195, 21, hwnd, (HMENU)111, NULL, NULL);
 
             // D-Pad Navigation Buttons
-            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 250, 60, 22, hwnd, (HMENU)201, NULL, NULL);
-            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 250, 60, 22, hwnd, (HMENU)202, NULL, NULL);
-            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 250, 60, 22, hwnd, (HMENU)203, NULL, NULL);
+            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 272, 60, 21, hwnd, (HMENU)201, NULL, NULL);
+            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 272, 60, 21, hwnd, (HMENU)202, NULL, NULL);
+            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 272, 60, 21, hwnd, (HMENU)203, NULL, NULL);
 
-            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 275, 60, 22, hwnd, (HMENU)204, NULL, NULL);
-            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 275, 60, 22, hwnd, (HMENU)205, NULL, NULL);
-            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 275, 60, 22, hwnd, (HMENU)206, NULL, NULL);
+            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 295, 60, 21, hwnd, (HMENU)204, NULL, NULL);
+            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 295, 60, 21, hwnd, (HMENU)205, NULL, NULL);
+            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 295, 60, 21, hwnd, (HMENU)206, NULL, NULL);
 
-            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 300, 60, 22, hwnd, (HMENU)207, NULL, NULL);
-            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 300, 60, 22, hwnd, (HMENU)208, NULL, NULL);
-            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 300, 60, 22, hwnd, (HMENU)209, NULL, NULL);
+            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 318, 60, 21, hwnd, (HMENU)207, NULL, NULL);
+            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 318, 60, 21, hwnd, (HMENU)208, NULL, NULL);
+            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 318, 60, 21, hwnd, (HMENU)209, NULL, NULL);
 
             // Init Modal Buttons
             hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)301, NULL, NULL);
@@ -1234,13 +1404,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnConfirmInit = CreateWindowA("BUTTON", "🚀 INITIALIZE COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 34, hwnd, (HMENU)305, NULL, NULL);
 
             // Station Modal Buttons
-            hBtnStRefuel        = CreateWindowA("BUTTON", "⛽ REFUEL HYPER TANK (+30 Fuel - 40 Cr)",  WS_CHILD | BS_PUSHBUTTON, 230, 140, 380, 26, hwnd, (HMENU)401, NULL, NULL);
-            hBtnStRepair        = CreateWindowA("BUTTON", "🛠️ HULL RECONDITIONING (+40 HP - 80 Cr)", WS_CHILD | BS_PUSHBUTTON, 230, 170, 380, 26, hwnd, (HMENU)402, NULL, NULL);
-            hBtnStSellOre       = CreateWindowA("BUTTON", "💰 SELL MINED ORE / MINERALS (+25 Cr/Ton)",WS_CHILD | BS_PUSHBUTTON, 230, 200, 380, 26, hwnd, (HMENU)403, NULL, NULL);
-            hBtnStSellGas       = CreateWindowA("BUTTON", "💨 SELL PLASMA GAS RESERVES (+20 Cr/Unit)",WS_CHILD | BS_PUSHBUTTON, 230, 230, 380, 26, hwnd, (HMENU)406, NULL, NULL);
-            hBtnStSellArtifacts = CreateWindowA("BUTTON", "🏛️ SELL ANCIENT ARTIFACTS (+150 Cr/Relic)", WS_CHILD | BS_PUSHBUTTON, 230, 260, 380, 26, hwnd, (HMENU)407, NULL, NULL);
-            hBtnStRecruit       = CreateWindowA("BUTTON", "👨‍🚀 RECRUIT CREW OFFICERS (+3 - 100 Cr)",   WS_CHILD | BS_PUSHBUTTON, 230, 290, 380, 26, hwnd, (HMENU)404, NULL, NULL);
-            hBtnStClose         = CreateWindowA("BUTTON", "✕ CLOSE / UNDOCK STATION",               WS_CHILD | BS_PUSHBUTTON, 230, 324, 380, 28, hwnd, (HMENU)405, NULL, NULL);
+            hBtnStRefuel        = CreateWindowA("BUTTON", "⛽ REFUEL HYPER TANK (+30 Fuel - 40 Cr)",  WS_CHILD | BS_PUSHBUTTON, 230, 130, 380, 25, hwnd, (HMENU)401, NULL, NULL);
+            hBtnStRepair        = CreateWindowA("BUTTON", "🛠️ HULL RECONDITIONING (+40 HP - 80 Cr)", WS_CHILD | BS_PUSHBUTTON, 230, 158, 380, 25, hwnd, (HMENU)402, NULL, NULL);
+            hBtnStSellOre       = CreateWindowA("BUTTON", "💰 SELL MINED ORE / MINERALS (+25 Cr/Ton)",WS_CHILD | BS_PUSHBUTTON, 230, 186, 380, 25, hwnd, (HMENU)403, NULL, NULL);
+            hBtnStSellGas       = CreateWindowA("BUTTON", "💨 SELL PLASMA GAS RESERVES (+20 Cr/Unit)",WS_CHILD | BS_PUSHBUTTON, 230, 214, 380, 25, hwnd, (HMENU)406, NULL, NULL);
+            hBtnStSellArtifacts = CreateWindowA("BUTTON", "🏛️ SELL ANCIENT ARTIFACTS (+150 Cr/Relic)", WS_CHILD | BS_PUSHBUTTON, 230, 242, 380, 25, hwnd, (HMENU)407, NULL, NULL);
+            hBtnStRecruit       = CreateWindowA("BUTTON", "👨‍🚀 RECRUIT CREW OFFICERS (+3 - 100 Cr)",   WS_CHILD | BS_PUSHBUTTON, 230, 270, 380, 25, hwnd, (HMENU)404, NULL, NULL);
+            hBtnStUpgrade       = CreateWindowA("BUTTON", "🔧 SHIP SYSTEMS UPGRADE BAY",             WS_CHILD | BS_PUSHBUTTON, 230, 298, 380, 25, hwnd, (HMENU)408, NULL, NULL);
+            hBtnStClose         = CreateWindowA("BUTTON", "✕ CLOSE / UNDOCK STATION",               WS_CHILD | BS_PUSHBUTTON, 230, 328, 380, 26, hwnd, (HMENU)405, NULL, NULL);
 
             // Planet Telemetry Modal Button
             hBtnPlanetClose     = CreateWindowA("BUTTON", "✅ LOG SURVEY DATA & RESUME COMMAND",     WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 32, hwnd, (HMENU)501, NULL, NULL);
@@ -1262,6 +1433,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnCombatEvade  = CreateWindowA("BUTTON", "⚡ EVASIVE MANEUVER (-10 E, -5 F)",WS_CHILD | BS_PUSHBUTTON, 185, 275, 226, 26, hwnd, (HMENU)703, NULL, NULL);
             hBtnCombatRepair = CreateWindowA("BUTTON", "🛠️ DAMAGE CONTROL (-10 Scrap)",   WS_CHILD | BS_PUSHBUTTON, 417, 275, 226, 26, hwnd, (HMENU)704, NULL, NULL);
             hBtnCombatFlee   = CreateWindowA("BUTTON", "🚀 TACTICAL WARP FLEE (-15 Fuel)",WS_CHILD | BS_PUSHBUTTON, 185, 305, 458, 26, hwnd, (HMENU)705, NULL, NULL);
+
+            // Upgrade Modal Buttons (Phase 8)
+            hBtnUpgHull    = CreateWindowA("BUTTON", "[1] HULL PLATING",    WS_CHILD | BS_PUSHBUTTON, 210, 140, 420, 28, hwnd, (HMENU)801, NULL, NULL);
+            hBtnUpgCannons = CreateWindowA("BUTTON", "[2] PLASMA CANNONS",  WS_CHILD | BS_PUSHBUTTON, 210, 174, 420, 28, hwnd, (HMENU)802, NULL, NULL);
+            hBtnUpgShields = CreateWindowA("BUTTON", "[3] PARTICLE SHIELDS",WS_CHILD | BS_PUSHBUTTON, 210, 208, 420, 28, hwnd, (HMENU)803, NULL, NULL);
+            hBtnUpgWarp    = CreateWindowA("BUTTON", "[4] WARP DRIVE RANGE",WS_CHILD | BS_PUSHBUTTON, 210, 242, 420, 28, hwnd, (HMENU)804, NULL, NULL);
+            hBtnUpgSensors = CreateWindowA("BUTTON", "[5] SENSOR ARRAYS",   WS_CHILD | BS_PUSHBUTTON, 210, 276, 420, 28, hwnd, (HMENU)805, NULL, NULL);
+            hBtnUpgClose   = CreateWindowA("BUTTON", "✕ EXIT UPGRADE BAY",  WS_CHILD | BS_PUSHBUTTON, 210, 316, 420, 28, hwnd, (HMENU)806, NULL, NULL);
 
             UpdateControlVisibility(hwnd);
             SetTimer(hwnd, 1, 50, NULL);
@@ -1331,6 +1510,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (id == 110) {
                 StartTacticalCombat(hwnd, xrand() % 4);
+            } else if (id == 111 || id == 408) {
+                OpenUpgradeModal(hwnd);
+            } else if (id == 801) BuyHullUpgrade(hwnd);
+            else if (id == 802) BuyCannonsUpgrade(hwnd);
+            else if (id == 803) BuyShieldsUpgrade(hwnd);
+            else if (id == 804) BuyWarpUpgrade(hwnd);
+            else if (id == 805) BuySensorsUpgrade(hwnd);
+            else if (id == 806) {
+                g_State.inUpgradeModal = 0;
+                UpdateControlVisibility(hwnd);
+                AddLog("[UPGRADE BAY] Exited Subsystem Upgrade Bay.", 0);
             } else if (id == 701) CombatPlayerFire(hwnd);
             else if (id == 702) CombatPlayerShield(hwnd);
             else if (id == 703) CombatPlayerEvade(hwnd);
@@ -2004,6 +2194,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(feedLine, "> %s", g_State.combatFeed[c]);
                     TextOutA(hdc, 192, 340 + (c * 11), feedLine, (int)lstrlenA(feedLine));
                 }
+            } else if (g_State.inUpgradeModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {190, 55, 650, 375};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                FrameRect(hdc, &modalCard, hBorderCyanB);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 210, 68, "🔧 SHIP SYSTEMS UPGRADE BAY", 27);
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(160, 190, 220));
+                TextOutA(hdc, 210, 92, "Upgrade vessel technology using Credits & Mined Minerals (Ore):", 62);
+
+                char resBuf[96];
+                wsprintfA(resBuf, "CREDITS: %d | MINERAL ORE: %d", g_State.credits, g_State.ore);
+                SetTextColor(hdc, RGB(57, 255, 20));
+                TextOutA(hdc, 210, 112, resBuf, (int)lstrlenA(resBuf));
             }
 
             EndPaint(hwnd, &ps);
