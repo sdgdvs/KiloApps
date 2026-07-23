@@ -86,7 +86,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
-| KMines     | Tier 1          | Feature-Expanded       | Loop 6 Completed | Full parity. Loop 6 completed: 15-level campaign, Sonar power-up, Rush Mode. |
+| KMines     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic board sizes (8x8 to 24x24), treasure chests, speedruns, Sonar/Detector/Shield powerups, Blitz combo multipliers. |
 | KRogue     | Tier 2          | Feature-Expanded       | Loop 6 Completed | Web upgraded to basic playable version. EXE is a full roguelike. Loop 6 completed: Expanded to 25 levels, added Abyss biome. |
 | KSnake     | Tier 1          | Feature-Expanded       | Loop 6 Completed | Full parity. Loop 6 completed: Expanded to 15-level campaign win, added Portals, and Tracker Bug enemies. |
 | KTetris    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Bomb power-up, and Earthquake mechanics. |
@@ -114,6 +114,9 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KQuest     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 chapter dungeons, added multi-stage boss encounters, and 4 battle spells & consumables (Lightning Storm, Holy Shield, Phoenix Elixir, Berserk Might). |
 
 ## Progress Log
+
+**Loop 7**
+- [x] KMines (Expanded Campaign to 20 stages with dynamic board sizes 8x8 to 24x24, hidden Treasure Chests, timed speedrun stages, Sonar [R], Detector [D], Blast Shield [S] power-ups, and Blitz rapid-clear combo multipliers to both EXE and HTML)
 
 **Loop 6**
 - [x] KQuest (Expanded Campaign to 15 chapter dungeons, added multi-stage boss encounters, and 4 battle spells & consumables (Lightning Storm, Holy Shield, Phoenix Elixir, Berserk Might) to both EXE and HTML)

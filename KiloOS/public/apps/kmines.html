@@ -16,28 +16,30 @@
     --warning: #e0af68;
     --border: #3b4261;
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: #c0caf5; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: #c0caf5; user-select: none; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: auto; }
   
-  .game-container { position: relative; background: var(--card-bg); padding: 20px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 18px; }
+  .game-container { position: relative; background: var(--card-bg); padding: 18px; border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; max-width: 98vw; max-height: 98vh; }
   
-  .diff-bar { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-  .diff-bar button { background: #292e42; border: 1px solid var(--border); color: #a9b1d6; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; transition: all 0.2s; }
+  .diff-bar { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
+  .diff-bar button { background: #292e42; border: 1px solid var(--border); color: #a9b1d6; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; transition: all 0.2s; }
   .diff-bar button:hover { background: #3b4261; color: #fff; }
   .diff-bar button.active { background: var(--primary); color: #15161e; border-color: var(--primary); box-shadow: 0 0 12px rgba(122, 162, 247, 0.4); }
 
-  .toolbar { display: flex; justify-content: space-between; align-items: center; background: #12131c; padding: 10px 18px; border-radius: 10px; border: 1px solid #292e42; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
+  .status-banner { text-align: center; font-size: 12px; font-weight: 700; color: var(--warning); background: #12131c; padding: 4px 10px; border-radius: 6px; border: 1px solid #292e42; min-height: 18px; text-shadow: 0 0 8px rgba(224, 175, 104, 0.5); }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; background: #12131c; padding: 8px 14px; border-radius: 10px; border: 1px solid #292e42; box-shadow: inset 0 2px 6px rgba(0,0,0,0.6); }
   
-  .counter { font-family: 'JetBrains Mono', monospace; font-size: 24px; color: var(--danger); text-shadow: 0 0 10px rgba(247, 118, 142, 0.6); background: #090a0f; padding: 4px 12px; border-radius: 6px; border: 1px solid #24283b; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); min-width: 50px; text-align: center; }
+  .counter { font-family: 'JetBrains Mono', monospace; font-size: 22px; color: var(--danger); text-shadow: 0 0 10px rgba(247, 118, 142, 0.6); background: #090a0f; padding: 3px 10px; border-radius: 6px; border: 1px solid #24283b; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); min-width: 48px; text-align: center; }
   
-  .face-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #414868; background: linear-gradient(135deg, #2e344e, #1a1d2e); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.1s, box-shadow 0.1s; padding: 0; outline: none; }
+  .face-btn { width: 42px; height: 42px; border-radius: 50%; border: 2px solid #414868; background: linear-gradient(135deg, #2e344e, #1a1d2e); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2); transition: transform 0.1s, box-shadow 0.1s; padding: 0; outline: none; }
   .face-btn:active { transform: scale(0.92); box-shadow: 0 2px 4px rgba(0,0,0,0.6); }
-  .face-btn svg { width: 34px; height: 34px; }
+  .face-btn svg { width: 32px; height: 32px; }
 
-  .board-wrapper { position: relative; display: flex; justify-content: center; }
+  .board-wrapper { position: relative; display: flex; justify-content: center; overflow: auto; }
 
-  .board { display: grid; grid-template-columns: repeat(10, 30px); grid-template-rows: repeat(10, 30px); gap: 2px; background: #12141d; padding: 4px; border-radius: 8px; border: 1px solid #2d334a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); }
+  .board { display: grid; grid-template-columns: repeat(10, 26px); grid-template-rows: repeat(10, 26px); gap: 2px; background: #12141d; padding: 4px; border-radius: 8px; border: 1px solid #2d334a; box-shadow: inset 0 2px 8px rgba(0,0,0,0.6); }
   
-  .cell { width: 30px; height: 30px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
+  .cell { width: 26px; height: 26px; box-sizing: border-box; background: var(--tile-hidden); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.15s, transform 0.08s, filter 0.15s;
     box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.35), inset -1px -1px 0px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0,0,0,0.3);
     border-top: 1px solid rgba(255, 255, 255, 0.3);
     border-left: 1px solid rgba(255, 255, 255, 0.3);
@@ -50,6 +52,7 @@
   .cell.revealed { background: var(--tile-revealed); border: none; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.7), inset -1px -1px 0 rgba(255,255,255,0.04); cursor: default; }
   
   .cell.mine { background: radial-gradient(circle, #f7768e 0%, #7a1d2e 100%); box-shadow: 0 0 14px rgba(247, 118, 142, 0.8); }
+  .cell.chest { background: radial-gradient(circle, #facc15 0%, #854d0e 100%); box-shadow: 0 0 14px rgba(250, 204, 21, 0.8); }
   
   /* Digit custom vivid retro colors */
   .c1 { color: #38bdf8; text-shadow: 0 0 8px rgba(56, 189, 248, 0.4); } 
@@ -80,22 +83,26 @@
 <body>
   <div class="game-container">
     <div class="diff-bar">
-      <button id="btn-easy" class="active" onclick="setDiff('easy')">Easy</button>
-      <button id="btn-med" onclick="setDiff('med')">Medium</button>
-      <button id="btn-hard" onclick="setDiff('hard')">Hard</button>
-      <button id="btn-rush" onclick="startRush()">Rush</button>
-      <button id="btn-camp" onclick="toggleCampaign()">Camp: Off</button>
-      <button id="btn-radar" onclick="useRadar()" style="display:none; background:var(--primary); color:#000;">Radar (0)</button>
-      <button id="btn-sonar" onclick="useSonar()" style="display:none; background:var(--success); color:#000;">Sonar (0)</button>
+      <button id="btn-easy" class="active" onclick="setDiff('easy')">Easy (1)</button>
+      <button id="btn-med" onclick="setDiff('med')">Medium (2)</button>
+      <button id="btn-hard" onclick="setDiff('hard')">Hard (3)</button>
+      <button id="btn-rush" onclick="startRush()">Rush (4)</button>
+      <button id="btn-camp" onclick="toggleCampaign()">Camp 1/20 (C)</button>
+      <button id="btn-detector" onclick="useDetectorBot()" style="background:#818cf8; color:#000;">Detector [D] (0)</button>
+      <button id="btn-sonar" onclick="useSonarScan()" style="background:var(--success); color:#000;">Sonar [R] (0)</button>
+      <button id="btn-shield" onclick="useBlastShield()" style="background:var(--primary); color:#000;">Shield [S] (0)</button>
     </div>
+
+    <div class="status-banner" id="status-text">STAGE 1: 8x8 Board | 8 Mines | 1 Treasure Chest</div>
+
     <div class="toolbar">
-      <div class="counter" id="flag-count" title="Mines">010</div>
+      <div class="counter" id="flag-count" title="Mines">008</div>
       <button class="face-btn" id="face" onclick="resetLevel()"></button>
       <div class="counter" id="time-count" title="Time">000</div>
-      <div class="counter" id="best-count" title="Best Time" style="color:var(--warning);">999</div>
-      <div class="counter" id="stats-count" title="Played / Wins" style="color:#c0caf5; font-size:14px;">P:0 W:0</div>
-      <div class="counter" id="shield-count" title="Shields" style="color:var(--primary); display:none;">000</div>
+      <div class="counter" id="best-count" title="Best" style="color:var(--warning);">999</div>
+      <div class="counter" id="stats-count" title="Stats / Score" style="color:#c0caf5; font-size:13px;">P:0 W:0</div>
     </div>
+
     <div class="board-wrapper">
       <div class="board" id="board" oncontextmenu="return false;"></div>
       <canvas id="fx-canvas"></canvas>
@@ -106,7 +113,7 @@
     let ROWS = 10;
     let COLS = 10;
     let MINES = 10;
-    let grid = []; // 0:empty, 1:mine, 2:revealed, 4:flagged, 8:mine(hidden), 16:question
+    let grid = []; // bitmask: 8:mine, 2:revealed, 4:flagged, 16:question, 32:chest
     let gameOver = false;
     let initialized = false;
     let flags = 0;
@@ -116,19 +123,56 @@
     let bestTime = localStorage.getItem('kmines_bestTime_easy') || 999;
     let totalPlayed = parseInt(localStorage.getItem('kmines_totalPlayed') || '0');
     let totalWins = parseInt(localStorage.getItem('kmines_totalWins') || '0');
+    
+    // Campaign Mode (20 Stages)
     let campaignMode = false;
     let campaignLevel = 1;
-    let shields = 0;
-    let scans = 0;
-    let sonars = 0;
+    let chestsToPlace = 0;
+    let isSpeedrun = false;
+    let speedrunTime = 0;
+
+    // Power-ups
+    let shields = 0;   // Blast Shield (S)
+    let detectors = 0; // Detector / Flag-Bot (D)
+    let sonars = 0;    // Sonar / Radar Scan (R)
+
+    // Rush & Combo Mode
     let rushMode = false;
     let rushTime = 0;
     let rushScore = 0;
     let bestRush = parseInt(localStorage.getItem('kmines_bestRush') || '0');
+
+    let comboCount = 0;
+    let comboMultiplier = 1;
+    let lastRevealTime = 0;
+
     let currentFaceState = 'idle';
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // Particle Canvas FX System
+    const campaignStages = [
+      { r: 8,  c: 8,  m: 8,   chests: 1, speedrun: 0 },
+      { r: 9,  c: 9,  m: 12,  chests: 0, speedrun: 60 },
+      { r: 10, c: 10, m: 15,  chests: 2, speedrun: 0 },
+      { r: 11, c: 11, m: 20,  chests: 0, speedrun: 75 },
+      { r: 12, c: 12, m: 25,  chests: 2, speedrun: 0 },
+      { r: 13, c: 13, m: 30,  chests: 0, speedrun: 90 },
+      { r: 14, c: 14, m: 35,  chests: 3, speedrun: 0 },
+      { r: 15, c: 15, m: 42,  chests: 0, speedrun: 105 },
+      { r: 16, c: 16, m: 50,  chests: 3, speedrun: 0 },
+      { r: 17, c: 17, m: 58,  chests: 0, speedrun: 120 },
+      { r: 18, c: 18, m: 66,  chests: 3, speedrun: 0 },
+      { r: 19, c: 19, m: 75,  chests: 0, speedrun: 135 },
+      { r: 20, c: 20, m: 85,  chests: 4, speedrun: 0 },
+      { r: 21, c: 21, m: 95,  chests: 0, speedrun: 150 },
+      { r: 22, c: 22, m: 105, chests: 4, speedrun: 0 },
+      { r: 22, c: 22, m: 115, chests: 0, speedrun: 160 },
+      { r: 23, c: 23, m: 125, chests: 4, speedrun: 0 },
+      { r: 23, c: 23, m: 135, chests: 0, speedrun: 170 },
+      { r: 24, c: 24, m: 145, chests: 5, speedrun: 0 },
+      { r: 24, c: 24, m: 160, chests: 5, speedrun: 200 }
+    ];
+
+    // Particle FX
     const fxCanvas = document.getElementById('fx-canvas');
     const fxCtx = fxCanvas.getContext('2d');
     let particles = [];
@@ -146,14 +190,29 @@
         const angle = Math.random() * Math.PI * 2;
         const speed = 1.5 + Math.random() * 4.5;
         particles.push({
-          x: cx,
-          y: cy,
+          x: cx, y: cy,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed - 1.5,
           size: 2 + Math.random() * 4,
           color: colors[Math.floor(Math.random() * colors.length)],
-          life: 1.0,
-          decay: 0.02 + Math.random() * 0.03
+          life: 1.0, decay: 0.02 + Math.random() * 0.03
+        });
+      }
+      if (!fxAnimFrame) updateFX();
+    }
+
+    function spawnTreasureFX(cx, cy) {
+      const colors = ['#facc15', '#fef08a', '#38bdf8', '#ffffff', '#e0af68'];
+      for (let i = 0; i < 30; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 4.0;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2.0,
+          size: 2 + Math.random() * 3,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1.0, decay: 0.015 + Math.random() * 0.025
         });
       }
       if (!fxAnimFrame) updateFX();
@@ -169,8 +228,7 @@
           vy: Math.random() * 2 + 1,
           size: 3 + Math.random() * 4,
           color: colors[Math.floor(Math.random() * colors.length)],
-          life: 1.0,
-          decay: 0.01 + Math.random() * 0.015
+          life: 1.0, decay: 0.01 + Math.random() * 0.015
         });
       }
       if (!fxAnimFrame) updateFX();
@@ -180,16 +238,11 @@
       fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.12; // gravity
-        p.vx *= 0.97;
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.12; p.vx *= 0.97;
         p.life -= p.decay;
 
-        if (p.life <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
+        if (p.life <= 0) { particles.splice(i, 1); continue; }
 
         fxCtx.globalAlpha = Math.max(0, p.life);
         fxCtx.fillStyle = p.color;
@@ -198,33 +251,28 @@
         fxCtx.fill();
       }
       fxCtx.globalAlpha = 1.0;
-
-      if (particles.length > 0) {
-        fxAnimFrame = requestAnimationFrame(updateFX);
-      } else {
-        fxAnimFrame = null;
-      }
+      if (particles.length > 0) fxAnimFrame = requestAnimationFrame(updateFX);
+      else fxAnimFrame = null;
     }
     
     function playSound(freq, duration, type='sine') {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+      } catch(e){}
     }
 
     function formatNumber(num) {
       return Math.max(0, num).toString().padStart(3, '0');
     }
 
-    // SVG Sprite Builders
     function renderSmileySVG(state) {
       if (state === 'pressed') {
         return `<svg viewBox="0 0 36 36">
@@ -232,8 +280,6 @@
           <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fef08a" opacity="0.6"/>
           <circle cx="12" cy="14" r="3" fill="#1e293b"/>
           <circle cx="24" cy="14" r="3" fill="#1e293b"/>
-          <circle cx="12" cy="13" r="1" fill="#ffffff"/>
-          <circle cx="24" cy="13" r="1" fill="#ffffff"/>
           <ellipse cx="18" cy="24" rx="4" ry="5" fill="#1e293b"/>
         </svg>`;
       } else if (state === 'dead') {
@@ -247,19 +293,14 @@
       } else if (state === 'win') {
         return `<svg viewBox="0 0 36 36">
           <circle cx="18" cy="18" r="16" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
-          <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fef08a" opacity="0.6"/>
-          <!-- Sunglasses -->
           <polygon points="6,12 17,12 16,19 8,19" fill="#0f172a"/>
           <polygon points="19,12 30,12 28,19 20,19" fill="#0f172a"/>
           <line x1="16" y1="14" x2="20" y2="14" stroke="#0f172a" stroke-width="2"/>
-          <line x1="8" y1="14" x2="13" y2="14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="21" y1="14" x2="26" y2="14" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
           <path d="M12 24 Q 18 29 24 23" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
         </svg>`;
-      } else { // Idle
+      } else {
         return `<svg viewBox="0 0 36 36">
           <circle cx="18" cy="18" r="16" fill="#facc15" stroke="#ca8a04" stroke-width="2"/>
-          <ellipse cx="18" cy="8" rx="8" ry="3" fill="#fef08a" opacity="0.6"/>
           <circle cx="13" cy="14" r="2.5" fill="#1e293b"/>
           <circle cx="23" cy="14" r="2.5" fill="#1e293b"/>
           <path d="M11 22 Q 18 28 25 22" fill="none" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
@@ -272,7 +313,7 @@
       document.getElementById('face').innerHTML = renderSmileySVG(state);
     }
 
-    const MINE_SVG = `<svg class="mine-svg" viewBox="0 0 32 32" width="22" height="22">
+    const MINE_SVG = `<svg class="mine-svg" viewBox="0 0 32 32" width="20" height="20">
       <g stroke="#121520" stroke-width="2.5" stroke-linecap="round">
         <line x1="16" y1="4" x2="16" y2="28"/><line x1="4" y1="16" x2="28" y2="16"/>
         <line x1="7.5" y1="7.5" x2="24.5" y2="24.5"/><line x1="24.5" y1="7.5" x2="7.5" y2="24.5"/>
@@ -283,16 +324,37 @@
       <circle cx="22" cy="5" r="2.5" class="fuse-spark"/>
     </svg>`;
 
-    const FLAG_SVG = `<svg class="flag-svg" viewBox="0 0 32 32" width="22" height="22">
+    const CHEST_SVG = `<svg class="chest-svg" viewBox="0 0 32 32" width="20" height="20">
+      <rect x="5" y="12" width="22" height="15" rx="2" fill="#facc15" stroke="#854d0e" stroke-width="1.5"/>
+      <path d="M4 12 C 4 7, 28 7, 28 12 Z" fill="#fbbf24" stroke="#854d0e" stroke-width="1.5"/>
+      <rect x="14" y="15" width="4" height="6" rx="1" fill="#1e293b"/>
+      <circle cx="16" cy="17" r="1.5" fill="#fef08a"/>
+    </svg>`;
+
+    const FLAG_SVG = `<svg class="flag-svg" viewBox="0 0 32 32" width="20" height="20">
       <ellipse cx="16" cy="27" rx="6" ry="2" fill="#121520"/>
       <line x1="11" y1="27" x2="11" y2="5" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
       <circle cx="11" cy="4" r="2" fill="#fbbf24"/>
       <path d="M12 6 Q 18 4, 25 7 L 25 16 Q 18 13, 12 15 Z" fill="#ef4444" stroke="#991b1b" stroke-width="1" class="flag-cloth"/>
     </svg>`;
 
-    const QUESTION_SVG = `<svg class="question-svg" viewBox="0 0 32 32" width="22" height="22">
-      <text x="16" y="23" text-anchor="middle" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="20" filter="drop-shadow(0 0 4px rgba(56,189,248,0.6))">?</text>
+    const QUESTION_SVG = `<svg class="question-svg" viewBox="0 0 32 32" width="20" height="20">
+      <text x="16" y="23" text-anchor="middle" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="18">?</text>
     </svg>`;
+
+    function updateUIStatus() {
+      document.getElementById('btn-detector').innerText = `Detector [D] (${detectors})`;
+      document.getElementById('btn-sonar').innerText = `Sonar [R] (${sonars})`;
+      document.getElementById('btn-shield').innerText = `Shield [S] (${shields})`;
+
+      if (rushMode) {
+        document.getElementById('status-text').innerText = `RUSH MODE: Score ${rushScore} | Combo x${comboMultiplier}! | Best ${bestRush}`;
+      } else if (campaignMode) {
+        document.getElementById('status-text').innerText = `STAGE ${campaignLevel}/20: ${ROWS}x${COLS} Board | ${MINES} Mines ${isSpeedrun ? '| TIMED SPEEDRUN' : ''}`;
+      } else {
+        document.getElementById('status-text').innerText = `FREEPLAY: ${currentDiff.toUpperCase()} Mode (${ROWS}x${COLS})`;
+      }
+    }
 
     function init() {
       grid = Array(ROWS).fill().map(() => Array(COLS).fill(0));
@@ -300,61 +362,80 @@
       initialized = false;
       flags = 0;
       time = 0;
+      comboCount = 0;
+      comboMultiplier = 1;
       particles = [];
       bestTime = localStorage.getItem('kmines_bestTime_' + currentDiff) || 999;
       totalPlayed = parseInt(localStorage.getItem('kmines_totalPlayed') || '0');
       totalWins = parseInt(localStorage.getItem('kmines_totalWins') || '0');
       clearInterval(timer);
       setFaceState('idle');
+
       document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
-      document.getElementById('time-count').innerText = formatNumber(rushMode ? rushTime : time);
+      document.getElementById('time-count').innerText = formatNumber(rushMode ? rushTime : (isSpeedrun ? speedrunTime : time));
       
       if (rushMode) {
           document.getElementById('best-count').innerText = formatNumber(bestRush);
-          document.getElementById('best-count').title = "Best Rush Score";
-          document.getElementById('shield-count').style.display = "none";
-          document.getElementById('stats-count').style.display = "block";
           document.getElementById('stats-count').innerText = "Score: " + rushScore;
-          document.getElementById('btn-radar').style.display = "none";
-          document.getElementById('btn-sonar').style.display = "none";
       } else if (campaignMode) {
           document.getElementById('best-count').innerText = formatNumber(campaignLevel);
-          document.getElementById('best-count').title = "Level";
-          document.getElementById('shield-count').style.display = "block";
-          document.getElementById('shield-count').innerText = formatNumber(shields);
-          document.getElementById('stats-count').style.display = "none";
-          document.getElementById('btn-radar').style.display = "inline-block";
-          document.getElementById('btn-radar').innerText = "Radar (" + scans + ")";
-          document.getElementById('btn-sonar').style.display = "inline-block";
-          document.getElementById('btn-sonar').innerText = "Sonar (" + sonars + ")";
+          document.getElementById('stats-count').innerText = "Stage " + campaignLevel;
       } else {
           document.getElementById('best-count').innerText = formatNumber(bestTime);
-          document.getElementById('best-count').title = "Best Time";
-          document.getElementById('shield-count').style.display = "none";
-          document.getElementById('stats-count').style.display = "block";
           document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
-          document.getElementById('btn-radar').style.display = "none";
-          document.getElementById('btn-sonar').style.display = "none";
       }
       
+      updateUIStatus();
+
       const board = document.getElementById('board');
-      board.style.gridTemplateColumns = `repeat(${COLS}, 30px)`;
-      board.style.gridTemplateRows = `repeat(${ROWS}, 30px)`;
+      let cellSize = COLS > 18 ? 22 : 26;
+      board.style.gridTemplateColumns = `repeat(${COLS}, ${cellSize}px)`;
+      board.style.gridTemplateRows = `repeat(${ROWS}, ${cellSize}px)`;
       render();
       setTimeout(resizeFxCanvas, 50);
     }
 
-    function useRadar() {
-        if (!campaignMode || scans <= 0 || gameOver || !initialized) return;
+    function useSonarScan() {
+        if (sonars <= 0 || gameOver || !initialized) return;
+        let targetR = -1, targetC = -1;
+        for (let i = 0; i < 1000; i++) {
+            let r = Math.floor(Math.random() * ROWS);
+            let c = Math.floor(Math.random() * COLS);
+            if (!(grid[r][c] & 2)) { targetR = r; targetC = c; break; }
+        }
+        if (targetR !== -1) {
+            sonars--;
+            for (let i = -1; i <= 1; i++) {
+                for (let j = -1; j <= 1; j++) {
+                    let nr = targetR + i, nc = targetC + j;
+                    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                        if (grid[nr][nc] & 8) {
+                            if (!(grid[nr][nc] & 4)) { grid[nr][nc] |= 4; flags++; }
+                        } else {
+                            if (!(grid[nr][nc] & 2) && !(grid[nr][nc] & 4)) reveal(nr, nc);
+                        }
+                    }
+                }
+            }
+            document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
+            playSound(2000, 0.15, 'triangle');
+            updateUIStatus();
+            render();
+            if (checkWin() && !gameOver) handleWin();
+        }
+    }
+
+    function useDetectorBot() {
+        if (detectors <= 0 || gameOver || !initialized) return;
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 if ((grid[r][c] & 8) && !(grid[r][c] & 4) && !(grid[r][c] & 2)) {
                     grid[r][c] |= 4;
                     flags++;
-                    scans--;
-                    document.getElementById('btn-radar').innerText = "Radar (" + scans + ")";
+                    detectors--;
                     document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
-                    playSound(1200, 0.1, 'sine');
+                    playSound(1400, 0.12, 'sine');
+                    updateUIStatus();
                     render();
                     return;
                 }
@@ -362,69 +443,21 @@
         }
     }
 
-    function useSonar() {
-        if (!campaignMode || sonars <= 0 || gameOver || !initialized) return;
-        let targetR = -1, targetC = -1;
-        for (let i = 0; i < 1000; i++) {
-            let r = Math.floor(Math.random() * ROWS);
-            let c = Math.floor(Math.random() * COLS);
-            if (!(grid[r][c] & 2)) {
-                targetR = r; targetC = c;
-                break;
-            }
-        }
-        if (targetR !== -1) {
-            sonars--;
-            document.getElementById('btn-sonar').innerText = "Sonar (" + sonars + ")";
-            for (let i = -1; i <= 1; i++) {
-                for (let j = -1; j <= 1; j++) {
-                    let nr = targetR + i, nc = targetC + j;
-                    if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                        if (grid[nr][nc] & 8) {
-                            if (!(grid[nr][nc] & 4)) {
-                                grid[nr][nc] |= 4;
-                                flags++;
-                            }
-                        } else {
-                            if (!(grid[nr][nc] & 2) && !(grid[nr][nc] & 4)) {
-                                reveal(nr, nc);
-                            }
-                        }
-                    }
-                }
-            }
-            document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
-            playSound(2000, 0.15, 'triangle');
-            render();
-            if (checkWin() && !gameOver) {
-                gameOver = true;
-                clearInterval(timer);
-                totalWins++;
-                localStorage.setItem('kmines_totalWins', totalWins);
-                setFaceState('win');
-                spawnVictoryFX();
-                playSound(800, 0.5, 'square');
-                setTimeout(() => {
-                    alert("Level Complete!");
-                    campaignLevel++;
-                    initCampaignLevel();
-                }, 100);
-            }
-        }
+    function useBlastShield() {
+        if (shields <= 0 || gameOver || !initialized) return;
+        playSound(1200, 0.1, 'sine');
+        document.getElementById('status-text').innerText = `BLAST SHIELD ACTIVE (${shields} Charges)`;
     }
 
     function resetLevel() {
-        if (campaignMode) {
-            initCampaignLevel();
-        } else {
-            setDiff(currentDiff);
-        }
+        if (campaignMode) initCampaignLevel();
+        else setDiff(currentDiff);
     }
 
     function toggleCampaign() {
         campaignMode = !campaignMode;
         rushMode = false;
-        document.getElementById('btn-camp').innerText = campaignMode ? "Camp: On" : "Camp: Off";
+        document.getElementById('btn-camp').innerText = campaignMode ? `Camp ${campaignLevel}/20 (C)` : "Camp: Off (C)";
         document.getElementById('btn-camp').classList.toggle('active', campaignMode);
         if (campaignMode) {
             campaignLevel = 1;
@@ -435,34 +468,27 @@
     }
 
     function initCampaignLevel() {
-        if (campaignLevel === 1) { ROWS=8; COLS=8; MINES=10; }
-        else if (campaignLevel === 2) { ROWS=12; COLS=12; MINES=25; }
-        else if (campaignLevel === 3) { ROWS=16; COLS=16; MINES=45; }
-        else if (campaignLevel === 4) { ROWS=20; COLS=20; MINES=75; }
-        else if (campaignLevel === 5) { ROWS=24; COLS=24; MINES=120; }
-        else if (campaignLevel === 6) { ROWS=24; COLS=30; MINES=150; }
-        else if (campaignLevel === 7) { ROWS=26; COLS=30; MINES=180; }
-        else if (campaignLevel === 8) { ROWS=28; COLS=30; MINES=200; }
-        else if (campaignLevel === 9) { ROWS=30; COLS=30; MINES=220; }
-        else if (campaignLevel === 10) { ROWS=30; COLS=30; MINES=250; }
-        else if (campaignLevel === 11) { ROWS=30; COLS=30; MINES=275; }
-        else if (campaignLevel === 12) { ROWS=32; COLS=32; MINES=310; }
-        else if (campaignLevel === 13) { ROWS=34; COLS=34; MINES=350; }
-        else if (campaignLevel === 14) { ROWS=36; COLS=36; MINES=390; }
-        else if (campaignLevel === 15) { ROWS=40; COLS=40; MINES=450; }
-        else {
+        if (campaignLevel >= 1 && campaignLevel <= 20) {
+            let s = campaignStages[campaignLevel - 1];
+            ROWS = s.r; COLS = s.c; MINES = s.m; chestsToPlace = s.chests;
+            isSpeedrun = s.speedrun > 0;
+            speedrunTime = s.speedrun;
+
+            shields = campaignLevel >= 5 ? (campaignLevel >= 11 ? 3 : 2) : 1;
+            detectors = 2 + Math.floor(campaignLevel / 4);
+            sonars = 1 + Math.floor(campaignLevel / 3);
+        } else {
             campaignMode = false;
-            document.getElementById('btn-camp').innerText = "Camp: Off";
+            document.getElementById('btn-camp').innerText = "Camp: Off (C)";
             document.getElementById('btn-camp').classList.remove('active');
             setDiff('easy');
-            alert("Campaign Complete!");
+            alert("CAMPAIGN COMPLETE! You cleared all 20 stages!");
             return;
         }
-        shields = campaignLevel >= 5 ? (campaignLevel >= 11 ? 3 : 2) : 1;
-        scans = campaignLevel >= 11 ? 5 : 3;
-        sonars = Math.floor(campaignLevel / 3);
+
         document.querySelectorAll('.diff-bar button').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-camp').classList.add('active');
+        document.getElementById('btn-camp').innerText = `Camp ${campaignLevel}/20 (C)`;
         init();
     }
 
@@ -474,8 +500,8 @@
       rushTime = 60;
       rushScore = 0;
       ROWS = 10; COLS = 10; MINES = 10;
-      shields = 0;
-      document.getElementById('btn-camp').innerText = "Camp: Off";
+      shields = 0; detectors = 0; sonars = 0; isSpeedrun = false; chestsToPlace = 0;
+      document.getElementById('btn-camp').innerText = "Camp: Off (C)";
       init();
     }
 
@@ -484,14 +510,16 @@
       document.getElementById('btn-' + level).classList.add('active');
       campaignMode = false;
       rushMode = false;
-      document.getElementById('btn-camp').innerText = "Camp: Off";
+      isSpeedrun = false;
+      chestsToPlace = 0;
+      document.getElementById('btn-camp').innerText = "Camp: Off (C)";
       document.getElementById('btn-camp').classList.remove('active');
       
       currentDiff = level;
       if (level === 'easy') { ROWS = 10; COLS = 10; MINES = 10; }
       else if (level === 'med') { ROWS = 16; COLS = 16; MINES = 40; }
       else if (level === 'hard') { ROWS = 16; COLS = 30; MINES = 99; }
-      shields = 0;
+      shields = 0; detectors = 0; sonars = 0;
       init();
     }
 
@@ -510,6 +538,18 @@
                 render();
             }
             document.getElementById('time-count').innerText = formatNumber(rushTime);
+        } else if (isSpeedrun) {
+            speedrunTime--;
+            if (speedrunTime <= 0) {
+                speedrunTime = 0;
+                gameOver = true;
+                clearInterval(timer);
+                for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=2;
+                setFaceState('dead');
+                playSound(150, 0.5, 'sawtooth');
+                render();
+            }
+            document.getElementById('time-count').innerText = formatNumber(speedrunTime);
         } else {
             time++;
             if (time > 999) time = 999;
@@ -524,10 +564,21 @@
         let r = Math.floor(Math.random() * ROWS);
         let c = Math.floor(Math.random() * COLS);
         if (grid[r][c] === 0 && (r < firstR - 1 || r > firstR + 1 || c < firstC - 1 || c > firstC + 1)) {
-          grid[r][c] = 8;
+          grid[r][c] |= 8;
           placed++;
         }
       }
+
+      let cPlaced = 0;
+      while (cPlaced < chestsToPlace) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (grid[r][c] === 0 && (r < firstR - 1 || r > firstR + 1 || c < firstC - 1 || c > firstC + 1)) {
+          grid[r][c] |= 32;
+          cPlaced++;
+        }
+      }
+
       initialized = true;
       totalPlayed++;
       localStorage.setItem('kmines_totalPlayed', totalPlayed);
@@ -551,21 +602,48 @@
       if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
       if (grid[r][c] & 2 || grid[r][c] & 4) return;
       
-      grid[r][c] |= 2; // set revealed
+      grid[r][c] |= 2;
+
+      let now = Date.now();
+      if (lastRevealTime > 0 && now - lastRevealTime <= 2000) comboCount++;
+      else comboCount = 1;
+      lastRevealTime = now;
+      comboMultiplier = Math.min(8, 1 + Math.floor(comboCount / 3));
+
+      if (rushMode) rushScore += 10 * comboMultiplier;
+
+      // Chest opened!
+      if (grid[r][c] & 32) {
+        grid[r][c] &= ~32;
+        const px = c * (COLS > 18 ? 22 : 26) + 12;
+        const py = r * (COLS > 18 ? 22 : 26) + 12;
+        spawnTreasureFX(px, py);
+
+        let reward = Math.random();
+        if (reward < 0.35) { sonars++; document.getElementById('status-text').innerText = "CHEST: +1 SONAR SCAN! (R)"; }
+        else if (reward < 0.70) { detectors++; document.getElementById('status-text').innerText = "CHEST: +1 DETECTOR! (D)"; }
+        else if (reward < 0.90) { shields++; document.getElementById('status-text').innerText = "CHEST: +1 BLAST SHIELD! (S)"; }
+        else {
+          if (isSpeedrun) { speedrunTime += 15; document.getElementById('status-text').innerText = "CHEST: +15 SECONDS!"; }
+          else { rushScore += 500; document.getElementById('status-text').innerText = "CHEST: +500 BONUS SCORE!"; }
+        }
+        playSound(1800, 0.15, 'sine');
+        updateUIStatus();
+      }
       
       if (grid[r][c] & 8) {
-        // Particle explosion on cell!
-        const px = c * 30 + 15;
-        const py = r * 30 + 15;
+        const px = c * (COLS > 18 ? 22 : 26) + 12;
+        const py = r * (COLS > 18 ? 22 : 26) + 12;
         spawnExplosionFX(px, py);
 
         if (shields > 0) {
           shields--;
-          grid[r][c] &= ~8; // Destroy mine
+          grid[r][c] &= ~8;
           MINES--;
-          document.getElementById('shield-count').innerText = formatNumber(shields);
+          document.getElementById('status-text').innerText = "BLAST SHIELD ABSORBED MINE!";
           document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
           playSound(200, 0.2, 'square');
+          updateUIStatus();
         } else {
           gameOver = true;
           return;
@@ -591,14 +669,51 @@
       return revealed === (ROWS * COLS - MINES);
     }
 
+    function handleWin() {
+      playSound(800, 0.5, 'square');
+      spawnVictoryFX();
+      if (rushMode) {
+          rushScore += 100 * comboMultiplier;
+          rushTime += 15;
+          if (rushTime > 999) rushTime = 999;
+          if (rushScore > bestRush) {
+              bestRush = rushScore;
+              localStorage.setItem('kmines_bestRush', bestRush);
+          }
+          init();
+          return;
+      }
+      
+      gameOver = true;
+      clearInterval(timer);
+      totalWins++;
+      localStorage.setItem('kmines_totalWins', totalWins);
+      if (!campaignMode && time < bestTime) {
+          bestTime = time;
+          localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
+          document.getElementById('best-count').innerText = formatNumber(bestTime);
+      }
+      setFaceState('win');
+      flags = MINES;
+      document.getElementById('flag-count').innerText = formatNumber(0);
+      for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4;
+      render();
+      if (campaignMode) {
+          setTimeout(() => {
+              alert(`STAGE ${campaignLevel} COMPLETE!`);
+              campaignLevel++;
+              initCampaignLevel();
+          }, 100);
+      }
+    }
+
     function handleLeftClick(r, c) {
       if (gameOver) return;
       if (!initialized) placeMines(r, c);
       
-      if (grid[r][c] & 4) return; // Flagged
+      if (grid[r][c] & 4) return;
 
       if (grid[r][c] & 2) {
-        // Chording
         let flagged = 0;
         for (let i = -1; i <= 1; i++) {
           for (let j = -1; j <= 1; j++) {
@@ -613,9 +728,7 @@
             for (let j = -1; j <= 1; j++) {
               let nr = r + i, nc = c + j;
               if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
-                if (!(grid[nr][nc] & 4) && !(grid[nr][nc] & 2)) {
-                  reveal(nr, nc);
-                }
+                if (!(grid[nr][nc] & 4) && !(grid[nr][nc] & 2)) reveal(nr, nc);
               }
             }
           }
@@ -633,44 +746,10 @@
         setFaceState('dead');
         render();
       } else if (checkWin()) {
-        playSound(800, 0.5, 'square');
-        spawnVictoryFX();
-        if (rushMode) {
-            rushScore++;
-            rushTime += 15;
-            if (rushTime > 999) rushTime = 999;
-            if (rushScore > bestRush) {
-                bestRush = rushScore;
-                localStorage.setItem('kmines_bestRush', bestRush);
-            }
-            init();
-            return;
-        }
-        
-        gameOver = true;
-        clearInterval(timer);
-        totalWins++;
-        localStorage.setItem('kmines_totalWins', totalWins);
-        if (!campaignMode && time < bestTime) {
-            bestTime = time;
-            localStorage.setItem('kmines_bestTime_' + currentDiff, bestTime);
-            document.getElementById('best-count').innerText = formatNumber(bestTime);
-        }
-        document.getElementById('stats-count').innerText = "P:" + totalPlayed + " W:" + totalWins;
-        setFaceState('win');
-        flags = MINES;
-        document.getElementById('flag-count').innerText = formatNumber(0);
-        for(let i=0;i<ROWS;i++) for(let j=0;j<COLS;j++) if(grid[i][j]&8) grid[i][j]|=4;
-        render();
-        if (campaignMode) {
-            setTimeout(() => {
-                alert("Level Complete!");
-                campaignLevel++;
-                initCampaignLevel();
-            }, 100);
-        }
+        handleWin();
       } else {
         playSound(400, 0.1, 'sine');
+        updateUIStatus();
         render();
       }
     }
@@ -679,19 +758,13 @@
       if (gameOver || !initialized) return;
       if (!(grid[r][c] & 2)) {
         if (grid[r][c] & 4) {
-          // Flagged -> Question
-          grid[r][c] &= ~4;
-          grid[r][c] |= 16;
-          flags--;
+          grid[r][c] &= ~4; grid[r][c] |= 16; flags--;
           playSound(600, 0.1, 'triangle');
         } else if (grid[r][c] & 16) {
-          // Question -> Unrevealed
           grid[r][c] &= ~16;
           playSound(500, 0.1, 'triangle');
         } else {
-          // Unrevealed -> Flagged
-          grid[r][c] |= 4;
-          flags++;
+          grid[r][c] |= 4; flags++;
           playSound(800, 0.1, 'triangle');
         }
         document.getElementById('flag-count').innerText = formatNumber(MINES - flags);
@@ -699,7 +772,17 @@
       }
     }
 
-    // Mouse Press Shock Reaction
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '1') setDiff('easy');
+      else if (e.key === '2') setDiff('med');
+      else if (e.key === '3') setDiff('hard');
+      else if (e.key === '4') startRush();
+      else if (e.key === 'c' || e.key === 'C') toggleCampaign();
+      else if (e.key === 'r' || e.key === 'R') useSonarScan();
+      else if (e.key === 'd' || e.key === 'D') useDetectorBot();
+      else if (e.key === 's' || e.key === 'S') useBlastShield();
+    });
+
     window.addEventListener('mousedown', (e) => {
       if (!gameOver && !checkWin() && e.target.classList.contains('cell')) {
         setFaceState('pressed');
@@ -715,10 +798,16 @@
     function render() {
       const board = document.getElementById('board');
       board.innerHTML = '';
+      let cellSize = COLS > 18 ? 22 : 26;
+      board.style.gridTemplateColumns = `repeat(${COLS}, ${cellSize}px)`;
+      board.style.gridTemplateRows = `repeat(${ROWS}, ${cellSize}px)`;
+
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const div = document.createElement('div');
           div.className = 'cell';
+          div.style.width = cellSize + 'px';
+          div.style.height = cellSize + 'px';
           
           if (grid[r][c] & 2) {
             div.classList.add('revealed');
@@ -736,6 +825,9 @@
             div.innerHTML = FLAG_SVG;
           } else if (grid[r][c] & 16) {
             div.innerHTML = QUESTION_SVG;
+          } else if (grid[r][c] & 32 && gameOver) {
+            div.classList.add('chest');
+            div.innerHTML = CHEST_SVG;
           }
           
           div.onmousedown = (e) => {
