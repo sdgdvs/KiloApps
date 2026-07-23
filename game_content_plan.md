@@ -105,7 +105,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KHangman   | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 5 new categories, Time Attack Blitz mode, and Shield power-up. |
 | KSimon     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-stage campaign, Hint/Slow-mo/Shield powerups, Chaos Mode. |
 | KMatch3    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Stone obstacles, 3x3 Bomb gems, Rainbow gems, and 3 powerups (Hammer, Extra Moves, Shuffle). |
-| KWords     | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
+| KWords     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 3 new themes (Elements, Sci-Fi, Myth), Radar, Freeze Timer, Hint powerups, and Frozen tile obstacles. |
 | KGo        | Tier 1          | Game Content Expander  | Needs Improvement | Full parity. Loop 6 pending. |
 | KDarts     | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
 | KTowers    | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
@@ -134,6 +134,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KHangman (Expanded Campaign to 15 stages, added 5 new categories, Time Attack Blitz mode, and Shield power-up to both EXE and HTML)
 - [x] KSimon (Expanded Campaign to 15 stages, added Hint, Slow-mo, and Shield power-ups, and Chaos Mode to both EXE and HTML)
 - [x] KMatch3 (Expanded Campaign to 15 stages, added Stone obstacles, 3x3 Bomb gems, Rainbow gems, and 3 powerups (Hammer, Extra Moves, Shuffle) to both EXE and HTML)
+- [x] KWords (Expanded Campaign to 15 stages, added 3 new themes (Elements, Sci-Fi, Myth), Radar, Freeze Timer, Hint powerups, and Frozen tile obstacles to both EXE and HTML)
 
 **Loop 5**
 - [x] KMines (Expanded Campaign to 10 levels, added Radar powerup and Lifetime Stats tracking to both EXE and HTML)

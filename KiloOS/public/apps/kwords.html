@@ -23,6 +23,8 @@
     border-bottom: 1px solid #333;
     padding-bottom: 10px;
     margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   .container {
     display: flex;
@@ -67,6 +69,11 @@
   .cell.hint {
     background-color: #d69e2e;
     color: #1a202c;
+  }
+  .cell.frozen {
+    background-color: #4fd1c5;
+    color: #1a202c;
+    box-shadow: inset 0 0 4px #319795;
   }
   .cell.selected {
     background-color: #3182ce;
@@ -116,35 +123,36 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.8);
-    padding: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 20px 30px;
     border: 2px solid #0078d7;
     text-align: center;
     border-radius: 10px;
+    z-index: 10;
   }
   button {
     background-color: #2d3748;
     color: white;
     border: none;
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 6px 12px;
+    font-size: 14px;
     cursor: pointer;
-    margin-top: 10px;
+    border-radius: 4px;
   }
   button:hover {
     background-color: #4a5568;
   }
   .diff-btn {
-    margin: 0 5px;
+    margin: 0 2px;
     padding: 5px 10px;
-    font-size: 14px;
-    margin-top: 0;
+    font-size: 13px;
   }
   .diff-btn.active {
     background-color: #3182ce;
   }
   #win-message button {
     background-color: #3182ce;
+    margin-top: 15px;
   }
   #win-message button:hover {
     background-color: #2b6cb0;
@@ -153,9 +161,9 @@
 </head>
 <body>
   <div class="header">
-    <h2>KWords</h2>
-    <div>
-      <select id="theme-select" onchange="setTheme(this.value)" style="background:#2d3748; color:white; border:none; padding:5px 10px; margin-right:10px; border-radius:4px; outline:none; font-size:14px; cursor:pointer;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <h2 style="margin:0; font-size:20px; color:#63b3ed;">KWords</h2>
+      <select id="theme-select" onchange="setTheme(this.value)" style="background:#2d3748; color:white; border:none; padding:5px 8px; border-radius:4px; outline:none; font-size:13px; cursor:pointer;">
         <option value="Programming">Programming</option>
         <option value="Animals">Animals</option>
         <option value="Countries">Countries</option>
@@ -164,68 +172,84 @@
         <option value="Sports">Sports</option>
         <option value="Nature">Nature</option>
         <option value="History">History</option>
+        <option value="Elements">Elements</option>
+        <option value="Sci-Fi">Sci-Fi</option>
+        <option value="Myth">Myth</option>
       </select>
-      <select id="mode-select" onchange="setMode(this.value)" style="background:#2d3748; color:white; border:none; padding:5px 10px; margin-right:10px; border-radius:4px; outline:none; font-size:14px; cursor:pointer;">
+      <select id="mode-select" onchange="setMode(this.value)" style="background:#2d3748; color:white; border:none; padding:5px 8px; border-radius:4px; outline:none; font-size:13px; cursor:pointer;">
         <option value="classic">Classic</option>
         <option value="zen">Zen Mode</option>
         <option value="time_attack">Time Attack</option>
         <option value="campaign">Campaign</option>
       </select>
+    </div>
+    <div style="display:flex; align-items:center; gap:4px;">
       <button class="diff-btn" id="btn-easy" onclick="setDifficulty('easy')">Easy</button>
       <button class="diff-btn active" id="btn-medium" onclick="setDifficulty('medium')">Medium</button>
       <button class="diff-btn" id="btn-hard" onclick="setDifficulty('hard')">Hard</button>
-      <button class="diff-btn" id="btn-hint" onclick="useHint()" style="background-color: #d69e2e; color: #1a202c; font-weight: bold; margin-left: 10px;">Hint</button>
-      <button class="diff-btn" id="btn-wand" onclick="useWand()" style="background-color: #9f7aea; color: white; font-weight: bold; margin-left: 10px;">Wand</button>
-      <button class="diff-btn" onclick="saveGame()" style="margin-left: 10px;">Save</button>
+      <button class="diff-btn" id="btn-hint" onclick="useHint()" style="background-color: #d69e2e; color: #1a202c; font-weight: bold; margin-left: 5px;">Hint (H)</button>
+      <button class="diff-btn" id="btn-radar" onclick="useRadar()" style="background-color: #9f7aea; color: white; font-weight: bold;">Radar (R)</button>
+      <button class="diff-btn" id="btn-freeze" onclick="useFreeze()" style="background-color: #38b2ac; color: #1a202c; font-weight: bold;">Freeze (F)</button>
+      <button class="diff-btn" onclick="saveGame()" style="margin-left: 5px;">Save</button>
       <button class="diff-btn" onclick="loadGame()">Load</button>
-      <button class="diff-btn" onclick="showStats()">Stats</button>
+      <button class="diff-btn" onclick="showStatsModal()">Stats</button>
       <button class="diff-btn" onclick="document.getElementById('help-modal').style.display='block'">Help</button>
     </div>
-    <div>Found: <span id="found-count">0</span>/<span id="total">0</span> | Score: <span id="score">0</span> | Timer: <span id="timer">00:00</span> | Wands: <span id="wands">3</span></div>
+    <div style="font-size:14px; font-weight:bold;">
+      <span id="stg-info" style="display:none; color:#ecc94b; margin-right:10px;">Stage: <span id="stage-num">1</span>/15 |</span>
+      Found: <span id="found-count">0</span>/<span id="total">0</span> | 
+      Score: <span id="score">0</span> | 
+      Timer: <span id="timer">00:00</span> | 
+      Powerups: <span id="powerup-info">R:3 F:3 H:3</span>
+    </div>
   </div>
   <div class="container">
     <div class="grid-container">
       <div class="grid" id="grid"></div>
       <div id="win-message">
-        <h2 id="win-title">You Win!</h2>
-        <p style="font-size: 18px; margin-bottom: 15px;">Final Score: <strong id="final-score">0</strong></p>
+        <h2 id="win-title" style="margin:0 0 10px 0; color:#48bb78;">You Win!</h2>
+        <p style="font-size: 18px; margin: 0 0 15px 0;">Final Score: <strong id="final-score">0</strong></p>
         <button onclick="initGame()">Play Again</button>
       </div>
     </div>
     <div class="words-list">
-      <h3>Words to Find</h3>
+      <h3 style="margin-top:0; color:#e2e8f0;">Words to Find</h3>
       <ul id="word-list-items"></ul>
     </div>
   </div>
+
   <div id="stats-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;">
-    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:400px; max-height:80%; overflow-y:auto; border-radius:10px;">
-      <h2 style="margin-top:0;">Statistics</h2>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:420px; max-height:80%; overflow-y:auto; border-radius:10px;">
+      <h2 style="margin-top:0; color:#63b3ed;">Statistics</h2>
       <div id="stats-content"></div>
-      <button onclick="document.getElementById('stats-modal').style.display='none'" style="margin-top:20px;">Close</button>
+      <button onclick="document.getElementById('stats-modal').style.display='none'" style="margin-top:20px; width:100%;">Close</button>
     </div>
   </div>
+
   <div id="help-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100;">
-    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:450px; max-height:80%; overflow-y:auto; border-radius:10px; line-height: 1.5;">
-      <h2 style="margin-top:0;">How to Play KWords</h2>
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background:#1e212b; border:2px solid #2d3748; padding:20px; width:460px; max-height:80%; overflow-y:auto; border-radius:10px; line-height: 1.5;">
+      <h2 style="margin-top:0; color:#63b3ed;">How to Play KWords</h2>
       <p><strong>Goal:</strong> Find all the hidden words in the grid!</p>
       <ul style="list-style-type: disc; padding-left: 20px;">
-        <li style="width: auto;">Words can be placed horizontally, vertically, or diagonally.</li>
-        <li style="width: auto;">They can be spelled forwards or backwards.</li>
+        <li style="width: auto;">Words can be horizontal, vertical, or diagonal (forwards or backwards).</li>
         <li style="width: auto;">Click and drag to select a word in the grid.</li>
       </ul>
-      <h3>Modes & Difficulties</h3>
+      <h3 style="color:#ecc94b;">Campaign & Modes</h3>
       <ul style="list-style-type: disc; padding-left: 20px;">
-        <li style="width: auto;"><strong>Classic:</strong> Find words as fast as possible for a high score. Timer counts up.</li>
-        <li style="width: auto;"><strong>Campaign:</strong> 10 stages of increasing difficulty and size. Play to the end!</li>
-        <li style="width: auto;"><strong>Time Attack:</strong> Find all words before the timer runs out!</li>
-        <li style="width: auto;"><strong>Zen:</strong> No timer, no score. Just relax and find words.</li>
-        <li style="width: auto;"><strong>Easy / Medium / Hard:</strong> Changes the grid size and the number of words to find.</li>
+        <li style="width: auto;"><strong>Campaign Mode:</strong> 15 stages with distinct grid sizes, themes, stage timers, and frozen tile obstacles!</li>
+        <li style="width: auto;"><strong>Classic / Time Attack / Zen:</strong> Play custom difficulties.</li>
       </ul>
-      <p><em>Use the <strong>Hint</strong> button to reveal the first letter of an unfound word (costs 50 points and 30 seconds).</em></p>
-      <p><em>Use the <strong>Wand</strong> button to reveal an entire word (costs 200 points, or uses 1 Wand in Campaign mode).</em></p>
+      <h3 style="color:#38b2ac;">Power-Ups & Mechanics</h3>
+      <ul style="list-style-type: disc; padding-left: 20px;">
+        <li style="width: auto;"><strong>Radar / Reveal Word (R key):</strong> Highlights an unfound word completely.</li>
+        <li style="width: auto;"><strong>Freeze Timer (F key):</strong> Freezes countdown timer for 15 seconds!</li>
+        <li style="width: auto;"><strong>Hint / First Letter (H key):</strong> Flashes starting letter of an unfound word.</li>
+        <li style="width: auto;"><strong>Frozen Tiles:</strong> Locked cyan tiles on the grid that thaw when finding words touching them!</li>
+      </ul>
       <button onclick="document.getElementById('help-modal').style.display='none'" style="margin-top:20px; width: 100%;">Close</button>
     </div>
   </div>
+
   <script>
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
@@ -281,13 +305,36 @@
       "Food": ["PIZZA", "BURGER", "SALAD", "PASTA", "SUSHI", "STEAK", "CHEESE", "BREAD", "APPLE", "BANANA", "ORANGE", "GRAPE", "CHICKEN", "BACON", "TOMATO", "POTATO", "ONION", "GARLIC", "PEPPER", "CARROT", "CEREAL", "WAFFLE", "PANCAKE", "MUFFIN", "COOKIE", "CHOCOLATE", "VANILLA", "BUTTER", "YOGURT", "HONEY"],
       "Sports": ["SOCCER", "TENNIS", "BASKETBALL", "BASEBALL", "GOLF", "RUGBY", "CRICKET", "HOCKEY", "VOLLEYBALL", "SWIMMING", "BOXING", "WRESTLING", "CYCLING", "ATHLETICS", "GYMNASTICS", "ARCHERY", "FENCING", "BOWLING", "BILLIARDS", "SNOOKER", "DARTS", "KARATE", "JUDO", "TAEKWONDO", "SURFING", "SKATING", "SKIING", "SNOWBOARD", "ROWING", "SAILING"],
       "Nature": ["FOREST", "RIVER", "MOUNTAIN", "OCEAN", "DESERT", "VALLEY", "CANYON", "VOLCANO", "ISLAND", "JUNGLE", "GLACIER", "TUNDRA", "PRAIRIE", "SAVANNA", "MARSH", "SWAMP", "LAKE", "STREAM", "WATERFALL", "GEYSER", "CAVE", "CLIFF", "BEACH", "DUNE", "REEF", "FLOWER", "TREE", "BUSH", "GRASS", "FERN"],
-      "History": ["EMPIRE", "PHARAOH", "PYRAMID", "CASTLE", "KNIGHT", "VIKING", "SAMURAI", "ROMAN", "GREEK", "SPARTAN", "AZTEC", "MAYAN", "INCA", "DYNASTY", "REVOLUTION", "WARRIOR", "GLADIATOR", "CRUSADE", "RENAISSANCE", "COLONY", "TREATY", "ALLIANCE", "MONARCH", "REPUBLIC", "SENATE", "CHIEFTAIN", "EMPEROR", "SULTAN", "TSAR", "KAISER"]
+      "History": ["EMPIRE", "PHARAOH", "PYRAMID", "CASTLE", "KNIGHT", "VIKING", "SAMURAI", "ROMAN", "GREEK", "SPARTAN", "AZTEC", "MAYAN", "INCA", "DYNASTY", "REVOLUTION", "WARRIOR", "GLADIATOR", "CRUSADE", "RENAISSANCE", "COLONY", "TREATY", "ALLIANCE", "MONARCH", "REPUBLIC", "SENATE", "CHIEFTAIN", "EMPEROR", "SULTAN", "TSAR", "KAISER"],
+      "Elements": ["HYDROGEN", "HELIUM", "LITHIUM", "CARBON", "NITROGEN", "OXYGEN", "SODIUM", "SILICON", "IRON", "COPPER", "GOLD", "SILVER", "PLATINUM", "URANIUM", "TITANIUM", "NEON", "ARGON", "KRYPTON", "XENON", "RADON", "ZINC", "NICKEL", "COBALT", "TIN", "LEAD", "MERCURY", "CALCIUM", "POTASSIUM", "MAGNESIUM", "ALUMINUM"],
+      "Sci-Fi": ["CYBORG", "ANDROID", "HOLOGRAM", "HYPERDRIVE", "TELEPORT", "STARSHIP", "WARP", "MUTANT", "FORCEFIELD", "NANITE", "CLONE", "ANTIMATTER", "QUANTUM", "SINGULARITY", "DYSON", "CYBERSPACE", "MECHA", "DYSTOPIA", "EXOPLANET", "TERRAFORM", "BIOMECH", "STEALTH", "LASER", "PLASMA", "BLASTER", "SERVO", "SYNTHETIC", "METAVERSE", "SIMULATION", "AVATAR"],
+      "Myth": ["ZEUS", "HERCULES", "ODYSSEY", "THOR", "ODIN", "LOKI", "VALKYRIE", "APOLLO", "ATHENA", "POSEIDON", "MEDUSA", "MINOTAUR", "PEGASUS", "PHOENIX", "DRAGON", "HYDRA", "TITAN", "NEPTUNE", "VULCAN", "SPHINX", "GRIFFIN", "CENTAUR", "KRAKEN", "VALHALLA", "OLYMPUS", "HADES", "HERMES", "ACHILLES", "PANDORA", "NEMESIS"]
     };
+
+    const CAMPAIGN_STAGES = [
+      { grid: 8,  words: 4,  time: 120, theme: "Programming", frozen: 0 },
+      { grid: 8,  words: 5,  time: 120, theme: "Animals",     frozen: 0 },
+      { grid: 9,  words: 5,  time: 130, theme: "Countries",   frozen: 3 },
+      { grid: 9,  words: 6,  time: 130, theme: "Space",       frozen: 3 },
+      { grid: 10, words: 6,  time: 140, theme: "Elements",    frozen: 4 },
+      { grid: 10, words: 7,  time: 140, theme: "Sci-Fi",      frozen: 4 },
+      { grid: 10, words: 7,  time: 150, theme: "Myth",        frozen: 5 },
+      { grid: 11, words: 8,  time: 150, theme: "Nature",      frozen: 5 },
+      { grid: 11, words: 8,  time: 160, theme: "Food",        frozen: 6 },
+      { grid: 11, words: 9,  time: 160, theme: "Sports",      frozen: 6 },
+      { grid: 12, words: 9,  time: 170, theme: "History",     frozen: 7 },
+      { grid: 12, words: 10, time: 170, theme: "Elements",    frozen: 7 },
+      { grid: 12, words: 10, time: 180, theme: "Sci-Fi",      frozen: 8 },
+      { grid: 12, words: 11, time: 180, theme: "Myth",        frozen: 8 },
+      { grid: 12, words: 12, time: 200, theme: "Space",       frozen: 9 }
+    ];
+
     let currentTheme = "Programming";
     let gameMode = "classic";
     let gridSize = 15;
     let numWordsToFind = 8;
     let grid = [];
+    let frozenGrid = [];
     let wordsToFind = [];
     let foundWords = [];
     let hintedWords = [];
@@ -298,15 +345,32 @@
     let seconds = 0;
     let score = 0;
     let campaignStage = 1;
-    let magicWands = 3;
+    
+    let radarCharges = 3;
+    let freezeCharges = 3;
+    let hintCharges = 3;
+    let freezeTimer = 0;
+    
     let timeSinceLastFind = 0;
     let comboMultiplier = 1;
+
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('stats-modal').style.display === 'block' || document.getElementById('help-modal').style.display === 'block') return;
+      const key = e.key.toLowerCase();
+      if (key === 'r' || key === 'w') useRadar();
+      else if (key === 'f') useFreeze();
+      else if (key === 'h') useHint();
+      else if (key === 's') saveGame();
+      else if (key === 'l') loadGame();
+    });
 
     function setMode(mode) {
         gameMode = mode;
         if (gameMode === 'campaign') {
             campaignStage = 1;
-            magicWands = 3;
+            radarCharges = 3;
+            freezeCharges = 3;
+            hintCharges = 3;
             score = 0;
         }
         initGame();
@@ -327,12 +391,41 @@
     }
 
     function initGame() {
+        let numFrozen = 0;
+        freezeTimer = 0;
+
+        if (gameMode === "campaign") {
+            let stgObj = CAMPAIGN_STAGES[Math.min(14, campaignStage - 1)];
+            gridSize = stgObj.grid;
+            numWordsToFind = stgObj.words;
+            seconds = stgObj.time;
+            currentTheme = stgObj.theme;
+            numFrozen = stgObj.frozen;
+            document.getElementById('theme-select').value = currentTheme;
+            document.getElementById('stg-info').style.display = 'inline';
+            document.getElementById('stage-num').textContent = campaignStage;
+            radarCharges = 3;
+            freezeCharges = 3;
+            hintCharges = 3;
+        } else {
+            document.getElementById('stg-info').style.display = 'none';
+            if (gameMode === "time_attack") {
+                seconds = (gridSize === 10) ? 120 : (gridSize === 15) ? 180 : 300;
+                numFrozen = (gridSize === 10) ? 0 : (gridSize === 15) ? 3 : 6;
+            } else {
+                seconds = 0;
+                numFrozen = (gridSize === 10) ? 0 : (gridSize === 15) ? 2 : 4;
+            }
+        }
+
         wordsToFind = [];
-        let shuffled = [...THEMES[currentTheme]].sort(() => 0.5 - Math.random());
+        let themeList = THEMES[currentTheme] || THEMES["Programming"];
+        let shuffled = [...themeList].sort(() => 0.5 - Math.random());
         wordsToFind = shuffled.slice(0, numWordsToFind);
         foundWords = [];
         hintedWords = [];
         grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(''));
+        frozenGrid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
         
         for (let word of wordsToFind) {
             placeWord(word);
@@ -346,54 +439,56 @@
                 }
             }
         }
+
+        // Place frozen obstacle tiles
+        let fCount = 0;
+        let attempts = 0;
+        while(fCount < numFrozen && attempts < 300) {
+            attempts++;
+            let fr = Math.floor(Math.random() * gridSize);
+            let fc = Math.floor(Math.random() * gridSize);
+            if (!frozenGrid[fr][fc]) {
+                frozenGrid[fr][fc] = true;
+                fCount++;
+            }
+        }
         
         document.getElementById('total').textContent = wordsToFind.length;
         document.getElementById('found-count').textContent = 0;
-        score = 0;
-        document.getElementById('score').textContent = 0;
+        if (gameMode !== "campaign" || campaignStage === 1) score = 0;
+        document.getElementById('score').textContent = score;
         document.getElementById('win-message').style.display = 'none';
         document.getElementById('win-title').textContent = "You Win!";
         
-        if (gameMode === "campaign") {
-            if (campaignStage === 1) { gridSize = 10; numWordsToFind = 5; seconds = 120; }
-            else if (campaignStage === 2) { gridSize = 12; numWordsToFind = 6; seconds = 130; }
-            else if (campaignStage === 3) { gridSize = 12; numWordsToFind = 7; seconds = 140; }
-            else if (campaignStage === 4) { gridSize = 15; numWordsToFind = 8; seconds = 150; }
-            else if (campaignStage === 5) { gridSize = 15; numWordsToFind = 9; seconds = 160; }
-            else if (campaignStage === 6) { gridSize = 15; numWordsToFind = 10; seconds = 170; }
-            else if (campaignStage === 7) { gridSize = 18; numWordsToFind = 11; seconds = 180; }
-            else if (campaignStage === 8) { gridSize = 20; numWordsToFind = 12; seconds = 190; }
-            else if (campaignStage === 9) { gridSize = 22; numWordsToFind = 14; seconds = 200; }
-            else { gridSize = 25; numWordsToFind = 16; seconds = 240; }
-            document.getElementById('wands').parentElement.style.display = 'inline';
-        } else if (gameMode === "time_attack") {
-            seconds = (gridSize === 10) ? 120 : (gridSize === 15) ? 180 : 300;
-            document.getElementById('wands').parentElement.style.display = 'inline';
-        } else {
-            seconds = 0;
-            document.getElementById('wands').parentElement.style.display = 'inline';
-        }
         timeSinceLastFind = 0;
         comboMultiplier = 1;
         updateTimerDisplay();
         
         if(timerInterval) clearInterval(timerInterval);
         timerInterval = setInterval(() => {
-            if (gameMode === "time_attack" || gameMode === "campaign") {
-                if (seconds > 0) {
-                    seconds--;
+            if (!document.getElementById('win-message').style.display || document.getElementById('win-message').style.display === 'none') {
+                if (freezeTimer > 0) {
+                    freezeTimer--;
                     updateTimerDisplay();
                 } else {
-                    clearInterval(timerInterval);
-                    document.getElementById('final-score').textContent = "Time's up!";
-                    document.getElementById('win-title').textContent = "Game Over";
-                    document.getElementById('win-message').style.display = 'block';
+                    if (gameMode === "time_attack" || gameMode === "campaign") {
+                        if (seconds > 0) {
+                            seconds--;
+                            updateTimerDisplay();
+                        } else {
+                            clearInterval(timerInterval);
+                            document.getElementById('final-score').textContent = "Time's up!";
+                            document.getElementById('win-title').textContent = "Game Over";
+                            document.getElementById('win-title').style.color = "#e53e3e";
+                            document.getElementById('win-message').style.display = 'block';
+                        }
+                    } else if (gameMode === "classic") {
+                        seconds++;
+                        updateTimerDisplay();
+                    }
                 }
-            } else if (gameMode === "classic") {
-                seconds++;
-                updateTimerDisplay();
+                timeSinceLastFind++;
             }
-            timeSinceLastFind++;
         }, 1000);
 
         renderGrid();
@@ -405,12 +500,20 @@
             document.getElementById('timer').textContent = "--:--";
             document.getElementById('score').textContent = "-";
         } else {
-            let m = Math.floor(seconds / 60).toString().padStart(2, '0');
-            let s = (seconds % 60).toString().padStart(2, '0');
-            document.getElementById('timer').textContent = `${m}:${s}`;
+            if (freezeTimer > 0) {
+                document.getElementById('timer').textContent = `FROZEN (${freezeTimer}s)`;
+            } else {
+                let m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                let s = (seconds % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${m}:${s}`;
+            }
             document.getElementById('score').textContent = score;
         }
-        document.getElementById('wands').textContent = magicWands;
+        if (gameMode === "campaign") {
+            document.getElementById('powerup-info').textContent = `R:${radarCharges} F:${freezeCharges} H:${hintCharges}`;
+        } else {
+            document.getElementById('powerup-info').textContent = `Ready`;
+        }
     }
 
     function placeWord(word) {
@@ -451,6 +554,7 @@
             for(let c=0; c<gridSize; c++){
                 const cell = document.createElement('div');
                 cell.className = 'cell';
+                if (frozenGrid[r][c]) cell.classList.add('frozen');
                 cell.dataset.r = r;
                 cell.dataset.c = c;
                 cell.textContent = grid[r][c];
@@ -462,7 +566,6 @@
                 gridEl.appendChild(cell);
             }
         }
-        document.addEventListener('mouseup', endSelection);
     }
 
     function renderWordList() {
@@ -484,7 +587,6 @@
         let dc = Math.sign(c2 - c1);
         let dist = Math.max(Math.abs(r2 - r1), Math.abs(c2 - c1));
         
-        // must be straight line
         if (Math.abs(r2 - r1) !== Math.abs(c2 - c1) && r1 !== r2 && c1 !== c2) return [];
         
         let cells = [];
@@ -549,14 +651,29 @@
                     document.getElementById('score').textContent = score;
                 }
                 
-                // Mark cells as found permanently in DOM
+                // Mark cells as found and thaw touching frozen tiles
                 currentSelection.forEach(cell => {
                     const el = document.querySelector(`.cell[data-r="${cell.r}"][data-c="${cell.c}"]`);
                     if(el) el.classList.add('found');
+                    
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            let nr = cell.r + dr;
+                            let nc = cell.c + dc;
+                            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                                if (frozenGrid[nr][nc]) {
+                                    frozenGrid[nr][nc] = false;
+                                    score += 100; // Bonus for thawing
+                                    const frozenEl = document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`);
+                                    if (frozenEl) frozenEl.classList.remove('frozen');
+                                }
+                            }
+                        }
+                    }
                 });
                 
                 if (foundWords.length === wordsToFind.length) {
-                    if (gameMode === 'campaign' && campaignStage < 10) {
+                    if (gameMode === 'campaign' && campaignStage < 15) {
                         playSound('fanfare');
                         clearInterval(timerInterval);
                         campaignStage++;
@@ -566,6 +683,8 @@
                         clearInterval(timerInterval);
                         updateStatsOnWin();
                         document.getElementById('final-score').textContent = score;
+                        document.getElementById('win-title').textContent = "You Win!";
+                        document.getElementById('win-title').style.color = "#48bb78";
                         document.getElementById('win-message').style.display = 'block';
                     }
                 } else {
@@ -604,7 +723,7 @@
                                 break;
                             }
                         }
-                        if (match) return {r, c};
+                        if (match) return {r, c, d};
                     }
                 }
             }
@@ -613,7 +732,8 @@
     }
 
     function useHint() {
-        if (foundWords.length === wordsToFind.length) return;
+        if (foundWords.length === wordsToFind.length || document.getElementById('win-message').style.display === 'block') return;
+        if (gameMode === 'campaign' && hintCharges <= 0) return;
         
         let unfound = wordsToFind.filter(w => !foundWords.includes(w) && !hintedWords.includes(w));
         if (unfound.length === 0) unfound = wordsToFind.filter(w => !foundWords.includes(w));
@@ -623,6 +743,9 @@
         let foundLoc = findWordInGrid(targetWord);
         
         if (foundLoc) {
+            if (gameMode === 'campaign') hintCharges--;
+            else if (gameMode !== 'zen') score = Math.max(0, score - 50);
+            
             if (!hintedWords.includes(targetWord)) {
                 hintedWords.push(targetWord);
             }
@@ -630,21 +753,29 @@
             let c = foundLoc.c;
             const el = document.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
             if (el) el.classList.add('hint');
-            
-            if (gameMode !== "zen") {
-                score = Math.max(0, score - 50);
-                if (gameMode === "classic") seconds += 30;
-                if (gameMode === "time_attack") seconds = Math.max(0, seconds - 30);
-                document.getElementById('score').textContent = score;
-                updateTimerDisplay();
-            }
+            playSound('tick');
+            updateTimerDisplay();
         }
     }
 
-        function useWand() {
+    function useFreeze() {
         if (foundWords.length === wordsToFind.length || document.getElementById('win-message').style.display === 'block') return;
-        if (gameMode === 'campaign' && magicWands <= 0) return;
-        if (gameMode !== 'campaign' && score < 200) return;
+        if (freezeTimer > 0) return;
+        if (gameMode === 'campaign' && freezeCharges <= 0) return;
+        if (gameMode !== 'campaign' && score < 100 && gameMode !== 'zen') return;
+
+        if (gameMode === 'campaign') freezeCharges--;
+        else if (gameMode !== 'zen') score = Math.max(0, score - 100);
+
+        freezeTimer = 15;
+        playSound('tick');
+        updateTimerDisplay();
+    }
+
+    function useRadar() {
+        if (foundWords.length === wordsToFind.length || document.getElementById('win-message').style.display === 'block') return;
+        if (gameMode === 'campaign' && radarCharges <= 0) return;
+        if (gameMode !== 'campaign' && score < 200 && gameMode !== 'zen') return;
         
         let unfound = wordsToFind.filter(w => !foundWords.includes(w));
         if (unfound.length === 0) return;
@@ -653,41 +784,41 @@
         let foundLoc = findWordInGrid(targetWord);
         
         if (foundLoc) {
-            if (gameMode === 'campaign') magicWands--;
-            else score = Math.max(0, score - 200);
+            if (gameMode === 'campaign') radarCharges--;
+            else if (gameMode !== 'zen') score = Math.max(0, score - 200);
             
             updateTimerDisplay();
             
             let r = foundLoc.r;
             let c = foundLoc.c;
-            const dirs = [[0,1], [1,0], [1,1], [-1,1], [1,-1], [-1,-1], [0,-1], [-1,0]];
-            for (let d of dirs) {
-                let match = true;
-                for (let i = 0; i < targetWord.length; i++) {
-                    let nr = r + i * d[0];
-                    let nc = c + i * d[1];
-                    if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || grid[nr][nc] !== targetWord[i]) {
-                        match = false;
-                        break;
+            let d = foundLoc.d;
+            foundWords.push(targetWord);
+            document.getElementById('word-' + targetWord).className = 'found';
+            document.getElementById('found-count').textContent = foundWords.length;
+            
+            for (let i = 0; i < targetWord.length; i++) {
+                let nr = r + i * d[0];
+                let nc = c + i * d[1];
+                const el = document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`);
+                if(el) el.classList.add('found');
+
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        let zr = nr + dr;
+                        let zc = nc + dc;
+                        if (zr >= 0 && zr < gridSize && zc >= 0 && zc < gridSize) {
+                            if (frozenGrid[zr][zc]) {
+                                frozenGrid[zr][zc] = false;
+                                const frozenEl = document.querySelector(`.cell[data-r="${zr}"][data-c="${zc}"]`);
+                                if (frozenEl) frozenEl.classList.remove('frozen');
+                            }
+                        }
                     }
-                }
-                if (match) {
-                    foundWords.push(targetWord);
-                    document.getElementById('word-' + targetWord).className = 'found';
-                    document.getElementById('found-count').textContent = foundWords.length;
-                    
-                    for (let i = 0; i < targetWord.length; i++) {
-                        let nr = r + i * d[0];
-                        let nc = c + i * d[1];
-                        const el = document.querySelector(`.cell[data-r="${nr}"][data-c="${nc}"]`);
-                        if(el) el.classList.add('found');
-                    }
-                    break;
                 }
             }
             
             if (foundWords.length === wordsToFind.length) {
-                if (gameMode === 'campaign' && campaignStage < 10) {
+                if (gameMode === 'campaign' && campaignStage < 15) {
                     playSound('fanfare');
                     clearInterval(timerInterval);
                     campaignStage++;
@@ -697,6 +828,8 @@
                     clearInterval(timerInterval);
                     updateStatsOnWin();
                     document.getElementById('final-score').textContent = score;
+                    document.getElementById('win-title').textContent = "You Win!";
+                    document.getElementById('win-title').style.color = "#48bb78";
                     document.getElementById('win-message').style.display = 'block';
                 }
             } else {
@@ -712,13 +845,14 @@
                 r: cell.dataset.r,
                 c: cell.dataset.c,
                 found: cell.classList.contains('found'),
-                hint: cell.classList.contains('hint')
+                hint: cell.classList.contains('hint'),
+                frozen: cell.classList.contains('frozen')
             });
         });
         const state = {
             currentTheme, gameMode, gridSize, numWordsToFind,
-            grid, wordsToFind, foundWords, hintedWords,
-            seconds, score, cellStates
+            grid, frozenGrid, wordsToFind, foundWords, hintedWords,
+            seconds, score, campaignStage, radarCharges, freezeCharges, hintCharges, cellStates
         };
         localStorage.setItem('kwords_save', JSON.stringify(state));
         alert('Game Saved!');
@@ -733,11 +867,16 @@
             gridSize = state.gridSize;
             numWordsToFind = state.numWordsToFind;
             grid = state.grid;
+            frozenGrid = state.frozenGrid || Array(gridSize).fill(null).map(() => Array(gridSize).fill(false));
             wordsToFind = state.wordsToFind;
             foundWords = state.foundWords || [];
             hintedWords = state.hintedWords || [];
             seconds = state.seconds || 0;
             score = state.score || 0;
+            campaignStage = state.campaignStage || 1;
+            radarCharges = state.radarCharges || 3;
+            freezeCharges = state.freezeCharges || 3;
+            hintCharges = state.hintCharges || 3;
 
             document.getElementById('theme-select').value = currentTheme;
             document.getElementById('mode-select').value = gameMode;
@@ -779,12 +918,15 @@
                     if (el) {
                         if (cs.found) el.classList.add('found');
                         if (cs.hint) el.classList.add('hint');
+                        if (cs.frozen) el.classList.add('frozen');
                     }
                 });
             }
         } else {
             alert('No saved game found.');
         }
+    }
+
     function loadStats() {
         let stats = localStorage.getItem('kwords_stats');
         if (stats) return JSON.parse(stats);
@@ -798,27 +940,24 @@
     function updateStatsOnWin() {
         let stats = loadStats();
         stats.completed++;
-        let diffKey = (gridSize === 10) ? 'easy' : (gridSize === 15) ? 'medium' : 'hard';
-        let key = currentTheme + '_' + diffKey;
+        let key = `${currentTheme}_${gridSize}`;
         if (!stats.bestTimes[key] || seconds < stats.bestTimes[key]) {
             stats.bestTimes[key] = seconds;
         }
         saveStats(stats);
     }
 
-    function showStats() {
+    function showStatsModal() {
         let stats = loadStats();
-        let html = `<p style="font-size:18px;">Total Puzzles Completed: <strong>${stats.completed}</strong></p><h3 style="margin-bottom:10px;">Best Times</h3><ul style="max-height:300px; overflow-y:auto; padding-right:10px;">`;
-        let hasTimes = false;
-        for (const [key, time] of Object.entries(stats.bestTimes)) {
-            hasTimes = true;
-            let m = Math.floor(time / 60).toString().padStart(2, '0');
-            let s = (time % 60).toString().padStart(2, '0');
-            let parts = key.split('_');
-            html += `<li style="width:100%; border-bottom:1px solid #333; padding:10px 0;"><span style="text-transform:capitalize; color:#a0aec0;">${parts[0]} - ${parts[1]}</span>: <span style="float:right; font-weight:bold;">${m}:${s}</span></li>`;
+        let html = `<p><strong>Puzzles Completed:</strong> ${stats.completed}</p>`;
+        html += `<h4>Best Times</h4><ul>`;
+        for (let k in stats.bestTimes) {
+            let [thm, sz] = k.split('_');
+            let m = Math.floor(stats.bestTimes[k] / 60);
+            let s = stats.bestTimes[k] % 60;
+            html += `<li>${thm} (${sz}x${sz}): ${m}m ${s}s</li>`;
         }
-        if (!hasTimes) html += `<li>No best times yet.</li>`;
-        html += '</ul>';
+        html += `</ul>`;
         document.getElementById('stats-content').innerHTML = html;
         document.getElementById('stats-modal').style.display = 'block';
     }
