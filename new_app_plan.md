@@ -51,24 +51,31 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KQuest
-**Phase:** 9
-**Status:** Phase 9 Complete
+**App:** KQuest (Fantasy text RPG)
+**Phase:** 10 (next to do)
+**Status:** Phases 1-9 complete
 
-- [x] Phase 1: Choose a unique app. Scaffold `KQuest/` directory. Create web HTML file with basic UI skeleton. Register in App.jsx.
-- [x] Phase 2: Implement core functionality in the web HTML (inline JS/CSS, self-contained).
-- [x] Phase 3: Create native C version (`main.c`, `build.bat`) with Win32 API. Aim for functional parity with web.
-- [x] Phase 4: Apply a clean dark theme to both versions. Do NOT spend time on elaborate visual polish — keep it functional and move on to features.
-- [x] Phase 5: Add Multiple Dungeon Biomes & Environmental Hazards (Goblin Mines, Ancient Catacombs, Dragon Spire, unique monster pools, ambient hazards, and town biome selector) to web & native versions.
-- [x] Phase 6: Add Crafting & Equipment Enchanting System (Alchemy Bench/Enchanter's Forge in Town Hub to salvage loot into materials, craft consumable battle items like Bombs/Elixirs, and enchant weapons/armor with elemental prefixes like Flaming/Vampiric/Fortified) to web & native versions.
-- [x] Phase 7: Add Party Companions & Mercenary Hire System (Mercenary Guild in Town Hub to hire AI party companions: Paladin Tank, Archmage DPS, Cleric Healer with combat turn actions, passive buffs, level scaling, and gold upkeep) to web & native versions.
-- [x] Phase 8: Add Procedural Bounty Contracts & Quest Tracking System (Quest Board in Town Hub with monster slay bounties, floor clearance challenges, item collection quests, active quest tracker HUD, and tiered rewards like Gold/XP/Rune chests) to web & native versions.
-- [x] Phase 9: Add Skill Tree & Specialization Mastery System (Training Hall in Town Hub to allocate Skill Points gained per level into Offense/Defense/Utility trees, unlocking active battle abilities like Execute/Iron Will/Mana Surge and passive stat multipliers) to web & native versions.
+- [x] Phase 1: Scaffold, register in App.jsx.
+- [x] Phase 2: Core web HTML RPG (character creation, dungeon, combat, town hub).
+- [x] Phase 3: Native C version with functional parity.
+- [x] Phase 4: Dark theme.
+- [x] Phase 5: Multiple dungeon biomes & environmental hazards.
+- [x] Phase 6: Crafting & equipment enchanting system.
+- [x] Phase 7: Party companions & mercenary hire system.
+- [x] Phase 8: Procedural bounty contracts & quest tracking.
+- [x] Phase 9: Skill tree & specialization mastery system.
+- [ ] Phase 10: Add a Boss Rush / Arena Mode — a standalone challenge mode accessible from the town hub where the player fights waves of bosses with increasing difficulty, earning unique rewards.
+- [ ] Phase 11: Add an Inventory Management upgrade — expandable backpack slots, item sorting/filtering, item comparison tooltips, quick-sell, and item rarity tiers (Common/Uncommon/Rare/Epic/Legendary).
+- [ ] Phase 12: Add Save Slots & New Game Plus — multiple save file slots, a New Game+ mode that carries over stats/equipment with harder enemies, and an achievements/milestone tracker.
+- [ ] Phase 13: Add Sound Effects — Web Audio API tones for combat hits, spell casts, level ups, item pickups, door opens, death. Native: Beep()/PlaySound equivalents.
+- [ ] Phase 14: Add Comprehensive Help — How-to-play overlay, controls reference, bestiary/lore codex, crafting recipe reference.
 
-## Next Priority (Before New Apps)
-
-**App:** KQuest
-**Goal:** Phase 10 (Deep Expansion: Add sixth substantial expansion feature)
+### How to execute the next phase:
+1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
+2. Implement the feature in BOTH `KiloOS/public/apps/kquest.html` AND `KQuest/main.c`.
+3. Mark the phase as `[x]` in this plan file.
+4. Update the **Phase** number to the next unchecked phase.
+5. Commit and push both the code changes and this plan file update.
 
 
 
@@ -108,6 +115,24 @@ Each expansion phase adds ONE substantial feature to BOTH web and native version
 ### Completion (NEVER STOP — immediately start the next app)
 After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Immediately pick the next app from the Possible Future Apps list and start Phase 1.** This agent never idles. If the suggestion list is exhausted, invent new unique apps. The cycle is: create → expand deeply → complete → create next → repeat forever.
 
+### Subagent Workflow (CRITICAL — follow this every turn)
+1. `git pull` to get latest changes.
+2. Read `new_app_plan.md` to find the **Current App** and the next unchecked phase.
+3. Spawn a subagent, passing it:
+   - The full contents of `new_app_plan.md`
+   - The specific task: "Implement Phase N for [App Name] as described in the plan."
+4. The subagent does the coding, commits, and pushes.
+5. After the subagent completes, update `new_app_plan.md`: mark the phase `[x]`, bump the Phase number, commit and push.
+6. **If the subagent fails:** Log a one-line failure note in the plan file (e.g., `Phase 10: FAILED — [reason]`), commit, and **stop for this turn**. Do NOT retry immediately. The next cron trigger will retry.
+7. **If all 14 phases are done:** Move the app to Completed, pick the next app from the Possible Future Apps list, write its Phase 1-14 plan with concrete feature descriptions, and start Phase 1.
+
+### Writing Phase Plans for New Apps
+When starting a new app, you MUST write concrete phase descriptions for Phases 5-14 upfront. Do NOT leave them as "add a feature" — describe the specific feature. Example:
+- ✅ `Phase 5: Add 3 difficulty levels (Easy/Medium/Hard) affecting enemy speed and spawn rate.`
+- ❌ `Phase 5: Deep Expansion: Add first substantial expansion feature.`
+
+Use the game/utility feature priority lists above for inspiration, but write specific descriptions tailored to the app.
+
 ## Completed Apps
 - KDarts (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KGo (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
@@ -131,7 +156,6 @@ After Phase 14, mark the app as COMPLETE and move it to the Completed list. **Im
 ## Possible Future Apps (pick from here or invent your own)
 
 ### 🎮 GAMES — DEEP FANTASY & SCI-FI (PRIORITY)
-- **KQuest** — Fantasy text RPG with procedural dungeons. Character creation (warrior/mage/rogue). Inventory, equipment, spells. Turn-based combat with enemy AI. Town hub with shop, inn, quest board. Multiple dungeon biomes. Boss fights. Save/load. 20+ enemy types. Loot tables. XP and leveling.
 - **KStarship** — Sci-fi exploration. Navigate a star map, discover planets, manage fuel/hull/crew. Random encounters (pirates, anomalies, traders). Ship upgrades. Crew management. Text-based with ASCII star maps. Permadeath mode.
 - **KAlchemy** — Fantasy crafting/discovery game. Combine elements to discover new ones. 100+ discoverable recipes. Procedural hints. Encyclopedia tracking. Multiple tiers of complexity (earth+fire=lava, lava+water=obsidian). Score by discoveries.
 - **KFortress** — Tower defense with fantasy theme. Place towers on a grid path. Multiple tower types (archer, mage, cannon). Enemy waves with varying resistances. Upgrade system. Gold economy. 15+ levels with different maps. Boss waves.
