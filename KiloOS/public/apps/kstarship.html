@@ -20,6 +20,7 @@
       --red-alert: #ff3366;
       --purple-anomaly: #b026ff;
       --blue-station: #3b82f6;
+      --planet-glow: #00ffaa;
       --text-main: #c4e1ff;
       --text-muted: #6488a8;
       --font-mono: 'Consolas', 'Cascadia Code', 'Courier New', monospace;
@@ -119,7 +120,7 @@
 
     .main-layout {
       display: grid;
-      grid-template-columns: 285px 1fr 310px;
+      grid-template-columns: 290px 1fr 310px;
       grid-template-rows: 1fr 175px;
       gap: 12px;
       padding: 12px;
@@ -205,14 +206,14 @@
     .resource-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 6px;
       margin-top: 2px;
     }
 
     .res-card {
       background: rgba(10, 24, 48, 0.7);
       border: 1px solid #142e50;
-      padding: 8px 6px;
+      padding: 6px 4px;
       border-radius: 4px;
       text-align: center;
       transition: border-color 0.2s;
@@ -223,14 +224,14 @@
     }
 
     .res-val {
-      font-size: 1.05rem;
+      font-size: 0.95rem;
       font-weight: bold;
       color: var(--cyan-glow);
       text-shadow: 0 0 6px var(--cyan-glow);
     }
 
     .res-name {
-      font-size: 0.64rem;
+      font-size: 0.62rem;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -288,7 +289,7 @@
       left: 10px;
       z-index: 10;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       pointer-events: none;
       font-size: 0.75rem;
     }
@@ -296,9 +297,15 @@
     .hud-box {
       background: rgba(4, 12, 24, 0.9);
       border: 1px solid var(--border-cyan);
-      padding: 5px 10px;
+      padding: 4px 8px;
       border-radius: 3px;
       box-shadow: 0 0 8px rgba(0, 240, 255, 0.15);
+    }
+
+    .hud-box-biome {
+      border-color: var(--green-status);
+      color: var(--green-status);
+      text-shadow: 0 0 6px var(--green-status);
     }
 
     .star-map-canvas {
@@ -357,15 +364,16 @@
     .ascii-cell-asteroid { color: var(--amber-alert); text-shadow: 0 0 6px var(--amber-alert); }
     .ascii-cell-anomaly { color: var(--purple-anomaly); text-shadow: 0 0 8px var(--purple-anomaly); }
     .ascii-cell-pirate { color: var(--red-alert); text-shadow: 0 0 8px var(--red-alert); }
+    .ascii-cell-planet { color: var(--planet-glow); text-shadow: 0 0 8px var(--planet-glow); font-weight: bold; }
 
     /* Right Panel: Controls & Bridge Actions */
     .action-btn {
       background: rgba(10, 26, 50, 0.85);
       border: 1px solid var(--border-cyan);
       color: var(--cyan-glow);
-      padding: 9px 12px;
+      padding: 7px 10px;
       font-family: var(--font-mono);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       border-radius: 4px;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -396,8 +404,8 @@
     .dpad-container {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      margin-top: 4px;
+      gap: 4px;
+      margin-top: 2px;
     }
 
     .dpad-btn {
@@ -405,8 +413,8 @@
       border: 1px solid var(--border-color);
       color: var(--text-main);
       font-family: var(--font-mono);
-      font-size: 0.78rem;
-      padding: 8px 0;
+      font-size: 0.75rem;
+      padding: 6px 0;
       text-align: center;
       border-radius: 3px;
       cursor: pointer;
@@ -473,13 +481,13 @@
       background: #081426;
       border: 2px solid var(--cyan-glow);
       border-radius: 6px;
-      padding: 22px;
-      width: 500px;
+      padding: 20px;
+      width: 520px;
       max-width: 94vw;
       box-shadow: 0 0 35px rgba(0, 240, 255, 0.45);
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
     }
 
     .class-selector {
@@ -527,6 +535,35 @@
       border-color: var(--cyan-glow);
       box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
     }
+
+    .scan-telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      background: rgba(4, 12, 26, 0.8);
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid var(--border-cyan);
+      margin-top: 4px;
+    }
+
+    .telemetry-item {
+      text-align: center;
+    }
+
+    .telemetry-val {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--green-status);
+      text-shadow: 0 0 8px var(--green-status);
+    }
+
+    .telemetry-lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
   </style>
 </head>
 <body>
@@ -534,11 +571,12 @@
   <header>
     <div class="title-container">
       <span class="title-logo">🚀 KSTARSHIP</span>
-      <span class="subtitle">Sci-Fi Sector Command v2.0</span>
+      <span class="subtitle">Sci-Fi Sector Command v5.0</span>
     </div>
     <div class="header-info">
       <button class="audio-toggle" id="btnAudioToggle" onclick="toggleAudio()">🔊 AUDIO: ON</button>
       <div>SECTOR: <span id="currentSectorLabel" style="color: var(--cyan-glow);">ALPHA-01</span></div>
+      <div>BIOME: <span id="currentBiomeHeaderLabel" style="color: var(--green-status); font-weight:bold;">TERRAN</span></div>
       <div>GRID: <span id="gridCoordsLabel" style="color: var(--amber-alert);">D4</span></div>
     </div>
   </header>
@@ -573,8 +611,8 @@
         <div class="bar-bg"><div class="bar-fill bar-shields" id="barShields" style="width: 100%;"></div></div>
       </div>
 
-      <div class="panel-header" style="margin-top: 4px;">
-        <span>Manifest & Inventory</span>
+      <div class="panel-header" style="margin-top: 2px;">
+        <span>Manifest & Cargo</span>
       </div>
 
       <div class="resource-grid">
@@ -584,15 +622,23 @@
         </div>
         <div class="res-card">
           <div class="res-val" id="resOre">0</div>
-          <div class="res-name">Ore (Tons)</div>
+          <div class="res-name">Minerals</div>
+        </div>
+        <div class="res-card">
+          <div class="res-val" id="resGas">0</div>
+          <div class="res-name">Gas</div>
+        </div>
+        <div class="res-card">
+          <div class="res-val" id="resArtifacts">0</div>
+          <div class="res-name">Artifacts</div>
         </div>
         <div class="res-card">
           <div class="res-val" id="resCrew">10</div>
-          <div class="res-name">Crew Count</div>
+          <div class="res-name">Crew</div>
         </div>
         <div class="res-card">
           <div class="res-val" id="resScraps">25</div>
-          <div class="res-name">Tech Scrap</div>
+          <div class="res-name">Scrap</div>
         </div>
       </div>
     </div>
@@ -601,6 +647,7 @@
     <div class="card-panel viewport-panel">
       <div class="hud-overlay">
         <div class="hud-box" id="hudSystemLabel">SYSTEM: SOLARIS PRIME</div>
+        <div class="hud-box hud-box-biome" id="hudBiomeLabel">BIOME: TERRAN SYSTEM</div>
         <div class="hud-box" id="hudCellType" style="color: var(--amber-alert);">OBJECT: DEEP SPACE</div>
       </div>
 
@@ -619,7 +666,7 @@
     <!-- Right: Command Deck Controls -->
     <div class="card-panel">
       <div class="panel-header">
-        <span>Sector Navigation Grid</span>
+        <span>Navigation Grid</span>
       </div>
 
       <!-- Navigation D-Pad -->
@@ -635,13 +682,18 @@
         <button class="dpad-btn" onclick="moveShip(1, 1)">SE</button>
       </div>
 
-      <div class="panel-header" style="margin-top: 4px;">
+      <div class="panel-header" style="margin-top: 2px;">
         <span>Bridge Actions</span>
       </div>
 
       <button class="action-btn" onclick="btnScanSector()">
         <span>📡 SCAN SECTOR GRID</span>
         <small>-10 E</small>
+      </button>
+
+      <button class="action-btn" onclick="btnScanPlanet()" style="border-color: var(--planet-glow); color: var(--planet-glow);">
+        <span>🪐 ORBITAL PLANET SCAN</span>
+        <small>-12 E</small>
       </button>
 
       <button class="action-btn" onclick="btnWarpJump()">
@@ -679,6 +731,40 @@
     </div>
   </div>
 
+  <!-- Planet Telemetry & Scan Modal -->
+  <div class="modal-overlay" id="planetModal" style="display: none;">
+    <div class="modal-card">
+      <div class="panel-header" style="font-size: 1rem; border-color: var(--planet-glow); color: var(--planet-glow);">
+        <span>🪐 ORBITAL PLANET TELEMETRY</span>
+        <button class="audio-toggle" onclick="closePlanetModal()">✕ CLOSE</button>
+      </div>
+      <p style="font-size: 0.82rem; color: #a0c0e0;" id="planetModalDesc">High-resolution orbital sensor telemetry active.</p>
+      
+      <div class="scan-telemetry-grid">
+        <div class="telemetry-item">
+          <div class="telemetry-val" id="planetValMinerals">+0</div>
+          <div class="telemetry-lbl">Minerals (Ore)</div>
+        </div>
+        <div class="telemetry-item">
+          <div class="telemetry-val" style="color: var(--cyan-glow);" id="planetValGas">+0</div>
+          <div class="telemetry-lbl">Plasma Gas</div>
+        </div>
+        <div class="telemetry-item">
+          <div class="telemetry-val" style="color: var(--amber-glow);" id="planetValArtifacts">+0</div>
+          <div class="telemetry-lbl">Ancient Artifacts</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.75rem; color: var(--text-muted);" id="planetModalStatus">
+        SURVEY STATUS: ANALYSIS COMPLETE
+      </div>
+
+      <button class="action-btn" style="justify-content: center; margin-top: 4px;" onclick="closePlanetModal()">
+        ✅ LOG SURVEY DATA & RESUME COMMAND
+      </button>
+    </div>
+  </div>
+
   <!-- Outpost Services Modal -->
   <div class="modal-overlay" id="stationModal" style="display: none;">
     <div class="modal-card">
@@ -686,7 +772,7 @@
         <span>⚓ ORBITAL OUTPOST SERVICES</span>
         <button class="audio-toggle" onclick="closeStationModal()">✕ CLOSE</button>
       </div>
-      <p style="font-size: 0.8rem; color: #a0c0e0;">Welcome Captain. Outpost supplies and refueling docks are open.</p>
+      <p style="font-size: 0.8rem; color: #a0c0e0;">Welcome Captain. Station docks open for refueling and commerce.</p>
       
       <button class="action-btn" onclick="stationRefuel()">
         <span>⛽ REFUEL HYPER TANK (+30 Fuel)</span>
@@ -697,8 +783,16 @@
         <small>80 CREDITS</small>
       </button>
       <button class="action-btn" onclick="stationSellOre()">
-        <span>💰 SELL ALL MINED ORE</span>
+        <span>💰 SELL MINED ORE / MINERALS</span>
         <small>+25 CR / TON</small>
+      </button>
+      <button class="action-btn" onclick="stationSellGas()">
+        <span>💨 SELL PLASMA GAS RESERVES</span>
+        <small>+20 CR / UNIT</small>
+      </button>
+      <button class="action-btn" onclick="stationSellArtifacts()">
+        <span>🏛️ SELL ANCIENT ARTIFACTS</span>
+        <small>+150 CR / RELIC</small>
       </button>
       <button class="action-btn" onclick="stationRecruitCrew()">
         <span>👨‍🚀 RECRUIT CREW OFFICERS (+3 Crew)</span>
@@ -789,6 +883,14 @@
           gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
           osc.start(now);
           osc.stop(now + 0.15);
+        } else if (type === 'planetScan') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1200, now);
+          osc.frequency.setValueAtTime(1800, now + 0.1);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
         } else if (type === 'mine') {
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(250, now);
@@ -834,24 +936,12 @@
       } catch (e) { }
     }
 
-    // Game State
-    const state = {
-      shipName: 'SS ANTIGRAVITY',
-      shipClass: 'CORVETTE',
-      sector: 'ALPHA-01',
-      hull: 100, maxHull: 100,
-      fuel: 100, maxFuel: 100,
-      energy: 100, maxEnergy: 100,
-      shields: 75, maxShields: 75,
-      credits: 1000,
-      ore: 0,
-      crew: 10,
-      scraps: 25,
-      shipX: 3, shipY: 3, // 0..7 grid
-      gridSize: 8,
-      gridMap: [], // 8x8 matrix of object types: 'empty', 'star', 'station', 'asteroid', 'anomaly', 'pirate'
-      mapMode: 'canvas', // 'canvas' or 'ascii'
-      moveCount: 0
+    // Biomes Definition (Phase 5)
+    const BIOMES = {
+      TERRAN: { id: 'TERRAN', name: 'TERRAN SYSTEM', color: '#00f0ff', desc: 'Balanced sector with lush habitability.', bgGlow: 'rgba(0, 240, 255, 0.06)' },
+      VOLCANIC: { id: 'VOLCANIC', name: 'VOLCANIC SYSTEM', color: '#ff4422', desc: 'Geothermal flares & heavy mineral deposits.', bgGlow: 'rgba(255, 68, 34, 0.10)' },
+      NEBULA: { id: 'NEBULA', name: 'NEBULA SYSTEM', color: '#cc33ff', desc: 'Dense ion gas clouds & energy surges.', bgGlow: 'rgba(204, 51, 255, 0.10)' },
+      ASTEROID_BELT: { id: 'ASTEROID_BELT', name: 'ASTEROID BELT', color: '#ffaa00', desc: 'Dense asteroid fields & ancient relics.', bgGlow: 'rgba(255, 170, 0, 0.08)' }
     };
 
     const CELL_TYPES = {
@@ -860,11 +950,49 @@
       STATION: { code: 'station', symbol: '⚓', asciiClass: 'ascii-cell-station', name: 'ORBITAL OUTPOST' },
       ASTEROID: { code: 'asteroid', symbol: '⬢', asciiClass: 'ascii-cell-asteroid', name: 'ASTEROID FIELD' },
       ANOMALY: { code: 'anomaly', symbol: '🗲', asciiClass: 'ascii-cell-anomaly', name: 'QUANTUM ANOMALY' },
-      PIRATE: { code: 'pirate', symbol: '☠', asciiClass: 'ascii-cell-pirate', name: 'HOSTILE PIRATE' }
+      PIRATE: { code: 'pirate', symbol: '☠', asciiClass: 'ascii-cell-pirate', name: 'HOSTILE PIRATE' },
+      PLANET: { code: 'planet', symbol: '🪐', asciiClass: 'ascii-cell-planet', name: 'ORBITAL PLANET' }
+    };
+
+    // Game State
+    const state = {
+      shipName: 'SS ANTIGRAVITY',
+      shipClass: 'CORVETTE',
+      sector: 'ALPHA-01',
+      currentBiome: BIOMES.TERRAN,
+      hull: 100, maxHull: 100,
+      fuel: 100, maxFuel: 100,
+      energy: 100, maxEnergy: 100,
+      shields: 75, maxShields: 75,
+      credits: 1000,
+      ore: 0,
+      gas: 0,
+      artifacts: 0,
+      crew: 10,
+      scraps: 25,
+      shipX: 3, shipY: 3, // 0..7 grid
+      gridSize: 8,
+      gridMap: [], // 8x8 matrix of object types
+      planetDetails: {}, // "y_x" -> { name, scanned, minerals, gas, artifacts }
+      mapMode: 'canvas', // 'canvas' or 'ascii'
+      moveCount: 0
     };
 
     function generateSectorGrid() {
+      // Assign system biome
+      const keys = Object.keys(BIOMES);
+      state.currentBiome = BIOMES[keys[Math.floor(Math.random() * keys.length)]];
+
       state.gridMap = [];
+      state.planetDetails = {};
+
+      const planetNamesByBiome = {
+        TERRAN: ['Terran Prime', 'Oceania World', 'Lush Garden Moon', 'Verdant Haven'],
+        VOLCANIC: ['Magma Core', 'Pyroclastic Wastes', 'Obsidian Forge', 'Ignis IV'],
+        NEBULA: ['Gas Giant Alpha', 'Ion Cloud World', 'Aether Methane', 'Plasma Realm'],
+        ASTEROID_BELT: ['Barren Moon', 'Cratered Core', 'Ancient Relic World', 'Fragment X-9']
+      };
+
       for (let y = 0; y < state.gridSize; y++) {
         const row = [];
         for (let x = 0; x < state.gridSize; x++) {
@@ -873,12 +1001,43 @@
             continue;
           }
           const rand = Math.random();
-          if (rand < 0.06) row.push(CELL_TYPES.STATION);
-          else if (rand < 0.16) row.push(CELL_TYPES.STAR);
-          else if (rand < 0.32) row.push(CELL_TYPES.ASTEROID);
-          else if (rand < 0.42) row.push(CELL_TYPES.ANOMALY);
-          else if (rand < 0.50) row.push(CELL_TYPES.PIRATE);
-          else row.push(CELL_TYPES.EMPTY);
+
+          // Biome specific distribution ratios
+          let pStation = 0.06, pStar = 0.16, pAsteroid = 0.32, pAnomaly = 0.42, pPirate = 0.50, pPlanet = 0.65;
+
+          if (state.currentBiome.id === 'VOLCANIC') {
+            pAsteroid = 0.38; pPlanet = 0.70;
+          } else if (state.currentBiome.id === 'NEBULA') {
+            pAnomaly = 0.48; pPlanet = 0.68;
+          } else if (state.currentBiome.id === 'ASTEROID_BELT') {
+            pAsteroid = 0.42; pPlanet = 0.72;
+          }
+
+          if (rand < pStation) row.push(CELL_TYPES.STATION);
+          else if (rand < pStar) row.push(CELL_TYPES.STAR);
+          else if (rand < pAsteroid) row.push(CELL_TYPES.ASTEROID);
+          else if (rand < pAnomaly) row.push(CELL_TYPES.ANOMALY);
+          else if (rand < pPirate) row.push(CELL_TYPES.PIRATE);
+          else if (rand < pPlanet) {
+            row.push(CELL_TYPES.PLANET);
+            const pList = planetNamesByBiome[state.currentBiome.id];
+            const pName = pList[Math.floor(Math.random() * pList.length)];
+            let mins = Math.floor(Math.random() * 20) + 10;
+            let gas = Math.floor(Math.random() * 18) + 6;
+            let arts = (Math.random() < 0.4) ? (Math.floor(Math.random() * 2) + 1) : 0;
+
+            if (state.currentBiome.id === 'VOLCANIC') mins += 15;
+            if (state.currentBiome.id === 'NEBULA') gas += 15;
+            if (state.currentBiome.id === 'ASTEROID_BELT') arts += 1;
+
+            state.planetDetails[`${y}_${x}`] = {
+              name: pName,
+              scanned: false,
+              minerals: mins,
+              gas: gas,
+              artifacts: arts
+            };
+          } else row.push(CELL_TYPES.EMPTY);
         }
         state.gridMap.push(row);
       }
@@ -945,13 +1104,20 @@
       generateSectorGrid();
       updateUI();
       playSound('good');
-      addLog(`Commissioned ${state.shipClass} [${state.shipName}]. Command assumed.`, 'good');
+      addLog(`Commissioned ${state.shipClass} [${state.shipName}]. Sector ${state.currentBiome.name} launched.`, 'good');
     }
 
     function updateUI() {
       document.getElementById('shipNameDisplay').innerText = state.shipName;
       document.getElementById('shipClassTag').innerText = state.shipClass;
       document.getElementById('currentSectorLabel').innerText = state.sector;
+
+      // Biome Header & HUD
+      document.getElementById('currentBiomeHeaderLabel').innerText = state.currentBiome.id;
+      document.getElementById('currentBiomeHeaderLabel').style.color = state.currentBiome.color;
+      document.getElementById('hudBiomeLabel').innerText = `BIOME: ${state.currentBiome.name}`;
+      document.getElementById('hudBiomeLabel').style.borderColor = state.currentBiome.color;
+      document.getElementById('hudBiomeLabel').style.color = state.currentBiome.color;
 
       const colChar = String.fromCharCode(65 + state.shipX);
       const rowNum = state.shipY + 1;
@@ -972,12 +1138,19 @@
 
       document.getElementById('resCredits').innerText = state.credits.toLocaleString();
       document.getElementById('resOre').innerText = state.ore;
+      document.getElementById('resGas').innerText = state.gas;
+      document.getElementById('resArtifacts').innerText = state.artifacts;
       document.getElementById('resCrew').innerText = state.crew;
       document.getElementById('resScraps').innerText = state.scraps;
 
       // Current cell object
       const currentCell = state.gridMap[state.shipY][state.shipX];
-      document.getElementById('hudCellType').innerText = `OBJECT: ${currentCell.name}`;
+      let cellDisplayName = currentCell.name;
+      if (currentCell === CELL_TYPES.PLANET) {
+        const pInfo = state.planetDetails[`${state.shipY}_${state.shipX}`];
+        if (pInfo) cellDisplayName = `PLANET: ${pInfo.name}`;
+      }
+      document.getElementById('hudCellType').innerText = `OBJECT: ${cellDisplayName}`;
 
       renderAsciiGrid();
     }
@@ -1010,9 +1183,24 @@
       state.energy = Math.max(0, state.energy - 1);
 
       state.moveCount++;
-      if (state.moveCount % 6 === 0) {
-        // Crew consumption
-        if (state.crew > 0) addLog('Life support consumed 1 unit supplies for crew.', 'sys');
+      if (state.moveCount % 6 === 0 && state.crew > 0) {
+        addLog('Life support consumed 1 unit supplies for crew.', 'sys');
+      }
+
+      // Biome Ambient Environmental Effects
+      if (state.currentBiome.id === 'VOLCANIC' && Math.random() < 0.15) {
+        const flareDmg = Math.floor(Math.random() * 4) + 2;
+        if (state.shields >= flareDmg) {
+          state.shields -= flareDmg;
+          addLog(`[VOLCANIC] Geothermal solar flare scorched deflector grid (-${flareDmg} Shields).`, 'warn');
+        } else {
+          state.hull = Math.max(0, state.hull - flareDmg);
+          addLog(`[VOLCANIC] Thermal radiation hit hull structure (-${flareDmg} HP)!`, 'alert');
+        }
+      } else if (state.currentBiome.id === 'NEBULA' && Math.random() < 0.20) {
+        const recharge = Math.floor(Math.random() * 6) + 4;
+        state.energy = Math.min(state.maxEnergy, state.energy + recharge);
+        addLog(`[NEBULA] Plasma cloud energy absorbed (+${recharge} Energy).`, 'good');
       }
 
       playSound('move');
@@ -1070,13 +1258,18 @@
           state.hull = Math.max(0, state.hull - rem);
           addLog(`Shields collapsed! Hull took ${rem} combat damage!`, 'alert');
         }
+      } else if (cell === CELL_TYPES.PLANET) {
+        const pData = state.planetDetails[`${state.shipY}_${state.shipX}`];
+        if (pData) {
+          addLog(`[ORBIT] Entered orbit around ${pData.name}. Execute Orbital Planet Scan.`, 'sys');
+        }
       }
 
       updateUI();
     }
 
     function centerView() {
-      addLog(`Current location locked: [${String.fromCharCode(65 + state.shipX)}${state.shipY + 1}]`, 'sys');
+      addLog(`Current location locked: [${String.fromCharCode(65 + state.shipX)}${state.shipY + 1}] in ${state.currentBiome.name}`, 'sys');
     }
 
     // Actions
@@ -1089,15 +1282,64 @@
       state.energy -= 10;
       playSound('scan');
       
-      let counts = { station: 0, asteroid: 0, anomaly: 0, pirate: 0 };
+      let counts = { station: 0, asteroid: 0, anomaly: 0, pirate: 0, planet: 0 };
       for (let y = 0; y < state.gridSize; y++) {
         for (let x = 0; x < state.gridSize; x++) {
           const code = state.gridMap[y][x].code;
           if (counts[code] !== undefined) counts[code]++;
         }
       }
-      addLog(`[SCAN COMPLETE] Outposts: ${counts.station} | Asteroids: ${counts.asteroid} | Anomalies: ${counts.anomaly} | Hostiles: ${counts.pirate}`, 'sys');
+      addLog(`[SCAN COMPLETE] Planets: ${counts.planet} | Outposts: ${counts.station} | Asteroids: ${counts.asteroid} | Hostiles: ${counts.pirate}`, 'sys');
       updateUI();
+    }
+
+    function btnScanPlanet() {
+      const cell = state.gridMap[state.shipY][state.shipX];
+      if (cell !== CELL_TYPES.PLANET) {
+        addLog('Orbital planet scan target unavailable. Navigate starship to a Planet grid cell.', 'warn');
+        playSound('alert');
+        return;
+      }
+
+      if (state.energy < 12) {
+        addLog('Insufficient reactor energy for orbital planet scan.', 'warn');
+        playSound('alert');
+        return;
+      }
+
+      state.energy -= 12;
+      playSound('planetScan');
+
+      const pKey = `${state.shipY}_${state.shipX}`;
+      const planet = state.planetDetails[pKey];
+      if (!planet) return;
+
+      if (!planet.scanned) {
+        planet.scanned = true;
+        state.ore += planet.minerals;
+        state.gas += planet.gas;
+        state.artifacts += planet.artifacts;
+
+        addLog(`[ORBITAL SCAN] ${planet.name} surveyed! Extracted +${planet.minerals} Minerals, +${planet.gas} Gas, +${planet.artifacts} Artifacts!`, 'good');
+      } else {
+        addLog(`[ORBITAL SURVEY RE-READ] ${planet.name} surveyed earlier. Minerals: ${planet.minerals} | Gas: ${planet.gas} | Artifacts: ${planet.artifacts}`, 'sys');
+      }
+
+      openPlanetModal(planet);
+      updateUI();
+    }
+
+    function openPlanetModal(planet) {
+      document.getElementById('planetModalDesc').innerText = `Orbital telemetry scan report for target world: ${planet.name} [${state.currentBiome.name}].`;
+      document.getElementById('planetValMinerals').innerText = `+${planet.minerals}`;
+      document.getElementById('planetValGas').innerText = `+${planet.gas}`;
+      document.getElementById('planetValArtifacts').innerText = `+${planet.artifacts}`;
+      document.getElementById('planetModalStatus').innerText = `SURVEY STATUS: ${planet.scanned ? 'ANALYSIS COMPLETED & CARGO LOGGED' : 'PENDING'}`;
+      document.getElementById('planetModal').style.display = 'flex';
+    }
+
+    function closePlanetModal() {
+      document.getElementById('planetModal').style.display = 'none';
     }
 
     function btnWarpJump() {
@@ -1117,7 +1359,7 @@
 
       generateSectorGrid();
       updateUI();
-      addLog(`[WARP JUMP] Disengaged hyperdrive. Arrived at sector ${state.sector}.`, 'good');
+      addLog(`[WARP JUMP] Disengaged hyperdrive. Arrived at sector ${state.sector} [${state.currentBiome.name}].`, 'good');
     }
 
     function btnMineAsteroids() {
@@ -1138,7 +1380,7 @@
       state.ore += minedOre;
       state.scraps += minedScrap;
       updateUI();
-      addLog(`[MINING LASER] Extracted ${minedOre} tons rare ore & ${minedScrap} tech scrap!`, 'good');
+      addLog(`[MINING LASER] Extracted ${minedOre} tons minerals & ${minedScrap} tech scrap!`, 'good');
     }
 
     function btnDockStation() {
@@ -1225,13 +1467,39 @@
 
     function stationSellOre() {
       if (state.ore <= 0) {
-        addLog('No ore in cargo bay to sell.', 'warn');
+        addLog('No minerals/ore in cargo bay to sell.', 'warn');
         return;
       }
       const earned = state.ore * 25;
       state.credits += earned;
-      addLog(`[STATION] Sold ${state.ore} tons of rare ore for +${earned} Cr!`, 'good');
+      addLog(`[STATION] Sold ${state.ore} tons of minerals for +${earned} Cr!`, 'good');
       state.ore = 0;
+      updateUI();
+      playSound('good');
+    }
+
+    function stationSellGas() {
+      if (state.gas <= 0) {
+        addLog('No plasma gas reserves in cargo bay to sell.', 'warn');
+        return;
+      }
+      const earned = state.gas * 20;
+      state.credits += earned;
+      addLog(`[STATION] Sold ${state.gas} units of plasma gas for +${earned} Cr!`, 'good');
+      state.gas = 0;
+      updateUI();
+      playSound('good');
+    }
+
+    function stationSellArtifacts() {
+      if (state.artifacts <= 0) {
+        addLog('No ancient artifacts in inventory to sell.', 'warn');
+        return;
+      }
+      const earned = state.artifacts * 150;
+      state.credits += earned;
+      addLog(`[STATION] Sold ${state.artifacts} ancient relics to outpost museum for +${earned} Cr!`, 'good');
+      state.artifacts = 0;
       updateUI();
       playSound('good');
     }
@@ -1341,7 +1609,11 @@
 
       const w = canvas.width;
       const h = canvas.height;
+      
+      // Biome tint background
       ctx.fillStyle = '#03060d';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = state.currentBiome.bgGlow;
       ctx.fillRect(0, 0, w, h);
 
       // Background stars
@@ -1416,13 +1688,32 @@
           } else {
             const cell = state.gridMap[y][x];
             if (cell !== CELL_TYPES.EMPTY) {
-              ctx.font = '16px Consolas';
-              if (cell === CELL_TYPES.STAR) ctx.fillStyle = '#ffee55';
-              else if (cell === CELL_TYPES.STATION) ctx.fillStyle = '#3b82f6';
-              else if (cell === CELL_TYPES.ASTEROID) ctx.fillStyle = '#ffaa00';
-              else if (cell === CELL_TYPES.ANOMALY) ctx.fillStyle = '#b026ff';
-              else if (cell === CELL_TYPES.PIRATE) ctx.fillStyle = '#ff3366';
-              ctx.fillText(cell.symbol, cx, cy);
+              if (cell === CELL_TYPES.PLANET) {
+                // Orbital Planet GDI rendering with rings
+                ctx.save();
+                ctx.fillStyle = '#00ffaa';
+                ctx.shadowColor = '#00ffaa';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Planet Ring
+                ctx.strokeStyle = 'rgba(0, 255, 170, 0.6)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, 11, 4, Math.PI / 6, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+              } else {
+                ctx.font = '16px Consolas';
+                if (cell === CELL_TYPES.STAR) ctx.fillStyle = '#ffee55';
+                else if (cell === CELL_TYPES.STATION) ctx.fillStyle = '#3b82f6';
+                else if (cell === CELL_TYPES.ASTEROID) ctx.fillStyle = '#ffaa00';
+                else if (cell === CELL_TYPES.ANOMALY) ctx.fillStyle = '#b026ff';
+                else if (cell === CELL_TYPES.PIRATE) ctx.fillStyle = '#ff3366';
+                ctx.fillText(cell.symbol, cx, cy);
+              }
             }
           }
         }
@@ -1434,12 +1725,14 @@
     // Keyboard Navigation Listener
     window.addEventListener('keydown', (e) => {
       if (document.getElementById('initModal').style.display !== 'none' ||
-          document.getElementById('stationModal').style.display !== 'none') return;
+          document.getElementById('stationModal').style.display !== 'none' ||
+          document.getElementById('planetModal').style.display !== 'none') return;
 
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveShip(0, -1);
       else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') moveShip(0, 1);
       else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveShip(-1, 0);
       else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveShip(1, 0);
+      else if (e.key === 'p' || e.key === 'P') btnScanPlanet();
       else if (e.key === ' ') btnScanSector();
     });
 

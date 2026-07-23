@@ -14,7 +14,16 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
     return dest;
 }
 
-// Game State Definitions
+// Game State Definitions (Phase 5 - Biomes & Planet Scanning)
+typedef struct {
+    int type;      // 0: Terran, 1: Volcanic, 2: Gas Giant, 3: Ancient Ruins
+    int scanned;   // 0: no, 1: yes
+    int minerals;
+    int gas;
+    int artifacts;
+    char name[32];
+} PlanetCellData;
+
 typedef struct {
     char shipName[32];
     char shipClass[16];
@@ -25,15 +34,20 @@ typedef struct {
     int shields, maxShields;
     int credits;
     int ore;
+    int gas;       // Plasma Gas Resource
+    int artifacts; // Ancient Artifacts
     int crew;
     int scraps;
     int shipX, shipY;
-    int gridMap[8][8]; // 0: empty, 1: star, 2: station, 3: asteroid, 4: anomaly, 5: pirate
+    int gridMap[8][8]; // 0: empty, 1: star, 2: station, 3: asteroid, 4: anomaly, 5: pirate, 6: planet
+    PlanetCellData planetData[8][8];
+    int currentBiome;  // 0: Terran, 1: Volcanic, 2: Nebula, 3: Asteroid Belt
     int moveCount;
     int mapMode;       // 0: Graphical GDI, 1: ASCII Matrix
     int audioMuted;    // 0: Sound ON, 1: Muted
     int inInitModal;   // 1: Commission Modal Active
     int inStationModal;// 1: Outpost Services Active
+    int inPlanetModal; // 1: Planet Telemetry Active
     int selectedClass; // 0: Corvette, 1: Frigate, 2: Interceptor, 3: Cruiser
 } StarshipState;
 
@@ -43,11 +57,13 @@ static StarshipState g_State = {
     100, 100,
     100, 100,
     75, 75,
-    1000, 0, 10, 25,
+    1000, 0, 0, 0, 10, 25,
     3, 3,
-    {{0}}, 0,
-    0, 0, 1, 0, 0
+    {{0}}, {{{0}}}, 0, 0,
+    0, 0, 1, 0, 0, 0
 };
+
+static const char* g_BiomeNames[] = {"TERRAN SYSTEM", "VOLCANIC SYSTEM", "NEBULA SYSTEM", "ASTEROID BELT"};
 
 typedef struct {
     char msg[128];
@@ -95,31 +111,59 @@ void AddLog(const char* msg, int type) {
 void PlayGameSound(int type) {
     if (g_State.audioMuted) return;
     switch (type) {
-        case 1: Beep(450, 40); break;  // Move
-        case 2: Beep(1200, 100); break; // Scan
-        case 3: Beep(250, 150); break;  // Mine
-        case 4: Beep(1600, 200); break; // Warp
-        case 5: Beep(900, 120); break;  // Dock
-        case 6: Beep(220, 220); break;  // Alert
-        case 7: Beep(850, 100); break;  // Good
+        case 1: Beep(450, 40); break;   // Move
+        case 2: Beep(1200, 100); break;  // Scan
+        case 3: Beep(250, 150); break;   // Mine
+        case 4: Beep(1600, 200); break;  // Warp
+        case 5: Beep(900, 120); break;   // Dock
+        case 6: Beep(220, 220); break;   // Alert
+        case 7: Beep(850, 100); break;   // Good
+        case 8: Beep(1400, 80); Beep(1800, 120); break; // Planet Scan
     }
 }
 
 void GenerateSectorGrid() {
+    g_State.currentBiome = xrand() % 4;
     int x, y;
     for (y = 0; y < 8; y++) {
         for (x = 0; x < 8; x++) {
+            g_State.planetData[y][x].scanned = 0;
             if (x == g_State.shipX && y == g_State.shipY) {
                 g_State.gridMap[y][x] = 0;
                 continue;
             }
             int r = xrand() % 100;
-            if (r < 6) g_State.gridMap[y][x] = 2;       // Station
-            else if (r < 16) g_State.gridMap[y][x] = 1; // Star
-            else if (r < 32) g_State.gridMap[y][x] = 3; // Asteroid
-            else if (r < 42) g_State.gridMap[y][x] = 4; // Anomaly
-            else if (r < 50) g_State.gridMap[y][x] = 5; // Pirate
-            else g_State.gridMap[y][x] = 0;            // Empty
+            int pStation = 6, pStar = 16, pAsteroid = 32, pAnomaly = 42, pPirate = 50, pPlanet = 65;
+
+            if (g_State.currentBiome == 1) { // Volcanic
+                pAsteroid = 38; pPlanet = 70;
+            } else if (g_State.currentBiome == 2) { // Nebula
+                pAnomaly = 48; pPlanet = 68;
+            } else if (g_State.currentBiome == 3) { // Asteroid Belt
+                pAsteroid = 42; pPlanet = 72;
+            }
+
+            if (r < pStation) g_State.gridMap[y][x] = 2;       // Station
+            else if (r < pStar) g_State.gridMap[y][x] = 1;      // Star
+            else if (r < pAsteroid) g_State.gridMap[y][x] = 3;  // Asteroid
+            else if (r < pAnomaly) g_State.gridMap[y][x] = 4;   // Anomaly
+            else if (r < pPirate) g_State.gridMap[y][x] = 5;    // Pirate
+            else if (r < pPlanet) {
+                g_State.gridMap[y][x] = 6;                      // Planet
+                g_State.planetData[y][x].type = xrand() % 4;
+                g_State.planetData[y][x].minerals = (xrand() % 20) + 10;
+                g_State.planetData[y][x].gas = (xrand() % 18) + 6;
+                g_State.planetData[y][x].artifacts = ((xrand() % 100) < 40) ? ((xrand() % 2) + 1) : 0;
+
+                if (g_State.currentBiome == 1) g_State.planetData[y][x].minerals += 15;
+                if (g_State.currentBiome == 2) g_State.planetData[y][x].gas += 15;
+                if (g_State.currentBiome == 3) g_State.planetData[y][x].artifacts += 1;
+
+                const char* pNames[] = {"Terran Prime", "Volcanic Core", "Gas Giant Alpha", "Ancient Relic Moon"};
+                lstrcpyA(g_State.planetData[y][x].name, pNames[g_State.planetData[y][x].type]);
+            } else {
+                g_State.gridMap[y][x] = 0;                     // Empty
+            }
         }
     }
 }
@@ -137,12 +181,13 @@ void InitStars() {
 
 // Window Controls & Handles
 static HWND hBtnAudioToggle, hBtnModeToggle;
-static HWND hBtnScan, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair;
+static HWND hBtnScan, hBtnScanPlanet, hBtnWarp, hBtnMine, hBtnDock, hBtnShield, hBtnRepair;
 static HWND hBtnNW, hBtnN, hBtnNE, hBtnW, hBtnCenter, hBtnE, hBtnSW, hBtnS, hBtnSE;
 
 // Modal Controls
 static HWND hBtnClass0, hBtnClass1, hBtnClass2, hBtnClass3, hBtnConfirmInit;
-static HWND hBtnStRefuel, hBtnStRepair, hBtnStSellOre, hBtnStRecruit, hBtnStClose;
+static HWND hBtnStRefuel, hBtnStRepair, hBtnStSellOre, hBtnStSellGas, hBtnStSellArtifacts, hBtnStRecruit, hBtnStClose;
+static HWND hBtnPlanetClose;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -151,39 +196,45 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal);
 
     // Main Deck Action & Nav Buttons
-    ShowWindow(hBtnScan, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnWarp, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnMine, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnDock, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnShield, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnRepair, inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnScanPlanet, inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnWarp,       inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnMine,       inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnDock,       inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnShield,     inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnRepair,     inMain ? SW_SHOW : SW_HIDE);
 
-    ShowWindow(hBtnNW, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnN, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnNE, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnW, inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnNW,     inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnN,      inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnNE,     inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnW,      inMain ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnCenter, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnE, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnSW, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnS, inMain ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnSE, inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnE,      inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnSW,     inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnS,      inMain ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnSE,     inMain ? SW_SHOW : SW_HIDE);
 
     // Init Modal Buttons
-    ShowWindow(hBtnClass0, g_State.inInitModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnClass1, g_State.inInitModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnClass2, g_State.inInitModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnClass3, g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnClass0,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnClass1,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnClass2,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnClass3,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnConfirmInit, g_State.inInitModal ? SW_SHOW : SW_HIDE);
 
     // Station Modal Buttons
-    ShowWindow(hBtnStRefuel, g_State.inStationModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnStRepair, g_State.inStationModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnStSellOre, g_State.inStationModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnStRecruit, g_State.inStationModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnStClose, g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStRefuel,        g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStRepair,        g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStSellOre,       g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStSellGas,       g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStSellArtifacts, g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStRecruit,       g_State.inStationModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnStClose,         g_State.inStationModal ? SW_SHOW : SW_HIDE);
+
+    // Planet Telemetry Modal Buttons
+    ShowWindow(hBtnPlanetClose, g_State.inPlanetModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -195,33 +246,33 @@ void ApplyShipClassStats() {
         g_State.maxFuel = 120; g_State.fuel = 120;
         g_State.maxEnergy = 100; g_State.energy = 100;
         g_State.maxShields = 75; g_State.shields = 75;
-        g_State.credits = 1000; g_State.crew = 10; g_State.ore = 0; g_State.scraps = 25;
+        g_State.credits = 1000; g_State.crew = 10; g_State.ore = 0; g_State.gas = 0; g_State.artifacts = 0; g_State.scraps = 25;
     } else if (g_State.selectedClass == 1) { // Frigate
         lstrcpyA(g_State.shipClass, "FRIGATE");
         g_State.maxHull = 150; g_State.hull = 150;
         g_State.maxFuel = 90; g_State.fuel = 90;
         g_State.maxEnergy = 90; g_State.energy = 90;
         g_State.maxShields = 50; g_State.shields = 50;
-        g_State.credits = 800; g_State.crew = 16; g_State.ore = 20; g_State.scraps = 25;
+        g_State.credits = 800; g_State.crew = 16; g_State.ore = 20; g_State.gas = 5; g_State.artifacts = 0; g_State.scraps = 25;
     } else if (g_State.selectedClass == 2) { // Interceptor
         lstrcpyA(g_State.shipClass, "INTERCEPTOR");
         g_State.maxHull = 80; g_State.hull = 80;
         g_State.maxFuel = 100; g_State.fuel = 100;
         g_State.maxEnergy = 130; g_State.energy = 130;
         g_State.maxShields = 100; g_State.shields = 100;
-        g_State.credits = 1200; g_State.crew = 8; g_State.ore = 0; g_State.scraps = 25;
+        g_State.credits = 1200; g_State.crew = 8; g_State.ore = 0; g_State.gas = 0; g_State.artifacts = 0; g_State.scraps = 25;
     } else if (g_State.selectedClass == 3) { // Cruiser
         lstrcpyA(g_State.shipClass, "CRUISER");
         g_State.maxHull = 110; g_State.hull = 110;
         g_State.maxFuel = 140; g_State.fuel = 140;
         g_State.maxEnergy = 110; g_State.energy = 110;
         g_State.maxShields = 85; g_State.shields = 85;
-        g_State.credits = 1500; g_State.crew = 20; g_State.ore = 0; g_State.scraps = 25;
+        g_State.credits = 1500; g_State.crew = 20; g_State.ore = 0; g_State.gas = 0; g_State.artifacts = 0; g_State.scraps = 25;
     }
 }
 
 void MoveShip(HWND hwnd, int dx, int dy) {
-    if (g_State.inInitModal || g_State.inStationModal) return;
+    if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal) return;
 
     if (g_State.hull <= 0) {
         AddLog("[ALERT] SHIP DESTROYED! Subsystems unresponsive.", 2);
@@ -250,6 +301,22 @@ void MoveShip(HWND hwnd, int dx, int dy) {
     g_State.moveCount++;
     if (g_State.moveCount % 6 == 0 && g_State.crew > 0) {
         AddLog("[SYS] Life support consumed 1 unit supplies for crew.", 0);
+    }
+
+    // Biome Environmental Effects
+    if (g_State.currentBiome == 1 && (xrand() % 100) < 15) { // Volcanic
+        int flare = (xrand() % 4) + 2;
+        if (g_State.shields >= flare) {
+          g_State.shields -= flare;
+          AddLog("[VOLCANIC] Geothermal solar flare scorched deflectors!", 1);
+        } else {
+          g_State.hull = (g_State.hull > flare) ? g_State.hull - flare : 0;
+          AddLog("[VOLCANIC] Thermal radiation scorched hull structure!", 2);
+        }
+    } else if (g_State.currentBiome == 2 && (xrand() % 100) < 20) { // Nebula
+        int energyGain = (xrand() % 6) + 4;
+        g_State.energy = (g_State.energy + energyGain > g_State.maxEnergy) ? g_State.maxEnergy : g_State.energy + energyGain;
+        AddLog("[NEBULA] Plasma cloud absorbed (+Reactor Energy).", 3);
     }
 
     PlayGameSound(1);
@@ -306,6 +373,10 @@ void MoveShip(HWND hwnd, int dx, int dy) {
             g_State.hull = (g_State.hull > rem) ? g_State.hull - rem : 0;
             AddLog("[ALERT] Shields collapsed! Hull took combat damage!", 2);
         }
+    } else if (cell == 6) { // Planet
+        char buf[128];
+        wsprintfA(buf, "[ORBIT] Entered orbit around %s. Execute Planet Scan.", g_State.planetData[g_State.shipY][g_State.shipX].name);
+        AddLog(buf, 0);
     }
 
     InvalidateRect(hwnd, NULL, TRUE);
@@ -317,7 +388,7 @@ void ExecuteScan(HWND hwnd) {
         PlayGameSound(6);
     } else {
         g_State.energy -= 10;
-        int st = 0, ast = 0, anom = 0, pir = 0, x, y;
+        int st = 0, ast = 0, anom = 0, pir = 0, plan = 0, x, y;
         for (y = 0; y < 8; y++) {
             for (x = 0; x < 8; x++) {
                 int c = g_State.gridMap[y][x];
@@ -325,13 +396,51 @@ void ExecuteScan(HWND hwnd) {
                 else if (c == 3) ast++;
                 else if (c == 4) anom++;
                 else if (c == 5) pir++;
+                else if (c == 6) plan++;
             }
         }
         char buf[128];
-        wsprintfA(buf, "[SCAN COMPLETE] Outposts: %d | Asteroids: %d | Anomalies: %d | Hostiles: %d", st, ast, anom, pir);
+        wsprintfA(buf, "[SCAN COMPLETE] Planets: %d | Outposts: %d | Asteroids: %d | Hostiles: %d", plan, st, ast, pir);
         AddLog(buf, 0);
         PlayGameSound(2);
     }
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void ExecutePlanetScan(HWND hwnd) {
+    int cell = g_State.gridMap[g_State.shipY][g_State.shipX];
+    if (cell != 6) {
+        AddLog("[WARN] Target is not a planet cell. Move starship to a Planet location.", 1);
+        PlayGameSound(6);
+        return;
+    }
+    if (g_State.energy < 12) {
+        AddLog("[WARN] Insufficient reactor energy for orbital planet scan.", 1);
+        PlayGameSound(6);
+        return;
+    }
+
+    g_State.energy -= 12;
+    PlayGameSound(8);
+
+    PlanetCellData* p = &g_State.planetData[g_State.shipY][g_State.shipX];
+    if (!p->scanned) {
+        p->scanned = 1;
+        g_State.ore += p->minerals;
+        g_State.gas += p->gas;
+        g_State.artifacts += p->artifacts;
+
+        char buf[160];
+        wsprintfA(buf, "[ORBITAL SCAN] %s surveyed! Minerals +%d | Gas +%d | Artifacts +%d", p->name, p->minerals, p->gas, p->artifacts);
+        AddLog(buf, 3);
+    } else {
+        char buf[160];
+        wsprintfA(buf, "[ORBITAL SURVEY] %s already scanned. Minerals: %d | Gas: %d | Artifacts: %d", p->name, p->minerals, p->gas, p->artifacts);
+        AddLog(buf, 0);
+    }
+
+    g_State.inPlanetModal = 1;
+    UpdateControlVisibility(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -351,7 +460,9 @@ void ExecuteWarp(HWND hwnd) {
         g_State.shipY = xrand() % 8;
         GenerateSectorGrid();
 
-        AddLog("[WARP JUMP] Disengaged hyperdrive. Arrived at sector.", 3);
+        char buf[128];
+        wsprintfA(buf, "[WARP JUMP] Disengaged hyperdrive. Arrived at sector [%s].", g_BiomeNames[g_State.currentBiome]);
+        AddLog(buf, 3);
         PlayGameSound(4);
     }
     InvalidateRect(hwnd, NULL, TRUE);
@@ -461,9 +572,39 @@ void StationSellOre(HWND hwnd) {
     int earned = g_State.ore * 25;
     g_State.credits += earned;
     char buf[128];
-    wsprintfA(buf, "[STATION] Sold %d tons of rare ore for +%d Cr!", g_State.ore, earned);
+    wsprintfA(buf, "[STATION] Sold %d tons of minerals for +%d Cr!", g_State.ore, earned);
     AddLog(buf, 3);
     g_State.ore = 0;
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void StationSellGas(HWND hwnd) {
+    if (g_State.gas <= 0) {
+        AddLog("[WARN] No gas reserves in cargo bay to sell.", 1);
+        return;
+    }
+    int earned = g_State.gas * 20;
+    g_State.credits += earned;
+    char buf[128];
+    wsprintfA(buf, "[STATION] Sold %d units plasma gas for +%d Cr!", g_State.gas, earned);
+    AddLog(buf, 3);
+    g_State.gas = 0;
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void StationSellArtifacts(HWND hwnd) {
+    if (g_State.artifacts <= 0) {
+        AddLog("[WARN] No ancient artifacts in inventory to sell.", 1);
+        return;
+    }
+    int earned = g_State.artifacts * 150;
+    g_State.credits += earned;
+    char buf[128];
+    wsprintfA(buf, "[STATION] Sold %d ancient relics to museum for +%d Cr!", g_State.artifacts, earned);
+    AddLog(buf, 3);
+    g_State.artifacts = 0;
     PlayGameSound(7);
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -527,25 +668,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnModeToggle  = CreateWindowA("BUTTON", "🌌 GRAPHICAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 515, 8, 115, 24, hwnd, (HMENU)101, NULL, NULL);
 
             // Right Panel Action Buttons
-            hBtnScan   = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 26, hwnd, (HMENU)102, NULL, NULL);
-            hBtnWarp   = CreateWindowA("BUTTON", "🌌 HYPER WARP",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 78, 195, 26, hwnd, (HMENU)103, NULL, NULL);
-            hBtnMine   = CreateWindowA("BUTTON", "⛏️ MINE ASTEROID", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 108, 195, 26, hwnd, (HMENU)104, NULL, NULL);
-            hBtnDock   = CreateWindowA("BUTTON", "⚓ DOCK OUTPOST", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 138, 195, 26, hwnd, (HMENU)105, NULL, NULL);
-            hBtnShield = CreateWindowA("BUTTON", "🛡️ BOOST DEFLECT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 168, 195, 26, hwnd, (HMENU)106, NULL, NULL);
-            hBtnRepair = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 198, 195, 26, hwnd, (HMENU)107, NULL, NULL);
+            hBtnScan       = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 24, hwnd, (HMENU)102, NULL, NULL);
+            hBtnScanPlanet = CreateWindowA("BUTTON", "🪐 PLANET SCAN", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 74, 195, 24, hwnd, (HMENU)108, NULL, NULL);
+            hBtnWarp       = CreateWindowA("BUTTON", "🌌 HYPER WARP",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 100, 195, 24, hwnd, (HMENU)103, NULL, NULL);
+            hBtnMine       = CreateWindowA("BUTTON", "⛏️ MINE ASTEROID", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 126, 195, 24, hwnd, (HMENU)104, NULL, NULL);
+            hBtnDock       = CreateWindowA("BUTTON", "⚓ DOCK OUTPOST", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 152, 195, 24, hwnd, (HMENU)105, NULL, NULL);
+            hBtnShield     = CreateWindowA("BUTTON", "🛡️ BOOST DEFLECT",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 178, 195, 24, hwnd, (HMENU)106, NULL, NULL);
+            hBtnRepair     = CreateWindowA("BUTTON", "🛠️ REPAIR HULL",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 204, 195, 24, hwnd, (HMENU)107, NULL, NULL);
 
             // D-Pad Navigation Buttons
-            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 240, 60, 26, hwnd, (HMENU)201, NULL, NULL);
-            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 240, 60, 26, hwnd, (HMENU)202, NULL, NULL);
-            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 240, 60, 26, hwnd, (HMENU)203, NULL, NULL);
+            hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 238, 60, 24, hwnd, (HMENU)201, NULL, NULL);
+            hBtnN      = CreateWindowA("BUTTON", "N ▲",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 238, 60, 24, hwnd, (HMENU)202, NULL, NULL);
+            hBtnNE     = CreateWindowA("BUTTON", "NE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 238, 60, 24, hwnd, (HMENU)203, NULL, NULL);
 
-            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 272, 60, 26, hwnd, (HMENU)204, NULL, NULL);
-            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 272, 60, 26, hwnd, (HMENU)205, NULL, NULL);
-            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 272, 60, 26, hwnd, (HMENU)206, NULL, NULL);
+            hBtnW      = CreateWindowA("BUTTON", "◄ W",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 266, 60, 24, hwnd, (HMENU)204, NULL, NULL);
+            hBtnCenter = CreateWindowA("BUTTON", "●",    WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 266, 60, 24, hwnd, (HMENU)205, NULL, NULL);
+            hBtnE      = CreateWindowA("BUTTON", "E ►",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 266, 60, 24, hwnd, (HMENU)206, NULL, NULL);
 
-            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 304, 60, 26, hwnd, (HMENU)207, NULL, NULL);
-            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 304, 60, 26, hwnd, (HMENU)208, NULL, NULL);
-            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 304, 60, 26, hwnd, (HMENU)209, NULL, NULL);
+            hBtnSW     = CreateWindowA("BUTTON", "SW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 294, 60, 24, hwnd, (HMENU)207, NULL, NULL);
+            hBtnS      = CreateWindowA("BUTTON", "S ▼",  WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 697, 294, 60, 24, hwnd, (HMENU)208, NULL, NULL);
+            hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 294, 60, 24, hwnd, (HMENU)209, NULL, NULL);
 
             // Init Modal Buttons
             hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)301, NULL, NULL);
@@ -555,11 +697,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnConfirmInit = CreateWindowA("BUTTON", "🚀 INITIALIZE COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 34, hwnd, (HMENU)305, NULL, NULL);
 
             // Station Modal Buttons
-            hBtnStRefuel  = CreateWindowA("BUTTON", "⛽ REFUEL HYPER TANK (+30 Fuel - 40 Cr)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)401, NULL, NULL);
-            hBtnStRepair  = CreateWindowA("BUTTON", "🛠️ HULL RECONDITIONING (+40 HP - 80 Cr)", WS_CHILD | BS_PUSHBUTTON, 230, 186, 380, 28, hwnd, (HMENU)402, NULL, NULL);
-            hBtnStSellOre = CreateWindowA("BUTTON", "💰 SELL ALL MINED ORE (+25 Cr/Ton)",       WS_CHILD | BS_PUSHBUTTON, 230, 222, 380, 28, hwnd, (HMENU)403, NULL, NULL);
-            hBtnStRecruit = CreateWindowA("BUTTON", "👨‍🚀 RECRUIT CREW OFFICERS (+3 - 100 Cr)",   WS_CHILD | BS_PUSHBUTTON, 230, 258, 380, 28, hwnd, (HMENU)404, NULL, NULL);
-            hBtnStClose   = CreateWindowA("BUTTON", "✕ CLOSE / UNDOCK STATION",               WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 30, hwnd, (HMENU)405, NULL, NULL);
+            hBtnStRefuel        = CreateWindowA("BUTTON", "⛽ REFUEL HYPER TANK (+30 Fuel - 40 Cr)",  WS_CHILD | BS_PUSHBUTTON, 230, 140, 380, 26, hwnd, (HMENU)401, NULL, NULL);
+            hBtnStRepair        = CreateWindowA("BUTTON", "🛠️ HULL RECONDITIONING (+40 HP - 80 Cr)", WS_CHILD | BS_PUSHBUTTON, 230, 170, 380, 26, hwnd, (HMENU)402, NULL, NULL);
+            hBtnStSellOre       = CreateWindowA("BUTTON", "💰 SELL MINED ORE / MINERALS (+25 Cr/Ton)",WS_CHILD | BS_PUSHBUTTON, 230, 200, 380, 26, hwnd, (HMENU)403, NULL, NULL);
+            hBtnStSellGas       = CreateWindowA("BUTTON", "💨 SELL PLASMA GAS RESERVES (+20 Cr/Unit)",WS_CHILD | BS_PUSHBUTTON, 230, 230, 380, 26, hwnd, (HMENU)406, NULL, NULL);
+            hBtnStSellArtifacts = CreateWindowA("BUTTON", "🏛️ SELL ANCIENT ARTIFACTS (+150 Cr/Relic)", WS_CHILD | BS_PUSHBUTTON, 230, 260, 380, 26, hwnd, (HMENU)407, NULL, NULL);
+            hBtnStRecruit       = CreateWindowA("BUTTON", "👨‍🚀 RECRUIT CREW OFFICERS (+3 - 100 Cr)",   WS_CHILD | BS_PUSHBUTTON, 230, 290, 380, 26, hwnd, (HMENU)404, NULL, NULL);
+            hBtnStClose         = CreateWindowA("BUTTON", "✕ CLOSE / UNDOCK STATION",               WS_CHILD | BS_PUSHBUTTON, 230, 324, 380, 28, hwnd, (HMENU)405, NULL, NULL);
+
+            // Planet Telemetry Modal Button
+            hBtnPlanetClose     = CreateWindowA("BUTTON", "✅ LOG SURVEY DATA & RESUME COMMAND",     WS_CHILD | BS_PUSHBUTTON, 230, 300, 380, 32, hwnd, (HMENU)501, NULL, NULL);
 
             UpdateControlVisibility(hwnd);
             SetTimer(hwnd, 1, 50, NULL);
@@ -578,7 +725,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_Stars[i].speed = -g_Stars[i].speed;
                 }
             }
-            if (g_State.mapMode == 0 && !g_State.inInitModal && !g_State.inStationModal) {
+            if (g_State.mapMode == 0 && !g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal) {
                 RECT rectMap = {260, 48, 615, 393};
                 InvalidateRect(hwnd, &rectMap, FALSE);
             }
@@ -586,7 +733,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            if (g_State.inInitModal || g_State.inStationModal) break;
+            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal) break;
 
             switch (wParam) {
                 case VK_UP:    MoveShip(hwnd, 0, -1); break;
@@ -597,6 +744,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'S':      MoveShip(hwnd, 0, 1);  break;
                 case 'A':      MoveShip(hwnd, -1, 0); break;
                 case 'D':      MoveShip(hwnd, 1, 0);  break;
+                case 'P':      ExecutePlanetScan(hwnd); break;
                 case VK_SPACE: ExecuteScan(hwnd);     break;
             }
             break;
@@ -612,6 +760,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetWindowTextA(hBtnModeToggle, (g_State.mapMode == 0) ? "🌌 GRAPHICAL" : "📟 ASCII");
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (id == 102) ExecuteScan(hwnd);
+            else if (id == 108) ExecutePlanetScan(hwnd);
             else if (id == 103) ExecuteWarp(hwnd);
             else if (id == 104) ExecuteMine(hwnd);
             else if (id == 105) ExecuteDock(hwnd);
@@ -643,11 +792,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 401) StationRefuel(hwnd);
             else if (id == 402) StationRepair(hwnd);
             else if (id == 403) StationSellOre(hwnd);
+            else if (id == 406) StationSellGas(hwnd);
+            else if (id == 407) StationSellArtifacts(hwnd);
             else if (id == 404) StationRecruitCrew(hwnd);
             else if (id == 405) {
                 g_State.inStationModal = 0;
                 UpdateControlVisibility(hwnd);
                 AddLog("[STATION] Undocked from orbital outpost.", 0);
+            } else if (id == 501) {
+                g_State.inPlanetModal = 0;
+                UpdateControlVisibility(hwnd);
+                AddLog("[ORBIT] Planetary telemetry logged.", 0);
             }
             SetFocus(hwnd);
             break;
@@ -668,13 +823,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SelectObject(hdc, hMonoFont);
             SetTextColor(hdc, RGB(255, 170, 0));
-            TextOutA(hdc, 160, 14, "[CYBERNETIC SECTOR COMMAND v4.0]", 32);
+            TextOutA(hdc, 160, 14, "[CYBERNETIC SECTOR COMMAND v5.0]", 32);
 
-            char sectorBuf[64];
+            char sectorBuf[96];
             char colChar = (char)('A' + g_State.shipX);
-            wsprintfA(sectorBuf, "SECTOR: %s   GRID: %c%d", g_State.sector, colChar, g_State.shipY + 1);
+            wsprintfA(sectorBuf, "SECTOR: %s [%s] GRID: %c%d", g_State.sector, g_BiomeNames[g_State.currentBiome], colChar, g_State.shipY + 1);
             SetTextColor(hdc, RGB(0, 240, 255));
-            TextOutA(hdc, 635, 14, sectorBuf, (int)lstrlenA(sectorBuf));
+            TextOutA(hdc, 630, 14, sectorBuf, (int)lstrlenA(sectorBuf));
 
             // Left Panel: Ship Vitals & Manifest
             RECT leftPanel = {10, 48, 250, 393};
@@ -688,7 +843,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SelectObject(hdc, hBoldFont);
             SetTextColor(hdc, RGB(0, 240, 255));
-            TextOutA(hdc, 20, 76, g_State.shipName, (int)lstrlenA(g_State.shipName));
+            TextOutA(hdc, 20, 74, g_State.shipName, (int)lstrlenA(g_State.shipName));
             SelectObject(hdc, hMonoFont);
 
             // Status Bars
@@ -696,59 +851,71 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(180, 210, 240));
 
             wsprintfA(valBuf, "%d/%d", g_State.hull, g_State.maxHull);
-            TextOutA(hdc, 20, 96, "HULL INTEGRITY:", 15);
-            TextOutA(hdc, 190, 96, valBuf, (int)lstrlenA(valBuf));
-            DrawBar(hdc, 20, 112, 210, 10, g_State.hull, g_State.maxHull, RGB(57, 255, 20));
+            TextOutA(hdc, 20, 92, "HULL INTEGRITY:", 15);
+            TextOutA(hdc, 190, 92, valBuf, (int)lstrlenA(valBuf));
+            DrawBar(hdc, 20, 106, 210, 8, g_State.hull, g_State.maxHull, RGB(57, 255, 20));
 
             wsprintfA(valBuf, "%d/%d", g_State.fuel, g_State.maxFuel);
-            TextOutA(hdc, 20, 128, "HYPER FUEL:", 11);
-            TextOutA(hdc, 190, 128, valBuf, (int)lstrlenA(valBuf));
-            DrawBar(hdc, 20, 144, 210, 10, g_State.fuel, g_State.maxFuel, RGB(255, 170, 0));
+            TextOutA(hdc, 20, 118, "HYPER FUEL:", 11);
+            TextOutA(hdc, 190, 118, valBuf, (int)lstrlenA(valBuf));
+            DrawBar(hdc, 20, 132, 210, 8, g_State.fuel, g_State.maxFuel, RGB(255, 170, 0));
 
             wsprintfA(valBuf, "%d/%d", g_State.energy, g_State.maxEnergy);
-            TextOutA(hdc, 20, 160, "REACTOR ENERGY:", 15);
-            TextOutA(hdc, 190, 160, valBuf, (int)lstrlenA(valBuf));
-            DrawBar(hdc, 20, 176, 210, 10, g_State.energy, g_State.maxEnergy, RGB(0, 240, 255));
+            TextOutA(hdc, 20, 144, "REACTOR ENERGY:", 15);
+            TextOutA(hdc, 190, 144, valBuf, (int)lstrlenA(valBuf));
+            DrawBar(hdc, 20, 158, 210, 8, g_State.energy, g_State.maxEnergy, RGB(0, 240, 255));
 
             wsprintfA(valBuf, "%d/%d", g_State.shields, g_State.maxShields);
-            TextOutA(hdc, 20, 192, "SHIELD MATRIX:", 14);
-            TextOutA(hdc, 190, 192, valBuf, (int)lstrlenA(valBuf));
-            DrawBar(hdc, 20, 208, 210, 10, g_State.shields, g_State.maxShields, RGB(59, 130, 246));
+            TextOutA(hdc, 20, 170, "SHIELD MATRIX:", 14);
+            TextOutA(hdc, 190, 170, valBuf, (int)lstrlenA(valBuf));
+            DrawBar(hdc, 20, 184, 210, 8, g_State.shields, g_State.maxShields, RGB(59, 130, 246));
 
-            // Manifest & Resources Grid
+            // Manifest & Resources Grid (2x3 grid)
             SetTextColor(hdc, RGB(0, 240, 255));
-            TextOutA(hdc, 20, 232, "[ MANIFEST & CARGO ]", 20);
+            TextOutA(hdc, 20, 200, "[ MANIFEST & CARGO ]", 20);
 
-            RECT resCard1 = {20, 252, 120, 312};
-            RECT resCard2 = {130, 252, 230, 312};
-            RECT resCard3 = {20, 320, 120, 380};
-            RECT resCard4 = {130, 320, 230, 380};
+            RECT resCard1 = {20, 218, 120, 268};
+            RECT resCard2 = {130, 218, 230, 268};
+            RECT resCard3 = {20, 274, 120, 324};
+            RECT resCard4 = {130, 274, 230, 324};
+            RECT resCard5 = {20, 330, 120, 380};
+            RECT resCard6 = {130, 330, 230, 380};
 
             HBRUSH hResBg = CreateSolidBrush(RGB(10, 24, 48));
             FillRect(hdc, &resCard1, hResBg);
             FillRect(hdc, &resCard2, hResBg);
             FillRect(hdc, &resCard3, hResBg);
             FillRect(hdc, &resCard4, hResBg);
+            FillRect(hdc, &resCard5, hResBg);
+            FillRect(hdc, &resCard6, hResBg);
             DeleteObject(hResBg);
 
             SetTextColor(hdc, RGB(0, 240, 255));
             SelectObject(hdc, hBoldFont);
 
             wsprintfA(valBuf, "%d", g_State.credits);
-            TextOutA(hdc, 30, 260, valBuf, (int)lstrlenA(valBuf));
+            TextOutA(hdc, 30, 224, valBuf, (int)lstrlenA(valBuf));
             wsprintfA(valBuf, "%d", g_State.ore);
-            TextOutA(hdc, 140, 260, valBuf, (int)lstrlenA(valBuf));
+            TextOutA(hdc, 140, 224, valBuf, (int)lstrlenA(valBuf));
+
+            wsprintfA(valBuf, "%d", g_State.gas);
+            TextOutA(hdc, 30, 280, valBuf, (int)lstrlenA(valBuf));
+            wsprintfA(valBuf, "%d", g_State.artifacts);
+            TextOutA(hdc, 140, 280, valBuf, (int)lstrlenA(valBuf));
+
             wsprintfA(valBuf, "%d", g_State.crew);
-            TextOutA(hdc, 30, 328, valBuf, (int)lstrlenA(valBuf));
+            TextOutA(hdc, 30, 336, valBuf, (int)lstrlenA(valBuf));
             wsprintfA(valBuf, "%d", g_State.scraps);
-            TextOutA(hdc, 140, 328, valBuf, (int)lstrlenA(valBuf));
+            TextOutA(hdc, 140, 336, valBuf, (int)lstrlenA(valBuf));
 
             SelectObject(hdc, hMonoFont);
             SetTextColor(hdc, RGB(123, 155, 185));
-            TextOutA(hdc, 30, 285, "CREDITS", 7);
-            TextOutA(hdc, 140, 285, "ORE (TONS)", 10);
-            TextOutA(hdc, 30, 353, "CREW", 4);
-            TextOutA(hdc, 140, 353, "SCRAP", 5);
+            TextOutA(hdc, 30, 246, "CREDITS", 7);
+            TextOutA(hdc, 140, 246, "MINERALS", 8);
+            TextOutA(hdc, 30, 302, "GAS", 3);
+            TextOutA(hdc, 140, 302, "ARTIFACTS", 9);
+            TextOutA(hdc, 30, 358, "CREW", 4);
+            TextOutA(hdc, 140, 358, "SCRAP", 5);
 
             // Center Viewport: Star Map Grid
             RECT centerPanel = {260, 48, 615, 393};
@@ -761,21 +928,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(0, 240, 255));
             TextOutA(hdc, 270, 54, "SYSTEM: SOLARIS PRIME", 21);
 
-            const char* objectNames[] = {"DEEP SPACE", "SOLAR STAR", "ORBITAL OUTPOST", "ASTEROID FIELD", "QUANTUM ANOMALY", "HOSTILE PIRATE"};
+            char biomeHud[64];
+            wsprintfA(biomeHud, "BIOME: %s", g_BiomeNames[g_State.currentBiome]);
+            SetTextColor(hdc, RGB(57, 255, 20));
+            TextOutA(hdc, 445, 54, biomeHud, (int)lstrlenA(biomeHud));
+
+            const char* objectNames[] = {"DEEP SPACE", "SOLAR STAR", "ORBITAL OUTPOST", "ASTEROID FIELD", "QUANTUM ANOMALY", "HOSTILE PIRATE", "ORBITAL PLANET"};
             int curCellType = g_State.gridMap[g_State.shipY][g_State.shipX];
             char objBuf[64];
-            wsprintfA(objBuf, "OBJECT: %s", objectNames[curCellType]);
+            if (curCellType == 6) {
+                wsprintfA(objBuf, "OBJECT: PLANET [%s]", g_State.planetData[g_State.shipY][g_State.shipX].name);
+            } else {
+                wsprintfA(objBuf, "OBJECT: %s", objectNames[curCellType]);
+            }
             SetTextColor(hdc, RGB(255, 170, 0));
-            TextOutA(hdc, 450, 54, objBuf, (int)lstrlenA(objBuf));
+            TextOutA(hdc, 270, 68, objBuf, (int)lstrlenA(objBuf));
 
             if (g_State.mapMode == 0) { // Graphical GDI Render
-                // Background Stars
+                // Background Stars tinted per biome
                 int s;
                 for (s = 0; s < 75; s++) {
                     int sx = 265 + g_Stars[s].x;
                     int sy = 72 + g_Stars[s].y;
-                    if (sx >= 262 && sx <= 610 && sy >= 72 && sy <= 388) {
+                    if (sx >= 262 && sx <= 610 && sy >= 85 && sy <= 388) {
                         COLORREF starCol = RGB(g_Stars[s].alpha, g_Stars[s].alpha, (g_Stars[s].alpha + 40 > 255) ? 255 : g_Stars[s].alpha + 40);
+                        if (g_State.currentBiome == 1) starCol = RGB((g_Stars[s].alpha + 60 > 255) ? 255 : g_Stars[s].alpha + 60, g_Stars[s].alpha / 2, g_Stars[s].alpha / 2);
+                        else if (g_State.currentBiome == 2) starCol = RGB((g_Stars[s].alpha + 40 > 255) ? 255 : g_Stars[s].alpha + 40, g_Stars[s].alpha / 2, (g_Stars[s].alpha + 60 > 255) ? 255 : g_Stars[s].alpha + 60);
+                        else if (g_State.currentBiome == 3) starCol = RGB((g_Stars[s].alpha + 50 > 255) ? 255 : g_Stars[s].alpha + 50, (g_Stars[s].alpha + 40 > 255) ? 255 : g_Stars[s].alpha + 40, g_Stars[s].alpha / 3);
+
                         SetPixel(hdc, sx, sy, starCol);
                         if (g_Stars[s].size > 1) {
                             SetPixel(hdc, sx + 1, sy, starCol);
@@ -788,8 +968,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(15, 45, 75));
                 HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
                 int gx, gy;
-                int startX = 285, startY = 85;
-                int cellW = 38, cellH = 36;
+                int startX = 285, startY = 98;
+                int cellW = 38, cellH = 34;
 
                 for (gy = 0; gy <= 8; gy++) {
                     MoveToEx(hdc, startX, startY + gy * cellH, NULL);
@@ -869,7 +1049,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 Ellipse(hdc, cx - 4, cy + 2, cx + 2, cy + 8);
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hAstB);
-                            } else if (type == 4) { // Anomaly (Diamond)
+                            } else if (type == 4) { // Anomaly
                                 POINT dPts[4];
                                 dPts[0].x = cx;     dPts[0].y = cy - 9;
                                 dPts[1].x = cx + 8; dPts[1].y = cy;
@@ -900,6 +1080,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 SelectObject(hdc, hOldB);
                                 DeleteObject(hPirP);
                                 DeleteObject(hPirB);
+                            } else if (type == 6) { // Orbital Planet
+                                HBRUSH hPlB = CreateSolidBrush(RGB(0, 255, 170));
+                                HPEN hPlP = CreatePen(PS_SOLID, 1, RGB(180, 255, 230));
+                                HPEN hOldP = (HPEN)SelectObject(hdc, hPlP);
+                                HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hPlB);
+                                Ellipse(hdc, cx - 7, cy - 7, cx + 7, cy + 7);
+
+                                // Ring
+                                HPEN hRingP = CreatePen(PS_SOLID, 1, RGB(0, 220, 150));
+                                SelectObject(hdc, hRingP);
+                                Arc(hdc, cx - 11, cy - 4, cx + 11, cy + 4, cx - 11, cy, cx + 11, cy);
+                                DeleteObject(hRingP);
+
+                                SelectObject(hdc, hOldP);
+                                SelectObject(hdc, hOldB);
+                                DeleteObject(hPlP);
+                                DeleteObject(hPlB);
                             }
                         }
                     }
@@ -909,19 +1106,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int gx, gy;
                 for (gx = 0; gx < 8; gx++) {
                     char cHeader[2] = {(char)('A' + gx), '\0'};
-                    TextOutA(hdc, 305 + (gx * 35), 75, cHeader, 1);
+                    TextOutA(hdc, 305 + (gx * 35), 78, cHeader, 1);
                 }
 
                 for (gy = 0; gy < 8; gy++) {
                     char rHeader[2] = {(char)('1' + gy), '\0'};
                     SetTextColor(hdc, RGB(0, 139, 155));
-                    TextOutA(hdc, 280, 95 + (gy * 35), rHeader, 1);
+                    TextOutA(hdc, 280, 98 + (gy * 34), rHeader, 1);
 
                     for (gx = 0; gx < 8; gx++) {
                         int cellX = 295 + (gx * 35);
-                        int cellY = 90 + (gy * 35);
+                        int cellY = 94 + (gy * 34);
 
-                        RECT cRect = {cellX, cellY, cellX + 32, cellY + 32};
+                        RECT cRect = {cellX, cellY, cellX + 32, cellY + 30};
                         HPEN hCellPen = CreatePen(PS_SOLID, 1, RGB(15, 35, 60));
                         HPEN hOldP = (HPEN)SelectObject(hdc, hCellPen);
                         HBRUSH hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -932,27 +1129,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                         if (gx == g_State.shipX && gy == g_State.shipY) {
                             SetTextColor(hdc, RGB(0, 240, 255));
-                            TextOutA(hdc, cellX + 11, cellY + 8, "^", 1);
+                            TextOutA(hdc, cellX + 11, cellY + 7, "^", 1);
                         } else {
                             int type = g_State.gridMap[gy][gx];
                             if (type == 1) {
                                 SetTextColor(hdc, RGB(255, 238, 85));
-                                TextOutA(hdc, cellX + 11, cellY + 8, "*", 1);
+                                TextOutA(hdc, cellX + 11, cellY + 7, "*", 1);
                             } else if (type == 2) {
                                 SetTextColor(hdc, RGB(59, 130, 246));
-                                TextOutA(hdc, cellX + 11, cellY + 8, "O", 1);
+                                TextOutA(hdc, cellX + 11, cellY + 7, "O", 1);
                             } else if (type == 3) {
                                 SetTextColor(hdc, RGB(255, 170, 0));
-                                TextOutA(hdc, cellX + 11, cellY + 8, "#", 1);
+                                TextOutA(hdc, cellX + 11, cellY + 7, "#", 1);
                             } else if (type == 4) {
                                 SetTextColor(hdc, RGB(176, 38, 255));
-                                TextOutA(hdc, cellX + 11, cellY + 8, "?", 1);
+                                TextOutA(hdc, cellX + 11, cellY + 7, "?", 1);
                             } else if (type == 5) {
                                 SetTextColor(hdc, RGB(255, 51, 102));
-                                TextOutA(hdc, cellX + 11, cellY + 8, "X", 1);
+                                TextOutA(hdc, cellX + 11, cellY + 7, "X", 1);
+                            } else if (type == 6) {
+                                SetTextColor(hdc, RGB(0, 255, 170));
+                                TextOutA(hdc, cellX + 11, cellY + 7, "P", 1);
                             } else {
                                 SetTextColor(hdc, RGB(25, 50, 85));
-                                TextOutA(hdc, cellX + 11, cellY + 8, ".", 1);
+                                TextOutA(hdc, cellX + 11, cellY + 7, ".", 1);
                             }
                         }
                     }
@@ -963,9 +1163,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rightPanel = {620, 48, 830, 393};
             FillRect(hdc, &rightPanel, hPanelBrush);
             FrameRect(hdc, &rightPanel, hBorderCyanB);
-
-            SetTextColor(hdc, RGB(0, 240, 255));
-            TextOutA(hdc, 630, 222, "[ NAVIGATION GRID ]", 19);
 
             // Bottom Panel: Log Console
             RECT logPanel = {10, 402, 830, 545};
@@ -993,7 +1190,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(hBorderCyanB);
             DeleteObject(hBorderAmberB);
 
-            // Render Active Modals (Commissioning / Outpost)
+            // Render Active Modals
             if (g_State.inInitModal) {
                 RECT modalOverlay = {10, 48, 830, 393};
                 HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
@@ -1010,7 +1207,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 SelectObject(hdc, hMonoFont);
                 SetTextColor(hdc, RGB(160, 190, 220));
-                TextOutA(hdc, 230, 115, "Captain, select vessel blueprint to launch frontier sector exploration:", 71);
+                TextOutA(hdc, 230, 115, "Captain, select vessel blueprint to launch sector exploration:", 61);
 
                 // Highlight selected class
                 int selY = 150 + (g_State.selectedClass * 34);
@@ -1028,17 +1225,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(hdc, &modalOverlay, hDimBrush);
                 DeleteObject(hDimBrush);
 
-                RECT modalCard = {210, 70, 630, 370};
+                RECT modalCard = {210, 60, 630, 375};
                 FillRect(hdc, &modalCard, hPanelBrush);
                 FrameRect(hdc, &modalCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
                 SelectObject(hdc, hTitleFont);
                 SetTextColor(hdc, RGB(0, 240, 255));
-                TextOutA(hdc, 230, 85, "⚓ ORBITAL OUTPOST SERVICES", 26);
+                TextOutA(hdc, 230, 75, "⚓ ORBITAL OUTPOST SERVICES", 26);
 
                 SelectObject(hdc, hMonoFont);
                 SetTextColor(hdc, RGB(160, 190, 220));
-                TextOutA(hdc, 230, 115, "Welcome Captain. Station refueling docks & outpost supplies active:", 68);
+                TextOutA(hdc, 230, 105, "Welcome Captain. Station refueling docks & outpost supplies active:", 67);
+            } else if (g_State.inPlanetModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {210, 70, 630, 360};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                FrameRect(hdc, &modalCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(0, 255, 170));
+                TextOutA(hdc, 230, 85, "🪐 ORBITAL PLANET TELEMETRY", 27);
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(160, 190, 220));
+                char pDesc[128];
+                PlanetCellData* p = &g_State.planetData[g_State.shipY][g_State.shipX];
+                wsprintfA(pDesc, "Survey telemetry report for target world: %s", p->name);
+                TextOutA(hdc, 230, 115, pDesc, (int)lstrlenA(pDesc));
+
+                char yield1[64], yield2[64], yield3[64];
+                wsprintfA(yield1, "MINERALS (ORE): +%d Tons", p->minerals);
+                wsprintfA(yield2, "PLASMA GAS:     +%d Units", p->gas);
+                wsprintfA(yield3, "ARTIFACTS:      +%d Relics", p->artifacts);
+
+                SetTextColor(hdc, RGB(57, 255, 20));
+                TextOutA(hdc, 250, 150, yield1, (int)lstrlenA(yield1));
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 250, 180, yield2, (int)lstrlenA(yield2));
+                SetTextColor(hdc, RGB(255, 170, 0));
+                TextOutA(hdc, 250, 210, yield3, (int)lstrlenA(yield3));
+
+                SetTextColor(hdc, RGB(180, 200, 220));
+                TextOutA(hdc, 230, 250, "SURVEY STATUS: ANALYSIS COMPLETE & CARGO LOGGED", 47);
             }
 
             EndPaint(hwnd, &ps);
