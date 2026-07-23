@@ -4,17 +4,30 @@
     <meta charset="utf-8">
     <title>KReversi</title>
     <style>
-        body { margin: 0; padding: 20px; font-family: sans-serif; background-color: var(--bg-color, #121212); color: var(--text-color, #e0e0e0); display: flex; flex-direction: column; align-items: center; transition: background-color 0.3s, color 0.3s; }
-        h1 { font-size: 24px; color: var(--h1-color, #fff); margin-bottom: 10px; }
-        .info { display: flex; justify-content: space-between; width: 340px; margin-bottom: 10px; font-weight: bold; }
-        .board { display: grid; grid-template-columns: repeat(8, 40px); grid-template-rows: repeat(8, 40px); gap: 2px; background: var(--board-bg, #222); padding: 2px; border-radius: 4px; transition: background 0.3s; }
-        .cell { background: var(--cell-bg, #1a562c); width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s; }
+        body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color, #121212); color: var(--text-color, #e0e0e0); display: flex; flex-direction: column; align-items: center; transition: background-color 0.3s, color 0.3s; user-select: none; }
+        h1 { font-size: 24px; color: var(--h1-color, #fff); margin-top: 0; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .header-panel { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 440px; gap: 6px; margin-bottom: 10px; }
+        .info { display: flex; justify-content: space-between; width: 100%; font-weight: bold; font-size: 15px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px; box-sizing: border-box; }
+        .eval-panel { font-size: 13px; font-weight: bold; color: var(--hint-outline, #ffd700); display: flex; gap: 12px; justify-content: center; width: 100%; background: var(--eval-bg, #1a1a1a); padding: 6px 12px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; flex-wrap: wrap; text-align: center; }
+        .controls-grid { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; box-sizing: border-box; }
+        label { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+        select, input[type="checkbox"] { background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px 6px; font-size: 12px; }
+        select:focus { outline: none; border-color: var(--hint-outline, #ffd700); }
+        
+        .board-wrapper { position: relative; padding: 4px; background: var(--board-bg, #222); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 10px; }
+        .board { display: grid; gap: 2px; background: var(--board-bg, #222); border-radius: 6px; }
+        .cell { background: var(--cell-bg, #1a562c); width: var(--cell-size, 45px); height: var(--cell-size, 45px); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s, transform 0.1s; position: relative; border-radius: 3px; }
         .cell:hover { background: var(--cell-hover, #23783b); }
-        .disc { width: 32px; height: 32px; border-radius: 50%; display: none; }
-        .disc.black { display: block; background: var(--disc-black, #111); box-shadow: var(--disc-black-shadow, 1px 1px 2px rgba(0,0,0,0.8)); }
-        .disc.white { display: block; background: var(--disc-white, #eee); box-shadow: var(--disc-white-shadow, 1px 1px 2px rgba(0,0,0,0.8)); }
-        .valid-move { position: relative; }
-        .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: var(--valid-dot, rgba(255,255,255,0.3)); border-radius: 50%; }
+        .cell.blocked { background: #222 !important; cursor: not-allowed; opacity: 0.8; }
+        .cell.blocked::after { content: '✕'; color: #555; font-size: 18px; font-weight: bold; }
+        
+        .disc { width: calc(var(--cell-size, 45px) * 0.8); height: calc(var(--cell-size, 45px) * 0.8); border-radius: 50%; display: none; transition: transform 0.2s; }
+        .disc.black { display: block; background: var(--disc-black, #111); box-shadow: var(--disc-black-shadow, 1px 1px 4px rgba(0,0,0,0.8)); }
+        .disc.white { display: block; background: var(--disc-white, #eee); box-shadow: var(--disc-white-shadow, 1px 1px 4px rgba(0,0,0,0.8)); }
+        
+        .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: var(--valid-dot, rgba(255,255,255,0.35)); border-radius: 50%; }
+        .bomb-target::after { content: '💣'; position: absolute; font-size: 14px; opacity: 0.7; }
+        
         @keyframes flipToWhite {
             0% { transform: scaleX(1); background: var(--disc-black, #111); }
             50% { transform: scaleX(0); background: var(--disc-black, #111); }
@@ -29,84 +42,46 @@
         }
         .disc.flip-to-white { animation: flipToWhite 0.3s forwards; }
         .disc.flip-to-black { animation: flipToBlack 0.3s forwards; }
-        #message { margin-top: 15px; font-size: 18px; font-weight: bold; }
-        button { padding: 8px 16px; font-size: 14px; cursor: pointer; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; }
-        button:hover { background: #444; }
+        
         .recommended-hint { outline: 3px solid var(--hint-outline, #ffd700); box-shadow: 0 0 10px var(--hint-outline, #ffd700) inset; background: var(--hint-bg, #3c7349) !important; }
         .recommended-hint::after { background: var(--hint-outline, #ffd700) !important; width: 14px !important; height: 14px !important; box-shadow: 0 0 6px var(--hint-outline, #ffd700); }
-        .eval-panel { margin-bottom: 10px; font-size: 14px; font-weight: bold; color: var(--hint-outline, #ffd700); display: flex; gap: 20px; justify-content: center; width: 340px; background: var(--eval-bg, #1a1a1a); padding: 6px 12px; border-radius: 4px; border: 1px solid #333; box-sizing: border-box; }
-
+        
+        #message { min-height: 24px; font-size: 16px; font-weight: bold; color: #55ff55; text-shadow: 0 1px 2px #000; margin-bottom: 8px; text-align: center; }
+        
+        .button-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 440px; }
+        button { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 5px; transition: background 0.2s, transform 0.1s; }
+        button:hover { background: #3d3d3d; border-color: #666; }
+        button:active { transform: scale(0.97); }
+        button.active-btn { background: #b84c00; border-color: #ff6600; color: #fff; box-shadow: 0 0 8px rgba(255,102,0,0.5); }
+        
         /* Themes */
         body.theme-classic {
-            --bg-color: #121212;
-            --board-bg: #222222;
-            --cell-bg: #1a562c;
-            --cell-hover: #23783b;
-            --disc-black: #111111;
-            --disc-white: #eeeeee;
-            --disc-black-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            --disc-white-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            --valid-dot: rgba(255,255,255,0.35);
-            --hint-outline: #ffd700;
-            --hint-bg: #3c7349;
-            --eval-bg: #1a1a1a;
-            --text-color: #e0e0e0;
-            --h1-color: #ffffff;
+            --bg-color: #121212; --board-bg: #222222; --cell-bg: #1a562c; --cell-hover: #23783b;
+            --disc-black: #111111; --disc-white: #eeeeee; --disc-black-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            --disc-white-shadow: 1px 1px 3px rgba(0,0,0,0.8); --valid-dot: rgba(255,255,255,0.35);
+            --hint-outline: #ffd700; --hint-bg: #3c7349; --eval-bg: #1a1a1a; --text-color: #e0e0e0; --h1-color: #ffffff;
         }
-
         body.theme-cyber {
-            --bg-color: #060b19;
-            --board-bg: #00f5d4;
-            --cell-bg: #0b132b;
-            --cell-hover: #1c2541;
-            --disc-black: #00f5d4;
-            --disc-white: #ff007f;
-            --disc-black-shadow: 0 0 10px #00f5d4;
-            --disc-white-shadow: 0 0 10px #ff007f;
-            --valid-dot: rgba(0,245,212,0.45);
-            --hint-outline: #ff007f;
-            --hint-bg: #152f5e;
-            --eval-bg: #0d1b2a;
-            --text-color: #e0e6ed;
-            --h1-color: #00f5d4;
+            --bg-color: #060b19; --board-bg: #00f5d4; --cell-bg: #0b132b; --cell-hover: #1c2541;
+            --disc-black: #00f5d4; --disc-white: #ff007f; --disc-black-shadow: 0 0 10px #00f5d4;
+            --disc-white-shadow: 0 0 10px #ff007f; --valid-dot: rgba(0,245,212,0.45);
+            --hint-outline: #ff007f; --hint-bg: #152f5e; --eval-bg: #0d1b2a; --text-color: #e0e6ed; --h1-color: #00f5d4;
         }
-
         body.theme-crimson {
-            --bg-color: #140306;
-            --board-bg: #5a0c18;
-            --cell-bg: #3a0810;
-            --cell-hover: #540c17;
-            --disc-black: #ffd700;
-            --disc-white: #d90429;
-            --disc-black-shadow: 0 0 8px #ffd700;
-            --disc-white-shadow: 0 0 8px #d90429;
-            --valid-dot: rgba(255,215,0,0.45);
-            --hint-outline: #ffd700;
-            --hint-bg: #6e101f;
-            --eval-bg: #28060c;
-            --text-color: #f7d6d8;
-            --h1-color: #ffd700;
+            --bg-color: #140306; --board-bg: #5a0c18; --cell-bg: #3a0810; --cell-hover: #540c17;
+            --disc-black: #ffd700; --disc-white: #d90429; --disc-black-shadow: 0 0 8px #ffd700;
+            --disc-white-shadow: 0 0 8px #d90429; --valid-dot: rgba(255,215,0,0.45);
+            --hint-outline: #ffd700; --hint-bg: #6e101f; --eval-bg: #28060c; --text-color: #f7d6d8; --h1-color: #ffd700;
         }
-
         body.theme-terminal {
-            --bg-color: #020b02;
-            --board-bg: #00ff66;
-            --cell-bg: #071c07;
-            --cell-hover: #113611;
-            --disc-black: #ffb000;
-            --disc-white: #33ff33;
-            --disc-black-shadow: 0 0 8px #ffb000;
-            --disc-white-shadow: 0 0 8px #33ff33;
-            --valid-dot: rgba(51,255,51,0.45);
-            --hint-outline: #ffb000;
-            --hint-bg: #1a4a1a;
-            --eval-bg: #092009;
-            --text-color: #33ff33;
-            --h1-color: #33ff33;
+            --bg-color: #020b02; --board-bg: #00ff66; --cell-bg: #071c07; --cell-hover: #113611;
+            --disc-black: #ffb000; --disc-white: #33ff33; --disc-black-shadow: 0 0 8px #ffb000;
+            --disc-white-shadow: 0 0 8px #33ff33; --valid-dot: rgba(51,255,51,0.45);
+            --hint-outline: #ffb000; --hint-bg: #1a4a1a; --eval-bg: #092009; --text-color: #33ff33; --h1-color: #33ff33;
         }
 
         /* Modal styling */
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; }
         .modal-content { background: var(--bg-color, #121212); border: 2px solid var(--board-bg, #333); border-radius: 8px; width: 90%; max-width: 480px; max-height: 80vh; overflow-y: auto; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); color: var(--text-color, #e0e0e0); position: relative; font-size: 14px; line-height: 1.5; }
         .modal-content h2 { color: var(--h1-color, #fff); margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 8px; font-size: 20px; text-align: center; }
         .close-btn { position: absolute; right: 15px; top: 10px; font-size: 24px; cursor: pointer; color: #888; }
@@ -119,73 +94,84 @@
 </head>
 <body class="theme-classic">
     <h1>KReversi</h1>
-    <div class="info">
-        <div id="score-black">Black: 2</div>
-        <div id="turn-display">Turn: Black</div>
-        <div id="score-white">White: 2</div>
-    </div>
-    <div class="eval-panel" id="eval-panel">
-        <span id="eval-score">Eval: +0</span>
-        <span id="clock-display" style="color: #ffaa00;">Clock: Unlimited</span>
-        <span id="hint-text">Best Move: -</span>
-    </div>
-    <div style="margin-bottom: 10px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; width: 360px;">
-        <div>
-            <label for="theme-select" style="font-size: 13px;">Theme:</label>
-            <select id="theme-select" onchange="changeTheme()" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
-                <option value="classic" selected>Classic Emerald</option>
-                <option value="cyber">Midnight Cyber</option>
-                <option value="crimson">Obsidian Crimson</option>
-                <option value="terminal">Retro Terminal</option>
-            </select>
+    <div class="header-panel">
+        <div class="info">
+            <div id="score-black">Black: 2</div>
+            <div id="turn-display">Turn: Black</div>
+            <div id="score-white">White: 2</div>
         </div>
-        <div>
-            <label for="ai-difficulty" style="font-size: 13px;">AI:</label>
-            <select id="ai-difficulty" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
-            </select>
+        <div class="eval-panel">
+            <span id="eval-score">Eval: +0</span>
+            <span id="clock-display" style="color: #ffaa00;">Clock: Off</span>
+            <span id="hint-text">Best Move: -</span>
+            <span id="bomb-text" style="color: #ff6600;">Bombs: 2</span>
         </div>
-        <div>
-            <label for="time-mode" style="font-size: 13px;">Timer:</label>
-            <select id="time-mode" onchange="initGame()" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
-                <option value="0" selected>Untimed</option>
-                <option value="5">Blitz (5s)</option>
-                <option value="15">Rapid (15s)</option>
-            </select>
-        </div>
-        <div>
-            <label for="handicap-select" style="font-size: 13px;">Handicap:</label>
-            <select id="handicap-select" onchange="initGame()" style="background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 2px 4px;">
-                <option value="std" selected>Standard</option>
-                <option value="b_corner">Black Corner</option>
-                <option value="w_corner">White Corner</option>
-                <option value="b_adv">Black Adv (+2)</option>
-                <option value="4_corners">4 Corners</option>
-            </select>
-        </div>
-        <div>
-            <label for="sound-toggle" style="font-size: 13px; cursor: pointer;">
+        <div class="controls-grid">
+            <label for="mode-select">Mode:
+                <select id="mode-select" onchange="changeGameMode()">
+                    <option value="campaign" selected>Campaign (15 Stages)</option>
+                    <option value="freeplay">Free Play</option>
+                </select>
+            </label>
+            <label id="stage-select-label" for="stage-select">Stage:
+                <select id="stage-select" onchange="changeStage()">
+                    <!-- Options populated via JS -->
+                </select>
+            </label>
+            <label id="board-size-label" for="board-size-select" style="display: none;">Size:
+                <select id="board-size-select" onchange="initGame()">
+                    <option value="6">6x6</option>
+                    <option value="8" selected>8x8</option>
+                    <option value="10">10x10</option>
+                </select>
+            </label>
+            <label id="ai-diff-label" for="ai-difficulty" style="display: none;">AI:
+                <select id="ai-difficulty">
+                    <option value="rookie">Rookie</option>
+                    <option value="greedy">Greedy</option>
+                    <option value="positional" selected>Positional</option>
+                    <option value="grandmaster">Grandmaster (Minimax)</option>
+                </select>
+            </label>
+            <label for="theme-select">Theme:
+                <select id="theme-select" onchange="changeTheme()">
+                    <option value="classic" selected>Classic Emerald</option>
+                    <option value="cyber">Midnight Cyber</option>
+                    <option value="crimson">Obsidian Crimson</option>
+                    <option value="terminal">Retro Terminal</option>
+                </select>
+            </label>
+            <label for="time-mode">Timer:
+                <select id="time-mode" onchange="initGame()">
+                    <option value="0" selected>Untimed</option>
+                    <option value="5">Blitz (5s)</option>
+                    <option value="15">Rapid (15s)</option>
+                </select>
+            </label>
+            <label>
                 <input type="checkbox" id="sound-toggle" checked style="margin-right: 2px;"> Sound
             </label>
-        </div>
-        <div>
-            <label for="hint-toggle" style="font-size: 13px; cursor: pointer;">
+            <label>
                 <input type="checkbox" id="hint-toggle" checked onchange="renderBoard()" style="margin-right: 2px;"> Hints
             </label>
         </div>
     </div>
-    <div id="board" class="board"></div>
+    
     <div id="message"></div>
-    <div style="margin-top: 15px;">
-        <button onclick="undoMove()" style="margin-right: 10px;">Undo Move</button>
-        <button onclick="saveGame()" style="margin-right: 10px;">Save Game</button>
-        <button onclick="loadGame()" style="margin-right: 10px;">Load Game</button>
-        <button onclick="initGame()" style="margin-right: 10px;">Restart Game</button>
-        <button onclick="showStats()" style="margin-right: 10px;">Statistics</button>
-        <button onclick="showHelp()">Help & Strategy</button>
+    <div class="board-wrapper">
+        <div id="board" class="board"></div>
     </div>
+
+    <div class="button-bar">
+        <button id="bomb-btn" onclick="toggleBomb()" style="border-color: #ff6600; color: #ff9933;">Bomb Disc (B)</button>
+        <button onclick="undoMove()">Undo (U)</button>
+        <button onclick="saveGame()">Save</button>
+        <button onclick="loadGame()">Load</button>
+        <button onclick="initGame()">Restart (R)</button>
+        <button onclick="showStats()">Stats</button>
+        <button onclick="showHelp()">Help</button>
+    </div>
+
     <script>
         const boardEl = document.getElementById('board');
         const scoreBlackEl = document.getElementById('score-black');
@@ -193,10 +179,13 @@
         const turnDisplayEl = document.getElementById('turn-display');
         const messageEl = document.getElementById('message');
         const clockDisplayEl = document.getElementById('clock-display');
+        const bombTextEl = document.getElementById('bomb-text');
+        const bombBtnEl = document.getElementById('bomb-btn');
 
         const EMPTY = 0;
         const BLACK = 1;
         const WHITE = 2;
+        const BLOCKED = 3;
 
         const DIRS = [
             [-1,-1], [-1,0], [-1,1],
@@ -211,26 +200,87 @@
             terminal: { p1: 'Amber', p2: 'Green' }
         };
 
+        const WEIGHTS_6 = [
+            100, -20,  10,  10, -20, 100,
+            -20, -50,  -2,  -2, -50, -20,
+             10,  -2,  -1,  -1,  -2,  10,
+             10,  -2,  -1,  -1,  -2,  10,
+            -20, -50,  -2,  -2, -50, -20,
+            100, -20,  10,  10, -20, 100
+        ];
+
+        const WEIGHTS_8 = [
+            100, -20,  10,   5,   5,  10, -20, 100,
+            -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+             10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+              5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+              5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
+             10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
+            -20, -50,  -2,  -2,  -2,  -2, -50, -20,
+            100, -20,  10,   5,   5,  10, -20, 100
+        ];
+
+        const WEIGHTS_10 = [
+            100, -20,  15,   5,   5,   5,   5,  15, -20, 100,
+            -20, -50,  -2,  -2,  -2,  -2,  -2,  -2, -50, -20,
+             15,  -2,   1,   1,   1,   1,   1,   1,  -2,  15,
+              5,  -2,   1,  -1,  -1,  -1,  -1,   1,  -2,   5,
+              5,  -2,   1,  -1,  -1,  -1,  -1,   1,  -2,   5,
+              5,  -2,   1,  -1,  -1,  -1,  -1,   1,  -2,   5,
+              5,  -2,   1,  -1,  -1,  -1,  -1,   1,  -2,   5,
+             15,  -2,   1,   1,   1,   1,   1,   1,  -2,  15,
+            -20, -50,  -2,  -2,  -2,  -2,  -2,  -2, -50, -20,
+            100, -20,  15,   5,   5,   5,   5,  15, -20, 100
+        ];
+
+        const CAMPAIGN_STAGES = [
+            { stage: 1, name: "Initiation", width: 6, height: 6, ai: "rookie", bombs: 1, desc: "Small 6x6 board. Master the basics.", holes: [], custom: [] },
+            { stage: 2, name: "Outpost Duel", width: 6, height: 6, ai: "greedy", bombs: 1, desc: "6x6 board against an aggressive Greedy AI.", holes: [], custom: [] },
+            { stage: 3, name: "The Vault", width: 6, height: 6, ai: "rookie", bombs: 1, desc: "6x6 board with 4 obstacle holes blocking corners.", holes: [[1,1],[1,4],[4,1],[4,4]], custom: [] },
+            { stage: 4, name: "Classic Arena", width: 8, height: 8, ai: "greedy", bombs: 1, desc: "Standard 8x8 battle vs Greedy AI.", holes: [], custom: [] },
+            { stage: 5, name: "Fortress Gates", width: 8, height: 8, ai: "positional", bombs: 1, desc: "8x8 board with blocked corners! Watch your mobility.", holes: [[0,0],[0,7],[7,0],[7,7]], custom: [] },
+            { stage: 6, name: "Crossfire Zone", width: 8, height: 8, ai: "positional", bombs: 1, desc: "4 inner obstacle holes split the center.", holes: [[2,2],[2,5],[5,2],[5,5]], custom: [] },
+            { stage: 7, name: "Vanguard Siege", width: 8, height: 8, ai: "grandmaster", bombs: 2, desc: "Face Grandmaster AI! You start with 2 extra discs.", holes: [], custom: [[2,3,BLACK],[5,4,BLACK]] },
+            { stage: 8, name: "Great Colosseum", width: 10, height: 10, ai: "rookie", bombs: 2, desc: "Massive 10x10 arena! Control the expansive board.", holes: [], custom: [] },
+            { stage: 9, name: "Greedy Leviathan", width: 10, height: 10, ai: "greedy", bombs: 2, desc: "10x10 board vs high-disc Greedy AI.", holes: [], custom: [] },
+            { stage: 10, name: "Citadel Runes", width: 10, height: 10, ai: "positional", bombs: 2, desc: "10x10 board with 8 corner & subcorner holes.", holes: [[0,0],[0,9],[9,0],[9,9],[1,1],[1,8],[8,1],[8,8]], custom: [] },
+            { stage: 11, name: "Diamond Ring", width: 8, height: 8, ai: "positional", bombs: 2, desc: "8x8 board with an outer ring of obstacles.", holes: [[1,3],[1,4],[3,1],[4,1],[3,6],[4,6],[6,3],[6,4]], custom: [] },
+            { stage: 12, name: "Labyrinth Grid", width: 10, height: 10, ai: "grandmaster", bombs: 2, desc: "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", holes: [[2,2],[2,7],[7,2],[7,7],[4,2],[4,7],[2,4],[7,4]], custom: [] },
+            { stage: 13, name: "Blitz Trench", width: 6, height: 6, ai: "grandmaster", bombs: 2, desc: "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", holes: [], custom: [], timeMode: 5 },
+            { stage: 14, name: "Dragon's Den", width: 8, height: 8, ai: "grandmaster", bombs: 2, desc: "8x8 board with 4 dragon holes on edge centers.", holes: [[0,3],[3,0],[4,7],[7,4]], custom: [] },
+            { stage: 15, name: "Grandmaster Showdown", width: 10, height: 10, ai: "grandmaster", bombs: 3, desc: "The ultimate 10x10 finale against Grandmaster Minimax AI!", holes: [], custom: [] }
+        ];
+
         let currentThemeKey = 'classic';
+        let gameMode = 'campaign';
+        let currentStage = 1;
+        let maxUnlockedStage = 1;
+
+        let boardWidth = 8;
+        let boardHeight = 8;
         let boardState = [];
         let currentPlayer = BLACK;
         let validMoves = [];
         let history = [];
+        let bombCount = 2;
+        let isBombActive = false;
+
         let aiTimeoutId = null;
         let moveTimerInterval = null;
-        let moveTimeLimit = 0;
         let moveTimeLeft = 0;
         let audioCtx = null;
         let stats = { wins: 0, losses: 0, draws: 0 };
         let gameEnded = false;
 
+        function getWeightMatrix(w, h) {
+            if (w === 6) return WEIGHTS_6;
+            if (w === 10) return WEIGHTS_10;
+            return WEIGHTS_8;
+        }
+
         function loadThemePref() {
             const saved = localStorage.getItem('kreversi_theme');
-            if (saved && THEMES[saved]) {
-                currentThemeKey = saved;
-            } else {
-                currentThemeKey = 'classic';
-            }
+            if (saved && THEMES[saved]) currentThemeKey = saved;
             document.getElementById('theme-select').value = currentThemeKey;
             document.body.className = 'theme-' + currentThemeKey;
         }
@@ -245,27 +295,53 @@
 
         function loadStats() {
             const saved = localStorage.getItem('kreversi_stats');
-            if (saved) {
-                stats = JSON.parse(saved);
-            }
+            if (saved) stats = JSON.parse(saved);
+            const savedStage = localStorage.getItem('kreversi_campaign_unlocked');
+            if (savedStage) maxUnlockedStage = parseInt(savedStage, 10);
+            updateStageDropdown();
         }
 
         function saveStats() {
             localStorage.setItem('kreversi_stats', JSON.stringify(stats));
+            localStorage.setItem('kreversi_campaign_unlocked', maxUnlockedStage.toString());
+        }
+
+        function updateStageDropdown() {
+            const select = document.getElementById('stage-select');
+            select.innerHTML = '';
+            for (let s of CAMPAIGN_STAGES) {
+                const opt = document.createElement('option');
+                opt.value = s.stage;
+                opt.textContent = `Stage ${s.stage}: ${s.name}${s.stage > maxUnlockedStage ? ' 🔒' : ''}`;
+                if (s.stage > maxUnlockedStage) opt.disabled = true;
+                if (s.stage === currentStage) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        function changeGameMode() {
+            gameMode = document.getElementById('mode-select').value;
+            const isCampaign = gameMode === 'campaign';
+            document.getElementById('stage-select-label').style.display = isCampaign ? 'inline-flex' : 'none';
+            document.getElementById('board-size-label').style.display = isCampaign ? 'none' : 'inline-flex';
+            document.getElementById('ai-diff-label').style.display = isCampaign ? 'none' : 'inline-flex';
+            initGame();
+        }
+
+        function changeStage() {
+            currentStage = parseInt(document.getElementById('stage-select').value, 10);
+            initGame();
         }
 
         function showStats() {
             const total = stats.wins + stats.losses + stats.draws;
-            alert(`Games Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}`);
+            alert(`KReversi Statistics\n\nGames Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}\nMax Campaign Stage: ${maxUnlockedStage} / 15`);
         }
 
         function saveGame() {
             const state = {
-                boardState,
-                currentPlayer,
-                history,
-                gameEnded,
-                theme: currentThemeKey
+                boardState, boardWidth, boardHeight, currentPlayer, history,
+                gameEnded, bombCount, isBombActive, gameMode, currentStage, theme: currentThemeKey
             };
             localStorage.setItem('kreversi_save', JSON.stringify(state));
             messageEl.textContent = 'Game Saved!';
@@ -276,18 +352,25 @@
             if (saved) {
                 const state = JSON.parse(saved);
                 boardState = state.boardState;
+                boardWidth = state.boardWidth;
+                boardHeight = state.boardHeight;
                 currentPlayer = state.currentPlayer;
                 history = state.history || [];
                 gameEnded = state.gameEnded || false;
+                bombCount = state.bombCount || 2;
+                isBombActive = state.isBombActive || false;
+                gameMode = state.gameMode || 'campaign';
+                currentStage = state.currentStage || 1;
+                
                 if (state.theme && THEMES[state.theme]) {
                     currentThemeKey = state.theme;
                     document.getElementById('theme-select').value = currentThemeKey;
                     document.body.className = 'theme-' + currentThemeKey;
                 }
-                if (aiTimeoutId) {
-                    clearTimeout(aiTimeoutId);
-                    aiTimeoutId = null;
-                }
+                document.getElementById('mode-select').value = gameMode;
+                changeGameMode();
+
+                if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
                 stopTimer();
                 messageEl.textContent = 'Game Loaded!';
                 initBoardDOM();
@@ -312,7 +395,7 @@
                 if (type === 'place') {
                     osc.type = 'sine';
                     osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
                     gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.1);
@@ -320,30 +403,31 @@
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(400, audioCtx.currentTime);
                     osc.frequency.linearRampToValueAtTime(200, audioCtx.currentTime + 0.3);
-                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime);
                     gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'bomb') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.2);
                 }
             } catch (e) {}
         }
 
         function stopTimer() {
-            if (moveTimerInterval) {
-                clearInterval(moveTimerInterval);
-                moveTimerInterval = null;
-            }
+            if (moveTimerInterval) { clearInterval(moveTimerInterval); moveTimerInterval = null; }
         }
 
         function updateClockDisplay() {
             if (!clockDisplayEl) return;
             const timeMode = parseInt(document.getElementById('time-mode').value);
-            if (timeMode === 0) {
-                clockDisplayEl.textContent = 'Clock: Unlimited';
-            } else {
-                const sec = (moveTimeLeft / 10).toFixed(1);
-                clockDisplayEl.textContent = `Clock: ${sec}s`;
-            }
+            if (timeMode === 0) clockDisplayEl.textContent = 'Clock: Off';
+            else clockDisplayEl.textContent = `Clock: ${(moveTimeLeft / 10).toFixed(1)}s`;
         }
 
         function resetTimer() {
@@ -353,16 +437,11 @@
                 moveTimeLeft = timeMode * 10;
                 updateClockDisplay();
                 moveTimerInterval = setInterval(tickTimer, 100);
-            } else {
-                updateClockDisplay();
-            }
+            } else updateClockDisplay();
         }
 
         function tickTimer() {
-            if (gameEnded) {
-                stopTimer();
-                return;
-            }
+            if (gameEnded) { stopTimer(); return; }
             moveTimeLeft--;
             updateClockDisplay();
             if (moveTimeLeft <= 0) {
@@ -371,42 +450,69 @@
                 const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
                 const timedOutPlayer = currentPlayer === BLACK ? themeInfo.p1 : themeInfo.p2;
                 const winnerPlayer = currentPlayer === BLACK ? themeInfo.p2 : themeInfo.p1;
-                messageEl.textContent = `${timedOutPlayer} ran out of time! ${winnerPlayer} wins!`;
-                if (currentPlayer === BLACK) stats.losses++;
-                else stats.wins++;
+                messageEl.textContent = `${timedOutPlayer} Timeout! ${winnerPlayer} wins!`;
+                if (currentPlayer === BLACK) stats.losses++; else stats.wins++;
                 saveStats();
                 playSound('over');
                 renderBoard();
             }
         }
 
-        function applyHandicap() {
-            boardState = Array(64).fill(EMPTY);
-            boardState[27] = WHITE; boardState[28] = BLACK;
-            boardState[35] = BLACK; boardState[36] = WHITE;
-            const h = document.getElementById('handicap-select').value;
-            if (h === 'b_corner') {
-                boardState[0] = BLACK;
-            } else if (h === 'w_corner') {
-                boardState[63] = WHITE;
-            } else if (h === 'b_adv') {
-                boardState[19] = BLACK; boardState[44] = BLACK;
-            } else if (h === '4_corners') {
-                boardState[0] = BLACK; boardState[7] = WHITE;
-                boardState[56] = WHITE; boardState[63] = BLACK;
+        function setupBoardState() {
+            if (gameMode === 'campaign') {
+                const stageData = CAMPAIGN_STAGES[currentStage - 1];
+                boardWidth = stageData.width;
+                boardHeight = stageData.height;
+                bombCount = stageData.bombs;
+                if (stageData.timeMode) document.getElementById('time-mode').value = stageData.timeMode;
+                else document.getElementById('time-mode').value = "0";
+
+                boardState = Array(boardWidth * boardHeight).fill(EMPTY);
+
+                // Apply holes
+                for (let [hr, hc] of stageData.holes) {
+                    if (hr < boardHeight && hc < boardWidth) boardState[hr * boardWidth + hc] = BLOCKED;
+                }
+
+                // Center discs
+                const midR = Math.floor(boardHeight / 2), midC = Math.floor(boardWidth / 2);
+                boardState[(midR - 1) * boardWidth + (midC - 1)] = WHITE;
+                boardState[(midR - 1) * boardWidth + midC] = BLACK;
+                boardState[midR * boardWidth + (midC - 1)] = BLACK;
+                boardState[midR * boardWidth + midC] = WHITE;
+
+                // Custom setup
+                for (let [cr, cc, color] of stageData.custom) {
+                    if (cr < boardHeight && cc < boardWidth) boardState[cr * boardWidth + cc] = color;
+                }
+            } else {
+                const size = parseInt(document.getElementById('board-size-select').value, 10);
+                boardWidth = size;
+                boardHeight = size;
+                bombCount = 2;
+                boardState = Array(boardWidth * boardHeight).fill(EMPTY);
+
+                const midR = Math.floor(boardHeight / 2), midC = Math.floor(boardWidth / 2);
+                boardState[(midR - 1) * boardWidth + (midC - 1)] = WHITE;
+                boardState[(midR - 1) * boardWidth + midC] = BLACK;
+                boardState[midR * boardWidth + (midC - 1)] = BLACK;
+                boardState[midR * boardWidth + midC] = WHITE;
             }
         }
 
         function initGame() {
-            applyHandicap();
+            setupBoardState();
             currentPlayer = BLACK;
             history = [];
             gameEnded = false;
-            if (aiTimeoutId) {
-                clearTimeout(aiTimeoutId);
-                aiTimeoutId = null;
-            }
-            messageEl.textContent = '';
+            isBombActive = false;
+            if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+            
+            if (gameMode === 'campaign') {
+                const stageData = CAMPAIGN_STAGES[currentStage - 1];
+                messageEl.textContent = `Stage ${currentStage}: ${stageData.name} - ${stageData.desc}`;
+            } else messageEl.textContent = '';
+
             initBoardDOM();
             renderBoard();
             resetTimer();
@@ -414,7 +520,13 @@
 
         function initBoardDOM() {
             boardEl.innerHTML = '';
-            for (let i = 0; i < 64; i++) {
+            boardEl.style.gridTemplateColumns = `repeat(${boardWidth}, var(--cell-size, 45px))`;
+            boardEl.style.gridTemplateRows = `repeat(${boardHeight}, var(--cell-size, 45px))`;
+
+            const cellSize = boardWidth === 6 ? '55px' : (boardWidth === 8 ? '45px' : '38px');
+            document.documentElement.style.setProperty('--cell-size', cellSize);
+
+            for (let i = 0; i < boardWidth * boardHeight; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.id = 'cell-' + i;
@@ -432,15 +544,15 @@
         function pushHistory() {
             history.push({
                 board: [...boardState],
-                player: currentPlayer
+                player: currentPlayer,
+                bombCount,
+                isBombActive,
+                gameEnded
             });
         }
 
         function undoMove() {
-            if (aiTimeoutId) {
-                clearTimeout(aiTimeoutId);
-                aiTimeoutId = null;
-            }
+            if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
             if (history.length === 0) return;
             
             let lastState = history.pop();
@@ -449,38 +561,54 @@
             }
             boardState = lastState.board;
             currentPlayer = lastState.player;
+            bombCount = lastState.bombCount;
+            isBombActive = false;
             gameEnded = false;
             messageEl.textContent = '';
             renderBoard();
             resetTimer();
         }
 
-        function getFlippable(index, player) {
-            if (boardState[index] !== EMPTY) return [];
-            const r = Math.floor(index / 8);
-            const c = index % 8;
+        function toggleBomb() {
+            if (bombCount > 0 && !gameEnded && currentPlayer === BLACK) {
+                isBombActive = !isBombActive;
+                if (isBombActive) messageEl.textContent = '💣 BOMB ACTIVE: Click ANY empty cell to detonate 3x3 explosion!';
+                else messageEl.textContent = '';
+                renderBoard();
+            }
+        }
+
+        function getFlippableOnBoard(b, w, h, index, player) {
+            if (index < 0 || index >= w * h) return [];
+            if (b[index] !== EMPTY) return [];
+            const r = Math.floor(index / w);
+            const c = index % w;
             const opponent = player === BLACK ? WHITE : BLACK;
             let flippable = [];
 
             for (let [dr, dc] of DIRS) {
                 let nr = r + dr, nc = c + dc;
                 let currentDirFlippable = [];
-                while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && boardState[nr * 8 + nc] === opponent) {
-                    currentDirFlippable.push(nr * 8 + nc);
+                while (nr >= 0 && nr < h && nc >= 0 && nc < w && b[nr * w + nc] === opponent) {
+                    currentDirFlippable.push(nr * w + nc);
                     nr += dr;
                     nc += dc;
                 }
-                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && boardState[nr * 8 + nc] === player) {
+                if (nr >= 0 && nr < h && nc >= 0 && nc < w && b[nr * w + nc] === player) {
                     flippable.push(...currentDirFlippable);
                 }
             }
             return flippable;
         }
 
+        function getFlippable(index, player) {
+            return getFlippableOnBoard(boardState, boardWidth, boardHeight, index, player);
+        }
+
         function getValidMoves(player) {
             const moves = [];
-            for (let i = 0; i < 64; i++) {
-                if (getFlippable(i, player).length > 0) {
+            for (let i = 0; i < boardWidth * boardHeight; i++) {
+                if (boardState[i] === EMPTY && getFlippable(i, player).length > 0) {
                     moves.push(i);
                 }
             }
@@ -505,9 +633,19 @@
             if (movesB.length === 0 && movesW.length === 0) {
                 const {b, w} = updateScores();
                 const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
-                if (b > w) messageEl.textContent = `${themeInfo.p1} wins!`;
-                else if (w > b) messageEl.textContent = `${themeInfo.p2} wins!`;
-                else messageEl.textContent = 'Draw!';
+                
+                if (b > w) {
+                    if (gameMode === 'campaign') {
+                        messageEl.textContent = `🎉 STAGE ${currentStage} CLEARED! WINNER!`;
+                        if (currentStage === maxUnlockedStage && maxUnlockedStage < 15) {
+                            maxUnlockedStage++;
+                            saveStats();
+                            updateStageDropdown();
+                        }
+                    } else messageEl.textContent = `${themeInfo.p1} Wins!`;
+                } else if (w > b) {
+                    messageEl.textContent = `${themeInfo.p2} Wins!`;
+                } else messageEl.textContent = 'Draw!';
                 
                 if (!gameEnded) {
                     gameEnded = true;
@@ -525,19 +663,47 @@
 
         function handleCellClick(index) {
             if (gameEnded) return;
+
+            if (isBombActive) {
+                if (boardState[index] === EMPTY && bombCount > 0) {
+                    pushHistory();
+                    boardState[index] = BLACK;
+                    bombCount--;
+                    isBombActive = false;
+
+                    const r = Math.floor(index / boardWidth);
+                    const c = index % boardWidth;
+                    const flipped = [];
+                    for (let [dr, dc] of DIRS) {
+                        let nr = r + dr, nc = c + dc;
+                        if (nr >= 0 && nr < boardHeight && nc >= 0 && nc < boardWidth) {
+                            let idx = nr * boardWidth + nc;
+                            if (boardState[idx] === WHITE) {
+                                boardState[idx] = BLACK;
+                                flipped.push(idx);
+                            }
+                        }
+                    }
+                    playSound('bomb');
+                    currentPlayer = WHITE;
+                    if (getValidMoves(WHITE).length === 0) currentPlayer = BLACK;
+                    renderBoard(flipped);
+                    resetTimer();
+                    if (currentPlayer === WHITE) aiTimeoutId = setTimeout(makeAIMove, 400);
+                }
+                return;
+            }
+
             const flips = getFlippable(index, currentPlayer);
             if (flips.length > 0) {
                 pushHistory();
                 boardState[index] = currentPlayer;
-                for (let f of flips) {
-                    boardState[f] = currentPlayer;
-                }
+                for (let f of flips) boardState[f] = currentPlayer;
                 playSound('place');
                 
                 currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
-                
                 if (getValidMoves(currentPlayer).length === 0) {
-                    currentPlayer = currentPlayer === BLACK ? WHITE : BLACK; // Skip turn
+                    currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
                     if (getValidMoves(currentPlayer).length === 0) {
                         renderBoard(flips);
                         checkEndGame();
@@ -553,104 +719,134 @@
             }
         }
 
+        function evaluateBoardState(b, w, h, player) {
+            const weights = getWeightMatrix(w, h);
+            let score = 0;
+            let pCount = 0, oppCount = 0;
+            const opponent = player === BLACK ? WHITE : BLACK;
+
+            for (let i = 0; i < w * h; i++) {
+                if (b[i] === player) {
+                    score += weights[i] + 5;
+                    pCount++;
+                } else if (b[i] === opponent) {
+                    score -= (weights[i] + 5);
+                    oppCount++;
+                }
+            }
+            return score + (pCount - oppCount) * 2;
+        }
+
+        function minimax(b, w, h, depth, alpha, beta, isMaxPlayer, player) {
+            if (depth === 0) return evaluateBoardState(b, w, h, player);
+            const opponent = player === BLACK ? WHITE : BLACK;
+            const currPlayer = isMaxPlayer ? player : opponent;
+
+            const moves = [];
+            for (let i = 0; i < w * h; i++) {
+                if (b[i] === EMPTY && getFlippableOnBoard(b, w, h, i, currPlayer).length > 0) {
+                    moves.push(i);
+                }
+            }
+
+            if (moves.length === 0) return evaluateBoardState(b, w, h, player);
+
+            if (isMaxPlayer) {
+                let maxEval = -999999;
+                for (let m of moves) {
+                    const tempBoard = [...b];
+                    const flips = getFlippableOnBoard(tempBoard, w, h, m, currPlayer);
+                    tempBoard[m] = currPlayer;
+                    for (let f of flips) tempBoard[f] = currPlayer;
+                    const evalVal = minimax(tempBoard, w, h, depth - 1, alpha, beta, false, player);
+                    maxEval = Math.max(maxEval, evalVal);
+                    alpha = Math.max(alpha, evalVal);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = 999999;
+                for (let m of moves) {
+                    const tempBoard = [...b];
+                    const flips = getFlippableOnBoard(tempBoard, w, h, m, currPlayer);
+                    tempBoard[m] = currPlayer;
+                    for (let f of flips) tempBoard[f] = currPlayer;
+                    const evalVal = minimax(tempBoard, w, h, depth - 1, alpha, beta, true, player);
+                    minEval = Math.min(minEval, evalVal);
+                    beta = Math.min(beta, evalVal);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function getBestMove(player) {
+            const moves = getValidMoves(player);
+            if (moves.length === 0) return null;
+            
+            let diff = 'positional';
+            if (gameMode === 'campaign') {
+                diff = CAMPAIGN_STAGES[currentStage - 1].ai;
+            } else {
+                diff = document.getElementById('ai-difficulty').value;
+            }
+
+            if (diff === 'rookie') {
+                return moves[Math.floor(Math.random() * moves.length)];
+            } else if (diff === 'greedy') {
+                let maxFlips = -1, best = moves[0];
+                for (let m of moves) {
+                    let count = getFlippable(m, player).length;
+                    if (count > maxFlips) { maxFlips = count; best = m; }
+                }
+                return best;
+            } else if (diff === 'positional') {
+                const weights = getWeightMatrix(boardWidth, boardHeight);
+                let maxVal = -Infinity, best = moves[0];
+                for (let m of moves) {
+                    let count = getFlippable(m, player).length;
+                    let val = count * 2 + weights[m];
+                    if (val > maxVal) { maxVal = val; best = m; }
+                }
+                return best;
+            } else { // grandmaster minimax
+                let maxVal = -Infinity, best = moves[0];
+                const depth = boardWidth === 10 ? 2 : 3;
+                for (let m of moves) {
+                    const tempBoard = [...boardState];
+                    const flips = getFlippable(m, player);
+                    tempBoard[m] = player;
+                    for (let f of flips) tempBoard[f] = player;
+                    let val = minimax(tempBoard, boardWidth, boardHeight, depth, -999999, 999999, false, player);
+                    if (val > maxVal) { maxVal = val; best = m; }
+                }
+                return best;
+            }
+        }
+
         function makeAIMove() {
             aiTimeoutId = null;
             if (checkEndGame()) return;
             const moves = getValidMoves(WHITE);
             if (moves.length > 0) {
                 pushHistory();
-                const diff = document.getElementById('ai-difficulty').value;
-                let bestMove = moves[0];
-                
-                if (diff === 'easy') {
-                    bestMove = moves[Math.floor(Math.random() * moves.length)];
-                } else if (diff === 'medium') {
-                    let maxFlips = -1;
-                    for(let m of moves) {
-                        let flips = getFlippable(m, WHITE).length;
-                        if(flips > maxFlips) {
-                            maxFlips = flips;
-                            bestMove = m;
-                        }
-                    }
-                } else { // hard
-                    const weights = [
-                        100, -20,  10,   5,   5,  10, -20, 100,
-                        -20, -50,  -2,  -2,  -2,  -2, -50, -20,
-                         10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
-                          5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
-                          5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
-                         10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
-                        -20, -50,  -2,  -2,  -2,  -2, -50, -20,
-                        100, -20,  10,   5,   5,  10, -20, 100
-                    ];
-                    let maxScore = -Infinity;
-                    for(let m of moves) {
-                        let flips = getFlippable(m, WHITE).length;
-                        let score = flips + weights[m];
-                        if(score > maxScore) {
-                            maxScore = score;
-                            bestMove = m;
-                        }
-                    }
-                }
-
-                let flips = getFlippable(bestMove, WHITE);
+                const bestMove = getBestMove(WHITE);
+                const flips = getFlippable(bestMove, WHITE);
                 boardState[bestMove] = WHITE;
-                for (let f of flips) {
-                    boardState[f] = WHITE;
-                }
+                for (let f of flips) boardState[f] = WHITE;
                 playSound('place');
                 currentPlayer = BLACK;
-                if (getValidMoves(BLACK).length === 0) {
-                    currentPlayer = WHITE;
-                }
+                if (getValidMoves(BLACK).length === 0) currentPlayer = WHITE;
                 renderBoard(flips);
                 resetTimer();
             }
             checkEndGame();
         }
 
-        const WEIGHTS = [
-            100, -20,  10,   5,   5,  10, -20, 100,
-            -20, -50,  -2,  -2,  -2,  -2, -50, -20,
-             10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
-              5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
-              5,  -2,  -1,  -1,  -1,  -1,  -2,   5,
-             10,  -2,  -1,  -1,  -1,  -1,  -2,  10,
-            -20, -50,  -2,  -2,  -2,  -2, -50, -20,
-            100, -20,  10,   5,   5,  10, -20, 100
-        ];
-
-        function evaluatePosition() {
-            let score = 0;
-            for (let i = 0; i < 64; i++) {
-                if (boardState[i] === BLACK) score += WEIGHTS[i] + 1;
-                else if (boardState[i] === WHITE) score -= (WEIGHTS[i] + 1);
-            }
-            return score;
-        }
-
-        function getBestMove(player) {
-            const moves = getValidMoves(player);
-            if (moves.length === 0) return null;
-            let bestMove = null;
-            let maxVal = -Infinity;
-            for (let m of moves) {
-                const flips = getFlippable(m, player).length;
-                const val = flips * 2 + WEIGHTS[m];
-                if (val > maxVal) {
-                    maxVal = val;
-                    bestMove = m;
-                }
-            }
-            return bestMove;
-        }
-
         function getCoords(index) {
             if (index === null || index === undefined) return '-';
-            const col = String.fromCharCode(65 + (index % 8));
-            const row = Math.floor(index / 8) + 1;
+            const col = String.fromCharCode(65 + (index % boardWidth));
+            const row = Math.floor(index / boardWidth) + 1;
             return `${col}${row}`;
         }
 
@@ -660,15 +856,26 @@
             const bestMoveIdx = (currentPlayer === BLACK && !gameEnded) ? getBestMove(BLACK) : null;
             const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
             
-            for (let i = 0; i < 64; i++) {
+            for (let i = 0; i < boardWidth * boardHeight; i++) {
                 const cell = document.getElementById('cell-' + i);
                 const disc = document.getElementById('disc-' + i);
+                if (!cell || !disc) continue;
                 
                 cell.className = 'cell';
-                if (boardState[i] === EMPTY && currentPlayer === BLACK && validMoves.includes(i)) {
-                    cell.classList.add('valid-move');
-                    if (showHints && i === bestMoveIdx) {
-                        cell.classList.add('recommended-hint');
+                if (boardState[i] === BLOCKED) {
+                    cell.classList.add('blocked');
+                    disc.className = 'disc';
+                    continue;
+                }
+
+                if (boardState[i] === EMPTY && currentPlayer === BLACK && !gameEnded) {
+                    if (isBombActive) {
+                        cell.classList.add('bomb-target');
+                    } else if (validMoves.includes(i)) {
+                        cell.classList.add('valid-move');
+                        if (showHints && i === bestMoveIdx) {
+                            cell.classList.add('recommended-hint');
+                        }
                     }
                 }
                 
@@ -684,7 +891,10 @@
             turnDisplayEl.textContent = `Turn: ${currentPlayer === BLACK ? themeInfo.p1 : themeInfo.p2}`;
             updateScores();
 
-            const evalScore = evaluatePosition();
+            bombTextEl.textContent = `Bombs: ${bombCount}`;
+            bombBtnEl.className = isBombActive ? 'active-btn' : '';
+
+            const evalScore = evaluateBoardState(boardState, boardWidth, boardHeight, BLACK);
             const evalScoreEl = document.getElementById('eval-score');
             const hintTextEl = document.getElementById('hint-text');
             if (evalScoreEl) {
@@ -694,54 +904,52 @@
             }
             if (hintTextEl) {
                 if (showHints && currentPlayer === BLACK && bestMoveIdx !== null) {
-                    hintTextEl.textContent = `Best Move: ${getCoords(bestMoveIdx)}`;
+                    hintTextEl.textContent = `Best: ${getCoords(bestMoveIdx)}`;
                 } else {
-                    hintTextEl.textContent = `Best Move: -`;
+                    hintTextEl.textContent = `Best: -`;
                 }
             }
         }
 
-        function showHelp() {
-            document.getElementById('help-modal').style.display = 'flex';
-        }
-
-        function closeHelp() {
-            document.getElementById('help-modal').style.display = 'none';
-        }
+        function showHelp() { document.getElementById('help-modal').style.display = 'flex'; }
+        function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
 
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeHelp();
+            else if (e.key === 'b' || e.key === 'B') toggleBomb();
+            else if (e.key === 'h' || e.key === 'H') {
+                const chk = document.getElementById('hint-toggle');
+                chk.checked = !chk.checked;
+                renderBoard();
+            } else if (e.key === 'u' || e.key === 'U') undoMove();
+            else if (e.key === 'r' || e.key === 'R') initGame();
         });
 
         loadThemePref();
         loadStats();
-        initGame();
+        changeGameMode();
     </script>
+
     <div id="help-modal" class="modal" onclick="if(event.target===this) closeHelp()">
         <div class="modal-content">
             <span class="close-btn" onclick="closeHelp()">&times;</span>
-            <h2>KReversi Rules & Strategy Guide</h2>
+            <h2>KReversi Strategy Guide & Rules</h2>
             <div class="guide-section">
                 <h3>1. Core Rules & Objective</h3>
-                <p><strong>Objective:</strong> Have the majority of your colored discs on the 8x8 board when neither player has any legal moves remaining.</p>
-                <p><strong>Placing Discs:</strong> A valid move consists of placing a disc to sandwich one or more opponent discs between your newly placed disc and an existing disc of your color (horizontally, vertically, or diagonally).</p>
-                <p><strong>Flipping & Passing:</strong> All sandwiched opponent discs flip to your color. If a player has no legal moves, their turn is automatically passed. If neither player can move, the game ends.</p>
+                <p><strong>Objective:</strong> Control the majority of discs on the board when no legal moves remain.</p>
+                <p><strong>Flipping & Sandwiching:</strong> Trap opponent discs between your newly placed disc and an existing disc of your color.</p>
+                <p><strong>Blocked Cells (Holes):</strong> Dark unplayable cells that block line flips and cannot hold discs.</p>
             </div>
             <div class="guide-section">
-                <h3>2. Corner Control Strategy</h3>
-                <p><strong>Immutable Anchors:</strong> The 4 corner squares (A1, H1, A8, H8) can <em>never</em> be flipped once captured!</p>
-                <p><strong>Stable Discs:</strong> Securing a corner allows you to build outward and create permanent, un-flippable disc chains along the edges. Prioritize capturing corners whenever available.</p>
+                <h3>2. Campaign Mode & AI Personalities</h3>
+                <p><strong>15 Stages:</strong> Progress across dynamic 6x6, 8x8, and 10x10 boards with unique obstacle setups.</p>
+                <p><strong>4 AI Difficulties:</strong> Rookie, Greedy, Positional, and Grandmaster Minimax AI!</p>
             </div>
             <div class="guide-section">
-                <h3>3. Mobility Management</h3>
-                <p><strong>Maximize Options:</strong> Early and mid-game strategy relies on having many move options while restricting your opponent's choices. Starving your opponent of moves forces them into bad placements.</p>
-                <p><strong>Frontier Control:</strong> Keep your disc cluster compact and avoid placing discs on the outer perimeter ("frontier") early, which exposes new moves to your opponent.</p>
-            </div>
-            <div class="guide-section">
-                <h3>4. Edge Traps & Hazards</h3>
-                <p><strong>X-Squares (B2, G2, B7, G7):</strong> Extremely dangerous! Placing a disc here while the adjacent corner is empty almost guarantees your opponent will take that corner.</p>
-                <p><strong>C-Squares (A2, B1, H2, G1, etc.):</strong> Edge squares next to corners. Hazardous without prior corner or edge control.</p>
-                <p><strong>Wedge Plays:</strong> Leaving gaps on edges allows opponents to wedge inside and take control of the border.</p>
+                <h3>3. Power-ups & Shortcuts</h3>
+                <p><strong>Optimal Hint (H):</strong> Highlights top positional / minimax move choice.</p>
+                <p><strong>Undo Move (U):</strong> Reverts last move pair against AI.</p>
+                <p><strong>Bomb Disc (B):</strong> Detonates a 3x3 explosion flipping surrounding enemy discs!</p>
             </div>
         </div>
     </div>

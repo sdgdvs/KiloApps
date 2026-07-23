@@ -109,7 +109,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KGo        | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 3 AI personalities (Territorial, Influence, Grandmaster), Tsumego puzzles, AI Hint (H), Territory Estimator (T), and Undo (U). |
 | KDarts     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-stage campaign, 5 game modes, Focus/Magnet/Undo powerups, wind & wobble mechanics. |
 | KTowers    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-stage campaign, 3-5 peg Reve's Puzzles, Frame-Stewart solver, Hint, Undo, Time Freeze powerups, Locked Disks, Adjacent-only rules. |
-| KReversi   | Tier 1          | Creator (Phase 14)     | Needs Improvement | Full parity. New — needs Games agent loop. |
+| KReversi   | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 4 AI personalities (Rookie, Greedy, Positional, Grandmaster Minimax), blocked/hole cells, and Bomb disc power-up. |
 | KQuest     | Tier 1          | Creator (in progress)  | Needs Improvement | RPG — Creator building (Phase 9). Needs Games agent loop when complete. |
 
 ## Progress Log
@@ -138,6 +138,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - [x] KGo (Expanded Campaign to 15 stages, added 3 AI personalities (Territorial, Influence, Grandmaster), Tsumego puzzles, AI Hint (H), Territory Estimator (T), and Undo (U) to both EXE and HTML)
 - [x] KDarts (Expanded Campaign to 15 stages, added 5 game modes (501, 301, Cricket, ATC, Blitz), Focus/Magnet/Undo powerups, wind and wobble mechanics to both EXE and HTML)
 - [x] KTowers (Expanded Campaign to 15 stages, 3-5 peg Reve's Puzzles, Frame-Stewart solver, Hint, Undo, Time Freeze powerups, Locked Disks, Adjacent-only rules to both EXE and HTML)
+- [x] KReversi (Expanded Campaign to 15 stages, added blocked/hole cells, 4 AI personalities (including Grandmaster Minimax), and Bomb Disc power-up to both EXE and HTML)
 
 **Loop 5**
 - [x] KMines (Expanded Campaign to 10 levels, added Radar powerup and Lifetime Stats tracking to both EXE and HTML)
