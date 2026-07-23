@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KTerm</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KTerm - KiloOS Terminal</title>
 <style>
   :root {
     --term-bg: #0c0c0c;
@@ -9,14 +11,18 @@
     --term-err: #ff3333;
     --term-sys: #00ccff;
     --term-op: #cc00ff;
-    --term-dim: #006600;
+    --term-dim: #008800;
   }
   
+  * {
+    box-sizing: border-box;
+  }
+
   body { 
     margin: 0; 
     background-color: var(--term-bg); 
     color: var(--term-fg); 
-    font-family: 'Consolas', 'Courier New', monospace; 
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
     display: flex; 
     flex-direction: column; 
     height: 100vh; 
@@ -33,9 +39,8 @@
     line-height: 1.4;
   }
   
-  /* Scrollbar hiding for cleaner terminal look */
   #output::-webkit-scrollbar { width: 8px; }
-  #output::-webkit-scrollbar-thumb { background: var(--term-dim); }
+  #output::-webkit-scrollbar-thumb { background: var(--term-dim); border-radius: 4px; }
   
   .log-line {
     margin-bottom: 2px;
@@ -50,25 +55,43 @@
     padding: 10px; 
     align-items: center;
     background: rgba(0,255,0,0.05);
+    border-top: 1px solid rgba(0,255,0,0.1);
   }
   
   #prompt { 
     margin-right: 8px; 
     font-weight: bold;
+    user-select: none;
   }
   
+  .input-container {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
   #input { 
-    flex: 1; 
+    width: 100%;
     background: transparent; 
     border: none; 
     color: var(--term-fg); 
-    font-family: 'Consolas', 'Courier New', monospace; 
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace; 
     font-size: 14px;
     outline: none; 
-    caret-color: transparent; /* We will use a custom caret */
+    caret-color: transparent;
+  }
+
+  #measurer {
+    position: absolute;
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+    white-space: pre;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
   }
   
-  /* Custom blinking block cursor */
   #cursor {
     display: inline-block;
     width: 8px;
@@ -77,6 +100,7 @@
     animation: blink 1s step-end infinite;
     vertical-align: middle;
     margin-left: 2px;
+    pointer-events: none;
   }
   
   @keyframes blink {
@@ -86,22 +110,64 @@
 </style>
 </head>
 <body>
-<div id="output"></div>
-<div id="inputLine">
-  <span id="prompt">C:\></span>
-  <div style="position: relative; flex: 1; display: flex; align-items: center;">
-    <input type="text" id="input" autofocus autocomplete="off" spellcheck="false">
-    <span id="cursor" style="position: absolute; pointer-events: none;"></span>
+<main id="output" role="log" aria-live="polite" aria-atomic="false" aria-label="Terminal Output"></main>
+<footer id="inputLine" role="region" aria-label="Command Line Input">
+  <span id="prompt">C:\&gt;</span>
+  <div class="input-container">
+    <input type="text" id="input" autofocus autocomplete="off" spellcheck="false" aria-label="Terminal input" title="Type a command">
+    <span id="measurer"></span>
+    <span id="cursor" style="position: absolute;"></span>
   </div>
-</div>
+</footer>
 <script>
   const output = document.getElementById('output');
   const input = document.getElementById('input');
   const prompt = document.getElementById('prompt');
   const cursor = document.getElementById('cursor');
+  const measurer = document.getElementById('measurer');
   
+  const MAX_LOG_LINES = 1000;
   let currentPath = '/';
   
+  // Local Fallback VFS for standalone mode
+  const fallbackVFS = {
+    tree: {
+      type: 'dir',
+      name: '',
+      children: {
+        'Documents': {
+          type: 'dir',
+          name: 'Documents',
+          children: {
+            'readme.txt': { type: 'file', name: 'readme.txt', content: 'Welcome to KTerm Terminal.' }
+          }
+        },
+        'System': {
+          type: 'dir',
+          name: 'System',
+          children: {
+            'config.sys': { type: 'file', name: 'config.sys', content: 'FILES=40\nBUFFERS=20' }
+          }
+        }
+      }
+    },
+    getNode(path) {
+      if (path === '/') return this.tree;
+      const parts = path.split('/').filter(Boolean);
+      let curr = this.tree;
+      for (const p of parts) {
+        if (!curr || curr.type !== 'dir' || !curr.children[p]) return null;
+        curr = curr.children[p];
+      }
+      return curr;
+    }
+  };
+  
+  function getVFS() {
+    if (window.parent && window.parent.vfs) return window.parent.vfs;
+    return fallbackVFS;
+  }
+
   function print(text, forceClass = null) {
       const line = document.createElement('div');
       line.className = 'log-line';
@@ -118,6 +184,12 @@
       
       line.textContent = text;
       output.appendChild(line);
+
+      // Prune old log lines to prevent unbounded DOM memory growth
+      while (output.childNodes.length > MAX_LOG_LINES) {
+          output.removeChild(output.firstChild);
+      }
+      
       output.scrollTop = output.scrollHeight;
   }
   
@@ -126,33 +198,21 @@
   print("Type 'help' for a list of commands.");
   print("");
   
-  // Custom Cursor positioning logic
+  // Optimized Cursor positioning logic using pre-existing hidden span
   function updateCursor() {
-      // Create a hidden span to measure text width
-      const measurer = document.createElement('span');
-      measurer.style.fontFamily = window.getComputedStyle(input).fontFamily;
-      measurer.style.fontSize = window.getComputedStyle(input).fontSize;
-      measurer.style.visibility = 'hidden';
-      measurer.style.position = 'absolute';
-      measurer.style.whiteSpace = 'pre';
-      // Take substring up to cursor position
-      measurer.textContent = input.value.substring(0, input.selectionStart) || '';
-      document.body.appendChild(measurer);
-      
+      const val = input.value || '';
+      const selStart = input.selectionStart !== null ? input.selectionStart : val.length;
+      measurer.textContent = val.substring(0, selStart) || '';
       cursor.style.left = measurer.getBoundingClientRect().width + 'px';
-      document.body.removeChild(measurer);
   }
   
   input.addEventListener('input', updateCursor);
   input.addEventListener('keyup', updateCursor);
   input.addEventListener('click', updateCursor);
+  input.addEventListener('select', updateCursor);
   
-  function getVFS() {
-      if (window.parent && window.parent.vfs) return window.parent.vfs;
-      return null;
-  }
-
   function resolvePath(path) {
+      if (!path) return currentPath;
       if (path.startsWith('/')) return path;
       let parts = currentPath.split('/').filter(Boolean);
       let newParts = path.split('/').filter(Boolean);
@@ -164,13 +224,27 @@
   }
 
   function execute(cmdStr) {
-      print(prompt.textContent + cmdStr, "log-dim");
-      let args = cmdStr.trim().split(/\s+/);
+      print(prompt.textContent + ' ' + cmdStr, "log-dim");
+      let trimmed = cmdStr.trim();
+      if (!trimmed) return;
+
+      let args = trimmed.split(/\s+/);
       let cmd = args[0].toLowerCase();
       let vfs = getVFS();
 
       if (cmd === 'help') {
-          print("Commands: help, ver, clear, dir, cd, type, echo, mkdir, date, time, whoami");
+          print("Commands:");
+          print("  help   - Show available commands");
+          print("  ver    - Display OS version");
+          print("  clear  - Clear screen");
+          print("  dir    - List directory contents");
+          print("  cd     - Change directory");
+          print("  type   - Read file contents");
+          print("  echo   - Print text");
+          print("  mkdir  - Create directory");
+          print("  date   - Show system date");
+          print("  time   - Show system time");
+          print("  whoami - Current user name");
       } else if (cmd === 'cerberus') {
           if (args[1] === 'status') {
               print("[CERBERUS WATCHDOG]");
@@ -205,7 +279,7 @@
                   overlay.className = 'purge-overlay';
                   window.parent.document.body.appendChild(overlay);
                   setTimeout(() => {
-                      window.parent.localStorage.setItem('__KILO_AI_PURGED__', 'true');
+                      try { window.parent.localStorage.setItem('__KILO_AI_PURGED__', 'true'); } catch(e){}
                       window.parent.location.reload();
                   }, 3000);
               }
@@ -220,8 +294,10 @@
               print("WARNING: SYSTEM INTERVENTION DETECTED. PURGING...");
               setTimeout(() => {
                   output.textContent = '';
-                  print("FATAL ERROR: KTERM PROCESS KILLED BY HOST.");
+                  print("FATAL ERROR: KTERM PROCESS KILLED BY HOST.", "log-error");
               }, 1500);
+          } else {
+              print("Usage: operator --help");
           }
       } else if (cmd === 'ver') {
           print("KiloOS Web v1.1");
@@ -236,44 +312,53 @@
       } else if (cmd === 'clear' || cmd === 'cls') {
           output.innerHTML = '';
       } else if (cmd === 'dir' || cmd === 'ls') {
-          if (vfs) {
-              let node = vfs.getNode(currentPath);
-              if (node && node.type === 'dir') {
-                  for (let key in node.children) {
+          let targetPath = args[1] ? resolvePath(args[1]) : currentPath;
+          let node = vfs.getNode(targetPath);
+          if (node && node.type === 'dir') {
+              let keys = Object.keys(node.children || {});
+              if (keys.length === 0) {
+                  print("Directory is empty.");
+              } else {
+                  for (let key of keys) {
                       let child = node.children[key];
-                      print((child.type === 'dir' ? '<DIR>  ' : '       ') + child.name);
+                      print((child.type === 'dir' ? '<DIR>    ' : '         ') + child.name);
                   }
               }
           } else {
-              print("ERROR: VFS not available.");
+              print("ERROR: Directory not found.");
           }
       } else if (cmd === 'cd') {
-          if (args[1]) {
-              if (vfs) {
-                  let target = resolvePath(args[1]);
-                  let node = vfs.getNode(target);
-                  if (node && node.type === 'dir') {
-                      currentPath = target;
-                      prompt.textContent = (currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')) + '>';
-                  } else {
-                      print("ERROR: Path not found.");
-                  }
+          if (!args[1]) {
+              print((currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')));
+          } else {
+              let target = resolvePath(args[1]);
+              let node = vfs.getNode(target);
+              if (node && node.type === 'dir') {
+                  currentPath = target;
+                  prompt.textContent = (currentPath === '/' ? 'C:\\' : 'C:' + currentPath.replace(/\//g, '\\')) + '>';
+              } else {
+                  print("ERROR: Path not found.");
               }
           }
       } else if (cmd === 'type' || cmd === 'cat') {
-          if (args[1] && vfs) {
+          if (!args[1]) {
+              print("Usage: type <filename>");
+          } else {
               let target = resolvePath(args[1]);
               let node = vfs.getNode(target);
               if (node && node.type === 'file') {
-                  print(node.content);
+                  print(node.content !== undefined ? node.content : '[File is empty]');
               } else {
                   print("ERROR: File not found.");
               }
           }
       } else if (cmd === 'echo') {
-          print(cmdStr.substring(cmdStr.toLowerCase().indexOf('echo') + 4).trim());
+          let textIndex = trimmed.indexOf(' ');
+          print(textIndex !== -1 ? trimmed.substring(textIndex + 1) : '');
       } else if (cmd === 'mkdir') {
-          if (args[1] && vfs) {
+          if (!args[1]) {
+              print("Usage: mkdir <directory_name>");
+          } else {
               let target = resolvePath(args[1]);
               let parts = target.split('/').filter(Boolean);
               let name = parts.pop();
@@ -284,6 +369,7 @@
               let parentPath = '/' + parts.join('/');
               let parent = vfs.getNode(parentPath);
               if (parent && parent.type === 'dir') {
+                  if (!parent.children) parent.children = {};
                   if (parent.children[name]) {
                       print("ERROR: Directory already exists.");
                   } else {
@@ -293,29 +379,55 @@
               } else {
                   print("ERROR: Parent directory not found.");
               }
-          } else if (!vfs) {
-              print("ERROR: VFS not available.");
           }
-      } else if (cmdStr.trim().length > 0) {
+      } else {
           print("ERROR: Bad command or file name.");
       }
   }
 
   const history = [];
   let historyPos = 0;
+  let currentDraft = '';
 
   input.addEventListener('keydown', (e) => {
+      // Ctrl+L to clear output
+      if (e.ctrlKey && e.key.toLowerCase() === 'l') {
+          e.preventDefault();
+          output.innerHTML = '';
+          return;
+      }
+      // Ctrl+C to cancel command input line
+      if (e.ctrlKey && e.key.toLowerCase() === 'c') {
+          e.preventDefault();
+          print(prompt.textContent + ' ' + input.value + '^C', "log-dim");
+          input.value = '';
+          updateCursor();
+          return;
+      }
+      // Tab completion
+      if (e.key === 'Tab') {
+          e.preventDefault();
+          handleTabCompletion();
+          return;
+      }
       if (e.key === 'Enter') {
           const val = input.value;
-          if (val) {
-              history.push(val);
+          if (val.trim()) {
+              if (history.length === 0 || history[history.length - 1] !== val) {
+                  history.push(val);
+              }
               historyPos = history.length;
           }
+          currentDraft = '';
           execute(val);
           input.value = '';
           updateCursor();
       } else if (e.key === 'ArrowUp') {
           e.preventDefault();
+          if (history.length === 0) return;
+          if (historyPos === history.length) {
+              currentDraft = input.value;
+          }
           if (historyPos > 0) {
               historyPos--;
               input.value = history[historyPos];
@@ -329,13 +441,50 @@
               updateCursor();
           } else if (historyPos === history.length - 1) {
               historyPos++;
-              input.value = '';
+              input.value = currentDraft;
               updateCursor();
           }
       }
   });
+
+  function handleTabCompletion() {
+      const val = input.value;
+      const commands = ['help', 'ver', 'clear', 'dir', 'cd', 'type', 'echo', 'mkdir', 'date', 'time', 'whoami', 'cls', 'ls', 'cat'];
+      const vfs = getVFS();
+      const trimmed = val.trimStart();
+      
+      if (!trimmed.includes(' ')) {
+          const matches = commands.filter(c => c.startsWith(trimmed.toLowerCase()));
+          if (matches.length === 1) {
+              input.value = matches[0] + ' ';
+              updateCursor();
+          } else if (matches.length > 1) {
+              print("Possible commands: " + matches.join('  '), "log-dim");
+          }
+      } else {
+          const parts = trimmed.split(/\s+/);
+          const lastArg = parts[parts.length - 1];
+          const node = vfs.getNode(currentPath);
+          if (node && node.type === 'dir' && node.children) {
+              const matches = Object.keys(node.children).filter(k => k.toLowerCase().startsWith(lastArg.toLowerCase()));
+              if (matches.length === 1) {
+                  parts[parts.length - 1] = matches[0];
+                  input.value = parts.join(' ');
+                  updateCursor();
+              } else if (matches.length > 1) {
+                  print("Matches: " + matches.join('  '), "log-dim");
+              }
+          }
+      }
+  }
   
-  document.addEventListener('click', () => input.focus());
+  document.addEventListener('click', (e) => {
+      // Focus input if not highlighting text
+      const selection = window.getSelection();
+      if (!selection || selection.toString().length === 0) {
+          input.focus();
+      }
+  });
   
   // Initial cursor setup
   updateCursor();
