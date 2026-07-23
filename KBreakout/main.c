@@ -1,7 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
+
+int _fltused = 1;
 
 #define W 400
 #define H 400
@@ -50,20 +50,268 @@ int lasers_active[MAX_LASERS];
 int bricks[ROWS][COLS];
 int bricks_left = 0;
 
+#define MAX_PARTICLES 64
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    COLORREF color;
+} Particle;
+Particle particles[MAX_PARTICLES];
+
+#define MAX_TRAIL 6
+typedef struct { int x, y; } TrailPoint;
+TrailPoint ball_trail[MAX_TRAIL];
+int trail_idx = 0;
+
+static unsigned int rng_seed = 1337;
+static int MyRand() {
+    rng_seed = rng_seed * 1103515245 + 12345;
+    return (int)(rng_seed & 0x7fffffff);
+}
+
+static int MyAbs(int x) {
+    return x < 0 ? -x : x;
+}
+
+void SpawnParticles(float x, float y, COLORREF color, int count) {
+    for (int i = 0; i < count; i++) {
+        for (int p = 0; p < MAX_PARTICLES; p++) {
+            if (particles[p].life <= 0) {
+                particles[p].x = x;
+                particles[p].y = y;
+                particles[p].vx = ((float)(MyRand() % 61 - 30)) / 10.0f;
+                particles[p].vy = ((float)(MyRand() % 61 - 30)) / 10.0f;
+                particles[p].life = 10 + (MyRand() % 12);
+                particles[p].color = color;
+                break;
+            }
+        }
+    }
+}
+
+void UpdateParticles() {
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].life--;
+        }
+    }
+}
+
+void RecordBallTrail(int x, int y) {
+    ball_trail[trail_idx].x = x;
+    ball_trail[trail_idx].y = y;
+    trail_idx = (trail_idx + 1) % MAX_TRAIL;
+}
+
+COLORREF GetBrickColor(int r, int c, int type) {
+    if (type == 9) return RGB(140, 150, 160);
+    if (type == 2) return RGB(240, 60, 60);
+    COLORREF rowColors[5] = {
+        RGB(255, 50, 100),
+        RGB(255, 150, 50),
+        RGB(255, 200, 0),
+        RGB(50, 200, 100),
+        RGB(50, 200, 255)
+    };
+    return rowColors[r % 5];
+}
+
+void DrawGDIBrick(HDC hdc, int r, int c, int type, int bx, int by, int bw, int bh) {
+    COLORREF baseClr = GetBrickColor(r, c, type);
+    HBRUSH br = CreateSolidBrush(baseClr);
+    RECT rr = { bx + 1, by + 1, bx + bw - 1, by + bh - 1 };
+    FillRect(hdc, &rr, br);
+    DeleteObject(br);
+
+    HPEN lightPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    HPEN oldPen = (HPEN)SelectObject(hdc, lightPen);
+    MoveToEx(hdc, bx + 1, by + bh - 2, NULL);
+    LineTo(hdc, bx + 1, by + 1);
+    LineTo(hdc, bx + bw - 2, by + 1);
+
+    HPEN darkPen = CreatePen(PS_SOLID, 1, RGB(30, 30, 30));
+    SelectObject(hdc, darkPen);
+    LineTo(hdc, bx + bw - 2, by + bh - 2);
+    LineTo(hdc, bx + 1, by + bh - 2);
+
+    if (type == 9) { // Steel cross pattern
+        HPEN steelPen = CreatePen(PS_SOLID, 1, RGB(220, 220, 220));
+        SelectObject(hdc, steelPen);
+        MoveToEx(hdc, bx + 4, by + 4, NULL); LineTo(hdc, bx + bw - 4, by + bh - 4);
+        MoveToEx(hdc, bx + bw - 4, by + 4, NULL); LineTo(hdc, bx + 4, by + bh - 4);
+        DeleteObject(steelPen);
+    } else if (type == 2) { // Reinforced armor plate
+        HPEN armorPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        SelectObject(hdc, armorPen);
+        MoveToEx(hdc, bx + bw/2, by + 3, NULL); LineTo(hdc, bx + bw/2 - 4, by + bh/2);
+        LineTo(hdc, bx + bw/2 + 4, by + bh - 3);
+        DeleteObject(armorPen);
+    }
+
+    SelectObject(hdc, oldPen);
+    DeleteObject(lightPen);
+    DeleteObject(darkPen);
+}
+
+void DrawGDIPaddle(HDC hdc, int px, int py, int pw, int ph) {
+    HBRUSH pBrush = CreateSolidBrush(RGB(50, 70, 100));
+    HPEN pPen = CreatePen(PS_SOLID, 1, RGB(120, 150, 190));
+    HPEN oldPen = (HPEN)SelectObject(hdc, pPen);
+    HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, pBrush);
+
+    RoundRect(hdc, px, py, px + pw, py + ph, 6, 6);
+
+    HPEN hiPen = CreatePen(PS_SOLID, 1, RGB(200, 230, 255));
+    SelectObject(hdc, hiPen);
+    MoveToEx(hdc, px + 4, py + 1, NULL);
+    LineTo(hdc, px + pw - 4, py + 1);
+    DeleteObject(hiPen);
+
+    COLORREF ledClr = ((GetTickCount() / 200) % 2 == 0) ? RGB(0, 255, 255) : RGB(0, 120, 255);
+    HBRUSH ledBr = CreateSolidBrush(ledClr);
+    RECT l1 = { px + 2, py + 3, px + 5, py + ph - 3 };
+    RECT l2 = { px + pw - 5, py + 3, px + pw - 2, py + ph - 3 };
+    FillRect(hdc, &l1, ledBr);
+    FillRect(hdc, &l2, ledBr);
+    DeleteObject(ledBr);
+
+    COLORREF coreClr = sticky_timer > 0 ? RGB(0, 120, 255) :
+                       laser_timer > 0 ? RGB(0, 255, 255) : RGB(255, 180, 0);
+    HBRUSH coreBr = CreateSolidBrush(coreClr);
+    RECT coreRc = { px + pw/2 - 8, py + 3, px + pw/2 + 8, py + ph - 3 };
+    FillRect(hdc, &coreRc, coreBr);
+    DeleteObject(coreBr);
+
+    if (laser_timer > 0) {
+        HBRUSH lasNoz = CreateSolidBrush(RGB(0, 255, 255));
+        RECT n1 = { px, py - 4, px + 3, py };
+        RECT n2 = { px + pw - 3, py - 4, px + pw, py };
+        FillRect(hdc, &n1, lasNoz);
+        FillRect(hdc, &n2, lasNoz);
+        DeleteObject(lasNoz);
+    }
+
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(pPen);
+    DeleteObject(pBrush);
+}
+
+void DrawGDIBall(HDC hdc) {
+    if (state == 0) return;
+    
+    if (!ball_stuck) {
+        for (int i = 0; i < MAX_TRAIL; i++) {
+            int idx = (trail_idx + i) % MAX_TRAIL;
+            if (ball_trail[idx].x != 0 || ball_trail[idx].y != 0) {
+                int sz = 2 + (i * (ball_size - 2)) / MAX_TRAIL;
+                COLORREF trailClr = pierce_timer > 0 ? RGB(200, 50, 50) : RGB(0, 180, 255);
+                HBRUSH tBr = CreateSolidBrush(trailClr);
+                HPEN tPen = CreatePen(PS_NULL, 0, 0);
+                HGDIOBJ oP = SelectObject(hdc, tPen);
+                HGDIOBJ oB = SelectObject(hdc, tBr);
+                Ellipse(hdc, ball_trail[idx].x - sz/2, ball_trail[idx].y - sz/2, ball_trail[idx].x + sz/2, ball_trail[idx].y + sz/2);
+                SelectObject(hdc, oP); SelectObject(hdc, oB);
+                DeleteObject(tPen); DeleteObject(tBr);
+            }
+        }
+    }
+
+    COLORREF outerClr = pierce_timer > 0 ? RGB(255, 30, 30) : RGB(0, 180, 255);
+    COLORREF innerClr = RGB(255, 255, 255);
+
+    HBRUSH oBr = CreateSolidBrush(outerClr);
+    HPEN oPen = CreatePen(PS_SOLID, 1, outerClr);
+    HGDIOBJ oldP = SelectObject(hdc, oPen);
+    HGDIOBJ oldB = SelectObject(hdc, oBr);
+
+    Ellipse(hdc, ball_x, ball_y, ball_x + ball_size, ball_y + ball_size);
+
+    HBRUSH iBr = CreateSolidBrush(innerClr);
+    SelectObject(hdc, iBr);
+    Ellipse(hdc, ball_x + 2, ball_y + 2, ball_x + ball_size - 2, ball_y + ball_size - 2);
+
+    SelectObject(hdc, oldP);
+    SelectObject(hdc, oldB);
+    DeleteObject(oPen); DeleteObject(oBr); DeleteObject(iBr);
+}
+
+void DrawGDIPowerup(HDC hdc, int x, int y, int type) {
+    COLORREF clr = RGB(255, 255, 255);
+    char badge[2] = "?";
+    if (type == 1) { clr = RGB(255, 200, 0); badge[0] = 'E'; }
+    else if (type == 2) { clr = RGB(50, 220, 50); badge[0] = '+'; }
+    else if (type == 3) { clr = RGB(255, 50, 50); badge[0] = 'P'; }
+    else if (type == 4) { clr = RGB(50, 100, 255); badge[0] = 'S'; }
+    else if (type == 5) { clr = RGB(0, 255, 255); badge[0] = 'L'; }
+
+    HBRUSH pwBr = CreateSolidBrush(clr);
+    HPEN pwPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    HGDIOBJ oP = SelectObject(hdc, pwPen);
+    HGDIOBJ oB = SelectObject(hdc, pwBr);
+
+    RoundRect(hdc, x - 7, y - 7, x + 7, y + 7, 6, 6);
+
+    SetTextColor(hdc, RGB(0, 0, 0));
+    SetBkMode(hdc, TRANSPARENT);
+    TextOutA(hdc, x - 3, y - 6, badge, 1);
+
+    SelectObject(hdc, oP);
+    SelectObject(hdc, oB);
+    DeleteObject(pwPen); DeleteObject(pwBr);
+}
+
+void DrawGDIUFO(HDC hdc, int x, int y) {
+    HBRUSH domeBr = CreateSolidBrush(RGB(0, 255, 255));
+    HBRUSH bodyBr = CreateSolidBrush(RGB(180, 40, 180));
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HGDIOBJ oP = SelectObject(hdc, nullPen);
+    
+    HGDIOBJ oB = SelectObject(hdc, domeBr);
+    Ellipse(hdc, x + 8, y, x + 22, y + 10);
+
+    SelectObject(hdc, bodyBr);
+    Ellipse(hdc, x, y + 3, x + 30, y + 11);
+
+    COLORREF lightClr = ((GetTickCount() / 150) % 2 == 0) ? RGB(255, 0, 255) : RGB(0, 255, 255);
+    HBRUSH lightBr = CreateSolidBrush(lightClr);
+    SelectObject(hdc, lightBr);
+    RECT l1 = { x + 5, y + 8, x + 8, y + 10 };
+    RECT l2 = { x + 14, y + 9, x + 17, y + 11 };
+    RECT l3 = { x + 22, y + 8, x + 25, y + 10 };
+    FillRect(hdc, &l1, lightBr);
+    FillRect(hdc, &l2, lightBr);
+    FillRect(hdc, &l3, lightBr);
+
+    SelectObject(hdc, oP);
+    SelectObject(hdc, oB);
+    DeleteObject(domeBr); DeleteObject(bodyBr); DeleteObject(lightBr); DeleteObject(nullPen);
+}
+
 void LoadHighScore() {
-    FILE *f = fopen("kbreakout_hi.dat", "r");
-    if (f) {
-        fscanf(f, "%d %d", &high_score, &lifetime_bricks);
-        fclose(f);
+    HANDLE hFile = CreateFileA("kbreakout_hi.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read;
+        int buf[2] = {0, 0};
+        if (ReadFile(hFile, buf, sizeof(buf), &read, NULL)) {
+            high_score = buf[0];
+            lifetime_bricks = buf[1];
+        }
+        CloseHandle(hFile);
     }
 }
 
 void SaveHighScore() {
     if (score > high_score) high_score = score;
-    FILE *f = fopen("kbreakout_hi.dat", "w");
-    if (f) {
-        fprintf(f, "%d %d", high_score, lifetime_bricks);
-        fclose(f);
+    HANDLE hFile = CreateFileA("kbreakout_hi.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        int buf[2] = { high_score, lifetime_bricks };
+        WriteFile(hFile, buf, sizeof(buf), &written, NULL);
+        CloseHandle(hFile);
     }
 }
 
@@ -76,6 +324,8 @@ void InitLevel() {
     laser_timer = 0;
     ball_stuck = 0;
     for(int i=0; i<MAX_LASERS; i++) lasers_active[i] = 0;
+    for(int i=0; i<MAX_PARTICLES; i++) particles[i].life = 0;
+    for(int i=0; i<MAX_TRAIL; i++) { ball_trail[i].x = 0; ball_trail[i].y = 0; }
     ufo_active = 0;
     ufo_timer = 300;
     for (int r = 0; r < ROWS; r++) {
@@ -98,7 +348,7 @@ void InitLevel() {
                 if ((r+c)%2 == 0) v = 2; else v = 9;
                 if (v == 9 && (r==4 || r==0)) v = 1;
             } else if (L == 7) {
-                if (abs(r - 2) + abs(c - 4) < 3) v = 2;
+                if (MyAbs(r - 2) + MyAbs(c - 4) < 3) v = 2;
             } else if (L == 8) {
                 if (c == 1 || c == 8) v = 9; else v = 2;
             } else if (L == 9) {
@@ -133,6 +383,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (pad_x < 0) pad_x = 0;
                 if (pad_x > W - pad_w) pad_x = W - pad_w;
 
+                UpdateParticles();
+
                 if (ball_stuck) {
                     ball_x = pad_x + ball_stuck_offset;
                     ball_y = H - 30 - ball_size;
@@ -143,6 +395,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     ball_x += ball_dx;
                     ball_y += ball_dy;
+                    RecordBallTrail(ball_x + ball_size/2, ball_y + ball_size/2);
 
                     // Wall collisions
                     if (ball_x < 0) { ball_x = 0; ball_dx = -ball_dx; }
@@ -158,6 +411,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             ball_dx = (hit_pos / 5);
                             if (ball_dx == 0) ball_dx = (ball_dx > 0) ? 1 : -1;
                             MessageBeep(0xFFFFFFFF);
+                            SpawnParticles(ball_x + ball_size/2, H - 30, RGB(0, 255, 255), 5);
                             if (sticky_timer > 0) {
                                 ball_stuck = 1;
                                 ball_stuck_offset = ball_x - pad_x;
@@ -196,6 +450,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (power_x + 10 > pad_x && power_x < pad_x + pad_w) {
                             power_active = 0;
                             MessageBeep(MB_OK);
+                            SpawnParticles(power_x, power_y, RGB(255, 255, 255), 10);
                             if (power_type == 1) { paddle_timer = 300; pad_w = (diff == 1) ? 80 : 100; }
                             else if (power_type == 2) { lives++; }
                             else if (power_type == 3) { pierce_timer = 300; }
@@ -235,6 +490,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         ball_dy = -ball_dy;
                         score += 50 + diff * 50;
                         MessageBeep(0xFFFFFFFF);
+                        SpawnParticles(ufo_x + 15, ufo_y + 5, RGB(255, 0, 255), 15);
                     }
                 } else {
                     if (ufo_timer > 0) ufo_timer--;
@@ -257,7 +513,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     lasers_active[i] = 0;
                                     if (bricks[r][c] == 2) {
                                         bricks[r][c] = 1; score += 5; lifetime_bricks++;
+                                        SpawnParticles(lasers_x[i], lasers_y[i], RGB(240, 60, 60), 6);
                                     } else {
+                                        SpawnParticles(lasers_x[i], lasers_y[i], GetBrickColor(r, c, bricks[r][c]), 10);
                                         bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++;
                                         if (bricks_left == 0) { speed++; level++; InitLevel(); }
                                     }
@@ -279,14 +537,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     if (bricks[r][c] == 9) {
                                         ball_dy = -ball_dy;
                                         MessageBeep(0xFFFFFFFF);
+                                        SpawnParticles(ball_x, ball_y, RGB(150, 150, 150), 5);
                                     } else if (bricks[r][c] == 2) {
                                         if (pierce_timer > 0) {
+                                            SpawnParticles(bx + br_w/2, by + br_h/2, RGB(240, 60, 60), 12);
                                             bricks[r][c] = 0; bricks_left--; score += 5 + (diff * 5); lifetime_bricks++;
                                         } else {
+                                            SpawnParticles(bx + br_w/2, by + br_h/2, RGB(240, 60, 60), 6);
                                             bricks[r][c] = 1; ball_dy = -ball_dy; score += 5 + (diff * 5); lifetime_bricks++;
                                         }
                                         MessageBeep(0xFFFFFFFF);
                                     } else {
+                                        SpawnParticles(bx + br_w/2, by + br_h/2, GetBrickColor(r, c, bricks[r][c]), 12);
                                         bricks[r][c] = 0;
                                         bricks_left--;
                                         if (pierce_timer <= 0) ball_dy = -ball_dy;
@@ -353,54 +615,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, W/2 - 70, H/2 + 10, t2, lstrlenA(t2));
                 TextOutA(memDC, W/2 - 70, H/2 + 30, t3, lstrlenA(t3));
             } else {
-                HBRUSH p_brush = CreateSolidBrush(RGB(51, 204, 255));
-                HBRUSH b_brush = CreateSolidBrush(pierce_timer > 0 ? RGB(255, 50, 50) : RGB(255, 255, 255));
-                
-                RECT rp = { pad_x, H - 30, pad_x + pad_w, H - 30 + pad_h };
-                FillRect(memDC, &rp, p_brush);
-                
-                RECT rb = { ball_x, ball_y, ball_x + ball_size, ball_y + ball_size };
-                FillRect(memDC, &rb, b_brush);
-                
-                DeleteObject(p_brush);
-                DeleteObject(b_brush);
-                
+                DrawGDIPaddle(memDC, pad_x, H - 30, pad_w, pad_h);
+
                 int br_w = W / COLS;
                 int br_h = 20;
                 for (int r = 0; r < ROWS; r++) {
                     for (int c = 0; c < COLS; c++) {
                         if (bricks[r][c]) {
-                            HBRUSH br;
-                            if (bricks[r][c] == 9) br = CreateSolidBrush(RGB(100, 100, 100));
-                            else if (bricks[r][c] == 2) br = CreateSolidBrush(RGB(255, 100, 100));
-                            else br = CreateSolidBrush(RGB(200 - r * 30, 100 + c * 15, 50 + r * 20));
-                            
-                            RECT rr = { c * br_w + 1, r * br_h + 40 + 1, (c + 1) * br_w - 1, (r + 1) * br_h + 40 - 1 };
-                            FillRect(memDC, &rr, br);
-                            DeleteObject(br);
+                            DrawGDIBrick(memDC, r, c, bricks[r][c], c * br_w, r * br_h + 40, br_w, br_h);
                         }
                     }
                 }
                 
-                if (power_active) {
-                    HBRUSH pw;
-                    if (power_type == 1) pw = CreateSolidBrush(RGB(255, 255, 0));
-                    else if (power_type == 2) pw = CreateSolidBrush(RGB(0, 255, 0));
-                    else if (power_type == 3) pw = CreateSolidBrush(RGB(255, 0, 0));
-                    else if (power_type == 4) pw = CreateSolidBrush(RGB(0, 0, 255));
-                    else pw = CreateSolidBrush(RGB(0, 255, 255));
-                    
-                    RECT rp_pow = { power_x, power_y, power_x + 10, power_y + 10 };
-                    FillRect(memDC, &rp_pow, pw);
-                    DeleteObject(pw);
-                }
-
-                if (ufo_active) {
-                    HBRUSH ufob = CreateSolidBrush(RGB(200, 50, 200));
-                    RECT ru = { ufo_x, ufo_y, ufo_x + 30, ufo_y + 10 };
-                    FillRect(memDC, &ru, ufob);
-                    DeleteObject(ufob);
-                }
+                if (power_active) DrawGDIPowerup(memDC, power_x, power_y, power_type);
+                if (ufo_active) DrawGDIUFO(memDC, ufo_x, ufo_y);
 
                 HBRUSH las = CreateSolidBrush(RGB(0, 255, 255));
                 for(int i=0; i<MAX_LASERS; i++) {
@@ -410,6 +638,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
                 DeleteObject(las);
+
+                // Render Particles
+                for (int i = 0; i < MAX_PARTICLES; i++) {
+                    if (particles[i].life > 0) {
+                        HBRUSH pBr = CreateSolidBrush(particles[i].color);
+                        RECT prc = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                        FillRect(memDC, &prc, pBr);
+                        DeleteObject(pBr);
+                    }
+                }
+
+                DrawGDIBall(memDC);
             }
             
             char sStr[64];
@@ -456,3 +696,4 @@ void MainEntry() {
     }
     ExitProcess(0);
 }
+

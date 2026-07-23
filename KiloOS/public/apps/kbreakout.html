@@ -27,6 +27,8 @@ let sticky_timer = 0, ball_stuck = 0, ball_stuck_offset = 0;
 let laser_timer = 0, lasers = [];
 let ufo_active = 0, ufo_x = 0, ufo_y = 25, ufo_dx = 2, ufo_timer = 300;
 let keys = {};
+let particles = [];
+let ball_trail = [];
 const ROWS = 5, COLS = 10, BR_W = w/COLS, BR_H = 20;
 let bricks = [];
 let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -45,8 +47,183 @@ function playTone(f, type, dur) {
     osc.stop(audioCtx.currentTime + dur);
 }
 
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let spd = 1 + Math.random() * 3.5;
+        particles.push({
+            x: x, y: y,
+            vx: Math.cos(angle) * spd,
+            vy: Math.sin(angle) * spd,
+            size: 2 + Math.random() * 3,
+            life: 1.0,
+            color: color
+        });
+    }
+}
+
+function getBrickColor(r, c, type) {
+    if (type === 9) return '#8899a6';
+    if (type === 2) return '#ff4444';
+    const rowColors = ['#ff3366', '#ff9933', '#ffcc00', '#33cc66', '#33ccff'];
+    return rowColors[r % rowColors.length];
+}
+
+function drawBrick(r, c, type, bx, by) {
+    let baseColor = getBrickColor(r, c, type);
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
+
+    // Bevel highlights & shadows
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.fillRect(bx + 1, by + 1, BR_W - 2, 3);
+    ctx.fillRect(bx + 1, by + 1, 3, BR_H - 2);
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillRect(bx + 1, by + BR_H - 4, BR_W - 2, 3);
+    ctx.fillRect(bx + BR_W - 4, by + 1, 3, BR_H - 2);
+
+    // Inner details & textures
+    if (type === 9) { // Silver metal plates
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(bx + 4, by + 4); ctx.lineTo(bx + BR_W - 4, by + BR_H - 4);
+        ctx.moveTo(bx + BR_W - 4, by + 4); ctx.lineTo(bx + 4, by + BR_H - 4);
+        ctx.stroke();
+    } else if (type === 2) { // Reinforced armor plate
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(bx + BR_W/2, by + 3); ctx.lineTo(bx + BR_W/2 - 4, by + BR_H/2);
+        ctx.lineTo(bx + BR_W/2 + 4, by + BR_H - 3);
+        ctx.stroke();
+    }
+}
+
+function drawPaddle() {
+    let py = h - 30;
+    let grad = ctx.createLinearGradient(pad_x, py, pad_x, py + pad_h);
+    grad.addColorStop(0, '#88a0c0');
+    grad.addColorStop(0.3, '#334466');
+    grad.addColorStop(0.7, '#1a2436');
+    grad.addColorStop(1, '#5577aa');
+    ctx.fillStyle = grad;
+    
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(pad_x, py, pad_w, pad_h, 4);
+    else ctx.rect(pad_x, py, pad_w, pad_h);
+    ctx.fill();
+
+    ctx.fillStyle = '#ccedff';
+    ctx.fillRect(pad_x + 4, py + 1, pad_w - 8, 2);
+
+    let ledColor = (Math.floor(Date.now() / 200) % 2 === 0) ? '#00ffff' : '#0088ff';
+    ctx.fillStyle = ledColor;
+    ctx.fillRect(pad_x + 2, py + 3, 3, pad_h - 6);
+    ctx.fillRect(pad_x + pad_w - 5, py + 3, 3, pad_h - 6);
+
+    let glowOpacity = (Math.sin(Date.now() / 100) + 1) / 2 * 0.6 + 0.4;
+    let coreColor = sticky_timer > 0 ? `rgba(0, 100, 255, ${glowOpacity})` :
+                    laser_timer > 0 ? `rgba(0, 255, 255, ${glowOpacity})` :
+                    `rgba(255, 200, 0, ${glowOpacity})`;
+    ctx.fillStyle = coreColor;
+    ctx.fillRect(pad_x + pad_w / 2 - 8, py + 3, 16, pad_h - 6);
+
+    if (laser_timer > 0) {
+        ctx.fillStyle = '#0ff';
+        ctx.fillRect(pad_x, py - 4, 3, 4);
+        ctx.fillRect(pad_x + pad_w - 3, py - 4, 3, 4);
+    }
+}
+
+function updateAndDrawBall() {
+    if (state === 0) return;
+    if (!ball_stuck) {
+        ball_trail.push({x: ball_x + ball_size/2, y: ball_y + ball_size/2});
+        if (ball_trail.length > 8) ball_trail.shift();
+    } else {
+        ball_trail = [];
+    }
+
+    for (let i = 0; i < ball_trail.length; i++) {
+        let t = ball_trail[i];
+        let alpha = (i + 1) / ball_trail.length * 0.4;
+        let radius = (ball_size / 2) * ((i + 1) / ball_trail.length);
+        ctx.fillStyle = pierce_timer > 0 ? `rgba(255, 50, 50, ${alpha})` : `rgba(0, 220, 255, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    let bx = ball_x + ball_size / 2;
+    let by = ball_y + ball_size / 2;
+    let radGrad = ctx.createRadialGradient(bx - 1, by - 1, 1, bx, by, ball_size);
+    if (pierce_timer > 0) {
+        radGrad.addColorStop(0, '#ffffff');
+        radGrad.addColorStop(0.4, '#ff3333');
+        radGrad.addColorStop(1, '#990000');
+    } else {
+        radGrad.addColorStop(0, '#ffffff');
+        radGrad.addColorStop(0.4, '#33ffff');
+        radGrad.addColorStop(1, '#0066cc');
+    }
+    ctx.fillStyle = radGrad;
+    ctx.beginPath();
+    ctx.arc(bx, by, ball_size / 2 + 1, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+function drawPowerup(x, y, type) {
+    let pw = 14, ph = 14;
+    let color = '#fff', label = '?';
+    if (type === 1) { color = '#ffcc00'; label = 'E'; }
+    else if (type === 2) { color = '#33cc33'; label = '+'; }
+    else if (type === 3) { color = '#ff3333'; label = 'P'; }
+    else if (type === 4) { color = '#3366ff'; label = 'S'; }
+    else if (type === 5) { color = '#00ffff'; label = 'L'; }
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x - pw/2, y - ph/2, pw, ph, 4);
+    else ctx.rect(x - pw/2, y - ph/2, pw, ph);
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 10px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y);
+}
+
+function drawUFO(x, y) {
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.7)';
+    ctx.beginPath();
+    ctx.arc(x + 15, y + 4, 7, Math.PI, 0);
+    ctx.fill();
+
+    let ufoGrad = ctx.createLinearGradient(x, y + 4, x, y + 10);
+    ufoGrad.addColorStop(0, '#d000d0');
+    ufoGrad.addColorStop(1, '#500050');
+    ctx.fillStyle = ufoGrad;
+    ctx.beginPath();
+    ctx.ellipse(x + 15, y + 7, 15, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    let lightColor = (Math.floor(Date.now() / 150) % 2 === 0) ? '#ff00ff' : '#00ffff';
+    ctx.fillStyle = lightColor;
+    ctx.fillRect(x + 5, y + 8, 3, 2);
+    ctx.fillRect(x + 14, y + 9, 3, 2);
+    ctx.fillRect(x + 22, y + 8, 3, 2);
+}
+
 function initLevel() {
     bricks = [];
+    particles = [];
+    ball_trail = [];
     let bCount = 0;
     for(let r=0; r<ROWS; r++) {
         let row = [];
@@ -150,6 +327,7 @@ function loop() {
                 ball_dx = hit * 0.2;
                 if(Math.abs(ball_dx) < 1) ball_dx = ball_dx > 0 ? 1 : -1;
                 playTone(400, 'square', 0.1);
+                spawnParticles(ball_x + ball_size/2, ball_y + ball_size, '#00ffff', 5);
                 if (sticky_timer > 0) {
                     ball_stuck = 1;
                     ball_stuck_offset = ball_x - pad_x;
@@ -183,6 +361,7 @@ function loop() {
             power_y += 3;
             if (power_y + 10 > h - 30 && power_y < h - 30 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
                 power_active = 0;
+                spawnParticles(power_x, power_y, '#ffffff', 10);
                 if (power_type === 1) { paddle_timer = 300; pad_w = diff === 1 ? 80 : 100; }
                 else if (power_type === 2) { lives++; }
                 else if (power_type === 3) { pierce_timer = 300; }
@@ -214,6 +393,7 @@ function loop() {
                 ufo_active = 0;
                 ball_dy = -ball_dy;
                 score += 50 + diff * 50;
+                spawnParticles(ufo_x + 15, ufo_y + 5, '#ff00ff', 15);
                 playTone(500, 'square', 0.1);
             }
         } else {
@@ -231,9 +411,12 @@ function loop() {
             let c = Math.floor(lasers[i].x / BR_W);
             if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                 if (bricks[r][c] !== 0 && bricks[r][c] !== 9) {
+                    let bx = c * BR_W, by = r * BR_H + 40;
                     if (bricks[r][c] === 2) {
                         bricks[r][c] = 1; score += 5; lifetime_bricks++; playTone(700, 'square', 0.05);
+                        spawnParticles(bx + BR_W/2, by + BR_H/2, '#ff4444', 6);
                     } else {
+                        spawnParticles(bx + BR_W/2, by + BR_H/2, getBrickColor(r, c, bricks[r][c]), 10);
                         bricks[r][c] = 0; score += 10; lifetime_bricks++; playTone(600, 'square', 0.05);
                     }
                     lasers.splice(i, 1);
@@ -250,14 +433,18 @@ function loop() {
                     if(!ball_stuck && ball_x + ball_size > bx && ball_x < bx + BR_W && ball_y + ball_size > by && ball_y < by + BR_H) {
                         if (bricks[r][c] === 9) {
                             ball_dy = -ball_dy;
+                            spawnParticles(ball_x, ball_y, '#aaaaaa', 5);
                             playTone(800, 'square', 0.05);
                         } else if (bricks[r][c] === 2) {
                             if (pierce_timer > 0) {
+                                spawnParticles(bx + BR_W/2, by + BR_H/2, '#ff4444', 12);
                                 bricks[r][c] = 0; bLeft--; lifetime_bricks++; score += 5 + diff * 5; playTone(700, 'square', 0.05);
                             } else {
+                                spawnParticles(bx + BR_W/2, by + BR_H/2, '#ff4444', 6);
                                 bricks[r][c] = 1; ball_dy = -ball_dy; lifetime_bricks++; score += 5 + diff * 5; playTone(700, 'square', 0.05);
                             }
                         } else {
+                            spawnParticles(bx + BR_W/2, by + BR_H/2, getBrickColor(r, c, bricks[r][c]), 12);
                             bricks[r][c] = 0;
                             bLeft--;
                             if (pierce_timer <= 0) ball_dy = -ball_dy;
@@ -272,10 +459,7 @@ function loop() {
                             }
                         }
                     }
-                    if (bricks[r][c] === 9) ctx.fillStyle = '#666';
-                    else if (bricks[r][c] === 2) ctx.fillStyle = '#f66';
-                    else ctx.fillStyle = `rgb(${200-r*30},${100+c*15},${50+r*20})`;
-                    ctx.fillRect(bx+1, by+1, BR_W-2, BR_H-2);
+                    drawBrick(r, c, bricks[r][c], bx, by);
                 }
             }
         }
@@ -287,30 +471,36 @@ function loop() {
         }
     }
     
-    ctx.fillStyle = '#3cf';
-    if(state !== 0) ctx.fillRect(pad_x, h-30, pad_w, pad_h);
+    if (state !== 0) drawPaddle();
+    if (power_active) drawPowerup(power_x, power_y, power_type);
+    if (ufo_active) drawUFO(ufo_x, ufo_y);
     
-    if (power_active) {
-        if (power_type === 1) ctx.fillStyle = '#ff0';
-        else if (power_type === 2) ctx.fillStyle = '#0f0';
-        else if (power_type === 3) ctx.fillStyle = '#f00';
-        else if (power_type === 4) ctx.fillStyle = '#00f';
-        else ctx.fillStyle = '#0ff';
-        ctx.fillRect(power_x, power_y, 10, 10);
-    }
-    
-    if (ufo_active) {
-        ctx.fillStyle = '#c3c';
-        ctx.fillRect(ufo_x, ufo_y, 30, 10);
-    }
-    
-    ctx.fillStyle = pierce_timer > 0 ? '#f33' : '#fff';
-    if(state !== 0) ctx.fillRect(ball_x, ball_y, ball_size, ball_size);
-    
+    // Draw lasers
     ctx.fillStyle = '#0ff';
     for (let l of lasers) {
-        ctx.fillRect(l.x - 2, l.y - 5, 4, 10);
+        ctx.fillRect(l.x - 2, l.y - 6, 4, 10);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(l.x - 1, l.y - 5, 2, 4);
+        ctx.fillStyle = '#0ff';
     }
+    
+    // Particle system update & render
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.03;
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+        } else {
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.fillRect(p.x, p.y, p.size, p.size);
+            ctx.globalAlpha = 1.0;
+        }
+    }
+    
+    updateAndDrawBall();
     
     document.getElementById('sc').innerText = score;
     document.getElementById('lv').innerText = lives;

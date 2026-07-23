@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KBreakout
 - KMaze
 - KRogue
 - KChess
@@ -107,6 +106,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KPac
 - KSnake
 - KTetris
+- KBreakout
 
 ## Completed Work Log
 
@@ -114,4 +114,5 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **KPac (Loop 1):** Implemented animated mouth chomp cycle for Pac-Man (with direction-based angles and speed boost aura), distinct ghost sprites (Blinky, Pinky, Inky, Clyde, Green) with movement-direction eye tracking and scared/flashing states, arcade-style double neon wall tiles, glowing pellets, pulsing power pellets, lightning speed item, frost freeze item, cherry fruit sprite, particle sparks, and floating score popups for both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).
 - **KSnake (Loop 1):** Implemented direction-aware snake head sprite with eyes and flickering red tongue animation, rounded multi-shade scale body segments, pulsing red apple with leaf & stem, golden star special food, floating cyan ghost food, ice crystal food, stone brick wall blocks with cracks & highlights, 8-legged creeping spider sprite with animated leg wiggles, swirling energy portals, dark metal tracker drone with pulsing red eye, and colorful eating particle bursts for both Web Canvas (ksnake.html) and Native C Win32 GDI (KSnake/main.c).
 - **KTetris (Loop 1):** Implemented 3D beveled gem & metallic tetromino blocks for all piece types (I, J, L, O, S, T, Z, Garbage, Bomb), ghost piece outline with pulsing energy grid, hard drop particle trails & impact sparks, glowing white line clear flash animation, and floating score text popups for both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
+- **KBreakout (Loop 1):** Implemented futuristic metallic paddle with side lights and animated energy core, energy ball with motion trail, 3D beveled bricks (silver metal, reinforced armor, row-tiered colors), powerup capsules with letter badges (Expand, Extra life, Pierce, Sticky, Laser), flying saucer UFO sprite, and brick destruction particle bursts for both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 
