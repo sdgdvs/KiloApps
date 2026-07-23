@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KType
+**Target App:** KVault
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -158,3 +158,5 @@ Pass 1 Complete.
 - **KTimer**: Added Countdown mode, ARIA accessibility attributes, robust time format parsing, Web Audio safety with auto-close cleanup, timer interval clearing, and safe `localStorage` wrappers in `ktimer.html`. Added Countdown/Stopwatch tabs, `WS_TABSTOP` keyboard navigation, static font/brush cleanup, `KillTimer` on `WM_DESTROY`, and fixed MSVC CRT symbol collisions in `main.c`.
 
 - **KTodo**: Added ARIA accessibility roles/labels, focus indicators, dynamic status announcements, XSS input escaping, `localStorage` try-catch guards, filter tabs (All/Active/Completed), and task counters in `ktodo.html`. Added Enter key edit subclassing, Delete key listbox subclassing, dynamic `WM_SIZE` control scaling, minimum window tracking size, and string buffer safety in `main.c`.
+
+- **KType**: Added ARIA attributes/roles, Arcade Cascade keyboard typing support, event parameter fix, animation loop leak prevention, dynamic word pool replenishment, and safe `localStorage`/Blob export in `ktype.html`. Added persistent font handle cleanup on `WM_DESTROY`, zero-division WPM protection, non-alpha character typing support, and buffer array bounds checks in `main.c`.
