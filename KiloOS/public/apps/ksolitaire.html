@@ -7,48 +7,57 @@
 <style>
   :root {
     --bg-color: #0d5c2e;
-    --card-w: 80px;
-    --card-h: 112px;
-    --card-gap: 12px;
-    --border-radius: 6px;
+    --card-w: 84px;
+    --card-h: 118px;
+    --card-gap: 14px;
+    --border-radius: 8px;
     --card-back-bg: #1e3c72;
-    --card-back-pattern: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; }
 
   body {
     background-color: var(--bg-color);
-    background-image: radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.3) 100%);
+    background-image: 
+      radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.45) 100%),
+      repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.03) 0px, rgba(0, 0, 0, 0.03) 2px, transparent 2px, transparent 4px);
     color: #fff;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.6);
   }
 
   /* Header & Toolbar */
   header {
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 8px 16px;
+    background: rgba(10, 15, 25, 0.75);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.25);
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     z-index: 100;
   }
 
   .logo-title {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #ffeb3b;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    color: #ffd700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.6), 0 0 10px rgba(255,215,0,0.3);
+  }
+
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    fill: #ffd700;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
   }
 
   .toolbar {
@@ -59,29 +68,32 @@
   }
 
   .btn {
-    background: linear-gradient(180deg, #444 0%, #222 100%);
-    color: #fff;
+    background: linear-gradient(180deg, #3a3f4d 0%, #1f232d 100%);
+    color: #f0f0f0;
     border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 4px;
-    padding: 6px 12px;
+    border-radius: 6px;
+    padding: 7px 14px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    transition: all 0.15s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
   }
 
   .btn:hover:not(:disabled) {
-    background: linear-gradient(180deg, #555 0%, #333 100%);
-    border-color: rgba(255,255,255,0.4);
-    transform: translateY(-1px);
+    background: linear-gradient(180deg, #4a5061 0%, #2b303d 100%);
+    border-color: rgba(255,215,0,0.5);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
   }
 
   .btn:active:not(:disabled) {
     transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
 
   .btn:disabled {
@@ -91,30 +103,31 @@
   }
 
   .btn-primary {
-    background: linear-gradient(180deg, #2196F3 0%, #1565C0 100%);
-    border-color: #64B5F6;
+    background: linear-gradient(180deg, #1e88e5 0%, #1565c0 100%);
+    border-color: #64b5f6;
   }
   .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(180deg, #42A5F5 0%, #1E88E5 100%);
+    background: linear-gradient(180deg, #42a5f5 0%, #1e88e5 100%);
   }
 
   .btn-success {
-    background: linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);
-    border-color: #81C784;
+    background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
+    border-color: #81c784;
+    color: #e8f5e9;
   }
   .btn-success:hover:not(:disabled) {
-    background: linear-gradient(180deg, #66BB6A 0%, #388E3C 100%);
+    background: linear-gradient(180deg, #388e3c 0%, #2e7d32 100%);
   }
 
   .btn-warning {
-    background: linear-gradient(180deg, #FF9800 0%, #E65100 100%);
-    border-color: #FFB74D;
+    background: linear-gradient(180deg, #ef6c00 0%, #e65100 100%);
+    border-color: #ffb74d;
   }
 
   select.btn {
     appearance: none;
-    padding-right: 24px;
-    background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    padding-right: 26px;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffd700" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
     background-repeat: no-repeat;
     background-position: right 8px center;
   }
@@ -124,39 +137,41 @@
     display: flex;
     gap: 16px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     color: #e0e0e0;
-    background: rgba(0,0,0,0.2);
-    padding: 4px 12px;
+    background: rgba(0,0,0,0.35);
+    padding: 6px 16px;
     border-radius: 20px;
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
   }
 
   .status-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
   }
   .status-val {
-    color: #fff;
-    font-family: monospace;
-    font-size: 14px;
+    color: #ffd700;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    text-shadow: 0 0 5px rgba(255,215,0,0.4);
   }
 
   /* Game Board Layout */
   #board {
     flex: 1;
     position: relative;
-    max-width: 900px;
+    max-width: 920px;
     width: 100%;
     margin: 20px auto;
-    padding: 0 10px;
+    padding: 0 16px;
   }
 
   .top-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
   }
 
   .stock-waste-group, .foundations-group {
@@ -174,11 +189,17 @@
   .slot {
     width: var(--card-w);
     height: var(--card-h);
-    border: 2px dashed rgba(255, 255, 255, 0.25);
+    border: 2px dashed rgba(255, 255, 255, 0.22);
     border-radius: var(--border-radius);
     position: relative;
-    background: rgba(0, 0, 0, 0.1);
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    background: rgba(0, 0, 0, 0.18);
+    box-shadow: inset 0 3px 6px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
+  }
+
+  .slot.foundation {
+    border-color: rgba(255, 215, 0, 0.3);
+    background: rgba(0, 0, 0, 0.25);
   }
 
   .slot.foundation::after {
@@ -187,8 +208,9 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 32px;
-    color: rgba(255, 255, 255, 0.15);
+    font-size: 38px;
+    color: rgba(255, 255, 255, 0.12);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
 
   .slot.tableau {
@@ -203,44 +225,92 @@
     height: var(--card-h);
     border-radius: var(--border-radius);
     position: absolute;
-    background: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.5);
+    background: #ffffff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.35), 0 0 1px rgba(0,0,0,0.6);
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     padding: 4px 6px;
     font-weight: 700;
-    box-sizing: border-weight-box;
+    box-sizing: border-box;
+    overflow: hidden;
+    backface-visibility: hidden;
   }
 
   .card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    z-index: 50 !important;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+    z-index: 60 !important;
   }
 
   .card.red { color: #d32f2f; }
-  .card.black { color: #212121; }
+  .card.black { color: #1a1a1a; }
 
   .card .card-corner {
     display: flex;
     flex-direction: column;
     align-items: center;
-    line-height: 1;
+    line-height: 0.95;
+    z-index: 2;
   }
 
-  .card .card-rank { font-size: 16px; letter-spacing: -1px; }
-  .card .card-suit-sm { font-size: 14px; }
+  .card .card-rank { font-size: 16px; font-weight: 900; letter-spacing: -1px; }
+  .card .card-suit-sm { font-size: 14px; margin-top: 1px; }
 
-  .card .card-center-suit {
+  .card .card-center {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 36px;
-    opacity: 0.85;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  /* Pip layout matrix for 2-10 */
+  .pip-container {
+    width: 48px;
+    height: 76px;
+    position: relative;
+  }
+  .pip-icon {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Court Card Frame */
+  .court-frame {
+    width: 52px;
+    height: 80px;
+    border: 2px solid #d4af37;
+    border-radius: 4px;
+    background: radial-gradient(circle, #fff 0%, #f7f1e3 100%);
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    overflow: hidden;
+  }
+
+  .court-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Ace Centerpiece */
+  .ace-centerpiece {
+    width: 44px;
+    height: 44px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
   }
 
   .card .card-corner.bottom {
@@ -250,40 +320,59 @@
   /* Card Back Styling */
   .card.face-down {
     background: var(--card-back-bg);
-    background-image: var(--card-back-pattern);
     border: 2px solid #ffffff;
     cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.3);
   }
   .card.face-down * { display: none; }
 
+  .card-back-inner {
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-back-logo {
+    width: 32px;
+    height: 32px;
+    fill: #ffd700;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  }
+
   .card.selected {
-    outline: 3px solid #ffeb3b;
-    box-shadow: 0 0 15px #ffeb3b, 0 4px 12px rgba(0,0,0,0.5);
+    outline: 3px solid #ffd700;
+    box-shadow: 0 0 18px #ffd700, 0 6px 16px rgba(0,0,0,0.5);
     z-index: 90 !important;
   }
 
   .card.hint-src {
-    animation: hintPulseSrc 1s infinite alternate;
+    animation: hintPulseSrc 0.8s infinite alternate;
   }
   .card.hint-dst, .slot.hint-dst {
-    animation: hintPulseDst 1s infinite alternate;
+    animation: hintPulseDst 0.8s infinite alternate;
   }
 
   @keyframes hintPulseSrc {
     0% { outline: 3px solid #00E676; box-shadow: 0 0 10px #00E676; }
-    100% { outline: 3px solid #B9F6CA; box-shadow: 0 0 20px #00E676; }
+    100% { outline: 3px solid #B9F6CA; box-shadow: 0 0 22px #00E676; }
   }
   @keyframes hintPulseDst {
     0% { outline: 3px solid #FF9100; box-shadow: 0 0 10px #FF9100; }
-    100% { outline: 3px solid #FFE0B2; box-shadow: 0 0 20px #FF9100; }
+    100% { outline: 3px solid #FFE0B2; box-shadow: 0 0 22px #FF9100; }
   }
 
   /* Modal Dialogs */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -300,12 +389,12 @@
 
   .modal {
     background: #1e293b;
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,215,0,0.3);
     border-radius: 12px;
     width: 90%;
-    max-width: 460px;
+    max-width: 480px;
     padding: 24px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 35px rgba(0,0,0,0.6);
     color: #f8fafc;
   }
 
@@ -317,7 +406,7 @@
     border-bottom: 1px solid #334155;
     padding-bottom: 12px;
   }
-  .modal-title { font-size: 20px; font-weight: 700; color: #ffeb3b; }
+  .modal-title { font-size: 20px; font-weight: 800; color: #ffd700; }
   .modal-close { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; }
   .modal-close:hover { color: #fff; }
 
@@ -335,60 +424,70 @@
     text-align: center;
   }
   .stat-card .lbl { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
-  .stat-card .val { font-size: 20px; font-weight: 700; color: #38bdf8; }
+  .stat-card .val { font-size: 20px; font-weight: 800; color: #38bdf8; }
 
   /* Deck Theme Patterns */
   .theme-navy {
-    --card-back-bg: #1e3c72;
-    --card-back-pattern: radial-gradient(circle, #2a5298 20%, transparent 20%), radial-gradient(circle, #2a5298 20%, transparent 20%);
-    --card-back-pattern: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    --card-back-bg: radial-gradient(circle, #2a5298 20%, transparent 20%), linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   }
   .theme-crimson {
-    --card-back-bg: #800020;
-    --card-back-pattern: radial-gradient(circle, #a01235 20%, transparent 20%), linear-gradient(135deg, #700018 0%, #b01538 100%);
+    --card-back-bg: radial-gradient(circle, #a01235 20%, transparent 20%), linear-gradient(135deg, #700018 0%, #b01538 100%);
   }
   .theme-emerald {
-    --card-back-bg: #064e3b;
-    --card-back-pattern: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+    --card-back-bg: linear-gradient(135deg, #064e3b 0%, #047857 100%);
   }
   .theme-cyber {
-    --card-back-bg: #0f172a;
-    --card-back-pattern: linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px), linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px);
-    background-size: 8px 8px;
+    --card-back-bg: linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px), linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px), #0f172a;
+    background-size: 8px 8px, 8px 8px, 100% 100%;
   }
   .theme-gold {
-    --card-back-bg: #451a03;
-    --card-back-pattern: linear-gradient(135deg, #78350f 0%, #b45309 100%);
+    --card-back-bg: linear-gradient(135deg, #78350f 0%, #b45309 100%);
   }
 
   /* Win Animation Banner */
   #win-banner {
     position: fixed;
-    top: 30%;
+    top: 35%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    background: linear-gradient(135deg, #ffeb3b 0%, #f57c00 100%);
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
     color: #000;
-    padding: 24px 48px;
-    border-radius: 16px;
-    font-size: 32px;
+    padding: 28px 56px;
+    border-radius: 20px;
+    font-size: 34px;
     font-weight: 900;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    z-index: 500;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.5);
+    z-index: 1000;
     text-align: center;
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
+    border: 3px solid #fff;
   }
   #win-banner.active {
     transform: translate(-50%, -50%) scale(1);
+  }
+
+  /* Canvas for Win Waterfall Cascade */
+  #win-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 900;
+    display: none;
   }
 </style>
 </head>
 <body class="theme-navy">
 
+<canvas id="win-canvas"></canvas>
+
 <header>
   <div class="logo-title">
-    <span>♠</span> KSolitaire
+    <svg class="logo-icon" viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z"/></svg>
+    KSolitaire
   </div>
 
   <div class="status-bar">
@@ -459,8 +558,8 @@
 
 <!-- Win Banner -->
 <div id="win-banner">
-  🎉 VICTORY! 🎉
-  <div style="font-size: 16px; font-weight: 500; margin-top: 8px;" id="win-details">Score: 0 | Time: 0s</div>
+  🏆 VICTORY! 🏆
+  <div style="font-size: 16px; font-weight: 600; margin-top: 10px;" id="win-details">Score: 0 | Time: 0s</div>
 </div>
 
 <!-- Stats Modal -->
@@ -490,13 +589,76 @@
 <script>
 // --- Constants & Suit Definitions ---
 const SUITS = [
-  { name: 'hearts', symbol: '♥', color: 'red' },
-  { name: 'diamonds', symbol: '♦', color: 'red' },
-  { name: 'clubs', symbol: '♣', color: 'black' },
-  { name: 'spades', symbol: '♠', color: 'black' }
+  { name: 'hearts', symbol: '♥', color: 'red', svg: '<svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#d32f2f"/></svg>' },
+  { name: 'diamonds', symbol: '♦', color: 'red', svg: '<svg viewBox="0 0 24 24"><path d="M12 2L2 12l10 10 10-10L12 2z" fill="#d32f2f"/></svg>' },
+  { name: 'clubs', symbol: '♣', color: 'black', svg: '<svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 00-4 4c0 1.63.98 3.03 2.38 3.65A4.5 4.5 0 006 14c0 2.48 2.02 4.5 4.5 4.5H11v3.5h2V18.5h.5c2.48 0 4.5-2.02 4.5-4.5 0-2.03-1.35-3.75-3.21-4.35A4 4 0 0016 6a4 4 0 00-4-4z" fill="#1a1a1a"/></svg>' },
+  { name: 'spades', symbol: '♠', color: 'black', svg: '<svg viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z" fill="#1a1a1a"/></svg>' }
 ];
 
 const RANKS = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+// --- Court Card Vector Graphics (SVG Strings) ---
+const COURT_SVGS = {
+  J: `<svg class="court-svg" viewBox="0 0 60 90">
+        <rect width="60" height="90" fill="#1e293b"/>
+        <path d="M10 15 L50 15 L50 75 L10 75 Z" fill="#2563eb" stroke="#ffd700" stroke-width="2"/>
+        <circle cx="30" cy="35" r="14" fill="#ffedd5"/>
+        <!-- Knight Cap & Feather -->
+        <path d="M16 28 C20 18, 40 18, 44 28 Z" fill="#dc2626"/>
+        <path d="M40 24 Q52 10 48 4" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
+        <!-- Eyes & Visor slit -->
+        <line x1="24" y1="34" x2="28" y2="34" stroke="#1e293b" stroke-width="2"/>
+        <line x1="32" y1="34" x2="36" y2="34" stroke="#1e293b" stroke-width="2"/>
+        <!-- Halberd Spear -->
+        <line x1="12" y1="18" x2="12" y2="78" stroke="#94a3b8" stroke-width="2.5"/>
+        <path d="M6 22 L12 12 L18 22 Z" fill="#cbd5e1"/>
+      </svg>`,
+  Q: `<svg class="court-svg" viewBox="0 0 60 90">
+        <rect width="60" height="90" fill="#2e1065"/>
+        <path d="M10 15 L50 15 L50 75 L10 75 Z" fill="#7e22ce" stroke="#ffd700" stroke-width="2"/>
+        <circle cx="30" cy="35" r="14" fill="#fef3c7"/>
+        <!-- Crown / Tiara -->
+        <path d="M18 25 L23 16 L30 22 L37 16 L42 25 Z" fill="#ffd700" stroke="#b45309" stroke-width="1"/>
+        <circle cx="23" cy="16" r="2" fill="#ef4444"/>
+        <circle cx="30" cy="22" r="2" fill="#3b82f6"/>
+        <circle cx="37" cy="16" r="2" fill="#ef4444"/>
+        <!-- Eyes & Lips -->
+        <circle cx="25" cy="34" r="1.5" fill="#3b0764"/>
+        <circle cx="35" cy="34" r="1.5" fill="#3b0764"/>
+        <path d="M27 40 Q30 43 33 40" fill="none" stroke="#dc2626" stroke-width="2"/>
+        <!-- Rose -->
+        <circle cx="44" cy="58" r="6" fill="#f43f5e"/>
+        <path d="M44 64 L44 76" stroke="#22c55e" stroke-width="2"/>
+      </svg>`,
+  K: `<svg class="court-svg" viewBox="0 0 60 90">
+        <rect width="60" height="90" fill="#450a0a"/>
+        <path d="M10 15 L50 15 L50 75 L10 75 Z" fill="#b91c1c" stroke="#ffd700" stroke-width="2"/>
+        <circle cx="30" cy="36" r="15" fill="#ffedd5"/>
+        <!-- King Crown -->
+        <path d="M15 24 L22 12 L30 20 L38 12 L45 24 Z" fill="#ffd700" stroke="#78350f" stroke-width="1.5"/>
+        <circle cx="30" cy="11" r="3" fill="#ef4444"/>
+        <!-- Beard & Eyes -->
+        <path d="M20 42 Q30 52 40 42 Z" fill="#78350f"/>
+        <circle cx="24" cy="34" r="1.5" fill="#1e293b"/>
+        <circle cx="36" cy="34" r="1.5" fill="#1e293b"/>
+        <!-- Golden Scepter -->
+        <line x1="46" y1="20" x2="46" y2="75" stroke="#ffd700" stroke-width="3"/>
+        <circle cx="46" cy="18" r="4" fill="#ef4444" stroke="#ffd700" stroke-width="1"/>
+      </svg>`
+};
+
+// Matrix positions for Pip layout (x: %, y: %)
+const PIP_POSITIONS = {
+  2: [[50,20], [50,80]],
+  3: [[50,20], [50,50], [50,80]],
+  4: [[30,20], [70,20], [30,80], [70,80]],
+  5: [[30,20], [70,20], [50,50], [30,80], [70,80]],
+  6: [[30,20], [70,20], [30,50], [70,50], [30,80], [70,80]],
+  7: [[30,20], [70,20], [50,35], [30,50], [70,50], [30,80], [70,80]],
+  8: [[30,20], [70,20], [50,35], [30,50], [70,50], [50,65], [30,80], [70,80]],
+  9: [[30,18], [70,18], [30,40], [70,40], [50,50], [30,62], [70,62], [30,84], [70,84]],
+  10: [[30,18], [70,18], [50,30], [30,42], [70,42], [30,58], [70,58], [50,70], [30,82], [70,82]]
+};
 
 // --- Game State ---
 let stock = [];
@@ -504,7 +666,7 @@ let waste = [];
 let foundations = [[], [], [], []];
 let tableau = [[], [], [], [], [], [], []];
 
-let drawMode = 1; // 1 or 3
+let drawMode = 1;
 let movesCount = 0;
 let scoreCount = 0;
 let timerSeconds = 0;
@@ -513,12 +675,10 @@ let gameStarted = false;
 let gameWon = false;
 let soundEnabled = true;
 
-// Undo / Redo Stacks (Snapshots)
+// Undo / Redo Stacks
 let undoStack = [];
 let redoStack = [];
-
-// Selection State
-let selectedSelection = null; // { type: 'waste'|'tableau'|'foundation', pileIdx: int, cardIdx: int }
+let selectedSelection = null;
 
 // Statistics
 let stats = {
@@ -531,7 +691,7 @@ let stats = {
   bestTimeD3: null
 };
 
-// Web Audio API Synthesizer
+// Audio Synthesizer
 let audioCtx = null;
 function playTone(freq, type, duration) {
   if (!soundEnabled) return;
@@ -563,12 +723,11 @@ function playSound(name) {
   }
 }
 
-// --- Initialization & Storage ---
+// --- Initialization ---
 function init() {
   loadStats();
   loadSavedGame();
   
-  // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undoMove(); }
     else if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); redoMove(); }
@@ -588,18 +747,13 @@ function saveStats() {
   try { localStorage.setItem('ksolitaire_stats', JSON.stringify(stats)); } catch(e){}
 }
 
-// --- New Game Logic ---
+// --- Deck & Deal ---
 function createDeck() {
   let deck = [];
   let id = 1;
   for (let s = 0; s < 4; s++) {
     for (let r = 1; r <= 13; r++) {
-      deck.push({
-        id: id++,
-        suit: s,
-        rank: r,
-        faceUp: false
-      });
+      deck.push({ id: id++, suit: s, rank: r, faceUp: false });
     }
   }
   return deck;
@@ -625,15 +779,16 @@ function newGame() {
   redoStack = [];
 
   document.getElementById('win-banner').classList.remove('active');
+  const canvas = document.getElementById('win-canvas');
+  canvas.style.display = 'none';
+
   updateUIStats();
 
   let deck = shuffle(createDeck());
-
   foundations = [[], [], [], []];
   tableau = [[], [], [], [], [], [], []];
   waste = [];
 
-  // Deal Tableau
   for (let col = 0; col < 7; col++) {
     for (let row = 0; row <= col; row++) {
       let card = deck.pop();
@@ -643,7 +798,6 @@ function newGame() {
   }
 
   stock = deck;
-
   clearHints();
   render();
   saveState();
@@ -679,7 +833,7 @@ function updateUIStats() {
   document.getElementById('autofinish-btn').disabled = !canAutoFinish();
 }
 
-// --- Save / Resume State Snapshot ---
+// --- Save / Resume State ---
 function saveState(recordUndo = false) {
   let snapshot = {
     stock: JSON.parse(JSON.stringify(stock)),
@@ -729,7 +883,6 @@ function loadSavedGame() {
 function undoMove() {
   if (undoStack.length === 0) return;
   
-  // Push current state to redo
   let currentSnapshot = {
     stock: JSON.parse(JSON.stringify(stock)),
     waste: JSON.parse(JSON.stringify(waste)),
@@ -791,7 +944,7 @@ function redoMove() {
   saveState();
 }
 
-// --- Move Validation Logic ---
+// --- Move Validation ---
 function canMoveToFoundation(card, fIdx) {
   let fPile = foundations[fIdx];
   if (card.suit !== fIdx) return false;
@@ -821,7 +974,6 @@ function handleStockClick() {
 
   if (stock.length === 0) {
     if (waste.length === 0) return;
-    // Recycle Waste to Stock
     while (waste.length > 0) {
       let card = waste.pop();
       card.faceUp = false;
@@ -829,7 +981,6 @@ function handleStockClick() {
     }
     playSound('flip');
   } else {
-    // Draw cards from Stock to Waste
     let count = Math.min(drawMode, stock.length);
     for (let i = 0; i < count; i++) {
       let card = stock.pop();
@@ -852,7 +1003,6 @@ function handleCardClick(type, pileIdx, cardIdx, event) {
 
   clearHints();
 
-  // If selecting face-down card at top of tableau -> Flip it!
   if (type === 'tableau') {
     let pile = tableau[pileIdx];
     let card = pile[cardIdx];
@@ -866,18 +1016,15 @@ function handleCardClick(type, pileIdx, cardIdx, event) {
       checkWin();
       return;
     }
-    if (!card.faceUp) return; // Cannot select face down cards inside pile
+    if (!card.faceUp) return;
   }
 
-  // If already selected, try moving to this card's pile
   if (selectedSelection) {
     if (selectedSelection.type === type && selectedSelection.pileIdx === pileIdx) {
-      // Deselect if same card
       selectedSelection = null;
       render();
       return;
     }
-    // Attempt move
     let moved = attemptMove(selectedSelection, type, pileIdx);
     if (moved) {
       selectedSelection = null;
@@ -885,7 +1032,6 @@ function handleCardClick(type, pileIdx, cardIdx, event) {
     }
   }
 
-  // Select new card
   if (type === 'waste') {
     if (waste.length === 0) return;
     selectedSelection = { type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 };
@@ -921,7 +1067,6 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
 
   if (!card || !card.faceUp) return;
 
-  // Try auto-moving to Foundation
   for (let f = 0; f < 4; f++) {
     if (canMoveToFoundation(card, f)) {
       saveState(true);
@@ -933,7 +1078,6 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
       movesCount++;
       playSound('foundation');
       
-      // Auto flip top of tableau if face down
       if (type === 'tableau' && tableau[pileIdx].length > 0) {
         let top = tableau[pileIdx][tableau[pileIdx].length - 1];
         if (!top.faceUp) { top.faceUp = true; scoreCount += 5; }
@@ -975,7 +1119,6 @@ function attemptMove(src, dstType, dstPileIdx) {
 
   saveState(true);
 
-  // Perform Move
   if (src.type === 'waste') waste.pop();
   else if (src.type === 'tableau') tableau[src.pileIdx].splice(src.cardIdx);
   else if (src.type === 'foundation') foundations[src.pileIdx].pop();
@@ -990,7 +1133,6 @@ function attemptMove(src, dstType, dstPileIdx) {
     playSound('place');
   }
 
-  // Reveal top face-down card in source tableau column
   if (src.type === 'tableau' && tableau[src.pileIdx].length > 0) {
     let top = tableau[src.pileIdx][tableau[src.pileIdx].length - 1];
     if (!top.faceUp) {
@@ -1018,7 +1160,6 @@ function giveHint() {
   clearHints();
   if (gameWon) return;
 
-  // 1. Move to Foundation
   for (let t = 0; t < 7; t++) {
     if (tableau[t].length > 0) {
       let card = tableau[t][tableau[t].length - 1];
@@ -1045,11 +1186,10 @@ function giveHint() {
     }
   }
 
-  // 2. Move Tableau card revealing a face-down card
   for (let srcT = 0; srcT < 7; srcT++) {
     let pile = tableau[srcT];
     let firstFaceUpIdx = pile.findIndex(c => c.faceUp);
-    if (firstFaceUpIdx > 0) { // Has face-down cards underneath
+    if (firstFaceUpIdx > 0) {
       let cardToMove = pile[firstFaceUpIdx];
       for (let dstT = 0; dstT < 7; dstT++) {
         if (srcT !== dstT && canMoveToTableau([cardToMove], dstT)) {
@@ -1061,7 +1201,6 @@ function giveHint() {
     }
   }
 
-  // 3. Move Waste card to Tableau
   if (waste.length > 0) {
     let card = waste[waste.length - 1];
     for (let dstT = 0; dstT < 7; dstT++) {
@@ -1073,22 +1212,6 @@ function giveHint() {
     }
   }
 
-  // 4. Move King to Empty Tableau
-  for (let srcT = 0; srcT < 7; srcT++) {
-    let pile = tableau[srcT];
-    let firstFaceUpIdx = pile.findIndex(c => c.faceUp);
-    if (firstFaceUpIdx > 0 && pile[firstFaceUpIdx].rank === 13) {
-      for (let dstT = 0; dstT < 7; dstT++) {
-        if (tableau[dstT].length === 0) {
-          activeHint = { srcType: 'tableau', srcPile: srcT, srcCardIdx: firstFaceUpIdx, dstType: 'tableau', dstPile: dstT };
-          highlightHint();
-          return;
-        }
-      }
-    }
-  }
-
-  // 5. Draw Stock
   if (stock.length > 0 || waste.length > 0) {
     activeHint = { srcType: 'stock', srcPile: 0, dstType: 'stock' };
     highlightHint();
@@ -1122,7 +1245,6 @@ function highlightHint() {
 // --- Auto-Finish Solver ---
 function canAutoFinish() {
   if (gameWon) return false;
-  // All cards in tableau must be face up, and stock + waste must be empty
   if (stock.length > 0 || waste.length > 0) return false;
   for (let t = 0; t < 7; t++) {
     for (let c of tableau[t]) {
@@ -1158,10 +1280,10 @@ function autoFinish() {
   }, 100);
 }
 
-// --- Victory Detection ---
+// --- Victory Detection & Solitaire Cascade Waterfall ---
 function checkWin() {
   let totalFoundation = foundations.reduce((acc, f) => acc + f.length, 0);
-  if (totalFoundation === 52) {
+  if (totalFoundation === 52 && !gameWon) {
     gameWon = true;
     stopTimer();
     playSound('win');
@@ -1184,12 +1306,100 @@ function checkWin() {
     let s = (timerSeconds % 60).toString().padStart(2, '0');
     document.getElementById('win-details').textContent = `Score: ${scoreCount} | Time: ${m}:${s} | Moves: ${movesCount}`;
     document.getElementById('win-banner').classList.add('active');
+
+    startWinCascade();
   }
+}
+
+function startWinCascade() {
+  const canvas = document.getElementById('win-canvas');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  let cards = [];
+  let delay = 0;
+  for (let f = 0; f < 4; f++) {
+    for (let c = foundations[f].length - 1; c >= 0; c--) {
+      let card = foundations[f][c];
+      let fEl = document.getElementById(`foundation-${f}`);
+      let rect = fEl.getBoundingClientRect();
+      cards.push({
+        card,
+        x: rect.left,
+        y: rect.top,
+        vx: (Math.random() * 6 + 3) * (Math.random() < 0.5 ? 1 : -1),
+        vy: -(Math.random() * 4 + 2),
+        delay: delay++ * 6,
+        active: false,
+        finished: false
+      });
+    }
+  }
+
+  let frame = 0;
+  function loop() {
+    frame++;
+    cards.forEach(c => {
+      if (frame >= c.delay && !c.active && !c.finished) {
+        c.active = true;
+      }
+      if (c.active) {
+        // Draw card onto canvas (stamping trail effect)
+        drawCardToCanvas(ctx, c.card, c.x, c.y);
+        
+        c.x += c.vx;
+        c.y += c.vy;
+        c.vy += 0.75; // Gravity
+
+        if (c.y + 118 >= canvas.height) {
+          c.y = canvas.height - 118;
+          c.vy = -c.vy * 0.85; // Bounce
+        }
+
+        if (c.x <= 0 || c.x + 84 >= canvas.width) {
+          c.vx = -c.vx;
+        }
+
+        if (c.x < -120 || c.x > canvas.width + 120 || c.y > canvas.height + 150) {
+          c.active = false;
+          c.finished = true;
+        }
+      }
+    });
+
+    if (cards.some(c => !c.finished)) {
+      requestAnimationFrame(loop);
+    }
+  }
+  requestAnimationFrame(loop);
+}
+
+function drawCardToCanvas(ctx, card, x, y) {
+  ctx.save();
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.roundRect(x, y, 84, 118, 8);
+  ctx.fill();
+  ctx.shadowColor = 'transparent';
+
+  ctx.fillStyle = SUITS[card.suit].color === 'red' ? '#d32f2f' : '#1a1a1a';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.fillText(RANKS[card.rank] + SUITS[card.suit].symbol, x + 6, y + 20);
+
+  ctx.font = '36px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(SUITS[card.suit].symbol, x + 42, y + 59);
+  ctx.restore();
 }
 
 // --- Render Engine ---
 function render() {
-  // Render Stock Slot
+  // Stock
   let stockSlot = document.getElementById('stock-slot');
   stockSlot.innerHTML = '';
   if (stock.length > 0) {
@@ -1198,16 +1408,15 @@ function render() {
     stockSlot.appendChild(topCardEl);
   }
 
-  // Render Waste Slot
+  // Waste
   let wasteSlot = document.getElementById('waste-slot');
   wasteSlot.innerHTML = '';
   if (waste.length > 0) {
-    // Show up to 3 cards slightly offset if draw mode 3
     let showCount = drawMode === 3 ? Math.min(3, waste.length) : 1;
     let startIdx = waste.length - showCount;
     for (let i = startIdx; i < waste.length; i++) {
       let cardEl = createCardEl(waste[i]);
-      cardEl.style.left = `${(i - startIdx) * 16}px`;
+      cardEl.style.left = `${(i - startIdx) * 18}px`;
       cardEl.onclick = (e) => handleCardClick('waste', 0, i, e);
       cardEl.ondblclick = (e) => handleCardDoubleClick('waste', 0, i, e);
       
@@ -1218,7 +1427,7 @@ function render() {
     }
   }
 
-  // Render Foundations
+  // Foundations
   for (let f = 0; f < 4; f++) {
     let fSlot = document.getElementById(`foundation-${f}`);
     fSlot.innerHTML = '';
@@ -1233,7 +1442,7 @@ function render() {
     }
   }
 
-  // Render Tableau
+  // Tableau
   for (let t = 0; t < 7; t++) {
     let tSlot = document.getElementById(`tableau-${t}`);
     tSlot.innerHTML = '';
@@ -1245,11 +1454,11 @@ function render() {
       cardEl.style.top = `${offsetY}px`;
 
       if (card.faceUp) {
-        offsetY += 24; // Stack spacing for face-up cards
+        offsetY += 26;
         cardEl.onclick = (e) => handleCardClick('tableau', t, c, e);
         cardEl.ondblclick = (e) => handleCardDoubleClick('tableau', t, c, e);
       } else {
-        offsetY += 12; // Stack spacing for face-down cards
+        offsetY += 14;
         cardEl.onclick = (e) => handleCardClick('tableau', t, c, e);
       }
 
@@ -1270,18 +1479,39 @@ function createCardEl(card) {
   
   if (!card.faceUp) {
     el.classList.add('face-down');
+    el.innerHTML = `
+      <div class="card-back-inner">
+        <svg class="card-back-logo" viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z"/></svg>
+      </div>
+    `;
     return el;
   }
 
-  let suitSym = SUITS[card.suit].symbol;
+  let suitObj = SUITS[card.suit];
+  let suitSym = suitObj.symbol;
   let rankStr = RANKS[card.rank];
+
+  let centerHTML = '';
+  if (card.rank === 1) {
+    // Ace Centerpiece
+    centerHTML = `<div class="ace-centerpiece">${suitObj.svg}</div>`;
+  } else if (card.rank >= 11) {
+    // Court Cards (J, Q, K)
+    let courtKey = rankStr;
+    centerHTML = `<div class="court-frame">${COURT_SVGS[courtKey]}</div>`;
+  } else {
+    // Pip Matrix (2 to 10)
+    let pips = PIP_POSITIONS[card.rank] || [];
+    let pipItems = pips.map(pos => `<div class="pip-icon" style="left:${pos[0]}%; top:${pos[1]}%;">${suitObj.svg}</div>`).join('');
+    centerHTML = `<div class="pip-container">${pipItems}</div>`;
+  }
 
   el.innerHTML = `
     <div class="card-corner top">
       <span class="card-rank">${rankStr}</span>
       <span class="card-suit-sm">${suitSym}</span>
     </div>
-    <div class="card-center-suit">${suitSym}</div>
+    <div class="card-center">${centerHTML}</div>
     <div class="card-corner bottom">
       <span class="card-rank">${rankStr}</span>
       <span class="card-suit-sm">${suitSym}</span>
