@@ -1,5 +1,19 @@
 #include <windows.h>
 
+#pragma function(memset, memcpy)
+void* __cdecl memset(void* dest, int c, size_t count) {
+    char* p = (char*)dest;
+    while (count--) *p++ = (char)c;
+    return dest;
+}
+
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
 #define STATE_CHAR_CREATE   0
 #define STATE_TOWN          1
 #define STATE_SHOP          2
@@ -12,6 +26,8 @@
 #define STATE_TRAINING_HALL 9
 #define STATE_BOSS_RUSH     10
 #define STATE_INVENTORY     11
+#define STATE_SAVE_LOAD     12
+#define STATE_ACHIEVEMENTS   13
 
 #define MAX_INV_SLOTS 30
 
@@ -188,6 +204,7 @@ typedef struct {
     int invSort;   // 0: Rarity, 1: Name, 2: Value
     int selectedInvIdx;
     Companion companion;
+    int ngLevel;
 } Hero;
 
 typedef struct {
@@ -202,6 +219,194 @@ static Enemy currentEnemy;
 static int gameState = STATE_CHAR_CREATE;
 static int selectedClassIndex = 0; // 0: Warrior, 1: Mage, 2: Rogue
 
+static int g_Achievements[10] = {0};
+static const char* g_AchieveNames[10] = {
+    "First Blood",
+    "Dungeon Explorer",
+    "Dragon Slayer",
+    "Master Crafter",
+    "Mercenary Leader",
+    "Arena Champion",
+    "Wealthy Hero",
+    "Master of Skills",
+    "NG+ Pioneer",
+    "Save Master"
+};
+static const char* g_AchieveDescs[10] = {
+    "Defeat your first dungeon monster",
+    "Reach Floor 5 in the dungeon",
+    "Defeat the Obsidian Dragon boss",
+    "Craft or imbue items in Forge & Alchemy",
+    "Hire a party companion from Mercenary Guild",
+    "Reach Wave 5 in Boss Rush Arena",
+    "Accumulate 500 Gold",
+    "Allocate 5 Skill Points in Training Hall",
+    "Enter New Game Plus mode",
+    "Save your progress to a save file slot"
+};
+static const int g_AchieveRewards[10] = {50, 100, 250, 75, 75, 150, 100, 100, 200, 50};
+static int g_SelectedSaveSlot = 0; // 0..3
+
+static BountyContract g_BoardBounties[4];
+static BountyContract g_ActiveBounties[3];
+static int g_ActiveBountyCount = 0;
+
+typedef struct {
+    char magic[8]; // "KQUEST12"
+    int ngLevel;
+    int achievements[10];
+    Hero hero;
+    BountyContract activeBounties[3];
+    int activeBountyCount;
+    char timestamp[32];
+} SaveSlotData;
+
+void LogMessage(const char* msg);
+void SetupButtons();
+void UpdateUI();
+
+static void my_memcpy(void* dest, const void* src, size_t n) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (n--) *d++ = *s++;
+}
+
+static void my_memset(void* dest, int val, size_t n) {
+    char* d = (char*)dest;
+    while (n--) *d++ = (char)val;
+}
+
+void UnlockAchievement(int id) {
+    if (id < 0 || id >= 10) return;
+    if (!g_Achievements[id]) {
+        g_Achievements[id] = 1;
+        player.gold += g_AchieveRewards[id];
+        char msg[128];
+        wsprintfA(msg, "🏆 ACHIEVEMENT UNLOCKED: \"%s\"! (+%d Gold)", g_AchieveNames[id], g_AchieveRewards[id]);
+        LogMessage(msg);
+        Beep(523, 80); Beep(659, 80); Beep(784, 120);
+    }
+}
+
+void SaveToSlot(int slotIdx) {
+    char fileName[64];
+    wsprintfA(fileName, "kquest_slot%d.dat", slotIdx + 1);
+    HANDLE hFile = CreateFileA(fileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        LogMessage("❌ Failed to create save file.");
+        return;
+    }
+    SaveSlotData data;
+    my_memset(&data, 0, sizeof(SaveSlotData));
+    lstrcpyA(data.magic, "KQUEST12");
+    data.ngLevel = player.ngLevel;
+    my_memcpy(data.achievements, g_Achievements, sizeof(g_Achievements));
+    my_memcpy(&data.hero, &player, sizeof(Hero));
+    my_memcpy(data.activeBounties, g_ActiveBounties, sizeof(g_ActiveBounties));
+    data.activeBountyCount = g_ActiveBountyCount;
+
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    wsprintfA(data.timestamp, "%04d-%02d-%02d %02d:%02d", st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute);
+
+    DWORD bytesWritten = 0;
+    WriteFile(hFile, &data, sizeof(SaveSlotData), &bytesWritten, NULL);
+    CloseHandle(hFile);
+
+    UnlockAchievement(9); // Save Master
+    char msg[128];
+    wsprintfA(msg, "💾 Game saved to Slot %d successfully!", slotIdx + 1);
+    LogMessage(msg);
+}
+
+void LoadFromSlot(int slotIdx) {
+    char fileName[64];
+    wsprintfA(fileName, "kquest_slot%d.dat", slotIdx + 1);
+    HANDLE hFile = CreateFileA(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        char msg[128];
+        wsprintfA(msg, "❌ Save Slot %d is empty!", slotIdx + 1);
+        LogMessage(msg);
+        return;
+    }
+    SaveSlotData data;
+    my_memset(&data, 0, sizeof(SaveSlotData));
+    DWORD bytesRead = 0;
+    ReadFile(hFile, &data, sizeof(SaveSlotData), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (bytesRead == sizeof(SaveSlotData) && lstrcmpA(data.magic, "KQUEST12") == 0) {
+        player = data.hero;
+        player.ngLevel = data.ngLevel;
+        my_memcpy(g_Achievements, data.achievements, sizeof(g_Achievements));
+        my_memcpy(g_ActiveBounties, data.activeBounties, sizeof(g_ActiveBounties));
+        g_ActiveBountyCount = data.activeBountyCount;
+
+        char msg[128];
+        wsprintfA(msg, "📂 Loaded Save Slot %d! Welcome back, %s!", slotIdx + 1, player.name);
+        LogMessage(msg);
+        gameState = STATE_TOWN;
+        SetupButtons();
+        UpdateUI();
+    } else {
+        LogMessage("❌ Invalid save file data.");
+    }
+}
+
+void DeleteSlot(int slotIdx) {
+    char fileName[64];
+    wsprintfA(fileName, "kquest_slot%d.dat", slotIdx + 1);
+    DeleteFileA(fileName);
+    char msg[128];
+    wsprintfA(msg, "🗑️ Cleared Save Slot %d.", slotIdx + 1);
+    LogMessage(msg);
+}
+
+void GetSlotSummary(int slotIdx, char* outBuf, int maxLen) {
+    char fileName[64];
+    wsprintfA(fileName, "kquest_slot%d.dat", slotIdx + 1);
+    HANDLE hFile = CreateFileA(fileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        wsprintfA(outBuf, "[Slot %d]: Empty Slot", slotIdx + 1);
+        return;
+    }
+    SaveSlotData data;
+    my_memset(&data, 0, sizeof(SaveSlotData));
+    DWORD bytesRead = 0;
+    ReadFile(hFile, &data, sizeof(SaveSlotData), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (bytesRead == sizeof(SaveSlotData) && lstrcmpA(data.magic, "KQUEST12") == 0) {
+        char ng[16] = "";
+        if (data.ngLevel > 0) wsprintfA(ng, " NG+%d", data.ngLevel);
+        wsprintfA(outBuf, "[Slot %d]: %s (Lvl %d %s, Fl %d, %dG%s) Saved: %s",
+            slotIdx + 1, data.hero.name, data.hero.level, data.hero.heroClass,
+            data.hero.floor, data.hero.gold, ng, data.timestamp);
+    } else {
+        wsprintfA(outBuf, "[Slot %d]: Corrupted Data", slotIdx + 1);
+    }
+}
+
+void EnterNewGamePlus() {
+    player.ngLevel++;
+    UnlockAchievement(8); // NG+ Pioneer
+    player.floor = 1;
+    player.biome = 0;
+    player.hp = player.maxHp;
+    player.mp = player.maxMp;
+    player.questMonstersKilled = 0; player.questMonstersDone = 0;
+    player.questBossKilled = 0; player.questBossDone = 0;
+    g_ActiveBountyCount = 0;
+    
+    char msg[128];
+    wsprintfA(msg, "✨ ENTERED NEW GAME+ (Cycle NG+%d)! Enemy stats scaled by +%d%%! Rewards increased!", player.ngLevel, player.ngLevel * 50);
+    LogMessage(msg);
+    Beep(523, 100); Beep(659, 100); Beep(784, 150); Beep(1046, 250);
+    gameState = STATE_TOWN;
+    SetupButtons();
+    UpdateUI();
+}
+
 HWND hStatusText;
 HWND hInfoText;
 HWND hLogEdit;
@@ -209,10 +414,6 @@ HWND hBtn1, hBtn2, hBtn3, hBtn4, hBtn5, hBtn6;
 
 HBRUSH hBgBrush = NULL;
 HBRUSH hPanelBrush = NULL;
-
-static BountyContract g_BoardBounties[4];
-static BountyContract g_ActiveBounties[3];
-static int g_ActiveBountyCount = 0;
 
 void GenerateBounties() {
     g_BoardBounties[0].id = 1;
@@ -572,10 +773,17 @@ void UpdateUI() {
         locStr = player.arenaActive ? "Boss Rush Arena" : g_Biomes[player.biome].name;
     } else if (gameState == STATE_INVENTORY) {
         locStr = "Inventory Hub";
+    } else if (gameState == STATE_SAVE_LOAD) {
+        locStr = "Save/Load Manager";
+    } else if (gameState == STATE_ACHIEVEMENTS) {
+        locStr = "Achievements Hub";
     }
 
-    wsprintfA(statusBuf, "Hero: %s (%s)  |  Lvl: %d  |  HP: %d/%d  |  MP: %d/%d  |  Gold: %d Gold  |  Loc: %s (Floor %d)",
-        player.name, player.heroClass, player.level,
+    char ngStr[32] = "";
+    if (player.ngLevel > 0) wsprintfA(ngStr, " [NG+ %d]", player.ngLevel);
+
+    wsprintfA(statusBuf, "Hero: %s (%s)  |  Lvl: %d%s  |  HP: %d/%d  |  MP: %d/%d  |  Gold: %d Gold  |  Loc: %s (Floor %d)",
+        player.name, player.heroClass, player.level, ngStr,
         player.hp, player.maxHp, player.mp, player.maxMp,
         player.gold, locStr, player.floor);
 
@@ -586,7 +794,44 @@ void UpdateUI() {
         if (player.companion.active == 2) bonusInt += 5;
     }
 
-    if (gameState == STATE_INVENTORY) {
+    if (gameState == STATE_SAVE_LOAD) {
+        char slot1[128], slot2[128], slot3[128], slot4[128];
+        GetSlotSummary(0, slot1, 128);
+        GetSlotSummary(1, slot2, 128);
+        GetSlotSummary(2, slot3, 128);
+        GetSlotSummary(3, slot4, 128);
+
+        wsprintfA(infoBuf,
+            "💾 SAVE / LOAD GAME SLOTS (Selected: Slot %d)\r\n"
+            "%s %s\r\n"
+            "%s %s\r\n"
+            "%s %s\r\n"
+            "%s %s\r\n\r\n"
+            "Controls: [Select Slot] to change target slot | [Save Slot] to save game | [Load Slot] to restore hero.",
+            g_SelectedSaveSlot + 1,
+            g_SelectedSaveSlot == 0 ? ">>" : "  ", slot1,
+            g_SelectedSaveSlot == 1 ? ">>" : "  ", slot2,
+            g_SelectedSaveSlot == 2 ? ">>" : "  ", slot3,
+            g_SelectedSaveSlot == 3 ? ">>" : "  ", slot4);
+    } else if (gameState == STATE_ACHIEVEMENTS) {
+        int count = 0;
+        for (int i = 0; i < 10; i++) if (g_Achievements[i]) count++;
+
+        char achList[768]; achList[0] = '\0';
+        for (int i = 0; i < 10; i++) {
+            char entry[96];
+            wsprintfA(entry, "%s [%s] %s: %s (+%dG)\r\n",
+                g_Achievements[i] ? "🏆" : "🔒",
+                g_Achievements[i] ? "UNLOCKED" : "LOCKED",
+                g_AchieveNames[i], g_AchieveDescs[i], g_AchieveRewards[i]);
+            lstrcatA(achList, entry);
+        }
+
+        wsprintfA(infoBuf,
+            "🏆 HERO MILESTONES & ACHIEVEMENTS: %d / 10 Unlocked  |  NG+ Cycle: NG+ %d\r\n"
+            "%s",
+            count, player.ngLevel, achList);
+    } else if (gameState == STATE_INVENTORY) {
         const char* fStr = player.invFilter == 0 ? "All" : (player.invFilter == 1 ? "Consumables" : (player.invFilter == 2 ? "Equipment" : "Materials"));
         const char* sStr = player.invSort == 0 ? "Rarity (Desc)" : (player.invSort == 1 ? "Name (A-Z)" : "Value (Desc)");
         
@@ -707,16 +952,45 @@ void SetupButtons() {
             break;
 
         case STATE_TOWN: {
-            char bBtn[64];
-            wsprintfA(bBtn, "Biome: %s", g_Biomes[player.biome].name);
             char invBtn[64];
             wsprintfA(invBtn, "🎒 Inventory (%d/%d)", player.invCount, player.maxInvSlots);
             SetWindowTextA(hBtn1, "Enter Dungeon");
             SetWindowTextA(hBtn2, "🏟️ Boss Rush");
-            SetWindowTextA(hBtn3, bBtn);
-            SetWindowTextA(hBtn4, "Rest Inn / Shop");
-            SetWindowTextA(hBtn5, invBtn);
-            SetWindowTextA(hBtn6, "📜 Board / Train");
+            SetWindowTextA(hBtn3, invBtn);
+            SetWindowTextA(hBtn4, "📜 Board / Train");
+            SetWindowTextA(hBtn5, "💾 Save / Load");
+            SetWindowTextA(hBtn6, "🏆 Achievements");
+            break;
+        }
+
+        case STATE_SAVE_LOAD: {
+            char selBtn[64];
+            wsprintfA(selBtn, "Select Slot (%d/4)", g_SelectedSaveSlot + 1);
+            char saveBtn[64];
+            wsprintfA(saveBtn, "💾 Save Slot %d", g_SelectedSaveSlot + 1);
+            char loadBtn[64];
+            wsprintfA(loadBtn, "📂 Load Slot %d", g_SelectedSaveSlot + 1);
+            char delBtn[64];
+            wsprintfA(delBtn, "🗑️ Clear Slot %d", g_SelectedSaveSlot + 1);
+
+            SetWindowTextA(hBtn1, selBtn);
+            SetWindowTextA(hBtn2, saveBtn);
+            SetWindowTextA(hBtn3, loadBtn);
+            SetWindowTextA(hBtn4, delBtn);
+            SetWindowTextA(hBtn5, "⚡ Quick Save (Slot 1)");
+            SetWindowTextA(hBtn6, "⬅️ Back to Town");
+            break;
+        }
+
+        case STATE_ACHIEVEMENTS: {
+            char ngBtn[64];
+            wsprintfA(ngBtn, "✨ Start NG+ (NG+ %d)", player.ngLevel + 1);
+            SetWindowTextA(hBtn1, "Refresh");
+            SetWindowTextA(hBtn2, "---");
+            SetWindowTextA(hBtn3, "---");
+            SetWindowTextA(hBtn4, "---");
+            SetWindowTextA(hBtn5, ngBtn);
+            SetWindowTextA(hBtn6, "⬅️ Back to Town");
             break;
         }
 
@@ -940,6 +1214,18 @@ void StartCombat() {
         currentEnemy.xp += floorBonus * 10;
         currentEnemy.gold += floorBonus * 8;
     }
+    if (player.ngLevel > 0) {
+        float mult = 1.0f + (player.ngLevel * 0.5f);
+        float rMult = 1.0f + (player.ngLevel * 0.4f);
+        currentEnemy.maxHp = (int)(currentEnemy.maxHp * mult);
+        currentEnemy.str = (int)(currentEnemy.str * mult);
+        currentEnemy.def = (int)(currentEnemy.def * mult);
+        currentEnemy.xp = (int)(currentEnemy.xp * rMult);
+        currentEnemy.gold = (int)(currentEnemy.gold * rMult);
+        char ngName[64];
+        wsprintfA(ngName, "%s [NG+%d]", currentEnemy.name, player.ngLevel);
+        lstrcpyA(currentEnemy.name, ngName);
+    }
     currentEnemy.hp = currentEnemy.maxHp;
 
     char msg[128];
@@ -1034,6 +1320,13 @@ void CombatVictory() {
     player.xp += currentEnemy.xp;
     player.gold += rewardGold;
 
+    UnlockAchievement(0); // First Blood
+    if (ContainsSubstr(currentEnemy.name, "Boss") || ContainsSubstr(currentEnemy.name, "King") || ContainsSubstr(currentEnemy.name, "Lord") || ContainsSubstr(currentEnemy.name, "Dragon")) {
+        UnlockAchievement(2); // Dragon Slayer
+    }
+    if (player.floor >= 5) UnlockAchievement(1); // Dungeon Explorer
+    if (player.gold >= 500) UnlockAchievement(6); // Wealthy Hero
+
     PayCompanionUpkeep();
 
     // Material Drops
@@ -1074,6 +1367,7 @@ void CombatVictory() {
         int trophies = (player.arenaWave <= 5) ? g_ArenaBosses[player.arenaWave - 1].trophies : (player.arenaWave + 3);
         player.arenaTokens += trophies;
         if (player.arenaWave > player.arenaBestWave) player.arenaBestWave = player.arenaWave;
+        if (player.arenaWave >= 5) UnlockAchievement(5); // Arena Champion
         
         char amsg[128];
         wsprintfA(amsg, "🏆 ARENA WAVE %d CLEARED! +%d Arena Trophies awarded! Best Record: Wave %d!", player.arenaWave, trophies, player.arenaBestWave);
@@ -1101,6 +1395,16 @@ void CombatVictory() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_SAVE_LOAD) {
+        g_SelectedSaveSlot = (g_SelectedSaveSlot + 1) % 4;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_ACHIEVEMENTS) {
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_INVENTORY) {
         if (player.invCount > 0) {
             player.selectedInvIdx = (player.selectedInvIdx + 1) % player.invCount;
@@ -1176,6 +1480,7 @@ void HandleButton1() {
             player.companion.cost = 80;
             player.companion.isDown = 0;
             LogMessage("🛡️ Hired Paladin Tank Sir Gareth! Devotion Aura Active (+4 DEF)!");
+            UnlockAchievement(4); // Mercenary Leader
             SetupButtons();
             UpdateUI();
         } else {
@@ -1306,6 +1611,12 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_SAVE_LOAD) {
+        SaveToSlot(g_SelectedSaveSlot);
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_INVENTORY) {
         if (player.invCount > 0 && player.selectedInvIdx >= 0 && player.selectedInvIdx < player.invCount) {
             InvItem* it = &player.inventory[player.selectedInvIdx];
@@ -1410,6 +1721,7 @@ void HandleButton2() {
             player.companion.cost = 100;
             player.companion.isDown = 0;
             LogMessage("🔮 Hired Archmage DPS Lady Pyra! Arcane Intellect Active (+5 INT)!");
+            UnlockAchievement(4); // Mercenary Leader
             SetupButtons();
             UpdateUI();
         } else {
@@ -1430,6 +1742,7 @@ void HandleButton2() {
             player.elementalCore -= 1;
             player.fireBombs++;
             LogMessage("💣 Crafted 1x Fire Bomb (Deals 45 fire damage in combat)!");
+            UnlockAchievement(3); // Master Crafter
             UpdateUI();
         } else {
             LogMessage("Need 1 Iron Scrap & 1 Elemental Core for Fire Bomb!");
@@ -1509,6 +1822,10 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_SAVE_LOAD) {
+        LoadFromSlot(g_SelectedSaveSlot);
+        return;
+    }
     if (gameState == STATE_INVENTORY) {
         if (player.invCount > 0 && player.selectedInvIdx >= 0 && player.selectedInvIdx < player.invCount) {
             InvItem* it = &player.inventory[player.selectedInvIdx];
@@ -1581,6 +1898,7 @@ void HandleButton3() {
             player.companion.cost = 70;
             player.companion.isDown = 0;
             LogMessage("✨ Hired Cleric Healer Brother Tobias! Blessed Grace Active (+10 Max HP)!");
+            UnlockAchievement(4); // Mercenary Leader
             SetupButtons();
             UpdateUI();
         } else {
@@ -1626,6 +1944,12 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_SAVE_LOAD) {
+        DeleteSlot(g_SelectedSaveSlot);
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_INVENTORY) {
         QuickSellCommons();
         UpdateUI();
@@ -1775,6 +2099,16 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_SAVE_LOAD) {
+        SaveToSlot(0);
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
+    if (gameState == STATE_ACHIEVEMENTS) {
+        EnterNewGamePlus();
+        return;
+    }
     if (gameState == STATE_INVENTORY) {
         ExpandBackpackSlots();
         UpdateUI();
@@ -1805,8 +2139,8 @@ void HandleButton5() {
         return;
     }
     if (gameState == STATE_TOWN) {
-        gameState = STATE_INVENTORY;
-        LogMessage("🎒 Opened Backpack & Inventory Management Hub.");
+        gameState = STATE_SAVE_LOAD;
+        LogMessage("💾 Opened Save / Load Game Manager.");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
@@ -1885,6 +2219,13 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
+    if (gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_INVENTORY) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
@@ -1900,8 +2241,8 @@ void HandleButton6() {
         return;
     }
     if (gameState == STATE_TOWN) {
-        gameState = STATE_TRAINING_HALL;
-        LogMessage("Entered Master Instructor's Training Hall.");
+        gameState = STATE_ACHIEVEMENTS;
+        LogMessage("🏆 Opened Milestones & Achievements Tracker.");
         SetupButtons();
         UpdateUI();
         return;

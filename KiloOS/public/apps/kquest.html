@@ -379,8 +379,8 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 11</span></h1>
-    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Boss Rush Arena)</div>
+    <h1>🗡️ KQuest <span class="badge">Phase 12</span></h1>
+    <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Save Slots, NG+ Mode & Achievements)</div>
   </header>
 
   <!-- Player Stats Header Bar -->
@@ -436,7 +436,7 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 11: Inventory Management Upgrade (Rarity Tiers, Sorting/Filtering, Item Comparison, Quick-Sell & Expandable Slots)!</div>
+        <div class="log-entry system">Phase 12: Save Slots & New Game Plus (Multiple Save Slots, NG+ Mode with Scaled Enemies & Achievements Tracker)!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -544,7 +544,9 @@
       BOSS_RUSH: 'BOSS_RUSH',
       DUNGEON: 'DUNGEON',
       COMBAT: 'COMBAT',
-      GAME_OVER: 'GAME_OVER'
+      GAME_OVER: 'GAME_OVER',
+      SAVE_LOAD: 'SAVE_LOAD',
+      ACHIEVEMENTS: 'ACHIEVEMENTS'
     };
 
     let currentState = STATE.CHAR_CREATE;
@@ -647,7 +649,9 @@
         { id: 'slay_monsters', title: 'Clear Dungeon Chambers', req: 5, current: 0, reward: 50, done: false },
         { id: 'slay_boss', title: 'Defeat Biome Boss (Floor 5)', req: 1, current: 0, reward: 150, done: false }
       ],
-      bountyContracts: []
+      bountyContracts: [],
+      ngLevel: 0,
+      achievements: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     };
 
     // Current Enemy in Combat
@@ -1091,8 +1095,180 @@
         renderCombat();
       } else if (state === STATE.GAME_OVER) {
         renderGameOver();
+      } else if (state === STATE.SAVE_LOAD) {
+        renderSaveLoad();
+      } else if (state === STATE.ACHIEVEMENTS) {
+        renderAchievements();
       }
       updateUI();
+    }
+
+    // --- PHASE 12: SAVE SLOTS, NG+ MODE & ACHIEVEMENTS SYSTEM ---
+    const ACHIEVEMENTS_DEF = [
+      { id: 0, name: "First Blood", desc: "Defeat your first dungeon monster", reward: 50, icon: "⚔️" },
+      { id: 1, name: "Dungeon Explorer", desc: "Reach Floor 5 in the dungeon", reward: 100, icon: "🗺️" },
+      { id: 2, name: "Dragon Slayer", desc: "Defeat the Obsidian Dragon boss", reward: 250, icon: "🐲" },
+      { id: 3, name: "Master Crafter", desc: "Craft or imbue items in Forge & Alchemy", reward: 75, icon: "🧪" },
+      { id: 4, name: "Mercenary Leader", desc: "Hire a party companion", reward: 75, icon: "🛡️" },
+      { id: 5, name: "Arena Champion", desc: "Reach Wave 5 in Boss Rush Arena", reward: 150, icon: "🏆" },
+      { id: 6, name: "Wealthy Hero", desc: "Accumulate 500 Gold", reward: 100, icon: "🪙" },
+      { id: 7, name: "Master of Skills", desc: "Allocate 5 Skill Points in Training", reward: 100, icon: "✨" },
+      { id: 8, name: "NG+ Pioneer", desc: "Enter New Game Plus mode", reward: 200, icon: "🌟" },
+      { id: 9, name: "Save Master", desc: "Save your progress to a save slot", reward: 50, icon: "💾" }
+    ];
+
+    function unlockAchievement(id) {
+      if (!player.achievements) player.achievements = [0,0,0,0,0,0,0,0,0,0];
+      if (!player.achievements[id]) {
+        player.achievements[id] = 1;
+        const ach = ACHIEVEMENTS_DEF[id];
+        player.gold += ach.reward;
+        logMsg(`🏆 ACHIEVEMENT UNLOCKED: "${ach.name}"! (+${ach.reward} Gold)`, 'loot');
+        updateUI();
+      }
+    }
+
+    function saveSlot(slotNum) {
+      const data = {
+        player: player,
+        ngLevel: player.ngLevel || 0,
+        achievements: player.achievements || [0,0,0,0,0,0,0,0,0,0],
+        savedAt: new Date().toLocaleString()
+      };
+      localStorage.setItem('kquest_save_slot_' + slotNum, JSON.stringify(data));
+      unlockAchievement(9);
+      logMsg(`💾 Game saved to Slot ${slotNum} successfully!`, 'system');
+      renderSaveLoad();
+    }
+
+    function loadSlot(slotNum) {
+      const raw = localStorage.getItem('kquest_save_slot_' + slotNum);
+      if (!raw) {
+        logMsg(`❌ Save Slot ${slotNum} is empty!`, 'warning');
+        return;
+      }
+      try {
+        const data = JSON.parse(raw);
+        player = data.player;
+        if (data.ngLevel !== undefined) player.ngLevel = data.ngLevel;
+        if (data.achievements) player.achievements = data.achievements;
+        logMsg(`📂 Loaded Save Slot ${slotNum}! Welcome back, ${player.name}!`, 'system');
+        setGameState(STATE.TOWN);
+      } catch (e) {
+        logMsg(`❌ Error loading Save Slot ${slotNum}!`, 'warning');
+      }
+    }
+
+    function deleteSlot(slotNum) {
+      localStorage.removeItem('kquest_save_slot_' + slotNum);
+      logMsg(`🗑️ Save Slot ${slotNum} cleared.`, 'system');
+      renderSaveLoad();
+    }
+
+    function enterNewGamePlus() {
+      player.ngLevel = (player.ngLevel || 0) + 1;
+      unlockAchievement(8);
+      player.floor = 1;
+      player.biome = 0;
+      player.hp = player.maxHp;
+      player.mp = player.maxMp;
+      player.quests.forEach(q => { q.current = 0; q.done = false; });
+      player.bountyContracts = [];
+      logMsg(`✨ ENTERED NEW GAME+ (Cycle NG+ ${player.ngLevel})! Enemies are now stronger (+${player.ngLevel * 50}% HP/ATK/DEF), but yield increased Gold and XP rewards!`, 'town');
+      setGameState(STATE.TOWN);
+    }
+
+    function renderSaveLoad() {
+      document.getElementById('location-title').textContent = '💾 Save / Load Game Slots';
+      document.getElementById('location-desc').textContent = 'Manage your save files. Save your progress or load a previously saved hero.';
+
+      const dyn = document.getElementById('dynamic-content');
+      let slotsHtml = '<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-top:8px;">';
+
+      for (let i = 1; i <= 4; i++) {
+        const raw = localStorage.getItem('kquest_save_slot_' + i);
+        let infoStr = '<div style="color:#6c7086; font-size:0.8rem;">Empty Slot</div>';
+        let hasData = false;
+        if (raw) {
+          try {
+            const d = JSON.parse(raw);
+            const p = d.player;
+            const ng = d.ngLevel ? ` [NG+ ${d.ngLevel}]` : '';
+            infoStr = `
+              <div style="font-weight:700; color:#cba6f7; font-size:0.9rem;">${p.name} (Lvl ${p.level}${ng})</div>
+              <div style="font-size:0.75rem; color:#a6adc8;">Class: ${p.class} | Floor: ${p.floor}</div>
+              <div style="font-size:0.75rem; color:#f9e2af;">Gold: ${p.gold} 🪙</div>
+              <div style="font-size:0.7rem; color:#6c7086; margin-top:2px;">Saved: ${d.savedAt || 'Unknown'}</div>
+            `;
+            hasData = true;
+          } catch (e) {
+            infoStr = '<div style="color:#f38ba8; font-size:0.8rem;">Corrupted Slot</div>';
+          }
+        }
+
+        slotsHtml += `
+          <div style="background:#181825; border:1px solid #313244; border-radius:8px; padding:10px; display:flex; flex-direction:column; justify-content:space-between;">
+            <div style="font-weight:700; color:#89b4fa; border-bottom:1px solid #313244; padding-bottom:4px; margin-bottom:6px;">Slot ${i}</div>
+            ${infoStr}
+            <div style="display:flex; gap:4px; margin-top:8px;">
+              <button class="btn btn-primary" style="flex:1; font-size:0.75rem; padding:4px;" onclick="saveSlot(${i})">💾 Save</button>
+              ${hasData ? `<button class="btn btn-accent" style="flex:1; font-size:0.75rem; padding:4px;" onclick="loadSlot(${i})">📂 Load</button>` : ''}
+              ${hasData ? `<button class="btn btn-danger" style="font-size:0.75rem; padding:4px;" onclick="deleteSlot(${i})">🗑️</button>` : ''}
+            </div>
+          </div>
+        `;
+      }
+      slotsHtml += '</div>';
+      dyn.innerHTML = slotsHtml;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Return to Town</button>
+      `;
+    }
+
+    function renderAchievements() {
+      document.getElementById('location-title').textContent = '🏆 Hero Milestones & Achievements';
+      document.getElementById('location-desc').textContent = 'Track your heroic accomplishments and earn bonus gold rewards!';
+
+      if (!player.achievements) player.achievements = [0,0,0,0,0,0,0,0,0,0];
+      const unlockedCount = player.achievements.filter(a => a === 1).length;
+
+      const dyn = document.getElementById('dynamic-content');
+      let achHtml = `
+        <div style="background:#181825; border:1px solid #313244; border-radius:8px; padding:10px; margin-top:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-weight:700; color:#cba6f7;">Milestones Progress: ${unlockedCount} / ${ACHIEVEMENTS_DEF.length} Unlocked</span>
+            <span style="font-size:0.8rem; color:#a6e3a1;">NG+ Cycle: NG+ ${player.ngLevel || 0}</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(230px, 1fr)); gap:8px;">
+      `;
+
+      ACHIEVEMENTS_DEF.forEach(ach => {
+        const isUnlocked = player.achievements[ach.id] === 1;
+        achHtml += `
+          <div style="background:${isUnlocked ? 'linear-gradient(135deg, #181825 0%, #1e2e22 100%)' : '#11111b'}; border:1px solid ${isUnlocked ? '#a6e3a1' : '#313244'}; border-radius:6px; padding:8px; opacity:${isUnlocked ? '1' : '0.65'};">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong style="color:${isUnlocked ? '#a6e3a1' : '#cdd6f4'}; font-size:0.85rem;">${ach.icon} ${ach.name}</strong>
+              <span style="font-size:0.7rem; font-weight:700; padding:1px 6px; border-radius:4px; background:${isUnlocked ? '#a6e3a1' : '#313244'}; color:${isUnlocked ? '#11111b' : '#a6adc8'};">${isUnlocked ? 'UNLOCKED' : 'LOCKED'}</span>
+            </div>
+            <div style="font-size:0.75rem; color:#bac2de; margin-top:2px;">${ach.desc}</div>
+            <div style="font-size:0.7rem; color:#f9e2af; margin-top:4px;">Reward: +${ach.reward} Gold</div>
+          </div>
+        `;
+      });
+
+      achHtml += `
+          </div>
+        </div>
+      `;
+      dyn.innerHTML = achHtml;
+
+      const ctrl = document.getElementById('controls-panel');
+      ctrl.innerHTML = `
+        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Return to Town</button>
+        <button class="btn" style="background:linear-gradient(135deg, #f5c2e7, #cba6f7); color:#11111b; font-weight:700;" onclick="enterNewGamePlus()">✨ Start New Game+ (NG+ ${(player.ngLevel || 0) + 1})</button>
+      `;
     }
 
     // --- CHARACTER CREATION ---
@@ -1207,7 +1383,9 @@
         <button class="btn" onclick="setGameState(STATE.SHOP)">🛒 Visit Merchant</button>
         <button class="btn btn-craft" onclick="setGameState(STATE.CRAFTING)">⚒️ Alchemy & Forge</button>
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MERCENARY)">🛡️ Mercenary Guild</button>
-        <button class="btn" onclick="claimQuests()">📜 Check Quest Rewards</button>
+        <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save / Load</button>
+        <button class="btn" style="background:#fab387; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Achievements</button>
+        ${(player.ngLevel || 0) > 0 ? `<button class="btn" style="background:linear-gradient(135deg, #f5c2e7, #cba6f7); color:#11111b; font-weight:700;" onclick="enterNewGamePlus()">✨ New Game+ (NG+ ${(player.ngLevel || 0) + 1})</button>` : ''}
       `;
     }
 
@@ -1795,6 +1973,7 @@
         isDown: false
       };
       logMsg(`🛡️ Hired companion ${name} the ${role}! Passive Buff Active: ${passive}`, 'town');
+      unlockAchievement(4); // Mercenary Leader
       updateUI();
       renderMercenary();
     }
@@ -1996,6 +2175,7 @@
       player.materials.iron += 2;
       player.materials.dust += 1;
       logMsg(`♻️ Salvaged spare gear for 20 Gold! Gained +2 Iron Scrap & +1 Arcane Dust.`, 'craft');
+      unlockAchievement(3); // Master Crafter
       updateUI();
       renderCrafting();
     }
@@ -2012,6 +2192,7 @@
         if (existing) existing.count++;
         else player.inventory.push({ id: 'fire_bomb', name: 'Fire Bomb', count: 1, desc: 'Deals 45 fire damage' });
         logMsg(`💣 Crafted 1x Fire Bomb at the Alchemy Bench!`, 'craft');
+        unlockAchievement(3); // Master Crafter
       } else if (recipe === 'greater_hp') {
         if (player.materials.dust < 2 || player.materials.iron < 1) {
           logMsg(`Insufficient materials! Greater HP requires 2 Arcane Dust & 1 Iron Scrap.`, 'warning');
@@ -2224,16 +2405,18 @@
         baseM = b.monsters[idx];
       }
 
-      // Scale with floor
+      // Scale with floor and NG+
       const scale = 1 + (player.floor - 1) * 0.2;
+      const ngMult = 1 + (player.ngLevel || 0) * 0.5;
+      const ngRewardMult = 1 + (player.ngLevel || 0) * 0.4;
       currentEnemy = {
-        name: baseM.name,
-        maxHp: Math.floor(baseM.hp * scale),
-        hp: Math.floor(baseM.hp * scale),
-        str: Math.floor(baseM.str * scale),
-        def: Math.floor(baseM.def * scale),
-        xp: Math.floor(baseM.xp * scale),
-        gold: Math.floor(baseM.gold * scale)
+        name: baseM.name + ((player.ngLevel || 0) > 0 ? ` [NG+ ${player.ngLevel}]` : ''),
+        maxHp: Math.floor(baseM.hp * scale * ngMult),
+        hp: Math.floor(baseM.hp * scale * ngMult),
+        str: Math.floor(baseM.str * scale * ngMult),
+        def: Math.floor(baseM.def * scale * ngMult),
+        xp: Math.floor(baseM.xp * scale * ngRewardMult),
+        gold: Math.floor(baseM.gold * scale * ngRewardMult)
       };
 
       logMsg(`⚠️ An enemy appears in ${b.name}! A hostile ${currentEnemy.name} (HP: ${currentEnemy.hp}) blocks your path!`, 'combat');
