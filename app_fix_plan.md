@@ -152,3 +152,5 @@ Pass 1 Complete.
 - **KTaskMgr**: Added XSS protection with `textContent`, ARIA grid accessibility, `visibilityState` auto-refresh throttling, and `R`/`F5`/`Delete` hotkeys in `ktaskmgr.html` & `ktask.html`. Added flicker-free listbox redraws, global keyboard subclassing, status bar process counter, and System/Idle PID termination protections in `main.c`.
 
 - **KTerm**: Added ARIA live regions/roles, tab completion, terminal log line pruning (max 1000 lines), persistent cursor measuring span, and fallback Virtual File System in `kterm.html`. Replaced unsafe `wsprintfA` with bounded string formatting, fixed case-insensitive command parsing, expanded edit control buffer limit to 1MB, and added bounds checking in `main.c`.
+
+- **KTetris**: Added ARIA accessibility attributes, touch/screen-reader controls, sound mute toggle, AudioContext try-catch error handling, and wall-kick piece rotation in `ktetris.html`. Fixed GDI brush resource leak in `DrawTetrisBlock`, added `KillTimer` on `WM_DESTROY`, wall/floor kicks, and high score input sanitization in `main.c`.
