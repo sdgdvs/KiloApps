@@ -11,6 +11,23 @@
 #define STATE_QUEST_BOARD   8
 #define STATE_TRAINING_HALL 9
 #define STATE_BOSS_RUSH     10
+#define STATE_INVENTORY     11
+
+#define MAX_INV_SLOTS 30
+
+typedef struct {
+    char name[32];
+    int type;     // 0: Consumable, 1: Equipment, 2: Material
+    int eqType;   // 0: None, 1: Weapon, 2: Armor
+    int bonusStr;
+    int bonusDef;
+    int rarity;   // 0: Common, 1: Uncommon, 2: Rare, 3: Epic, 4: Legendary
+    int count;
+    int value;    // Gold value per item
+    char desc[64];
+} InvItem;
+
+static const char* g_RarityNames[5] = {"Common", "Uncommon", "Rare", "Epic", "Legendary"};
 
 typedef struct {
     char name[48];
@@ -164,6 +181,12 @@ typedef struct {
     int questMonstersDone;
     int questBossKilled;
     int questBossDone;
+    int maxInvSlots;
+    int invCount;
+    InvItem inventory[MAX_INV_SLOTS];
+    int invFilter; // 0: All, 1: Consumables, 2: Equipment, 3: Materials
+    int invSort;   // 0: Rarity, 1: Name, 2: Value
+    int selectedInvIdx;
     Companion companion;
 } Hero;
 
@@ -362,6 +385,115 @@ void LogMessage(const char* msg) {
     SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)"\r\n");
 }
 
+int AddInvItem(const char* name, int type, int eqType, int bonusStr, int bonusDef, int rarity, int count, int value, const char* desc) {
+    if (player.maxInvSlots <= 0) player.maxInvSlots = 10;
+    
+    if (type != 1) {
+        for (int i = 0; i < player.invCount; i++) {
+            if (lstrcmpA(player.inventory[i].name, name) == 0 && player.inventory[i].type == type) {
+                player.inventory[i].count += count;
+                return 1;
+            }
+        }
+    }
+
+    if (player.invCount >= player.maxInvSlots) {
+        if (hLogEdit) {
+            char msg[128];
+            wsprintfA(msg, "🎒 BACKPACK FULL (%d/%d Slots)! Cannot pick up %s!\r\n", player.invCount, player.maxInvSlots, name);
+            int len = GetWindowTextLength(hLogEdit);
+            SendMessage(hLogEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+            SendMessage(hLogEdit, EM_REPLACESEL, FALSE, (LPARAM)msg);
+        }
+        return 0;
+    }
+
+    InvItem* it = &player.inventory[player.invCount];
+    lstrcpyA(it->name, name);
+    it->type = type;
+    it->eqType = eqType;
+    it->bonusStr = bonusStr;
+    it->bonusDef = bonusDef;
+    it->rarity = rarity;
+    it->count = count;
+    it->value = value;
+    lstrcpyA(it->desc, desc);
+
+    player.invCount++;
+    return 1;
+}
+
+void RemoveInvItem(int index) {
+    if (index < 0 || index >= player.invCount) return;
+    for (int i = index; i < player.invCount - 1; i++) {
+        player.inventory[i] = player.inventory[i + 1];
+    }
+    player.invCount--;
+    if (player.selectedInvIdx >= player.invCount && player.invCount > 0) {
+        player.selectedInvIdx = player.invCount - 1;
+    }
+}
+
+void QuickSellCommons() {
+    int soldGold = 0;
+    int soldCount = 0;
+    for (int i = player.invCount - 1; i >= 0; i--) {
+        if (player.inventory[i].rarity == 0) {
+            int val = player.inventory[i].value * player.inventory[i].count;
+            soldGold += val;
+            soldCount += player.inventory[i].count;
+            RemoveInvItem(i);
+        }
+    }
+    if (soldCount == 0) {
+        LogMessage("No Common items found in inventory to quick-sell.");
+        return;
+    }
+    player.gold += soldGold;
+    char msg[128];
+    wsprintfA(msg, "💰 QUICK-SOLD %d Common item(s) for +%d Gold!", soldCount, soldGold);
+    LogMessage(msg);
+}
+
+void ExpandBackpackSlots() {
+    if (player.maxInvSlots >= 30) {
+        LogMessage("🎒 Backpack is already at maximum capacity (30 slots)!");
+        return;
+    }
+    int cost = (player.maxInvSlots / 10) * 50;
+    if (player.gold < cost) {
+        char msg[128];
+        wsprintfA(msg, "Need %d Gold to expand backpack slots!", cost);
+        LogMessage(msg);
+        return;
+    }
+    player.gold -= cost;
+    player.maxInvSlots += 5;
+    char msg[128];
+    wsprintfA(msg, "🎒 EXPANDED BACKPACK! Capacity increased to %d Slots!", player.maxInvSlots);
+    LogMessage(msg);
+}
+
+void SortInventory() {
+    for (int i = 0; i < player.invCount - 1; i++) {
+        for (int j = i + 1; j < player.invCount; j++) {
+            int swapNeeded = 0;
+            if (player.invSort == 0) { // Rarity desc
+                if (player.inventory[j].rarity > player.inventory[i].rarity) swapNeeded = 1;
+            } else if (player.invSort == 1) { // Name asc
+                if (lstrcmpA(player.inventory[i].name, player.inventory[j].name) > 0) swapNeeded = 1;
+            } else if (player.invSort == 2) { // Value desc
+                if (player.inventory[j].value > player.inventory[i].value) swapNeeded = 1;
+            }
+            if (swapNeeded) {
+                InvItem tmp = player.inventory[i];
+                player.inventory[i] = player.inventory[j];
+                player.inventory[j] = tmp;
+            }
+        }
+    }
+}
+
 void InitHero(int classIdx) {
     lstrcpyA(player.name, "Valerius");
     player.level = 1;
@@ -393,9 +525,17 @@ void InitHero(int classIdx) {
     player.questMonstersKilled = 0;
     player.questMonstersDone = 0;
     player.questBossKilled = 0;
-    player.questBossDone = 0;
     player.companion.active = 0;
     player.companion.isDown = 0;
+    player.maxInvSlots = 10;
+    player.invCount = 0;
+    player.invFilter = 0;
+    player.invSort = 0;
+    player.selectedInvIdx = 0;
+
+    AddInvItem("Health Potion", 0, 0, 0, 0, 0, 3, 8, "Restores 35 HP");
+    AddInvItem("Mana Potion", 0, 0, 0, 0, 0, 2, 8, "Restores 25 MP");
+    AddInvItem("Iron Scrap", 2, 0, 0, 0, 0, 2, 5, "Crafting material");
 
     if (classIdx == 0) { // Warrior
         lstrcpyA(player.heroClass, "Warrior");
@@ -423,13 +563,15 @@ void InitHero(int classIdx) {
 
 void UpdateUI() {
     char statusBuf[512];
-    char infoBuf[512];
+    char infoBuf[1024];
 
     const char* locStr = "Oakhaven Town";
     if (gameState == STATE_BOSS_RUSH) {
         locStr = "Boss Rush Arena";
     } else if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
         locStr = player.arenaActive ? "Boss Rush Arena" : g_Biomes[player.biome].name;
+    } else if (gameState == STATE_INVENTORY) {
+        locStr = "Inventory Hub";
     }
 
     wsprintfA(statusBuf, "Hero: %s (%s)  |  Lvl: %d  |  HP: %d/%d  |  MP: %d/%d  |  Gold: %d Gold  |  Loc: %s (Floor %d)",
@@ -444,49 +586,103 @@ void UpdateUI() {
         if (player.companion.active == 2) bonusInt += 5;
     }
 
-    char compBuf[128];
-    if (player.companion.active > 0) {
-        wsprintfA(compBuf, "%s (%s Lvl %d, HP: %d/%d, Upkeep: %dG) %s",
-            player.companion.name, player.companion.role, player.companion.level,
-            player.companion.hp, player.companion.maxHp, player.companion.upkeep,
-            player.companion.isDown ? "[DOWNED]" : "[ACTIVE]");
-    } else {
-        lstrcpyA(compBuf, "None (Hire at Mercenary Guild)");
-    }
+    if (gameState == STATE_INVENTORY) {
+        const char* fStr = player.invFilter == 0 ? "All" : (player.invFilter == 1 ? "Consumables" : (player.invFilter == 2 ? "Equipment" : "Materials"));
+        const char* sStr = player.invSort == 0 ? "Rarity (Desc)" : (player.invSort == 1 ? "Name (A-Z)" : "Value (Desc)");
+        
+        char selItemBuf[256];
+        char compBuf[256];
+        if (player.invCount > 0 && player.selectedInvIdx >= 0 && player.selectedInvIdx < player.invCount) {
+            InvItem* it = &player.inventory[player.selectedInvIdx];
+            wsprintfA(selItemBuf, "[%s] %s (x%d) | Value: %dG | Desc: %s",
+                g_RarityNames[it->rarity], it->name, it->count, it->value, it->desc);
 
-    char bProgressBuf[256];
-    if (g_ActiveBountyCount == 0) {
-        lstrcpyA(bProgressBuf, "None active (Accept at Quest Board)");
-    } else {
-        bProgressBuf[0] = '\0';
-        for (int i = 0; i < g_ActiveBountyCount; i++) {
-            if (g_ActiveBounties[i].type == 2) { // fetch
-                if (lstrcmpA(g_ActiveBounties[i].targetMat, "iron") == 0) {
-                    g_ActiveBounties[i].current = player.ironScrap;
+            if (it->type == 1) {
+                if (it->eqType == 1) {
+                    int diff = it->bonusStr - player.weaponBonusStr;
+                    wsprintfA(compBuf, "vs Equipped Weapon [%s (+%d STR)]: %s%d STR %s",
+                        player.weaponName, player.weaponBonusStr, diff >= 0 ? "+" : "", diff, diff > 0 ? "(UPGRADE)" : (diff < 0 ? "(DOWNGRADE)" : "(SAME)"));
+                } else {
+                    int diff = it->bonusDef - player.armorBonusDef;
+                    wsprintfA(compBuf, "vs Equipped Armor [%s (+%d DEF)]: %s%d DEF %s",
+                        player.armorName, player.armorBonusDef, diff >= 0 ? "+" : "", diff, diff > 0 ? "(UPGRADE)" : (diff < 0 ? "(DOWNGRADE)" : "(SAME)"));
                 }
-                if (g_ActiveBounties[i].current >= g_ActiveBounties[i].req) g_ActiveBounties[i].done = 1;
+            } else {
+                lstrcpyA(compBuf, "N/A (Consumable/Material item)");
             }
-            char itemBuf[96];
-            const char* tStr = g_ActiveBounties[i].tier == 1 ? "[Bronze]" : (g_ActiveBounties[i].tier == 2 ? "[Silver]" : "[Gold]");
-            wsprintfA(itemBuf, "%s%s %s(%d/%d%s) ", i > 0 ? " | " : "", tStr, g_ActiveBounties[i].title, g_ActiveBounties[i].current, g_ActiveBounties[i].req, g_ActiveBounties[i].done ? " READY" : "");
-            lstrcatA(bProgressBuf, itemBuf);
+        } else {
+            lstrcpyA(selItemBuf, "No items in inventory.");
+            lstrcpyA(compBuf, "N/A");
         }
-    }
 
-    int offBonusDmg = player.offensePoints * 2;
-    wsprintfA(infoBuf,
-        "BIOME: %s (Hazard: %s)  |  COMPANION: %s  |  ARENA RECORD: Wave %d (🏆 %d Trophies)\r\n"
-        "ATTRIBUTES: STR %d (+%d) | INT %d (+%d) | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
-        "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s\r\n"
-        "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Core x%d  |  SKILLS: %d SP (Off:%d Def:%d Util:%d)\r\n"
-        "BOUNTIES: %s",
-        g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf, player.arenaBestWave, player.arenaTokens,
-        player.str, player.weaponBonusStr + offBonusDmg, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
-        player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
-        player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
-        player.ironScrap, player.arcaneDust, player.elementalCore,
-        player.skillPoints, player.offensePoints, player.defensePoints, player.utilityPoints,
-        bProgressBuf);
+        char invListBuf[384];
+        invListBuf[0] = '\0';
+        for (int i = 0; i < player.invCount && i < 6; i++) {
+            char itemEntry[64];
+            wsprintfA(itemEntry, "%s%s[%s]%s(x%d)", i > 0 ? " | " : "",
+                i == player.selectedInvIdx ? ">>" : "",
+                g_RarityNames[player.inventory[i].rarity],
+                player.inventory[i].name,
+                player.inventory[i].count);
+            lstrcatA(invListBuf, itemEntry);
+        }
+        if (player.invCount > 6) lstrcatA(invListBuf, " ...");
+
+        wsprintfA(infoBuf,
+            "🎒 BACKPACK: %d / %d Slots  |  Filter: %s  |  Sort: %s\r\n"
+            "SELECTED ITEM [%d/%d]: %s\r\n"
+            "STAT COMPARISON: %s\r\n"
+            "INVENTORY LIST: %s",
+            player.invCount, player.maxInvSlots, fStr, sStr,
+            player.invCount > 0 ? player.selectedInvIdx + 1 : 0, player.invCount, selItemBuf,
+            compBuf,
+            invListBuf);
+    } else {
+        char compBuf[128];
+        if (player.companion.active > 0) {
+            wsprintfA(compBuf, "%s (%s Lvl %d, HP: %d/%d, Upkeep: %dG) %s",
+                player.companion.name, player.companion.role, player.companion.level,
+                player.companion.hp, player.companion.maxHp, player.companion.upkeep,
+                player.companion.isDown ? "[DOWNED]" : "[ACTIVE]");
+        } else {
+            lstrcpyA(compBuf, "None (Hire at Mercenary Guild)");
+        }
+
+        char bProgressBuf[256];
+        if (g_ActiveBountyCount == 0) {
+            lstrcpyA(bProgressBuf, "None active (Accept at Quest Board)");
+        } else {
+            bProgressBuf[0] = '\0';
+            for (int i = 0; i < g_ActiveBountyCount; i++) {
+                if (g_ActiveBounties[i].type == 2) {
+                    if (lstrcmpA(g_ActiveBounties[i].targetMat, "iron") == 0) {
+                        g_ActiveBounties[i].current = player.ironScrap;
+                    }
+                    if (g_ActiveBounties[i].current >= g_ActiveBounties[i].req) g_ActiveBounties[i].done = 1;
+                }
+                char itemBuf[96];
+                const char* tStr = g_ActiveBounties[i].tier == 1 ? "[Bronze]" : (g_ActiveBounties[i].tier == 2 ? "[Silver]" : "[Gold]");
+                wsprintfA(itemBuf, "%s%s %s(%d/%d%s) ", i > 0 ? " | " : "", tStr, g_ActiveBounties[i].title, g_ActiveBounties[i].current, g_ActiveBounties[i].req, g_ActiveBounties[i].done ? " READY" : "");
+                lstrcatA(bProgressBuf, itemBuf);
+            }
+        }
+
+        int offBonusDmg = player.offensePoints * 2;
+        wsprintfA(infoBuf,
+            "BIOME: %s (Hazard: %s)  |  COMPANION: %s  |  ARENA RECORD: Wave %d (🏆 %d Tr)\r\n"
+            "ATTRIBUTES: STR %d (+%d) | INT %d (+%d) | DEF %d (+%d) | AGI %d | XP %d/%d\r\n"
+            "EQUIPMENT: Weapon: %s%s%s | Armor: %s%s%s  |  BACKPACK: %d/%d Slots\r\n"
+            "MATERIALS: Iron Scrap x%d | Arcane Dust x%d | Core x%d  |  SKILLS: %d SP (Off:%d Def:%d Util:%d)\r\n"
+            "BOUNTIES: %s",
+            g_Biomes[player.biome].name, g_Biomes[player.biome].hazardName, compBuf, player.arenaBestWave, player.arenaTokens,
+            player.str, player.weaponBonusStr + offBonusDmg, player.intStat, bonusInt, player.def, bonusDef, player.agi, player.xp, player.nextXp,
+            player.weaponPrefix[0] ? "[" : "", player.weaponPrefix[0] ? player.weaponPrefix : "", player.weaponPrefix[0] ? "] " : "", player.weaponName,
+            player.armorPrefix[0] ? "[" : "", player.armorPrefix[0] ? player.armorPrefix : "", player.armorPrefix[0] ? "] " : "", player.armorName,
+            player.invCount, player.maxInvSlots,
+            player.ironScrap, player.arcaneDust, player.elementalCore,
+            player.skillPoints, player.offensePoints, player.defensePoints, player.utilityPoints,
+            bProgressBuf);
+    }
 
     if (hStatusText) SetWindowTextA(hStatusText, statusBuf);
     if (hInfoText) SetWindowTextA(hInfoText, infoBuf);
@@ -513,14 +709,24 @@ void SetupButtons() {
         case STATE_TOWN: {
             char bBtn[64];
             wsprintfA(bBtn, "Biome: %s", g_Biomes[player.biome].name);
-            char spBtn[64];
-            wsprintfA(spBtn, "🏋️ Training (%d SP)", player.skillPoints);
+            char invBtn[64];
+            wsprintfA(invBtn, "🎒 Inventory (%d/%d)", player.invCount, player.maxInvSlots);
             SetWindowTextA(hBtn1, "Enter Dungeon");
             SetWindowTextA(hBtn2, "🏟️ Boss Rush");
             SetWindowTextA(hBtn3, bBtn);
             SetWindowTextA(hBtn4, "Rest Inn / Shop");
-            SetWindowTextA(hBtn5, "📜 Quest Board");
-            SetWindowTextA(hBtn6, spBtn);
+            SetWindowTextA(hBtn5, invBtn);
+            SetWindowTextA(hBtn6, "📜 Board / Train");
+            break;
+        }
+
+        case STATE_INVENTORY: {
+            SetWindowTextA(hBtn1, "Next Item");
+            SetWindowTextA(hBtn2, "Use / Equip");
+            SetWindowTextA(hBtn3, "Sell Item");
+            SetWindowTextA(hBtn4, "💰 Sell Commons");
+            SetWindowTextA(hBtn5, "➕ Expand Slots");
+            SetWindowTextA(hBtn6, "⬅️ Back to Town");
             break;
         }
 
@@ -895,6 +1101,13 @@ void CombatVictory() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_INVENTORY) {
+        if (player.invCount > 0) {
+            player.selectedInvIdx = (player.selectedInvIdx + 1) % player.invCount;
+        }
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_BOSS_RUSH) {
         if (!player.arenaWave) player.arenaWave = 1;
         player.arenaActive = 1;
@@ -1093,6 +1306,53 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_INVENTORY) {
+        if (player.invCount > 0 && player.selectedInvIdx >= 0 && player.selectedInvIdx < player.invCount) {
+            InvItem* it = &player.inventory[player.selectedInvIdx];
+            if (it->type == 0) {
+                if (ContainsSubstr(it->name, "Health")) {
+                    player.hp = (player.hp + 35 > player.maxHp) ? player.maxHp : player.hp + 35;
+                    LogMessage("🧪 Drank Health Potion (+35 HP)!");
+                } else if (ContainsSubstr(it->name, "Mana")) {
+                    player.mp = (player.mp + 25 > player.maxMp) ? player.maxMp : player.mp + 25;
+                    LogMessage("🧪 Drank Mana Potion (+25 MP)!");
+                } else if (ContainsSubstr(it->name, "Greater")) {
+                    player.hp = (player.hp + 70 > player.maxHp) ? player.maxHp : player.hp + 70;
+                    LogMessage("🧪 Drank Greater HP Elixir (+70 HP)!");
+                } else if (ContainsSubstr(it->name, "Might")) {
+                    player.mp = (player.mp + 40 > player.maxMp) ? player.maxMp : player.mp + 40;
+                    player.str += 3;
+                    LogMessage("⚡ Drank Elixir of Might (+40 MP & +3 STR)!");
+                }
+                it->count--;
+                if (it->count <= 0) RemoveInvItem(player.selectedInvIdx);
+            } else if (it->type == 1) {
+                if (it->eqType == 1) {
+                    char oldName[32]; int oldVal = player.weaponBonusStr;
+                    lstrcpyA(oldName, player.weaponName);
+                    lstrcpyA(player.weaponName, it->name);
+                    player.weaponBonusStr = it->bonusStr;
+                    char emsg[128]; wsprintfA(emsg, "⚔️ Equipped weapon %s (+%d STR)!", it->name, it->bonusStr);
+                    LogMessage(emsg);
+                    it->count--;
+                    if (it->count <= 0) RemoveInvItem(player.selectedInvIdx);
+                    AddInvItem(oldName, 1, 1, oldVal, 0, 0, 1, 15, "Previous weapon");
+                } else if (it->eqType == 2) {
+                    char oldName[32]; int oldVal = player.armorBonusDef;
+                    lstrcpyA(oldName, player.armorName);
+                    lstrcpyA(player.armorName, it->name);
+                    player.armorBonusDef = it->bonusDef;
+                    char emsg[128]; wsprintfA(emsg, "🛡️ Equipped armor %s (+%d DEF)!", it->name, it->bonusDef);
+                    LogMessage(emsg);
+                    it->count--;
+                    if (it->count <= 0) RemoveInvItem(player.selectedInvIdx);
+                    AddInvItem(oldName, 1, 2, 0, oldVal, 0, 1, 15, "Previous armor");
+                }
+            }
+        }
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_BOSS_RUSH) {
         if (player.arenaTokens >= 5) {
             player.arenaTokens -= 5;
@@ -1249,6 +1509,19 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_INVENTORY) {
+        if (player.invCount > 0 && player.selectedInvIdx >= 0 && player.selectedInvIdx < player.invCount) {
+            InvItem* it = &player.inventory[player.selectedInvIdx];
+            player.gold += it->value;
+            char smsg[128];
+            wsprintfA(smsg, "💰 Sold 1x %s for %d Gold.", it->name, it->value);
+            LogMessage(smsg);
+            it->count--;
+            if (it->count <= 0) RemoveInvItem(player.selectedInvIdx);
+        }
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_BOSS_RUSH) {
         if (player.arenaTokens >= 5) {
             player.arenaTokens -= 5;
@@ -1353,6 +1626,11 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_INVENTORY) {
+        QuickSellCommons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_BOSS_RUSH) {
         if (player.arenaTokens >= 8) {
             player.arenaTokens -= 8;
@@ -1497,6 +1775,11 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_INVENTORY) {
+        ExpandBackpackSlots();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_BOSS_RUSH) {
         if (player.arenaTokens >= 4) {
             player.arenaTokens -= 4;
@@ -1522,8 +1805,8 @@ void HandleButton5() {
         return;
     }
     if (gameState == STATE_TOWN) {
-        gameState = STATE_CRAFTING;
-        LogMessage("Entered Enchanter's Forge & Alchemy Bench.");
+        gameState = STATE_INVENTORY;
+        LogMessage("🎒 Opened Backpack & Inventory Management Hub.");
         SetupButtons();
         UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
@@ -1602,6 +1885,13 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
+    if (gameState == STATE_INVENTORY) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town Square.");
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_BOSS_RUSH) {
         gameState = STATE_TOWN;
         LogMessage("Returned to Town Square.");
@@ -1728,7 +2018,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetupButtons();
             UpdateUI();
             LogMessage("=== Welcome to KQuest: Fantasy Dungeon RPG ===");
-            LogMessage("Phase 10: Boss Rush / Arena Challenge Mode Active!");
+            LogMessage("Phase 11: Inventory Management Upgrade Active!");
             break;
         }
         case WM_COMMAND: {

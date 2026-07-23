@@ -379,7 +379,7 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span class="badge">Phase 10</span></h1>
+    <h1>🗡️ KQuest <span class="badge">Phase 11</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Boss Rush Arena)</div>
   </header>
 
@@ -436,7 +436,7 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Phase 9: Skill Tree & Specialization Mastery System Enabled!</div>
+        <div class="log-entry system">Phase 11: Inventory Management Upgrade (Rarity Tiers, Sorting/Filtering, Item Comparison, Quick-Sell & Expandable Slots)!</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -496,7 +496,24 @@
 
       <!-- Inventory Card -->
       <div class="card">
-        <div class="card-header">🎒 Inventory</div>
+        <div class="card-header" style="flex-wrap:wrap; gap:4px;">
+          <span>🎒 Inventory (<span id="inv-capacity">0/10</span>)</span>
+          <button class="btn btn-accent" style="font-size:0.7rem; padding:2px 6px;" onclick="expandBackpack()" title="Expand backpack capacity by +5 slots">➕ Slot (<span id="expand-cost">50</span>G)</button>
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">
+          <select id="inv-filter" onchange="changeInvFilter(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 4px; flex:1;">
+            <option value="all">Filter: All</option>
+            <option value="consumable">Consumables</option>
+            <option value="equipment">Equipment</option>
+            <option value="material">Materials</option>
+          </select>
+          <select id="inv-sort" onchange="changeInvSort(this.value)" style="background:#11111b; color:#cdd6f4; border:1px solid #45475a; border-radius:4px; font-size:0.75rem; padding:2px 4px; flex:1;">
+            <option value="rarity">Sort: Rarity</option>
+            <option value="name">Sort: Name</option>
+            <option value="value">Sort: Value</option>
+          </select>
+          <button class="btn btn-danger" style="font-size:0.7rem; padding:2px 6px;" onclick="quickSellCommons()" title="Quick-sell all Common items for Gold">💰 Sell Common</button>
+        </div>
         <div class="card-body" id="inventory-list">
           <!-- Dynamic inventory list -->
         </div>
@@ -619,10 +636,12 @@
         dust: 2,
         core: 1
       },
-      companion: null, // { id, name, role, level, hp, maxHp, upkeep, cost, passive, isDown }
+      maxInvSlots: 10,
+      invFilter: 'all',
+      invSort: 'rarity',
       inventory: [
-        { id: 'hp_potion', name: 'Health Potion', count: 3, desc: 'Restores 35 HP' },
-        { id: 'mp_potion', name: 'Mana Potion', count: 2, desc: 'Restores 25 MP' }
+        { id: 'hp_potion', name: 'Health Potion', type: 'consumable', rarity: 0, count: 3, value: 8, desc: 'Restores 35 HP' },
+        { id: 'mp_potion', name: 'Mana Potion', type: 'consumable', rarity: 0, count: 2, value: 8, desc: 'Restores 25 MP' }
       ],
       quests: [
         { id: 'slay_monsters', title: 'Clear Dungeon Chambers', req: 5, current: 0, reward: 50, done: false },
@@ -708,19 +727,242 @@
       updateQuestUI();
     }
 
+    const RARITIES = [
+      { id: 0, name: 'Common', color: '#a6adc8', bg: '#1e1e2e' },
+      { id: 1, name: 'Uncommon', color: '#a6e3a1', bg: '#1c3325' },
+      { id: 2, name: 'Rare', color: '#89b4fa', bg: '#1c2838' },
+      { id: 3, name: 'Epic', color: '#cba6f7', bg: '#2b1c38' },
+      { id: 4, name: 'Legendary', color: '#f9e2af', bg: '#382f1c' }
+    ];
+
+    function addItemToInventory(item) {
+      if (!player.maxInvSlots) player.maxInvSlots = 10;
+      if (!player.inventory) player.inventory = [];
+
+      let existing = player.inventory.find(i => i.id === item.id || (i.name === item.name && i.type === item.type && i.type !== 'equipment'));
+      if (existing) {
+        existing.count += (item.count || 1);
+        updateUI();
+        return true;
+      }
+
+      if (player.inventory.length >= player.maxInvSlots) {
+        logMsg(`🎒 BACKPACK FULL (${player.inventory.length}/${player.maxInvSlots} Slots)! Cannot pick up ${item.name}. Expand slots or sell items!`, 'warning');
+        return false;
+      }
+
+      player.inventory.push({
+        id: item.id || ('item_' + Math.floor(Math.random()*100000)),
+        name: item.name,
+        type: item.type || 'consumable',
+        eqType: item.eqType || null,
+        bonusStr: item.bonusStr || 0,
+        bonusDef: item.bonusDef || 0,
+        rarity: item.rarity !== undefined ? item.rarity : 0,
+        count: item.count || 1,
+        value: item.value || 10,
+        desc: item.desc || ''
+      });
+      updateUI();
+      return true;
+    }
+
+    function changeInvFilter(val) {
+      player.invFilter = val;
+      updateInventoryUI();
+    }
+
+    function changeInvSort(val) {
+      player.invSort = val;
+      updateInventoryUI();
+    }
+
+    function expandBackpack() {
+      if (!player.maxInvSlots) player.maxInvSlots = 10;
+      if (player.maxInvSlots >= 30) {
+        logMsg(`🎒 Backpack is already at maximum capacity (30 slots)!`, 'warning');
+        return;
+      }
+      const cost = Math.floor(50 * (player.maxInvSlots / 10));
+      if (player.gold < cost) {
+        logMsg(`You need ${cost} Gold to expand backpack slots!`, 'warning');
+        return;
+      }
+      player.gold -= cost;
+      player.maxInvSlots += 5;
+      logMsg(`🎒 EXPANDED BACKPACK! New Capacity: ${player.maxInvSlots} Slots!`, 'town');
+      updateUI();
+    }
+
+    function quickSellCommons() {
+      let soldGold = 0;
+      let soldCount = 0;
+      for (let i = player.inventory.length - 1; i >= 0; i--) {
+        const item = player.inventory[i];
+        if (item.rarity === 0) {
+          const val = (item.value || 5) * item.count;
+          soldGold += val;
+          soldCount += item.count;
+          player.inventory.splice(i, 1);
+        }
+      }
+      if (soldCount === 0) {
+        logMsg(`No Common items found in inventory to sell.`, 'system');
+        return;
+      }
+      player.gold += soldGold;
+      logMsg(`💰 QUICK-SOLD ${soldCount} Common item(s) for +${soldGold} Gold!`, 'loot');
+      updateUI();
+    }
+
+    function sellItem(actualIndex) {
+      const item = player.inventory[actualIndex];
+      if (!item) return;
+      const unitVal = item.value || 5;
+      player.gold += unitVal;
+      logMsg(`💰 Sold 1x ${item.name} for ${unitVal} Gold.`, 'loot');
+      item.count--;
+      if (item.count <= 0) {
+        player.inventory.splice(actualIndex, 1);
+      }
+      updateUI();
+    }
+
+    function equipItemFromInv(actualIndex) {
+      const item = player.inventory[actualIndex];
+      if (!item || item.type !== 'equipment') return;
+
+      if (item.eqType === 'weapon') {
+        const oldWeapon = player.weapon ? { ...player.weapon } : null;
+        player.weapon = { name: item.name, bonusStr: item.bonusStr, prefix: '' };
+        logMsg(`⚔️ Equipped weapon: ${item.name} (+${item.bonusStr} STR)!`, 'loot');
+        item.count--;
+        if (item.count <= 0) player.inventory.splice(actualIndex, 1);
+        if (oldWeapon) {
+          addItemToInventory({
+            id: 'weapon_' + Math.floor(Math.random()*10000),
+            name: oldWeapon.name,
+            type: 'equipment',
+            eqType: 'weapon',
+            bonusStr: oldWeapon.bonusStr,
+            bonusDef: 0,
+            rarity: 0,
+            count: 1,
+            value: 20,
+            desc: `Weapon (+${oldWeapon.bonusStr} STR)`
+          });
+        }
+      } else if (item.eqType === 'armor') {
+        const oldArmor = player.armor ? { ...player.armor } : null;
+        player.armor = { name: item.name, bonusDef: item.bonusDef, prefix: '' };
+        logMsg(`🛡️ Equipped armor: ${item.name} (+${item.bonusDef} DEF)!`, 'loot');
+        item.count--;
+        if (item.count <= 0) player.inventory.splice(actualIndex, 1);
+        if (oldArmor) {
+          addItemToInventory({
+            id: 'armor_' + Math.floor(Math.random()*10000),
+            name: oldArmor.name,
+            type: 'equipment',
+            eqType: 'armor',
+            bonusStr: 0,
+            bonusDef: oldArmor.bonusDef,
+            rarity: 0,
+            count: 1,
+            value: 20,
+            desc: `Armor (+${oldArmor.bonusDef} DEF)`
+          });
+        }
+      }
+      updateUI();
+    }
+
     function updateInventoryUI() {
       const invContainer = document.getElementById('inventory-list');
+      if (!invContainer) return;
       invContainer.innerHTML = '';
+
+      if (!player.maxInvSlots) player.maxInvSlots = 10;
+      if (!player.invFilter) player.invFilter = 'all';
+      if (!player.invSort) player.invSort = 'rarity';
+
+      if (document.getElementById('inv-capacity')) {
+        document.getElementById('inv-capacity').textContent = `${player.inventory.length}/${player.maxInvSlots}`;
+      }
+      const expandCost = Math.floor(50 * (player.maxInvSlots / 10));
+      if (document.getElementById('expand-cost')) {
+        document.getElementById('expand-cost').textContent = expandCost;
+      }
+
       if (player.inventory.length === 0) {
         invContainer.innerHTML = '<div style="font-size:0.8rem; color:#6c7086;">Inventory is empty.</div>';
         return;
       }
-      player.inventory.forEach((item, index) => {
+
+      let indexedItems = player.inventory.map((item, idx) => ({ ...item, originalIndex: idx }));
+
+      if (player.invFilter !== 'all') {
+        indexedItems = indexedItems.filter(item => item.type === player.invFilter);
+      }
+
+      if (player.invSort === 'rarity') {
+        indexedItems.sort((a, b) => (b.rarity !== undefined ? b.rarity : 0) - (a.rarity !== undefined ? a.rarity : 0));
+      } else if (player.invSort === 'name') {
+        indexedItems.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (player.invSort === 'value') {
+        indexedItems.sort((a, b) => (b.value || 0) - (a.value || 0));
+      }
+
+      if (indexedItems.length === 0) {
+        invContainer.innerHTML = `<div style="font-size:0.8rem; color:#6c7086;">No ${player.invFilter} items found.</div>`;
+        return;
+      }
+
+      indexedItems.forEach(item => {
+        const rInfo = RARITIES[item.rarity || 0] || RARITIES[0];
         const row = document.createElement('div');
         row.className = 'item-row';
+        row.style.display = 'flex';
+        row.style.flexDirection = 'column';
+        row.style.gap = '4px';
+        row.style.background = rInfo.bg;
+        row.style.border = `1px solid ${rInfo.color}`;
+        row.style.margin = '4px 0';
+        row.style.padding = '6px';
+        row.style.borderRadius = '6px';
+
+        let compHtml = '';
+        if (item.type === 'equipment') {
+          if (item.eqType === 'weapon') {
+            const curStr = player.weapon ? player.weapon.bonusStr : 0;
+            const diff = item.bonusStr - curStr;
+            const diffColor = diff > 0 ? '#a6e3a1' : (diff < 0 ? '#f38ba8' : '#a6adc8');
+            const diffText = diff > 0 ? `+${diff} STR (Upgrade!)` : (diff < 0 ? `${diff} STR (Downgrade)` : `Same STR`);
+            compHtml = `<div style="font-size:0.75rem; color:${diffColor}; font-weight:600;">📊 Comparison vs Equipped [${player.weapon ? player.weapon.name : 'None'}]: <span style="color:${diffColor};">${diffText}</span></div>`;
+          } else if (item.eqType === 'armor') {
+            const curDef = player.armor ? player.armor.bonusDef : 0;
+            const diff = item.bonusDef - curDef;
+            const diffColor = diff > 0 ? '#a6e3a1' : (diff < 0 ? '#f38ba8' : '#a6adc8');
+            const diffText = diff > 0 ? `+${diff} DEF (Upgrade!)` : (diff < 0 ? `${diff} DEF (Downgrade)` : `Same DEF`);
+            compHtml = `<div style="font-size:0.75rem; color:${diffColor}; font-weight:600;">📊 Comparison vs Equipped [${player.armor ? player.armor.name : 'None'}]: <span style="color:${diffColor};">${diffText}</span></div>`;
+          }
+        }
+
         row.innerHTML = `
-          <span>${item.name} (x${item.count})</span>
-          <button class="btn btn-primary" onclick="useItem(${index})">Use</button>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <span style="color:${rInfo.color}; font-weight:700; border:1px solid ${rInfo.color}; border-radius:3px; padding:0 4px; font-size:0.7rem; margin-right:4px;">${rInfo.name}</span>
+              <strong style="color:#cdd6f4; font-size:0.85rem;">${item.name}</strong>
+              <span style="font-size:0.75rem; color:#a6adc8;">(x${item.count})</span>
+            </div>
+            <span style="font-size:0.75rem; color:#f9e2af; font-weight:600;">${item.value || 5}G</span>
+          </div>
+          <div style="font-size:0.75rem; color:#bac2de;">${item.desc || ''}</div>
+          ${compHtml}
+          <div style="display:flex; justify-content:flex-end; gap:4px; margin-top:2px;">
+            ${item.type === 'consumable' ? `<button class="btn btn-primary" style="padding:2px 8px; font-size:0.75rem;" onclick="useItem(${item.originalIndex})">Use</button>` : ''}
+            ${item.type === 'equipment' ? `<button class="btn btn-accent" style="padding:2px 8px; font-size:0.75rem;" onclick="equipItemFromInv(${item.originalIndex})">Equip</button>` : ''}
+            <button class="btn btn-danger" style="padding:2px 8px; font-size:0.75rem;" onclick="sellItem(${item.originalIndex})">Sell (${item.value || 5}G)</button>
+          </div>
         `;
         invContainer.appendChild(row);
       });
