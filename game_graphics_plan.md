@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KRogue
 - KChess
 - KPong
 - KMines
@@ -107,6 +106,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KTetris
 - KBreakout
 - KMaze
+- KRogue
 
 ## Completed Work Log
 
@@ -116,5 +116,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **KTetris (Loop 1):** Implemented 3D beveled gem & metallic tetromino blocks for all piece types (I, J, L, O, S, T, Z, Garbage, Bomb), ghost piece outline with pulsing energy grid, hard drop particle trails & impact sparks, glowing white line clear flash animation, and floating score text popups for both Web Canvas (ktetris.html) and Native C Win32 GDI (KTetris/main.c).
 - **KBreakout (Loop 1):** Implemented futuristic metallic paddle with side lights and animated energy core, energy ball with motion trail, 3D beveled bricks (silver metal, reinforced armor, row-tiered colors), powerup capsules with letter badges (Expand, Extra life, Pierce, Sticky, Laser), flying saucer UFO sprite, and brick destruction particle bursts for both Web Canvas (kbreakout.html) and Native C Win32 GDI (KBreakout/main.c).
 - **KMaze (Loop 1):** Implemented custom 16x16 procedural wall textures (stone bricks, glowing exit portal, gold key block, steel door, coin chest, spike trap, cyan compass plate, speed boost bolt, teleporter vortex, red minotaur beast, crossed pickaxe block), distance fog & side shading, held equipment 3D HUD (swinging pickaxe and brass compass with target direction needle), particle bursts, and polished minimap with player direction arrow for both Web Canvas (kmaze.html) and Native C (KMaze/main.c).
+- **KRogue (Loop 1):** Implemented custom knight player sprite (with helmet, visor slit, cape, sword, shield), 12 distinct animated monster sprites (giant rat, bat, orc, zombie, cave troll, ghost, gelatinous cube with inner skull, hydra, balrog with horns, titan, beholder with eyestalks, mind flayer with tentacles), 3D stone brick wall tiles with biome color palettes (Mossy green, Volcanic red, Void purple, Abyss gold-dark), stairs, doors, shrines, food, gold coins, floating damage numbers, hit spark particles, attack stroke animations, and responsive HUD bars for both Web Canvas (krogue.html) and Native C Win32 GDI (KRogue/main.c).
+
 
 

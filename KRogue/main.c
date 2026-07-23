@@ -1172,14 +1172,186 @@ void load_game() {
     }
 }
 
+void draw_tile_gdi(HDC memDC, int x, int y, Tile* t, int visible) {
+    int px = x * char_w;
+    int py = y * char_h;
+    
+    if (t->ch == '#') {
+        COLORREF wallColor = visible ? t->fg : C_FOG;
+        HBRUSH brush = CreateSolidBrush(wallColor);
+        RECT r = { px, py, px + char_w, py + char_h };
+        FillRect(memDC, &r, brush);
+        DeleteObject(brush);
+        
+        HPEN pen = CreatePen(PS_SOLID, 1, visible ? RGB(220, 220, 220) : RGB(70, 70, 70));
+        HPEN oldPen = (HPEN)SelectObject(memDC, pen);
+        MoveToEx(memDC, px, py + char_h - 1, NULL);
+        LineTo(memDC, px, py);
+        LineTo(memDC, px + char_w - 1, py);
+        SelectObject(memDC, oldPen);
+        DeleteObject(pen);
+    } else if (t->ch == '.') {
+        COLORREF floorColor = visible ? t->fg : RGB(20, 20, 20);
+        HBRUSH brush = CreateSolidBrush(floorColor);
+        RECT r = { px, py, px + char_w, py + char_h };
+        FillRect(memDC, &r, brush);
+        DeleteObject(brush);
+        
+        HPEN pen = CreatePen(PS_SOLID, 1, RGB(15, 15, 15));
+        HPEN oldPen = (HPEN)SelectObject(memDC, pen);
+        MoveToEx(memDC, px + char_w - 1, py, NULL);
+        LineTo(memDC, px + char_w - 1, py + char_h - 1);
+        LineTo(memDC, px, py + char_h - 1);
+        SelectObject(memDC, oldPen);
+        DeleteObject(pen);
+    } else if (t->ch == '+') {
+        HBRUSH brush = CreateSolidBrush(RGB(139, 69, 19));
+        RECT r = { px + 1, py + 1, px + char_w - 1, py + char_h - 1 };
+        FillRect(memDC, &r, brush);
+        DeleteObject(brush);
+        HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, goldBrush);
+        Ellipse(memDC, px + char_w - 4, py + char_h / 2 - 1, px + char_w - 1, py + char_h / 2 + 2);
+        SelectObject(memDC, oldB);
+        DeleteObject(goldBrush);
+    }
+}
+
+void draw_item_gdi(HDC memDC, int x, int y, Item* it) {
+    int px = x * char_w;
+    int py = y * char_h;
+    int cx = px + char_w / 2;
+    int cy = py + char_h / 2;
+    
+    if (it->type == TYPE_GOLD || it->ch == '*') {
+        HBRUSH b = CreateSolidBrush(RGB(255, 215, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 3, cy - 3, cx + 4, cy + 4);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+    } else if (it->type == TYPE_HEAL || it->ch == '!') {
+        HBRUSH b = CreateSolidBrush(it->fg);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 3, cy, cx + 4, cy + 6);
+        RECT r = { cx - 1, cy - 4, cx + 2, cy };
+        FillRect(memDC, &r, b);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+    } else if (it->type == TYPE_SHRINE || it->ch == '^') {
+        HBRUSH b = CreateSolidBrush(RGB(100, 100, 100));
+        RECT r = { px + 2, py + char_h - 5, px + char_w - 2, py + char_h - 1 };
+        FillRect(memDC, &r, b);
+        DeleteObject(b);
+        POINT pts[4] = { {cx, py + 2}, {cx + 4, cy - 1}, {cx, cy + 3}, {cx - 4, cy - 1} };
+        HBRUSH cb = CreateSolidBrush(RGB(0, 255, 255));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, cb);
+        Polygon(memDC, pts, 4);
+        SelectObject(memDC, oldB);
+        DeleteObject(cb);
+    } else if (it->ch == '>') {
+        HBRUSH b = CreateSolidBrush(RGB(255, 215, 0));
+        RECT r1 = { px + 1, py + 3, px + char_w - 1, py + 6 };
+        RECT r2 = { px + 3, py + 8, px + char_w - 3, py + 11 };
+        RECT r3 = { px + 5, py + 13, px + char_w - 5, py + 16 };
+        FillRect(memDC, &r1, b);
+        FillRect(memDC, &r2, b);
+        FillRect(memDC, &r3, b);
+        DeleteObject(b);
+    } else {
+        SetTextColor(memDC, it->fg);
+        SetBkMode(memDC, TRANSPARENT);
+        TextOutA(memDC, px, py, &it->ch, 1);
+        SetBkMode(memDC, OPAQUE);
+    }
+}
+
+void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
+    int px = x * char_w;
+    int py = y * char_h;
+    int cx = px + char_w / 2;
+    int cy = py + char_h / 2;
+    
+    if (e == get_player() || e->ch == '@') {
+        HBRUSH capeB = CreateSolidBrush(RGB(0, 120, 255));
+        RECT capeR = { cx - 4, cy - 2, cx + 5, cy + 7 };
+        FillRect(memDC, &capeR, capeB);
+        DeleteObject(capeB);
+        
+        HBRUSH armorB = CreateSolidBrush(RGB(220, 220, 220));
+        RECT armorR = { cx - 3, cy - 4, cx + 4, cy + 5 };
+        FillRect(memDC, &armorR, armorB);
+        DeleteObject(armorB);
+        
+        HBRUSH visorB = CreateSolidBrush(RGB(255, 215, 0));
+        RECT visorR = { cx - 2, cy - 6, cx + 3, cy - 4 };
+        FillRect(memDC, &visorR, visorB);
+        DeleteObject(visorB);
+        
+        HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HPEN oldP = (HPEN)SelectObject(memDC, pen);
+        MoveToEx(memDC, cx + 3, cy + 2, NULL);
+        LineTo(memDC, cx + 6, cy - 5);
+        SelectObject(memDC, oldP);
+        DeleteObject(pen);
+    } else if (e->ch == 'r') {
+        HBRUSH b = CreateSolidBrush(RGB(180, 180, 0));
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 4, cy - 2, cx + 5, cy + 5);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+        SetPixel(memDC, cx + 2, cy - 1, RGB(255, 0, 0));
+    } else if (e->ch == 'b') {
+        HPEN pen = CreatePen(PS_SOLID, 2, RGB(200, 100, 0));
+        HPEN oldP = (HPEN)SelectObject(memDC, pen);
+        MoveToEx(memDC, cx - 5, cy - 3, NULL);
+        LineTo(memDC, cx, cy + 2);
+        LineTo(memDC, cx + 5, cy - 3);
+        SelectObject(memDC, oldP);
+        DeleteObject(pen);
+    } else if (e->ch == 'o' || e->ch == 'g') {
+        HBRUSH b = CreateSolidBrush(e->fg);
+        RECT r = { cx - 4, cy - 6, cx + 5, cy + 6 };
+        FillRect(memDC, &r, b);
+        DeleteObject(b);
+        SetPixel(memDC, cx - 1, cy - 3, RGB(255, 0, 0));
+        SetPixel(memDC, cx + 2, cy - 3, RGB(255, 0, 0));
+    } else if (e->ch == 'x' || e->ch == 'z') {
+        HBRUSH b = CreateSolidBrush(e->fg);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 3, cy - 7, cx + 4, cy);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+        RECT r = { cx - 2, cy, cx + 3, cy + 6 };
+        HBRUSH b2 = CreateSolidBrush(RGB(150, 150, 150));
+        FillRect(memDC, &r, b2);
+        DeleteObject(b2);
+    } else if (e->ch == 'T' || e->ch == 'M') {
+        HBRUSH b = CreateSolidBrush(e->fg);
+        RECT r = { cx - 5, cy - 8, cx + 6, cy + 8 };
+        FillRect(memDC, &r, b);
+        DeleteObject(b);
+    } else if (e->ch == 'D' || e->ch == 'B') {
+        HBRUSH b = CreateSolidBrush(e->fg);
+        HBRUSH oldB = (HBRUSH)SelectObject(memDC, b);
+        Ellipse(memDC, cx - 6, cy - 6, cx + 7, cy + 7);
+        SelectObject(memDC, oldB);
+        DeleteObject(b);
+        SetPixel(memDC, cx - 2, cy - 2, RGB(255, 255, 0));
+        SetPixel(memDC, cx + 2, cy - 2, RGB(255, 255, 0));
+    } else {
+        SetTextColor(memDC, e->fg);
+        SetBkMode(memDC, TRANSPARENT);
+        TextOutA(memDC, px, py, &e->ch, 1);
+        SetBkMode(memDC, OPAQUE);
+    }
+}
+
 void draw_game(HDC hdc) {
-    // create memory DC
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP memBM = CreateCompatibleBitmap(hdc, W * char_w, TOTAL_H * char_h);
     HBITMAP hOldBM = (HBITMAP)SelectObject(memDC, memBM);
     HFONT hOldFont = (HFONT)SelectObject(memDC, g_font);
 
-    
     RECT bgRect = {0, 0, W * char_w, TOTAL_H * char_h};
     HBRUSH bgBrush = CreateSolidBrush(RGB(0,0,0));
     FillRect(memDC, &bgRect, bgBrush);
@@ -1192,22 +1364,15 @@ void draw_game(HDC hdc) {
             for(int x=0; x<W; x++) {
                 Tile* t = &g.map[y][x];
                 if(t->visible || t->explored) {
-                    COLORREF fg = t->visible ? t->fg : C_FOG;
-                    COLORREF bg = RGB(0,0,0);
-                    
-                    char ch = t->ch;
+                    draw_tile_gdi(memDC, x, y, t, t->visible);
                     
                     if(t->visible) {
                         Item* it = get_item_at(x, y);
-                        if(it) { ch = it->ch; fg = it->fg; }
+                        if(it) draw_item_gdi(memDC, x, y, it);
                         
                         Entity* e = get_entity_at(x, y);
-                        if(e) { ch = e->ch; fg = e->fg; }
+                        if(e) draw_entity_gdi(memDC, x, y, e);
                     }
-                    
-                    SetTextColor(memDC, fg);
-                    SetBkColor(memDC, bg);
-                    TextOutA(memDC, x * char_w, y * char_h, &ch, 1);
                 }
             }
         }

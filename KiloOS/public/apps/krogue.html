@@ -3,106 +3,220 @@
 <head>
     <title>KRogue Web</title>
     <style>
-        body { margin: 0; padding: 0; background: #000; color: #fff; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        #game { white-space: pre; font-size: 20px; line-height: 20px; }
-        .wall { color: #888; }
-        .floor { color: #555; }
-        .player { color: #fff; font-weight: bold; }
-        .monster-r { color: #d90; }
-        .monster-b { color: #c60; }
-        .monster-z { color: #3a5; }
-        .monster-o { color: #0f0; }
-        .monster-T { color: #0b0; }
-        .stairs { color: #ff0; font-weight: bold; }
-        .gold { color: #fd0; }
-        .shrine { color: #0ff; font-weight: bold; }
-        .food { color: #a52; }
-        .monster-G { color: #0ff; }
-        .monster-C { color: #088; }
-        .monster-H { color: #0f0; }
-        .wall.moss { color: #696; }
-        .floor.moss { color: #353; }
-        .wall.volcanic { color: #955; }
-        .floor.volcanic { color: #533; }
-        .wall.abyss { color: #606; }
-        .floor.abyss { color: #303; }
-        .wall.void { color: #406; }
-        .floor.void { color: #102; }
-        .monster-B { color: #f40; }
-        .monster-t { color: #dda; }
-        .monster-E { color: #a0f; }
-        .monster-M { color: #90d; }
+        * { box-sizing: border-box; user-select: none; }
+        body {
+            margin: 0; padding: 0;
+            background: #090a0f; color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100vh; overflow: hidden;
+        }
+        #game-container {
+            display: flex; flex-direction: column; align-items: center;
+            background: #11131c; border: 3px solid #2d3748; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(66, 153, 225, 0.15);
+            padding: 16px; width: 920px; max-width: 98vw;
+        }
+        #canvas-wrapper {
+            position: relative;
+            border: 2px solid #4a5568; border-radius: 8px; overflow: hidden;
+            background: #050508;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+        }
+        canvas { display: block; image-rendering: pixelated; }
+        #ui-panel {
+            width: 100%; margin-top: 12px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .stats-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #1a202c; padding: 8px 16px; border-radius: 6px; border: 1px solid #2d3748;
+            font-weight: bold; font-size: 14px;
+        }
+        .stat-group { display: flex; align-items: center; gap: 12px; }
+        .bar-container {
+            width: 120px; height: 14px; background: #2d3748; border-radius: 7px; overflow: hidden;
+            display: inline-block; position: relative; vertical-align: middle; border: 1px solid #4a5568;
+        }
+        .bar-fill-hp { height: 100%; background: linear-gradient(90deg, #e53e3e, #f56565); transition: width 0.2s; }
+        .bar-fill-food { height: 100%; background: linear-gradient(90deg, #dd6b20, #ed8936); transition: width 0.2s; }
+        .bar-text {
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            text-align: center; font-size: 10px; line-height: 14px; color: #fff; text-shadow: 1px 1px 2px #000;
+        }
+        #msg-box {
+            background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
+            padding: 8px 12px; height: 75px; overflow-y: hidden;
+            font-family: monospace; font-size: 13px; line-height: 1.35; color: #a0aec0;
+            display: flex; flex-direction: column; justify-content: flex-end;
+        }
+        .msg-latest { color: #f6ad55; font-weight: bold; }
+        .msg-combat { color: #fc8181; }
+        .msg-good { color: #68d391; }
+        .controls-hint {
+            font-size: 11px; color: #718096; text-align: center; margin-top: 4px;
+        }
     </style>
 </head>
 <body>
-    <div id="game"></div>
+    <div id="game-container">
+        <div id="canvas-wrapper">
+            <canvas id="gameCanvas" width="880" height="440"></canvas>
+        </div>
+        <div id="ui-panel">
+            <div class="stats-row">
+                <div class="stat-group">
+                    <span>HP:</span>
+                    <div class="bar-container">
+                        <div id="hp-bar" class="bar-fill-hp" style="width: 100%;"></div>
+                        <div id="hp-text" class="bar-text">10/10</div>
+                    </div>
+                    <span>Food:</span>
+                    <div class="bar-container">
+                        <div id="food-bar" class="bar-fill-food" style="width: 100%;"></div>
+                        <div id="food-text" class="bar-text">200/200</div>
+                    </div>
+                </div>
+                <div class="stat-group">
+                    <span style="color: #63b3ed;">LVL <span id="val-lvl">1</span></span>
+                    <span style="color: #b794f4;">XP <span id="val-xp">0</span></span>
+                    <span style="color: #f6e05e;">GOLD <span id="val-gold">0</span></span>
+                    <span style="color: #fc8181;">DLVL <span id="val-dlvl">1</span></span>
+                    <span style="color: #cbd5e0;">KILLS <span id="val-kills">0</span></span>
+                </div>
+            </div>
+            <div id="msg-box"></div>
+            <div class="controls-hint">
+                [Arrows] Move / Attack &nbsp;|&nbsp; [.] Wait &nbsp;|&nbsp; [S] Save &nbsp;|&nbsp; [L] Load &nbsp;|&nbsp; [D] Difficulty &nbsp;|&nbsp; [R] Restart
+            </div>
+        </div>
+    </div>
+
     <script>
-        const W = 40;
-        const H = 20;
+        const COLS = 40;
+        const ROWS = 20;
+        const TILE = 22; // 40 * 22 = 880 width, 20 * 22 = 440 height
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
         let map = [];
         let player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
         let monsters = [];
         let items = [];
         let msgs = ["Welcome to KRogue!", "Find the stairs '>'. Defeat evil."];
-        let state = 0; // 0=menu, 1=play, 2=dead
+        let state = 0; // 0=menu, 1=play, 2=dead, 3=victory
         let difficulty = 0;
         let dlevel = 1;
         let total_kills = 0;
         let diffStr = ["Normal", "Hard", "Nightmare"];
-        
-        function addMsg(m) {
-            msgs.push(m);
-            if (msgs.length > 4) msgs.shift();
+        let frameCount = 0;
+
+        // Visual effects system
+        let particles = [];
+        let floatTexts = [];
+        let attackAnims = [];
+
+        function addMsg(m, type = 'normal') {
+            msgs.push({ text: m, type: type });
+            if (msgs.length > 10) msgs.shift();
+            updateMsgBox();
+        }
+
+        function updateMsgBox() {
+            const box = document.getElementById('msg-box');
+            box.innerHTML = msgs.slice(-4).map((m, idx, arr) => {
+                let cls = idx === arr.length - 1 ? 'msg-latest' : '';
+                if (m.text.includes('hit') || m.text.includes('starved') || m.text.includes('dies')) cls += ' msg-combat';
+                if (m.text.includes('glows') || m.text.includes('pick') || m.text.includes('level') || m.text.includes('Saved')) cls += ' msg-good';
+                return `<div class="${cls.trim()}">${m.text}</div>`;
+            }).join('');
+        }
+
+        function addFloatText(x, y, text, color = '#ffffff') {
+            floatTexts.push({
+                x: (x + 0.5) * TILE,
+                y: (y + 0.3) * TILE,
+                text: text,
+                color: color,
+                life: 1.0
+            });
+        }
+
+        function addParticles(x, y, color, count = 8) {
+            for (let i = 0; i < count; i++) {
+                let angle = Math.random() * Math.PI * 2;
+                let speed = 1 + Math.random() * 3;
+                particles.push({
+                    x: (x + 0.5) * TILE,
+                    y: (y + 0.5) * TILE,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    size: 2 + Math.random() * 3,
+                    life: 1.0
+                });
+            }
+        }
+
+        function addAttackAnim(x, y, targetX, targetY) {
+            attackAnims.push({
+                sx: (x + 0.5) * TILE,
+                sy: (y + 0.5) * TILE,
+                tx: (targetX + 0.5) * TILE,
+                ty: (targetY + 0.5) * TILE,
+                life: 1.0
+            });
         }
 
         function initMap() {
             map = [];
             monsters = [];
             items = [];
-            for (let y = 0; y < H; y++) {
+            for (let y = 0; y < ROWS; y++) {
                 map[y] = [];
-                for (let x = 0; x < W; x++) {
-                    map[y][x] = (x===0 || y===0 || x===W-1 || y===H-1) ? '#' : '.';
-                    if (Math.random() < 0.1 && map[y][x] === '.') map[y][x] = '#'; // simple walls
+                for (let x = 0; x < COLS; x++) {
+                    map[y][x] = (x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1) ? '#' : '.';
+                    if (Math.random() < 0.1 && map[y][x] === '.') map[y][x] = '#';
                 }
             }
             player.x = 2; player.y = 2;
             map[2][2] = '.';
             
             // Stairs
-            items.push({ x: W-3, y: H-3, ch: '>', type: 'stairs' });
-            map[H-3][W-3] = '.';
+            items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
+            map[ROWS - 3][COLS - 3] = '.';
 
-            if (Math.random() < 0.25) {
+            if (Math.random() < 0.3) {
                 let sx, sy;
-                do { sx = Math.floor(Math.random()*(W-4))+2; sy = Math.floor(Math.random()*(H-4))+2; } while(map[sy][sx] === '#');
+                do { sx = Math.floor(Math.random() * (COLS - 4)) + 2; sy = Math.floor(Math.random() * (ROWS - 4)) + 2; } while(map[sy][sx] === '#');
                 items.push({ x: sx, y: sy, ch: '^', type: 'shrine' });
             }
             
-            for(let f = 0; f < 3; f++) {
+            for (let f = 0; f < 3; f++) {
                 let fx, fy;
-                do { fx = Math.floor(Math.random()*(W-4))+2; fy = Math.floor(Math.random()*(H-4))+2; } while(map[fy][fx] === '#');
+                do { fx = Math.floor(Math.random() * (COLS - 4)) + 2; fy = Math.floor(Math.random() * (ROWS - 4)) + 2; } while(map[fy][fx] === '#');
                 items.push({ x: fx, y: fy, ch: '%', type: 'food' });
             }
 
-            for (let i = 0; i < 5 + difficulty*2 + dlevel; i++) {
+            for (let i = 0; i < 5 + difficulty * 2 + dlevel; i++) {
                 let mx, my;
                 do {
-                    mx = Math.floor(Math.random()*(W-4))+2;
-                    my = Math.floor(Math.random()*(H-4))+2;
-                } while(map[my][mx] === '#' || (mx===2 && my===2) || (mx===W-3 && my===H-3));
+                    mx = Math.floor(Math.random() * (COLS - 4)) + 2;
+                    my = Math.floor(Math.random() * (ROWS - 4)) + 2;
+                } while(map[my][mx] === '#' || (mx === 2 && my === 2) || (mx === COLS - 3 && my === ROWS - 3));
                 
                 let r = Math.random();
                 let type = 'r', hp = 5, name = 'Giant Rat';
-                if (dlevel > 1 && r < 0.2) { type = 'b'; hp = 3; name = 'Giant Bat'; }
-                else if (dlevel > 2 && r > 0.4 && r < 0.6) { type = 'o'; hp = 10; name = 'Orc'; }
-                else if (dlevel > 3 && r > 0.4 && r < 0.5) { type = 'z'; hp = 15; name = 'Zombie'; }
-                else if (dlevel > 4 && r > 0.5 && r < 0.6) { type = 'T'; hp = 25; name = 'Cave Troll'; }
-                else if (dlevel > 5 && r > 0.6 && r < 0.7) { type = 'G'; hp = 18; name = 'Ghost'; }
-                else if (dlevel > 8 && r > 0.7 && r < 0.8) { type = 'C'; hp = 35; name = 'Gelatinous Cube'; }
-                else if (dlevel > 10 && r >= 0.8 && r < 0.9) { type = 'H'; hp = 50; name = 'Hydra'; }
-                else if (dlevel > 12 && r >= 0.9) {
-                    let m4 = Math.floor(Math.random()*4);
+                if (dlevel > 1 && r < 0.2) { type = 'b'; hp = 4; name = 'Giant Bat'; }
+                else if (dlevel > 2 && r >= 0.2 && r < 0.4) { type = 'o'; hp = 10; name = 'Orc'; }
+                else if (dlevel > 3 && r >= 0.4 && r < 0.55) { type = 'z'; hp = 15; name = 'Zombie'; }
+                else if (dlevel > 4 && r >= 0.55 && r < 0.65) { type = 'T'; hp = 25; name = 'Cave Troll'; }
+                else if (dlevel > 5 && r >= 0.65 && r < 0.75) { type = 'G'; hp = 18; name = 'Ghost'; }
+                else if (dlevel > 8 && r >= 0.75 && r < 0.85) { type = 'C'; hp = 35; name = 'Gelatinous Cube'; }
+                else if (dlevel > 10 && r >= 0.85 && r < 0.92) { type = 'H'; hp = 50; name = 'Hydra'; }
+                else if (dlevel > 12 && r >= 0.92) {
+                    let m4 = Math.floor(Math.random() * 4);
                     if (m4 === 0) { type = 'B'; hp = 80; name = 'Balrog'; }
                     else if (m4 === 1) { type = 't'; hp = 100; name = 'Titan'; }
                     else if (m4 === 2) { type = 'E'; hp = 60; name = 'Beholder'; }
@@ -114,59 +228,345 @@
                 });
             }
         }
-        
-        function render() {
-            let out = "";
-            if (state === 0) {
-                out += "KRogue Web\n\n";
-                out += "Difficulty: " + diffStr[difficulty] + " (Press D to change)\n\n";
-                out += "Press ENTER to start\n";
-                out += "Press L to load game\n";
-            } else if (state === 1) {
-                for (let y = 0; y < H; y++) {
-                    for (let x = 0; x < W; x++) {
-                        if (x === player.x && y === player.y) out += "<span class='player'>@</span>";
-                        else {
-                            let m = monsters.find(m => m.x === x && m.y === y);
-                            if (m) out += "<span class='monster-"+m.ch+"'>" + m.ch + "</span>";
-                            else {
-                                let it = items.find(i => i.x === x && i.y === y);
-                                if (it) {
-                                    if (it.type === 'stairs') out += "<span class='stairs'>></span>";
-                                    else if (it.type === 'gold') out += "<span class='gold'>*</span>";
-                                    else if (it.type === 'shrine') out += "<span class='shrine'>^</span>";
-                                    else if (it.type === 'food') out += "<span class='food'>%</span>";
-                                } else {
-                                    let biome = "";
-                                    if(dlevel >= 5 && dlevel < 10) biome = " moss";
-                                    else if(dlevel >= 10 && dlevel < 15) biome = " volcanic";
-                                    else if(dlevel >= 15 && dlevel < 20) biome = " void";
-                                    else if(dlevel >= 20) biome = " abyss";
-                                    out += map[y][x] === '#' ? `<span class='wall${biome}'>#</span>` : `<span class='floor${biome}'>.</span>`;
-                                }
-                            }
-                        }
-                    }
-                    out += "\n";
-                }
-                out += `\nHP: ${player.hp}/${player.max_hp}  Level: ${player.level}  XP: ${player.xp}  Gold: ${player.gold}  DLVL: ${dlevel}  Food: ${player.hunger}  Kills: ${total_kills}\n`;
-                for (let i = 0; i < msgs.length; i++) {
-                    out += msgs[i] + "\n";
-                }
-            } else if (state === 2 || state === 3) {
-                out += "You died.\nPress R to restart.";
-            } else if (state === 3) {
-                out += "VICTORY!\nYou defeated the dungeon!\nPress R to restart.";
-            }
-            document.getElementById('game').innerHTML = out;
+
+        // DRAWING SPRITES
+        function drawWallTile(x, y, biome) {
+            let px = x * TILE, py = y * TILE;
+            let baseColor = '#4a5568', accentColor = '#2d3748', mortarColor = '#1a202c';
+            
+            if (biome === 'moss') { baseColor = '#38a169'; accentColor = '#276749'; }
+            else if (biome === 'volcanic') { baseColor = '#e53e3e'; accentColor = '#9b2c2c'; }
+            else if (biome === 'void') { baseColor = '#805ad5'; accentColor = '#553c9a'; }
+            else if (biome === 'abyss') { baseColor = '#d69e2e'; accentColor = '#744210'; }
+
+            ctx.fillStyle = mortarColor;
+            ctx.fillRect(px, py, TILE, TILE);
+
+            // Brick pattern
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
+            ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
+            ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
+
+            // Brick highlights
+            ctx.fillStyle = accentColor;
+            ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
+            ctx.fillRect(px + 2, py + 18, TILE / 2 - 4, 2);
+            ctx.fillRect(px + TILE / 2 + 2, py + 18, TILE / 2 - 4, 2);
         }
-        
+
+        function drawFloorTile(x, y, biome) {
+            let px = x * TILE, py = y * TILE;
+            let bg = '#171923';
+            if (biome === 'moss') bg = '#12251a';
+            else if (biome === 'volcanic') bg = '#271414';
+            else if (biome === 'void') bg = '#1e1427';
+            else if (biome === 'abyss') bg = '#1f1912';
+
+            ctx.fillStyle = bg;
+            ctx.fillRect(px, py, TILE, TILE);
+
+            // Floor texture dots
+            ctx.fillStyle = 'rgba(255,255,255,0.04)';
+            ctx.fillRect(px + 4, py + 4, 3, 3);
+            ctx.fillRect(px + 14, py + 12, 2, 2);
+            ctx.fillRect(px + 8, py + 16, 3, 2);
+        }
+
+        function drawPlayerSprite(px, py) {
+            let bob = Math.sin(frameCount * 0.15) * 1.5;
+            let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
+
+            // Cape
+            ctx.fillStyle = '#3182ce';
+            ctx.fillRect(cx - 7, cy - 2, 14, 10);
+
+            // Body / Armor
+            ctx.fillStyle = '#cbd5e0';
+            ctx.fillRect(cx - 5, cy - 4, 10, 10);
+            ctx.fillStyle = '#a0aec0';
+            ctx.fillRect(cx - 4, cy - 1, 8, 3);
+
+            // Head / Helmet
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath(); ctx.arc(cx, cy - 6, 5, 0, Math.PI * 2); ctx.fill();
+            // Golden Visor
+            ctx.fillStyle = '#ecc94b';
+            ctx.fillRect(cx - 3, cy - 7, 6, 2);
+
+            // Sword
+            ctx.strokeStyle = '#edf2f7'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(cx + 6, cy + 2); ctx.lineTo(cx + 10, cy - 6); ctx.stroke();
+            // Shield
+            ctx.fillStyle = '#e53e3e';
+            ctx.beginPath(); ctx.arc(cx - 6, cy + 1, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#ecc94b'; ctx.lineWidth = 1; ctx.stroke();
+        }
+
+        function drawMonsterSprite(px, py, type) {
+            let cx = px + TILE / 2, cy = py + TILE / 2;
+            let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
+
+            if (type === 'r') { // Giant Rat
+                ctx.fillStyle = '#d69e2e';
+                ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#e53e3e'; // eyes
+                ctx.fillRect(cx + 3, cy + bob, 2, 2);
+                // Tail
+                ctx.strokeStyle = '#ed8936'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(cx - 6, cy + 3); ctx.quadraticCurveTo(cx - 10, cy, cx - 8, cy - 4); ctx.stroke();
+            } else if (type === 'b') { // Giant Bat
+                let wing = Math.sin(frameCount * 0.3) * 4;
+                ctx.fillStyle = '#805ad5';
+                ctx.beginPath();
+                ctx.moveTo(cx, cy + bob);
+                ctx.lineTo(cx - 9, cy - 4 + wing);
+                ctx.lineTo(cx - 4, cy + 2);
+                ctx.lineTo(cx + 4, cy + 2);
+                ctx.lineTo(cx + 9, cy - 4 + wing);
+                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 2, cy - 1 + bob, 4, 2);
+            } else if (type === 'o') { // Orc
+                ctx.fillStyle = '#38a169';
+                ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
+                ctx.fillStyle = '#22543d'; ctx.fillRect(cx - 4, cy - 8 + bob, 8, 4); // helm
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 4 + bob, 4, 2); // eyes
+                // Axe
+                ctx.strokeStyle = '#718096'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(cx + 4, cy + 4); ctx.lineTo(cx + 8, cy - 5); ctx.stroke();
+            } else if (type === 'z') { // Zombie
+                ctx.fillStyle = '#48bb78';
+                ctx.fillRect(cx - 4, cy - 7 + bob, 8, 13);
+                ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 3, cy - 4 + bob, 6, 3); // dark sockets
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 1, cy - 3 + bob, 2, 2);
+            } else if (type === 'T') { // Cave Troll
+                ctx.fillStyle = '#2f855a';
+                ctx.fillRect(cx - 7, cy - 8 + bob, 14, 15);
+                ctx.fillStyle = '#22543d'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 4);
+                // Club
+                ctx.fillStyle = '#744210'; ctx.fillRect(cx + 6, cy - 6 + bob, 4, 12);
+            } else if (type === 'G') { // Ghost
+                let alpha = 0.5 + Math.sin(frameCount * 0.1) * 0.25;
+                ctx.fillStyle = `rgba(129, 230, 217, ${alpha})`;
+                ctx.beginPath(); ctx.arc(cx, cy - 3 + bob, 7, Math.PI, 0);
+                ctx.lineTo(cx + 7, cy + 6 + bob); ctx.lineTo(cx + 3, cy + 3 + bob);
+                ctx.lineTo(cx, cy + 7 + bob); ctx.lineTo(cx - 3, cy + 3 + bob);
+                ctx.lineTo(cx - 7, cy + 6 + bob); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 4, cy - 4 + bob, 3, 3); ctx.fillRect(cx + 1, cy - 4 + bob, 3, 3);
+            } else if (type === 'C') { // Gelatinous Cube
+                ctx.fillStyle = 'rgba(56, 178, 172, 0.55)';
+                ctx.strokeStyle = '#4fd1c5'; ctx.lineWidth = 1.5;
+                ctx.fillRect(cx - 8, cy - 8, 16, 16); ctx.strokeRect(cx - 8, cy - 8, 16, 16);
+                // Trapped bones inside
+                ctx.fillStyle = '#e2e8f0'; ctx.fillRect(cx - 3, cy - 2, 4, 4); ctx.fillRect(cx + 1, cy + 2, 3, 2);
+            } else if (type === 'H') { // Hydra
+                ctx.fillStyle = '#38a169';
+                ctx.fillRect(cx - 6, cy, 12, 8);
+                // 3 heads
+                for (let i = -1; i <= 1; i++) {
+                    let neckX = cx + i * 5, neckY = cy - 4 + Math.sin(frameCount * 0.2 + i) * 2;
+                    ctx.fillRect(neckX - 2, neckY - 4, 4, 6);
+                    ctx.fillStyle = '#e53e3e'; ctx.fillRect(neckX - 1, neckY - 3, 2, 2); ctx.fillStyle = '#38a169';
+                }
+            } else if (type === 'B') { // Balrog
+                ctx.fillStyle = '#dd6b20';
+                ctx.fillRect(cx - 7, cy - 8 + bob, 14, 15);
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 6);
+                // Horns
+                ctx.fillStyle = '#1a202c';
+                ctx.beginPath(); ctx.moveTo(cx - 5, cy - 8); ctx.lineTo(cx - 9, cy - 12); ctx.lineTo(cx - 3, cy - 8); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(cx + 5, cy - 8); ctx.lineTo(cx + 9, cy - 12); ctx.lineTo(cx + 3, cy - 8); ctx.fill();
+            } else if (type === 't') { // Titan
+                ctx.fillStyle = '#ecc94b';
+                ctx.fillRect(cx - 7, cy - 9 + bob, 14, 17);
+                ctx.fillStyle = '#63b3ed'; ctx.fillRect(cx - 3, cy - 5 + bob, 6, 4); // Glowing eyes
+            } else if (type === 'E') { // Beholder
+                ctx.fillStyle = '#805ad5';
+                ctx.beginPath(); ctx.arc(cx, cy + bob, 8, 0, Math.PI * 2); ctx.fill();
+                // Giant Eye
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy + bob, 4, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#e53e3e'; ctx.beginPath(); ctx.arc(cx, cy + bob, 2, 0, Math.PI * 2); ctx.fill();
+                // Eyestalks
+                ctx.strokeStyle = '#9f7aea'; ctx.lineWidth = 1.5;
+                for (let a = -2; a <= 2; a++) {
+                    let ex = cx + a * 3, ey = cy - 8 + bob;
+                    ctx.beginPath(); ctx.moveTo(cx + a * 2, cy - 6 + bob); ctx.lineTo(ex, ey - 3); ctx.stroke();
+                }
+            } else if (type === 'M') { // Mind Flayer
+                ctx.fillStyle = '#553c9a';
+                ctx.fillRect(cx - 6, cy - 7 + bob, 12, 14);
+                // Tentacles
+                ctx.fillStyle = '#b794f4';
+                ctx.fillRect(cx - 4, cy + bob, 2, 6); ctx.fillRect(cx - 1, cy + 1 + bob, 2, 6); ctx.fillRect(cx + 2, cy + bob, 2, 6);
+            } else {
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 5, cy - 5, 10, 10);
+            }
+        }
+
+        function drawItemSprite(px, py, type) {
+            let cx = px + TILE / 2, cy = py + TILE / 2;
+            let pulse = Math.sin(frameCount * 0.1) * 1.5;
+
+            if (type === 'stairs') {
+                ctx.fillStyle = '#ecc94b';
+                ctx.fillRect(cx - 7, cy + 3, 14, 3);
+                ctx.fillRect(cx - 5, cy, 10, 3);
+                ctx.fillRect(cx - 3, cy - 3, 6, 3);
+                // Arrow down
+                ctx.fillStyle = '#f6e05e';
+                ctx.beginPath(); ctx.moveTo(cx - 4, cy - 7); ctx.lineTo(cx + 4, cy - 7); ctx.lineTo(cx, cy - 2); ctx.fill();
+            } else if (type === 'shrine') {
+                ctx.fillStyle = '#4a5568'; ctx.fillRect(cx - 6, cy + 2, 12, 5);
+                // Floating crystal
+                ctx.fillStyle = '#38b2ac';
+                ctx.beginPath(); ctx.moveTo(cx, cy - 8 + pulse); ctx.lineTo(cx + 4, cy - 2 + pulse); ctx.lineTo(cx, cy + 4 + pulse); ctx.lineTo(cx - 4, cy - 2 + pulse); ctx.fill();
+            } else if (type === 'food') {
+                ctx.fillStyle = '#ed8936';
+                ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#e2e8f0'; ctx.fillRect(cx + 2, cy + 1, 4, 3); // Bone stick
+            } else if (type === 'gold') {
+                ctx.fillStyle = '#ecc94b';
+                ctx.beginPath(); ctx.arc(cx - 2, cy + 2, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(cx + 2, cy + 1, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(cx, cy - 2, 3, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fff'; ctx.fillRect(cx - 1, cy - 3, 1, 1);
+            }
+        }
+
+        function render() {
+            frameCount++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let biome = "";
+            if (dlevel >= 5 && dlevel < 10) biome = "moss";
+            else if (dlevel >= 10 && dlevel < 15) biome = "volcanic";
+            else if (dlevel >= 15 && dlevel < 20) biome = "void";
+            else if (dlevel >= 20) biome = "abyss";
+
+            if (state === 0) { // Main Menu
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#f6ad55'; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
+                ctx.fillText("K R O G U E", canvas.width / 2, 140);
+
+                ctx.fillStyle = '#cbd5e0'; ctx.font = '18px sans-serif';
+                ctx.fillText("Explore the Caverns of Chaos", canvas.width / 2, 185);
+
+                ctx.fillStyle = '#ecc94b'; ctx.font = 'bold 16px sans-serif';
+                ctx.fillText("Difficulty: " + diffStr[difficulty] + " (Press D to change)", canvas.width / 2, 260);
+
+                ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
+                ctx.fillText("Press [ENTER] to Start Journey", canvas.width / 2, 330);
+                ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
+                ctx.fillText("Press [L] to Load Saved Game", canvas.width / 2, 365);
+                return;
+            }
+
+            if (state === 2 || state === 3) {
+                ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.textAlign = 'center';
+                if (state === 2) {
+                    ctx.fillStyle = '#e53e3e'; ctx.font = 'bold 36px monospace';
+                    ctx.fillText("Y O U   D I E D", canvas.width / 2, 200);
+                    ctx.fillStyle = '#a0aec0'; ctx.font = '18px sans-serif';
+                    ctx.fillText(`Floor: ${dlevel}  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, canvas.width / 2, 250);
+                } else {
+                    ctx.fillStyle = '#ecc94b'; ctx.font = 'bold 36px monospace';
+                    ctx.fillText("V I C T O R Y !", canvas.width / 2, 200);
+                    ctx.fillStyle = '#68d391'; ctx.font = '18px sans-serif';
+                    ctx.fillText("You conquered the dungeon and retrieved glory!", canvas.width / 2, 250);
+                }
+                ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
+                ctx.fillText("Press [R] to Restart", canvas.width / 2, 320);
+                return;
+            }
+
+            // Draw dungeon map
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (map[y][x] === '#') {
+                        drawWallTile(x, y, biome);
+                    } else {
+                        drawFloorTile(x, y, biome);
+                    }
+                }
+            }
+
+            // Draw items
+            items.forEach(it => {
+                drawItemSprite(it.x * TILE, it.y * TILE, it.type);
+            });
+
+            // Draw monsters
+            monsters.forEach(m => {
+                drawMonsterSprite(m.x * TILE, m.y * TILE, m.ch);
+                // Health bar over monster
+                if (m.hp < m.max_hp) {
+                    let pct = Math.max(0, m.hp / m.max_hp);
+                    ctx.fillStyle = '#1a202c'; ctx.fillRect(m.x * TILE + 2, m.y * TILE, TILE - 4, 3);
+                    ctx.fillStyle = '#e53e3e'; ctx.fillRect(m.x * TILE + 2, m.y * TILE, (TILE - 4) * pct, 3);
+                }
+            });
+
+            // Draw player
+            drawPlayerSprite(player.x * TILE, player.y * TILE);
+
+            // Draw attack animations
+            for (let i = attackAnims.length - 1; i >= 0; i--) {
+                let a = attackAnims[i];
+                ctx.strokeStyle = '#fc8181'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(a.tx, a.ty); ctx.stroke();
+                a.life -= 0.15;
+                if (a.life <= 0) attackAnims.splice(i, 1);
+            }
+
+            // Draw particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1.0;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Draw floating text
+            for (let i = floatTexts.length - 1; i >= 0; i--) {
+                let ft = floatTexts[i];
+                ft.y -= 0.8; ft.life -= 0.03;
+                ctx.fillStyle = ft.color;
+                ctx.globalAlpha = Math.max(0, ft.life);
+                ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center';
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.globalAlpha = 1.0;
+                if (ft.life <= 0) floatTexts.splice(i, 1);
+            }
+
+            // Sync UI panel elements
+            document.getElementById('hp-bar').style.width = (Math.max(0, player.hp) / player.max_hp * 100) + '%';
+            document.getElementById('hp-text').innerText = `${player.hp}/${player.max_hp}`;
+            document.getElementById('food-bar').style.width = (Math.max(0, player.hunger) / player.max_hunger * 100) + '%';
+            document.getElementById('food-text').innerText = `${player.hunger}/${player.max_hunger}`;
+            document.getElementById('val-lvl').innerText = player.level;
+            document.getElementById('val-xp').innerText = player.xp;
+            document.getElementById('val-gold').innerText = player.gold;
+            document.getElementById('val-dlvl').innerText = dlevel;
+            document.getElementById('val-kills').innerText = total_kills;
+        }
+
+        function gameLoop() {
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
         function saveGame() {
             try {
                 localStorage.setItem('krogue_save', JSON.stringify({ player, monsters, items, map, difficulty, dlevel, msgs, total_kills }));
-                alert("Game Saved!");
+                addMsg("Game Saved successfully!", 'good');
             } catch(e) {
-                alert("Failed to save game.");
+                addMsg("Failed to save game.");
             }
         }
         
@@ -184,15 +584,15 @@
                     total_kills = d.total_kills || 0;
                     msgs = d.msgs || [];
                     state = 1;
-                    render();
+                    addMsg("Game Loaded successfully!", 'good');
                 } else {
-                    alert("No save found.");
+                    addMsg("No saved game found.");
                 }
             } catch(e) {
-                alert("Failed to load game.");
+                addMsg("Failed to load game.");
             }
         }
-        
+
         window.addEventListener('keydown', e => {
             if (state === 0) {
                 if (e.key === 'd' || e.key === 'D') difficulty = (difficulty + 1) % 3;
@@ -200,11 +600,12 @@
                     state = 1; dlevel = 1; 
                     player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
                     total_kills = 0;
-                    msgs = ["Welcome to KRogue!", "Find the stairs '>'. Defeat evil."];
+                    msgs = [];
+                    addMsg("Welcome to KRogue!", 'good');
+                    addMsg("Find the stairs '>'. Defeat evil.");
                     initMap(); 
                 }
                 if (e.key === 'l' || e.key === 'L') loadGame();
-                render();
             } else if (state === 1) {
                 let dx = 0, dy = 0;
                 let turnTaken = false;
@@ -212,30 +613,38 @@
                 if (e.key === 'ArrowDown') { dy = 1; turnTaken = true; }
                 if (e.key === 'ArrowLeft') { dx = -1; turnTaken = true; }
                 if (e.key === 'ArrowRight') { dx = 1; turnTaken = true; }
-                if (e.key === '.') turnTaken = true; // Wait
+                if (e.key === '.') turnTaken = true;
                 if (e.key === 's' || e.key === 'S') saveGame();
                 if (e.key === 'l' || e.key === 'L') loadGame();
                 
                 if (turnTaken) {
                     if (dx !== 0 || dy !== 0) {
                         let nx = player.x + dx, ny = player.y + dy;
-                        if (nx>=0 && ny>=0 && nx<W && ny<H && map[ny][nx] !== '#') {
+                        if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
                             let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
                             if (mIdx >= 0) {
                                 let dmg = 2 + player.level;
                                 monsters[mIdx].hp -= dmg;
                                 addMsg(`You hit ${monsters[mIdx].name} for ${dmg}.`);
+                                addFloatText(nx, ny, `-${dmg}`, '#e53e3e');
+                                addParticles(nx, ny, '#e53e3e', 10);
+                                addAttackAnim(player.x, player.y, nx, ny);
+
                                 if (monsters[mIdx].hp <= 0) {
-                                    addMsg(`${monsters[mIdx].name} dies!`);
-                                    if (Math.random() < 0.3) {
-                                        items.push({ x: monsters[mIdx].x, y: monsters[mIdx].y, type: 'gold', amount: Math.floor(Math.random()*10)+5 });
+                                    addMsg(`${monsters[mIdx].name} dies!`, 'good');
+                                    addFloatText(nx, ny, `+5 XP`, '#ecc94b');
+                                    if (Math.random() < 0.35) {
+                                        let goldAmt = Math.floor(Math.random() * 10) + 5;
+                                        items.push({ x: monsters[mIdx].x, y: monsters[mIdx].y, type: 'gold', amount: goldAmt });
                                     }
                                     player.xp += 5;
                                     total_kills++;
                                     monsters.splice(mIdx, 1);
                                     if (player.xp >= player.level * 10) {
                                         player.level++; player.max_hp += 5; player.hp = player.max_hp;
-                                        addMsg(`Welcome to level ${player.level}!`);
+                                        addMsg(`Welcome to level ${player.level}!`, 'good');
+                                        addFloatText(player.x, player.y, `LEVEL UP!`, '#68d391');
+                                        addParticles(player.x, player.y, '#ecc94b', 16);
                                     }
                                 }
                             } else {
@@ -246,32 +655,33 @@
                                     if (it.type === 'stairs') {
                                         dlevel++;
                                         if (dlevel > 25) {
-                                            state = 3; // Victory
-                                            render();
-                                            return;
+                                            state = 3; return;
                                         }
-                                        addMsg(`You descend to level ${dlevel}...`);
+                                        addMsg(`You descend to floor ${dlevel}...`, 'good');
                                         initMap();
-                                        render();
                                         return;
                                     } else if (it.type === 'gold') {
                                         player.gold += it.amount;
-                                        addMsg(`You pick up ${it.amount} gold.`);
+                                        addMsg(`You pick up ${it.amount} gold.`, 'good');
+                                        addFloatText(player.x, player.y, `+${it.amount}G`, '#ecc94b');
                                         items.splice(itIdx, 1);
                                     } else if (it.type === 'shrine') {
-                                        let buff = Math.floor(Math.random()*3);
-                                        if (buff === 0) { player.max_hp += 10; player.hp = player.max_hp; addMsg("Shrine glows! Health increased!"); }
-                                        else if (buff === 1) { player.xp += 50; addMsg("Shrine glows! You feel wiser!"); }
-                                        else { player.level++; player.max_hp += 5; player.hp = player.max_hp; addMsg("Shrine glows! You grew stronger!"); }
+                                        let buff = Math.floor(Math.random() * 3);
+                                        if (buff === 0) { player.max_hp += 10; player.hp = player.max_hp; addMsg("Shrine glows! Health increased!", 'good'); }
+                                        else if (buff === 1) { player.xp += 50; addMsg("Shrine glows! You feel wiser!", 'good'); }
+                                        else { player.level++; player.max_hp += 5; player.hp = player.max_hp; addMsg("Shrine glows! You grew stronger!", 'good'); }
+                                        addFloatText(player.x, player.y, `SHRINE BUFF!`, '#38b2ac');
+                                        addParticles(player.x, player.y, '#38b2ac', 18);
                                         items.splice(itIdx, 1);
                                         if (player.xp >= player.level * 10) {
                                             player.level++; player.max_hp += 5; player.hp = player.max_hp;
-                                            addMsg(`Welcome to level ${player.level}!`);
+                                            addMsg(`Welcome to level ${player.level}!`, 'good');
                                         }
                                     } else if (it.type === 'food') {
                                         player.hunger += 100;
                                         if (player.hunger > player.max_hunger) player.hunger = player.max_hunger;
-                                        addMsg("You eat a food ration.");
+                                        addMsg("You eat a food ration.", 'good');
+                                        addFloatText(player.x, player.y, `+100 FOOD`, '#ed8936');
                                         items.splice(itIdx, 1);
                                     }
                                 }
@@ -290,14 +700,12 @@
                         }
                     }
                     
-                    // monster turn
+                    // monster turns
                     monsters.forEach(m => {
                         m.turn++;
-                        if (m.ch === 'z' && m.turn % 2 === 0) return; // Zombie is slow
-                        if (m.ch === 'b') { // Bat is fast, does logic twice
-                            for(let step=0; step<2; step++) {
-                                doMonsterMove(m);
-                            }
+                        if (m.ch === 'z' && m.turn % 2 === 0) return;
+                        if (m.ch === 'b') {
+                            for (let step = 0; step < 2; step++) doMonsterMove(m);
                         } else {
                             doMonsterMove(m);
                         }
@@ -308,17 +716,18 @@
                         if (Math.random() < 0.7) {
                             let mdx = Math.sign(player.x - m.x);
                             let mdy = Math.sign(player.y - m.y);
-                            // Avoid diagonal for simplicity, pick one axis
                             if (mdx !== 0 && mdy !== 0) {
                                 if (Math.random() < 0.5) mdx = 0; else mdy = 0;
                             }
                             let nx = m.x + mdx; let ny = m.y + mdy;
                             if (nx === player.x && ny === player.y) {
-                                let dmg = 1 + difficulty + (dlevel>2?1:0);
+                                let dmg = 1 + difficulty + (dlevel > 2 ? 1 : 0);
                                 player.hp -= dmg;
                                 addMsg(`${m.name} hits you for ${dmg}.`);
+                                addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
+                                addParticles(player.x, player.y, '#fc8181', 6);
                                 if (player.hp <= 0) state = 2;
-                            } else if (nx>=0 && ny>=0 && nx<W && ny<H && map[ny][nx] !== '#') {
+                            } else if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
                                 if (!monsters.find(om => om.x === nx && om.y === ny)) {
                                     m.x = nx; m.y = ny;
                                 }
@@ -326,13 +735,13 @@
                         }
                     }
                 }
-                render();
             } else if (state === 2 || state === 3) {
-                if (e.key === 'r' || e.key === 'R') { state = 0; render(); }
+                if (e.key === 'r' || e.key === 'R') { state = 0; }
             }
         });
-        
-        render();
+
+        // Start render loop
+        gameLoop();
     </script>
 </body>
 </html>
