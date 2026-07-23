@@ -516,41 +516,41 @@
     </div>
   </div>
 
-  <nav class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('test')">⚡ Speed Test</button>
-    <button class="tab-btn" onclick="switchTab('arcade')">🎮 Arcade Cascade</button>
-    <button class="tab-btn" onclick="switchTab('custom')">📝 Custom Lessons</button>
-    <button class="tab-btn" onclick="switchTab('analytics')">📊 Analytics & Heatmap</button>
-    <button class="tab-btn" onclick="switchTab('history')">🏆 Leaderboard</button>
+  <nav class="nav-tabs" role="tablist" aria-label="Navigation Tabs">
+    <button class="tab-btn active" id="tab-btn-test" role="tab" aria-selected="true" aria-controls="tab-test" onclick="switchTab('test')">⚡ Speed Test</button>
+    <button class="tab-btn" id="tab-btn-arcade" role="tab" aria-selected="false" aria-controls="tab-arcade" onclick="switchTab('arcade')">🎮 Arcade Cascade</button>
+    <button class="tab-btn" id="tab-btn-custom" role="tab" aria-selected="false" aria-controls="tab-custom" onclick="switchTab('custom')">📝 Custom Lessons</button>
+    <button class="tab-btn" id="tab-btn-analytics" role="tab" aria-selected="false" aria-controls="tab-analytics" onclick="switchTab('analytics')">📊 Analytics & Heatmap</button>
+    <button class="tab-btn" id="tab-btn-history" role="tab" aria-selected="false" aria-controls="tab-history" onclick="switchTab('history')">🏆 Leaderboard</button>
   </nav>
 
   <div class="header-actions">
-    <button class="icon-btn" id="sound-btn" title="Toggle Sound" onclick="toggleSound()">🔊</button>
+    <button class="icon-btn" id="sound-btn" title="Toggle Sound" aria-label="Toggle Sound Effects" onclick="toggleSound()">🔊</button>
   </div>
 </header>
 
 <main>
   <!-- TAB 1: SPEED TEST -->
-  <div id="tab-test" class="tab-content active">
+  <div id="tab-test" class="tab-content active" role="tabpanel" aria-labelledby="tab-btn-test">
     <div class="controls-bar">
       <div class="control-group">
         <span class="control-label">Mode:</span>
         <div class="chip-group" id="mode-chips">
-          <button class="chip active" onclick="setTestMode('time', 15)">15s</button>
-          <button class="chip" onclick="setTestMode('time', 30)">30s</button>
-          <button class="chip" onclick="setTestMode('time', 60)">60s</button>
-          <button class="chip" onclick="setTestMode('words', 25)">25 Words</button>
-          <button class="chip" onclick="setTestMode('words', 50)">50 Words</button>
+          <button class="chip active" onclick="setTestMode(event, 'time', 15)">15s</button>
+          <button class="chip" onclick="setTestMode(event, 'time', 30)">30s</button>
+          <button class="chip" onclick="setTestMode(event, 'time', 60)">60s</button>
+          <button class="chip" onclick="setTestMode(event, 'words', 25)">25 Words</button>
+          <button class="chip" onclick="setTestMode(event, 'words', 50)">50 Words</button>
         </div>
       </div>
 
       <div class="control-group">
         <span class="control-label">Preset:</span>
         <div class="chip-group" id="preset-chips">
-          <button class="chip active" onclick="setPreset('common')">Common English</button>
-          <button class="chip" onclick="setPreset('code')">Code Snippets</button>
-          <button class="chip" onclick="setPreset('symbols')">Punctuation & Numbers</button>
-          <button class="chip" onclick="setPreset('custom')">Custom Import</button>
+          <button class="chip active" onclick="setPreset(event, 'common')">Common English</button>
+          <button class="chip" onclick="setPreset(event, 'code')">Code Snippets</button>
+          <button class="chip" onclick="setPreset(event, 'symbols')">Punctuation & Numbers</button>
+          <button class="chip" onclick="setPreset(event, 'custom')">Custom Import</button>
         </div>
       </div>
     </div>
@@ -582,11 +582,11 @@
     <!-- Typing Canvas Container -->
     <div class="card" style="padding: 16px;">
       <div class="typing-area" id="typing-area" onclick="focusInput()">
-        <input type="text" id="hidden-input" class="hidden-input" autocomplete="off" autocapitalize="none" spellcheck="false">
-        <div id="words-container"></div>
+        <input type="text" id="hidden-input" class="hidden-input" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Speed test typing input">
+        <div id="words-container" aria-live="polite"></div>
       </div>
       <div class="reset-bar">
-        <button class="btn btn-secondary" onclick="resetTest()">🔄 Restart Test (Esc)</button>
+        <button class="btn btn-secondary" aria-label="Restart typing test" onclick="resetTest()">🔄 Restart Test (Esc)</button>
       </div>
     </div>
 
@@ -594,32 +594,32 @@
     <div class="card">
       <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-secondary);">Real-Time Performance Trajectory</h3>
       <div class="chart-container">
-        <canvas id="wpm-chart"></canvas>
+        <canvas id="wpm-chart" role="img" aria-label="Real-time WPM speed graph"></canvas>
       </div>
     </div>
   </div>
 
   <!-- TAB 2: ARCADE CASCADE -->
-  <div id="tab-arcade" class="tab-content">
+  <div id="tab-arcade" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-arcade">
     <div class="card arcade-container">
       <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; max-width: 600px;">
         <h2 style="font-size: 18px; font-weight: 700;">Arcade Speed Typing Cascade</h2>
         <span class="badge">Classic Win32 Mode</span>
       </div>
-      <canvas id="arcade-canvas" width="600" height="450"></canvas>
+      <canvas id="arcade-canvas" width="600" height="450" role="img" aria-label="Arcade falling words game canvas"></canvas>
       <div style="display: flex; gap: 12px;">
-        <button class="btn" onclick="startArcadeGame()">🎮 New Arcade Game</button>
+        <button class="btn" onclick="startArcadeGame()" aria-label="Start new arcade game">🎮 New Arcade Game</button>
       </div>
     </div>
   </div>
 
   <!-- TAB 3: CUSTOM LESSONS -->
-  <div id="tab-custom" class="tab-content">
+  <div id="tab-custom" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-custom">
     <div class="two-col">
       <div class="card">
         <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Create / Paste Custom Lesson</h3>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Enter custom text, code, or quotes to build a custom speed drill.</p>
-        <textarea id="custom-text-input" class="editor-textarea" placeholder="Paste your text or code snippet here..."></textarea>
+        <textarea id="custom-text-input" class="editor-textarea" placeholder="Paste your text or code snippet here..." aria-label="Custom lesson text content"></textarea>
         <div style="display: flex; gap: 10px; margin-top: 14px;">
           <button class="btn" onclick="saveCustomLesson()">💾 Save & Load Lesson</button>
           <button class="btn btn-secondary" onclick="exportCustomLesson()">📤 Export JSON</button>
@@ -629,8 +629,8 @@
       <div class="card">
         <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Import Lesson File</h3>
         <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Select a text (.txt) or KType lesson pack (.json) file.</p>
-        <input type="file" id="lesson-file-input" accept=".txt,.json" style="display: none;" onchange="handleFileImport(event)">
-        <div style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; background: rgba(0,0,0,0.2);" onclick="document.getElementById('lesson-file-input').click()">
+        <input type="file" id="lesson-file-input" accept=".txt,.json" style="display: none;" onchange="handleFileImport(event)" aria-label="Lesson file picker">
+        <div role="button" tabindex="0" style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; background: rgba(0,0,0,0.2);" onclick="document.getElementById('lesson-file-input').click()" onkeydown="if(event.key==='Enter'||event.key===' ') document.getElementById('lesson-file-input').click()">
           <div style="font-size: 32px; margin-bottom: 8px;">📂</div>
           <div style="font-size: 14px; font-weight: 600;">Click to Browse or Drag & Drop File</div>
           <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Supports Plain Text (.txt) or KType Lesson JSON</div>
@@ -640,7 +640,7 @@
   </div>
 
   <!-- TAB 4: ANALYTICS & HEATMAP -->
-  <div id="tab-analytics" class="tab-content">
+  <div id="tab-analytics" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-analytics">
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="font-size: 18px; font-weight: 700;">Finger Weakness & Error Heatmap Analysis</h3>
@@ -671,7 +671,7 @@
   </div>
 
   <!-- TAB 5: LEADERBOARD & HISTORY -->
-  <div id="tab-history" class="tab-content">
+  <div id="tab-history" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-history">
     <div class="card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
         <h3 style="font-size: 18px; font-weight: 700;">Performance History & Leaderboard</h3>
@@ -798,6 +798,7 @@ let wordIndex = 0;
 let charIndex = 0;
 let isTestActive = false;
 let testStartTime = null;
+
 let testTimer = null;
 let timeRemaining = 30;
 
@@ -808,17 +809,35 @@ let errorCount = 0;
 let chartDataWPM = [];
 let chartDataAcc = [];
 
-let keyHeatmapData = JSON.parse(localStorage.getItem('ktype_heatmap') || '{}');
-let testHistory = JSON.parse(localStorage.getItem('ktype_history') || '[]');
+let keyHeatmapData = {};
+let testHistory = [];
+
+try {
+  keyHeatmapData = JSON.parse(localStorage.getItem('ktype_heatmap') || '{}');
+} catch (e) {
+  keyHeatmapData = {};
+}
+
+try {
+  testHistory = JSON.parse(localStorage.getItem('ktype_history') || '[]');
+} catch (e) {
+  testHistory = [];
+}
 
 // --- Navigation Tabs ---
 function switchTab(tabId) {
   currentTab = tabId;
-  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-selected', 'false');
+  });
   document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-  const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
-  if (btn) btn.classList.add('active');
+  const btn = document.getElementById(`tab-btn-${tabId}`);
+  if (btn) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+  }
 
   const target = document.getElementById(`tab-${tabId}`);
   if (target) target.classList.add('active');
@@ -835,20 +854,22 @@ function switchTab(tabId) {
 }
 
 // --- Speed Test Engine ---
-function setTestMode(type, val) {
+function setTestMode(evt, type, val) {
   testModeType = type;
   testModeVal = val;
 
   document.querySelectorAll('#mode-chips .chip').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
+  const target = (evt && evt.target) ? evt.target : event.target;
+  if (target) target.classList.add('active');
 
   resetTest();
 }
 
-function setPreset(presetKey) {
+function setPreset(evt, presetKey) {
   currentPreset = presetKey;
   document.querySelectorAll('#preset-chips .chip').forEach(c => c.classList.remove('active'));
-  event.target.classList.add('active');
+  const target = (evt && evt.target) ? evt.target : event.target;
+  if (target) target.classList.add('active');
 
   resetTest();
 }
@@ -978,7 +999,7 @@ function finishTest() {
   isTestActive = false;
   playSound('complete');
 
-  const elapsedSec = (Date.now() - testStartTime) / 1000;
+  const elapsedSec = Math.max(0.1, (Date.now() - testStartTime) / 1000);
   const minutes = elapsedSec / 60;
   const finalWpm = Math.max(0, Math.round((correctKeystrokes / 5) / minutes));
   const finalAcc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
@@ -999,8 +1020,10 @@ function finishTest() {
 
   testHistory.unshift(session);
   if (testHistory.length > 50) testHistory.pop();
-  localStorage.setItem('ktype_history', JSON.stringify(testHistory));
-  localStorage.setItem('ktype_heatmap', JSON.stringify(keyHeatmapData));
+  try {
+    localStorage.setItem('ktype_history', JSON.stringify(testHistory));
+    localStorage.setItem('ktype_heatmap', JSON.stringify(keyHeatmapData));
+  } catch(e) {}
 }
 
 // Input Listener
@@ -1024,7 +1047,14 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
     charIndex = 0;
     e.target.value = '';
 
-    if (wordIndex >= testWords.length) {
+    if (testModeType === 'time' && wordIndex >= testWords.length - 10) {
+      // Replenish words dynamically for time mode
+      let source = PRESETS[currentPreset] || PRESETS.common;
+      for (let i = 0; i < 50; i++) {
+        testWords.push(source[Math.floor(Math.random() * source.length)]);
+      }
+      renderWords();
+    } else if (wordIndex >= testWords.length) {
       finishTest();
     } else {
       updateCaretPosition();
@@ -1064,16 +1094,77 @@ document.addEventListener('keydown', (e) => {
       if (charSpan) charSpan.className = 'char';
       updateCaretPosition();
     }
+  } else if (currentTab === 'arcade' && arcadeRunning) {
+    if (e.key === 'Escape') {
+      startArcadeGame();
+      return;
+    }
+    const key = e.key.toLowerCase();
+    if (key.length === 1 && key >= 'a' && key <= 'z') {
+      if (!keyHeatmapData[key]) keyHeatmapData[key] = { hits: 0, errors: 0 };
+
+      if (arcadeTarget !== -1 && arcadeWords[arcadeTarget]) {
+        const item = arcadeWords[arcadeTarget];
+        if (key === item.word[item.matchLen]) {
+          item.matchLen++;
+          arcadeCombo++;
+          keyHeatmapData[key].hits++;
+          playSound('key');
+          if (item.matchLen === item.word.length) {
+            arcadeScore += 10 + arcadeCombo;
+            arcadeWords.splice(arcadeTarget, 1);
+            arcadeTarget = -1;
+            playSound('complete');
+          }
+        } else {
+          arcadeCombo = 0;
+          keyHeatmapData[key].errors++;
+          playSound('error');
+        }
+      } else {
+        // Find closest falling word starting with this key
+        let foundIdx = -1;
+        let maxY = -1000;
+        arcadeWords.forEach((wObj, idx) => {
+          if (wObj.matchLen === 0 && wObj.word[0] === key) {
+            if (wObj.y > maxY) { maxY = wObj.y; foundIdx = idx; }
+          }
+        });
+        if (foundIdx !== -1) {
+          arcadeTarget = foundIdx;
+          const item = arcadeWords[arcadeTarget];
+          item.matchLen = 1;
+          arcadeCombo++;
+          keyHeatmapData[key].hits++;
+          playSound('key');
+          if (item.matchLen === item.word.length) {
+            arcadeScore += 10 + arcadeCombo;
+            arcadeWords.splice(arcadeTarget, 1);
+            arcadeTarget = -1;
+            playSound('complete');
+          }
+        } else {
+          arcadeCombo = 0;
+          keyHeatmapData[key].errors++;
+          playSound('error');
+        }
+      }
+    }
   }
 });
 
 // --- WPM Chart Rendering ---
 function drawChart() {
   const canvas = document.getElementById('wpm-chart');
-  if (!canvas) return;
+  if (!canvas || !canvas.parentElement) return;
   const ctx = canvas.getContext('2d');
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = canvas.parentElement.clientHeight;
+
+  const parentW = canvas.parentElement.clientWidth || 400;
+  const parentH = canvas.parentElement.clientHeight || 200;
+  if (canvas.width !== parentW || canvas.height !== parentH) {
+    canvas.width = parentW;
+    canvas.height = parentH;
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1184,7 +1275,7 @@ function renderHeatmap() {
 
 function resetHeatmap() {
   keyHeatmapData = {};
-  localStorage.removeItem('ktype_heatmap');
+  try { localStorage.removeItem('ktype_heatmap'); } catch(e) {}
   renderHeatmap();
 }
 
@@ -1201,13 +1292,15 @@ function exportCustomLesson() {
   const text = document.getElementById('custom-text-input').value.trim();
   if (!text) return alert('No text to export.');
 
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ title: "KType Custom Lesson", words: text.split(/\s+/) }, null, 2));
+  const blob = new Blob([JSON.stringify({ title: "KType Custom Lesson", words: text.split(/\s+/) }, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
   const downloadAnchor = document.createElement('a');
-  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("href", url);
   downloadAnchor.setAttribute("download", "ktype_lesson.json");
   document.body.appendChild(downloadAnchor);
   downloadAnchor.click();
   downloadAnchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 function handleFileImport(e) {
@@ -1274,12 +1367,13 @@ function exportHistoryCSV() {
   a.href = url;
   a.download = 'ktype_history.csv';
   a.click();
+  URL.revokeObjectURL(url);
 }
 
 function clearHistory() {
   if (confirm('Clear all performance history logs?')) {
     testHistory = [];
-    localStorage.removeItem('ktype_history');
+    try { localStorage.removeItem('ktype_history'); } catch(e) {}
     renderHistoryTable();
   }
 }
@@ -1291,6 +1385,7 @@ let arcadeScore = 0;
 let arcadeLives = 3;
 let arcadeCombo = 0;
 let arcadeTarget = -1;
+let arcadeAnimationFrame = null;
 
 function initArcadeCanvas() {
   const canvas = document.getElementById('arcade-canvas');
@@ -1305,6 +1400,7 @@ function initArcadeCanvas() {
 }
 
 function startArcadeGame() {
+  if (arcadeAnimationFrame) cancelAnimationFrame(arcadeAnimationFrame);
   arcadeRunning = true;
   arcadeScore = 0;
   arcadeLives = 3;
@@ -1312,7 +1408,7 @@ function startArcadeGame() {
   arcadeTarget = -1;
   arcadeWords = [];
   spawnArcadeWord();
-  requestAnimationFrame(arcadeLoop);
+  arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
 }
 
 function spawnArcadeWord() {
@@ -1346,15 +1442,17 @@ function arcadeLoop() {
   ctx.font = 'bold 22px Consolas';
   ctx.textAlign = 'left';
 
-  arcadeWords.forEach((item, idx) => {
+  for (let idx = arcadeWords.length - 1; idx >= 0; idx--) {
+    const item = arcadeWords[idx];
     item.y += item.speed;
 
     if (item.y > canvas.height - 30) {
       arcadeLives--;
       arcadeWords.splice(idx, 1);
       if (arcadeTarget === idx) arcadeTarget = -1;
+      else if (arcadeTarget > idx) arcadeTarget--;
       if (arcadeLives <= 0) arcadeRunning = false;
-      return;
+      continue;
     }
 
     const matched = item.word.substring(0, item.matchLen);
@@ -1365,7 +1463,7 @@ function arcadeLoop() {
     const mWidth = ctx.measureText(matched).width;
     ctx.fillStyle = (arcadeTarget === idx) ? '#f59e0b' : '#f8fafc';
     ctx.fillText(remaining, item.x + mWidth, item.y);
-  });
+  }
 
   if (Math.random() < 0.03) spawnArcadeWord();
 
@@ -1380,7 +1478,7 @@ function arcadeLoop() {
     ctx.textAlign = 'center';
     ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
   } else {
-    requestAnimationFrame(arcadeLoop);
+    arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
   }
 }
 

@@ -140,6 +140,10 @@ void StartSpeedTest() {
     testStartTime = GetTickCount();
 }
 
+// --- Persistent Font Handles ---
+HFONT g_fontNav = NULL;
+HFONT g_fontMain = NULL;
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE:
@@ -148,6 +152,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             memset(fWords, 0, sizeof(fWords));
             memset(keyHits, 0, sizeof(keyHits));
             memset(keyErrors, 0, sizeof(keyErrors));
+            g_fontNav = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            g_fontMain = CreateFontA(22, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
             SpawnArcadeWord();
             ResetSpeedTest();
             SetTimer(hwnd, 1, 30, NULL);
@@ -178,11 +184,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DWORD elapsedSec = (GetTickCount() - testStartTime) / 1000;
                     if (elapsedSec >= (DWORD)testDuration) {
                         testActive = 0;
-                        DWORD minutes = elapsedSec / 60;
                         DWORD wpm = 0;
-                        if (minutes > 0) {
-                            wpm = (correctTyped / 5) / minutes;
-                        } else {
+                        if (elapsedSec > 0) {
                             wpm = (correctTyped / 5) * 60 / elapsedSec;
                         }
                         if (wpm > bestWPM) {
@@ -228,11 +231,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int keyIdx = c - 'a';
                         if (targetWord != -1 && fWords[targetWord].active) {
                             const char* cur = commonWords[fWords[targetWord].wordIdx];
-                            if (c == cur[fWords[targetWord].matchLen]) {
+                            int curLen = StrLen(cur);
+                            if (fWords[targetWord].matchLen < curLen && c == cur[fWords[targetWord].matchLen]) {
                                 fWords[targetWord].matchLen++;
                                 arcadeCombo++;
                                 keyHits[keyIdx]++;
-                                if (fWords[targetWord].matchLen == StrLen(cur)) {
+                                if (fWords[targetWord].matchLen == curLen) {
                                     arcadeScore += 10 + arcadeCombo;
                                     if ((DWORD)arcadeScore > highArcadeScore) {
                                         highArcadeScore = (DWORD)arcadeScore;
@@ -273,6 +277,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 const char** pool = (currentMode == 2) ? codeWords : commonWords;
                 const char* curWord = pool[testWordPool[testWordIndex]];
+                int curWordLen = StrLen(curWord);
 
                 if (c == ' ') {
                     testWordIndex++;
@@ -280,20 +285,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (testWordIndex >= 40) testWordIndex = 0;
                 } else if (c >= 32 && c <= 126) {
                     totalTyped++;
-                    char expected = curWord[testCharIndex];
-                    if (expected >= 'A' && expected <= 'Z') expected += 32;
-                    char typedLow = c;
-                    if (typedLow >= 'A' && typedLow <= 'Z') typedLow += 32;
+                    if (testCharIndex < curWordLen) {
+                        char expected = curWord[testCharIndex];
+                        char typedLow = c;
+                        if (typedLow >= 'A' && typedLow <= 'Z') typedLow += 32;
+                        char expLow = expected;
+                        if (expLow >= 'A' && expLow <= 'Z') expLow += 32;
 
-                    if (typedLow >= 'a' && typedLow <= 'z') {
-                        int kIdx = typedLow - 'a';
-                        if (typedLow == expected) {
+                        if (typedLow == expLow) {
                             correctTyped++;
-                            keyHits[kIdx]++;
+                            if (typedLow >= 'a' && typedLow <= 'z') keyHits[typedLow - 'a']++;
                         } else {
                             testErrors++;
-                            keyErrors[kIdx]++;
+                            if (typedLow >= 'a' && typedLow <= 'z') keyErrors[typedLow - 'a']++;
                         }
+                    } else {
+                        testErrors++;
                     }
                     testCharIndex++;
                 }
@@ -324,8 +331,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             FillRect(memDC, &hRect, headerBg);
             DeleteObject(headerBg);
 
-            HFONT fontNav = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            HGDIOBJ oldFont = SelectObject(memDC, fontNav);
+            HGDIOBJ oldFont = SelectObject(memDC, g_fontNav ? g_fontNav : GetStockObject(DEFAULT_GUI_FONT));
 
             SetTextColor(memDC, (currentMode == 0) ? RGB(0, 242, 254) : RGB(148, 163, 184));
             TextOutA(memDC, 15, 10, "F1: Arcade", 10);
@@ -339,8 +345,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, (currentMode == 3) ? RGB(0, 242, 254) : RGB(148, 163, 184));
             TextOutA(memDC, 410, 10, "F4: Heatmap", 11);
 
-            HFONT fontMain = CreateFontA(22, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Consolas");
-            SelectObject(memDC, fontMain);
+            if (g_fontMain) SelectObject(memDC, g_fontMain);
 
             if (currentMode == 0) { // Arcade Mode Render
                 if (arcadeLives > 0) {
@@ -525,8 +530,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             SelectObject(memDC, oldFont);
-            DeleteObject(fontMain);
-            DeleteObject(fontNav);
 
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
             SelectObject(memDC, oldBM);
@@ -542,6 +545,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_DESTROY:
             KillTimer(hwnd, 1);
+            if (g_fontNav) DeleteObject(g_fontNav);
+            if (g_fontMain) DeleteObject(g_fontMain);
             PostQuitMessage(0);
             break;
 
