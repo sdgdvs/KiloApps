@@ -1,165 +1,1395 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KType</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KType Studio - Professional Typing Suite & Arcade</title>
 <style>
-  body { margin: 0; background-color: #141428; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; user-select: none; }
-  canvas { background-color: #141428; box-shadow: 0 4px 10px rgba(0,0,0,0.5); border: 1px solid #333; }
+  :root {
+    --bg-dark: #0b0d14;
+    --bg-card: rgba(20, 24, 38, 0.75);
+    --bg-card-hover: rgba(30, 36, 56, 0.85);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --accent-cyan: #00f2fe;
+    --accent-blue: #4facfe;
+    --accent-purple: #9d4edd;
+    --accent-green: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-red: #ef4444;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-sans); }
+
+  body {
+    background-color: var(--bg-dark);
+    background-image: 
+      radial-gradient(at 10% 10%, rgba(0, 242, 254, 0.08) 0px, transparent 50%),
+      radial-gradient(at 90% 90%, rgba(157, 78, 221, 0.08) 0px, transparent 50%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Header / Nav */
+  header {
+    background: rgba(11, 13, 20, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-logo {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 20px;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+  }
+
+  .brand-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(to right, #fff, var(--text-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .nav-tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.05); }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    color: #0b0d14;
+    font-weight: 700;
+    box-shadow: 0 0 12px rgba(0, 242, 254, 0.3);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .icon-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.1); }
+  .icon-btn.active { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+
+  /* Main Container */
+  main {
+    flex: 1;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: flex; flex-direction: column; gap: 20px; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Glass Card */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Controls Toolbar */
+  .controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: rgba(15, 18, 28, 0.8);
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .control-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+
+  .chip-group {
+    display: flex;
+    gap: 6px;
+  }
+
+  .chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .chip:hover { color: var(--text-primary); border-color: rgba(255, 255, 255, 0.2); }
+  .chip.active {
+    background: rgba(0, 242, 254, 0.15);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+
+  /* Metrics Panel */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .metric-card {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .metric-value {
+    font-size: 32px;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--accent-cyan);
+    line-height: 1.1;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  /* Typing Test Display */
+  .typing-area {
+    min-height: 180px;
+    font-family: var(--font-mono);
+    font-size: 22px;
+    line-height: 1.8;
+    color: var(--text-muted);
+    padding: 24px;
+    background: rgba(5, 7, 12, 0.6);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    position: relative;
+    user-select: none;
+    cursor: text;
+    overflow: hidden;
+  }
+
+  .typing-area:focus-within {
+    border-color: rgba(0, 242, 254, 0.4);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.1);
+  }
+
+  .hidden-input {
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    cursor: default;
+  }
+
+  .word {
+    display: inline-block;
+    margin-right: 12px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .char {
+    position: relative;
+    transition: color 0.1s ease;
+  }
+
+  .char.correct { color: var(--accent-green); }
+  .char.incorrect { color: var(--accent-red); background: rgba(239, 68, 68, 0.2); border-radius: 2px; }
+  .char.extra { color: var(--accent-amber); opacity: 0.8; }
+  
+  .caret {
+    display: inline-block;
+    width: 2.5px;
+    height: 24px;
+    background: var(--accent-cyan);
+    position: absolute;
+    top: 4px;
+    animation: blink 1s infinite;
+    box-shadow: 0 0 8px var(--accent-cyan);
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .reset-bar {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    color: #0b0d14;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3); }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+  }
+  .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); box-shadow: none; }
+  .btn-danger { background: var(--accent-red); color: #fff; }
+  .btn-danger:hover { opacity: 0.9; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+
+  /* Arcade Canvas Container */
+  .arcade-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #arcade-canvas {
+    background: #07090e;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Keyboard Heatmap */
+  .keyboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    background: rgba(5, 7, 12, 0.8);
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid var(--border-color);
+  }
+
+  .kbd-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .key {
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .key .err-count {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .key.wide-15 { width: 66px; }
+  .key.wide-20 { width: 88px; }
+  .key.wide-space { width: 260px; }
+
+  .key.heat-0 { border-color: rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+  .key.heat-low { border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.15); color: var(--accent-amber); }
+  .key.heat-high { border-color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.3); color: #fff; box-shadow: 0 0 10px rgba(239, 68, 68, 0.3); }
+
+  /* Chart Canvas */
+  .chart-container {
+    width: 100%;
+    height: 220px;
+    position: relative;
+  }
+
+  #wpm-chart {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+  }
+
+  /* Table styles */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .data-table th {
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--text-muted);
+    padding: 12px 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .data-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+  }
+
+  .data-table tr:hover td { color: var(--text-primary); background: rgba(255, 255, 255, 0.02); }
+
+  /* Textarea / Code Editor */
+  .editor-textarea {
+    width: 100%;
+    height: 140px;
+    background: rgba(5, 7, 12, 0.8);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+  }
+
+  .editor-textarea:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 768px) {
+    .two-col { grid-template-columns: 1fr; }
+    header { flex-direction: column; gap: 12px; }
+  }
+
+  .finger-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+    justify-content: center;
+  }
+
+  .finger-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .badge {
+    background: rgba(0, 242, 254, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
-<canvas id="cvs" width="400" height="500"></canvas>
+
+<header>
+  <div class="brand">
+    <div class="brand-logo">K</div>
+    <div>
+      <div class="brand-title">KType Studio</div>
+    </div>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('test')">⚡ Speed Test</button>
+    <button class="tab-btn" onclick="switchTab('arcade')">🎮 Arcade Cascade</button>
+    <button class="tab-btn" onclick="switchTab('custom')">📝 Custom Lessons</button>
+    <button class="tab-btn" onclick="switchTab('analytics')">📊 Analytics & Heatmap</button>
+    <button class="tab-btn" onclick="switchTab('history')">🏆 Leaderboard</button>
+  </nav>
+
+  <div class="header-actions">
+    <button class="icon-btn" id="sound-btn" title="Toggle Sound" onclick="toggleSound()">🔊</button>
+  </div>
+</header>
+
+<main>
+  <!-- TAB 1: SPEED TEST -->
+  <div id="tab-test" class="tab-content active">
+    <div class="controls-bar">
+      <div class="control-group">
+        <span class="control-label">Mode:</span>
+        <div class="chip-group" id="mode-chips">
+          <button class="chip active" onclick="setTestMode('time', 15)">15s</button>
+          <button class="chip" onclick="setTestMode('time', 30)">30s</button>
+          <button class="chip" onclick="setTestMode('time', 60)">60s</button>
+          <button class="chip" onclick="setTestMode('words', 25)">25 Words</button>
+          <button class="chip" onclick="setTestMode('words', 50)">50 Words</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <span class="control-label">Preset:</span>
+        <div class="chip-group" id="preset-chips">
+          <button class="chip active" onclick="setPreset('common')">Common English</button>
+          <button class="chip" onclick="setPreset('code')">Code Snippets</button>
+          <button class="chip" onclick="setPreset('symbols')">Punctuation & Numbers</button>
+          <button class="chip" onclick="setPreset('custom')">Custom Import</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Metrics Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-value" id="live-wpm">0</div>
+        <div class="metric-label">WPM</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="live-acc">100%</div>
+        <div class="metric-label">Accuracy</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="live-timer">30s</div>
+        <div class="metric-label">Time Remaining</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="live-raw">0</div>
+        <div class="metric-label">Raw CPM</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="live-errors" style="color: var(--accent-red)">0</div>
+        <div class="metric-label">Mistypes</div>
+      </div>
+    </div>
+
+    <!-- Typing Canvas Container -->
+    <div class="card" style="padding: 16px;">
+      <div class="typing-area" id="typing-area" onclick="focusInput()">
+        <input type="text" id="hidden-input" class="hidden-input" autocomplete="off" autocapitalize="none" spellcheck="false">
+        <div id="words-container"></div>
+      </div>
+      <div class="reset-bar">
+        <button class="btn btn-secondary" onclick="resetTest()">🔄 Restart Test (Esc)</button>
+      </div>
+    </div>
+
+    <!-- Live Session Real-time Graph -->
+    <div class="card">
+      <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-secondary);">Real-Time Performance Trajectory</h3>
+      <div class="chart-container">
+        <canvas id="wpm-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: ARCADE CASCADE -->
+  <div id="tab-arcade" class="tab-content">
+    <div class="card arcade-container">
+      <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; max-width: 600px;">
+        <h2 style="font-size: 18px; font-weight: 700;">Arcade Speed Typing Cascade</h2>
+        <span class="badge">Classic Win32 Mode</span>
+      </div>
+      <canvas id="arcade-canvas" width="600" height="450"></canvas>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn" onclick="startArcadeGame()">🎮 New Arcade Game</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: CUSTOM LESSONS -->
+  <div id="tab-custom" class="tab-content">
+    <div class="two-col">
+      <div class="card">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Create / Paste Custom Lesson</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Enter custom text, code, or quotes to build a custom speed drill.</p>
+        <textarea id="custom-text-input" class="editor-textarea" placeholder="Paste your text or code snippet here..."></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+          <button class="btn" onclick="saveCustomLesson()">💾 Save & Load Lesson</button>
+          <button class="btn btn-secondary" onclick="exportCustomLesson()">📤 Export JSON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Import Lesson File</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Select a text (.txt) or KType lesson pack (.json) file.</p>
+        <input type="file" id="lesson-file-input" accept=".txt,.json" style="display: none;" onchange="handleFileImport(event)">
+        <div style="border: 2px dashed var(--border-color); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; background: rgba(0,0,0,0.2);" onclick="document.getElementById('lesson-file-input').click()">
+          <div style="font-size: 32px; margin-bottom: 8px;">📂</div>
+          <div style="font-size: 14px; font-weight: 600;">Click to Browse or Drag & Drop File</div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Supports Plain Text (.txt) or KType Lesson JSON</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: ANALYTICS & HEATMAP -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;">Finger Weakness & Error Heatmap Analysis</h3>
+        <button class="btn btn-secondary" onclick="resetHeatmap()">Clear Heatmap Stats</button>
+      </div>
+
+      <!-- QWERTY Heatmap -->
+      <div class="keyboard-container" id="qwerty-heatmap">
+        <!-- Rows populated by JS -->
+      </div>
+
+      <!-- Weakness Summary -->
+      <div class="two-col" style="margin-top: 20px;">
+        <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <h4 style="font-size: 14px; color: var(--accent-red); margin-bottom: 8px;">⚠️ Top Weakest Keys</h4>
+          <ul id="weakest-keys-list" style="list-style: none; font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary);">
+            <li>No data recorded yet. Take a test!</li>
+          </ul>
+        </div>
+        <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color);">
+          <h4 style="font-size: 14px; color: var(--accent-cyan); margin-bottom: 8px;">💡 Targeted Recommendations</h4>
+          <div id="recommendations-text" style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+            Take speed tests to generate detailed finger diagnostics and key stroke accuracy metrics.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: LEADERBOARD & HISTORY -->
+  <div id="tab-history" class="tab-content">
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;">Performance History & Leaderboard</h3>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-secondary" onclick="exportHistoryCSV()">📥 Export CSV</button>
+          <button class="btn btn-danger" onclick="clearHistory()">Clear History</button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Mode / Preset</th>
+              <th>WPM</th>
+              <th>Accuracy</th>
+              <th>Raw CPM</th>
+              <th>Errors</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No test sessions completed yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
 <script>
-  const cvs = document.getElementById('cvs');
-  const ctx = cvs.getContext('2d');
-  
-  const words = [
-      "hello", "world", "kilo", "system", "typing",
-      "speed", "code", "native", "win32", "game",
-      "fast", "keyboard", "monitor", "software", "mouse",
-      "hardware", "interface", "compiler", "linker", "binary",
-      "execute", "process", "thread", "memory", "storage",
-      "network", "server", "client", "packet", "router"
-  ];
-  
-  let score = 0;
-  let lives = 3;
-  
-  const MAX_WORDS = 5;
-  let fWords = [];
-  for (let i = 0; i < MAX_WORDS; i++) {
-      fWords.push({ active: false, word: "", y: 0, x: 0, matchLen: 0 });
+// --- Presets Data ---
+const PRESETS = {
+  common: [
+    "the", "be", "of", "and", "a", "to", "in", "he", "have", "it", "that", "for", "they", "i", "with", "as", "not", "on", "she", "at", "by", "this", "we", "you", "do", "but", "from", "or", "which", "one", "would", "all", "will", "there", "say", "who", "make", "when", "can", "more", "if", "no", "man", "out", "other", "so", "what", "time", "up", "go", "about", "than", "into", "could", "state", "only", "new", "year", "some", "take", "come", "these", "know", "see", "use", "get", "like", "then", "first", "work", "life", "over", "think", "also", "back", "after", "use", "two", "how", "our", "work", "first", "well", "way", "even", "new", "want", "because", "any", "these", "give", "day", "most", "us"
+  ],
+  code: [
+    "function", "const", "let", "return", "document.getElementById", "addEventListener", "canvas.getContext('2d')", "if (active == true)", "for (let i = 0; i < count; i++)", "async function fetchData()", "try { process() } catch (err)", "import { useState } from 'react'", "struct Node* next = NULL;", "printf(\"%d\\n\", result);", "while (lives > 0) { update(); }", "Array.prototype.map.call", "border-radius: 12px;", "box-shadow: 0 4px 10px rgba(0,0,0,0.5);"
+  ],
+  symbols: [
+    "user@domain.com", "$100.50", "value[idx] >= 45;", "(a + b) * (c / d)", "#define WIN32_LEAN_AND_MEAN", "127.0.0.1:8080", "{ key: 'value', id: 99 }", "System.out.println(\"Hi!\");", "x = y ? true : false;", "v1.0.4-beta"
+  ],
+  custom: ["Type your custom lesson text to practice here."]
+};
+
+// --- Keyboard Layout & Finger Mapping ---
+const KEYBOARD_LAYOUT = [
+  ["q","w","e","r","t","y","u","i","o","p"],
+  ["a","s","d","f","g","h","j","k","l"],
+  ["z","x","c","v","b","n","m"]
+];
+
+const FINGER_MAP = {
+  q: 'L Pinky', a: 'L Pinky', z: 'L Pinky', 1: 'L Pinky',
+  w: 'L Ring', s: 'L Ring', x: 'L Ring', 2: 'L Ring',
+  e: 'L Middle', d: 'L Middle', c: 'L Middle', 3: 'L Middle',
+  r: 'L Index', f: 'L Index', v: 'L Index', t: 'L Index', g: 'L Index', b: 'L Index', 4: 'L Index', 5: 'L Index',
+  y: 'R Index', h: 'R Index', n: 'R Index', u: 'R Index', j: 'R Index', m: 'R Index', 6: 'R Index', 7: 'R Index',
+  i: 'R Middle', k: 'R Middle', 8: 'R Middle',
+  o: 'R Ring', l: 'R Ring', 9: 'R Ring',
+  p: 'R Pinky', 0: 'R Pinky'
+};
+
+// --- Sound Synthesizer (Web Audio API) ---
+let audioCtx = null;
+let soundEnabled = true;
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  let targetWord = -1;
-  let combo = 0;
-  
-  function spawnWord() {
-      for (let i = 0; i < MAX_WORDS; i++) {
-          if (!fWords[i].active) {
-              fWords[i].active = true;
-              fWords[i].word = words[Math.floor(Math.random() * words.length)];
-              fWords[i].y = -20;
-              fWords[i].x = 20 + Math.random() * 250;
-              fWords[i].matchLen = 0;
-              return;
-          }
-      }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  const now = audioCtx.currentTime;
+
+  if (type === 'key') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(450 + Math.random() * 50, now);
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+    osc.start(now);
+    osc.stop(now + 0.04);
+  } else if (type === 'error') {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(150, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  } else if (type === 'complete') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(523.25, now);
+    osc.frequency.setValueAtTime(659.25, now + 0.08);
+    osc.frequency.setValueAtTime(783.99, now + 0.16);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
   }
-  
-  spawnWord();
-  
-  function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
-      
-      ctx.font = "bold 24px Consolas";
-      ctx.textBaseline = "top";
-      
-      if (lives > 0) {
-          for (let i = 0; i < MAX_WORDS; i++) {
-              if (fWords[i].active) {
-                  let matched = fWords[i].word.substring(0, fWords[i].matchLen);
-                  let unmatched = fWords[i].word.substring(fWords[i].matchLen);
-                  
-                  ctx.fillStyle = "rgb(100, 255, 100)";
-                  ctx.fillText(matched, fWords[i].x, fWords[i].y);
-                  
-                  let mWidth = ctx.measureText(matched).width;
-                  ctx.fillStyle = (targetWord === i) ? "rgb(255, 255, 100)" : "rgb(255, 255, 255)";
-                  ctx.fillText(unmatched, fWords[i].x + mWidth, fWords[i].y);
-              }
-          }
-      } else {
-          ctx.textAlign = "center";
-          ctx.fillStyle = "rgb(255, 100, 100)";
-          ctx.fillText("GAME OVER", cvs.width / 2, 200);
-          ctx.fillStyle = "rgb(200, 200, 200)";
-          ctx.fillText("Press any key to restart", cvs.width / 2, 240);
-          ctx.textAlign = "left";
-      }
-      
-      ctx.fillStyle = "rgb(200, 200, 200)";
-      ctx.fillText("Score: " + score, 10, 10);
-      ctx.fillText("Lives: " + lives, 10, 40);
-      ctx.fillText("Combo: " + combo, 10, 70);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  btn.textContent = soundEnabled ? '🔊' : '🔇';
+  btn.classList.toggle('active', soundEnabled);
+}
+
+// --- App State ---
+let currentTab = 'test';
+let testModeType = 'time'; // 'time' or 'words'
+let testModeVal = 30; // 15, 30, 60 or word count
+let currentPreset = 'common';
+
+let testWords = [];
+let wordIndex = 0;
+let charIndex = 0;
+let isTestActive = false;
+let testStartTime = null;
+let testTimer = null;
+let timeRemaining = 30;
+
+let totalKeystrokes = 0;
+let correctKeystrokes = 0;
+let errorCount = 0;
+
+let chartDataWPM = [];
+let chartDataAcc = [];
+
+let keyHeatmapData = JSON.parse(localStorage.getItem('ktype_heatmap') || '{}');
+let testHistory = JSON.parse(localStorage.getItem('ktype_history') || '[]');
+
+// --- Navigation Tabs ---
+function switchTab(tabId) {
+  currentTab = tabId;
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+  const btn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+  if (btn) btn.classList.add('active');
+
+  const target = document.getElementById(`tab-${tabId}`);
+  if (target) target.classList.add('active');
+
+  if (tabId === 'test') {
+    focusInput();
+  } else if (tabId === 'analytics') {
+    renderHeatmap();
+  } else if (tabId === 'history') {
+    renderHistoryTable();
+  } else if (tabId === 'arcade') {
+    initArcadeCanvas();
   }
-  
-  function update() {
-      if (lives > 0) {
-          let speed = 2 + Math.floor(score / 100);
-          for (let i = 0; i < MAX_WORDS; i++) {
-              if (fWords[i].active) {
-                  fWords[i].y += speed;
-                  if (fWords[i].y > cvs.height) {
-                      fWords[i].active = false;
-                      lives--;
-                      if (targetWord === i) targetWord = -1;
-                      combo = 0;
-                  }
-              }
-          }
-          if (Math.random() < (0.02 + score / 20000)) {
-              spawnWord();
-          }
-      }
-      draw();
+}
+
+// --- Speed Test Engine ---
+function setTestMode(type, val) {
+  testModeType = type;
+  testModeVal = val;
+
+  document.querySelectorAll('#mode-chips .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+
+  resetTest();
+}
+
+function setPreset(presetKey) {
+  currentPreset = presetKey;
+  document.querySelectorAll('#preset-chips .chip').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+
+  resetTest();
+}
+
+function generateTestWords() {
+  let source = PRESETS[currentPreset] || PRESETS.common;
+  testWords = [];
+  const targetCount = (testModeType === 'words') ? testModeVal : 100;
+  for (let i = 0; i < targetCount; i++) {
+    const word = source[Math.floor(Math.random() * source.length)];
+    testWords.push(word);
   }
-  
-  window.addEventListener('keydown', (e) => {
-      if (lives <= 0) {
-          lives = 3;
-          score = 0;
-          combo = 0;
-          targetWord = -1;
-          for (let i = 0; i < MAX_WORDS; i++) fWords[i].active = false;
-          spawnWord();
-      } else {
-          let c = e.key.toLowerCase();
-          if (c.length === 1 && c >= 'a' && c <= 'z') {
-              if (targetWord !== -1 && fWords[targetWord].active) {
-                  if (c === fWords[targetWord].word[fWords[targetWord].matchLen]) {
-                      fWords[targetWord].matchLen++;
-                      combo++;
-                      if (fWords[targetWord].matchLen === fWords[targetWord].word.length) {
-                          score += 10 + combo;
-                          fWords[targetWord].active = false;
-                          targetWord = -1;
-                      }
-                  } else {
-                      combo = 0;
-                      score -= 2;
-                      if (score < 0) score = 0;
-                  }
-              } else {
-                  let found = -1;
-                  let highestY = -1000;
-                  for (let i = 0; i < MAX_WORDS; i++) {
-                      if (fWords[i].active && fWords[i].word[0] === c && fWords[i].matchLen === 0) {
-                          if (fWords[i].y > highestY) {
-                              highestY = fWords[i].y;
-                              found = i;
-                          }
-                      }
-                  }
-                  if (found !== -1) {
-                      targetWord = found;
-                      fWords[targetWord].matchLen = 1;
-                      combo++;
-                      if (fWords[targetWord].matchLen === fWords[targetWord].word.length) {
-                          score += 10 + combo;
-                          fWords[targetWord].active = false;
-                          targetWord = -1;
-                      }
-                  } else {
-                      combo = 0;
-                      score -= 2;
-                      if (score < 0) score = 0;
-                  }
-              }
-          }
-      }
+}
+
+function renderWords() {
+  const container = document.getElementById('words-container');
+  container.innerHTML = '';
+
+  testWords.forEach((word, wIdx) => {
+    const wordDiv = document.createElement('div');
+    wordDiv.className = 'word';
+    wordDiv.id = `w-${wIdx}`;
+
+    word.split('').forEach((ch, cIdx) => {
+      const charSpan = document.createElement('span');
+      charSpan.className = 'char';
+      charSpan.id = `c-${wIdx}-${cIdx}`;
+      charSpan.textContent = ch;
+      wordDiv.appendChild(charSpan);
+    });
+
+    container.appendChild(wordDiv);
   });
-  
-  setInterval(update, 30);
+
+  updateCaretPosition();
+}
+
+function updateCaretPosition() {
+  let oldCaret = document.querySelector('.caret');
+  if (oldCaret) oldCaret.remove();
+
+  const targetChar = document.getElementById(`c-${wordIndex}-${charIndex}`);
+  const targetWord = document.getElementById(`w-${wordIndex}`);
+
+  const caret = document.createElement('div');
+  caret.className = 'caret';
+
+  if (targetChar) {
+    targetChar.parentNode.insertBefore(caret, targetChar);
+  } else if (targetWord) {
+    targetWord.appendChild(caret);
+  }
+}
+
+function focusInput() {
+  document.getElementById('hidden-input').focus();
+}
+
+function resetTest() {
+  clearInterval(testTimer);
+  isTestActive = false;
+  testStartTime = null;
+  wordIndex = 0;
+  charIndex = 0;
+  totalKeystrokes = 0;
+  correctKeystrokes = 0;
+  errorCount = 0;
+  chartDataWPM = [];
+  chartDataAcc = [];
+
+  timeRemaining = (testModeType === 'time') ? testModeVal : 0;
+  document.getElementById('live-timer').textContent = (testModeType === 'time') ? `${timeRemaining}s` : '0s';
+  document.getElementById('live-wpm').textContent = '0';
+  document.getElementById('live-acc').textContent = '100%';
+  document.getElementById('live-raw').textContent = '0';
+  document.getElementById('live-errors').textContent = '0';
+  document.getElementById('hidden-input').value = '';
+
+  generateTestWords();
+  renderWords();
+  drawChart();
+}
+
+function startTest() {
+  isTestActive = true;
+  testStartTime = Date.now();
+
+  testTimer = setInterval(() => {
+    const elapsedSec = (Date.now() - testStartTime) / 1000;
+
+    if (testModeType === 'time') {
+      timeRemaining = Math.max(0, testModeVal - Math.floor(elapsedSec));
+      document.getElementById('live-timer').textContent = `${timeRemaining}s`;
+
+      if (timeRemaining <= 0) {
+        finishTest();
+        return;
+      }
+    } else {
+      document.getElementById('live-timer').textContent = `${Math.floor(elapsedSec)}s`;
+    }
+
+    updateMetrics(elapsedSec);
+  }, 500);
+}
+
+function updateMetrics(elapsedSec) {
+  if (!elapsedSec || elapsedSec < 0.5) return;
+
+  const minutes = elapsedSec / 60;
+  const netWpm = Math.max(0, Math.round((correctKeystrokes / 5) / minutes));
+  const rawCpm = Math.round(totalKeystrokes / minutes);
+  const accuracy = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+
+  document.getElementById('live-wpm').textContent = netWpm;
+  document.getElementById('live-acc').textContent = `${accuracy}%`;
+  document.getElementById('live-raw').textContent = rawCpm;
+  document.getElementById('live-errors').textContent = errorCount;
+
+  chartDataWPM.push(netWpm);
+  chartDataAcc.push(accuracy);
+  drawChart();
+}
+
+function finishTest() {
+  clearInterval(testTimer);
+  isTestActive = false;
+  playSound('complete');
+
+  const elapsedSec = (Date.now() - testStartTime) / 1000;
+  const minutes = elapsedSec / 60;
+  const finalWpm = Math.max(0, Math.round((correctKeystrokes / 5) / minutes));
+  const finalAcc = totalKeystrokes > 0 ? Math.round((correctKeystrokes / totalKeystrokes) * 100) : 100;
+  const finalRaw = Math.round(totalKeystrokes / minutes);
+
+  // Save Session to History
+  const session = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    mode: (testModeType === 'time') ? `${testModeVal}s` : `${testModeVal} Words`,
+    preset: currentPreset,
+    wpm: finalWpm,
+    accuracy: finalAcc,
+    cpm: finalRaw,
+    errors: errorCount,
+    duration: `${Math.round(elapsedSec)}s`
+  };
+
+  testHistory.unshift(session);
+  if (testHistory.length > 50) testHistory.pop();
+  localStorage.setItem('ktype_history', JSON.stringify(testHistory));
+  localStorage.setItem('ktype_heatmap', JSON.stringify(keyHeatmapData));
+}
+
+// Input Listener
+document.getElementById('hidden-input').addEventListener('input', (e) => {
+  if (currentTab !== 'test') return;
+  const inputVal = e.target.value;
+  if (!inputVal) return;
+
+  if (!isTestActive) startTest();
+
+  const typedChar = inputVal[inputVal.length - 1];
+  const targetWord = testWords[wordIndex];
+
+  if (!targetWord) return;
+
+  totalKeystrokes++;
+
+  if (typedChar === ' ') {
+    // Word submit
+    wordIndex++;
+    charIndex = 0;
+    e.target.value = '';
+
+    if (wordIndex >= testWords.length) {
+      finishTest();
+    } else {
+      updateCaretPosition();
+    }
+    return;
+  }
+
+  const expectedChar = targetWord[charIndex];
+  const charSpan = document.getElementById(`c-${wordIndex}-${charIndex}`);
+
+  // Record Heatmap Stats
+  const targetKey = (expectedChar || typedChar).toLowerCase();
+  if (!keyHeatmapData[targetKey]) keyHeatmapData[targetKey] = { hits: 0, errors: 0 };
+
+  if (typedChar === expectedChar) {
+    if (charSpan) charSpan.className = 'char correct';
+    correctKeystrokes++;
+    keyHeatmapData[targetKey].hits++;
+    playSound('key');
+  } else {
+    if (charSpan) charSpan.className = 'char incorrect';
+    errorCount++;
+    keyHeatmapData[targetKey].errors++;
+    playSound('error');
+  }
+
+  charIndex++;
+  updateCaretPosition();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (currentTab === 'test') {
+    if (e.key === 'Escape') resetTest();
+    if (e.key === 'Backspace' && charIndex > 0) {
+      charIndex--;
+      const charSpan = document.getElementById(`c-${wordIndex}-${charIndex}`);
+      if (charSpan) charSpan.className = 'char';
+      updateCaretPosition();
+    }
+  }
+});
+
+// --- WPM Chart Rendering ---
+function drawChart() {
+  const canvas = document.getElementById('wpm-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.clientWidth;
+  canvas.height = canvas.parentElement.clientHeight;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (chartDataWPM.length < 2) {
+    ctx.fillStyle = '#64748b';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Real-time WPM chart will plot as you type...', 20, 30);
+    return;
+  }
+
+  const padding = 30;
+  const w = canvas.width - padding * 2;
+  const h = canvas.height - padding * 2;
+
+  const maxVal = Math.max(100, ...chartDataWPM);
+
+  // Draw Grid Lines
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padding + (h / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(canvas.width - padding, y);
+    ctx.stroke();
+  }
+
+  // Draw WPM Line
+  ctx.beginPath();
+  ctx.strokeStyle = '#00f2fe';
+  ctx.lineWidth = 3;
+
+  const step = w / (chartDataWPM.length - 1);
+  chartDataWPM.forEach((val, idx) => {
+    const x = padding + idx * step;
+    const y = canvas.height - padding - (val / maxVal) * h;
+    if (idx === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Gradient fill under curve
+  const lastX = padding + (chartDataWPM.length - 1) * step;
+  ctx.lineTo(lastX, canvas.height - padding);
+  ctx.lineTo(padding, canvas.height - padding);
+  ctx.closePath();
+
+  const grad = ctx.createLinearGradient(0, padding, 0, canvas.height - padding);
+  grad.addColorStop(0, 'rgba(0, 242, 254, 0.25)');
+  grad.addColorStop(1, 'rgba(0, 242, 254, 0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+// --- Heatmap & Finger Analysis ---
+function renderHeatmap() {
+  const container = document.getElementById('qwerty-heatmap');
+  container.innerHTML = '';
+
+  KEYBOARD_LAYOUT.forEach(row => {
+    const rowDiv = document.createElement('div');
+    rowDiv.className = 'kbd-row';
+
+    row.forEach(key => {
+      const keyDiv = document.createElement('div');
+      const stats = keyHeatmapData[key] || { hits: 0, errors: 0 };
+      const total = stats.hits + stats.errors;
+      const errRate = total > 0 ? (stats.errors / total) : 0;
+
+      let heatClass = 'heat-0';
+      if (stats.errors > 0) {
+        heatClass = errRate > 0.2 ? 'heat-high' : 'heat-low';
+      }
+
+      keyDiv.className = `key ${heatClass}`;
+      keyDiv.innerHTML = `<div>${key.toUpperCase()}</div><div class="err-count">${stats.errors} err</div>`;
+      rowDiv.appendChild(keyDiv);
+    });
+
+    container.appendChild(rowDiv);
+  });
+
+  // Weakness Analysis
+  const sorted = Object.keys(keyHeatmapData)
+    .map(k => ({ key: k, errors: keyHeatmapData[k].errors, total: keyHeatmapData[k].hits + keyHeatmapData[k].errors }))
+    .filter(item => item.errors > 0)
+    .sort((a, b) => b.errors - a.errors);
+
+  const listEl = document.getElementById('weakest-keys-list');
+  const recEl = document.getElementById('recommendations-text');
+  listEl.innerHTML = '';
+
+  if (sorted.length === 0) {
+    listEl.innerHTML = '<li>🎉 Great job! No key weaknesses detected.</li>';
+    recEl.textContent = 'Keep practicing standard drills to maintain high accuracy and speed!';
+  } else {
+    sorted.slice(0, 5).forEach(item => {
+      const finger = FINGER_MAP[item.key] || 'Finger';
+      const li = document.createElement('li');
+      li.innerHTML = `Key <strong>'${item.key.toUpperCase()}'</strong> (${finger}) &mdash; ${item.errors} errors`;
+      listEl.appendChild(li);
+    });
+
+    const topWeakFinger = FINGER_MAP[sorted[0].key] || 'Weak Finger';
+    recEl.innerHTML = `Targeted focus needed for <strong>${topWeakFinger}</strong>. Recommended: practice custom drills isolating keys <code>${sorted.slice(0, 3).map(s => s.key.toUpperCase()).join(', ')}</code>.`;
+  }
+}
+
+function resetHeatmap() {
+  keyHeatmapData = {};
+  localStorage.removeItem('ktype_heatmap');
+  renderHeatmap();
+}
+
+// --- Custom Lessons & Import/Export ---
+function saveCustomLesson() {
+  const text = document.getElementById('custom-text-input').value.trim();
+  if (!text) return alert('Please enter some lesson text first.');
+
+  PRESETS.custom = text.split(/\s+/).filter(w => w.length > 0);
+  alert('Custom lesson loaded! Select "Custom Import" preset in Speed Test to practice.');
+}
+
+function exportCustomLesson() {
+  const text = document.getElementById('custom-text-input').value.trim();
+  if (!text) return alert('No text to export.');
+
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ title: "KType Custom Lesson", words: text.split(/\s+/) }, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", "ktype_lesson.json");
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+}
+
+function handleFileImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const content = event.target.result;
+    if (file.name.endsWith('.json')) {
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed.words && Array.isArray(parsed.words)) {
+          PRESETS.custom = parsed.words;
+          document.getElementById('custom-text-input').value = parsed.words.join(' ');
+        }
+      } catch (err) {
+        alert('Invalid JSON file format.');
+      }
+    } else {
+      document.getElementById('custom-text-input').value = content;
+      PRESETS.custom = content.split(/\s+/).filter(w => w.length > 0);
+    }
+    alert('File imported successfully!');
+  };
+  reader.readAsText(file);
+}
+
+// --- History & Leaderboard ---
+function renderHistoryTable() {
+  const tbody = document.getElementById('history-table-body');
+  tbody.innerHTML = '';
+
+  if (testHistory.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">No test sessions completed yet.</td></tr>`;
+    return;
+  }
+
+  testHistory.forEach(item => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.date}</td>
+      <td><span class="badge">${item.mode}</span> (${item.preset})</td>
+      <td style="color: var(--accent-cyan); font-weight: 700;">${item.wpm}</td>
+      <td>${item.accuracy}%</td>
+      <td>${item.cpm}</td>
+      <td style="color: ${item.errors > 0 ? 'var(--accent-red)' : 'var(--accent-green)'}">${item.errors}</td>
+      <td>${item.duration}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportHistoryCSV() {
+  if (testHistory.length === 0) return alert('No history data to export.');
+  let csv = 'Date,Mode,Preset,WPM,Accuracy,CPM,Errors,Duration\n';
+  testHistory.forEach(h => {
+    csv += `"${h.date}","${h.mode}","${h.preset}",${h.wpm},${h.accuracy},${h.cpm},${h.errors},"${h.duration}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ktype_history.csv';
+  a.click();
+}
+
+function clearHistory() {
+  if (confirm('Clear all performance history logs?')) {
+    testHistory = [];
+    localStorage.removeItem('ktype_history');
+    renderHistoryTable();
+  }
+}
+
+// --- Arcade Falling Words Game Canvas ---
+let arcadeRunning = false;
+let arcadeWords = [];
+let arcadeScore = 0;
+let arcadeLives = 3;
+let arcadeCombo = 0;
+let arcadeTarget = -1;
+
+function initArcadeCanvas() {
+  const canvas = document.getElementById('arcade-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#07090e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00f2fe';
+  ctx.font = 'bold 20px Consolas';
+  ctx.textAlign = 'center';
+  ctx.fillText('Press "New Arcade Game" to play Arcade Cascade!', canvas.width / 2, canvas.height / 2);
+}
+
+function startArcadeGame() {
+  arcadeRunning = true;
+  arcadeScore = 0;
+  arcadeLives = 3;
+  arcadeCombo = 0;
+  arcadeTarget = -1;
+  arcadeWords = [];
+  spawnArcadeWord();
+  requestAnimationFrame(arcadeLoop);
+}
+
+function spawnArcadeWord() {
+  if (arcadeWords.length >= 6) return;
+  const pool = PRESETS.common;
+  const word = pool[Math.floor(Math.random() * pool.length)];
+  arcadeWords.push({
+    word: word,
+    x: 30 + Math.random() * 500,
+    y: 0,
+    speed: 1 + Math.random() * 1.5,
+    matchLen: 0
+  });
+}
+
+function arcadeLoop() {
+  if (!arcadeRunning || currentTab !== 'arcade') return;
+
+  const canvas = document.getElementById('arcade-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < canvas.width; x += 40) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+
+  // Update & Draw Words
+  ctx.font = 'bold 22px Consolas';
+  ctx.textAlign = 'left';
+
+  arcadeWords.forEach((item, idx) => {
+    item.y += item.speed;
+
+    if (item.y > canvas.height - 30) {
+      arcadeLives--;
+      arcadeWords.splice(idx, 1);
+      if (arcadeTarget === idx) arcadeTarget = -1;
+      if (arcadeLives <= 0) arcadeRunning = false;
+      return;
+    }
+
+    const matched = item.word.substring(0, item.matchLen);
+    const remaining = item.word.substring(item.matchLen);
+
+    ctx.fillStyle = '#10b981';
+    ctx.fillText(matched, item.x, item.y);
+    const mWidth = ctx.measureText(matched).width;
+    ctx.fillStyle = (arcadeTarget === idx) ? '#f59e0b' : '#f8fafc';
+    ctx.fillText(remaining, item.x + mWidth, item.y);
+  });
+
+  if (Math.random() < 0.03) spawnArcadeWord();
+
+  // HUD
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '14px sans-serif';
+  ctx.fillText(`Score: ${arcadeScore}   Lives: ${arcadeLives}   Combo: ${arcadeCombo}`, 20, 25);
+
+  if (arcadeLives <= 0) {
+    ctx.fillStyle = '#ef4444';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
+  } else {
+    requestAnimationFrame(arcadeLoop);
+  }
+}
+
+// Window Load Init
+window.addEventListener('load', () => {
+  resetTest();
+  renderHeatmap();
+  renderHistoryTable();
+});
 </script>
 </body>
 </html>
