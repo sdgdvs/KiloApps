@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KTerm
+**Target App:** KTetris
 **Status:** Next (Pass 2)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -150,3 +150,5 @@ Pass 1 Complete.
 - **KTask**: Added `Array.isArray` type guards, title/id normalization, ARIA accessibility attributes, keyboard shortcuts, memory leak cleanup for taskStats, and auto-refresh in `ktask.html`. Replaced signed `my_itoa` with `my_utoa` for process IDs > 2GB, added dynamic `WM_SIZE` resizing, listbox selection preservation, shortcuts/timers, and clean process handle management in `main.c`.
 
 - **KTaskMgr**: Added XSS protection with `textContent`, ARIA grid accessibility, `visibilityState` auto-refresh throttling, and `R`/`F5`/`Delete` hotkeys in `ktaskmgr.html` & `ktask.html`. Added flicker-free listbox redraws, global keyboard subclassing, status bar process counter, and System/Idle PID termination protections in `main.c`.
+
+- **KTerm**: Added ARIA live regions/roles, tab completion, terminal log line pruning (max 1000 lines), persistent cursor measuring span, and fallback Virtual File System in `kterm.html`. Replaced unsafe `wsprintfA` with bounded string formatting, fixed case-insensitive command parsing, expanded edit control buffer limit to 1MB, and added bounds checking in `main.c`.
