@@ -1,8 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KTodo - Task Manager</title>
 <style>
+  * {
+    box-sizing: border-box;
+  }
   body {
     background: #1a1a1a;
     color: #e0e0e0;
@@ -10,7 +15,6 @@
     margin: 0;
     padding: 20px;
     height: 100vh;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
   }
@@ -33,16 +37,49 @@
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
   }
   .input-group {
     display: flex;
     gap: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
   }
+  .priority-select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .priority-select:focus-visible {
+    border-color: #5a8bd4;
+    box-shadow: 0 0 0 2px rgba(90, 139, 212, 0.5);
+  }
+  .priority-select option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+  .priority-badge {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    margin-right: 8px;
+    letter-spacing: 0.5px;
+  }
+  .priority-High { background: rgba(212, 90, 90, 0.35); color: #ff9999; border: 1px solid rgba(212, 90, 90, 0.5); }
+  .priority-Medium { background: rgba(212, 180, 90, 0.35); color: #ffe066; border: 1px solid rgba(212, 180, 90, 0.5); }
+  .priority-Low { background: rgba(90, 212, 139, 0.35); color: #a3ffc2; border: 1px solid rgba(90, 212, 139, 0.5); }
+
   input[type="text"] {
     flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 160px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: #fff;
     padding: 10px 14px;
     border-radius: 8px;
@@ -50,9 +87,9 @@
     font-size: 14px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  input[type="text"]:focus {
+  input[type="text"]:focus-visible {
     border-color: #5a8bd4;
-    box-shadow: 0 0 0 3px rgba(90, 139, 212, 0.3);
+    box-shadow: 0 0 0 3px rgba(90, 139, 212, 0.4);
   }
   button.add-btn {
     background: linear-gradient(135deg, #5a8bd4, #3a6baf);
@@ -69,9 +106,69 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(90, 139, 212, 0.6);
   }
+  button.add-btn:focus-visible {
+    outline: 2px solid #88c0ff;
+    outline-offset: 2px;
+  }
   button.add-btn:active {
     transform: translateY(0);
   }
+
+  .controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .filters {
+    display: flex;
+    gap: 4px;
+  }
+  .filter-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #aaa;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .filter-btn.active {
+    color: #fff;
+    background: rgba(90, 139, 212, 0.3);
+    border-color: rgba(90, 139, 212, 0.5);
+    font-weight: 600;
+  }
+  .filter-btn:focus-visible {
+    outline: 2px solid #5a8bd4;
+  }
+  .clear-btn {
+    background: transparent;
+    border: none;
+    color: #bbb;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: color 0.2s;
+  }
+  .clear-btn:hover {
+    color: #ff8888;
+    text-decoration: underline;
+  }
+  .clear-btn:focus-visible {
+    outline: 2px solid #ff8888;
+  }
+
   .todo-list {
     flex: 1;
     overflow-y: auto;
@@ -113,89 +210,229 @@
     cursor: pointer;
     accent-color: #5a8bd4;
   }
-  .todo-text { flex: 1; font-size: 15px; cursor: pointer; user-select: none; }
+  .todo-checkbox:focus-visible {
+    outline: 2px solid #5a8bd4;
+    outline-offset: 2px;
+  }
+  .todo-text {
+    flex: 1;
+    font-size: 15px;
+    cursor: pointer;
+    user-select: none;
+    word-break: break-word;
+  }
   .delete-btn { 
     background: transparent; 
     color: #d45a5a; 
     border: none; 
-    font-size: 18px;
+    font-size: 20px;
+    line-height: 1;
     cursor: pointer; 
-    opacity: 0.5;
+    opacity: 0.6;
+    padding: 2px 6px;
+    border-radius: 4px;
     transition: all 0.2s;
   }
   .todo-item:hover .delete-btn { opacity: 1; }
   .delete-btn:hover {
     color: #ff6b6b;
     transform: scale(1.2);
+    background: rgba(212, 90, 90, 0.2);
+  }
+  .delete-btn:focus-visible {
+    opacity: 1;
+    outline: 2px solid #ff6b6b;
+  }
+  .empty-state {
+    text-align: center;
+    padding: 30px 10px;
+    color: #888;
+    font-style: italic;
+    font-size: 14px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .status-bar {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 8px;
+    text-align: right;
   }
 </style>
 </head>
 <body>
-  <div class="header">KTodo</div>
-  <div class="glass-panel">
+  <div class="header" id="appTitle">KTodo</div>
+  <main class="glass-panel" role="main">
     <div class="input-group">
-      <input type="text" id="taskInput" placeholder="Add a new task..." onkeypress="handleKeyPress(event)">
-      <button class="add-btn" onclick="addTask()">Add</button>
+      <label for="taskInput" class="sr-only">New task text</label>
+      <input type="text" id="taskInput" placeholder="Add a new task..." maxlength="200" onkeydown="handleKeyDown(event)">
+      <label for="prioritySelect" class="sr-only">Task priority</label>
+      <select id="prioritySelect" class="priority-select" aria-label="Task Priority">
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+      <button class="add-btn" id="addBtn" onclick="addTask()" aria-label="Add Task">Add</button>
     </div>
-    <div class="todo-list" id="todoList">
+
+    <div class="controls-bar">
+      <div class="filters" role="group" aria-label="Filter tasks">
+        <button class="filter-btn active" id="filter-all" onclick="setFilter('all')" aria-pressed="true">All</button>
+        <button class="filter-btn" id="filter-active" onclick="setFilter('active')" aria-pressed="false">Active</button>
+        <button class="filter-btn" id="filter-completed" onclick="setFilter('completed')" aria-pressed="false">Completed</button>
+      </div>
+      <button class="clear-btn" onclick="clearCompleted()" id="clearCompletedBtn">Clear Completed</button>
+    </div>
+
+    <div class="todo-list" id="todoList" role="list" aria-label="Todo List">
       <!-- Tasks injected via JS -->
     </div>
-  </div>
+
+    <div class="status-bar" id="statusBar" aria-live="polite"></div>
+  </main>
 
   <script>
-    let tasks = JSON.parse(localStorage.getItem('ktodo_tasks')) || [];
+    let tasks = [];
+    let currentFilter = 'all';
+
+    function loadTasks() {
+      try {
+        const saved = localStorage.getItem('ktodo_tasks');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            tasks = parsed.filter(t => t && typeof t === 'object' && typeof t.text === 'string');
+          }
+        }
+      } catch (e) {
+        console.warn('LocalStorage load error:', e);
+        tasks = [];
+      }
+    }
 
     function saveTasks() {
-      localStorage.setItem('ktodo_tasks', JSON.stringify(tasks));
+      try {
+        localStorage.setItem('ktodo_tasks', JSON.stringify(tasks));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+      renderTasks();
+    }
+
+    function escapeHtml(unsafe) {
+      if (unsafe === null || unsafe === undefined) return '';
+      return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const isActive = btn.id === `filter-${filter}`;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
       renderTasks();
     }
 
     function renderTasks() {
       const list = document.getElementById('todoList');
+      const statusBar = document.getElementById('statusBar');
       list.innerHTML = '';
       
-      tasks.forEach((task, index) => {
+      const filteredTasks = tasks.filter(t => {
+        if (currentFilter === 'active') return !t.completed;
+        if (currentFilter === 'completed') return t.completed;
+        return true;
+      });
+
+      const activeCount = tasks.filter(t => !t.completed).length;
+      const completedCount = tasks.filter(t => t.completed).length;
+      statusBar.textContent = `${activeCount} active task${activeCount === 1 ? '' : 's'} · ${completedCount} completed`;
+
+      if (filteredTasks.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = tasks.length === 0 
+          ? 'No tasks yet! Type a task above and press Add.'
+          : `No ${currentFilter} tasks found.`;
+        list.appendChild(empty);
+        return;
+      }
+      
+      filteredTasks.forEach((task) => {
+        const originalIndex = tasks.indexOf(task);
         const item = document.createElement('div');
         item.className = `todo-item ${task.completed ? 'completed' : ''}`;
+        item.setAttribute('role', 'listitem');
+        
+        const prio = escapeHtml(task.priority || 'Medium');
+        const escapedText = escapeHtml(task.text);
         
         item.innerHTML = `
-          <input type="checkbox" class="todo-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${index})">
-          <span class="todo-text" onclick="toggleTask(${index})">${escapeHtml(task.text)}</span>
-          <button class="delete-btn" onclick="deleteTask(${index})" title="Delete Task">×</button>
+          <input type="checkbox" class="todo-checkbox" ${task.completed ? 'checked' : ''} 
+                 onchange="toggleTask(${originalIndex})" aria-label="Mark task '${escapedText}' as ${task.completed ? 'active' : 'completed'}">
+          <span class="priority-badge priority-${prio}">${prio}</span>
+          <span class="todo-text" onclick="toggleTask(${originalIndex})">${escapedText}</span>
+          <button class="delete-btn" onclick="deleteTask(${originalIndex})" aria-label="Delete task '${escapedText}'" title="Delete Task">×</button>
         `;
         list.appendChild(item);
       });
     }
 
-    function escapeHtml(unsafe) {
-      return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-    }
-
     function addTask() {
       const input = document.getElementById('taskInput');
+      const prioritySelect = document.getElementById('prioritySelect');
       const text = input.value.trim();
+      const priority = prioritySelect.value || 'Medium';
       if (text) {
-        tasks.unshift({ text, completed: false });
+        tasks.unshift({ text, completed: false, priority });
         input.value = '';
         saveTasks();
       }
     }
 
-    function handleKeyPress(e) {
-      if (e.key === 'Enter') addTask();
+    function handleKeyDown(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addTask();
+      }
     }
 
     function toggleTask(index) {
-      tasks[index].completed = !tasks[index].completed;
-      saveTasks();
+      if (index >= 0 && index < tasks.length) {
+        tasks[index].completed = !tasks[index].completed;
+        saveTasks();
+      }
     }
 
     function deleteTask(index) {
-      tasks.splice(index, 1);
+      if (index >= 0 && index < tasks.length) {
+        tasks.splice(index, 1);
+        saveTasks();
+      }
+    }
+
+    function clearCompleted() {
+      tasks = tasks.filter(t => !t.completed);
       saveTasks();
     }
 
-    // Initial render
+    // Initial load and render
+    loadTasks();
     renderTasks();
   </script>
 </body>

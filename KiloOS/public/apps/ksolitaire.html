@@ -1,464 +1,1356 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KMemory (Patience)</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KSolitaire - Klondike Solitaire</title>
 <style>
-  body { margin: 0; background-color: #1e963c; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; user-select: none; font-family: sans-serif; color: white;}
-  #ui { display: flex; justify-content: space-between; width: 100%; max-width: 600px; margin-bottom: 10px; font-weight: bold; font-size: 14px; gap: 10px; }
-  .grid { display: grid; gap: 10px; }
-  .grid.easy { grid-template-columns: repeat(4, 1fr); max-width: 400px; max-height: 400px; }
-  .grid.hard { grid-template-columns: repeat(6, 1fr); max-width: 600px; max-height: 400px; }
-  .grid.expert { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 400px; }
-  .grid.camp4 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 600px; }
-  .grid.camp5 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 800px; }
-  .grid.camp6 { grid-template-columns: repeat(10, 1fr); max-width: 1000px; max-height: 800px; }
-  .grid.camp7 { grid-template-columns: repeat(10, 1fr); max-width: 1000px; max-height: 1000px; }
-  .grid.camp8 { grid-template-columns: repeat(12, 1fr); max-width: 1200px; max-height: 1000px; }
-  .grid.camp9 { grid-template-columns: repeat(12, 1fr); max-width: 1200px; max-height: 1200px; }
-  .grid.camp10 { grid-template-columns: repeat(14, 1fr); max-width: 1400px; max-height: 1200px; }
-  .grid.camp11 { grid-template-columns: repeat(14, 1fr); max-width: 1400px; max-height: 1400px; }
-  .grid.camp12 { grid-template-columns: repeat(16, 1fr); max-width: 1600px; max-height: 1400px; }
-  .grid.camp13 { grid-template-columns: repeat(16, 1fr); max-width: 1600px; max-height: 1600px; }
-  .grid.camp14 { grid-template-columns: repeat(18, 1fr); max-width: 1800px; max-height: 1600px; }
-  .grid.camp15 { grid-template-columns: repeat(18, 1fr); max-width: 1800px; max-height: 1800px; }
-  .grid.rush1 { grid-template-columns: repeat(4, 1fr); max-width: 400px; max-height: 400px; }
-  .grid.rush2 { grid-template-columns: repeat(6, 1fr); max-width: 600px; max-height: 400px; }
-  .grid.rush3 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 400px; }
-  .grid.rush4 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 600px; }
-  .grid.rush5 { grid-template-columns: repeat(8, 1fr); max-width: 800px; max-height: 800px; }
-  .card { background: #3264c8; border-radius: 4px; box-shadow: inset 0 0 0 2px rgba(0,0,0,0.2); cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: bold; color: #000; }
-  .card.flipped { background: #fff; box-shadow: inset 0 0 0 1px #ccc; cursor: default; }
-  .card.matched { background: transparent; box-shadow: none; cursor: default; color: transparent; }
-  .controls { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 800px; }
-  button { padding: 5px 10px; font-size: 16px; cursor: pointer; background: #eee; border: 1px solid #ccc; border-radius: 4px; color: #333; }
-  button:hover { background: #fff; }
+  :root {
+    --bg-color: #0d5c2e;
+    --card-w: 80px;
+    --card-h: 112px;
+    --card-gap: 12px;
+    --border-radius: 6px;
+    --card-back-bg: #1e3c72;
+    --card-back-pattern: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; user-select: none; }
+
+  body {
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.3) 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header & Toolbar */
+  header {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    z-index: 100;
+  }
+
+  .logo-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ffeb3b;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    background: linear-gradient(180deg, #444 0%, #222 100%);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  .btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #555 0%, #333 100%);
+    border-color: rgba(255,255,255,0.4);
+    transform: translateY(-1px);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #2196F3 0%, #1565C0 100%);
+    border-color: #64B5F6;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(180deg, #42A5F5 0%, #1E88E5 100%);
+  }
+
+  .btn-success {
+    background: linear-gradient(180deg, #4CAF50 0%, #2E7D32 100%);
+    border-color: #81C784;
+  }
+  .btn-success:hover:not(:disabled) {
+    background: linear-gradient(180deg, #66BB6A 0%, #388E3C 100%);
+  }
+
+  .btn-warning {
+    background: linear-gradient(180deg, #FF9800 0%, #E65100 100%);
+    border-color: #FFB74D;
+  }
+
+  select.btn {
+    appearance: none;
+    padding-right: 24px;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e0e0e0;
+    background: rgba(0,0,0,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .status-val {
+    color: #fff;
+    font-family: monospace;
+    font-size: 14px;
+  }
+
+  /* Game Board Layout */
+  #board {
+    flex: 1;
+    position: relative;
+    max-width: 900px;
+    width: 100%;
+    margin: 20px auto;
+    padding: 0 10px;
+  }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .stock-waste-group, .foundations-group {
+    display: flex;
+    gap: var(--card-gap);
+  }
+
+  .tableau-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--card-gap);
+  }
+
+  /* Slot / Pile styling */
+  .slot {
+    width: var(--card-w);
+    height: var(--card-h);
+    border: 2px dashed rgba(255, 255, 255, 0.25);
+    border-radius: var(--border-radius);
+    position: relative;
+    background: rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .slot.foundation::after {
+    content: attr(data-suit);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.15);
+  }
+
+  .slot.tableau {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* Card styling */
+  .card {
+    width: var(--card-w);
+    height: var(--card-h);
+    border-radius: var(--border-radius);
+    position: absolute;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.5);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 4px 6px;
+    font-weight: 700;
+    box-sizing: border-weight-box;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 50 !important;
+  }
+
+  .card.red { color: #d32f2f; }
+  .card.black { color: #212121; }
+
+  .card .card-corner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1;
+  }
+
+  .card .card-rank { font-size: 16px; letter-spacing: -1px; }
+  .card .card-suit-sm { font-size: 14px; }
+
+  .card .card-center-suit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 36px;
+    opacity: 0.85;
+  }
+
+  .card .card-corner.bottom {
+    transform: rotate(180deg);
+  }
+
+  /* Card Back Styling */
+  .card.face-down {
+    background: var(--card-back-bg);
+    background-image: var(--card-back-pattern);
+    border: 2px solid #ffffff;
+    cursor: pointer;
+  }
+  .card.face-down * { display: none; }
+
+  .card.selected {
+    outline: 3px solid #ffeb3b;
+    box-shadow: 0 0 15px #ffeb3b, 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 90 !important;
+  }
+
+  .card.hint-src {
+    animation: hintPulseSrc 1s infinite alternate;
+  }
+  .card.hint-dst, .slot.hint-dst {
+    animation: hintPulseDst 1s infinite alternate;
+  }
+
+  @keyframes hintPulseSrc {
+    0% { outline: 3px solid #00E676; box-shadow: 0 0 10px #00E676; }
+    100% { outline: 3px solid #B9F6CA; box-shadow: 0 0 20px #00E676; }
+  }
+  @keyframes hintPulseDst {
+    0% { outline: 3px solid #FF9100; box-shadow: 0 0 10px #FF9100; }
+    100% { outline: 3px solid #FFE0B2; box-shadow: 0 0 20px #FF9100; }
+  }
+
+  /* Modal Dialogs */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    background: #1e293b;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 460px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    color: #f8fafc;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 12px;
+  }
+  .modal-title { font-size: 20px; font-weight: 700; color: #ffeb3b; }
+  .modal-close { background: none; border: none; color: #94a3b8; font-size: 24px; cursor: pointer; }
+  .modal-close:hover { color: #fff; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    text-align: center;
+  }
+  .stat-card .lbl { font-size: 12px; color: #94a3b8; margin-bottom: 4px; }
+  .stat-card .val { font-size: 20px; font-weight: 700; color: #38bdf8; }
+
+  /* Deck Theme Patterns */
+  .theme-navy {
+    --card-back-bg: #1e3c72;
+    --card-back-pattern: radial-gradient(circle, #2a5298 20%, transparent 20%), radial-gradient(circle, #2a5298 20%, transparent 20%);
+    --card-back-pattern: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  }
+  .theme-crimson {
+    --card-back-bg: #800020;
+    --card-back-pattern: radial-gradient(circle, #a01235 20%, transparent 20%), linear-gradient(135deg, #700018 0%, #b01538 100%);
+  }
+  .theme-emerald {
+    --card-back-bg: #064e3b;
+    --card-back-pattern: linear-gradient(135deg, #064e3b 0%, #047857 100%);
+  }
+  .theme-cyber {
+    --card-back-bg: #0f172a;
+    --card-back-pattern: linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px), linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px);
+    background-size: 8px 8px;
+  }
+  .theme-gold {
+    --card-back-bg: #451a03;
+    --card-back-pattern: linear-gradient(135deg, #78350f 0%, #b45309 100%);
+  }
+
+  /* Win Animation Banner */
+  #win-banner {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: linear-gradient(135deg, #ffeb3b 0%, #f57c00 100%);
+    color: #000;
+    padding: 24px 48px;
+    border-radius: 16px;
+    font-size: 32px;
+    font-weight: 900;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    z-index: 500;
+    text-align: center;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+  }
+  #win-banner.active {
+    transform: translate(-50%, -50%) scale(1);
+  }
 </style>
 </head>
-<body>
-<div id="ui">
-  <div>Time: <span id="time">0</span>s</div>
-  <div>Moves: <span id="moves">0</span></div>
-  <div>Score: <span id="score">0</span></div>
-  <div>Combo: x<span id="combo">1</span></div>
-  <div>Best: <span id="best">-</span></div>
-  <div>Pairs: <span id="stats_pairs">0</span></div>
-  <div>Wins: <span id="stats_wins">0</span></div>
+<body class="theme-navy">
+
+<header>
+  <div class="logo-title">
+    <span>♠</span> KSolitaire
+  </div>
+
+  <div class="status-bar">
+    <div class="status-item">Time: <span id="timer-val" class="status-val">00:00</span></div>
+    <div class="status-item">Moves: <span id="moves-val" class="status-val">0</span></div>
+    <div class="status-item">Score: <span id="score-val" class="status-val">0</span></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn btn-primary" onclick="newGame()">⚡ New Game</button>
+    
+    <select id="draw-mode-select" class="btn" onchange="changeDrawMode(this.value)">
+      <option value="1">Draw 1</option>
+      <option value="3">Draw 3</option>
+    </select>
+
+    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
+    <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
+    <button class="btn btn-warning" onclick="giveHint()" title="Hint (Ctrl+H)">💡 Hint</button>
+    <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto Complete remaining cards">✨ Auto-Finish</button>
+
+    <select id="theme-select" class="btn" onchange="changeTheme(this.value)">
+      <option value="theme-navy">Deck: Navy</option>
+      <option value="theme-crimson">Deck: Crimson</option>
+      <option value="theme-emerald">Deck: Emerald</option>
+      <option value="theme-cyber">Deck: Cyber</option>
+      <option value="theme-gold">Deck: Gold</option>
+    </select>
+
+    <select id="felt-select" class="btn" onchange="changeFelt(this.value)">
+      <option value="#0d5c2e">Felt: Classic Green</option>
+      <option value="#0f172a">Felt: Slate Dark</option>
+      <option value="#1e1b4b">Felt: Royal Indigo</option>
+      <option value="#450a0a">Felt: Deep Crimson</option>
+    </select>
+
+    <button class="btn" onclick="openStatsModal()">📊 Stats</button>
+    <button class="btn" onclick="toggleSound()"><span id="sound-icon">🔊</span></button>
+  </div>
+</header>
+
+<div id="board">
+  <!-- Top Row: Stock, Waste, Foundations -->
+  <div class="top-row">
+    <div class="stock-waste-group">
+      <div id="stock-slot" class="slot" onclick="handleStockClick()"></div>
+      <div id="waste-slot" class="slot"></div>
+    </div>
+    <div class="foundations-group">
+      <div id="foundation-0" class="slot foundation" data-suit="♥" onclick="handlePileClick('foundation', 0)"></div>
+      <div id="foundation-1" class="slot foundation" data-suit="♦" onclick="handlePileClick('foundation', 1)"></div>
+      <div id="foundation-2" class="slot foundation" data-suit="♣" onclick="handlePileClick('foundation', 2)"></div>
+      <div id="foundation-3" class="slot foundation" data-suit="♠" onclick="handlePileClick('foundation', 3)"></div>
+    </div>
+  </div>
+
+  <!-- Tableau Row (7 columns) -->
+  <div class="tableau-row">
+    <div id="tableau-0" class="slot tableau" onclick="handlePileClick('tableau', 0)"></div>
+    <div id="tableau-1" class="slot tableau" onclick="handlePileClick('tableau', 1)"></div>
+    <div id="tableau-2" class="slot tableau" onclick="handlePileClick('tableau', 2)"></div>
+    <div id="tableau-3" class="slot tableau" onclick="handlePileClick('tableau', 3)"></div>
+    <div id="tableau-4" class="slot tableau" onclick="handlePileClick('tableau', 4)"></div>
+    <div id="tableau-5" class="slot tableau" onclick="handlePileClick('tableau', 5)"></div>
+    <div id="tableau-6" class="slot tableau" onclick="handlePileClick('tableau', 6)"></div>
+  </div>
 </div>
-<div class="grid easy" id="grid"></div>
-<div class="controls">
-  <select id="themeSelect" onchange="setTheme(this.value)" style="padding: 5px; font-size: 16px; border-radius: 4px;">
-    <option value="letters">Letters</option>
-    <option value="numbers">Numbers</option>
-    <option value="symbols">Symbols</option>
-  </select>
-  <button onclick="setDifficulty('easy')">Easy</button>
-  <button onclick="setDifficulty('hard')">Hard</button>
-  <button onclick="setDifficulty('expert')">Expert</button>
-  <button onclick="setDifficulty('campaign')">Campaign</button>
-  <button onclick="setDifficulty('rush')">Rush Mode</button>
-  <button onclick="peek()">Peek</button>
-  <button onclick="resetGame()">Restart</button>
+
+<!-- Win Banner -->
+<div id="win-banner">
+  🎉 VICTORY! 🎉
+  <div style="font-size: 16px; font-weight: 500; margin-top: 8px;" id="win-details">Score: 0 | Time: 0s</div>
 </div>
+
+<!-- Stats Modal -->
+<div id="stats-modal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Game Statistics</div>
+      <button class="modal-close" onclick="closeStatsModal()">&times;</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="lbl">Games Played</div><div id="st-played" class="val">0</div></div>
+      <div class="stat-card"><div class="lbl">Wins</div><div id="st-wins" class="val">0</div></div>
+      <div class="stat-card"><div class="lbl">Win Rate</div><div id="st-winrate" class="val">0%</div></div>
+      <div class="stat-card"><div class="lbl">Current Streak</div><div id="st-streak" class="val">0</div></div>
+      <div class="stat-card"><div class="lbl">Best Streak</div><div id="st-maxstreak" class="val">0</div></div>
+      <div class="stat-card"><div class="lbl">High Score</div><div id="st-highscore" class="val">0</div></div>
+      <div class="stat-card"><div class="lbl">Best Time (D1)</div><div id="st-besttime1" class="val">--</div></div>
+      <div class="stat-card"><div class="lbl">Best Time (D3)</div><div id="st-besttime3" class="val">--</div></div>
+    </div>
+    <div style="display:flex; justify-content: space-between;">
+      <button class="btn btn-warning" onclick="resetStats()">Clear Statistics</button>
+      <button class="btn btn-primary" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const grid = document.getElementById('grid');
-  const movesEl = document.getElementById('moves');
-  const scoreEl = document.getElementById('score');
-  const comboEl = document.getElementById('combo');
-  const bestEl = document.getElementById('best');
-  const timeEl = document.getElementById('time');
-  
-  let cards = [];
-  let flipped = [];
-  let matched = [];
-  let firstFlip = -1;
-  let secondFlip = -1;
-  let matches = 0;
-  let moves = 0;
-  let score = 0;
-  let combo = 1;
-  let lock = false;
-  let diff = 'easy'; // easy, hard, expert, campaign, rush
-  let currentTheme = 'letters';
-  const themes = {
-      letters: (c) => {
-          if (c < 26) return String.fromCharCode(65 + c);
-          return String.fromCharCode(65 + Math.floor(c / 26) - 1) + String.fromCharCode(65 + (c % 26));
-      },
-      numbers: (c) => (c + 1).toString(),
-      symbols: (c) => {
-          const sym = "!@#$%^&*+=?~OX<>";
-          if (c < 16) return sym[c];
-          return sym[Math.floor(c / 16) - 1] + sym[c % 16];
-      }
-  };
-  let timer = null;
-  let elapsed = 0;
-  let playing = false;
-  let stats_pairs = 0;
-  let stats_wins = 0;
+// --- Constants & Suit Definitions ---
+const SUITS = [
+  { name: 'hearts', symbol: '♥', color: 'red' },
+  { name: 'diamonds', symbol: '♦', color: 'red' },
+  { name: 'clubs', symbol: '♣', color: 'black' },
+  { name: 'spades', symbol: '♠', color: 'black' }
+];
+
+const RANKS = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+
+// --- Game State ---
+let stock = [];
+let waste = [];
+let foundations = [[], [], [], []];
+let tableau = [[], [], [], [], [], [], []];
+
+let drawMode = 1; // 1 or 3
+let movesCount = 0;
+let scoreCount = 0;
+let timerSeconds = 0;
+let timerInterval = null;
+let gameStarted = false;
+let gameWon = false;
+let soundEnabled = true;
+
+// Undo / Redo Stacks (Snapshots)
+let undoStack = [];
+let redoStack = [];
+
+// Selection State
+let selectedSelection = null; // { type: 'waste'|'tableau'|'foundation', pileIdx: int, cardIdx: int }
+
+// Statistics
+let stats = {
+  played: 0,
+  wins: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+  highScore: 0,
+  bestTimeD1: null,
+  bestTimeD3: null
+};
+
+// Web Audio API Synthesizer
+let audioCtx = null;
+function playTone(freq, type, duration) {
+  if (!soundEnabled) return;
   try {
-      stats_pairs = parseInt(localStorage.getItem('kmemory_pairs')) || 0;
-      stats_wins = parseInt(localStorage.getItem('kmemory_wins')) || 0;
-  } catch(e) {}
-  let campaign_level = 1;
-  let rush_level = 1;
-  let rush_time_left = 60;
-  
-  document.getElementById('stats_pairs').textContent = stats_pairs;
-  document.getElementById('stats_wins').textContent = stats_wins;
-  
-  let audioCtx;
-  function playTone(freq, type, duration) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      let osc = audioCtx.createOscillator();
-      let gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    let osc = audioCtx.createOscillator();
+    let gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+
+function playSound(name) {
+  if (name === 'flip') playTone(400, 'sine', 0.08);
+  else if (name === 'place') playTone(580, 'triangle', 0.1);
+  else if (name === 'foundation') playTone(880, 'square', 0.15);
+  else if (name === 'win') {
+    playTone(523.25, 'triangle', 0.2);
+    setTimeout(() => playTone(659.25, 'triangle', 0.2), 150);
+    setTimeout(() => playTone(783.99, 'triangle', 0.3), 300);
+    setTimeout(() => playTone(1046.50, 'triangle', 0.5), 450);
   }
+}
+
+// --- Initialization & Storage ---
+function init() {
+  loadStats();
+  loadSavedGame();
   
-  function getBestKey() { return 'kmemory_bestscore_' + diff; }
-  function updateBest() {
-      let b = null;
-      try { b = localStorage.getItem(getBestKey()); } catch(e) {}
-      bestEl.textContent = b ? b : '-';
+  // Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undoMove(); }
+    else if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); redoMove(); }
+    else if (e.ctrlKey && e.key.toLowerCase() === 'h') { e.preventDefault(); giveHint(); }
+    else if (e.ctrlKey && e.key.toLowerCase() === 'f') { e.preventDefault(); autoFinish(); }
+  });
+}
+
+function loadStats() {
+  try {
+    let d = localStorage.getItem('ksolitaire_stats');
+    if (d) stats = Object.assign(stats, JSON.parse(d));
+  } catch(e){}
+}
+
+function saveStats() {
+  try { localStorage.setItem('ksolitaire_stats', JSON.stringify(stats)); } catch(e){}
+}
+
+// --- New Game Logic ---
+function createDeck() {
+  let deck = [];
+  let id = 1;
+  for (let s = 0; s < 4; s++) {
+    for (let r = 1; r <= 13; r++) {
+      deck.push({
+        id: id++,
+        suit: s,
+        rank: r,
+        faceUp: false
+      });
+    }
+  }
+  return deck;
+}
+
+function shuffle(deck) {
+  for (let i = deck.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+function newGame() {
+  stopTimer();
+  timerSeconds = 0;
+  movesCount = 0;
+  scoreCount = 0;
+  gameStarted = false;
+  gameWon = false;
+  selectedSelection = null;
+  undoStack = [];
+  redoStack = [];
+
+  document.getElementById('win-banner').classList.remove('active');
+  updateUIStats();
+
+  let deck = shuffle(createDeck());
+
+  foundations = [[], [], [], []];
+  tableau = [[], [], [], [], [], [], []];
+  waste = [];
+
+  // Deal Tableau
+  for (let col = 0; col < 7; col++) {
+    for (let row = 0; row <= col; row++) {
+      let card = deck.pop();
+      if (row === col) card.faceUp = true;
+      tableau[col].push(card);
+    }
   }
 
-  function getNumCards() {
-      if (diff === 'easy') return 16;
-      if (diff === 'hard') return 24;
-      if (diff === 'expert') return 32;
-      if (diff === 'rush') {
-          const r_sizes = [16, 24, 32, 48, 64];
-          return r_sizes[Math.min(rush_level - 1, 4)];
-      }
-      if (diff === 'campaign') {
-          const c_sizes = [16, 24, 32, 48, 64, 80, 100, 120, 144, 168, 196, 224, 256, 288, 324];
-          return c_sizes[Math.min(campaign_level - 1, 14)];
-      }
-      return 16;
+  stock = deck;
+
+  clearHints();
+  render();
+  saveState();
+}
+
+function startTimer() {
+  if (!timerInterval) {
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      updateTimerDisplay();
+    }, 1000);
+  }
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function updateTimerDisplay() {
+  let m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+  let s = (timerSeconds % 60).toString().padStart(2, '0');
+  document.getElementById('timer-val').textContent = `${m}:${s}`;
+}
+
+function updateUIStats() {
+  document.getElementById('moves-val').textContent = movesCount;
+  document.getElementById('score-val').textContent = scoreCount;
+  document.getElementById('undo-btn').disabled = undoStack.length === 0;
+  document.getElementById('redo-btn').disabled = redoStack.length === 0;
+  document.getElementById('autofinish-btn').disabled = !canAutoFinish();
+}
+
+// --- Save / Resume State Snapshot ---
+function saveState(recordUndo = false) {
+  let snapshot = {
+    stock: JSON.parse(JSON.stringify(stock)),
+    waste: JSON.parse(JSON.stringify(waste)),
+    foundations: JSON.parse(JSON.stringify(foundations)),
+    tableau: JSON.parse(JSON.stringify(tableau)),
+    movesCount,
+    scoreCount,
+    timerSeconds,
+    gameStarted
+  };
+
+  if (recordUndo) {
+    undoStack.push(snapshot);
+    redoStack = [];
   }
 
-  function peek() {
-      if (lock || (!playing && diff !== 'rush')) return;
-      lock = true;
-      moves += 5;
-      score = Math.max(0, score - 200);
-      combo = 1;
-      movesEl.textContent = moves;
-      scoreEl.textContent = score;
-      comboEl.textContent = combo;
-      let numCards = getNumCards();
-      for (let i = 0; i < numCards; i++) {
-          if (!matched[i]) flipped[i] = true;
-      }
-      playTone(300, 'sine', 0.3);
+  try {
+    localStorage.setItem('ksolitaire_savestate', JSON.stringify(snapshot));
+  } catch(e){}
+
+  updateUIStats();
+}
+
+function loadSavedGame() {
+  try {
+    let d = localStorage.getItem('ksolitaire_savestate');
+    if (d) {
+      let snapshot = JSON.parse(d);
+      stock = snapshot.stock;
+      waste = snapshot.waste;
+      foundations = snapshot.foundations;
+      tableau = snapshot.tableau;
+      movesCount = snapshot.movesCount;
+      scoreCount = snapshot.scoreCount;
+      timerSeconds = snapshot.timerSeconds;
+      gameStarted = snapshot.gameStarted;
+      if (gameStarted) startTimer();
+      updateTimerDisplay();
       render();
-      setTimeout(() => {
-          for (let i = 0; i < numCards; i++) {
-              if (!matched[i]) flipped[i] = false;
-          }
-          firstFlip = -1;
-          secondFlip = -1;
-          lock = false;
-          render();
-      }, 1500);
+      return;
+    }
+  } catch(e){}
+  newGame();
+}
+
+function undoMove() {
+  if (undoStack.length === 0) return;
+  
+  // Push current state to redo
+  let currentSnapshot = {
+    stock: JSON.parse(JSON.stringify(stock)),
+    waste: JSON.parse(JSON.stringify(waste)),
+    foundations: JSON.parse(JSON.stringify(foundations)),
+    tableau: JSON.parse(JSON.stringify(tableau)),
+    movesCount,
+    scoreCount,
+    timerSeconds,
+    gameStarted
+  };
+  redoStack.push(currentSnapshot);
+
+  let prev = undoStack.pop();
+  stock = prev.stock;
+  waste = prev.waste;
+  foundations = prev.foundations;
+  tableau = prev.tableau;
+  movesCount = prev.movesCount;
+  scoreCount = prev.scoreCount;
+  timerSeconds = prev.timerSeconds;
+  gameStarted = prev.gameStarted;
+
+  selectedSelection = null;
+  clearHints();
+  playSound('flip');
+  render();
+  saveState();
+}
+
+function redoMove() {
+  if (redoStack.length === 0) return;
+
+  let currentSnapshot = {
+    stock: JSON.parse(JSON.stringify(stock)),
+    waste: JSON.parse(JSON.stringify(waste)),
+    foundations: JSON.parse(JSON.stringify(foundations)),
+    tableau: JSON.parse(JSON.stringify(tableau)),
+    movesCount,
+    scoreCount,
+    timerSeconds,
+    gameStarted
+  };
+  undoStack.push(currentSnapshot);
+
+  let next = redoStack.pop();
+  stock = next.stock;
+  waste = next.waste;
+  foundations = next.foundations;
+  tableau = next.tableau;
+  movesCount = next.movesCount;
+  scoreCount = next.scoreCount;
+  timerSeconds = next.timerSeconds;
+  gameStarted = next.gameStarted;
+
+  selectedSelection = null;
+  clearHints();
+  playSound('flip');
+  render();
+  saveState();
+}
+
+// --- Move Validation Logic ---
+function canMoveToFoundation(card, fIdx) {
+  let fPile = foundations[fIdx];
+  if (card.suit !== fIdx) return false;
+  if (fPile.length === 0) return card.rank === 1; // Ace
+  let topCard = fPile[fPile.length - 1];
+  return card.rank === topCard.rank + 1;
+}
+
+function canMoveToTableau(cardsToMove, tIdx) {
+  let topMoveCard = cardsToMove[0];
+  let tPile = tableau[tIdx];
+  if (tPile.length === 0) return topMoveCard.rank === 13; // King only
+  let targetCard = tPile[tPile.length - 1];
+  if (!targetCard.faceUp) return false;
+  let targetSuitObj = SUITS[targetCard.suit];
+  let moveSuitObj = SUITS[topMoveCard.suit];
+  return (targetSuitObj.color !== moveSuitObj.color) && (targetCard.rank === topMoveCard.rank + 1);
+}
+
+// --- Player Actions ---
+function handleStockClick() {
+  if (gameWon) return;
+  if (!gameStarted) { gameStarted = true; startTimer(); }
+
+  saveState(true);
+  clearHints();
+
+  if (stock.length === 0) {
+    if (waste.length === 0) return;
+    // Recycle Waste to Stock
+    while (waste.length > 0) {
+      let card = waste.pop();
+      card.faceUp = false;
+      stock.push(card);
+    }
+    playSound('flip');
+  } else {
+    // Draw cards from Stock to Waste
+    let count = Math.min(drawMode, stock.length);
+    for (let i = 0; i < count; i++) {
+      let card = stock.pop();
+      card.faceUp = true;
+      waste.push(card);
+    }
+    playSound('flip');
   }
 
-  function setDifficulty(d) {
-      diff = d;
-      if (d === 'campaign') campaign_level = 1;
-      if (d === 'rush') { rush_level = 1; rush_time_left = 60; score = 0; }
-      if (d === 'easy' || d === 'hard' || d === 'expert') score = 0;
-      updateGridSize();
-      init();
+  movesCount++;
+  selectedSelection = null;
+  render();
+  checkWin();
+}
+
+function handleCardClick(type, pileIdx, cardIdx, event) {
+  if (event) event.stopPropagation();
+  if (gameWon) return;
+  if (!gameStarted) { gameStarted = true; startTimer(); }
+
+  clearHints();
+
+  // If selecting face-down card at top of tableau -> Flip it!
+  if (type === 'tableau') {
+    let pile = tableau[pileIdx];
+    let card = pile[cardIdx];
+    if (!card.faceUp && cardIdx === pile.length - 1) {
+      saveState(true);
+      card.faceUp = true;
+      scoreCount += 5;
+      movesCount++;
+      playSound('flip');
+      render();
+      checkWin();
+      return;
+    }
+    if (!card.faceUp) return; // Cannot select face down cards inside pile
   }
 
-  function resetGame() {
-      if (diff === 'campaign') campaign_level = 1;
-      if (diff === 'rush') { rush_level = 1; rush_time_left = 60; score = 0; }
-      if (diff === 'easy' || diff === 'hard' || diff === 'expert') score = 0;
-      updateGridSize();
-      init();
+  // If already selected, try moving to this card's pile
+  if (selectedSelection) {
+    if (selectedSelection.type === type && selectedSelection.pileIdx === pileIdx) {
+      // Deselect if same card
+      selectedSelection = null;
+      render();
+      return;
+    }
+    // Attempt move
+    let moved = attemptMove(selectedSelection, type, pileIdx);
+    if (moved) {
+      selectedSelection = null;
+      return;
+    }
   }
 
-  function updateGridSize() {
-      let d = diff;
-      let ui = document.getElementById('ui');
-      if (d === 'easy' || (d === 'campaign' && campaign_level === 1) || (d === 'rush' && rush_level === 1)) { grid.className = `grid ${d === 'rush' ? 'rush1' : 'easy'}`; ui.style.width = '380px'; }
-      else if (d === 'hard' || (d === 'campaign' && campaign_level === 2) || (d === 'rush' && rush_level === 2)) { grid.className = `grid ${d === 'rush' ? 'rush2' : 'hard'}`; ui.style.width = '570px'; }
-      else if (d === 'expert' || (d === 'campaign' && campaign_level === 3) || (d === 'rush' && rush_level === 3)) { grid.className = `grid ${d === 'rush' ? 'rush3' : 'expert'}`; ui.style.width = '760px'; }
-      else if (d === 'campaign' && campaign_level === 4) { grid.className = 'grid camp4'; ui.style.width = '760px'; }
-      else if (d === 'rush' && rush_level === 4) { grid.className = 'grid rush4'; ui.style.width = '760px'; }
-      else if (d === 'campaign' && campaign_level === 5) { grid.className = 'grid camp5'; ui.style.width = '760px'; }
-      else if (d === 'rush' && rush_level >= 5) { grid.className = 'grid rush5'; ui.style.width = '760px'; }
-      else if (d === 'campaign' && campaign_level === 6) { grid.className = 'grid camp6'; ui.style.width = '950px'; }
-      else if (d === 'campaign' && campaign_level === 7) { grid.className = 'grid camp7'; ui.style.width = '950px'; }
-      else if (d === 'campaign' && campaign_level === 8) { grid.className = 'grid camp8'; ui.style.width = '1140px'; }
-      else if (d === 'campaign' && campaign_level === 9) { grid.className = 'grid camp9'; ui.style.width = '1140px'; }
-      else if (d === 'campaign' && campaign_level === 10) { grid.className = 'grid camp10'; ui.style.width = '1330px'; }
-      else if (d === 'campaign' && campaign_level === 11) { grid.className = 'grid camp11'; ui.style.width = '1330px'; }
-      else if (d === 'campaign' && campaign_level === 12) { grid.className = 'grid camp12'; ui.style.width = '1520px'; }
-      else if (d === 'campaign' && campaign_level === 13) { grid.className = 'grid camp13'; ui.style.width = '1520px'; }
-      else if (d === 'campaign' && campaign_level === 14) { grid.className = 'grid camp14'; ui.style.width = '1710px'; }
-      else if (d === 'campaign' && campaign_level >= 15) { grid.className = 'grid camp15'; ui.style.width = '1710px'; }
+  // Select new card
+  if (type === 'waste') {
+    if (waste.length === 0) return;
+    selectedSelection = { type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 };
+  } else if (type === 'tableau') {
+    selectedSelection = { type: 'tableau', pileIdx, cardIdx };
+  } else if (type === 'foundation') {
+    if (foundations[pileIdx].length === 0) return;
+    selectedSelection = { type: 'foundation', pileIdx, cardIdx: foundations[pileIdx].length - 1 };
   }
 
-  function setTheme(t) {
-      currentTheme = t;
-      init();
+  render();
+}
+
+function handlePileClick(type, pileIdx) {
+  if (gameWon) return;
+  if (!selectedSelection) return;
+
+  clearHints();
+  let moved = attemptMove(selectedSelection, type, pileIdx);
+  if (moved) selectedSelection = null;
+}
+
+function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
+  if (event) event.stopPropagation();
+  if (gameWon) return;
+  clearHints();
+
+  let card = null;
+  if (type === 'waste' && waste.length > 0) card = waste[waste.length - 1];
+  else if (type === 'tableau' && tableau[pileIdx].length > 0 && cardIdx === tableau[pileIdx].length - 1) {
+    card = tableau[pileIdx][cardIdx];
   }
 
-  function startTimer() {
-      if (!playing) {
-          playing = true;
-          timer = setInterval(() => {
-              if (diff === 'rush') {
-                  rush_time_left--;
-                  timeEl.textContent = rush_time_left;
-                  if (rush_time_left <= 0) {
-                      stopTimer();
-                      alert("Time's up! Rush Mode over. Score: " + score);
-                      updateBest();
-                      rush_level = 1;
-                      rush_time_left = 60;
-                      score = 0;
-                      updateGridSize();
-                      init();
-                  }
-              } else {
-                  elapsed++;
-                  timeEl.textContent = elapsed;
-              }
-          }, 1000);
+  if (!card || !card.faceUp) return;
+
+  // Try auto-moving to Foundation
+  for (let f = 0; f < 4; f++) {
+    if (canMoveToFoundation(card, f)) {
+      saveState(true);
+      if (type === 'waste') waste.pop();
+      else if (type === 'tableau') tableau[pileIdx].pop();
+
+      foundations[f].push(card);
+      scoreCount += 10;
+      movesCount++;
+      playSound('foundation');
+      
+      // Auto flip top of tableau if face down
+      if (type === 'tableau' && tableau[pileIdx].length > 0) {
+        let top = tableau[pileIdx][tableau[pileIdx].length - 1];
+        if (!top.faceUp) { top.faceUp = true; scoreCount += 5; }
       }
+
+      selectedSelection = null;
+      render();
+      checkWin();
+      return;
+    }
+  }
+}
+
+function attemptMove(src, dstType, dstPileIdx) {
+  let cardsToMove = [];
+
+  if (src.type === 'waste') {
+    if (waste.length === 0) return false;
+    cardsToMove.push(waste[waste.length - 1]);
+  } else if (src.type === 'tableau') {
+    let pile = tableau[src.pileIdx];
+    cardsToMove = pile.slice(src.cardIdx);
+  } else if (src.type === 'foundation') {
+    let fPile = foundations[src.pileIdx];
+    if (fPile.length === 0) return false;
+    cardsToMove.push(fPile[fPile.length - 1]);
   }
 
-  function stopTimer() {
-      playing = false;
-      if (timer) clearInterval(timer);
-      timer = null;
+  if (cardsToMove.length === 0) return false;
+
+  let legal = false;
+  if (dstType === 'foundation' && cardsToMove.length === 1) {
+    if (canMoveToFoundation(cardsToMove[0], dstPileIdx)) legal = true;
+  } else if (dstType === 'tableau') {
+    if (canMoveToTableau(cardsToMove, dstPileIdx)) legal = true;
   }
 
-  function init() {
-      if (diff !== 'rush') {
-          stopTimer();
-          elapsed = 0;
-          timeEl.textContent = elapsed;
+  if (!legal) return false;
+
+  saveState(true);
+
+  // Perform Move
+  if (src.type === 'waste') waste.pop();
+  else if (src.type === 'tableau') tableau[src.pileIdx].splice(src.cardIdx);
+  else if (src.type === 'foundation') foundations[src.pileIdx].pop();
+
+  if (dstType === 'foundation') {
+    foundations[dstPileIdx].push(cardsToMove[0]);
+    scoreCount += (src.type === 'waste' ? 10 : (src.type === 'tableau' ? 10 : 0));
+    playSound('foundation');
+  } else if (dstType === 'tableau') {
+    tableau[dstPileIdx].push(...cardsToMove);
+    scoreCount += (src.type === 'waste' ? 5 : (src.type === 'foundation' ? -15 : 0));
+    playSound('place');
+  }
+
+  // Reveal top face-down card in source tableau column
+  if (src.type === 'tableau' && tableau[src.pileIdx].length > 0) {
+    let top = tableau[src.pileIdx][tableau[src.pileIdx].length - 1];
+    if (!top.faceUp) {
+      top.faceUp = true;
+      scoreCount += 5;
+    }
+  }
+
+  movesCount++;
+  render();
+  checkWin();
+  return true;
+}
+
+// --- Smart Hint System ---
+let activeHint = null;
+function clearHints() {
+  activeHint = null;
+  document.querySelectorAll('.hint-src, .hint-dst').forEach(el => {
+    el.classList.remove('hint-src', 'hint-dst');
+  });
+}
+
+function giveHint() {
+  clearHints();
+  if (gameWon) return;
+
+  // 1. Move to Foundation
+  for (let t = 0; t < 7; t++) {
+    if (tableau[t].length > 0) {
+      let card = tableau[t][tableau[t].length - 1];
+      if (card.faceUp) {
+        for (let f = 0; f < 4; f++) {
+          if (canMoveToFoundation(card, f)) {
+            activeHint = { srcType: 'tableau', srcPile: t, srcCardIdx: tableau[t].length - 1, dstType: 'foundation', dstPile: f };
+            highlightHint();
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  if (waste.length > 0) {
+    let card = waste[waste.length - 1];
+    for (let f = 0; f < 4; f++) {
+      if (canMoveToFoundation(card, f)) {
+        activeHint = { srcType: 'waste', srcPile: 0, srcCardIdx: waste.length - 1, dstType: 'foundation', dstPile: f };
+        highlightHint();
+        return;
+      }
+    }
+  }
+
+  // 2. Move Tableau card revealing a face-down card
+  for (let srcT = 0; srcT < 7; srcT++) {
+    let pile = tableau[srcT];
+    let firstFaceUpIdx = pile.findIndex(c => c.faceUp);
+    if (firstFaceUpIdx > 0) { // Has face-down cards underneath
+      let cardToMove = pile[firstFaceUpIdx];
+      for (let dstT = 0; dstT < 7; dstT++) {
+        if (srcT !== dstT && canMoveToTableau([cardToMove], dstT)) {
+          activeHint = { srcType: 'tableau', srcPile: srcT, srcCardIdx: firstFaceUpIdx, dstType: 'tableau', dstPile: dstT };
+          highlightHint();
+          return;
+        }
+      }
+    }
+  }
+
+  // 3. Move Waste card to Tableau
+  if (waste.length > 0) {
+    let card = waste[waste.length - 1];
+    for (let dstT = 0; dstT < 7; dstT++) {
+      if (canMoveToTableau([card], dstT)) {
+        activeHint = { srcType: 'waste', srcPile: 0, srcCardIdx: waste.length - 1, dstType: 'tableau', dstPile: dstT };
+        highlightHint();
+        return;
+      }
+    }
+  }
+
+  // 4. Move King to Empty Tableau
+  for (let srcT = 0; srcT < 7; srcT++) {
+    let pile = tableau[srcT];
+    let firstFaceUpIdx = pile.findIndex(c => c.faceUp);
+    if (firstFaceUpIdx > 0 && pile[firstFaceUpIdx].rank === 13) {
+      for (let dstT = 0; dstT < 7; dstT++) {
+        if (tableau[dstT].length === 0) {
+          activeHint = { srcType: 'tableau', srcPile: srcT, srcCardIdx: firstFaceUpIdx, dstType: 'tableau', dstPile: dstT };
+          highlightHint();
+          return;
+        }
+      }
+    }
+  }
+
+  // 5. Draw Stock
+  if (stock.length > 0 || waste.length > 0) {
+    activeHint = { srcType: 'stock', srcPile: 0, dstType: 'stock' };
+    highlightHint();
+    return;
+  }
+
+  playTone(250, 'sawtooth', 0.2);
+}
+
+function highlightHint() {
+  if (!activeHint) return;
+  if (activeHint.srcType === 'stock') {
+    document.getElementById('stock-slot').classList.add('hint-src');
+  } else if (activeHint.srcType === 'waste') {
+    let wasteSlot = document.getElementById('waste-slot');
+    if (wasteSlot.lastElementChild) wasteSlot.lastElementChild.classList.add('hint-src');
+  } else if (activeHint.srcType === 'tableau') {
+    let tSlot = document.getElementById(`tableau-${activeHint.srcPile}`);
+    if (tSlot.children[activeHint.srcCardIdx]) tSlot.children[activeHint.srcCardIdx].classList.add('hint-src');
+  }
+
+  if (activeHint.dstType === 'foundation') {
+    document.getElementById(`foundation-${activeHint.dstPile}`).classList.add('hint-dst');
+  } else if (activeHint.dstType === 'tableau') {
+    let tSlot = document.getElementById(`tableau-${activeHint.dstPile}`);
+    if (tSlot.lastElementChild) tSlot.lastElementChild.classList.add('hint-dst');
+    else tSlot.classList.add('hint-dst');
+  }
+}
+
+// --- Auto-Finish Solver ---
+function canAutoFinish() {
+  if (gameWon) return false;
+  // All cards in tableau must be face up, and stock + waste must be empty
+  if (stock.length > 0 || waste.length > 0) return false;
+  for (let t = 0; t < 7; t++) {
+    for (let c of tableau[t]) {
+      if (!c.faceUp) return false;
+    }
+  }
+  return true;
+}
+
+function autoFinish() {
+  if (!canAutoFinish()) return;
+  
+  let stepTimer = setInterval(() => {
+    let movedAny = false;
+
+    for (let t = 0; t < 7; t++) {
+      if (tableau[t].length > 0) {
+        let card = tableau[t][tableau[t].length - 1];
+        for (let f = 0; f < 4; f++) {
+          if (canMoveToFoundation(card, f)) {
+            attemptMove({ type: 'tableau', pileIdx: t, cardIdx: tableau[t].length - 1 }, 'foundation', f);
+            movedAny = true;
+            break;
+          }
+        }
+      }
+      if (movedAny) break;
+    }
+
+    if (!movedAny || gameWon) {
+      clearInterval(stepTimer);
+    }
+  }, 100);
+}
+
+// --- Victory Detection ---
+function checkWin() {
+  let totalFoundation = foundations.reduce((acc, f) => acc + f.length, 0);
+  if (totalFoundation === 52) {
+    gameWon = true;
+    stopTimer();
+    playSound('win');
+
+    stats.played++;
+    stats.wins++;
+    stats.currentStreak++;
+    if (stats.currentStreak > stats.bestStreak) stats.bestStreak = stats.currentStreak;
+    if (scoreCount > stats.highScore) stats.highScore = scoreCount;
+
+    if (drawMode === 1) {
+      if (!stats.bestTimeD1 || timerSeconds < stats.bestTimeD1) stats.bestTimeD1 = timerSeconds;
+    } else {
+      if (!stats.bestTimeD3 || timerSeconds < stats.bestTimeD3) stats.bestTimeD3 = timerSeconds;
+    }
+
+    saveStats();
+
+    let m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+    let s = (timerSeconds % 60).toString().padStart(2, '0');
+    document.getElementById('win-details').textContent = `Score: ${scoreCount} | Time: ${m}:${s} | Moves: ${movesCount}`;
+    document.getElementById('win-banner').classList.add('active');
+  }
+}
+
+// --- Render Engine ---
+function render() {
+  // Render Stock Slot
+  let stockSlot = document.getElementById('stock-slot');
+  stockSlot.innerHTML = '';
+  if (stock.length > 0) {
+    let topCardEl = createCardEl(stock[stock.length - 1]);
+    topCardEl.classList.add('face-down');
+    stockSlot.appendChild(topCardEl);
+  }
+
+  // Render Waste Slot
+  let wasteSlot = document.getElementById('waste-slot');
+  wasteSlot.innerHTML = '';
+  if (waste.length > 0) {
+    // Show up to 3 cards slightly offset if draw mode 3
+    let showCount = drawMode === 3 ? Math.min(3, waste.length) : 1;
+    let startIdx = waste.length - showCount;
+    for (let i = startIdx; i < waste.length; i++) {
+      let cardEl = createCardEl(waste[i]);
+      cardEl.style.left = `${(i - startIdx) * 16}px`;
+      cardEl.onclick = (e) => handleCardClick('waste', 0, i, e);
+      cardEl.ondblclick = (e) => handleCardDoubleClick('waste', 0, i, e);
+      
+      if (selectedSelection && selectedSelection.type === 'waste' && i === waste.length - 1) {
+        cardEl.classList.add('selected');
+      }
+      wasteSlot.appendChild(cardEl);
+    }
+  }
+
+  // Render Foundations
+  for (let f = 0; f < 4; f++) {
+    let fSlot = document.getElementById(`foundation-${f}`);
+    fSlot.innerHTML = '';
+    let fPile = foundations[f];
+    if (fPile.length > 0) {
+      let cardEl = createCardEl(fPile[fPile.length - 1]);
+      cardEl.onclick = (e) => handleCardClick('foundation', f, fPile.length - 1, e);
+      if (selectedSelection && selectedSelection.type === 'foundation' && selectedSelection.pileIdx === f) {
+        cardEl.classList.add('selected');
+      }
+      fSlot.appendChild(cardEl);
+    }
+  }
+
+  // Render Tableau
+  for (let t = 0; t < 7; t++) {
+    let tSlot = document.getElementById(`tableau-${t}`);
+    tSlot.innerHTML = '';
+    let tPile = tableau[t];
+    let offsetY = 0;
+    for (let c = 0; c < tPile.length; c++) {
+      let card = tPile[c];
+      let cardEl = createCardEl(card);
+      cardEl.style.top = `${offsetY}px`;
+
+      if (card.faceUp) {
+        offsetY += 24; // Stack spacing for face-up cards
+        cardEl.onclick = (e) => handleCardClick('tableau', t, c, e);
+        cardEl.ondblclick = (e) => handleCardDoubleClick('tableau', t, c, e);
       } else {
-          timeEl.textContent = rush_time_left;
+        offsetY += 12; // Stack spacing for face-down cards
+        cardEl.onclick = (e) => handleCardClick('tableau', t, c, e);
       }
-      
-      cards = [];
-      let numCards = getNumCards();
-      for (let i = 0; i < numCards; i++) {
-          let val = Math.floor(i / 2);
-          if (diff === 'expert' || diff === 'campaign' || diff === 'rush') {
-              if (val === numCards/2 - 1) val = 100;
-              else if (val === numCards/2 - 2) val = 101;
-              else if (val === numCards/2 - 3) val = 102;
-              else if (val === numCards/2 - 4 && numCards >= 48) val = 103;
-              else if (val === numCards/2 - 5 && numCards >= 64) val = 104; // Ghost
-              else if (val === numCards/2 - 6 && numCards >= 80) val = 105; // Freeze
-          }
-          cards.push(val);
-          flipped[i] = true;
-          matched[i] = false;
+
+      if (selectedSelection && selectedSelection.type === 'tableau' && selectedSelection.pileIdx === t && c >= selectedSelection.cardIdx) {
+        cardEl.classList.add('selected');
       }
-      for (let i = numCards - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [cards[i], cards[j]] = [cards[j], cards[i]];
-      }
-      firstFlip = -1;
-      secondFlip = -1;
-      matches = 0;
-      moves = 0;
-      combo = 1;
-      movesEl.textContent = moves;
-      scoreEl.textContent = score;
-      comboEl.textContent = combo;
-      lock = true;
-      updateBest();
-      render();
-      
-      let previewTime = diff === 'expert' ? 1000 : (diff === 'hard' ? 2000 : 3000);
-      setTimeout(() => {
-          for (let i = 0; i < numCards; i++) flipped[i] = false;
-          lock = false;
-          render();
-      }, previewTime);
+
+      tSlot.appendChild(cardEl);
+    }
   }
 
-  function render() {
-      grid.innerHTML = '';
-      let numCards = getNumCards();
-      for (let i = 0; i < numCards; i++) {
-          const c = document.createElement('div');
-          c.className = 'card';
-          c.tabIndex = 0;
-          c.setAttribute('role', 'button');
-          let label = 'Face down card';
-          
-          if (matched[i]) {
-              c.classList.add('matched');
-              label = 'Matched card';
-              c.removeAttribute('tabindex');
-          } else if (flipped[i]) {
-              c.classList.add('flipped');
-              if (cards[i] === 100) { c.textContent = "+T"; c.style.color = "#00f"; }
-              else if (cards[i] === 101) { c.textContent = "??"; c.style.color = "#f00"; }
-              else if (cards[i] === 102) { c.textContent = "-B"; c.style.color = "#800"; }
-              else if (cards[i] === 103) { c.textContent = "+X"; c.style.color = "#f0f"; }
-              else if (cards[i] === 104) { c.textContent = "+G"; c.style.color = "#888"; }
-              else if (cards[i] === 105) { c.textContent = "+F"; c.style.color = "#0ff"; }
-              else c.textContent = themes[currentTheme](cards[i]);
-              label = 'Flipped card ' + c.textContent;
-          }
-          c.setAttribute('aria-label', label);
-          c.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); c.onclick(); } };
-          
-          c.onclick = () => {
-              if (lock || flipped[i] || matched[i]) return;
-              startTimer();
-              flipped[i] = true;
-              playTone(600, 'square', 0.1);
-              render();
-              
-              if (firstFlip === -1) {
-                  firstFlip = i;
-              } else {
-                  secondFlip = i;
-                  moves++;
-                  movesEl.textContent = moves;
-                  if (cards[firstFlip] === cards[secondFlip]) {
-                      if (cards[firstFlip] === 100) {
-                          score += 500;
-                          if (diff === 'rush') rush_time_left += 10;
-                          else elapsed = Math.max(0, elapsed - 10);
-                      } else if (cards[firstFlip] === 101) {
-                          for (let k = numCards - 1; k > 0; k--) {
-                              if (!matched[k]) {
-                                  let j = Math.floor(Math.random() * (k + 1));
-                                  while(matched[j]) j = Math.floor(Math.random() * (k + 1));
-                                  if (!matched[j]) {
-                                      [cards[k], cards[j]] = [cards[j], cards[k]];
-                                  }
-                              }
-                          }
-                      } else if (cards[firstFlip] === 102) {
-                          score = Math.max(0, score - 500);
-                          if (diff === 'rush') rush_time_left = Math.max(0, rush_time_left - 15);
-                          else elapsed += 15;
-                          playTone(200, 'sawtooth', 0.5);
-                      } else if (cards[firstFlip] === 103) {
-                          score += 500;
-                          for(let k=0; k<numCards; k++) {
-                              if(!matched[k]) flipped[k] = true;
-                          }
-                          render();
-                          setTimeout(() => {
-                              for(let k=0; k<numCards; k++) if(!matched[k]) flipped[k] = false;
-                              render();
-                          }, 2000);
-                      } else if (cards[firstFlip] === 104) {
-                          score += 500;
-                          let pairsToMatch = 2;
-                          for (let k = 0; k < numCards && pairsToMatch > 0; k++) {
-                              if (!matched[k] && cards[k] < 100) {
-                                  for (let l = k + 1; l < numCards; l++) {
-                                      if (!matched[l] && cards[l] === cards[k]) {
-                                          matched[k] = true;
-                                          matched[l] = true;
-                                          matches++;
-                                          pairsToMatch--;
-                                          break;
-                                      }
-                                  }
-                              }
-                          }
-                      } else if (cards[firstFlip] === 105) {
-                          score += 500;
-                          if (diff === 'rush') rush_time_left += 15;
-                          else elapsed = Math.max(0, elapsed - 15);
-                      }
-                      
-                      score += 100 * combo;
-                      combo++;
-                      if (diff === 'rush') {
-                          rush_time_left += 2;
-                          timeEl.textContent = rush_time_left;
-                      } else {
-                          timeEl.textContent = elapsed;
-                      }
-                      
-                      scoreEl.textContent = score;
-                      comboEl.textContent = combo;
-                      matched[firstFlip] = true;
-                      matched[secondFlip] = true;
-                      firstFlip = -1;
-                      secondFlip = -1;
-                      matches++;
-                      stats_pairs++;
-                      try { localStorage.setItem('kmemory_pairs', stats_pairs); } catch(e) {}
-                      document.getElementById('stats_pairs').textContent = stats_pairs;
-                      
-                      playTone(800, 'square', 0.2);
-                      if (matches >= numCards / 2) {
-                          if (diff !== 'rush') stopTimer();
-                          stats_wins++;
-                          try { localStorage.setItem('kmemory_wins', stats_wins); } catch(e) {}
-                          document.getElementById('stats_wins').textContent = stats_wins;
-                          
-                          let b = null;
-                          try { b = localStorage.getItem(getBestKey()); } catch(e) {}
-                          if (!b || score > parseInt(b)) {
-                              try { localStorage.setItem(getBestKey(), score); } catch(e) {}
-                          }
-                          
-                          if (diff === 'campaign') {
-                              campaign_level++;
-                              if (campaign_level > 15) {
-                                  setTimeout(() => { alert("You beat the Campaign! Total score: " + score); updateBest(); diff='campaign'; campaign_level=1; updateGridSize(); init(); }, 100);
-                              } else {
-                                  setTimeout(() => { alert("Stage Clear! Next Stage..."); updateBest(); updateGridSize(); init(); }, 100);
-                              }
-                          } else if (diff === 'rush') {
-                              rush_level++;
-                              rush_time_left += 20;
-                              setTimeout(() => { alert("Board " + (rush_level - 1) + " Cleared! +20s"); updateGridSize(); init(); }, 100);
-                          } else {
-                              setTimeout(() => { alert("You won with score " + score + " in " + moves + " moves and " + elapsed + " seconds!"); updateBest(); init(); }, 100);
-                          }
-                      }
-                      render();
-                  } else {
-                      combo = 1;
-                      comboEl.textContent = combo;
-                      lock = true;
-                      playTone(400, 'square', 0.1);
-                      setTimeout(() => {
-                          flipped[firstFlip] = false;
-                          flipped[secondFlip] = false;
-                          firstFlip = -1;
-                          secondFlip = -1;
-                          lock = false;
-                          render();
-                      }, 1000);
-                  }
-              }
-          };
-          grid.appendChild(c);
-      }
+  updateUIStats();
+}
+
+function createCardEl(card) {
+  let el = document.createElement('div');
+  el.className = `card ${SUITS[card.suit].color}`;
+  
+  if (!card.faceUp) {
+    el.classList.add('face-down');
+    return el;
   }
 
-  updateGridSize();
-  init();
+  let suitSym = SUITS[card.suit].symbol;
+  let rankStr = RANKS[card.rank];
+
+  el.innerHTML = `
+    <div class="card-corner top">
+      <span class="card-rank">${rankStr}</span>
+      <span class="card-suit-sm">${suitSym}</span>
+    </div>
+    <div class="card-center-suit">${suitSym}</div>
+    <div class="card-corner bottom">
+      <span class="card-rank">${rankStr}</span>
+      <span class="card-suit-sm">${suitSym}</span>
+    </div>
+  `;
+
+  return el;
+}
+
+// --- Menu Controls ---
+function changeDrawMode(val) {
+  drawMode = parseInt(val);
+  newGame();
+}
+
+function changeTheme(val) {
+  document.body.className = val;
+  try { localStorage.setItem('ksolitaire_theme', val); } catch(e){}
+}
+
+function changeFelt(val) {
+  document.body.style.setProperty('--bg-color', val);
+  try { localStorage.setItem('ksolitaire_felt', val); } catch(e){}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+function openStatsModal() {
+  let played = stats.played;
+  let wins = stats.wins;
+  let winrate = played > 0 ? Math.round((wins / played) * 100) : 0;
+
+  document.getElementById('st-played').textContent = played;
+  document.getElementById('st-wins').textContent = wins;
+  document.getElementById('st-winrate').textContent = `${winrate}%`;
+  document.getElementById('st-streak').textContent = stats.currentStreak;
+  document.getElementById('st-maxstreak').textContent = stats.bestStreak;
+  document.getElementById('st-highscore').textContent = stats.highScore;
+
+  let fmtTime = (sec) => {
+    if (!sec) return '--';
+    let m = Math.floor(sec / 60);
+    let s = sec % 60;
+    return `${m}m ${s}s`;
+  };
+
+  document.getElementById('st-besttime1').textContent = fmtTime(stats.bestTimeD1);
+  document.getElementById('st-besttime3').textContent = fmtTime(stats.bestTimeD3);
+
+  document.getElementById('stats-modal').classList.add('active');
+}
+
+function closeStatsModal() {
+  document.getElementById('stats-modal').classList.remove('active');
+}
+
+function resetStats() {
+  if (confirm("Are you sure you want to reset all game statistics?")) {
+    stats = { played: 0, wins: 0, currentStreak: 0, bestStreak: 0, highScore: 0, bestTimeD1: null, bestTimeD3: null };
+    saveStats();
+    openStatsModal();
+  }
+}
+
+// Start App
+init();
 </script>
 </body>
 </html>
