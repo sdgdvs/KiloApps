@@ -110,11 +110,13 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | KDarts     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-stage campaign, 5 game modes, Focus/Magnet/Undo powerups, wind & wobble mechanics. |
 | KTowers    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-stage campaign, 3-5 peg Reve's Puzzles, Frame-Stewart solver, Hint, Undo, Time Freeze powerups, Locked Disks, Adjacent-only rules. |
 | KReversi   | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added 4 AI personalities (Rookie, Greedy, Positional, Grandmaster Minimax), blocked/hole cells, and Bomb disc power-up. |
+| KStarship  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-Sector Campaign, Energy Allocation & Subsystems, 7 Enemy types & Multi-stage Bosses, 4 Power-ups (Time Dilation, Plasma Nova, Nano Drones, Hyper-Shield). |
 | KQuest     | Tier 1          | Creator (in progress)  | Needs Improvement | RPG — Creator building (Phase 9). Needs Games agent loop when complete. |
 
 ## Progress Log
 
 **Loop 6**
+- [x] KStarship (Expanded Campaign to 15 Sectors, added Energy Allocation & Subsystems, 7 Enemy Types & Multi-stage Bosses, and 4 Power-ups to both EXE and HTML)
 - [x] KMines (Expanded Campaign to 15 levels, added Sonar power-up and Rush Mode to both EXE and HTML)
 - [x] KRogue (Expanded to 25 levels, added Abyss biome, and moved final boss to level 25 for both EXE and HTML)
 - [x] KSnake (Expanded to 15-level campaign win, added Portals, and Tracker Bug enemies to both EXE and HTML)

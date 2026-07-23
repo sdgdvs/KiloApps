@@ -1,5 +1,12 @@
 #include <windows.h>
 
+void AddLog(const char* msg, int type);
+void PlayGameSound(int type);
+void AddCombatFeed(const char* msg);
+void CombatVictory(HWND hwnd);
+void CheckSectorObjectiveProgress(HWND hwnd, int eventType, int amount);
+
+
 #pragma function(memset, memcpy)
 void* __cdecl memset(void* dest, int c, size_t count) {
     char* p = (char*)dest;
@@ -93,6 +100,24 @@ typedef struct {
     int inTradeModal;
     int marketBuy[5];
     int marketSell[5];
+    // Phase 11 Sector Campaign, Subsystems & Power-ups
+    int currentSectorIdx;
+    int sectorCompleted[15];
+    int sectorObjType;
+    int sectorObjProgress;
+    int sectorObjTarget;
+    int inSectorMapModal;
+    int pwrShields;
+    int pwrEngines;
+    int pwrWeapons;
+    int subShields;
+    int subCannons;
+    int subEngines;
+    int subDrones;
+    int timeDilationTurns;
+    int hyperShieldTurns;
+    int enemyType;
+    int bossStage;
 } StarshipState;
 
 static StarshipState g_State = {
@@ -118,8 +143,198 @@ static StarshipState g_State = {
     },
     0, 0, 0, 100, 0,
     {30, 45, 25, 120, 200},
-    {25, 38, 20, 100, 160}
+    {25, 38, 20, 100, 160},
+    // Campaign, Subsystems & Power-ups initial state
+    0, {0}, 0, 0, 2, 0,
+    2, 2, 2,
+    100, 100, 100, 100,
+    0, 0, 0, 1
 };
+
+
+typedef struct {
+    const char* name;
+    const char* desc;
+    int objType;
+    int objTarget;
+    const char* rewardDesc;
+} CampaignSectorDef;
+
+static CampaignSectorDef g_CampaignSectors[15] = {
+    {"SECTOR 01: ALPHA PATROL", "Patrol sector space. Destroy 2 Hostile Pirates.", 0, 2, "+300 Cr, +15 Scrap"},
+    {"SECTOR 02: ASTEROID BELT", "Mine 15 Tons of Titanium Ore from Asteroid Fields.", 1, 15, "+350 Cr, +20 Fuel"},
+    {"SECTOR 03: INTERCEPTOR RIFT", "Eliminate 3 Hostile Interceptor Drones.", 2, 3, "+400 Cr, +25 Energy"},
+    {"SECTOR 04: NEBULA CONVOY", "Escort transport fleet across sector. Travel 10 grid moves.", 3, 10, "+450 Cr, +2 Crew"},
+    {"SECTOR 05: COMMANDER OUTPOST", "BOSS ENCOUNTER: Defeat Alien Interceptor Commander!", 4, 1, "+600 Cr, +1 Relic"},
+    {"SECTOR 06: VOLCANIC DEFENSE", "Defend volcanic outpost. Defeat 3 Raider waves.", 5, 3, "+550 Cr, +30 Ore"},
+    {"SECTOR 07: DRONE MINEFIELD", "Clear 4 Mine Layer Drones from sector orbit.", 6, 4, "+600 Cr, +35 Scrap"},
+    {"SECTOR 08: DEEP VOID WARFARE", "Engage heavy fleet. Defeat 4 Heavy Cruisers.", 7, 4, "+700 Cr, +40 Fuel"},
+    {"SECTOR 09: ASTEROID SURVIVAL", "Survive 15 grid moves inside dense asteroid storm.", 8, 15, "+650 Cr, +30 Gas"},
+    {"SECTOR 10: DREADNOUGHT RIFT", "BOSS ENCOUNTER: Destroy Alien Flagship Dreadnought!", 9, 1, "+1000 Cr, +2 Relics"},
+    {"SECTOR 11: TITAN PATROL", "Clear sector space. Complete 5 Sector Encounters.", 10, 5, "+800 Cr, +40 Scrap"},
+    {"SECTOR 12: QUANTUM ANOMALY", "Survey 3 Orbital Worlds in quantum space.", 11, 3, "+850 Cr, +3 Relics"},
+    {"SECTOR 13: CHAOS SIEGE", "Defend outpost from siege. Defeat 4 Heavy Raiders.", 12, 4, "+900 Cr, +50 Fuel"},
+    {"SECTOR 14: HIVE MINEFIELD", "Neutralize 6 Hive Mine Drones in deep orbit.", 13, 6, "+950 Cr, +50 Scrap"},
+    {"SECTOR 15: OMEGA CORE", "FINAL BOSS: Destroy Alien Mothership Overlord!", 14, 1, "VICTORY & GALACTIC PEACE"}
+};
+
+void CheckSectorObjectiveProgress(HWND hwnd, int eventType, int amount) {
+    int curSec = g_State.currentSectorIdx;
+    if (curSec < 0 || curSec >= 15) return;
+    if (g_State.sectorCompleted[curSec]) return;
+
+    if (g_State.sectorObjType == eventType) {
+        g_State.sectorObjProgress += amount;
+        if (g_State.sectorObjProgress >= g_State.sectorObjTarget) {
+            g_State.sectorObjProgress = g_State.sectorObjTarget;
+            g_State.sectorCompleted[curSec] = 1;
+            g_State.credits += 300 + curSec * 50;
+            g_State.scraps += 20 + curSec * 3;
+            char buf[160];
+            wsprintfA(buf, "[CAMPAIGN VICTORY] Completed Sector %d: %s! Reward claimed!", curSec + 1, g_CampaignSectors[curSec].name);
+            AddLog(buf, 3);
+            PlayGameSound(7);
+        }
+    }
+}
+
+void SetCampaignSector(HWND hwnd, int secIdx) {
+    if (secIdx < 0) secIdx = 0;
+    if (secIdx >= 15) secIdx = 14;
+    g_State.currentSectorIdx = secIdx;
+    g_State.sectorObjType = g_CampaignSectors[secIdx].objType;
+    g_State.sectorObjTarget = g_CampaignSectors[secIdx].objTarget;
+    g_State.sectorObjProgress = g_State.sectorCompleted[secIdx] ? g_State.sectorObjTarget : 0;
+    char buf[128];
+    wsprintfA(buf, "[CAMPAIGN MAP] Sector set to #%d: %s.", secIdx + 1, g_CampaignSectors[secIdx].name);
+    AddLog(buf, 3);
+}
+
+void UseTimeDilation(HWND hwnd) {
+    if (g_State.energy < 20) {
+        AddLog("[WARN] Need 20 Energy for Time Dilation ability.", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 20;
+    g_State.timeDilationTurns = 3;
+    AddLog("[POWER-UP] Time Dilation field active! Hostile turns frozen for 3 turns.", 3);
+    if (g_State.inCombatModal) AddCombatFeed("[POWER-UP] Time Dilation engaged! Hostile attack frozen!");
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void UsePlasmaNova(HWND hwnd) {
+    if (g_State.energy < 30) {
+        AddLog("[WARN] Need 30 Energy for Plasma Nova ability.", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 30;
+    if (g_State.inCombatModal) {
+        int novaDmg = 60 + (g_State.pwrWeapons * 5);
+        g_State.enemyHull = (g_State.enemyHull > novaDmg) ? g_State.enemyHull - novaDmg : 0;
+        char buf[128];
+        wsprintfA(buf, "[PLASMA NOVA] Dealt %d direct Plasma damage to %s!", novaDmg, g_State.enemyName);
+        AddCombatFeed(buf);
+        if (g_State.enemyHull <= 0) CombatVictory(hwnd);
+    } else {
+        int cleared = 0;
+        int dy, dx;
+        for (dy = -1; dy <= 1; dy++) {
+            for (dx = -1; dx <= 1; dx++) {
+                int ny = g_State.shipY + dy;
+                int nx = g_State.shipX + dx;
+                if (ny >= 0 && ny < 8 && nx >= 0 && nx < 8) {
+                    if (g_State.gridMap[ny][nx] == 3 || g_State.gridMap[ny][nx] == 5) {
+                        g_State.gridMap[ny][nx] = 0;
+                        cleared++;
+                    }
+                }
+            }
+        }
+        g_State.scraps += cleared * 5;
+        char buf[128];
+        wsprintfA(buf, "[PLASMA NOVA] Cleared %d hazards! Recovered +%d Scrap!", cleared, cleared * 5);
+        AddLog(buf, 3);
+    }
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void UseNanoDrones(HWND hwnd) {
+    if (g_State.energy < 20 || g_State.scraps < 15) {
+        AddLog("[WARN] Need 20 Energy & 15 Scrap for Nano Repair Drones.", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 20;
+    g_State.scraps -= 15;
+    g_State.hull = (g_State.hull + 40 > g_State.maxHull) ? g_State.maxHull : g_State.hull + 40;
+    g_State.subShields = 100;
+    g_State.subCannons = 100;
+    g_State.subEngines = 100;
+    g_State.subDrones = 100;
+    AddLog("[POWER-UP] Nano Repair Drones restored +40 Hull HP & repaired all subsystems to 100%!", 3);
+    if (g_State.inCombatModal) AddCombatFeed("[NANO DRONES] Restored +40 Hull HP & all subsystems repaired!");
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void UseHyperShield(HWND hwnd) {
+    if (g_State.energy < 25) {
+        AddLog("[WARN] Need 25 Energy for Hyper-Shield ability.", 1);
+        PlayGameSound(6);
+        return;
+    }
+    g_State.energy -= 25;
+    g_State.hyperShieldTurns = 2;
+    g_State.shields = g_State.maxShields;
+    AddLog("[POWER-UP] Hyper-Shield invincible matrix active for 2 turns!", 3);
+    if (g_State.inCombatModal) AddCombatFeed("[HYPER-SHIELD] Invincible barrier active for 2 turns!");
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void RepairSubsystemTarget(HWND hwnd, int sysIdx) {
+    if (g_State.scraps < 10 && g_State.energy < 15) {
+        AddLog("[WARN] Need 10 Scrap or 15 Energy for subsystem repair.", 1);
+        PlayGameSound(6);
+        return;
+    }
+    if (g_State.scraps >= 10) g_State.scraps -= 10;
+    else g_State.energy -= 15;
+
+    const char* sysNames[4] = {"Shield Generator", "Laser Cannons", "Impulse Drive", "Drone Bay"};
+    int* subPtrs[4] = {&g_State.subShields, &g_State.subCannons, &g_State.subEngines, &g_State.subDrones};
+
+    *subPtrs[sysIdx] = (*subPtrs[sysIdx] + 35 > 100) ? 100 : *subPtrs[sysIdx] + 35;
+    char buf[128];
+    wsprintfA(buf, "[SUBSYSTEM REPAIR] Restored %s to %d%% integrity!", sysNames[sysIdx], *subPtrs[sysIdx]);
+    AddLog(buf, 3);
+    PlayGameSound(7);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void AdjustEnergyAlloc(HWND hwnd, int sysIdx, int delta) {
+    int total = g_State.pwrShields + g_State.pwrEngines + g_State.pwrWeapons;
+    if (delta > 0 && total >= 6) {
+        AddLog("[SYS] Energy Allocation pool at maximum capacity (6 MW).", 0);
+        return;
+    }
+    if (sysIdx == 0) {
+        if (delta < 0 && g_State.pwrShields <= 0) return;
+        g_State.pwrShields += delta;
+    } else if (sysIdx == 1) {
+        if (delta < 0 && g_State.pwrEngines <= 0) return;
+        g_State.pwrEngines += delta;
+    } else if (sysIdx == 2) {
+        if (delta < 0 && g_State.pwrWeapons <= 0) return;
+        g_State.pwrWeapons += delta;
+    }
+    PlayGameSound(5);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
 
 static const char* g_BiomeNames[] = {"TERRAN SYSTEM", "VOLCANIC SYSTEM", "NEBULA SYSTEM", "ASTEROID BELT"};
 
@@ -263,6 +478,14 @@ static HWND hBtnUpgHull, hBtnUpgCannons, hBtnUpgShields, hBtnUpgWarp, hBtnUpgSen
 static HWND hBtnCrewHire[4], hBtnCrewAssign[4], hBtnCrewAbility[4], hBtnCrewClose;
 // Phase 10 Trade Market Controls & Economy
 static HWND hBtnTrade = NULL;
+static HWND hBtnCampaignMap = NULL;
+static HWND hBtnTimeDilation = NULL, hBtnPlasmaNova = NULL, hBtnNanoDrones = NULL, hBtnHyperShield = NULL;
+static HWND hBtnPwrShieldPlus = NULL, hBtnPwrShieldMinus = NULL;
+static HWND hBtnPwrEnginesPlus = NULL, hBtnPwrEnginesMinus = NULL;
+static HWND hBtnPwrWeaponsPlus = NULL, hBtnPwrWeaponsMinus = NULL;
+static HWND hBtnSecJump[15] = {NULL};
+static HWND hBtnSecMapClose = NULL;
+
 static HWND hBtnStTrade = NULL;
 static HWND hBtnTradeBuy1[5] = {NULL};
 static HWND hBtnTradeBuy5[5] = {NULL};
@@ -395,7 +618,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal && !g_State.inSectorMapModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -494,6 +717,18 @@ void UpdateControlVisibility(HWND hwnd) {
         ShowWindow(hBtnTradeSellAll[c], g_State.inTradeModal ? SW_SHOW : SW_HIDE);
     }
     ShowWindow(hBtnTradeClose, g_State.inTradeModal ? SW_SHOW : SW_HIDE);
+
+    ShowWindow(hBtnCampaignMap,  (inMain || g_State.inCombatModal) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnTimeDilation, (inMain || g_State.inCombatModal) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnPlasmaNova,   (inMain || g_State.inCombatModal) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnNanoDrones,   (inMain || g_State.inCombatModal) ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnHyperShield,  (inMain || g_State.inCombatModal) ? SW_SHOW : SW_HIDE);
+
+    int s;
+    for (s = 0; s < 15; s++) {
+        ShowWindow(hBtnSecJump[s], g_State.inSectorMapModal ? SW_SHOW : SW_HIDE);
+    }
+    ShowWindow(hBtnSecMapClose, g_State.inSectorMapModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -806,6 +1041,8 @@ void MoveShip(HWND hwnd, int dx, int dy) {
     g_State.energy = (g_State.energy > 0) ? g_State.energy - 1 : 0;
 
     g_State.moveCount++;
+    CheckSectorObjectiveProgress(hwnd, 3, 1);
+    CheckSectorObjectiveProgress(hwnd, 8, 1);
     if (g_State.moveCount % 6 == 0 && g_State.crew > 0) {
         AddLog("[SYS] Life support consumed 1 unit supplies for crew.", 0);
     }
@@ -928,6 +1165,7 @@ void ExecutePlanetScan(HWND hwnd) {
         g_State.ore += mins;
         g_State.gas += gas;
         g_State.artifacts += arts;
+        CheckSectorObjectiveProgress(hwnd, 11, 1);
 
         char buf[160];
         wsprintfA(buf, "[ORBITAL SCAN] %s surveyed! Minerals +%d | Gas +%d | Artifacts +%d", p->name, mins, gas, arts);
@@ -986,6 +1224,7 @@ void ExecuteMine(HWND hwnd) {
             minedScrap = (int)(minedScrap * 1.5);
         }
         g_State.ore += minedOre;
+        CheckSectorObjectiveProgress(hwnd, 1, minedOre);
         g_State.scraps += minedScrap;
         char buf[128];
         wsprintfA(buf, "[MINING LASER] Extracted %d tons ore & %d tech scrap!", minedOre, minedScrap);
@@ -1363,14 +1602,24 @@ void StartTacticalCombat(HWND hwnd, int presetIdx) {
     g_State.targetSubsystem = 0;
     g_State.playerEvading = 0;
     g_State.combatFeedCount = 0;
+    g_State.bossStage = 1;
+    g_State.enemyType = presetIdx % 7;
 
-    const char* names[] = {"CYBERNETIC PIRATE RAIDER", "VOID CRUISER DREADNOUGHT", "OBSIDIAN RAVAGER INTERCEPTOR", "IMPERIAL STAR DESTROYER"};
-    int hulls[] = {85, 120, 65, 140};
-    int shields[] = {45, 75, 55, 90};
-    int powers[] = {15, 22, 18, 26};
-    int evasions[] = {15, 8, 30, 5};
+    const char* names[] = {
+        "CYBERNETIC PIRATE RAIDER",
+        "OBSIDIAN RAVAGER INTERCEPTOR",
+        "VOID CRUISER DREADNOUGHT",
+        "MINE LAYER DRONE SQUADRON",
+        "ALIEN INTERCEPTOR COMMANDER",
+        "ALIEN FLAGSHIP DREADNOUGHT",
+        "ALIEN MOTHERSHIP OVERLORD"
+    };
+    int hulls[] = {85, 65, 160, 90, 180, 300, 500};
+    int shields[] = {45, 35, 80, 40, 80, 120, 200};
+    int powers[] = {15, 18, 24, 20, 22, 28, 35};
+    int evasions[] = {15, 35, 5, 20, 25, 10, 15};
 
-    int p = presetIdx % 4;
+    int p = g_State.enemyType;
     int i;
     for (i = 0; names[p][i] != '\0'; i++) g_State.enemyName[i] = names[p][i];
     g_State.enemyName[i] = '\0';
@@ -1392,15 +1641,29 @@ void StartTacticalCombat(HWND hwnd, int presetIdx) {
 }
 
 void CombatVictory(HWND hwnd) {
-    g_State.credits += 120;
-    g_State.scraps += 25;
+    int rewardCr = 120 + g_State.enemyType * 40;
+    int rewardScrap = 25 + g_State.enemyType * 5;
+    int rewardRelic = (g_State.enemyType >= 4) ? 2 : 1;
+
+    g_State.credits += rewardCr;
+    g_State.scraps += rewardScrap;
     g_State.fuel = (g_State.fuel + 20 > g_State.maxFuel) ? g_State.maxFuel : g_State.fuel + 20;
-    g_State.artifacts += 1;
+    g_State.artifacts += rewardRelic;
 
     char buf[160];
-    wsprintfA(buf, "[COMBAT VICTORY] Destroyed %s! Claimed +120 Cr, +25 Scrap, +20 Fuel & +1 Relic!", g_State.enemyName);
+    wsprintfA(buf, "[COMBAT VICTORY] Destroyed %s! Claimed +%d Cr, +%d Scrap & +%d Relics!", g_State.enemyName, rewardCr, rewardScrap, rewardRelic);
     AddLog(buf, 3);
     PlayGameSound(7);
+
+    if (g_State.enemyType == 0 || g_State.enemyType == 1) CheckSectorObjectiveProgress(hwnd, 0, 1);
+    if (g_State.enemyType == 1) CheckSectorObjectiveProgress(hwnd, 2, 1);
+    if (g_State.enemyType == 4) CheckSectorObjectiveProgress(hwnd, 4, 1);
+    if (g_State.enemyType == 3) CheckSectorObjectiveProgress(hwnd, 6, 1);
+    if (g_State.enemyType == 2) CheckSectorObjectiveProgress(hwnd, 7, 1);
+    if (g_State.enemyType == 5) CheckSectorObjectiveProgress(hwnd, 9, 1);
+    if (g_State.enemyType == 2) CheckSectorObjectiveProgress(hwnd, 12, 1);
+    if (g_State.enemyType == 3) CheckSectorObjectiveProgress(hwnd, 13, 1);
+    if (g_State.enemyType == 6) CheckSectorObjectiveProgress(hwnd, 14, 1);
 
     if (g_State.gridMap[g_State.shipY][g_State.shipX] == 5) {
         g_State.gridMap[g_State.shipY][g_State.shipX] = 0;
@@ -1423,16 +1686,55 @@ void CombatDefeat(HWND hwnd) {
 void CombatEnemyTurn(HWND hwnd) {
     if (!g_State.inCombatModal || g_State.enemyHull <= 0) return;
 
+    if (g_State.timeDilationTurns > 0) {
+        g_State.timeDilationTurns--;
+        AddCombatFeed("[TIME DILATION] Hostile attack turn frozen by temporal stasis!");
+        InvalidateRect(hwnd, NULL, TRUE);
+        return;
+    }
+
+    if (g_State.hyperShieldTurns > 0) {
+        g_State.hyperShieldTurns--;
+        AddCombatFeed("[HYPER-SHIELD] Invincible deflector matrix absorbed 100% incoming fire!");
+        InvalidateRect(hwnd, NULL, TRUE);
+        return;
+    }
+
+    if (g_State.enemyType == 5) {
+        if (g_State.bossStage == 1 && g_State.enemyHull <= 150) {
+            g_State.bossStage = 2;
+            g_State.enemyShields = 80;
+            g_State.enemyWeaponPower += 8;
+            AddCombatFeed("[BOSS STAGE 2] Alien Flagship activated Heavy Ion Beam & Drone Shielding!");
+            PlayGameSound(6);
+        }
+    } else if (g_State.enemyType == 6) {
+        if (g_State.bossStage == 1 && g_State.enemyHull <= 300) {
+            g_State.bossStage = 2;
+            g_State.enemyShields = 120;
+            g_State.enemyWeaponPower += 10;
+            AddCombatFeed("[BOSS STAGE 2] Alien Mothership engaged Quantum Barrier & Disruption Pulse!");
+            PlayGameSound(6);
+        } else if (g_State.bossStage == 2 && g_State.enemyHull <= 125) {
+            g_State.bossStage = 3;
+            g_State.enemyShields = 100;
+            g_State.enemyWeaponPower += 15;
+            AddCombatFeed("[BOSS STAGE 3 CRITICAL] Mothership Overlord charging Supernova Oblivion Beam!");
+            PlayGameSound(6);
+        }
+    }
+
     if (g_State.enemyShields <= 0 && (xrand() % 100) < 25) {
-        g_State.enemyShields = 25;
+        g_State.enemyShields = 30 + g_State.enemyType * 5;
         char buf[128];
-        wsprintfA(buf, "[ENEMY ACTION] %s recharged deflector shields (+25 HP)!", g_State.enemyName);
+        wsprintfA(buf, "[ENEMY ACTION] %s recharged deflector shields (+%d HP)!", g_State.enemyName, 30 + g_State.enemyType * 5);
         AddCombatFeed(buf);
         InvalidateRect(hwnd, NULL, TRUE);
         return;
     }
 
-    int hitChance = g_State.playerEvading ? 45 : (g_State.officers[0].assigned ? 70 : 85);
+    int hitChance = g_State.playerEvading ? 35 : (g_State.officers[0].assigned ? 65 : 80);
+    hitChance -= (g_State.pwrEngines * 4);
     g_State.playerEvading = 0;
 
     if ((xrand() % 100) >= hitChance) {
@@ -1698,6 +2000,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnUpgrade    = CreateWindowA("BUTTON", "🔧 SHIP UPGRADE BAY",WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 228, 195, 19, hwnd, (HMENU)111, NULL, NULL);
             hBtnCrew       = CreateWindowA("BUTTON", "👨‍✈️ OFFICER ROSTER", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 248, 195, 19, hwnd, (HMENU)112, NULL, NULL);
             hBtnTrade      = CreateWindowA("BUTTON", "📈 COMMODITY MARKET", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 268, 195, 19, hwnd, (HMENU)113, NULL, NULL);
+            hBtnCampaignMap= CreateWindowA("BUTTON", "🗺️ CAMPAIGN MAP (15 S)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 362, 195, 19, hwnd, (HMENU)114, NULL, NULL);
+
+            hBtnTimeDilation=CreateWindowA("BUTTON", "⏳ DILATE (T)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 384, 96, 19, hwnd, (HMENU)115, NULL, NULL);
+            hBtnPlasmaNova  =CreateWindowA("BUTTON", "💥 NOVA (N)",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 729, 384, 96, 19, hwnd, (HMENU)116, NULL, NULL);
+            hBtnNanoDrones  =CreateWindowA("BUTTON", "🤖 NANITE (R)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 405, 96, 19, hwnd, (HMENU)117, NULL, NULL);
+            hBtnHyperShield =CreateWindowA("BUTTON", "🛡️ SHIELD (J)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 729, 405, 96, 19, hwnd, (HMENU)118, NULL, NULL);
+
+            for (k = 0; k < 15; k++) {
+                char sBtnLabel[64];
+                wsprintfA(sBtnLabel, "[SEC %02d] %s", k + 1, (k == 0 || g_State.sectorCompleted[k - 1]) ? "WARP" : "LOCKED");
+                int col = k % 3;
+                int row = k / 3;
+                hBtnSecJump[k] = CreateWindowA("BUTTON", sBtnLabel, WS_CHILD | BS_PUSHBUTTON, 195 + (col * 155), 115 + (row * 48), 150, 42, hwnd, (HMENU)(1101 + k), NULL, NULL);
+            }
+            hBtnSecMapClose = CreateWindowA("BUTTON", "✅ RETURN TO SECTOR COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 195, 360, 460, 26, hwnd, (HMENU)1116, NULL, NULL);
 
             // D-Pad Navigation Buttons
             hBtnNW     = CreateWindowA("BUTTON", "NW",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 292, 60, 21, hwnd, (HMENU)201, NULL, NULL);
@@ -1845,6 +2162,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'A':      MoveShip(hwnd, -1, 0); break;
                 case 'D':      MoveShip(hwnd, 1, 0);  break;
                 case 'P':      ExecutePlanetScan(hwnd); break;
+                case 'T':      UseTimeDilation(hwnd); break;
+                case 'N':      UsePlasmaNova(hwnd);   break;
+                case 'R':      UseNanoDrones(hwnd);   break;
+                case 'J':      UseHyperShield(hwnd);  break;
                 case VK_SPACE: ExecuteScan(hwnd);     break;
             }
             break;
@@ -1880,6 +2201,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 OpenUpgradeModal(hwnd);
             } else if (id == 112 || id == 409) {
                 OpenCrewModal(hwnd);
+            } else if (id == 114) {
+                g_State.inSectorMapModal = 1;
+                int s;
+                for (s = 0; s < 15; s++) {
+                    char sBtnLabel[64];
+                    BOOL unlocked = (s == 0 || g_State.sectorCompleted[s - 1]);
+                    wsprintfA(sBtnLabel, "SEC %02d %s", s + 1, unlocked ? (g_State.sectorCompleted[s] ? "✔ DONE" : "▶ WARP") : "🔒 LOCK");
+                    SetWindowTextA(hBtnSecJump[s], sBtnLabel);
+                }
+                UpdateControlVisibility(hwnd);
+            } else if (id == 115) UseTimeDilation(hwnd);
+            else if (id == 116) UsePlasmaNova(hwnd);
+            else if (id == 117) UseNanoDrones(hwnd);
+            else if (id == 118) UseHyperShield(hwnd);
+            else if (id >= 1101 && id <= 1115) {
+                int targetSec = id - 1101;
+                if (targetSec == 0 || g_State.sectorCompleted[targetSec - 1]) {
+                    SetCampaignSector(hwnd, targetSec);
+                    g_State.inSectorMapModal = 0;
+                    UpdateControlVisibility(hwnd);
+                    ExecuteWarp(hwnd);
+                } else {
+                    AddLog("[WARN] Sector locked! Complete previous Sector objectives first.", 1);
+                    PlayGameSound(6);
+                }
+            } else if (id == 1116) {
+                g_State.inSectorMapModal = 0;
+                UpdateControlVisibility(hwnd);
             } else if (id == 113) {
                 g_State.inTradeModal = 1;
                 UpdateMarketPrices();
@@ -2679,6 +3028,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     wsprintfA(abilStr, "ABILITY: %s", o->ability);
                     TextOutA(hdc, 205, cardY + 36, abilStr, (int)lstrlenA(abilStr));
                 }
+            } else if (g_State.inSectorMapModal) {
+                RECT modalOverlay = {10, 48, 830, 430};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {180, 52, 670, 395};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hCyanBorder = CreateSolidBrush(RGB(0, 240, 255));
+                FrameRect(hdc, &modalCard, hCyanBorder);
+                DeleteObject(hCyanBorder);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 200, 60, "🗺️ GALACTIC SECTOR CAMPAIGN MAP (15 SECTORS)", 45);
+
+                SelectObject(hdc, hMonoFont);
+                SetTextColor(hdc, RGB(160, 190, 220));
+                char secHdr[128];
+                wsprintfA(secHdr, "CURRENT: Sector %d/15 | OBJ: %s (%d/%d)", g_State.currentSectorIdx + 1, g_CampaignSectors[g_State.currentSectorIdx].name, g_State.sectorObjProgress, g_State.sectorObjTarget);
+                TextOutA(hdc, 200, 82, secHdr, (int)lstrlenA(secHdr));
+
+                SetTextColor(hdc, RGB(255, 170, 0));
+                TextOutA(hdc, 200, 96, "Select unlocked Sector to initiate hyperwarp mission deployment:", 64);
             } else if (g_State.inTradeModal) {
                 RECT modalOverlay = {10, 48, 830, 393};
                 HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));

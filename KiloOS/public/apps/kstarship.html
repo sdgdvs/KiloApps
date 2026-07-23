@@ -702,6 +702,7 @@
     </div>
     <div class="header-info">
       <button class="audio-toggle" id="btnAudioToggle" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+      <button class="audio-toggle" style="border-color: var(--cyan-glow); color: var(--cyan-glow);" onclick="openSectorMapModal()">🗺️ SECTOR MAP (15 S)</button>
       <div>SECTOR: <span id="currentSectorLabel" style="color: var(--cyan-glow);">ALPHA-01</span></div>
       <div>BIOME: <span id="currentBiomeHeaderLabel" style="color: var(--green-status); font-weight:bold;">TERRAN</span></div>
       <div>GRID: <span id="gridCoordsLabel" style="color: var(--amber-alert);">D4</span></div>
@@ -736,6 +737,53 @@
       <div class="stat-row">
         <div class="stat-label-val"><span>SHIELD MATRIX</span><span id="valShields">75/75</span></div>
         <div class="bar-bg"><div class="bar-fill bar-shields" id="barShields" style="width: 100%;"></div></div>
+      </div>
+
+      <div class="panel-header" style="margin-top: 2px;">
+        <span>Subsystem Integrity</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label-val"><span>SHIELD GENERATOR</span><span id="valSubShields">100%</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="barSubShields" style="width: 100%; background: var(--blue-station);"></div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label-val"><span>LASER CANNONS</span><span id="valSubCannons">100%</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="barSubCannons" style="width: 100%; background: var(--red-alert);"></div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label-val"><span>IMPULSE DRIVE</span><span id="valSubEngines">100%</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="barSubEngines" style="width: 100%; background: var(--amber-alert);"></div></div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label-val"><span>DRONE BAY</span><span id="valSubDrones">100%</span></div>
+        <div class="bar-bg"><div class="bar-fill" id="barSubDrones" style="width: 100%; background: var(--purple-anomaly);"></div></div>
+      </div>
+
+      <div class="panel-header" style="margin-top: 2px;">
+        <span>Energy Allocation</span>
+      </div>
+      <div style="font-size: 0.72rem; display: flex; flex-direction: column; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span>SHIELDS (<span id="valPwrShields">2</span> MW):</span>
+          <div>
+            <button class="dpad-btn" style="padding: 1px 6px;" onclick="adjustEnergyAlloc('shields', -1)">-</button>
+            <button class="dpad-btn" style="padding: 1px 6px;" onclick="adjustEnergyAlloc('shields', 1)">+</button>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span>ENGINES (<span id="valPwrEngines">2</span> MW):</span>
+          <div>
+            <button class="dpad-btn" style="padding: 1px 6px;" onclick="adjustEnergyAlloc('engines', -1)">-</button>
+            <button class="dpad-btn" style="padding: 1px 6px;" onclick="adjustEnergyAlloc('engines', 1)">+</button>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span>WEAPONS (<span id="valPwrWeapons">2</span> MW):</span>
+          <div>
+            <button class="dpad-btn" style="padding: 1px 6px;" onclick="adjustEnergyAlloc('weapons', -1)">-</button>
+            <button class="dpad-btn" style="padding: 1px 6px;" onclick="adjustEnergyAlloc('weapons', 1)">+</button>
+          </div>
+        </div>
       </div>
 
       <div class="panel-header" style="margin-top: 2px;">
@@ -880,6 +928,28 @@
         <span>🛠️ REPAIR HULL</span>
         <small>50 CR / 10 SCRAP</small>
       </button>
+
+      <div class="panel-header" style="margin-top: 2px;">
+        <span>Special Power-Ups</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+        <button class="action-btn" onclick="useTimeDilation()">
+          <span>⏳ DILATE (T)</span>
+          <small>-20 E</small>
+        </button>
+        <button class="action-btn" onclick="usePlasmaNova()">
+          <span>💥 NOVA (N)</span>
+          <small>-30 E</small>
+        </button>
+        <button class="action-btn" onclick="useNanoDrones()">
+          <span>🤖 NANITE (R)</span>
+          <small>-20 E/-15 S</small>
+        </button>
+        <button class="action-btn" onclick="useHyperShield()">
+          <span>🛡️ SHIELD (S)</span>
+          <small>-25 E</small>
+        </button>
+      </div>
     </div>
 
     <!-- Bottom: Event Console Log -->
@@ -1212,6 +1282,25 @@
     </div>
   </div>
 
+  <!-- Galactic Sector Campaign Map Modal (15 Sectors) -->
+  <div class="modal-overlay" id="sectorMapModal" style="display: none;">
+    <div class="modal-card" style="width: 720px; border-color: var(--cyan-glow);">
+      <div class="panel-header" style="font-size: 1rem;">
+        <span>🗺️ GALACTIC SECTOR CAMPAIGN MAP (15 SECTORS)</span>
+        <button class="audio-toggle" onclick="closeSectorMapModal()">✕ CLOSE</button>
+      </div>
+      <p style="font-size: 0.8rem; color: #a0c0e0;" id="sectorMapDesc">
+        Complete sector objectives to unlock hyperwarp trajectories across the galaxy.
+      </p>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 320px; overflow-y: auto;" id="sectorGridContainer">
+        <!-- Rendered via JS -->
+      </div>
+      <button class="action-btn" style="justify-content: center; margin-top: 4px;" onclick="closeSectorMapModal()">
+        ✅ RETURN TO SECTOR COMMAND DECK
+      </button>
+    </div>
+  </div>
+
   <!-- Initial Ship Creation Modal -->
   <div class="modal-overlay" id="initModal">
     <div class="modal-card">
@@ -1384,6 +1473,25 @@
       'OMEGA-99':   { fuel: 1.2, meds: 1.3, ore: 1.1, cyberware: 1.4, luxury: 1.3, intel: 'Quantum Void: Highly volatile black market exchange rates.' }
     };
 
+        // 15 Sector Campaign Mode Definitions
+    const CAMPAIGN_SECTORS = [
+      { id: 0, name: 'SECTOR 01: ALPHA PATROL', desc: 'Patrol sector space. Destroy 2 Hostile Pirates.', objType: 0, objTarget: 2, rewardDesc: '+300 Cr, +15 Scrap' },
+      { id: 1, name: 'SECTOR 02: ASTEROID BELT', desc: 'Mine 15 Tons of Titanium Ore from Asteroid Fields.', objType: 1, objTarget: 15, rewardDesc: '+350 Cr, +20 Fuel' },
+      { id: 2, name: 'SECTOR 03: INTERCEPTOR RIFT', desc: 'Eliminate 3 Hostile Interceptor Drones.', objType: 2, objTarget: 3, rewardDesc: '+400 Cr, +25 Energy' },
+      { id: 3, name: 'SECTOR 04: NEBULA CONVOY', desc: 'Escort transport fleet across sector. Travel 10 grid moves.', objType: 3, objTarget: 10, rewardDesc: '+450 Cr, +2 Crew' },
+      { id: 4, name: 'SECTOR 05: COMMANDER OUTPOST', desc: 'BOSS ENCOUNTER: Defeat Alien Interceptor Commander!', objType: 4, objTarget: 1, rewardDesc: '+600 Cr, +1 Relic' },
+      { id: 5, name: 'SECTOR 06: VOLCANIC DEFENSE', desc: 'Defend volcanic outpost. Defeat 3 Raider waves.', objType: 5, objTarget: 3, rewardDesc: '+550 Cr, +30 Ore' },
+      { id: 6, name: 'SECTOR 07: DRONE MINEFIELD', desc: 'Clear 4 Mine Layer Drones from sector orbit.', objType: 6, objTarget: 4, rewardDesc: '+600 Cr, +35 Scrap' },
+      { id: 7, name: 'SECTOR 08: DEEP VOID WARFARE', desc: 'Engage heavy fleet. Defeat 4 Heavy Cruisers.', objType: 7, objTarget: 4, rewardDesc: '+700 Cr, +40 Fuel' },
+      { id: 8, name: 'SECTOR 09: ASTEROID SURVIVAL', desc: 'Survive 15 grid moves inside dense asteroid storm.', objType: 8, objTarget: 15, rewardDesc: '+650 Cr, +30 Gas' },
+      { id: 9, name: 'SECTOR 10: DREADNOUGHT RIFT', desc: 'BOSS ENCOUNTER: Destroy Alien Flagship Dreadnought!', objType: 9, objTarget: 1, rewardDesc: '+1000 Cr, +2 Relics' },
+      { id: 10, name: 'SECTOR 11: TITAN PATROL', desc: 'Clear sector space. Complete 5 Sector Encounters.', objType: 10, objTarget: 5, rewardDesc: '+800 Cr, +40 Scrap' },
+      { id: 11, name: 'SECTOR 12: QUANTUM ANOMALY', desc: 'Survey 3 Orbital Worlds in quantum space.', objType: 11, objTarget: 3, rewardDesc: '+850 Cr, +3 Relics' },
+      { id: 12, name: 'SECTOR 13: CHAOS SIEGE', desc: 'Defend outpost from siege. Defeat 4 Heavy Raiders.', objType: 12, objTarget: 4, rewardDesc: '+900 Cr, +50 Fuel' },
+      { id: 13, name: 'SECTOR 14: HIVE MINEFIELD', desc: 'Neutralize 6 Hive Mine Drones in deep orbit.', objType: 13, objTarget: 6, rewardDesc: '+950 Cr, +50 Scrap' },
+      { id: 14, name: 'SECTOR 15: OMEGA CORE', desc: 'FINAL BOSS: Destroy Alien Mothership Overlord!', objType: 14, objTarget: 1, rewardDesc: 'VICTORY & GALACTIC PEACE' }
+    ];
+
     // Game State
     const state = {
       shipName: 'SS ANTIGRAVITY',
@@ -1425,9 +1533,198 @@
         { id: 'gunner', name: 'Lt. Cross', role: 'GUNNER', cost: 350, hired: false, assigned: false, passive: '+25% Phaser DMG (+10 DMG)', ability: 'Plasma Salvo (2x Phaser DMG / 20 E)' },
         { id: 'science', name: 'Dr. Astra', role: 'SCIENCE OFFICER', cost: 300, hired: false, assigned: false, passive: '+50% Scan & Mining Resource Yields', ability: 'Deep Sensor Pulse (Reveal All Grid & +25 E / 15 E)' }
       ],
-      salvoActive: false
+      salvoActive: false,
+      // Campaign, Subsystems & Power-ups
+      currentSectorIdx: 0,
+      sectorCompleted: new Array(15).fill(false),
+      sectorObjType: 0,
+      sectorObjProgress: 0,
+      sectorObjTarget: 2,
+      pwrShields: 2,
+      pwrEngines: 2,
+      pwrWeapons: 2,
+      subShields: 100,
+      subCannons: 100,
+      subEngines: 100,
+      subDrones: 100,
+      timeDilationTurns: 0,
+      hyperShieldTurns: 0,
+      enemyType: 0,
+      bossStage: 1
     };
 
+    
+    function checkSectorObjectiveProgress(eventType, amount) {
+      const curSec = state.currentSectorIdx;
+      if (curSec < 0 || curSec >= 15) return;
+      if (state.sectorCompleted[curSec]) return;
+
+      if (state.sectorObjType === eventType) {
+        state.sectorObjProgress += amount;
+        if (state.sectorObjProgress >= state.sectorObjTarget) {
+          state.sectorObjProgress = state.sectorObjTarget;
+          state.sectorCompleted[curSec] = true;
+          state.credits += 300 + curSec * 50;
+          state.scraps += 20 + curSec * 3;
+          playSound('good');
+          addLog(`[CAMPAIGN VICTORY] Completed Sector ${curSec + 1}: ${CAMPAIGN_SECTORS[curSec].name}! Reward: ${CAMPAIGN_SECTORS[curSec].rewardDesc}`, 'good');
+          updateUI();
+        }
+      }
+    }
+
+    function openSectorMapModal() {
+      updateSectorMapUI();
+      playSound('dock');
+      document.getElementById('sectorMapModal').style.display = 'flex';
+    }
+
+    function closeSectorMapModal() {
+      document.getElementById('sectorMapModal').style.display = 'none';
+    }
+
+    function updateSectorMapUI() {
+      const container = document.getElementById('sectorGridContainer');
+      if (!container) return;
+      document.getElementById('sectorMapDesc').innerText = `Current Sector #${state.currentSectorIdx + 1}: ${CAMPAIGN_SECTORS[state.currentSectorIdx].name} | Objective: ${CAMPAIGN_SECTORS[state.currentSectorIdx].desc}`;
+
+      container.innerHTML = CAMPAIGN_SECTORS.map((s, idx) => {
+        const unlocked = (idx === 0 || state.sectorCompleted[idx - 1]);
+        const completed = state.sectorCompleted[idx];
+        return `
+          <div style="background: rgba(4, 12, 24, 0.9); border: 1px solid ${completed ? 'var(--green-status)' : (unlocked ? 'var(--cyan-glow)' : 'var(--border-color)')}; padding: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="font-weight: bold; font-size: 0.76rem; color: ${completed ? 'var(--green-status)' : (unlocked ? 'var(--cyan-glow)' : 'var(--text-muted)')};">${s.name}</div>
+            <div style="font-size: 0.65rem; color: var(--text-muted);">${s.desc}</div>
+            <div style="font-size: 0.68rem; color: var(--amber-alert);">Reward: ${s.rewardDesc}</div>
+            <button class="action-btn" style="margin-top: 4px; justify-content: center; ${unlocked ? '' : 'opacity: 0.4;'}" onclick="jumpToSector(${idx})">
+              ${completed ? '✔ REVISIT' : (unlocked ? '▶ WARP TO SECTOR' : '🔒 LOCKED')}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function jumpToSector(idx) {
+      if (idx !== 0 && !state.sectorCompleted[idx - 1]) {
+        addLog('[WARN] Sector locked! Complete previous sector objectives first.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.currentSectorIdx = idx;
+      state.sectorObjType = CAMPAIGN_SECTORS[idx].objType;
+      state.sectorObjTarget = CAMPAIGN_SECTORS[idx].objTarget;
+      state.sectorObjProgress = state.sectorCompleted[idx] ? state.sectorObjTarget : 0;
+      closeSectorMapModal();
+      btnWarpJump();
+      addLog(`[CAMPAIGN WARP] Arrived at Sector ${idx + 1}: ${CAMPAIGN_SECTORS[idx].name}!`, 'good');
+    }
+
+    function adjustEnergyAlloc(sys, delta) {
+      const total = state.pwrShields + state.pwrEngines + state.pwrWeapons;
+      if (delta > 0 && total >= 6) {
+        addLog('[SYS] Energy Allocation pool at max capacity (6 MW).', 'sys');
+        return;
+      }
+      if (sys === 'shields') {
+        if (delta < 0 && state.pwrShields <= 0) return;
+        state.pwrShields += delta;
+      } else if (sys === 'engines') {
+        if (delta < 0 && state.pwrEngines <= 0) return;
+        state.pwrEngines += delta;
+      } else if (sys === 'weapons') {
+        if (delta < 0 && state.pwrWeapons <= 0) return;
+        state.pwrWeapons += delta;
+      }
+      playSound('dock');
+      updateUI();
+    }
+
+    function useTimeDilation() {
+      if (state.energy < 20) {
+        addLog('[WARN] Need 20 Energy for Time Dilation ability.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 20;
+      state.timeDilationTurns = 3;
+      playSound('good');
+      addLog('[POWER-UP] Time Dilation field active! Hostile turn actions frozen for 3 turns.', 'good');
+      if (document.getElementById('combatModal').style.display === 'flex') {
+        addCombatFeedLog('[POWER-UP] Time Dilation engaged! Hostile turn frozen!');
+      }
+      updateUI();
+    }
+
+    function usePlasmaNova() {
+      if (state.energy < 30) {
+        addLog('[WARN] Need 30 Energy for Plasma Nova ability.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 30;
+      if (document.getElementById('combatModal').style.display === 'flex' && combatState.active) {
+        const novaDmg = 60 + (state.pwrWeapons * 5);
+        combatState.enemyHull = Math.max(0, combatState.enemyHull - novaDmg);
+        addCombatFeedLog(`[PLASMA NOVA] Dealt ${novaDmg} direct Plasma Damage to ${combatState.enemyName}!`);
+        if (combatState.enemyHull <= 0) combatVictory();
+      } else {
+        let cleared = 0;
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const ny = state.shipY + dy;
+            const nx = state.shipX + dx;
+            if (ny >= 0 && ny < 8 && nx >= 0 && nx < 8) {
+              if (state.gridMap[ny][nx] === CELL_TYPES.ASTEROID || state.gridMap[ny][nx] === CELL_TYPES.PIRATE) {
+                state.gridMap[ny][nx] = CELL_TYPES.EMPTY;
+                cleared++;
+              }
+            }
+          }
+        }
+        state.scraps += cleared * 5;
+        addLog(`[PLASMA NOVA] Cleared ${cleared} hazards! Recovered +${cleared * 5} Scrap!`, 'good');
+      }
+      playSound('good');
+      updateUI();
+    }
+
+    function useNanoDrones() {
+      if (state.energy < 20 || state.scraps < 15) {
+        addLog('[WARN] Need 20 Energy & 15 Scrap for Nano Repair Drones.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 20;
+      state.scraps -= 15;
+      state.hull = Math.min(state.maxHull, state.hull + 40);
+      state.subShields = 100;
+      state.subCannons = 100;
+      state.subEngines = 100;
+      state.subDrones = 100;
+      playSound('good');
+      addLog('[POWER-UP] Nano Repair Drones restored +40 Hull HP & repaired all subsystems to 100%!', 'good');
+      if (document.getElementById('combatModal').style.display === 'flex') {
+        addCombatFeedLog('[NANO DRONES] Restored +40 Hull HP & all subsystems repaired!');
+      }
+      updateUI();
+    }
+
+    function useHyperShield() {
+      if (state.energy < 25) {
+        addLog('[WARN] Need 25 Energy for Hyper-Shield ability.', 'warn');
+        playSound('alert');
+        return;
+      }
+      state.energy -= 25;
+      state.hyperShieldTurns = 2;
+      state.shields = state.maxShields;
+      playSound('good');
+      addLog('[POWER-UP] Hyper-Shield invincible matrix active for 2 turns!', 'good');
+      if (document.getElementById('combatModal').style.display === 'flex') {
+        addCombatFeedLog('[HYPER-SHIELD] Invincible deflector matrix active for 2 turns!');
+      }
+      updateUI();
+    }
     function getUsedCargo() {
       return (state.meds || 0) + (state.ore || 0) + (state.cyberware || 0) + (state.luxury || 0);
     }
@@ -1746,6 +2043,22 @@
       document.getElementById('resCrew').innerText = state.crew;
       document.getElementById('resScraps').innerText = state.scraps;
 
+      // Update Energy Allocation & Subsystem Displays
+      if (document.getElementById('valPwrShields')) document.getElementById('valPwrShields').innerText = state.pwrShields;
+      if (document.getElementById('valPwrEngines')) document.getElementById('valPwrEngines').innerText = state.pwrEngines;
+      if (document.getElementById('valPwrWeapons')) document.getElementById('valPwrWeapons').innerText = state.pwrWeapons;
+
+      if (document.getElementById('valSubShields')) {
+        document.getElementById('valSubShields').innerText = `${state.subShields}%`;
+        document.getElementById('barSubShields').style.width = `${state.subShields}%`;
+        document.getElementById('valSubCannons').innerText = `${state.subCannons}%`;
+        document.getElementById('barSubCannons').style.width = `${state.subCannons}%`;
+        document.getElementById('valSubEngines').innerText = `${state.subEngines}%`;
+        document.getElementById('barSubEngines').style.width = `${state.subEngines}%`;
+        document.getElementById('valSubDrones').innerText = `${state.subDrones}%`;
+        document.getElementById('barSubDrones').style.width = `${state.subDrones}%`;
+      }
+
       // Current cell object
       const currentCell = state.gridMap[state.shipY][state.shipX];
       let cellDisplayName = currentCell.name;
@@ -1787,7 +2100,7 @@
       state.fuel = Math.max(0, state.fuel - fuelCost);
       state.energy = Math.max(0, state.energy - 1);
 
-      state.moveCount++;
+      state.moveCount++; checkSectorObjectiveProgress(3, 1); checkSectorObjectiveProgress(8, 1);
       if (state.moveCount % 6 === 0 && state.crew > 0) {
         addLog('Life support consumed 1 unit supplies for crew.', 'sys');
       }
@@ -1984,7 +2297,7 @@
         }
         state.ore += mins;
         state.gas += gas;
-        state.artifacts += arts;
+        state.artifacts += arts; checkSectorObjectiveProgress(11, 1);
 
         addLog(`[ORBITAL SCAN] ${planet.name} surveyed! Extracted +${mins} Minerals, +${gas} Gas, +${arts} Artifacts!`, 'good');
       } else {
@@ -2048,7 +2361,7 @@
         minedOre = Math.floor(minedOre * 1.5);
         minedScrap = Math.floor(minedScrap * 1.5);
       }
-      state.ore += minedOre;
+      state.ore += minedOre; checkSectorObjectiveProgress(1, minedOre);
       state.scraps += minedScrap;
       updateUI();
       addLog(`[MINING LASER] Extracted ${minedOre} tons minerals & ${minedScrap} tech scrap!`, 'good');
@@ -2880,10 +3193,13 @@
     };
 
     const ENEMY_PRESETS = [
-      { name: 'CYBERNETIC PIRATE RAIDER', hull: 85, shields: 45, weaponPower: 15, evasion: 15 },
-      { name: 'VOID CRUISER DREADNOUGHT', hull: 120, shields: 75, weaponPower: 22, evasion: 8 },
-      { name: 'OBSIDIAN RAVAGER INTERCEPTOR', hull: 65, shields: 55, weaponPower: 18, evasion: 30 },
-      { name: 'IMPERIAL STAR DESTROYER', hull: 140, shields: 90, weaponPower: 26, evasion: 5 }
+      { name: 'CYBERNETIC PIRATE RAIDER', hull: 85, shields: 45, weaponPower: 15, evasion: 15, type: 0 },
+      { name: 'OBSIDIAN RAVAGER INTERCEPTOR', hull: 65, shields: 35, weaponPower: 18, evasion: 35, type: 1 },
+      { name: 'VOID CRUISER DREADNOUGHT', hull: 160, shields: 80, weaponPower: 24, evasion: 5, type: 2 },
+      { name: 'MINE LAYER DRONE SQUADRON', hull: 90, shields: 40, weaponPower: 20, evasion: 20, type: 3 },
+      { name: 'ALIEN INTERCEPTOR COMMANDER', hull: 180, shields: 80, weaponPower: 22, evasion: 25, type: 4 },
+      { name: 'ALIEN FLAGSHIP DREADNOUGHT', hull: 300, shields: 120, weaponPower: 28, evasion: 10, type: 5 },
+      { name: 'ALIEN MOTHERSHIP OVERLORD', hull: 500, shields: 200, weaponPower: 35, evasion: 15, type: 6 }
     ];
 
     function addCombatFeed(msg, type = 'sys') {
@@ -2921,6 +3237,7 @@
       combatState.active = true;
       combatState.targetSubsystem = 'HULL';
       combatState.playerEvading = false;
+      state.bossStage = 1;
       combatState.enemy = {
         name: preset.name,
         hull: preset.hull, maxHull: preset.hull,
@@ -2928,7 +3245,8 @@
         weaponPower: preset.weaponPower,
         weaponsDamaged: false,
         evasion: preset.evasion,
-        enginesDamaged: false
+        enginesDamaged: false,
+        type: preset.type
       };
 
       document.getElementById('combatFeedLog').innerHTML = '';
@@ -3134,7 +3452,46 @@
     function combatEnemyTurn() {
       if (!combatState.active || combatState.enemy.hull <= 0) return;
 
+      if (state.timeDilationTurns > 0) {
+        state.timeDilationTurns--;
+        addCombatFeed('[TIME DILATION] Hostile turn frozen by temporal field!', 'good');
+        updateCombatUI();
+        return;
+      }
+
+      if (state.hyperShieldTurns > 0) {
+        state.hyperShieldTurns--;
+        addCombatFeed('[HYPER-SHIELD] Invincible deflector matrix absorbed 100% incoming fire!', 'good');
+        updateCombatUI();
+        return;
+      }
+
       const e = combatState.enemy;
+
+      if (e.type === 5) {
+        if (state.bossStage === 1 && e.hull <= 150) {
+          state.bossStage = 2;
+          e.shields = 80;
+          e.weaponPower += 8;
+          addCombatFeed('[BOSS STAGE 2] Alien Flagship activated Heavy Ion Beam & Drone Shielding!', 'warn');
+          playSound('alert');
+        }
+      } else if (e.type === 6) {
+        if (state.bossStage === 1 && e.hull <= 300) {
+          state.bossStage = 2;
+          e.shields = 120;
+          e.weaponPower += 10;
+          addCombatFeed('[BOSS STAGE 2] Alien Mothership engaged Quantum Barrier & Disruption Pulse!', 'warn');
+          playSound('alert');
+        } else if (state.bossStage === 2 && e.hull <= 125) {
+          state.bossStage = 3;
+          e.shields = 100;
+          e.weaponPower += 15;
+          addCombatFeed('[BOSS STAGE 3 CRITICAL] Mothership Overlord charging Supernova Oblivion Beam!', 'alert');
+          playSound('alert');
+        }
+      }
+
       if (e.shields <= 0 && Math.random() < 0.25) {
         e.shields = 25;
         addCombatFeed(`[ENEMY ACTION] ${e.name} recharged deflector shield matrix (+25 Shields)!`, 'warn');
@@ -3179,12 +3536,27 @@
 
     function combatVictory() {
       const e = combatState.enemy;
-      state.credits += 120;
-      state.scraps += 25;
-      state.fuel = Math.min(state.maxFuel, state.fuel + 20);
-      state.artifacts += 1;
+      const type = e.type || 0;
+      const rewardCr = 120 + type * 40;
+      const rewardScrap = 25 + type * 5;
+      const rewardRelic = (type >= 4) ? 2 : 1;
 
-      addLog(`[COMBAT VICTORY] Destroyed ${e.name}! Recovered +120 Cr, +25 Scrap, +20 Fuel & +1 Ancient Relic!`, 'good');
+      state.credits += rewardCr;
+      state.scraps += rewardScrap;
+      state.fuel = Math.min(state.maxFuel, state.fuel + 20);
+      state.artifacts += rewardRelic;
+
+      if (type === 0 || type === 1) checkSectorObjectiveProgress(0, 1);
+      if (type === 1) checkSectorObjectiveProgress(2, 1);
+      if (type === 4) checkSectorObjectiveProgress(4, 1);
+      if (type === 3) checkSectorObjectiveProgress(6, 1);
+      if (type === 2) checkSectorObjectiveProgress(7, 1);
+      if (type === 5) checkSectorObjectiveProgress(9, 1);
+      if (type === 2) checkSectorObjectiveProgress(12, 1);
+      if (type === 3) checkSectorObjectiveProgress(13, 1);
+      if (type === 6) checkSectorObjectiveProgress(14, 1);
+
+      addLog(`[COMBAT VICTORY] Destroyed ${e.name}! Claimed +${rewardCr} Cr, +${rewardScrap} Scrap & +${rewardRelic} Relics!`, 'good');
       playSound('good');
 
       if (state.gridMap[state.shipY][state.shipX] === CELL_TYPES.PIRATE) {
