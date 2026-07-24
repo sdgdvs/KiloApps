@@ -526,13 +526,17 @@ void PlayGameSound(int type) {
     if (g_State.audioMuted) return;
     switch (type) {
         case 1: Beep(450, 40); break;   // Move
-        case 2: Beep(1200, 100); break;  // Scan
+        case 2: Beep(1200, 80); Beep(1600, 80); break;  // Scan
         case 3: Beep(250, 150); break;   // Mine
-        case 4: Beep(1600, 200); break;  // Warp
-        case 5: Beep(900, 120); break;   // Dock
-        case 6: Beep(220, 220); break;   // Alert
-        case 7: Beep(850, 100); break;   // Good
+        case 4: Beep(300, 40); Beep(600, 40); Beep(1000, 50); Beep(1500, 60); break;  // Warp Drive
+        case 5: Beep(523, 50); Beep(659, 50); Beep(783, 60); break;   // Dock
+        case 6: Beep(880, 60); Beep(587, 60); Beep(880, 60); Beep(587, 60); break;   // Alarm Klaxon
+        case 7: Beep(850, 100); break;   // Good / Success
         case 8: Beep(1400, 80); Beep(1800, 120); break; // Planet Scan
+        case 9: Beep(1200, 25); Beep(800, 25); Beep(400, 30); break; // Laser Blast
+        case 10: Beep(180, 70); Beep(220, 70); Beep(180, 70); break; // Shield Hum
+        case 11: Beep(523, 30); Beep(659, 30); Beep(783, 30); Beep(1046, 40); break; // Item Pickup
+        case 12: Beep(150, 60); Beep(100, 80); Beep(60, 100); break; // Explosion Rumble
     }
 }
 
@@ -725,7 +729,7 @@ void BuyCommodity(HWND hwnd, int type, int qty) {
     char buf[128];
     wsprintfA(buf, "[MARKET BOUGHT] Purchased +%d %s for %d Cr.", qty, cNames[type], cost);
     AddLog(buf, 3);
-    PlayGameSound(5);
+    PlayGameSound(11);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -760,7 +764,7 @@ void SellCommodity(HWND hwnd, int type, int qty) {
     char buf[128];
     wsprintfA(buf, "[MARKET SOLD] Sold %d %s for +%d Cr.", qty, cNames[type], earnings);
     AddLog(buf, 3);
-    PlayGameSound(5);
+    PlayGameSound(11);
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
@@ -1831,7 +1835,7 @@ void CombatVictory(HWND hwnd) {
     char buf[160];
     wsprintfA(buf, "[COMBAT VICTORY] Destroyed %s! Claimed +%d Cr, +%d Scrap & +%d Relics!", g_State.enemyName, rewardCr, rewardScrap, rewardRelic);
     AddLog(buf, 3);
-    PlayGameSound(7);
+    PlayGameSound(12);
 
     if (g_State.enemyType == 0 || g_State.enemyType == 1) CheckSectorObjectiveProgress(hwnd, 0, 1);
     if (g_State.enemyType == 1) CheckSectorObjectiveProgress(hwnd, 2, 1);
@@ -2039,7 +2043,7 @@ void CombatPlayerFire(HWND hwnd) {
                 AddCombatFeed(buf);
             }
         }
-        PlayGameSound(7);
+        PlayGameSound(9);
     }
 
     if (g_State.enemyHull <= 0) {
@@ -2059,7 +2063,7 @@ void CombatPlayerShield(HWND hwnd) {
     g_State.energy -= 15;
     g_State.shields = (g_State.shields + 30 > g_State.maxShields) ? g_State.maxShields : g_State.shields + 30;
     AddCombatFeed("[DEFLECTOR OVERCHARGE] Overcharged shields (+30 HP)!");
-    PlayGameSound(7);
+    PlayGameSound(10);
 
     CombatEnemyTurn(hwnd);
 }

@@ -1479,20 +1479,33 @@
       document.getElementById('btnAudioToggle').innerText = audioMuted ? '🔇 AUDIO: OFF' : '🔊 AUDIO: ON';
     }
 
+    function createNoiseBuffer(duration) {
+      if (!audioCtx) return null;
+      const bufferSize = audioCtx.sampleRate * duration;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      return buffer;
+    }
+
     function playSound(type) {
       if (audioMuted) return;
       try {
         initAudio();
         if (!audioCtx) return;
-
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
 
         const now = audioCtx.currentTime;
 
         if (type === 'move') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'sine';
           osc.frequency.setValueAtTime(400, now);
           osc.frequency.exponentialRampToValueAtTime(700, now + 0.05);
@@ -1501,6 +1514,10 @@
           osc.start(now);
           osc.stop(now + 0.05);
         } else if (type === 'scan') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'triangle';
           osc.frequency.setValueAtTime(800, now);
           osc.frequency.linearRampToValueAtTime(1600, now + 0.15);
@@ -1509,6 +1526,10 @@
           osc.start(now);
           osc.stop(now + 0.15);
         } else if (type === 'planetScan') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'sine';
           osc.frequency.setValueAtTime(1200, now);
           osc.frequency.setValueAtTime(1800, now + 0.1);
@@ -1517,6 +1538,10 @@
           osc.start(now);
           osc.stop(now + 0.25);
         } else if (type === 'mine') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(250, now);
           osc.frequency.linearRampToValueAtTime(120, now + 0.2);
@@ -1525,14 +1550,22 @@
           osc.start(now);
           osc.stop(now + 0.2);
         } else if (type === 'warp') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'sine';
-          osc.frequency.setValueAtTime(150, now);
-          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.4);
+          osc.frequency.setValueAtTime(90, now);
+          osc.frequency.exponentialRampToValueAtTime(1600, now + 0.45);
           gain.gain.setValueAtTime(0.2, now);
-          gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.45);
           osc.start(now);
-          osc.stop(now + 0.4);
+          osc.stop(now + 0.45);
         } else if (type === 'dock') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'sine';
           osc.frequency.setValueAtTime(523.25, now);
           osc.frequency.setValueAtTime(659.25, now + 0.08);
@@ -1541,15 +1574,25 @@
           gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
           osc.start(now);
           osc.stop(now + 0.25);
-        } else if (type === 'alert') {
+        } else if (type === 'alert' || type === 'alarm') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'square';
-          osc.frequency.setValueAtTime(300, now);
-          osc.frequency.setValueAtTime(200, now + 0.1);
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.setValueAtTime(587, now + 0.1);
+          osc.frequency.setValueAtTime(880, now + 0.2);
+          osc.frequency.setValueAtTime(587, now + 0.3);
           gain.gain.setValueAtTime(0.15, now);
-          gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
           osc.start(now);
-          osc.stop(now + 0.2);
+          osc.stop(now + 0.4);
         } else if (type === 'good') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
           osc.type = 'sine';
           osc.frequency.setValueAtTime(600, now);
           osc.frequency.exponentialRampToValueAtTime(1000, now + 0.15);
@@ -1557,6 +1600,79 @@
           gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
           osc.start(now);
           osc.stop(now + 0.15);
+        } else if (type === 'laser') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1100, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.12);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+          osc.start(now);
+          osc.stop(now + 0.12);
+        } else if (type === 'shield') {
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc1.type = 'sine';
+          osc2.type = 'sine';
+          osc1.frequency.setValueAtTime(140, now);
+          osc2.frequency.setValueAtTime(145, now);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+          osc1.start(now);
+          osc2.start(now);
+          osc1.stop(now + 0.35);
+          osc2.stop(now + 0.35);
+        } else if (type === 'pickup') {
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          notes.forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = 'sine';
+            const noteStart = now + (idx * 0.045);
+            osc.frequency.setValueAtTime(freq, noteStart);
+            gain.gain.setValueAtTime(0.12, noteStart);
+            gain.gain.linearRampToValueAtTime(0.01, noteStart + 0.04);
+            osc.start(noteStart);
+            osc.stop(noteStart + 0.04);
+          });
+        } else if (type === 'explosion') {
+          const noiseBuffer = createNoiseBuffer(0.6);
+          if (noiseBuffer) {
+            const noiseSrc = audioCtx.createBufferSource();
+            noiseSrc.buffer = noiseBuffer;
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(160, now);
+            filter.frequency.linearRampToValueAtTime(40, now + 0.6);
+            const noiseGain = audioCtx.createGain();
+            noiseGain.gain.setValueAtTime(0.25, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+            noiseSrc.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(audioCtx.destination);
+            noiseSrc.start(now);
+            noiseSrc.stop(now + 0.6);
+          }
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(80, now);
+          osc.frequency.exponentialRampToValueAtTime(25, now + 0.6);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now);
+          osc.stop(now + 0.6);
         }
       } catch (e) { }
     }
@@ -3528,7 +3644,7 @@
             addCombatFeed(`[TARGET: CORE HULL] DIRECT HIT ON HULL! Dealt ${baseDmg} critical DMG!`, 'good');
           }
         }
-        playSound('good');
+        playSound('laser');
       }
 
       updateCombatUI();
@@ -3552,7 +3668,7 @@
       const boost = 30;
       state.shields = Math.min(state.maxShields, state.shields + boost);
       addCombatFeed(`[DEFLECTOR OVERCHARGE] Diverted power to shield matrix! +${boost} HP restored.`, 'sys');
-      playSound('good');
+      playSound('shield');
       updateCombatUI();
       updateUI();
 
@@ -3729,7 +3845,7 @@
       if (type === 6) checkSectorObjectiveProgress(14, 1);
 
       addLog(`[COMBAT VICTORY] Destroyed ${e.name}! Claimed +${rewardCr} Cr, +${rewardScrap} Scrap & +${rewardRelic} Relics!`, 'good');
-      playSound('good');
+      playSound('explosion');
 
       if (state.gridMap[state.shipY][state.shipX] === CELL_TYPES.PIRATE) {
         state.gridMap[state.shipY][state.shipX] = CELL_TYPES.EMPTY;
