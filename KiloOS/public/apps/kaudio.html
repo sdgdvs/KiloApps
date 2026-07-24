@@ -1,54 +1,80 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KAudio</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAudio Synthesizer</title>
 <style>
+  * {
+    box-sizing: border-box;
+  }
   body { 
     margin: 0; 
     background: linear-gradient(135deg, #0f172a, #1e1b4b); 
     display: flex; flex-direction: column; 
     justify-content: center; align-items: center; 
     height: 100vh; overflow: hidden; 
-    font-family: 'Inter', system-ui, sans-serif; user-select: none; color: #fff;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif; 
+    user-select: none; color: #fff;
   }
   .synth-container {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.04);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
   .controls {
     display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;
+    gap: 12px;
+  }
+  .brand {
+    font-size: 18px; font-weight: 700; letter-spacing: 0.5px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .dot { color: #0ea5e9; }
+  .status-badge {
+    font-size: 13px; font-weight: 600; color: #ef4444; opacity: 0.7;
+    background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s;
+  }
+  .octave-badge {
+    font-size: 13px; font-weight: 500; color: #94a3b8;
+    background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
   }
   .waveform-select {
-    background: rgba(0, 0, 0, 0.4); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.4);
+    background: rgba(0, 0, 0, 0.5); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4);
     padding: 6px 12px; border-radius: 6px; cursor: pointer; outline: none; font-size: 13px;
-    transition: all 0.2s; appearance: none; text-align: center; font-weight: 500;
+    transition: all 0.2s; font-weight: 500;
   }
-  .waveform-select:hover { border-color: #0ea5e9; background: rgba(0, 0, 0, 0.6); }
-  .waveform-select option { background: #1e1b4b; color: #fff; }
-  .keys-wrapper { position: relative; display: flex; gap: 4px; }
+  .waveform-select:hover, .waveform-select:focus { border-color: #38bdf8; background: rgba(0, 0, 0, 0.7); box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
+  .waveform-select option { background: #0f172a; color: #fff; }
+  
+  .keys-wrapper { position: relative; display: flex; gap: 4px; padding-top: 4px; }
   
   .key { 
     width: 44px; height: 160px; background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%); 
     border-radius: 0 0 6px 6px; display: flex; align-items: flex-end; justify-content: center; 
     padding-bottom: 12px; font-weight: 600; color: #475569; font-size: 13px;
-    cursor: pointer; transition: transform 0.1s, box-shadow 0.1s, background 0.1s; 
+    cursor: pointer; transition: transform 0.08s, box-shadow 0.08s, background 0.08s; 
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), inset 0 -4px 0 rgba(0,0,0,0.1);
-    position: relative; z-index: 1;
+    position: relative; z-index: 1; outline: none; touch-action: manipulation;
+  }
+  .key:focus-visible {
+    outline: 2px solid #0ea5e9; outline-offset: 2px;
   }
   .key.black {
-    position: absolute; top: 0; left: 0; 
-    width: 28px; height: 90px; background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+    position: absolute; top: 4px; left: 0; 
+    width: 28px; height: 94px; background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
     border-radius: 0 0 4px 4px; color: #94a3b8; font-size: 11px; z-index: 2;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), inset 0 -3px 0 rgba(0,0,0,0.5);
     padding-bottom: 8px;
   }
   
-  /* Black Key Positions */
+  /* Black Key Offsets */
   .key.black[data-note="1"] { margin-left: 32px; }
   .key.black[data-note="3"] { margin-left: 80px; }
   .key.black[data-note="6"] { margin-left: 176px; }
@@ -57,21 +83,21 @@
   
   /* Active States */
   .key.active { 
-    background: #0ea5e9; color: #fff; transform: translateY(2px);
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0,0,0,0.2), 0 0 15px rgba(14, 165, 233, 0.4);
+    background: #0ea5e9; color: #fff; transform: translateY(3px);
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), inset 0 -2px 0 rgba(0,0,0,0.2), 0 0 15px rgba(14, 165, 233, 0.5);
   }
   .key.black.active {
-    background: #38bdf8; transform: translateY(2px); color: #fff;
-    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(0,0,0,0.5), 0 0 10px rgba(56, 189, 248, 0.4);
+    background: #38bdf8; transform: translateY(3px); color: #fff;
+    box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.4), inset 0 -1px 0 rgba(0,0,0,0.5), 0 0 12px rgba(56, 189, 248, 0.5);
   }
 </style>
 </head>
 <body>
-<div class="synth-container">
+<main class="synth-container" role="region" aria-label="KAudio Synthesizer">
   <div class="controls">
-    <div style="font-size: 16px; font-weight: 700; letter-spacing: 0.5px;">KAudio<span style="color:#0ea5e9">.</span></div>
-    <div id="octaveDisplay" style="font-size: 13px; font-weight: 500; color: #94a3b8; margin: 0 16px;">Oct: 0 (L/R)</div>
-    <div id="recStatus" style="font-size: 13px; font-weight: bold; color: #ef4444; margin: 0 16px 0 0; opacity: 0.5;">Z: Rec, X: Play</div>
+    <div class="brand">KAudio<span class="dot">.</span></div>
+    <div id="octaveDisplay" class="octave-badge">Oct: 0 (L/R)</div>
+    <div id="recStatus" class="status-badge">Z: Rec, X: Play</div>
     <select id="waveType" class="waveform-select" aria-label="Waveform type">
       <option value="square">Square Wave</option>
       <option value="sine">Sine Wave</option>
@@ -80,14 +106,16 @@
     </select>
   </div>
   <div class="keys-wrapper" id="keys"></div>
-</div>
+</main>
 <script>
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let ctx = null;
+  let masterGain = null;
   
   // 13 notes: C, C#, D, D#, E, F, F#, G, G#, A, A#, B, C
   const binds = ['A', 'W', 'S', 'E', 'D', 'F', 'T', 'G', 'Y', 'H', 'U', 'J', 'K'];
   const freqs = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 523.25];
+  const noteNames = ['C4', 'C#4', 'D4', 'D#4', 'E4', 'F4', 'F#4', 'G4', 'G#4', 'A4', 'A#4', 'B4', 'C5'];
   const isBlack = [false, true, false, true, false, false, true, false, true, false, true, false, false];
   
   const keyEls = [];
@@ -103,7 +131,20 @@
   const waveSelect = document.getElementById('waveType');
   const keysContainer = document.getElementById('keys');
   const octaveDisplay = document.getElementById('octaveDisplay');
-  
+  const recStatus = document.getElementById('recStatus');
+
+  function initAudio() {
+      if (!ctx) {
+          ctx = new AudioContext();
+          masterGain = ctx.createGain();
+          masterGain.gain.setValueAtTime(0.25, ctx.currentTime);
+          masterGain.connect(ctx.destination);
+      }
+      if (ctx.state === 'suspended') {
+          ctx.resume();
+      }
+  }
+
   for (let i = 0; i < binds.length; i++) {
       let el = document.createElement('div');
       el.className = 'key' + (isBlack[i] ? ' black' : '');
@@ -111,17 +152,40 @@
       el.textContent = binds[i];
       el.tabIndex = 0;
       el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', 'Play key ' + binds[i]);
+      el.setAttribute('aria-label', `Play note ${noteNames[i]} (Key ${binds[i]})`);
+      el.setAttribute('aria-pressed', 'false');
       keysContainer.appendChild(el);
       keyEls.push(el);
       
-      el.addEventListener('mousedown', () => play(i));
-      el.addEventListener('mouseup', () => stop(i));
-      el.addEventListener('mouseleave', () => stop(i));
-  }
+      const startTrigger = (e) => {
+          if (e.type === 'touchstart') e.preventDefault();
+          play(i);
+      };
+      const stopTrigger = (e) => {
+          if (e.type === 'touchend' || e.type === 'touchcancel') e.preventDefault();
+          stop(i);
+      };
 
-  function initAudio() {
-      if (!ctx) ctx = new AudioContext();
+      el.addEventListener('mousedown', startTrigger);
+      el.addEventListener('mouseup', stopTrigger);
+      el.addEventListener('mouseleave', stopTrigger);
+
+      el.addEventListener('touchstart', startTrigger, { passive: false });
+      el.addEventListener('touchend', stopTrigger, { passive: false });
+      el.addEventListener('touchcancel', stopTrigger, { passive: false });
+
+      el.addEventListener('keydown', (e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+              e.preventDefault();
+              play(i);
+          }
+      });
+      el.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              stop(i);
+          }
+      });
   }
 
   function play(i, fromPlayback = false) {
@@ -133,19 +197,23 @@
       }
       
       let osc = ctx.createOscillator();
-      let gain = ctx.createGain();
+      let voiceGain = ctx.createGain();
       
       osc.type = waveSelect.value;
-      osc.frequency.value = freqs[i] * Math.pow(2, octaveShift);
+      osc.frequency.setValueAtTime(freqs[i] * Math.pow(2, octaveShift), ctx.currentTime);
       
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      voiceGain.gain.setValueAtTime(0, ctx.currentTime);
+      voiceGain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.01);
       
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      osc.connect(voiceGain);
+      voiceGain.connect(masterGain);
       osc.start();
       
-      activeOscs[i] = { osc, gain };
-      keyEls[i].classList.add('active');
+      activeOscs[i] = { osc, gain: voiceGain };
+      if (keyEls[i]) {
+          keyEls[i].classList.add('active');
+          keyEls[i].setAttribute('aria-pressed', 'true');
+      }
   }
 
   function stop(i, fromPlayback = false) {
@@ -154,20 +222,37 @@
       }
 
       if (activeOscs[i]) {
-          let { osc, gain } = activeOscs[i];
-          gain.gain.setValueAtTime(0.1, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-          osc.stop(ctx.currentTime + 0.1);
+          let { osc, gain: voiceGain } = activeOscs[i];
           delete activeOscs[i];
+          if (ctx) {
+              try {
+                  let now = ctx.currentTime;
+                  voiceGain.gain.cancelScheduledValues(now);
+                  voiceGain.gain.setValueAtTime(voiceGain.gain.value, now);
+                  voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
+                  osc.stop(now + 0.09);
+                  setTimeout(() => {
+                      try {
+                          osc.disconnect();
+                          voiceGain.disconnect();
+                      } catch(e) {}
+                  }, 100);
+              } catch(e) {
+                  try { osc.stop(); } catch(err) {}
+              }
+          }
       }
-      keyEls[i].classList.remove('active');
+      if (keyEls[i]) {
+          keyEls[i].classList.remove('active');
+          keyEls[i].setAttribute('aria-pressed', 'false');
+      }
   }
 
   function startPlayback() {
       isPlaying = true;
-      document.getElementById('recStatus').textContent = '[PLAYING]';
-      document.getElementById('recStatus').style.color = '#10b981';
-      document.getElementById('recStatus').style.opacity = '1';
+      recStatus.textContent = '[PLAYING]';
+      recStatus.style.color = '#10b981';
+      recStatus.style.opacity = '1';
       
       let maxTime = 0;
       recordedEvents.forEach(ev => {
@@ -189,16 +274,21 @@
       playbackTimeouts.forEach(t => clearTimeout(t));
       playbackTimeouts = [];
       for (let i = 0; i < binds.length; i++) stop(i, true);
-      document.getElementById('recStatus').textContent = 'Z: Rec, X: Play';
-      document.getElementById('recStatus').style.color = '#ef4444';
-      document.getElementById('recStatus').style.opacity = '0.5';
+      recStatus.textContent = 'Z: Rec, X: Play';
+      recStatus.style.color = '#ef4444';
+      recStatus.style.opacity = '0.7';
   }
 
   document.addEventListener('keydown', e => {
-      let idx = binds.indexOf(e.key.toUpperCase());
-      if (idx !== -1 && !e.repeat) play(idx);
+      if (!e.key) return;
+      initAudio();
       
-      if (e.key.toUpperCase() === 'Z') {
+      let idx = binds.indexOf(e.key.toUpperCase());
+      if (idx !== -1 && !e.repeat && document.activeElement !== waveSelect) {
+          play(idx);
+      }
+      
+      if (e.key.toUpperCase() === 'Z' && !e.repeat && document.activeElement !== waveSelect) {
           if (isPlaying) stopPlayback();
           isRecording = !isRecording;
           if (isRecording) {
@@ -209,54 +299,60 @@
                       recordedEvents.push({ keyIndex: i, time: 0, type: 1 });
                   }
               }
-              document.getElementById('recStatus').textContent = '[RECORDING]';
-              document.getElementById('recStatus').style.color = '#ef4444';
-              document.getElementById('recStatus').style.opacity = '1';
+              recStatus.textContent = '[RECORDING]';
+              recStatus.style.color = '#ef4444';
+              recStatus.style.opacity = '1';
           } else {
-              document.getElementById('recStatus').textContent = 'Z: Rec, X: Play';
-              document.getElementById('recStatus').style.opacity = '0.5';
+              recStatus.textContent = 'Z: Rec, X: Play';
+              recStatus.style.opacity = '0.7';
           }
       }
-      if (e.key.toUpperCase() === 'X') {
+
+      if (e.key.toUpperCase() === 'X' && !e.repeat && document.activeElement !== waveSelect) {
           if (isRecording) {
               isRecording = false;
-              document.getElementById('recStatus').textContent = 'Z: Rec, X: Play';
-              document.getElementById('recStatus').style.opacity = '0.5';
+              recStatus.textContent = 'Z: Rec, X: Play';
+              recStatus.style.opacity = '0.7';
           }
           if (recordedEvents.length === 0) return;
           if (isPlaying) stopPlayback();
           else startPlayback();
       }
       
-      if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          waveSelect.selectedIndex = (waveSelect.selectedIndex - 1 + waveSelect.options.length) % waveSelect.options.length;
-      }
-      if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          waveSelect.selectedIndex = (waveSelect.selectedIndex + 1) % waveSelect.options.length;
-      }
-      if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          if (octaveShift > -4) {
-              for (let i = 0; i < binds.length; i++) stop(i);
-              octaveShift--;
-              octaveDisplay.textContent = 'Oct: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+      if (document.activeElement !== waveSelect) {
+          if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              waveSelect.selectedIndex = (waveSelect.selectedIndex - 1 + waveSelect.options.length) % waveSelect.options.length;
           }
-      }
-      if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          if (octaveShift < 4) {
-              for (let i = 0; i < binds.length; i++) stop(i);
-              octaveShift++;
-              octaveDisplay.textContent = 'Oct: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+          if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              waveSelect.selectedIndex = (waveSelect.selectedIndex + 1) % waveSelect.options.length;
+          }
+          if (e.key === 'ArrowLeft') {
+              e.preventDefault();
+              if (octaveShift > -4) {
+                  for (let i = 0; i < binds.length; i++) stop(i);
+                  octaveShift--;
+                  octaveDisplay.textContent = 'Oct: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+              }
+          }
+          if (e.key === 'ArrowRight') {
+              e.preventDefault();
+              if (octaveShift < 4) {
+                  for (let i = 0; i < binds.length; i++) stop(i);
+                  octaveShift++;
+                  octaveDisplay.textContent = 'Oct: ' + (octaveShift > 0 ? '+' : '') + octaveShift + ' (L/R)';
+              }
           }
       }
   });
 
   document.addEventListener('keyup', e => {
+      if (!e.key) return;
       let idx = binds.indexOf(e.key.toUpperCase());
-      if (idx !== -1) stop(idx);
+      if (idx !== -1 && document.activeElement !== waveSelect) {
+          stop(idx);
+      }
   });
 
   window.addEventListener('blur', () => {
