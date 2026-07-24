@@ -1,127 +1,1204 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KJournal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KJournal - Personal Journal & Mood Analytics</title>
 <style>
-  body { margin: 0; background: #fdf6e3; display: flex; height: 100vh; font-family: 'Segoe UI', sans-serif; color: #333; }
-  .sidebar { width: 200px; background: #eee8d5; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
-  .main { flex: 1; display: flex; flex-direction: column; padding: 10px; }
-  .date-picker { padding: 10px; border-bottom: 1px solid #ccc; }
-  .date-picker input { width: 100%; box-sizing: border-box; padding: 5px; font-size: 14px; }
-  .entry-list { flex: 1; overflow-y: auto; list-style: none; padding: 0; margin: 0; }
-  .search-box { padding: 10px; border-bottom: 1px solid #ccc; background: #e8e2d0; }
-  .search-box input { width: 100%; box-sizing: border-box; padding: 5px; font-size: 14px; }
-  .entry-item { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; font-size: 14px; }
-  .entry-item:hover { background: #e8e2d0; }
-  .entry-item.active { background: #fdf6e3; font-weight: bold; border-left: 4px solid #b58900; }
-  textarea { flex: 1; width: 100%; box-sizing: border-box; background: transparent; border: none; padding: 10px; font-size: 16px; font-family: 'Segoe UI', sans-serif; resize: none; outline: none; line-height: 1.5; }
-  .toolbar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-bottom: 10px; }
-  h2 { margin: 0; font-size: 18px; color: #b58900; }
-  button { background: #b58900; color: white; border: none; padding: 5px 15px; border-radius: 3px; cursor: pointer; }
-  button:hover { background: #cb4b16; }
+  :root {
+    --bg-primary: #181b22;
+    --bg-secondary: #212631;
+    --bg-tertiary: #2a303f;
+    --accent-gold: #e5c07b;
+    --accent-gold-hover: #d19a66;
+    --accent-cyan: #56b6c2;
+    --accent-green: #98c379;
+    --accent-red: #e06c75;
+    --accent-purple: #c678dd;
+    --text-main: #abb2bf;
+    --text-bright: #ffffff;
+    --text-muted: #6b7280;
+    --border-color: #313745;
+    --card-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-main);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* PIN Lock Overlay */
+  #pinOverlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 17, 23, 0.95);
+    backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .pin-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 30px;
+    width: 320px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+  }
+  .pin-card h2 { color: var(--accent-gold); margin-bottom: 8px; font-size: 20px; }
+  .pin-card p { color: var(--text-muted); font-size: 13px; margin-bottom: 20px; }
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; }
+  .pin-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--accent-gold); transition: background 0.2s;
+  }
+  .pin-dot.filled { background: var(--accent-gold); }
+  .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .pin-btn {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-bright);
+    font-size: 18px; font-weight: bold;
+    padding: 14px 0; border-radius: 8px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pin-btn:hover { background: var(--border-color); border-color: var(--accent-gold); }
+  .pin-btn:active { transform: scale(0.95); }
+  .pin-btn.action { font-size: 13px; font-weight: normal; color: var(--accent-red); }
+
+  /* App Layout */
+  .app-container { display: flex; width: 100%; height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 330px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .sidebar-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand-title {
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--accent-gold);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 5px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .icon-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-bright);
+    border-color: var(--accent-gold);
+  }
+
+  /* Streak Summary Widget */
+  .streak-widget {
+    margin: 12px 16px 6px 16px;
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+  }
+  .streak-item { display: flex; flex-direction: column; }
+  .streak-val { font-weight: bold; font-size: 15px; color: var(--accent-gold); }
+  .streak-lbl { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+
+  /* Mini Calendar Widget */
+  .cal-container {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .cal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .cal-month-title { font-weight: 600; font-size: 13px; color: var(--text-bright); }
+  .cal-nav { display: flex; gap: 4px; }
+  .cal-nav button {
+    background: var(--bg-tertiary); border: none; color: var(--text-main);
+    width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 12px;
+  }
+  .cal-nav button:hover { background: var(--border-color); color: var(--text-bright); }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+    text-align: center;
+    font-size: 11px;
+  }
+  .cal-day-head { color: var(--text-muted); padding: 3px 0; font-weight: bold; }
+  .cal-day {
+    padding: 5px 0;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    color: var(--text-main);
+  }
+  .cal-day:hover { background: var(--bg-tertiary); }
+  .cal-day.empty { cursor: default; }
+  .cal-day.today { border: 1px solid var(--accent-gold); font-weight: bold; color: var(--text-bright); }
+  .cal-day.selected { background: var(--accent-gold); color: #000; font-weight: bold; }
+  .cal-day.has-entry::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+  }
+  .cal-day.selected.has-entry::after { background: #000; }
+
+  /* Hashtag Cloud */
+  .tag-section {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .tag-section-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: bold; margin-bottom: 6px; }
+  .tag-cloud { display: flex; flex-wrap: wrap; gap: 4px; max-height: 70px; overflow-y: auto; }
+  .tag-pill {
+    font-size: 11px; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    color: var(--accent-cyan); padding: 2px 7px; border-radius: 12px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tag-pill:hover, .tag-pill.active {
+    background: var(--accent-cyan); color: #111; border-color: var(--accent-cyan); font-weight: 600;
+  }
+
+  /* Search & Filter Bar */
+  .search-box { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; gap: 6px; }
+  .search-box input {
+    flex: 1; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    color: var(--text-bright); padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none;
+  }
+  .search-box input:focus { border-color: var(--accent-gold); }
+
+  /* Entry List */
+  .entry-list-container { flex: 1; overflow-y: auto; }
+  .entry-item {
+    padding: 10px 16px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.15s;
+  }
+  .entry-item:hover { background: var(--bg-tertiary); }
+  .entry-item.active { background: rgba(229, 192, 123, 0.1); border-left: 3px solid var(--accent-gold); }
+  .entry-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .entry-item-date { font-weight: 600; font-size: 13px; color: var(--text-bright); }
+  .entry-item-mood { font-size: 14px; }
+  .entry-item-snippet { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Main Workspace */
+  .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); }
+
+  .toolbar {
+    padding: 12px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 12px; }
+  .date-title { font-size: 18px; font-weight: 700; color: var(--accent-gold); }
+
+  .mood-picker { display: flex; align-items: center; gap: 4px; background: var(--bg-tertiary); padding: 3px; border-radius: 6px; border: 1px solid var(--border-color); }
+  .mood-opt {
+    background: transparent; border: none; padding: 4px 7px; border-radius: 4px; cursor: pointer; font-size: 15px; opacity: 0.5; transition: all 0.15s;
+  }
+  .mood-opt:hover, .mood-opt.selected { opacity: 1; background: var(--bg-secondary); transform: scale(1.1); }
+
+  .toolbar-right { display: flex; align-items: center; gap: 8px; }
+
+  .btn {
+    background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main);
+    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+  }
+  .btn:hover { background: var(--border-color); color: var(--text-bright); }
+  .btn-primary { background: var(--accent-gold); color: #181b22; border: none; font-weight: 600; }
+  .btn-primary:hover { background: var(--accent-gold-hover); color: #000; }
+  .btn-danger { background: rgba(224, 108, 117, 0.15); color: var(--accent-red); border-color: rgba(224, 108, 117, 0.3); }
+  .btn-danger:hover { background: var(--accent-red); color: #fff; }
+
+  /* Editor Container */
+  .editor-container { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; }
+  textarea.journal-editor {
+    flex: 1; width: 100%; background: transparent; border: none; outline: none;
+    color: var(--text-bright); font-size: 16px; line-height: 1.7; font-family: inherit; resize: none;
+  }
+
+  .editor-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 10px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px;
+  }
+
+  /* Modals */
+  .modal-backdrop {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 900;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-backdrop.active { display: flex; }
+  .modal-card {
+    background: var(--bg-secondary); border: 1px solid var(--border-color);
+    border-radius: 12px; width: 500px; max-width: 90vw; max-height: 85vh;
+    display: flex; flex-direction: column; box-shadow: var(--card-shadow);
+  }
+  .modal-header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border-color);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h3 { color: var(--accent-gold); font-size: 17px; }
+  .modal-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 14px; }
+  .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px; }
+
+  /* Analytics Modal Styling */
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    padding: 14px; border-radius: 8px; text-align: center;
+  }
+  .stat-card-val { font-size: 22px; font-weight: bold; color: var(--accent-gold); }
+  .stat-card-lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .chart-section { margin-top: 16px; }
+  .chart-title { font-size: 13px; font-weight: bold; color: var(--text-bright); margin-bottom: 10px; }
+  .mood-bar-item { margin-bottom: 8px; }
+  .mood-bar-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+  .mood-bar-bg { background: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden; }
+  .mood-bar-fill { height: 100%; background: var(--accent-gold); border-radius: 4px; }
+
+  /* Form controls */
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--text-main); }
+  .form-control {
+    width: 100%; background: var(--bg-tertiary); border: 1px solid var(--border-color);
+    color: var(--text-bright); padding: 8px 12px; border-radius: 6px; font-size: 14px; outline: none;
+  }
+  .form-control:focus { border-color: var(--accent-gold); }
+
+  /* Notification Toast */
+  #toast {
+    position: fixed; bottom: 20px; right: 20px;
+    background: var(--accent-gold); color: #111; font-weight: 600;
+    padding: 10px 18px; border-radius: 8px; box-shadow: var(--card-shadow);
+    transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
 </style>
 </head>
 <body>
-<div class="sidebar">
-    <div class="date-picker">
-        <input type="date" id="dateInput" aria-label="Select Date">
+
+<!-- PIN Overlay -->
+<div id="pinOverlay" style="display:none;">
+  <div class="pin-card">
+    <h2 id="pinTitle">KJournal Locked</h2>
+    <p id="pinSub">Enter 4-digit PIN to access your journal</p>
+    <div class="pin-dots">
+      <div class="pin-dot" id="dot0"></div>
+      <div class="pin-dot" id="dot1"></div>
+      <div class="pin-dot" id="dot2"></div>
+      <div class="pin-dot" id="dot3"></div>
     </div>
+    <div class="pin-keypad">
+      <button class="pin-btn" onclick="pressPin('1')">1</button>
+      <button class="pin-btn" onclick="pressPin('2')">2</button>
+      <button class="pin-btn" onclick="pressPin('3')">3</button>
+      <button class="pin-btn" onclick="pressPin('4')">4</button>
+      <button class="pin-btn" onclick="pressPin('5')">5</button>
+      <button class="pin-btn" onclick="pressPin('6')">6</button>
+      <button class="pin-btn" onclick="pressPin('7')">7</button>
+      <button class="pin-btn" onclick="pressPin('8')">8</button>
+      <button class="pin-btn" onclick="pressPin('9')">9</button>
+      <button class="pin-btn action" onclick="clearPin()">Clear</button>
+      <button class="pin-btn" onclick="pressPin('0')">0</button>
+      <button class="pin-btn action" onclick="backspacePin()">⌫</button>
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-title">
+        <span>📖</span> KJournal
+      </div>
+      <div>
+        <button class="icon-btn" onclick="openAnalyticsModal()" title="Analytics & Streaks">📊</button>
+        <button class="icon-btn" onclick="openSettingsModal()" title="Settings & Security">⚙️</button>
+        <button class="icon-btn" onclick="lockApp()" id="lockAppBtn" title="Lock Journal" style="display:none;">🔒</button>
+      </div>
+    </div>
+
+    <!-- Streak Widget -->
+    <div class="streak-widget">
+      <div class="streak-item">
+        <div class="streak-val" id="currentStreakVal">0 days</div>
+        <div class="streak-lbl">Current Streak 🔥</div>
+      </div>
+      <div class="streak-item">
+        <div class="streak-val" id="totalEntriesVal">0</div>
+        <div class="streak-lbl">Total Entries 📝</div>
+      </div>
+    </div>
+
+    <!-- Calendar View -->
+    <div class="cal-container">
+      <div class="cal-header">
+        <span class="cal-month-title" id="calMonthYear">July 2026</span>
+        <div class="cal-nav">
+          <button onclick="prevCalMonth()">‹</button>
+          <button onclick="todayCalMonth()">•</button>
+          <button onclick="nextCalMonth()">›</button>
+        </div>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- Hashtag Cloud -->
+    <div class="tag-section">
+      <div class="tag-section-title">Hashtags</div>
+      <div class="tag-cloud" id="tagCloud"></div>
+    </div>
+
+    <!-- Search Box -->
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Search entries..." aria-label="Search entries">
+      <input type="text" id="searchInput" placeholder="Search entries & tags..." oninput="renderEntryList()">
     </div>
-    <ul class="entry-list" id="entryList" aria-label="Journal Entries"></ul>
-</div>
-<div class="main">
+
+    <!-- Entry List -->
+    <div class="entry-list-container" id="entryList"></div>
+  </div>
+
+  <!-- Main Content Editor -->
+  <div class="main-content">
     <div class="toolbar">
-        <h2 id="currentDateDisplay" aria-live="polite">Select a Date</h2>
-        <button id="saveBtn" aria-label="Save Entry">Save Entry</button>
+      <div class="toolbar-left">
+        <div class="date-title" id="currentDateDisplay">July 24, 2026</div>
+        <div class="mood-picker">
+          <button class="mood-opt" data-mood="😀" title="Happy" onclick="selectMood('😀')">😀</button>
+          <button class="mood-opt" data-mood="😊" title="Calm" onclick="selectMood('😊')">😊</button>
+          <button class="mood-opt" data-mood="😐" title="Neutral" onclick="selectMood('😐')">😐</button>
+          <button class="mood-opt" data-mood="😔" title="Sad" onclick="selectMood('😔')">😔</button>
+          <button class="mood-opt" data-mood="⚡" title="Energetic" onclick="selectMood('⚡')">⚡</button>
+          <button class="mood-opt" data-mood="🧘" title="Focused" onclick="selectMood('🧘')">🧘</button>
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button class="btn" onclick="openImportExportModal()">📥 / 📤 Data</button>
+        <button class="btn btn-danger" onclick="deleteCurrentEntry()">Delete</button>
+        <button class="btn btn-primary" onclick="saveEntry()">Save Entry</button>
+      </div>
     </div>
-    <textarea id="journalArea" placeholder="Write your thoughts here..." aria-label="Journal Entry Content"></textarea>
+
+    <div class="editor-container">
+      <textarea id="journalArea" class="journal-editor" placeholder="Write your thoughts, ideas, or reflection for today... Use #hashtags to categorize." oninput="updateEditorStats()"></textarea>
+      <div class="editor-footer">
+        <div id="editorStats">0 words | 0 characters</div>
+        <div id="saveStatus">Saved locally</div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Analytics & Streaks Modal -->
+<div class="modal-backdrop" id="analyticsModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>📊 Journal Analytics & Streaks</h3>
+      <button class="icon-btn" onclick="closeModal('analyticsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-card-val" id="modalCurrentStreak">0 Days</div>
+          <div class="stat-card-lbl">Current Writing Streak 🔥</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-val" id="modalBestStreak">0 Days</div>
+          <div class="stat-card-lbl">Longest Streak 🏆</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-val" id="modalTotalWords">0</div>
+          <div class="stat-card-lbl">Total Words Written ✍️</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-val" id="modalAvgWords">0</div>
+          <div class="stat-card-lbl">Avg Words / Entry 📈</div>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-title">Mood Breakdown</div>
+        <div id="moodBreakdown"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="closeModal('analyticsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings & Security Modal -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>⚙️ Settings & PIN Lock Security</h3>
+      <button class="icon-btn" onclick="closeModal('settingsModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label><strong>PIN Lock Security</strong></label>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          Set a 4-digit numeric PIN to protect your journal entries from unauthorized access.
+        </p>
+        <button class="btn btn-primary" id="setPinBtn" onclick="initSetPin()">Set / Change 4-Digit PIN</button>
+        <button class="btn btn-danger" id="removePinBtn" onclick="removePin()" style="display:none; margin-left:8px;">Disable PIN Lock</button>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+      <div class="form-group">
+        <label><strong>Storage Information</strong></label>
+        <p style="font-size:12px; color:var(--text-muted);" id="storageInfo">
+          All data is stored privately inside browser LocalStorage.
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('settingsModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import & Export Modal -->
+<div class="modal-backdrop" id="importExportModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>📥 / 📤 Data Import & Export</h3>
+      <button class="icon-btn" onclick="closeModal('importExportModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label><strong>Export Entries</strong></label>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          Download your complete journal backup in JSON, Markdown, or Plain Text format.
+        </p>
+        <div style="display:flex; gap:8px;">
+          <button class="btn" onclick="exportData('json')">Export JSON</button>
+          <button class="btn" onclick="exportData('md')">Export Markdown</button>
+          <button class="btn" onclick="exportData('txt')">Export TXT</button>
+        </div>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+      <div class="form-group">
+        <label><strong>Import Entries</strong></label>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          Restore entries from a previously exported JSON backup file.
+        </p>
+        <input type="file" id="importFileInput" accept=".json" class="form-control">
+        <button class="btn btn-primary" onclick="importData()" style="margin-top:10px;">Import JSON File</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('importExportModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast">Saved!</div>
+
 <script>
-  const dateInput = document.getElementById('dateInput');
-  const entryList = document.getElementById('entryList');
-  const journalArea = document.getElementById('journalArea');
-  const currentDateDisplay = document.getElementById('currentDateDisplay');
-  const saveBtn = document.getElementById('saveBtn');
-  const searchInput = document.getElementById('searchInput');
-  
-  let entries = {};
-  try {
-      let saved = localStorage.getItem('kjournal_data');
-      if (saved) entries = JSON.parse(saved);
-  } catch (e) {
+  // Core State
+  let entries = {}; // { 'YYYY-MM-DD': { text: '', mood: '😀', updatedAt: timestamp } }
+  let settings = { pin: '', pinEnabled: false };
+  let selectedDate = '';
+  let selectedMood = '';
+  let selectedTagFilter = '';
+  let calCurrentYear = new Date().getFullYear();
+  let calCurrentMonth = new Date().getMonth(); // 0-indexed
+
+  // PIN Input State
+  let pinBuffer = '';
+  let pinMode = 'verify'; // 'verify', 'create_1', 'create_2'
+  let newPinTemp = '';
+
+  // Initialize App
+  function init() {
+    loadSettings();
+    loadEntries();
+
+    const d = new Date();
+    selectedDate = formatDateString(d.getFullYear(), d.getMonth() + 1, d.getDate());
+
+    if (settings.pinEnabled && settings.pin) {
+      showPinOverlay('verify');
+    } else {
+      document.getElementById('pinOverlay').style.display = 'none';
+    }
+
+    updateLockBtnState();
+    renderCalendar();
+    renderTagCloud();
+    renderEntryList();
+    loadSelectedEntry();
+  }
+
+  // Local Storage Data Handling
+  function loadEntries() {
+    try {
+      const saved = localStorage.getItem('kjournal_data');
+      if (saved) {
+        let parsed = JSON.parse(saved);
+        // Handle migration from old flat format { "2026-07-24": "text" }
+        entries = {};
+        for (let k in parsed) {
+          if (typeof parsed[k] === 'string') {
+            entries[k] = { text: parsed[k], mood: '😊', updatedAt: Date.now() };
+          } else {
+            entries[k] = parsed[k];
+          }
+        }
+      }
+    } catch (e) {
       entries = {};
+    }
   }
 
-  // Init date
-  const d = new Date();
-  const today = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  dateInput.value = today;
+  function saveEntriesToStorage() {
+    localStorage.setItem('kjournal_data', JSON.stringify(entries));
+  }
 
-  function renderList() {
-      entryList.innerHTML = '';
-      let sortedDates = Object.keys(entries).sort((a,b) => b.localeCompare(a));
-      
-      const searchTerm = searchInput.value.toLowerCase().trim();
-      if (searchTerm) {
-          sortedDates = sortedDates.filter(date => entries[date].toLowerCase().includes(searchTerm));
+  function loadSettings() {
+    try {
+      const s = localStorage.getItem('kjournal_settings');
+      if (s) settings = JSON.parse(s);
+    } catch (e) {}
+  }
+
+  function saveSettingsToStorage() {
+    localStorage.setItem('kjournal_settings', JSON.stringify(settings));
+    updateLockBtnState();
+  }
+
+  function updateLockBtnState() {
+    const btn = document.getElementById('lockAppBtn');
+    btn.style.display = (settings.pinEnabled && settings.pin) ? 'inline-flex' : 'none';
+    document.getElementById('removePinBtn').style.display = (settings.pinEnabled && settings.pin) ? 'inline-block' : 'none';
+  }
+
+  // Toast Notification
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // PIN Protection System
+  function showPinOverlay(mode) {
+    pinMode = mode;
+    pinBuffer = '';
+    updatePinDots();
+    const overlay = document.getElementById('pinOverlay');
+    const title = document.getElementById('pinTitle');
+    const sub = document.getElementById('pinSub');
+    overlay.style.display = 'flex';
+
+    if (mode === 'verify') {
+      title.innerText = 'KJournal Locked';
+      sub.innerText = 'Enter 4-digit PIN to access your journal';
+    } else if (mode === 'create_1') {
+      title.innerText = 'Set New PIN';
+      sub.innerText = 'Enter a new 4-digit PIN';
+    } else if (mode === 'create_2') {
+      title.innerText = 'Confirm PIN';
+      sub.innerText = 'Re-enter your 4-digit PIN to confirm';
+    }
+  }
+
+  function pressPin(digit) {
+    if (pinBuffer.length < 4) {
+      pinBuffer += digit;
+      updatePinDots();
+      if (pinBuffer.length === 4) {
+        setTimeout(handlePinComplete, 150);
       }
+    }
+  }
 
-      sortedDates.forEach(date => {
-          let li = document.createElement('li');
-          li.className = 'entry-item' + (date === dateInput.value ? ' active' : '');
-          li.innerText = date;
-          li.tabIndex = 0;
-          li.setAttribute('role', 'button');
-          li.onclick = () => {
-              dateInput.value = date;
-              loadEntry();
-          };
-          li.onkeydown = (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  li.onclick();
-              }
-          };
-          entryList.appendChild(li);
+  function backspacePin() {
+    if (pinBuffer.length > 0) {
+      pinBuffer = pinBuffer.slice(0, -1);
+      updatePinDots();
+    }
+  }
+
+  function clearPin() {
+    pinBuffer = '';
+    updatePinDots();
+  }
+
+  function updatePinDots() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById(`dot${i}`);
+      if (i < pinBuffer.length) dot.classList.add('filled');
+      else dot.classList.remove('filled');
+    }
+  }
+
+  function handlePinComplete() {
+    if (pinMode === 'verify') {
+      if (pinBuffer === settings.pin) {
+        document.getElementById('pinOverlay').style.display = 'none';
+        showToast('Unlocked successfully');
+      } else {
+        showToast('Incorrect PIN!');
+        pinBuffer = '';
+        updatePinDots();
+      }
+    } else if (pinMode === 'create_1') {
+      newPinTemp = pinBuffer;
+      showPinOverlay('create_2');
+    } else if (pinMode === 'create_2') {
+      if (pinBuffer === newPinTemp) {
+        settings.pin = pinBuffer;
+        settings.pinEnabled = true;
+        saveSettingsToStorage();
+        document.getElementById('pinOverlay').style.display = 'none';
+        closeModal('settingsModal');
+        showToast('PIN Lock Enabled!');
+      } else {
+        showToast('PINs did not match!');
+        showPinOverlay('create_1');
+      }
+    }
+  }
+
+  function lockApp() {
+    if (settings.pinEnabled && settings.pin) {
+      showPinOverlay('verify');
+    }
+  }
+
+  function initSetPin() {
+    showPinOverlay('create_1');
+  }
+
+  function removePin() {
+    if (confirm('Are you sure you want to disable PIN protection?')) {
+      settings.pin = '';
+      settings.pinEnabled = false;
+      saveSettingsToStorage();
+      showToast('PIN Lock Disabled');
+    }
+  }
+
+  // Calendar Navigator Widget
+  function renderCalendar() {
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    document.getElementById('calMonthYear').innerText = `${monthNames[calCurrentMonth]} ${calCurrentYear}`;
+
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    const dayHeaders = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    dayHeaders.forEach(dh => {
+      const el = document.createElement('div');
+      el.className = 'cal-day-head';
+      el.innerText = dh;
+      grid.appendChild(el);
+    });
+
+    const firstDay = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+    const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+
+    // Pad blank days
+    for (let i = 0; i < firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-day empty';
+      grid.appendChild(empty);
+    }
+
+    const todayStr = formatDateString(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = formatDateString(calCurrentYear, calCurrentMonth + 1, day);
+      const dayEl = document.createElement('div');
+      dayEl.className = 'cal-day';
+      if (dateStr === todayStr) dayEl.classList.add('today');
+      if (dateStr === selectedDate) dayEl.classList.add('selected');
+      if (entries[dateStr] && entries[dateStr].text.trim().length > 0) {
+        dayEl.classList.add('has-entry');
+      }
+      dayEl.innerText = day;
+      dayEl.onclick = () => {
+        selectedDate = dateStr;
+        loadSelectedEntry();
+        renderCalendar();
+      };
+      grid.appendChild(dayEl);
+    }
+  }
+
+  function prevCalMonth() {
+    calCurrentMonth--;
+    if (calCurrentMonth < 0) {
+      calCurrentMonth = 11;
+      calCurrentYear--;
+    }
+    renderCalendar();
+  }
+
+  function nextCalMonth() {
+    calCurrentMonth++;
+    if (calCurrentMonth > 11) {
+      calCurrentMonth = 0;
+      calCurrentYear++;
+    }
+    renderCalendar();
+  }
+
+  function todayCalMonth() {
+    const d = new Date();
+    calCurrentYear = d.getFullYear();
+    calCurrentMonth = d.getMonth();
+    selectedDate = formatDateString(calCurrentYear, calCurrentMonth + 1, d.getDate());
+    loadSelectedEntry();
+    renderCalendar();
+  }
+
+  // Hashtag Extraction & Filtering
+  function extractAllHashtags() {
+    const tagCounts = {};
+    for (let d in entries) {
+      const text = entries[d].text || '';
+      const tags = text.match(/#[a-zA-Z0-9_\-]+/g) || [];
+      tags.forEach(t => {
+        const lower = t.toLowerCase();
+        tagCounts[lower] = (tagCounts[lower] || 0) + 1;
       });
+    }
+    return tagCounts;
   }
 
-  function loadEntry() {
-      const date = dateInput.value;
-      currentDateDisplay.innerText = date || "Select a Date";
-      if (date && entries[date]) {
-          journalArea.value = entries[date];
-      } else {
-          journalArea.value = "";
-      }
-      renderList();
+  function renderTagCloud() {
+    const container = document.getElementById('tagCloud');
+    container.innerHTML = '';
+    const tagCounts = extractAllHashtags();
+    const tags = Object.keys(tagCounts).sort((a,b) => tagCounts[b] - tagCounts[a]);
+
+    if (tags.length === 0) {
+      container.innerHTML = '<span style="font-size:12px; color:var(--text-muted);">No #tags used yet</span>';
+      return;
+    }
+
+    tags.forEach(tag => {
+      const pill = document.createElement('span');
+      pill.className = 'tag-pill' + (selectedTagFilter === tag ? ' active' : '');
+      pill.innerText = `${tag} (${tagCounts[tag]})`;
+      pill.onclick = () => {
+        if (selectedTagFilter === tag) selectedTagFilter = '';
+        else selectedTagFilter = tag;
+        renderTagCloud();
+        renderEntryList();
+      };
+      container.appendChild(pill);
+    });
   }
 
-  saveBtn.addEventListener('click', () => {
-      const date = dateInput.value;
-      if (!date) return;
-      const text = journalArea.value.trim();
-      if (text) {
-          entries[date] = text;
-      } else {
-          delete entries[date]; // Remove empty entries
+  // Entry List & Search
+  function renderEntryList() {
+    const container = document.getElementById('entryList');
+    container.innerHTML = '';
+
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    let dates = Object.keys(entries).sort((a,b) => b.localeCompare(a));
+
+    dates = dates.filter(date => {
+      const entry = entries[date];
+      if (!entry || !entry.text.trim()) return false;
+
+      // Hashtag Filter
+      if (selectedTagFilter && !entry.text.toLowerCase().includes(selectedTagFilter)) {
+        return false;
       }
-      localStorage.setItem('kjournal_data', JSON.stringify(entries));
-      renderList();
-  });
 
-  dateInput.addEventListener('change', () => {
-      loadEntry();
-  });
+      // Keyword Search
+      if (searchTerm && !entry.text.toLowerCase().includes(searchTerm) && !date.includes(searchTerm)) {
+        return false;
+      }
+      return true;
+    });
 
-  searchInput.addEventListener('input', () => {
-      renderList();
-  });
+    if (dates.length === 0) {
+      container.innerHTML = '<div style="padding:16px; text-align:center; font-size:13px; color:var(--text-muted);">No entries found</div>';
+      updateStreakWidget();
+      return;
+    }
 
-  // initial load
-  loadEntry();
+    dates.forEach(date => {
+      const entry = entries[date];
+      const div = document.createElement('div');
+      div.className = 'entry-item' + (date === selectedDate ? ' active' : '');
+      div.onclick = () => {
+        selectedDate = date;
+        loadSelectedEntry();
+        renderCalendar();
+      };
+
+      const header = document.createElement('div');
+      header.className = 'entry-item-header';
+      header.innerHTML = `<span class="entry-item-date">${formatReadableDate(date)}</span><span class="entry-item-mood">${entry.mood || '😊'}</span>`;
+
+      const snippet = document.createElement('div');
+      snippet.className = 'entry-item-snippet';
+      snippet.innerText = entry.text;
+
+      div.appendChild(header);
+      div.appendChild(snippet);
+      container.appendChild(div);
+    });
+
+    updateStreakWidget();
+  }
+
+  // Entry Loading & Editing
+  function loadSelectedEntry() {
+    document.getElementById('currentDateDisplay').innerText = formatReadableDate(selectedDate);
+
+    // Sync Calendar Month View if date changed
+    const parts = selectedDate.split('-');
+    if (parts.length === 3) {
+      calCurrentYear = parseInt(parts[0]);
+      calCurrentMonth = parseInt(parts[1]) - 1;
+    }
+
+    const entry = entries[selectedDate] || { text: '', mood: '😊' };
+    document.getElementById('journalArea').value = entry.text || '';
+    selectMood(entry.mood || '😊', false);
+
+    updateEditorStats();
+    renderEntryList();
+  }
+
+  function selectMood(mood, triggerSave = true) {
+    selectedMood = mood;
+    document.querySelectorAll('.mood-opt').forEach(btn => {
+      if (btn.getAttribute('data-mood') === mood) btn.classList.add('selected');
+      else btn.classList.remove('selected');
+    });
+  }
+
+  function saveEntry() {
+    if (!selectedDate) return;
+    const text = document.getElementById('journalArea').value.trim();
+
+    if (text) {
+      entries[selectedDate] = {
+        text: text,
+        mood: selectedMood || '😊',
+        updatedAt: Date.now()
+      };
+      showToast('Entry saved!');
+    } else {
+      delete entries[selectedDate];
+      showToast('Entry cleared');
+    }
+
+    saveEntriesToStorage();
+    renderCalendar();
+    renderTagCloud();
+    renderEntryList();
+  }
+
+  function deleteCurrentEntry() {
+    if (!entries[selectedDate]) return;
+    if (confirm(`Delete entry for ${formatReadableDate(selectedDate)}?`)) {
+      delete entries[selectedDate];
+      document.getElementById('journalArea').value = '';
+      saveEntriesToStorage();
+      renderCalendar();
+      renderTagCloud();
+      renderEntryList();
+      showToast('Entry deleted');
+    }
+  }
+
+  function updateEditorStats() {
+    const text = document.getElementById('journalArea').value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const chars = text.length;
+    document.getElementById('editorStats').innerText = `${words} words | ${chars} characters`;
+  }
+
+  // Streak & Analytics Calculation
+  function calculateAnalytics() {
+    const dates = Object.keys(entries).filter(d => entries[d] && entries[d].text.trim().length > 0).sort();
+    const totalEntries = dates.length;
+
+    let totalWords = 0;
+    const moodCounts = {};
+
+    dates.forEach(d => {
+      const text = entries[d].text || '';
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      totalWords += words;
+
+      const mood = entries[d].mood || '😊';
+      moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+    });
+
+    const avgWords = totalEntries > 0 ? Math.round(totalWords / totalEntries) : 0;
+
+    // Calculate Streaks
+    let currentStreak = 0;
+    let longestStreak = 0;
+
+    if (totalEntries > 0) {
+      const todayStr = formatDateString(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate());
+      const yesterdayDate = new Date();
+      yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+      const yesterdayStr = formatDateString(yesterdayDate.getFullYear(), yesterdayDate.getMonth() + 1, yesterdayDate.getDate());
+
+      // Check if active today or yesterday
+      let checkDate = new Date();
+      if (!entries[todayStr]) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      }
+
+      let tempStreak = 0;
+      while (true) {
+        const dStr = formatDateString(checkDate.getFullYear(), checkDate.getMonth() + 1, checkDate.getDate());
+        if (entries[dStr] && entries[dStr].text.trim().length > 0) {
+          tempStreak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      currentStreak = tempStreak;
+
+      // Longest Streak Calculation
+      let run = 0;
+      let prevTime = null;
+      dates.forEach(dStr => {
+        const parts = dStr.split('-');
+        const curTime = new Date(parts[0], parts[1] - 1, parts[2]).getTime();
+        if (prevTime !== null) {
+          const diffDays = Math.round((curTime - prevTime) / (1000 * 3600 * 24));
+          if (diffDays === 1) {
+            run++;
+          } else {
+            run = 1;
+          }
+        } else {
+          run = 1;
+        }
+        if (run > longestStreak) longestStreak = run;
+        prevTime = curTime;
+      });
+    }
+
+    return { totalEntries, totalWords, avgWords, currentStreak, longestStreak, moodCounts };
+  }
+
+  function updateStreakWidget() {
+    const stats = calculateAnalytics();
+    document.getElementById('currentStreakVal').innerText = `${stats.currentStreak} day${stats.currentStreak === 1 ? '' : 's'}`;
+    document.getElementById('totalEntriesVal').innerText = stats.totalEntries;
+  }
+
+  function openAnalyticsModal() {
+    const stats = calculateAnalytics();
+    document.getElementById('modalCurrentStreak').innerText = `${stats.currentStreak} Days`;
+    document.getElementById('modalBestStreak').innerText = `${stats.longestStreak} Days`;
+    document.getElementById('modalTotalWords').innerText = stats.totalWords.toLocaleString();
+    document.getElementById('modalAvgWords').innerText = stats.avgWords;
+
+    const breakdown = document.getElementById('moodBreakdown');
+    breakdown.innerHTML = '';
+
+    const moods = [
+      { emoji: '😀', label: 'Happy' },
+      { emoji: '😊', label: 'Calm' },
+      { emoji: '😐', label: 'Neutral' },
+      { emoji: '😔', label: 'Sad' },
+      { emoji: '⚡', label: 'Energetic' },
+      { emoji: '🧘', label: 'Focused' }
+    ];
+
+    moods.forEach(m => {
+      const count = stats.moodCounts[m.emoji] || 0;
+      const pct = stats.totalEntries > 0 ? Math.round((count / stats.totalEntries) * 100) : 0;
+
+      const item = document.createElement('div');
+      item.className = 'mood-bar-item';
+      item.innerHTML = `
+        <div class="mood-bar-label">
+          <span>${m.emoji} ${m.label} (${count})</span>
+          <span>${pct}%</span>
+        </div>
+        <div class="mood-bar-bg">
+          <div class="mood-bar-fill" style="width: ${pct}%;"></div>
+        </div>
+      `;
+      breakdown.appendChild(item);
+    });
+
+    openModal('analyticsModal');
+  }
+
+  function openSettingsModal() {
+    openModal('settingsModal');
+  }
+
+  function openImportExportModal() {
+    openModal('importExportModal');
+  }
+
+  function openModal(id) {
+    document.getElementById(id).classList.add('active');
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+
+  // Import / Export Systems
+  function exportData(format) {
+    const dates = Object.keys(entries).sort();
+    if (dates.length === 0) {
+      showToast('No entries to export');
+      return;
+    }
+
+    let filename = `kjournal_export_${new Date().toISOString().slice(0,10)}`;
+    let content = '';
+    let mimeType = 'text/plain';
+
+    if (format === 'json') {
+      content = JSON.stringify(entries, null, 2);
+      filename += '.json';
+      mimeType = 'application/json';
+    } else if (format === 'md') {
+      dates.forEach(d => {
+        const e = entries[d];
+        content += `# ${formatReadableDate(d)}\n\n`;
+        content += `**Mood:** ${e.mood || '😊'}\n\n`;
+        content += `${e.text}\n\n---\n\n`;
+      });
+      filename += '.md';
+      mimeType = 'text/markdown';
+    } else if (format === 'txt') {
+      dates.forEach(d => {
+        const e = entries[d];
+        content += `=== Entry: ${d} (Mood: ${e.mood || '😊'}) ===\n`;
+        content += `${e.text}\n\n`;
+      });
+      filename += '.txt';
+    }
+
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported as ${format.toUpperCase()}`);
+  }
+
+  function importData() {
+    const fileInput = document.getElementById('importFileInput');
+    if (!fileInput.files || fileInput.files.length === 0) {
+      showToast('Please select a JSON file to import');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const imported = JSON.parse(e.target.result);
+        let count = 0;
+        for (let d in imported) {
+          if (typeof imported[d] === 'string') {
+            entries[d] = { text: imported[d], mood: '😊', updatedAt: Date.now() };
+          } else {
+            entries[d] = imported[d];
+          }
+          count++;
+        }
+        saveEntriesToStorage();
+        renderCalendar();
+        renderTagCloud();
+        renderEntryList();
+        loadSelectedEntry();
+        closeModal('importExportModal');
+        showToast(`Successfully imported ${count} entries!`);
+      } catch (err) {
+        showToast('Invalid JSON file format');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // Utilities
+  function formatDateString(year, month, day) {
+    const y = String(year);
+    const m = String(month).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatReadableDate(dateStr) {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    return d.toLocaleDateString(undefined, options);
+  }
+
+  // Start app on load
+  window.onload = init;
 </script>
 </body>
 </html>
