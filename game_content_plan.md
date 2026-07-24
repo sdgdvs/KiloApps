@@ -87,7 +87,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
 | KMines     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic board sizes (8x8 to 24x24), treasure chests, speedruns, Sonar/Detector/Shield powerups, Blitz combo multipliers. |
-| KRogue     | Tier 2          | Feature-Expanded       | Loop 6 Completed | Web upgraded to basic playable version. EXE is a full roguelike. Loop 6 completed: Expanded to 25 levels, added Abyss biome. |
+| KRogue     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: Expanded to 30 levels across 6 biomes, moved Astaroth the Fallen to L30, added Arch-Mage, Lich Lord, Shadow Assassin, Shadow Behemoth, Mimic Chests, 3 trap types, Meteor Strike [M], Invisibility Cloak [I], Divine Blessing [D] spells. |
 | KSnake     | Tier 1          | Feature-Expanded       | Loop 6 Completed | Full parity. Loop 6 completed: Expanded to 15-level campaign win, added Portals, and Tracker Bug enemies. |
 | KTetris    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Bomb power-up, and Earthquake mechanics. |
 | KPong      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 levels, added Horizontal Obstacle, and Freeze power-up. |

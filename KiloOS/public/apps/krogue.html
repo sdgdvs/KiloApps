@@ -23,7 +23,7 @@
             background: #050508;
             box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
         }
-        canvas { display: block; image-rendering: pixelated; }
+        canvas { display: block; image-rendering: pixelated; cursor: crosshair; }
         #ui-panel {
             width: 100%; margin-top: 12px;
             display: flex; flex-direction: column; gap: 8px;
@@ -31,19 +31,44 @@
         .stats-row {
             display: flex; justify-content: space-between; align-items: center;
             background: #1a202c; padding: 8px 16px; border-radius: 6px; border: 1px solid #2d3748;
-            font-weight: bold; font-size: 14px;
+            font-weight: bold; font-size: 13px; flex-wrap: wrap; gap: 8px;
         }
-        .stat-group { display: flex; align-items: center; gap: 12px; }
+        .stat-group { display: flex; align-items: center; gap: 10px; }
         .bar-container {
-            width: 120px; height: 14px; background: #2d3748; border-radius: 7px; overflow: hidden;
+            width: 100px; height: 14px; background: #2d3748; border-radius: 7px; overflow: hidden;
             display: inline-block; position: relative; vertical-align: middle; border: 1px solid #4a5568;
         }
         .bar-fill-hp { height: 100%; background: linear-gradient(90deg, #e53e3e, #f56565); transition: width 0.2s; }
+        .bar-fill-mp { height: 100%; background: linear-gradient(90deg, #3182ce, #63b3ed); transition: width 0.2s; }
         .bar-fill-food { height: 100%; background: linear-gradient(90deg, #dd6b20, #ed8936); transition: width 0.2s; }
         .bar-text {
             position: absolute; width: 100%; height: 100%; top: 0; left: 0;
             text-align: center; font-size: 10px; line-height: 14px; color: #fff; text-shadow: 1px 1px 2px #000;
         }
+        .status-pill {
+            padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase;
+        }
+        .status-invis { background: #553c9a; color: #b794f4; border: 1px solid #805ad5; box-shadow: 0 0 6px rgba(128,90,213,0.5); }
+        .status-poison { background: #22543d; color: #68d391; border: 1px solid #38a169; }
+        .status-root { background: #744210; color: #f6ad55; border: 1px solid #dd6b20; }
+
+        .action-buttons {
+            display: flex; gap: 8px; justify-content: center; width: 100%; margin-top: 2px;
+        }
+        .btn-action {
+            background: #2d3748; color: #e2e8f0; border: 1px solid #4a5568; border-radius: 6px;
+            padding: 6px 14px; font-size: 12px; font-weight: bold; cursor: pointer;
+            transition: all 0.15s ease-in-out; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-action:hover { background: #3a4a60; border-color: #63b3ed; color: #fff; transform: translateY(-1px); }
+        .btn-action:active { transform: translateY(0); }
+        .btn-meteor { border-color: #e53e3e; }
+        .btn-meteor:hover { background: #9b2c2c; border-color: #fc8181; }
+        .btn-invis { border-color: #805ad5; }
+        .btn-invis:hover { background: #553c9a; border-color: #b794f4; }
+        .btn-bless { border-color: #ecc94b; }
+        .btn-bless:hover { background: #744210; border-color: #f6e05e; }
+
         #msg-box {
             background: #0d1117; border: 1px solid #21262d; border-radius: 6px;
             padding: 8px 12px; height: 75px; overflow-y: hidden;
@@ -53,8 +78,9 @@
         .msg-latest { color: #f6ad55; font-weight: bold; }
         .msg-combat { color: #fc8181; }
         .msg-good { color: #68d391; }
+        .msg-magic { color: #b794f4; }
         .controls-hint {
-            font-size: 11px; color: #718096; text-align: center; margin-top: 4px;
+            font-size: 11px; color: #718096; text-align: center; margin-top: 2px;
         }
     </style>
 </head>
@@ -69,15 +95,21 @@
                     <span>HP:</span>
                     <div class="bar-container">
                         <div id="hp-bar" class="bar-fill-hp" style="width: 100%;"></div>
-                        <div id="hp-text" class="bar-text">10/10</div>
+                        <div id="hp-text" class="bar-text">20/20</div>
+                    </div>
+                    <span>MP:</span>
+                    <div class="bar-container">
+                        <div id="mp-bar" class="bar-fill-mp" style="width: 100%;"></div>
+                        <div id="mp-text" class="bar-text">30/30</div>
                     </div>
                     <span>Food:</span>
                     <div class="bar-container">
                         <div id="food-bar" class="bar-fill-food" style="width: 100%;"></div>
-                        <div id="food-text" class="bar-text">200/200</div>
+                        <div id="food-text" class="bar-text">300/300</div>
                     </div>
                 </div>
                 <div class="stat-group">
+                    <div id="status-indicators" style="display: flex; gap: 4px;"></div>
                     <span style="color: #63b3ed;">LVL <span id="val-lvl">1</span></span>
                     <span style="color: #b794f4;">XP <span id="val-xp">0</span></span>
                     <span style="color: #f6e05e;">GOLD <span id="val-gold">0</span></span>
@@ -85,9 +117,15 @@
                     <span style="color: #cbd5e0;">KILLS <span id="val-kills">0</span></span>
                 </div>
             </div>
+            <div class="action-buttons">
+                <button class="btn-action btn-meteor" onclick="castMeteor()">[M] Meteor Strike (12 MP)</button>
+                <button class="btn-action btn-invis" onclick="castInvisibility()">[I] Invisibility (10 MP)</button>
+                <button class="btn-action btn-bless" onclick="castBlessing()">[D] Divine Miracle (15 MP)</button>
+                <button class="btn-action" onclick="doWait()">[.] Wait Turn</button>
+            </div>
             <div id="msg-box"></div>
             <div class="controls-hint">
-                [Arrows] Move / Attack &nbsp;|&nbsp; [.] Wait &nbsp;|&nbsp; [S] Save &nbsp;|&nbsp; [L] Load &nbsp;|&nbsp; [D] Difficulty &nbsp;|&nbsp; [R] Restart
+                [Arrows] Move / Attack &nbsp;|&nbsp; [.] Wait &nbsp;|&nbsp; [M] Meteor &nbsp;|&nbsp; [I] Invisibility &nbsp;|&nbsp; [D] Blessing &nbsp;|&nbsp; [S] Save &nbsp;|&nbsp; [L] Load
             </div>
         </div>
     </div>
@@ -95,22 +133,28 @@
     <script>
         const COLS = 40;
         const ROWS = 20;
-        const TILE = 22; // 40 * 22 = 880 width, 20 * 22 = 440 height
+        const TILE = 22;
         
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
         let map = [];
-        let player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
+        let player = { 
+            x: 2, y: 2, hp: 20, max_hp: 20, mp: 30, max_mp: 30, 
+            xp: 0, level: 1, gold: 0, hunger: 300, max_hunger: 300,
+            invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0
+        };
         let monsters = [];
         let items = [];
-        let msgs = ["Welcome to KRogue!", "Find the stairs '>'. Defeat evil."];
-        let state = 0; // 0=menu, 1=play, 2=dead, 3=victory
+        let traps = [];
+        let msgs = ["Welcome to KRogue!", "Descend 30 levels and defeat Astaroth the Fallen!"];
+        let state = 0; // 0=menu, 1=play, 2=dead, 3=victory, 4=targeting
         let difficulty = 0;
         let dlevel = 1;
         let total_kills = 0;
         let diffStr = ["Normal", "Hard", "Nightmare"];
         let frameCount = 0;
+        let targetX = 0, targetY = 0;
 
         // Visual effects system
         let particles = [];
@@ -119,7 +163,7 @@
 
         function addMsg(m, type = 'normal') {
             msgs.push({ text: m, type: type });
-            if (msgs.length > 10) msgs.shift();
+            if (msgs.length > 12) msgs.shift();
             updateMsgBox();
         }
 
@@ -127,8 +171,9 @@
             const box = document.getElementById('msg-box');
             box.innerHTML = msgs.slice(-4).map((m, idx, arr) => {
                 let cls = idx === arr.length - 1 ? 'msg-latest' : '';
-                if (m.text.includes('hit') || m.text.includes('starved') || m.text.includes('dies')) cls += ' msg-combat';
-                if (m.text.includes('glows') || m.text.includes('pick') || m.text.includes('level') || m.text.includes('Saved')) cls += ' msg-good';
+                if (m.text.includes('hit') || m.text.includes('starved') || m.text.includes('dies') || m.text.includes('triggers')) cls += ' msg-combat';
+                if (m.text.includes('glows') || m.text.includes('pick') || m.text.includes('level') || m.text.includes('Saved') || m.text.includes('Blessing') || m.text.includes('SLAIN')) cls += ' msg-good';
+                if (m.text.includes('METEOR') || m.text.includes('Invisibility') || m.text.includes('Miracle')) cls += ' msg-magic';
                 return `<div class="${cls.trim()}">${m.text}</div>`;
             }).join('');
         }
@@ -143,51 +188,82 @@
             });
         }
 
-        function addParticles(x, y, color, count = 8) {
+        function addParticles(x, y, color, count = 10) {
             for (let i = 0; i < count; i++) {
                 let angle = Math.random() * Math.PI * 2;
-                let speed = 1 + Math.random() * 3;
+                let speed = 1 + Math.random() * 4;
                 particles.push({
                     x: (x + 0.5) * TILE,
                     y: (y + 0.5) * TILE,
                     vx: Math.cos(angle) * speed,
                     vy: Math.sin(angle) * speed,
                     color: color,
-                    size: 2 + Math.random() * 3,
+                    size: 2 + Math.random() * 4,
                     life: 1.0
                 });
             }
         }
 
-        function addAttackAnim(x, y, targetX, targetY) {
+        function addAttackAnim(x, y, targetX, targetY, color = '#fc8181') {
             attackAnims.push({
                 sx: (x + 0.5) * TILE,
                 sy: (y + 0.5) * TILE,
                 tx: (targetX + 0.5) * TILE,
                 ty: (targetY + 0.5) * TILE,
+                color: color,
                 life: 1.0
             });
+        }
+
+        function getBiome(lvl) {
+            if (lvl <= 5) return 'sewers';
+            if (lvl <= 10) return 'caves';
+            if (lvl <= 15) return 'crypt';
+            if (lvl <= 20) return 'inferno';
+            if (lvl <= 25) return 'void';
+            return 'celestial';
+        }
+
+        function getBiomeName(lvl) {
+            if (lvl <= 5) return 'Sewers';
+            if (lvl <= 10) return 'Caves';
+            if (lvl <= 15) return 'Crypt';
+            if (lvl <= 20) return 'Inferno';
+            if (lvl <= 25) return 'Void';
+            return 'Celestial Sanctuary';
         }
 
         function initMap() {
             map = [];
             monsters = [];
             items = [];
+            traps = [];
+
             for (let y = 0; y < ROWS; y++) {
                 map[y] = [];
                 for (let x = 0; x < COLS; x++) {
                     map[y][x] = (x === 0 || y === 0 || x === COLS - 1 || y === ROWS - 1) ? '#' : '.';
-                    if (Math.random() < 0.1 && map[y][x] === '.') map[y][x] = '#';
+                    if (Math.random() < 0.12 && map[y][x] === '.') map[y][x] = '#';
                 }
             }
             player.x = 2; player.y = 2;
             map[2][2] = '.';
             
-            // Stairs
-            items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
-            map[ROWS - 3][COLS - 3] = '.';
+            // Stairs (Only spawn if floor < 30)
+            if (dlevel < 30) {
+                items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
+                map[ROWS - 3][COLS - 3] = '.';
+            } else {
+                // Floor 30: Spawn Arch-Boss Astaroth the Fallen
+                let hp = Math.floor(800 * (1 + difficulty * 0.5));
+                monsters.push({
+                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'Astaroth the Fallen', boss: true, turn: 0
+                });
+                addMsg("ASTAROTH THE FALLEN AWAITS YOU AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
+            }
 
-            if (Math.random() < 0.3) {
+            // Shrines & Food
+            if (Math.random() < 0.4) {
                 let sx, sy;
                 do { sx = Math.floor(Math.random() * (COLS - 4)) + 2; sy = Math.floor(Math.random() * (ROWS - 4)) + 2; } while(map[sy][sx] === '#');
                 items.push({ x: sx, y: sy, ch: '^', type: 'shrine' });
@@ -199,7 +275,17 @@
                 items.push({ x: fx, y: fy, ch: '%', type: 'food' });
             }
 
-            for (let i = 0; i < 5 + difficulty * 2 + dlevel; i++) {
+            // Traps: Poison Spikes, Teleport, Root
+            for (let t = 0; t < 4 + Math.floor(dlevel / 4); t++) {
+                let tx, ty;
+                do { tx = Math.floor(Math.random() * (COLS - 4)) + 2; ty = Math.floor(Math.random() * (ROWS - 4)) + 2; } while(map[ty][tx] === '#' || (tx === 2 && ty === 2));
+                let trapType = Math.random() < 0.4 ? 'poison' : (Math.random() < 0.7 ? 'teleport' : 'root');
+                traps.push({ x: tx, y: ty, type: trapType, revealed: false });
+            }
+
+            // Monster spawning based on depth
+            let numMonsters = 5 + difficulty * 2 + Math.floor(dlevel * 0.6);
+            for (let i = 0; i < numMonsters; i++) {
                 let mx, my;
                 do {
                     mx = Math.floor(Math.random() * (COLS - 4)) + 2;
@@ -208,47 +294,71 @@
                 
                 let r = Math.random();
                 let type = 'r', hp = 5, name = 'Giant Rat';
-                if (dlevel > 1 && r < 0.2) { type = 'b'; hp = 4; name = 'Giant Bat'; }
-                else if (dlevel > 2 && r >= 0.2 && r < 0.4) { type = 'o'; hp = 10; name = 'Orc'; }
-                else if (dlevel > 3 && r >= 0.4 && r < 0.55) { type = 'z'; hp = 15; name = 'Zombie'; }
-                else if (dlevel > 4 && r >= 0.55 && r < 0.65) { type = 'T'; hp = 25; name = 'Cave Troll'; }
-                else if (dlevel > 5 && r >= 0.65 && r < 0.75) { type = 'G'; hp = 18; name = 'Ghost'; }
-                else if (dlevel > 8 && r >= 0.75 && r < 0.85) { type = 'C'; hp = 35; name = 'Gelatinous Cube'; }
-                else if (dlevel > 10 && r >= 0.85 && r < 0.92) { type = 'H'; hp = 50; name = 'Hydra'; }
-                else if (dlevel > 12 && r >= 0.92) {
-                    let m4 = Math.floor(Math.random() * 4);
-                    if (m4 === 0) { type = 'B'; hp = 80; name = 'Balrog'; }
-                    else if (m4 === 1) { type = 't'; hp = 100; name = 'Titan'; }
-                    else if (m4 === 2) { type = 'E'; hp = 60; name = 'Beholder'; }
-                    else { type = 'M'; hp = 60; name = 'Mind Flayer'; }
+                
+                if (dlevel <= 5) {
+                    if (r < 0.25) { type = 'b'; hp = 4; name = 'Giant Bat'; }
+                    else if (r < 0.45) { type = 's'; hp = 10; name = 'Slime'; }
+                    else if (r < 0.70) { type = 'g'; hp = 6; name = 'Goblin'; }
+                    else if (r < 0.90) { type = 'x'; hp = 8; name = 'Skeleton'; }
+                } else if (dlevel <= 10) {
+                    if (r < 0.25) { type = 'o'; hp = 14; name = 'Orc'; }
+                    else if (r < 0.45) { type = 'S'; hp = 12; name = 'Giant Spider'; }
+                    else if (r < 0.65) { type = 'z'; hp = 25; name = 'Zombie'; }
+                    else if (r < 0.85) { type = 'k'; hp = 10; name = 'Kobold'; }
+                    else { type = 'G'; hp = 18; name = 'Ghost'; }
+                } else if (dlevel <= 15) {
+                    if (r < 0.25) { type = 'T'; hp = 35; name = 'Cave Troll'; }
+                    else if (r < 0.45) { type = 'M'; hp = 30; name = 'Minotaur'; }
+                    else if (r < 0.65) { type = 'W'; hp = 25; name = 'Wraith'; }
+                    else if (r < 0.85) { type = 'C'; hp = 50; name = 'Gelatinous Cube'; }
+                    else { type = 'y'; hp = 40; name = 'Gargoyle'; }
+                } else if (dlevel <= 20) {
+                    if (r < 0.20) { type = 'D'; hp = 70; name = 'Red Dragon'; }
+                    else if (r < 0.40) { type = 'V'; hp = 50; name = 'Vampire'; }
+                    else if (r < 0.60) { type = 'L'; hp = 45; name = 'Lich'; }
+                    else if (r < 0.80) { type = 'd'; hp = 60; name = 'Demon'; }
+                    else { type = 'H'; hp = 95; name = 'Hydra'; }
+                } else if (dlevel <= 25) {
+                    if (r < 0.20) { type = 'B'; hp = 110; name = 'Balrog'; }
+                    else if (r < 0.40) { type = 't'; hp = 130; name = 'Titan'; }
+                    else if (r < 0.60) { type = 'E'; hp = 80; name = 'Beholder'; }
+                    else if (r < 0.80) { type = 'a'; hp = 50; name = 'Shadow Assassin'; }
+                    else { type = 'U'; hp = 150; name = 'Shadow Behemoth'; }
+                } else { // Celestial L26-30
+                    if (r < 0.20) { type = 'A'; hp = 80; name = 'Arch-Mage'; }
+                    else if (r < 0.40) { type = 'L'; hp = 120; name = 'Lich Lord'; }
+                    else if (r < 0.60) { type = 'm'; hp = 80; name = 'Mimic Chest'; }
+                    else if (r < 0.80) { type = 'a'; hp = 60; name = 'Shadow Assassin'; }
+                    else { type = 'U'; hp = 170; name = 'Shadow Behemoth'; }
                 }
-                hp = Math.floor(hp * (1 + difficulty * 0.5));
+
+                hp = Math.floor(hp * (1 + difficulty * 0.4 + dlevel * 0.05));
                 monsters.push({
                     x: mx, y: my, hp: hp, max_hp: hp, ch: type, name: name, turn: 0
                 });
             }
         }
 
-        // DRAWING SPRITES
+        // DRAWING TILES & BIOMES
         function drawWallTile(x, y, biome) {
             let px = x * TILE, py = y * TILE;
             let baseColor = '#4a5568', accentColor = '#2d3748', mortarColor = '#1a202c';
             
-            if (biome === 'moss') { baseColor = '#38a169'; accentColor = '#276749'; }
-            else if (biome === 'volcanic') { baseColor = '#e53e3e'; accentColor = '#9b2c2c'; }
-            else if (biome === 'void') { baseColor = '#805ad5'; accentColor = '#553c9a'; }
-            else if (biome === 'abyss') { baseColor = '#d69e2e'; accentColor = '#744210'; }
+            if (biome === 'sewers') { baseColor = '#2f855a'; accentColor = '#22543d'; }
+            else if (biome === 'caves') { baseColor = '#744210'; accentColor = '#975a16'; }
+            else if (biome === 'crypt') { baseColor = '#4a5568'; accentColor = '#2d3748'; }
+            else if (biome === 'inferno') { baseColor = '#9b2c2c'; accentColor = '#c53030'; }
+            else if (biome === 'void') { baseColor = '#553c9a'; accentColor = '#44337a'; }
+            else if (biome === 'celestial') { baseColor = '#d69e2e'; accentColor = '#b7791f'; }
 
             ctx.fillStyle = mortarColor;
             ctx.fillRect(px, py, TILE, TILE);
 
-            // Brick pattern
             ctx.fillStyle = baseColor;
             ctx.fillRect(px + 1, py + 1, TILE - 2, 9);
             ctx.fillRect(px + 1, py + 11, TILE / 2 - 2, 9);
             ctx.fillRect(px + TILE / 2 + 1, py + 11, TILE / 2 - 2, 9);
 
-            // Brick highlights
             ctx.fillStyle = accentColor;
             ctx.fillRect(px + 2, py + 8, TILE - 4, 2);
             ctx.fillRect(px + 2, py + 18, TILE / 2 - 4, 2);
@@ -258,15 +368,16 @@
         function drawFloorTile(x, y, biome) {
             let px = x * TILE, py = y * TILE;
             let bg = '#171923';
-            if (biome === 'moss') bg = '#12251a';
-            else if (biome === 'volcanic') bg = '#271414';
+            if (biome === 'sewers') bg = '#12251a';
+            else if (biome === 'caves') bg = '#271e14';
+            else if (biome === 'crypt') bg = '#1a1d24';
+            else if (biome === 'inferno') bg = '#2a1414';
             else if (biome === 'void') bg = '#1e1427';
-            else if (biome === 'abyss') bg = '#1f1912';
+            else if (biome === 'celestial') bg = '#1a2733';
 
             ctx.fillStyle = bg;
             ctx.fillRect(px, py, TILE, TILE);
 
-            // Floor texture dots
             ctx.fillStyle = 'rgba(255,255,255,0.04)';
             ctx.fillRect(px + 4, py + 4, 3, 3);
             ctx.fillRect(px + 14, py + 12, 2, 2);
@@ -277,8 +388,13 @@
             let bob = Math.sin(frameCount * 0.15) * 1.5;
             let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
 
+            if (player.invisible_turns > 0) {
+                ctx.fillStyle = 'rgba(183, 148, 244, 0.4)';
+                ctx.beginPath(); ctx.arc(cx, cy, 12, 0, Math.PI * 2); ctx.fill();
+            }
+
             // Cape
-            ctx.fillStyle = '#3182ce';
+            ctx.fillStyle = player.invisible_turns > 0 ? '#805ad5' : '#3182ce';
             ctx.fillRect(cx - 7, cy - 2, 14, 10);
 
             // Body / Armor
@@ -290,7 +406,6 @@
             // Head / Helmet
             ctx.fillStyle = '#e2e8f0';
             ctx.beginPath(); ctx.arc(cx, cy - 6, 5, 0, Math.PI * 2); ctx.fill();
-            // Golden Visor
             ctx.fillStyle = '#ecc94b';
             ctx.fillRect(cx - 3, cy - 7, 6, 2);
 
@@ -310,11 +425,7 @@
             if (type === 'r') { // Giant Rat
                 ctx.fillStyle = '#d69e2e';
                 ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#e53e3e'; // eyes
-                ctx.fillRect(cx + 3, cy + bob, 2, 2);
-                // Tail
-                ctx.strokeStyle = '#ed8936'; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(cx - 6, cy + 3); ctx.quadraticCurveTo(cx - 10, cy, cx - 8, cy - 4); ctx.stroke();
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx + 3, cy + bob, 2, 2);
             } else if (type === 'b') { // Giant Bat
                 let wing = Math.sin(frameCount * 0.3) * 4;
                 ctx.fillStyle = '#805ad5';
@@ -325,81 +436,75 @@
                 ctx.lineTo(cx + 4, cy + 2);
                 ctx.lineTo(cx + 9, cy - 4 + wing);
                 ctx.closePath(); ctx.fill();
-                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 2, cy - 1 + bob, 4, 2);
             } else if (type === 'o') { // Orc
                 ctx.fillStyle = '#38a169';
                 ctx.fillRect(cx - 5, cy - 6 + bob, 10, 12);
-                ctx.fillStyle = '#22543d'; ctx.fillRect(cx - 4, cy - 8 + bob, 8, 4); // helm
-                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 4 + bob, 4, 2); // eyes
-                // Axe
-                ctx.strokeStyle = '#718096'; ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(cx + 4, cy + 4); ctx.lineTo(cx + 8, cy - 5); ctx.stroke();
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 2, cy - 4 + bob, 4, 2);
             } else if (type === 'z') { // Zombie
                 ctx.fillStyle = '#48bb78';
                 ctx.fillRect(cx - 4, cy - 7 + bob, 8, 13);
-                ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 3, cy - 4 + bob, 6, 3); // dark sockets
                 ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 1, cy - 3 + bob, 2, 2);
             } else if (type === 'T') { // Cave Troll
                 ctx.fillStyle = '#2f855a';
                 ctx.fillRect(cx - 7, cy - 8 + bob, 14, 15);
-                ctx.fillStyle = '#22543d'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 4);
-                // Club
                 ctx.fillStyle = '#744210'; ctx.fillRect(cx + 6, cy - 6 + bob, 4, 12);
             } else if (type === 'G') { // Ghost
-                let alpha = 0.5 + Math.sin(frameCount * 0.1) * 0.25;
-                ctx.fillStyle = `rgba(129, 230, 217, ${alpha})`;
-                ctx.beginPath(); ctx.arc(cx, cy - 3 + bob, 7, Math.PI, 0);
-                ctx.lineTo(cx + 7, cy + 6 + bob); ctx.lineTo(cx + 3, cy + 3 + bob);
-                ctx.lineTo(cx, cy + 7 + bob); ctx.lineTo(cx - 3, cy + 3 + bob);
-                ctx.lineTo(cx - 7, cy + 6 + bob); ctx.closePath(); ctx.fill();
-                ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 4, cy - 4 + bob, 3, 3); ctx.fillRect(cx + 1, cy - 4 + bob, 3, 3);
+                ctx.fillStyle = 'rgba(129, 230, 217, 0.7)';
+                ctx.beginPath(); ctx.arc(cx, cy - 3 + bob, 7, Math.PI, 0); ctx.fill();
             } else if (type === 'C') { // Gelatinous Cube
-                ctx.fillStyle = 'rgba(56, 178, 172, 0.55)';
-                ctx.strokeStyle = '#4fd1c5'; ctx.lineWidth = 1.5;
-                ctx.fillRect(cx - 8, cy - 8, 16, 16); ctx.strokeRect(cx - 8, cy - 8, 16, 16);
-                // Trapped bones inside
-                ctx.fillStyle = '#e2e8f0'; ctx.fillRect(cx - 3, cy - 2, 4, 4); ctx.fillRect(cx + 1, cy + 2, 3, 2);
+                ctx.fillStyle = 'rgba(56, 178, 172, 0.6)';
+                ctx.fillRect(cx - 8, cy - 8, 16, 16);
             } else if (type === 'H') { // Hydra
                 ctx.fillStyle = '#38a169';
                 ctx.fillRect(cx - 6, cy, 12, 8);
-                // 3 heads
                 for (let i = -1; i <= 1; i++) {
-                    let neckX = cx + i * 5, neckY = cy - 4 + Math.sin(frameCount * 0.2 + i) * 2;
-                    ctx.fillRect(neckX - 2, neckY - 4, 4, 6);
-                    ctx.fillStyle = '#e53e3e'; ctx.fillRect(neckX - 1, neckY - 3, 2, 2); ctx.fillStyle = '#38a169';
+                    ctx.fillRect(cx + i * 5 - 2, cy - 6 + Math.sin(frameCount * 0.2 + i) * 2, 4, 6);
                 }
             } else if (type === 'B') { // Balrog
-                ctx.fillStyle = '#dd6b20';
-                ctx.fillRect(cx - 7, cy - 8 + bob, 14, 15);
+                ctx.fillStyle = '#dd6b20'; ctx.fillRect(cx - 7, cy - 8 + bob, 14, 15);
                 ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 5, cy - 6 + bob, 10, 6);
-                // Horns
-                ctx.fillStyle = '#1a202c';
-                ctx.beginPath(); ctx.moveTo(cx - 5, cy - 8); ctx.lineTo(cx - 9, cy - 12); ctx.lineTo(cx - 3, cy - 8); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(cx + 5, cy - 8); ctx.lineTo(cx + 9, cy - 12); ctx.lineTo(cx + 3, cy - 8); ctx.fill();
             } else if (type === 't') { // Titan
-                ctx.fillStyle = '#ecc94b';
-                ctx.fillRect(cx - 7, cy - 9 + bob, 14, 17);
-                ctx.fillStyle = '#63b3ed'; ctx.fillRect(cx - 3, cy - 5 + bob, 6, 4); // Glowing eyes
-            } else if (type === 'E') { // Beholder
-                ctx.fillStyle = '#805ad5';
-                ctx.beginPath(); ctx.arc(cx, cy + bob, 8, 0, Math.PI * 2); ctx.fill();
-                // Giant Eye
-                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy + bob, 4, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#e53e3e'; ctx.beginPath(); ctx.arc(cx, cy + bob, 2, 0, Math.PI * 2); ctx.fill();
-                // Eyestalks
-                ctx.strokeStyle = '#9f7aea'; ctx.lineWidth = 1.5;
-                for (let a = -2; a <= 2; a++) {
-                    let ex = cx + a * 3, ey = cy - 8 + bob;
-                    ctx.beginPath(); ctx.moveTo(cx + a * 2, cy - 6 + bob); ctx.lineTo(ex, ey - 3); ctx.stroke();
-                }
-            } else if (type === 'M') { // Mind Flayer
-                ctx.fillStyle = '#553c9a';
-                ctx.fillRect(cx - 6, cy - 7 + bob, 12, 14);
-                // Tentacles
-                ctx.fillStyle = '#b794f4';
-                ctx.fillRect(cx - 4, cy + bob, 2, 6); ctx.fillRect(cx - 1, cy + 1 + bob, 2, 6); ctx.fillRect(cx + 2, cy + bob, 2, 6);
+                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 9 + bob, 14, 17);
+            } else if (type === 'A') { // Arch-Mage
+                ctx.fillStyle = '#00dcff'; ctx.fillRect(cx - 5, cy - 8 + bob, 10, 14);
+                ctx.fillStyle = '#3182ce'; ctx.fillRect(cx - 6, cy - 12 + bob, 12, 4); // Hat
+            } else if (type === 'L') { // Lich Lord
+                ctx.fillStyle = '#f6e05e'; ctx.fillRect(cx - 6, cy - 8 + bob, 12, 15);
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 3, cy - 5 + bob, 6, 3);
+            } else if (type === 'a') { // Shadow Assassin
+                ctx.fillStyle = '#805ad5'; ctx.fillRect(cx - 4, cy - 7 + bob, 8, 13);
+                ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 5, cy - 9 + bob, 10, 3);
+            } else if (type === 'U') { // Shadow Behemoth
+                ctx.fillStyle = '#2b6cb0'; ctx.fillRect(cx - 8, cy - 9 + bob, 16, 17);
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 4, cy - 5 + bob, 8, 4);
+            } else if (type === 'm') { // Mimic Chest
+                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 4, 14, 10);
+                ctx.fillStyle = '#744210'; ctx.fillRect(cx - 7, cy - 4, 14, 3);
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 3, cy + 1, 6, 2); // Sharp teeth
+            } else if (type === '&') { // Astaroth the Fallen
+                let pulse = Math.sin(frameCount * 0.1) * 3;
+                ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 9, cy - 10 + bob, 18, 19);
+                ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 8);
+                // Wings
+                ctx.fillStyle = '#9b2c2c';
+                ctx.beginPath(); ctx.moveTo(cx - 9, cy - 5); ctx.lineTo(cx - 16 - pulse, cy - 14); ctx.lineTo(cx - 8, cy + 2); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(cx + 9, cy - 5); ctx.lineTo(cx + 16 + pulse, cy - 14); ctx.lineTo(cx + 8, cy + 2); ctx.fill();
             } else {
                 ctx.fillStyle = '#e53e3e'; ctx.fillRect(cx - 5, cy - 5, 10, 10);
+            }
+        }
+
+        function drawTrapSprite(px, py, type) {
+            let cx = px + TILE / 2, cy = py + TILE / 2;
+            if (type === 'poison') {
+                ctx.fillStyle = '#38a169';
+                ctx.beginPath(); ctx.moveTo(cx - 5, cy + 4); ctx.lineTo(cx, cy - 4); ctx.lineTo(cx + 5, cy + 4); ctx.fill();
+            } else if (type === 'teleport') {
+                ctx.strokeStyle = '#b794f4'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.stroke();
+            } else if (type === 'root') {
+                ctx.fillStyle = '#dd6b20';
+                ctx.fillRect(cx - 5, cy - 2, 10, 4);
             }
         }
 
@@ -412,24 +517,18 @@
                 ctx.fillRect(cx - 7, cy + 3, 14, 3);
                 ctx.fillRect(cx - 5, cy, 10, 3);
                 ctx.fillRect(cx - 3, cy - 3, 6, 3);
-                // Arrow down
                 ctx.fillStyle = '#f6e05e';
                 ctx.beginPath(); ctx.moveTo(cx - 4, cy - 7); ctx.lineTo(cx + 4, cy - 7); ctx.lineTo(cx, cy - 2); ctx.fill();
             } else if (type === 'shrine') {
                 ctx.fillStyle = '#4a5568'; ctx.fillRect(cx - 6, cy + 2, 12, 5);
-                // Floating crystal
                 ctx.fillStyle = '#38b2ac';
                 ctx.beginPath(); ctx.moveTo(cx, cy - 8 + pulse); ctx.lineTo(cx + 4, cy - 2 + pulse); ctx.lineTo(cx, cy + 4 + pulse); ctx.lineTo(cx - 4, cy - 2 + pulse); ctx.fill();
             } else if (type === 'food') {
-                ctx.fillStyle = '#ed8936';
-                ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 5, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#e2e8f0'; ctx.fillRect(cx + 2, cy + 1, 4, 3); // Bone stick
+                ctx.fillStyle = '#ed8936'; ctx.beginPath(); ctx.arc(cx - 1, cy - 1, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#e2e8f0'; ctx.fillRect(cx + 2, cy + 1, 4, 3);
             } else if (type === 'gold') {
                 ctx.fillStyle = '#ecc94b';
-                ctx.beginPath(); ctx.arc(cx - 2, cy + 2, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(cx + 2, cy + 1, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.beginPath(); ctx.arc(cx, cy - 2, 3, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#fff'; ctx.fillRect(cx - 1, cy - 3, 1, 1);
+                ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill();
             }
         }
 
@@ -437,29 +536,23 @@
             frameCount++;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            let biome = "";
-            if (dlevel >= 5 && dlevel < 10) biome = "moss";
-            else if (dlevel >= 10 && dlevel < 15) biome = "volcanic";
-            else if (dlevel >= 15 && dlevel < 20) biome = "void";
-            else if (dlevel >= 20) biome = "abyss";
+            let biome = getBiome(dlevel);
 
             if (state === 0) { // Main Menu
-                ctx.fillStyle = '#0f172a';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#f6ad55'; ctx.font = 'bold 36px monospace'; ctx.textAlign = 'center';
-                ctx.fillText("K R O G U E", canvas.width / 2, 140);
+                ctx.fillText("K R O G U E", canvas.width / 2, 130);
 
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '18px sans-serif';
-                ctx.fillText("Explore the Caverns of Chaos", canvas.width / 2, 185);
+                ctx.fillText("Loop 7 Expansion: 30 Dungeon Levels & 6 Biomes", canvas.width / 2, 175);
 
                 ctx.fillStyle = '#ecc94b'; ctx.font = 'bold 16px sans-serif';
-                ctx.fillText("Difficulty: " + diffStr[difficulty] + " (Press D to change)", canvas.width / 2, 260);
+                ctx.fillText("Difficulty: " + diffStr[difficulty] + " (Press D to change)", canvas.width / 2, 250);
 
                 ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
-                ctx.fillText("Press [ENTER] to Start Journey", canvas.width / 2, 330);
+                ctx.fillText("Press [ENTER] to Start Journey", canvas.width / 2, 320);
                 ctx.fillStyle = '#a0aec0'; ctx.font = '14px sans-serif';
-                ctx.fillText("Press [L] to Load Saved Game", canvas.width / 2, 365);
+                ctx.fillText("Press [L] to Load Saved Game", canvas.width / 2, 360);
                 return;
             }
 
@@ -470,19 +563,21 @@
                     ctx.fillStyle = '#e53e3e'; ctx.font = 'bold 36px monospace';
                     ctx.fillText("Y O U   D I E D", canvas.width / 2, 200);
                     ctx.fillStyle = '#a0aec0'; ctx.font = '18px sans-serif';
-                    ctx.fillText(`Floor: ${dlevel}  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, canvas.width / 2, 250);
+                    ctx.fillText(`Floor: ${dlevel} (${getBiomeName(dlevel)})  |  Kills: ${total_kills}  |  Gold: ${player.gold}`, canvas.width / 2, 250);
                 } else {
                     ctx.fillStyle = '#ecc94b'; ctx.font = 'bold 36px monospace';
-                    ctx.fillText("V I C T O R Y !", canvas.width / 2, 200);
-                    ctx.fillStyle = '#68d391'; ctx.font = '18px sans-serif';
-                    ctx.fillText("You conquered the dungeon and retrieved glory!", canvas.width / 2, 250);
+                    ctx.fillText("V I C T O R Y !", canvas.width / 2, 180);
+                    ctx.fillStyle = '#68d391'; ctx.font = 'bold 20px sans-serif';
+                    ctx.fillText("YOU SLAIN ASTAROTH THE FALLEN & SAVED THE SANCTUARY!", canvas.width / 2, 230);
+                    ctx.fillStyle = '#a0aec0'; ctx.font = '16px sans-serif';
+                    ctx.fillText(`Total Kills: ${total_kills}  |  Final Level: ${player.level}  |  Gold: ${player.gold}`, canvas.width / 2, 275);
                 }
                 ctx.fillStyle = '#cbd5e0'; ctx.font = '16px sans-serif';
-                ctx.fillText("Press [R] to Restart", canvas.width / 2, 320);
+                ctx.fillText("Press [R] to Restart", canvas.width / 2, 330);
                 return;
             }
 
-            // Draw dungeon map
+            // Draw map tiles
             for (let y = 0; y < ROWS; y++) {
                 for (let x = 0; x < COLS; x++) {
                     if (map[y][x] === '#') {
@@ -493,6 +588,11 @@
                 }
             }
 
+            // Draw revealed traps
+            traps.forEach(tr => {
+                if (tr.revealed) drawTrapSprite(tr.x * TILE, tr.y * TILE, tr.type);
+            });
+
             // Draw items
             items.forEach(it => {
                 drawItemSprite(it.x * TILE, it.y * TILE, it.type);
@@ -501,7 +601,6 @@
             // Draw monsters
             monsters.forEach(m => {
                 drawMonsterSprite(m.x * TILE, m.y * TILE, m.ch);
-                // Health bar over monster
                 if (m.hp < m.max_hp) {
                     let pct = Math.max(0, m.hp / m.max_hp);
                     ctx.fillStyle = '#1a202c'; ctx.fillRect(m.x * TILE + 2, m.y * TILE, TILE - 4, 3);
@@ -512,16 +611,24 @@
             // Draw player
             drawPlayerSprite(player.x * TILE, player.y * TILE);
 
-            // Draw attack animations
+            // Targeting Reticle (State === 4)
+            if (state === 4) {
+                ctx.strokeStyle = '#fc8181'; ctx.lineWidth = 2;
+                ctx.strokeRect(targetX * TILE, targetY * TILE, TILE, TILE);
+                ctx.fillStyle = 'rgba(252, 129, 129, 0.2)';
+                ctx.fillRect((targetX - 2) * TILE, (targetY - 2) * TILE, 5 * TILE, 5 * TILE);
+            }
+
+            // Attack & Spell Animations
             for (let i = attackAnims.length - 1; i >= 0; i--) {
                 let a = attackAnims[i];
-                ctx.strokeStyle = '#fc8181'; ctx.lineWidth = 3;
+                ctx.strokeStyle = a.color || '#fc8181'; ctx.lineWidth = 3;
                 ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(a.tx, a.ty); ctx.stroke();
                 a.life -= 0.15;
                 if (a.life <= 0) attackAnims.splice(i, 1);
             }
 
-            // Draw particles
+            // Particles
             for (let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i];
                 p.x += p.vx; p.y += p.vy; p.life -= 0.05;
@@ -532,7 +639,7 @@
                 if (p.life <= 0) particles.splice(i, 1);
             }
 
-            // Draw floating text
+            // Floating Text
             for (let i = floatTexts.length - 1; i >= 0; i--) {
                 let ft = floatTexts[i];
                 ft.y -= 0.8; ft.life -= 0.03;
@@ -544,16 +651,27 @@
                 if (ft.life <= 0) floatTexts.splice(i, 1);
             }
 
-            // Sync UI panel elements
+            // Update UI Panel elements
             document.getElementById('hp-bar').style.width = (Math.max(0, player.hp) / player.max_hp * 100) + '%';
             document.getElementById('hp-text').innerText = `${player.hp}/${player.max_hp}`;
+            document.getElementById('mp-bar').style.width = (Math.max(0, player.mp) / player.max_mp * 100) + '%';
+            document.getElementById('mp-text').innerText = `${player.mp}/${player.max_mp}`;
             document.getElementById('food-bar').style.width = (Math.max(0, player.hunger) / player.max_hunger * 100) + '%';
             document.getElementById('food-text').innerText = `${player.hunger}/${player.max_hunger}`;
+            
             document.getElementById('val-lvl').innerText = player.level;
             document.getElementById('val-xp').innerText = player.xp;
             document.getElementById('val-gold').innerText = player.gold;
-            document.getElementById('val-dlvl').innerText = dlevel;
+            document.getElementById('val-dlvl').innerText = `${dlevel}/30`;
             document.getElementById('val-kills').innerText = total_kills;
+
+            // Status Indicators
+            let statusContainer = document.getElementById('status-indicators');
+            let statusHTML = "";
+            if (player.invisible_turns > 0) statusHTML += `<span class="status-pill status-invis">INVIS (${player.invisible_turns})</span>`;
+            if (player.poisoned_turns > 0) statusHTML += `<span class="status-pill status-poison">POISON (${player.poisoned_turns})</span>`;
+            if (player.rooted_turns > 0) statusHTML += `<span class="status-pill status-root">ROOTED (${player.rooted_turns})</span>`;
+            statusContainer.innerHTML = statusHTML;
         }
 
         function gameLoop() {
@@ -561,13 +679,150 @@
             requestAnimationFrame(gameLoop);
         }
 
+        function castMeteor() {
+            if (state !== 1) return;
+            if (player.mp < 12) {
+                addMsg("Not enough MP for Meteor Strike (12 MP required)!");
+                return;
+            }
+            state = 4;
+            targetX = player.x; targetY = player.y;
+            addMsg("Targeting Meteor Strike 5x5... (Use Arrows/Click, press [ENTER]/[M] to launch)", 'msg-magic');
+        }
+
+        function executeMeteor() {
+            player.mp -= 12;
+            addMsg("METEOR STRIKE! Flaming meteors rain down in 5x5 area!", 'msg-magic');
+            addParticles(targetX, targetY, '#e53e3e', 35);
+            addParticles(targetX, targetY, '#ecc94b', 35);
+
+            for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                    let tx = targetX + dx, ty = targetY + dy;
+                    let mIdx = monsters.findIndex(m => m.x === tx && m.y === ty);
+                    if (mIdx >= 0) {
+                        let dmg = 45 + player.level * 5;
+                        monsters[mIdx].hp -= dmg;
+                        addMsg(`Meteor strikes ${monsters[mIdx].name} for ${dmg} dmg!`, 'msg-combat');
+                        addFloatText(tx, ty, `-${dmg}`, '#e53e3e');
+                        if (monsters[mIdx].hp <= 0) {
+                            addMsg(`${monsters[mIdx].name} dies!`, 'good');
+                            player.xp += 8; total_kills++;
+                            if (monsters[mIdx].boss) { state = 3; return; }
+                            monsters.splice(mIdx, 1);
+                        }
+                    }
+                }
+            }
+            state = 1;
+            endTurn();
+        }
+
+        function castInvisibility() {
+            if (state !== 1) return;
+            if (player.mp < 10) {
+                addMsg("Not enough MP for Invisibility (10 MP required)!");
+                return;
+            }
+            player.mp -= 10;
+            player.invisible_turns = 5;
+            addMsg("Invisibility Cloak activated! (5 turns untargetable)", 'msg-magic');
+            addParticles(player.x, player.y, '#b794f4', 20);
+            endTurn();
+        }
+
+        function castBlessing() {
+            if (state !== 1) return;
+            if (player.mp < 15) {
+                addMsg("Not enough MP for Divine Miracle (15 MP required)!");
+                return;
+            }
+            player.mp -= 15;
+            player.hp = player.max_hp;
+            player.poisoned_turns = 0;
+            player.rooted_turns = 0;
+            player.hunger = player.max_hunger;
+            addMsg("Divine Miracle! HP restored & ailments cured!", 'good');
+            addParticles(player.x, player.y, '#ecc94b', 30);
+            addFloatText(player.x, player.y, `DIVINE BLESSING!`, '#f6e05e');
+            endTurn();
+        }
+
+        function doWait() {
+            if (state === 1) endTurn();
+        }
+
+        function endTurn() {
+            // Regulate player statuses
+            if (player.invisible_turns > 0) player.invisible_turns--;
+            if (player.rooted_turns > 0) player.rooted_turns--;
+            if (player.poisoned_turns > 0) {
+                player.hp--;
+                player.poisoned_turns--;
+                addMsg("You take 1 poison damage.", 'msg-combat');
+                if (player.hp <= 0) { state = 2; return; }
+            }
+
+            // Hunger decay & passive MP regen
+            if (player.hunger > 0) {
+                player.hunger--;
+            } else {
+                player.hp--;
+                if (Math.random() < 0.2) addMsg("You are starving!");
+                if (player.hp <= 0) { state = 2; return; }
+            }
+            if (Math.random() < 0.3 && player.mp < player.max_mp) player.mp++;
+
+            // Monster turns
+            monsters.forEach(m => {
+                m.turn++;
+                if (m.ch === 'z' && m.turn % 2 === 0) return;
+                doMonsterMove(m);
+            });
+
+            function doMonsterMove(m) {
+                if (m.hp <= 0) return;
+                
+                // If player is invisible, monster wanders randomly
+                if (player.invisible_turns > 0 || Math.random() < 0.3) {
+                    let rdx = Math.floor(Math.random() * 3) - 1;
+                    let rdy = Math.floor(Math.random() * 3) - 1;
+                    let nx = m.x + rdx, ny = m.y + rdy;
+                    if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
+                        if (!monsters.find(om => om.x === nx && om.y === ny) && (nx !== player.x || ny !== player.y)) {
+                            m.x = nx; m.y = ny;
+                        }
+                    }
+                    return;
+                }
+
+                let mdx = Math.sign(player.x - m.x);
+                let mdy = Math.sign(player.y - m.y);
+                if (mdx !== 0 && mdy !== 0) {
+                    if (Math.random() < 0.5) mdx = 0; else mdy = 0;
+                }
+                let nx = m.x + mdx, ny = m.y + mdy;
+
+                if (nx === player.x && ny === player.y) {
+                    let dmg = 2 + difficulty + Math.floor(dlevel * 0.5);
+                    player.hp -= dmg;
+                    addMsg(`${m.name} hits you for ${dmg} dmg.`, 'msg-combat');
+                    addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
+                    addParticles(player.x, player.y, '#fc8181', 6);
+                    if (player.hp <= 0) state = 2;
+                } else if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
+                    if (!monsters.find(om => om.x === nx && om.y === ny)) {
+                        m.x = nx; m.y = ny;
+                    }
+                }
+            }
+        }
+
         function saveGame() {
             try {
-                localStorage.setItem('krogue_save', JSON.stringify({ player, monsters, items, map, difficulty, dlevel, msgs, total_kills }));
+                localStorage.setItem('krogue_save', JSON.stringify({ player, monsters, items, traps, map, difficulty, dlevel, msgs, total_kills }));
                 addMsg("Game Saved successfully!", 'good');
-            } catch(e) {
-                addMsg("Failed to save game.");
-            }
+            } catch(e) { addMsg("Failed to save game."); }
         }
         
         function loadGame() {
@@ -575,22 +830,12 @@
                 let s = localStorage.getItem('krogue_save');
                 if (s) {
                     let d = JSON.parse(s);
-                    player = d.player;
-                    monsters = d.monsters;
-                    items = d.items || [];
-                    map = d.map;
-                    difficulty = d.difficulty;
-                    dlevel = d.dlevel || 1;
-                    total_kills = d.total_kills || 0;
-                    msgs = d.msgs || [];
-                    state = 1;
-                    addMsg("Game Loaded successfully!", 'good');
-                } else {
-                    addMsg("No saved game found.");
-                }
-            } catch(e) {
-                addMsg("Failed to load game.");
-            }
+                    player = d.player; monsters = d.monsters; items = d.items || []; traps = d.traps || [];
+                    map = d.map; difficulty = d.difficulty; dlevel = d.dlevel || 1;
+                    total_kills = d.total_kills || 0; msgs = d.msgs || [];
+                    state = 1; addMsg("Game Loaded successfully!", 'good');
+                } else { addMsg("No saved game found."); }
+            } catch(e) { addMsg("Failed to load game."); }
         }
 
         window.addEventListener('keydown', e => {
@@ -598,149 +843,142 @@
                 if (e.key === 'd' || e.key === 'D') difficulty = (difficulty + 1) % 3;
                 if (e.key === 'Enter') { 
                     state = 1; dlevel = 1; 
-                    player = { x: 1, y: 1, hp: 10, max_hp: 10, xp: 0, level: 1, gold: 0, hunger: 200, max_hunger: 200 };
-                    total_kills = 0;
-                    msgs = [];
+                    player = { 
+                        x: 2, y: 2, hp: 20, max_hp: 20, mp: 30, max_mp: 30, 
+                        xp: 0, level: 1, gold: 0, hunger: 300, max_hunger: 300,
+                        invisible_turns: 0, poisoned_turns: 0, rooted_turns: 0
+                    };
+                    total_kills = 0; msgs = [];
                     addMsg("Welcome to KRogue!", 'good');
-                    addMsg("Find the stairs '>'. Defeat evil.");
+                    addMsg("Descend 30 levels & conquer Astaroth the Fallen!");
                     initMap(); 
                 }
                 if (e.key === 'l' || e.key === 'L') loadGame();
             } else if (state === 1) {
+                if (player.rooted_turns > 0) {
+                    addMsg("You are rooted and cannot move!", 'msg-combat');
+                    endTurn();
+                    return;
+                }
+
                 let dx = 0, dy = 0;
                 let turnTaken = false;
                 if (e.key === 'ArrowUp') { dy = -1; turnTaken = true; }
                 if (e.key === 'ArrowDown') { dy = 1; turnTaken = true; }
                 if (e.key === 'ArrowLeft') { dx = -1; turnTaken = true; }
                 if (e.key === 'ArrowRight') { dx = 1; turnTaken = true; }
-                if (e.key === '.') turnTaken = true;
+                if (e.key === '.') endTurn();
+                if (e.key === 'm' || e.key === 'M') castMeteor();
+                if (e.key === 'i' || e.key === 'I') castInvisibility();
+                if (e.key === 'd' || e.key === 'D') castBlessing();
                 if (e.key === 's' || e.key === 'S') saveGame();
                 if (e.key === 'l' || e.key === 'L') loadGame();
                 
-                if (turnTaken) {
-                    if (dx !== 0 || dy !== 0) {
-                        let nx = player.x + dx, ny = player.y + dy;
-                        if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
-                            let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
-                            if (mIdx >= 0) {
-                                let dmg = 2 + player.level;
-                                monsters[mIdx].hp -= dmg;
-                                addMsg(`You hit ${monsters[mIdx].name} for ${dmg}.`);
-                                addFloatText(nx, ny, `-${dmg}`, '#e53e3e');
-                                addParticles(nx, ny, '#e53e3e', 10);
-                                addAttackAnim(player.x, player.y, nx, ny);
+                if (turnTaken && (dx !== 0 || dy !== 0)) {
+                    let nx = player.x + dx, ny = player.y + dy;
+                    if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
+                        let mIdx = monsters.findIndex(m => m.x === nx && m.y === ny);
+                        if (mIdx >= 0) {
+                            let dmg = 3 + player.level * 2;
+                            monsters[mIdx].hp -= dmg;
+                            addMsg(`You hit ${monsters[mIdx].name} for ${dmg}.`);
+                            addFloatText(nx, ny, `-${dmg}`, '#e53e3e');
+                            addParticles(nx, ny, '#e53e3e', 10);
+                            addAttackAnim(player.x, player.y, nx, ny);
 
-                                if (monsters[mIdx].hp <= 0) {
-                                    addMsg(`${monsters[mIdx].name} dies!`, 'good');
-                                    addFloatText(nx, ny, `+5 XP`, '#ecc94b');
-                                    if (Math.random() < 0.35) {
-                                        let goldAmt = Math.floor(Math.random() * 10) + 5;
-                                        items.push({ x: monsters[mIdx].x, y: monsters[mIdx].y, type: 'gold', amount: goldAmt });
-                                    }
-                                    player.xp += 5;
-                                    total_kills++;
-                                    monsters.splice(mIdx, 1);
-                                    if (player.xp >= player.level * 10) {
-                                        player.level++; player.max_hp += 5; player.hp = player.max_hp;
-                                        addMsg(`Welcome to level ${player.level}!`, 'good');
-                                        addFloatText(player.x, player.y, `LEVEL UP!`, '#68d391');
-                                        addParticles(player.x, player.y, '#ecc94b', 16);
-                                    }
-                                }
-                            } else {
-                                player.x = nx; player.y = ny;
-                                let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
-                                if (itIdx >= 0) {
-                                    let it = items[itIdx];
-                                    if (it.type === 'stairs') {
-                                        dlevel++;
-                                        if (dlevel > 25) {
-                                            state = 3; return;
-                                        }
-                                        addMsg(`You descend to floor ${dlevel}...`, 'good');
-                                        initMap();
-                                        return;
-                                    } else if (it.type === 'gold') {
-                                        player.gold += it.amount;
-                                        addMsg(`You pick up ${it.amount} gold.`, 'good');
-                                        addFloatText(player.x, player.y, `+${it.amount}G`, '#ecc94b');
-                                        items.splice(itIdx, 1);
-                                    } else if (it.type === 'shrine') {
-                                        let buff = Math.floor(Math.random() * 3);
-                                        if (buff === 0) { player.max_hp += 10; player.hp = player.max_hp; addMsg("Shrine glows! Health increased!", 'good'); }
-                                        else if (buff === 1) { player.xp += 50; addMsg("Shrine glows! You feel wiser!", 'good'); }
-                                        else { player.level++; player.max_hp += 5; player.hp = player.max_hp; addMsg("Shrine glows! You grew stronger!", 'good'); }
-                                        addFloatText(player.x, player.y, `SHRINE BUFF!`, '#38b2ac');
-                                        addParticles(player.x, player.y, '#38b2ac', 18);
-                                        items.splice(itIdx, 1);
-                                        if (player.xp >= player.level * 10) {
-                                            player.level++; player.max_hp += 5; player.hp = player.max_hp;
-                                            addMsg(`Welcome to level ${player.level}!`, 'good');
-                                        }
-                                    } else if (it.type === 'food') {
-                                        player.hunger += 100;
-                                        if (player.hunger > player.max_hunger) player.hunger = player.max_hunger;
-                                        addMsg("You eat a food ration.", 'good');
-                                        addFloatText(player.x, player.y, `+100 FOOD`, '#ed8936');
-                                        items.splice(itIdx, 1);
-                                    }
+                            if (monsters[mIdx].hp <= 0) {
+                                addMsg(`${monsters[mIdx].name} dies!`, 'good');
+                                player.xp += 6; total_kills++;
+                                if (monsters[mIdx].boss) { state = 3; return; }
+                                monsters.splice(mIdx, 1);
+                                if (player.xp >= player.level * 12) {
+                                    player.level++; player.max_hp += 5; player.hp = player.max_hp;
+                                    player.max_mp += 5; player.mp = player.max_mp;
+                                    addMsg(`Level Up! You are now level ${player.level}!`, 'good');
+                                    addFloatText(player.x, player.y, `LEVEL UP!`, '#68d391');
+                                    addParticles(player.x, player.y, '#ecc94b', 16);
                                 }
                             }
-                        }
-                    }
-                    
-                    if (player.hunger > 0) {
-                        player.hunger--;
-                    } else {
-                        player.hp--;
-                        if (Math.random() < 0.2) addMsg("You are starving!");
-                        if (player.hp <= 0) {
-                            addMsg("You starved to death.");
-                            state = 2;
-                        }
-                    }
-                    
-                    // monster turns
-                    monsters.forEach(m => {
-                        m.turn++;
-                        if (m.ch === 'z' && m.turn % 2 === 0) return;
-                        if (m.ch === 'b') {
-                            for (let step = 0; step < 2; step++) doMonsterMove(m);
                         } else {
-                            doMonsterMove(m);
-                        }
-                    });
-                    
-                    function doMonsterMove(m) {
-                        if (m.hp <= 0) return;
-                        if (Math.random() < 0.7) {
-                            let mdx = Math.sign(player.x - m.x);
-                            let mdy = Math.sign(player.y - m.y);
-                            if (mdx !== 0 && mdy !== 0) {
-                                if (Math.random() < 0.5) mdx = 0; else mdy = 0;
+                            player.x = nx; player.y = ny;
+                            
+                            // Check Traps
+                            let trIdx = traps.findIndex(t => t.x === nx && t.y === ny);
+                            if (trIdx >= 0) {
+                                let tr = traps[trIdx];
+                                tr.revealed = true;
+                                if (tr.type === 'poison') {
+                                    player.hp -= 8; player.poisoned_turns = 8;
+                                    addMsg("You triggered Poison Spikes!", 'msg-combat');
+                                    addFloatText(player.x, player.y, `-8 HP & POISON`, '#38a169');
+                                    addParticles(player.x, player.y, '#38a169', 15);
+                                    if (player.hp <= 0) { state = 2; return; }
+                                } else if (tr.type === 'teleport') {
+                                    let tx, ty;
+                                    do { tx = Math.floor(Math.random() * (COLS - 4)) + 2; ty = Math.floor(Math.random() * (ROWS - 4)) + 2; } while(map[ty][tx] === '#');
+                                    player.x = tx; player.y = ty;
+                                    addMsg("You triggered a Teleport Trap!", 'msg-combat');
+                                    addFloatText(player.x, player.y, `TELEPORT!`, '#b794f4');
+                                    addParticles(player.x, player.y, '#b794f4', 18);
+                                } else if (tr.type === 'root') {
+                                    player.rooted_turns = 5;
+                                    addMsg("You triggered a Root Trap!", 'msg-combat');
+                                    addFloatText(player.x, player.y, `ROOTED!`, '#dd6b20');
+                                }
+                                traps.splice(trIdx, 1);
                             }
-                            let nx = m.x + mdx; let ny = m.y + mdy;
-                            if (nx === player.x && ny === player.y) {
-                                let dmg = 1 + difficulty + (dlevel > 2 ? 1 : 0);
-                                player.hp -= dmg;
-                                addMsg(`${m.name} hits you for ${dmg}.`);
-                                addFloatText(player.x, player.y, `-${dmg}`, '#e53e3e');
-                                addParticles(player.x, player.y, '#fc8181', 6);
-                                if (player.hp <= 0) state = 2;
-                            } else if (nx >= 0 && ny >= 0 && nx < COLS && ny < ROWS && map[ny][nx] !== '#') {
-                                if (!monsters.find(om => om.x === nx && om.y === ny)) {
-                                    m.x = nx; m.y = ny;
+
+                            // Items
+                            let itIdx = items.findIndex(i => i.x === nx && i.y === ny);
+                            if (itIdx >= 0) {
+                                let it = items[itIdx];
+                                if (it.type === 'stairs') {
+                                    dlevel++;
+                                    addMsg(`You descend to ${getBiomeName(dlevel)} (Floor ${dlevel})...`, 'good');
+                                    initMap(); return;
+                                } else if (it.type === 'gold') {
+                                    player.gold += 15 + dlevel * 3;
+                                    addMsg(`You picked up gold!`, 'good');
+                                    items.splice(itIdx, 1);
+                                } else if (it.type === 'shrine') {
+                                    player.max_hp += 10; player.hp = player.max_hp;
+                                    player.max_mp += 10; player.mp = player.max_mp;
+                                    addMsg("Magic Shrine glows! Stats empowered!", 'good');
+                                    addParticles(player.x, player.y, '#38b2ac', 18);
+                                    items.splice(itIdx, 1);
+                                } else if (it.type === 'food') {
+                                    player.hunger += 150;
+                                    if (player.hunger > player.max_hunger) player.hunger = player.max_hunger;
+                                    addMsg("Ate food ration.", 'good');
+                                    items.splice(itIdx, 1);
                                 }
                             }
                         }
+                        endTurn();
                     }
                 }
+            } else if (state === 4) { // Targeting Mode
+                if (e.key === 'ArrowUp' && targetY > 0) targetY--;
+                if (e.key === 'ArrowDown' && targetY < ROWS - 1) targetY++;
+                if (e.key === 'ArrowLeft' && targetX > 0) targetX--;
+                if (e.key === 'ArrowRight' && targetX < COLS - 1) targetX++;
+                if (e.key === 'Enter' || e.key === 'm' || e.key === 'M') executeMeteor();
+                if (e.key === 'Escape') { state = 1; addMsg("Targeting cancelled."); }
             } else if (state === 2 || state === 3) {
-                if (e.key === 'r' || e.key === 'R') { state = 0; }
+                if (e.key === 'r' || e.key === 'R') state = 0;
             }
         });
 
-        // Start render loop
+        canvas.addEventListener('click', e => {
+            if (state === 4) {
+                let rect = canvas.getBoundingClientRect();
+                targetX = Math.floor((e.clientX - rect.left) / TILE);
+                targetY = Math.floor((e.clientY - rect.top) / TILE);
+                executeMeteor();
+            }
+        });
+
+        // Start game loop
         gameLoop();
     </script>
 </body>

@@ -35,6 +35,12 @@
 #define C_TITAN RGB(210, 180, 140)
 #define C_BEHOLDER RGB(138, 43, 226)
 #define C_MINDFLAYER RGB(148, 0, 211)
+#define C_ARCHMAGE RGB(0, 220, 255)
+#define C_LICHLORD RGB(255, 255, 100)
+#define C_ASSASSIN RGB(120, 50, 180)
+#define C_BEHEMOTH RGB(40, 40, 90)
+#define C_MIMIC RGB(255, 215, 0)
+#define C_ASTAROTH RGB(255, 215, 0)
 
 #define C_POTION RGB(255,50,255)
 #define C_WEAPON RGB(50,255,255)
@@ -71,6 +77,7 @@ typedef struct {
 #define STATUS_NONE 0
 #define STATUS_POISON 1
 #define STATUS_ROOTED 2
+#define STATUS_INVISIBLE 3
 
 #define ABILITY_NONE 0
 #define ABILITY_SPLIT 1
@@ -138,6 +145,9 @@ typedef struct {
 #define S_FIREBALL 2
 #define S_FREEZE 3
 #define S_LIGHTNING 4
+#define S_METEOR 5
+#define S_INVISIBILITY 6
+#define S_BLESSING 7
 
 typedef struct {
     Tile map[H][W];
@@ -257,9 +267,11 @@ void spawn_monster(int x, int y) {
             e->active = 1;
             e->x = x; e->y = y;
             int max_tier = 1;
-            if(g.dlevel >= 2) max_tier = 2;
-            if(g.dlevel >= 4) max_tier = 3;
-            if(g.dlevel >= 8) max_tier = 4;
+            if(g.dlevel >= 3) max_tier = 2;
+            if(g.dlevel >= 7) max_tier = 3;
+            if(g.dlevel >= 12) max_tier = 4;
+            if(g.dlevel >= 18) max_tier = 5;
+            if(g.dlevel >= 24) max_tier = 6;
             
             if(rand_range(0, 100) < 5) {
                 e->ch = '$'; e->fg = C_SHOPKEEPER; str_cpy(e->name, "Shopkeeper");
@@ -294,18 +306,31 @@ void spawn_monster(int x, int y) {
                 else if(m == 3) { e->ch = 'e'; e->fg = C_ELF; str_cpy(e->name, "Dark Elf"); e->hp = e->max_hp = 20 + g.dlevel*3; e->atk = 12; e->def = 3; e->xp = 16; e->behavior = B_SMART; }
                 else if(m == 4) { e->ch = 'y'; e->fg = C_SKELETON; str_cpy(e->name, "Gargoyle"); e->hp = e->max_hp = 35 + g.dlevel*3; e->atk = 7; e->def = 8; e->xp = 16; e->behavior = B_SLUGGISH; }
                 else { e->ch = 'C'; e->fg = C_CUBE; str_cpy(e->name, "Gelatinous Cube"); e->hp = e->max_hp = 50 + g.dlevel*3; e->atk = 5; e->def = 10; e->xp = 25; e->behavior = B_SLUGGISH; e->special_ability = ABILITY_SPLIT; }
-            } else {
-                int m4 = rand_range(0, 9);
+            } else if(tier == 4) {
+                int m4 = rand_range(0, 5);
                 if(m4 == 0) { e->ch = 'D'; e->fg = C_DRAGON; str_cpy(e->name, "Red Dragon"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 15; e->def = 8; e->xp = 50; e->behavior = B_NORMAL; e->special_ability = ABILITY_BREATHE_FIRE; }
                 else if(m4 == 1) { e->ch = 'V'; e->fg = C_VAMPIRE; str_cpy(e->name, "Vampire"); e->hp = e->max_hp = 45 + g.dlevel*5; e->atk = 14; e->def = 6; e->xp = 45; e->behavior = B_FAST; }
                 else if(m4 == 2) { e->ch = 'G'; e->fg = C_GOLEM; str_cpy(e->name, "Stone Golem"); e->hp = e->max_hp = 80 + g.dlevel*5; e->atk = 10; e->def = 15; e->xp = 60; e->behavior = B_SLUGGISH; }
                 else if(m4 == 3) { e->ch = 'L'; e->fg = C_LICH; str_cpy(e->name, "Lich"); e->hp = e->max_hp = 40 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 80; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
                 else if(m4 == 4) { e->ch = 'd'; e->fg = C_DEMON; str_cpy(e->name, "Demon"); e->hp = e->max_hp = 50 + g.dlevel*5; e->atk = 18; e->def = 10; e->xp = 70; e->behavior = B_FAST; e->special_ability = ABILITY_BREATHE_FIRE; }
-                else if(m4 == 5) { e->ch = 'H'; e->fg = C_HYDRA; str_cpy(e->name, "Hydra"); e->hp = e->max_hp = 90 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 100; e->behavior = B_NORMAL; }
-                else if(m4 == 6) { e->ch = 'B'; e->fg = C_BALROG; str_cpy(e->name, "Balrog"); e->hp = e->max_hp = 100 + g.dlevel*5; e->atk = 30; e->def = 12; e->xp = 150; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
-                else if(m4 == 7) { e->ch = 't'; e->fg = C_TITAN; str_cpy(e->name, "Titan"); e->hp = e->max_hp = 120 + g.dlevel*5; e->atk = 35; e->def = 15; e->xp = 200; e->behavior = B_NORMAL; }
-                else if(m4 == 8) { e->ch = 'E'; e->fg = C_BEHOLDER; str_cpy(e->name, "Beholder"); e->hp = e->max_hp = 70 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 180; e->behavior = B_ERRATIC; e->special_ability = ABILITY_SUMMON; }
-                else { e->ch = 'M'; e->fg = C_MINDFLAYER; str_cpy(e->name, "Mind Flayer"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 160; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else { e->ch = 'H'; e->fg = C_HYDRA; str_cpy(e->name, "Hydra"); e->hp = e->max_hp = 90 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 100; e->behavior = B_NORMAL; }
+            } else if(tier == 5) {
+                int m5 = rand_range(0, 5);
+                if(m5 == 0) { e->ch = 'B'; e->fg = C_BALROG; str_cpy(e->name, "Balrog"); e->hp = e->max_hp = 100 + g.dlevel*5; e->atk = 30; e->def = 12; e->xp = 150; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
+                else if(m5 == 1) { e->ch = 't'; e->fg = C_TITAN; str_cpy(e->name, "Titan"); e->hp = e->max_hp = 120 + g.dlevel*5; e->atk = 35; e->def = 15; e->xp = 200; e->behavior = B_NORMAL; }
+                else if(m5 == 2) { e->ch = 'E'; e->fg = C_BEHOLDER; str_cpy(e->name, "Beholder"); e->hp = e->max_hp = 70 + g.dlevel*5; e->atk = 25; e->def = 8; e->xp = 180; e->behavior = B_ERRATIC; e->special_ability = ABILITY_SUMMON; }
+                else if(m5 == 3) { e->ch = 'M'; e->fg = C_MINDFLAYER; str_cpy(e->name, "Mind Flayer"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 160; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else if(m5 == 4) { e->ch = 'a'; e->fg = C_ASSASSIN; str_cpy(e->name, "Shadow Assassin"); e->hp = e->max_hp = 45 + g.dlevel*4; e->atk = 35; e->def = 4; e->xp = 140; e->behavior = B_FAST; }
+                else { e->ch = 'U'; e->fg = C_BEHEMOTH; str_cpy(e->name, "Shadow Behemoth"); e->hp = e->max_hp = 140 + g.dlevel*6; e->atk = 40; e->def = 16; e->xp = 300; e->behavior = B_NORMAL; }
+            } else {
+                int m6 = rand_range(0, 6);
+                if(m6 == 0) { e->ch = 'A'; e->fg = C_ARCHMAGE; str_cpy(e->name, "Arch-Mage"); e->hp = e->max_hp = 70 + g.dlevel*5; e->atk = 28; e->def = 8; e->xp = 220; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else if(m6 == 1) { e->ch = 'L'; e->fg = C_LICHLORD; str_cpy(e->name, "Lich Lord"); e->hp = e->max_hp = 110 + g.dlevel*6; e->atk = 32; e->def = 12; e->xp = 350; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
+                else if(m6 == 2) { e->ch = 'm'; e->fg = C_MIMIC; str_cpy(e->name, "Mimic Chest"); e->hp = e->max_hp = 80 + g.dlevel*4; e->atk = 26; e->def = 10; e->xp = 180; e->behavior = B_NORMAL; }
+                else if(m6 == 3) { e->ch = 'a'; e->fg = C_ASSASSIN; str_cpy(e->name, "Shadow Assassin"); e->hp = e->max_hp = 50 + g.dlevel*4; e->atk = 36; e->def = 5; e->xp = 160; e->behavior = B_FAST; }
+                else if(m6 == 4) { e->ch = 'U'; e->fg = C_BEHEMOTH; str_cpy(e->name, "Shadow Behemoth"); e->hp = e->max_hp = 160 + g.dlevel*6; e->atk = 45; e->def = 18; e->xp = 350; e->behavior = B_NORMAL; }
+                else if(m6 == 5) { e->ch = 'B'; e->fg = C_BALROG; str_cpy(e->name, "Balrog"); e->hp = e->max_hp = 120 + g.dlevel*5; e->atk = 34; e->def = 14; e->xp = 250; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
+                else { e->ch = 't'; e->fg = C_TITAN; str_cpy(e->name, "Titan"); e->hp = e->max_hp = 150 + g.dlevel*5; e->atk = 40; e->def = 18; e->xp = 300; e->behavior = B_NORMAL; }
             }
             
             if(e->behavior != B_SHOPKEEPER) {
@@ -350,7 +375,7 @@ void generate_random_item(Item* it) {
         int s_type = rand_range(0, 1);
         if(s_type == 0) str_cpy(it->name, "Wooden Shield");
         else str_cpy(it->name, "Kiteshield");
-    } else if (r < 98) {
+    } else if (r < 97) {
         it->ch = '='; it->fg = RGB(255,215,0); it->type = TYPE_RING;
         it->subtype = rand_range(0, 2);
         if(it->subtype == 0) { str_cpy(it->name, "Ring of Strength"); it->val = 2 + g.dlevel/2; }
@@ -358,12 +383,15 @@ void generate_random_item(Item* it) {
         else { str_cpy(it->name, "Amulet of Life"); it->val = 20 + g.dlevel * 5; it->ch = '"'; }
     } else {
         it->ch = '?'; it->fg = RGB(200, 100, 255); it->type = TYPE_SPELLBOOK;
-        it->subtype = rand_range(0, 4);
+        it->subtype = rand_range(0, 7);
         if(it->subtype == S_MISSILE) { str_cpy(it->name, "Spellbook of Magic Missile"); }
         else if(it->subtype == S_HEAL) { str_cpy(it->name, "Spellbook of Healing"); }
         else if(it->subtype == S_FIREBALL) { str_cpy(it->name, "Spellbook of Fireball"); }
         else if(it->subtype == S_FREEZE) { str_cpy(it->name, "Spellbook of Ice Storm"); }
-        else { str_cpy(it->name, "Spellbook of Lightning"); }
+        else if(it->subtype == S_LIGHTNING) { str_cpy(it->name, "Spellbook of Lightning"); }
+        else if(it->subtype == S_METEOR) { str_cpy(it->name, "Spellbook of Meteor Strike"); }
+        else if(it->subtype == S_INVISIBILITY) { str_cpy(it->name, "Spellbook of Invisibility"); }
+        else { str_cpy(it->name, "Spellbook of Divine Blessing"); }
     }
 }
 
@@ -472,18 +500,18 @@ void generate_map() {
     get_player()->x = cx;
     get_player()->y = cy;
     
-    if(g.dlevel == 25) {
+    if(g.dlevel == 30) {
         g.stair_x = -1;
         g.stair_y = -1;
         for(int i=1; i<MAX_ENTITIES; i++) {
             if(!g.entities[i].active) {
                 Entity* e = &g.entities[i];
                 e->active = 1; e->x = lcx; e->y = lcy;
-                e->ch = '&'; e->fg = RGB(255, 0, 255); str_cpy(e->name, "Chaos God Andor Drakon");
-                e->hp = e->max_hp = 500; e->atk = 35; e->def = 25; e->xp = 5000;
+                e->ch = '&'; e->fg = C_ASTAROTH; str_cpy(e->name, "Astaroth the Fallen");
+                e->hp = e->max_hp = 800; e->atk = 50; e->def = 30; e->xp = 10000;
                 e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON;
-                if(g.difficulty == 1) { e->max_hp = 750; e->atk = 50; }
-                else if(g.difficulty == 2) { e->max_hp = 1000; e->atk = 75; e->def = 40; }
+                if(g.difficulty == 1) { e->max_hp = 1200; e->atk = 70; }
+                else if(g.difficulty == 2) { e->max_hp = 1600; e->atk = 90; e->def = 45; }
                 e->hp = e->max_hp;
                 break;
             }
@@ -518,8 +546,8 @@ void generate_map() {
     for(int y=1; y<H-1; y++) {
         for(int x=1; x<W-1; x++) {
             if(g.map[y][x].ch == '.' && g.map[y][x].walkable) {
-                if(rand_range(0, 100) < 3) {
-                    g.map[y][x].has_trap = 1;
+                if(rand_range(0, 100) < 4) {
+                    g.map[y][x].has_trap = rand_range(1, 3);
                 } else if(rand_range(0, 100) < 1) {
                     for(int i=0; i<MAX_ITEMS; i++) {
                         if(!g.items[i].active) {
@@ -536,12 +564,13 @@ void generate_map() {
     }
     
 
-    COLORREF cur_wall = C_WALL;
-    COLORREF cur_floor = C_FLOOR;
-    if(g.dlevel >= 5 && g.dlevel < 10) { cur_wall = RGB(100, 150, 100); cur_floor = RGB(50, 80, 50); }
-    else if(g.dlevel >= 10 && g.dlevel < 15) { cur_wall = RGB(150, 50, 50); cur_floor = RGB(80, 40, 40); }
-    else if(g.dlevel >= 15 && g.dlevel < 20) { cur_wall = RGB(50, 0, 80); cur_floor = RGB(20, 0, 30); }
-    else if(g.dlevel >= 20) { cur_wall = RGB(80, 0, 80); cur_floor = RGB(40, 0, 40); }
+    COLORREF cur_wall = RGB(60, 120, 80); // Sewers L1-5
+    COLORREF cur_floor = RGB(30, 60, 40);
+    if(g.dlevel >= 6 && g.dlevel <= 10) { cur_wall = RGB(140, 110, 80); cur_floor = RGB(60, 50, 35); } // Caves
+    else if(g.dlevel >= 11 && g.dlevel <= 15) { cur_wall = RGB(110, 80, 140); cur_floor = RGB(45, 30, 60); } // Crypt
+    else if(g.dlevel >= 16 && g.dlevel <= 20) { cur_wall = RGB(180, 40, 20); cur_floor = RGB(80, 20, 10); } // Inferno
+    else if(g.dlevel >= 21 && g.dlevel <= 25) { cur_wall = RGB(70, 20, 120); cur_floor = RGB(30, 10, 50); } // Void
+    else if(g.dlevel >= 26) { cur_wall = RGB(220, 180, 60); cur_floor = RGB(40, 80, 100); } // Celestial Sanctuary
     for(int y=0; y<H; y++) {
         for(int x=0; x<W; x++) {
             if(g.map[y][x].ch == '#') g.map[y][x].fg = cur_wall;
@@ -592,6 +621,12 @@ void finalize_character() {
     p->hp = p->max_hp;
     p->mp = p->max_mp;
     
+    // Unlock artifact spells & abilities
+    g.known_spells[S_MISSILE] = 1;
+    g.known_spells[S_METEOR] = 1;
+    g.known_spells[S_INVISIBILITY] = 1;
+    g.known_spells[S_BLESSING] = 1;
+    
     add_msg("Welcome to KRogue!");
     add_msg("Find the stairs '>'. Defeat evil. F5 to quicksave.");
     
@@ -605,7 +640,10 @@ void finalize_character() {
         Item bow = {1, 0, 0, '(', C_WEAPON, "Shortbow", 2, W_BOW, 2};
         g.equip_weapon = bow;
     } else if(p->class_id == CLASS_WIZARD) {
-        g.known_spells[S_MISSILE] = 1;
+        g.known_spells[S_HEAL] = 1;
+        g.known_spells[S_FIREBALL] = 1;
+        g.known_spells[S_FREEZE] = 1;
+        g.known_spells[S_LIGHTNING] = 1;
         Item stick = {1, 0, 0, '(', C_WEAPON, "Stick", 2, W_SWORD, 1};
         g.equip_weapon = stick;
     }
@@ -877,7 +915,7 @@ void do_monsters_turn(int is_bonus) {
 
             int dx = 0, dy = 0;
             
-            if(e->behavior == B_ERRATIC && rand_range(0, 100) < 50) {
+            if(p->status_effect == STATUS_INVISIBLE || (e->behavior == B_ERRATIC && rand_range(0, 100) < 50)) {
                 dx = rand_range(-1, 1);
                 dy = rand_range(-1, 1);
             } else {
@@ -1535,6 +1573,18 @@ void draw_game(HDC hdc) {
             TextOutA(memDC, 20, y, "e - Lightning (Cost: 7 MP)", 26);
             y += char_h;
         }
+        if(g.known_spells[S_METEOR]) {
+            TextOutA(memDC, 20, y, "f - Meteor Strike (Cost: 12 MP)", 31);
+            y += char_h;
+        }
+        if(g.known_spells[S_INVISIBILITY]) {
+            TextOutA(memDC, 20, y, "g - Invisibility Cloak (Cost: 10 MP)", 36);
+            y += char_h;
+        }
+        if(g.known_spells[S_BLESSING]) {
+            TextOutA(memDC, 20, y, "h - Divine Blessing (Cost: 15 MP)", 33);
+            y += char_h;
+        }
     } else if(g.state == 8) { // message log
         SetTextColor(memDC, RGB(255,255,255));
         SetBkColor(memDC, RGB(0,0,0));
@@ -1769,6 +1819,38 @@ void fire_spell() {
                 break; // stop at wall
             }
         }
+    } else if (g.active_spell == S_METEOR) {
+        p->mp -= 12;
+        add_msg("METEOR STRIKE! Flaming meteors rain down!");
+        for(int dy=-2; dy<=2; dy++) {
+            for(int dx=-2; dx<=2; dx++) {
+                int tx = g.target_x + dx;
+                int ty = g.target_y + dy;
+                if(tx >= 0 && tx < W && ty >= 0 && ty < H) {
+                    Entity* target = get_entity_at(tx, ty);
+                    if(target && target != p) {
+                        int dmg = 45 + p->level * 5;
+                        target->hp -= dmg;
+                        char buf[100];
+                        wsprintfA(buf, "%s is crushed by meteor for %d dmg!", target->name, dmg);
+                        add_msg(buf);
+                        if(target->hp <= 0) handle_death(target, p);
+                    }
+                }
+            }
+        }
+    } else if (g.active_spell == S_INVISIBILITY) {
+        p->mp -= 10;
+        p->status_effect = STATUS_INVISIBLE;
+        p->status_duration = 5;
+        add_msg("You don the Invisibility Cloak! Enemies cannot see you for 5 turns.");
+    } else if (g.active_spell == S_BLESSING) {
+        p->mp -= 15;
+        p->hp = p->max_hp;
+        p->status_effect = STATUS_NONE;
+        p->status_duration = 0;
+        p->hunger = 1000;
+        add_msg("Divine Miracle! HP restored, status cured, hunger satisfied!");
     }
     
     monsters_turn();
@@ -1906,6 +1988,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         Entity* p = get_player();
                         g.target_x = p->x; g.target_y = p->y;
                         add_msg("Targeting Ice Storm... (Arrows to aim, Enter/F to fire)");
+                    } else {
+                        add_msg("Not enough MP!");
+                        g.state = 0;
+                    }
+                }
+                else if(wParam == 'F' && g.known_spells[S_METEOR]) {
+                    if(get_player()->mp >= 12) {
+                        g.state = 3;
+                        g.targeting_mode = 1;
+                        g.active_spell = S_METEOR;
+                        Entity* p = get_player();
+                        g.target_x = p->x; g.target_y = p->y;
+                        add_msg("Targeting Meteor Strike 5x5... (Arrows to aim, Enter/F to fire)");
+                    } else {
+                        add_msg("Not enough MP!");
+                        g.state = 0;
+                    }
+                }
+                else if(wParam == 'G' && g.known_spells[S_INVISIBILITY]) {
+                    if(get_player()->mp >= 10) {
+                        g.state = 0;
+                        g.active_spell = S_INVISIBILITY;
+                        fire_spell();
+                    } else {
+                        add_msg("Not enough MP!");
+                        g.state = 0;
+                    }
+                }
+                else if(wParam == 'H' && g.known_spells[S_BLESSING]) {
+                    if(get_player()->mp >= 15) {
+                        g.state = 0;
+                        g.active_spell = S_BLESSING;
+                        fire_spell();
                     } else {
                         add_msg("Not enough MP!");
                         g.state = 0;
