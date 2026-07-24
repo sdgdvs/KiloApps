@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KStarship (Sci-fi space exploration)
-**Phase:** 13 (next to do)
-**Status:** Phases 1-12 complete
+**Phase:** 14 (next to do)
+**Status:** Phases 1-13 complete
 
 - [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML sci-fi exploration game (ship creation/naming, sector navigation grid with ASCII star map, fuel/hull/crew/energy resource management).
@@ -69,7 +69,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 10: Deep Space Trading & Economy — Interstellar commodity market across sectors with fluctuating buy/sell prices for Fuel, Meds, Ore, Cyberware, and Luxury Goods.
 - [x] Phase 11: Permadeath, High Score Leaderboard & Captain's Log — Permadeath mode option, persistent hall of fame with score categories (Distance, Credits, Battles Won), and automatic event log.
 - [x] Phase 12: Multiple Game Modes & Difficulty Levels — Add 3 Game Modes (Explorer, Survival, Permadeath Iron Captain) and 3 Difficulty Settings adjusting resource consumption and enemy difficulty.
-- [ ] Phase 13: Add Sound Effects — Web Audio API laser blasts, shield hums, warp drives, alarm klaxons, item pickups, explosion rumbles. Native: Win32 Beep() equivalents.
+- [x] Phase 13: Add Sound Effects — Web Audio API laser blasts, shield hums, warp drives, alarm klaxons, item pickups, explosion rumbles. Native: Win32 Beep() equivalents.
 - [ ] Phase 14: Add Comprehensive Help & Star Captain Codex — How-to-play modal overlay, controls reference, sector guide, alien species encyclopedia, and ship system manual.
 
 ### How to execute the next phase:
