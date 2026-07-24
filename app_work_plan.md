@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KTask
+**Target App:** KSys
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KTask
 - KSys
 - KRogue
 - KConverter
@@ -77,6 +76,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KSolitaire (Added Draw 1/3 Rules, Unlimited Undo/Redo, Smart Hint System, Auto-Finish Solver, Win-Rate & Stats Tracker, Deck & Felt Themes, Save/Resume State)
 - KTerm (Added Multi-Tab Terminals, Reverse History Search Ctrl+R, Custom Aliases, Environment Variables, Tab Autocomplete, and Session Log Export)
 - KSynth (Added Preset Save/Load System [JSON import/export & presets menu], Programmable Arpeggiator [Up, Down, Up-Down, Random], Dual Oscillators & Waveforms, Real-Time Oscilloscope / Spectrum Visualizer, ADSR Envelope Controls, 16-Step Pattern Sequencer Export/Import)
+- KTask (Added Process Priority Adjuster, CPU/RAM Rolling Sparkline Charts, Process Snapshot Exports [CSV/JSON], Kill Confirmation Modal, and System Summary)
 
 
 
