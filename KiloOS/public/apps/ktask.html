@@ -7,17 +7,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-color: hsl(210, 15%, 12%);
-    --card-bg: hsl(210, 15%, 16%);
-    --card-hover: hsl(210, 15%, 22%);
-    --primary: hsl(200, 85%, 60%);
+    --bg-color: #0f172a;
+    --card-bg: #1e293b;
+    --card-hover: #334155;
+    --primary: #38bdf8;
     --primary-muted: rgba(56, 189, 248, 0.15);
-    --danger: hsl(0, 85%, 60%);
-    --danger-hover: hsl(0, 85%, 50%);
+    --primary-glow: rgba(56, 189, 248, 0.3);
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
     --border-color: rgba(255, 255, 255, 0.08);
-    --text-main: #ffffff;
+    --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --success: #34d399;
+    --warning: #fbbf24;
+    --purple: #a855f7;
   }
   
   * { box-sizing: border-box; }
@@ -39,7 +42,7 @@
     padding: 0;
     width: 100%;
     height: 100%;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: var(--bg-color);
     color: var(--text-main);
     user-select: none;
@@ -50,29 +53,76 @@
 
   /* Header */
   .header {
-    padding: 14px 20px;
+    padding: 10px 18px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--card-bg);
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(10px);
     flex-wrap: wrap;
     gap: 12px;
+    z-index: 10;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 
   .header h1 {
     margin: 0;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+
+  /* Navigation Tabs */
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .tab-btn {
+    padding: 5px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tab-btn.active {
+    background: var(--primary-muted);
+    color: var(--primary);
+    border: 1px solid rgba(56, 189, 248, 0.3);
   }
 
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
@@ -83,13 +133,13 @@
   }
 
   .select-ctrl, .input-ctrl {
-    padding: 7px 12px;
+    padding: 6px 10px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(15, 23, 42, 0.6);
     color: var(--text-main);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
+    font-family: inherit;
+    font-size: 12px;
     outline: none;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
   }
@@ -104,16 +154,16 @@
     box-shadow: 0 0 0 2px var(--primary-muted);
   }
 
-  .btn-primary {
-    padding: 7px 14px;
+  .btn-primary, .btn-secondary {
+    padding: 6px 12px;
     cursor: pointer;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     background: rgba(255, 255, 255, 0.06);
     color: var(--text-main);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -126,7 +176,12 @@
     border-color: var(--primary);
   }
 
-  .btn-primary:focus-visible {
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-primary:focus-visible, .btn-secondary:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px var(--primary);
   }
@@ -140,22 +195,22 @@
     cursor: pointer;
   }
 
-  /* Dashboard Metrics */
+  /* Dashboard Metrics Bar */
   .dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    padding: 15px 20px;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+    padding: 10px 18px;
     border-bottom: 1px solid var(--border-color);
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(15, 23, 42, 0.4);
   }
 
   .metric {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     background: var(--card-bg);
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
   }
@@ -171,13 +226,13 @@
   }
 
   .metric-val {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     color: var(--text-main);
   }
 
   .progress-bg {
-    height: 6px;
+    height: 5px;
     background: rgba(255, 255, 255, 0.08);
     border-radius: 3px;
     overflow: hidden;
@@ -191,35 +246,44 @@
     transition: width 0.5s ease-out, background-color 0.3s ease;
   }
 
-  /* Task List */
-  .task-list {
+  /* Tab View Container */
+  .tab-content {
     flex: 1;
-    padding: 15px 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .tab-pane {
+    display: none;
+    flex: 1;
     overflow-y: auto;
+    padding: 14px 18px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tab-pane.active {
+    display: flex;
+  }
+
+  /* Task Cards List */
+  .task-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-  }
-
-  .task-list::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .task-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
   }
 
   .task-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 12px 16px;
+    padding: 10px 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: all 0.2s ease;
-    gap: 15px;
+    gap: 12px;
   }
 
   .task-card:hover {
@@ -240,7 +304,7 @@
     width: 34px;
     height: 34px;
     border-radius: 8px;
-    background: rgba(56, 189, 248, 0.1);
+    background: rgba(56, 189, 248, 0.12);
     color: var(--primary);
     display: flex;
     align-items: center;
@@ -248,6 +312,7 @@
     font-weight: 700;
     font-size: 13px;
     flex-shrink: 0;
+    border: 1px solid rgba(56, 189, 248, 0.2);
   }
 
   .task-info {
@@ -258,7 +323,7 @@
   }
 
   .task-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -271,17 +336,36 @@
     font-family: 'Consolas', monospace;
     display: flex;
     gap: 10px;
+    align-items: center;
     flex-wrap: wrap;
+  }
+
+  .task-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .priority-select {
+    padding: 4px 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-main);
+    font-family: inherit;
+    cursor: pointer;
   }
 
   .status-badge {
     display: inline-block;
-    padding: 1px 6px;
+    padding: 2px 6px;
     border-radius: 4px;
     background: rgba(52, 211, 153, 0.15);
     color: var(--success);
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
   }
 
@@ -289,13 +373,12 @@
     background: rgba(239, 68, 68, 0.12);
     color: var(--danger);
     border: 1px solid rgba(239, 68, 68, 0.25);
-    padding: 7px 14px;
+    padding: 5px 11px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    flex-shrink: 0;
   }
 
   .btn-kill:hover {
@@ -305,9 +388,172 @@
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
   }
 
-  .btn-kill:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px var(--danger);
+  /* Canvas Charts Layout */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    height: 100%;
+    min-height: 250px;
+  }
+
+  @media (max-width: 768px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+
+  .chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .chart-title {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chart-val-large {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+  }
+
+  .chart-canvas-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    min-height: 160px;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  /* Summary Grid */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .summary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .summary-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .summary-value {
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+    color: var(--text-main);
+  }
+
+  .summary-subtext {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal-box {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 420px;
+    padding: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-overlay.active .modal-box {
+    transform: scale(1);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--danger);
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .modal-body {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-muted);
+  }
+
+  .modal-body strong {
+    color: var(--text-main);
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
   }
 
   .empty-state {
@@ -336,7 +582,7 @@
     transform: translateY(10px);
     transition: all 0.3s ease;
     pointer-events: none;
-    z-index: 100;
+    z-index: 1100;
   }
 
   .toast.show {
@@ -347,17 +593,42 @@
 </head>
 <body>
   <div class="header">
-    <h1>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-        <line x1="8" y1="21" x2="16" y2="21"></line>
-        <line x1="12" y1="17" x2="12" y2="21"></line>
-      </svg>
-      System Monitor
-    </h1>
+    <div class="header-left">
+      <h1>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        KTask Monitor
+      </h1>
+
+      <div class="nav-tabs" role="tablist">
+        <button class="tab-btn active" id="tab-tasks-btn" onclick="switchTab('tasks')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
+          Processes
+        </button>
+        <button class="tab-btn" id="tab-charts-btn" onclick="switchTab('charts')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          Performance
+        </button>
+        <button class="tab-btn" id="tab-system-btn" onclick="switchTab('system')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
+          Summary
+        </button>
+      </div>
+    </div>
     
     <div class="header-actions">
       <div class="input-group">
+        <label for="filterSelect" class="sr-only">Filter by category</label>
+        <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="renderTasks()">
+          <option value="all">All Categories</option>
+          <option value="high-cpu">High CPU (&gt;2%)</option>
+          <option value="high-mem">High Memory (&gt;25MB)</option>
+          <option value="high-pri">High Priority</option>
+        </select>
+
         <label for="sortSelect" class="sr-only">Sort tasks</label>
         <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="renderTasks()">
           <option value="name">Sort by Name</option>
@@ -367,15 +638,25 @@
         </select>
         
         <label for="searchInput" class="sr-only">Filter tasks</label>
-        <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter tasks (Name or PID)..." aria-label="Filter tasks" oninput="renderTasks()">
+        <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID..." aria-label="Filter tasks" oninput="renderTasks()">
       </div>
+
+      <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        CSV
+      </button>
+
+      <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        JSON
+      </button>
       
       <label class="toggle-label">
         <input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"> Auto-refresh
       </label>
 
       <button class="btn-primary" onclick="refresh()" aria-label="Refresh task list (Shortcut: R)">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="23 4 23 10 17 10"></polyline>
           <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
         </svg>
@@ -412,10 +693,112 @@
         <div class="progress-fill" id="mem-fill" style="width: 0%; background: #a277ff;"></div>
       </div>
     </div>
+
+    <div class="metric">
+      <div class="metric-header">
+        <span>System Status</span>
+        <span id="sys-status-badge" style="color: var(--success);">OPTIMAL</span>
+      </div>
+      <div class="metric-val" id="uptime-val" style="font-family: monospace;">Uptime: 00:00:00</div>
+    </div>
   </div>
 
-  <div class="task-list" id="tasklist" role="region" aria-label="Task List" aria-live="polite">
-    <!-- Tasks injected here -->
+  <div class="tab-content">
+    <!-- Tab Pane 1: Process List -->
+    <div class="tab-pane active" id="pane-tasks">
+      <div class="task-list" id="tasklist" role="region" aria-label="Task List" aria-live="polite">
+        <!-- Tasks injected here -->
+      </div>
+    </div>
+
+    <!-- Tab Pane 2: Real-time Canvas Charts -->
+    <div class="tab-pane" id="pane-charts">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title" style="color: var(--primary);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+              Real-time CPU Usage History (%)
+            </div>
+            <div class="chart-val-large" id="chart-cpu-val" style="color: var(--primary);">0%</div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="cpuCanvas"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title" style="color: var(--purple);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+              Real-time RAM Allocation History (GB)
+            </div>
+            <div class="chart-val-large" id="chart-mem-val" style="color: var(--purple);">0.0 GB</div>
+          </div>
+          <div class="chart-canvas-container">
+            <canvas id="memCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Pane 3: System Performance Summary -->
+    <div class="tab-pane" id="pane-system">
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-label">Total System Threads</div>
+          <div class="summary-value" id="summary-threads">0</div>
+          <div class="summary-subtext">Across active running processes</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">Memory Allocation</div>
+          <div class="summary-value" id="summary-mem-used">0.0 / 8.0 GB</div>
+          <div class="summary-subtext">System Virtual RAM Pool</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">Peak CPU Load</div>
+          <div class="summary-value" id="summary-peak-cpu" style="color: var(--warning);">0%</div>
+          <div class="summary-subtext">Highest recorded spike</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">Handles Count (Est.)</div>
+          <div class="summary-value" id="summary-handles">0</div>
+          <div class="summary-subtext">Active open process handles</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">CPU Cores / Arch</div>
+          <div class="summary-value">8 Cores (x64)</div>
+          <div class="summary-subtext">Logical processor layout</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">Kernel Scheduler</div>
+          <div class="summary-value" style="color: var(--success);">Preemptive</div>
+          <div class="summary-subtext">High precision timer ticks</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-box">
+      <div class="modal-header">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <h3 id="modalTitle">Terminate Process</h3>
+      </div>
+      <div class="modal-body" id="modalBody">
+        Are you sure you want to end process <strong id="modalTaskName">Task</strong> (PID: <span id="modalTaskPid">0</span>)? Unsaved work in this application may be lost.
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeKillModal()">Cancel</button>
+        <button class="btn-kill" style="background: var(--danger); color: #fff;" onclick="executePendingKill()">End Process</button>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
@@ -425,10 +808,22 @@
     let autoRefreshInterval = null;
     let allTasks = [];
     let taskStats = {};
+    let activeTab = 'tasks';
+    let pendingKillPid = null;
+    let pendingKillTitle = '';
+    let peakCpu = 0;
+    let startTime = Date.now();
 
-    // Periodic CPU/Memory simulation for system overview
+    // Canvas History Data (50 points)
+    const HISTORY_LEN = 50;
+    let cpuHistory = new Array(HISTORY_LEN).fill(10);
+    let memHistory = new Array(HISTORY_LEN).fill(2.4);
+
+    // Dynamic System Stats update
     setInterval(() => {
       const cpu = Math.floor(Math.random() * 25) + 5;
+      if (cpu > peakCpu) peakCpu = cpu;
+
       const cpuVal = document.getElementById('cpu-val');
       const cpuFill = document.getElementById('cpu-fill');
       if (cpuVal) cpuVal.innerText = cpu + '%';
@@ -437,13 +832,66 @@
         cpuFill.style.backgroundColor = cpu > 80 ? 'hsl(0, 85%, 60%)' : (cpu > 50 ? 'hsl(40, 85%, 55%)' : 'hsl(200, 85%, 60%)');
       }
 
-      const memBase = 2.1;
-      const mem = (memBase + Math.random() * 0.6).toFixed(1);
+      const memBase = 2.2;
+      const mem = parseFloat((memBase + Math.random() * 0.5).toFixed(1));
       const memVal = document.getElementById('mem-val');
       const memFill = document.getElementById('mem-fill');
       if (memVal) memVal.innerText = mem + ' GB';
       if (memFill) memFill.style.width = Math.floor((mem / 8.0) * 100) + '%';
+
+      // Status Badge
+      const sysStatus = document.getElementById('sys-status-badge');
+      if (sysStatus) {
+        if (cpu > 75 || mem > 6.0) {
+          sysStatus.innerText = 'HIGH LOAD';
+          sysStatus.style.color = 'var(--danger)';
+        } else if (cpu > 45 || mem > 4.5) {
+          sysStatus.innerText = 'MODERATE';
+          sysStatus.style.color = 'var(--warning)';
+        } else {
+          sysStatus.innerText = 'OPTIMAL';
+          sysStatus.style.color = 'var(--success)';
+        }
+      }
+
+      // Uptime counter
+      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+      const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(elapsedSec % 60).padStart(2, '0');
+      const uptimeVal = document.getElementById('uptime-val');
+      if (uptimeVal) uptimeVal.innerText = `Uptime: ${hrs}:${mins}:${secs}`;
+
+      // Update History Arrays
+      cpuHistory.push(cpu);
+      if (cpuHistory.length > HISTORY_LEN) cpuHistory.shift();
+
+      memHistory.push(mem);
+      if (memHistory.length > HISTORY_LEN) memHistory.shift();
+
+      // Render Charts if active tab is charts
+      if (activeTab === 'charts') {
+        drawCharts();
+      }
+
+      // Update summary pane metrics
+      updateSummaryMetrics();
     }, 2000);
+
+    function switchTab(tabName) {
+      activeTab = tabName;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+
+      const targetBtn = document.getElementById(`tab-${tabName}-btn`);
+      const targetPane = document.getElementById(`pane-${tabName}`);
+      if (targetBtn) targetBtn.classList.add('active');
+      if (targetPane) targetPane.classList.add('active');
+
+      if (tabName === 'charts') {
+        setTimeout(drawCharts, 50);
+      }
+    }
 
     function refresh() {
       const reqId = ++reqIdCounter;
@@ -481,11 +929,94 @@
       setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
-    function endTask(taskId, taskTitle) {
+    function promptKillTask(taskId, taskTitle) {
+      pendingKillPid = taskId;
+      pendingKillTitle = taskTitle;
+      
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('modalTaskName').textContent = taskTitle || 'Process';
+      document.getElementById('modalTaskPid').textContent = taskId;
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeKillModal() {
+      pendingKillPid = null;
+      pendingKillTitle = '';
+      const modal = document.getElementById('confirmModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function executePendingKill() {
+      if (!pendingKillPid) return;
+      const pid = pendingKillPid;
+      const title = pendingKillTitle;
+      closeKillModal();
+
       const reqId = ++reqIdCounter;
-      window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: taskId }, '*');
-      showToast(`Terminating task ${taskTitle || taskId}...`);
+      window.parent.postMessage({ type: 'OS_KILL_TASK', requestId: reqId, taskId: pid }, '*');
+      showToast(`Terminating process ${title || pid}...`);
       setTimeout(refresh, 100);
+    }
+
+    function changePriority(taskId, newPriority) {
+      if (taskStats[taskId]) {
+        taskStats[taskId].priority = newPriority;
+        showToast(`Priority for PID ${taskId} changed to ${newPriority}`);
+      }
+    }
+
+    function exportCSV() {
+      if (!allTasks.length) {
+        showToast('No active tasks to export.');
+        return;
+      }
+
+      let csv = 'PID,Process Name,CPU (%),Memory (MB),Priority,Status\n';
+      allTasks.forEach(task => {
+        const id = String(task.id || '');
+        const title = String(task.title || 'Untitled');
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
+        csv += `"${id}","${title.replace(/"/g, '""')}",${stats.cpu},${stats.mem},"${stats.priority || 'Normal'}","Active"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ktask_processes_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported process snapshot to CSV.');
+    }
+
+    function exportJSON() {
+      if (!allTasks.length) {
+        showToast('No active tasks to export.');
+        return;
+      }
+
+      const data = allTasks.map(task => {
+        const id = String(task.id || '');
+        const title = String(task.title || 'Untitled');
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
+        return {
+          pid: id,
+          name: title,
+          cpuPercent: parseFloat(stats.cpu),
+          memoryMB: parseFloat(stats.mem),
+          priority: stats.priority || 'Normal',
+          status: 'Active'
+        };
+      });
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ktask_processes_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Exported process snapshot to JSON.');
     }
 
     window.addEventListener('message', (e) => {
@@ -503,6 +1034,7 @@
       
       const filterInput = document.getElementById('searchInput');
       const filterText = (filterInput ? filterInput.value : '').trim().toLowerCase();
+      const catFilter = document.getElementById('filterSelect')?.value || 'all';
 
       // Memory leak cleanup: retain stats only for active tasks
       const currentTaskIds = new Set(allTasks.map(t => String(t.id || '')));
@@ -512,10 +1044,32 @@
         }
       });
 
+      // Ensure statistics exist for all tasks
+      allTasks.forEach(task => {
+        const taskId = String(task.id || '');
+        if (!taskStats[taskId]) {
+          taskStats[taskId] = {
+            mem: (Math.random() * 45 + 12).toFixed(1),
+            cpu: (Math.random() * 4.5).toFixed(1),
+            priority: 'Normal'
+          };
+        } else {
+          taskStats[taskId].cpu = Math.max(0, (parseFloat(taskStats[taskId].cpu) + (Math.random() - 0.5) * 1.2)).toFixed(1);
+        }
+      });
+
       let filteredTasks = allTasks.filter(t => {
         const title = String(t.title || '').toLowerCase();
         const id = String(t.id || '').toLowerCase();
-        return title.includes(filterText) || id.includes(filterText);
+        const stats = taskStats[id] || { mem: 0, cpu: 0, priority: 'Normal' };
+
+        const matchesText = title.includes(filterText) || id.includes(filterText);
+        if (!matchesText) return false;
+
+        if (catFilter === 'high-cpu') return parseFloat(stats.cpu) > 2.0;
+        if (catFilter === 'high-mem') return parseFloat(stats.mem) > 25.0;
+        if (catFilter === 'high-pri') return stats.priority === 'High' || stats.priority === 'Realtime';
+        return true;
       });
 
       // Update Active Tasks metric
@@ -535,19 +1089,6 @@
           </div>`;
         return;
       }
-      
-      // Ensure statistics exist for filtered tasks
-      filteredTasks.forEach(task => {
-        const taskId = String(task.id || '');
-        if (!taskStats[taskId]) {
-          taskStats[taskId] = {
-            mem: (Math.random() * 45 + 12).toFixed(1),
-            cpu: (Math.random() * 4.5).toFixed(1)
-          };
-        } else {
-          taskStats[taskId].cpu = Math.max(0, (parseFloat(taskStats[taskId].cpu) + (Math.random() - 0.5) * 1.5)).toFixed(1);
-        }
-      });
 
       const sortBy = document.getElementById('sortSelect')?.value || 'name';
       filteredTasks.sort((a, b) => {
@@ -566,7 +1107,7 @@
       filteredTasks.forEach(task => {
         const taskId = String(task.id || 'N/A');
         const taskTitle = String(task.title || 'Untitled Process');
-        const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5' };
+        const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
         
         const card = document.createElement('div');
         card.className = 'task-card';
@@ -586,28 +1127,138 @@
               </div>
             </div>
           </div>
-          <button class="btn-kill" aria-label="End task ${taskTitle} with PID ${taskId}">End Task</button>
+          <div class="task-right">
+            <select class="priority-select" aria-label="Adjust process priority for ${taskTitle}">
+              <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
+              <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
+              <option value="High" ${stats.priority === 'High' ? 'selected' : ''}>High</option>
+              <option value="Realtime" ${stats.priority === 'Realtime' ? 'selected' : ''}>Realtime</option>
+            </select>
+            <button class="btn-kill" aria-label="End task ${taskTitle} with PID ${taskId}">End Task</button>
+          </div>
         `;
 
         card.querySelector('.task-title').textContent = taskTitle;
-        card.querySelector('.btn-kill').onclick = () => endTask(taskId, taskTitle);
+        const priSel = card.querySelector('.priority-select');
+        priSel.onchange = (e) => changePriority(taskId, e.target.value);
+        card.querySelector('.btn-kill').onclick = () => promptKillTask(taskId, taskTitle);
         list.appendChild(card);
       });
+    }
+
+    function updateSummaryMetrics() {
+      let totalThreads = 0;
+      let totalHandles = allTasks.length * 14 + 120;
+      allTasks.forEach(t => {
+        totalThreads += Math.floor(Math.random() * 4) + 2;
+      });
+      
+      const elThreads = document.getElementById('summary-threads');
+      const elPeak = document.getElementById('summary-peak-cpu');
+      const elHandles = document.getElementById('summary-handles');
+      const elMemUsed = document.getElementById('summary-mem-used');
+
+      if (elThreads) elThreads.innerText = totalThreads || 36;
+      if (elPeak) elPeak.innerText = peakCpu + '%';
+      if (elHandles) elHandles.innerText = totalHandles;
+      
+      const curMem = memHistory[memHistory.length - 1] || 2.4;
+      if (elMemUsed) elMemUsed.innerText = `${curMem} / 8.0 GB`;
+    }
+
+    function drawCharts() {
+      const cpuCanvas = document.getElementById('cpuCanvas');
+      const memCanvas = document.getElementById('memCanvas');
+
+      if (cpuCanvas) {
+        renderLineChart(cpuCanvas, cpuHistory, '#38bdf8', 'rgba(56, 189, 248, 0.2)', 100);
+        document.getElementById('chart-cpu-val').innerText = cpuHistory[cpuHistory.length - 1] + '%';
+      }
+
+      if (memCanvas) {
+        renderLineChart(memCanvas, memHistory, '#a855f7', 'rgba(168, 85, 247, 0.2)', 8.0);
+        document.getElementById('chart-mem-val').innerText = memHistory[memHistory.length - 1] + ' GB';
+      }
+    }
+
+    function renderLineChart(canvas, data, strokeColor, fillColor, maxVal) {
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      canvas.width = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw Gridlines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      const rows = 4;
+      for (let i = 1; i < rows; i++) {
+        const y = (h / rows) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      if (data.length < 2) return;
+
+      const step = w / (data.length - 1);
+      ctx.beginPath();
+      
+      data.forEach((val, idx) => {
+        const x = idx * step;
+        const normalized = Math.min(1, Math.max(0, val / maxVal));
+        const y = h - (normalized * (h - 20)) - 10;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      // Line style
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Area Fill
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      ctx.fillStyle = fillColor;
+      ctx.fill();
     }
 
     // Keyboard Shortcuts & Visibility Listener
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-      if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
-        e.preventDefault();
-        refresh();
-      } else if (e.key === 'Escape') {
+
+      if (e.key === 'Escape') {
+        const modal = document.getElementById('confirmModal');
+        if (modal && modal.classList.contains('active')) {
+          closeKillModal();
+          return;
+        }
         const search = document.getElementById('searchInput');
         if (search && search.value) {
           search.value = '';
           renderTasks();
         }
+      } else if (e.key === 'Enter') {
+        const modal = document.getElementById('confirmModal');
+        if (modal && modal.classList.contains('active')) {
+          executePendingKill();
+        }
+      } else if (e.key === 'r' || e.key === 'R' || e.key === 'F5') {
+        e.preventDefault();
+        refresh();
       }
+    });
+
+    window.addEventListener('resize', () => {
+      if (activeTab === 'charts') drawCharts();
     });
 
     document.addEventListener('visibilitychange', () => {
@@ -624,4 +1275,3 @@
   </script>
 </body>
 </html>
-

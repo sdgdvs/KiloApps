@@ -11,6 +11,9 @@ HWND hListBox = NULL;
 HWND hSearchBox = NULL;
 HWND hBtnRefresh = NULL;
 HWND hBtnEndTask = NULL;
+HWND hBtnPriority = NULL;
+HWND hBtnExportCSV = NULL;
+HWND hBtnExportJSON = NULL;
 HWND hStatusText = NULL;
 WNDPROC g_OldEditProc = NULL;
 WNDPROC g_OldListProc = NULL;
@@ -95,13 +98,19 @@ void LayoutControls(HWND hwnd) {
     int width = rc.right - rc.left;
     int height = rc.bottom - rc.top;
 
-    if (width < 200 || height < 150) return;
+    if (width < 320 || height < 200) return;
 
     MoveWindow(hSearchBox, 10, 10, width - 20, 25, TRUE);
-    MoveWindow(hListBox, 10, 42, width - 20, height - 100, TRUE);
-    MoveWindow(hStatusText, 10, height - 54, width - 20, 20, TRUE);
-    MoveWindow(hBtnRefresh, 10, height - 30, 95, 24, TRUE);
-    MoveWindow(hBtnEndTask, width - 105, height - 30, 95, 24, TRUE);
+    MoveWindow(hListBox, 10, 42, width - 20, height - 105, TRUE);
+    
+    int btnY = height - 58;
+    MoveWindow(hBtnRefresh, 10, btnY, 70, 24, TRUE);
+    MoveWindow(hBtnPriority, 85, btnY, 85, 24, TRUE);
+    MoveWindow(hBtnExportCSV, 175, btnY, 65, 24, TRUE);
+    MoveWindow(hBtnExportJSON, 245, btnY, 65, 24, TRUE);
+    MoveWindow(hBtnEndTask, width - 95, btnY, 85, 24, TRUE);
+
+    MoveWindow(hStatusText, 10, height - 28, width - 20, 20, TRUE);
 }
 
 void RefreshList() {
@@ -130,10 +139,12 @@ void RefreshList() {
     pe32.dwSize = sizeof(PROCESSENTRY32);
     int totalTasks = 0;
     int shownTasks = 0;
+    DWORD totalThreads = 0;
 
     if (Process32First(hSnapshot, &pe32)) {
         do {
             totalTasks++;
+            totalThreads += pe32.cntThreads;
             if (filter[0] && !my_stristr(pe32.szExeFile, filter)) continue;
 
             char buf[512] = {0};
@@ -177,16 +188,30 @@ void RefreshList() {
     RedrawWindow(hListBox, NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 
     if (hStatusText) {
-        char statusBuf[128] = {0};
+        MEMORYSTATUSEX memStatus;
+        memStatus.dwLength = sizeof(memStatus);
+        GlobalMemoryStatusEx(&memStatus);
+
+        char statusBuf[256] = {0};
         char shownStr[16] = {0};
         char totalStr[16] = {0};
+        char threadsStr[16] = {0};
+        char memLoadStr[16] = {0};
+
         my_utoa((DWORD)shownTasks, shownStr);
         my_utoa((DWORD)totalTasks, totalStr);
-        my_strcpy(statusBuf, "Processes: ");
+        my_utoa(totalThreads, threadsStr);
+        my_utoa(memStatus.dwMemoryLoad, memLoadStr);
+
+        my_strcpy(statusBuf, "Procs: ");
         my_strcat(statusBuf, shownStr);
-        my_strcat(statusBuf, " shown (");
+        my_strcat(statusBuf, "/");
         my_strcat(statusBuf, totalStr);
-        my_strcat(statusBuf, " total)");
+        my_strcat(statusBuf, " | Threads: ");
+        my_strcat(statusBuf, threadsStr);
+        my_strcat(statusBuf, " | RAM Load: ");
+        my_strcat(statusBuf, memLoadStr);
+        my_strcat(statusBuf, "%");
         SetWindowTextA(hStatusText, statusBuf);
     }
 }
@@ -206,10 +231,15 @@ void PerformEndTask(HWND hwnd) {
         return;
     }
 
-    if (pid == GetCurrentProcessId()) {
-        if (MessageBoxA(hwnd, "Terminating KTask will exit this application. Continue?", "Confirm End Task", MB_YESNO | MB_ICONWARNING) != IDYES) {
-            return;
-        }
+    char confirmBuf[256] = {0};
+    char pidStr[16] = {0};
+    my_utoa(pid, pidStr);
+    my_strcpy(confirmBuf, "Are you sure you want to terminate process with PID ");
+    my_strcat(confirmBuf, pidStr);
+    my_strcat(confirmBuf, "? Unsaved data may be lost.");
+
+    if (MessageBoxA(hwnd, confirmBuf, "Confirm End Task", MB_YESNO | MB_ICONWARNING) != IDYES) {
+        return;
     }
 
     HANDLE hProc = OpenProcess(PROCESS_TERMINATE, FALSE, pid);
@@ -238,6 +268,165 @@ void PerformEndTask(HWND hwnd) {
         my_strcat(errBuf, ").");
         MessageBoxA(hwnd, errBuf, "KTask Error", MB_OK | MB_ICONERROR);
     }
+}
+
+void PerformSetPriority(HWND hwnd) {
+    int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    if (sel == LB_ERR) {
+        MessageBoxA(hwnd, "Please select a process from the list first.", "KTask Notice", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    DWORD pid = (DWORD)SendMessageA(hListBox, LB_GETITEMDATA, sel, 0);
+    if (pid == 0 || pid == 4) {
+        MessageBoxA(hwnd, "Cannot change priority for System or Idle processes.", "KTask Warning", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    HANDLE hProc = OpenProcess(PROCESS_SET_INFORMATION | PROCESS_QUERY_INFORMATION, FALSE, pid);
+    if (!hProc) {
+        MessageBoxA(hwnd, "Access Denied: Unable to modify process priority.", "KTask Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    DWORD curPri = GetPriorityClass(hProc);
+    DWORD newPri = NORMAL_PRIORITY_CLASS;
+    const char* priName = "Normal";
+
+    if (curPri == NORMAL_PRIORITY_CLASS) {
+        newPri = HIGH_PRIORITY_CLASS;
+        priName = "High";
+    } else if (curPri == HIGH_PRIORITY_CLASS) {
+        newPri = BELOW_NORMAL_PRIORITY_CLASS;
+        priName = "Below Normal";
+    } else {
+        newPri = NORMAL_PRIORITY_CLASS;
+        priName = "Normal";
+    }
+
+    if (SetPriorityClass(hProc, newPri)) {
+        char msgBuf[128] = {0};
+        my_strcpy(msgBuf, "Process priority class updated to ");
+        my_strcat(msgBuf, priName);
+        my_strcat(msgBuf, ".");
+        MessageBoxA(hwnd, msgBuf, "KTask Success", MB_OK | MB_ICONINFORMATION);
+        RefreshList();
+    } else {
+        MessageBoxA(hwnd, "Failed to update priority class.", "KTask Error", MB_OK | MB_ICONERROR);
+    }
+    CloseHandle(hProc);
+}
+
+void PerformExportCSV(HWND hwnd) {
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to create process snapshot.", "Export Failed", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    HANDLE hFile = CreateFileA("ktask_export.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        CloseHandle(hSnapshot);
+        MessageBoxA(hwnd, "Failed to create ktask_export.csv file.", "Export Failed", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    const char* header = "PID,Process Name,Threads,BasePriority\r\n";
+    DWORD written = 0;
+    WriteFile(hFile, header, my_strlen(header), &written, NULL);
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+    if (Process32First(hSnapshot, &pe32)) {
+        do {
+            char lineBuf[512] = {0};
+            char pidStr[16] = {0};
+            char thrStr[16] = {0};
+            char priStr[16] = {0};
+
+            my_utoa(pe32.th32ProcessID, pidStr);
+            my_utoa(pe32.cntThreads, thrStr);
+            my_itoa(pe32.pcPriClassBase, priStr);
+
+            my_strcpy(lineBuf, pidStr);
+            my_strcat(lineBuf, ",\"");
+            my_strcat(lineBuf, pe32.szExeFile);
+            my_strcat(lineBuf, "\",");
+            my_strcat(lineBuf, thrStr);
+            my_strcat(lineBuf, ",");
+            my_strcat(lineBuf, priStr);
+            my_strcat(lineBuf, "\r\n");
+
+            WriteFile(hFile, lineBuf, my_strlen(lineBuf), &written, NULL);
+        } while (Process32Next(hSnapshot, &pe32));
+    }
+
+    CloseHandle(hFile);
+    CloseHandle(hSnapshot);
+
+    MessageBoxA(hwnd, "Process list snapshot exported to 'ktask_export.csv'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
+}
+
+void PerformExportJSON(HWND hwnd) {
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to create process snapshot.", "Export Failed", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    HANDLE hFile = CreateFileA("ktask_export.json", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        CloseHandle(hSnapshot);
+        MessageBoxA(hwnd, "Failed to create ktask_export.json file.", "Export Failed", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    const char* startJson = "[\r\n";
+    DWORD written = 0;
+    WriteFile(hFile, startJson, my_strlen(startJson), &written, NULL);
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+    BOOL isFirst = TRUE;
+
+    if (Process32First(hSnapshot, &pe32)) {
+        do {
+            if (!isFirst) {
+                const char* comma = ",\r\n";
+                WriteFile(hFile, comma, my_strlen(comma), &written, NULL);
+            }
+            isFirst = FALSE;
+
+            char lineBuf[512] = {0};
+            char pidStr[16] = {0};
+            char thrStr[16] = {0};
+            char priStr[16] = {0};
+
+            my_utoa(pe32.th32ProcessID, pidStr);
+            my_utoa(pe32.cntThreads, thrStr);
+            my_itoa(pe32.pcPriClassBase, priStr);
+
+            my_strcpy(lineBuf, "  {\"pid\": ");
+            my_strcat(lineBuf, pidStr);
+            my_strcat(lineBuf, ", \"name\": \"");
+            my_strcat(lineBuf, pe32.szExeFile);
+            my_strcat(lineBuf, "\", \"threads\": ");
+            my_strcat(lineBuf, thrStr);
+            my_strcat(lineBuf, ", \"basePriority\": ");
+            my_strcat(lineBuf, priStr);
+            my_strcat(lineBuf, "}");
+
+            WriteFile(hFile, lineBuf, my_strlen(lineBuf), &written, NULL);
+        } while (Process32Next(hSnapshot, &pe32));
+    }
+
+    const char* endJson = "\r\n]\r\n";
+    WriteFile(hFile, endJson, my_strlen(endJson), &written, NULL);
+
+    CloseHandle(hFile);
+    CloseHandle(hSnapshot);
+
+    MessageBoxA(hwnd, "Process list snapshot exported to 'ktask_export.json'!", "Export Complete", MB_OK | MB_ICONINFORMATION);
 }
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -279,10 +468,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hStatusText, WM_SETFONT, (WPARAM)hFont, FALSE);
 
-            hBtnRefresh = CreateWindowA("BUTTON", "Refresh", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 95, 25, hwnd, (HMENU)1, NULL, NULL);
-            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 240, 95, 25, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRefresh = CreateWindowA("BUTTON", "Refresh", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 240, 70, 25, hwnd, (HMENU)1, NULL, NULL);
+            hBtnPriority = CreateWindowA("BUTTON", "Set Priority", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 85, 240, 85, 25, hwnd, (HMENU)6, NULL, NULL);
+            hBtnExportCSV = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 175, 240, 65, 25, hwnd, (HMENU)7, NULL, NULL);
+            hBtnExportJSON = CreateWindowA("BUTTON", "JSON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 240, 65, 25, hwnd, (HMENU)8, NULL, NULL);
+            hBtnEndTask = CreateWindowA("BUTTON", "End Task", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 240, 85, 25, hwnd, (HMENU)2, NULL, NULL);
             
             SendMessageA(hBtnRefresh, WM_SETFONT, (WPARAM)hFont, FALSE);
+            SendMessageA(hBtnPriority, WM_SETFONT, (WPARAM)hFont, FALSE);
+            SendMessageA(hBtnExportCSV, WM_SETFONT, (WPARAM)hFont, FALSE);
+            SendMessageA(hBtnExportJSON, WM_SETFONT, (WPARAM)hFont, FALSE);
             SendMessageA(hBtnEndTask, WM_SETFONT, (WPARAM)hFont, FALSE);
 
             g_OldEditProc = (WNDPROC)SetWindowLongPtrA(hSearchBox, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
@@ -311,6 +506,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefreshList();
             } else if (id == 2) {
                 PerformEndTask(hwnd);
+            } else if (id == 6) {
+                PerformSetPriority(hwnd);
+            } else if (id == 7) {
+                PerformExportCSV(hwnd);
+            } else if (id == 8) {
+                PerformExportJSON(hwnd);
             } else if (id == 4 && code == LBN_DBLCLK) {
                 PerformEndTask(hwnd);
             }
@@ -345,7 +546,7 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT rc = {0, 0, 420, 340};
+    RECT rc = {0, 0, 440, 360};
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     
     HWND hwnd = CreateWindowExA(0, "KTaskClass", "KTask Process Monitor", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
