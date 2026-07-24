@@ -53,28 +53,28 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KStarship (Sci-fi space exploration)
-**Phase:** 14 (next to do)
-**Status:** Phases 1-13 complete
+**App:** KAlchemy (Fantasy crafting & element discovery)
+**Phase:** 1 (next to do)
+**Status:** Ready to start Phase 1
 
-- [x] Phase 1: Scaffold KStarship directory (`KStarship/`), create web HTML skeleton (`KiloOS/public/apps/kstarship.html`), register in App.jsx.
-- [x] Phase 2: Core web HTML sci-fi exploration game (ship creation/naming, sector navigation grid with ASCII star map, fuel/hull/crew/energy resource management).
-- [x] Phase 3: Native C version (`KStarship/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
-- [x] Phase 4: Dark theme UI styling (cybernetic sci-fi theme: deep space dark background, cyan/amber accent highlights, crisp terminal font layout).
-- [x] Phase 5: Star System Biomes & Planet Scanning — Add 4 star system biomes (Terran, Volcanic, Nebula, Asteroid Belt) with orbital planet scanning for minerals, gas, and artifacts.
-- [x] Phase 6: Random Encounter Engine — Add procedural space events: pirate attacks, derelict ships, space anomalies, alien traders, and distress calls with choice-driven outcomes.
-- [x] Phase 7: Turn-based Tactical Ship Combat — Add tactical combat system against enemy starships (Shields, Weapons, Targeting, Evasion, Repairing systems).
-- [x] Phase 8: Ship Systems Upgrade Bay — Add upgrade shop for Hull plating, Plasma cannons, Particle shields, Warp drive range, and Sensor arrays using collected Credits and Ore.
-- [x] Phase 9: Crew Management & Officer Roster — Hire and assign officers (Pilot, Engineer, Gunner, Science Officer) with passive stat bonuses and unique special abilities.
-- [x] Phase 10: Deep Space Trading & Economy — Interstellar commodity market across sectors with fluctuating buy/sell prices for Fuel, Meds, Ore, Cyberware, and Luxury Goods.
-- [x] Phase 11: Permadeath, High Score Leaderboard & Captain's Log — Permadeath mode option, persistent hall of fame with score categories (Distance, Credits, Battles Won), and automatic event log.
-- [x] Phase 12: Multiple Game Modes & Difficulty Levels — Add 3 Game Modes (Explorer, Survival, Permadeath Iron Captain) and 3 Difficulty Settings adjusting resource consumption and enemy difficulty.
-- [x] Phase 13: Add Sound Effects — Web Audio API laser blasts, shield hums, warp drives, alarm klaxons, item pickups, explosion rumbles. Native: Win32 Beep() equivalents.
-- [ ] Phase 14: Add Comprehensive Help & Star Captain Codex — How-to-play modal overlay, controls reference, sector guide, alien species encyclopedia, and ship system manual.
+- [ ] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
+- [ ] Phase 2: Core web HTML element discovery game (4 basic elements: Fire, Water, Earth, Air; Transmutation Crucible combining 2 elements; inventory grid & discovery counter).
+- [ ] Phase 3: Native C version (`KAlchemy/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
+- [ ] Phase 4: Dark theme UI styling (mystical arcane laboratory theme: deep violet/slate background, glowing rune borders, golden element badges).
+- [ ] Phase 5: Expanded Recipe Matrix & Tiering — Add 50+ secondary elements across 5 tiers (Basic, Nature, Metallurgy, Arcane, Celestial) with tier unlock thresholds and discovery notifications.
+- [ ] Phase 6: Alchemist's Research Hints & Oracle System — Add hint system offering vague or specific combination clues using Alchemical Dust earned per new discovery.
+- [ ] Phase 7: Element Essence Distillation & Extraction — Add Laboratory Equipment (Retort, Alembic, Crucible, Anvil) allowing players to break down complex elements back into base essences.
+- [ ] Phase 8: Master Alchemist Guild Quests — Add procedural quest board where guild patrons request specific potions, metals, or magical artifacts for Gold and XP rewards.
+- [ ] Phase 9: Laboratory Upgrades & Enchanter Workshop — Add shop to upgrade Crucible capacity, Essence extraction yield, Auto-sorter, and Catalyst speed using Gold.
+- [ ] Phase 10: Potion Brewing & Effect Tester — Add Potion Brewing cauldrons combining discoverable herbs and essences to create usable buff elixirs (Strength, Invisibility, Mana, Elixir of Life).
+- [ ] Phase 11: Master Alchemist Codex & Recipe Book — Add comprehensive searchable grimoire tracking discovered elements, combination histories, flavor lore text, and missing combinations per tier.
+- [ ] Phase 12: Multiple Game Modes & Challenges — Add 3 Game Modes (Classic Discovery, Timed Alchemy Blitz, Puzzle Crucible mode with target element goals) and High Score tracking.
+- [ ] Phase 13: Add Sound Effects — Web Audio API bubble simmers, glass clinkers, transmutation zaps, magic fanfares, discovery chimes. Native: Win32 Beep() equivalents.
+- [ ] Phase 14: Add Comprehensive Help & Grandmaster Manual — How-to-play modal overlay, element tier guide, lab controls reference, and alchemy lore encyclopedia.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
-2. Implement the feature in BOTH `KiloOS/public/apps/kstarship.html` AND `KStarship/main.c`.
+2. Implement the feature in BOTH `KiloOS/public/apps/kalchemy.html` AND `KAlchemy/main.c`.
 3. Mark the phase as `[x]` in this plan file.
 4. Update the **Phase** number to the next unchecked phase.
 5. Commit and push both the code changes and this plan file update.
@@ -155,6 +155,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - KTowers (Phase 14 completed: Added Comprehensive Help / How-to-Play modal to both versions)
 - KReversi (Phase 14 completed: Added Comprehensive Help / How-to-Play modal & Strategy Guide to both versions)
 - KQuest (Phase 14 completed: Added Comprehensive Help / Lore Codex & Recipe Reference to both versions)
+- KStarship (Phase 14 completed: Added Comprehensive Help & Star Captain Codex to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
