@@ -1,170 +1,1324 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KBase - Universal Base & Bitwise Utility</title>
 <style>
+  :root {
+    --bg-dark: #0a0d14;
+    --card-bg: #121824;
+    --card-border: #1e293b;
+    --card-hover: #26334d;
+    --accent-cyan: #00f0ff;
+    --accent-green: #00ff9d;
+    --accent-amber: #ffb700;
+    --accent-pink: #ff3b5c;
+    --accent-purple: #a855f7;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    background: #111;
-    color: #0f0;
-    font-family: 'Consolas', 'Courier New', monospace;
-    margin: 0;
-    padding: 20px;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-sans);
     height: 100vh;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
-    gap: 15px;
+    overflow: hidden;
   }
-  .box {
+
+  /* Header & Navigation */
+  header {
+    background: #0f1522;
+    border-bottom: 1px solid var(--card-border);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent-cyan);
+    letter-spacing: 0.5px;
+  }
+
+  .brand-icon {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-weight: 900;
+    font-size: 13px;
+  }
+
+  nav {
+    display: flex;
+    gap: 6px;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .tab-btn.active {
+    color: var(--accent-cyan);
+    background: rgba(0, 240, 255, 0.08);
+    border-color: rgba(0, 240, 255, 0.3);
+  }
+
+  /* Main Container */
+  main {
     flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .tab-content {
+    display: none;
+    max-width: 1100px;
+    margin: 0 auto;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .tab-content.active {
+    display: flex;
+  }
+
+  /* Cards & Grid Layout */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  /* Input Controls & Labels */
+  .input-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
+    margin-bottom: 12px;
   }
-  label {
-    font-weight: bold;
-    font-size: 14px;
-    color: #fff;
-  }
-  textarea {
-    flex: 1;
-    background: #000;
-    color: #0f0;
-    border: 1px solid #333;
-    padding: 10px;
-    resize: none;
-    font-family: inherit;
-    font-size: 14px;
-    outline: none;
-    border-radius: 4px;
-  }
-  textarea:focus { border-color: #0f0; }
-  .controls {
+
+  .input-header {
     display: flex;
-    gap: 10px;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
   }
-  button {
-    background: #222;
-    color: #fff;
-    border: 1px solid #444;
-    padding: 10px 20px;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
     border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    font-family: inherit;
-    transition: all 0.2s;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--accent-cyan);
+    font-family: var(--font-mono);
   }
-  button:hover { background: #333; border-color: #0f0; color: #0f0; }
+
+  input[type="text"], textarea, select {
+    background: #090c13;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--accent-green);
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+    width: 100%;
+  }
+
+  input[type="text"]:focus, textarea:focus, select:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 90px;
+  }
+
+  /* Action Buttons */
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .btn {
+    background: #1c2536;
+    color: var(--text-main);
+    border: 1px solid var(--card-border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn:hover {
+    background: var(--card-hover);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: #fff;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+    color: #fff;
+  }
+
+  .btn-accent {
+    background: rgba(0, 255, 157, 0.15);
+    color: var(--accent-green);
+    border-color: rgba(0, 255, 157, 0.3);
+  }
+
+  .btn-accent:hover {
+    background: rgba(0, 255, 157, 0.25);
+    color: #fff;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* 64-Bit Grid Interactive Component */
+  .bitboard-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bit-row {
+    display: grid;
+    grid-template-columns: repeat(32, 1fr);
+    gap: 3px;
+  }
+
+  .bit-box {
+    aspect-ratio: 1;
+    background: #090c13;
+    border: 1px solid var(--card-border);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+
+  .bit-box:hover {
+    border-color: var(--accent-cyan);
+  }
+
+  .bit-box.val-1 {
+    background: rgba(0, 240, 255, 0.2);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+    box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+  }
+
+  .bit-box.val-0 {
+    color: var(--text-muted);
+  }
+
+  .bit-num {
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+  }
+
+  .bit-idx {
+    font-size: 0.6rem;
+    color: #475569;
+    font-family: var(--font-mono);
+  }
+
+  .bit-group-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 2px;
+  }
+
+  /* Bitwise Operator Matrix Visualizer */
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+
+  .matrix-table th, .matrix-table td {
+    padding: 8px;
+    border: 1px solid var(--card-border);
+    text-align: left;
+  }
+
+  .matrix-table th {
+    background: #090c13;
+    color: var(--text-muted);
+  }
+
+  .bit-stream {
+    letter-spacing: 2px;
+    word-break: break-all;
+  }
+
+  .bit-stream span.on {
+    color: var(--accent-cyan);
+    font-weight: bold;
+  }
+
+  .bit-stream span.off {
+    color: #334155;
+  }
+
+  /* IEEE-754 Inspector Styling */
+  .ieee-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .ieee-strip {
+    display: flex;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 38px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .ieee-part {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    color: #000;
+    transition: transform 0.1s;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .part-sign { background: var(--accent-pink); color: #fff; }
+  .part-exp { background: var(--accent-cyan); color: #000; }
+  .part-mantissa { background: var(--accent-amber); color: #000; }
+
+  .ieee-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* History Table */
+  .history-table-wrapper {
+    max-height: 350px;
+    overflow-y: auto;
+  }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  table.data-table th {
+    position: sticky;
+    top: 0;
+    background: #090c13;
+    color: var(--text-muted);
+    padding: 10px;
+    border-bottom: 2px solid var(--card-border);
+  }
+
+  table.data-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--card-border);
+    font-family: var(--font-mono);
+  }
+
+  table.data-table tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--accent-green);
+    color: #000;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 <body>
-  <div class="box">
-    <label>Input</label>
-    <textarea id="inpText" placeholder="Enter text here..."></textarea>
+
+<header>
+  <div class="brand">
+    <div class="brand-icon">K</div>
+    <span>KBase Studio</span>
   </div>
-  
-  <div class="controls" style="flex-wrap: wrap;">
-    <button id="btnEncode">B64 Enc</button>
-    <button id="btnDecode">B64 Dec</button>
-    <button id="btnUrlEnc">URL Enc</button>
-    <button id="btnUrlDec">URL Dec</button>
-    <button id="btnHexEnc">Hex Enc</button>
-    <button id="btnHexDec">Hex Dec</button>
-    <button id="btnHash">SHA-256</button>
+  <nav>
+    <button class="tab-btn active" data-tab="tab-converter">⚡ Multi-Base</button>
+    <button class="tab-btn" data-tab="tab-bitboard">🔢 64-Bit Grid & Ops</button>
+    <button class="tab-btn" data-tab="tab-ieee">🔬 IEEE-754 Float</button>
+    <button class="tab-btn" data-tab="tab-history">📜 History & Export</button>
+  </nav>
+</header>
+
+<main>
+  <!-- TAB 1: MULTI-BASE & STRING CONVERTER -->
+  <div id="tab-converter" class="tab-content active">
+    <div class="card">
+      <div class="card-title">
+        <span>Simultaneous Multi-Base Live Converter</span>
+        <button class="btn btn-sm" id="btn-clear-bases">Clear All</button>
+      </div>
+      <div class="grid-2">
+        <div class="input-group">
+          <div class="input-header">
+            <label>Binary (Base 2)</label>
+            <span class="badge">0b</span>
+          </div>
+          <input type="text" id="base-bin" placeholder="e.g. 101010" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label>Octal (Base 8)</label>
+            <span class="badge">0o</span>
+          </div>
+          <input type="text" id="base-oct" placeholder="e.g. 52" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label>Decimal (Base 10 - 64-bit)</label>
+            <span class="badge">DEC</span>
+          </div>
+          <input type="text" id="base-dec" placeholder="e.g. 42" autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label>Hexadecimal (Base 16)</label>
+            <span class="badge">0x</span>
+          </div>
+          <input type="text" id="base-hex" placeholder="e.g. 2A" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 10px;">
+        <div class="input-group">
+          <div class="input-header">
+            <label>Custom Base (<span id="custom-base-label">36</span>)</label>
+            <input type="range" id="custom-base-range" min="2" max="36" value="36" style="width:100px;">
+          </div>
+          <input type="text" id="base-custom" placeholder="Custom base result..." autocomplete="off">
+        </div>
+
+        <div class="input-group">
+          <div class="input-header">
+            <label>ASCII / UTF-8 String</label>
+            <span class="badge">TXT</span>
+          </div>
+          <input type="text" id="base-ascii" placeholder="Single char / short text..." autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Text & String Encoding Suite</div>
+      <div class="input-group">
+        <label>Input Buffer Text</label>
+        <textarea id="str-input" placeholder="Type or paste arbitrary string here..."></textarea>
+      </div>
+
+      <div class="btn-group" style="margin-bottom: 14px;">
+        <button class="btn btn-accent" id="btn-b64-enc">Base64 Enc</button>
+        <button class="btn" id="btn-b64-dec">Base64 Dec</button>
+        <button class="btn btn-accent" id="btn-url-enc">URL Enc</button>
+        <button class="btn" id="btn-url-dec">URL Dec</button>
+        <button class="btn btn-accent" id="btn-hex-enc">Hex Enc</button>
+        <button class="btn" id="btn-hex-dec">Hex Dec</button>
+        <button class="btn btn-primary" id="btn-sha256">SHA-256 Hash</button>
+      </div>
+
+      <div class="input-group">
+        <label>Result Buffer</label>
+        <textarea id="str-output" readonly placeholder="Output string will appear here..."></textarea>
+      </div>
+    </div>
   </div>
-  
-  <div class="box">
-    <label>Output</label>
-    <textarea id="outText" placeholder="Result will appear here..." readonly></textarea>
+
+  <!-- TAB 2: 64-BIT GRID & BITWISE OPERATOR SUITE -->
+  <div id="tab-bitboard" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>Interactive 64-Bit Toggle Board</span>
+        <span class="badge" id="bitboard-hex-disp">0x0000000000000000</span>
+      </div>
+
+      <div class="bitboard-container">
+        <!-- High 32 Bits (63..32) -->
+        <div>
+          <div class="bit-group-label">
+            <span>HIGH 32-BITS (Bits 63..32)</span>
+            <span id="high32-dec">DEC: 0</span>
+          </div>
+          <div class="bit-row" id="grid-high"></div>
+        </div>
+
+        <!-- Low 32 Bits (31..0) -->
+        <div style="margin-top: 10px;">
+          <div class="bit-group-label">
+            <span>LOW 32-BITS (Bits 31..0)</span>
+            <span id="low32-dec">DEC: 0</span>
+          </div>
+          <div class="bit-row" id="grid-low"></div>
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin-top: 16px;">
+        <button class="btn" id="bb-clear">Clear All (0)</button>
+        <button class="btn" id="bb-setall">Set All (1)</button>
+        <button class="btn" id="bb-invert">Invert (~)</button>
+        <button class="btn" id="bb-shl">Shift Left (&lt;&lt; 1)</button>
+        <button class="btn" id="bb-shr">Shift Right (&gt;&gt; 1)</button>
+        <button class="btn" id="bb-rol">Rotate Left (ROL)</button>
+        <button class="btn" id="bb-ror">Rotate Right (ROR)</button>
+        <button class="btn" id="bb-rev">Reverse Bits</button>
+        <button class="btn" id="bb-byteswap">Byte Swap (Endianness)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">64-Bit Bitwise Logical & Shift Operator Suite</div>
+      <div class="grid-2">
+        <div class="input-group">
+          <label>Operand A (Hex / Dec / Bin)</label>
+          <input type="text" id="op-a" value="0x0F0F0F0F0F0F0F0F">
+        </div>
+        <div class="input-group">
+          <label>Operand B (Hex / Dec / Bin or Shift Count)</label>
+          <input type="text" id="op-b" value="0x00FF00FF00FF00FF">
+        </div>
+      </div>
+
+      <div class="btn-group" style="margin: 10px 0;">
+        <button class="btn btn-accent" data-op="AND">A & B (AND)</button>
+        <button class="btn btn-accent" data-op="OR">A | B (OR)</button>
+        <button class="btn btn-accent" data-op="XOR">A ^ B (XOR)</button>
+        <button class="btn" data-op="NOT">~A (NOT)</button>
+        <button class="btn" data-op="SHL">A &lt;&lt; B (SHL)</button>
+        <button class="btn" data-op="SHR">A &gt;&gt;&gt; B (SHR Logical)</button>
+        <button class="btn" data-op="SAR">A &gt;&gt; B (SAR Arith)</button>
+        <button class="btn" data-op="ROL">A ROL B</button>
+        <button class="btn" data-op="ROR">A ROR B</button>
+      </div>
+
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th style="width: 100px;">Target</th>
+            <th>Hexadecimal / Decimal Value</th>
+            <th>64-Bit Binary Stream</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Operand A</strong></td>
+            <td id="mat-a-val" style="color:var(--accent-green);">0x0F0F0F0F0F0F0F0F</td>
+            <td id="mat-a-bin" class="bit-stream"></td>
+          </tr>
+          <tr>
+            <td><strong>Operand B</strong></td>
+            <td id="mat-b-val" style="color:var(--accent-amber);">0x00FF00FF00FF00FF</td>
+            <td id="mat-b-bin" class="bit-stream"></td>
+          </tr>
+          <tr style="background: rgba(0, 240, 255, 0.05);">
+            <td><strong id="mat-op-label" style="color:var(--accent-cyan);">Result (AND)</strong></td>
+            <td id="mat-res-val" style="color:var(--accent-cyan); font-weight:bold;">0x000F00F00F00F00</td>
+            <td id="mat-res-bin" class="bit-stream"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
-  <script>
-    const inpText = document.getElementById('inpText');
-    const outText = document.getElementById('outText');
-    const btnEncode = document.getElementById('btnEncode');
-    const btnDecode = document.getElementById('btnDecode');
-    const btnUrlEnc = document.getElementById('btnUrlEnc');
-    const btnUrlDec = document.getElementById('btnUrlDec');
-    const btnHexEnc = document.getElementById('btnHexEnc');
-    const btnHexDec = document.getElementById('btnHexDec');
-    const btnHash = document.getElementById('btnHash');
+  <!-- TAB 3: IEEE-754 FLOATING POINT INSPECTOR -->
+  <div id="tab-ieee" class="tab-content">
+    <div class="card">
+      <div class="card-title">IEEE-754 Floating Point Representation Inspector</div>
+      <div class="grid-2">
+        <div class="input-group">
+          <label>Floating Point Decimal Value</label>
+          <input type="text" id="fp-input" value="3.14159265359" placeholder="e.g. -0.15625 or 3.14159">
+        </div>
+        <div class="input-group">
+          <label>Preset Samples</label>
+          <div class="btn-group">
+            <button class="btn btn-sm fp-preset" data-val="3.14159265359">π (Pi)</button>
+            <button class="btn btn-sm fp-preset" data-val="-0.15625">-0.15625</button>
+            <button class="btn btn-sm fp-preset" data-val="1.0">1.0</button>
+            <button class="btn btn-sm fp-preset" data-val="0.0">0.0</button>
+            <button class="btn btn-sm fp-preset" data-val="-0.0">-0.0</button>
+            <button class="btn btn-sm fp-preset" data-val="Infinity">+Infinity</button>
+            <button class="btn btn-sm fp-preset" data-val="NaN">NaN</button>
+          </div>
+        </div>
+      </div>
 
-    btnEncode.onclick = () => {
-      try {
-        outText.value = btoa(unescape(encodeURIComponent(inpText.value)));
-      } catch(e) {
-        outText.value = "Error: Could not encode to Base64.";
-      }
+      <div class="ieee-legend" style="margin-top: 10px;">
+        <div class="legend-item">
+          <div class="legend-color" style="background:var(--accent-pink);"></div>
+          <span>Sign (S)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background:var(--accent-cyan);"></div>
+          <span>Exponent (E)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background:var(--accent-amber);"></div>
+          <span>Mantissa / Fraction (M)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Single Precision 32-Bit -->
+    <div class="card">
+      <div class="card-title">
+        <span>32-Bit Single Precision (float)</span>
+        <span class="badge" id="fp32-hex">0x40490FDB</span>
+      </div>
+      <div class="ieee-breakdown">
+        <div class="ieee-strip">
+          <div class="ieee-part part-sign" id="fp32-sign-strip" style="flex: 1;" title="Sign Bit">S</div>
+          <div class="ieee-part part-exp" id="fp32-exp-strip" style="flex: 8;" title="Exponent Bits">EXPONENT (8-bit)</div>
+          <div class="ieee-part part-mantissa" id="fp32-mant-strip" style="flex: 23;" title="Mantissa Bits">MANTISSA (23-bit)</div>
+        </div>
+
+        <div class="grid-2" style="font-family: var(--font-mono); font-size: 0.9rem;">
+          <div>
+            <p><strong>Sign Bit:</strong> <span id="fp32-sign-val" style="color:var(--accent-pink)">0 (+ positive)</span></p>
+            <p><strong>Biased Exponent:</strong> <span id="fp32-exp-val" style="color:var(--accent-cyan)">128 (binary 10000000)</span></p>
+            <p><strong>Unbiased Exponent (E - 127):</strong> <span id="fp32-exp-unbiased">1</span></p>
+          </div>
+          <div>
+            <p><strong>Mantissa (Fraction):</strong> <span id="fp32-mant-val" style="color:var(--accent-amber)">0.5707963...</span></p>
+            <p><strong>Exact Reconstructed:</strong> <span id="fp32-reconstructed" style="color:var(--accent-green)">3.1415927410125732</span></p>
+            <p><strong>Formula:</strong> <span id="fp32-formula" style="font-size:0.8rem; color:var(--text-muted)">(-1)^0 × 2^(1) × 1.5707963</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Double Precision 64-Bit -->
+    <div class="card">
+      <div class="card-title">
+        <span>64-Bit Double Precision (double)</span>
+        <span class="badge" id="fp64-hex">0x400921FB54442D18</span>
+      </div>
+      <div class="ieee-breakdown">
+        <div class="ieee-strip">
+          <div class="ieee-part part-sign" id="fp64-sign-strip" style="flex: 1;" title="Sign Bit">S</div>
+          <div class="ieee-part part-exp" id="fp64-exp-strip" style="flex: 11;" title="Exponent Bits">EXP (11)</div>
+          <div class="ieee-part part-mantissa" id="fp64-mant-strip" style="flex: 52;" title="Mantissa Bits">MANTISSA (52-bit)</div>
+        </div>
+
+        <div class="grid-2" style="font-family: var(--font-mono); font-size: 0.9rem;">
+          <div>
+            <p><strong>Sign Bit:</strong> <span id="fp64-sign-val" style="color:var(--accent-pink)">0</span></p>
+            <p><strong>Biased Exponent:</strong> <span id="fp64-exp-val" style="color:var(--accent-cyan)">1024</span></p>
+            <p><strong>Unbiased Exponent (E - 1023):</strong> <span id="fp64-exp-unbiased">1</span></p>
+          </div>
+          <div>
+            <p><strong>Mantissa (Fraction):</strong> <span id="fp64-mant-val" style="color:var(--accent-amber)">0.5707963267948966</span></p>
+            <p><strong>Exact Reconstructed:</strong> <span id="fp64-reconstructed" style="color:var(--accent-green)">3.141592653589793</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: HISTORY LOG & EXPORT -->
+  <div id="tab-history" class="tab-content">
+    <div class="card">
+      <div class="card-title">
+        <span>Activity & Calculation Log</span>
+        <div class="btn-group">
+          <button class="btn btn-sm" id="btn-clear-history">Clear History</button>
+          <button class="btn btn-sm btn-accent" id="btn-export-csv">Export CSV</button>
+          <button class="btn btn-sm btn-primary" id="btn-export-json">Export JSON</button>
+        </div>
+      </div>
+
+      <div class="history-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 140px;">Timestamp</th>
+              <th style="width: 130px;">Category</th>
+              <th>Input / Expression</th>
+              <th>Output Result</th>
+            </tr>
+          </thead>
+          <tbody id="history-rows">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No operations recorded yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+  // Global State & History Storage
+  const historyLog = [];
+
+  function addHistory(category, inputStr, outputStr) {
+    const entry = {
+      timestamp: new Date().toLocaleTimeString(),
+      category: category,
+      input: String(inputStr),
+      output: String(outputStr)
     };
+    historyLog.unshift(entry);
+    if (historyLog.length > 100) historyLog.pop();
+    renderHistory();
+  }
 
-    btnDecode.onclick = () => {
-      try {
-        outText.value = decodeURIComponent(escape(atob(inpText.value.trim())));
-      } catch(e) {
-        outText.value = "Error: Invalid Base64 input string.";
+  function renderHistory() {
+    const tbody = document.getElementById('history-rows');
+    if (historyLog.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No operations recorded yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = historyLog.map(item => `
+      <tr>
+        <td>${item.timestamp}</td>
+        <td><span class="badge">${item.category}</span></td>
+        <td style="color:var(--text-main);">${escapeHtml(item.input)}</td>
+        <td style="color:var(--accent-cyan);">${escapeHtml(item.output)}</td>
+      </tr>
+    `).join('');
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  }
+
+  // Navigation Tab Switching
+  const tabs = document.querySelectorAll('.tab-btn');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ==========================================
+  // TAB 1: SIMULTANEOUS MULTI-BASE CONVERTER
+  // ==========================================
+  const elBin = document.getElementById('base-bin');
+  const elOct = document.getElementById('base-oct');
+  const elDec = document.getElementById('base-dec');
+  const elHex = document.getElementById('base-hex');
+  const elCustom = document.getElementById('base-custom');
+  const elAscii = document.getElementById('base-ascii');
+  const customRange = document.getElementById('custom-base-range');
+  const customLabel = document.getElementById('custom-base-label');
+
+  let activeBaseTrigger = null;
+
+  function parseBigIntFromBase(val, base) {
+    val = val.trim();
+    if (!val) return null;
+    if (base === 16 && val.toLowerCase().startsWith('0x')) val = val.substring(2);
+    if (base === 8 && val.toLowerCase().startsWith('0o')) val = val.substring(2);
+    if (base === 2 && val.toLowerCase().startsWith('0b')) val = val.substring(2);
+
+    try {
+      if (base === 10) return BigInt(val);
+      // For general base 2..36 parsing via BigInt or parseInt
+      const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
+      val = val.toLowerCase();
+      let res = 0n;
+      const b = BigInt(base);
+      for (let i = 0; i < val.length; i++) {
+        const digit = chars.indexOf(val[i]);
+        if (digit < 0 || digit >= base) return null;
+        res = res * b + BigInt(digit);
       }
-    };
+      return res;
+    } catch(e) {
+      return null;
+    }
+  }
 
-    btnUrlEnc.onclick = () => {
-      try {
-        outText.value = encodeURIComponent(inpText.value);
-      } catch(e) {
-        outText.value = "Error: Could not encode URL.";
-      }
-    };
+  function updateBasesFromValue(bigVal, sourceEl) {
+    const cBase = parseInt(customRange.value, 10);
+    customLabel.textContent = cBase;
 
-    btnUrlDec.onclick = () => {
-      try {
-        outText.value = decodeURIComponent(inpText.value);
-      } catch(e) {
-        outText.value = "Error: Invalid URL encoding.";
-      }
-    };
+    if (bigVal === null) {
+      if (sourceEl !== elBin) elBin.value = '';
+      if (sourceEl !== elOct) elOct.value = '';
+      if (sourceEl !== elDec) elDec.value = '';
+      if (sourceEl !== elHex) elHex.value = '';
+      if (sourceEl !== elCustom) elCustom.value = '';
+      if (sourceEl !== elAscii) elAscii.value = '';
+      return;
+    }
 
-    btnHexEnc.onclick = () => {
-      try {
-        const arr = new TextEncoder().encode(inpText.value);
-        outText.value = Array.from(arr).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
-      } catch(e) {
-        outText.value = "Error: Could not encode hex.";
-      }
-    };
+    if (sourceEl !== elBin) elBin.value = bigVal.toString(2);
+    if (sourceEl !== elOct) elOct.value = bigVal.toString(8);
+    if (sourceEl !== elDec) elDec.value = bigVal.toString(10);
+    if (sourceEl !== elHex) elHex.value = bigVal.toString(16).toUpperCase();
+    if (sourceEl !== elCustom) elCustom.value = bigVal.toString(cBase).toUpperCase();
 
-    btnHexDec.onclick = () => {
+    if (sourceEl !== elAscii) {
       try {
-        const hex = inpText.value.replace(/\s+/g, '');
-        if (hex.length % 2 !== 0) throw new Error();
-        const arr = new Uint8Array(hex.length / 2);
-        for(let i = 0; i < hex.length; i+=2) {
-          arr[i/2] = parseInt(hex.substring(i, i+2), 16);
+        if (bigVal >= 0n && bigVal <= 0x10ffffn) {
+          elAscii.value = String.fromCodePoint(Number(bigVal));
+        } else {
+          elAscii.value = '[Out of Unicode range]';
         }
-        outText.value = new TextDecoder().decode(arr);
       } catch(e) {
-        outText.value = "Error: Invalid hex input.";
+        elAscii.value = '';
       }
-    };
+    }
+  }
 
-    btnHash.onclick = async () => {
-      try {
-        const msgUint8 = new TextEncoder().encode(inpText.value);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        outText.value = hashHex;
-      } catch(e) {
-        outText.value = "Error: Could not generate hash.";
-      }
-    };
+  function handleBaseInput(e, base) {
+    const val = e.target.value;
+    if (!val) {
+      updateBasesFromValue(null, e.target);
+      return;
+    }
+    const bigVal = parseBigIntFromBase(val, base);
+    updateBasesFromValue(bigVal, e.target);
+    if (bigVal !== null) {
+      // Sync Bitboard bit value
+      bitboardVal = bigVal & 0xFFFFFFFFFFFFFFFFn;
+      renderBitboard();
+    }
+  }
 
-    outText.onclick = () => {
-      if (outText.value && !outText.value.startsWith("Error")) {
-        navigator.clipboard.writeText(outText.value);
-        const original = outText.value;
-        outText.value = "Copied to clipboard!";
-        setTimeout(() => outText.value = original, 1000);
+  elBin.addEventListener('input', (e) => handleBaseInput(e, 2));
+  elOct.addEventListener('input', (e) => handleBaseInput(e, 8));
+  elDec.addEventListener('input', (e) => handleBaseInput(e, 10));
+  elHex.addEventListener('input', (e) => handleBaseInput(e, 16));
+  elCustom.addEventListener('input', (e) => handleBaseInput(e, parseInt(customRange.value, 10)));
+
+  customRange.addEventListener('input', () => {
+    const val = parseBigIntFromBase(elDec.value, 10);
+    updateBasesFromValue(val, null);
+  });
+
+  elAscii.addEventListener('input', (e) => {
+    const val = e.target.value;
+    if (val.length === 0) {
+      updateBasesFromValue(null, e.target);
+      return;
+    }
+    const code = BigInt(val.codePointAt(0));
+    updateBasesFromValue(code, e.target);
+  });
+
+  document.getElementById('btn-clear-bases').onclick = () => {
+    updateBasesFromValue(null, null);
+  };
+
+  // String Encoding Handlers
+  const strInput = document.getElementById('str-input');
+  const strOutput = document.getElementById('str-output');
+
+  document.getElementById('btn-b64-enc').onclick = () => {
+    try {
+      strOutput.value = btoa(unescape(encodeURIComponent(strInput.value)));
+      addHistory('Base64 Encode', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error encoding Base64'; }
+  };
+
+  document.getElementById('btn-b64-dec').onclick = () => {
+    try {
+      strOutput.value = decodeURIComponent(escape(atob(strInput.value.trim())));
+      addHistory('Base64 Decode', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error decoding Base64'; }
+  };
+
+  document.getElementById('btn-url-enc').onclick = () => {
+    try {
+      strOutput.value = encodeURIComponent(strInput.value);
+      addHistory('URL Encode', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error encoding URL'; }
+  };
+
+  document.getElementById('btn-url-dec').onclick = () => {
+    try {
+      strOutput.value = decodeURIComponent(strInput.value);
+      addHistory('URL Decode', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error decoding URL'; }
+  };
+
+  document.getElementById('btn-hex-enc').onclick = () => {
+    try {
+      const arr = new TextEncoder().encode(strInput.value);
+      strOutput.value = Array.from(arr).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+      addHistory('Hex Encode', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error encoding Hex'; }
+  };
+
+  document.getElementById('btn-hex-dec').onclick = () => {
+    try {
+      const hex = strInput.value.replace(/\s+/g, '');
+      if (hex.length % 2 !== 0) throw new Error();
+      const arr = new Uint8Array(hex.length / 2);
+      for (let i = 0; i < hex.length; i += 2) {
+        arr[i/2] = parseInt(hex.substring(i, i+2), 16);
       }
+      strOutput.value = new TextDecoder().decode(arr);
+      addHistory('Hex Decode', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error decoding Hex'; }
+  };
+
+  document.getElementById('btn-sha256').onclick = async () => {
+    try {
+      const msgUint8 = new TextEncoder().encode(strInput.value);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      strOutput.value = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      addHistory('SHA-256', strInput.value, strOutput.value);
+    } catch(e) { strOutput.value = 'Error calculating SHA-256'; }
+  };
+
+  strOutput.onclick = () => {
+    if (strOutput.value && !strOutput.value.startsWith("Error")) {
+      navigator.clipboard.writeText(strOutput.value);
+      showToast('Copied output to clipboard!');
+    }
+  };
+
+  // ==========================================
+  // TAB 2: 64-BIT TOGGLE GRID & OPERATOR SUITE
+  // ==========================================
+  let bitboardVal = 0n;
+
+  const gridHigh = document.getElementById('grid-high');
+  const gridLow = document.getElementById('grid-low');
+
+  function initBitboardGrid() {
+    gridHigh.innerHTML = '';
+    gridLow.innerHTML = '';
+
+    for (let i = 63; i >= 32; i--) {
+      gridHigh.appendChild(createBitBox(i));
+    }
+    for (let i = 31; i >= 0; i--) {
+      gridLow.appendChild(createBitBox(i));
+    }
+  }
+
+  function createBitBox(idx) {
+    const box = document.createElement('div');
+    box.className = 'bit-box val-0';
+    box.id = `bit-${idx}`;
+    box.innerHTML = `<span class="bit-num">0</span><span class="bit-idx">${idx}</span>`;
+    box.onclick = () => toggleBit(idx);
+    return box;
+  }
+
+  function toggleBit(idx) {
+    const mask = 1n << BigInt(idx);
+    bitboardVal ^= mask;
+    renderBitboard();
+    updateBasesFromValue(bitboardVal, null);
+  }
+
+  function renderBitboard() {
+    bitboardVal &= 0xFFFFFFFFFFFFFFFFn;
+    for (let i = 0; i < 64; i++) {
+      const el = document.getElementById(`bit-${i}`);
+      if (!el) continue;
+      const isSet = (bitboardVal & (1n << BigInt(i))) !== 0n;
+      el.className = `bit-box ${isSet ? 'val-1' : 'val-0'}`;
+      el.querySelector('.bit-num').textContent = isSet ? '1' : '0';
+    }
+
+    const hexStr = '0x' + bitboardVal.toString(16).padStart(16, '0').toUpperCase();
+    document.getElementById('bitboard-hex-disp').textContent = hexStr;
+
+    const high32 = bitboardVal >> 32n;
+    const low32 = bitboardVal & 0xFFFFFFFFn;
+    document.getElementById('high32-dec').textContent = `DEC: ${high32.toString(10)}`;
+    document.getElementById('low32-dec').textContent = `DEC: ${low32.toString(10)}`;
+  }
+
+  // Bitboard Operations
+  document.getElementById('bb-clear').onclick = () => { bitboardVal = 0n; renderBitboard(); updateBasesFromValue(bitboardVal, null); };
+  document.getElementById('bb-setall').onclick = () => { bitboardVal = 0xFFFFFFFFFFFFFFFFn; renderBitboard(); updateBasesFromValue(bitboardVal, null); };
+  document.getElementById('bb-invert').onclick = () => { bitboardVal = ~bitboardVal & 0xFFFFFFFFFFFFFFFFn; renderBitboard(); updateBasesFromValue(bitboardVal, null); };
+  document.getElementById('bb-shl').onclick = () => { bitboardVal = (bitboardVal << 1n) & 0xFFFFFFFFFFFFFFFFn; renderBitboard(); updateBasesFromValue(bitboardVal, null); };
+  document.getElementById('bb-shr').onclick = () => { bitboardVal = (bitboardVal >> 1n) & 0xFFFFFFFFFFFFFFFFn; renderBitboard(); updateBasesFromValue(bitboardVal, null); };
+  
+  document.getElementById('bb-rol').onclick = () => {
+    const msb = (bitboardVal & (1n << 63n)) !== 0n ? 1n : 0n;
+    bitboardVal = ((bitboardVal << 1n) | msb) & 0xFFFFFFFFFFFFFFFFn;
+    renderBitboard();
+    updateBasesFromValue(bitboardVal, null);
+  };
+  
+  document.getElementById('bb-ror').onclick = () => {
+    const lsb = (bitboardVal & 1n) !== 0n ? (1n << 63n) : 0n;
+    bitboardVal = ((bitboardVal >> 1n) | lsb) & 0xFFFFFFFFFFFFFFFFn;
+    renderBitboard();
+    updateBasesFromValue(bitboardVal, null);
+  };
+
+  document.getElementById('bb-rev').onclick = () => {
+    let rev = 0n;
+    for (let i = 0n; i < 64n; i++) {
+      if ((bitboardVal & (1n << i)) !== 0n) {
+        rev |= (1n << (63n - i));
+      }
+    }
+    bitboardVal = rev;
+    renderBitboard();
+    updateBasesFromValue(bitboardVal, null);
+  };
+
+  document.getElementById('bb-byteswap').onclick = () => {
+    let v = bitboardVal;
+    let swapped = 0n;
+    for (let i = 0n; i < 8n; i++) {
+      const byte = (v >> (i * 8n)) & 0xFFn;
+      swapped |= (byte << ((7n - i) * 8n));
+    }
+    bitboardVal = swapped;
+    renderBitboard();
+    updateBasesFromValue(bitboardVal, null);
+  };
+
+  // Bitwise Operator Matrix Calculator
+  const opAInput = document.getElementById('op-a');
+  const opBInput = document.getElementById('op-b');
+
+  function parseOpVal(str) {
+    str = str.trim();
+    if (str.toLowerCase().startsWith('0x')) return parseBigIntFromBase(str, 16) || 0n;
+    if (str.toLowerCase().startsWith('0b')) return parseBigIntFromBase(str, 2) || 0n;
+    if (str.toLowerCase().startsWith('0o')) return parseBigIntFromBase(str, 8) || 0n;
+    return parseBigIntFromBase(str, 10) || 0n;
+  }
+
+  function formatBitStream(bigVal) {
+    const bin = (bigVal & 0xFFFFFFFFFFFFFFFFn).toString(2).padStart(64, '0');
+    let html = '';
+    for (let i = 0; i < 64; i++) {
+      if (i > 0 && i % 8 === 0) html += ' ';
+      const bit = bin[i];
+      html += `<span class="${bit === '1' ? 'on' : 'off'}">${bit}</span>`;
+    }
+    return html;
+  }
+
+  function executeBitwiseOp(op) {
+    const valA = parseOpVal(opAInput.value) & 0xFFFFFFFFFFFFFFFFn;
+    const valB = parseOpVal(opBInput.value) & 0xFFFFFFFFFFFFFFFFn;
+    let res = 0n;
+
+    switch (op) {
+      case 'AND': res = valA & valB; break;
+      case 'OR':  res = valA | valB; break;
+      case 'XOR': res = valA ^ valB; break;
+      case 'NOT': res = ~valA & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'SHL': res = (valA << (valB & 63n)) & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'SHR': res = (valA >> (valB & 63n)) & 0xFFFFFFFFFFFFFFFFn; break;
+      case 'SAR': 
+        // Sign-extend BigInt 64-bit
+        const signedA = BigInt.asIntN(64, valA);
+        res = BigInt.asUintN(64, signedA >> (valB & 63n));
+        break;
+      case 'ROL': {
+        const cnt = valB & 63n;
+        res = ((valA << cnt) | (valA >> (64n - cnt))) & 0xFFFFFFFFFFFFFFFFn;
+        break;
+      }
+      case 'ROR': {
+        const cnt = valB & 63n;
+        res = ((valA >> cnt) | (valA << (64n - cnt))) & 0xFFFFFFFFFFFFFFFFn;
+        break;
+      }
+    }
+
+    document.getElementById('mat-a-val').textContent = '0x' + valA.toString(16).padStart(16, '0').toUpperCase();
+    document.getElementById('mat-a-bin').innerHTML = formatBitStream(valA);
+
+    document.getElementById('mat-b-val').textContent = '0x' + valB.toString(16).padStart(16, '0').toUpperCase();
+    document.getElementById('mat-b-bin').innerHTML = formatBitStream(valB);
+
+    document.getElementById('mat-op-label').textContent = `Result (${op})`;
+    document.getElementById('mat-res-val').textContent = '0x' + res.toString(16).padStart(16, '0').toUpperCase();
+    document.getElementById('mat-res-bin').innerHTML = formatBitStream(res);
+
+    addHistory(`Bitwise ${op}`, `A=0x${valA.toString(16)}, B=0x${valB.toString(16)}`, `0x${res.toString(16).toUpperCase()}`);
+  }
+
+  document.querySelectorAll('[data-op]').forEach(btn => {
+    btn.onclick = () => executeBitwiseOp(btn.dataset.op);
+  });
+
+  // ==========================================
+  // TAB 3: IEEE-754 FLOATING POINT INSPECTOR
+  // ==========================================
+  const fpInput = document.getElementById('fp-input');
+
+  function inspectIEEE754() {
+    const rawVal = fpInput.value.trim();
+    let num = parseFloat(rawVal);
+    if (isNaN(num) && rawVal.toLowerCase() !== 'nan') num = 0;
+
+    // 32-Bit Float Breakdown
+    const buf32 = new ArrayBuffer(4);
+    const view32 = new DataView(buf32);
+    view32.setFloat32(0, num, false); // Big endian
+    const bits32 = view32.getUint32(0, false);
+
+    const sign32 = (bits32 >>> 31) & 1;
+    const exp32 = (bits32 >>> 23) & 0xFF;
+    const mant32 = bits32 & 0x7FFFFF;
+
+    const bin32 = bits32.toString(2).padStart(32, '0');
+    document.getElementById('fp32-hex').textContent = '0x' + bits32.toString(16).padStart(8, '0').toUpperCase();
+
+    document.getElementById('fp32-sign-strip').textContent = bin32[0];
+    document.getElementById('fp32-exp-strip').textContent = bin32.substring(1, 9);
+    document.getElementById('fp32-mant-strip').textContent = bin32.substring(9);
+
+    document.getElementById('fp32-sign-val').textContent = `${sign32} (${sign32 === 1 ? '- negative' : '+ positive'})`;
+    document.getElementById('fp32-exp-val').textContent = `${exp32} (0b${exp32.toString(2).padStart(8, '0')})`;
+    
+    const unbiased32 = exp32 === 0 ? -126 : exp32 - 127;
+    document.getElementById('fp32-exp-unbiased').textContent = unbiased32;
+
+    const mantFrac32 = mant32 / Math.pow(2, 23);
+    document.getElementById('fp32-mant-val').textContent = mantFrac32.toFixed(7) + ` (0x${mant32.toString(16)})`;
+    document.getElementById('fp32-reconstructed').textContent = view32.getFloat32(0, false);
+    
+    const signMult = sign32 === 1 ? '-1' : '1';
+    document.getElementById('fp32-formula').textContent = `(-1)^${sign32} × 2^(${unbiased32}) × (1 + ${mantFrac32.toFixed(6)})`;
+
+    // 64-Bit Double Breakdown
+    const buf64 = new ArrayBuffer(8);
+    const view64 = new DataView(buf64);
+    view64.setFloat64(0, num, false);
+    const high64 = view64.getUint32(0, false);
+    const low64 = view64.getUint32(4, false);
+    const bigBits64 = (BigInt(high64) << 32n) | BigInt(low64);
+    const bin64 = bigBits64.toString(2).padStart(64, '0');
+
+    document.getElementById('fp64-hex').textContent = '0x' + bigBits64.toString(16).padStart(16, '0').toUpperCase();
+
+    document.getElementById('fp64-sign-strip').textContent = bin64[0];
+    document.getElementById('fp64-exp-strip').textContent = bin64.substring(1, 12);
+    document.getElementById('fp64-mant-strip').textContent = bin64.substring(12);
+
+    const sign64 = (high64 >>> 31) & 1;
+    const exp64 = (high64 >>> 20) & 0x7FF;
+    const unbiased64 = exp64 === 0 ? -1022 : exp64 - 1023;
+
+    document.getElementById('fp64-sign-val').textContent = `${sign64}`;
+    document.getElementById('fp64-exp-val').textContent = `${exp64} (0b${exp64.toString(2).padStart(11, '0')})`;
+    document.getElementById('fp64-exp-unbiased').textContent = unbiased64;
+
+    const mant64 = bigBits64 & 0x000FFFFFFFFFFFFFn;
+    const mantFrac64 = Number(mant64) / Math.pow(2, 52);
+    document.getElementById('fp64-mant-val').textContent = mantFrac64.toFixed(12);
+    document.getElementById('fp64-reconstructed').textContent = view64.getFloat64(0, false);
+
+    addHistory('IEEE-754 Inspect', rawVal, `Float32: 0x${bits32.toString(16).toUpperCase()}`);
+  }
+
+  fpInput.addEventListener('input', inspectIEEE754);
+  document.querySelectorAll('.fp-preset').forEach(btn => {
+    btn.onclick = () => {
+      fpInput.value = btn.dataset.val;
+      inspectIEEE754();
     };
-  </script>
+  });
+
+  // ==========================================
+  // TAB 4: EXPORT & HISTORY
+  // ==========================================
+  document.getElementById('btn-clear-history').onclick = () => {
+    historyLog.length = 0;
+    renderHistory();
+    showToast('History cleared.');
+  };
+
+  document.getElementById('btn-export-csv').onclick = () => {
+    if (historyLog.length === 0) {
+      showToast('History is empty!');
+      return;
+    }
+    let csv = 'Timestamp,Category,Input,Output\n';
+    historyLog.forEach(row => {
+      csv += `"${row.timestamp}","${row.category}","${row.input.replace(/"/g, '""')}","${row.output.replace(/"/g, '""')}"\n`;
+    });
+
+    downloadFile(csv, 'kbase_history.csv', 'text/csv');
+  };
+
+  document.getElementById('btn-export-json').onclick = () => {
+    if (historyLog.length === 0) {
+      showToast('History is empty!');
+      return;
+    }
+    const jsonStr = JSON.stringify(historyLog, null, 2);
+    downloadFile(jsonStr, 'kbase_history.json', 'application/json');
+  };
+
+  function downloadFile(content, fileName, contentType) {
+    const a = document.createElement('a');
+    const file = new Blob([content], { type: contentType });
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast(`Exported ${fileName}`);
+  }
+
+  // Initialization
+  window.addEventListener('DOMContentLoaded', () => {
+    initBitboardGrid();
+    renderBitboard();
+    executeBitwiseOp('AND');
+    inspectIEEE754();
+  });
+</script>
 </body>
 </html>
