@@ -3,12 +3,24 @@
 <head>
 <title>KMaze</title>
 <style>
-  body { margin: 0; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: monospace; }
-  canvas { image-rendering: pixelated; width: 100%; height: 100%; max-width: 640px; max-height: 480px; }
+  body { margin: 0; background-color: #000; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; font-family: monospace; user-select: none; }
+  #gameContainer { position: relative; width: 100%; height: 100%; max-width: 640px; max-height: 480px; display: flex; flex-direction: column; }
+  canvas { image-rendering: pixelated; width: 100%; height: calc(100% - 40px); background: #000; }
+  #hudControls { display: flex; width: 100%; height: 40px; background: #111; border-top: 1px solid #333; box-sizing: border-box; justify-content: space-around; align-items: center; }
+  .hudBtn { background: #223; color: #0ff; border: 1px solid #00ffff44; padding: 6px 10px; font-size: 11px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: background 0.1s; }
+  .hudBtn:active { background: #055; }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="320" height="240"></canvas>
+<div id="gameContainer">
+  <canvas id="gameCanvas" width="320" height="240"></canvas>
+  <div id="hudControls">
+    <button class="hudBtn" onclick="usePickaxe()">[P] Break Wall</button>
+    <button class="hudBtn" onclick="usePathfinder()">[C] Pathfinder</button>
+    <button class="hudBtn" onclick="useSpeedShoes()">[S] Speed Shoes</button>
+    <button class="hudBtn" onclick="useStunSpray()">[F] Stun Spray</button>
+  </div>
+</div>
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -44,7 +56,7 @@
     [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
       [1,0,0,0,5,0,0,0,0,0,0,5,0,0,1],
-      [1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],
+      [1,0,1,1,1,1,1,1,1,1,1,0,1,0,1],
       [1,0,1,5,0,0,0,0,0,0,0,0,1,0,1],
       [1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],
       [1,0,1,0,1,0,5,0,0,0,1,0,1,0,1],
@@ -165,9 +177,17 @@
   let keysHeld = 0;
   let hasCompass = 0;
   let speedBoost = 0;
-  let hasPickaxe = 0;
+  let hasPickaxe = 1;
+  let pathfinderCharges = 1;
+  let pathfinderTimer = 0;
+  let speedShoesCharges = 1;
+  let speedShoesTimer = 0;
+  let stunSprayCharges = 1;
+  let stunSprayTimer = 0;
+  let bossHP = 3;
   let map = JSON.parse(JSON.stringify(maps[currentLevel]));
-  
+  let isPathTile = [];
+
   let gameState = 0; // 0: Start, 1: Play, 2: Win
   let startTime = 0;
   let endTime = 0;
@@ -200,9 +220,9 @@
   }
 
   // Procedural 16x16 Texture Generator
-  const textures = new Array(14);
+  const textures = new Array(16);
   function initTextures() {
-      for (let t = 0; t < 14; t++) {
+      for (let t = 0; t < 16; t++) {
           textures[t] = new Uint32Array(256);
           for (let y = 0; y < 16; y++) {
               for (let x = 0; x < 16; x++) {
@@ -241,10 +261,10 @@
                           if (dist < 2.0) { r = 255; g = 255; b = 255; }
                           else { r = 255; g = 200; b = 0; }
                       } else { r = 139; g = 69; b = 19; }
-                  } else if (t === 6) { // Trap
+                  } else if (t === 6) { // Lava Trap
                       if (y >= 12 && (x % 4 === 1 || x % 4 === 2)) { r = 200; g = 200; b = 200; }
-                      else if ((x + y) % 6 < 2) { r = 255; g = 0; b = 255; }
-                      else { r = 26; g = 16; b = 37; }
+                      else if ((x + y) % 6 < 2) { r = 255; g = 68; b = 0; }
+                      else { r = 136; g = 17; b = 0; }
                   } else if (t === 8) { // Compass Block
                       if (x === 7 || y === 7 || Math.abs(x - 7) + Math.abs(y - 7) <= 4) { r = 0; g = 255; b = 255; }
                       else { r = 0; g = 68; b = 85; }
@@ -264,6 +284,16 @@
                       if ((x + y === 15 || x + y === 14) && (x >= 3 && x <= 12)) { r = 136; g = 153; b = 170; }
                       else if (x === y && x >= 4 && x <= 11) { r = 139; g = 69; b = 19; }
                       else { r = 92; g = 58; b = 30; }
+                  } else if (t === 14) { // Stun Spray
+                      if (x >= 5 && x <= 10 && y >= 4 && y <= 14) { r = 0; g = 204; b = 255; }
+                      else if (x >= 6 && x <= 9 && y >= 1 && y <= 3) { r = 255; g = 255; b = 255; }
+                      else { r = 0; g = 51; b = 102; }
+                  } else if (t === 15) { // Minotaur King Boss
+                      if (y <= 3 && x >= 4 && x <= 11) { r = 255; g = 215; b = 0; }
+                      else if ((x >= 1 && x <= 4 && y <= 5) || (x >= 11 && x <= 14 && y <= 5)) { r = 238; g = 238; b = 238; }
+                      else if ((x >= 4 && x <= 6 && y >= 6 && y <= 7) || (x >= 9 && x <= 11 && y >= 6 && y <= 7)) { r = 255; g = 0; b = 0; }
+                      else if (y >= 10 && y <= 13 && x >= 4 && x <= 11) { r = 255; g = 255; b = 255; }
+                      else { r = 153; g = 0; b = 0; }
                   } else {
                       r = 170; g = 0; b = 0;
                   }
@@ -273,6 +303,68 @@
       }
   }
   initTextures();
+
+  function computePathfinderPath() {
+      isPathTile = Array.from({length: map.length}, () => Array(map[0].length).fill(false));
+      let targetX = -1, targetY = -1;
+      let needKey = false;
+      for (let x = 0; x < map.length; x++) {
+          for (let y = 0; y < map[0].length; y++) {
+              if (map[x][y] === 4) needKey = true;
+          }
+      }
+      if (needKey && keysHeld === 0) {
+          for (let x = 0; x < map.length; x++) {
+              for (let y = 0; y < map[0].length; y++) {
+                  if (map[x][y] === 3) { targetX = x; targetY = y; break; }
+              }
+          }
+      }
+      if (targetX === -1) {
+          for (let x = 0; x < map.length; x++) {
+              for (let y = 0; y < map[0].length; y++) {
+                  if (map[x][y] === 2) { targetX = x; targetY = y; break; }
+              }
+          }
+      }
+      if (targetX === -1) return;
+
+      let queue = [];
+      let parent = Array.from({length: map.length}, () => Array(map[0].length).fill(null));
+      let startX = Math.floor(pX), startY = Math.floor(pY);
+      queue.push([startX, startY]);
+      parent[startX][startY] = [startX, startY];
+
+      let dirs = [[0,1], [0,-1], [1,0], [-1,0]];
+      let found = false;
+
+      while (queue.length > 0) {
+          let [cx, cy] = queue.shift();
+          if (cx === targetX && cy === targetY) { found = true; break; }
+
+          for (let d of dirs) {
+              let nx = cx + d[0], ny = cy + d[1];
+              if (nx >= 0 && nx < map.length && ny >= 0 && ny < map[0].length && !parent[nx][ny]) {
+                  let tile = map[nx][ny];
+                  if ([0,2,3,5,6,8,9,10,11,13,14].includes(tile) || (tile === 4 && keysHeld > 0)) {
+                      parent[nx][ny] = [cx, cy];
+                      queue.push([nx, ny]);
+                  }
+              }
+          }
+      }
+
+      if (found) {
+          let currX = targetX, currY = targetY;
+          while (currX !== startX || currY !== startY) {
+              isPathTile[currX][currY] = true;
+              let p = parent[currX][currY];
+              if (!p || (p[0] === currX && p[1] === currY)) break;
+              currX = p[0]; currY = p[1];
+          }
+          isPathTile[startX][startY] = true;
+      }
+  }
 
   function generateMaze(w, h) {
       let m = Array.from({length: w}, () => Array(h).fill(1));
@@ -304,18 +396,13 @@
       for(let i=0; i < (w*h)/10; i++) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
-          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) {
-              m[rx][ry] = 5;
-          }
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 5;
       }
       let placedCompass = false;
       while(!placedCompass) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
-          if (m[rx][ry] === 0) {
-              m[rx][ry] = 8;
-              placedCompass = true;
-          }
+          if (m[rx][ry] === 0) { m[rx][ry] = 8; placedCompass = true; }
       }
       for(let i=0; i < (w*h)/20; i++) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
@@ -330,9 +417,7 @@
       for(let i=0; i < (w*h)/30; i++) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
-          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) {
-              m[rx][ry] = 9;
-          }
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 9;
       }
       if (currentLevel >= 5) {
           let placedMino = false;
@@ -340,17 +425,19 @@
               let rx = 1 + Math.floor(Math.random()*(w-2));
               let ry = 1 + Math.floor(Math.random()*(h-2));
               if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY) && Math.abs(rx - 1) + Math.abs(ry - 1) > 5) {
-                  m[rx][ry] = 12;
-                  placedMino = true;
+                  m[rx][ry] = 12; placedMino = true;
               }
           }
       }
       for(let i=0; i < (w*h)/40; i++) {
           let rx = 1 + Math.floor(Math.random()*(w-2));
           let ry = 1 + Math.floor(Math.random()*(h-2));
-          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) {
-              m[rx][ry] = 13;
-          }
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 13;
+      }
+      for(let i=0; i < (w*h)/40; i++) {
+          let rx = 1 + Math.floor(Math.random()*(w-2));
+          let ry = 1 + Math.floor(Math.random()*(h-2));
+          if (m[rx][ry] === 0 && (rx !== 1 || ry !== 1) && (rx !== farX || ry !== farY)) m[rx][ry] = 14;
       }
       let t1x=0, t1y=0, t2x=0, t2y=0;
       for(let i=0; i<100; i++) {
@@ -363,11 +450,26 @@
           let ry = 1 + Math.floor(Math.random()*(h-2));
           if (m[rx][ry] === 0 && (rx !== t1x || ry !== t1y) && (rx !== 1 || ry !== 1)) { t2x=rx; t2y=ry; break; }
       }
-      if (t1x && t2x) {
-          m[t1x][t1y] = 10;
-          m[t2x][t2y] = 11;
+      if (t1x && t2x) { m[t1x][t1y] = 10; m[t2x][t2y] = 11; }
+      
+      // Stage 35 (level 34) Boss Arena Chamber
+      if (currentLevel === 34) {
+          bossHP = 3;
+          for (let i = 15; i <= 25; i++) {
+              for (let j = 15; j <= 25; j++) {
+                  m[i][j] = 0;
+              }
+          }
+          m[20][20] = 15; // Minotaur King Boss
+          m[17][17] = 12; // Guard 1
+          m[23][23] = 12; // Guard 2
+          m[25][25] = 3;  // Boss Key
+          m[farX][farY] = 2;
+          if (farX > 1 && farY > 1) m[farX - 1][farY] = 4;
+      } else {
+          m[farX][farY] = 2;
       }
-      m[farX][farY] = 2;
+
       return m;
   }
   
@@ -375,8 +477,15 @@
       currentLevel++;
       hasCompass = currentLevel < 6 ? 1 : 0;
       speedBoost = 0;
-      hasPickaxe = 0;
-      if (currentLevel > 29) {
+      hasPickaxe = 1;
+      pathfinderCharges = 1;
+      speedShoesCharges = 1;
+      stunSprayCharges = 1;
+      pathfinderTimer = 0;
+      speedShoesTimer = 0;
+      stunSprayTimer = 0;
+
+      if (currentLevel > 34) {
           gameState = 2;
           endTime = Date.now();
           let elapsed = (endTime - startTime) / 1000;
@@ -392,7 +501,9 @@
       }
       
       if (currentLevel >= maps.length) {
-          let s = 11 + (currentLevel - maps.length) * 4;
+          let s = 11 + 2 * Math.floor(((currentLevel - maps.length) * 15) / 24);
+          if (s > 41) s = 41;
+          if (s % 2 === 0) s++;
           map = generateMaze(s, s);
       } else {
           map = JSON.parse(JSON.stringify(maps[currentLevel]));
@@ -424,6 +535,72 @@
       osc.stop(audioCtx.currentTime + duration);
   }
   
+  function usePickaxe() {
+      if (gameState !== 1 || hasPickaxe <= 0) return;
+      let tx = Math.floor(pX + dX * 0.8);
+      let ty = Math.floor(pY + dY * 0.8);
+      let tVal = map[tx] && map[tx][ty];
+      if (tVal === 1 || tVal === 7) {
+          hasPickaxe--;
+          map[tx][ty] = 0;
+          playTone(400, 'square', 0.1);
+          addParticles(W/2, H/2, '#a06030', 25);
+          msgText = "Wall Broken!"; msgTimer = 60;
+      } else if (tVal === 12) {
+          hasPickaxe--;
+          map[tx][ty] = 0;
+          score += 200;
+          playTone(600, 'square', 0.2);
+          addParticles(W/2, H/2, '#ff0000', 25);
+          msgText = "Minotaur Slain!"; msgTimer = 60;
+      } else if (tVal === 15) {
+          hasPickaxe--;
+          bossHP--;
+          playTone(700, 'square', 0.3);
+          addParticles(W/2, H/2, '#ffd700', 30);
+          if (bossHP <= 0) {
+              map[tx][ty] = 3;
+              score += 1000;
+              msgText = "Minotaur King Slain! Key Dropped!";
+          } else {
+              msgText = "Minotaur King Hit!";
+          }
+          msgTimer = 60;
+      }
+  }
+
+  function usePathfinder() {
+      if (gameState !== 1) return;
+      if (pathfinderCharges > 0 || hasCompass) {
+          if (pathfinderCharges > 0) pathfinderCharges--;
+          pathfinderTimer = 10000;
+          computePathfinderPath();
+          playTone(700, 'sine', 0.2);
+          addParticles(W/2, H/2, '#00ffff', 25);
+          msgText = "Pathfinder Active (10s)!"; msgTimer = 60;
+      }
+  }
+
+  function useSpeedShoes() {
+      if (gameState !== 1) return;
+      if (speedShoesCharges > 0 || speedBoost) {
+          if (speedShoesCharges > 0) speedShoesCharges--;
+          speedShoesTimer = 8000;
+          playTone(800, 'sine', 0.2);
+          addParticles(W/2, H/2, '#ffff00', 25);
+          msgText = "Speed Shoes Active (8s)!"; msgTimer = 60;
+      }
+  }
+
+  function useStunSpray() {
+      if (gameState !== 1 || stunSprayCharges <= 0) return;
+      stunSprayCharges--;
+      stunSprayTimer = 10000;
+      playTone(500, 'square', 0.3);
+      addParticles(W/2, H/2, '#00ccff', 30);
+      msgText = "Minotaur Stun Spray Active (10s)!"; msgTimer = 60;
+  }
+
   const keys = {};
   document.addEventListener('keydown', e => {
       keys[e.key] = true;
@@ -438,35 +615,45 @@
               nextLevel();
           }
       }
-      if (gameState === 1 && (e.key === 's' || e.key === 'S')) {
-          let saveData = {
-              currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
-              pX, pY, dX, dY, planeX, planeY, map,
-              elapsed: Date.now() - startTime
-          };
-          localStorage.setItem('kmaze_save', JSON.stringify(saveData));
-          msgText = "Game Saved!";
-          msgTimer = 60;
-          playTone(900, 'sine', 0.2);
-      }
-      if (gameState === 1 && (e.key === 'l' || e.key === 'L')) {
-          let sd = localStorage.getItem('kmaze_save');
-          if (sd) {
-              let saveData = JSON.parse(sd);
-              currentLevel = saveData.currentLevel;
-              score = saveData.score;
-              keysHeld = saveData.keysHeld;
-              hasCompass = saveData.hasCompass;
-              speedBoost = saveData.speedBoost;
-              hasPickaxe = saveData.hasPickaxe;
-              pX = saveData.pX; pY = saveData.pY;
-              dX = saveData.dX; dY = saveData.dY;
-              planeX = saveData.planeX; planeY = saveData.planeY;
-              map = saveData.map;
-              startTime = Date.now() - saveData.elapsed;
-              msgText = "Game Loaded!";
+      if (gameState === 1) {
+          if (e.key === 'p' || e.key === 'P') usePickaxe();
+          if (e.key === 'c' || e.key === 'C') usePathfinder();
+          if (e.key === 's' || e.key === 'S') useSpeedShoes();
+          if (e.key === 'f' || e.key === 'F') useStunSpray();
+          if (e.key === 'v' || e.key === 'V') {
+              let saveData = {
+                  currentLevel, score, keysHeld, hasCompass, speedBoost, hasPickaxe,
+                  pathfinderCharges, speedShoesCharges, stunSprayCharges,
+                  pX, pY, dX, dY, planeX, planeY, map,
+                  elapsed: Date.now() - startTime
+              };
+              localStorage.setItem('kmaze_save', JSON.stringify(saveData));
+              msgText = "Game Saved!";
               msgTimer = 60;
               playTone(900, 'sine', 0.2);
+          }
+          if (e.key === 'l' || e.key === 'L') {
+              let sd = localStorage.getItem('kmaze_save');
+              if (sd) {
+                  let saveData = JSON.parse(sd);
+                  currentLevel = saveData.currentLevel;
+                  score = saveData.score;
+                  keysHeld = saveData.keysHeld;
+                  hasCompass = saveData.hasCompass;
+                  speedBoost = saveData.speedBoost;
+                  hasPickaxe = saveData.hasPickaxe;
+                  pathfinderCharges = saveData.pathfinderCharges || 1;
+                  speedShoesCharges = saveData.speedShoesCharges || 1;
+                  stunSprayCharges = saveData.stunSprayCharges || 1;
+                  pX = saveData.pX; pY = saveData.pY;
+                  dX = saveData.dX; dY = saveData.dY;
+                  planeX = saveData.planeX; planeY = saveData.planeY;
+                  map = saveData.map;
+                  startTime = Date.now() - saveData.elapsed;
+                  msgText = "Game Loaded!";
+                  msgTimer = 60;
+                  playTone(900, 'sine', 0.2);
+              }
           }
       }
   });
@@ -477,7 +664,13 @@
       frameCount++;
       
       if (msgTimer > 0) msgTimer--;
-      
+      if (pathfinderTimer > 0) {
+          pathfinderTimer -= 30;
+          computePathfinderPath();
+      }
+      if (speedShoesTimer > 0) speedShoesTimer -= 30;
+      if (stunSprayTimer > 0) stunSprayTimer -= 30;
+
       // Update particles
       particles = particles.filter(p => {
           p.x += p.vx; p.y += p.vy;
@@ -488,37 +681,45 @@
       minotaurTimer += 30;
       if (minotaurTimer >= 1000) {
           minotaurTimer = 0;
-          let minotaurs = [];
-          for (let x = 0; x < map.length; x++) {
-              for (let y = 0; y < map[0].length; y++) {
-                  if (map[x][y] === 12) {
-                      minotaurs.push({x, y});
+          if (stunSprayTimer <= 0) { // Only move if NOT stunned
+              let minotaurs = [];
+              for (let x = 0; x < map.length; x++) {
+                  for (let y = 0; y < map[0].length; y++) {
+                      let val = map[x][y];
+                      if (val === 12 || val === 15) {
+                          minotaurs.push({x, y, type: val});
+                      }
                   }
               }
-          }
-          for (let m of minotaurs) {
-              let dx = 0, dy = 0;
-              if (Math.floor(pX) > m.x) dx = 1;
-              else if (Math.floor(pX) < m.x) dx = -1;
-              if (Math.floor(pY) > m.y) dy = 1;
-              else if (Math.floor(pY) < m.y) dy = -1;
-              
-              if (dx !== 0 && map[m.x + dx] && map[m.x + dx][m.y] === 0) {
-                  map[m.x][m.y] = 0;
-                  map[m.x + dx][m.y] = 12;
-                  m.x += dx;
-              } else if (dy !== 0 && map[m.x] && map[m.x][m.y + dy] === 0) {
-                  map[m.x][m.y] = 0;
-                  map[m.x][m.y + dy] = 12;
-                  m.y += dy;
-              }
-              
-              if (m.x === Math.floor(pX) && m.y === Math.floor(pY)) {
-                  playTone(200, 'sawtooth', 0.5);
-                  score = Math.max(0, score - 100);
-                  currentLevel--;
-                  nextLevel();
-                  break;
+              for (let m of minotaurs) {
+                  let dx = 0, dy = 0;
+                  if (Math.floor(pX) > m.x) dx = 1;
+                  else if (Math.floor(pX) < m.x) dx = -1;
+                  if (Math.floor(pY) > m.y) dy = 1;
+                  else if (Math.floor(pY) < m.y) dy = -1;
+                  
+                  if (dx !== 0 && map[m.x + dx] && map[m.x + dx][m.y] === 0) {
+                      map[m.x][m.y] = 0;
+                      map[m.x + dx][m.y] = m.type;
+                      m.x += dx;
+                  } else if (dy !== 0 && map[m.x] && map[m.x][m.y + dy] === 0) {
+                      map[m.x][m.y] = 0;
+                      map[m.x][m.y + dy] = m.type;
+                      m.y += dy;
+                  }
+                  
+                  if (m.x === Math.floor(pX) && m.y === Math.floor(pY)) {
+                      playTone(200, 'sawtooth', 0.5);
+                      score = Math.max(0, score - 100);
+                      if (m.type === 15) {
+                          pX = 1.5; pY = 1.5;
+                          msgText = "Trampled by Minotaur King!"; msgTimer = 60;
+                      } else {
+                          currentLevel--;
+                          nextLevel();
+                          break;
+                      }
+                  }
               }
           }
       }
@@ -526,12 +727,12 @@
       let moveSpeed = 0.1;
       const rotSpeed = 0.05;
       
-      if (keys['Shift']) moveSpeed = 0.2;
-      if (speedBoost) moveSpeed *= 1.5;
+      if (keys['Shift']) moveSpeed *= 1.5;
+      if (speedShoesTimer > 0 || speedBoost) moveSpeed *= 2.0;
       
       let tryMove = (mx, my) => {
           let val = map[Math.floor(mx)] && map[Math.floor(mx)][Math.floor(my)];
-          if ([0,2,3,5,6,7,8,9,10,11,12,13].includes(val)) return true;
+          if ([0,2,3,5,6,7,8,9,10,11,12,13,14,15].includes(val)) return true;
           if (val === 4) {
               if (keysHeld > 0) {
                   keysHeld--;
@@ -581,22 +782,27 @@
           playTone(200, 'sawtooth', 0.2);
           score = Math.max(0, score - 50);
           pX = 1.5; pY = 1.5;
-          addParticles(W/2, H/2, '#ff00ff', 20);
+          addParticles(W/2, H/2, '#ff3300', 20);
+          msgText = "Burnt by Lava Trap!"; msgTimer = 60;
       } else if (curVal === 7) {
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(400, 'square', 0.1);
           addParticles(W/2, H/2, '#aaaaaa', 10);
       } else if (curVal === 8) {
+          pathfinderCharges++;
           hasCompass = 1;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(700, 'square', 0.2);
           addParticles(W/2, H/2, '#00ffff', 15);
+          msgText = "+1 Pathfinder!"; msgTimer = 60;
       } else if (curVal === 9) {
+          speedShoesCharges++;
           speedBoost = 1;
           score += 50;
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(600, 'sine', 0.2);
           addParticles(W/2, H/2, '#ffffff', 15);
+          msgText = "+1 Speed Shoes!"; msgTimer = 60;
       } else if (curVal === 10) {
           let found = false;
           for(let i=0; i<map.length; i++) {
@@ -633,6 +839,18 @@
           map[Math.floor(pX)][Math.floor(pY)] = 0;
           playTone(700, 'square', 0.2);
           addParticles(W/2, H/2, '#8b4513', 15);
+          msgText = "+1 Pickaxe!"; msgTimer = 60;
+      } else if (curVal === 14) {
+          stunSprayCharges++;
+          map[Math.floor(pX)][Math.floor(pY)] = 0;
+          playTone(700, 'square', 0.2);
+          addParticles(W/2, H/2, '#00ccff', 15);
+          msgText = "+1 Stun Spray!"; msgTimer = 60;
+      } else if (curVal === 15) {
+          playTone(200, 'sawtooth', 0.5);
+          score = Math.max(0, score - 150);
+          pX = 1.5; pY = 1.5;
+          msgText = "Attacked by Minotaur King!"; msgTimer = 60;
       }
 
       if (keys['ArrowRight'] || keys['d']) {
@@ -722,15 +940,17 @@
           let texX = Math.floor(wallX * 16) & 15;
           
           if (hit === 7) hit = 1;
-          if (hit < 1 || hit > 13) hit = 1;
+          if (hit < 1 || hit > 15) hit = 1;
           let tex = textures[hit];
           
           let step = 16 / lineHeight;
           let texPos = (actualStart - H / 2 + lineHeight / 2) * step;
           
-          let fog = 1.0 - perpWallDist / 12.0;
+          let maxDist = (currentLevel >= 20) ? 4.5 : ((currentLevel >= 10) ? 7.0 : 12.0);
+          if (pathfinderTimer > 0) maxDist = 14.0;
+          let fog = 1.0 - perpWallDist / maxDist;
           fog = Math.max(0.1, Math.min(1.0, fog));
-          if (currentLevel >= 15 && perpWallDist > 4.5) fog = 0.0;
+          if (currentLevel >= 15 && perpWallDist > maxDist && pathfinderTimer <= 0) fog = 0.0;
           let sideMult = (side === 1) ? 0.75 : 1.0;
           
           for (let y = actualStart; y <= actualEnd; y++) {
@@ -757,7 +977,7 @@
       // 4. Equipment HUD & Overlay
       if (gameState === 1) {
           // Held Compass
-          if (hasCompass) {
+          if (hasCompass || pathfinderTimer > 0) {
               ctx.save();
               ctx.beginPath();
               ctx.arc(27, H - 27, 16, 0, Math.PI * 2);
@@ -821,31 +1041,30 @@
           ctx.fillText(`Games: ${totalGames} Escapes: ${totalEscapes}`, W/2 - 70, H/2 + 30);
       } else if (gameState === 2) {
           let elapsed = (endTime - startTime) / 1000;
-          ctx.fillText("You Escaped!", W/2 - 40, H/2 - 20);
-          ctx.fillText("Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 70, H/2);
+          ctx.fillText("You Escaped 35 Stages!", W/2 - 70, H/2 - 20);
+          ctx.fillText("Score: " + score + " Time: " + elapsed.toFixed(1) + "s", W/2 - 80, H/2);
           ctx.fillText("Best: " + bestTime.toFixed(1) + "s", W/2 - 40, H/2 + 20);
           ctx.fillText("Press ENTER to play again", W/2 - 80, H/2 + 40);
       } else {
           let elapsed = (Date.now() - startTime) / 1000;
-          ctx.fillText("Score: " + score + " Keys: " + keysHeld + " Pick: " + hasPickaxe, 10, 20);
-          ctx.fillText("Level: " + (currentLevel+1), 10, 35);
-          ctx.fillText("Time: " + elapsed.toFixed(1), 10, 50);
-          if (bestTime < 9999) ctx.fillText("Best: " + bestTime.toFixed(1), 10, 65);
-          ctx.fillText("S:Save L:Load", W - 90, 20);
+          ctx.fillText(`Lvl:${currentLevel+1}/35 Key:${keysHeld} P:${hasPickaxe} C:${pathfinderCharges} S:${speedShoesCharges} F:${stunSprayCharges}`, 10, 15);
+          ctx.fillText(`Score:${score} Time:${elapsed.toFixed(1)}s`, 10, 30);
+          ctx.fillText("V:Save L:Load", W - 90, 15);
           
           if (msgTimer > 0) {
               ctx.fillStyle = 'yellow';
-              ctx.fillText(msgText, W/2 - 40, 30);
+              ctx.fillText(msgText, W/2 - 50, 45);
               ctx.fillStyle = 'white';
           }
           
           // 6. Minimap
-          if (hasCompass) {
+          if (hasCompass || pathfinderTimer > 0 || currentLevel < 15) {
               let mmW = map.length;
               let mmH = map[0].length;
               let mmS = 5;
               if (mmW > 15) mmS = 4;
               if (mmW > 23) mmS = 3;
+              if (mmW > 35) mmS = 2;
               const mmX = W - 10 - mmW * mmS;
               const mmY = 10;
               
@@ -854,18 +1073,25 @@
               
               for (let i = 0; i < mmW; i++) {
                   for (let j = 0; j < mmH; j++) {
+                      if (currentLevel >= 15 && pathfinderTimer <= 0) {
+                          let distToPlayer = Math.sqrt((i - pX)**2 + (j - pY)**2);
+                          if (distToPlayer > 5.5) continue;
+                      }
                       let v = map[i][j];
-                      if (v === 1 || v === 7) ctx.fillStyle = '#999';
+                      if (isPathTile[i] && isPathTile[i][j] && pathfinderTimer > 0) ctx.fillStyle = '#0ff';
+                      else if (v === 1 || v === 7) ctx.fillStyle = '#999';
                       else if (v === 2) ctx.fillStyle = '#0f0';
                       else if (v === 3) ctx.fillStyle = '#ff0';
                       else if (v === 4) ctx.fillStyle = '#00f';
                       else if (v === 5) ctx.fillStyle = '#f80';
-                      else if (v === 6) ctx.fillStyle = '#909';
+                      else if (v === 6) ctx.fillStyle = '#f30';
                       else if (v === 8) ctx.fillStyle = '#0ff';
-                      else if (v === 9) ctx.fillStyle = '#fff';
+                      else if (v === 9) ctx.fillStyle = '#ff0';
                       else if (v === 10 || v === 11) ctx.fillStyle = '#f0f';
                       else if (v === 12) ctx.fillStyle = '#ff3232';
                       else if (v === 13) ctx.fillStyle = '#964b00';
+                      else if (v === 14) ctx.fillStyle = '#00ccff';
+                      else if (v === 15) ctx.fillStyle = '#ffd700';
                       else ctx.fillStyle = '#141419';
                       ctx.fillRect(mmX + i * mmS, mmY + j * mmS, mmS, mmS);
                   }
