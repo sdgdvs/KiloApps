@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVault</title>
+    <title>KVault - Secure Password & Note Manager</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
@@ -100,10 +100,12 @@
             box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
         }
 
-        .btn:hover {
+        .btn:hover, .btn:focus-visible {
             background-color: var(--primary-hover);
             transform: translateY(-2px);
             box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+            outline: 2px solid var(--primary-accent);
+            outline-offset: 2px;
         }
         
         .btn:active {
@@ -115,7 +117,7 @@
             box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
         }
         
-        .btn.danger:hover {
+        .btn.danger:hover, .btn.danger:focus-visible {
             background-color: var(--danger-hover);
             box-shadow: 0 6px 16px rgba(255, 71, 87, 0.3);
         }
@@ -126,7 +128,7 @@
             box-shadow: none;
         }
 
-        .btn.secondary:hover {
+        .btn.secondary:hover, .btn.secondary:focus-visible {
             background: var(--glass-hover);
             border-color: rgba(255, 255, 255, 0.2);
         }
@@ -145,7 +147,7 @@
             letter-spacing: 0.3px;
         }
 
-        input[type="text"], input[type="password"], textarea {
+        input[type="text"], input[type="password"], textarea, select {
             background-color: var(--input-bg);
             border: 1px solid var(--glass-border);
             color: white;
@@ -158,7 +160,7 @@
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             border-color: var(--primary-accent);
             box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
         }
@@ -239,6 +241,7 @@
             line-height: 1.4;
             color: rgba(255,255,255,0.9);
             border: 1px solid rgba(0,0,0,0.2);
+            user-select: text;
         }
         
         .secret-item-value.visible {
@@ -350,24 +353,24 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="app-container">
         <div class="header">
-            <h1>🔒 KVault</h1>
+            <h1><span aria-hidden="true">🔒</span> KVault</h1>
             <div style="display:flex; align-items:center; gap:10px;">
-                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="showHelp()">Help</button>
+                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="showHelp()" aria-label="Open Help Dialog">Help</button>
                 <div id="auth-controls" style="display:none; align-items:center; gap:10px;">
-                    <select id="theme-select" onchange="updateTheme()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+                    <select id="theme-select" onchange="updateTheme()" aria-label="Select Color Theme" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
                         <option value="dark">Dark Theme</option>
                         <option value="light">Light Theme</option>
                         <option value="neon">Neon Theme</option>
                     </select>
-                    <select id="auto-lock-select" onchange="updateAutoLock()" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+                    <select id="auto-lock-select" onchange="updateAutoLock()" aria-label="Select Auto Lock Timeout" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
                         <option value="60000">Lock: 1 min</option>
                         <option value="300000">Lock: 5 min</option>
                         <option value="900000">Lock: 15 min</option>
                         <option value="0">Lock: Never</option>
                     </select>
-                    <button class="btn" onclick="lockVault()">Lock Vault</button>
+                    <button class="btn" onclick="lockVault()" aria-label="Lock Vault Now">Lock Vault</button>
                 </div>
             </div>
         </div>
@@ -381,31 +384,32 @@
                         <p id="auth-desc" style="margin:0; opacity:0.7; font-size:14px; line-height: 1.5;">Enter your master password to decrypt your vault.</p>
                     </div>
                     <div class="input-group">
-                        <input type="password" id="master-password" placeholder="Master Password" onkeyup="checkStrength(); if(event.key === 'Enter') handleAuth()">
+                        <label for="master-password">Master Password</label>
+                        <input type="password" id="master-password" placeholder="Master Password" onkeyup="checkStrength(); if(event.key === 'Enter') handleAuth()" aria-describedby="auth-error strength-text" autocomplete="current-password">
                         <div id="strength-bar-container" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; display: none;">
                             <div id="strength-bar" style="height: 100%; width: 0%; background: var(--danger-accent); transition: all 0.3s;"></div>
                         </div>
                         <div id="strength-text" style="font-size: 12px; text-align: right; margin-top: 2px; color: rgba(255,255,255,0.5); display: none;"></div>
                     </div>
                     <button class="btn" style="width: 100%; margin-top: 10px; padding: 14px;" onclick="handleAuth()" id="auth-btn">Unlock Vault</button>
-                    <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:16px; text-align: center; font-weight: 500;">Incorrect password. Please try again.</p>
+                    <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:16px; text-align: center; font-weight: 500;" role="alert">Incorrect password. Please try again.</p>
                 </div>
             </div>
 
             <!-- Main Vault View -->
             <div id="view-vault" class="view-section">
-                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 24px;">
+                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
                     <h2 style="margin:0; font-weight: 600;">Your Secrets</h2>
-                    <div style="display:flex; gap: 10px; align-items: center;">
-                        <input type="text" id="search-input" placeholder="Search..." onkeyup="filterSecrets()" style="padding: 10px 14px; width: 140px; font-size: 14px; margin-right: 5px;">
-                        <button class="btn secondary" onclick="importVault()">Import</button>
-                        <button class="btn secondary" onclick="exportVault()">Export</button>
-                        <button class="btn secondary" onclick="copyVaultBackup()" title="Copy Backup to Clipboard">Copy</button>
-                        <button class="btn danger" style="padding: 12px; background: rgba(255, 71, 87, 0.2); border-color: rgba(255, 71, 87, 0.3); color: #ff4757; box-shadow: none;" onclick="clearAppClipboard()" title="Clear Clipboard">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="9" y1="14" x2="15" y2="14"></line><line x1="12" y1="11" x2="12" y2="17"></line></svg>
+                    <div style="display:flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="search-input" placeholder="Search secrets..." onkeyup="filterSecrets()" aria-label="Search Secrets" style="padding: 10px 14px; width: 140px; font-size: 14px; margin-right: 5px;">
+                        <button class="btn secondary" onclick="importVault()" aria-label="Import Vault JSON Backup">Import</button>
+                        <button class="btn secondary" onclick="exportVault()" aria-label="Export Vault Encrypted JSON">Export</button>
+                        <button class="btn secondary" onclick="copyVaultBackup()" title="Copy Encrypted Backup to Clipboard" aria-label="Copy Encrypted Backup">Copy</button>
+                        <button class="btn danger" style="padding: 12px; background: rgba(255, 71, 87, 0.2); border-color: rgba(255, 71, 87, 0.3); color: #ff4757; box-shadow: none;" onclick="clearAppClipboard()" title="Clear Clipboard" aria-label="Clear Clipboard">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="9" y1="14" x2="15" y2="14"></line><line x1="12" y1="11" x2="12" y2="17"></line></svg>
                         </button>
-                        <button class="btn" onclick="showAddSecret()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <button class="btn" onclick="showAddSecret()" aria-label="Add New Secret Item">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                             Add Secret
                         </button>
                     </div>
@@ -416,7 +420,7 @@
                 </div>
                 
                 <div id="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5; margin-bottom: 16px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5; margin-bottom: 16px;" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                     <p>Your vault is empty.</p>
                     <button class="btn secondary" onclick="showAddSecret()">Create your first secret</button>
                 </div>
@@ -427,7 +431,7 @@
                 <div class="card" style="max-width: 500px; margin: 20px auto; width: 100%;">
                     <h2 style="margin:0 0 24px 0;">Add New Secret</h2>
                     <div class="input-group">
-                        <label>Category</label>
+                        <label for="new-secret-category">Category</label>
                         <select id="new-secret-category" style="background-color: var(--input-bg); border: 1px solid var(--glass-border); color: white; padding: 14px; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 15px; outline: none;">
                             <option value="General">General</option>
                             <option value="Login">Login</option>
@@ -436,15 +440,15 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <label>Title / Identifier</label>
+                        <label for="new-secret-title">Title / Identifier</label>
                         <input type="text" id="new-secret-title" placeholder="e.g. Github Password or API Key">
                     </div>
                     <div class="input-group">
-                        <label>Secret Value</label>
+                        <label for="new-secret-value">Secret Value</label>
                         <div style="display:flex; gap:10px;">
                             <textarea id="new-secret-value" placeholder="Enter password, token, or secure note here..." style="flex:1;"></textarea>
-                            <button class="btn secondary" style="align-self: flex-start; padding: 14px;" onclick="generatePassword()" title="Generate Password">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                            <button class="btn secondary" style="align-self: flex-start; padding: 14px;" onclick="generatePassword()" title="Generate Password" aria-label="Generate Random Password">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
                             </button>
                         </div>
                     </div>
@@ -457,18 +461,18 @@
         </div>
     </div>
     
-    <div class="notification" id="notification">Action successful</div>
+    <div class="notification" id="notification" role="status" aria-live="polite">Action successful</div>
 
-    <div class="modal-overlay" id="help-modal">
+    <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <div class="modal-content">
-            <h3>📖 KVault Help & Tutorial</h3>
+            <h3 id="help-title">📖 KVault Help & Security Guide</h3>
             <p>Welcome to KVault! Your secure, client-side encrypted password manager and secure note storage.</p>
             <ul>
-                <li><strong>Encryption:</strong> Uses AES-GCM 256-bit encryption. Your data is encrypted with a master password that is NEVER stored. If you lose it, your data cannot be recovered.</li>
-                <li><strong>Auto-Lock:</strong> Set a timeout to automatically lock your vault when you are away.</li>
-                <li><strong>Shortcuts:</strong> <code>Ctrl+S</code> saves the vault or current secret, <code>Ctrl+L</code> locks the vault instantly.</li>
-                <li><strong>Import/Export:</strong> Backup your vault to a JSON file. You can drag & drop a backup file onto the screen to load it.</li>
-                <li><strong>Clipboard Security:</strong> Use the "Clear Clipboard" (trash icon) to wipe sensitive data after pasting it.</li>
+                <li><strong>Encryption:</strong> Uses AES-GCM 256-bit encryption. Data is encrypted locally with your Master Password which is NEVER stored.</li>
+                <li><strong>Auto-Lock:</strong> Automatically locks your vault after inactivity.</li>
+                <li><strong>Shortcuts:</strong> <code>Ctrl+S</code> saves vault/secret, <code>Ctrl+L</code> locks instantly.</li>
+                <li><strong>Import/Export:</strong> Backup or restore using encrypted JSON files.</li>
+                <li><strong>Clipboard Security:</strong> Click "Clear Clipboard" after copying passwords to protect sensitive credentials.</li>
             </ul>
             <button class="btn close-modal" onclick="closeHelp()">Got it</button>
         </div>
@@ -480,6 +484,16 @@
         let vaultData = [];
         let autoLockTimeout = 60000;
         let idleTimer = null;
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         function showHelp() {
             const modal = document.getElementById('help-modal');
@@ -541,12 +555,12 @@
             for (const key in theme) {
                 document.documentElement.style.setProperty(key, theme[key]);
             }
-            localStorage.setItem('kvault_theme', themeName);
+            try { localStorage.setItem('kvault_theme', themeName); } catch(e){}
         }
 
         function updateAutoLock() {
-            autoLockTimeout = parseInt(document.getElementById('auto-lock-select').value);
-            localStorage.setItem('kvault_autolock', autoLockTimeout);
+            autoLockTimeout = parseInt(document.getElementById('auto-lock-select').value) || 0;
+            try { localStorage.setItem('kvault_autolock', autoLockTimeout); } catch(e){}
             resetIdleTimer();
         }
 
@@ -562,8 +576,8 @@
             }
         }
 
-        ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
-            document.addEventListener(evt, resetIdleTimer);
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, { passive: true });
         });
         
         // --- Cryptography Utilities (Web Crypto API) ---
@@ -615,7 +629,7 @@
                 const dec = new TextDecoder();
                 return dec.decode(decrypted);
             } catch (e) {
-                return null; // Decryption failed (wrong key or tampered data)
+                return null;
             }
         }
         
@@ -624,41 +638,51 @@
         const STORAGE_KEY = 'kvault_data';
         
         function initAuthView() {
-            const savedTheme = localStorage.getItem('kvault_theme') || 'dark';
+            let savedTheme = 'dark';
+            try { savedTheme = localStorage.getItem('kvault_theme') || 'dark'; } catch(e){}
             const themeSel = document.getElementById('theme-select');
             if (themeSel) {
                 themeSel.value = savedTheme;
                 updateTheme();
             }
 
-            const savedAutoLock = localStorage.getItem('kvault_autolock');
+            let savedAutoLock = null;
+            try { savedAutoLock = localStorage.getItem('kvault_autolock'); } catch(e){}
             if (savedAutoLock !== null) {
                 autoLockTimeout = parseInt(savedAutoLock);
                 const sel = document.getElementById('auto-lock-select');
                 if (sel) sel.value = autoLockTimeout;
             }
             
-            const stored = localStorage.getItem(STORAGE_KEY);
+            let stored = null;
+            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             if (stored) {
                 document.getElementById('auth-title').innerText = "Unlock Vault";
                 document.getElementById('auth-desc').innerText = "Enter your master password to decrypt.";
-                document.getElementById('auth-btn').innerText = "Unlock";
+                document.getElementById('auth-btn').innerText = "Unlock Vault";
             } else {
                 document.getElementById('auth-title').innerText = "Setup Vault";
                 document.getElementById('auth-desc').innerText = "Create a master password. Do not lose it!";
-                document.getElementById('auth-btn').innerText = "Initialize";
+                document.getElementById('auth-btn').innerText = "Initialize Vault";
             }
+            setTimeout(() => {
+                const passInput = document.getElementById('master-password');
+                if (passInput) passInput.focus();
+            }, 100);
         }
         
         async function handleAuth() {
             const pwd = document.getElementById('master-password').value;
-            if (!pwd) return;
+            if (!pwd) {
+                showNotification("Please enter a master password", "error");
+                return;
+            }
             
-            const stored = localStorage.getItem(STORAGE_KEY);
+            let stored = null;
+            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             document.getElementById('auth-error').style.display = 'none';
             
             if (stored) {
-                // Unlock
                 try {
                     const parsed = JSON.parse(stored);
                     const salt = new Uint8Array(parsed.salt);
@@ -675,13 +699,12 @@
                     document.getElementById('master-password').value = '';
                     checkStrength();
                     showVault();
-                    showNotification("Vault unlocked");
+                    showNotification("Vault unlocked successfully");
                 } catch (e) {
                     console.error(e);
                     document.getElementById('auth-error').style.display = 'block';
                 }
             } else {
-                // Setup new
                 const salt = window.crypto.getRandomValues(new Uint8Array(16));
                 masterKey = await deriveKey(pwd, salt);
                 vaultData = [];
@@ -689,7 +712,7 @@
                 document.getElementById('master-password').value = '';
                 checkStrength();
                 showVault();
-                showNotification("Vault initialized");
+                showNotification("Vault initialized successfully");
             }
         }
 
@@ -741,9 +764,12 @@
             if (salt) {
                 storedSalt = salt;
             } else {
-                const stored = localStorage.getItem(STORAGE_KEY);
+                let stored = null;
+                try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
                 if (stored) {
                     storedSalt = new Uint8Array(JSON.parse(stored).salt);
+                } else {
+                    storedSalt = window.crypto.getRandomValues(new Uint8Array(16));
                 }
             }
             
@@ -755,14 +781,19 @@
                 vault: encryptedVault
             };
             
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            } catch(e) {
+                showNotification("Error saving to local storage", "error");
+            }
         }
         
         function lockVault() {
             masterKey = null;
             vaultData = [];
-            document.getElementById('master-password').value = '';
-            if (typeof checkStrength === 'function') checkStrength();
+            const passElem = document.getElementById('master-password');
+            if (passElem) passElem.value = '';
+            checkStrength();
             switchView('view-auth');
             document.getElementById('auth-controls').style.display = 'none';
             initAuthView();
@@ -775,7 +806,8 @@
         
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(viewId).classList.add('active');
+            const target = document.getElementById(viewId);
+            if (target) target.classList.add('active');
         }
         
         function showVault() {
@@ -790,7 +822,7 @@
             document.getElementById('new-secret-title').value = '';
             document.getElementById('new-secret-value').value = '';
             document.getElementById('new-secret-category').value = 'General';
-            document.getElementById('new-secret-title').focus();
+            setTimeout(() => document.getElementById('new-secret-title').focus(), 100);
         }
         
         function generatePassword() {
@@ -817,7 +849,7 @@
             }
             
             vaultData.push({
-                id: Date.now().toString(),
+                id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
                 title: title,
                 value: value,
                 category: category,
@@ -830,7 +862,7 @@
         }
         
         async function deleteSecret(id) {
-            if(confirm("Delete this secret permanently?")) {
+            if (confirm("Are you sure you want to delete this secret permanently?")) {
                 vaultData = vaultData.filter(s => s.id !== id);
                 await saveVaultToStorage();
                 renderSecrets();
@@ -841,30 +873,36 @@
         function toggleSecretValue(id) {
             const el = document.getElementById('secret-val-' + id);
             const btn = document.getElementById('secret-btn-toggle-' + id);
+            if (!el || !btn) return;
             if (el.classList.contains('visible')) {
                 el.classList.remove('visible');
                 btn.innerText = 'Reveal';
+                btn.setAttribute('aria-expanded', 'false');
             } else {
                 el.classList.add('visible');
                 btn.innerText = 'Hide';
+                btn.setAttribute('aria-expanded', 'true');
             }
         }
         
         function copySecret(val) {
+            if (!val) return;
             navigator.clipboard.writeText(val).then(() => {
-                showNotification("Copied to clipboard!");
+                showNotification("Copied secret to clipboard!");
             }).catch(() => {
-                showNotification("Failed to copy");
+                showNotification("Failed to copy secret", "error");
             });
         }
         
         function filterSecrets() {
-            const query = document.getElementById('search-input').value.toLowerCase();
+            const queryElem = document.getElementById('search-input');
+            const query = queryElem ? queryElem.value.toLowerCase() : '';
             const items = document.querySelectorAll('.secret-item');
             let visibleCount = 0;
             
             items.forEach(item => {
-                const title = item.querySelector('.secret-item-header span').innerText.toLowerCase();
+                const titleSpan = item.querySelector('.secret-item-header span');
+                const title = titleSpan ? titleSpan.innerText.toLowerCase() : '';
                 if (title.includes(query)) {
                     item.style.display = 'flex';
                     visibleCount++;
@@ -878,7 +916,8 @@
                 if (visibleCount === 0) {
                     empty.style.display = 'block';
                     empty.querySelector('p').innerText = 'No secrets match your search.';
-                    empty.querySelector('button').style.display = 'none';
+                    const btn = empty.querySelector('button');
+                    if (btn) btn.style.display = 'none';
                 } else {
                     empty.style.display = 'none';
                 }
@@ -893,20 +932,22 @@
             if (vaultData.length === 0) {
                 empty.style.display = 'block';
                 empty.querySelector('p').innerText = 'Your vault is empty.';
-                empty.querySelector('button').style.display = 'inline-flex';
+                const btn = empty.querySelector('button');
+                if (btn) btn.style.display = 'inline-flex';
                 list.style.display = 'none';
             } else {
                 empty.style.display = 'none';
                 list.style.display = 'grid';
                 
-                    vaultData.forEach((secret, index) => {
+                vaultData.forEach((secret, index) => {
                     const item = document.createElement('div');
                     item.className = 'secret-item';
                     item.style.animationDelay = `${index * 0.05}s`;
                     
-                    const safeTitle = secret.title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    const safeCat = secret.category ? secret.category.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+                    const safeTitle = escapeHtml(secret.title);
+                    const safeCat = escapeHtml(secret.category || '');
                     const catBadge = safeCat ? `<span style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${safeCat}</span>` : '';
+                    
                     item.innerHTML = `
                         <div class="secret-item-header">
                             <span>${safeTitle}</span>
@@ -914,18 +955,24 @@
                         </div>
                         <div class="secret-item-value" id="secret-val-${secret.id}"></div>
                         <div class="secret-actions">
-                            <button class="btn secondary" id="secret-btn-toggle-${secret.id}">Reveal</button>
+                            <button class="btn secondary" id="secret-btn-toggle-${secret.id}" aria-expanded="false">Reveal</button>
                             <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-copy-${secret.id}">Copy</button>
                             <button class="btn danger" id="secret-btn-delete-${secret.id}">Delete</button>
                         </div>
                     `;
                     list.appendChild(item);
                     
-                    document.getElementById(`secret-val-${secret.id}`).textContent = secret.value;
+                    const valContainer = document.getElementById(`secret-val-${secret.id}`);
+                    if (valContainer) valContainer.textContent = secret.value;
                     
-                    document.getElementById(`secret-btn-toggle-${secret.id}`).onclick = () => toggleSecretValue(secret.id);
-                    document.getElementById(`secret-btn-copy-${secret.id}`).onclick = () => copySecret(secret.value);
-                    document.getElementById(`secret-btn-delete-${secret.id}`).onclick = () => deleteSecret(secret.id);
+                    const toggleBtn = document.getElementById(`secret-btn-toggle-${secret.id}`);
+                    if (toggleBtn) toggleBtn.onclick = () => toggleSecretValue(secret.id);
+                    
+                    const copyBtn = document.getElementById(`secret-btn-copy-${secret.id}`);
+                    if (copyBtn) copyBtn.onclick = () => copySecret(secret.value);
+                    
+                    const delBtn = document.getElementById(`secret-btn-delete-${secret.id}`);
+                    if (delBtn) delBtn.onclick = () => deleteSecret(secret.id);
                 });
                 
                 if (document.getElementById('search-input')) {
@@ -936,10 +983,10 @@
         
         function showNotification(msg, type='success') {
             const notif = document.getElementById('notification');
+            if (!notif) return;
             notif.innerText = msg;
             notif.className = `notification show ${type}`;
             
-            // Clear existing timeout if any
             if (window.notifTimeout) clearTimeout(window.notifTimeout);
             
             window.notifTimeout = setTimeout(() => {
@@ -948,13 +995,14 @@
         }
         
         function copyVaultBackup() {
-            const stored = localStorage.getItem(STORAGE_KEY);
+            let stored = null;
+            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             if (!stored) {
-                showNotification("Vault is empty", "error");
+                showNotification("Vault is empty or not configured", "error");
                 return;
             }
             navigator.clipboard.writeText(stored).then(() => {
-                showNotification("Backup copied to clipboard");
+                showNotification("Encrypted backup copied to clipboard");
             }).catch(() => {
                 showNotification("Failed to copy backup", "error");
             });
@@ -969,7 +1017,8 @@
         }
 
         function exportVault() {
-            const stored = localStorage.getItem(STORAGE_KEY);
+            let stored = null;
+            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             if (!stored) {
                 showNotification("Vault is empty", "error");
                 return;
@@ -981,7 +1030,7 @@
             a.download = "kvault_backup.json";
             a.click();
             URL.revokeObjectURL(url);
-            showNotification("Vault exported");
+            showNotification("Vault backup exported");
         }
 
         function importVault() {
@@ -1000,10 +1049,10 @@
                             lockVault();
                             showNotification("Vault imported successfully. Please unlock.");
                         } else {
-                            showNotification("Invalid vault file", "error");
+                            showNotification("Invalid vault backup file format", "error");
                         }
                     } catch (err) {
-                        showNotification("Error parsing file", "error");
+                        showNotification("Error parsing backup file", "error");
                     }
                 };
                 reader.readAsText(file);
@@ -1027,6 +1076,11 @@
                     if (masterKey) {
                         lockVault();
                     }
+                }
+            } else if (e.key === 'Escape') {
+                const modal = document.getElementById('help-modal');
+                if (modal && modal.classList.contains('active')) {
+                    closeHelp();
                 }
             }
         });
@@ -1052,7 +1106,7 @@
             const container = document.querySelector('.container');
             if(container) container.style.borderColor = 'var(--glass-border)';
             
-            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 const file = e.dataTransfer.files[0];
                 const reader = new FileReader();
                 reader.onload = (ev) => {
@@ -1061,9 +1115,9 @@
                         if (data.salt && data.vault) {
                             localStorage.setItem(STORAGE_KEY, ev.target.result);
                             lockVault();
-                            showNotification("Vault dropped & imported. Please unlock.");
+                            showNotification("Vault backup dropped & imported. Please unlock.");
                         } else {
-                            showNotification("Invalid vault file", "error");
+                            showNotification("Invalid vault backup file format", "error");
                         }
                     } catch (err) {
                         showNotification("Error parsing dropped file", "error");
@@ -1075,7 +1129,6 @@
 
         // Init
         initAuthView();
-
     </script>
 </body>
 </html>
