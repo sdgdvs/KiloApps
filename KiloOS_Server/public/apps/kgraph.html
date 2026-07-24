@@ -1,222 +1,1111 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KGraph - Advanced Function Plotter & Calculus Suite</title>
 <style>
-  body {
-    background: #1a1a1a;
-    color: #e0e0e0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 20px;
-    height: 100vh;
+  * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background: #0f111a;
+    color: #e2e8f0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
-  .header {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 16px;
+  
+  /* Header Bar */
+  .app-header {
+    background: rgba(23, 27, 44, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(12px);
+    z-index: 10;
+  }
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .app-icon {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
     color: #fff;
-    text-align: center;
-    letter-spacing: 1px;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
   }
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+  .app-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, #ffffff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
-  .input-group {
+  
+  .header-actions {
     display: flex;
     gap: 8px;
-    margin-bottom: 16px;
     align-items: center;
   }
-  .func-label {
-    font-size: 18px;
-    font-weight: bold;
-    color: #5a8bd4;
-  }
-  input[type="text"] {
-    flex: 1;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
-    padding: 10px 14px;
-    border-radius: 8px;
-    outline: none;
-    font-family: 'Consolas', monospace;
-    font-size: 15px;
-    transition: all 0.3s;
-  }
-  input[type="text"]:focus {
-    border-color: #5a8bd4;
-    box-shadow: 0 0 0 3px rgba(90, 139, 212, 0.3);
-  }
-  button.plot-btn {
-    background: linear-gradient(135deg, #5a8bd4, #3a6baf);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
+  
+  .btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    padding: 7px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
-    font-weight: bold;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(90, 139, 212, 0.4);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
-  button.plot-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(90, 139, 212, 0.6);
+  .btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.25);
   }
-  button.plot-btn:active {
-    transform: translateY(0);
+  .btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
   }
-  .canvas-container {
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #60a5fa, #1d4ed8);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.6);
+  }
+  .btn-accent {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: none;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+  }
+  .btn-accent:hover {
+    background: linear-gradient(135deg, #34d399, #047857);
+  }
+
+  /* Main Workspace Layout */
+  .workspace {
     flex: 1;
-    background: #0a0a0a;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    display: flex;
     position: relative;
     overflow: hidden;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
   }
-  canvas {
+  
+  /* Sidebar Panels */
+  .sidebar {
+    width: 380px;
+    background: rgba(19, 23, 36, 0.95);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+    transition: width 0.3s ease;
+  }
+  
+  .tab-nav {
+    display: flex;
+    background: rgba(15, 17, 26, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 11px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .tab-btn:hover {
+    color: #94a3b8;
+  }
+  .tab-btn.active {
+    color: #38bdf8;
+    border-bottom-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.05);
+  }
+  
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: none;
+  }
+  .tab-content.active {
+    display: block;
+  }
+  
+  /* Section Box */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #64748b;
+    margin-bottom: 12px;
+  }
+  
+  /* Function Inputs */
+  .func-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .func-card:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .func-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .func-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .color-badge {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .func-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: #94a3b8;
+  }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .input-row {
+    display: flex;
+    gap: 6px;
+  }
+  .func-input {
+    flex: 1;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f8fafc;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  .func-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  }
+  
+  /* Form Controls & Tools */
+  .control-group {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+  }
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .field-row:last-child {
+    margin-bottom: 0;
+  }
+  .field-label {
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .field-input {
+    width: 110px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    text-align: right;
+    outline: none;
+  }
+  .field-select {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+  }
+  
+  .calc-result-box {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    color: #38bdf8;
+  }
+  
+  /* Results Tables */
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .result-table th, .result-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .result-table th {
+    color: #94a3b8;
+    font-weight: 600;
+  }
+  .result-table tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+  }
+  
+  /* Preset Items */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .preset-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .preset-card:hover {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.4);
+  }
+  .preset-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 4px;
+  }
+  .preset-expr {
+    font-family: monospace;
+    font-size: 10px;
+    color: #94a3b8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Canvas Area */
+  .canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: #090b11;
+    overflow: hidden;
+  }
+  canvas#graphCanvas {
     width: 100%;
     height: 100%;
     display: block;
+    cursor: crosshair;
   }
-  .error-msg {
-    color: #ff6b6b;
-    font-size: 13px;
-    margin-top: -10px;
-    margin-bottom: 10px;
-    min-height: 15px;
+  
+  /* Floating Overlay Readout */
+  .cursor-readout {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    color: #e2e8f0;
+    backdrop-filter: blur(8px);
+    pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+    z-index: 4;
+  }
+  .readout-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 3px;
+  }
+  .readout-line:last-child {
+    margin-bottom: 0;
+  }
+  .readout-val {
+    font-weight: bold;
+  }
+  
+  /* Canvas Controls Toolbar */
+  .canvas-tools {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+    background: rgba(15, 23, 42, 0.85);
+    padding: 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    z-index: 4;
+  }
+  .tool-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tool-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Error Toast */
+  .toast-err {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 6;
+  }
+  .toast-err.visible {
+    opacity: 1;
   }
 </style>
 </head>
 <body>
-  <div class="header">KGraph</div>
-  <div class="glass-panel">
-    <div class="input-group">
-      <span class="func-label">f(x) =</span>
-      <input type="text" id="funcInput" value="Math.sin(x)" placeholder="e.g. Math.sin(x) or x*x" onkeypress="handleKeyPress(event)">
-      <button class="plot-btn" onclick="plotGraph()">Plot</button>
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="title-group">
+      <div class="app-icon">f</div>
+      <div class="app-title">KGraph Studio</div>
     </div>
-    <div class="error-msg" id="errorMsg"></div>
-    <div class="canvas-container">
-      <canvas id="graphCanvas"></canvas>
+    <div class="header-actions">
+      <button class="btn" onclick="exportPNG()">📷 Save PNG</button>
+      <button class="btn" onclick="exportCSV()">📊 Export CSV</button>
+      <button class="btn" onclick="exportJSON()">💾 Save Config</button>
+      <label class="btn" style="cursor:pointer">
+        📂 Load Config
+        <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
+      </label>
+      <button class="btn btn-primary" onclick="replotAll()">▶ Plot</button>
     </div>
   </div>
 
+  <!-- Workspace -->
+  <div class="workspace">
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+      <div class="tab-nav">
+        <div class="tab-btn active" onclick="switchTab('tabFuncs')">Functions</div>
+        <div class="tab-btn" onclick="switchTab('tabCalc')">Calculus</div>
+        <div class="tab-btn" onclick="switchTab('tabRoots')">Analysis</div>
+        <div class="tab-btn" onclick="switchTab('tabPresets')">Presets</div>
+      </div>
+      
+      <!-- Functions Tab -->
+      <div class="tab-content active" id="tabFuncs">
+        <div class="section-title">Functions (y1 - y5)</div>
+        <div id="funcList"></div>
+      </div>
+      
+      <!-- Calculus Tab -->
+      <div class="tab-content" id="tabCalc">
+        <div class="section-title">Derivative & Integral Suite</div>
+        
+        <div class="control-group">
+          <div class="field-row">
+            <span class="field-label">Target Function</span>
+            <select class="field-select" id="calcTargetFunc" onchange="updateCalcResults()">
+              <option value="0">y1(x)</option>
+              <option value="1">y2(x)</option>
+              <option value="2">y3(x)</option>
+              <option value="3">y4(x)</option>
+              <option value="4">y5(x)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Point x₀</span>
+            <input type="number" step="0.1" class="field-input" id="calcX0" value="1.0" oninput="updateCalcResults()">
+          </div>
+          <div class="calc-result-box" id="derivativeResult">
+            f'(1.0) = ...
+          </div>
+        </div>
+        
+        <div class="control-group">
+          <div class="field-row">
+            <span class="field-label">Definite Integral ∫ [a, b]</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Lower Bound a</span>
+            <input type="number" step="0.5" class="field-input" id="intA" value="0.0" oninput="updateCalcResults()">
+          </div>
+          <div class="field-row">
+            <span class="field-label">Upper Bound b</span>
+            <input type="number" step="0.5" class="field-input" id="intB" value="3.14159" oninput="updateCalcResults()">
+          </div>
+          <div class="field-row">
+            <label class="checkbox-label" style="font-size:12px; color:#cbd5e1;">
+              <input type="checkbox" id="shadeIntegral" checked onchange="replotAll()">
+              Shade Region on Graph
+            </label>
+          </div>
+          <div class="calc-result-box" id="integralResult">
+            ∫ f(x) dx = ...
+          </div>
+        </div>
+      </div>
+      
+      <!-- Analysis / Roots Tab -->
+      <div class="tab-content" id="tabRoots">
+        <div class="section-title">Roots & Intersections</div>
+        
+        <div class="control-group">
+          <div class="field-row">
+            <span class="field-label">Function for Roots</span>
+            <select class="field-select" id="rootTargetFunc">
+              <option value="0">y1(x)</option>
+              <option value="1">y2(x)</option>
+              <option value="2">y3(x)</option>
+              <option value="3">y4(x)</option>
+              <option value="4">y5(x)</option>
+            </select>
+          </div>
+          <button class="btn btn-accent" style="width:100%; justify-content:center; margin-top:6px;" onclick="findRoots()">🔍 Find Roots in View</button>
+          <div id="rootsTableContainer"></div>
+        </div>
+        
+        <div class="control-group">
+          <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="findIntersections()">⚡ Find Function Intersections</button>
+          <div id="intersectionsTableContainer"></div>
+        </div>
+      </div>
+      
+      <!-- Presets Tab -->
+      <div class="tab-content" id="tabPresets">
+        <div class="section-title">Function Presets</div>
+        <div class="preset-grid" id="presetGrid"></div>
+      </div>
+      
+    </div>
+    
+    <!-- Canvas Area -->
+    <div class="canvas-wrap">
+      <canvas id="graphCanvas"></canvas>
+      
+      <!-- Floating Readout -->
+      <div class="cursor-readout" id="cursorReadout">
+        <div class="readout-line">
+          <span>x:</span> <span class="readout-val" id="readoutX">0.000</span>
+        </div>
+        <div id="readoutYList"></div>
+      </div>
+      
+      <!-- Canvas Tools Bar -->
+      <div class="canvas-tools">
+        <button class="tool-btn" onclick="zoomIn()" title="Zoom In">+</button>
+        <button class="tool-btn" onclick="zoomOut()" title="Zoom Out">-</button>
+        <button class="tool-btn" onclick="resetView()" title="Reset View">⟲</button>
+      </div>
+      
+      <!-- Error Toast -->
+      <div class="toast-err" id="toastErr"></div>
+    </div>
+    
+  </div>
+
   <script>
+    // Configuration & Data State
+    const FUNC_COLORS = ['#38bdf8', '#34d399', '#f43f5e', '#a855f7', '#fbbf24'];
+    const FUNC_NAMES = ['y1', 'y2', 'y3', 'y4', 'y5'];
+    
+    let functions = [
+      { expr: 'sin(x)', enabled: true, showDeriv: false },
+      { expr: 'cos(x)', enabled: true, showDeriv: false },
+      { expr: 'x^2 / 4 - 2', enabled: false, showDeriv: false },
+      { expr: 'exp(-x^2)', enabled: false, showDeriv: false },
+      { expr: 'x^3 - 3*x', enabled: false, showDeriv: false }
+    ];
+
+    let compiledFuncs = [];
+    
+    // Viewport Virtual Box
+    let view_cx = 0;
+    let view_cy = 0;
+    let view_scale = 10; // Half-width range
+    
+    // Computed Analysis Markers
+    let computedRoots = []; // [{x, y, funcIdx}]
+    let computedIntersections = []; // [{x, y, f1, f2}]
+    
+    // Mouse state
+    let isDragging = false;
+    let lastMouse = { x: 0, y: 0 };
+    let currentHoverX = 0;
+    
+    // DOM Elements
     const canvas = document.getElementById('graphCanvas');
     const ctx = canvas.getContext('2d');
     
-    // Virtual coordinates: x from -10 to 10
-    const RANGE_X = 10;
-    const RANGE_Y = 10;
-    
-    function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      plotGraph();
-    }
-    
-    window.addEventListener('resize', resizeCanvas);
-    
-    function drawGrid() {
-      const w = canvas.width;
-      const h = canvas.height;
+    // --- Expression Compiler ---
+    function compileMathExpr(str) {
+      if (!str || !str.trim()) return null;
+      let expr = str.trim();
       
-      ctx.clearRect(0, 0, w, h);
+      // Exponent substitution
+      expr = expr.replace(/\^/g, '**');
       
-      // Grid lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.lineWidth = 1;
+      // Replace Math functions
+      const funcs = ['sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sqrt', 'abs', 'log', 'exp', 'floor', 'ceil', 'round', 'sign', 'min', 'max'];
+      funcs.forEach(fn => {
+        const re = new RegExp('\\b' + fn + '\\b', 'g');
+        expr = expr.replace(re, 'Math.' + fn);
+      });
       
-      // Vertical grid
-      for(let x = -RANGE_X; x <= RANGE_X; x++) {
-        const px = (x + RANGE_X) / (2 * RANGE_X) * w;
-        ctx.beginPath();
-        ctx.moveTo(px, 0);
-        ctx.lineTo(px, h);
-        ctx.stroke();
-      }
+      expr = expr.replace(/\bln\b/g, 'Math.log');
+      expr = expr.replace(/\bPI\b/gi, 'Math.PI');
+      expr = expr.replace(/\bE\b/g, 'Math.E');
       
-      // Horizontal grid
-      for(let y = -RANGE_Y; y <= RANGE_Y; y++) {
-        const py = h - ((y + RANGE_Y) / (2 * RANGE_Y) * h);
-        ctx.beginPath();
-        ctx.moveTo(0, py);
-        ctx.lineTo(w, py);
-        ctx.stroke();
-      }
-      
-      // Axes
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 2;
-      
-      // Y axis
-      ctx.beginPath();
-      ctx.moveTo(w / 2, 0);
-      ctx.lineTo(w / 2, h);
-      ctx.stroke();
-      
-      // X axis
-      ctx.beginPath();
-      ctx.moveTo(0, h / 2);
-      ctx.lineTo(w, h / 2);
-      ctx.stroke();
-    }
-    
-    function handleKeyPress(e) {
-      if (e.key === 'Enter') plotGraph();
-    }
-    
-    function plotGraph() {
-      drawGrid();
-      const expr = document.getElementById('funcInput').value;
-      const errBox = document.getElementById('errorMsg');
-      errBox.innerText = '';
-      
-      if (!expr) return;
-      
-      const w = canvas.width;
-      const h = canvas.height;
-      
-      ctx.strokeStyle = '#5a8bd4';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      
-      let first = true;
-      
-      // Simple and extremely naive sanitization for eval
-      const safeExpr = expr.replace(/[^a-zA-Z0-9\.\+\-\*\/\(\) \bMath\.]/g, '');
+      // Implicit multiplication
+      expr = expr.replace(/(\d+)\s*([xX]|Math\.)/g, '$1*$2');
+      expr = expr.replace(/(\d+)\s*\(/g, '$1*(');
+      expr = expr.replace(/([xX])\s*([xX])/g, '$1*$2');
+      expr = expr.replace(/([xX])\s*(Math\.)/g, '$1*$2');
+      expr = expr.replace(/([xX])\s*\(/g, '$1*(');
+      expr = expr.replace(/\)\s*([xX]|Math\.|\d)/g, ')*$1');
+      expr = expr.replace(/\)\s*\(/g, ')*(');
       
       try {
-        for (let px = 0; px <= w; px += 2) { // Step by 2 pixels for performance
-          const x = (px / w) * (2 * RANGE_X) - RANGE_X;
+        const fn = new Function('x', `
+          try {
+            let v = (${expr});
+            return (typeof v === 'number' && !isNaN(v) && isFinite(v)) ? v : NaN;
+          } catch(e) {
+            return NaN;
+          }
+        `);
+        fn(0);
+        return fn;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function evalDeriv(fn, x, h = 1e-5) {
+      if (!fn) return NaN;
+      const y1 = fn(x + h);
+      const y0 = fn(x - h);
+      if (isNaN(y1) || isNaN(y0)) return NaN;
+      return (y1 - y0) / (2 * h);
+    }
+    
+    function evalIntegral(fn, a, b, n = 200) {
+      if (!fn || a >= b) return NaN;
+      if (n % 2 !== 0) n++;
+      const h = (b - a) / n;
+      let sum = fn(a) + fn(b);
+      for (let i = 1; i < n; i++) {
+        const x = a + i * h;
+        const val = fn(x);
+        if (isNaN(val)) return NaN;
+        sum += (i % 2 === 1 ? 4 : 2) * val;
+      }
+      return (h / 3) * sum;
+    }
+    
+    // --- UI Builders ---
+    function buildFuncCards() {
+      const container = document.getElementById('funcList');
+      container.innerHTML = '';
+      
+      functions.forEach((f, idx) => {
+        const card = document.createElement('div');
+        card.className = 'func-card';
+        card.innerHTML = `
+          <div class="func-header">
+            <div class="func-title">
+              <span class="color-badge" style="background:${FUNC_COLORS[idx]}"></span>
+              <span>${FUNC_NAMES[idx]}(x) =</span>
+            </div>
+            <div class="func-controls">
+              <label class="checkbox-label">
+                <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleFunc(${idx}, this.checked)">
+                Visible
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" ${f.showDeriv ? 'checked' : ''} onchange="toggleDeriv(${idx}, this.checked)">
+                f'
+              </label>
+            </div>
+          </div>
+          <div class="input-row">
+            <input type="text" class="func-input" value="${f.expr}" id="funcInput_${idx}" placeholder="e.g. sin(x)" oninput="updateFuncExpr(${idx}, this.value)">
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+    
+    const PRESETS = [
+      { name: 'Sine Wave', expr: 'sin(x)' },
+      { name: 'Cosine Wave', expr: 'cos(x)' },
+      { name: 'Cubic Polynomial', expr: 'x^3 - 3*x' },
+      { name: 'Gaussian Curve', expr: 'exp(-x^2)' },
+      { name: 'Damped Oscillation', expr: 'exp(-abs(x)/3) * cos(3*x)' },
+      { name: 'Rational Function', expr: '1 / (1 + x^2)' },
+      { name: 'Sigmoid', expr: '1 / (1 + exp(-x))' },
+      { name: 'Heart Upper', expr: 'sqrt(1 - (abs(x)-1)^2)' },
+      { name: 'Sinc Function', expr: 'sin(x) / x' },
+      { name: 'Parabola', expr: 'x^2 / 4 - 2' }
+    ];
+    
+    function buildPresets() {
+      const grid = document.getElementById('presetGrid');
+      grid.innerHTML = '';
+      PRESETS.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'preset-card';
+        card.innerHTML = `
+          <div class="preset-name">${p.name}</div>
+          <div class="preset-expr">${p.expr}</div>
+        `;
+        card.onclick = () => loadPreset(p.expr);
+        grid.appendChild(card);
+      });
+    }
+    
+    function loadPreset(expr) {
+      functions[0].expr = expr;
+      functions[0].enabled = true;
+      document.getElementById('funcInput_0').value = expr;
+      replotAll();
+      switchTab('tabFuncs');
+    }
+    
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      const btnMap = { tabFuncs: 0, tabCalc: 1, tabRoots: 2, tabPresets: 3 };
+      document.querySelectorAll('.tab-btn')[btnMap[tabId]].classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+      
+      if (tabId === 'tabCalc') updateCalcResults();
+    }
+    
+    function toggleFunc(idx, enabled) {
+      functions[idx].enabled = enabled;
+      replotAll();
+    }
+    
+    function toggleDeriv(idx, show) {
+      functions[idx].showDeriv = show;
+      replotAll();
+    }
+    
+    function updateFuncExpr(idx, expr) {
+      functions[idx].expr = expr;
+      replotAll();
+    }
+    
+    function replotAll() {
+      compiledFuncs = functions.map(f => compileMathExpr(f.expr));
+      drawGraph();
+      if (document.getElementById('tabCalc').classList.contains('active')) {
+        updateCalcResults();
+      }
+    }
+
+    // --- Calculus Updates ---
+    function updateCalcResults() {
+      const idx = parseInt(document.getElementById('calcTargetFunc').value);
+      const fn = compiledFuncs[idx];
+      const x0 = parseFloat(document.getElementById('calcX0').value) || 0;
+      
+      const derivBox = document.getElementById('derivativeResult');
+      if (fn && functions[idx].enabled) {
+        const df = evalDeriv(fn, x0);
+        derivBox.innerHTML = `<strong>y${idx+1}'(${x0})</strong> = ${isNaN(df) ? 'Undefined' : df.toFixed(6)}`;
+      } else {
+        derivBox.innerHTML = `Selected function disabled or invalid.`;
+      }
+      
+      const a = parseFloat(document.getElementById('intA').value) || 0;
+      const b = parseFloat(document.getElementById('intB').value) || 0;
+      const intBox = document.getElementById('integralResult');
+      
+      if (fn && functions[idx].enabled && a < b) {
+        const area = evalIntegral(fn, a, b);
+        intBox.innerHTML = `<strong>∫ [${a}, ${b}] y${idx+1}(x) dx</strong> = ${isNaN(area) ? 'Undefined' : area.toFixed(6)}`;
+      } else {
+        intBox.innerHTML = `Specify valid bounds [a < b] & active function.`;
+      }
+      
+      drawGraph();
+    }
+    
+    // --- Root & Intersection Finders ---
+    function findRoots() {
+      const idx = parseInt(document.getElementById('rootTargetFunc').value);
+      const fn = compiledFuncs[idx];
+      const container = document.getElementById('rootsTableContainer');
+      computedRoots = [];
+      
+      if (!fn || !functions[idx].enabled) {
+        container.innerHTML = `<div style="color:#ef4444; font-size:12px; margin-top:8px;">Selected function is empty or disabled.</div>`;
+        drawGraph();
+        return;
+      }
+      
+      const minX = view_cx - view_scale;
+      const maxX = view_cx + view_scale;
+      const steps = 300;
+      const dx = (maxX - minX) / steps;
+      
+      for (let i = 0; i < steps; i++) {
+        const x1 = minX + i * dx;
+        const x2 = x1 + dx;
+        const y1 = fn(x1);
+        const y2 = fn(x2);
+        
+        if (isNaN(y1) || isNaN(y2)) continue;
+        
+        if (y1 * y2 <= 0) {
+          // Bisection
+          let low = x1, high = x2;
+          for (let iter = 0; iter < 20; iter++) {
+            const mid = (low + high) / 2;
+            const yMid = fn(mid);
+            if (fn(low) * yMid <= 0) high = mid;
+            else low = mid;
+          }
+          const rootX = (low + high) / 2;
+          const rootY = fn(rootX);
+          if (Math.abs(rootY) < 1e-4) {
+            computedRoots.push({ x: rootX, y: rootY, funcIdx: idx });
+          }
+        }
+      }
+      
+      if (computedRoots.length === 0) {
+        container.innerHTML = `<div style="color:#94a3b8; font-size:12px; margin-top:8px;">No roots found in current view.</div>`;
+      } else {
+        let html = `<table class="result-table"><thead><tr><th>#</th><th>Root (x)</th><th>y(x)</th></tr></thead><tbody>`;
+        computedRoots.forEach((r, i) => {
+          html += `<tr onclick="focusPoint(${r.x}, ${r.y})"><td>${i+1}</td><td>${r.x.toFixed(5)}</td><td>${r.y.toFixed(5)}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+      }
+      
+      drawGraph();
+    }
+    
+    function findIntersections() {
+      const container = document.getElementById('intersectionsTableContainer');
+      computedIntersections = [];
+      
+      const active = [];
+      compiledFuncs.forEach((fn, i) => {
+        if (fn && functions[i].enabled) active.push(i);
+      });
+      
+      if (active.length < 2) {
+        container.innerHTML = `<div style="color:#ef4444; font-size:12px; margin-top:8px;">At least 2 active functions required.</div>`;
+        drawGraph();
+        return;
+      }
+      
+      const minX = view_cx - view_scale;
+      const maxX = view_cx + view_scale;
+      const steps = 300;
+      const dx = (maxX - minX) / steps;
+      
+      for (let a = 0; a < active.length; a++) {
+        for (let b = a + 1; b < active.length; b++) {
+          const i1 = active[a], i2 = active[b];
+          const fn1 = compiledFuncs[i1], fn2 = compiledFuncs[i2];
           
-          // Evaluate function
-          // We use a safe-ish constructor
-          const func = new Function('x', 'return ' + safeExpr + ';');
-          const y = func(x);
+          const g = (x) => fn1(x) - fn2(x);
           
+          for (let s = 0; s < steps; s++) {
+            const x1 = minX + s * dx;
+            const x2 = x1 + dx;
+            const g1 = g(x1);
+            const g2 = g(x2);
+            
+            if (isNaN(g1) || isNaN(g2)) continue;
+            
+            if (g1 * g2 <= 0) {
+              let low = x1, high = x2;
+              for (let iter = 0; iter < 20; iter++) {
+                const mid = (low + high) / 2;
+                if (g(low) * g(mid) <= 0) high = mid;
+                else low = mid;
+              }
+              const interX = (low + high) / 2;
+              const interY = fn1(interX);
+              if (!isNaN(interY)) {
+                computedIntersections.push({ x: interX, y: interY, f1: i1, f2: i2 });
+              }
+            }
+          }
+        }
+      }
+      
+      if (computedIntersections.length === 0) {
+        container.innerHTML = `<div style="color:#94a3b8; font-size:12px; margin-top:8px;">No intersections found in view.</div>`;
+      } else {
+        let html = `<table class="result-table"><thead><tr><th>Pair</th><th>x</th><th>y</th></tr></thead><tbody>`;
+        computedIntersections.forEach((pt) => {
+          html += `<tr onclick="focusPoint(${pt.x}, ${pt.y})">
+            <td>y${pt.f1+1} ∩ y${pt.f2+1}</td>
+            <td>${pt.x.toFixed(4)}</td>
+            <td>${pt.y.toFixed(4)}</td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+        container.innerHTML = html;
+      }
+      
+      drawGraph();
+    }
+    
+    function focusPoint(x, y) {
+      view_cx = x;
+      view_cy = y;
+      drawGraph();
+    }
+
+    // --- Graph Rendering ---
+    function resizeCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      const w = canvas.parentElement.clientWidth;
+      const h = canvas.parentElement.clientHeight;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.scale(dpr, dpr);
+      drawGraph();
+    }
+
+    function toScreenX(x, width) {
+      return ((x - (view_cx - view_scale)) / (2 * view_scale)) * width;
+    }
+    
+    function toScreenY(y, height) {
+      const view_height = 2 * view_scale * (height / (canvas.parentElement.clientWidth || 1));
+      return height - ((y - (view_cy - view_height / 2)) / view_height) * height;
+    }
+    
+    function toWorldX(px, width) {
+      return view_cx - view_scale + (px / width) * (2 * view_scale);
+    }
+
+    function drawGraph() {
+      const width = canvas.parentElement.clientWidth;
+      const height = canvas.parentElement.clientHeight;
+      if (!width || !height) return;
+      
+      ctx.clearRect(0, 0, width, height);
+      
+      const view_height = 2 * view_scale * (height / width);
+      const minX = view_cx - view_scale;
+      const maxX = view_cx + view_scale;
+      const minY = view_cy - view_height / 2;
+      const maxY = view_cy + view_height / 2;
+      
+      // Grid Step calculation
+      let rawStep = view_scale / 5;
+      let magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+      let residual = rawStep / magnitude;
+      let gridStep = magnitude;
+      if (residual > 5) gridStep = 5 * magnitude;
+      else if (residual > 2) gridStep = 2 * magnitude;
+      
+      // Draw Grid Lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+      ctx.lineWidth = 1;
+      
+      const firstGridX = Math.floor(minX / gridStep) * gridStep;
+      for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
+        const px = toScreenX(gx, width);
+        ctx.beginPath();
+        ctx.moveTo(px, 0);
+        ctx.lineTo(px, height);
+        ctx.stroke();
+      }
+      
+      const firstGridY = Math.floor(minY / gridStep) * gridStep;
+      for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
+        const py = toScreenY(gy, height);
+        ctx.beginPath();
+        ctx.moveTo(0, py);
+        ctx.lineTo(width, py);
+        ctx.stroke();
+      }
+      
+      // Draw Axes
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 2;
+      
+      const axisX = toScreenX(0, width);
+      const axisY = toScreenY(0, height);
+      
+      if (axisX >= 0 && axisX <= width) {
+        ctx.beginPath();
+        ctx.moveTo(axisX, 0);
+        ctx.lineTo(axisX, height);
+        ctx.stroke();
+      }
+      if (axisY >= 0 && axisY <= height) {
+        ctx.beginPath();
+        ctx.moveTo(0, axisY);
+        ctx.lineTo(width, axisY);
+        ctx.stroke();
+      }
+      
+      // Axis Ticks & Labels
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      
+      for (let gx = firstGridX; gx <= maxX; gx += gridStep) {
+        if (Math.abs(gx) < 1e-6) continue;
+        const px = toScreenX(gx, width);
+        const py = Math.max(10, Math.min(height - 20, axisY + 4));
+        ctx.fillText(Number(gx.toFixed(4)).toString(), px, py);
+      }
+      
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let gy = firstGridY; gy <= maxY; gy += gridStep) {
+        if (Math.abs(gy) < 1e-6) continue;
+        const py = toScreenY(gy, height);
+        const px = Math.max(35, Math.min(width - 5, axisX - 6));
+        ctx.fillText(Number(gy.toFixed(4)).toString(), px, py);
+      }
+
+      // Shaded Definite Integral Region
+      const isShade = document.getElementById('shadeIntegral').checked;
+      const targetIdx = parseInt(document.getElementById('calcTargetFunc').value);
+      const targetFn = compiledFuncs[targetIdx];
+      const intA = parseFloat(document.getElementById('intA').value) || 0;
+      const intB = parseFloat(document.getElementById('intB').value) || 0;
+      
+      if (isShade && targetFn && functions[targetIdx].enabled && intA < intB) {
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.beginPath();
+        const startPx = Math.max(0, toScreenX(intA, width));
+        const endPx = Math.min(width, toScreenX(intB, width));
+        const baselinePy = toScreenY(0, height);
+        
+        ctx.moveTo(startPx, baselinePy);
+        for (let px = startPx; px <= endPx; px += 2) {
+          const x = toWorldX(px, width);
+          const y = targetFn(x);
+          if (!isNaN(y)) {
+            const py = toScreenY(y, height);
+            ctx.lineTo(px, py);
+          }
+        }
+        ctx.lineTo(endPx, baselinePy);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Draw Function Curves
+      functions.forEach((f, idx) => {
+        if (!f.enabled) return;
+        const fn = compiledFuncs[idx];
+        if (!fn) return;
+        
+        // Primary Function Curve
+        ctx.strokeStyle = FUNC_COLORS[idx];
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        let first = true;
+        
+        for (let px = 0; px <= width; px += 2) {
+          const x = toWorldX(px, width);
+          const y = fn(x);
           if (isNaN(y) || !isFinite(y)) {
             first = true;
             continue;
           }
-          
-          const py = h - ((y + RANGE_Y) / (2 * RANGE_Y) * h);
-          
+          const py = toScreenY(y, height);
           if (first) {
             ctx.moveTo(px, py);
             first = false;
@@ -225,12 +1114,245 @@
           }
         }
         ctx.stroke();
-      } catch (e) {
-        errBox.innerText = 'Invalid mathematical expression';
+        
+        // Derivative Curve (Dashed line)
+        if (f.showDeriv) {
+          ctx.strokeStyle = FUNC_COLORS[idx];
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          let dFirst = true;
+          
+          for (let px = 0; px <= width; px += 3) {
+            const x = toWorldX(px, width);
+            const dy = evalDeriv(fn, x);
+            if (isNaN(dy) || !isFinite(dy)) {
+              dFirst = true;
+              continue;
+            }
+            const py = toScreenY(dy, height);
+            if (dFirst) {
+              ctx.moveTo(px, py);
+              dFirst = false;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+          ctx.stroke();
+          ctx.setLineDash([]); // Reset dash
+        }
+      });
+      
+      // Draw Roots Markers (Green Dots)
+      computedRoots.forEach(r => {
+        const px = toScreenX(r.x, width);
+        const py = toScreenY(r.y, height);
+        ctx.fillStyle = '#10b981';
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+      
+      // Draw Intersections Markers (Yellow Diamonds)
+      computedIntersections.forEach(pt => {
+        const px = toScreenX(pt.x, width);
+        const py = toScreenY(pt.y, height);
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.moveTo(px, py - 7);
+        ctx.lineTo(px + 7, py);
+        ctx.lineTo(px, py + 7);
+        ctx.lineTo(px - 7, py);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+      
+      // Hover Tracing Crosshair & Readout
+      const hoverPx = toScreenX(currentHoverX, width);
+      if (hoverPx >= 0 && hoverPx <= width) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(hoverPx, 0);
+        ctx.lineTo(hoverPx, height);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
+      
+      updateReadout(currentHoverX);
     }
     
-    // Init
+    function updateReadout(x) {
+      document.getElementById('readoutX').innerText = x.toFixed(4);
+      const container = document.getElementById('readoutYList');
+      let html = '';
+      
+      compiledFuncs.forEach((fn, idx) => {
+        if (!functions[idx].enabled || !fn) return;
+        const y = fn(x);
+        const dy = evalDeriv(fn, x);
+        html += `
+          <div class="readout-line" style="color:${FUNC_COLORS[idx]}">
+            <span>${FUNC_NAMES[idx]}:</span>
+            <span class="readout-val">${isNaN(y) ? 'N/A' : y.toFixed(4)} ${functions[idx].showDeriv ? '(f\'=' + (isNaN(dy)?'N/A':dy.toFixed(3)) + ')' : ''}</span>
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+    }
+    
+    // --- Mouse & Pan / Zoom Interaction ---
+    canvas.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      lastMouse = { x: e.clientX, y: e.clientY };
+    });
+    
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+    
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const px = e.clientX - rect.left;
+      currentHoverX = toWorldX(px, rect.width);
+      
+      if (isDragging) {
+        const dx = e.clientX - lastMouse.x;
+        const dy = e.clientY - lastMouse.y;
+        lastMouse = { x: e.clientX, y: e.clientY };
+        
+        const w = rect.width;
+        const h = rect.height;
+        const view_height = 2 * view_scale * (h / w);
+        
+        view_cx -= (dx / w) * (2 * view_scale);
+        view_cy += (dy / h) * view_height;
+      }
+      
+      drawGraph();
+    });
+    
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 0.85 : 1.18;
+      view_scale *= zoomFactor;
+      drawGraph();
+    }, { passive: false });
+    
+    function zoomIn() {
+      view_scale *= 0.75;
+      drawGraph();
+    }
+    function zoomOut() {
+      view_scale *= 1.3333;
+      drawGraph();
+    }
+    function resetView() {
+      view_cx = 0;
+      view_cy = 0;
+      view_scale = 10;
+      drawGraph();
+    }
+
+    // --- Export & Import ---
+    function exportPNG() {
+      const link = document.createElement('a');
+      link.download = 'KGraph_snapshot.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    function exportCSV() {
+      const width = canvas.parentElement.clientWidth || 500;
+      const minX = view_cx - view_scale;
+      const maxX = view_cx + view_scale;
+      const steps = 200;
+      const dx = (maxX - minX) / steps;
+      
+      let csv = 'x,' + FUNC_NAMES.join(',') + '\n';
+      
+      for (let i = 0; i <= steps; i++) {
+        const x = minX + i * dx;
+        let row = [x.toFixed(5)];
+        compiledFuncs.forEach((fn, idx) => {
+          if (fn && functions[idx].enabled) {
+            const y = fn(x);
+            row.push(isNaN(y) ? '' : y.toFixed(5));
+          } else {
+            row.push('');
+          }
+        });
+        csv += row.join(',') + '\n';
+      }
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'KGraph_data.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function exportJSON() {
+      const config = {
+        functions: functions,
+        view_cx: view_cx,
+        view_cy: view_cy,
+        view_scale: view_scale
+      };
+      const json = JSON.stringify(config, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'KGraph_config.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const config = JSON.parse(e.target.result);
+          if (config.functions && Array.isArray(config.functions)) {
+            functions = config.functions;
+            if (config.view_cx !== undefined) view_cx = config.view_cx;
+            if (config.view_cy !== undefined) view_cy = config.view_cy;
+            if (config.view_scale !== undefined) view_scale = config.view_scale;
+            buildFuncCards();
+            replotAll();
+          }
+        } catch(err) {
+          showToast('Invalid JSON file format');
+        }
+      };
+      reader.readAsText(file);
+    }
+    
+    function showToast(msg) {
+      const t = document.getElementById('toastErr');
+      t.innerText = msg;
+      t.classList.add('visible');
+      setTimeout(() => t.classList.remove('visible'), 3000);
+    }
+    
+    // Window Resize Event
+    window.addEventListener('resize', resizeCanvas);
+
+    // Initialization
+    buildFuncCards();
+    buildPresets();
     setTimeout(resizeCanvas, 100);
   </script>
 </body>
