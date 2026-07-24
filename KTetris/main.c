@@ -48,6 +48,7 @@ typedef struct {
     int stat_lines[4];
     DWORD mode_timer_ms;
     int ultra_time_left_ms;
+    int nuke_charges, swap_charges, freeze_charges, freeze_timer_ms;
     int is_valid;
 } GameSaveState;
 
@@ -80,6 +81,13 @@ int ultra_time_left_ms = 120000;
 
 int timer_speed = 500;
 int gravity_timer = 0;
+
+// Skills & Hazards State
+int nuke_charges = 2;
+int swap_charges = 3;
+int freeze_charges = 2;
+int freeze_timer_ms = 0;
+int shake_timer = 0;
 
 void InitGame();
 void SpawnPiece();
@@ -115,7 +123,6 @@ void SaveLeaderboardEntry(int newScore, int modeIdx, int linesCleared, DWORD tim
     newEntry.time_ms = timeMs;
     wsprintfA(newEntry.date, "%02d/%02d/%04d", st.wMonth, st.wDay, st.wYear);
 
-    // Insert sorted
     int inserted = 0;
     for (int i = 0; i < num_leaderboard_entries; i++) {
         if (newScore > leaderboard[i].score) {
@@ -177,6 +184,10 @@ void SaveGameStateToFile() {
     for (int i = 0; i < 4; i++) state.stat_lines[i] = stat_lines[i];
     state.mode_timer_ms = mode_timer_ms;
     state.ultra_time_left_ms = ultra_time_left_ms;
+    state.nuke_charges = nuke_charges;
+    state.swap_charges = swap_charges;
+    state.freeze_charges = freeze_charges;
+    state.freeze_timer_ms = freeze_timer_ms;
     state.is_valid = 12345;
 
     HANDLE hFile = CreateFileA("ktetris_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -221,6 +232,10 @@ int LoadGameStateFromFile() {
     for (int i = 0; i < 4; i++) stat_lines[i] = state.stat_lines[i];
     mode_timer_ms = state.mode_timer_ms;
     ultra_time_left_ms = state.ultra_time_left_ms;
+    nuke_charges = state.nuke_charges;
+    swap_charges = state.swap_charges;
+    freeze_charges = state.freeze_charges;
+    freeze_timer_ms = state.freeze_timer_ms;
 
     start_screen = 0;
     game_over = 0;
@@ -228,60 +243,76 @@ int LoadGameStateFromFile() {
     is_paused = 0;
     show_leaderboard = 0;
     
-    int new_speed = 500 - (level - 1) * 30;
-    if (new_speed < 50) new_speed = 50;
+    int new_speed = 500 - (level - 1) * 23;
+    if (new_speed < 40) new_speed = 40;
     timer_speed = new_speed;
 
     return 1;
 }
 
-const unsigned short tetrominos[7][4] = {
-    {0x0F00, 0x2222, 0x00F0, 0x4444}, // I
-    {0x44C0, 0x8E00, 0x6220, 0x0710}, // J
-    {0x2260, 0x0E80, 0xC440, 0x2E00}, // L
-    {0xCC00, 0xCC00, 0xCC00, 0xCC00}, // O
-    {0x06C0, 0x8C40, 0x6C00, 0x4620}, // S
-    {0x0E40, 0x4C40, 0x4E00, 0x4640}, // T
-    {0x0C60, 0x4C80, 0xC600, 0x2640}  // Z
+// 13 Piece Types (0..6 Tetrominos, 7..12 Pentominos), 4 Rotations each (5x5 Bitmasks)
+const unsigned int tetrominos[13][4] = {
+    // 0: I (4-block)
+    {0x078000, 0x421080, 0x003c00, 0x210840},
+    // 1: J (4-block)
+    {0x870000, 0x621000, 0x070800, 0x423000},
+    // 2: L (4-block)
+    {0x270000, 0x421800, 0x072000, 0xc21000},
+    // 3: O (4-block)
+    {0x063000, 0x063000, 0x063000, 0x063000},
+    // 4: S (4-block)
+    {0x660000, 0x430800, 0x033000, 0x861000},
+    // 5: T (4-block)
+    {0x470000, 0x431000, 0x071000, 0x461000},
+    // 6: Z (4-block)
+    {0xc30000, 0x231000, 0x061800, 0x462000},
+    // 7: I5 (5-block line)
+    {0x0f8000, 0x421084, 0x007c00, 0x421084},
+    // 8: L5 (5-block L)
+    {0x878000, 0x621080, 0x078400, 0x421180},
+    // 9: T5 (5-block T)
+    {0xe21000, 0x270800, 0x423800, 0x872000},
+    // 10: U5 (5-block U)
+    {0xa70000, 0x621800, 0x072800, 0xc23000},
+    // 11: X5 (5-block Plus)
+    {0x471000, 0x471000, 0x471000, 0x471000},
+    // 12: Z5 (5-block Z)
+    {0xc21800, 0x272000, 0xc21800, 0x272000}
 };
 
-const COLORREF colors[10] = {
-    RGB(0,0,0),
-    RGB(0,240,240),   // I - Cyan
-    RGB(0,0,240),     // J - Blue
-    RGB(240,160,0),   // L - Orange
-    RGB(240,240,0),   // O - Yellow
-    RGB(0,240,0),     // S - Green
-    RGB(160,0,240),   // T - Purple
-    RGB(240,0,0),     // Z - Red
-    RGB(136,136,153), // Garbage - Grey
-    RGB(255,51,51)    // Bomb - Bright Red
+const COLORREF colors[16] = {
+    RGB(0,0,0),       // 0: Empty
+    RGB(0,240,240),   // 1: I - Cyan
+    RGB(0,0,240),     // 2: J - Blue
+    RGB(240,160,0),   // 3: L - Orange
+    RGB(240,240,0),   // 4: O - Yellow
+    RGB(0,240,0),     // 5: S - Green
+    RGB(160,0,240),   // 6: T - Purple
+    RGB(240,0,0),     // 7: Z - Red
+    RGB(255,105,180), // 8: I5 - Hot Pink
+    RGB(50,205,50),   // 9: L5 - Lime Green
+    RGB(173,255,47),  // 10: T5 - Green Yellow
+    RGB(0,191,255),   // 11: U5 - Deep Sky Blue
+    RGB(255,215,0),   // 12: X5 - Gold
+    RGB(138,43,226),  // 13: Z5 - Blue Violet
+    RGB(136,136,153), // 14: Garbage - Grey
+    RGB(255,51,51)    // 15: Bomb - Bright Red
 };
 
-const COLORREF bevel_hi[10] = {
+const COLORREF bevel_hi[16] = {
     RGB(0,0,0),
-    RGB(153,255,255),
-    RGB(102,102,255),
-    RGB(255,204,102),
-    RGB(255,255,153),
-    RGB(102,255,102),
-    RGB(217,153,255),
-    RGB(255,102,102),
-    RGB(187,187,204),
-    RGB(255,153,153)
+    RGB(153,255,255), RGB(102,102,255), RGB(255,204,102), RGB(255,255,153),
+    RGB(102,255,102), RGB(217,153,255), RGB(255,102,102), RGB(255,182,217),
+    RGB(144,238,144), RGB(214,255,153), RGB(153,230,255), RGB(255,240,153),
+    RGB(200,150,255), RGB(187,187,204), RGB(255,153,153)
 };
 
-const COLORREF bevel_sh[10] = {
+const COLORREF bevel_sh[16] = {
     RGB(0,0,0),
-    RGB(0,136,136),
-    RGB(0,0,136),
-    RGB(153,85,0),
-    RGB(153,153,0),
-    RGB(0,136,0),
-    RGB(85,0,136),
-    RGB(136,0,0),
-    RGB(68,68,85),
-    RGB(136,0,0)
+    RGB(0,136,136),   RGB(0,0,136),     RGB(153,85,0),    RGB(153,153,0),
+    RGB(0,136,0),     RGB(85,0,136),    RGB(136,0,0),     RGB(178,34,110),
+    RGB(34,139,34),   RGB(107,142,35),  RGB(0,104,139),   RGB(184,134,11),
+    RGB(75,0,130),    RGB(68,68,85),    RGB(136,0,0)
 };
 
 // FX structures
@@ -385,11 +416,15 @@ void SpawnDropParticles(int gridX, int startY, int endY, int colorIdx) {
     }
 }
 
-int bag[7];
-int bag_index = 7;
+int bag[13];
+int bag_size = 7;
+int bag_index = 13;
+
 void fill_bag() {
-    for (int i = 0; i < 7; i++) bag[i] = i;
-    for (int i = 6; i > 0; i--) {
+    int max_pieces = (game_mode == MODE_CAMPAIGN ? (campaign_level >= 15 ? 13 : 7) : (level >= 15 ? 13 : 7));
+    bag_size = max_pieces;
+    for (int i = 0; i < max_pieces; i++) bag[i] = i;
+    for (int i = max_pieces - 1; i > 0; i--) {
         int j = random_int(i + 1);
         int temp = bag[i];
         bag[i] = bag[j];
@@ -399,7 +434,8 @@ void fill_bag() {
 }
 
 int get_random_piece() {
-    if (bag_index >= 7) fill_bag();
+    int max_pieces = (game_mode == MODE_CAMPAIGN ? (campaign_level >= 15 ? 13 : 7) : (level >= 15 ? 13 : 7));
+    if (bag_index >= bag_size || bag_size != max_pieces) fill_bag();
     return bag[bag_index++];
 }
 
@@ -407,16 +443,16 @@ void FillNextQueue() {
     for (int i = 0; i < 3; i++) {
         if (next_queue[i].pc == -1) {
             next_queue[i].pc = get_random_piece();
-            next_queue[i].is_bomb = (random_int(15) == 0) ? 1 : 0;
+            next_queue[i].is_bomb = (random_int(12) == 0) ? 1 : 0;
         }
     }
 }
 
 int check_collision(int p, int rot, int px, int py) {
-    unsigned short shape = tetrominos[p][rot];
-    for (int y = 0; y < 4; y++) {
-        for (int x = 0; x < 4; x++) {
-            if (shape & (1 << (15 - (y * 4 + x)))) {
+    unsigned int shape = tetrominos[p][rot];
+    for (int y = 0; y < 5; y++) {
+        for (int x = 0; x < 5; x++) {
+            if (shape & (1 << (24 - (y * 5 + x)))) {
                 int nx = px + x;
                 int ny = py + y;
                 if (nx < 0 || nx >= W || ny >= H || (ny >= 0 && grid[ny][nx]))
@@ -427,12 +463,61 @@ int check_collision(int p, int rot, int px, int py) {
     return 0;
 }
 
+// Active Skill Implementations
+void UseRowNuke() {
+    if (nuke_charges <= 0 || game_over || is_paused || start_screen || win_screen || show_leaderboard) return;
+    nuke_charges--;
+    for (int k = 0; k < 3; k++) {
+        int rY = H - 1 - k;
+        AddLineFlash(rY);
+        for (int x = 0; x < W; x++) {
+            if (grid[rY][x] > 0) {
+                COLORREF pCol = colors[grid[rY][x]];
+                for (int p = 0; p < 3; p++) AddParticle((float)((x + 0.5)*CELL_SIZE), (float)((rY + 0.5)*CELL_SIZE), (float)(random_int(10) - 5), (float)(-random_int(8) - 2), pCol, 3, 20);
+            }
+        }
+    }
+    for (int y = H - 1; y >= 3; y--) {
+        for (int x = 0; x < W; x++) grid[y][x] = grid[y - 3][x];
+    }
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < W; x++) grid[y][x] = 0;
+    }
+    score += 300;
+    AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2), "ROW NUKE! +300", RGB(255, 100, 0));
+    Beep(180, 100); Beep(120, 150);
+}
+
+void UsePieceSwap() {
+    if (swap_charges <= 0 || game_over || is_paused || start_screen || win_screen || show_leaderboard) return;
+    swap_charges--;
+    int temp_p = current_piece;
+    int temp_b = current_is_bomb;
+    current_piece = next_queue[0].pc;
+    current_is_bomb = next_queue[0].is_bomb;
+    next_queue[0].pc = temp_p;
+    next_queue[0].is_bomb = temp_b;
+    current_rot = 0;
+    current_x = W / 2 - 2;
+    current_y = -2;
+    AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2 + 20), "PIECE SWAP!", RGB(0, 255, 200));
+    Beep(750, 60);
+}
+
+void UseGravityFreeze() {
+    if (freeze_charges <= 0 || freeze_timer_ms > 0 || game_over || is_paused || start_screen || win_screen || show_leaderboard) return;
+    freeze_charges--;
+    freeze_timer_ms = 10000;
+    AddPopup((float)(W * CELL_SIZE / 2 - 40), (float)(H * CELL_SIZE / 2 - 20), "GRAVITY FREEZE!", RGB(0, 240, 255));
+    Beep(1200, 100);
+}
+
 void lock_piece() {
-    unsigned short shape = tetrominos[current_piece][current_rot];
-    int block_val = current_is_bomb ? 9 : (current_piece + 1);
-    for (int y = 0; y < 4; y++) {
-        for (int x = 0; x < 4; x++) {
-            if (shape & (1 << (15 - (y * 4 + x)))) {
+    unsigned int shape = tetrominos[current_piece][current_rot];
+    int block_val = current_is_bomb ? 15 : (current_piece + 1);
+    for (int y = 0; y < 5; y++) {
+        for (int x = 0; x < 5; x++) {
+            if (shape & (1 << (24 - (y * 5 + x)))) {
                 if (current_y + y >= 0) {
                     grid[current_y + y][current_x + x] = block_val;
                 }
@@ -453,7 +538,7 @@ void lock_piece() {
             lines_cleared++;
             AddLineFlash(y);
             for (int x = 0; x < W; x++) {
-                if (grid[y][x] == 9) {
+                if (grid[y][x] == 15) {
                     explode_centers[y][x] = 1;
                     has_bombs = 1;
                 }
@@ -487,7 +572,7 @@ void lock_piece() {
                         }
                     }
                     score += 500;
-                    AddPopup((float)(W * CELL_SIZE / 2 - 20), (float)(H * CELL_SIZE / 2), "BOMB BOOM! +500", RGB(255, 50, 50));
+                    AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2), "BOMB BOOM! +500", RGB(255, 50, 50));
                     Beep(150, 100); Beep(100, 200);
                 }
             }
@@ -521,7 +606,7 @@ void lock_piece() {
         level = campaign_level;
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
         
-        if (campaign_level > 5 && campaign_level <= 10) {
+        if (campaign_level > 5 && campaign_level <= 9) {
             int threshold = 16 - campaign_level;
             if (threshold < 5) threshold = 5;
             if (pieces_placed % threshold == 0) {
@@ -529,10 +614,10 @@ void lock_piece() {
                     for (int x = 0; x < W; x++) grid[y][x] = grid[y+1][x];
                 }
                 int hole = random_int(W);
-                for (int x = 0; x < W; x++) grid[H - 1][x] = (x == hole) ? 0 : 8;
+                for (int x = 0; x < W; x++) grid[H - 1][x] = (x == hole) ? 0 : 14;
                 Beep(300, 100);
             }
-        } else if (campaign_level > 10) {
+        } else if (campaign_level >= 10 && campaign_level < 15) {
             int threshold = 18 - campaign_level;
             if (threshold < 3) threshold = 3;
             if (pieces_placed % threshold == 0) {
@@ -540,15 +625,35 @@ void lock_piece() {
                 for (int k = 0; k < cols; k++) {
                     int c = random_int(W);
                     for (int y = 0; y < H - 1; y++) grid[y][c] = grid[y+1][c];
-                    grid[H - 1][c] = 8;
+                    grid[H - 1][c] = 14;
                 }
                 Beep(250, 80);
+            }
+        } else if (campaign_level >= 15) {
+            // Stage 15..20: Earthquake hazard!
+            int eq_freq = 21 - campaign_level;
+            if (eq_freq < 3) eq_freq = 3;
+            if (pieces_placed % eq_freq == 0) {
+                shake_timer = 12;
+                int rRow = H - 1 - random_int(8);
+                int dir = (random_int(2) == 0) ? -1 : 1;
+                if (dir == 1) {
+                    int temp = grid[rRow][W - 1];
+                    for (int x = W - 1; x > 0; x--) grid[rRow][x] = grid[rRow][x - 1];
+                    grid[rRow][0] = temp;
+                } else {
+                    int temp = grid[rRow][0];
+                    for (int x = 0; x < W - 1; x++) grid[rRow][x] = grid[rRow][x + 1];
+                    grid[rRow][W - 1] = temp;
+                }
+                AddPopup((float)(W * CELL_SIZE / 2 - 35), (float)(H * CELL_SIZE / 2 - 40), "EARTHQUAKE!", RGB(255, 180, 0));
+                Beep(120, 150);
             }
         }
 
         if (lines >= goal) {
             campaign_level++;
-            if (campaign_level > 15) {
+            if (campaign_level > 20) {
                 win_screen = 1;
                 Beep(800, 150); Beep(1000, 150); Beep(1200, 300);
                 SaveLeaderboardEntry(score, game_mode, lines, mode_timer_ms);
@@ -569,8 +674,8 @@ void lock_piece() {
     } else { // MARATHON & ULTRA
         level = (lines / 10) + 1;
         score += lines_cleared * 100 * level * (combo > 0 ? combo : 1);
-        int new_speed = 500 - (level - 1) * 30;
-        if (new_speed < 50) new_speed = 50;
+        int new_speed = 500 - (level - 1) * 23;
+        if (new_speed < 40) new_speed = 40;
         timer_speed = new_speed;
     }
 }
@@ -582,11 +687,10 @@ void SpawnPiece() {
     current_y = -2;
     current_is_bomb = next_queue[0].is_bomb;
 
-    // Shift next queue
     next_queue[0] = next_queue[1];
     next_queue[1] = next_queue[2];
     next_queue[2].pc = get_random_piece();
-    next_queue[2].is_bomb = (random_int(15) == 0) ? 1 : 0;
+    next_queue[2].is_bomb = (random_int(12) == 0) ? 1 : 0;
 
     hold_used = 0;
     if (check_collision(current_piece, current_rot, current_x, current_y + 1)) {
@@ -609,6 +713,11 @@ void InitGame() {
     gravity_timer = 0;
     mode_timer_ms = 0;
     ultra_time_left_ms = 120000;
+    nuke_charges = 2;
+    swap_charges = 3;
+    freeze_charges = 2;
+    freeze_timer_ms = 0;
+    shake_timer = 0;
 
     if (game_mode == MODE_CAMPAIGN) {
         int garbage = campaign_level * 2;
@@ -616,12 +725,13 @@ void InitGame() {
         for (int r = 0; r < garbage; r++) {
             int hole = random_int(W);
             for (int x = 0; x < W; x++) {
-                grid[H - 1 - r][x] = (x == hole) ? 0 : 8;
+                grid[H - 1 - r][x] = (x == hole) ? 0 : 14;
             }
         }
         lines = 0;
         level = campaign_level;
-        timer_speed = 500 - (level - 1) * 30;
+        timer_speed = 500 - (level - 1) * 23;
+        if (timer_speed < 40) timer_speed = 40;
     } else {
         lines = 0;
         level = 1;
@@ -630,7 +740,7 @@ void InitGame() {
     }
 
     combo = 0;
-    bag_index = 7;
+    bag_index = 13;
     game_over = 0;
     is_paused = 0;
     win_screen = 0;
@@ -642,14 +752,14 @@ void InitGame() {
 
     for (int i = 0; i < 3; i++) {
         next_queue[i].pc = get_random_piece();
-        next_queue[i].is_bomb = (random_int(15) == 0) ? 1 : 0;
+        next_queue[i].is_bomb = (random_int(12) == 0) ? 1 : 0;
     }
 
     SpawnPiece();
 }
 
 void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhost) {
-    if (colorIdx <= 0 || colorIdx >= 10) return;
+    if (colorIdx <= 0 || colorIdx >= 16) return;
     if (isGhost) {
         HPEN pen = CreatePen(PS_SOLID, 1, colors[colorIdx]);
         HPEN oldPen = (HPEN)SelectObject(hdc, pen);
@@ -708,7 +818,7 @@ void DrawTetrisBlock(HDC hdc, int px, int py, int colorIdx, int size, int isGhos
     FillRect(hdc, &rFlare, whiteBrush);
     DeleteObject(whiteBrush);
 
-    if (colorIdx == 9) { // Bomb
+    if (colorIdx == 15) { // Bomb
         HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
         SelectObject(hdc, yellowBrush);
         Ellipse(hdc, px + size / 4, py + size / 4, px + size * 3 / 4, py + size * 3 / 4);
@@ -742,6 +852,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
                 mode_timer_ms += 20;
 
+                if (freeze_timer_ms > 0) {
+                    freeze_timer_ms -= 20;
+                    if (freeze_timer_ms < 0) freeze_timer_ms = 0;
+                }
+
+                if (shake_timer > 0) shake_timer--;
+
                 if (game_mode == MODE_ULTRA) {
                     ultra_time_left_ms -= 20;
                     if (ultra_time_left_ms <= 0) {
@@ -753,16 +870,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
 
-                gravity_timer += 20;
-                if (gravity_timer >= timer_speed) {
-                    gravity_timer = 0;
-                    if (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
-                        current_y++;
-                    } else {
-                        int old_level = campaign_level;
-                        lock_piece();
-                        if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) {
-                            SpawnPiece();
+                if (freeze_timer_ms <= 0) {
+                    gravity_timer += 20;
+                    if (gravity_timer >= timer_speed) {
+                        gravity_timer = 0;
+                        if (!check_collision(current_piece, current_rot, current_x, current_y + 1)) {
+                            current_y++;
+                        } else {
+                            int old_level = campaign_level;
+                            lock_piece();
+                            if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) {
+                                SpawnPiece();
+                            }
                         }
                     }
                 }
@@ -802,6 +921,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
 
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
+                int sideX = W * CELL_SIZE + 15;
+                if (mx >= sideX && mx <= sideX + 140) {
+                    if (my >= 350 && my <= 372) { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); }
+                    else if (my >= 375 && my <= 397) { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); }
+                    else if (my >= 400 && my <= 422) { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); }
+                }
+            }
+            break;
+        }
+
         case WM_KEYDOWN:
             if (start_screen) {
                 if (wParam == '1') { game_mode = MODE_MARATHON; start_screen = 0; score = 0; InitGame(); }
@@ -809,7 +942,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '3') { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); }
                 if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); }
                 if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
-                if (wParam == 'R') { LoadGameStateFromFile(); }
+                if (wParam == 'V' || wParam == 'R') { LoadGameStateFromFile(); }
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }
@@ -839,12 +972,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
-                if (wParam == 'S') {
+                if (wParam == 'V') {
                     SaveGameStateToFile();
                     AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255));
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
+                if (wParam == 'B') { UseRowNuke(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == 'S') { UsePieceSwap(); InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == 'F') { UseGravityFreeze(); InvalidateRect(hwnd, NULL, FALSE); break; }
+
                 if (is_paused) break;
 
                 if (wParam == VK_LEFT && !check_collision(current_piece, current_rot, current_x - 1, current_y)) current_x--;
@@ -858,9 +995,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         current_x--; current_rot = next_r;
                     } else if (!check_collision(current_piece, next_r, current_x + 1, current_y)) {
                         current_x++; current_rot = next_r;
-                    } else if (current_piece == 0 && !check_collision(current_piece, next_r, current_x - 2, current_y)) {
+                    } else if (!check_collision(current_piece, next_r, current_x - 2, current_y)) {
                         current_x -= 2; current_rot = next_r;
-                    } else if (current_piece == 0 && !check_collision(current_piece, next_r, current_x + 2, current_y)) {
+                    } else if (!check_collision(current_piece, next_r, current_x + 2, current_y)) {
                         current_x += 2; current_rot = next_r;
                     }
                 }
@@ -893,7 +1030,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         drop_dist++;
                     }
                     score += drop_dist * 2;
-                    SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 9 : (current_piece + 1));
+                    SpawnDropParticles(current_x, start_y, current_y, current_is_bomb ? 15 : (current_piece + 1));
                     int old_level = campaign_level;
                     lock_piece();
                     if (!win_screen && !game_over && (game_mode != MODE_CAMPAIGN || campaign_level == old_level)) {
@@ -909,7 +1046,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             
             int total_w = W * CELL_SIZE + 170;
-            int total_h = H * CELL_SIZE + 40;
+            int total_h = H * CELL_SIZE + 90;
 
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP hbm = CreateCompatibleBitmap(hdc, total_w, total_h);
@@ -919,15 +1056,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT fullRc = {0, 0, total_w, total_h};
             FillRect(memDC, &fullRc, bg);
             DeleteObject(bg);
+
+            int offX = 0, offY = 0;
+            if (shake_timer > 0) {
+                offX = random_int(7) - 3;
+                offY = random_int(7) - 3;
+            }
             
             // Draw grid lines
             HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(35, 35, 45));
             HPEN oldPen = (HPEN)SelectObject(memDC, gridPen);
             for (int x = 0; x <= W; x++) {
-                MoveToEx(memDC, x * CELL_SIZE, 0, NULL); LineTo(memDC, x * CELL_SIZE, H * CELL_SIZE);
+                MoveToEx(memDC, offX + x * CELL_SIZE, offY, NULL); LineTo(memDC, offX + x * CELL_SIZE, offY + H * CELL_SIZE);
             }
             for (int y = 0; y <= H; y++) {
-                MoveToEx(memDC, 0, y * CELL_SIZE, NULL); LineTo(memDC, W * CELL_SIZE, y * CELL_SIZE);
+                MoveToEx(memDC, offX, offY + y * CELL_SIZE, NULL); LineTo(memDC, offX + W * CELL_SIZE, offY + y * CELL_SIZE);
             }
             SelectObject(memDC, oldPen);
             DeleteObject(gridPen);
@@ -936,38 +1079,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int y = 0; y < H; y++) {
                 for (int x = 0; x < W; x++) {
                     if (grid[y][x]) {
-                        DrawTetrisBlock(memDC, x * CELL_SIZE, y * CELL_SIZE, grid[y][x], CELL_SIZE, 0);
+                        DrawTetrisBlock(memDC, offX + x * CELL_SIZE, offY + y * CELL_SIZE, grid[y][x], CELL_SIZE, 0);
                     }
                 }
             }
             
             // Draw active & Ghost piece
             if (!game_over && !is_paused && !start_screen && !win_screen && !show_leaderboard) {
-                unsigned short shape = tetrominos[current_piece][current_rot];
-                int draw_val = current_is_bomb ? 9 : (current_piece + 1);
+                unsigned int shape = tetrominos[current_piece][current_rot];
+                int draw_val = current_is_bomb ? 15 : (current_piece + 1);
                 
                 // Ghost piece
                 int ghost_y = current_y;
                 while (!check_collision(current_piece, current_rot, current_x, ghost_y + 1)) {
                     ghost_y++;
                 }
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (shape & (1 << (15 - (y * 4 + x)))) {
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 5; x++) {
+                        if (shape & (1 << (24 - (y * 5 + x)))) {
                             if (ghost_y + y >= 0) {
-                                DrawTetrisBlock(memDC, (current_x + x) * CELL_SIZE, (ghost_y + y) * CELL_SIZE, draw_val, CELL_SIZE, 1);
+                                DrawTetrisBlock(memDC, offX + (current_x + x) * CELL_SIZE, offY + (ghost_y + y) * CELL_SIZE, draw_val, CELL_SIZE, 1);
                             }
                         }
                     }
                 }
 
                 // Active piece
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (shape & (1 << (15 - (y * 4 + x)))) {
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 5; x++) {
+                        if (shape & (1 << (24 - (y * 5 + x)))) {
                             int py = current_y + y;
                             if (py >= 0) {
-                                DrawTetrisBlock(memDC, (current_x + x) * CELL_SIZE, py * CELL_SIZE, draw_val, CELL_SIZE, 0);
+                                DrawTetrisBlock(memDC, offX + (current_x + x) * CELL_SIZE, offY + py * CELL_SIZE, draw_val, CELL_SIZE, 0);
                             }
                         }
                     }
@@ -977,7 +1120,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw Line Flashes
             for (int i = 0; i < num_flashes; i++) {
                 HBRUSH flashBrush = CreateSolidBrush(RGB(255, 255, 255));
-                RECT rFlash = { 0, line_flashes[i].y * CELL_SIZE, W * CELL_SIZE, (line_flashes[i].y + 1) * CELL_SIZE };
+                RECT rFlash = { offX, offY + line_flashes[i].y * CELL_SIZE, offX + W * CELL_SIZE, offY + (line_flashes[i].y + 1) * CELL_SIZE };
                 FillRect(memDC, &rFlash, flashBrush);
                 DeleteObject(flashBrush);
             }
@@ -985,7 +1128,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Draw Particles
             for (int i = 0; i < num_particles; i++) {
                 HBRUSH pBrush = CreateSolidBrush(particles[i].color);
-                RECT rP = { (int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size };
+                RECT rP = { offX + (int)particles[i].x, offY + (int)particles[i].y, offX + (int)particles[i].x + particles[i].size, offY + (int)particles[i].y + particles[i].size };
                 FillRect(memDC, &rP, pBrush);
                 DeleteObject(pBrush);
             }
@@ -994,7 +1137,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, TRANSPARENT);
             for (int i = 0; i < num_popups; i++) {
                 SetTextColor(memDC, text_popups[i].color);
-                TextOutA(memDC, (int)text_popups[i].x, (int)text_popups[i].y, text_popups[i].text, lstrlenA(text_popups[i].text));
+                TextOutA(memDC, offX + (int)text_popups[i].x, offY + (int)text_popups[i].y, text_popups[i].text, lstrlenA(text_popups[i].text));
             }
 
             // Sidebar Panel
@@ -1043,7 +1186,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, sideX, 137, line_str, lstrlenA(line_str));
             } else if (game_mode == MODE_CAMPAIGN) {
                 char lvl_str[32], line_str[32];
-                wsprintfA(lvl_str, "STAGE: %d/15", campaign_level);
+                wsprintfA(lvl_str, "STAGE: %d/20", campaign_level);
                 wsprintfA(line_str, "LINES: %d/%d", lines, campaign_level * 10);
                 TextOutA(memDC, sideX, 105, lvl_str, lstrlenA(lvl_str));
                 TextOutA(memDC, sideX, 122, line_str, lstrlenA(line_str));
@@ -1061,34 +1204,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (!game_over) {
                 // Item 0
-                unsigned short n0 = tetrominos[next_queue[0].pc][0];
-                int v0 = next_queue[0].is_bomb ? 9 : (next_queue[0].pc + 1);
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (n0 & (1 << (15 - (y * 4 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + x * 14, 178 + y * 14, v0, 14, 0);
+                unsigned int n0 = tetrominos[next_queue[0].pc][0];
+                int v0 = next_queue[0].is_bomb ? 15 : (next_queue[0].pc + 1);
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 5; x++) {
+                        if (n0 & (1 << (24 - (y * 5 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + x * 13, 178 + y * 13, v0, 13, 0);
                         }
                     }
                 }
 
                 // Item 1
-                unsigned short n1 = tetrominos[next_queue[1].pc][0];
-                int v1 = next_queue[1].is_bomb ? 9 : (next_queue[1].pc + 1);
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (n1 & (1 << (15 - (y * 4 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + x * 10, 242 + y * 10, v1, 10, 0);
+                unsigned int n1 = tetrominos[next_queue[1].pc][0];
+                int v1 = next_queue[1].is_bomb ? 15 : (next_queue[1].pc + 1);
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 5; x++) {
+                        if (n1 & (1 << (24 - (y * 5 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + x * 9, 248 + y * 9, v1, 9, 0);
                         }
                     }
                 }
 
                 // Item 2
-                unsigned short n2 = tetrominos[next_queue[2].pc][0];
-                int v2 = next_queue[2].is_bomb ? 9 : (next_queue[2].pc + 1);
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (n2 & (1 << (15 - (y * 4 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + 65 + x * 10, 242 + y * 10, v2, 10, 0);
+                unsigned int n2 = tetrominos[next_queue[2].pc][0];
+                int v2 = next_queue[2].is_bomb ? 15 : (next_queue[2].pc + 1);
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 5; x++) {
+                        if (n2 & (1 << (24 - (y * 5 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + 65 + x * 9, 248 + y * 9, v2, 9, 0);
                         }
                     }
                 }
@@ -1096,24 +1239,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Hold Piece
             SetTextColor(memDC, RGB(0, 240, 240));
-            TextOutA(memDC, sideX, 295, hold_used ? "HOLD (LOCKED):" : "HOLD [C]:", hold_used ? 14 : 9);
+            TextOutA(memDC, sideX, 298, hold_used ? "HOLD (LOCKED):" : "HOLD [C]:", hold_used ? 14 : 9);
 
             if (hold_piece != -1) {
-                unsigned short h0 = tetrominos[hold_piece][0];
-                int hv = hold_is_bomb ? 9 : (hold_piece + 1);
-                for (int y = 0; y < 4; y++) {
-                    for (int x = 0; x < 4; x++) {
-                        if (h0 & (1 << (15 - (y * 4 + x)))) {
-                            DrawTetrisBlock(memDC, sideX + x * 13, 312 + y * 13, hv, 13, 0);
+                unsigned int h0 = tetrominos[hold_piece][0];
+                int hv = hold_is_bomb ? 15 : (hold_piece + 1);
+                for (int y = 0; y < 5; y++) {
+                    for (int x = 0; x < 5; x++) {
+                        if (h0 & (1 << (24 - (y * 5 + x)))) {
+                            DrawTetrisBlock(memDC, sideX + x * 11, 312 + y * 11, hv, 11, 0);
                         }
                     }
                 }
             }
 
+            // SKILLS Panel
+            SetTextColor(memDC, RGB(255, 215, 0));
+            TextOutA(memDC, sideX, 368, "ACTIVE SKILLS:", 14);
+
+            char nuke_str[32], swap_str[32], freeze_str[32];
+            wsprintfA(nuke_str, "[B] Nuke: %d", nuke_charges);
+            wsprintfA(swap_str, "[S] Swap: %d", swap_charges);
+            if (freeze_timer_ms > 0) {
+                wsprintfA(freeze_str, "[F] FROZEN (%ds)", (freeze_timer_ms / 1000) + 1);
+            } else {
+                wsprintfA(freeze_str, "[F] Freeze: %d", freeze_charges);
+            }
+
+            SetTextColor(memDC, nuke_charges > 0 ? RGB(255, 120, 50) : RGB(100, 100, 100));
+            TextOutA(memDC, sideX, 385, nuke_str, lstrlenA(nuke_str));
+
+            SetTextColor(memDC, swap_charges > 0 ? RGB(0, 255, 200) : RGB(100, 100, 100));
+            TextOutA(memDC, sideX, 402, swap_str, lstrlenA(swap_str));
+
+            SetTextColor(memDC, freeze_timer_ms > 0 ? RGB(0, 255, 255) : (freeze_charges > 0 ? RGB(100, 200, 255) : RGB(100, 100, 100)));
+            TextOutA(memDC, sideX, 419, freeze_str, lstrlenA(freeze_str));
+
             // Hints
-            SetTextColor(memDC, RGB(100, 100, 120));
-            TextOutA(memDC, sideX, 385, "[P] Pause | [S] Save", 20);
-            TextOutA(memDC, sideX, 400, "[Space] Hard Drop", 17);
+            SetTextColor(memDC, RGB(120, 120, 140));
+            TextOutA(memDC, sideX, 442, "[P] Pause | [V] Save", 20);
+            TextOutA(memDC, sideX, 458, "[Space] Hard Drop", 17);
 
             // Overlays & Screens
             if (show_leaderboard) {
@@ -1158,7 +1323,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 SetTextColor(memDC, RGB(170, 170, 170));
-                TextOutA(memDC, total_w / 2 - 80, 380, "Press ENTER or ESC to return", 28);
+                TextOutA(memDC, total_w / 2 - 80, 420, "Press ENTER or ESC to return", 28);
             } else if (game_over) {
                 SetTextColor(memDC, RGB(255, 51, 51));
                 TextOutA(memDC, 45, H * CELL_SIZE / 2 - 10, "GAME OVER", 9);
@@ -1185,18 +1350,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOutA(memDC, 45, 115, "1. Marathon (Endless)", 21);
                 TextOutA(memDC, 45, 145, "2. Sprint (40-Lines Race)", 25);
                 TextOutA(memDC, 45, 175, "3. Ultra (2-Minute Timed)", 25);
-                TextOutA(memDC, 45, 205, "4. Campaign (15 Stages)", 23);
+                TextOutA(memDC, 45, 205, "4. Campaign (20 Stages)", 23);
 
                 SetTextColor(memDC, RGB(0, 255, 102));
                 TextOutA(memDC, 45, 235, "5 / [L]. High Scores", 20);
 
                 if (HasSavedGame()) {
                     SetTextColor(memDC, RGB(255, 0, 255));
-                    TextOutA(memDC, 45, 270, "[R]. Resume Saved Game", 22);
+                    TextOutA(memDC, 45, 270, "[V]. Resume Saved Game", 22);
                 }
 
                 SetTextColor(memDC, RGB(100, 100, 120));
-                TextOutA(memDC, total_w / 2 - 80, 390, "Use keys (1-5), L, or R", 22);
+                TextOutA(memDC, total_w / 2 - 80, 420, "Use keys (1-5), L, or V", 22);
             } else if (is_paused) {
                 SetTextColor(memDC, RGB(255, 255, 0));
                 TextOutA(memDC, 55, H * CELL_SIZE / 2, "PAUSED", 6);
@@ -1238,7 +1403,7 @@ void MainEntry() {
     RegisterClass(&wc);
 
     int winWidth = W * CELL_SIZE + 170 + 16;
-    int winHeight = H * CELL_SIZE + 39;
+    int winHeight = H * CELL_SIZE + 90;
 
     HWND hwnd = CreateWindowEx(0, "KTetrisApp", "KTetris", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, winWidth, winHeight, NULL, NULL, hInstance, NULL);
