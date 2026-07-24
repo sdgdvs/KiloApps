@@ -1,68 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KChart</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: #09090b;
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --border-color: rgba(255, 255, 255, 0.1);
+    --card-bg: rgba(255, 255, 255, 0.04);
+    --border-color: rgba(255, 255, 255, 0.12);
     --text-main: #ffffff;
-    --btn-bg: rgba(255, 255, 255, 0.1);
-    --btn-hover: rgba(255, 255, 255, 0.2);
+    --text-muted: #a1a1aa;
+    --btn-bg: rgba(255, 255, 255, 0.08);
+    --btn-hover: rgba(255, 255, 255, 0.18);
+    --focus-ring: #3b82f6;
   }
+  * { box-sizing: border-box; }
   body { 
-    margin: 0; font-family: 'Inter', -apple-system, sans-serif; 
+    margin: 0; 
+    font-family: 'Inter', -apple-system, sans-serif; 
     background: radial-gradient(circle at top right, #1e1b4b, var(--bg-color) 80%); 
-    display: flex; flex-direction: column; align-items: center; justify-content: center; 
-    height: 100vh; overflow: hidden; user-select: none; color: var(--text-main);
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh; 
+    overflow: hidden; 
+    user-select: none; 
+    color: var(--text-main);
   }
-  .chart-container {
+  .chart-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 20px;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    display: flex; flex-direction: column; align-items: center;
+    border-radius: 20px;
+    padding: 24px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 520px;
+    width: 90%;
+  }
+  .chart-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .chart-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #f4f4f5;
+  }
+  .chart-mode-badge {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .canvas-wrapper {
+    position: relative;
+    width: 100%;
+    height: 260px;
   }
   canvas { 
-    background-color: transparent; 
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 8px;
+    outline: none;
+  }
+  canvas:focus-visible {
+    box-shadow: 0 0 0 2px var(--focus-ring);
+  }
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
   }
   button { 
-    margin-top: 20px; padding: 8px 24px; font-size: 15px; font-weight: 600; 
+    padding: 10px 22px; 
+    font-size: 14px; 
+    font-weight: 600; 
     font-family: 'Inter', sans-serif;
-    cursor: pointer; border: 1px solid var(--border-color); border-radius: 20px; 
-    background: var(--btn-bg); color: var(--text-main);
+    cursor: pointer; 
+    border: 1px solid var(--border-color); 
+    border-radius: 20px; 
+    background: var(--btn-bg); 
+    color: var(--text-main);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(8px);
+    outline: none;
   }
-  button:hover { background: var(--btn-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-  button:active { transform: translateY(1px) scale(0.96); }
+  button:hover { 
+    background: var(--btn-hover); 
+    transform: translateY(-1px); 
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3); 
+  }
+  button:focus-visible {
+    box-shadow: 0 0 0 2px var(--focus-ring);
+  }
+  button:active { 
+    transform: translateY(1px) scale(0.97); 
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 </style>
 </head>
 <body>
-<div class="chart-container">
-  <canvas id="cvs" width="400" height="250" aria-label="Interactive Chart" role="img"></canvas>
-  <div>
-    <button id="btnRand" aria-label="Randomize data">Randomize</button>
-    <button id="btnToggle" aria-label="Toggle chart type">Toggle Type</button>
+<div class="chart-card">
+  <div class="chart-header">
+    <div class="chart-title">Data Analytics</div>
+    <div id="modeBadge" class="chart-mode-badge">Bar View</div>
   </div>
+  <div class="canvas-wrapper">
+    <canvas id="cvs" tabindex="0" role="img" aria-label="Data chart visualization. Use left and right arrow keys to inspect values."></canvas>
+  </div>
+  <div class="controls">
+    <button id="btnRand" aria-label="Randomize chart data">Randomize</button>
+    <button id="btnToggle" aria-label="Toggle chart type between Bar, Line, and Donut">Toggle Type</button>
+  </div>
+  <div id="srDesc" class="sr-only" aria-live="polite">Chart loaded. Values: Q1: 20, Q2: 60, Q3: 45, Q4: 80, Q5: 30.</div>
 </div>
+
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   const btnRand = document.getElementById('btnRand');
   const btnToggle = document.getElementById('btnToggle');
-  
-  let isLineChart = false;
-  
-  let hoverX = 0;
-  let hoverY = 0;
+  const modeBadge = document.getElementById('modeBadge');
+  const srDesc = document.getElementById('srDesc');
+
+  // Chart Modes: 0 = Bar, 1 = Line, 2 = Donut
+  let chartMode = 0;
+  const modes = ["Bar View", "Line View", "Donut View"];
+
+  let hoverX = -1;
+  let hoverY = -1;
   let hoveredIndex = -1;
-  
+
   let values = [20, 60, 45, 80, 30];
   let target = [20, 60, 45, 80, 30];
   const labels = ["Q1", "Q2", "Q3", "Q4", "Q5"];
@@ -73,223 +168,430 @@
       "rgb(139, 92, 246)", // Purple
       "rgb(59, 130, 246)"  // Blue
   ];
-  
-  function drawRoundedRect(ctx, x, y, width, height, radius) {
+
+  let width = 400;
+  let height = 260;
+
+  function resizeCanvas() {
+      const rect = cvs.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      width = rect.width || 400;
+      height = rect.height || 260;
+      
+      cvs.width = width * dpr;
+      cvs.height = height * dpr;
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+      draw();
+  }
+
+  function drawRoundedRect(ctx, x, y, w, h, r) {
+      if (w <= 0 || h <= 0) return;
+      r = Math.min(r, w / 2, h / 2);
+      if (r < 0) r = 0;
       ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.lineTo(x + width - radius, y);
-      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-      ctx.lineTo(x + width, y + height);
-      ctx.lineTo(x, y + height);
-      ctx.lineTo(x, y + radius);
-      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h);
+      ctx.lineTo(x, y + h);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
       ctx.closePath();
-      ctx.fill();
   }
 
   function draw() {
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
-      
-      let chartX = 40;
+      ctx.clearRect(0, 0, width, height);
+
+      if (chartMode === 2) {
+          drawDonutChart();
+          return;
+      }
+
+      let chartX = 45;
       let chartY = 20;
-      let chartW = cvs.width - 80;
-      let chartH = cvs.height - 60;
-      
-      // Draw grid lines
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.1)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
+      let chartW = width - 65;
+      let chartH = height - 55;
+
+      // Safe max value determination (prevent div by zero)
+      const maxVal = Math.max(1, ...values, ...target);
+
+      // Grid lines & Y-axis labels
+      ctx.font = "11px 'Inter', sans-serif";
+      ctx.fillStyle = "#71717a";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+
       for (let i = 0; i <= 4; i++) {
           let y = chartY + (chartH / 4) * i;
+          let valNum = Math.round(maxVal - (maxVal / 4) * i);
+          
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
           ctx.moveTo(chartX, y);
           ctx.lineTo(chartX + chartW, y);
-      }
-      ctx.stroke();
+          ctx.stroke();
 
-      // Draw axes
+          ctx.fillText(valNum.toString(), chartX - 8, y);
+      }
+
+      // Draw Axes
       ctx.beginPath();
       ctx.moveTo(chartX, chartY);
       ctx.lineTo(chartX, chartY + chartH);
       ctx.lineTo(chartX + chartW, chartY + chartH);
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      
-      let barW = 34;
-      let spacing = (chartW - (5 * barW)) / 6;
-      
-      ctx.font = "13px 'Inter'";
+
+      let n = values.length;
+      let barW = Math.min(36, Math.max(16, (chartW / n) * 0.5));
+      let spacing = (chartW - (n * barW)) / (n + 1);
+
+      ctx.font = "12px 'Inter', sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
-      ctx.fontWeight = "600";
-      
-      if (!isLineChart) {
-          for (let i = 0; i < 5; i++) {
-              let bw = barW;
-              let bh = (values[i] * chartH) / 100;
+
+      if (chartMode === 0) {
+          // Bar Chart
+          for (let i = 0; i < n; i++) {
+              let safeVal = Math.max(0, values[i]);
+              let bh = (safeVal / maxVal) * chartH;
               let bx = chartX + spacing + i * (barW + spacing);
               let by = chartY + chartH - bh;
-              
-              ctx.shadowBlur = 15;
-              ctx.shadowColor = colors[i];
-              ctx.fillStyle = colors[i];
-              
-              if (bh > 0) {
-                  drawRoundedRect(ctx, bx, by, bw, bh, 6);
+
+              if (bh > 0.5) {
+                  ctx.shadowBlur = hoveredIndex === i ? 18 : 8;
+                  ctx.shadowColor = colors[i % colors.length];
+                  ctx.fillStyle = colors[i % colors.length];
+                  drawRoundedRect(ctx, bx, by, barW, bh, 5);
+                  ctx.fill();
               }
-              
+
               ctx.shadowBlur = 0;
-              ctx.fillStyle = "#a1a1aa";
-              ctx.fillText(labels[i], bx + bw / 2, chartY + chartH + 10);
+              ctx.fillStyle = hoveredIndex === i ? "#ffffff" : "#a1a1aa";
+              ctx.fontWeight = hoveredIndex === i ? "600" : "400";
+              ctx.fillText(labels[i], bx + barW / 2, chartY + chartH + 8);
           }
-      } else {
+      } else if (chartMode === 1) {
+          // Line Chart with area fill
           ctx.shadowBlur = 0;
-          
-          // Draw lines
+
+          // Translucent gradient area fill
+          let areaGrad = ctx.createLinearGradient(0, chartY, 0, chartY + chartH);
+          areaGrad.addColorStop(0, "rgba(20, 184, 166, 0.35)");
+          areaGrad.addColorStop(1, "rgba(20, 184, 166, 0.0)");
+
           ctx.beginPath();
-          for (let i = 0; i < 5; i++) {
-              let bw = barW;
-              let bh = (values[i] * chartH) / 100;
-              let bx = chartX + spacing + i * (barW + spacing) + bw / 2;
+          let pts = [];
+          for (let i = 0; i < n; i++) {
+              let safeVal = Math.max(0, values[i]);
+              let bh = (safeVal / maxVal) * chartH;
+              let bx = chartX + spacing + i * (barW + spacing) + barW / 2;
               let by = chartY + chartH - bh;
-              
+              pts.push({ x: bx, y: by });
               if (i === 0) ctx.moveTo(bx, by);
               else ctx.lineTo(bx, by);
           }
           ctx.strokeStyle = colors[0];
           ctx.lineWidth = 3;
           ctx.stroke();
-          
-          // Draw points
-          for (let i = 0; i < 5; i++) {
-              let bw = barW;
-              let bh = (values[i] * chartH) / 100;
-              let bx = chartX + spacing + i * (barW + spacing) + bw / 2;
-              let by = chartY + chartH - bh;
-              
-              ctx.beginPath();
-              ctx.arc(bx, by, 6, 0, Math.PI * 2);
-              ctx.fillStyle = colors[i];
+
+          // Fill area
+          if (pts.length > 0) {
+              ctx.lineTo(pts[pts.length - 1].x, chartY + chartH);
+              ctx.lineTo(pts[0].x, chartY + chartH);
+              ctx.closePath();
+              ctx.fillStyle = areaGrad;
               ctx.fill();
-              
-              ctx.fillStyle = "#a1a1aa";
-              ctx.fillText(labels[i], bx, chartY + chartH + 10);
+          }
+
+          // Points and labels
+          for (let i = 0; i < n; i++) {
+              let bx = pts[i].x;
+              let by = pts[i].y;
+              let isHov = hoveredIndex === i;
+
+              ctx.beginPath();
+              ctx.arc(bx, by, isHov ? 8 : 5, 0, Math.PI * 2);
+              ctx.fillStyle = colors[i % colors.length];
+              ctx.shadowBlur = isHov ? 12 : 0;
+              ctx.shadowColor = colors[i % colors.length];
+              ctx.fill();
+
+              ctx.shadowBlur = 0;
+              ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+              ctx.fillText(labels[i], bx, chartY + chartH + 8);
           }
       }
 
-      if (hoveredIndex !== -1 && !animating) {
-          let val = Math.round(values[hoveredIndex]);
-          let txt = labels[hoveredIndex] + ": " + val;
-          ctx.font = "12px 'Inter'";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          let tw = ctx.measureText(txt).width;
-          let th = 24;
-          let tx = hoverX + 10;
-          let ty = hoverY - 10 - th;
-          
-          if (tx + tw + 16 > cvs.width) tx = hoverX - tw - 20;
-          if (ty < 0) ty = hoverY + 20;
-          
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = "rgba(0,0,0,0.5)";
-          ctx.fillStyle = "rgba(20,20,25,0.95)";
-          drawRoundedRect(ctx, tx, ty, tw + 16, th, 4);
-          ctx.strokeStyle = "rgba(255,255,255,0.2)";
-          ctx.lineWidth = 1;
-          ctx.stroke();
-          
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = "#ffffff";
-          ctx.fillText(txt, tx + (tw + 16)/2, ty + th/2);
-      }
+      drawTooltip();
   }
-  
+
+  function drawDonutChart() {
+      let total = values.reduce((a, b) => a + Math.max(0, b), 0);
+      let cx = width / 2 - 40;
+      let cy = height / 2;
+      let outerR = Math.min(width, height) * 0.35;
+      let innerR = outerR * 0.55;
+
+      if (total <= 0) total = 1; // Div by zero guard
+
+      let startAngle = -Math.PI / 2;
+      let n = values.length;
+
+      for (let i = 0; i < n; i++) {
+          let val = Math.max(0, values[i]);
+          let sliceAngle = (val / total) * (Math.PI * 2);
+          let endAngle = startAngle + sliceAngle;
+          let isHov = hoveredIndex === i;
+          let offsetR = isHov ? 6 : 0;
+
+          let midAngle = startAngle + sliceAngle / 2;
+          let dx = Math.cos(midAngle) * offsetR;
+          let dy = Math.sin(midAngle) * offsetR;
+
+          ctx.beginPath();
+          ctx.arc(cx + dx, cy + dy, outerR, startAngle, endAngle);
+          ctx.arc(cx + dx, cy + dy, innerR, endAngle, startAngle, true);
+          ctx.closePath();
+
+          ctx.fillStyle = colors[i % colors.length];
+          ctx.shadowBlur = isHov ? 16 : 0;
+          ctx.shadowColor = colors[i % colors.length];
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          startAngle = endAngle;
+      }
+
+      // Legend
+      let legX = width - 110;
+      let legY = height / 2 - (n * 22) / 2;
+      ctx.font = "12px 'Inter', sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+
+      for (let i = 0; i < n; i++) {
+          let isHov = hoveredIndex === i;
+          let y = legY + i * 22;
+
+          ctx.fillStyle = colors[i % colors.length];
+          ctx.beginPath();
+          ctx.arc(legX, y, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+          ctx.fontWeight = isHov ? "600" : "400";
+          let val = Math.round(values[i]);
+          ctx.fillText(`${labels[i]}: ${val}`, legX + 12, y);
+      }
+
+      drawTooltip();
+  }
+
+  function drawTooltip() {
+      if (hoveredIndex === -1 || animating) return;
+
+      let val = Math.round(values[hoveredIndex]);
+      let txt = `${labels[hoveredIndex]}: ${val}`;
+      ctx.font = "600 12px 'Inter', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      let tw = ctx.measureText(txt).width;
+      let th = 26;
+      let tx = hoverX + 12;
+      let ty = hoverY - 12 - th;
+
+      // Tooltip position clamping
+      if (tx + tw + 16 > width - 8) tx = hoverX - tw - 20;
+      if (tx < 8) tx = 8;
+      if (ty < 8) ty = hoverY + 16;
+      if (ty + th > height - 8) ty = height - th - 8;
+
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = "rgba(0,0,0,0.6)";
+      ctx.fillStyle = "rgba(18, 18, 22, 0.95)";
+      
+      drawRoundedRect(ctx, tx, ty, tw + 16, th, 6);
+      ctx.fill();
+      
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(txt, tx + (tw + 16) / 2, ty + th / 2);
+  }
+
   let animating = false;
   function update() {
       let changed = false;
-      for (let i = 0; i < 5; i++) {
-          if (values[i] < target[i]) {
-              values[i] += (target[i] - values[i]) * 0.1;
-              if (target[i] - values[i] < 0.5) values[i] = target[i];
+      for (let i = 0; i < values.length; i++) {
+          let diff = target[i] - values[i];
+          if (Math.abs(diff) > 0.1) {
+              values[i] += diff * 0.12;
               changed = true;
-          } else if (values[i] > target[i]) {
-              values[i] -= (values[i] - target[i]) * 0.1;
-              if (values[i] - target[i] < 0.5) values[i] = target[i];
-              changed = true;
+          } else {
+              values[i] = target[i];
           }
       }
+      draw();
       if (changed) {
-          draw();
           requestAnimationFrame(update);
       } else {
           animating = false;
+          updateScreenReader();
       }
   }
-  
+
+  function updateScreenReader() {
+      let desc = labels.map((l, idx) => `${l}: ${Math.round(values[idx])}`).join(', ');
+      srDesc.textContent = `Chart updated. Current values: ${desc}`;
+  }
+
   btnRand.onclick = () => {
-      for (let i = 0; i < 5; i++) {
-          target[i] = 5 + Math.floor(Math.random() * 95);
+      for (let i = 0; i < values.length; i++) {
+          target[i] = 10 + Math.floor(Math.random() * 90);
       }
       if (!animating) {
           animating = true;
           update();
       }
   };
-  
+
   btnToggle.onclick = () => {
-      isLineChart = !isLineChart;
+      chartMode = (chartMode + 1) % modes.length;
+      modeBadge.textContent = modes[chartMode];
       draw();
   };
 
-  cvs.addEventListener('mousemove', (e) => {
+  function handlePointerMove(clientX, clientY) {
       const rect = cvs.getBoundingClientRect();
-      hoverX = e.clientX - rect.left;
-      hoverY = e.clientY - rect.top;
-      
-      let chartX = 40;
-      let chartY = 20;
-      let chartW = cvs.width - 80;
-      let chartH = cvs.height - 60;
-      let barW = 34;
-      let spacing = (chartW - (5 * barW)) / 6;
-      
+      hoverX = clientX - rect.left;
+      hoverY = clientY - rect.top;
+
       let newHover = -1;
-      for (let i = 0; i < 5; i++) {
-          let bh = (values[i] * chartH) / 100;
-          let bx, by, bw, h;
-          if (!isLineChart) {
-              bx = chartX + spacing + i * (barW + spacing);
-              by = chartY + chartH - bh;
-              bw = barW;
-              h = bh;
-          } else {
-              bx = chartX + spacing + i * (barW + spacing) + barW / 2 - 10;
-              by = chartY + chartH - bh - 10;
-              bw = 20;
-              h = 20;
+      let n = values.length;
+
+      if (chartMode === 2) {
+          // Donut hover check
+          let cx = width / 2 - 40;
+          let cy = height / 2;
+          let dx = hoverX - cx;
+          let dy = hoverY - cy;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          let outerR = Math.min(width, height) * 0.35;
+          let innerR = outerR * 0.55;
+
+          if (dist >= innerR && dist <= outerR + 10) {
+              let angle = Math.atan2(dy, dx);
+              if (angle < -Math.PI / 2) angle += Math.PI * 2;
+              let total = values.reduce((a, b) => a + Math.max(0, b), 0) || 1;
+              let currAngle = -Math.PI / 2;
+
+              for (let i = 0; i < n; i++) {
+                  let sliceAngle = (Math.max(0, values[i]) / total) * (Math.PI * 2);
+                  if (angle >= currAngle && angle <= currAngle + sliceAngle) {
+                      newHover = i;
+                      break;
+                  }
+                  currAngle += sliceAngle;
+              }
           }
-          if (hoverX >= bx && hoverX <= bx + bw && hoverY >= by && hoverY <= by + h) {
-              newHover = i;
-              break;
+      } else {
+          // Bar & Line hover check
+          let chartX = 45;
+          let chartY = 20;
+          let chartW = width - 65;
+          let chartH = height - 55;
+          let maxVal = Math.max(1, ...values);
+
+          let barW = Math.min(36, Math.max(16, (chartW / n) * 0.5));
+          let spacing = (chartW - (n * barW)) / (n + 1);
+
+          for (let i = 0; i < n; i++) {
+              let bh = (Math.max(0, values[i]) / maxVal) * chartH;
+              let bx, by, bw, h;
+
+              if (chartMode === 0) {
+                  bx = chartX + spacing + i * (barW + spacing);
+                  by = chartY + chartH - bh;
+                  bw = barW;
+                  h = bh;
+              } else {
+                  bx = chartX + spacing + i * (barW + spacing) + barW / 2 - 12;
+                  by = chartY + chartH - bh - 12;
+                  bw = 24;
+                  h = 24;
+              }
+
+              if (hoverX >= bx && hoverX <= bx + bw && hoverY >= by - 5 && hoverY <= chartY + chartH) {
+                  newHover = i;
+                  break;
+              }
           }
       }
-      if (newHover !== hoveredIndex) {
+
+      if (newHover !== hoveredIndex || (newHover !== -1 && !animating)) {
           hoveredIndex = newHover;
           if (!animating) draw();
-      } else if (hoveredIndex !== -1 && !animating) {
-          draw(); // update tooltip position
       }
-  });
+  }
 
+  cvs.addEventListener('mousemove', (e) => handlePointerMove(e.clientX, e.clientY));
   cvs.addEventListener('mouseleave', () => {
       if (hoveredIndex !== -1) {
           hoveredIndex = -1;
           if (!animating) draw();
       }
   });
-  
-  draw();
+
+  // Touch Support
+  cvs.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+  }, { passive: true });
+  cvs.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+          handlePointerMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+  }, { passive: true });
+  cvs.addEventListener('touchend', () => {
+      hoveredIndex = -1;
+      if (!animating) draw();
+  });
+
+  // Keyboard accessibility
+  cvs.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          hoveredIndex = (hoveredIndex + 1) % values.length;
+          hoverX = width / 2;
+          hoverY = height / 2;
+          draw();
+          e.preventDefault();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          hoveredIndex = (hoveredIndex - 1 + values.length) % values.length;
+          hoverX = width / 2;
+          hoverY = height / 2;
+          draw();
+          e.preventDefault();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+          btnRand.click();
+          e.preventDefault();
+      } else if (e.key === 't' || e.key === 'T') {
+          btnToggle.click();
+          e.preventDefault();
+      }
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
 </script>
 </body>
 </html>
+
