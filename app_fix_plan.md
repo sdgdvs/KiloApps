@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KChart
+**Target App:** KChat & KChatServer
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -175,3 +175,5 @@ Pass 1 Complete.
 - **KCalc**: Fixed division by zero and numeric overflow handling, added factorial `n > 170` performance domain bounds, implicit multiplication and parenthesis auto-closing in expression parser, precision formatting, and full keyboard navigation in `kcalc.html`. Fixed div-by-zero, `ln`/`log10`/`sqrt`/`n!` domain checks, static control `WM_CTLCOLORSTATIC` background brush, and window dimensions (320x430) in `main.c`.
 
 - **KCalendar**: Added DOM `textContent` XSS escaping, `currentDate.setDate(1)` month boundary navigation safety, ARIA grid/application attributes, keyboard navigation (`Enter`/`Space`/`Escape`), and modal focus traps in `kcalendar.html`. Replaced CRT file I/O with native Win32 APIs (`CreateFileA`/`WriteFile`), added event deletion button & listbox double-click deletion, GDI brush handle cleanup in `WM_DESTROY`, and day bit shift bounds safety in `main.c`.
+
+- **KChart**: Added high-DPI scaling (`devicePixelRatio`), dynamic division-by-zero bounds (`Math.max(1, ...)`), Donut/Bar/Line chart mode toggle, ARIA live region updates, and touch support in `kchart.html`. Added Donut chart mode with GDI `Pie` rendering, CRT-free trig helpers (`my_sin`/`my_cos`), dynamic `WM_SIZE` layout scaling, Y-axis legend rendering, and double-buffering GDI cleanup in `main.c`.
