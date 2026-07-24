@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KCalc
+**Target App:** KCalendar
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -171,3 +171,5 @@ Pass 1 Complete.
 - **KAudio**: Added Web Audio API context auto-resumption, master gain node (0.25) to prevent clipping, click-free exponential release ramps, touch screen event support, and ARIA piano key attributes in `kaudio.html`. Added mouse click-and-drag key playing, auto-repeat keyboard guards, exact `AdjustWindowRect` sizing, and MIDI note clamping in `main.c`.
 
 - **KBBS**: Added ANSI 256-color SGR parameter handling, 2048-char music buffer limit, ARIA canvas/modal attributes, and high-load queue throttling in `kbbs.html`. Added cached solid GDI brushes to eliminate 2k per-frame brush allocations, OSC sequence parser state, ANSI music overflow protection, and terminal scroll bounds clamping in `main.c`.
+
+- **KCalc**: Fixed division by zero and numeric overflow handling, added factorial `n > 170` performance domain bounds, implicit multiplication and parenthesis auto-closing in expression parser, precision formatting, and full keyboard navigation in `kcalc.html`. Fixed div-by-zero, `ln`/`log10`/`sqrt`/`n!` domain checks, static control `WM_CTLCOLORSTATIC` background brush, and window dimensions (320x430) in `main.c`.
