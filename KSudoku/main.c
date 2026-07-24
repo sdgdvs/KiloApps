@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 
 // Colors
 COLORREF themes[3][9] = {
@@ -44,6 +45,55 @@ typedef struct {
     int soundEnabled;
 } Prefs;
 Prefs prefs = {0, 1, 1};
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int size;
+    int life;
+    int shape;
+} WinParticle;
+
+#define MAX_WIN_PARTICLES 120
+WinParticle winParticles[MAX_WIN_PARTICLES];
+int winFxActive = 0;
+
+void TriggerVictoryParticles() {
+    winFxActive = 1;
+    COLORREF colors[] = {
+        RGB(245, 158, 11), RGB(16, 185, 129), RGB(59, 130, 246),
+        RGB(236, 72, 153), RGB(139, 92, 246), RGB(239, 68, 68), RGB(56, 189, 248)
+    };
+    int numColors = sizeof(colors)/sizeof(colors[0]);
+    for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
+        winParticles[i].x = 220.0f + (rand() % 80 - 40);
+        winParticles[i].y = 255.0f + (rand() % 80 - 40);
+        float angle = (rand() % 360) * 3.14159f / 180.0f;
+        float speed = 3.0f + (rand() % 100) / 10.0f;
+        winParticles[i].vx = cosf(angle) * speed;
+        winParticles[i].vy = sinf(angle) * speed - 5.0f;
+        winParticles[i].color = colors[rand() % numColors];
+        winParticles[i].size = 4 + (rand() % 6);
+        winParticles[i].life = 40 + (rand() % 40);
+        winParticles[i].shape = rand() % 2;
+    }
+}
+
+void UpdateVictoryParticles() {
+    if (!winFxActive) return;
+    int anyAlive = 0;
+    for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
+        if (winParticles[i].life > 0) {
+            winParticles[i].x += winParticles[i].vx;
+            winParticles[i].y += winParticles[i].vy;
+            winParticles[i].vy += 0.35f;
+            winParticles[i].life--;
+            if (winParticles[i].life > 0) anyAlive = 1;
+        }
+    }
+    if (!anyAlive) winFxActive = 0;
+}
 
 void LoadPrefs() {
     FILE *f = fopen("ksudoku_prefs.dat", "rb");
@@ -523,6 +573,7 @@ void CheckWin(HWND hwnd) {
             
     timerActive = 0;
     PlaySudokuSound(6);
+    TriggerVictoryParticles();
     
     if (isRushMode) {
         score += elapsedTime * 10 + 500; // Completion bonus for Rush
@@ -674,11 +725,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             SetTimer(hwnd, 1, 1000, NULL);
+            SetTimer(hwnd, 2, 30, NULL);
             UpdatePowerupButtons();
             break;
         }
         case WM_TIMER: {
-            if(timerActive) {
+            if (wParam == 2) {
+                if (winFxActive) {
+                    UpdateVictoryParticles();
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 1 && timerActive) {
                 if (isRushMode) {
                     elapsedTime--;
                     if (elapsedTime <= 0) {
@@ -1027,29 +1084,96 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             int start_x = 40, start_y = 75, cell_sz = 40;
+            int board_w = 9 * cell_sz;
+
+            // 3D Wooden / Slate Outer Board Frame
+            RECT outerFrame = {start_x - 8, start_y - 8, start_x + board_w + 8, start_y + board_w + 8};
+            HBRUSH hFrameBrush = CreateSolidBrush(RGB(30, 41, 59));
+            FillRect(hdc, &outerFrame, hFrameBrush);
+            DeleteObject(hFrameBrush);
+
+            HPEN hLightPen = CreatePen(PS_SOLID, 2, RGB(71, 85, 105));
+            HPEN hDarkPen = CreatePen(PS_SOLID, 2, RGB(15, 23, 42));
+            HPEN oldPen = (HPEN)SelectObject(hdc, hLightPen);
+
+            MoveToEx(hdc, outerFrame.left, outerFrame.bottom, NULL);
+            LineTo(hdc, outerFrame.left, outerFrame.top);
+            LineTo(hdc, outerFrame.right, outerFrame.top);
+
+            SelectObject(hdc, hDarkPen);
+            LineTo(hdc, outerFrame.right, outerFrame.bottom);
+            LineTo(hdc, outerFrame.left, outerFrame.bottom);
+
+            SelectObject(hdc, oldPen);
+            DeleteObject(hLightPen);
+            DeleteObject(hDarkPen);
             
             int highlight_val = 0;
             if(sel_r >= 0 && sel_c >= 0 && board[sel_r][sel_c] != 0) {
                 highlight_val = board[sel_r][sel_c];
             }
             
-            // Draw cells
+            // Draw cells with recessed slots and 3D tactile tile styling
             for(int r=0; r<9; r++) {
                 for(int c=0; c<9; c++) {
                     RECT rc = {start_x + c*cell_sz, start_y + r*cell_sz, start_x + (c+1)*cell_sz, start_y + (r+1)*cell_sz};
+                    RECT cellInner = {rc.left + 1, rc.top + 1, rc.right - 1, rc.bottom - 1};
                     
                     HBRUSH cellBg = NULL;
                     if(r == sel_r && c == sel_c) {
-                        cellBg = CreateSolidBrush(themes[prefs.theme][T_SEL]);
+                        cellBg = CreateSolidBrush(RGB(37, 99, 235));
                     } else if(sel_r >= 0 && (r == sel_r || c == sel_c || (r/3 == sel_r/3 && c/3 == sel_c/3))) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
                     } else if(prefs.highlightSame && highlight_val && board[r][c] == highlight_val) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
+                    } else if(fixed[r][c] && board[r][c] != 0) {
+                        cellBg = CreateSolidBrush(RGB(24, 34, 56));
+                    } else {
+                        cellBg = CreateSolidBrush(themes[prefs.theme][T_BG]);
                     }
                     
-                    if(cellBg) {
-                        FillRect(hdc, &rc, cellBg);
-                        DeleteObject(cellBg);
+                    FillRect(hdc, &cellInner, cellBg);
+                    DeleteObject(cellBg);
+
+                    // Recessed inset cell bevel
+                    HPEN hInsetShadow = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+                    HPEN hInsetHighlight = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
+                    oldPen = (HPEN)SelectObject(hdc, hInsetShadow);
+
+                    MoveToEx(hdc, cellInner.left, cellInner.bottom, NULL);
+                    LineTo(hdc, cellInner.left, cellInner.top);
+                    LineTo(hdc, cellInner.right, cellInner.top);
+
+                    SelectObject(hdc, hInsetHighlight);
+                    LineTo(hdc, cellInner.right, cellInner.bottom);
+                    LineTo(hdc, cellInner.left, cellInner.bottom);
+
+                    SelectObject(hdc, oldPen);
+                    DeleteObject(hInsetShadow);
+                    DeleteObject(hInsetHighlight);
+
+                    // Red Pulsing Collision Warning Aura Box
+                    if(error_cells[r][c]) {
+                        HPEN hErrPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+                        oldPen = (HPEN)SelectObject(hdc, hErrPen);
+                        HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
+                        Rectangle(hdc, rc.left - 1, rc.top - 1, rc.right + 1, rc.bottom + 1);
+                        SelectObject(hdc, oldB);
+                        SelectObject(hdc, oldPen);
+                        DeleteObject(hErrPen);
+                    }
+
+                    // Selected Cell Glowing Aura Border
+                    if(r == sel_r && c == sel_c) {
+                        HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB(147, 197, 253));
+                        oldPen = (HPEN)SelectObject(hdc, hSelPen);
+                        HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
+                        Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
+                        SelectObject(hdc, oldB);
+                        SelectObject(hdc, oldPen);
+                        DeleteObject(hSelPen);
                     }
                     
                     if (fog_cells[r][c] && board[r][c] == 0) {
@@ -1063,32 +1187,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if(board[r][c] != 0) {
                         char buf[2];
                         sprintf(buf, "%d", board[r][c]);
-                        if(error_cells[r][c]) SetTextColor(hdc, themes[prefs.theme][T_ERR]);
-                        else if(fixed[r][c]) SetTextColor(hdc, themes[prefs.theme][T_FIXED]); 
-                        else SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
+                        
+                        // 3D Engraved text shadow for fixed initial cells
+                        if(fixed[r][c] && !error_cells[r][c]) {
+                            SetTextColor(hdc, RGB(0, 0, 0));
+                            RECT shadowRc = rc; shadowRc.left += 1; shadowRc.top += 3;
+                            DrawTextA(hdc, buf, -1, &shadowRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            SetTextColor(hdc, RGB(248, 250, 252));
+                        } else if(error_cells[r][c]) {
+                            SetTextColor(hdc, RGB(248, 113, 113));
+                        } else {
+                            SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
+                        }
                         
                         RECT textRc = rc;
-                        textRc.top += 2;
+                        textRc.top += 1;
                         DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     } else {
                         int hasNotes = 0;
                         for(int i=1; i<=9; i++) if(notes[r][c][i]) hasNotes = 1;
                         if(hasNotes) {
                             HFONT oldFnt = (HFONT)SelectObject(hdc, hFontSmall);
-                            SetTextColor(hdc, RGB(148, 163, 184));
                             for(int i=1; i<=9; i++) {
                                 if(notes[r][c][i]) {
                                     int sub_r = (i-1) / 3;
                                     int sub_c = (i-1) % 3;
-                                    RECT textRc = rc;
-                                    textRc.left += sub_c * (cell_sz / 3);
-                                    textRc.right = textRc.left + (cell_sz / 3);
-                                    textRc.top += sub_r * (cell_sz / 3);
-                                    textRc.bottom = textRc.top + (cell_sz / 3);
+                                    RECT noteRc = rc;
+                                    noteRc.left += sub_c * (cell_sz / 3) + 1;
+                                    noteRc.right = noteRc.left + (cell_sz / 3) - 1;
+                                    noteRc.top += sub_r * (cell_sz / 3) + 1;
+                                    noteRc.bottom = noteRc.top + (cell_sz / 3) - 1;
                                     
+                                    // Pencil note mini-pip badge background
+                                    HBRUSH hPipBrush = CreateSolidBrush(RGB(30, 58, 100));
+                                    FillRect(hdc, &noteRc, hPipBrush);
+                                    DeleteObject(hPipBrush);
+
+                                    SetTextColor(hdc, RGB(147, 197, 253));
                                     char buf[2];
                                     sprintf(buf, "%d", i);
-                                    DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                                    DrawTextA(hdc, buf, -1, &noteRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                                 }
                             }
                             SelectObject(hdc, oldFnt);
@@ -1097,10 +1235,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw grid lines
+            // Draw grid lines with thick 3x3 block divider 3D effect
             for(int i=0; i<=9; i++) {
                 int thick = (i % 3 == 0);
-                HPEN hPen = CreatePen(PS_SOLID, thick ? 3 : 1, themes[prefs.theme][thick ? T_GRID_THICK : T_GRID_THIN]);
+                COLORREF gridCol = thick ? RGB(248, 250, 252) : themes[prefs.theme][T_GRID_THIN];
+                HPEN hPen = CreatePen(PS_SOLID, thick ? 3 : 1, gridCol);
                 HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
                 
                 MoveToEx(hdc, start_x + i*cell_sz, start_y, NULL);
@@ -1111,6 +1250,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 SelectObject(hdc, oldPen);
                 DeleteObject(hPen);
+
+                if (thick && i > 0 && i < 9) {
+                    HPEN hShadPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+                    HPEN oldP = (HPEN)SelectObject(hdc, hShadPen);
+                    
+                    MoveToEx(hdc, start_x + i*cell_sz + 2, start_y, NULL);
+                    LineTo(hdc, start_x + i*cell_sz + 2, start_y + 9*cell_sz);
+                    
+                    MoveToEx(hdc, start_x, start_y + i*cell_sz + 2, NULL);
+                    LineTo(hdc, start_x + 9*cell_sz, start_y + i*cell_sz + 2);
+
+                    SelectObject(hdc, oldP);
+                    DeleteObject(hShadPen);
+                }
+            }
+
+            // Draw Victory Confetti Particles
+            if (winFxActive) {
+                for(int i = 0; i < MAX_WIN_PARTICLES; i++) {
+                    if (winParticles[i].life > 0) {
+                        HBRUSH pBrush = CreateSolidBrush(winParticles[i].color);
+                        HPEN pPen = CreatePen(PS_SOLID, 1, winParticles[i].color);
+                        HPEN oldP = (HPEN)SelectObject(hdc, pPen);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, pBrush);
+
+                        int px = (int)winParticles[i].x;
+                        int py = (int)winParticles[i].y;
+                        int psz = winParticles[i].size;
+
+                        if (winParticles[i].shape == 0) {
+                            Rectangle(hdc, px, py, px + psz, py + psz + 2);
+                        } else {
+                            Ellipse(hdc, px, py, px + psz, py + psz);
+                        }
+
+                        SelectObject(hdc, oldP);
+                        SelectObject(hdc, oldB);
+                        DeleteObject(pPen);
+                        DeleteObject(pBrush);
+                    }
+                }
             }
             
             SelectObject(hdc, oldFont);
