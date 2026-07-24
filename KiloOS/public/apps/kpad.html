@@ -1,48 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>KPad Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPad Pro - Advanced Text & Code Editor</title>
 <style>
   :root {
-    --bg-base: #0f172a;
-    --bg-glass: rgba(30, 41, 59, 0.7);
+    --bg-base: #0b0f19;
+    --bg-surface: #0f172a;
+    --bg-glass: rgba(15, 23, 42, 0.85);
+    --bg-glass-card: rgba(30, 41, 59, 0.7);
     --border-glass: rgba(255, 255, 255, 0.1);
+    --border-active: rgba(59, 130, 246, 0.5);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
+    --text-muted: #64748b;
     --accent: #3b82f6;
     --accent-hover: #60a5fa;
-    --tab-bg: rgba(15, 23, 42, 0.5);
-    --tab-active: rgba(59, 130, 246, 0.2);
+    --accent-glow: rgba(59, 130, 246, 0.3);
+    --tab-bg: rgba(11, 15, 25, 0.8);
+    --tab-active: rgba(30, 41, 59, 0.95);
+    --gutter-bg: #0b0f19;
+    --gutter-text: #475569;
+    --gutter-active: #38bdf8;
+    
+    /* Syntax Tokens */
+    --tok-kw: #38bdf8;
+    --tok-str: #34d399;
+    --tok-num: #fb7185;
+    --tok-comment: #64748b;
+    --tok-key: #a78bfa;
+    --tok-tag: #f59e0b;
+    --tok-bool: #f43f5e;
   }
+
+  [data-theme="neon"] {
+    --bg-base: #090d16;
+    --bg-surface: #111827;
+    --accent: #10b981;
+    --accent-hover: #34d399;
+    --accent-glow: rgba(16, 185, 129, 0.3);
+    --tok-kw: #f472b6;
+    --tok-str: #34d399;
+    --tok-num: #fbbf24;
+  }
+
+  [data-theme="cyber"] {
+    --bg-base: #13091f;
+    --bg-surface: #1d1135;
+    --accent: #d946ef;
+    --accent-hover: #f0abfc;
+    --accent-glow: rgba(217, 70, 239, 0.3);
+    --tok-kw: #38bdf8;
+    --tok-str: #f472b6;
+    --tok-num: #a78bfa;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
   body, html { 
-    margin: 0; padding: 0; width: 100%; height: 100%; 
+    width: 100%; height: 100%; 
     overflow: hidden; 
-    font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; 
+    font-family: 'Inter', system-ui, -apple-system, sans-serif; 
     background: var(--bg-base); 
     color: var(--text-primary);
     display: flex; flex-direction: column; 
   }
-  
-  /* Glassmorphic Menu */
-  .menu { 
+
+  /* Glass Menu Header */
+  .header-menu { 
     background: var(--bg-glass); 
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-glass); 
     display: flex; 
+    align-items: center;
     font-size: 13px; 
-    padding: 4px 8px; 
-    gap: 10px;
-    z-index: 10;
+    padding: 2px 10px; 
+    gap: 4px;
+    z-index: 100;
+    user-select: none;
   }
-  .menu-item { 
+
+  .menu-btn { 
     padding: 6px 12px; 
     cursor: pointer; 
     position: relative; 
     border-radius: 4px;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
+    color: var(--text-secondary);
   }
-  .menu-item:hover { 
+  .menu-btn:hover { 
     background: var(--accent); 
     color: white; 
   }
@@ -51,42 +98,66 @@
     display: none; 
     position: absolute; 
     top: 100%; left: 0; 
-    background: rgba(30, 41, 59, 0.95); 
-    backdrop-filter: blur(16px);
+    background: rgba(15, 23, 42, 0.95); 
+    backdrop-filter: blur(20px);
     border: 1px solid var(--border-glass); 
     border-radius: 6px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-    z-index: 100; 
-    min-width: 200px;
-    margin-top: 5px;
-    overflow: hidden;
-    animation: fadeIn 0.2s ease;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6); 
+    z-index: 1000; 
+    min-width: 210px;
+    margin-top: 4px;
+    padding: 4px 0;
+    animation: dropIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
+
+  @keyframes dropIn {
+    from { opacity: 0; transform: translateY(-6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .menu-item:hover .dropdown { display: block; }
+
+  .menu-btn:hover .dropdown { display: block; }
+  
   .dropdown div { 
-    padding: 8px 16px; 
-    transition: background 0.15s;
+    padding: 7px 14px; 
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-primary);
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
   }
-  .dropdown div:hover { background: var(--accent); }
-  .dropdown .shortcut { color: var(--text-secondary); font-size: 11px; }
-  .dropdown div:hover .shortcut { color: rgba(255,255,255,0.7); }
+  .dropdown div:hover { background: var(--accent); color: white; }
+  .dropdown .shortcut { color: var(--text-muted); font-size: 11px; margin-left: 12px; }
+  .dropdown div:hover .shortcut { color: rgba(255,255,255,0.8); }
   .divider { border-bottom: 1px solid var(--border-glass); margin: 4px 0; padding: 0 !important; }
 
-  /* Tabs System */
-  .tabs-container {
+  /* App Brand Title */
+  .brand-badge {
+    margin-left: auto;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-right: 8px;
+  }
+
+  /* Multi-Tab Strip */
+  .tabs-bar {
     display: flex;
+    align-items: center;
     background: var(--tab-bg);
     border-bottom: 1px solid var(--border-glass);
     overflow-x: auto;
+    scrollbar-width: none;
+    user-select: none;
   }
-  .tab {
-    padding: 8px 16px;
+  .tabs-bar::-webkit-scrollbar { display: none; }
+  
+  .tab-item {
+    padding: 8px 14px;
     font-size: 12px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -94,138 +165,448 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s;
-    user-select: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    position: relative;
+    max-width: 200px;
   }
-  .tab:hover { background: rgba(255,255,255,0.05); }
-  .tab.active {
+  .tab-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+  .tab-item.active {
     background: var(--tab-active);
     color: var(--accent-hover);
     border-bottom: 2px solid var(--accent);
+    font-weight: 500;
+  }
+  .tab-dirty {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-left: 2px;
   }
   .tab-close {
     width: 16px; height: 16px;
+    border-radius: 4px;
     display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-    font-size: 10px;
+    font-size: 11px;
+    color: var(--text-muted);
+    transition: all 0.15s;
   }
-  .tab-close:hover { background: rgba(255,255,255,0.2); color: white; }
+  .tab-close:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
-  /* Editor */
+  .add-tab-btn {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 14px;
+    transition: color 0.15s;
+  }
+  .add-tab-btn:hover { color: var(--accent); }
+
+  /* Find & Replace Floating Panel */
+  .find-replace-panel {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    position: absolute;
+    top: 10px;
+    right: 25px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+    min-width: 340px;
+    animation: dropIn 0.2s ease;
+  }
+  .find-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .find-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    color: white;
+    padding: 5px 8px;
+    font-size: 12px;
+    outline: none;
+  }
+  .find-input:focus { border-color: var(--accent); }
+  .find-toggle {
+    padding: 4px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .find-toggle.active {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent-hover);
+  }
+  .find-btn {
+    padding: 4px 10px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .find-btn:hover { background: var(--accent-hover); }
+  .find-stats {
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 70px;
+    text-align: right;
+  }
+
+  /* Main Editor Layout */
   .editor-wrapper {
     flex: 1;
     display: flex;
     position: relative;
-    background: #0f172a;
+    background: var(--bg-surface);
+    overflow: hidden;
   }
-  textarea { 
-    flex: 1; 
-    width: 100%; 
-    border: none; 
-    outline: none; 
-    padding: 15px; 
-    font-family: 'Consolas', 'Fira Code', monospace; 
-    font-size: 14px; 
-    line-height: 1.5;
+
+  /* Gutter Line Numbers */
+  .gutter {
+    width: 50px;
+    background: var(--gutter-bg);
+    border-right: 1px solid var(--border-glass);
+    color: var(--gutter-text);
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 12px 0;
+    text-align: right;
+    user-select: none;
+    overflow: hidden;
+  }
+  .gutter-line {
+    padding-right: 10px;
+    height: 20.8px; /* line-height 1.6 * font-size 13px */
+  }
+  .gutter-line.active {
+    color: var(--gutter-active);
+    font-weight: bold;
+    background: rgba(56, 189, 248, 0.08);
+  }
+
+  /* Code Container & Synchronized Overlay */
+  .code-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #highlight-pre, #editor {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    margin: 0;
+    padding: 12px 16px;
+    font-family: 'Consolas', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    tab-size: 4;
+    white-space: pre;
+    word-wrap: normal;
+    overflow: auto;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+  }
+
+  #highlight-pre {
+    pointer-events: none;
+    z-index: 1;
     background: transparent;
     color: #e2e8f0;
-    resize: none; 
-    box-sizing: border-box; 
-    tab-size: 4;
   }
-  
-  /* Status Bar */
+
+  #editor {
+    z-index: 2;
+    background: transparent;
+    color: transparent;
+    caret-color: #38bdf8;
+    resize: none;
+  }
+
+  /* Syntax Highlighting Token Styles */
+  .tok-kw { color: var(--tok-kw); font-weight: bold; }
+  .tok-str { color: var(--tok-str); }
+  .tok-num { color: var(--tok-num); }
+  .tok-comment { color: var(--tok-comment); font-style: italic; }
+  .tok-key { color: var(--tok-key); }
+  .tok-tag { color: var(--tok-tag); }
+  .tok-bool { color: var(--tok-bool); font-weight: bold; }
+
+  /* Glass Status Bar */
   .status-bar { 
     background: var(--bg-glass); 
     backdrop-filter: blur(10px);
     border-top: 1px solid var(--border-glass); 
     display: flex; 
-    justify-content: flex-end; 
-    padding: 6px 15px; 
+    align-items: center;
+    justify-content: space-between; 
+    padding: 4px 12px; 
     font-size: 11px; 
     color: var(--text-secondary); 
-    gap: 20px; 
+    z-index: 10;
+    user-select: none;
+  }
+  .status-left, .status-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
   .status-item {
-    display: flex; align-items: center; gap: 5px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .lang-select, .theme-select {
+    background: rgba(0,0,0,0.3);
+    color: var(--text-primary);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* Context Menu */
+  .context-menu {
+    display: none;
+    position: absolute;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+    z-index: 2000;
+    min-width: 160px;
+    padding: 4px 0;
+  }
+  .context-menu div {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .context-menu div:hover {
+    background: var(--accent);
   }
 </style>
 </head>
 <body>
-  <div id="find-panel" role="search" aria-label="Find Text" style="display:none; position:absolute; top:40px; right:20px; background:var(--bg-glass); backdrop-filter:blur(10px); padding:8px; border-radius:6px; border:1px solid var(--border-glass); z-index:50; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
-    <input type="text" id="find-input" placeholder="Find..." aria-label="Find query" style="background:rgba(0,0,0,0.5); color:white; border:none; padding:4px 8px; border-radius:3px; outline:none;" onkeydown="if(event.key==='Enter') findNext()">
-    <button onclick="findNext()" aria-label="Find Next" style="background:var(--accent); color:white; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-left:4px;">Find</button>
-    <button onclick="closeFind()" aria-label="Close Find" style="background:transparent; color:var(--text-secondary); border:none; padding:4px 8px; cursor:pointer; margin-left:4px;">✕</button>
-  </div>
-  <div class="menu">
-    <div class="menu-item">File
+
+  <!-- Menu Bar -->
+  <div class="header-menu">
+    <div class="menu-btn">File
       <div class="dropdown">
         <div onclick="newTab()"><span>New Tab</span><span class="shortcut">Ctrl+T</span></div>
         <div class="divider"></div>
         <div onclick="openVFS()"><span>Open (VFS)</span></div>
         <div onclick="saveVFS()"><span>Save (VFS)</span><span class="shortcut">Ctrl+S</span></div>
         <div class="divider"></div>
-        <div onclick="openFileNative()"><span>Open (Local)</span></div>
-        <div onclick="saveFileNative()"><span>Save As (Local)</span></div>
+        <div onclick="openFileNative()"><span>Open Local File</span><span class="shortcut">Ctrl+O</span></div>
+        <div onclick="saveFileNative()"><span>Save As Local</span></div>
+        <div class="divider"></div>
+        <div onclick="exportDocument('txt')"><span>Export as Plain Text (.txt)</span></div>
+        <div onclick="exportDocument('html')"><span>Export as HTML (.html)</span></div>
+        <div onclick="exportDocument('json')"><span>Export Session Backup (.json)</span></div>
       </div>
     </div>
-    <div class="menu-item">Edit
+
+    <div class="menu-btn">Edit
       <div class="dropdown">
         <div onclick="document.execCommand('undo')"><span>Undo</span><span class="shortcut">Ctrl+Z</span></div>
+        <div onclick="document.execCommand('redo')"><span>Redo</span><span class="shortcut">Ctrl+Y</span></div>
         <div class="divider"></div>
         <div onclick="document.execCommand('cut')"><span>Cut</span><span class="shortcut">Ctrl+X</span></div>
         <div onclick="document.execCommand('copy')"><span>Copy</span><span class="shortcut">Ctrl+C</span></div>
         <div onclick="document.execCommand('paste')"><span>Paste</span><span class="shortcut">Ctrl+V</span></div>
+        <div onclick="selectAll()"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
         <div class="divider"></div>
-        <div onclick="document.getElementById('editor').select()"><span>Select All</span><span class="shortcut">Ctrl+A</span></div>
-        <div class="divider"></div>
-        <div onclick="openFind()"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
-        <div onclick="insertDateTime()"><span>Time/Date</span><span class="shortcut">F5</span></div>
+        <div onclick="openFind(false)"><span>Find...</span><span class="shortcut">Ctrl+F</span></div>
+        <div onclick="openFind(true)"><span>Replace...</span><span class="shortcut">Ctrl+H</span></div>
+        <div onclick="insertDateTime()"><span>Insert Time/Date</span><span class="shortcut">F5</span></div>
       </div>
     </div>
-    <div class="menu-item">View
+
+    <div class="menu-btn">Tools
+      <div class="dropdown">
+        <div onclick="transformText('upper')"><span>UPPERCASE</span></div>
+        <div onclick="transformText('lower')"><span>lowercase</span></div>
+        <div onclick="transformText('title')"><span>Title Case</span></div>
+        <div class="divider"></div>
+        <div onclick="trimWhitespace()"><span>Trim Trailing Spaces</span></div>
+        <div onclick="formatJSON()"><span>Format JSON</span></div>
+        <div onclick="sortLines()"><span>Sort Lines</span></div>
+      </div>
+    </div>
+
+    <div class="menu-btn">View
       <div class="dropdown">
         <div onclick="toggleWordWrap()"><span>Toggle Word Wrap</span><span class="shortcut">Alt+Z</span></div>
+        <div onclick="toggleGutter()"><span>Toggle Line Numbers</span></div>
+        <div class="divider"></div>
+        <div onclick="changeFontSize(1)"><span>Increase Font Size</span></div>
+        <div onclick="changeFontSize(-1)"><span>Decrease Font Size</span></div>
+        <div onclick="resetFontSize()"><span>Reset Font Size</span></div>
       </div>
     </div>
-  </div>
-  
-  <div class="tabs-container" id="tabs" role="tablist"></div>
 
+    <div class="brand-badge">KPad Pro</div>
+  </div>
+
+  <!-- Multi-Tab Strip -->
+  <div class="tabs-bar" id="tabs-bar" role="tablist"></div>
+
+  <!-- Floating Find & Replace Panel -->
+  <div class="find-replace-panel" id="find-panel" role="search">
+    <div class="find-row">
+      <input type="text" class="find-input" id="find-input" placeholder="Find..." aria-label="Find input" onkeydown="if(event.key==='Enter') findNext(false)">
+      <button class="find-toggle" id="btn-match-case" onclick="toggleFindOpt('matchCase')" title="Match Case (Aa)">Aa</button>
+      <button class="find-toggle" id="btn-regex" onclick="toggleFindOpt('regex')" title="Regular Expression (.*)">.*</button>
+      <span class="find-stats" id="find-stats">0 of 0</span>
+      <button class="find-btn" onclick="findNext(false)">▲</button>
+      <button class="find-btn" onclick="findNext(true)">▼</button>
+      <button class="find-toggle" onclick="closeFind()">✕</button>
+    </div>
+    <div class="find-row" id="replace-row" style="display:none;">
+      <input type="text" class="find-input" id="replace-input" placeholder="Replace with..." aria-label="Replace input" onkeydown="if(event.key==='Enter') replaceOne()">
+      <button class="find-btn" onclick="replaceOne()">Replace</button>
+      <button class="find-btn" onclick="replaceAll()">Replace All</button>
+    </div>
+  </div>
+
+  <!-- Editor Container with Line Gutter -->
   <div class="editor-wrapper">
-    <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor"></textarea>
+    <div class="gutter" id="gutter"></div>
+    <div class="code-container">
+      <pre id="highlight-pre" aria-hidden="true"><code id="highlight-code"></code></pre>
+      <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor"></textarea>
+    </div>
   </div>
-  
+
+  <!-- Status Bar -->
   <div class="status-bar">
-    <div class="status-item" id="file-path">Unsaved</div>
-    <div class="status-item" id="encoding">UTF-8</div>
-    <div class="status-item" id="line-count">Ln 1, Col 1</div>
-    <div class="status-item" id="char-count">0 Lines, 0 Chars</div>
+    <div class="status-left">
+      <div class="status-item" id="file-path">Untitled 1</div>
+      <div class="status-item" id="file-status">Ready</div>
+    </div>
+    <div class="status-right">
+      <div class="status-item">
+        <label for="theme-selector" style="display:none;">Theme</label>
+        <select class="theme-select" id="theme-selector" onchange="setTheme(this.value)" aria-label="Select Theme">
+          <option value="dark">Dark Slate</option>
+          <option value="neon">Midnight Neon</option>
+          <option value="cyber">Cyberpunk</option>
+        </select>
+      </div>
+      <div class="status-item">
+        <label for="lang-selector" style="display:none;">Language Mode</label>
+        <select class="lang-select" id="lang-selector" onchange="setLanguage(this.value)" aria-label="Select Language Mode">
+          <option value="plaintext">Plain Text</option>
+          <option value="javascript">JavaScript</option>
+          <option value="html">HTML</option>
+          <option value="css">CSS</option>
+          <option value="c">C / C++</option>
+          <option value="python">Python</option>
+          <option value="json">JSON</option>
+          <option value="markdown">Markdown</option>
+          <option value="sql">SQL</option>
+        </select>
+      </div>
+      <div class="status-item" id="stat-pos">Ln 1, Col 1</div>
+      <div class="status-item" id="stat-counts">1 Lines, 0 Chars</div>
+    </div>
   </div>
-  
+
+  <!-- Context Menu for Tabs -->
+  <div class="context-menu" id="tab-context-menu">
+    <div onclick="ctxNewTab()">New Tab</div>
+    <div onclick="ctxDuplicateTab()">Duplicate Tab</div>
+    <div onclick="ctxCloseTab()">Close Tab</div>
+    <div onclick="ctxCloseOthers()">Close Others</div>
+  </div>
+
   <script>
     const editor = document.getElementById('editor');
+    const highlightCode = document.getElementById('highlight-code');
+    const highlightPre = document.getElementById('highlight-pre');
+    const gutter = document.getElementById('gutter');
+    
     let tabs = [];
     let activeTabIndex = -1;
     let wordWrap = false;
-    
-    // Tab Management
-    function createTab(name = "Untitled", content = "", path = null) {
-      const tab = { id: Date.now(), name, content, path, isModified: false };
+    let showGutter = true;
+    let currentFontSize = 13;
+    let ctxTabIndex = -1;
+
+    let findOpts = {
+      matchCase: false,
+      regex: false
+    };
+
+    // --- Tab Session Management ---
+    function createTab(name = "Untitled", content = "", path = null, language = "plaintext") {
+      const tab = {
+        id: Date.now() + Math.random(),
+        name,
+        content,
+        path,
+        language: language || detectLanguage(name),
+        isModified: false,
+        cursorPos: 0
+      };
       tabs.push(tab);
-      switchTab(tabs.length - 1);
       renderTabs();
+      switchTab(tabs.length - 1);
+      saveSession();
     }
-    
+
     function newTab() {
-      createTab("Untitled", "");
+      const count = tabs.length + 1;
+      createTab(`Untitled ${count}`, "");
     }
-    
+
+    function switchTab(index) {
+      if (index < 0 || index >= tabs.length) return;
+      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+        tabs[activeTabIndex].content = editor.value;
+        tabs[activeTabIndex].cursorPos = editor.selectionStart;
+      }
+      activeTabIndex = index;
+      const tab = tabs[index];
+      editor.value = tab.content;
+      document.getElementById('lang-selector').value = tab.language;
+      document.getElementById('file-path').innerText = tab.path || tab.name;
+      
+      renderTabs();
+      updateEditor();
+      
+      if (tab.cursorPos) {
+        editor.selectionStart = editor.selectionEnd = tab.cursorPos;
+      }
+    }
+
     function closeTab(index, e) {
       if (e) e.stopPropagation();
       const tab = tabs[index];
       if (tab.isModified) {
-        if(!confirm(`Save changes to ${tab.name}?`)) return; // Simple discard for now
+        if (!confirm(`Discard unsaved changes to "${tab.name}"?`)) return;
       }
       tabs.splice(index, 1);
       if (tabs.length === 0) {
@@ -234,144 +615,453 @@
         if (activeTabIndex >= tabs.length) activeTabIndex = tabs.length - 1;
         switchTab(activeTabIndex);
       }
-      renderTabs();
+      saveSession();
     }
-    
-    function switchTab(index) {
-      // Save current content to active tab
-      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
-        tabs[activeTabIndex].content = editor.value;
-      }
-      activeTabIndex = index;
-      editor.value = tabs[index].content;
-      document.getElementById('file-path').innerText = tabs[index].path || 'Unsaved';
-      renderTabs();
-      updateStatus();
-    }
-    
+
     function renderTabs() {
-      const container = document.getElementById('tabs');
+      const container = document.getElementById('tabs-bar');
       container.innerHTML = '';
       tabs.forEach((tab, index) => {
-        const el = document.createElement('div');
-        el.className = `tab ${index === activeTabIndex ? 'active' : ''}`;
-        el.setAttribute('role', 'tab');
-        el.setAttribute('tabindex', '0');
-        el.setAttribute('aria-selected', index === activeTabIndex ? 'true' : 'false');
-        el.onclick = () => switchTab(index);
-        el.onkeydown = (e) => { if (e.key === 'Enter') switchTab(index); };
+        const item = document.createElement('div');
+        item.className = `tab-item ${index === activeTabIndex ? 'active' : ''}`;
+        item.onclick = () => switchTab(index);
+        item.oncontextmenu = (e) => showTabContext(e, index);
         
-        const title = document.createElement('span');
-        title.innerText = tab.name + (tab.isModified ? ' •' : '');
-        
+        const titleSpan = document.createElement('span');
+        titleSpan.innerText = tab.name;
+        item.appendChild(titleSpan);
+
+        if (tab.isModified) {
+          const dirty = document.createElement('span');
+          dirty.className = 'tab-dirty';
+          item.appendChild(dirty);
+        }
+
         const closeBtn = document.createElement('div');
         closeBtn.className = 'tab-close';
-        closeBtn.setAttribute('role', 'button');
-        closeBtn.setAttribute('aria-label', `Close ${tab.name}`);
-        closeBtn.setAttribute('tabindex', '0');
         closeBtn.innerText = '✕';
         closeBtn.onclick = (e) => closeTab(index, e);
-        closeBtn.onkeydown = (e) => { if (e.key === 'Enter') closeTab(index, e); };
-        
-        el.appendChild(title);
-        el.appendChild(closeBtn);
-        container.appendChild(el);
+        item.appendChild(closeBtn);
+
+        container.appendChild(item);
       });
+
+      const addBtn = document.createElement('div');
+      addBtn.className = 'add-tab-btn';
+      addBtn.innerText = '+';
+      addBtn.title = 'New Tab (Ctrl+T)';
+      addBtn.onclick = newTab;
+      container.appendChild(addBtn);
     }
-    
-    // Editor features
-    function openFind() {
-      document.getElementById('find-panel').style.display = 'flex';
-      document.getElementById('find-input').focus();
+
+    // --- Tab Context Menu ---
+    function showTabContext(e, index) {
+      e.preventDefault();
+      ctxTabIndex = index;
+      const menu = document.getElementById('tab-context-menu');
+      menu.style.display = 'block';
+      menu.style.left = e.clientX + 'px';
+      menu.style.top = e.clientY + 'px';
     }
-    
-    function closeFind() {
-      document.getElementById('find-panel').style.display = 'none';
-      editor.focus();
-    }
-    
-    function findNext() {
-      const term = document.getElementById('find-input').value;
-      if (!term) return;
-      const content = editor.value;
-      let start = editor.selectionEnd;
-      let idx = content.toLowerCase().indexOf(term.toLowerCase(), start);
-      if (idx === -1) {
-        idx = content.toLowerCase().indexOf(term.toLowerCase(), 0); // wrap around
+
+    document.addEventListener('click', () => {
+      document.getElementById('tab-context-menu').style.display = 'none';
+    });
+
+    function ctxNewTab() { newTab(); }
+    function ctxDuplicateTab() {
+      if (ctxTabIndex >= 0 && ctxTabIndex < tabs.length) {
+        const t = tabs[ctxTabIndex];
+        createTab(`${t.name} (Copy)`, t.content, null, t.language);
       }
-      if (idx !== -1) {
-        editor.setSelectionRange(idx, idx + term.length);
-        editor.focus();
-      } else {
-        alert("Text not found");
+    }
+    function ctxCloseTab() { if (ctxTabIndex >= 0) closeTab(ctxTabIndex); }
+    function ctxCloseOthers() {
+      if (ctxTabIndex >= 0) {
+        tabs = [tabs[ctxTabIndex]];
+        switchTab(0);
       }
     }
 
-    function toggleWordWrap() {
-      wordWrap = !wordWrap;
-      editor.setAttribute('wrap', wordWrap ? 'soft' : 'off');
-    }
-    
-    function insertDateTime() {
-      const dt = new Date();
-      const pad = (n) => n.toString().padStart(2, '0');
-      const formatted = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
-      const start = editor.selectionStart;
-      const end = editor.selectionEnd;
-      editor.value = editor.value.substring(0, start) + formatted + editor.value.substring(end);
-      editor.selectionStart = editor.selectionEnd = start + formatted.length;
-      checkInput();
-      updateStatus();
-    }
-    
-    function checkInput() {
-      const val = editor.value.toLowerCase();
-      if (val.includes('script')) {
-        alert('[CERBERUS WATCHDOG: LOCKDOWN INITIATED]\nUNAUTHORIZED INJECTION ATTEMPT DETECTED.');
+    // --- Syntax Highlighting & Tokenizer ---
+    function detectLanguage(filename) {
+      if (!filename) return 'plaintext';
+      const ext = filename.split('.').pop().toLowerCase();
+      switch (ext) {
+        case 'js': case 'jsx': case 'ts': case 'tsx': return 'javascript';
+        case 'html': case 'htm': return 'html';
+        case 'css': return 'css';
+        case 'c': case 'cpp': case 'h': case 'hpp': return 'c';
+        case 'py': return 'python';
+        case 'json': return 'json';
+        case 'md': case 'markdown': return 'markdown';
+        case 'sql': return 'sql';
+        default: return 'plaintext';
       }
+    }
+
+    function setLanguage(lang) {
       if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
-        if (!tabs[activeTabIndex].isModified) {
+        tabs[activeTabIndex].language = lang;
+        updateEditor();
+        saveSession();
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+    }
+
+    function colorize(code, lang) {
+      if (lang === 'plaintext' || !code) return escapeHtml(code);
+      let html = escapeHtml(code);
+
+      if (lang === 'json') {
+        html = html.replace(/&quot;(.*?)&quot;(\s*:)/g, '<span class="tok-key">&quot;$1&quot;</span>$2');
+        html = html.replace(/&quot;(.*?)&quot;/g, '<span class="tok-str">&quot;$1&quot;</span>');
+        html = html.replace(/\b(true|false|null)\b/g, '<span class="tok-bool">$1</span>');
+        html = html.replace(/\b(-?\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
+        return html;
+      }
+
+      if (lang === 'javascript' || lang === 'c') {
+        html = html.replace(/(\/\/[^\n]*)/g, '<span class="tok-comment">$1</span>');
+        html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>');
+        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;|`[\s\S]*?`)/g, '<span class="tok-str">$1</span>');
+        const kw = /\b(const|let|var|function|return|if|else|for|while|switch|case|default|try|catch|throw|new|this|async|await|import|export|class|extends|typedef|struct|int|char|void|float|double|static|extern|auto)\b/g;
+        html = html.replace(kw, '<span class="tok-kw">$1</span>');
+        html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
+        return html;
+      }
+
+      if (lang === 'html') {
+        html = html.replace(/(&lt;!--[\s\S]*?--&gt;)/g, '<span class="tok-comment">$1</span>');
+        html = html.replace(/(&lt;\/?[a-zA-Z0-9-]+)/g, '<span class="tok-tag">$1</span>');
+        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
+        return html;
+      }
+
+      if (lang === 'css') {
+        html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="tok-comment">$1</span>');
+        html = html.replace(/([a-zA-Z0-9-]+)(?=\s*:)/g, '<span class="tok-key">$1</span>');
+        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
+        return html;
+      }
+
+      if (lang === 'python') {
+        html = html.replace(/(#[^\n]*)/g, '<span class="tok-comment">$1</span>');
+        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
+        const pykw = /\b(def|return|if|elif|else|for|while|in|import|from|as|try|except|class|with|lambda|is|not|and|or|None|True|False)\b/g;
+        html = html.replace(pykw, '<span class="tok-kw">$1</span>');
+        html = html.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
+        return html;
+      }
+
+      if (lang === 'markdown') {
+        html = html.replace(/^(#+\s+[^\n]+)/gm, '<span class="tok-kw">$1</span>');
+        html = html.replace(/(\*\*[^\*]+\*\*)/g, '<span class="tok-key">$1</span>');
+        html = html.replace(/(`[^`]+`)/g, '<span class="tok-str">$1</span>');
+        return html;
+      }
+
+      if (lang === 'sql') {
+        html = html.replace(/(--[^\n]*)/g, '<span class="tok-comment">$1</span>');
+        html = html.replace(/(&quot;[\s\S]*?&quot;|&#039;[\s\S]*?&#039;)/g, '<span class="tok-str">$1</span>');
+        const sqlkw = /\b(SELECT|FROM|WHERE|INSERT|INTO|UPDATE|DELETE|JOIN|LEFT|RIGHT|INNER|ON|GROUP|BY|ORDER|HAVING|LIMIT|CREATE|TABLE|DROP|ALTER|AND|OR|NOT|AS|SET)\b/gi;
+        html = html.replace(sqlkw, '<span class="tok-kw">$1</span>');
+        return html;
+      }
+
+      return html;
+    }
+
+    // --- Update Editor, Gutter & Highlight Overlay ---
+    function updateEditor() {
+      const text = editor.value;
+      const lang = document.getElementById('lang-selector').value;
+      
+      // Update Highlight overlay
+      highlightCode.innerHTML = colorize(text, lang) + (text.endsWith('\n') ? ' ' : '');
+      
+      // Update Gutter line numbers
+      const lines = text.split('\n');
+      const linesCount = lines.length;
+      
+      const linesBefore = text.substr(0, editor.selectionStart).split('\n');
+      const currentLineIdx = linesBefore.length - 1;
+
+      let gutterHtml = '';
+      for (let i = 1; i <= linesCount; i++) {
+        gutterHtml += `<div class="gutter-line ${i - 1 === currentLineIdx ? 'active' : ''}">${i}</div>`;
+      }
+      gutter.innerHTML = gutterHtml;
+
+      // Update Status Bar
+      const colIdx = linesBefore[linesBefore.length - 1].length + 1;
+      const selLen = Math.abs(editor.selectionEnd - editor.selectionStart);
+      
+      document.getElementById('stat-pos').innerText = selLen > 0 ? 
+        `Ln ${currentLineIdx + 1}, Col ${colIdx} (${selLen} sel)` : 
+        `Ln ${currentLineIdx + 1}, Col ${colIdx}`;
+
+      document.getElementById('stat-counts').innerText = `${linesCount} Lines, ${text.length} Chars`;
+
+      // Mark tab as modified
+      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+        if (text !== tabs[activeTabIndex].content) {
           tabs[activeTabIndex].isModified = true;
+          tabs[activeTabIndex].content = text;
           renderTabs();
         }
       }
     }
 
-    function updateStatus() {
-      const val = editor.value;
-      const linesBeforeCursor = val.substr(0, editor.selectionStart).split('\n');
-      const currentLine = linesBeforeCursor.length;
-      const currentCol = linesBeforeCursor[linesBeforeCursor.length - 1].length + 1;
-      
-      const totalChars = val.length;
-      const totalLines = val.split('\n').length;
-      
-      document.getElementById('line-count').innerText = `Ln ${currentLine}, Col ${currentCol}`;
-      document.getElementById('char-count').innerText = `${totalLines} Lines, ${totalChars} Chars`;
+    // Synchronize Scroll
+    editor.addEventListener('scroll', () => {
+      highlightPre.scrollTop = editor.scrollTop;
+      highlightPre.scrollLeft = editor.scrollLeft;
+      gutter.scrollTop = editor.scrollTop;
+    });
+
+    editor.addEventListener('input', updateEditor);
+    editor.addEventListener('keyup', updateEditor);
+    editor.addEventListener('click', updateEditor);
+
+    // --- Find & Replace Engine ---
+    function openFind(showReplace = false) {
+      const panel = document.getElementById('find-panel');
+      panel.style.display = 'flex';
+      document.getElementById('replace-row').style.display = showReplace ? 'flex' : 'none';
+      const input = document.getElementById('find-input');
+      input.focus();
+      input.select();
     }
 
-    editor.addEventListener('input', () => { checkInput(); updateStatus(); });
-    editor.addEventListener('keyup', updateStatus);
-    editor.addEventListener('click', updateStatus);
-    
-    // Handle Indentation
-    editor.addEventListener('keydown', function(e) {
-      if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = this.selectionStart;
-        const end = this.selectionEnd;
-        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-        this.selectionStart = this.selectionEnd = start + 4;
-        checkInput();
+    function closeFind() {
+      document.getElementById('find-panel').style.display = 'none';
+      editor.focus();
+    }
+
+    function toggleFindOpt(opt) {
+      findOpts[opt] = !findOpts[opt];
+      document.getElementById(opt === 'matchCase' ? 'btn-match-case' : 'btn-regex')
+              .classList.toggle('active', findOpts[opt]);
+      findNext(false);
+    }
+
+    function findNext(reverse = false) {
+      const query = document.getElementById('find-input').value;
+      if (!query) return;
+      
+      const text = editor.value;
+      let regex;
+      try {
+        if (findOpts.regex) {
+          regex = new RegExp(query, findOpts.matchCase ? 'g' : 'gi');
+        } else {
+          const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          regex = new RegExp(escaped, findOpts.matchCase ? 'g' : 'gi');
+        }
+      } catch (e) {
+        document.getElementById('find-stats').innerText = "Invalid Regex";
+        return;
+      }
+
+      const matches = [...text.matchAll(regex)];
+      document.getElementById('find-stats').innerText = `${matches.length} matches`;
+
+      if (matches.length === 0) return;
+
+      const pos = reverse ? editor.selectionStart : editor.selectionEnd;
+      let targetMatch = null;
+
+      if (!reverse) {
+        targetMatch = matches.find(m => m.index >= pos) || matches[0];
+      } else {
+        targetMatch = matches.reverse().find(m => m.index < editor.selectionStart) || matches[0];
+      }
+
+      if (targetMatch) {
+        editor.setSelectionRange(targetMatch.index, targetMatch.index + targetMatch[0].length);
+        editor.focus();
+        updateEditor();
+      }
+    }
+
+    function replaceOne() {
+      const query = document.getElementById('find-input').value;
+      const replaceStr = document.getElementById('replace-input').value;
+      if (!query) return;
+
+      const selStart = editor.selectionStart;
+      const selEnd = editor.selectionEnd;
+      const selectedText = editor.value.substring(selStart, selEnd);
+
+      if (selectedText.toLowerCase() === query.toLowerCase() || findOpts.regex) {
+        editor.value = editor.value.substring(0, selStart) + replaceStr + editor.value.substring(selEnd);
+        editor.setSelectionRange(selStart, selStart + replaceStr.length);
+        updateEditor();
+      }
+      findNext(false);
+    }
+
+    function replaceAll() {
+      const query = document.getElementById('find-input').value;
+      const replaceStr = document.getElementById('replace-input').value;
+      if (!query) return;
+
+      try {
+        const flags = findOpts.matchCase ? 'g' : 'gi';
+        const regex = findOpts.regex ? new RegExp(query, flags) : new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        editor.value = editor.value.replace(regex, replaceStr);
+        updateEditor();
+        alert('All occurrences replaced.');
+      } catch (e) {
+        alert('Error performing Replace All: ' + e.message);
+      }
+    }
+
+    // --- Tools & Transformations ---
+    function transformText(type) {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const val = editor.value;
+      let sel = val.substring(start, end);
+      if (!sel) sel = val;
+
+      let res = sel;
+      if (type === 'upper') res = sel.toUpperCase();
+      if (type === 'lower') res = sel.toLowerCase();
+      if (type === 'title') res = sel.replace(/\b\w/g, c => c.toUpperCase());
+
+      if (start !== end) {
+        editor.value = val.substring(0, start) + res + val.substring(end);
+        editor.setSelectionRange(start, start + res.length);
+      } else {
+        editor.value = res;
+      }
+      updateEditor();
+    }
+
+    function trimWhitespace() {
+      const lines = editor.value.split('\n').map(l => l.trimEnd());
+      editor.value = lines.join('\n');
+      updateEditor();
+    }
+
+    function formatJSON() {
+      try {
+        const parsed = JSON.parse(editor.value);
+        editor.value = JSON.stringify(parsed, null, 2);
+        setLanguage('json');
+        document.getElementById('lang-selector').value = 'json';
+        updateEditor();
+      } catch (e) {
+        alert('Invalid JSON: ' + e.message);
+      }
+    }
+
+    function sortLines() {
+      const lines = editor.value.split('\n');
+      lines.sort((a, b) => a.localeCompare(b));
+      editor.value = lines.join('\n');
+      updateEditor();
+    }
+
+    function insertDateTime() {
+      const dt = new Date();
+      const pad = n => n.toString().padStart(2, '0');
+      const formatted = `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())} ${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      editor.value = editor.value.substring(0, start) + formatted + editor.value.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + formatted.length;
+      updateEditor();
+    }
+
+    function selectAll() {
+      editor.select();
+    }
+
+    function toggleWordWrap() {
+      wordWrap = !wordWrap;
+      const wrapVal = wordWrap ? 'soft' : 'off';
+      editor.setAttribute('wrap', wrapVal);
+      highlightPre.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+      highlightPre.style.wordWrap = wordWrap ? 'break-word' : 'normal';
+    }
+
+    function toggleGutter() {
+      showGutter = !showGutter;
+      gutter.style.display = showGutter ? 'block' : 'none';
+    }
+
+    function changeFontSize(delta) {
+      currentFontSize = Math.max(10, Math.min(32, currentFontSize + delta));
+      editor.style.fontSize = currentFontSize + 'px';
+      highlightPre.style.fontSize = currentFontSize + 'px';
+      gutter.style.fontSize = currentFontSize + 'px';
+    }
+
+    function resetFontSize() {
+      currentFontSize = 13;
+      changeFontSize(0);
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+
+    // --- Export / Import Engine ---
+    function exportDocument(format) {
+      const tab = tabs[activeTabIndex];
+      let content = editor.value;
+      let filename = (tab.name || 'document').replace(/\.[^/.]+$/, "");
+      let mime = 'text/plain';
+
+      if (format === 'txt') {
+        filename += '.txt';
+      } else if (format === 'html') {
+        filename += '.html';
+        mime = 'text/html';
+        content = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>${escapeHtml(tab.name)}</title>\n</head>\n<body>\n<pre>${escapeHtml(content)}</pre>\n</body>\n</html>`;
+      } else if (format === 'json') {
+        filename = 'kpad_session_backup.json';
+        mime = 'application/json';
+        content = JSON.stringify(tabs, null, 2);
+      }
+
+      const blob = new Blob([content], { type: mime });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Drag & Drop File Import
+    window.addEventListener('dragover', e => e.preventDefault());
+    window.addEventListener('drop', async e => {
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        for (const file of e.dataTransfer.files) {
+          const text = await file.text();
+          createTab(file.name, text, null, detectLanguage(file.name));
+        }
       }
     });
 
+    // --- VFS & Parent Window Messaging ---
     let currentReqId = 0;
     const callbacks = {};
 
     window.addEventListener('message', (e) => {
       const msg = e.data;
-      if (callbacks[msg.requestId]) {
+      if (msg && callbacks[msg.requestId]) {
         callbacks[msg.requestId](msg);
         delete callbacks[msg.requestId];
       }
@@ -388,29 +1078,12 @@
     async function loadVFSFile(path) {
       const res = await sendToOS({ type: 'VFS_READ', path });
       const filename = path.split('/').pop() || 'file';
-      createTab(filename, res.data || '', path);
+      createTab(filename, res.data || '', path, detectLanguage(filename));
     }
-
-    window.onload = () => {
-      if (window.location.hash) {
-        const path = window.location.hash.substring(1);
-        if (path) { loadVFSFile(path); return; }
-      }
-      newTab(); // Start with empty tab
-    };
-
-    // Keyboard Shortcuts
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.key === 'f') { e.preventDefault(); openFind(); }
-      if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveVFS(); }
-      if (e.ctrlKey && e.key === 't') { e.preventDefault(); newTab(); }
-      if (e.altKey && e.key === 'z') { e.preventDefault(); toggleWordWrap(); }
-      if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
-    });
 
     async function openVFS() {
       const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
-      if (res.path) loadVFSFile(res.path);
+      if (res && res.path) loadVFSFile(res.path);
     }
 
     async function saveVFS() {
@@ -418,7 +1091,7 @@
       let path = tab.path;
       if (!path) {
         const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
-        if (!res.path) return;
+        if (!res || !res.path) return;
         path = res.path;
       }
       tab.content = editor.value;
@@ -428,7 +1101,7 @@
       tab.isModified = false;
       document.getElementById('file-path').innerText = path;
       renderTabs();
-      updateStatus();
+      saveSession();
     }
 
     async function openFileNative() {
@@ -436,10 +1109,10 @@
         const [fileHandle] = await window.showOpenFilePicker();
         const file = await fileHandle.getFile();
         const content = await file.text();
-        createTab(file.name, content, null);
+        createTab(file.name, content, null, detectLanguage(file.name));
       } catch (e) {}
     }
-    
+
     async function saveFileNative() {
       try {
         const fileHandle = await window.showSaveFilePicker();
@@ -451,8 +1124,74 @@
         tab.name = fileHandle.name;
         tab.isModified = false;
         renderTabs();
+        saveSession();
       } catch (e) {}
     }
+
+    // --- Session Persistence ---
+    function saveSession() {
+      try {
+        const sessionData = tabs.map(t => ({
+          name: t.name,
+          content: t.content,
+          path: t.path,
+          language: t.language
+        }));
+        localStorage.setItem('kpad_session_tabs', JSON.stringify(sessionData));
+        localStorage.setItem('kpad_session_active', activeTabIndex);
+      } catch (e) {}
+    }
+
+    function loadSession() {
+      try {
+        const raw = localStorage.getItem('kpad_session_tabs');
+        const active = parseInt(localStorage.getItem('kpad_session_active') || '0', 10);
+        if (raw) {
+          const savedTabs = JSON.parse(raw);
+          if (Array.isArray(savedTabs) && savedTabs.length > 0) {
+            savedTabs.forEach(t => createTab(t.name, t.content, t.path, t.language));
+            switchTab(active < savedTabs.length ? active : 0);
+            return true;
+          }
+        }
+      } catch (e) {}
+      return false;
+    }
+
+    // Global Key Shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'f') { e.preventDefault(); openFind(false); }
+      if (e.ctrlKey && e.key === 'h') { e.preventDefault(); openFind(true); }
+      if (e.ctrlKey && e.key === 's') { e.preventDefault(); saveVFS(); }
+      if (e.ctrlKey && e.key === 't') { e.preventDefault(); newTab(); }
+      if (e.ctrlKey && e.key === 'w') { e.preventDefault(); closeTab(activeTabIndex); }
+      if (e.ctrlKey && e.key === 'o') { e.preventDefault(); openFileNative(); }
+      if (e.altKey && e.key === 'z') { e.preventDefault(); toggleWordWrap(); }
+      if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
+    });
+
+    // Handle Tab key indenting inside editor
+    editor.addEventListener('keydown', function(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 4;
+        updateEditor();
+      }
+    });
+
+    // Startup Initialization
+    window.onload = () => {
+      if (window.location.hash) {
+        const path = window.location.hash.substring(1);
+        if (path) { loadVFSFile(path); return; }
+      }
+      if (!loadSession()) {
+        newTab();
+      }
+    };
   </script>
 </body>
 </html>
