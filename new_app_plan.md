@@ -54,12 +54,12 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAlchemy (Fantasy crafting & element discovery)
-**Phase:** 3 (next to do)
-**Status:** Phases 1-2 complete
+**Phase:** 4 (next to do)
+**Status:** Phases 1-3 complete
 
 - [x] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML element discovery game (4 basic elements: Fire, Water, Earth, Air; Transmutation Crucible combining 2 elements; inventory grid & discovery counter).
-- [ ] Phase 3: Native C version (`KAlchemy/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
+- [x] Phase 3: Native C version (`KAlchemy/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
 - [ ] Phase 4: Dark theme UI styling (mystical arcane laboratory theme: deep violet/slate background, glowing rune borders, golden element badges).
 - [ ] Phase 5: Expanded Recipe Matrix & Tiering — Add 50+ secondary elements across 5 tiers (Basic, Nature, Metallurgy, Arcane, Celestial) with tier unlock thresholds and discovery notifications.
 - [ ] Phase 6: Alchemist's Research Hints & Oracle System — Add hint system offering vague or specific combination clues using Alchemical Dust earned per new discovery.

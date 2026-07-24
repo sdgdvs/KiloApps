@@ -78,21 +78,76 @@ typedef struct {
     int slot1;
     int slot2;
     char lastStatus[128];
-    char journalLog[1024];
+    char searchFilter[64];
 } AlchemyState;
 
 static AlchemyState g_State;
 static HWND g_hElemButtons[TOTAL_ELEMENTS];
 static HWND g_hSlot1Button = NULL;
 static HWND g_hSlot2Button = NULL;
+static HWND g_hSearchEdit = NULL;
+static HWND g_hJournalEdit = NULL;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
 static HBRUSH hCrucibleBrush = NULL;
+static HBRUSH hVesselBrush = NULL;
+static HPEN hVesselPen = NULL;
+static HPEN hGoldPen = NULL;
 static HFONT hTitleFont = NULL;
 static HFONT hHeaderFont = NULL;
 static HFONT hUIFont = NULL;
 static HFONT hSlotFont = NULL;
+
+static void AddJournalLog(const char* text) {
+    if (!g_hJournalEdit) return;
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    char buf[512];
+    wsprintfA(buf, "[%02d:%02d:%02d] %s\r\n\r\n", st.wHour, st.wMinute, st.wSecond, text);
+
+    int len = GetWindowTextLengthA(g_hJournalEdit);
+    SendMessageA(g_hJournalEdit, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+    SendMessageA(g_hJournalEdit, EM_REPLACESEL, FALSE, (LPARAM)buf);
+    SendMessageA(g_hJournalEdit, EM_SCROLLCARET, 0, 0);
+}
+
+static void ToLowerStr(char* dest, const char* src) {
+    while (*src) {
+        char c = *src++;
+        if (c >= 'A' && c <= 'Z') c += ('a' - 'A');
+        *dest++ = c;
+    }
+    *dest = '\0';
+}
+
+static int StrContainsIgnoreCase(const char* haystack, const char* needle) {
+    if (!needle || !needle[0]) return 1;
+    char hLower[128], nLower[128];
+    ToLowerStr(hLower, haystack);
+    ToLowerStr(nLower, needle);
+
+    for (int i = 0; hLower[i] != '\0'; i++) {
+        int j = 0;
+        while (hLower[i + j] != '\0' && nLower[j] != '\0' && hLower[i + j] == nLower[j]) {
+            j++;
+        }
+        if (nLower[j] == '\0') return 1;
+    }
+    return 0;
+}
+
+static void UpdateElementButtonsVisibility() {
+    for (int i = 0; i < TOTAL_ELEMENTS; i++) {
+        if (g_hElemButtons[i]) {
+            int show = g_State.discovered[i];
+            if (show && g_State.searchFilter[0] != '\0') {
+                show = StrContainsIgnoreCase(g_Elements[i].name, g_State.searchFilter);
+            }
+            ShowWindow(g_hElemButtons[i], show ? SW_SHOW : SW_HIDE);
+        }
+    }
+}
 
 static void InitGameState() {
     memset(&g_State, 0, sizeof(AlchemyState));
@@ -105,7 +160,7 @@ static void InitGameState() {
     g_State.slot1 = -1;
     g_State.slot2 = -1;
     lstrcpyA(g_State.lastStatus, "Transmutation Crucible Ready");
-    lstrcpyA(g_State.journalLog, "Welcome Apprentice Alchemist!\r\nSelect elements from your Grimoire to combine in the Crucible.");
+    g_State.searchFilter[0] = '\0';
 }
 
 static void UpdateSlotButtonText() {
@@ -125,18 +180,10 @@ static void UpdateSlotButtonText() {
     }
 }
 
-static void UpdateElementButtonsVisibility() {
-    for (int i = 0; i < TOTAL_ELEMENTS; i++) {
-        if (g_hElemButtons[i]) {
-            ShowWindow(g_hElemButtons[i], g_State.discovered[i] ? SW_SHOW : SW_HIDE);
-        }
-    }
-}
-
 static void PlayDiscoveryFanfare() {
-    Beep(523, 70);  // C5
-    Beep(659, 70);  // E5
-    Beep(784, 70);  // G5
+    Beep(523, 70);   // C5
+    Beep(659, 70);   // E5
+    Beep(784, 70);   // G5
     Beep(1046, 120); // C6
 }
 
@@ -148,39 +195,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBgBrush = CreateSolidBrush(RGB(13, 15, 27));
             hPanelBrush = CreateSolidBrush(RGB(22, 24, 44));
             hCrucibleBrush = CreateSolidBrush(RGB(28, 24, 54));
+            hVesselBrush = CreateSolidBrush(RGB(45, 35, 80));
+            hVesselPen = CreatePen(PS_DASH, 2, RGB(155, 89, 182));
+            hGoldPen = CreatePen(PS_SOLID, 2, RGB(243, 156, 18));
             hTitleFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hHeaderFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hUIFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             hSlotFont = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
 
+            // Grimoire Search Input
+            g_hSearchEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
+                30, 96, 225, 24, hwnd, (HMENU)401, NULL, NULL);
+
             // Element Grimoire Buttons (2 columns of 10)
             for (int i = 0; i < TOTAL_ELEMENTS; i++) {
                 int col = i % 2;
                 int row = i / 2;
-                int x = 32 + col * 112;
-                int y = 115 + row * 38;
+                int x = 30 + col * 115;
+                int y = 128 + row * 35;
                 g_hElemButtons[i] = CreateWindowA("BUTTON", g_Elements[i].name,
                     WS_CHILD | BS_PUSHBUTTON,
-                    x, y, 105, 34, hwnd, (HMENU)(UINT_PTR)(100 + i), NULL, NULL);
+                    x, y, 110, 31, hwnd, (HMENU)(UINT_PTR)(100 + i), NULL, NULL);
             }
             UpdateElementButtonsVisibility();
 
             // Crucible Slots
-            g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 300, 140, 90, 60, hwnd, (HMENU)301, NULL, NULL);
-            g_hSlot2Button = CreateWindowA("BUTTON", "[ Slot 2 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 400, 140, 90, 60, hwnd, (HMENU)302, NULL, NULL);
+            g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 295, 200, 90, 50, hwnd, (HMENU)301, NULL, NULL);
+            g_hSlot2Button = CreateWindowA("BUTTON", "[ Slot 2 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 400, 200, 90, 50, hwnd, (HMENU)302, NULL, NULL);
 
             // Action Buttons
-            CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 320, 230, 150, 42, hwnd, (HMENU)201, NULL, NULL);
-            CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 335, 285, 120, 30, hwnd, (HMENU)202, NULL, NULL);
-            CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 335, 325, 120, 26, hwnd, (HMENU)203, NULL, NULL);
+            CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
+            CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
+            CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
+
+            // Journal Log Edit Control (Read-Only)
+            g_hJournalEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_BORDER,
+                530, 96, 225, 415, hwnd, (HMENU)402, NULL, NULL);
+
+            AddJournalLog("Welcome Apprentice Alchemist!\r\nSelect elements from your Grimoire to combine in the Crucible.");
             break;
         }
 
         case WM_COMMAND: {
             int id = LOWORD(wParam);
+            int code = HIWORD(wParam);
 
+            // Search filter edit box changed
+            if (id == 401 && code == EN_CHANGE) {
+                GetWindowTextA(g_hSearchEdit, g_State.searchFilter, sizeof(g_State.searchFilter));
+                UpdateElementButtonsVisibility();
+            }
             // Element selection (IDs 100 to 119)
-            if (id >= 100 && id < 100 + TOTAL_ELEMENTS) {
+            else if (id >= 100 && id < 100 + TOTAL_ELEMENTS) {
                 int elemIdx = id - 100;
                 if (g_State.discovered[elemIdx]) {
                     if (g_State.slot1 == -1) {
@@ -213,6 +279,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 201) {
                 if (g_State.slot1 < 0 || g_State.slot2 < 0) {
                     lstrcpyA(g_State.lastStatus, "Select 2 elements for Crucible!");
+                    AddJournalLog("Place two elements into the Crucible before transmuting.");
                     Beep(220, 100);
                 } else {
                     int e1 = g_State.slot1;
@@ -236,21 +303,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             UpdateElementButtonsVisibility();
 
                             wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
-                            wsprintfA(g_State.journalLog, "✨ NEW DISCOVERY! Combined %s + %s -> %s! (+50 Essence)\r\n\r\nTotal Discovered: %d / %d",
-                                g_Elements[e1].name, g_Elements[e2].name, g_Elements[res].name,
-                                g_State.discoveredCount, TOTAL_ELEMENTS);
+
+                            char logMsg[256];
+                            wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s by combining %s + %s! (+50 Essence)",
+                                g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
+                            AddJournalLog(logMsg);
 
                             PlayDiscoveryFanfare();
                         } else {
                             wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
-                            wsprintfA(g_State.journalLog, "Created %s by combining %s + %s. Already in Grimoire.",
+                            char logMsg[256];
+                            wsprintfA(logMsg, "Created %s (%s + %s). Already recorded in Grimoire.",
                                 g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
+                            AddJournalLog(logMsg);
                             Beep(659, 120);
                         }
                     } else {
                         wsprintfA(g_State.lastStatus, "Reaction Fizzled!");
-                        wsprintfA(g_State.journalLog, "Reaction Fizzled! No combination for %s + %s.",
+                        char logMsg[256];
+                        wsprintfA(logMsg, "Reaction fizzled! No transmutation for %s + %s.",
                             g_Elements[e1].name, g_Elements[e2].name);
+                        AddJournalLog(logMsg);
                         Beep(180, 150);
                     }
                 }
@@ -269,8 +342,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 203) {
                 if (MessageBoxA(hwnd, "Reset all discovered elements back to starter 4?", "Reset KAlchemy", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                     InitGameState();
+                    SetWindowTextA(g_hSearchEdit, "");
                     UpdateSlotButtonText();
                     UpdateElementButtonsVisibility();
+                    SetWindowTextA(g_hJournalEdit, "");
+                    AddJournalLog("Journal reset. Basic elements restored.");
                     Beep(400, 100);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -284,66 +360,91 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(hdc, TRANSPARENT);
 
             // Top Header Bar
-            RECT headerRect = { 20, 12, 765, 62 };
+            RECT headerRect = { 20, 10, 765, 60 };
             FillRect(hdc, &headerRect, hPanelBrush);
             FrameRect(hdc, &headerRect, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
             SelectObject(hdc, hTitleFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 35, 23, "KAlchemy - Element Discovery Lab", 32);
+            TextOutA(hdc, 35, 20, "KAlchemy - Element Discovery Lab", 32);
 
             SelectObject(hdc, hUIFont);
             char statsStr[128];
             const char* rankStr = "Apprentice";
             if (g_State.discoveredCount >= 20) rankStr = "Grand Master";
-            else if (g_State.discoveredCount >= 15) rankStr = "Master";
+            else if (g_State.discoveredCount >= 15) rankStr = "Master Alchemist";
             else if (g_State.discoveredCount >= 10) rankStr = "Journeyman";
             else if (g_State.discoveredCount >= 6) rankStr = "Adept";
 
             wsprintfA(statsStr, "Discovered: %d/%d  |  Essence: %d  |  Rank: %s", 
                 g_State.discoveredCount, TOTAL_ELEMENTS, g_State.essence, rankStr);
             SetTextColor(hdc, RGB(160, 220, 255));
-            TextOutA(hdc, 430, 26, statsStr, lstrlenA(statsStr));
+            TextOutA(hdc, 400, 24, statsStr, lstrlenA(statsStr));
 
             // Left Panel - Element Grimoire
-            RECT leftPanel = { 20, 72, 265, 525 };
+            RECT leftPanel = { 20, 68, 265, 523 };
             FillRect(hdc, &leftPanel, hPanelBrush);
             FrameRect(hdc, &leftPanel, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 35, 82, "Elemental Grimoire", 18);
+            TextOutA(hdc, 30, 74, "Elemental Grimoire", 18);
+
+            char countStr[32];
+            wsprintfA(countStr, "(%d Elements)", g_State.discoveredCount);
+            SelectObject(hdc, hUIFont);
+            SetTextColor(hdc, RGB(160, 170, 190));
+            TextOutA(hdc, 175, 76, countStr, lstrlenA(countStr));
 
             // Center Panel - Transmutation Crucible
-            RECT centerPanel = { 280, 72, 505, 525 };
+            RECT centerPanel = { 275, 68, 510, 523 };
             FillRect(hdc, &centerPanel, hCrucibleBrush);
             FrameRect(hdc, &centerPanel, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 305, 82, "Transmutation Crucible", 22);
+            TextOutA(hdc, 295, 74, "Transmutation Crucible", 22);
+
+            // Draw Vessel Graphic (Ellipse)
+            HGDIOBJ oldBrush = SelectObject(hdc, hVesselBrush);
+            HGDIOBJ oldPen = SelectObject(hdc, hVesselPen);
+            Ellipse(hdc, 350, 100, 435, 185);
+            SelectObject(hdc, hSlotFont);
+            SetTextColor(hdc, RGB(220, 200, 255));
+            TextOutA(hdc, 368, 134, "Crucible", 8);
+            SelectObject(hdc, oldBrush);
+            SelectObject(hdc, oldPen);
 
             // Status message centered below crucible buttons
             SelectObject(hdc, hUIFont);
             SetTextColor(hdc, RGB(120, 230, 180));
-            RECT statusRect = { 290, 365, 495, 410 };
+            RECT statusRect = { 285, 390, 500, 440 };
             DrawTextA(hdc, g_State.lastStatus, -1, &statusRect, DT_CENTER | DT_WORDBREAK);
 
             // Right Panel - Journal & Log
-            RECT rightPanel = { 520, 72, 765, 525 };
+            RECT rightPanel = { 520, 68, 765, 523 };
             FillRect(hdc, &rightPanel, hPanelBrush);
             FrameRect(hdc, &rightPanel, (HBRUSH)GetStockObject(GRAY_BRUSH));
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 535, 82, "Alchemist's Journal", 19);
-
-            SelectObject(hdc, hUIFont);
-            SetTextColor(hdc, RGB(200, 210, 230));
-            RECT logRect = { 535, 115, 750, 500 };
-            DrawTextA(hdc, g_State.journalLog, -1, &logRect, DT_LEFT | DT_WORDBREAK);
+            TextOutA(hdc, 535, 74, "Alchemist's Journal", 19);
 
             EndPaint(hwnd, &ps);
+            break;
+        }
+
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLOREDIT: {
+            HDC hdcEdit = (HDC)wParam;
+            HWND hEdit = (HWND)lParam;
+            if (hEdit == g_hJournalEdit || hEdit == g_hSearchEdit) {
+                SetTextColor(hdcEdit, RGB(220, 230, 242));
+                SetBkColor(hdcEdit, RGB(16, 18, 32));
+                static HBRUSH hEditBg = NULL;
+                if (!hEditBg) hEditBg = CreateSolidBrush(RGB(16, 18, 32));
+                return (INT_PTR)hEditBg;
+            }
             break;
         }
 
@@ -359,6 +460,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hBgBrush) DeleteObject(hBgBrush);
             if (hPanelBrush) DeleteObject(hPanelBrush);
             if (hCrucibleBrush) DeleteObject(hCrucibleBrush);
+            if (hVesselBrush) DeleteObject(hVesselBrush);
+            if (hVesselPen) DeleteObject(hVesselPen);
+            if (hGoldPen) DeleteObject(hGoldPen);
             if (hTitleFont) DeleteObject(hTitleFont);
             if (hHeaderFont) DeleteObject(hHeaderFont);
             if (hUIFont) DeleteObject(hUIFont);
