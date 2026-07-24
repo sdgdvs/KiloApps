@@ -31,16 +31,56 @@
     display: block;
     image-rendering: pixelated;
   }
+  .skill-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 10;
+  }
+  .skill-btn {
+    background: rgba(10, 25, 50, 0.85);
+    border: 1px solid #00e5ff;
+    color: #00e5ff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+    transition: all 0.15s ease;
+  }
+  .skill-btn:hover {
+    background: #00e5ff;
+    color: #000;
+  }
+  .skill-btn.cooldown {
+    border-color: #555;
+    color: #777;
+    background: rgba(20, 20, 20, 0.8);
+    cursor: not-allowed;
+    box-shadow: none;
+  }
 </style>
 </head>
 <body>
 <div id="gameContainer">
   <canvas id="gameCanvas" width="320" height="480" tabindex="0" role="img" aria-label="KSpace space shooter game canvas"></canvas>
+  <div class="skill-bar" id="skillBar" style="display:none;">
+    <button class="skill-btn" id="btnTimeStop" onclick="useTimeStop()">[T] STOP</button>
+    <button class="skill-btn" id="btnDash" onclick="useTacticalDash()">[D] DASH</button>
+    <button class="skill-btn" id="btnBomb" onclick="useSmartBomb()">[B] BOMB</button>
+    <button class="skill-btn" id="btnShield" onclick="useHyperShield()">[S] SHIELD</button>
+  </div>
 </div>
 
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
+  const skillBar = document.getElementById('skillBar');
   const W = 320, H = 480;
 
   // --- GAME STATES ---
@@ -50,16 +90,17 @@
   const STATE_PAUSED = 3;
   const STATE_LEADERBOARD = 4;
   const STATE_GAMEOVER = 5;
+  const STATE_VICTORY = 6;
 
   let gameState = STATE_MENU;
   let menuIndex = 0;
-  let modeIndex = 0; // 0: Classic Arcade, 1: Endurance Wave, 2: Boss Rush
+  let modeIndex = 0; // 0: Classic 20-Wave Campaign, 1: Endurance Wave, 2: Boss Rush
 
   // --- GAME MODES ---
   const MODES = [
-    { name: 'Classic Arcade', desc: 'Progressive waves with Bosses every 5 waves' },
-    { name: 'Endurance Wave', desc: 'Relentless enemy storm, scaling speed' },
-    { name: 'Boss Rush', desc: 'Non-stop Boss encounters back-to-back' }
+    { name: 'Classic 20-Wave Campaign', desc: '20 Waves with Stage 20 Alien Mothership Boss' },
+    { name: 'Endurance Wave Storm', desc: 'Relentless enemy storm, scaling speed & asteroids' },
+    { name: 'Boss Rush Challenge', desc: 'Non-stop Boss encounters back-to-back' }
   ];
 
   // --- PLAYER ENTITY ---
@@ -74,11 +115,17 @@
     weaponType: 0 // 0: Normal, 1: Spread, 2: Laser, 3: Plasma
   };
 
-  // Timers & Stats
+  // Timers & Active Skills Cooldowns
   let spreadTimer = 0;
   let laserTimer = 0;
   let rapidTimer = 0;
   let timeStopTimer = 0;
+  let timeStopCooldown = 0;
+  let dashCooldown = 0;
+  let invincibleTimer = 0;
+  let hyperShieldTimer = 0;
+  let hyperShieldCooldown = 0;
+
   let score = 0;
   let highScore = 0;
   let totalKills = 0;
@@ -95,8 +142,8 @@
   let explosions = [];
   let powerups = [];
 
-  // Boss State
-  let boss = null; // { x, y, hp, maxHp, type, phase, dx, dy, timer }
+  // Boss & Mothership State
+  let boss = null; // { x, y, hp, maxHp, level, isMothership, turrets: [{hp, active}], dx, dy, attackTimer }
 
   // Init Starfield
   for (let i = 0; i < 60; i++) {
@@ -120,11 +167,11 @@
         leaderboard = JSON.parse(data);
       } else {
         leaderboard = [
-          { score: 5000, wave: 10, mode: 'Classic Arcade' },
-          { score: 3500, wave: 7, mode: 'Endurance Wave' },
-          { score: 2500, wave: 5, mode: 'Boss Rush' },
-          { score: 1500, wave: 3, mode: 'Classic Arcade' },
-          { score: 800, wave: 2, mode: 'Classic Arcade' }
+          { score: 12000, wave: 20, mode: 'Classic 20-Wave Campaign' },
+          { score: 8500, wave: 15, mode: 'Classic 20-Wave Campaign' },
+          { score: 5000, wave: 10, mode: 'Endurance Wave Storm' },
+          { score: 3500, wave: 7, mode: 'Boss Rush Challenge' },
+          { score: 1500, wave: 4, mode: 'Classic 20-Wave Campaign' }
         ];
       }
     } catch (e) {
@@ -147,11 +194,7 @@
   }
 
   function hasSavedGame() {
-    try {
-      return localStorage.getItem('kspace_save') !== null;
-    } catch (e) {
-      return false;
-    }
+    try { return localStorage.getItem('kspace_save') !== null; } catch (e) { return false; }
   }
 
   function saveGameState() {
@@ -165,6 +208,11 @@
       laserTimer: laserTimer,
       rapidTimer: rapidTimer,
       timeStopTimer: timeStopTimer,
+      timeStopCooldown: timeStopCooldown,
+      dashCooldown: dashCooldown,
+      invincibleTimer: invincibleTimer,
+      hyperShieldTimer: hyperShieldTimer,
+      hyperShieldCooldown: hyperShieldCooldown,
       boss: boss
     };
     try {
@@ -187,6 +235,11 @@
       laserTimer = saveObj.laserTimer || 0;
       rapidTimer = saveObj.rapidTimer || 0;
       timeStopTimer = saveObj.timeStopTimer || 0;
+      timeStopCooldown = saveObj.timeStopCooldown || 0;
+      dashCooldown = saveObj.dashCooldown || 0;
+      invincibleTimer = saveObj.invincibleTimer || 0;
+      hyperShieldTimer = saveObj.hyperShieldTimer || 0;
+      hyperShieldCooldown = saveObj.hyperShieldCooldown || 0;
       boss = saveObj.boss || null;
 
       bullets = [];
@@ -236,7 +289,7 @@
         gain.gain.setValueAtTime(0.12, t);
         gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
         osc.start(t); osc.stop(t + 0.25);
-      } else if (type === 2) { // Powerup
+      } else if (type === 2) { // Powerup / Skill
         osc.type = 'sine';
         osc.frequency.setValueAtTime(520, t);
         osc.frequency.setValueAtTime(780, t + 0.08);
@@ -266,6 +319,15 @@
         gain.gain.setValueAtTime(0.04, t);
         gain.gain.linearRampToValueAtTime(0, t + 0.05);
         osc.start(t); osc.stop(t + 0.05);
+      } else if (type === 6) { // Victory Fanfare
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.setValueAtTime(554, t + 0.12);
+        osc.frequency.setValueAtTime(659, t + 0.24);
+        osc.frequency.setValueAtTime(880, t + 0.36);
+        gain.gain.setValueAtTime(0.15, t);
+        gain.gain.linearRampToValueAtTime(0, t + 0.6);
+        osc.start(t); osc.stop(t + 0.6);
       }
     } catch (e) {}
   }
@@ -309,17 +371,88 @@
     }
   }
 
+  // --- ACTIVE SKILLS FUNCTIONS ---
+  function useTimeStop() {
+    if (gameState !== STATE_PLAYING) return;
+    if (timeStopCooldown <= 0 || timeStopTimer > 0) {
+      timeStopTimer = 375; // 6 seconds
+      timeStopCooldown = 600; // 10 seconds CD
+      playSound(3);
+      addExplosion(W / 2, H / 2, 40, '#00e5ff');
+    }
+  }
+
+  function useTacticalDash() {
+    if (gameState !== STATE_PLAYING) return;
+    if (dashCooldown <= 0) {
+      addExplosion(p.x + 10, p.y + 10, 25, '#00b0ff');
+      p.x = W / 2 - 10;
+      p.y = H - 60;
+      invincibleTimer = 125; // 2 seconds invincibility
+      dashCooldown = 300; // 5 seconds CD
+      playSound(2);
+      addExplosion(p.x + 10, p.y + 10, 25, '#00e5ff');
+    }
+  }
+
+  function useSmartBomb() {
+    if (p.bombs <= 0 || gameState !== STATE_PLAYING) return;
+    p.bombs--;
+    bombFlash = 15;
+    playSound(4);
+    addExplosion(W / 2, H / 2, 50, '#ffffff');
+
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      let e = enemies[i];
+      e.hp -= 100;
+      if (e.hp <= 0) {
+        score += 30;
+        enemiesKilled++;
+        totalKills++;
+        addExplosion(e.x + 10, e.y + 10, 16, '#00e5ff');
+        enemies.splice(i, 1);
+      }
+    }
+    eBullets = [];
+
+    if (boss) {
+      if (boss.isMothership) {
+        for (let t of boss.turrets) {
+          if (t.active) {
+            t.hp -= 60;
+            if (t.hp <= 0) t.active = false;
+          }
+        }
+        if (!isMothershipShieldActive()) boss.hp -= 80;
+      } else {
+        boss.hp -= 80;
+      }
+      addExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 35, '#ff1744');
+      if (boss.hp <= 0) destroyBoss();
+    }
+    try { localStorage.setItem('kspace_totalkills', totalKills); } catch (e) {}
+  }
+
+  function useHyperShield() {
+    if (gameState !== STATE_PLAYING) return;
+    if (hyperShieldCooldown <= 0 || hyperShieldTimer === 0) {
+      hyperShieldTimer = 500; // 8 seconds energy barrier
+      hyperShieldCooldown = 750; // 12.5 seconds CD
+      playSound(2);
+      addExplosion(p.x + 10, p.y + 10, 25, '#ffea00');
+    }
+  }
+
   // --- KEYBOARD & INPUT ---
   const keys = {};
   document.addEventListener('keydown', e => {
-    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape'].includes(e.code) || [' ', 'b', 'B', 'p', 'P'].includes(e.key)) {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Spacebar', 'KeyB', 'KeyP', 'Escape'].includes(e.code) || [' ', 'b', 'B', 'p', 'P', 't', 'T', 'd', 'D', 's', 'S'].includes(e.key)) {
       e.preventDefault();
     }
     if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
     keys[e.key.toLowerCase()] = true;
     keys[e.code] = true;
 
-    // Direct Single-Key Menu Action Handlers
     if (gameState === STATE_MENU) {
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
         menuIndex = (menuIndex - 1 + (hasSavedGame() ? 4 : 3)) % (hasSavedGame() ? 4 : 3);
@@ -342,8 +475,14 @@
       if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
         gameState = STATE_PAUSED;
         menuIndex = 0;
+      } else if (e.key === 't' || e.key === 'T') {
+        useTimeStop();
+      } else if (e.key === 'd' || e.key === 'D') {
+        useTacticalDash();
       } else if (e.key === 'b' || e.key === 'B' || e.key === 'x' || e.key === 'X') {
         useSmartBomb();
+      } else if (e.key === 's' || e.key === 'S') {
+        useHyperShield();
       }
     } else if (gameState === STATE_PAUSED) {
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
@@ -355,12 +494,8 @@
       } else if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
         gameState = STATE_PLAYING;
       }
-    } else if (gameState === STATE_LEADERBOARD) {
+    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
-        gameState = STATE_MENU;
-      }
-    } else if (gameState === STATE_GAMEOVER) {
-      if (e.key === 'Enter' || e.key === ' ') {
         gameState = STATE_MENU;
       }
     }
@@ -407,15 +542,12 @@
           break;
         }
       }
-    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER) {
+    } else if (gameState === STATE_LEADERBOARD || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       gameState = STATE_MENU;
     } else if (gameState === STATE_PLAYING) {
-      // Tap on top right pauses
       if (mx > W - 40 && my < 40) {
         gameState = STATE_PAUSED;
         menuIndex = 0;
-      } else if (mx < 40 && my > H - 40) {
-        useSmartBomb();
       }
     }
   });
@@ -432,145 +564,126 @@
 
   function handleMenuSelect() {
     let saved = hasSavedGame();
-    if (menuIndex === 0) {
-      gameState = STATE_MODE_SELECT;
-    } else if (saved && menuIndex === 1) {
-      loadGameState();
-    } else if ((!saved && menuIndex === 1) || (saved && menuIndex === 2)) {
-      gameState = STATE_LEADERBOARD;
-    } else {
-      gameState = STATE_MODE_SELECT;
-    }
+    if (menuIndex === 0) gameState = STATE_MODE_SELECT;
+    else if (saved && menuIndex === 1) loadGameState();
+    else if ((!saved && menuIndex === 1) || (saved && menuIndex === 2)) gameState = STATE_LEADERBOARD;
+    else gameState = STATE_MODE_SELECT;
   }
 
   function handlePauseSelect() {
-    if (menuIndex === 0) { // Resume
-      gameState = STATE_PLAYING;
-    } else if (menuIndex === 1) { // Save
-      saveGameState();
-    } else if (menuIndex === 2) { // Load
-      if (!loadGameState()) {
-        alert("No saved game found!");
-      }
-    } else if (menuIndex === 3) { // Quit to Menu
-      gameState = STATE_MENU;
-    }
+    if (menuIndex === 0) gameState = STATE_PLAYING;
+    else if (menuIndex === 1) saveGameState();
+    else if (menuIndex === 2) { if (!loadGameState()) alert("No saved game!"); }
+    else if (menuIndex === 3) gameState = STATE_MENU;
   }
 
   function startNewGame(modeIdx) {
     modeIndex = modeIdx;
     p = {
-      x: W / 2 - 10,
-      y: H - 60,
-      hp: 3,
-      maxHp: 3,
-      shield: false,
-      bombs: 1,
-      maxBombs: 3,
-      weaponType: 0
+      x: W / 2 - 10, y: H - 60,
+      hp: 3, maxHp: 3,
+      shield: false, bombs: 1, maxBombs: 3, weaponType: 0
     };
-    score = 0;
-    wave = 1;
-    enemiesKilled = 0;
-    spreadTimer = 0;
-    laserTimer = 0;
-    rapidTimer = 0;
-    timeStopTimer = 0;
-    bullets = [];
-    eBullets = [];
-    enemies = [];
-    powerups = [];
-    explosions = [];
+    score = 0; wave = 1; enemiesKilled = 0;
+    spreadTimer = 0; laserTimer = 0; rapidTimer = 0;
+    timeStopTimer = 0; timeStopCooldown = 0;
+    dashCooldown = 0; invincibleTimer = 0;
+    hyperShieldTimer = 0; hyperShieldCooldown = 0;
+    bullets = []; eBullets = []; enemies = []; powerups = []; explosions = [];
     boss = null;
     gameState = STATE_PLAYING;
     playSound(3);
 
-    if (modeIndex === 2) { // Boss Rush start
-      spawnBoss(1);
-    }
+    if (modeIndex === 2) spawnBoss(1);
   }
 
-  // --- SMART BOMB LOGIC ---
-  function useSmartBomb() {
-    if (p.bombs <= 0 || gameState !== STATE_PLAYING) return;
-    p.bombs--;
-    bombFlash = 15;
-    playSound(4);
-    addExplosion(W / 2, H / 2, 50, '#ffffff');
-
-    // Destroy regular enemies & enemy bullets
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      score += 20;
-      enemiesKilled++;
-      totalKills++;
-      addExplosion(enemies[i].x + 10, enemies[i].y + 10, 16, '#00e5ff');
-      enemies.splice(i, 1);
-    }
-    eBullets = [];
-
-    // Damage Boss if present
-    if (boss) {
-      boss.hp -= 35;
-      addExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 30, '#ff1744');
-      if (boss.hp <= 0) destroyBoss();
-    }
-
-    try { localStorage.setItem('kspace_totalkills', totalKills); } catch (e) {}
-  }
-
-  // --- SPAWNING SYSTEM ---
+  // --- SPAWNING SYSTEM & FORMATIONS ---
   function spawnEnemy() {
-    if (boss) return; // Don't spawn regular wave enemies during boss in classic/boss rush
+    if (boss) return;
 
     let t = Math.floor(Math.random() * 100);
     let type, dx = 0;
-    if (t < 35) type = 0;       // Scout Interceptor
-    else if (t < 50) type = 1;  // Chaser Predator
-    else if (t < 65) type = 2;  // Shooter Saucer
-    else if (t < 75) type = 3;  // Armored Heavy
-    else if (t < 85) { type = 4; dx = (Math.random() < 0.5 ? 2 : -2); } // Zigzag Fighter
-    else if (t < 95) type = 5;  // Asteroid Rock
-    else { type = 6; dx = (Math.random() < 0.5 ? 2 : -2); } // Elite Frigate
+    if (t < 25) type = 0;       // Scout Interceptor
+    else if (t < 38) type = 1;  // Chaser Predator
+    else if (t < 50) type = 2;  // Shooter Saucer
+    else if (t < 60) type = 3;  // Armored Heavy
+    else if (t < 70) { type = 4; dx = (Math.random() < 0.5 ? 2.2 : -2.2); } // Zigzag
+    else if (t < 78) type = 5;  // Small Asteroid
+    else if (t < 85) { type = 6; dx = (Math.random() < 0.5 ? 1.8 : -1.8); } // Frigate
+    else if (t < 92) type = 7;  // Kamikaze Interceptor
+    else type = 8;             // Stealth Cloak Fighter
 
-    let hp = type === 6 ? 45 : (type === 5 ? 25 : (type === 3 ? 10 : (type === 2 ? 5 : (type === 4 ? 3 : 1))));
-    let ew = type === 6 ? 36 : 20;
-    enemies.push({ x: Math.random() * (W - ew), y: -20, type: type, hp: hp, maxHp: hp, dx: dx });
+    let hp = type === 9 ? 50 : (type === 8 ? 18 : (type === 7 ? 8 : (type === 6 ? 45 : (type === 5 ? 25 : (type === 3 ? 12 : (type === 2 ? 6 : (type === 4 ? 4 : 2)))))));
+    let ew = (type === 6 || type === 9) ? 36 : 20;
+    enemies.push({ x: Math.random() * (W - ew), y: -24, type: type, hp: hp, maxHp: hp, dx: dx, timer: 0, cloaked: false });
+  }
+
+  function spawnFormation(type) {
+    if (boss) return;
+    let startX = 40;
+    for (let k = 0; k < 5; k++) {
+      let x = Math.min(W - 30, startX + k * 48);
+      let y = -20 - (k % 3) * 20;
+      let hp = type === 7 ? 8 : (type === 8 ? 18 : 5);
+      enemies.push({ x: x, y: y, type: type, hp: hp, maxHp: hp, dx: (k % 2 === 0 ? 1.5 : -1.5), dy: 2.0, timer: 0, cloaked: false });
+    }
+  }
+
+  function isMothershipShieldActive() {
+    if (!boss || !boss.isMothership) return false;
+    return boss.turrets.some(t => t.active);
   }
 
   function spawnBoss(bossLevel = 1) {
-    let hp = 120 + bossLevel * 80;
+    let isMother = (wave >= 20 || bossLevel >= 4);
+    let hp = isMother ? 600 : (140 + bossLevel * 90);
     boss = {
-      x: W / 2 - 30,
-      y: -60,
-      targetY: 50,
-      w: 60,
-      h: 50,
+      x: W / 2 - (isMother ? 45 : 30),
+      y: -70,
+      targetY: 45,
+      w: isMother ? 90 : 60,
+      h: isMother ? 60 : 50,
       hp: hp,
       maxHp: hp,
       level: bossLevel,
+      isMothership: isMother,
+      turrets: isMother ? [
+        { hp: 80, active: true },
+        { hp: 80, active: true },
+        { hp: 80, active: true },
+        { hp: 80, active: true }
+      ] : [],
       dx: 2.0,
-      phase: 1,
       attackTimer: 0
     };
     playSound(4);
   }
 
   function destroyBoss() {
-    score += 1000 * boss.level;
-    enemiesKilled += 5;
-    totalKills += 5;
+    score += boss.isMothership ? 10000 : (1200 * boss.level);
+    enemiesKilled += 10;
+    totalKills += 10;
     addExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 60, '#ff1744');
     playSound(1);
 
-    // Drop 2 Guaranteed Powerups
-    powerups.push({ x: boss.x + 10, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 6) });
-    powerups.push({ x: boss.x + 40, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 6) });
+    // Drop Powerups
+    powerups.push({ x: boss.x + 15, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 8) });
+    powerups.push({ x: boss.x + 45, y: boss.y + 20, dy: 1.5, type: Math.floor(Math.random() * 8) });
+
+    if (boss.isMothership || wave >= 20) {
+      boss = null;
+      gameState = STATE_VICTORY;
+      playSound(6);
+      addScoreToLeaderboard(score, wave, MODES[modeIndex].name);
+      clearSavedGame();
+      return;
+    }
 
     boss = null;
     wave++;
     playSound(3);
 
-    if (modeIndex === 2) { // Boss Rush: Next boss right away!
+    if (modeIndex === 2) {
       setTimeout(() => { if (gameState === STATE_PLAYING) spawnBoss(wave); }, 2500);
     }
   }
@@ -578,18 +691,15 @@
   // --- SHOOTING LOGIC ---
   function shoot() {
     playSound(laserTimer > 0 ? 5 : 0);
-    if (laserTimer > 0) {
-      // Heavy Laser beam handled in update collision directly
-      return;
-    }
+    if (laserTimer > 0) return;
 
     if (spreadTimer > 0 || p.weaponType === 1) {
       bullets.push({ x: p.x + 8, y: p.y, dx: -2.5, dy: -8, type: 0 });
       bullets.push({ x: p.x + 8, y: p.y, dx: 0, dy: -9, type: 0 });
       bullets.push({ x: p.x + 8, y: p.y, dx: 2.5, dy: -8, type: 0 });
-    } else if (p.weaponType === 3) { // Plasma Orb
-      bullets.push({ x: p.x + 6, y: p.y, dx: 0, dy: -5, type: 1, radius: 8 });
-    } else { // Standard Twin Blaster
+    } else if (p.weaponType === 3) {
+      bullets.push({ x: p.x + 6, y: p.y, dx: 0, dy: -5, type: 1 });
+    } else {
       bullets.push({ x: p.x + 3, y: p.y, dx: 0, dy: -8, type: 0 });
       bullets.push({ x: p.x + 13, y: p.y, dx: 0, dy: -8, type: 0 });
     }
@@ -597,22 +707,29 @@
 
   // --- UPDATE GAME LOOP ---
   function update() {
-    if (gameState !== STATE_PLAYING) return;
+    if (gameState !== STATE_PLAYING) {
+      skillBar.style.display = 'none';
+      return;
+    }
+    skillBar.style.display = 'flex';
+    updateSkillButtonsUI();
 
     if (bombFlash > 0) bombFlash--;
 
-    // Wave Progression
-    if (modeIndex === 0) { // Classic Arcade
-      let targetWave = 1 + Math.floor(score / 1000);
+    // 20-Wave Campaign Progression
+    if (modeIndex === 0) {
+      let targetWave = Math.min(20, 1 + Math.floor(score / 650));
       if (targetWave > wave) {
         wave = targetWave;
         playSound(3);
-        if (wave % 5 === 0 && !boss) {
-          spawnBoss(Math.floor(wave / 5));
-        }
+        if (wave === 5 && !boss) spawnBoss(1);
+        else if (wave === 10 && !boss) spawnBoss(2);
+        else if (wave === 15 && !boss) spawnBoss(3);
+        else if (wave === 20 && !boss) spawnBoss(4); // Stage 20 Alien Mothership Boss
+        else if (wave % 4 === 0) spawnFormation(Math.random() < 0.5 ? 7 : 8);
       }
-    } else if (modeIndex === 1) { // Endurance
-      wave = 1 + Math.floor(score / 800);
+    } else if (modeIndex === 1) {
+      wave = 1 + Math.floor(score / 600);
     }
 
     // Scroll Starfield
@@ -626,17 +743,17 @@
 
     updateExplosions();
 
-    // Controls Movement
+    // Movement
     const speed = (keys['shift'] || keys['ShiftLeft']) ? 7 : 4.5;
-    if (keys['arrowleft'] || keys['a']) p.x -= speed;
-    if (keys['arrowright'] || keys['d']) p.x += speed;
-    if (keys['arrowup'] || keys['w']) p.y -= speed;
-    if (keys['arrowdown'] || keys['s']) p.y += speed;
+    if (keys['arrowleft']) p.x -= speed;
+    if (keys['arrowright']) p.x += speed;
+    if (keys['arrowup']) p.y -= speed;
+    if (keys['arrowdown']) p.y += speed;
 
     p.x = Math.max(0, Math.min(W - 20, p.x));
     p.y = Math.max(0, Math.min(H - 20, p.y));
 
-    // Auto / Manual Firing
+    // Firing
     if (keys[' '] || keys['space'] || keys['enter']) {
       let fireRate = (rapidTimer > 0) ? 3 : 7;
       if (frameCount % fireRate === 0) shoot();
@@ -647,6 +764,11 @@
     if (laserTimer > 0) laserTimer--;
     if (rapidTimer > 0) rapidTimer--;
     if (timeStopTimer > 0) timeStopTimer--;
+    if (timeStopCooldown > 0) timeStopCooldown--;
+    if (hyperShieldTimer > 0) hyperShieldTimer--;
+    if (hyperShieldCooldown > 0) hyperShieldCooldown--;
+    if (dashCooldown > 0) dashCooldown--;
+    if (invincibleTimer > 0) invincibleTimer--;
 
     // Bullets Update
     for (let i = bullets.length - 1; i >= 0; i--) {
@@ -656,7 +778,7 @@
       if (b.y < -10 || b.x < -10 || b.x > W + 10) bullets.splice(i, 1);
     }
 
-    // Boss Logic
+    // Boss & Alien Mothership Logic
     if (boss) {
       if (boss.y < boss.targetY) boss.y += 1;
       else {
@@ -665,55 +787,96 @@
       }
 
       boss.attackTimer++;
-      if (timeStopTimer === 0 && boss.attackTimer % 45 === 0) {
-        // Boss Attack Patterns
-        if (boss.hp < boss.maxHp * 0.4) {
-          // Phase 2: Spread attack + laser ray
-          for (let a = -3; a <= 3; a += 2) {
-            eBullets.push({ x: boss.x + boss.w / 2, y: boss.y + boss.h, dx: a, dy: 4 });
+      if (timeStopTimer === 0 && boss.attackTimer % (boss.isMothership ? 35 : 45) === 0) {
+        if (boss.isMothership) {
+          let tOffsets = [5, 25, 65, 85];
+          for (let tIdx = 0; tIdx < 4; tIdx++) {
+            if (boss.turrets[tIdx] && boss.turrets[tIdx].active) {
+              eBullets.push({ x: boss.x + tOffsets[tIdx], y: boss.y + 35, dx: (tIdx === 0 ? -1.5 : (tIdx === 3 ? 1.5 : 0)), dy: 3.5 });
+            }
+          }
+          if (!isMothershipShieldActive() && (boss.attackTimer % 50 === 0)) {
+            for (let a = -2; a <= 2; a++) {
+              eBullets.push({ x: boss.x + 45, y: boss.y + 45, dx: a * 1.5, dy: 3.8 });
+            }
           }
         } else {
-          // Phase 1: 3-way fan
           eBullets.push({ x: boss.x + 10, y: boss.y + boss.h, dx: -1.5, dy: 3.5 });
           eBullets.push({ x: boss.x + boss.w / 2, y: boss.y + boss.h, dx: 0, dy: 4 });
           eBullets.push({ x: boss.x + boss.w - 10, y: boss.y + boss.h, dx: 1.5, dy: 3.5 });
         }
       }
 
-      // Laser Beam Collision with Boss
+      // Laser Beam vs Boss
       if (laserTimer > 0) {
         if (p.x + 10 >= boss.x && p.x + 10 <= boss.x + boss.w) {
-          boss.hp -= 0.8;
-          addExplosion(p.x + 10, boss.y + boss.h, 2, '#00e5ff');
-          if (boss.hp <= 0) destroyBoss();
+          if (!isMothershipShieldActive()) {
+            boss.hp -= 0.8;
+            addExplosion(p.x + 10, boss.y + boss.h, 2, '#00e5ff');
+            if (boss.hp <= 0) destroyBoss();
+          }
         }
       }
 
-      // Bullets vs Boss
+      // Bullets vs Boss & Turrets
       for (let j = bullets.length - 1; j >= 0; j--) {
         let b = bullets[j];
-        if (b.x >= boss.x && b.x <= boss.x + boss.w && b.y >= boss.y && b.y <= boss.y + boss.h) {
-          boss.hp -= (b.type === 1 ? 8 : 2);
-          addExplosion(b.x, b.y, b.type === 1 ? 8 : 3, '#00e5ff');
-          bullets.splice(j, 1);
-          if (boss.hp <= 0) {
-            destroyBoss();
-            break;
+        if (boss.isMothership) {
+          let tOffsetsX = [5, 25, 65, 85];
+          let hitTurret = false;
+          for (let tIdx = 0; tIdx < 4; tIdx++) {
+            if (boss.turrets[tIdx] && boss.turrets[tIdx].active) {
+              let tx = boss.x + tOffsetsX[tIdx];
+              let ty = boss.y + 25;
+              if (b.x >= tx - 6 && b.x <= tx + 18 && b.y >= ty - 6 && b.y <= ty + 18) {
+                bullets.splice(j, 1);
+                boss.turrets[tIdx].hp -= (b.type === 1 ? 12 : 3);
+                addExplosion(b.x, b.y, 4, '#ff9100');
+                if (boss.turrets[tIdx].hp <= 0) {
+                  boss.turrets[tIdx].active = false;
+                  addExplosion(tx, ty, 20, '#ff1744');
+                }
+                hitTurret = true;
+                break;
+              }
+            }
+          }
+          if (!hitTurret && b.x >= boss.x && b.x <= boss.x + boss.w && b.y >= boss.y && b.y <= boss.y + boss.h) {
+            bullets.splice(j, 1);
+            if (isMothershipShieldActive()) {
+              addExplosion(b.x, b.y, 3, '#00e5ff');
+            } else {
+              boss.hp -= (b.type === 1 ? 8 : 2);
+              addExplosion(b.x, b.y, 4, '#ff1744');
+              if (boss.hp <= 0) { destroyBoss(); break; }
+            }
+          }
+        } else {
+          if (b.x >= boss.x && b.x <= boss.x + boss.w && b.y >= boss.y && b.y <= boss.y + boss.h) {
+            boss.hp -= (b.type === 1 ? 8 : 2);
+            addExplosion(b.x, b.y, 3, '#00e5ff');
+            bullets.splice(j, 1);
+            if (boss.hp <= 0) { destroyBoss(); break; }
           }
         }
       }
     }
 
-    // Enemy Spawning
-    let spawnRate = Math.max(8, 32 - Math.floor(score / 150) - (modeIndex === 1 ? 8 : 0));
+    // Spawning regular enemies
+    let spawnRate = Math.max(8, 30 - Math.floor(score / 200) - (modeIndex === 1 ? 8 : 0));
     if (frameCount % spawnRate === 0) spawnEnemy();
 
     // Regular Enemies Update
-    let baseEnemySpeed = 1.8 + (score / 250) + (modeIndex === 1 ? 1.0 : 0);
+    let baseEnemySpeed = 1.8 + (score / 300) + (modeIndex === 1 ? 1.0 : 0);
     for (let i = enemies.length - 1; i >= 0; i--) {
       let e = enemies[i];
-      let ew = e.type === 6 ? 36 : 20;
-      let eh = e.type === 6 ? 36 : 20;
+      let ew = (e.type === 6 || e.type === 9) ? 36 : 20;
+      let eh = (e.type === 6 || e.type === 9) ? 36 : 20;
+
+      if (e.type === 8) {
+        e.timer++;
+        if (e.timer % 40 === 0) e.cloaked = !e.cloaked;
+      }
 
       if (timeStopTimer === 0) {
         if (e.type === 0) e.y += baseEnemySpeed * 1.2;
@@ -727,13 +890,19 @@
           e.y += baseEnemySpeed * 0.9;
           e.x += e.dx;
           if (e.x < 0 || e.x > W - ew) e.dx = -e.dx;
-        } else if (e.type === 5) e.y += baseEnemySpeed * 1.4;
+        } else if (e.type === 5 || e.type === 9) e.y += baseEnemySpeed * 1.3;
         else if (e.type === 6) {
           if (e.y < 60) e.y += 0.8;
           else {
             e.x += e.dx;
             if (e.x < 0 || e.x > W - ew) e.dx = -e.dx;
           }
+        } else if (e.type === 7) { // Kamikaze
+          e.y += baseEnemySpeed * 2.0;
+          if (e.x < p.x) e.x += 1.4;
+          if (e.x > p.x) e.x -= 1.4;
+        } else if (e.type === 8) {
+          e.y += baseEnemySpeed * 1.0;
         }
 
         // Enemy Firing
@@ -742,15 +911,12 @@
         }
       }
 
-      // Laser Beam Collision with regular enemies
+      // Laser Beam Collision
       if (laserTimer > 0) {
         if (p.x + 10 >= e.x && p.x + 10 <= e.x + ew && p.y > e.y) {
-          e.hp -= 0.5;
+          if (!e.cloaked) e.hp -= 0.5;
           addExplosion(p.x + 10, e.y + eh / 2, 2, '#00e5ff');
-          if (e.hp <= 0) {
-            handleEnemyDefeat(e, i);
-            continue;
-          }
+          if (e.hp <= 0) { handleEnemyDefeat(e, i); continue; }
         }
       }
 
@@ -766,9 +932,13 @@
       for (let j = bullets.length - 1; j >= 0; j--) {
         let b = bullets[j];
         if (b.x < e.x + ew && b.x + 4 > e.x && b.y < e.y + eh && b.y + 10 > e.y) {
-          e.hp -= (b.type === 1 ? 6 : 1);
-          addExplosion(b.x, b.y, b.type === 1 ? 6 : 3, '#00e5ff');
-          bullets.splice(j, 1);
+          if (e.cloaked && Math.random() < 0.75) {
+            // Miss cloaked fighter
+          } else {
+            e.hp -= (b.type === 1 ? 6 : 1);
+            addExplosion(b.x, b.y, b.type === 1 ? 6 : 3, '#00e5ff');
+            bullets.splice(j, 1);
+          }
 
           if (e.hp <= 0) {
             handleEnemyDefeat(e, i);
@@ -819,8 +989,31 @@
     frameCount++;
   }
 
+  function updateSkillButtonsUI() {
+    let bStop = document.getElementById('btnTimeStop');
+    let bDash = document.getElementById('btnDash');
+    let bBomb = document.getElementById('btnBomb');
+    let bShield = document.getElementById('btnShield');
+
+    if (timeStopTimer > 0) { bStop.className = 'skill-btn'; bStop.innerText = '[T] ACTIVE'; }
+    else if (timeStopCooldown > 0) { bStop.className = 'skill-btn cooldown'; bStop.innerText = `[T] ${Math.ceil(timeStopCooldown/60)}s`; }
+    else { bStop.className = 'skill-btn'; bStop.innerText = '[T] STOP'; }
+
+    if (invincibleTimer > 0) { bDash.className = 'skill-btn'; bDash.innerText = '[D] WARP'; }
+    else if (dashCooldown > 0) { bDash.className = 'skill-btn cooldown'; bDash.innerText = `[D] ${Math.ceil(dashCooldown/60)}s`; }
+    else { bDash.className = 'skill-btn'; bDash.innerText = '[D] DASH'; }
+
+    bBomb.innerText = `[B] BOMB (${p.bombs})`;
+    if (p.bombs <= 0) bBomb.className = 'skill-btn cooldown';
+    else bBomb.className = 'skill-btn';
+
+    if (hyperShieldTimer > 0) { bShield.className = 'skill-btn'; bShield.innerText = '[S] BARRIER'; }
+    else if (hyperShieldCooldown > 0) { bShield.className = 'skill-btn cooldown'; bShield.innerText = `[S] ${Math.ceil(hyperShieldCooldown/60)}s`; }
+    else { bShield.className = 'skill-btn'; bShield.innerText = '[S] SHIELD'; }
+  }
+
   function handleEnemyDefeat(e, index) {
-    score += (e.type === 6 ? 300 : (e.type === 5 ? 100 : (e.type === 3 ? 80 : 20)));
+    score += (e.type === 6 ? 300 : (e.type === 9 ? 200 : (e.type === 8 ? 150 : (e.type === 7 ? 120 : 30))));
     enemiesKilled++;
     totalKills++;
     playSound(1);
@@ -832,9 +1025,9 @@
     }
     try { localStorage.setItem('kspace_totalkills', totalKills); } catch (ex) {}
 
-    // Powerup Drop Chance (18%)
-    if (Math.random() < 0.18) {
-      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(Math.random() * 6) });
+    // Powerup Drop Chance (22%)
+    if (Math.random() < 0.22) {
+      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(Math.random() * 8) });
     }
 
     enemies.splice(index, 1);
@@ -846,10 +1039,14 @@
     else if (type === 2) { p.shield = true; }
     else if (type === 3) { p.bombs = Math.min(p.maxBombs, p.bombs + 1); }
     else if (type === 4) { rapidTimer = 350; }
-    else if (type === 5) { timeStopTimer = 300; }
+    else if (type === 5) { useTimeStop(); }
+    else if (type === 6) { useHyperShield(); }
+    else if (type === 7) { dashCooldown = 0; useTacticalDash(); }
   }
 
   function playerHit() {
+    if (hyperShieldTimer > 0 || invincibleTimer > 0) return;
+
     if (p.shield) {
       p.shield = false;
       addExplosion(p.x + 10, p.y + 10, 16, '#00e5ff');
@@ -884,25 +1081,20 @@
     ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
     ctx.closePath(); ctx.fill();
 
-    // Wings Accent
-    ctx.fillStyle = '#80d8ff';
-    ctx.fillRect(1, 10, 2, 8);
-    ctx.fillRect(17, 10, 2, 8);
-
     // Cockpit
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(10, 7, 3, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(10, 7, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
 
-    // Shield Aura
-    if (shield) {
+    // Hyper Shield Barrier Aura
+    if (hyperShieldTimer > 0) {
+      ctx.strokeStyle = '#ffea00';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(10, 10, 20, 0, Math.PI * 2); ctx.stroke();
+    } else if (shield) {
       let rot = (frame * 0.1) % (Math.PI * 2);
       ctx.strokeStyle = '#00e5ff';
       ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(10, 10, 16, rot, rot + Math.PI * 1.5);
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(10, 10, 16, rot, rot + Math.PI * 1.5); ctx.stroke();
     }
 
     ctx.restore();
@@ -912,12 +1104,8 @@
       ctx.save();
       ctx.strokeStyle = '#00e5ff';
       ctx.lineWidth = 4 + Math.sin(frame * 0.5) * 2;
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = '#00e5ff';
-      ctx.beginPath();
-      ctx.moveTo(x + 10, y);
-      ctx.lineTo(x + 10, 0);
-      ctx.stroke();
+      ctx.shadowBlur = 10; ctx.shadowColor = '#00e5ff';
+      ctx.beginPath(); ctx.moveTo(x + 10, y); ctx.lineTo(x + 10, 0); ctx.stroke();
       ctx.restore();
     }
   }
@@ -925,6 +1113,7 @@
   function drawEnemyShip(e, frame) {
     ctx.save();
     ctx.translate(e.x, e.y);
+    if (e.cloaked) ctx.globalAlpha = 0.25;
 
     if (e.type === 0) { // Red Interceptor
       ctx.fillStyle = '#ff1744';
@@ -933,30 +1122,28 @@
       ctx.closePath(); ctx.fill();
     } else if (e.type === 1) { // Orange Chaser
       ctx.fillStyle = '#ff9100';
-      ctx.beginPath();
-      ctx.moveTo(10, 20); ctx.lineTo(20, 4); ctx.lineTo(10, 0); ctx.lineTo(0, 4);
-      ctx.closePath(); ctx.fill();
-    } else if (e.type === 2) { // Purple Shooter Saucer
+      ctx.beginPath(); ctx.moveTo(10, 20); ctx.lineTo(20, 4); ctx.lineTo(10, 0); ctx.lineTo(0, 4); ctx.closePath(); ctx.fill();
+    } else if (e.type === 2) { // Purple Saucer
       ctx.fillStyle = '#d500f9';
       ctx.beginPath(); ctx.ellipse(10, 12, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#7c4dff';
-      ctx.beginPath(); ctx.ellipse(10, 8, 5, 4, 0, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 3) { // Heavy Armored
       ctx.fillStyle = '#78909c'; ctx.fillRect(2, 2, 16, 16);
-      ctx.fillStyle = '#37474f'; ctx.fillRect(5, 5, 10, 10);
-    } else if (e.type === 4) { // Zigzag Swift
+    } else if (e.type === 4) { // Zigzag
       ctx.fillStyle = '#00e5ff';
       ctx.beginPath(); ctx.moveTo(10, 18); ctx.lineTo(20, 0); ctx.lineTo(10, 6); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
-    } else if (e.type === 5) { // Asteroid
+    } else if (e.type === 5 || e.type === 9) { // Asteroids
       ctx.fillStyle = '#8d6e63';
-      ctx.beginPath();
-      ctx.arc(10, 10, 9, 0, Math.PI * 2);
-      ctx.fill();
+      let r = (e.type === 9) ? 15 : 9;
+      ctx.beginPath(); ctx.arc(r, r, r, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 6) { // Frigate
       ctx.fillStyle = '#c62828';
-      ctx.beginPath();
-      ctx.moveTo(18, 34); ctx.lineTo(34, 8); ctx.lineTo(18, 12); ctx.lineTo(2, 8);
-      ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(18, 34); ctx.lineTo(34, 8); ctx.lineTo(18, 12); ctx.lineTo(2, 8); ctx.closePath(); ctx.fill();
+    } else if (e.type === 7) { // Kamikaze Spike
+      ctx.fillStyle = '#ffeb3b';
+      ctx.beginPath(); ctx.moveTo(10, 22); ctx.lineTo(20, 0); ctx.lineTo(10, 4); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+    } else if (e.type === 8) { // Stealth Fighter
+      ctx.fillStyle = '#673ab7';
+      ctx.beginPath(); ctx.moveTo(10, 18); ctx.lineTo(20, 2); ctx.lineTo(10, 8); ctx.lineTo(0, 2); ctx.closePath(); ctx.fill();
     }
 
     ctx.restore();
@@ -966,21 +1153,43 @@
     ctx.save();
     ctx.translate(b.x, b.y);
 
-    // Dreadnought Main Frame
-    ctx.fillStyle = '#b71c1c';
-    ctx.beginPath();
-    ctx.moveTo(30, 48); ctx.lineTo(58, 12); ctx.lineTo(45, 2); ctx.lineTo(30, 14); ctx.lineTo(15, 2); ctx.lineTo(2, 12);
-    ctx.closePath(); ctx.fill();
+    if (b.isMothership) {
+      // Alien Mothership Hull
+      ctx.fillStyle = '#880e4f';
+      ctx.beginPath();
+      ctx.moveTo(45, 58); ctx.lineTo(85, 35); ctx.lineTo(90, 10); ctx.lineTo(65, 2); ctx.lineTo(45, 12); ctx.lineTo(25, 2); ctx.lineTo(0, 10); ctx.lineTo(5, 35);
+      ctx.closePath(); ctx.fill();
 
-    // Glowing Core
-    let coreCol = (frame % 10 < 5) ? '#ffea00' : '#ff1744';
-    ctx.fillStyle = coreCol;
-    ctx.beginPath(); ctx.arc(30, 24, 10, 0, Math.PI * 2); ctx.fill();
+      // Core Eye
+      let coreCol = (frame % 8 < 4) ? '#00e5ff' : '#ff1744';
+      ctx.fillStyle = coreCol;
+      ctx.beginPath(); ctx.arc(45, 30, 12, 0, Math.PI * 2); ctx.fill();
 
-    // Cannons
-    ctx.fillStyle = '#37474f';
-    ctx.fillRect(8, 30, 6, 16);
-    ctx.fillRect(46, 30, 6, 16);
+      // Turrets
+      let tOffsetsX = [5, 25, 65, 85];
+      for (let i = 0; i < 4; i++) {
+        if (b.turrets[i] && b.turrets[i].active) {
+          ctx.fillStyle = '#ff9100';
+          ctx.beginPath(); ctx.arc(tOffsetsX[i], 28, 7, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+
+      // Deflector Shield Ring
+      if (isMothershipShieldActive()) {
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(45, 30, 50, 0, Math.PI * 2); ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = '#b71c1c';
+      ctx.beginPath();
+      ctx.moveTo(30, 48); ctx.lineTo(58, 12); ctx.lineTo(45, 2); ctx.lineTo(30, 14); ctx.lineTo(15, 2); ctx.lineTo(2, 12);
+      ctx.closePath(); ctx.fill();
+
+      let coreCol = (frame % 10 < 5) ? '#ffea00' : '#ff1744';
+      ctx.fillStyle = coreCol;
+      ctx.beginPath(); ctx.arc(30, 24, 10, 0, Math.PI * 2); ctx.fill();
+    }
 
     ctx.restore();
   }
@@ -991,60 +1200,47 @@
     let pulse = 1 + Math.sin(frame * 0.15) * 0.15;
     ctx.scale(pulse, pulse);
 
-    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9'];
-    const labels = ['S', 'L', 'H', 'B', 'R', 'T'];
+    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff'];
+    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D'];
 
     ctx.fillStyle = colors[pu.type] || '#fff';
     ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
 
     ctx.fillStyle = '#000';
     ctx.font = 'bold 9px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(labels[pu.type] || 'P', 0, 1);
-
     ctx.restore();
   }
 
-  // --- MAIN RENDER LOOP ---
+  // --- RENDER LOOP ---
   function draw() {
-    // Screen Flash on Bomb
     if (bombFlash > 0) {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, W, H);
       return;
     }
 
-    // Dynamic Starfield background
     let bgR = 5 + (wave * 4) % 25;
     let bgG = 5 + (wave * 6) % 25;
     let bgB = 18 + (wave * 10) % 40;
     ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = timeStopTimer > 0 ? '#00e5ff' : '#ffffff';
     for (let s of stars) {
       ctx.fillRect(s.x, s.y, s.size, s.size);
     }
 
-    if (gameState === STATE_MENU) {
-      drawMenuScreen();
-    } else if (gameState === STATE_MODE_SELECT) {
-      drawModeSelectScreen();
-    } else if (gameState === STATE_LEADERBOARD) {
-      drawLeaderboardScreen();
-    } else if (gameState === STATE_PLAYING || gameState === STATE_PAUSED || gameState === STATE_GAMEOVER) {
-      // Gameplay Rendering
+    if (gameState === STATE_MENU) drawMenuScreen();
+    else if (gameState === STATE_MODE_SELECT) drawModeSelectScreen();
+    else if (gameState === STATE_LEADERBOARD) drawLeaderboardScreen();
+    else if (gameState === STATE_PLAYING || gameState === STATE_PAUSED || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       drawPlayerShip(p.x, p.y, p.shield, frameCount);
 
       for (let b of bullets) {
-        if (b.type === 1) { // Plasma
-          ctx.fillStyle = '#d500f9';
-          ctx.beginPath(); ctx.arc(b.x + 2, b.y + 2, 6, 0, Math.PI * 2); ctx.fill();
-        } else {
-          ctx.fillStyle = '#00e5ff';
-          ctx.fillRect(b.x, b.y, 4, 10);
-        }
+        ctx.fillStyle = b.type === 1 ? '#d500f9' : '#00e5ff';
+        ctx.fillRect(b.x, b.y, 4, 10);
       }
 
       for (let eb of eBullets) {
@@ -1057,12 +1253,11 @@
       for (let pu of powerups) drawPowerupItem(pu, frameCount);
 
       drawExplosions();
-
-      // HUD Overlay
       drawHUD();
 
       if (gameState === STATE_PAUSED) drawPauseScreen();
       if (gameState === STATE_GAMEOVER) drawGameOverScreen();
+      if (gameState === STATE_VICTORY) drawVictoryScreen();
     }
   }
 
@@ -1071,51 +1266,26 @@
     ctx.font = '12px monospace';
     ctx.fillText(`SCORE: ${score}`, 10, 18);
     ctx.fillText(`HIGH: ${highScore}`, 120, 18);
-    ctx.fillText(`WAVE: ${wave}`, W - 75, 18);
+    ctx.fillText(`WAVE: ${wave}/20`, W - 85, 18);
 
-    // Player HP (Hearts / Pips)
     ctx.fillStyle = '#ff1744';
-    for (let i = 0; i < p.hp; i++) {
-      ctx.fillRect(10 + i * 12, 26, 8, 8);
-    }
+    for (let i = 0; i < p.hp; i++) ctx.fillRect(10 + i * 12, 26, 8, 8);
 
-    // Bomb Indicators
     ctx.fillStyle = '#ffea00';
-    for (let i = 0; i < p.bombs; i++) {
-      ctx.fillRect(60 + i * 12, 26, 8, 8);
-    }
-    ctx.fillText(`[B]omb`, 100, 34);
+    for (let i = 0; i < p.bombs; i++) ctx.fillRect(60 + i * 12, 26, 8, 8);
 
-    // Shield Badge
-    if (p.shield) {
-      ctx.fillStyle = '#00e5ff';
-      ctx.fillText(`[SHIELD]`, 160, 34);
-    }
-
-    // Active Timers Indicator
-    let timerStr = '';
-    if (spreadTimer > 0) timerStr += 'SPREAD ';
-    if (laserTimer > 0) timerStr += 'LASER ';
-    if (rapidTimer > 0) timerStr += 'RAPID ';
-    if (timeStopTimer > 0) timerStr += 'STASIS ';
-    if (timerStr) {
-      ctx.fillStyle = '#00e676';
-      ctx.fillText(timerStr, 10, H - 10);
-    }
-
-    // Boss Health Bar
     if (boss) {
       ctx.fillStyle = '#111';
       ctx.fillRect(40, 42, W - 80, 12);
       let pct = Math.max(0, boss.hp / boss.maxHp);
-      ctx.fillStyle = '#ff1744';
+      ctx.fillStyle = boss.isMothership ? '#d500f9' : '#ff1744';
       ctx.fillRect(42, 44, (W - 84) * pct, 8);
       ctx.strokeStyle = '#fff';
       ctx.strokeRect(40, 42, W - 80, 12);
       ctx.fillStyle = '#fff';
       ctx.font = '9px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(`BOSS DREADNOUGHT Lvl ${boss.level}`, W / 2, 51);
+      ctx.fillText(boss.isMothership ? 'ALIEN MOTHERSHIP' : `DREADNOUGHT Lvl ${boss.level}`, W / 2, 51);
       ctx.textAlign = 'left';
     }
   }
@@ -1128,7 +1298,7 @@
 
     ctx.fillStyle = '#80d8ff';
     ctx.font = '12px monospace';
-    ctx.fillText('Deep Space Combat System', W / 2, 130);
+    ctx.fillText('Loop 7 Space Command', W / 2, 130);
 
     let saved = hasSavedGame();
     let options = ['START NEW GAME'];
@@ -1148,17 +1318,12 @@
         ctx.fillText(options[i], W / 2, y);
       }
     }
-
-    ctx.fillStyle = '#78909c';
-    ctx.font = '11px monospace';
-    ctx.fillText('Controls: Arrow Keys/WASD, Space: Fire', W / 2, H - 40);
-    ctx.fillText('Key B: Smart Bomb | Key P: Pause', W / 2, H - 22);
     ctx.textAlign = 'left';
   }
 
   function drawModeSelectScreen() {
     ctx.fillStyle = '#ffea00';
-    ctx.font = 'bold 22px monospace';
+    ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('SELECT GAME MODE', W / 2, 90);
 
@@ -1166,22 +1331,21 @@
       let y = 180 + i * 65;
       if (i === modeIndex) {
         ctx.fillStyle = '#00e5ff';
-        ctx.font = 'bold 18px monospace';
+        ctx.font = 'bold 16px monospace';
         ctx.fillText(`> ${MODES[i].name} <`, W / 2, y);
         ctx.fillStyle = '#ffffff';
         ctx.font = '11px monospace';
         ctx.fillText(MODES[i].desc, W / 2, y + 20);
       } else {
         ctx.fillStyle = '#78909c';
-        ctx.font = '15px monospace';
+        ctx.font = '14px monospace';
         ctx.fillText(MODES[i].name, W / 2, y);
       }
     }
 
     ctx.fillStyle = '#ff1744';
     ctx.font = '12px monospace';
-    ctx.fillText('Press ENTER to Launch Mission', W / 2, H - 50);
-    ctx.fillText('Press ESC to Return', W / 2, H - 30);
+    ctx.fillText('Press ENTER to Launch Mission', W / 2, H - 40);
     ctx.textAlign = 'left';
   }
 
@@ -1191,28 +1355,19 @@
     ctx.textAlign = 'center';
     ctx.fillText('TOP COMMANDERS', W / 2, 70);
 
-    ctx.fillStyle = '#ffea00';
-    ctx.font = '12px monospace';
-    ctx.fillText('RANK   SCORE   WAVE   MODE', W / 2, 105);
-
     for (let i = 0; i < leaderboard.length; i++) {
       let y = 140 + i * 35;
       let item = leaderboard[i];
       ctx.fillStyle = i === 0 ? '#ffea00' : '#ffffff';
       ctx.font = '13px monospace';
-      ctx.fillText(`#${i + 1}    ${item.score}     ${item.wave}    ${item.mode.substring(0, 10)}`, W / 2, y);
+      ctx.fillText(`#${i + 1}   Score:${item.score}   Wave:${item.wave}`, W / 2, y);
     }
-
-    ctx.fillStyle = '#80d8ff';
-    ctx.font = '12px monospace';
-    ctx.fillText('Press ENTER or ESC to return', W / 2, H - 40);
     ctx.textAlign = 'left';
   }
 
   function drawPauseScreen() {
     ctx.fillStyle = 'rgba(5, 5, 18, 0.85)';
     ctx.fillRect(0, 0, W, H);
-
     ctx.fillStyle = '#ffea00';
     ctx.font = 'bold 24px monospace';
     ctx.textAlign = 'center';
@@ -1237,25 +1392,40 @@
   function drawGameOverScreen() {
     ctx.fillStyle = 'rgba(20, 0, 0, 0.85)';
     ctx.fillRect(0, 0, W, H);
-
     ctx.fillStyle = '#ff1744';
     ctx.font = 'bold 28px monospace';
     ctx.textAlign = 'center';
     ctx.fillText('MISSION FAILED', W / 2, 140);
-
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px monospace';
     ctx.fillText(`FINAL SCORE: ${score}`, W / 2, 190);
     ctx.fillText(`WAVE REACHED: ${wave}`, W / 2, 220);
-    ctx.fillText(`KILLS: ${enemiesKilled}`, W / 2, 250);
-
     ctx.fillStyle = '#ffea00';
+    ctx.font = '14px monospace';
+    ctx.fillText('Press ENTER for Main Menu', W / 2, 310);
+    ctx.textAlign = 'left';
+  }
+
+  function drawVictoryScreen() {
+    ctx.fillStyle = 'rgba(0, 30, 20, 0.85)';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#00e676';
+    ctx.font = 'bold 24px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('CAMPAIGN VICTORY!', W / 2, 140);
+    ctx.fillStyle = '#ffea00';
+    ctx.font = '14px monospace';
+    ctx.fillText('Alien Mothership Destroyed', W / 2, 175);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '16px monospace';
+    ctx.fillText(`FINAL SCORE: ${score}`, W / 2, 220);
+    ctx.fillText(`VICTORY BONUS: +10000`, W / 2, 250);
+    ctx.fillStyle = '#80d8ff';
     ctx.font = '14px monospace';
     ctx.fillText('Press ENTER for Main Menu', W / 2, 330);
     ctx.textAlign = 'left';
   }
 
-  // --- GAME LOOP STEP ---
   setInterval(() => {
     update();
     draw();
