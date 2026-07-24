@@ -87,6 +87,19 @@ typedef struct {
 #define MAX_ANIMS 52
 Animation anims[MAX_ANIMS];
 
+// Victory Cascade Physics
+typedef struct {
+    int active;
+    Card c;
+    float x, y;
+    float vx, vy;
+    DWORD delay;
+} CascadeCard;
+#define MAX_CASCADE 52
+CascadeCard cascadeCards[MAX_CASCADE];
+int cascadeActive = 0;
+DWORD cascadeFrame = 0;
+
 void StartAnim(Card c, int sx, int sy, int ex, int ey) {
     for(int i=0; i<MAX_ANIMS; i++) {
         if(!anims[i].active) {
@@ -105,6 +118,7 @@ void StartAnim(Card c, int sx, int sy, int ex, int ey) {
 
 void ClearAnims() {
     for(int i=0; i<MAX_ANIMS; i++) anims[i].active = 0;
+    cascadeActive = 0;
 }
 
 int IsAnimating(Card c, int *px, int *py) {
@@ -201,6 +215,27 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
 
 void PlaySoundEffect(int type) {
     CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
+void StartVictoryCascade(HWND hwnd) {
+    RECT clientRect; GetClientRect(hwnd, &clientRect);
+    cascadeActive = 1;
+    cascadeFrame = 0;
+    int idx = 0;
+    for(int r=13; r>=1; r--) {
+        for(int s=0; s<4; s++) {
+            cascadeCards[idx].c.s = s;
+            cascadeCards[idx].c.r = r;
+            cascadeCards[idx].c.color = (s==1||s==3)?1:0;
+            cascadeCards[idx].x = (float)GetCardX(2, s, 0, clientRect);
+            cascadeCards[idx].y = (float)GetCardY(2, s, 0, clientRect);
+            cascadeCards[idx].vx = (float)((rand() % 16) - 8);
+            cascadeCards[idx].vy = (float)(-3 - (rand() % 4));
+            cascadeCards[idx].active = 0;
+            cascadeCards[idx].delay = (13 - r) * 12 + s * 3;
+            idx++;
+        }
+    }
 }
 
 void ShowStats(HWND hwnd) {
@@ -481,6 +516,7 @@ void CheckWin(HWND hwnd) {
                 }
             }
             gameInProgress = 0;
+            StartVictoryCascade(hwnd);
             InvalidateRect(hwnd, NULL, TRUE);
             ShowStats(hwnd);
         }
@@ -567,79 +603,207 @@ void UseExtraCellPowerup(HWND hwnd) {
     }
 }
 
+// Draw Suit Vector Shapes in GDI
+void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
+    COLORREF color = (suitIdx == 1 || suitIdx == 3) ? RGB(211, 47, 47) : RGB(30, 30, 30);
+    HBRUSH fillBrush = CreateSolidBrush(color);
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    SelectObject(hdc, fillBrush);
+    SelectObject(hdc, nullPen);
+    
+    int r = size / 2;
+    if (suitIdx == 0) { // Spades
+        POINT topPt[3] = {{cx, cy - r}, {cx - r + 1, cy + r/3}, {cx + r - 1, cy + r/3}};
+        Polygon(hdc, topPt, 3);
+        Ellipse(hdc, cx - r, cy - r/4, cx, cy + r/2);
+        Ellipse(hdc, cx, cy - r/4, cx + r, cy + r/2);
+        POINT stemPt[3] = {{cx, cy}, {cx - r/2, cy + r}, {cx + r/2, cy + r}};
+        Polygon(hdc, stemPt, 3);
+    } else if (suitIdx == 1) { // Hearts
+        Ellipse(hdc, cx - r, cy - r, cx + 1, cy + r/4);
+        Ellipse(hdc, cx - 1, cy - r, cx + r, cy + r/4);
+        POINT botPt[3] = {{cx - r + 1, cy - r/4}, {cx + r - 1, cy - r/4}, {cx, cy + r}};
+        Polygon(hdc, botPt, 3);
+    } else if (suitIdx == 2) { // Clubs
+        Ellipse(hdc, cx - r/2 - 1, cy - r, cx + r/2 + 1, cy);
+        Ellipse(hdc, cx - r, cy - r/2, cx, cy + r/2);
+        Ellipse(hdc, cx, cy - r/2, cx + r, cy + r/2);
+        POINT stemPt[3] = {{cx, cy}, {cx - r/2, cy + r}, {cx + r/2, cy + r}};
+        Polygon(hdc, stemPt, 3);
+    } else { // Diamonds
+        POINT diaPt[4] = {{cx, cy - r}, {cx + r, cy}, {cx, cy + r}, {cx - r, cy}};
+        Polygon(hdc, diaPt, 4);
+    }
+    
+    DeleteObject(fillBrush);
+    DeleteObject(nullPen);
+}
+
 void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
-    HBRUSH bg = CreateSolidBrush(RGB(45, 45, 48));
-    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 235, 59) : RGB(85, 85, 85));
+    // Card Body Shading & Border
+    HBRUSH bg = CreateSolidBrush(RGB(252, 252, 252));
+    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 215, 0) : RGB(180, 180, 180));
     
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
-    Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
+    RoundRect(hdc, x, y, x + CELL_W, y + CELL_H, 10, 10);
+    DeleteObject(bg);
+    DeleteObject(pen);
     
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, c.color ? RGB(255, 82, 82) : RGB(255, 255, 255));
+    SetTextColor(hdc, c.color ? RGB(211, 47, 47) : RGB(30, 30, 30));
     
-    WCHAR *suits[] = {L"\x2660", L"\x2665", L"\x2663", L"\x2666"};
     WCHAR *ranks[] = {L"A",L"2",L"3",L"4",L"5",L"6",L"7",L"8",L"9",L"10",L"J",L"Q",L"K"};
-    WCHAR text[16];
-    wsprintfW(text, L"%s%s", ranks[c.r-1], suits[c.s]);
     
-    HFONT hFont = CreateFontW(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+    HFONT hFont = CreateFontW(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
     
-    RECT rT = {x+5, y+5, x+CELL_W-5, y+25};
-    DrawTextW(hdc, text, -1, &rT, DT_LEFT | DT_TOP);
+    // Top-left Rank Text
+    RECT rT = {x + 4, y + 4, x + 24, y + 20};
+    DrawTextW(hdc, ranks[c.r-1], -1, &rT, DT_LEFT | DT_TOP);
+    DrawSuitGDI(hdc, x + 12, y + 26, 10, c.s);
     
-    RECT rB = {x+5, y+CELL_H-25, x+CELL_W-5, y+CELL_H-5};
-    DrawTextW(hdc, text, -1, &rB, DT_RIGHT | DT_BOTTOM);
+    // Bottom-right Rank Text (Rotated 180 effect simulated)
+    RECT rB = {x + CELL_W - 24, y + CELL_H - 20, x + CELL_W - 4, y + CELL_H - 4};
+    DrawTextW(hdc, ranks[c.r-1], -1, &rB, DT_RIGHT | DT_BOTTOM);
+    DrawSuitGDI(hdc, x + CELL_W - 12, y + CELL_H - 26, 10, c.s);
     
     SelectObject(hdc, hOldFont);
     DeleteObject(hFont);
-    DeleteObject(bg);
-    DeleteObject(pen);
+    
+    // Center Face / Court Portrait / Pips
+    if (c.r == 1) { // Ace Emblem
+        DrawSuitGDI(hdc, x + CELL_W/2, y + CELL_H/2, 24, c.s);
+        HPEN ringPen = CreatePen(PS_DOT, 1, RGB(212, 175, 55));
+        SelectObject(hdc, ringPen);
+        SelectObject(hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(hdc, x + CELL_W/2 - 18, y + CELL_H/2 - 18, x + CELL_W/2 + 18, y + CELL_H/2 + 18);
+        DeleteObject(ringPen);
+    } else if (c.r >= 11) { // Court Portraits (J, Q, K)
+        int px = x + 14, py = y + 22, pw = CELL_W - 28, ph = CELL_H - 44;
+        HBRUSH portraitBg = CreateSolidBrush(RGB(253, 251, 247));
+        HPEN goldPen = CreatePen(PS_SOLID, 1, RGB(212, 175, 55));
+        SelectObject(hdc, portraitBg);
+        SelectObject(hdc, goldPen);
+        Rectangle(hdc, px, py, px + pw, py + ph);
+        
+        COLORREF suitCol = c.color ? RGB(211, 47, 47) : RGB(30, 30, 30);
+        HBRUSH suitBrush = CreateSolidBrush(suitCol);
+        HBRUSH faceBrush = CreateSolidBrush(RGB(255, 224, 189));
+        HBRUSH crownBrush = CreateSolidBrush(RGB(255, 215, 0));
+        
+        if (c.r == 11) { // Jack (Knight)
+            // Plume & Helmet
+            SelectObject(hdc, suitBrush);
+            POINT hat[3] = {{px + pw/2, py + 4}, {px + 4, py + 14}, {px + pw - 4, py + 14}};
+            Polygon(hdc, hat, 3);
+            // Face
+            SelectObject(hdc, faceBrush);
+            Ellipse(hdc, px + pw/2 - 6, py + 14, px + pw/2 + 6, py + 26);
+            // Armor tunic
+            SelectObject(hdc, suitBrush);
+            Rectangle(hdc, px + 6, py + 26, px + pw - 6, py + ph - 4);
+        } else if (c.r == 12) { // Queen
+            // Crown
+            SelectObject(hdc, crownBrush);
+            POINT crown[5] = {{px + 6, py + 14}, {px + 10, py + 6}, {px + pw/2, py + 10}, {px + pw - 10, py + 6}, {px + pw - 6, py + 14}};
+            Polygon(hdc, crown, 5);
+            // Face & Hair
+            SelectObject(hdc, faceBrush);
+            Ellipse(hdc, px + pw/2 - 6, py + 14, px + pw/2 + 6, py + 26);
+            // Gown
+            SelectObject(hdc, suitBrush);
+            Rectangle(hdc, px + 6, py + 26, px + pw - 6, py + ph - 4);
+        } else { // King
+            // Crown
+            SelectObject(hdc, crownBrush);
+            Rectangle(hdc, px + 6, py + 6, px + pw - 6, py + 14);
+            // Face & Beard
+            SelectObject(hdc, faceBrush);
+            Ellipse(hdc, px + pw/2 - 7, py + 14, px + pw/2 + 7, py + 27);
+            HBRUSH beardBrush = CreateSolidBrush(RGB(109, 76, 65));
+            SelectObject(hdc, beardBrush);
+            Ellipse(hdc, px + pw/2 - 5, py + 22, px + pw/2 + 5, py + 30);
+            DeleteObject(beardBrush);
+            // Robe
+            SelectObject(hdc, suitBrush);
+            Rectangle(hdc, px + 4, py + 30, px + pw - 4, py + ph - 4);
+        }
+        
+        DeleteObject(portraitBg);
+        DeleteObject(goldPen);
+        DeleteObject(suitBrush);
+        DeleteObject(faceBrush);
+        DeleteObject(crownBrush);
+    } else { // Number Pips (2-10)
+        int cx = x + CELL_W / 2;
+        int cy = y + CELL_H / 2;
+        if (c.r == 2) {
+            DrawSuitGDI(hdc, cx, cy - 16, 12, c.s);
+            DrawSuitGDI(hdc, cx, cy + 16, 12, c.s);
+        } else if (c.r == 3) {
+            DrawSuitGDI(hdc, cx, cy - 20, 12, c.s);
+            DrawSuitGDI(hdc, cx, cy, 12, c.s);
+            DrawSuitGDI(hdc, cx, cy + 20, 12, c.s);
+        } else {
+            DrawSuitGDI(hdc, cx - 12, cy - 16, 12, c.s);
+            DrawSuitGDI(hdc, cx + 12, cy - 16, 12, c.s);
+            DrawSuitGDI(hdc, cx - 12, cy + 16, 12, c.s);
+            DrawSuitGDI(hdc, cx + 12, cy + 16, 12, c.s);
+            if (c.r == 5 || c.r == 9) DrawSuitGDI(hdc, cx, cy, 12, c.s);
+        }
+    }
 }
 
 void DrawEmptyCell(HDC hdc, int x, int y, int isFound, int suitIdx) {
-    HBRUSH bg = CreateSolidBrush(RGB(37, 37, 38));
-    HPEN pen = CreatePen(PS_SOLID, 2, RGB(85, 85, 85));
+    // Brass / Gold Slot Outline
+    HBRUSH bg = CreateSolidBrush(RGB(10, 40, 20));
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
-    Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
+    RoundRect(hdc, x, y, x + CELL_W, y + CELL_H, 10, 10);
     DeleteObject(bg);
     DeleteObject(pen);
     
     if(isFound) {
-        WCHAR *suits[] = {L"\x2660", L"\x2665", L"\x2663", L"\x2666"};
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, (suitIdx==1||suitIdx==3) ? RGB(139, 0, 0) : RGB(68, 68, 68));
-        HFONT hFont = CreateFontW(40, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
-        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-        
-        RECT r = {x, y, x+CELL_W, y+CELL_H};
-        DrawTextW(hdc, suits[suitIdx], -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-        
-        SelectObject(hdc, hOldFont);
-        DeleteObject(hFont);
+        DrawSuitGDI(hdc, x + CELL_W/2, y + CELL_H/2, 28, suitIdx);
     }
 }
 
 void DrawCardBack(HDC hdc, int x, int y, int type) {
     HBRUSH bg;
-    HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-    if (type == 0) bg = CreateSolidBrush(RGB(30, 136, 229)); // Blue
-    else if (type == 1) bg = CreateSolidBrush(RGB(229, 57, 53)); // Red
-    else if (type == 2) bg = CreateSolidBrush(RGB(67, 160, 71)); // Green
-    else bg = CreateSolidBrush(RGB(142, 36, 170)); // Purple
+    if (type == 0) bg = CreateSolidBrush(RGB(30, 60, 114)); // Royal Blue
+    else if (type == 1) bg = CreateSolidBrush(RGB(128, 0, 0)); // Crimson Red
+    else if (type == 2) bg = CreateSolidBrush(RGB(0, 77, 64)); // Emerald Green
+    else bg = CreateSolidBrush(RGB(33, 33, 33)); // Obsidian Dark
 
+    HPEN pen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
-    Rectangle(hdc, x, y, x + CELL_W, y + CELL_H);
+    RoundRect(hdc, x, y, x + CELL_W, y + CELL_H, 10, 10);
     
-    HPEN innerPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+    // Inner Lattice
+    HPEN innerPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
     SelectObject(hdc, innerPen);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
-    Rectangle(hdc, x + 5, y + 5, x + CELL_W - 5, y + CELL_H - 5);
-    Rectangle(hdc, x + 10, y + 10, x + CELL_W - 10, y + CELL_H - 10);
+    RoundRect(hdc, x + 5, y + 5, x + CELL_W - 5, y + CELL_H - 5, 6, 6);
     
+    // Center Golden Shield Logo "K"
+    HBRUSH goldBrush = CreateSolidBrush(RGB(212, 175, 55));
+    SelectObject(hdc, goldBrush);
+    POINT shield[4] = {{x + CELL_W/2, y + 25}, {x + CELL_W/2 + 14, y + 35}, {x + CELL_W/2, y + 65}, {x + CELL_W/2 - 14, y + 35}};
+    Polygon(hdc, shield, 4);
+    
+    SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, RGB(20, 20, 20));
+    HFONT hFont = CreateFontW(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    RECT r = {x, y + 32, x + CELL_W, y + 58};
+    DrawTextW(hdc, L"K", -1, &r, DT_CENTER | DT_SINGLELINE);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
+    DeleteObject(goldBrush);
     DeleteObject(innerPen);
     DeleteObject(bg);
     DeleteObject(pen);
@@ -665,12 +829,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbmMem = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
             HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
             
-            HBRUSH hbrBg = CreateSolidBrush(RGB(30, 30, 30));
+            // Rich Green Felt Casino Table Background
+            HBRUSH hbrBg = CreateSolidBrush(RGB(16, 96, 48));
             FillRect(hdcMem, &clientRect, hbrBg);
             DeleteObject(hbrBg);
             
+            // Outer felt vignette border
+            HPEN feltBorder = CreatePen(PS_SOLID, 8, RGB(8, 48, 24));
+            SelectObject(hdcMem, feltBorder);
+            SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
+            Rectangle(hdcMem, 0, 0, clientRect.right, clientRect.bottom);
+            DeleteObject(feltBorder);
+            
             SetBkMode(hdcMem, TRANSPARENT);
-            SetTextColor(hdcMem, RGB(255, 255, 255));
+            SetTextColor(hdcMem, RGB(255, 215, 0));
             HFONT hTitleFont = CreateFontW(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
@@ -761,6 +933,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int cx, cy;
                     if(IsAnimating(anims[i].c, &cx, &cy)) {
                         DrawCard(hdcMem, cx, cy, anims[i].c, 0);
+                    }
+                }
+            }
+            
+            // Draw Cascade Cards on Win
+            if (cascadeActive) {
+                for(int i=0; i<MAX_CASCADE; i++) {
+                    if (cascadeCards[i].active) {
+                        DrawCard(hdcMem, (int)cascadeCards[i].x, (int)cascadeCards[i].y, cascadeCards[i].c, 0);
                     }
                 }
             }
@@ -1001,6 +1182,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     active = 1;
                 }
             }
+            
+            if (cascadeActive) {
+                RECT clientRect; GetClientRect(hwnd, &clientRect);
+                cascadeFrame++;
+                int remaining = 0;
+                for(int i=0; i<MAX_CASCADE; i++) {
+                    if (cascadeFrame >= cascadeCards[i].delay) cascadeCards[i].active = 1;
+                    if (cascadeCards[i].active) {
+                        remaining = 1;
+                        cascadeCards[i].x += cascadeCards[i].vx;
+                        cascadeCards[i].y += cascadeCards[i].vy;
+                        cascadeCards[i].vy += 0.5f; // Gravity
+                        
+                        if (cascadeCards[i].y >= clientRect.bottom - CELL_H) {
+                            cascadeCards[i].y = (float)(clientRect.bottom - CELL_H);
+                            cascadeCards[i].vy = -cascadeCards[i].vy * 0.75f;
+                            cascadeCards[i].vx += ((rand() % 20) - 10) * 0.1f;
+                        }
+                        if (cascadeCards[i].x <= 0 || cascadeCards[i].x >= clientRect.right - CELL_W) {
+                            cascadeCards[i].vx = -cascadeCards[i].vx;
+                        }
+                    }
+                }
+                if (remaining && cascadeFrame < 600) active = 1;
+            }
+            
             if(gameInProgress && won == 0) {
                 if(now - lastTimeTick >= 1000) {
                     timeElapsed++;

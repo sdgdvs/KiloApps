@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KFreecell
 - KSudoku
 - KGo
 - KDarts
@@ -108,6 +107,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KHangman
 - KSimon
 - KMatch3
+- KFreecell
 
 ## Completed Work Log
 
@@ -128,6 +128,8 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **KHangman (Loop 1):** Implemented high-quality 3D wooden gallows (beveled oak/mahogany beams, brass brackets & rivets, pulley wheel, twisted hemp rope, animated swinging noose), detailed stick figure/character sprite added limb-by-limb with animated idle sway/breathe, expressive eyes (blinking, happy, scared pupil, dead X_X), blushing cheeks, cap, vest, boots, 3D tactile slate keycaps with hover glow and right/wrong state badging (✓/✗), and victory confetti streams / loss dark rain particle FX for both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 - **KSimon (Loop 1):** Implemented 3D circular dark arcade console housing with metallic rim and screws, 6 glossy 3D colored quadrant/bevel buttons (Green, Red, Yellow, Blue, Purple, Cyan) with inner vector icons (Treble Clef, Musical Note, Star, Sparkle, Diamond, Lightning), intense neon glowing flash states with expanding glow halos, center metal control disc with LED digital score counter & power switch, sound wave particle ripple rings, celebration victory fireworks, and error red flash burst FX for both Web Canvas (ksimon.html) and Native C Win32 GDI (KSimon/main.c).
 - **KMatch3 (Loop 1):** Implemented 6 3D faceted gem sprites (Red Ruby octagon, Green Emerald step-cut, Blue Sapphire cushion star, Yellow Topaz marquise rhombus, Purple Amethyst hexagon, Cyan Diamond brilliant round), special powerup gem badges (Line Blasters with glowing laser arrows, Rainbow Star gem, 3x3 Bomb gem with flickering fuse), smooth tile swap & spring fall drop animations, row/column laser beam highlights, 3D golden/stone grid frame with dark velvet cell sockets, granite stone tile textures, frosted ice overlay, and particle explosion bursts with score floaters for both Web Canvas/SVG (kmatch3.html) and Native C Win32 GDI (KMatch3/main.c).
+- **KFreecell (Loop 1):** Implemented detailed vector & GDI playing card suit sprites (Hearts ♥, Diamonds ♦, Clubs ♣, Spades ♠), detailed King, Queen, Jack court card portraits (with crowns, robes, tiaras, scepters, roses, halberds), Ace centerpiece emblems, pip matrix layouts (2-10), custom card back designs with centerpiece golden "K" crown shield logo, casino felt table micro-texture, gold/brass FreeCell & Foundation slot outlines, auto-foundation magnetic snap particle FX, card move glide animations, and a winning cascade card waterfall bounce animation with trail FX for both Web Canvas/SVG (kfreecell.html) and Native C Win32 GDI (KFreecell/main.c).
+
 
 
 

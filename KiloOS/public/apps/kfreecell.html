@@ -5,69 +5,152 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KFreecell</title>
 <style>
+  :root {
+    --felt-green: #145a2d;
+    --felt-dark: #0b381a;
+    --gold-accent: #ffd700;
+    --brass-border: #d4af37;
+  }
   body {
     margin: 0; padding: 0;
-    background-color: #1e1e1e;
+    background: radial-gradient(circle at 50% 35%, var(--felt-green) 0%, var(--felt-dark) 80%, #051d0d 100%);
+    background-attachment: fixed;
     color: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
     display: flex; flex-direction: column;
     height: 100vh; overflow: hidden;
     user-select: none;
+    box-shadow: inset 0 0 120px rgba(0,0,0,0.6);
+  }
+  body::before {
+    content: "";
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-image: 
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 4px),
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 2px, transparent 2px, transparent 4px);
+    pointer-events: none; z-index: 1;
   }
   .header {
-    background-color: #2d2d30; padding: 10px;
-    text-align: center; border-bottom: 1px solid #3e3e42;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(12px);
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.4);
     display: flex; justify-content: space-between; align-items: center;
     position: relative; z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
   }
-  .header h1 { margin: 0; font-size: 20px; }
+  .header h1 {
+    margin: 0; font-size: 20px; font-weight: 800;
+    color: var(--gold-accent);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3);
+    letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
   .btn {
-    background: #3e3e42; color: #fff; border: 1px solid #555;
-    padding: 5px 10px; cursor: pointer; border-radius: 3px;
+    background: linear-gradient(180deg, #3a3f4d 0%, #1f232d 100%);
+    color: #fff; border: 1px solid rgba(255,255,255,0.2);
+    padding: 5px 10px; cursor: pointer; border-radius: 5px;
+    font-size: 13px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
   }
-  .btn:hover { background: #555; }
+  .btn:hover {
+    background: linear-gradient(180deg, #4a5061 0%, #2b303d 100%);
+    border-color: var(--gold-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  }
   .game-board {
     flex-grow: 1; padding: 20px;
-    display: flex; flex-direction: column; gap: 20px;
-    position: relative;
+    display: flex; flex-direction: column; gap: 24px;
+    position: relative; z-index: 2;
+    max-width: 1100px; margin: 0 auto; width: 100%; box-sizing: border-box;
   }
   .top-row {
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: center;
   }
-  .group { display: flex; gap: 10px; }
+  .group { display: flex; gap: 12px; }
   .cell {
-    width: 70px; height: 100px;
-    border: 2px solid #555; border-radius: 5px;
-    background-color: #252526;
+    width: 74px; height: 106px;
+    border: 2px solid rgba(212, 175, 55, 0.5);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.28);
     position: relative; box-sizing: border-box;
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.7), 0 0 12px rgba(212, 175, 55, 0.15);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .cell:hover {
+    border-color: rgba(212, 175, 55, 0.85);
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.7), 0 0 16px rgba(212, 175, 55, 0.35);
   }
   .tableau {
     display: flex; justify-content: space-between; flex-grow: 1;
   }
   .column {
-    width: 70px; min-height: 100px;
+    width: 74px; min-height: 106px;
     position: relative;
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.12);
+    border: 1px dashed rgba(212, 175, 55, 0.25);
   }
   .card {
-    width: 70px; height: 100px;
-    border-radius: 5px; border: 1px solid #555;
-    background-color: #2d2d30;
+    width: 74px; height: 106px;
+    border-radius: 7px;
+    border: 1px solid #d0ceca;
+    background: linear-gradient(135deg, #ffffff 0%, #f7f6f2 100%);
     position: absolute; top: 0; left: 0;
     box-sizing: border-box;
     display: flex; flex-direction: column;
-    justify-content: space-between; padding: 5px;
-    font-size: 16px; font-weight: bold;
-    cursor: pointer; box-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-    transition: left 0.15s ease-out, top 0.15s ease-out, z-index 0s;
+    justify-content: space-between; padding: 4px 5px;
+    font-size: 15px; font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.25);
+    transition: left 0.15s ease-out, top 0.15s ease-out, transform 0.15s, box-shadow 0.15s;
+    user-select: none;
   }
-  .card.red { color: #ff5252; }
-  .card.black { color: #ffffff; }
-  .card.selected { outline: 3px solid #ffeb3b; }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.3);
+  }
+  .card.selected {
+    outline: 3px solid #ffd700;
+    box-shadow: 0 0 20px #ffd700, 0 10px 20px rgba(0,0,0,0.6);
+    transform: translateY(-5px);
+  }
+  .card.red { color: #d32f2f; }
+  .card.black { color: #1e1e1e; }
+  
+  .card-face {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .card-corner {
+    display: flex; flex-direction: column; align-items: center; line-height: 1;
+  }
+  .card-corner.top-left { position: absolute; top: 2px; left: 2px; }
+  .card-corner.bottom-right { position: absolute; bottom: 2px; right: 2px; transform: rotate(180deg); }
+  .card-rank { font-size: 14px; font-weight: 900; font-family: 'Arial', sans-serif; }
+  .card-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px; height: 64px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  
+  /* Particle Canvas Overlay */
+  #fx-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 900;
+  }
 </style>
 </head>
 <body>
+  <canvas id="fx-canvas"></canvas>
   <div class="header">
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;">
       <button class="btn" onclick="initGame()">New Game</button>
       <select id="game-mode" class="btn" style="background:#2d2d30; color:#fff;" onchange="updateModeUI(); initGame();">
         <option value="random">Random Deal</option>
@@ -80,40 +163,43 @@
       <button class="btn" onclick="saveGame()">Save</button>
       <button class="btn" onclick="loadGame()">Load</button>
       <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau (1 per game) [P]">Shuffle</button>
-      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-sweep safe cards to foundations (1 per game) [W]">Wand</button>
+      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-sweep safe cards (1 per game) [W]">Wand</button>
       <button class="btn" onclick="extraCellPowerup()" title="Extra Cell: Add +1 Free Cell slot (1 per game) [E]">+1 Cell</button>
       <button class="btn" onclick="showStats()">Stats</button>
       <button class="btn" onclick="showSettings()">Settings</button>
       <button class="btn" onclick="showHelp()">Help</button>
     </div>
-    <h1>KFreecell</h1>
-    <div id="game-info" style="font-size: 14px; margin: 0 15px;">Time: 00:00 | Moves: 0</div>
-    <div id="status" style="font-size: 14px;"></div>
+    <h1><svg width="22" height="22" viewBox="0 0 24 24" fill="#ffd700"><path d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/><path d="M12 16L9 22H15L12 16Z"/></svg> KFreecell</h1>
+    <div id="game-info" style="font-size: 14px; margin: 0 15px; font-weight: 700; color: #e0e0e0;">Time: 00:00 | Moves: 0</div>
+    <div id="status" style="font-size: 14px; font-weight: 800; color: #ffd700;"></div>
   </div>
+
   <div id="stats-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
-    <div style="background:#2d2d30; padding:20px; border-radius:5px; border:1px solid #555; text-align:center;">
-      <h2 style="margin-top:0;">Statistics</h2>
+    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; text-align:center; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
+      <h2 style="margin-top:0; color:#ffd700;">Statistics</h2>
       <p>Games Played: <span id="stat-played">0</span></p>
       <p>Wins: <span id="stat-wins">0</span> (<span id="stat-winpct">0</span>%)</p>
       <p>Current Streak: <span id="stat-streak">0</span></p>
       <p>Best Streak: <span id="stat-best">0</span></p>
       <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 15</p>
       <p>Time Attack Wins: <span id="stat-tawins">0</span> (Best Win: <span id="stat-tabest">--</span>)</p>
-      <button class="btn" style="margin-top:10px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
+      <button class="btn" style="margin-top:12px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
     </div>
   </div>
+
   <div id="settings-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
-    <div style="background:#2d2d30; padding:20px; border-radius:5px; border:1px solid #555; text-align:center;">
-      <h2 style="margin-top:0;">Settings</h2>
-      <p>Card Back Design:</p>
-      <div style="display:flex; gap:10px; justify-content:center; margin-bottom: 20px;" id="card-back-options">
+    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; text-align:center; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
+      <h2 style="margin-top:0; color:#ffd700;">Settings</h2>
+      <p>Select Card Back Design:</p>
+      <div style="display:flex; gap:12px; justify-content:center; margin-bottom: 20px;" id="card-back-options">
       </div>
       <button class="btn" onclick="document.getElementById('settings-modal').style.display='none'">Close</button>
     </div>
   </div>
+
   <div id="help-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
-    <div style="background:#2d2d30; padding:20px; border-radius:5px; border:1px solid #555; max-width:500px; text-align:left;">
-      <h2 style="margin-top:0; text-align:center;">How to Play Freecell</h2>
+    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; max-width:520px; text-align:left; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
+      <h2 style="margin-top:0; text-align:center; color:#ffd700;">How to Play Freecell</h2>
       <p><b>Rules:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
         <li>Build all 4 foundations from Ace to King by suit.</li>
@@ -132,7 +218,7 @@
       <ul style="margin: 0; padding-left: 20px;">
         <li><b>Random Deal:</b> A completely shuffled deck.</li>
         <li><b>Numbered Deal:</b> Deals based on a specific seed number. Replayable!</li>
-        <li><b>Campaign Mode:</b> 15 stages of increasing difficulty (fewer free cells, Baker's Game rules, King-only spaces).</li>
+        <li><b>Campaign Mode:</b> 15 stages of increasing difficulty.</li>
         <li><b>Time Attack:</b> 180s countdown timer! Each foundation placement adds +15s bonus time.</li>
       </ul>
       <p><b>Power-ups:</b></p>
@@ -146,6 +232,7 @@
       </div>
     </div>
   </div>
+
   <div class="game-board">
     <div class="top-row">
       <div class="group" id="free-cells">
@@ -154,7 +241,7 @@
         <div class="cell" data-type="free" data-index="2"></div>
         <div class="cell" data-type="free" data-index="3"></div>
       </div>
-      <div id="decorative-deck" class="cell" style="border: 2px solid #fff; background-color: #1e88e5; background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px);"></div>
+      <div id="decorative-deck" class="cell" style="border: 2px solid #ffd700; cursor:pointer;"></div>
       <div class="group" id="foundations">
         <div class="cell" data-type="found" data-index="0"></div>
         <div class="cell" data-type="found" data-index="1"></div>
@@ -173,6 +260,7 @@
       <div class="column" data-type="tab" data-index="7"></div>
     </div>
   </div>
+
   <script>
     let audioCtx = null;
     function initAudio() {
@@ -208,7 +296,7 @@
         osc.frequency.setValueAtTime(554, now + 0.2);
         osc.frequency.setValueAtTime(659, now + 0.4);
         osc.frequency.setValueAtTime(880, now + 0.6);
-        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.setValueAtTime(0.25, now);
         gain.gain.linearRampToValueAtTime(0, now + 1.2);
         osc.start(now); osc.stop(now + 1.2);
       }
@@ -217,6 +305,113 @@
     const suits = ['♠', '♥', '♣', '♦'];
     const colors = ['black', 'red', 'black', 'red'];
     const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+    // SVG Suit Generator
+    function getSuitSVG(s, size = 16) {
+      const color = (s === 1 || s === 3) ? '#d32f2f' : '#1e1e1e';
+      if (s === 0) { // Spades
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/><path d="M12 16L9 22H15L12 16Z"/></svg>`;
+      } else if (s === 1) { // Hearts
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
+      } else if (s === 2) { // Clubs
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><circle cx="12" cy="7.5" r="4.5"/><circle cx="7.5" cy="14" r="4.5"/><circle cx="16.5" cy="14" r="4.5"/><path d="M12 14L9 22H15L12 14Z"/></svg>`;
+      } else { // Diamonds
+        return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 2L3 12L12 22L21 12L12 2Z"/></svg>`;
+      }
+    }
+
+    // Court Card Portraits (J, Q, K) & Center Emblem SVG
+    function getCardCenterSVG(c) {
+      const isRed = (c.s === 1 || c.s === 3);
+      const suitCol = isRed ? '#d32f2f' : '#1e1e1e';
+      const goldCol = '#d4af37';
+      
+      if (c.r === 1) { // Ace Emblem
+        return `<svg width="44" height="60" viewBox="0 0 44 60">
+          <circle cx="22" cy="30" r="22" fill="none" stroke="${goldCol}" stroke-width="1.5" stroke-dasharray="3 2"/>
+          <g transform="translate(10, 18)">${getSuitSVG(c.s, 24)}</g>
+        </svg>`;
+      }
+      
+      if (c.r === 11) { // Jack Portrait
+        return `<svg width="42" height="62" viewBox="0 0 42 62">
+          <rect x="2" y="2" width="38" height="58" rx="4" fill="#fdfbf7" stroke="${goldCol}" stroke-width="1.5"/>
+          <path d="M6 16 L21 6 L36 16 L36 46 L21 56 L6 46 Z" fill="none" stroke="${suitCol}" stroke-width="1" opacity="0.4"/>
+          <!-- Helmet & Plume -->
+          <path d="M14 18 C14 12 28 12 28 18 L30 24 L12 24 Z" fill="${suitCol}"/>
+          <path d="M21 10 C18 4 24 2 28 6" stroke="${goldCol}" stroke-width="2" fill="none"/>
+          <!-- Face -->
+          <circle cx="21" cy="28" r="7" fill="#ffe0bd"/>
+          <circle cx="19" cy="27" r="1" fill="#333"/>
+          <path d="M19 31 Q21 33 23 31" stroke="#333" stroke-width="1" fill="none"/>
+          <!-- Armor / Doublet -->
+          <path d="M11 35 L31 35 L34 56 L8 56 Z" fill="${suitCol}"/>
+          <path d="M21 35 L21 56" stroke="${goldCol}" stroke-width="1.5"/>
+          <circle cx="21" cy="42" r="2" fill="${goldCol}"/>
+          <!-- Spearhead -->
+          <path d="M33 20 L37 28 L29 28 Z" fill="${goldCol}"/>
+          <line x1="33" y1="28" x2="33" y2="54" stroke="#8b5a2b" stroke-width="2"/>
+        </svg>`;
+      }
+      
+      if (c.r === 12) { // Queen Portrait
+        return `<svg width="42" height="62" viewBox="0 0 42 62">
+          <rect x="2" y="2" width="38" height="58" rx="4" fill="#fdfbf7" stroke="${goldCol}" stroke-width="1.5"/>
+          <!-- Crown -->
+          <path d="M13 18 L16 12 L21 16 L26 12 L29 18 Z" fill="${goldCol}"/>
+          <circle cx="16" cy="11" r="1.5" fill="${suitCol}"/>
+          <circle cx="21" cy="15" r="1.5" fill="${suitCol}"/>
+          <circle cx="26" cy="11" r="1.5" fill="${suitCol}"/>
+          <!-- Hair & Veil -->
+          <path d="M12 20 Q21 16 30 20 Q32 36 29 48 Q21 52 13 48 Z" fill="${suitCol}" opacity="0.3"/>
+          <!-- Face -->
+          <circle cx="21" cy="26" r="6.5" fill="#ffe0bd"/>
+          <circle cx="19" cy="25" r="1" fill="#333"/>
+          <path d="M19 29 Q21 31 23 29" stroke="#d32f2f" stroke-width="1" fill="none"/>
+          <!-- Gown & Rose -->
+          <path d="M12 33 Q21 30 30 33 L33 56 L9 56 Z" fill="${suitCol}"/>
+          <circle cx="21" cy="44" r="3.5" fill="#d32f2f"/>
+          <circle cx="21" cy="44" r="1.5" fill="${goldCol}"/>
+        </svg>`;
+      }
+      
+      if (c.r === 13) { // King Portrait
+        return `<svg width="42" height="62" viewBox="0 0 42 62">
+          <rect x="2" y="2" width="38" height="58" rx="4" fill="#fdfbf7" stroke="${goldCol}" stroke-width="1.5"/>
+          <!-- Imperial Crown -->
+          <path d="M11 18 L13 10 L21 14 L29 10 L31 18 Z" fill="${goldCol}"/>
+          <path d="M21 8 L21 14" stroke="${goldCol}" stroke-width="2"/>
+          <circle cx="21" cy="7" r="1.5" fill="#ffd700"/>
+          <!-- Beard & Face -->
+          <circle cx="21" cy="25" r="7" fill="#ffe0bd"/>
+          <path d="M14 26 C14 34 28 34 28 26 Z" fill="#6d4c41"/>
+          <circle cx="19" cy="24" r="1" fill="#333"/>
+          <!-- Robe -->
+          <path d="M10 32 L32 32 L35 56 L7 56 Z" fill="${suitCol}"/>
+          <path d="M17 32 L17 56 M25 32 L25 56" stroke="#fff" stroke-width="2" stroke-dasharray="2 2"/>
+          <!-- Scepter & Orb -->
+          <circle cx="31" cy="38" r="3" fill="${goldCol}"/>
+          <line x1="31" y1="41" x2="31" y2="54" stroke="${goldCol}" stroke-width="2"/>
+        </svg>`;
+      }
+      
+      // Number Cards 2-10 Layout
+      let pips = '';
+      const count = c.r;
+      const suitSvg = getSuitSVG(c.s, 12);
+      if (count === 2) {
+        pips = `<div style="position:absolute;top:4px;">${suitSvg}</div><div style="position:absolute;bottom:4px;transform:rotate(180deg);">${suitSvg}</div>`;
+      } else if (count === 3) {
+        pips = `<div style="position:absolute;top:4px;">${suitSvg}</div><div style="position:absolute;top:24px;">${suitSvg}</div><div style="position:absolute;bottom:4px;transform:rotate(180deg);">${suitSvg}</div>`;
+      } else if (count === 4) {
+        pips = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 14px;align-items:center;"><div>${suitSvg}</div><div>${suitSvg}</div><div style="transform:rotate(180deg);">${suitSvg}</div><div style="transform:rotate(180deg);">${suitSvg}</div></div>`;
+      } else if (count === 5) {
+        pips = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px 14px;align-items:center;"><div>${suitSvg}</div><div>${suitSvg}</div><div style="transform:rotate(180deg);">${suitSvg}</div><div style="transform:rotate(180deg);">${suitSvg}</div></div><div style="position:absolute;">${suitSvg}</div>`;
+      } else {
+        pips = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;"><div>${suitSvg}</div><div>${suitSvg}</div><div>${suitSvg}</div><div>${suitSvg}</div><div style="transform:rotate(180deg);">${suitSvg}</div><div style="transform:rotate(180deg);">${suitSvg}</div></div>`;
+      }
+      return `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;position:relative;">${pips}</div>`;
+    }
 
     let deck = [];
     let gameInProgress = false;
@@ -231,12 +426,14 @@
     let emptyKingOnly = false;
     let numFreeCells = 4;
     let timeRemaining = 180;
+
     const cardBacks = [
-      { color: '#1e88e5', pattern: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)' },
-      { color: '#e53935', pattern: 'repeating-linear-gradient(-45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)' },
-      { color: '#43a047', pattern: 'radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2.5px)' },
-      { color: '#8e24aa', pattern: 'repeating-radial-gradient(circle, transparent, transparent 4px, rgba(255,255,255,0.2) 4px, rgba(255,255,255,0.2) 8px)' }
+      { color: '#1e3c72', pattern: 'radial-gradient(circle at 50% 50%, #2a5298 0%, #1e3c72 100%)' },
+      { color: '#800000', pattern: 'radial-gradient(circle at 50% 50%, #b30000 0%, #660000 100%)' },
+      { color: '#004d40', pattern: 'radial-gradient(circle at 50% 50%, #00796b 0%, #004d40 100%)' },
+      { color: '#212121', pattern: 'radial-gradient(circle at 50% 50%, #424242 0%, #111111 100%)' }
     ];
+
     let state = {
       free: [null, null, null, null],
       found: [0, 0, 0, 0],
@@ -345,28 +542,36 @@
       Object.values(cardEls).forEach(el => el.style.transition = 'none');
       render();
       setTimeout(() => {
-        Object.values(cardEls).forEach(el => el.style.transition = 'left 0.15s ease-out, top 0.15s ease-out, z-index 0s');
+        Object.values(cardEls).forEach(el => el.style.transition = 'left 0.15s ease-out, top 0.15s ease-out, transform 0.15s, box-shadow 0.15s');
       }, 50);
     });
 
     function updateCardBackUI() {
-      const deck = document.getElementById('decorative-deck');
+      const deckEl = document.getElementById('decorative-deck');
       const back = cardBacks[settings.cardBack];
-      deck.style.backgroundColor = back.color;
-      deck.style.backgroundImage = back.pattern;
+      deckEl.style.backgroundColor = back.color;
+      deckEl.style.backgroundImage = back.pattern;
+      deckEl.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+        <svg width="40" height="50" viewBox="0 0 40 50">
+          <rect x="2" y="2" width="36" height="46" rx="3" fill="none" stroke="#ffd700" stroke-width="1.5"/>
+          <path d="M12 16 L20 8 L28 16 L20 24 Z" fill="#ffd700" opacity="0.8"/>
+          <text x="20" y="34" font-size="16" font-weight="900" fill="#ffd700" text-anchor="middle">K</text>
+        </svg>
+      </div>`;
       
       const opts = document.getElementById('card-back-options');
       if (opts) {
         opts.innerHTML = '';
         cardBacks.forEach((cb, i) => {
           let div = document.createElement('div');
-          div.style.width = '50px';
-          div.style.height = '70px';
+          div.style.width = '54px';
+          div.style.height = '78px';
           div.style.backgroundColor = cb.color;
           div.style.backgroundImage = cb.pattern;
-          div.style.border = (i === settings.cardBack) ? '3px solid #ffeb3b' : '1px solid #555';
+          div.style.border = (i === settings.cardBack) ? '3px solid #ffd700' : '1px solid #555';
           div.style.cursor = 'pointer';
-          div.style.borderRadius = '3px';
+          div.style.borderRadius = '5px';
+          div.style.boxShadow = '0 3px 8px rgba(0,0,0,0.4)';
           div.onclick = () => {
             settings.cardBack = i;
             localStorage.setItem('kfreecell_settings', JSON.stringify(settings));
@@ -453,7 +658,7 @@
       deck = [];
       for(let s=0; s<4; s++) {
         for(let r=1; r<=13; r++) {
-          deck.push({ s, r, color: colors[s], display: ranks[r-1] + suits[s] });
+          deck.push({ s, r, color: colors[s], display: ranks[r-1] });
         }
       }
       
@@ -545,7 +750,7 @@
       Object.values(cardEls).forEach(el => el.style.transition = 'none');
       render();
       setTimeout(() => {
-        Object.values(cardEls).forEach(el => el.style.transition = 'left 0.15s ease-out, top 0.15s ease-out, z-index 0s');
+        Object.values(cardEls).forEach(el => el.style.transition = 'left 0.15s ease-out, top 0.15s ease-out, transform 0.15s, box-shadow 0.15s');
       }, 50);
     }
 
@@ -568,19 +773,30 @@
       
       for(let s=0; s<4; s++) {
         for(let r=1; r<=13; r++) {
-          let c = { s, r, color: colors[s], display: ranks[r-1] + suits[s] };
+          let c = { s, r, color: colors[s], display: ranks[r-1] };
           let div = document.createElement('div');
           div.className = 'card ' + c.color;
           div.style.pointerEvents = 'auto';
           
-          let top = document.createElement('div');
-          top.innerText = c.display;
-          let bot = document.createElement('div');
-          bot.innerText = c.display;
-          bot.style.transform = 'rotate(180deg)';
+          let face = document.createElement('div');
+          face.className = 'card-face';
           
-          div.appendChild(top);
-          div.appendChild(bot);
+          let topLeft = document.createElement('div');
+          topLeft.className = 'card-corner top-left';
+          topLeft.innerHTML = `<span class="card-rank">${c.display}</span>${getSuitSVG(s, 11)}`;
+          
+          let center = document.createElement('div');
+          center.className = 'card-center';
+          center.innerHTML = getCardCenterSVG(c);
+          
+          let botRight = document.createElement('div');
+          botRight.className = 'card-corner bottom-right';
+          botRight.innerHTML = `<span class="card-rank">${c.display}</span>${getSuitSVG(s, 11)}`;
+          
+          face.appendChild(topLeft);
+          face.appendChild(center);
+          face.appendChild(botRight);
+          div.appendChild(face);
           
           div.id = `card-${s}-${r}`;
           layer.appendChild(div);
@@ -629,6 +845,48 @@
       let emptyFree = state.free.filter(c => !c).length;
       let emptyTab = state.tab.filter(c => c.length === 0).length;
       return (emptyFree + 1) * Math.pow(2, emptyTab);
+    }
+
+    function spawnSnapSparks(rect) {
+      const canvas = document.getElementById('fx-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      let particles = [];
+      for(let i=0; i<16; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 4;
+        particles.push({
+          x: cx, y: cy,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1.0, color: ['#ffd700', '#ffffff', '#64b5f6'][Math.floor(Math.random()*3)]
+        });
+      }
+      
+      function renderSparks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          if(p.life > 0) {
+            p.x += p.vx; p.y += p.vy;
+            p.life -= 0.05;
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = p.life;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            alive = true;
+          }
+        });
+        if(alive) requestAnimationFrame(renderSparks);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      renderSparks();
     }
 
     function handleCardClick(type, index, cardIdx, isTarget = false) {
@@ -682,6 +940,8 @@
           state.found[index] = cardsToMove[0].r;
           if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
           moved = true;
+          const foundEl = document.querySelectorAll('#foundations .cell')[index];
+          if(foundEl) spawnSnapSparks(foundEl.getBoundingClientRect());
         }
 
         if(moved) {
@@ -726,9 +986,84 @@
             }
           }
           gameInProgress = false;
+          startVictoryCascade();
           showStats();
         }
       }
+    }
+
+    // Victory Cascade Bounce Animation
+    function startVictoryCascade() {
+      const canvas = document.getElementById('fx-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      let cascadeCards = [];
+      const foundEls = document.querySelectorAll('#foundations .cell');
+      
+      let delay = 0;
+      for(let r=13; r>=1; r--) {
+        for(let s=0; s<4; s++) {
+          const rect = foundEls[s] ? foundEls[s].getBoundingClientRect() : {left: window.innerWidth/2, top: 100};
+          cascadeCards.push({
+            s, r,
+            x: rect.left, y: rect.top,
+            vx: (Math.random() - 0.5) * 8,
+            vy: -4 - Math.random() * 4,
+            active: false,
+            delay: delay
+          });
+          delay += 6;
+        }
+      }
+      
+      let frame = 0;
+      function animateCascade() {
+        frame++;
+        let remaining = false;
+        
+        cascadeCards.forEach(c => {
+          if (frame >= c.delay) c.active = true;
+          if (c.active) {
+            remaining = true;
+            c.x += c.vx;
+            c.y += c.vy;
+            c.vy += 0.5; // Gravity
+            
+            // Bounce off bottom
+            if (c.y >= canvas.height - 106) {
+              c.y = canvas.height - 106;
+              c.vy = -c.vy * 0.75;
+              c.vx += (Math.random() - 0.5) * 2;
+            }
+            // Bounce off walls
+            if (c.x <= 0 || c.x >= canvas.width - 74) {
+              c.vx = -c.vx;
+            }
+            
+            // Draw card stamp on canvas
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(c.x, c.y, 74, 106, 6);
+            else ctx.rect(c.x, c.y, 74, 106);
+            ctx.fill();
+            ctx.stroke();
+            
+            ctx.font = 'bold 16px Segoe UI';
+            ctx.fillStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
+            ctx.fillText(ranks[c.r-1] + suits[c.s], c.x + 8, c.y + 22);
+          }
+        });
+        
+        if (remaining && frame < 600) {
+          requestAnimationFrame(animateCascade);
+        }
+      }
+      animateCascade();
     }
 
     function isSafeToAutoMove(card) {
@@ -851,14 +1186,7 @@
           }
         }
         if(state.found[i] === 0) {
-          el.innerText = suits[i];
-          el.style.color = colors[i] === 'red' ? '#8b0000' : '#444';
-          el.style.fontSize = '40px';
-          el.style.display = 'flex';
-          el.style.justifyContent = 'center';
-          el.style.alignItems = 'center';
-        } else {
-          el.innerText = '';
+          el.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:0.35;">${getSuitSVG(i, 32)}</div>`;
         }
       });
 
@@ -869,7 +1197,7 @@
         state.tab[i].forEach((c, j) => {
           let cardRect = {
             left: rect.left,
-            top: rect.top + j * 25,
+            top: rect.top + j * 24,
             width: rect.width,
             height: rect.height
           };
