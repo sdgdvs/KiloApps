@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #define W 500
 #define H 670
@@ -33,6 +34,22 @@ const char* CAT_WORDS[NUM_CATEGORIES][20] = {
     {"NETFLIX", "TIKTOK", "PODCAST", "GAMING", "STREAMING", "ANIME", "MARVEL", "DISNEY", "ESPORTS", "MEME", "COSPLAY", "SPOTIFY", "FANDOM", "BINGE", "TRENDING", "VLOGGER", "INFLUENCER", "REELS", "YOUTUBE", "AVATAR"}
 };
 const int NUM_WORDS_PER_CAT = 20;
+
+// Particle Struct
+#define MAX_PARTICLES 50
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int size;
+    COLORREF color;
+    int life;
+    int maxLife;
+    int type; // 0: confetti, 1: rain
+} Particle;
+
+Particle particles[MAX_PARTICLES];
+int particle_count = 0;
+int anim_ticks = 0;
 
 // Game state variables
 int current_category = 0;
@@ -188,6 +205,51 @@ void CustomSrand(unsigned int s) {
     seed = s;
 }
 
+void SpawnWinParticles() {
+    COLORREF colors[] = {RGB(255, 64, 129), RGB(0, 230, 118), RGB(255, 235, 59), RGB(0, 176, 255), RGB(220, 64, 251)};
+    for (int i = 0; i < 35 && particle_count < MAX_PARTICLES; i++) {
+        particles[particle_count].x = (float)(200 + (CustomRand() % 100 - 50));
+        particles[particle_count].y = (float)(180 + (CustomRand() % 40 - 20));
+        particles[particle_count].vx = (float)((CustomRand() % 100 - 50) / 10.0f);
+        particles[particle_count].vy = (float)(-(CustomRand() % 60 + 20) / 10.0f);
+        particles[particle_count].size = CustomRand() % 5 + 4;
+        particles[particle_count].color = colors[CustomRand() % 5];
+        particles[particle_count].life = 0;
+        particles[particle_count].maxLife = 60 + CustomRand() % 30;
+        particles[particle_count].type = 0; // confetti
+        particle_count++;
+    }
+}
+
+void SpawnLossParticles() {
+    for (int i = 0; i < 30 && particle_count < MAX_PARTICLES; i++) {
+        particles[particle_count].x = (float)(CustomRand() % W);
+        particles[particle_count].y = (float)(CustomRand() % 200);
+        particles[particle_count].vx = -0.5f;
+        particles[particle_count].vy = (float)(CustomRand() % 40 + 30) / 10.0f;
+        particles[particle_count].size = CustomRand() % 3 + 2;
+        particles[particle_count].color = RGB(100, 180, 255);
+        particles[particle_count].life = 0;
+        particles[particle_count].maxLife = 50;
+        particles[particle_count].type = 1; // rain
+        particle_count++;
+    }
+}
+
+void UpdateParticles() {
+    for (int i = particle_count - 1; i >= 0; i--) {
+        particles[i].life++;
+        particles[i].x += particles[i].vx;
+        particles[i].y += particles[i].vy;
+        if (particles[i].type == 0) particles[i].vy += 0.15f; // gravity
+        
+        if (particles[i].life >= particles[i].maxLife || particles[i].y > H) {
+            particles[i] = particles[particle_count - 1];
+            particle_count--;
+        }
+    }
+}
+
 void SelectNewWord() {
     if (current_category == TOTAL_CAT_COUNT - 1) {
         char buf[1024] = {0};
@@ -232,6 +294,7 @@ void SelectNewWord() {
     for(int i=0; i<26; i++) guessed[i] = 0;
     errors = 0;
     hint_used = 0;
+    particle_count = 0;
 }
 
 void InitGame() {
@@ -302,6 +365,7 @@ void Guess(char c) {
                 game_over = 1;
                 won = 0;
                 PlaySoundEffect(4); // lose
+                SpawnLossParticles();
                 stats.losses++;
                 stats.streak = 0;
                 if (game_mode == 1) {
@@ -332,6 +396,7 @@ void Guess(char c) {
                     stats.blitz_best = blitz_words;
                 }
                 PlaySoundEffect(3);
+                SpawnWinParticles();
                 stats.wins++;
                 stats.streak++;
                 if (stats.streak > stats.best) stats.best = stats.streak;
@@ -341,6 +406,7 @@ void Guess(char c) {
                 game_over = 1;
                 won = 1;
                 PlaySoundEffect(3); // win
+                SpawnWinParticles();
                 stats.wins++;
                 stats.streak++;
                 if (stats.streak > stats.best) stats.best = stats.streak;
@@ -363,27 +429,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_TIMER:
             if (wParam == 1) {
-                int needs_redraw = 0;
-                if (shake_frames > 0) {
-                    shake_frames--;
-                    needs_redraw = 1;
+                anim_ticks++;
+                UpdateParticles();
+
+                if (game_over && won && (anim_ticks % 3 == 0)) {
+                    SpawnWinParticles();
+                } else if (game_over && !won && (anim_ticks % 4 == 0)) {
+                    SpawnLossParticles();
                 }
+
+                if (shake_frames > 0) shake_frames--;
                 if (game_over && won) {
                     win_pulse_phase += 10;
                     if (win_pulse_phase > 360) win_pulse_phase -= 360;
-                    needs_redraw = 1;
                 }
+
                 if (game_mode == 2 && !game_over) {
                     blitz_timer_counter++;
                     if (blitz_timer_counter >= 33) { // approx 1 sec
                         blitz_timer_counter = 0;
                         if (blitz_time > 0) {
                             blitz_time--;
-                            needs_redraw = 1;
                             if (blitz_time <= 0) {
                                 game_over = 1;
                                 won = 0;
                                 PlaySoundEffect(4);
+                                SpawnLossParticles();
                                 stats.losses++;
                                 stats.streak = 0;
                                 if (blitz_words > stats.blitz_best) stats.blitz_best = blitz_words;
@@ -392,7 +463,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
-                if (needs_redraw) InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
 
@@ -408,7 +479,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int x = (short)LOWORD(lParam);
             int y = (short)HIWORD(lParam);
             
-            // Bomb button (20..75, y: 530..560)
+            // Bomb button (15..75, y: 530..560)
             if (x >= 15 && x <= 75 && y >= 530 && y <= 560) {
                 if (bombs > 0 && !game_over) {
                     bombs--;
@@ -457,7 +528,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Shield button (155..215, y: 530..560)
             if (x >= 155 && x <= 215 && y >= 530 && y <= 560) {
-                // Info message or extra shield call
                 MessageBoxA(hwnd, "Shield absorbs 1 wrong letter guess automatically!", "Shield Info", MB_OK | MB_ICONINFORMATION);
                 break;
             }
@@ -597,8 +667,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbm = CreateCompatibleBitmap(hdc, W, H);
             HBITMAP hOld = (HBITMAP)SelectObject(memDC, hbm);
 
-            // Background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 18, 18));
+            // Slate Dark Background
+            HBRUSH bgBrush = CreateSolidBrush(RGB(18, 24, 34));
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bgBrush);
             DeleteObject(bgBrush);
@@ -612,7 +682,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else {
                 hFontMain = CreateFontA(24, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             }
-            HFONT hFontMono = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, FIXED_PITCH, "Consolas");
+            HFONT hFontMono = CreateFontA(16, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, FIXED_PITCH, "Consolas");
             HFONT hFontSmall = CreateFontA(13, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             
             // Title
@@ -622,29 +692,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Categories rendering (3 rows of 5)
             SelectObject(memDC, hFontSmall);
-            int cy = 32;
+            int catY = 32;
             for (int r = 0; r < 3; r++) {
                 int cx = 15;
                 for (int c = 0; c < 5; c++) {
                     int cat_idx = r * 5 + c;
                     if (cat_idx < TOTAL_CAT_COUNT) {
-                        RECT cRect = {cx, cy, cx + 90, cy + 22};
-                        HBRUSH cBg = CreateSolidBrush((cat_idx == current_category && game_mode == 0) ? RGB(0, 122, 204) : RGB(44, 44, 44));
+                        RECT cRect = {cx, catY, cx + 90, catY + 22};
+                        HBRUSH cBg = CreateSolidBrush((cat_idx == current_category && game_mode == 0) ? RGB(0, 137, 204) : RGB(35, 44, 58));
                         FillRect(memDC, &cRect, cBg);
                         DeleteObject(cBg);
-                        SetTextColor(memDC, RGB(255, 255, 255));
+                        SetTextColor(memDC, RGB(240, 244, 248));
                         DrawTextA(memDC, CAT_NAMES[cat_idx], -1, &cRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     }
                     cx += 95;
                 }
-                cy += 25;
+                catY += 25;
             }
 
-            // Drawing gallows
-            HPEN hPen = CreatePen(PS_SOLID, 4, RGB(255, 82, 82));
-            HPEN hOldPen = (HPEN)SelectObject(memDC, hPen);
-            HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
-            
+            // Screen shake offset calculation
             int ox = 0;
             if (shake_frames > 0) {
                 int offsets[] = {-10, 10, -8, 8, -6, 6, -4, 4, -2, 2, 0, 0, 0, 0, 0, 0};
@@ -653,57 +719,235 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (idx > 15) idx = 15;
                 ox = offsets[idx];
             }
+
+            // ==========================================
+            // RICH 3D WOODEN GALLOWS RENDERING (GDI)
+            // ==========================================
             
-            // Base gallows
-            MoveToEx(memDC, 190 + ox, 280, NULL);
-            LineTo(memDC, 310 + ox, 280); // Base
-            MoveToEx(memDC, 210 + ox, 280, NULL);
-            LineTo(memDC, 210 + ox, 140);  // Pole
-            LineTo(memDC, 270 + ox, 140);  // Top
-            LineTo(memDC, 270 + ox, 160);  // Rope
-            
-            if (errors > 0) {
-                // Head
-                Ellipse(memDC, 250 + ox, 160, 290 + ox, 200);
-            }
-            if (errors > 1) {
-                // Body
-                MoveToEx(memDC, 270 + ox, 200, NULL);
-                LineTo(memDC, 270 + ox, 240);
-            }
-            if (errors > 2) {
-                // Left arm
-                MoveToEx(memDC, 270 + ox, 210, NULL);
-                LineTo(memDC, 240 + ox, 240);
-            }
-            if (errors > 3) {
-                // Right arm
-                MoveToEx(memDC, 270 + ox, 210, NULL);
-                LineTo(memDC, 300 + ox, 240);
-            }
-            if (errors > 4) {
-                // Left leg
-                MoveToEx(memDC, 270 + ox, 240, NULL);
-                LineTo(memDC, 240 + ox, 270);
-            }
-            if (errors > 5) {
-                // Right leg
-                MoveToEx(memDC, 270 + ox, 240, NULL);
-                LineTo(memDC, 300 + ox, 270);
-            }
-            if (errors > 6) {
-                // Extra error
-                MoveToEx(memDC, 260 + ox, 175, NULL);
-                LineTo(memDC, 265 + ox, 180);
-                MoveToEx(memDC, 265 + ox, 175, NULL);
-                LineTo(memDC, 260 + ox, 180);
-            }
-            SelectObject(memDC, hOldPen);
+            // Base Wood Platform
+            RECT baseRc = {180 + ox, 275, 320 + ox, 285};
+            HBRUSH baseBrush = CreateSolidBrush(RGB(110, 65, 30));
+            FillRect(memDC, &baseRc, baseBrush);
+            DeleteObject(baseBrush);
+
+            HPEN hHighlightPen = CreatePen(PS_SOLID, 1, RGB(170, 105, 50));
+            HPEN hShadowPen = CreatePen(PS_SOLID, 1, RGB(50, 30, 15));
+            HPEN hOldPen = (HPEN)SelectObject(memDC, hHighlightPen);
+            MoveToEx(memDC, 180 + ox, 275, NULL); LineTo(memDC, 320 + ox, 275);
+            SelectObject(memDC, hShadowPen);
+            MoveToEx(memDC, 180 + ox, 285, NULL); LineTo(memDC, 320 + ox, 285);
+
+            // Vertical Wood Post (3D Beveled Rect)
+            RECT postRc = {205 + ox, 135, 217 + ox, 275};
+            HBRUSH postBrush = CreateSolidBrush(RGB(125, 75, 35));
+            FillRect(memDC, &postRc, postBrush);
+            DeleteObject(postBrush);
+
+            SelectObject(memDC, hHighlightPen);
+            MoveToEx(memDC, 205 + ox, 135, NULL); LineTo(memDC, 205 + ox, 275);
+            SelectObject(memDC, hShadowPen);
+            MoveToEx(memDC, 217 + ox, 135, NULL); LineTo(memDC, 217 + ox, 275);
+
+            // Wood Grain Lines on Post
+            HPEN hGrainPen = CreatePen(PS_SOLID, 1, RGB(75, 42, 20));
+            SelectObject(memDC, hGrainPen);
+            MoveToEx(memDC, 209 + ox, 135, NULL); LineTo(memDC, 209 + ox, 275);
+            MoveToEx(memDC, 214 + ox, 135, NULL); LineTo(memDC, 214 + ox, 275);
+
+            // Top Horizontal Beam
+            RECT beamRc = {205 + ox, 135, 280 + ox, 147};
+            HBRUSH beamBrush = CreateSolidBrush(RGB(135, 80, 40));
+            FillRect(memDC, &beamRc, beamBrush);
+            DeleteObject(beamBrush);
+
+            SelectObject(memDC, hHighlightPen);
+            MoveToEx(memDC, 205 + ox, 135, NULL); LineTo(memDC, 280 + ox, 135);
+            SelectObject(memDC, hShadowPen);
+            MoveToEx(memDC, 205 + ox, 147, NULL); LineTo(memDC, 280 + ox, 147);
+
+            // Diagonal Support Brace
+            POINT bracePts[4] = {
+                {205 + ox, 175}, {240 + ox, 147}, {247 + ox, 147}, {205 + ox, 185}
+            };
+            HBRUSH braceBrush = CreateSolidBrush(RGB(105, 60, 28));
+            HBRUSH hOldBrush = (HBRUSH)SelectObject(memDC, braceBrush);
+            Polygon(memDC, bracePts, 4);
             SelectObject(memDC, hOldBrush);
-            DeleteObject(hPen);
+            DeleteObject(braceBrush);
+
+            // Brass Corner Brackets & Rivet Accents
+            HBRUSH brassBrush = CreateSolidBrush(RGB(212, 175, 55));
+            RECT b1 = {203 + ox, 133, 219 + ox, 149};
+            FillRect(memDC, &b1, brassBrush);
+            DeleteObject(brassBrush);
+
+            // Brass Pulley Wheel
+            HBRUSH pulleyBrush = CreateSolidBrush(RGB(212, 175, 55));
+            SelectObject(memDC, pulleyBrush);
+            Ellipse(memDC, 264 + ox, 138, 276 + ox, 150);
+            HBRUSH axleBrush = CreateSolidBrush(RGB(60, 45, 15));
+            SelectObject(memDC, axleBrush);
+            Ellipse(memDC, 268 + ox, 142, 272 + ox, 146);
+            DeleteObject(pulleyBrush);
+            DeleteObject(axleBrush);
+            DeleteObject(hGrainPen);
+            DeleteObject(hHighlightPen);
+            DeleteObject(hShadowPen);
+
+            // Rope & Animated Swinging Loop/Noose Physics
+            float nooseSwayAngle = (float)sin(anim_ticks * 0.12) * (0.04f + errors * 0.02f);
+            if (game_over && won) nooseSwayAngle = (float)sin(anim_ticks * 0.3) * 0.08f;
+
+            int ropeX1 = 270 + ox;
+            int ropeY1 = 144;
+            int ropeLen = 22;
+            int hangX = ropeX1 + (int)(sin(nooseSwayAngle) * ropeLen);
+            int hangY = ropeY1 + (int)(cos(nooseSwayAngle) * ropeLen);
+
+            HPEN hRopePen = CreatePen(PS_SOLID, 3, RGB(210, 180, 140));
+            SelectObject(memDC, hRopePen);
+            MoveToEx(memDC, ropeX1, ropeY1, NULL);
+            LineTo(memDC, hangX, hangY);
+            DeleteObject(hRopePen);
+
+            // ==========================================
+            // CUTE CHARACTER SPRITE (Limb-by-Limb)
+            // ==========================================
+            int cx = hangX;
+            int cy = hangY;
+            int idleBounce = (game_over && won) ? abs((int)(sin(anim_ticks * 0.4) * 8)) : (int)(sin(anim_ticks * 0.15) * 2);
+
+            if (errors > 0) {
+                // Head (Error 1)
+                int headY = cy + 12 - idleBounce;
+                int headR = 12;
+
+                HBRUSH headBrush = CreateSolidBrush(RGB(255, 220, 180));
+                HPEN charPen = CreatePen(PS_SOLID, 2, RGB(45, 55, 70));
+                SelectObject(memDC, headBrush);
+                SelectObject(memDC, charPen);
+                Ellipse(memDC, cx - headR, headY - headR, cx + headR, headY + headR);
+                DeleteObject(headBrush);
+
+                // Blue Cap
+                HBRUSH capBrush = CreateSolidBrush(RGB(2, 136, 209));
+                SelectObject(memDC, capBrush);
+                Chord(memDC, cx - headR, headY - headR, cx + headR, headY + 2, cx + headR, headY - 1, cx - headR, headY - 1);
+                RECT brimRc = {cx - headR - 2, headY - 3, cx + headR + 2, headY + 1};
+                FillRect(memDC, &brimRc, capBrush);
+                DeleteObject(capBrush);
+
+                // Blushing Cheeks
+                HBRUSH cheekBrush = CreateSolidBrush(RGB(255, 140, 140));
+                SelectObject(memDC, cheekBrush);
+                SelectObject(memDC, GetStockObject(NULL_PEN));
+                Ellipse(memDC, cx - 8, headY + 1, cx - 4, headY + 5);
+                Ellipse(memDC, cx + 4, headY + 1, cx + 8, headY + 5);
+                DeleteObject(cheekBrush);
+
+                // Eyes Expressions
+                SelectObject(memDC, charPen);
+                if (game_over && won) {
+                    // Happy ^ ^ Eyes
+                    MoveToEx(memDC, cx - 7, headY - 1, NULL); LineTo(memDC, cx - 4, headY - 4); LineTo(memDC, cx - 1, headY - 1);
+                    MoveToEx(memDC, cx + 1, headY - 1, NULL); LineTo(memDC, cx + 4, headY - 4); LineTo(memDC, cx + 7, headY - 1);
+                } else if (game_over && !won) {
+                    // Dead X X Eyes
+                    MoveToEx(memDC, cx - 7, headY - 4, NULL); LineTo(memDC, cx - 3, headY);
+                    MoveToEx(memDC, cx - 3, headY - 4, NULL); LineTo(memDC, cx - 7, headY);
+                    MoveToEx(memDC, cx + 3, headY - 4, NULL); LineTo(memDC, cx + 7, headY);
+                    MoveToEx(memDC, cx + 7, headY - 4, NULL); LineTo(memDC, cx + 3, headY);
+                } else {
+                    // Normal / Scared Eyes
+                    HBRUSH eyeBrush = CreateSolidBrush(RGB(20, 20, 50));
+                    SelectObject(memDC, eyeBrush);
+                    Ellipse(memDC, cx - 6, headY - 4, cx - 2, headY);
+                    Ellipse(memDC, cx + 2, headY - 4, cx + 6, headY);
+                    DeleteObject(eyeBrush);
+                }
+
+                // Mouth Expressions
+                if (game_over && won) {
+                    Arc(memDC, cx - 4, headY, cx + 4, headY + 7, cx - 4, headY + 3, cx + 4, headY + 3);
+                } else if (game_over && !won) {
+                    Arc(memDC, cx - 4, headY + 3, cx + 4, headY + 9, cx + 4, headY + 6, cx - 4, headY + 6);
+                } else if (errors >= 4) {
+                    Ellipse(memDC, cx - 3, headY + 3, cx + 3, headY + 8);
+                } else {
+                    Arc(memDC, cx - 4, headY + 1, cx + 4, headY + 7, cx - 4, headY + 4, cx + 4, headY + 4);
+                }
+
+                // Torso (Error 2)
+                if (errors > 1) {
+                    int bodyY1 = headY + headR;
+                    int bodyY2 = bodyY1 + 30;
+                    RECT bodyRc = {cx - 7, bodyY1, cx + 7, bodyY2};
+                    HBRUSH bodyBrush = CreateSolidBrush(RGB(0, 137, 123));
+                    FillRect(memDC, &bodyRc, bodyBrush);
+                    FrameRect(memDC, &bodyRc, (HBRUSH)GetStockObject(BLACK_BRUSH));
+                    DeleteObject(bodyBrush);
+
+                    // Yellow Buttons
+                    HBRUSH btnBrush = CreateSolidBrush(RGB(255, 235, 59));
+                    SelectObject(memDC, btnBrush);
+                    SelectObject(memDC, GetStockObject(NULL_PEN));
+                    Ellipse(memDC, cx - 1, bodyY1 + 6, cx + 2, bodyY1 + 9);
+                    Ellipse(memDC, cx - 1, bodyY1 + 16, cx + 2, bodyY1 + 19);
+                    DeleteObject(btnBrush);
+
+                    // Left Arm (Error 3)
+                    if (errors > 2) {
+                        SelectObject(memDC, charPen);
+                        int lArmY = (game_over && won) ? bodyY1 - 10 : bodyY1 + 20;
+                        MoveToEx(memDC, cx - 7, bodyY1 + 5, NULL);
+                        LineTo(memDC, cx - 18, lArmY);
+                    }
+
+                    // Right Arm (Error 4)
+                    if (errors > 3) {
+                        SelectObject(memDC, charPen);
+                        int rArmY = (game_over && won) ? bodyY1 - 10 : bodyY1 + 20;
+                        MoveToEx(memDC, cx + 7, bodyY1 + 5, NULL);
+                        LineTo(memDC, cx + 18, rArmY);
+                    }
+
+                    // Left Leg (Error 5)
+                    if (errors > 4) {
+                        HPEN legPen = CreatePen(PS_SOLID, 3, RGB(55, 71, 79));
+                        SelectObject(memDC, legPen);
+                        int lLegX = (game_over && won) ? cx - 10 : cx - 8;
+                        MoveToEx(memDC, cx - 4, bodyY2, NULL);
+                        LineTo(memDC, lLegX, bodyY2 + 20);
+                        DeleteObject(legPen);
+
+                        // Boot
+                        RECT bootRc = {lLegX - 3, bodyY2 + 18, lLegX + 3, bodyY2 + 22};
+                        HBRUSH bootBrush = CreateSolidBrush(RGB(62, 39, 35));
+                        FillRect(memDC, &bootRc, bootBrush);
+                        DeleteObject(bootBrush);
+                    }
+
+                    // Right Leg (Error 6)
+                    if (errors > 5) {
+                        HPEN legPen = CreatePen(PS_SOLID, 3, RGB(55, 71, 79));
+                        SelectObject(memDC, legPen);
+                        int rLegX = (game_over && won) ? cx + 10 : cx + 8;
+                        MoveToEx(memDC, cx + 4, bodyY2, NULL);
+                        LineTo(memDC, rLegX, bodyY2 + 20);
+                        DeleteObject(legPen);
+
+                        // Boot
+                        RECT bootRc = {rLegX - 3, bodyY2 + 18, rLegX + 3, bodyY2 + 22};
+                        HBRUSH bootBrush = CreateSolidBrush(RGB(62, 39, 35));
+                        FillRect(memDC, &bootRc, bootBrush);
+                        DeleteObject(bootBrush);
+                    }
+                }
+                DeleteObject(charPen);
+            }
 
             // Word display
-            COLORREF wordColor = RGB(224, 224, 224);
+            COLORREF wordColor = RGB(240, 244, 248);
             if (game_over && won) {
                 int g = 175 + (50 * abs(win_pulse_phase - 180) / 180);
                 int r = 76 + (50 * abs(win_pulse_phase - 180) / 180);
@@ -724,14 +968,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             disp[len] = '\0';
             
-            // Center the word display
             SIZE tSize;
             GetTextExtentPoint32A(memDC, disp, len, &tSize);
             TextOutA(memDC, (W - tSize.cx) / 2, 290, disp, len);
 
             // Message & Info Display
             char msgBuf[128] = "Guess a letter to start";
-            COLORREF msgColor = RGB(224, 224, 224);
+            COLORREF msgColor = RGB(240, 244, 248);
             if (game_mode == 1) {
                 wsprintfA(msgBuf, "Campaign Stage %d / 15", campaign_level);
                 msgColor = RGB(255, 193, 7);
@@ -753,7 +996,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             GetTextExtentPoint32A(memDC, msgBuf, lstrlenA(msgBuf), &tSize);
             TextOutA(memDC, (W - tSize.cx) / 2, 330, msgBuf, lstrlenA(msgBuf));
 
-            // On-screen Keyboard
+            // ==========================================
+            // 3D TACTILE KEYCAP TILES & STATE BADGING
+            // ==========================================
             SelectObject(memDC, hFontMono);
             int kx = 110;
             int ky = 360;
@@ -764,57 +1009,95 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int by = ky + row * 40;
                 
                 RECT btnRect = {bx, by, bx + 35, by + 35};
-                
+
+                COLORREF keyFill, highlightCol, shadowCol, textCol;
+                const char* badgeStr = NULL;
+
                 if (guessed[i]) {
-                    HBRUSH btnBg = CreateSolidBrush(RGB(18, 18, 18));
-                    FillRect(memDC, &btnRect, btnBg);
-                    DeleteObject(btnBg);
-                    SetTextColor(memDC, RGB(85, 85, 85));
+                    int is_correct = 0;
+                    for (int w = 0; target_word[w] != '\0'; w++) {
+                        if (target_word[w] == 'A' + i) { is_correct = 1; break; }
+                    }
+                    if (is_correct) {
+                        keyFill = RGB(46, 125, 50);
+                        highlightCol = RGB(76, 175, 80);
+                        shadowCol = RGB(20, 70, 25);
+                        textCol = RGB(255, 255, 255);
+                        badgeStr = "v";
+                    } else {
+                        keyFill = RGB(150, 35, 35);
+                        highlightCol = RGB(220, 70, 70);
+                        shadowCol = RGB(60, 10, 10);
+                        textCol = RGB(255, 190, 190);
+                        badgeStr = "x";
+                    }
                 } else {
-                    HBRUSH btnBg = CreateSolidBrush(RGB(44, 44, 44));
-                    FillRect(memDC, &btnRect, btnBg);
-                    DeleteObject(btnBg);
-                    SetTextColor(memDC, RGB(224, 224, 224));
+                    keyFill = RGB(40, 48, 62);
+                    highlightCol = RGB(75, 90, 115);
+                    shadowCol = RGB(15, 20, 28);
+                    textCol = RGB(240, 244, 248);
                 }
-                
+
+                // Render 3D Keycap Background
+                HBRUSH btnBg = CreateSolidBrush(keyFill);
+                FillRect(memDC, &btnRect, btnBg);
+                DeleteObject(btnBg);
+
+                // Render 3D Bevel Highlights & Shadows
+                HPEN hH = CreatePen(PS_SOLID, 1, highlightCol);
+                HPEN hS = CreatePen(PS_SOLID, 1, shadowCol);
+                SelectObject(memDC, hH);
+                MoveToEx(memDC, bx, by + 34, NULL); LineTo(memDC, bx, by); LineTo(memDC, bx + 34, by);
+                SelectObject(memDC, hS);
+                MoveToEx(memDC, bx + 34, by, NULL); LineTo(memDC, bx + 34, by + 34); LineTo(memDC, bx, by + 34);
+                DeleteObject(hH);
+                DeleteObject(hS);
+
+                // Letter Text
+                SetTextColor(memDC, textCol);
                 char l[2] = {(char)('A' + i), 0};
                 DrawTextA(memDC, l, 1, &btnRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+                // Render Badging icon at top-right of keycap if guessed
+                if (badgeStr) {
+                    SelectObject(memDC, hFontSmall);
+                    SetTextColor(memDC, (badgeStr[0] == 'v') ? RGB(165, 214, 167) : RGB(239, 154, 154));
+                    RECT badgeRc = {bx + 22, by + 1, bx + 33, by + 12};
+                    DrawTextA(memDC, badgeStr, 1, &badgeRc, DT_RIGHT | DT_TOP | DT_SINGLELINE);
+                    SelectObject(memDC, hFontMono);
+                }
             }
 
             SelectObject(memDC, hFontSmall);
 
             // Row 1 Power-ups & Modes (y: 530..560)
-            // Bomb button
             RECT bombRect = {15, 530, 75, 560};
-            HBRUSH bombBg = CreateSolidBrush((bombs <= 0 || game_over) ? RGB(68, 68, 68) : RGB(244, 67, 54));
+            HBRUSH bombBg = CreateSolidBrush((bombs <= 0 || game_over) ? RGB(45, 52, 65) : RGB(229, 57, 53));
             FillRect(memDC, &bombRect, bombBg);
             DeleteObject(bombBg);
-            SetTextColor(memDC, (bombs <= 0 || game_over) ? RGB(119, 119, 119) : RGB(255, 255, 255));
+            SetTextColor(memDC, (bombs <= 0 || game_over) ? RGB(100, 110, 125) : RGB(255, 255, 255));
             char bombTxt[32];
             wsprintfA(bombTxt, "Bomb(%d)", bombs);
             DrawTextA(memDC, bombTxt, -1, &bombRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Hint button
             RECT hintRect = {85, 530, 145, 560};
-            HBRUSH hintBg = CreateSolidBrush((hint_used || game_over) ? RGB(68, 68, 68) : RGB(255, 152, 0));
+            HBRUSH hintBg = CreateSolidBrush((hint_used || game_over) ? RGB(45, 52, 65) : RGB(251, 140, 0));
             FillRect(memDC, &hintRect, hintBg);
             DeleteObject(hintBg);
-            SetTextColor(memDC, (hint_used || game_over) ? RGB(119, 119, 119) : RGB(255, 255, 255));
+            SetTextColor(memDC, (hint_used || game_over) ? RGB(100, 110, 125) : RGB(255, 255, 255));
             DrawTextA(memDC, "Hint", -1, &hintRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Shield button
             RECT shieldRect = {155, 530, 215, 560};
-            HBRUSH shieldBg = CreateSolidBrush((shields <= 0 || game_over) ? RGB(68, 68, 68) : RGB(156, 39, 176));
+            HBRUSH shieldBg = CreateSolidBrush((shields <= 0 || game_over) ? RGB(45, 52, 65) : RGB(142, 36, 170));
             FillRect(memDC, &shieldRect, shieldBg);
             DeleteObject(shieldBg);
-            SetTextColor(memDC, (shields <= 0 || game_over) ? RGB(119, 119, 119) : RGB(255, 255, 255));
+            SetTextColor(memDC, (shields <= 0 || game_over) ? RGB(100, 110, 125) : RGB(255, 255, 255));
             char shieldTxt[32];
             wsprintfA(shieldTxt, "Shield(%d)", shields);
             DrawTextA(memDC, shieldTxt, -1, &shieldRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Campaign button
             RECT campRect = {225, 530, 315, 560};
-            HBRUSH campBg = CreateSolidBrush(game_mode == 1 ? RGB(0, 150, 136) : RGB(80, 80, 80));
+            HBRUSH campBg = CreateSolidBrush(game_mode == 1 ? RGB(0, 137, 123) : RGB(50, 60, 75));
             FillRect(memDC, &campRect, campBg);
             DeleteObject(campBg);
             SetTextColor(memDC, RGB(255, 255, 255));
@@ -824,17 +1107,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, "Campaign", -1, &campRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
-            // Time Attack Blitz button
             RECT blitzRect = {325, 530, 405, 560};
-            HBRUSH blitzBg = CreateSolidBrush(game_mode == 2 ? RGB(233, 30, 99) : RGB(80, 80, 80));
+            HBRUSH blitzBg = CreateSolidBrush(game_mode == 2 ? RGB(216, 27, 96) : RGB(50, 60, 75));
             FillRect(memDC, &blitzRect, blitzBg);
             DeleteObject(blitzBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "Blitz Mode", -1, &blitzRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-            // Freeplay button
             RECT resRect = {415, 530, 485, 560};
-            HBRUSH resBg = CreateSolidBrush(game_mode == 0 ? RGB(0, 122, 204) : RGB(80, 80, 80));
+            HBRUSH resBg = CreateSolidBrush(game_mode == 0 ? RGB(2, 136, 209) : RGB(50, 60, 75));
             FillRect(memDC, &resRect, resBg);
             DeleteObject(resBg);
             SetTextColor(memDC, RGB(255, 255, 255));
@@ -842,35 +1123,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             // Row 2 System & Utility Buttons (y: 570..600)
             RECT saveRect = {35, 570, 105, 600};
-            HBRUSH saveBg = CreateSolidBrush(RGB(76, 175, 80));
+            HBRUSH saveBg = CreateSolidBrush(RGB(67, 160, 71));
             FillRect(memDC, &saveRect, saveBg);
             DeleteObject(saveBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "Save", -1, &saveRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT loadRect = {115, 570, 185, 600};
-            HBRUSH loadBg = CreateSolidBrush(RGB(156, 39, 176));
+            HBRUSH loadBg = CreateSolidBrush(RGB(106, 27, 154));
             FillRect(memDC, &loadRect, loadBg);
             DeleteObject(loadBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "Load", -1, &loadRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT helpRect = {195, 570, 265, 600};
-            HBRUSH helpBg = CreateSolidBrush(RGB(33, 150, 243));
+            HBRUSH helpBg = CreateSolidBrush(RGB(30, 136, 229));
             FillRect(memDC, &helpRect, helpBg);
             DeleteObject(helpBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, "Help", -1, &helpRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT muteRect = {275, 570, 345, 600};
-            HBRUSH muteBg = CreateSolidBrush(RGB(85, 85, 85));
+            HBRUSH muteBg = CreateSolidBrush(RGB(69, 90, 100));
             FillRect(memDC, &muteRect, muteBg);
             DeleteObject(muteBg);
             SetTextColor(memDC, RGB(255, 255, 255));
             DrawTextA(memDC, is_muted ? "Muted" : "Sound", -1, &muteRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             RECT rstRect = {355, 570, 455, 600};
-            HBRUSH rstBg = CreateSolidBrush(RGB(120, 120, 120));
+            HBRUSH rstBg = CreateSolidBrush(RGB(84, 110, 122));
             FillRect(memDC, &rstRect, rstBg);
             DeleteObject(rstBg);
             SetTextColor(memDC, RGB(255, 255, 255));
@@ -885,6 +1166,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, hFontMono);
             GetTextExtentPoint32A(memDC, statText, lstrlenA(statText), &tSize);
             TextOutA(memDC, (W - tSize.cx) / 2, 618, statText, lstrlenA(statText));
+
+            // ==========================================
+            // RENDER PARTICLES (CONFETTI / RAIN)
+            // ==========================================
+            for (int i = 0; i < particle_count; i++) {
+                HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                RECT pRc = {(int)particles[i].x, (int)particles[i].y, (int)particles[i].x + particles[i].size, (int)particles[i].y + particles[i].size};
+                FillRect(memDC, &pRc, pBrush);
+                DeleteObject(pBrush);
+            }
 
             DeleteObject(hFontMain);
             DeleteObject(hFontMono);

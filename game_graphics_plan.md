@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KHangman
 - KSimon
 - KMatch3
 - KFreecell
@@ -108,6 +107,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KStarship
 - KSolitaire
 - KConnect4
+- KHangman
 
 ## Completed Work Log
 
@@ -125,6 +125,7 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - **K2048 (Loop 1):** Implemented 3D metallic & gem tile texturing with distinct color themes for values 2 through 4096+, custom SVG and GDI badge icons (Crown for 2048+, Diamond for 1024, Stars for 256/512, Bomb & Wildcard badges), smooth merge pop animations with micro-wobble, 3D wooden/brushed metal board frame styling, milestone glowing aura rings, and interactive merge particle spark explosions for both Web Canvas/HTML (k2048.html) and Native C Win32 GDI (K2048/main.c).
 - **KSolitaire (Loop 1):** Implemented detailed vector & GDI playing card suit sprites (Hearts ♥, Diamonds ♦, Clubs ♣, Spades ♠), detailed King, Queen, Jack court card portraits (with crowns, robes, tiaras, scepters, roses, halberds), Ace centerpiece emblems, pip matrix layouts (2-10), custom card back designs with centerpiece golden "K" crown shield logo, casino felt table micro-texture, gold/brass card slot outlines, and a winning cascade card waterfall bounce animation with trail FX for both Web Canvas/HTML (ksolitaire.html) and Native C Win32 GDI (KSolitaire/main.c).
 - **KConnect4 (Loop 1):** Implemented 3D blue plastic grid board frame with cylindrical cutouts and inner depth shadows, 3D glossy red and yellow metallic checker discs with outer ridged rims and gold star / blue crown centerpiece emblems, gravity disc drop physics animation with bottom impact bounce, glowing neon beam line connecting the winning 4 discs with pulsing aura, and victory confetti particle spark bursts on win for both Web (kconnect4.html) and Native C Win32 GDI (KConnect4/main.c).
+- **KHangman (Loop 1):** Implemented high-quality 3D wooden gallows (beveled oak/mahogany beams, brass brackets & rivets, pulley wheel, twisted hemp rope, animated swinging noose), detailed stick figure/character sprite added limb-by-limb with animated idle sway/breathe, expressive eyes (blinking, happy, scared pupil, dead X_X), blushing cheeks, cap, vest, boots, 3D tactile slate keycaps with hover glow and right/wrong state badging (✓/✗), and victory confetti streams / loss dark rain particle FX for both Web Canvas (khangman.html) and Native C Win32 GDI (KHangman/main.c).
 
 
 
