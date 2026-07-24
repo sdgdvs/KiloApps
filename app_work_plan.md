@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KContacts
+**Target App:** KRead
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KContacts
 - KRead
 - KBase
 - KJournal
@@ -43,6 +42,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KChess
 - KChat
 - KBBS (Added Auto-Login feature for Dialing Directory)
+
 - KAudio (Added Sequencer - Record and Playback)
 - KClock (Added Alarms feature)
 - KPong (Added Difficulty Levels)
@@ -77,3 +77,4 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KTodo (Added Task Search & Multi-Filter System, Category Tagging, Due Dates & Priorities, Subtask Checklists, JSON/CSV Data Import/Export, and Productivity Statistics)
 - KGraph (Added Multi-Function Plotting y1-y5, Derivative & Simpson Integral Calculators, Roots & Intersections Finders, Interactive Value Tracing Cursor, Preset Library, and CSV/JSON/PNG Export)
 - KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, and Sound Alerts & Visual Progress Ring)
+- KContacts (Added Real-time Search & Group Filters, vCard [.vcf] & CSV Import/Export, Duplicates Merger, Contact Avatar Initial/Color Generator, and Quick Action buttons for Email/Phone)

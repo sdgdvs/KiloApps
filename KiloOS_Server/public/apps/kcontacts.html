@@ -1,275 +1,1126 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KContacts</title>
 <style>
-  body {
-    background: #121212;
-    color: #e0e0e0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  :root {
+    --bg-main: #0f172a;
+    --bg-card: #1e293b;
+    --bg-hover: #334155;
+    --bg-active: #1e293b;
+    --border-color: #334155;
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --accent-green: #10b981;
+    --accent-yellow: #eab308;
+    --accent-red: #ef4444;
+    --accent-purple: #8b5cf6;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-family);
     height: 100vh;
     display: flex;
-    box-sizing: border-box;
+    overflow: hidden;
+    user-select: none;
   }
+
+  /* Sidebar */
   .sidebar {
-    width: 35%;
-    border-right: 1px solid #333;
+    width: 380px;
+    min-width: 300px;
+    background-color: #111827;
+    border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    background: #1a1a1a;
+    height: 100vh;
   }
-  .search-bar {
-    padding: 10px;
-    border-bottom: 1px solid #333;
+
+  .sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
-  .search-bar input {
-    width: 100%;
-    padding: 8px;
-    background: #2a2a2a;
-    border: 1px solid #444;
+
+  .app-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .app-title {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f3f4f6;
+  }
+
+  .contact-count-badge {
+    background: #374151;
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn {
+    background: var(--bg-card);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .btn:hover {
+    background: var(--bg-hover);
+    border-color: #475569;
+  }
+
+  .btn-primary {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
     color: #fff;
-    border-radius: 4px;
-    box-sizing: border-box;
-    outline: none;
   }
+  .btn-primary:hover {
+    background: var(--accent-blue-hover);
+    border-color: var(--accent-blue-hover);
+  }
+
+  .btn-secondary {
+    background: #374151;
+    border-color: #4b5563;
+  }
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: var(--accent-red);
+  }
+  .btn-danger:hover {
+    background: var(--accent-red);
+    color: #fff;
+  }
+
+  /* Search & Filters */
+  .search-box {
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 9px 12px 9px 34px;
+    background: #1f2937;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus {
+    border-color: var(--accent-blue);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .category-pills {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0;
+    scrollbar-width: none;
+  }
+  .category-pills::-webkit-scrollbar { display: none; }
+
+  .pill {
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #1f2937;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+  }
+
+  .pill:hover {
+    background: var(--bg-hover);
+    color: #fff;
+  }
+
+  .pill.active {
+    background: var(--accent-blue);
+    color: #fff;
+    border-color: var(--accent-blue);
+  }
+
+  /* Contact List */
   .contact-list {
     flex: 1;
     overflow-y: auto;
   }
+
   .contact-item {
-    padding: 12px;
-    border-bottom: 1px solid #2a2a2a;
+    padding: 12px 16px;
+    border-bottom: 1px solid #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.15s;
   }
-  .contact-item:hover, .contact-item.active {
-    background: #2c3e50;
+
+  .contact-item:hover {
+    background: #1f2937;
   }
-  .contact-item-name {
-    font-weight: bold;
+
+  .contact-item.active {
+    background: #1e293b;
+    border-left: 4px solid var(--accent-blue);
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
     color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   }
-  .contact-item-sub {
+
+  .contact-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .contact-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
+  }
+
+  .contact-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #f3f4f6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .fav-star {
+    color: var(--accent-yellow);
+    font-size: 13px;
+  }
+
+  .contact-sub {
     font-size: 12px;
-    color: #888;
-    margin-top: 4px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
-  
+
+  .category-badge {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge-Work { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+  .badge-Personal { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  .badge-Family { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
+  .badge-Friends { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+  .badge-Other { background: rgba(107, 114, 128, 0.2); color: #9ca3af; }
+
+  /* Details Panel */
   .details-panel {
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: #1e1e1e;
-  }
-  .toolbar {
-    padding: 10px;
-    background: #222;
-    border-bottom: 1px solid #333;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-  }
-  button {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  button:hover { background: #2980b9; }
-  button.danger { background: #e74c3c; }
-  button.danger:hover { background: #c0392b; }
-  
-  .form-area {
-    padding: 20px;
-    flex: 1;
+    background: var(--bg-main);
     overflow-y: auto;
-    display: none;
-    flex-direction: column;
-    gap: 15px;
   }
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .form-group label {
-    font-size: 12px;
-    color: #aaa;
-    font-weight: bold;
-  }
-  .form-group input, .form-group textarea {
-    padding: 10px;
-    background: #111;
-    border: 1px solid #444;
-    color: #fff;
-    border-radius: 4px;
-    outline: none;
-    font-family: inherit;
-  }
-  .form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-  
+
   .empty-state {
     flex: 1;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #666;
-    font-style: italic;
+    color: var(--text-muted);
+    gap: 12px;
   }
+
+  .empty-state-icon {
+    font-size: 48px;
+    opacity: 0.5;
+  }
+
+  .details-header {
+    padding: 24px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .avatar-lg {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 26px;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+
+  .header-details {
+    flex: 1;
+  }
+
+  .header-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .details-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 600px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 10px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--accent-blue);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .checkbox-group input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent-blue);
+    cursor: pointer;
+  }
+
+  /* Toast notification */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 1000;
+  }
+
+  .toast {
+    background: #1e293b;
+    color: #fff;
+    border: 1px solid var(--accent-blue);
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* File Input Hidden */
+  #fileInput { display: none; }
 </style>
 </head>
 <body>
+
+  <!-- Sidebar -->
   <div class="sidebar">
-    <div class="search-bar">
-      <input type="text" id="searchInput" placeholder="Search contacts...">
+    <div class="sidebar-header">
+      <div class="app-title-bar">
+        <div class="app-title">
+          <span>📇</span> KContacts
+        </div>
+        <span class="contact-count-badge" id="contactCount">0 Contacts</span>
+      </div>
+
+      <div class="action-grid">
+        <button class="btn btn-primary" id="btnNew"><span>+</span> Add Contact</button>
+        <button class="btn btn-secondary" id="btnMerge"><span>🧹</span> Merge Dups</button>
+        <button class="btn btn-secondary" id="btnImport"><span>📥</span> Import</button>
+        <button class="btn btn-secondary" id="btnExport"><span>📤</span> Export</button>
+      </div>
+
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search contacts by name, email, phone..." aria-label="Search contacts">
+      </div>
+
+      <div class="category-pills" id="categoryPills">
+        <div class="pill active" data-cat="All">All</div>
+        <div class="pill" data-cat="Favorites">★ Favorites</div>
+        <div class="pill" data-cat="Work">Work</div>
+        <div class="pill" data-cat="Personal">Personal</div>
+        <div class="pill" data-cat="Family">Family</div>
+        <div class="pill" data-cat="Friends">Friends</div>
+        <div class="pill" data-cat="Other">Other</div>
+      </div>
     </div>
+
     <div class="contact-list" id="contactList">
-      <!-- Contact items -->
+      <!-- Contact items rendered dynamically -->
     </div>
   </div>
-  
-  <div class="details-panel">
-    <div class="toolbar">
-      <button id="btnNew">+ New</button>
-      <button id="btnSave" style="display:none;">Save</button>
-      <button class="danger" id="btnDel" style="display:none;">Delete</button>
-    </div>
-    
+
+  <!-- Details / Editor Panel -->
+  <div class="details-panel" id="detailsPanel">
     <div class="empty-state" id="emptyState">
-      Select a contact or create a new one.
+      <div class="empty-state-icon">👤</div>
+      <div style="font-size: 16px; font-weight: 600;">No Contact Selected</div>
+      <div>Select a contact from the list or create a new one.</div>
     </div>
-    
-    <div class="form-area" id="formArea">
-      <div class="form-group">
-        <label>Name</label>
-        <input type="text" id="inpName" placeholder="Full Name">
+
+    <div id="contentView" style="display: none; width: 100%;">
+      <div class="details-header">
+        <div class="avatar-lg" id="headerAvatar">--</div>
+        <div class="header-details">
+          <div class="header-name">
+            <span id="headerName">Contact Name</span>
+            <span id="headerFavStar" style="cursor: pointer;" title="Toggle Favorite">☆</span>
+          </div>
+          <div class="header-meta">
+            <span class="category-badge" id="headerCategoryBadge">Category</span>
+            <span id="headerCompany" style="color: var(--text-muted); font-size: 13px;"></span>
+          </div>
+          <div class="quick-actions">
+            <button class="btn btn-secondary" id="btnQuickCall"><span>📞</span> Call</button>
+            <button class="btn btn-secondary" id="btnQuickEmail"><span>✉️</span> Email</button>
+            <button class="btn btn-secondary" id="btnQuickCopy"><span>📋</span> Copy Info</button>
+            <button class="btn btn-danger" id="btnDelete"><span>🗑️</span> Delete</button>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="text" id="inpEmail" placeholder="Email Address">
-      </div>
-      <div class="form-group">
-        <label>Phone</label>
-        <input type="text" id="inpPhone" placeholder="Phone Number">
-      </div>
-      <div class="form-group">
-        <label>Notes</label>
-        <textarea id="inpNotes" placeholder="Additional details..."></textarea>
+
+      <div class="details-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="inpName" placeholder="e.g. Sarah Jenkins">
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="inpCategory">
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Family">Family</option>
+              <option value="Friends">Friends</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" id="inpPhone" placeholder="e.g. +1 555-0192">
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="text" id="inpEmail" placeholder="e.g. sarah@company.com">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Company / Organization</label>
+            <input type="text" id="inpCompany" placeholder="e.g. Acme Corp">
+          </div>
+          <div class="form-group">
+            <label>Job Title</label>
+            <input type="text" id="inpTitle" placeholder="e.g. Senior Designer">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="inpNotes" rows="3" placeholder="Additional details, tags, or notes..."></textarea>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="inpFav">
+          <label for="inpFav" style="font-size: 14px; font-weight: 500; color: #fff; cursor: pointer;">Add to Favorites ★</label>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 10px;">
+          <button class="btn btn-primary" id="btnSave" style="padding: 10px 24px;"><span>💾</span> Save Changes</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- Hidden File Input for Import -->
+  <input type="file" id="fileInput" accept=".vcf,.csv,.txt">
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <script>
-    const searchInput = document.getElementById('searchInput');
+    // State
+    let contacts = [];
+    let selectedId = null;
+    let currentFilter = 'All';
+
+    // Dom Elements
     const contactList = document.getElementById('contactList');
-    const btnNew = document.getElementById('btnNew');
-    const btnSave = document.getElementById('btnSave');
-    const btnDel = document.getElementById('btnDel');
+    const contactCount = document.getElementById('contactCount');
+    const searchInput = document.getElementById('searchInput');
+    const categoryPills = document.getElementById('categoryPills');
     const emptyState = document.getElementById('emptyState');
-    const formArea = document.getElementById('formArea');
-    
+    const contentView = document.getElementById('contentView');
+    const fileInput = document.getElementById('fileInput');
+
+    const headerAvatar = document.getElementById('headerAvatar');
+    const headerName = document.getElementById('headerName');
+    const headerFavStar = document.getElementById('headerFavStar');
+    const headerCategoryBadge = document.getElementById('headerCategoryBadge');
+    const headerCompany = document.getElementById('headerCompany');
+
     const inpName = document.getElementById('inpName');
-    const inpEmail = document.getElementById('inpEmail');
+    const inpCategory = document.getElementById('inpCategory');
     const inpPhone = document.getElementById('inpPhone');
+    const inpEmail = document.getElementById('inpEmail');
+    const inpCompany = document.getElementById('inpCompany');
+    const inpTitle = document.getElementById('inpTitle');
     const inpNotes = document.getElementById('inpNotes');
+    const inpFav = document.getElementById('inpFav');
 
-    let contacts = JSON.parse(localStorage.getItem('kcontacts_data') || '[]');
-    let currentEditIndex = -1;
+    // Utility: Toast
+    function showToast(msg) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
 
-    function renderList(filter = '') {
-      contactList.innerHTML = '';
-      contacts.forEach((c, i) => {
-        if (c.name.toLowerCase().includes(filter.toLowerCase()) || c.email.toLowerCase().includes(filter.toLowerCase())) {
-          const div = document.createElement('div');
-          div.className = 'contact-item' + (i === currentEditIndex ? ' active' : '');
-          div.innerHTML = `<div class="contact-item-name">${c.name || 'Unnamed Contact'}</div>
-                           <div class="contact-item-sub">${c.email}</div>`;
-          div.onclick = () => selectContact(i);
-          contactList.appendChild(div);
+    // Utility: Initials Generator
+    function getInitials(name) {
+      if (!name) return '?';
+      const parts = name.trim().split(/\s+/);
+      if (parts.length >= 2) {
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    // Utility: Deterministic Avatar Color Generator
+    function getAvatarColor(name) {
+      if (!name) return 'linear-gradient(135deg, #475569, #334155)';
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const h1 = Math.abs(hash) % 360;
+      const h2 = (h1 + 40) % 360;
+      return `linear-gradient(135deg, hsl(${h1}, 65%, 45%), hsl(${h2}, 65%, 35%))`;
+    }
+
+    // Default Seed Data
+    function seedData() {
+      const saved = localStorage.getItem('kcontacts_data_v2');
+      if (saved) {
+        try {
+          contacts = JSON.parse(saved);
+          return;
+        } catch (e) {
+          console.error("Failed to parse local storage", e);
         }
+      }
+
+      contacts = [
+        {
+          id: 'c1',
+          name: 'Alice Smith',
+          phone: '+1 555-0124',
+          email: 'alice.smith@acme.com',
+          category: 'Work',
+          company: 'Acme Corp',
+          title: 'Lead Architect',
+          notes: 'Key contact for cloud infrastructure project.',
+          fav: true
+        },
+        {
+          id: 'c2',
+          name: 'Bob Jones',
+          phone: '+1 555-0189',
+          email: 'bob.jones@gmail.com',
+          category: 'Personal',
+          company: '',
+          title: '',
+          notes: 'Met at tech meetup in June.',
+          fav: false
+        },
+        {
+          id: 'c3',
+          name: 'Carla Rossi',
+          phone: '+1 555-0199',
+          email: 'carla@designstudio.io',
+          category: 'Work',
+          company: 'Design Studio',
+          title: 'UX Lead',
+          notes: 'Freelance UI/UX Consultant.',
+          fav: true
+        },
+        {
+          id: 'c4',
+          name: 'David Miller',
+          phone: '+1 555-0143',
+          email: 'dmiller@familynet.org',
+          category: 'Family',
+          company: '',
+          title: '',
+          notes: 'Cousin - Birthday Oct 14.',
+          fav: false
+        }
+      ];
+      saveContacts();
+    }
+
+    function saveContacts() {
+      localStorage.setItem('kcontacts_data_v2', JSON.stringify(contacts));
+    }
+
+    // Render Contact List
+    function renderList() {
+      const query = searchInput.value.toLowerCase().trim();
+      contactList.innerHTML = '';
+
+      const filtered = contacts.filter(c => {
+        const matchesQuery = !query || 
+          (c.name && c.name.toLowerCase().includes(query)) ||
+          (c.email && c.email.toLowerCase().includes(query)) ||
+          (c.phone && c.phone.toLowerCase().includes(query)) ||
+          (c.company && c.company.toLowerCase().includes(query));
+
+        let matchesCat = true;
+        if (currentFilter === 'Favorites') matchesCat = !!c.fav;
+        else if (currentFilter !== 'All') matchesCat = c.category === currentFilter;
+
+        return matchesQuery && matchesCat;
       });
-    }
 
-    function selectContact(index) {
-      currentEditIndex = index;
-      const c = contacts[index];
-      inpName.value = c.name;
-      inpEmail.value = c.email;
-      inpPhone.value = c.phone;
-      inpNotes.value = c.notes;
-      
-      emptyState.style.display = 'none';
-      formArea.style.display = 'flex';
-      btnSave.style.display = 'block';
-      btnDel.style.display = 'block';
-      renderList(searchInput.value);
-    }
+      contactCount.textContent = `${contacts.length} Contact${contacts.length === 1 ? '' : 's'}`;
 
-    btnNew.onclick = () => {
-      currentEditIndex = -1;
-      inpName.value = '';
-      inpEmail.value = '';
-      inpPhone.value = '';
-      inpNotes.value = '';
-      
-      emptyState.style.display = 'none';
-      formArea.style.display = 'flex';
-      btnSave.style.display = 'block';
-      btnDel.style.display = 'none';
-      renderList(searchInput.value);
-    };
-
-    btnSave.onclick = () => {
-      const c = {
-        name: inpName.value.trim(),
-        email: inpEmail.value.trim(),
-        phone: inpPhone.value.trim(),
-        notes: inpNotes.value.trim()
-      };
-      
-      if (!c.name) {
-        alert("Name is required!");
+      if (filtered.length === 0) {
+        contactList.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">No matching contacts found.</div>`;
         return;
       }
 
-      if (currentEditIndex === -1) {
-        contacts.push(c);
-        currentEditIndex = contacts.length - 1;
-      } else {
-        contacts[currentEditIndex] = c;
-      }
-      
-      localStorage.setItem('kcontacts_data', JSON.stringify(contacts));
-      btnDel.style.display = 'block';
-      renderList(searchInput.value);
-    };
+      filtered.forEach(c => {
+        const item = document.createElement('div');
+        item.className = `contact-item ${c.id === selectedId ? 'active' : ''}`;
+        item.onclick = () => selectContact(c.id);
 
-    btnDel.onclick = () => {
-      if (confirm('Delete this contact?')) {
-        contacts.splice(currentEditIndex, 1);
-        localStorage.setItem('kcontacts_data', JSON.stringify(contacts));
-        currentEditIndex = -1;
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.style.background = getAvatarColor(c.name);
+        avatar.textContent = getInitials(c.name);
+
+        const info = document.createElement('div');
+        info.className = 'contact-info';
+
+        const nameRow = document.createElement('div');
+        nameRow.className = 'contact-name-row';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'contact-name';
+        nameSpan.textContent = c.name || 'Unnamed Contact';
+
+        nameRow.appendChild(nameSpan);
+        if (c.fav) {
+          const star = document.createElement('span');
+          star.className = 'fav-star';
+          star.textContent = '★';
+          nameRow.appendChild(star);
+        }
+
+        const subRow = document.createElement('div');
+        subRow.className = 'contact-sub';
+        subRow.style.display = 'flex';
+        subRow.style.justifySpaceBetween = 'space-between';
+
+        const subText = document.createElement('span');
+        subText.textContent = c.phone || c.email || 'No contact details';
+
+        const badge = document.createElement('span');
+        badge.className = `category-badge badge-${c.category || 'Other'}`;
+        badge.textContent = c.category || 'Other';
+
+        subRow.appendChild(subText);
         
+        info.appendChild(nameRow);
+        info.appendChild(subRow);
+
+        item.appendChild(avatar);
+        item.appendChild(info);
+        item.appendChild(badge);
+
+        contactList.appendChild(item);
+      });
+    }
+
+    // Select Contact
+    function selectContact(id) {
+      selectedId = id;
+      renderList();
+
+      const c = contacts.find(item => item.id === id);
+      if (!c) {
         emptyState.style.display = 'flex';
-        formArea.style.display = 'none';
-        btnSave.style.display = 'none';
-        btnDel.style.display = 'none';
-        renderList(searchInput.value);
+        contentView.style.display = 'none';
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      contentView.style.display = 'block';
+
+      // Header view
+      headerAvatar.style.background = getAvatarColor(c.name);
+      headerAvatar.textContent = getInitials(c.name);
+      headerName.textContent = c.name || 'Unnamed Contact';
+      headerFavStar.textContent = c.fav ? '★' : '☆';
+      headerFavStar.style.color = c.fav ? 'var(--accent-yellow)' : 'var(--text-muted)';
+      headerCategoryBadge.className = `category-badge badge-${c.category || 'Other'}`;
+      headerCategoryBadge.textContent = c.category || 'Other';
+      headerCompany.textContent = c.company ? `${c.company} ${c.title ? '• ' + c.title : ''}` : c.title || '';
+
+      // Form view
+      inpName.value = c.name || '';
+      inpCategory.value = c.category || 'Other';
+      inpPhone.value = c.phone || '';
+      inpEmail.value = c.email || '';
+      inpCompany.value = c.company || '';
+      inpTitle.value = c.title || '';
+      inpNotes.value = c.notes || '';
+      inpFav.checked = !!c.fav;
+    }
+
+    // Create New Contact
+    document.getElementById('btnNew').onclick = () => {
+      const newContact = {
+        id: 'c_' + Date.now(),
+        name: 'New Contact',
+        phone: '',
+        email: '',
+        category: 'Personal',
+        company: '',
+        title: '',
+        notes: '',
+        fav: false
+      };
+      contacts.unshift(newContact);
+      saveContacts();
+      selectContact(newContact.id);
+      showToast('Created new contact draft');
+    };
+
+    // Save Contact
+    document.getElementById('btnSave').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (!c) return;
+
+      if (!inpName.value.trim()) {
+        alert('Contact name cannot be empty.');
+        return;
+      }
+
+      c.name = inpName.value.trim();
+      c.category = inpCategory.value;
+      c.phone = inpPhone.value.trim();
+      c.email = inpEmail.value.trim();
+      c.company = inpCompany.value.trim();
+      c.title = inpTitle.value.trim();
+      c.notes = inpNotes.value.trim();
+      c.fav = inpFav.checked;
+
+      saveContacts();
+      selectContact(selectedId);
+      showToast('Contact updated successfully');
+    };
+
+    // Delete Contact
+    document.getElementById('btnDelete').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (!c) return;
+
+      if (confirm(`Are you sure you want to delete "${c.name}"?`)) {
+        contacts = contacts.filter(item => item.id !== selectedId);
+        selectedId = null;
+        saveContacts();
+        renderList();
+        emptyState.style.display = 'flex';
+        contentView.style.display = 'none';
+        showToast('Contact deleted');
       }
     };
 
-    searchInput.oninput = () => {
-      renderList(searchInput.value);
+    // Quick Action: Call
+    document.getElementById('btnQuickCall').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (c && c.phone) {
+        window.open(`tel:${c.phone}`, '_self');
+        showToast(`Dialing ${c.phone}...`);
+      } else {
+        showToast('No phone number specified');
+      }
     };
 
+    // Quick Action: Email
+    document.getElementById('btnQuickEmail').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (c && c.email) {
+        window.open(`mailto:${c.email}`, '_self');
+        showToast(`Opening email to ${c.email}...`);
+      } else {
+        showToast('No email address specified');
+      }
+    };
+
+    // Quick Action: Copy
+    document.getElementById('btnQuickCopy').onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (c) {
+        const text = `Name: ${c.name}\nPhone: ${c.phone}\nEmail: ${c.email}\nCategory: ${c.category}\nCompany: ${c.company}\nNotes: ${c.notes}`;
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Copied contact info to clipboard');
+        });
+      }
+    };
+
+    // Toggle Favorite from header
+    headerFavStar.onclick = () => {
+      if (!selectedId) return;
+      const c = contacts.find(item => item.id === selectedId);
+      if (c) {
+        c.fav = !c.fav;
+        inpFav.checked = c.fav;
+        saveContacts();
+        selectContact(selectedId);
+        showToast(c.fav ? 'Added to favorites' : 'Removed from favorites');
+      }
+    };
+
+    // Contact Duplicates Merger
+    document.getElementById('btnMerge').onclick = () => {
+      if (contacts.length < 2) {
+        showToast('Not enough contacts to merge');
+        return;
+      }
+
+      let mergedCount = 0;
+      const map = new Map();
+
+      const uniqueList = [];
+      for (const c of contacts) {
+        // key by lower name or email
+        const key = (c.name || '').toLowerCase().trim();
+        if (key && map.has(key)) {
+          const existing = map.get(key);
+          // Merge non-empty fields
+          if (!existing.phone && c.phone) existing.phone = c.phone;
+          if (!existing.email && c.email) existing.email = c.email;
+          if (!existing.company && c.company) existing.company = c.company;
+          if (!existing.title && c.title) existing.title = c.title;
+          if (!existing.notes && c.notes) existing.notes = c.notes;
+          else if (c.notes && !existing.notes.includes(c.notes)) existing.notes += '\n' + c.notes;
+          if (c.fav) existing.fav = true;
+          mergedCount++;
+        } else {
+          map.set(key, c);
+          uniqueList.push(c);
+        }
+      }
+
+      if (mergedCount > 0) {
+        contacts = uniqueList;
+        saveContacts();
+        renderList();
+        if (selectedId) selectContact(selectedId);
+        showToast(`Merged ${mergedCount} duplicate contact(s)!`);
+      } else {
+        showToast('No duplicate contacts found.');
+      }
+    };
+
+    // vCard (.vcf) & CSV Export
+    document.getElementById('btnExport').onclick = () => {
+      if (contacts.length === 0) {
+        showToast('No contacts to export');
+        return;
+      }
+
+      const mode = prompt("Export Format: Type 'vcf' for vCard or 'csv' for CSV file:", "vcf");
+      if (!mode) return;
+
+      let content = '';
+      let filename = '';
+      let mimeType = '';
+
+      if (mode.toLowerCase() === 'csv') {
+        const headers = ["Name", "Phone", "Email", "Category", "Company", "Title", "Favorite", "Notes"];
+        const rows = contacts.map(c => [
+          `"${(c.name||'').replace(/"/g, '""')}"`,
+          `"${(c.phone||'').replace(/"/g, '""')}"`,
+          `"${(c.email||'').replace(/"/g, '""')}"`,
+          `"${(c.category||'').replace(/"/g, '""')}"`,
+          `"${(c.company||'').replace(/"/g, '""')}"`,
+          `"${(c.title||'').replace(/"/g, '""')}"`,
+          c.fav ? "TRUE" : "FALSE",
+          `"${(c.notes||'').replace(/"/g, '""')}"`
+        ].join(','));
+        content = [headers.join(','), ...rows].join('\n');
+        filename = 'kcontacts_export.csv';
+        mimeType = 'text/csv';
+      } else {
+        // Default to vCard
+        content = contacts.map(c => {
+          return [
+            'BEGIN:VCARD',
+            'VERSION:3.0',
+            `FN:${c.name || ''}`,
+            `TEL;TYPE=CELL:${c.phone || ''}`,
+            `EMAIL;TYPE=INTERNET:${c.email || ''}`,
+            `ORG:${c.company || ''}`,
+            `TITLE:${c.title || ''}`,
+            `CATEGORIES:${c.category || ''}`,
+            `NOTE:${(c.notes || '').replace(/\n/g, '\\n')}`,
+            'END:VCARD'
+          ].join('\r\n');
+        }).join('\r\n');
+        filename = 'kcontacts_export.vcf';
+        mimeType = 'text/vcard';
+      }
+
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported ${contacts.length} contacts to ${filename}`);
+    };
+
+    // Import (.vcf / .csv)
+    document.getElementById('btnImport').onclick = () => {
+      fileInput.click();
+    };
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target.result;
+        let count = 0;
+
+        if (file.name.endsWith('.vcf') || text.includes('BEGIN:VCARD')) {
+          // Parse vCard
+          const cards = text.split(/END:VCARD/i);
+          cards.forEach(card => {
+            if (!card.includes('BEGIN:VCARD')) return;
+            const fnMatch = card.match(/FN:(.*)/i);
+            const telMatch = card.match(/TEL.*:(.*)/i);
+            const emailMatch = card.match(/EMAIL.*:(.*)/i);
+            const catMatch = card.match(/CATEGORIES:(.*)/i);
+            const orgMatch = card.match(/ORG:(.*)/i);
+            const noteMatch = card.match(/NOTE:(.*)/i);
+
+            if (fnMatch) {
+              contacts.push({
+                id: 'c_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                name: fnMatch[1].trim(),
+                phone: telMatch ? telMatch[1].trim() : '',
+                email: emailMatch ? emailMatch[1].trim() : '',
+                category: catMatch ? catMatch[1].trim() : 'Personal',
+                company: orgMatch ? orgMatch[1].trim() : '',
+                title: '',
+                notes: noteMatch ? noteMatch[1].replace(/\\n/g, '\n').trim() : '',
+                fav: false
+              });
+              count++;
+            }
+          });
+        } else {
+          // Parse CSV
+          const lines = text.split(/\r?\n/);
+          for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            const parts = line.split(',').map(s => s.replace(/^"|"$/g, '').trim());
+            if (parts.length >= 1 && parts[0]) {
+              contacts.push({
+                id: 'c_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                name: parts[0] || 'Imported Contact',
+                phone: parts[1] || '',
+                email: parts[2] || '',
+                category: parts[3] || 'Personal',
+                company: parts[4] || '',
+                title: parts[5] || '',
+                notes: parts[7] || '',
+                fav: parts[6] === 'TRUE'
+              });
+              count++;
+            }
+          }
+        }
+
+        saveContacts();
+        renderList();
+        showToast(`Successfully imported ${count} contacts!`);
+        fileInput.value = '';
+      };
+      reader.readAsText(file);
+    };
+
+    // Filter Chips Event Listener
+    categoryPills.onclick = (e) => {
+      const pill = e.target.closest('.pill');
+      if (!pill) return;
+
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentFilter = pill.getAttribute('data-cat');
+      renderList();
+    };
+
+    // Search Listener
+    searchInput.oninput = renderList;
+
+    // Initialization
+    seedData();
     renderList();
   </script>
 </body>
