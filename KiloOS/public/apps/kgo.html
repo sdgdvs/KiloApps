@@ -32,12 +32,13 @@
   }
   .board {
     display: grid;
-    background-color: #cda756;
-    padding: 15px;
+    background: repeating-linear-gradient(85deg, #dcb35c 0px, #dcb35c 16px, #d3a74e 18px, #e2ba64 34px, #cfa247 38px), linear-gradient(135deg, #e6c06c, #c89c44);
+    background-blend-mode: multiply;
+    padding: 16px;
     gap: 0;
-    border: 3px solid #222;
-    border-radius: 6px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    border: 7px solid #4a2e14;
+    border-radius: 8px;
+    box-shadow: inset 0 0 12px rgba(60, 30, 5, 0.65), inset 0 0 2px rgba(0, 0, 0, 0.9), 0 12px 28px rgba(0,0,0,0.7);
     position: relative;
   }
   .cell {
@@ -54,7 +55,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background-color: #111;
+    background-color: #221a10;
     z-index: 1;
   }
   .cell::after {
@@ -64,13 +65,27 @@
     top: 0;
     bottom: 0;
     width: 1px;
-    background-color: #111;
+    background-color: #221a10;
     z-index: 1;
   }
   .cell.top::after { top: 50%; }
   .cell.bottom::after { bottom: 50%; }
   .cell.left::before { left: 50%; }
   .cell.right::before { right: 50%; }
+
+  .hoshi-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background-color: #1a1208;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    box-shadow: 0 0 1px rgba(0,0,0,0.8);
+    pointer-events: none;
+  }
 
   .stone {
     position: absolute;
@@ -80,7 +95,6 @@
     height: 26px;
     border-radius: 50%;
     z-index: 3;
-    box-shadow: 1px 1px 3px rgba(0,0,0,0.6);
   }
   .stone.new {
     animation: placeAnim 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -97,13 +111,21 @@
     animation: captureAnim 0.3s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
   }
   .stone.atari {
-    box-shadow: 0 0 0 3px #ffcc00, inset -2px -2px 4px rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 3px #ffcc00, 2px 3px 6px rgba(0,0,0,0.7);
   }
-  .black { background-color: #111; box-shadow: inset -2px -2px 4px rgba(255,255,255,0.1), 2px 2px 4px rgba(0,0,0,0.5); }
-  .white { background-color: #eee; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.2), 2px 2px 4px rgba(0,0,0,0.5); }
+  .black {
+    background: radial-gradient(circle at 35% 35%, #4c525f 0%, #262930 35%, #111215 75%, #08080a 100%);
+    box-shadow: 2px 3px 6px rgba(0,0,0,0.75), inset -2px -2px 4px rgba(0,0,0,0.85), inset 1px 1px 2px rgba(255,255,255,0.25);
+  }
+  .white {
+    background:
+      radial-gradient(circle at 35% 35%, rgba(255,255,255,1) 0%, rgba(250,246,238,0.95) 45%, rgba(230,222,208,0.9) 75%, rgba(205,195,178,0.9) 100%),
+      repeating-radial-gradient(circle at 50% 50%, rgba(255,255,255,0.4) 0px, rgba(235,225,210,0.3) 2px, rgba(255,255,255,0.4) 4px);
+    box-shadow: 2px 3px 6px rgba(0,0,0,0.5), inset -2px -2px 5px rgba(170,155,130,0.5), inset 1px 1px 2px rgba(255,255,255,1);
+  }
   
   .stone.ghost {
-    opacity: 0.4;
+    opacity: 0.45;
     display: none;
     box-shadow: none;
     z-index: 2;
@@ -112,17 +134,67 @@
     display: block;
   }
 
+  .last-move-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #00f0ff;
+    box-shadow: 0 0 6px #00f0ff;
+    z-index: 5;
+    animation: pulseLastMove 1.2s infinite ease-in-out;
+    pointer-events: none;
+  }
+  .stone.white .last-move-ring {
+    border-color: #d000ff;
+    box-shadow: 0 0 6px #d000ff;
+  }
+  @keyframes pulseLastMove {
+    0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+    50% { transform: translate(-50%, -50%) scale(1.25); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+  }
+
   .territory-marker {
     position: absolute;
-    top: 9px;
-    left: 9px;
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
     z-index: 2;
+    animation: territoryGlow 1.5s infinite alternate ease-in-out;
   }
-  .territory-marker.B { background-color: rgba(0, 150, 255, 0.8); }
-  .territory-marker.W { background-color: rgba(255, 60, 60, 0.8); }
+  .territory-marker.B {
+    background: radial-gradient(circle at 35% 35%, #70c5ff, #0077dd);
+    box-shadow: 0 0 8px rgba(0, 150, 255, 0.9);
+  }
+  .territory-marker.W {
+    background: radial-gradient(circle at 35% 35%, #ff8888, #dd1111);
+    box-shadow: 0 0 8px rgba(255, 60, 60, 0.9);
+  }
+  @keyframes territoryGlow {
+    0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+  }
+
+  .capture-spark {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 10;
+    animation: sparkFade 0.45s cubic-bezier(0.1, 0.7, 0.1, 1) forwards;
+  }
+  @keyframes sparkFade {
+    0% { opacity: 1; transform: translate(0, 0) scale(1.6); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
+  }
 
   .hint-ring {
     position: absolute;
@@ -465,6 +537,45 @@
     }
   }
 
+  function isHoshi(x, y, boardSize) {
+    if (boardSize === 9) {
+      return (x === 2 || x === 6) && (y === 2 || y === 6) || (x === 4 && y === 4);
+    } else if (boardSize === 13) {
+      return (x === 3 || x === 9) && (y === 3 || y === 9) || (x === 6 && y === 6);
+    } else if (boardSize === 19) {
+      return (x === 3 || x === 9 || x === 15) && (y === 3 || y === 9 || y === 15);
+    }
+    return false;
+  }
+
+  function spawnCaptureSparks(stones) {
+    if (!stones || !stones.length) return;
+    stones.forEach(s => {
+      const cellX = (s.x + 0.5) * 30 + 16;
+      const cellY = (s.y + 0.5) * 30 + 16;
+      const count = 10;
+      for (let i = 0; i < count; i++) {
+        const spark = document.createElement('div');
+        spark.className = 'capture-spark';
+        const color = s.color === 'B' ? '#70c5ff' : '#ffa044';
+        spark.style.backgroundColor = color;
+        spark.style.boxShadow = `0 0 6px ${color}`;
+        spark.style.left = `${cellX}px`;
+        spark.style.top = `${cellY}px`;
+
+        const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.4 - 0.2);
+        const dist = 18 + Math.random() * 22;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+        spark.style.setProperty('--dx', `${dx}px`);
+        spark.style.setProperty('--dy', `${dy}px`);
+
+        boardEl.appendChild(spark);
+        setTimeout(() => spark.remove(), 450);
+      }
+    });
+  }
+
   function drawBoard() {
     boardEl.innerHTML = '';
     boardEl.style.gridTemplateColumns = `repeat(${size}, 30px)`;
@@ -485,6 +596,12 @@
         
         cell.dataset.x = x;
         cell.dataset.y = y;
+
+        if (isHoshi(x, y, size)) {
+          const hoshi = document.createElement('div');
+          hoshi.className = 'hoshi-dot';
+          cell.appendChild(hoshi);
+        }
         
         if (showEstimator && board[y][x] === null && territoryMap[y][x]) {
           const tm = document.createElement('div');
@@ -498,6 +615,13 @@
           if (lastMove.x === x && lastMove.y === y) classes += ' new';
           if (showEstimator && atariStones.some(s => s.x === x && s.y === y)) classes += ' atari';
           stone.className = classes;
+
+          if (lastMove.x === x && lastMove.y === y) {
+            const lmr = document.createElement('div');
+            lmr.className = 'last-move-ring';
+            stone.appendChild(lmr);
+          }
+
           cell.appendChild(stone);
         } else {
           const capturedAnim = capturedStonesForAnim.find(s => s.x === x && s.y === y);
@@ -708,6 +832,7 @@
     drawBoard();
     
     if (caps > 0) {
+      spawnCaptureSparks(capturedStonesForAnim);
       setTimeout(() => {
         capturedStonesForAnim = [];
         drawBoard();

@@ -121,6 +121,7 @@ char board[19][19] = {0}; // 0 = empty, 1 = black, 2 = white
 char prevBoard[19][19] = {0};
 int currentPlayer = 1;
 int captures[3] = {0}; // 1 = black, 2 = white
+int lastMoveX = -1, lastMoveY = -1;
 int hoverX = -1, hoverY = -1;
 int animX = -1, animY = -1;
 int animRadius = 13;
@@ -128,6 +129,27 @@ POINT capturedAnimStones[19*19];
 int capturedAnimColor[19*19];
 int capturedAnimCount = 0;
 int captureAnimRadius = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int color; // 1 = Black, 2 = White
+    int life;
+} SparkParticle;
+#define MAX_SPARKS 64
+SparkParticle sparkParticles[MAX_SPARKS];
+int sparkCount = 0;
+
+int IsHoshi(int x, int y, int size) {
+    if (size == 9) {
+        return ((x == 2 || x == 6) && (y == 2 || y == 6)) || (x == 4 && y == 4);
+    } else if (size == 13) {
+        return ((x == 3 || x == 9) && (y == 3 || y == 9)) || (x == 6 && y == 6);
+    } else if (size == 19) {
+        return ((x == 3 || x == 9 || x == 15) && (y == 3 || y == 9 || y == 15));
+    }
+    return 0;
+}
 
 int hintX = -1, hintY = -1;
 int showEstimator = 0;
@@ -446,6 +468,8 @@ void PlaceStone(HWND hwnd, int x, int y) {
     CopyBoard(prevBoard, boardBackup);
     currentPlayer = opp;
     hintX = -1; hintY = -1;
+    lastMoveX = x;
+    lastMoveY = y;
     
     if (caps > 0) PlayGameSound(2);
     else PlayGameSound(1);
@@ -457,6 +481,21 @@ void PlaceStone(HWND hwnd, int x, int y) {
     
     if (caps > 0) {
         captureAnimRadius = 13;
+        for (int i = 0; i < capturedAnimCount; i++) {
+            int cx = 40 + capturedAnimStones[i].x * 30;
+            int cy = 40 + capturedAnimStones[i].y * 30;
+            for (int p = 0; p < 8 && sparkCount < MAX_SPARKS; p++) {
+                sparkParticles[sparkCount].x = (float)cx;
+                sparkParticles[sparkCount].y = (float)cy;
+                float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
+                float speed = 2.0f + (float)(rand() % 25) / 10.0f;
+                sparkParticles[sparkCount].vx = cosf(angle) * speed;
+                sparkParticles[sparkCount].vy = sinf(angle) * speed;
+                sparkParticles[sparkCount].color = capturedAnimColor[i];
+                sparkParticles[sparkCount].life = 16;
+                sparkCount++;
+            }
+        }
         SetTimer(hwnd, 3, 16, NULL);
     }
     
@@ -779,6 +818,9 @@ void InitBoard() {
     redoCount = 0;
     hintX = -1;
     hintY = -1;
+    lastMoveX = -1;
+    lastMoveY = -1;
+    sparkCount = 0;
 }
 
 void CalculateScore(HWND hwnd) {
@@ -929,7 +971,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 3) {
                 captureAnimRadius -= 2;
-                if (captureAnimRadius <= 0) {
+                int newCount = 0;
+                for (int i = 0; i < sparkCount; i++) {
+                    sparkParticles[i].x += sparkParticles[i].vx;
+                    sparkParticles[i].y += sparkParticles[i].vy;
+                    sparkParticles[i].life--;
+                    if (sparkParticles[i].life > 0) {
+                        sparkParticles[newCount++] = sparkParticles[i];
+                    }
+                }
+                sparkCount = newCount;
+                if (captureAnimRadius <= 0 && sparkCount <= 0) {
                     captureAnimRadius = 0;
                     capturedAnimCount = 0;
                     KillTimer(hwnd, 3);
@@ -1004,24 +1056,67 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             int padding = 40;
             int cellSize = 30;
+            int boardW = (boardSize - 1) * cellSize;
             
+            // Outer shadow
+            HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 10, 10));
+            RECT shadowRect = { padding - 15 + 6, padding - 15 + 6, padding + boardW + 15 + 6, padding + boardW + 15 + 6 };
+            FillRect(hdc, &shadowRect, shadowBrush);
+            DeleteObject(shadowBrush);
+
+            // Outer frame mahogany
+            HBRUSH frameBrush = CreateSolidBrush(RGB(74, 46, 20));
+            RECT frameRect = { padding - 15, padding - 15, padding + boardW + 15, padding + boardW + 15 };
+            FillRect(hdc, &frameRect, frameBrush);
+            DeleteObject(frameBrush);
+
+            // Inner Kaya board surface
             HBRUSH boardBrush = CreateSolidBrush(RGB(220, 179, 92));
-            RECT boardRect = { padding, padding, padding + (boardSize-1)*cellSize, padding + (boardSize-1)*cellSize };
-            boardRect.left -= 15; boardRect.top -= 15;
-            boardRect.right += 15; boardRect.bottom += 15;
+            RECT boardRect = { padding - 8, padding - 8, padding + boardW + 8, padding + boardW + 8 };
             FillRect(hdc, &boardRect, boardBrush);
             DeleteObject(boardBrush);
 
-            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
+            // Fine wood grain texturing
+            HPEN grainPen = CreatePen(PS_SOLID, 1, RGB(205, 160, 78));
+            HPEN oldPen = SelectObject(hdc, grainPen);
+            for (int g = 0; g < 18; g++) {
+                int gy = padding - 6 + g * (boardW + 12) / 17;
+                MoveToEx(hdc, padding - 6, gy, NULL);
+                LineTo(hdc, padding + boardW + 6, gy + (g % 2 == 0 ? 2 : -2));
+            }
+            SelectObject(hdc, oldPen);
+            DeleteObject(grainPen);
+
+            // Grid lines
+            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(30, 22, 14));
             SelectObject(hdc, hPen);
             for (int i = 0; i < boardSize; i++) {
                 MoveToEx(hdc, padding, padding + i * cellSize, NULL);
-                LineTo(hdc, padding + (boardSize - 1) * cellSize, padding + i * cellSize);
+                LineTo(hdc, padding + boardW, padding + i * cellSize);
                 MoveToEx(hdc, padding + i * cellSize, padding, NULL);
-                LineTo(hdc, padding + i * cellSize, padding + (boardSize - 1) * cellSize);
+                LineTo(hdc, padding + i * cellSize, padding + boardW);
             }
             DeleteObject(hPen);
+
+            // Star points (Hoshi dots)
+            HBRUSH hoshiBrush = CreateSolidBrush(RGB(25, 18, 10));
+            HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
+            for (int r = 0; r < boardSize; r++) {
+                for (int c = 0; c < boardSize; c++) {
+                    if (IsHoshi(c, r, boardSize)) {
+                        int cx = padding + c * cellSize;
+                        int cy = padding + r * cellSize;
+                        HBRUSH oldB = SelectObject(hdc, hoshiBrush);
+                        HPEN oldP = SelectObject(hdc, nullPen);
+                        Ellipse(hdc, cx - 3, cy - 3, cx + 3, cy + 3);
+                        SelectObject(hdc, oldB);
+                        SelectObject(hdc, oldP);
+                    }
+                }
+            }
+            DeleteObject(hoshiBrush);
             
+            // Territory estimation visualizer
             if (showEstimator) {
                 ComputeTerritoryAndAtari();
                 for (int r = 0; r < boardSize; r++) {
@@ -1031,47 +1126,122 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         if (board[r][c] == 0) {
                             if (territoryMap[r][c] == 1) { // Black territory
                                 HBRUSH tBrush = CreateSolidBrush(RGB(0, 150, 255));
-                                RECT tr = { cx - 6, cy - 6, cx + 6, cy + 6 };
-                                FillRect(hdc, &tr, tBrush);
+                                HBRUSH tInner = CreateSolidBrush(RGB(180, 230, 255));
+                                SelectObject(hdc, nullPen);
+                                SelectObject(hdc, tBrush);
+                                Ellipse(hdc, cx - 6, cy - 6, cx + 6, cy + 6);
+                                SelectObject(hdc, tInner);
+                                Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
                                 DeleteObject(tBrush);
+                                DeleteObject(tInner);
                             } else if (territoryMap[r][c] == 2) { // White territory
                                 HBRUSH tBrush = CreateSolidBrush(RGB(255, 60, 60));
-                                RECT tr = { cx - 6, cy - 6, cx + 6, cy + 6 };
-                                FillRect(hdc, &tr, tBrush);
+                                HBRUSH tInner = CreateSolidBrush(RGB(255, 200, 200));
+                                SelectObject(hdc, nullPen);
+                                SelectObject(hdc, tBrush);
+                                Ellipse(hdc, cx - 6, cy - 6, cx + 6, cy + 6);
+                                SelectObject(hdc, tInner);
+                                Ellipse(hdc, cx - 2, cy - 2, cx + 2, cy + 2);
                                 DeleteObject(tBrush);
+                                DeleteObject(tInner);
                             }
                         }
                     }
                 }
             }
 
+            // Draw 3D Slate & Shell stones
             for (int r = 0; r < boardSize; r++) {
                 for (int c = 0; c < boardSize; c++) {
                     if (board[r][c] != 0) {
                         int cx = padding + c * cellSize;
                         int cy = padding + r * cellSize;
-                        HBRUSH stoneBrush = CreateSolidBrush(board[r][c] == 1 ? RGB(17, 17, 17) : RGB(238, 238, 238));
-                        HPEN stonePen = CreatePen(PS_SOLID, (showEstimator && atariMap[r][c]) ? 3 : 1, 
-                            (showEstimator && atariMap[r][c]) ? RGB(255, 200, 0) : RGB(0, 0, 0));
-                        
-                        HBRUSH oldBrush = SelectObject(hdc, stoneBrush);
-                        HPEN oldPen = SelectObject(hdc, stonePen);
-                        
                         int radius = (r == animY && c == animX) ? animRadius : 13;
-                        Ellipse(hdc, cx - radius, cy - radius, cx + radius, cy + radius);
                         
-                        SelectObject(hdc, oldBrush);
-                        SelectObject(hdc, oldPen);
-                        DeleteObject(stoneBrush);
-                        DeleteObject(stonePen);
+                        // Stone drop shadow
+                        HBRUSH shBrush = CreateSolidBrush(RGB(40, 28, 16));
+                        SelectObject(hdc, nullPen);
+                        SelectObject(hdc, shBrush);
+                        Ellipse(hdc, cx - radius + 2, cy - radius + 2, cx + radius + 2, cy + radius + 2);
+                        DeleteObject(shBrush);
+
+                        if (board[r][c] == 1) { // 3D Black Slate Stone
+                            HBRUSH slateBrush = CreateSolidBrush(RGB(20, 22, 26));
+                            HPEN slatePen = CreatePen(PS_SOLID, 1, RGB(10, 10, 12));
+                            HBRUSH oldB = SelectObject(hdc, slateBrush);
+                            HPEN oldP = SelectObject(hdc, slatePen);
+                            Ellipse(hdc, cx - radius, cy - radius, cx + radius, cy + radius);
+                            SelectObject(hdc, oldB);
+                            SelectObject(hdc, oldP);
+                            DeleteObject(slateBrush);
+                            DeleteObject(slatePen);
+
+                            // Specular sheen highlight
+                            HBRUSH sheenBrush = CreateSolidBrush(RGB(85, 95, 110));
+                            SelectObject(hdc, nullPen);
+                            SelectObject(hdc, sheenBrush);
+                            Ellipse(hdc, cx - 6, cy - 6, cx - 1, cy - 1);
+                            DeleteObject(sheenBrush);
+                        } else { // 3D White Clam Shell Stone
+                            HBRUSH clamBrush = CreateSolidBrush(RGB(246, 243, 235));
+                            HPEN clamPen = CreatePen(PS_SOLID, 1, RGB(190, 180, 165));
+                            HBRUSH oldB = SelectObject(hdc, clamBrush);
+                            HPEN oldP = SelectObject(hdc, clamPen);
+                            Ellipse(hdc, cx - radius, cy - radius, cx + radius, cy + radius);
+                            
+                            // Fine clam shell grain lines
+                            HPEN grainP = CreatePen(PS_SOLID, 1, RGB(220, 210, 195));
+                            SelectObject(hdc, grainP);
+                            Arc(hdc, cx - radius + 2, cy - radius + 3, cx + radius - 2, cy + radius + 3, cx - radius + 2, cy, cx + radius - 2, cy);
+                            Arc(hdc, cx - radius + 3, cy - radius + 7, cx + radius - 3, cy + radius + 7, cx - radius + 3, cy + 4, cx + radius - 3, cy + 4);
+                            
+                            SelectObject(hdc, oldB);
+                            SelectObject(hdc, oldP);
+                            DeleteObject(clamBrush);
+                            DeleteObject(clamPen);
+                            DeleteObject(grainP);
+
+                            // Specular highlight
+                            HBRUSH sheenBrush = CreateSolidBrush(RGB(255, 255, 255));
+                            SelectObject(hdc, nullPen);
+                            SelectObject(hdc, sheenBrush);
+                            Ellipse(hdc, cx - 6, cy - 6, cx - 1, cy - 1);
+                            DeleteObject(sheenBrush);
+                        }
+
+                        // Last Move Marker Ring
+                        if (c == lastMoveX && r == lastMoveY) {
+                            COLORREF ringColor = (board[r][c] == 1) ? RGB(0, 240, 255) : RGB(210, 0, 255);
+                            HPEN ringPen = CreatePen(PS_SOLID, 2, ringColor);
+                            HBRUSH hollowB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+                            HPEN oldP = SelectObject(hdc, ringPen);
+                            HBRUSH oldB = SelectObject(hdc, hollowB);
+                            Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
+                            SelectObject(hdc, oldP);
+                            SelectObject(hdc, oldB);
+                            DeleteObject(ringPen);
+                        }
+
+                        // Atari danger warning ring
+                        if (showEstimator && atariMap[r][c]) {
+                            HPEN atariPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
+                            HBRUSH hollowB = (HBRUSH)GetStockObject(HOLLOW_BRUSH);
+                            HPEN oldP = SelectObject(hdc, atariPen);
+                            HBRUSH oldB = SelectObject(hdc, hollowB);
+                            Ellipse(hdc, cx - radius - 1, cy - radius - 1, cx + radius + 1, cy + radius + 1);
+                            SelectObject(hdc, oldP);
+                            SelectObject(hdc, oldB);
+                            DeleteObject(atariPen);
+                        }
                     }
                 }
             }
 
+            // Captured stone animation
             for (int i = 0; i < capturedAnimCount; i++) {
                 int cx = padding + capturedAnimStones[i].x * cellSize;
                 int cy = padding + capturedAnimStones[i].y * cellSize;
-                HBRUSH stoneBrush = CreateSolidBrush(capturedAnimColor[i] == 1 ? RGB(17, 17, 17) : RGB(238, 238, 238));
+                HBRUSH stoneBrush = CreateSolidBrush(capturedAnimColor[i] == 1 ? RGB(20, 22, 26) : RGB(246, 243, 235));
                 HPEN stonePen = CreatePen(PS_SOLID, 2, RGB(255, 68, 68));
                 HBRUSH oldBrush = SelectObject(hdc, stoneBrush);
                 HPEN oldPen = SelectObject(hdc, stonePen);
@@ -1082,6 +1252,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SelectObject(hdc, oldPen);
                 DeleteObject(stoneBrush);
                 DeleteObject(stonePen);
+            }
+
+            // Spark particles on capture
+            for (int i = 0; i < sparkCount; i++) {
+                int px = (int)sparkParticles[i].x;
+                int py = (int)sparkParticles[i].y;
+                COLORREF sparkColor = (sparkParticles[i].color == 1) ? RGB(110, 200, 255) : RGB(255, 170, 50);
+                HBRUSH sBrush = CreateSolidBrush(sparkColor);
+                SelectObject(hdc, nullPen);
+                SelectObject(hdc, sBrush);
+                Ellipse(hdc, px - 2, py - 2, px + 2, py + 2);
+                DeleteObject(sBrush);
             }
 
             if (hintX != -1 && hintY != -1 && board[hintY][hintX] == 0) {
