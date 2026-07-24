@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KCalendar
+**Target App:** KChart
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -173,3 +173,5 @@ Pass 1 Complete.
 - **KBBS**: Added ANSI 256-color SGR parameter handling, 2048-char music buffer limit, ARIA canvas/modal attributes, and high-load queue throttling in `kbbs.html`. Added cached solid GDI brushes to eliminate 2k per-frame brush allocations, OSC sequence parser state, ANSI music overflow protection, and terminal scroll bounds clamping in `main.c`.
 
 - **KCalc**: Fixed division by zero and numeric overflow handling, added factorial `n > 170` performance domain bounds, implicit multiplication and parenthesis auto-closing in expression parser, precision formatting, and full keyboard navigation in `kcalc.html`. Fixed div-by-zero, `ln`/`log10`/`sqrt`/`n!` domain checks, static control `WM_CTLCOLORSTATIC` background brush, and window dimensions (320x430) in `main.c`.
+
+- **KCalendar**: Added DOM `textContent` XSS escaping, `currentDate.setDate(1)` month boundary navigation safety, ARIA grid/application attributes, keyboard navigation (`Enter`/`Space`/`Escape`), and modal focus traps in `kcalendar.html`. Replaced CRT file I/O with native Win32 APIs (`CreateFileA`/`WriteFile`), added event deletion button & listbox double-click deletion, GDI brush handle cleanup in `WM_DESTROY`, and day bit shift bounds safety in `main.c`.
