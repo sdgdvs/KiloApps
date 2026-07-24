@@ -223,6 +223,79 @@ void fmt_msg(const char* fmt, const char* s1, int d1, int d2) {
     add_msg(buf);
 }
 
+typedef struct {
+    char name[32];
+    int class_id;
+    int race;
+    int level;
+    int dlevel;
+    int kills;
+    int gold;
+    int score;
+    int victory;
+    unsigned int seed;
+} LeaderboardEntry;
+
+LeaderboardEntry g_leaderboard[10];
+int g_leaderboard_count = 0;
+
+void load_leaderboard() {
+    HANDLE hFile = CreateFileA("leaderboard.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile != INVALID_HANDLE_VALUE) {
+        DWORD read;
+        ReadFile(hFile, &g_leaderboard_count, sizeof(int), &read, NULL);
+        if (g_leaderboard_count > 10) g_leaderboard_count = 10;
+        ReadFile(hFile, g_leaderboard, sizeof(LeaderboardEntry) * g_leaderboard_count, &read, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void save_leaderboard() {
+    HANDLE hFile = CreateFileA("leaderboard.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(hFile != INVALID_HANDLE_VALUE) {
+        DWORD written;
+        WriteFile(hFile, &g_leaderboard_count, sizeof(int), &written, NULL);
+        WriteFile(hFile, g_leaderboard, sizeof(LeaderboardEntry) * g_leaderboard_count, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void record_run(int victory) {
+    load_leaderboard();
+    Entity* p = &g.entities[0];
+    int score = g.dlevel * 100 + g.total_kills * 25 + p->gold * 2 + p->level * 50;
+    
+    LeaderboardEntry new_entry;
+    RtlZeroMemory(&new_entry, sizeof(LeaderboardEntry));
+    str_cpy(new_entry.name, p->name[0] != 0 ? p->name : "Hero");
+    new_entry.class_id = g.char_class;
+    new_entry.race = g.char_race;
+    new_entry.level = p->level;
+    new_entry.dlevel = g.dlevel;
+    new_entry.kills = g.total_kills;
+    new_entry.gold = p->gold;
+    new_entry.score = score;
+    new_entry.victory = victory;
+    new_entry.seed = g.seed;
+
+    int pos = g_leaderboard_count;
+    for (int i = 0; i < g_leaderboard_count; i++) {
+        if (score > g_leaderboard[i].score) {
+            pos = i;
+            break;
+        }
+    }
+
+    if (pos < 10) {
+        for (int i = (g_leaderboard_count > 9 ? 9 : g_leaderboard_count); i > pos; i--) {
+            g_leaderboard[i] = g_leaderboard[i - 1];
+        }
+        g_leaderboard[pos] = new_entry;
+        if (g_leaderboard_count < 10) g_leaderboard_count++;
+        save_leaderboard();
+    }
+}
+
 Entity* get_player() { return &g.entities[0]; }
 
 // Distance and FOV
@@ -481,6 +554,7 @@ int bsp_split(int x, int y, int w, int h, int iter, int* cx, int* cy, int* last_
 }
 
 void generate_map() {
+    rand_seed(g.seed + g.dlevel * 1000);
     for(int y=0; y<H; y++) {
         for(int x=0; x<W; x++) {
             g.map[y][x].ch = '#';
@@ -587,6 +661,7 @@ void init_game() {
     g.char_race = RACE_HUMAN;
     g.char_class = CLASS_FIGHTER;
     g.difficulty = 0;
+    g.seed = 7492;
 }
 
 void finalize_character() {
@@ -711,6 +786,7 @@ void handle_death(Entity* e, Entity* killer) {
     if(e == get_player()) {
         g.state = 1; // dead
         add_msg("You have perished! Game Over.");
+        record_run(0);
     } else {
         if(killer == get_player()) {
             gain_xp(killer, e->xp);
@@ -764,6 +840,7 @@ void handle_death(Entity* e, Entity* killer) {
         
         if(e->ch == '&') {
             g.state = 10; // Victory
+            record_run(1);
         }
     }
 }
@@ -1519,7 +1596,41 @@ void draw_game(HDC hdc) {
         wsprintfA(buf, "Difficulty: %s (Press D to change)", g.difficulty == 0 ? "Normal" : (g.difficulty == 1 ? "Hard" : "Nightmare"));
         TextOutA(memDC, 20, 100, buf, str_len(buf));
         
-        TextOutA(memDC, 20, 140, "Press ENTER to begin your journey...", 36);
+        wsprintfA(buf, "Seed: %u (Press S to randomize)", g.seed);
+        TextOutA(memDC, 20, 120, buf, str_len(buf));
+
+        SetTextColor(memDC, RGB(255, 215, 0));
+        TextOutA(memDC, 20, 150, "Press H to view Run History Leaderboard", 39);
+
+        SetTextColor(memDC, RGB(255, 255, 255));
+        TextOutA(memDC, 20, 180, "Press ENTER to begin your journey...", 36);
+    } else if(g.state == 11) { // Leaderboard screen
+        SetTextColor(memDC, RGB(255, 215, 0));
+        SetBkColor(memDC, RGB(0,0,0));
+        TextOutA(memDC, 20, 20, "RUN HISTORY LEADERBOARD", 23);
+        TextOutA(memDC, 20, 40, "Press ESC or H to return.", 25);
+        
+        load_leaderboard();
+        int y = 80;
+        SetTextColor(memDC, RGB(100, 200, 255));
+        TextOutA(memDC, 20, y, "Rank  Class     Floor  Kills  Gold   Score  Seed     Result", 59);
+        y += char_h * 3 / 2;
+        
+        if (g_leaderboard_count == 0) {
+            SetTextColor(memDC, RGB(150, 150, 150));
+            TextOutA(memDC, 20, y, "No run history recorded yet.", 28);
+        } else {
+            for(int i = 0; i < g_leaderboard_count; i++) {
+                LeaderboardEntry* e = &g_leaderboard[i];
+                char buf[128];
+                const char* clsName = e->class_id == CLASS_FIGHTER ? "Fighter" : (e->class_id == CLASS_ROGUE ? "Rogue" : "Wizard");
+                const char* resStr = e->victory ? "VICTORY" : "DEFEAT";
+                wsprintfA(buf, "#%d    %-8s  %-5d  %-5d  %-5d  %-5d  %-7u  %s", i+1, clsName, e->dlevel, e->kills, e->gold, e->score, e->seed, resStr);
+                SetTextColor(memDC, e->victory ? RGB(100, 255, 100) : RGB(220, 100, 100));
+                TextOutA(memDC, 20, y, buf, str_len(buf));
+                y += char_h;
+            }
+        }
     } else if(g.state == 5) { // char sheet
         SetTextColor(memDC, RGB(255,255,255));
         SetBkColor(memDC, RGB(0,0,0));
@@ -1935,7 +2046,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if(wParam == 'R') g.char_race = (g.char_race + 1) % 3;
                 else if(wParam == 'C') g.char_class = (g.char_class + 1) % 3;
                 else if(wParam == 'D') g.difficulty = (g.difficulty + 1) % 3;
+                else if(wParam == 'S') g.seed = (g.seed * 3 + 1234) % 90000 + 1000;
+                else if(wParam == 'H') g.state = 11;
                 else if(wParam == VK_RETURN) finalize_character();
+            } else if(g.state == 11) { // leaderboard
+                if(wParam == VK_ESCAPE || wParam == 'H') g.state = 4;
             } else if(g.state == 5) { // char sheet
                 if(wParam == VK_ESCAPE || wParam == 'C') g.state = 0;
             } else if(g.state == 6) { // spells
