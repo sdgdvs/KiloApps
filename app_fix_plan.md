@@ -21,8 +21,8 @@
 
 ---
 
-**Target App:** KZip
-**Status:** Next (Pass 2)
+**Target App:** K2048
+**Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
 
@@ -162,3 +162,5 @@ Pass 1 Complete.
 - **KType**: Added ARIA attributes/roles, Arcade Cascade keyboard typing support, event parameter fix, animation loop leak prevention, dynamic word pool replenishment, and safe `localStorage`/Blob export in `ktype.html`. Added persistent font handle cleanup on `WM_DESTROY`, zero-division WPM protection, non-alpha character typing support, and buffer array bounds checks in `main.c`.
 
 - **KVault**: Added `escapeHtml` XSS escaping, explicit ARIA dialog/status attributes (`role="dialog"`, `aria-live="polite"`), focus indicators, `localStorage` try-catch guards, and Escape key modal close handler in `kvault.html`. Resolved CRT-free entrypoint linker issues, added GDI brush/font deletion in `WM_DESTROY`, `secure_zero` for master passwords before memory free, and `EM_SETCUEBANNER` in `main.c`.
+
+- **KZip**: Added `sanitizeFilename` path traversal prevention, 100MB file size bounds, ARIA accessibility attributes, drag-and-drop file loading, ESC modal handler, and XSS `escapeHtml` in `kzip.html`. Added `SanitizeFilename` directory traversal prevention, `lstrcpynA` buffer safety, `HeapAlloc` null-checks, `IsDialogMessage` TAB navigation, and ListBox double-click extract in `main.c`. Pass 2 Complete.
