@@ -31,15 +31,21 @@
 
   /* Header & Toolbar */
   header {
-    background: rgba(10, 15, 25, 0.75);
+    background: rgba(10, 15, 25, 0.85);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 215, 0, 0.25);
-    padding: 10px 20px;
+    padding: 8px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    z-index: 100;
+  }
+
+  .header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    z-index: 100;
   }
 
   .logo-title {
@@ -62,7 +68,7 @@
 
   .toolbar {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
     flex-wrap: wrap;
   }
@@ -72,7 +78,7 @@
     color: #f0f0f0;
     border: 1px solid rgba(255,255,255,0.2);
     border-radius: 6px;
-    padding: 7px 14px;
+    padding: 6px 12px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -106,17 +112,11 @@
     background: linear-gradient(180deg, #1e88e5 0%, #1565c0 100%);
     border-color: #64b5f6;
   }
-  .btn-primary:hover:not(:disabled) {
-    background: linear-gradient(180deg, #42a5f5 0%, #1e88e5 100%);
-  }
 
   .btn-success {
     background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
     border-color: #81c784;
     color: #e8f5e9;
-  }
-  .btn-success:hover:not(:disabled) {
-    background: linear-gradient(180deg, #388e3c 0%, #2e7d32 100%);
   }
 
   .btn-warning {
@@ -124,23 +124,33 @@
     border-color: #ffb74d;
   }
 
+  .btn-skill {
+    background: linear-gradient(180deg, #6b21a8 0%, #3b0764 100%);
+    border-color: #a855f7;
+    color: #f3e8ff;
+  }
+  .btn-skill:hover:not(:disabled) {
+    background: linear-gradient(180deg, #7e22ce 0%, #581c87 100%);
+    border-color: #c084fc;
+  }
+
   select.btn {
     appearance: none;
-    padding-right: 26px;
+    padding-right: 24px;
     background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffd700" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
     background-repeat: no-repeat;
-    background-position: right 8px center;
+    background-position: right 6px center;
   }
 
   /* Status Bar */
   .status-bar {
     display: flex;
-    gap: 16px;
+    gap: 14px;
     font-size: 13px;
     font-weight: 700;
     color: #e0e0e0;
     background: rgba(0,0,0,0.35);
-    padding: 6px 16px;
+    padding: 6px 14px;
     border-radius: 20px;
     border: 1px solid rgba(255, 215, 0, 0.2);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
@@ -154,8 +164,21 @@
   .status-val {
     color: #ffd700;
     font-family: 'Courier New', Courier, monospace;
-    font-size: 15px;
+    font-size: 14px;
     text-shadow: 0 0 5px rgba(255,215,0,0.4);
+  }
+
+  .mode-banner {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #38bdf8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   /* Game Board Layout */
@@ -164,14 +187,14 @@
     position: relative;
     max-width: 920px;
     width: 100%;
-    margin: 20px auto;
+    margin: 16px auto;
     padding: 0 16px;
   }
 
   .top-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
 
   .stock-waste-group, .foundations-group {
@@ -197,11 +220,6 @@
     transition: all 0.2s ease;
   }
 
-  .slot.foundation {
-    border-color: rgba(255, 215, 0, 0.3);
-    background: rgba(0, 0, 0, 0.25);
-  }
-
   .slot.foundation::after {
     content: attr(data-suit);
     position: absolute;
@@ -209,7 +227,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 38px;
-    color: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.15);
     text-shadow: 0 1px 2px rgba(0,0,0,0.5);
   }
 
@@ -247,6 +265,22 @@
 
   .card.red { color: #d32f2f; }
   .card.black { color: #1a1a1a; }
+
+  /* Frozen Card Styling */
+  .card.frozen {
+    border: 3px solid #00e5ff !important;
+    background: #e0f7fa !important;
+    box-shadow: 0 0 16px #00e5ff, inset 0 0 10px rgba(0,229,255,0.4) !important;
+    cursor: not-allowed;
+  }
+  .card.frozen::before {
+    content: '❄️';
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 14px;
+    filter: drop-shadow(0 0 4px #00e5ff);
+  }
 
   .card .card-corner {
     display: flex;
@@ -325,6 +359,15 @@
     box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.3);
   }
   .card.face-down * { display: none; }
+
+  /* X-Ray Vision Overlay for face-down cards */
+  .card.face-down.xray {
+    border-color: #00e5ff;
+    box-shadow: 0 0 14px #00e5ff;
+  }
+  .card.face-down.xray * { display: flex !important; }
+  .card.face-down.xray .card-back-inner { display: none !important; }
+  .card.face-down.xray { opacity: 0.88; background: #0f172a; }
 
   .card-back-inner {
     width: 100%;
@@ -452,9 +495,9 @@
     transform: translate(-50%, -50%) scale(0);
     background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
     color: #000;
-    padding: 28px 56px;
+    padding: 24px 44px;
     border-radius: 20px;
-    font-size: 34px;
+    font-size: 30px;
     font-weight: 900;
     box-shadow: 0 15px 50px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.5);
     z-index: 1000;
@@ -465,6 +508,7 @@
   }
   #win-banner.active {
     transform: translate(-50%, -50%) scale(1);
+    pointer-events: auto;
   }
 
   /* Canvas for Win Waterfall Cascade */
@@ -485,26 +529,43 @@
 <canvas id="win-canvas"></canvas>
 
 <header>
-  <div class="logo-title">
-    <svg class="logo-icon" viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z"/></svg>
-    KSolitaire
-  </div>
+  <div class="header-top">
+    <div class="logo-title">
+      <svg class="logo-icon" viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z"/></svg>
+      KSolitaire
+    </div>
 
-  <div class="status-bar">
-    <div class="status-item">Time: <span id="timer-val" class="status-val">00:00</span></div>
-    <div class="status-item">Moves: <span id="moves-val" class="status-val">0</span></div>
-    <div class="status-item">Score: <span id="score-val" class="status-val">0</span></div>
+    <div class="status-bar">
+      <div class="status-item">Time: <span id="timer-val" class="status-val">00:00</span></div>
+      <div class="status-item">Moves: <span id="moves-val" class="status-val">0</span></div>
+      <div class="status-item"><span id="score-label">Score</span>: <span id="score-val" class="status-val">0</span></div>
+    </div>
   </div>
 
   <div class="toolbar">
     <button class="btn btn-primary" onclick="newGame()">⚡ New Game</button>
     
+    <select id="mode-select" class="btn" onchange="changeGameMode(this.value)">
+      <option value="classic">Classic Solitaire</option>
+      <option value="vegas">Vegas Money Mode</option>
+      <option value="campaign">Campaign Mode (20 Stages)</option>
+    </select>
+
+    <select id="stage-select" class="btn" style="display:none;" onchange="changeStage(this.value)">
+      <!-- Filled dynamically -->
+    </select>
+
     <select id="draw-mode-select" class="btn" onchange="changeDrawMode(this.value)">
       <option value="1">Draw 1</option>
       <option value="3">Draw 3</option>
     </select>
 
-    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Undo (Ctrl+Z)">↩ Undo</button>
+    <!-- Active Skills -->
+    <button id="wand-btn" class="btn btn-skill" onclick="useMagicWand()" title="Magic Wand [W]: Auto play 1 card to foundation">🪄 Wand (<span id="wand-cnt">3</span>)</button>
+    <button id="xray-btn" class="btn btn-skill" onclick="useXRayVision()" title="X-Ray Vision [X]: Reveal face-down cards for 5s">👁️ X-Ray (<span id="xray-cnt">3</span>)</button>
+    <button id="shuffle-btn" class="btn btn-skill" onclick="useShuffleStock()" title="Shuffle Stock [S]: Reshuffle waste/stock pile">🔀 Shuffle (<span id="shuf-cnt">3</span>)</button>
+
+    <button id="undo-btn" class="btn" onclick="undoMove()" disabled title="Free Undo (U / Ctrl+Z)">↩ Undo</button>
     <button id="redo-btn" class="btn" onclick="redoMove()" disabled title="Redo (Ctrl+Y)">↪ Redo</button>
     <button class="btn btn-warning" onclick="giveHint()" title="Hint (Ctrl+H)">💡 Hint</button>
     <button id="autofinish-btn" class="btn btn-success" onclick="autoFinish()" disabled title="Auto Complete remaining cards">✨ Auto-Finish</button>
@@ -526,6 +587,11 @@
 
     <button class="btn" onclick="openStatsModal()">📊 Stats</button>
     <button class="btn" onclick="toggleSound()"><span id="sound-icon">🔊</span></button>
+  </div>
+
+  <div id="mode-info" class="mode-banner">
+    <span id="mode-desc">Classic Klondike Solitaire - Standard Rules</span>
+    <span id="sub-info"></span>
   </div>
 </header>
 
@@ -558,8 +624,9 @@
 
 <!-- Win Banner -->
 <div id="win-banner">
-  🏆 VICTORY! 🏆
+  <div id="win-title">🏆 VICTORY! 🏆</div>
   <div style="font-size: 16px; font-weight: 600; margin-top: 10px;" id="win-details">Score: 0 | Time: 0s</div>
+  <button id="next-stage-btn" class="btn btn-primary" style="margin-top:14px; font-size:16px; padding:8px 18px; display:none;" onclick="advanceNextStage()">Next Stage ➔</button>
 </div>
 
 <!-- Stats Modal -->
@@ -576,6 +643,8 @@
       <div class="stat-card"><div class="lbl">Current Streak</div><div id="st-streak" class="val">0</div></div>
       <div class="stat-card"><div class="lbl">Best Streak</div><div id="st-maxstreak" class="val">0</div></div>
       <div class="stat-card"><div class="lbl">High Score</div><div id="st-highscore" class="val">0</div></div>
+      <div class="stat-card"><div class="lbl">Vegas Bankroll</div><div id="st-vegas" class="val">$0</div></div>
+      <div class="stat-card"><div class="lbl">Max Stage</div><div id="st-stage" class="val">Stage 1</div></div>
       <div class="stat-card"><div class="lbl">Best Time (D1)</div><div id="st-besttime1" class="val">--</div></div>
       <div class="stat-card"><div class="lbl">Best Time (D3)</div><div id="st-besttime3" class="val">--</div></div>
     </div>
@@ -597,19 +666,38 @@ const SUITS = [
 
 const RANKS = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-// --- Court Card Vector Graphics (SVG Strings) ---
+const CAMPAIGN_STAGES = [
+  { stage: 1,  name: "Beginner's Luck",       drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 0, targetCards: 20, desc: "Draw 1 - Target: 20 Foundation Cards" },
+  { stage: 2,  name: "Double Pass",           drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 0, targetCards: 24, desc: "Draw 1 - Limited Stock Recycling (2 Passes)" },
+  { stage: 3,  name: "Cold Snap",             drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 1, targetCards: 28, desc: "Draw 1 - 1 Frozen Card in Tableau" },
+  { stage: 4,  name: "Suit Lock 101",         drawMode: 1, vegasRules: false, suitLocked: true,  frozenCards: 0, targetCards: 32, desc: "Draw 1 - Foundations Suit-Locked" },
+  { stage: 5,  name: "Vegas Debut",           drawMode: 1, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 36, desc: "Draw 1 - Vegas Money Rules (-$52 Start)" },
+  { stage: 6,  name: "Triple Draw",           drawMode: 3, vegasRules: false, suitLocked: false, frozenCards: 0, targetCards: 36, desc: "Draw 3 - Classic Rules" },
+  { stage: 7,  name: "Frostbite",             drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 2, targetCards: 40, desc: "Draw 1 - 2 Frozen Cards" },
+  { stage: 8,  name: "High Roller Vegas",     drawMode: 3, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 40, desc: "Draw 3 - Vegas Money Rules" },
+  { stage: 9,  name: "Lock & Freeze",         drawMode: 1, vegasRules: false, suitLocked: true,  frozenCards: 2, targetCards: 44, desc: "Draw 1 - Suit Lock + 2 Frozen Cards" },
+  { stage: 10, name: "Deep Freeze",           drawMode: 3, vegasRules: false, suitLocked: false, frozenCards: 3, targetCards: 44, desc: "Draw 3 - 3 Frozen Cards" },
+  { stage: 11, name: "Vegas Strict",          drawMode: 3, vegasRules: true,  suitLocked: false, frozenCards: 0, targetCards: 44, desc: "Draw 3 - Vegas Rules (1 Pass Only)" },
+  { stage: 12, name: "Glacial Suits",         drawMode: 1, vegasRules: false, suitLocked: true,  frozenCards: 3, targetCards: 48, desc: "Draw 1 - Suit Lock + 3 Frozen Cards" },
+  { stage: 13, name: "Suit Master",           drawMode: 3, vegasRules: false, suitLocked: true,  frozenCards: 0, targetCards: 48, desc: "Draw 3 - Suit-Locked Foundations" },
+  { stage: 14, name: "Arctic Blast",          drawMode: 1, vegasRules: false, suitLocked: false, frozenCards: 4, targetCards: 48, desc: "Draw 1 - 4 Frozen Cards" },
+  { stage: 15, name: "Vegas Mastery",         drawMode: 3, vegasRules: true,  suitLocked: true,  frozenCards: 0, targetCards: 48, desc: "Draw 3 - Vegas Rules + Suit Lock" },
+  { stage: 16, name: "Glacial Fortress",      drawMode: 3, vegasRules: false, suitLocked: true,  frozenCards: 3, targetCards: 52, desc: "Draw 3 - Suit Lock + 3 Frozen Cards" },
+  { stage: 17, name: "Vegas Peril",           drawMode: 3, vegasRules: true,  suitLocked: false, frozenCards: 3, targetCards: 52, desc: "Draw 3 - Vegas Rules + 3 Frozen Cards" },
+  { stage: 18, name: "High Stakes Ice",       drawMode: 3, vegasRules: true,  suitLocked: true,  frozenCards: 2, targetCards: 52, desc: "Draw 3 - Vegas Rules + Suit Lock + 2 Frozen" },
+  { stage: 19, name: "Ice Citadel",           drawMode: 3, vegasRules: false, suitLocked: true,  frozenCards: 4, targetCards: 52, desc: "Draw 3 - Suit Lock + 4 Frozen Cards" },
+  { stage: 20, name: "Grandmaster Challenge", drawMode: 3, vegasRules: true,  suitLocked: true,  frozenCards: 4, targetCards: 52, desc: "Draw 3 - Vegas + Suit Lock + 4 Frozen Cards" }
+];
+
 const COURT_SVGS = {
   J: `<svg class="court-svg" viewBox="0 0 60 90">
         <rect width="60" height="90" fill="#1e293b"/>
         <path d="M10 15 L50 15 L50 75 L10 75 Z" fill="#2563eb" stroke="#ffd700" stroke-width="2"/>
         <circle cx="30" cy="35" r="14" fill="#ffedd5"/>
-        <!-- Knight Cap & Feather -->
         <path d="M16 28 C20 18, 40 18, 44 28 Z" fill="#dc2626"/>
         <path d="M40 24 Q52 10 48 4" fill="#38bdf8" stroke="#fff" stroke-width="1.5"/>
-        <!-- Eyes & Visor slit -->
         <line x1="24" y1="34" x2="28" y2="34" stroke="#1e293b" stroke-width="2"/>
         <line x1="32" y1="34" x2="36" y2="34" stroke="#1e293b" stroke-width="2"/>
-        <!-- Halberd Spear -->
         <line x1="12" y1="18" x2="12" y2="78" stroke="#94a3b8" stroke-width="2.5"/>
         <path d="M6 22 L12 12 L18 22 Z" fill="#cbd5e1"/>
       </svg>`,
@@ -617,16 +705,13 @@ const COURT_SVGS = {
         <rect width="60" height="90" fill="#2e1065"/>
         <path d="M10 15 L50 15 L50 75 L10 75 Z" fill="#7e22ce" stroke="#ffd700" stroke-width="2"/>
         <circle cx="30" cy="35" r="14" fill="#fef3c7"/>
-        <!-- Crown / Tiara -->
         <path d="M18 25 L23 16 L30 22 L37 16 L42 25 Z" fill="#ffd700" stroke="#b45309" stroke-width="1"/>
         <circle cx="23" cy="16" r="2" fill="#ef4444"/>
         <circle cx="30" cy="22" r="2" fill="#3b82f6"/>
         <circle cx="37" cy="16" r="2" fill="#ef4444"/>
-        <!-- Eyes & Lips -->
         <circle cx="25" cy="34" r="1.5" fill="#3b0764"/>
         <circle cx="35" cy="34" r="1.5" fill="#3b0764"/>
         <path d="M27 40 Q30 43 33 40" fill="none" stroke="#dc2626" stroke-width="2"/>
-        <!-- Rose -->
         <circle cx="44" cy="58" r="6" fill="#f43f5e"/>
         <path d="M44 64 L44 76" stroke="#22c55e" stroke-width="2"/>
       </svg>`,
@@ -634,20 +719,16 @@ const COURT_SVGS = {
         <rect width="60" height="90" fill="#450a0a"/>
         <path d="M10 15 L50 15 L50 75 L10 75 Z" fill="#b91c1c" stroke="#ffd700" stroke-width="2"/>
         <circle cx="30" cy="36" r="15" fill="#ffedd5"/>
-        <!-- King Crown -->
         <path d="M15 24 L22 12 L30 20 L38 12 L45 24 Z" fill="#ffd700" stroke="#78350f" stroke-width="1.5"/>
         <circle cx="30" cy="11" r="3" fill="#ef4444"/>
-        <!-- Beard & Eyes -->
         <path d="M20 42 Q30 52 40 42 Z" fill="#78350f"/>
         <circle cx="24" cy="34" r="1.5" fill="#1e293b"/>
         <circle cx="36" cy="34" r="1.5" fill="#1e293b"/>
-        <!-- Golden Scepter -->
         <line x1="46" y1="20" x2="46" y2="75" stroke="#ffd700" stroke-width="3"/>
         <circle cx="46" cy="18" r="4" fill="#ef4444" stroke="#ffd700" stroke-width="1"/>
       </svg>`
 };
 
-// Matrix positions for Pip layout (x: %, y: %)
 const PIP_POSITIONS = {
   2: [[50,20], [50,80]],
   3: [[50,20], [50,50], [50,80]],
@@ -666,7 +747,21 @@ let waste = [];
 let foundations = [[], [], [], []];
 let tableau = [[], [], [], [], [], [], []];
 
+let gameMode = 'classic'; // 'classic', 'vegas', 'campaign'
+let campaignStage = 1;
 let drawMode = 1;
+let vegasRules = false;
+let suitLocked = false;
+let targetCards = 52;
+let stockPasses = 0;
+let maxStockPasses = 0;
+
+let wandCharges = 3;
+let xrayCharges = 3;
+let shuffleCharges = 3;
+let xrayTimer = 0;
+let xrayInterval = null;
+
 let movesCount = 0;
 let scoreCount = 0;
 let timerSeconds = 0;
@@ -687,6 +782,8 @@ let stats = {
   currentStreak: 0,
   bestStreak: 0,
   highScore: 0,
+  vegasCash: 0,
+  maxCampaignStage: 1,
   bestTimeD1: null,
   bestTimeD3: null
 };
@@ -715,6 +812,8 @@ function playSound(name) {
   if (name === 'flip') playTone(400, 'sine', 0.08);
   else if (name === 'place') playTone(580, 'triangle', 0.1);
   else if (name === 'foundation') playTone(880, 'square', 0.15);
+  else if (name === 'skill') playTone(1050, 'sine', 0.2);
+  else if (name === 'error') playTone(180, 'sawtooth', 0.2);
   else if (name === 'win') {
     playTone(523.25, 'triangle', 0.2);
     setTimeout(() => playTone(659.25, 'triangle', 0.2), 150);
@@ -726,13 +825,32 @@ function playSound(name) {
 // --- Initialization ---
 function init() {
   loadStats();
+  populateStageSelect();
   loadSavedGame();
-  
+
   window.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); undoMove(); }
-    else if (e.ctrlKey && e.key.toLowerCase() === 'y') { e.preventDefault(); redoMove(); }
-    else if (e.ctrlKey && e.key.toLowerCase() === 'h') { e.preventDefault(); giveHint(); }
-    else if (e.ctrlKey && e.key.toLowerCase() === 'f') { e.preventDefault(); autoFinish(); }
+    let k = e.key.toLowerCase();
+    if (e.ctrlKey && k === 'z') { e.preventDefault(); undoMove(); }
+    else if (e.ctrlKey && k === 'y') { e.preventDefault(); redoMove(); }
+    else if (e.ctrlKey && k === 'h') { e.preventDefault(); giveHint(); }
+    else if (e.ctrlKey && k === 'f') { e.preventDefault(); autoFinish(); }
+    else if (k === 'w' && !e.ctrlKey) { useMagicWand(); }
+    else if (k === 'x' && !e.ctrlKey) { useXRayVision(); }
+    else if (k === 's' && !e.ctrlKey) { useShuffleStock(); }
+    else if (k === 'u' && !e.ctrlKey) { undoMove(); }
+  });
+}
+
+function populateStageSelect() {
+  let select = document.getElementById('stage-select');
+  select.innerHTML = '';
+  CAMPAIGN_STAGES.forEach(stg => {
+    let opt = document.createElement('option');
+    opt.value = stg.stage;
+    let locked = stg.stage > stats.maxCampaignStage;
+    opt.textContent = `Stage ${stg.stage}: ${stg.name}${locked ? ' 🔒' : ''}`;
+    opt.disabled = locked;
+    select.appendChild(opt);
   });
 }
 
@@ -741,10 +859,12 @@ function loadStats() {
     let d = localStorage.getItem('ksolitaire_stats');
     if (d) stats = Object.assign(stats, JSON.parse(d));
   } catch(e){}
+  if (!stats.maxCampaignStage) stats.maxCampaignStage = 1;
 }
 
 function saveStats() {
   try { localStorage.setItem('ksolitaire_stats', JSON.stringify(stats)); } catch(e){}
+  populateStageSelect();
 }
 
 // --- Deck & Deal ---
@@ -753,7 +873,7 @@ function createDeck() {
   let id = 1;
   for (let s = 0; s < 4; s++) {
     for (let r = 1; r <= 13; r++) {
-      deck.push({ id: id++, suit: s, rank: r, faceUp: false });
+      deck.push({ id: id++, suit: s, rank: r, faceUp: false, isFrozen: false });
     }
   }
   return deck;
@@ -769,20 +889,60 @@ function shuffle(deck) {
 
 function newGame() {
   stopTimer();
+  stopXRay();
   timerSeconds = 0;
   movesCount = 0;
-  scoreCount = 0;
+  stockPasses = 0;
   gameStarted = false;
   gameWon = false;
   selectedSelection = null;
   undoStack = [];
   redoStack = [];
 
+  wandCharges = 3;
+  xrayCharges = 3;
+  shuffleCharges = 3;
+
   document.getElementById('win-banner').classList.remove('active');
+  document.getElementById('next-stage-btn').style.display = 'none';
   const canvas = document.getElementById('win-canvas');
   canvas.style.display = 'none';
 
-  updateUIStats();
+  let frozenCount = 0;
+
+  if (gameMode === 'campaign') {
+    let cfg = CAMPAIGN_STAGES[campaignStage - 1];
+    drawMode = cfg.drawMode;
+    vegasRules = cfg.vegasRules;
+    suitLocked = cfg.suitLocked;
+    targetCards = cfg.targetCards;
+    frozenCount = cfg.frozenCards;
+    scoreCount = vegasRules ? -52 : 0;
+    maxStockPasses = vegasRules ? (drawMode === 1 ? 1 : 3) : (cfg.stage === 2 ? 2 : 0);
+    document.getElementById('mode-desc').textContent = `Campaign Stage ${campaignStage}/20: ${cfg.name}`;
+    document.getElementById('sub-info').textContent = cfg.desc;
+  } else if (gameMode === 'vegas') {
+    vegasRules = true;
+    suitLocked = false;
+    targetCards = 52;
+    scoreCount = -52;
+    maxStockPasses = (drawMode === 1 ? 1 : 3);
+    frozenCount = 0;
+    document.getElementById('mode-desc').textContent = "Vegas Money Mode - Buy-in -$52 ($5/foundation card)";
+    document.getElementById('sub-info').textContent = `Total Vegas Cash: $${stats.vegasCash}`;
+  } else {
+    vegasRules = false;
+    suitLocked = false;
+    targetCards = 52;
+    scoreCount = 0;
+    maxStockPasses = 0;
+    frozenCount = 0;
+    document.getElementById('mode-desc').textContent = "Classic Solitaire - Standard Klondike Rules";
+    document.getElementById('sub-info').textContent = "";
+  }
+
+  document.getElementById('draw-mode-select').value = drawMode;
+  document.getElementById('score-label').textContent = vegasRules ? "Cash" : "Score";
 
   let deck = shuffle(createDeck());
   foundations = [[], [], [], []];
@@ -794,6 +954,21 @@ function newGame() {
       let card = deck.pop();
       if (row === col) card.faceUp = true;
       tableau[col].push(card);
+    }
+  }
+
+  // Freeze initial face-up cards if required
+  if (frozenCount > 0) {
+    let placed = 0;
+    let attempts = 0;
+    while (placed < frozenCount && attempts < 50) {
+      attempts++;
+      let col = Math.floor(Math.random() * 7);
+      let topCard = tableau[col][tableau[col].length - 1];
+      if (!topCard.isFrozen) {
+        topCard.isFrozen = true;
+        placed++;
+      }
     }
   }
 
@@ -827,7 +1002,13 @@ function updateTimerDisplay() {
 
 function updateUIStats() {
   document.getElementById('moves-val').textContent = movesCount;
-  document.getElementById('score-val').textContent = scoreCount;
+  document.getElementById('score-val').textContent = vegasRules ? (scoreCount >= 0 ? `$${scoreCount}` : `-$${Math.abs(scoreCount)}`) : scoreCount;
+  document.getElementById('wand-cnt').textContent = wandCharges;
+  document.getElementById('xray-cnt').textContent = xrayCharges;
+  document.getElementById('shuf-cnt').textContent = shuffleCharges;
+  document.getElementById('wand-btn').disabled = wandCharges <= 0 || gameWon;
+  document.getElementById('xray-btn').disabled = xrayCharges <= 0 || gameWon;
+  document.getElementById('shuffle-btn').disabled = shuffleCharges <= 0 || gameWon;
   document.getElementById('undo-btn').disabled = undoStack.length === 0;
   document.getElementById('redo-btn').disabled = redoStack.length === 0;
   document.getElementById('autofinish-btn').disabled = !canAutoFinish();
@@ -843,7 +1024,11 @@ function saveState(recordUndo = false) {
     movesCount,
     scoreCount,
     timerSeconds,
-    gameStarted
+    gameStarted,
+    stockPasses,
+    wandCharges,
+    xrayCharges,
+    shuffleCharges
   };
 
   if (recordUndo) {
@@ -871,6 +1056,11 @@ function loadSavedGame() {
       scoreCount = snapshot.scoreCount;
       timerSeconds = snapshot.timerSeconds;
       gameStarted = snapshot.gameStarted;
+      stockPasses = snapshot.stockPasses || 0;
+      wandCharges = snapshot.wandCharges !== undefined ? snapshot.wandCharges : 3;
+      xrayCharges = snapshot.xrayCharges !== undefined ? snapshot.xrayCharges : 3;
+      shuffleCharges = snapshot.shuffleCharges !== undefined ? snapshot.shuffleCharges : 3;
+
       if (gameStarted) startTimer();
       updateTimerDisplay();
       render();
@@ -891,7 +1081,11 @@ function undoMove() {
     movesCount,
     scoreCount,
     timerSeconds,
-    gameStarted
+    gameStarted,
+    stockPasses,
+    wandCharges,
+    xrayCharges,
+    shuffleCharges
   };
   redoStack.push(currentSnapshot);
 
@@ -904,6 +1098,10 @@ function undoMove() {
   scoreCount = prev.scoreCount;
   timerSeconds = prev.timerSeconds;
   gameStarted = prev.gameStarted;
+  stockPasses = prev.stockPasses || 0;
+  wandCharges = prev.wandCharges !== undefined ? prev.wandCharges : 3;
+  xrayCharges = prev.xrayCharges !== undefined ? prev.xrayCharges : 3;
+  shuffleCharges = prev.shuffleCharges !== undefined ? prev.shuffleCharges : 3;
 
   selectedSelection = null;
   clearHints();
@@ -923,7 +1121,11 @@ function redoMove() {
     movesCount,
     scoreCount,
     timerSeconds,
-    gameStarted
+    gameStarted,
+    stockPasses,
+    wandCharges,
+    xrayCharges,
+    shuffleCharges
   };
   undoStack.push(currentSnapshot);
 
@@ -936,6 +1138,10 @@ function redoMove() {
   scoreCount = next.scoreCount;
   timerSeconds = next.timerSeconds;
   gameStarted = next.gameStarted;
+  stockPasses = next.stockPasses || 0;
+  wandCharges = next.wandCharges !== undefined ? next.wandCharges : 3;
+  xrayCharges = next.xrayCharges !== undefined ? next.xrayCharges : 3;
+  shuffleCharges = next.shuffleCharges !== undefined ? next.shuffleCharges : 3;
 
   selectedSelection = null;
   clearHints();
@@ -947,21 +1153,113 @@ function redoMove() {
 // --- Move Validation ---
 function canMoveToFoundation(card, fIdx) {
   let fPile = foundations[fIdx];
-  if (card.suit !== fIdx) return false;
-  if (fPile.length === 0) return card.rank === 1; // Ace
-  let topCard = fPile[fPile.length - 1];
-  return card.rank === topCard.rank + 1;
+  if (suitLocked) {
+    if (card.suit !== fIdx) return false;
+    if (fPile.length === 0) return card.rank === 1;
+    let topCard = fPile[fPile.length - 1];
+    return card.rank === topCard.rank + 1;
+  } else {
+    if (fPile.length === 0) return card.rank === 1;
+    let topCard = fPile[fPile.length - 1];
+    if (card.suit !== topCard.suit) return false;
+    return card.rank === topCard.rank + 1;
+  }
 }
 
 function canMoveToTableau(cardsToMove, tIdx) {
   let topMoveCard = cardsToMove[0];
   let tPile = tableau[tIdx];
-  if (tPile.length === 0) return topMoveCard.rank === 13; // King only
+  if (tPile.length === 0) return topMoveCard.rank === 13;
   let targetCard = tPile[tPile.length - 1];
   if (!targetCard.faceUp) return false;
   let targetSuitObj = SUITS[targetCard.suit];
   let moveSuitObj = SUITS[topMoveCard.suit];
-  return (targetSuitObj.color !== moveSuitObj.color) && (targetCard.rank === topMoveCard.rank + 1);
+  return (targetSuitObj.color !== moveSuitObj.color) && (targetCard.rank === topCard.rank + 1);
+}
+
+function thawAdjacent(colA, colB) {
+  let minC = Math.max(0, Math.min(colA, colB) - 1);
+  let maxC = Math.min(6, Math.max(colA, colB) + 1);
+  for (let c = minC; c <= maxC; c++) {
+    tableau[c].forEach(card => card.isFrozen = false);
+  }
+}
+
+// --- Active Skills Implementation ---
+function useMagicWand() {
+  if (wandCharges <= 0 || gameWon) { playSound('error'); return; }
+
+  // 1. Search tableau top cards
+  for (let t = 0; t < 7; t++) {
+    if (tableau[t].length > 0) {
+      let card = tableau[t][tableau[t].length - 1];
+      if (card.faceUp && !card.isFrozen) {
+        for (let f = 0; f < 4; f++) {
+          if (canMoveToFoundation(card, f)) {
+            wandCharges--;
+            attemptMove({ type: 'tableau', pileIdx: t, cardIdx: tableau[t].length - 1 }, 'foundation', f);
+            playSound('skill');
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // 2. Search waste
+  if (waste.length > 0) {
+    let card = waste[waste.length - 1];
+    for (let f = 0; f < 4; f++) {
+      if (canMoveToFoundation(card, f)) {
+        wandCharges--;
+        attemptMove({ type: 'waste', pileIdx: 0, cardIdx: waste.length - 1 }, 'foundation', f);
+        playSound('skill');
+        return;
+      }
+    }
+  }
+
+  playSound('error');
+}
+
+function useXRayVision() {
+  if (xrayCharges <= 0 || gameWon) { playSound('error'); return; }
+  xrayCharges--;
+  xrayTimer = 5;
+  playSound('skill');
+
+  if (xrayInterval) clearInterval(xrayInterval);
+  xrayInterval = setInterval(() => {
+    xrayTimer--;
+    if (xrayTimer <= 0) {
+      stopXRay();
+    }
+    render();
+  }, 1000);
+
+  render();
+}
+
+function stopXRay() {
+  if (xrayInterval) { clearInterval(xrayInterval); xrayInterval = null; }
+  xrayTimer = 0;
+  render();
+}
+
+function useShuffleStock() {
+  if (shuffleCharges <= 0 || gameWon) { playSound('error'); return; }
+  if (stock.length === 0 && waste.length === 0) { playSound('error'); return; }
+
+  saveState(true);
+  shuffleCharges--;
+  let pool = [];
+  while (stock.length > 0) { let c = stock.pop(); c.faceUp = false; pool.push(c); }
+  while (waste.length > 0) { let c = waste.pop(); c.faceUp = false; pool.push(c); }
+
+  stock = shuffle(pool);
+  movesCount++;
+  playSound('skill');
+  render();
 }
 
 // --- Player Actions ---
@@ -974,6 +1272,11 @@ function handleStockClick() {
 
   if (stock.length === 0) {
     if (waste.length === 0) return;
+    if (maxStockPasses > 0 && stockPasses >= maxStockPasses) {
+      playSound('error');
+      return;
+    }
+    stockPasses++;
     while (waste.length > 0) {
       let card = waste.pop();
       card.faceUp = false;
@@ -1006,10 +1309,11 @@ function handleCardClick(type, pileIdx, cardIdx, event) {
   if (type === 'tableau') {
     let pile = tableau[pileIdx];
     let card = pile[cardIdx];
+    if (card.isFrozen) { playSound('error'); return; }
     if (!card.faceUp && cardIdx === pile.length - 1) {
       saveState(true);
       card.faceUp = true;
-      scoreCount += 5;
+      if (!vegasRules) scoreCount += 5;
       movesCount++;
       playSound('flip');
       render();
@@ -1065,7 +1369,10 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
     card = tableau[pileIdx][cardIdx];
   }
 
-  if (!card || !card.faceUp) return;
+  if (!card || !card.faceUp || card.isFrozen) {
+    if (card && card.isFrozen) playSound('error');
+    return;
+  }
 
   for (let f = 0; f < 4; f++) {
     if (canMoveToFoundation(card, f)) {
@@ -1074,13 +1381,14 @@ function handleCardDoubleClick(type, pileIdx, cardIdx, event) {
       else if (type === 'tableau') tableau[pileIdx].pop();
 
       foundations[f].push(card);
-      scoreCount += 10;
+      scoreCount += vegasRules ? 5 : 10;
       movesCount++;
       playSound('foundation');
       
       if (type === 'tableau' && tableau[pileIdx].length > 0) {
         let top = tableau[pileIdx][tableau[pileIdx].length - 1];
-        if (!top.faceUp) { top.faceUp = true; scoreCount += 5; }
+        if (!top.faceUp) { top.faceUp = true; if (!vegasRules) scoreCount += 5; }
+        thawAdjacent(pileIdx, pileIdx);
       }
 
       selectedSelection = null;
@@ -1099,6 +1407,9 @@ function attemptMove(src, dstType, dstPileIdx) {
     cardsToMove.push(waste[waste.length - 1]);
   } else if (src.type === 'tableau') {
     let pile = tableau[src.pileIdx];
+    for (let i = src.cardIdx; i < pile.length; i++) {
+      if (pile[i].isFrozen) { playSound('error'); return false; }
+    }
     cardsToMove = pile.slice(src.cardIdx);
   } else if (src.type === 'foundation') {
     let fPile = foundations[src.pileIdx];
@@ -1125,11 +1436,13 @@ function attemptMove(src, dstType, dstPileIdx) {
 
   if (dstType === 'foundation') {
     foundations[dstPileIdx].push(cardsToMove[0]);
-    scoreCount += (src.type === 'waste' ? 10 : (src.type === 'tableau' ? 10 : 0));
+    scoreCount += vegasRules ? 5 : (src.type === 'waste' ? 10 : (src.type === 'tableau' ? 10 : 0));
     playSound('foundation');
   } else if (dstType === 'tableau') {
     tableau[dstPileIdx].push(...cardsToMove);
-    scoreCount += (src.type === 'waste' ? 5 : (src.type === 'foundation' ? -15 : 0));
+    if (!vegasRules) {
+      scoreCount += (src.type === 'waste' ? 5 : (src.type === 'foundation' ? -15 : 0));
+    }
     playSound('place');
   }
 
@@ -1137,8 +1450,12 @@ function attemptMove(src, dstType, dstPileIdx) {
     let top = tableau[src.pileIdx][tableau[src.pileIdx].length - 1];
     if (!top.faceUp) {
       top.faceUp = true;
-      scoreCount += 5;
+      if (!vegasRules) scoreCount += 5;
     }
+  }
+
+  if (src.type === 'tableau' || dstType === 'tableau') {
+    thawAdjacent(src.type === 'tableau' ? src.pileIdx : dstPileIdx, dstType === 'tableau' ? dstPileIdx : src.pileIdx);
   }
 
   movesCount++;
@@ -1163,7 +1480,7 @@ function giveHint() {
   for (let t = 0; t < 7; t++) {
     if (tableau[t].length > 0) {
       let card = tableau[t][tableau[t].length - 1];
-      if (card.faceUp) {
+      if (card.faceUp && !card.isFrozen) {
         for (let f = 0; f < 4; f++) {
           if (canMoveToFoundation(card, f)) {
             activeHint = { srcType: 'tableau', srcPile: t, srcCardIdx: tableau[t].length - 1, dstType: 'foundation', dstPile: f };
@@ -1188,8 +1505,8 @@ function giveHint() {
 
   for (let srcT = 0; srcT < 7; srcT++) {
     let pile = tableau[srcT];
-    let firstFaceUpIdx = pile.findIndex(c => c.faceUp);
-    if (firstFaceUpIdx > 0) {
+    let firstFaceUpIdx = pile.findIndex(c => c.faceUp && !c.isFrozen);
+    if (firstFaceUpIdx >= 0) {
       let cardToMove = pile[firstFaceUpIdx];
       for (let dstT = 0; dstT < 7; dstT++) {
         if (srcT !== dstT && canMoveToTableau([cardToMove], dstT)) {
@@ -1248,7 +1565,7 @@ function canAutoFinish() {
   if (stock.length > 0 || waste.length > 0) return false;
   for (let t = 0; t < 7; t++) {
     for (let c of tableau[t]) {
-      if (!c.faceUp) return false;
+      if (!c.faceUp || c.isFrozen) return false;
     }
   }
   return true;
@@ -1283,9 +1600,10 @@ function autoFinish() {
 // --- Victory Detection & Solitaire Cascade Waterfall ---
 function checkWin() {
   let totalFoundation = foundations.reduce((acc, f) => acc + f.length, 0);
-  if (totalFoundation === 52 && !gameWon) {
+  if (totalFoundation >= targetCards && !gameWon) {
     gameWon = true;
     stopTimer();
+    stopXRay();
     playSound('win');
 
     stats.played++;
@@ -1293,6 +1611,7 @@ function checkWin() {
     stats.currentStreak++;
     if (stats.currentStreak > stats.bestStreak) stats.bestStreak = stats.currentStreak;
     if (scoreCount > stats.highScore) stats.highScore = scoreCount;
+    if (vegasRules) stats.vegasCash += scoreCount;
 
     if (drawMode === 1) {
       if (!stats.bestTimeD1 || timerSeconds < stats.bestTimeD1) stats.bestTimeD1 = timerSeconds;
@@ -1300,14 +1619,39 @@ function checkWin() {
       if (!stats.bestTimeD3 || timerSeconds < stats.bestTimeD3) stats.bestTimeD3 = timerSeconds;
     }
 
+    if (gameMode === 'campaign' && campaignStage < 20) {
+      if (campaignStage + 1 > stats.maxCampaignStage) {
+        stats.maxCampaignStage = campaignStage + 1;
+      }
+      document.getElementById('next-stage-btn').style.display = 'inline-block';
+    }
+
     saveStats();
 
     let m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
     let s = (timerSeconds % 60).toString().padStart(2, '0');
-    document.getElementById('win-details').textContent = `Score: ${scoreCount} | Time: ${m}:${s} | Moves: ${movesCount}`;
-    document.getElementById('win-banner').classList.add('active');
 
+    if (gameMode === 'campaign') {
+      document.getElementById('win-title').textContent = campaignStage === 20 ? '👑 GRANDMASTER VICTORIOUS! 👑' : `🏆 STAGE ${campaignStage} CLEARED! 🏆`;
+      document.getElementById('win-details').textContent = `Stage: ${CAMPAIGN_STAGES[campaignStage - 1].name} | Score: ${scoreCount} | Time: ${m}:${s}`;
+    } else if (gameMode === 'vegas') {
+      document.getElementById('win-title').textContent = '💰 VEGAS WINNER! 💰';
+      document.getElementById('win-details').textContent = `Earnings: $${scoreCount} | Vegas Bankroll: $${stats.vegasCash} | Time: ${m}:${s}`;
+    } else {
+      document.getElementById('win-title').textContent = '🏆 VICTORY! 🏆';
+      document.getElementById('win-details').textContent = `Score: ${scoreCount} | Time: ${m}:${s} | Moves: ${movesCount}`;
+    }
+
+    document.getElementById('win-banner').classList.add('active');
     startWinCascade();
+  }
+}
+
+function advanceNextStage() {
+  if (campaignStage < 20) {
+    campaignStage++;
+    document.getElementById('stage-select').value = campaignStage;
+    newGame();
   }
 }
 
@@ -1346,16 +1690,15 @@ function startWinCascade() {
         c.active = true;
       }
       if (c.active) {
-        // Draw card onto canvas (stamping trail effect)
         drawCardToCanvas(ctx, c.card, c.x, c.y);
         
         c.x += c.vx;
         c.y += c.vy;
-        c.vy += 0.75; // Gravity
+        c.vy += 0.75;
 
         if (c.y + 118 >= canvas.height) {
           c.y = canvas.height - 118;
-          c.vy = -c.vy * 0.85; // Bounce
+          c.vy = -c.vy * 0.85;
         }
 
         if (c.x <= 0 || c.x + 84 >= canvas.width) {
@@ -1477,14 +1820,22 @@ function createCardEl(card) {
   let el = document.createElement('div');
   el.className = `card ${SUITS[card.suit].color}`;
   
+  if (card.isFrozen) {
+    el.classList.add('frozen');
+  }
+
   if (!card.faceUp) {
     el.classList.add('face-down');
-    el.innerHTML = `
-      <div class="card-back-inner">
-        <svg class="card-back-logo" viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z"/></svg>
-      </div>
-    `;
-    return el;
+    if (xrayTimer > 0) {
+      el.classList.add('xray');
+    } else {
+      el.innerHTML = `
+        <div class="card-back-inner">
+          <svg class="card-back-logo" viewBox="0 0 24 24"><path d="M12 2C9 6.5 4 10 4 14.5A4.5 4.5 0 008.5 19H11v3h2v-3h2.5A4.5 4.5 0 0020 14.5C20 10 15 6.5 12 2z"/></svg>
+        </div>
+      `;
+      return el;
+    }
   }
 
   let suitObj = SUITS[card.suit];
@@ -1493,14 +1844,11 @@ function createCardEl(card) {
 
   let centerHTML = '';
   if (card.rank === 1) {
-    // Ace Centerpiece
     centerHTML = `<div class="ace-centerpiece">${suitObj.svg}</div>`;
   } else if (card.rank >= 11) {
-    // Court Cards (J, Q, K)
     let courtKey = rankStr;
     centerHTML = `<div class="court-frame">${COURT_SVGS[courtKey]}</div>`;
   } else {
-    // Pip Matrix (2 to 10)
     let pips = PIP_POSITIONS[card.rank] || [];
     let pipItems = pips.map(pos => `<div class="pip-icon" style="left:${pos[0]}%; top:${pos[1]}%;">${suitObj.svg}</div>`).join('');
     centerHTML = `<div class="pip-container">${pipItems}</div>`;
@@ -1522,6 +1870,17 @@ function createCardEl(card) {
 }
 
 // --- Menu Controls ---
+function changeGameMode(val) {
+  gameMode = val;
+  document.getElementById('stage-select').style.display = (gameMode === 'campaign') ? 'inline-flex' : 'none';
+  newGame();
+}
+
+function changeStage(val) {
+  campaignStage = parseInt(val);
+  newGame();
+}
+
 function changeDrawMode(val) {
   drawMode = parseInt(val);
   newGame();
@@ -1553,6 +1912,8 @@ function openStatsModal() {
   document.getElementById('st-streak').textContent = stats.currentStreak;
   document.getElementById('st-maxstreak').textContent = stats.bestStreak;
   document.getElementById('st-highscore').textContent = stats.highScore;
+  document.getElementById('st-vegas').textContent = `$${stats.vegasCash}`;
+  document.getElementById('st-stage').textContent = `Stage ${stats.maxCampaignStage}`;
 
   let fmtTime = (sec) => {
     if (!sec) return '--';
@@ -1573,7 +1934,7 @@ function closeStatsModal() {
 
 function resetStats() {
   if (confirm("Are you sure you want to reset all game statistics?")) {
-    stats = { played: 0, wins: 0, currentStreak: 0, bestStreak: 0, highScore: 0, bestTimeD1: null, bestTimeD3: null };
+    stats = { played: 0, wins: 0, currentStreak: 0, bestStreak: 0, highScore: 0, vegasCash: 0, maxCampaignStage: 1, bestTimeD1: null, bestTimeD3: null };
     saveStats();
     openStatsModal();
   }

@@ -12,15 +12,28 @@
 #define ID_LOAD_GAME      1009
 #define ID_STATS          1010
 #define ID_RESET_STATS    1011
+
 #define ID_THEME_BLUE     1020
 #define ID_THEME_CRIMSON  1021
 #define ID_THEME_EMERALD  1022
 #define ID_THEME_CYBER    1023
 #define ID_THEME_GOLD     1024
+
 #define ID_FELT_GREEN     1030
 #define ID_FELT_SLATE     1031
 #define ID_FELT_INDIGO    1032
 #define ID_FELT_CRIMSON   1033
+
+#define ID_MODE_CLASSIC   1040
+#define ID_MODE_VEGAS     1041
+#define ID_MODE_CAMPAIGN  1042
+#define ID_STAGE_PREV     1043
+#define ID_STAGE_NEXT     1044
+
+#define ID_SKILL_WAND     1050
+#define ID_SKILL_XRAY     1051
+#define ID_SKILL_SHUFFLE  1052
+#define ID_SKILL_UNDO     1053
 
 #define CARD_W 84
 #define CARD_H 118
@@ -28,9 +41,10 @@
 #define GAP_Y  16
 
 typedef struct {
-    int suit;   // 0=Hearts, 1=Diamonds, 2=Clubs, 3=Spades
-    int rank;   // 1 (Ace) to 13 (King)
+    int suit;       // 0=Hearts, 1=Diamonds, 2=Clubs, 3=Spades
+    int rank;       // 1 (Ace) to 13 (King)
     int faceUp;
+    int isFrozen;   // 1 if frozen card
 } Card;
 
 typedef struct {
@@ -42,6 +56,7 @@ typedef struct {
 
     Card foundations[4][13];
     int foundation_cnt[4];
+    int foundation_suit[4]; // Suit bound to foundation pile (-1 if empty & not locked)
 
     Card tableau[7][21];
     int tableau_cnt[7];
@@ -50,7 +65,19 @@ typedef struct {
     int score;
     int timerSeconds;
     int gameStarted;
-    int drawMode; // 1 or 3
+    int drawMode;       // 1 or 3
+    int gameMode;       // 0 = Classic, 1 = Campaign, 2 = Vegas Money Mode
+    int campaignStage;  // 1 to 20
+    int vegasRules;     // 1 if Vegas scoring applies (-$52 buyin, +$5 per foundation card)
+    int stockPasses;    // Stock recycles count
+    int maxStockPasses; // Pass cap (1 for D1 Vegas, 3 for D3 Vegas, 0 = infinite)
+    int suitLocked;     // 1 if foundations are suit locked (0=H, 1=D, 2=C, 3=S)
+    int targetCards;    // Foundation card goal to win
+
+    int wandCharges;    // Magic Wand uses (default 3)
+    int xrayCharges;    // X-Ray Vision uses (default 3)
+    int shuffleCharges; // Stock Shuffle uses (default 3)
+    int xrayTimer;      // X-Ray vision active timer (seconds)
 } SolitaireState;
 
 typedef struct {
@@ -61,7 +88,43 @@ typedef struct {
     int highScore;
     int bestTimeD1;
     int bestTimeD3;
+    int vegasCash;         // Cumulative Vegas Bankroll ($)
+    int maxCampaignStage;  // Highest stage unlocked (1..20)
 } SolitaireStats;
+
+typedef struct {
+    int stage;
+    const char* name;
+    int drawMode;
+    int vegasRules;
+    int suitLocked;
+    int frozenCards;
+    int targetCards;
+    const char* desc;
+} StageConfig;
+
+static const StageConfig CAMPAIGN_STAGES[20] = {
+    {1,  "Beginner's Luck",       1, 0, 0, 0, 20, "Draw 1 - Target: 20 Foundation Cards"},
+    {2,  "Double Pass",           1, 0, 0, 0, 24, "Draw 1 - Target: 24 Foundation Cards"},
+    {3,  "Cold Snap",             1, 0, 0, 1, 28, "Draw 1 - 1 Frozen Card in Tableau"},
+    {4,  "Suit Lock 101",         1, 0, 1, 0, 32, "Draw 1 - Foundations Suit-Locked"},
+    {5,  "Vegas Debut",           1, 1, 0, 0, 36, "Draw 1 - Vegas Money Rules (-$52 Start)"},
+    {6,  "Triple Draw",           3, 0, 0, 0, 36, "Draw 3 - Classic Rules"},
+    {7,  "Frostbite",             1, 0, 0, 2, 40, "Draw 1 - 2 Frozen Cards"},
+    {8,  "High Roller Vegas",     3, 1, 0, 0, 40, "Draw 3 - Vegas Money Rules"},
+    {9,  "Lock & Freeze",         1, 0, 1, 2, 44, "Draw 1 - Suit Lock + 2 Frozen Cards"},
+    {10, "Deep Freeze",           3, 0, 0, 3, 44, "Draw 3 - 3 Frozen Cards"},
+    {11, "Vegas Strict",          3, 1, 0, 0, 44, "Draw 3 - Vegas Rules (1 Pass Only)"},
+    {12, "Glacial Suits",         1, 0, 1, 3, 48, "Draw 1 - Suit Lock + 3 Frozen Cards"},
+    {13, "Suit Master",           3, 0, 1, 0, 48, "Draw 3 - Suit-Locked Foundations"},
+    {14, "Arctic Blast",          1, 0, 0, 4, 48, "Draw 1 - 4 Frozen Cards"},
+    {15, "Vegas Mastery",         3, 1, 1, 0, 48, "Draw 3 - Vegas Rules + Suit Lock"},
+    {16, "Glacial Fortress",      3, 0, 1, 3, 52, "Draw 3 - Suit Lock + 3 Frozen Cards"},
+    {17, "Vegas Peril",           3, 1, 0, 3, 52, "Draw 3 - Vegas Rules + 3 Frozen Cards"},
+    {18, "High Stakes Ice",       3, 1, 1, 2, 52, "Draw 3 - Vegas Rules + Suit Lock + 2 Frozen"},
+    {19, "Ice Citadel",           3, 0, 1, 4, 52, "Draw 3 - Suit Lock + 4 Frozen Cards"},
+    {20, "Grandmaster Challenge", 3, 1, 1, 4, 52, "Draw 3 - Vegas + Suit Lock + 4 Frozen Cards"}
+};
 
 typedef struct {
     Card card;
@@ -72,6 +135,30 @@ typedef struct {
     int finished;
 } CascadeCard;
 
+// Memory copy helpers for CRT-less build
+#pragma function(memcpy)
+void *memcpy(void *dest, const void *src, size_t count) {
+    char *d = (char *)dest;
+    const char *s = (const char *)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+#pragma function(memset)
+void *memset(void *dest, int c, size_t count) {
+    char *d = (char *)dest;
+    while (count--) *d++ = (char)c;
+    return dest;
+}
+
+void CopyState(SolitaireState *dst, const SolitaireState *src) {
+    memcpy(dst, src, sizeof(SolitaireState));
+}
+
+void ZeroMem(void *ptr, size_t size) {
+    memset(ptr, 0, size);
+}
+
 // --- Global Variables ---
 SolitaireState state;
 SolitaireState undoStack[256];
@@ -79,7 +166,7 @@ int undoCount = 0;
 SolitaireState redoStack[256];
 int redoCount = 0;
 
-SolitaireStats stats = {0};
+SolitaireStats stats;
 int themeId = 0; // 0=Blue, 1=Crimson, 2=Emerald, 3=Cyber, 4=Gold
 int feltId = 0;  // 0=Green, 1=Slate, 2=Indigo, 3=Crimson
 int selectedType = -1; // 0=waste, 1=tableau, 2=foundation
@@ -125,12 +212,14 @@ COLORREF GetCardBackBg() {
 
 // --- Storage Persistence ---
 void LoadStats() {
+    ZeroMem(&stats, sizeof(SolitaireStats));
     HANDLE hFile = CreateFileA("ksolitaire.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD readBytes = 0;
         ReadFile(hFile, &stats, sizeof(SolitaireStats), &readBytes, NULL);
         CloseHandle(hFile);
     }
+    if (stats.maxCampaignStage < 1) stats.maxCampaignStage = 1;
 }
 
 void SaveStats() {
@@ -165,10 +254,10 @@ int LoadGameState() {
 // --- Undo / Redo Snapshot ---
 void PushUndoState() {
     if (undoCount < 256) {
-        undoStack[undoCount++] = state;
+        CopyState(&undoStack[undoCount++], &state);
     } else {
-        for (int i = 0; i < 255; i++) undoStack[i] = undoStack[i+1];
-        undoStack[255] = state;
+        for (int i = 0; i < 255; i++) CopyState(&undoStack[i], &undoStack[i+1]);
+        CopyState(&undoStack[255], &state);
     }
     redoCount = 0;
     SaveGameState();
@@ -176,8 +265,8 @@ void PushUndoState() {
 
 void PerformUndo() {
     if (undoCount == 0) return;
-    if (redoCount < 256) redoStack[redoCount++] = state;
-    state = undoStack[--undoCount];
+    if (redoCount < 256) CopyState(&redoStack[redoCount++], &state);
+    CopyState(&state, &undoStack[--undoCount]);
     selectedType = -1;
     hintSrcType = -1;
     SaveGameState();
@@ -185,8 +274,8 @@ void PerformUndo() {
 
 void PerformRedo() {
     if (redoCount == 0) return;
-    if (undoCount < 256) undoStack[undoCount++] = state;
-    state = redoStack[--redoCount];
+    if (undoCount < 256) CopyState(&undoStack[undoCount++], &state);
+    CopyState(&state, &redoStack[--redoCount]);
     selectedType = -1;
     hintSrcType = -1;
     SaveGameState();
@@ -202,10 +291,46 @@ void ClearSelectionAndHints() {
 
 void NewGame(HWND hwnd) {
     state.moves = 0;
-    state.score = 0;
     state.timerSeconds = 0;
     state.gameStarted = 0;
-    if (state.drawMode != 1 && state.drawMode != 3) state.drawMode = 1;
+    state.stockPasses = 0;
+
+    if (state.campaignStage < 1) state.campaignStage = 1;
+    if (state.campaignStage > 20) state.campaignStage = 20;
+
+    int frozenCardsToPlace = 0;
+
+    if (state.gameMode == 1) { // Campaign Mode
+        const StageConfig *cfg = &CAMPAIGN_STAGES[state.campaignStage - 1];
+        state.drawMode = cfg->drawMode;
+        state.vegasRules = cfg->vegasRules;
+        state.suitLocked = cfg->suitLocked;
+        state.targetCards = cfg->targetCards;
+        frozenCardsToPlace = cfg->frozenCards;
+        state.score = cfg->vegasRules ? -52 : 0;
+        state.maxStockPasses = cfg->vegasRules ? (cfg->drawMode == 1 ? 1 : 3) : (cfg->stage == 2 ? 2 : 0);
+    } else if (state.gameMode == 2) { // Vegas Money Mode
+        if (state.drawMode != 1 && state.drawMode != 3) state.drawMode = 1;
+        state.vegasRules = 1;
+        state.suitLocked = 0;
+        state.targetCards = 52;
+        state.score = -52;
+        state.maxStockPasses = (state.drawMode == 1 ? 1 : 3);
+        frozenCardsToPlace = 0;
+    } else { // Classic Mode
+        if (state.drawMode != 1 && state.drawMode != 3) state.drawMode = 1;
+        state.vegasRules = 0;
+        state.suitLocked = 0;
+        state.targetCards = 52;
+        state.score = 0;
+        state.maxStockPasses = 0;
+        frozenCardsToPlace = 0;
+    }
+
+    state.wandCharges = 3;
+    state.xrayCharges = 3;
+    state.shuffleCharges = 3;
+    state.xrayTimer = 0;
 
     undoCount = 0;
     redoCount = 0;
@@ -222,6 +347,7 @@ void NewGame(HWND hwnd) {
             deck[idx].suit = s;
             deck[idx].rank = r;
             deck[idx].faceUp = 0;
+            deck[idx].isFrozen = 0;
             idx++;
         }
     }
@@ -234,7 +360,10 @@ void NewGame(HWND hwnd) {
         deck[j] = temp;
     }
 
-    for (int i = 0; i < 4; i++) state.foundation_cnt[i] = 0;
+    for (int i = 0; i < 4; i++) {
+        state.foundation_cnt[i] = 0;
+        state.foundation_suit[i] = state.suitLocked ? i : -1;
+    }
     state.waste_cnt = 0;
 
     idx = 0;
@@ -244,6 +373,21 @@ void NewGame(HWND hwnd) {
             Card c = deck[idx++];
             if (row == col) c.faceUp = 1;
             state.tableau[col][state.tableau_cnt[col]++] = c;
+        }
+    }
+
+    // Apply Ice/Frozen Cards to initial face-up cards if required
+    if (frozenCardsToPlace > 0) {
+        int placed = 0;
+        int attempts = 0;
+        while (placed < frozenCardsToPlace && attempts < 50) {
+            attempts++;
+            int col = rnd() % 7;
+            int topIdx = state.tableau_cnt[col] - 1;
+            if (!state.tableau[col][topIdx].isFrozen) {
+                state.tableau[col][topIdx].isFrozen = 1;
+                placed++;
+            }
         }
     }
 
@@ -261,10 +405,20 @@ int IsRedSuit(int suit) {
 }
 
 int CanMoveToFoundation(Card card, int fIdx) {
-    if (card.suit != fIdx) return 0;
-    if (state.foundation_cnt[fIdx] == 0) return (card.rank == 1);
-    Card topCard = state.foundations[fIdx][state.foundation_cnt[fIdx] - 1];
-    return (card.rank == topCard.rank + 1);
+    if (state.suitLocked) {
+        if (card.suit != fIdx) return 0;
+        if (state.foundation_cnt[fIdx] == 0) return (card.rank == 1);
+        Card topCard = state.foundations[fIdx][state.foundation_cnt[fIdx] - 1];
+        return (card.rank == topCard.rank + 1);
+    } else {
+        if (state.foundation_cnt[fIdx] == 0) {
+            return (card.rank == 1);
+        } else {
+            Card topCard = state.foundations[fIdx][state.foundation_cnt[fIdx] - 1];
+            if (card.suit != topCard.suit) return 0;
+            return (card.rank == topCard.rank + 1);
+        }
+    }
 }
 
 int CanMoveToTableau(Card topMoveCard, int tIdx) {
@@ -273,6 +427,19 @@ int CanMoveToTableau(Card topMoveCard, int tIdx) {
     if (!targetCard.faceUp) return 0;
     if (IsRedSuit(targetCard.suit) == IsRedSuit(topMoveCard.suit)) return 0;
     return (targetCard.rank == topMoveCard.rank + 1);
+}
+
+void ThawAdjacent(int colA, int colB) {
+    int minC = (colA < colB ? colA : colB) - 1;
+    int maxC = (colA > colB ? colA : colB) + 1;
+    if (minC < 0) minC = 0;
+    if (maxC > 6) maxC = 6;
+
+    for (int c = minC; c <= maxC; c++) {
+        for (int i = 0; i < state.tableau_cnt[c]; i++) {
+            state.tableau[c][i].isFrozen = 0;
+        }
+    }
 }
 
 void StartWinCascade(HWND hwnd) {
@@ -296,13 +463,13 @@ void StartWinCascade(HWND hwnd) {
             idx++;
         }
     }
-    SetTimer(hwnd, 3, 20, NULL); // 50 fps cascade animation
+    SetTimer(hwnd, 3, 20, NULL);
 }
 
 void CheckWin(HWND hwnd) {
     int total = 0;
     for (int i = 0; i < 4; i++) total += state.foundation_cnt[i];
-    if (total == 52 && !gameWon) {
+    if (total >= state.targetCards && !gameWon) {
         gameWon = 1;
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2);
@@ -312,6 +479,7 @@ void CheckWin(HWND hwnd) {
         stats.currentStreak++;
         if (stats.currentStreak > stats.bestStreak) stats.bestStreak = stats.currentStreak;
         if (state.score > stats.highScore) stats.highScore = state.score;
+        if (state.vegasRules) stats.vegasCash += state.score;
 
         if (state.drawMode == 1) {
             if (stats.bestTimeD1 == 0 || state.timerSeconds < stats.bestTimeD1) stats.bestTimeD1 = state.timerSeconds;
@@ -319,12 +487,35 @@ void CheckWin(HWND hwnd) {
             if (stats.bestTimeD3 == 0 || state.timerSeconds < stats.bestTimeD3) stats.bestTimeD3 = state.timerSeconds;
         }
 
+        if (state.gameMode == 1) {
+            if (state.campaignStage < 20 && state.campaignStage + 1 > stats.maxCampaignStage) {
+                stats.maxCampaignStage = state.campaignStage + 1;
+            }
+        }
+
         SaveStats();
         StartWinCascade(hwnd);
 
-        char msg[256];
-        wsprintfA(msg, "Congratulations! You completed Klondike Solitaire!\n\nFinal Score: %d\nTime: %d seconds\nMoves: %d", state.score, state.timerSeconds, state.moves);
-        MessageBoxA(hwnd, msg, "KSolitaire Victory!", MB_OK | MB_ICONINFORMATION);
+        char msg[384];
+        if (state.gameMode == 1) {
+            if (state.campaignStage < 20) {
+                wsprintfA(msg, "STAGE CLEARED!\n\nStage %d: %s Completed!\nScore: %d\nTime: %d s\nMoves: %d\n\nStage %d Unlocked!",
+                    state.campaignStage, CAMPAIGN_STAGES[state.campaignStage - 1].name, state.score, state.timerSeconds, state.moves, state.campaignStage + 1);
+            } else {
+                wsprintfA(msg, "GRANDMASTER CHALLENGE VICTORIOUS!\n\nYou have mastered all 20 Solitaire Campaign Stages!\n\nFinal Score: %d\nTime: %d s", state.score, state.timerSeconds);
+            }
+        } else if (state.gameMode == 2) {
+            wsprintfA(msg, "VEGAS SOLITAIRE WIN!\n\nEarnings this match: $%d\nTotal Vegas Cash: $%d\nTime: %d s", state.score, stats.vegasCash, state.timerSeconds);
+        } else {
+            wsprintfA(msg, "Congratulations! Solitaire Victory!\n\nFinal Score: %d\nTime: %d s\nMoves: %d", state.score, state.timerSeconds, state.moves);
+        }
+
+        if (MessageBoxA(hwnd, msg, "KSolitaire Victory!", MB_OK | MB_ICONINFORMATION) == IDOK) {
+            if (state.gameMode == 1 && state.campaignStage < 20) {
+                state.campaignStage++;
+                NewGame(hwnd);
+            }
+        }
     }
 }
 
@@ -338,6 +529,13 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
         moveCount = 1;
     } else if (srcType == 1) {
         if (srcIdx < 0 || srcIdx >= state.tableau_cnt[srcPile]) return 0;
+        // Check if any card in the sequence is frozen
+        for (int i = srcIdx; i < state.tableau_cnt[srcPile]; i++) {
+            if (state.tableau[srcPile][i].isFrozen) {
+                MessageBeep(MB_ICONHAND);
+                return 0;
+            }
+        }
         moveCount = state.tableau_cnt[srcPile] - srcIdx;
         for (int i = 0; i < moveCount; i++) {
             cardsToMove[i] = state.tableau[srcPile][srcIdx + i];
@@ -367,27 +565,123 @@ int AttemptMove(int srcType, int srcPile, int srcIdx, int dstType, int dstPile, 
 
     if (dstType == 2) {
         state.foundations[dstPile][state.foundation_cnt[dstPile]++] = cardsToMove[0];
-        state.score += (srcType == 0 ? 10 : (srcType == 1 ? 10 : 0));
+        if (state.foundation_cnt[dstPile] == 1 && !state.suitLocked) {
+            state.foundation_suit[dstPile] = cardsToMove[0].suit;
+        }
+        state.score += (state.vegasRules ? 5 : (srcType == 0 ? 10 : (srcType == 1 ? 10 : 0)));
         MessageBeep(MB_OK);
     } else if (dstType == 1) {
         for (int i = 0; i < moveCount; i++) {
             state.tableau[dstPile][state.tableau_cnt[dstPile]++] = cardsToMove[i];
         }
-        state.score += (srcType == 0 ? 5 : (srcType == 2 ? -15 : 0));
+        if (!state.vegasRules) {
+            state.score += (srcType == 0 ? 5 : (srcType == 2 ? -15 : 0));
+        }
     }
 
     if (srcType == 1 && state.tableau_cnt[srcPile] > 0) {
         Card *top = &state.tableau[srcPile][state.tableau_cnt[srcPile] - 1];
         if (!top->faceUp) {
             top->faceUp = 1;
-            state.score += 5;
+            if (!state.vegasRules) state.score += 5;
         }
+    }
+
+    // Thaw adjacent frozen cards when tableau move happens
+    if (srcType == 1 || dstType == 1) {
+        ThawAdjacent(srcType == 1 ? srcPile : dstPile, dstType == 1 ? dstPile : srcPile);
     }
 
     state.moves++;
     ClearSelectionAndHints();
     InvalidateRect(hwnd, NULL, FALSE);
     CheckWin(hwnd);
+    return 1;
+}
+
+// --- Active Skills & Power-ups ---
+int UseMagicWand(HWND hwnd) {
+    if (state.wandCharges <= 0 || gameWon) {
+        MessageBeep(MB_ICONHAND);
+        return 0;
+    }
+    // Search tableau top cards
+    for (int t = 0; t < 7; t++) {
+        if (state.tableau_cnt[t] > 0) {
+            Card c = state.tableau[t][state.tableau_cnt[t] - 1];
+            if (c.faceUp && !c.isFrozen) {
+                for (int f = 0; f < 4; f++) {
+                    if (CanMoveToFoundation(c, f)) {
+                        state.wandCharges--;
+                        AttemptMove(1, t, state.tableau_cnt[t] - 1, 2, f, hwnd);
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+    // Search waste
+    if (state.waste_cnt > 0) {
+        Card c = state.waste[state.waste_cnt - 1];
+        for (int f = 0; f < 4; f++) {
+            if (CanMoveToFoundation(c, f)) {
+                state.wandCharges--;
+                AttemptMove(0, 0, state.waste_cnt - 1, 2, f, hwnd);
+                return 1;
+            }
+        }
+    }
+    MessageBeep(MB_ICONASTERISK);
+    return 0;
+}
+
+int UseXRayVision(HWND hwnd) {
+    if (state.xrayCharges <= 0 || gameWon) {
+        MessageBeep(MB_ICONHAND);
+        return 0;
+    }
+    state.xrayCharges--;
+    state.xrayTimer = 5;
+    MessageBeep(MB_OK);
+    InvalidateRect(hwnd, NULL, FALSE);
+    return 1;
+}
+
+int UseShuffleStock(HWND hwnd) {
+    if (state.shuffleCharges <= 0 || gameWon) {
+        MessageBeep(MB_ICONHAND);
+        return 0;
+    }
+    if (state.stock_cnt == 0 && state.waste_cnt == 0) {
+        MessageBeep(MB_ICONASTERISK);
+        return 0;
+    }
+    PushUndoState();
+    state.shuffleCharges--;
+    Card temp[104];
+    int total = 0;
+    for (int i = 0; i < state.stock_cnt; i++) {
+        temp[total] = state.stock[i];
+        temp[total++].faceUp = 0;
+    }
+    for (int i = 0; i < state.waste_cnt; i++) {
+        temp[total] = state.waste[i];
+        temp[total++].faceUp = 0;
+    }
+    for (int i = total - 1; i > 0; i--) {
+        int j = rnd() % (i + 1);
+        Card t = temp[i];
+        temp[i] = temp[j];
+        temp[j] = t;
+    }
+    state.stock_cnt = 0;
+    state.waste_cnt = 0;
+    for (int i = 0; i < total; i++) {
+        state.stock[state.stock_cnt++] = temp[i];
+    }
+    state.moves++;
+    MessageBeep(MB_OK);
+    InvalidateRect(hwnd, NULL, FALSE);
     return 1;
 }
 
@@ -399,7 +693,7 @@ void GiveHint(HWND hwnd) {
     for (int t = 0; t < 7; t++) {
         if (state.tableau_cnt[t] > 0) {
             Card c = state.tableau[t][state.tableau_cnt[t] - 1];
-            if (c.faceUp) {
+            if (c.faceUp && !c.isFrozen) {
                 for (int f = 0; f < 4; f++) {
                     if (CanMoveToFoundation(c, f)) {
                         hintSrcType = 1; hintSrcPile = t; hintSrcIdx = state.tableau_cnt[t] - 1;
@@ -427,9 +721,9 @@ void GiveHint(HWND hwnd) {
     for (int srcT = 0; srcT < 7; srcT++) {
         int firstFaceUp = -1;
         for (int i = 0; i < state.tableau_cnt[srcT]; i++) {
-            if (state.tableau[srcT][i].faceUp) { firstFaceUp = i; break; }
+            if (state.tableau[srcT][i].faceUp && !state.tableau[srcT][i].isFrozen) { firstFaceUp = i; break; }
         }
-        if (firstFaceUp > 0) {
+        if (firstFaceUp >= 0) {
             Card c = state.tableau[srcT][firstFaceUp];
             for (int dstT = 0; dstT < 7; dstT++) {
                 if (srcT != dstT && CanMoveToTableau(c, dstT)) {
@@ -463,7 +757,7 @@ int CanAutoFinish() {
     if (state.stock_cnt > 0 || state.waste_cnt > 0) return 0;
     for (int t = 0; t < 7; t++) {
         for (int i = 0; i < state.tableau_cnt[t]; i++) {
-            if (!state.tableau[t][i].faceUp) return 0;
+            if (!state.tableau[t][i].faceUp || state.tableau[t][i].isFrozen) return 0;
         }
     }
     return 1;
@@ -558,10 +852,9 @@ void DrawSuitGDI(HDC hdc, int suit, int cx, int cy, int size) {
 void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
     int fx = x + 16;
     int fy = y + 24;
-    int fw = CARD_W - 32; // 52
-    int fh = CARD_H - 48; // 70
+    int fw = CARD_W - 32;
+    int fh = CARD_H - 48;
 
-    // Frame background
     COLORREF bgCol = (rank == 13) ? RGB(69, 10, 10) : ((rank == 12) ? RGB(46, 16, 101) : RGB(30, 41, 59));
     HBRUSH bgBrush = CreateSolidBrush(bgCol);
     RECT fr = {fx, fy, fx + fw, fy + fh};
@@ -576,77 +869,64 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
     int cx = fx + fw / 2;
     int cy = fy + fh / 2;
 
-    // Character Head & Face
     HBRUSH skinBrush = CreateSolidBrush(RGB(255, 224, 189));
     SelectObject(hdc, skinBrush);
     Ellipse(hdc, cx - 11, cy - 15, cx + 11, cy + 7);
     DeleteObject(skinBrush);
 
     if (rank == 13) { // King
-        // Crown
         HBRUSH crownBrush = CreateSolidBrush(RGB(255, 215, 0));
         SelectObject(hdc, crownBrush);
         POINT crownPts[5] = { {cx - 12, cy - 12}, {cx - 8, cy - 22}, {cx, cy - 16}, {cx + 8, cy - 22}, {cx + 12, cy - 12} };
         Polygon(hdc, crownPts, 5);
         DeleteObject(crownBrush);
 
-        // Robe
         HBRUSH robeBrush = CreateSolidBrush(RGB(185, 28, 28));
         SelectObject(hdc, robeBrush);
         POINT robePts[4] = { {cx - 14, cy + 5}, {cx + 14, cy + 5}, {cx + 18, fy + fh - 2}, {cx - 18, fy + fh - 2} };
         Polygon(hdc, robePts, 4);
         DeleteObject(robeBrush);
 
-        // Scepter
         HPEN scPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
         SelectObject(hdc, scPen);
         MoveToEx(hdc, cx + 14, fy + 8, NULL);
         LineTo(hdc, cx + 14, fy + fh - 4);
         DeleteObject(scPen);
-
     } else if (rank == 12) { // Queen
-        // Tiara
         HBRUSH tiaraBrush = CreateSolidBrush(RGB(255, 215, 0));
         SelectObject(hdc, tiaraBrush);
         POINT tiaraPts[5] = { {cx - 10, cy - 12}, {cx - 6, cy - 20}, {cx, cy - 15}, {cx + 6, cy - 20}, {cx + 10, cy - 12} };
         Polygon(hdc, tiaraPts, 5);
         DeleteObject(tiaraBrush);
 
-        // Gown
         HBRUSH gownBrush = CreateSolidBrush(RGB(126, 34, 206));
         SelectObject(hdc, gownBrush);
         POINT gownPts[4] = { {cx - 12, cy + 5}, {cx + 12, cy + 5}, {cx + 16, fy + fh - 2}, {cx - 16, fy + fh - 2} };
         Polygon(hdc, gownPts, 4);
         DeleteObject(gownBrush);
 
-        // Rose
         HBRUSH roseBrush = CreateSolidBrush(RGB(244, 63, 94));
         SelectObject(hdc, roseBrush);
         Ellipse(hdc, cx + 8, cy + 10, cx + 16, cy + 18);
         DeleteObject(roseBrush);
-
     } else if (rank == 11) { // Jack
-        // Cap
         HBRUSH capBrush = CreateSolidBrush(RGB(220, 38, 38));
         SelectObject(hdc, capBrush);
         Ellipse(hdc, cx - 12, cy - 20, cx + 12, cy - 10);
         DeleteObject(capBrush);
 
-        // Feather
         HPEN fPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
         SelectObject(hdc, fPen);
         MoveToEx(hdc, cx + 8, cy - 14, NULL);
         LineTo(hdc, cx + 16, cy - 24);
         DeleteObject(fPen);
 
-        // Tabard
         HBRUSH tabBrush = CreateSolidBrush(RGB(37, 99, 235));
         SelectObject(hdc, tabBrush);
         POINT tabPts[4] = { {cx - 12, cy + 5}, {cx + 12, cy + 5}, {cx + 14, fy + fh - 2}, {cx - 14, fy + fh - 2} };
         Polygon(hdc, tabPts, 4);
         DeleteObject(tabBrush);
 
-        // Spear
         HPEN spPen = CreatePen(PS_SOLID, 2, RGB(148, 163, 184));
         SelectObject(hdc, spPen);
         MoveToEx(hdc, cx - 14, fy + 4, NULL);
@@ -660,19 +940,18 @@ void DrawCourtCardGDI(HDC hdc, int rank, int suit, int x, int y) {
 }
 
 // --- Card Back Rendering ---
-void DrawCardBackGDI(HDC hdc, int x, int y) {
+void DrawCardBackGDI(HDC hdc, int x, int y, int isXRay) {
     RECT r = {x, y, x + CARD_W, y + CARD_H};
-    HBRUSH bg = CreateSolidBrush(GetCardBackBg());
+    HBRUSH bg = CreateSolidBrush(isXRay ? RGB(15, 45, 80) : GetCardBackBg());
     FillRect(hdc, &r, bg);
     DeleteObject(bg);
 
-    HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
-    HPEN oldPen = (HPEN)SelectObject(hdc, goldPen);
+    HPEN borderPen = CreatePen(PS_SOLID, 2, isXRay ? RGB(0, 229, 255) : RGB(255, 215, 0));
+    HPEN oldPen = (HPEN)SelectObject(hdc, borderPen);
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
     RoundRect(hdc, x + 3, y + 3, x + CARD_W - 3, y + CARD_H - 3, 6, 6);
 
-    // Crosshatch pattern lines
-    HPEN latPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
+    HPEN latPen = CreatePen(PS_SOLID, 1, isXRay ? RGB(0, 200, 255) : RGB(255, 215, 0));
     SelectObject(hdc, latPen);
     for (int offset = -CARD_H; offset < CARD_W + CARD_H; offset += 18) {
         MoveToEx(hdc, x + offset, y, NULL);
@@ -681,39 +960,55 @@ void DrawCardBackGDI(HDC hdc, int x, int y) {
         LineTo(hdc, x + offset + CARD_H, y);
     }
 
-    // Central Golden Crown Shield Emblem
     int cx = x + CARD_W / 2;
     int cy = y + CARD_H / 2;
-    HBRUSH crownBrush = CreateSolidBrush(RGB(255, 215, 0));
+    HBRUSH crownBrush = CreateSolidBrush(isXRay ? RGB(0, 229, 255) : RGB(255, 215, 0));
     SelectObject(hdc, crownBrush);
     Ellipse(hdc, cx - 14, cy - 14, cx + 14, cy + 14);
     DeleteObject(crownBrush);
 
     SetTextColor(hdc, RGB(0, 0, 0));
     SetBkMode(hdc, TRANSPARENT);
-    TextOutA(hdc, cx - 5, cy - 8, "K", 1);
+    TextOutA(hdc, cx - 5, cy - 8, isXRay ? "X" : "K", 1);
 
     SelectObject(hdc, oldPen);
     SelectObject(hdc, oldBrush);
-    DeleteObject(goldPen);
+    DeleteObject(borderPen);
     DeleteObject(latPen);
 }
 
 // --- Main GDI Card Renderer ---
 void DrawCardGDI(HDC hdc, Card card, int x, int y, int isSelected, int isHintSrc, int isHintDst) {
     if (!card.faceUp) {
-        DrawCardBackGDI(hdc, x, y);
+        if (state.xrayTimer > 0) {
+            DrawCardBackGDI(hdc, x, y, 1);
+            COLORREF textColor = IsRedSuit(card.suit) ? RGB(255, 128, 128) : RGB(180, 220, 255);
+            SetTextColor(hdc, textColor);
+            SetBkMode(hdc, TRANSPARENT);
+            char rankStr[4] = {0};
+            if (card.rank == 1) wsprintfA(rankStr, "A");
+            else if (card.rank == 11) wsprintfA(rankStr, "J");
+            else if (card.rank == 12) wsprintfA(rankStr, "Q");
+            else if (card.rank == 13) wsprintfA(rankStr, "K");
+            else wsprintfA(rankStr, "%d", card.rank);
+            TextOutA(hdc, x + 6, y + 4, rankStr, lstrlenA(rankStr));
+            DrawSuitGDI(hdc, card.suit, x + 12, y + 26, 12);
+        } else {
+            DrawCardBackGDI(hdc, x, y, 0);
+        }
         return;
     }
 
-    // Card white background
     RECT r = {x, y, x + CARD_W, y + CARD_H};
-    HBRUSH bg = CreateSolidBrush(RGB(255, 255, 255));
+    HBRUSH bg = CreateSolidBrush(card.isFrozen ? RGB(224, 247, 250) : RGB(255, 255, 255));
     FillRect(hdc, &r, bg);
     DeleteObject(bg);
 
-    HPEN cardPen = CreatePen(PS_SOLID, (isSelected || isHintSrc || isHintDst) ? 3 : 1, 
-        isSelected ? RGB(255, 215, 0) : (isHintSrc ? RGB(0, 230, 118) : (isHintDst ? RGB(255, 145, 0) : RGB(100, 100, 100))));
+    COLORREF borderCol = card.isFrozen ? RGB(0, 229, 255) : 
+        (isSelected ? RGB(255, 215, 0) : (isHintSrc ? RGB(0, 230, 118) : (isHintDst ? RGB(255, 145, 0) : RGB(100, 100, 100))));
+    int penWidth = (card.isFrozen || isSelected || isHintSrc || isHintDst) ? 3 : 1;
+
+    HPEN cardPen = CreatePen(PS_SOLID, penWidth, borderCol);
     HPEN oldPen = (HPEN)SelectObject(hdc, cardPen);
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
     RoundRect(hdc, x, y, x + CARD_W, y + CARD_H, 8, 8);
@@ -721,7 +1016,6 @@ void DrawCardGDI(HDC hdc, Card card, int x, int y, int isSelected, int isHintSrc
     SelectObject(hdc, oldBrush);
     DeleteObject(cardPen);
 
-    // Corner Rank and Suit
     COLORREF textColor = IsRedSuit(card.suit) ? RGB(211, 47, 47) : RGB(26, 26, 26);
     SetTextColor(hdc, textColor);
     SetBkMode(hdc, TRANSPARENT);
@@ -736,21 +1030,22 @@ void DrawCardGDI(HDC hdc, Card card, int x, int y, int isSelected, int isHintSrc
     TextOutA(hdc, x + 6, y + 4, rankStr, lstrlenA(rankStr));
     DrawSuitGDI(hdc, card.suit, x + 12, y + 26, 12);
 
-    TextOutA(hdc, x + CARD_W - 14, y + CARD_H - 20, rankStr, lstrlenA(rankStr));
-    DrawSuitGDI(hdc, card.suit, x + CARD_W - 12, y + CARD_H - 28, 12);
+    if (card.isFrozen) {
+        SetTextColor(hdc, RGB(0, 184, 212));
+        TextOutA(hdc, x + CARD_W - 20, y + 4, "ICE", 3);
+    } else {
+        TextOutA(hdc, x + CARD_W - 14, y + CARD_H - 20, rankStr, lstrlenA(rankStr));
+        DrawSuitGDI(hdc, card.suit, x + CARD_W - 12, y + CARD_H - 28, 12);
+    }
 
-    // Center Card Content
     int cx = x + CARD_W / 2;
     int cy = y + CARD_H / 2;
 
     if (card.rank == 1) {
-        // Ace Centerpiece Emblem
         DrawSuitGDI(hdc, card.suit, cx, cy, 32);
     } else if (card.rank >= 11) {
-        // Court Card Portraits (J, Q, K)
         DrawCourtCardGDI(hdc, card.rank, card.suit, x, y);
     } else {
-        // Pip Layout Matrix for ranks 2 to 10
         DrawSuitGDI(hdc, card.suit, cx, cy - 20, 16);
         DrawSuitGDI(hdc, card.suit, cx, cy + 20, 16);
         if (card.rank >= 4) {
@@ -813,6 +1108,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hGameMenu, MF_STRING, ID_RESET_STATS, "Reset Stats");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hGameMenu, "Game");
 
+            HMENU hModeMenu = CreatePopupMenu();
+            AppendMenu(hModeMenu, MF_STRING, ID_MODE_CLASSIC, "Classic Solitaire");
+            AppendMenu(hModeMenu, MF_STRING, ID_MODE_VEGAS, "Vegas Money Mode");
+            AppendMenu(hModeMenu, MF_STRING, ID_MODE_CAMPAIGN, "Campaign Mode (20 Stages)");
+            AppendMenu(hModeMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hModeMenu, MF_STRING, ID_STAGE_PREV, "Previous Stage");
+            AppendMenu(hModeMenu, MF_STRING, ID_STAGE_NEXT, "Next Stage");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hModeMenu, "Game Modes");
+
+            HMENU hSkillMenu = CreatePopupMenu();
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_WAND, "Magic Wand [W]");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_XRAY, "X-Ray Vision [X]");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_SHUFFLE, "Shuffle Stock [S]");
+            AppendMenu(hSkillMenu, MF_STRING, ID_SKILL_UNDO, "Free Undo [U]");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hSkillMenu, "Active Skills");
+
             HMENU hRulesMenu = CreatePopupMenu();
             AppendMenu(hRulesMenu, MF_STRING, ID_DRAW_1, "Draw 1 Card");
             AppendMenu(hRulesMenu, MF_STRING, ID_DRAW_3, "Draw 3 Cards");
@@ -838,6 +1149,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             seed = GetTickCount();
             LoadStats();
             if (!LoadGameState()) {
+                state.gameMode = 0;
+                state.campaignStage = 1;
                 state.drawMode = 1;
                 NewGame(hwnd);
             }
@@ -849,6 +1162,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == ID_NEW_GAME) NewGame(hwnd);
             else if (id == ID_DRAW_1) { state.drawMode = 1; NewGame(hwnd); }
             else if (id == ID_DRAW_3) { state.drawMode = 3; NewGame(hwnd); }
+            else if (id == ID_MODE_CLASSIC) { state.gameMode = 0; NewGame(hwnd); }
+            else if (id == ID_MODE_VEGAS) { state.gameMode = 2; NewGame(hwnd); }
+            else if (id == ID_MODE_CAMPAIGN) { state.gameMode = 1; NewGame(hwnd); }
+            else if (id == ID_STAGE_PREV) {
+                if (state.campaignStage > 1) { state.campaignStage--; state.gameMode = 1; NewGame(hwnd); }
+            } else if (id == ID_STAGE_NEXT) {
+                if (state.campaignStage < stats.maxCampaignStage && state.campaignStage < 20) {
+                    state.campaignStage++; state.gameMode = 1; NewGame(hwnd);
+                }
+            } else if (id == ID_SKILL_WAND) UseMagicWand(hwnd);
+            else if (id == ID_SKILL_XRAY) UseXRayVision(hwnd);
+            else if (id == ID_SKILL_SHUFFLE) UseShuffleStock(hwnd);
+            else if (id == ID_SKILL_UNDO) PerformUndo();
             else if (id == ID_UNDO) PerformUndo();
             else if (id == ID_REDO) PerformRedo();
             else if (id == ID_HINT) GiveHint(hwnd);
@@ -860,13 +1186,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == ID_STATS) {
                 char buf[512];
                 int winrate = stats.played > 0 ? (stats.wins * 100 / stats.played) : 0;
-                wsprintfA(buf, "Klondike Solitaire Statistics\n\nGames Played: %d\nWins: %d\nWin Rate: %d%%\nCurrent Streak: %d\nBest Streak: %d\nHigh Score: %d\nBest Time (Draw 1): %d s\nBest Time (Draw 3): %d s",
-                    stats.played, stats.wins, winrate, stats.currentStreak, stats.bestStreak, stats.highScore, stats.bestTimeD1, stats.bestTimeD3);
+                wsprintfA(buf, "Klondike Solitaire Statistics\n\nGames Played: %d\nWins: %d\nWin Rate: %d%%\nCurrent Streak: %d\nBest Streak: %d\nHigh Score: %d\nVegas Bankroll: $%d\nCampaign Max Stage: Stage %d / 20\nBest Time (Draw 1): %d s\nBest Time (Draw 3): %d s",
+                    stats.played, stats.wins, winrate, stats.currentStreak, stats.bestStreak, stats.highScore, stats.vegasCash, stats.maxCampaignStage, stats.bestTimeD1, stats.bestTimeD3);
                 MessageBoxA(hwnd, buf, "Statistics", MB_OK | MB_ICONINFORMATION);
             } else if (id == ID_RESET_STATS) {
                 if (MessageBoxA(hwnd, "Reset all statistics?", "Confirm", MB_YESNO | MB_ICONQUESTION) == IDYES) {
-                    SolitaireStats empty = {0};
-                    stats = empty;
+                    ZeroMem(&stats, sizeof(SolitaireStats));
+                    stats.maxCampaignStage = 1;
                     SaveStats();
                 }
             } else if (id == ID_THEME_BLUE) themeId = 0;
@@ -884,6 +1210,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == VK_F2) NewGame(hwnd);
+            else if (wParam == 'W' || wParam == 'w') UseMagicWand(hwnd);
+            else if (wParam == 'X' || wParam == 'x') UseXRayVision(hwnd);
+            else if (wParam == 'S' || wParam == 's') UseShuffleStock(hwnd);
+            else if (wParam == 'U' || wParam == 'u') PerformUndo();
             else if (GetKeyState(VK_CONTROL) & 0x8000) {
                 if (wParam == 'Z') PerformUndo();
                 else if (wParam == 'Y') PerformRedo();
@@ -910,14 +1240,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int stockX = GAP_X;
             int stockY = GAP_Y;
             if (mx >= stockX && mx <= stockX + CARD_W && my >= stockY && my <= stockY + CARD_H) {
-                PushUndoState();
                 if (state.stock_cnt == 0) {
-                    while (state.waste_cnt > 0) {
-                        Card c = state.waste[--state.waste_cnt];
-                        c.faceUp = 0;
-                        state.stock[state.stock_cnt++] = c;
+                    if (state.waste_cnt > 0) {
+                        if (state.maxStockPasses > 0 && state.stockPasses >= state.maxStockPasses) {
+                            MessageBeep(MB_ICONHAND);
+                            return 0;
+                        }
+                        PushUndoState();
+                        state.stockPasses++;
+                        while (state.waste_cnt > 0) {
+                            Card c = state.waste[--state.waste_cnt];
+                            c.faceUp = 0;
+                            state.stock[state.stock_cnt++] = c;
+                        }
                     }
                 } else {
+                    PushUndoState();
                     int count = (state.drawMode < state.stock_cnt) ? state.drawMode : state.stock_cnt;
                     for (int i = 0; i < count; i++) {
                         Card c = state.stock[--state.stock_cnt];
@@ -978,10 +1316,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int cardHeight = (c == tCount - 1) ? CARD_H : 24;
                         if (mx >= tx && mx <= tx + CARD_W && my >= cy && my <= cy + cardHeight) {
                             Card card = state.tableau[t][c];
+                            if (card.isFrozen) {
+                                MessageBeep(MB_ICONHAND);
+                                return 0;
+                            }
                             if (!card.faceUp && c == tCount - 1) {
                                 PushUndoState();
                                 state.tableau[t][c].faceUp = 1;
-                                state.score += 5;
+                                if (!state.vegasRules) state.score += 5;
                                 state.moves++;
                                 InvalidateRect(hwnd, NULL, FALSE);
                                 return 0;
@@ -1030,7 +1372,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     int topY = tableauStartY + (tCount - 1) * 24;
                     if (mx >= tx && mx <= tx + CARD_W && my >= topY && my <= topY + CARD_H) {
                         Card c = state.tableau[t][tCount - 1];
-                        if (c.faceUp) {
+                        if (c.faceUp && !c.isFrozen) {
                             for (int f = 0; f < 4; f++) {
                                 if (CanMoveToFoundation(c, f)) {
                                     AttemptMove(1, t, tCount - 1, 2, f, hwnd);
@@ -1047,6 +1389,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (wParam == 1) { // 1-sec timer
                 if (state.gameStarted && !gameWon) {
                     state.timerSeconds++;
+                    if (state.xrayTimer > 0) {
+                        state.xrayTimer--;
+                    }
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 2) { // Auto finish step
@@ -1070,11 +1415,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                             c->x += c->vx;
                             c->y += c->vy;
-                            c->vy += 0.85f; // Gravity
+                            c->vy += 0.85f;
 
                             if (c->y + CARD_H >= winH) {
                                 c->y = (float)(winH - CARD_H);
-                                c->vy = -c->vy * 0.82f; // Bounce
+                                c->vy = -c->vy * 0.82f;
                             }
                             if (c->x <= 0 || c->x + CARD_W >= winW) {
                                 c->vx = -c->vx;
@@ -1127,17 +1472,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetTextColor(memDC, RGB(255, 215, 0));
             SetBkMode(memDC, TRANSPARENT);
-            char statusText[256];
-            wsprintfA(statusText, "Time: %02d:%02d   Moves: %d   Score: %d   (Draw %d)   Wins: %d",
-                state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.drawMode, stats.wins);
-            TextOutA(memDC, 15, 8, statusText, lstrlenA(statusText));
+            char statusText[320];
+
+            if (state.gameMode == 1) {
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  [Stg %d/20]  Wand(W):%d  XRay(X):%d  Shuf(S):%d",
+                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.campaignStage,
+                    state.wandCharges, state.xrayCharges, state.shuffleCharges);
+            } else if (state.gameMode == 2) {
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Cash: $%d  Bank: $%d  Wand(W):%d  XRay(X):%d  Shuf(S):%d",
+                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, stats.vegasCash,
+                    state.wandCharges, state.xrayCharges, state.shuffleCharges);
+            } else {
+                wsprintfA(statusText, "Time: %02d:%02d  Moves: %d  Score: %d  (Draw %d)  Wand(W):%d  XRay(X):%d  Shuf(S):%d",
+                    state.timerSeconds / 60, state.timerSeconds % 60, state.moves, state.score, state.drawMode,
+                    state.wandCharges, state.xrayCharges, state.shuffleCharges);
+            }
+            TextOutA(memDC, 10, 8, statusText, lstrlenA(statusText));
 
             int stockX = GAP_X;
             int stockY = 35 + GAP_Y;
 
             // Stock Slot
             if (state.stock_cnt > 0) {
-                Card dummy = {0, 0, 0};
+                Card dummy = {0, 0, 0, 0};
                 DrawCardGDI(memDC, dummy, stockX, stockY, 0, 0, 0);
             } else {
                 DrawSlotOutline(memDC, stockX, stockY, "Stock", 0);
@@ -1168,7 +1525,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DrawCardGDI(memDC, topF, fx, fy, isSel, 0, isHD);
                 } else {
                     int isHD = (hintDstType == 2 && hintDstPile == f);
-                    DrawSlotOutline(memDC, fx, fy, fLabels[f], isHD);
+                    const char *lbl = state.suitLocked ? fLabels[f] : "Ace";
+                    DrawSlotOutline(memDC, fx, fy, lbl, isHD);
                 }
             }
 
