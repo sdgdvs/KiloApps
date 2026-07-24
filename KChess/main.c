@@ -2,13 +2,14 @@
 #include <windows.h>
 
 #define W 540
-#define H 560
+#define H 580
 #define TS 50
 #define OX 70
-#define OY 70
+#define OY 65
 
 // 0: empty, 1:P, 2:N, 3:B, 4:R, 5:Q, 6:K,  7:p, 8:n, 9:b, 10:r, 11:q, 12:k
-int board[8][8] = {
+int board[8][8];
+int defaultBoard[8][8] = {
     {10, 8, 9, 11, 12, 9, 8, 10},
     {7,  7, 7,  7,  7, 7, 7,  7},
     {0,  0, 0,  0,  0, 0, 0,  0},
@@ -19,29 +20,40 @@ int board[8][8] = {
     {4,  2, 3,  5,  6, 3, 2,  4}
 };
 
-int selX = -1;
-int selY = -1;
+int selX = -1, selY = -1;
 int whiteTurn = 1;
 int gameOver = 0;
 int winner = 0; // 1 = White, 2 = Black, 3 = Draw
-int aiMode = 1; // 1 = PvE, 0 = PvP
-int campaignMode = 0;
+int aiMode = 1; // 1 = vs AI, 0 = vs Player
+int gameMode = 0; // 0 = Campaign, 1 = Free Play, 2 = Puzzle Mode, 3 = Blitz Timer Mode
 int currentStage = 1;
-int aiDifficulty = 2; // 1=Easy, 2=Normal, 3=Hard
+int puzzleIndex = 0;
+int aiPersonality = 2; // 1=Novice, 2=Aggressive, 3=Defender, 4=Grandmaster Minimax
 int statsWins = 0, statsLosses = 0, statsDraws = 0;
-int pieceValues[] = {0, 100, 300, 300, 500, 900, 9000, 100, 300, 300, 500, 900, 9000};
+int pieceValues[] = {0, 100, 320, 330, 500, 900, 20000, 100, 320, 330, 500, 900, 20000};
 int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
 HBRUSH hBgBrush = NULL;
+HWND g_hwndMain = NULL;
 
 int wKingMoved = 0, wRookLMoved = 0, wRookRMoved = 0;
 int bKingMoved = 0, bRookLMoved = 0, bRookRMoved = 0;
 int epX = -1, epY = -1;
-int freezePowerups = 1;
+
+// Active Skills & Powerups
+int freezePowerups = 3;
 int blackFrozen = 0;
-int undoPowerups = 1;
+int undoPowerups = 3;
 int canUndo = 0;
+int hintPowerups = 3;
+int hintActive = 0;
+int hintSx = -1, hintSy = -1, hintTx = -1, hintTy = -1;
+
 int undoBoard[8][8];
 int undoWKM = 0, undoWRL = 0, undoWRR = 0, undoBKM = 0, undoBRL = 0, undoBRR = 0, undoEpX = -1, undoEpY = -1;
+
+// Blitz Timer
+float blitzTimeWhite = 180.0f;
+float blitzTimeBlack = 180.0f;
 
 // Particles & Slide animation
 typedef struct {
@@ -125,8 +137,8 @@ int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck);
 
 int GetPST(int pType, int x, int y, int isWhite) {
     int row = isWhite ? y : 7 - y;
-    int center = (x >= 3 && x <= 4 && row >= 3 && row <= 4) ? 10 : 
-                 (x >= 2 && x <= 5 && row >= 2 && row <= 5) ? 5 : 0;
+    int center = (x >= 3 && x <= 4 && row >= 3 && row <= 4) ? 12 : 
+                 (x >= 2 && x <= 5 && row >= 2 && row <= 5) ? 6 : 0;
     
     if (pType == 1) { // Pawn
         if (row <= 1) return 50; 
@@ -140,7 +152,7 @@ int GetPST(int pType, int x, int y, int isWhite) {
         if (row >= 6 && (x <= 2 || x >= 5)) return 20; 
         return -center * 2; 
     }
-    return 0;
+    return center;
 }
 
 int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck) {
@@ -289,81 +301,243 @@ int HasLegalMoves(int isWhite) {
     return 0;
 }
 
+// Engine Minimax Alpha-Beta Implementation
+int EvaluateBoardStatic(void) {
+    int score = 0;
+    for (int y = 0; y < 8; y++) {
+        for (int x = 0; x < 8; x++) {
+            int p = board[y][x];
+            if (p == 0) continue;
+            int isWhite = (p <= 6);
+            int pType = isWhite ? p : p - 6;
+            int val = pieceValues[p];
+            int pst = GetPST(pType, x, y, isWhite);
+            if (isWhite) score -= (val + pst);
+            else score += (val + pst);
+        }
+    }
+    return score;
+}
+
+typedef struct {
+    int srcP, dstP, epX, epY, wkm, wrl, wrr, bkm, brl, brr;
+} MoveState;
+
+static void MakeMoveSim(int sx, int sy, int tx, int ty, MoveState* ms) {
+    ms->srcP = board[sy][sx];
+    ms->dstP = board[ty][tx];
+    ms->epX = epX; ms->epY = epY;
+    ms->wkm = wKingMoved; ms->wrl = wRookLMoved; ms->wrr = wRookRMoved;
+    ms->bkm = bKingMoved; ms->brl = bRookLMoved; ms->brr = bRookRMoved;
+
+    board[ty][tx] = ms->srcP;
+    board[sy][sx] = 0;
+    int isWhite = (ms->srcP <= 6);
+    int pType = isWhite ? ms->srcP : ms->srcP - 6;
+    if (pType == 1 && (ty == 0 || ty == 7)) {
+        board[ty][tx] = isWhite ? 5 : 11;
+    }
+    if (pType == 6) { if (isWhite) wKingMoved = 1; else bKingMoved = 1; }
+    if (pType == 4) {
+        if (isWhite) { if (sx == 0) wRookLMoved = 1; if (sx == 7) wRookRMoved = 1; }
+        else { if (sx == 0) bRookLMoved = 1; if (sx == 7) bRookRMoved = 1; }
+    }
+}
+
+static void UnmakeMoveSim(int sx, int sy, int tx, int ty, const MoveState* ms) {
+    board[sy][sx] = ms->srcP;
+    board[ty][tx] = ms->dstP;
+    epX = ms->epX; epY = ms->epY;
+    wKingMoved = ms->wkm; wRookLMoved = ms->wrl; wRookRMoved = ms->wrr;
+    bKingMoved = ms->bkm; bRookLMoved = ms->brl; bRookRMoved = ms->brr;
+}
+
+int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
+    if (depth <= 0) return EvaluateBoardStatic();
+
+    if (isMaximizing) { // Black's turn
+        int maxEval = -999999;
+        for (int sy = 0; sy < 8; sy++) {
+            for (int sx = 0; sx < 8; sx++) {
+                if (board[sy][sx] > 6) {
+                    for (int ty = 0; ty < 8; ty++) {
+                        for (int tx = 0; tx < 8; tx++) {
+                            if (IsValidMove(sx, sy, tx, ty, 0)) {
+                                if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
+                                    MoveState ms;
+                                    MakeMoveSim(sx, sy, tx, ty, &ms);
+                                    int eval = MinimaxAB(depth - 1, alpha, beta, 0);
+                                    UnmakeMoveSim(sx, sy, tx, ty, &ms);
+                                    if (eval > maxEval) maxEval = eval;
+                                    if (eval > alpha) alpha = eval;
+                                    if (beta <= alpha) return maxEval;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return (maxEval == -999999) ? EvaluateBoardStatic() : maxEval;
+    } else { // White's turn
+        int minEval = 999999;
+        for (int sy = 0; sy < 8; sy++) {
+            for (int sx = 0; sx < 8; sx++) {
+                if (board[sy][sx] != 0 && board[sy][sx] <= 6) {
+                    for (int ty = 0; ty < 8; ty++) {
+                        for (int tx = 0; tx < 8; tx++) {
+                            if (IsValidMove(sx, sy, tx, ty, 0)) {
+                                if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 1)) {
+                                    MoveState ms;
+                                    MakeMoveSim(sx, sy, tx, ty, &ms);
+                                    int eval = MinimaxAB(depth - 1, alpha, beta, 1);
+                                    UnmakeMoveSim(sx, sy, tx, ty, &ms);
+                                    if (eval < minEval) minEval = eval;
+                                    if (eval < beta) beta = eval;
+                                    if (beta <= alpha) return minEval;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return (minEval == 999999) ? EvaluateBoardStatic() : minEval;
+    }
+}
+
+void GetOptimalHintMove(int* outSx, int* outSy, int* outTx, int* outTy) {
+    *outSx = -1; *outSy = -1; *outTx = -1; *outTy = -1;
+    int bestValue = 999999;
+    for (int sy = 0; sy < 8; sy++) {
+        for (int sx = 0; sx < 8; sx++) {
+            if (board[sy][sx] != 0 && board[sy][sx] <= 6) {
+                for (int ty = 0; ty < 8; ty++) {
+                    for (int tx = 0; tx < 8; tx++) {
+                        if (IsValidMove(sx, sy, tx, ty, 0)) {
+                            if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 1)) {
+                                MoveState ms;
+                                MakeMoveSim(sx, sy, tx, ty, &ms);
+                                int score = MinimaxAB(2, -999999, 999999, 1);
+                                UnmakeMoveSim(sx, sy, tx, ty, &ms);
+                                if (score < bestValue) {
+                                    bestValue = score;
+                                    *outSx = sx; *outSy = sy; *outTx = tx; *outTy = ty;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 void ResetGame(void) {
-    int initialBoard[8][8] = {
-        {10, 8, 9, 11, 12, 9, 8, 10},
-        {7,  7, 7,  7,  7, 7, 7,  7},
-        {0,  0, 0,  0,  0, 0, 0,  0},
-        {0,  0, 0,  0,  0, 0, 0,  0},
-        {0,  0, 0,  0,  0, 0, 0,  0},
-        {0,  0, 0,  0,  0, 0, 0,  0},
-        {1,  1, 1,  1,  1, 1, 1,  1},
-        {4,  2, 3,  5,  6, 3, 2,  4}
-    };
-    
     wKingMoved = 0; wRookLMoved = 0; wRookRMoved = 0;
     bKingMoved = 0; bRookLMoved = 0; bRookRMoved = 0;
     epX = -1; epY = -1;
-    if (campaignMode) {
-        aiDifficulty = currentStage > 3 ? 3 : currentStage;
-        if (currentStage == 4) initialBoard[7][1] = 0; 
-        if (currentStage == 5) initialBoard[7][3] = 0; 
-        if (currentStage == 6) {
-            for(int x=0; x<8; x++) { initialBoard[0][x] = 0; initialBoard[1][x] = 7; initialBoard[2][x] = 7; }
-            initialBoard[0][4] = 12;
+    hintActive = 0; hintSx = -1; hintSy = -1; hintTx = -1; hintTy = -1;
+    blackFrozen = 0; canUndo = 0;
+    blitzTimeWhite = 180.0f; blitzTimeBlack = 180.0f;
+
+    for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) board[y][x] = 0;
+
+    int targetStage = currentStage;
+    if (gameMode == 2) { // Puzzle Mode
+        int puzzleStageMap[] = { 1, 2, 3, 4, 11, 19 };
+        targetStage = puzzleStageMap[puzzleIndex % 6];
+    }
+
+    if (gameMode == 0 || gameMode == 2) {
+        switch (targetStage) {
+            case 1: // Stage 1: Mate-in-1 (Back Rank)
+                board[0][4] = 12; board[1][0] = 7; board[1][1] = 7; board[1][2] = 7;
+                board[1][5] = 7; board[1][6] = 7; board[1][7] = 7;
+                board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1; board[7][0] = 4;
+                aiPersonality = 1; break;
+            case 2: // Stage 2: Mate-in-1 (Smothered)
+                board[0][7] = 12; board[0][6] = 10; board[1][6] = 7; board[1][7] = 7;
+                board[7][5] = 6; board[2][4] = 2;
+                aiPersonality = 1; break;
+            case 3: // Stage 3: Mate-in-2 (Queen Sac Back Rank)
+                board[0][4] = 12; board[0][2] = 10;
+                for(int x=0; x<8; x++) if(x!=3 && x!=4) board[1][x] = 7;
+                board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1;
+                board[1][2] = 5; board[7][0] = 4;
+                aiPersonality = 2; break;
+            case 4: // Stage 4: Mate-in-2 (Greek Gift Sac)
+                board[0][6] = 12; board[1][5] = 7; board[1][6] = 7; board[1][7] = 7; board[2][5] = 8;
+                board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1;
+                board[5][3] = 3; board[6][2] = 5;
+                aiPersonality = 2; break;
+            case 5: // Stage 5: Endgame Study (Passed Pawn)
+                board[2][5] = 12; board[3][7] = 7; board[4][2] = 6; board[4][0] = 1;
+                aiPersonality = 3; break;
+            case 6: // Stage 6: Endgame Study (Lucena Position)
+                board[1][5] = 12; board[6][0] = 10; board[0][3] = 6; board[1][3] = 1; board[7][4] = 4;
+                aiPersonality = 3; break;
+            case 7: // Stage 7: Handicap Game (Rook Odds)
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                board[0][0] = 0; board[0][7] = 0; aiPersonality = 1; break;
+            case 8: // Stage 8: Handicap Game (Queen Odds)
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                board[0][3] = 0; aiPersonality = 2; break;
+            case 9: // Stage 9: Handicap (Pawn Avalanche)
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                board[2][2] = 7; board[2][3] = 7; board[2][4] = 7; board[2][5] = 7;
+                aiPersonality = 3; break;
+            case 10: // Stage 10: Full Match vs Novice AI
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                aiPersonality = 1; break;
+            case 11: // Stage 11: Mate-in-2 (Knight & Bishop Combo)
+                board[0][7] = 12; board[1][6] = 7; board[1][7] = 7; board[1][5] = 6; board[5][3] = 3; board[2][4] = 2;
+                aiPersonality = 2; break;
+            case 12: // Stage 12: Endgame Study (Queen vs Rook)
+                board[0][4] = 12; board[1][4] = 10; board[4][4] = 6; board[4][3] = 5;
+                aiPersonality = 3; break;
+            case 13: // Stage 13: Full Match vs Aggressive AI
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                aiPersonality = 2; break;
+            case 14: // Stage 14: Mate-in-2 (Pin & Sacrifice)
+                board[0][6] = 12; board[0][5] = 10; board[1][6] = 7; board[1][7] = 7;
+                board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1;
+                board[2][5] = 5; board[7][4] = 4;
+                aiPersonality = 3; break;
+            case 15: // Stage 15: Full Match vs Positional AI
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                aiPersonality = 3; break;
+            case 16: // Stage 16: Endgame Study (Double Rook Study)
+                board[2][4] = 12; board[0][0] = 10; board[0][7] = 10; board[2][3] = 7; board[3][4] = 7;
+                board[5][4] = 6; board[7][0] = 4; board[7][7] = 4; board[4][3] = 1; board[4][4] = 1;
+                aiPersonality = 4; break;
+            case 17: // Stage 17: Boss Handicap (Twin Queens)
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                board[0][3] = 11; board[0][4] = 11; board[0][2] = 12;
+                aiPersonality = 4; break;
+            case 18: // Stage 18: Full Match vs Grandmaster AI
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                aiPersonality = 4; break;
+            case 19: // Stage 19: Ultimate Mate-in-2 (Boden's Mate)
+                board[0][2] = 12; board[0][3] = 10; board[1][0] = 7; board[1][1] = 7; board[1][2] = 7;
+                board[7][6] = 6; board[4][5] = 3; board[5][4] = 3; board[2][2] = 5;
+                aiPersonality = 4; break;
+            case 20: // Stage 20: Grandmaster Boss Encounter
+            default:
+                for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
+                aiPersonality = 4; break;
         }
-        if (currentStage == 7) {
-            initialBoard[7][3] = 0; initialBoard[0][3] = 0;
-            initialBoard[7][0] = 0; initialBoard[0][0] = 0;
-        }
-        if (currentStage == 8) {
-            initialBoard[7][2] = 2; initialBoard[7][5] = 2;
-            initialBoard[0][2] = 8; initialBoard[0][5] = 8;
-        }
-        if (currentStage == 9) {
-            initialBoard[7][0] = 0; initialBoard[7][7] = 0;
-            initialBoard[0][3] = 0;
-        }
-        if (currentStage == 10) {
-            initialBoard[7][3] = 0;
-        }
-        if (currentStage == 11) {
-            for(int x=0; x<8; x++) initialBoard[2][x] = 7; 
-        }
-        if (currentStage == 12) {
-            initialBoard[7][1] = 0; initialBoard[7][6] = 0;
-            initialBoard[2][2] = 8; initialBoard[2][5] = 8;
-        }
-        if (currentStage == 13) {
-            initialBoard[0][2] = 11;
-        }
-        if (currentStage == 14) {
-            initialBoard[7][2] = 0; initialBoard[7][5] = 0;
-            initialBoard[2][0] = 10; initialBoard[2][7] = 10;
-        }
-        if (currentStage == 15) {
-            initialBoard[0][2] = 11; 
-            initialBoard[2][1] = 8; initialBoard[2][6] = 8;
-        }
-        freezePowerups = 1;
-        undoPowerups = 1;
     } else {
-        aiDifficulty = 2;
-        freezePowerups = 1;
-        undoPowerups = 1;
+        for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
     }
-    
-    for(int y=0; y<8; y++) {
-        for(int x=0; x<8; x++) {
-            board[y][x] = initialBoard[y][x];
-        }
-    }
+
+    freezePowerups = 3;
+    undoPowerups = 3;
+    hintPowerups = 3;
     selX = -1; selY = -1;
     whiteTurn = 1;
     gameOver = 0;
     winner = 0;
-    blackFrozen = 0;
-    canUndo = 0;
     lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
     g_particleCount = 0;
     g_slide.active = 0;
@@ -519,7 +693,7 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
         isCaptured = 1;
     }
 
-    // Trigger slide animation
+    // Slide animation
     g_slide.p = p;
     g_slide.startX = (float)(OX + sx * TS);
     g_slide.startY = (float)(OY + sy * TS);
@@ -581,24 +755,94 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     SetTimer(hwnd, 2, 30, NULL);
 }
 
+void DoBlackAIMove(void) {
+    if (gameOver || whiteTurn || !aiMode) return;
+    if (blackFrozen) {
+        blackFrozen = 0;
+        whiteTurn = 1;
+        InvalidateRect(g_hwndMain, NULL, FALSE);
+        return;
+    }
+
+    struct AIMove { int sx, sy, tx, ty, score; } moves[512];
+    int moveCount = 0;
+
+    for (int sy = 0; sy < 8; sy++) {
+        for (int sx = 0; sx < 8; sx++) {
+            if (board[sy][sx] > 6) {
+                for (int ty = 0; ty < 8; ty++) {
+                    for (int tx = 0; tx < 8; tx++) {
+                        if (IsValidMove(sx, sy, tx, ty, 0)) {
+                            if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
+                                moves[moveCount].sx = sx; moves[moveCount].sy = sy;
+                                moves[moveCount].tx = tx; moves[moveCount].ty = ty;
+
+                                int score = 0;
+                                int dstP = board[ty][tx];
+                                int pType = board[sy][sx] - 6;
+
+                                if (aiPersonality == 1) { // Novice
+                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + (my_rand() % 40 - 20);
+                                } else if (aiPersonality == 2) { // Aggressive Attacker
+                                    score = (dstP != 0 ? pieceValues[dstP] * 2 : 0) + GetPST(pType, tx, ty, 0);
+                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 15);
+                                    if (IsSquareAttacked(4, 7, 0)) score += 80;
+                                } else if (aiPersonality == 3) { // Positional Defender
+                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + GetPST(pType, tx, ty, 0);
+                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 5);
+                                    if (tx >= 2 && tx <= 5 && ty >= 2 && ty <= 5) score += 30;
+                                } else { // Grandmaster Minimax Alpha-Beta
+                                    MoveState ms;
+                                    MakeMoveSim(sx, sy, tx, ty, &ms);
+                                    int searchDepth = (gameMode == 0 && currentStage == 20) ? 4 : 3;
+                                    score = MinimaxAB(searchDepth - 1, -999999, 999999, 0);
+                                    UnmakeMoveSim(sx, sy, tx, ty, &ms);
+                                }
+                                moves[moveCount].score = score;
+                                moveCount++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (moveCount > 0) {
+        int bestScore = -9999999;
+        for (int i = 0; i < moveCount; i++) {
+            if (moves[i].score > bestScore) bestScore = moves[i].score;
+        }
+        int bestMoves[512], bestCount = 0;
+        for (int i = 0; i < moveCount; i++) {
+            if (moves[i].score == bestScore) bestMoves[bestCount++] = i;
+        }
+        int chosen = bestMoves[my_rand() % bestCount];
+        TriggerMove(g_hwndMain, moves[chosen].sx, moves[chosen].sy, moves[chosen].tx, moves[chosen].ty);
+        InvalidateRect(g_hwndMain, NULL, FALSE);
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_CREATE:
+            g_hwndMain = hwnd;
+            ResetGame();
+            SetTimer(hwnd, 3, 100, NULL); // Blitz timer tick
+            break;
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            // Double buffering
             HDC memDC = CreateCompatibleDC(hdc);
             HBITMAP memBM = CreateCompatibleBitmap(hdc, W, H);
             HGDIOBJ oldBM = SelectObject(memDC, memBM);
 
-            // Fill dark background
             HBRUSH bgBrush = CreateSolidBrush(RGB(15, 15, 22));
             RECT fullRc = {0, 0, W, H};
             FillRect(memDC, &fullRc, bgBrush);
             DeleteObject(bgBrush);
 
-            // Outer board wood frame border
             HBRUSH frameBrush = CreateSolidBrush(RGB(45, 24, 16));
             RECT frameRc = {15, 15, W - 15, H - 15};
             FillRect(memDC, &frameRc, frameBrush);
@@ -613,7 +857,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldPen);
             DeleteObject(goldPen);
 
-            // Board Rank & File Annotations
             HFONT labelFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);
             SetBkMode(memDC, TRANSPARENT);
@@ -626,7 +869,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RECT fTop = { OX + i * TS, OY - 22, OX + (i + 1) * TS, OY - 4 };
                 RECT fBot = { OX + i * TS, OY + TS * 8 + 4, OX + (i + 1) * TS, OY + TS * 8 + 22 };
                 RECT rLeft = { OX - 22, OY + i * TS, OX - 4, OY + (i + 1) * TS };
-                RECT rRight = { OX + TS * 8 + 4, OY + i * TS, OX + TS * 8 + 22, OY + (i + 1) * TS };
+                RECT rRight = { OX + TS * 8 + 4, OY + i * TS, OX + TS * 8 + 22, OY + TS * 8 + 22 };
                 DrawTextA(memDC, fStr, 1, &fTop, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 DrawTextA(memDC, fStr, 1, &fBot, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 DrawTextA(memDC, rStr, 1, &rLeft, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
@@ -635,7 +878,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(memDC, oldFont);
             DeleteObject(labelFont);
 
-            // Check warning detection
             int inCheckX = -1, inCheckY = -1;
             for (int cy = 0; cy < 8; cy++) {
                 for (int cx = 0; cx < 8; cx++) {
@@ -643,29 +885,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (p == 6 || p == 12) {
                         int isWhite = p <= 6;
                         if (IsSquareAttacked(cx, cy, !isWhite)) {
-                            inCheckX = cx;
-                            inCheckY = cy;
+                            inCheckX = cx; inCheckY = cy;
                         }
                     }
                 }
             }
 
-            // Draw Squares
             for (int y = 0; y < 8; y++) {
                 for (int x = 0; x < 8; x++) {
                     RECT rc = { OX + x * TS, OY + y * TS, OX + (x + 1) * TS, OY + (y + 1) * TS };
                     HBRUSH brush;
                     
                     if (x == inCheckX && y == inCheckY) {
-                        brush = CreateSolidBrush(RGB(239, 68, 68)); // red-500 for check
+                        brush = CreateSolidBrush(RGB(239, 68, 68));
                     } else if (x == selX && y == selY) {
-                        brush = CreateSolidBrush(RGB(245, 158, 11)); // selected gold
+                        brush = CreateSolidBrush(RGB(245, 158, 11));
                     } else if ((x == lastMoveSx && y == lastMoveSy) || (x == lastMoveTx && y == lastMoveTy)) {
-                        brush = CreateSolidBrush(RGB(253, 230, 138)); // yellow-200 last move
+                        brush = CreateSolidBrush(RGB(253, 230, 138));
+                    } else if (hintActive && ((x == hintSx && y == hintSy) || (x == hintTx && y == hintTy))) {
+                        brush = CreateSolidBrush(RGB(56, 189, 248)); // Cyan hint
                     } else if ((x + y) % 2 == 0) {
-                        brush = CreateSolidBrush(RGB(232, 218, 193)); // light wood
+                        brush = CreateSolidBrush(RGB(232, 218, 193));
                     } else {
-                        brush = CreateSolidBrush(RGB(74, 44, 27)); // dark walnut
+                        brush = CreateSolidBrush(RGB(74, 44, 27));
                     }
 
                     FillRect(memDC, &rc, brush);
@@ -677,7 +919,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(freezeOverlay);
                     }
 
-                    // Bevel border lines
                     HPEN lightPen = CreatePen(PS_SOLID, 1, (x + y) % 2 == 0 ? RGB(245, 235, 224) : RGB(92, 58, 34));
                     oldPen = SelectObject(memDC, lightPen);
                     MoveToEx(memDC, rc.left, rc.bottom - 1, NULL);
@@ -686,7 +927,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, oldPen);
                     DeleteObject(lightPen);
 
-                    // Valid Move Indicators
                     if (selX != -1 && IsValidMove(selX, selY, x, y, 0)) {
                         if (!SimulatedMoveLeavesCheck(selX, selY, x, y, whiteTurn)) {
                             int isCapture = (board[y][x] != 0 || (x == epX && y == (whiteTurn ? epY - 1 : epY + 1)));
@@ -704,7 +944,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
-                    // Piece rendering
                     int p = board[y][x];
                     int isAnimatingThisPiece = (g_slide.active && (int)((g_slide.targetX - OX) / TS) == x && (int)((g_slide.targetY - OY) / TS) == y);
                     if (p != 0 && !isAnimatingThisPiece) {
@@ -713,12 +952,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // Draw sliding piece
             if (g_slide.active) {
                 DrawChessPiece(memDC, g_slide.p, (int)g_slide.curX, (int)g_slide.curY, TS);
             }
 
-            // Render Particle Sparks
             for (int i = 0; i < g_particleCount; i++) {
                 if (g_particles[i].life > 0) {
                     HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
@@ -732,17 +969,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
-            // Text Headers
             HFONT sFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             oldFont = SelectObject(memDC, sFont);
             SetTextColor(memDC, RGB(255, 255, 255));
 
             RECT modeRc = { 20, 20, W - 150, 45 };
             char modeBuf[128];
-            if (campaignMode) {
-                wsprintfA(modeBuf, "Campaign: Stage %d | F:Freeze(%d) U:Undo(%d)", currentStage, freezePowerups, undoPowerups);
+            char* pNames[] = { "Novice", "Aggressive", "Defender", "Grandmaster" };
+            if (gameMode == 0) {
+                wsprintfA(modeBuf, "Campaign: Stage %d/20 [%s]", currentStage, pNames[aiPersonality - 1]);
+            } else if (gameMode == 1) {
+                wsprintfA(modeBuf, "%s [%s]", aiMode ? "vs AI" : "vs Player", pNames[aiPersonality - 1]);
+            } else if (gameMode == 2) {
+                wsprintfA(modeBuf, "Puzzle #%d [%s]", (puzzleIndex % 6) + 1, pNames[aiPersonality - 1]);
             } else {
-                wsprintfA(modeBuf, "%s | F:Freeze(%d) U:Undo(%d)", aiMode ? "vs AI ('M')" : "vs Player ('M')", freezePowerups, undoPowerups);
+                wsprintfA(modeBuf, "Blitz Timer (W:%ds B:%ds)", (int)blitzTimeWhite, (int)blitzTimeBlack);
             }
             DrawTextA(memDC, modeBuf, -1, &modeRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
@@ -751,21 +992,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             wsprintfA(statsBuf, "W:%d L:%d D:%d", statsWins, statsLosses, statsDraws);
             DrawTextA(memDC, statsBuf, -1, &statsRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
+            // Skill Buttons Row at bottom
+            struct Button { int x, y, w, h; char* text; } btns[5] = {
+                { 45, 475, 80, 28, "Hint (H)" },
+                { 135, 475, 80, 28, "Undo (U)" },
+                { 225, 475, 80, 28, "Freeze (F)" },
+                { 315, 475, 80, 28, "Mode (M)" },
+                { 405, 475, 90, 28, "AI (P)" }
+            };
+
+            for (int i = 0; i < 5; i++) {
+                RECT btnRc = { btns[i].x, btns[i].y, btns[i].x + btns[i].w, btns[i].y + btns[i].h };
+                HBRUSH btnBrush = CreateSolidBrush(RGB(30, 41, 59));
+                FillRect(memDC, &btnRc, btnBrush);
+                DeleteObject(btnBrush);
+
+                HPEN btnPen = CreatePen(PS_SOLID, 1, RGB(94, 234, 212));
+                oldPen = SelectObject(memDC, btnPen);
+                HGDIOBJ oldNull = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                RoundRect(memDC, btnRc.left, btnRc.top, btnRc.right, btnRc.bottom, 6, 6);
+                SelectObject(memDC, oldNull);
+                SelectObject(memDC, oldPen);
+                DeleteObject(btnPen);
+
+                SetTextColor(memDC, RGB(255, 255, 255));
+                DrawTextA(memDC, btns[i].text, -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            }
+
             RECT statusRc = { 20, H - 42, W - 20, H - 15 };
             if (gameOver) {
                 SetTextColor(memDC, RGB(245, 158, 11));
-                if (winner == 1) DrawTextA(memDC, campaignMode && currentStage < 15 ? "White Wins! Press 'R' for Next Stage" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (winner == 1) DrawTextA(memDC, gameMode == 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Stage 2" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (winner == 2) DrawTextA(memDC, "Checkmate! Black Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else DrawTextA(memDC, "Stalemate! Draw! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else DrawTextA(memDC, "Stalemate / Time Out! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             } else {
                 SetTextColor(memDC, whiteTurn ? RGB(250, 250, 250) : RGB(148, 163, 184));
-                DrawTextA(memDC, whiteTurn ? "White's Turn" : "Black's Turn", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                char turnBuf[128];
+                wsprintfA(turnBuf, "%s %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                DrawTextA(memDC, turnBuf, -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
             SelectObject(memDC, oldFont);
             DeleteObject(sFont);
 
-            // Blit to screen
             BitBlt(hdc, 0, 0, W, H, memDC, 0, 0, SRCCOPY);
 
             SelectObject(memDC, oldBM);
@@ -777,44 +1046,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN: {
             if (wParam == 'R') {
-                if (gameOver && campaignMode && winner == 1) {
-                    if (currentStage < 15) currentStage++;
-                    else { campaignMode = 0; currentStage = 1; }
+                if (gameOver && gameMode == 0 && winner == 1) {
+                    if (currentStage < 20) currentStage++;
+                    else { currentStage = 1; }
                 }
                 ResetGame();
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'M') {
-                if (!campaignMode) {
-                    aiMode = !aiMode;
-                    ResetGame();
-                    InvalidateRect(hwnd, NULL, FALSE);
-                }
-            } else if (wParam == 'C') {
-                campaignMode = !campaignMode;
-                if (campaignMode) { aiMode = 1; currentStage = 1; }
+                gameMode = (gameMode + 1) % 4;
+                if (gameMode == 0) aiMode = 1;
                 ResetGame();
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 'F') {
-                if (!gameOver && whiteTurn && aiMode && freezePowerups > 0) {
-                    freezePowerups--;
-                    blackFrozen = 1;
+            } else if (wParam == 'P') {
+                aiPersonality = (aiPersonality % 4) + 1;
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'H') { // OPTIMAL AI HINT SKILL
+                if (!gameOver && whiteTurn && hintPowerups > 0) {
+                    hintPowerups--;
+                    GetOptimalHintMove(&hintSx, &hintSy, &hintTx, &hintTy);
+                    if (hintSx != -1) hintActive = 1;
                     MessageBeep(MB_OK);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
-            } else if (wParam == 'U') {
+            } else if (wParam == 'F') { // TIME FREEZE SKILL
+                if (!gameOver && whiteTurn && freezePowerups > 0) {
+                    freezePowerups--;
+                    blackFrozen = 1;
+                    if (gameMode == 3) blitzTimeWhite += 15.0f;
+                    MessageBeep(MB_OK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            } else if (wParam == 'U') { // UNDO MOVE SKILL
                 if (!gameOver && whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
                     undoPowerups--;
-                    for(int y=0; y<8; y++) {
-                        for(int x=0; x<8; x++) {
-                            board[y][x] = undoBoard[y][x];
-                        }
-                    }
+                    for(int y=0; y<8; y++) for(int x=0; x<8; x++) board[y][x] = undoBoard[y][x];
                     wKingMoved = undoWKM; wRookLMoved = undoWRL; wRookRMoved = undoWRR;
                     bKingMoved = undoBKM; bRookLMoved = undoBRL; bRookRMoved = undoBRR;
                     epX = undoEpX; epY = undoEpY;
                     selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
-                    canUndo = 0;
-                    g_slide.active = 0;
+                    canUndo = 0; g_slide.active = 0; hintActive = 0;
                     MessageBeep(MB_OK);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
@@ -824,80 +1094,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER: {
             if (wParam == 1) {
                 KillTimer(hwnd, 1);
-                if (!gameOver && !whiteTurn && aiMode) {
-                    if (blackFrozen) {
-                        blackFrozen = 0;
-                        whiteTurn = 1;
-                        InvalidateRect(hwnd, NULL, FALSE);
-                    } else {
-                        struct Move { int sx, sy, tx, ty, score; } moves[1024];
-                        int moveCount = 0;
-                        for (int sy = 0; sy < 8; sy++) {
-                            for (int sx = 0; sx < 8; sx++) {
-                                if (board[sy][sx] > 6) { 
-                                    for (int ty = 0; ty < 8; ty++) {
-                                        for (int tx = 0; tx < 8; tx++) {
-                                            if (IsValidMove(sx, sy, tx, ty, 0)) {
-                                                if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
-                                                    moves[moveCount].sx = sx; moves[moveCount].sy = sy;
-                                                    moves[moveCount].tx = tx; moves[moveCount].ty = ty;
-                                                    int dstP = board[ty][tx];
-                                                    int baseScore = dstP != 0 ? pieceValues[dstP] : 0;
-                                                    int pType = board[sy][sx] > 6 ? board[sy][sx] - 6 : board[sy][sx];
-                                                    if (aiDifficulty >= 2) {
-                                                        baseScore += GetPST(pType, tx, ty, 0) - GetPST(pType, sx, sy, 0);
-                                                        if (IsSquareAttacked(tx, ty, 1)) baseScore -= (pieceValues[board[sy][sx]] / 10);
-                                                    }
-                                                    if (aiDifficulty >= 3) {
-                                                        int savedSrc = board[sy][sx];
-                                                        int savedDst = board[ty][tx];
-                                                        board[ty][tx] = savedSrc;
-                                                        board[sy][sx] = 0;
-                                                        int maxOppScore = 0;
-                                                        for (int osy = 0; osy < 8; osy++) {
-                                                            for (int osx = 0; osx < 8; osx++) {
-                                                                if (board[osy][osx] != 0 && board[osy][osx] <= 6) {
-                                                                    for (int oty = 0; oty < 8; oty++) {
-                                                                        for (int otx = 0; otx < 8; otx++) {
-                                                                            if (IsValidMove(osx, osy, otx, oty, 0)) {
-                                                                                int oDstP = board[oty][otx];
-                                                                                if (oDstP != 0) {
-                                                                                    int oScore = pieceValues[oDstP];
-                                                                                    if (oScore > maxOppScore) maxOppScore = oScore;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                        board[sy][sx] = savedSrc;
-                                                        board[ty][tx] = savedDst;
-                                                        baseScore -= maxOppScore;
-                                                    }
-                                                    moves[moveCount].score = baseScore;
-                                                    moveCount++;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (moveCount > 0) {
-                            int bestScore = -9999999;
-                            for (int i = 0; i < moveCount; i++) if (moves[i].score > bestScore) bestScore = moves[i].score;
-                            int bestMoves[1024], bestCount = 0;
-                            for (int i = 0; i < moveCount; i++) if (moves[i].score == bestScore) bestMoves[bestCount++] = i;
-                            int chosen = bestMoves[my_rand() % bestCount];
-                            
-                            TriggerMove(hwnd, moves[chosen].sx, moves[chosen].sy, moves[chosen].tx, moves[chosen].ty);
-                            InvalidateRect(hwnd, NULL, FALSE);
-                        }
-                    }
-                }
+                DoBlackAIMove();
             } else if (wParam == 2) {
-                // Animation & Particle tick
                 int activeParticles = 0;
                 for (int i = 0; i < g_particleCount; i++) {
                     if (g_particles[i].life > 0) {
@@ -918,7 +1116,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         float t = (float)elapsed / (float)g_slide.duration;
                         float easeT = 1.0f - (1.0f - t) * (1.0f - t);
                         g_slide.curX = g_slide.startX + (g_slide.targetX - g_slide.startX) * easeT;
-                        g_slide.curY = g_slide.startY + (g_slide.targetY - g_slide.startY) * easeT;
+                        g_slide.curY = g_slide.startY + (g_slide.targetY - g_slide.startX) * easeT;
                     }
                 }
 
@@ -928,32 +1126,59 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 3) { // Blitz Clock Tick
+                if (gameMode == 3 && !gameOver) {
+                    if (whiteTurn) {
+                        blitzTimeWhite -= 0.1f;
+                        if (blitzTimeWhite <= 0.0f) { blitzTimeWhite = 0; gameOver = 1; winner = 2; statsLosses++; SaveStatsFreestanding(); }
+                    } else {
+                        blitzTimeBlack -= 0.1f;
+                        if (blitzTimeBlack <= 0.0f) { blitzTimeBlack = 0; gameOver = 1; winner = 1; statsWins++; SaveStatsFreestanding(); }
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
             }
             break;
         }
         case WM_LBUTTONDOWN: {
-            if (gameOver) break;
-            if (aiMode && !whiteTurn) break;
-            
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
+
+            // Check skill buttons
+            if (my >= 475 && my <= 505) {
+                if (mx >= 45 && mx <= 125) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
+                if (mx >= 135 && mx <= 215) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
+                if (mx >= 225 && mx <= 305) { SendMessage(hwnd, WM_KEYDOWN, 'F', 0); return 0; }
+                if (mx >= 315 && mx <= 395) { SendMessage(hwnd, WM_KEYDOWN, 'M', 0); return 0; }
+                if (mx >= 405 && mx <= 495) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
+            }
+
+            if (gameOver) {
+                if (gameMode == 0 && winner == 1 && currentStage < 20) {
+                    currentStage++;
+                }
+                ResetGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
+
+            if (aiMode && !whiteTurn) break;
             
             int tx = (mx - OX) / TS;
             int ty = (my - OY) / TS;
             
             if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
+                hintActive = 0; // Clear hint on click
                 if (selX == -1) {
                     if (board[ty][tx] != 0) {
                         int isWhite = board[ty][tx] <= 6;
                         if ((whiteTurn && isWhite) || (!whiteTurn && !isWhite)) {
-                            selX = tx;
-                            selY = ty;
+                            selX = tx; selY = ty;
                         }
                     }
                 } else {
                     if (selX == tx && selY == ty) {
-                        selX = -1;
-                        selY = -1;
+                        selX = -1; selY = -1;
                     } else {
                         int p = board[selY][selX];
                         int isWhite = p <= 6;
@@ -961,8 +1186,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int dstIsWhite = dstP <= 6;
                         
                         if (dstP != 0 && isWhite == dstIsWhite) {
-                            selX = tx;
-                            selY = ty;
+                            selX = tx; selY = ty;
                         } else {
                             if (IsValidMove(selX, selY, tx, ty, 0)) {
                                 if (!SimulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
@@ -974,10 +1198,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         canUndo = 1;
                                     }
 
-                                    int curSelX = selX;
-                                    int curSelY = selY;
-                                    selX = -1;
-                                    selY = -1;
+                                    int curSelX = selX; int curSelY = selY;
+                                    selX = -1; selY = -1;
 
                                     TriggerMove(hwnd, curSelX, curSelY, tx, ty);
 
@@ -997,8 +1219,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_DESTROY:
             if (hBgBrush) DeleteObject(hBgBrush);
-            KillTimer(hwnd, 1);
-            KillTimer(hwnd, 2);
+            KillTimer(hwnd, 1); KillTimer(hwnd, 2); KillTimer(hwnd, 3);
             PostQuitMessage(0);
             break;
         default:
