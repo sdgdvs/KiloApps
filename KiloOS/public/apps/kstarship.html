@@ -717,7 +717,8 @@
       <div class="panel-header">
         <span>Ship Vitals</span>
         <div style="display: flex; gap: 4px; align-items: center;">
-          <span id="modeTagDisplay" style="font-size: 0.65rem; color: var(--amber-alert); border: 1px solid var(--amber-alert); padding: 1px 4px; border-radius: 2px;">STANDARD</span>
+          <span id="modeTagDisplay" style="font-size: 0.65rem; color: var(--amber-alert); border: 1px solid var(--amber-alert); padding: 1px 4px; border-radius: 2px;">SURVIVAL</span>
+          <span id="diffTagDisplay" style="font-size: 0.65rem; color: var(--cyan-glow); border: 1px solid var(--cyan-glow); padding: 1px 4px; border-radius: 2px;">COMMANDER</span>
           <span id="shipClassTag">CORVETTE</span>
         </div>
       </div>
@@ -1337,15 +1338,35 @@
         </div>
       </div>
 
-      <div style="font-size: 0.76rem; color: var(--cyan-glow); font-weight: bold; margin-top: 6px;">🎮 VOYAGE MODE:</div>
-      <div class="class-selector" style="grid-template-columns: 1fr 1fr;">
-        <div class="class-option selected" id="optModeNormal" onclick="selectGameMode(false)">
-          <div class="class-name">🛡️ STANDARD VOYAGE</div>
-          <div class="class-desc">Distress pod emergency escape on hull breach.</div>
+      <div style="font-size: 0.76rem; color: var(--cyan-glow); font-weight: bold; margin-top: 6px;">🎮 GAME VOYAGE MODE:</div>
+      <div class="class-selector" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="class-option" id="optModeExplorer" onclick="selectGameMode('explorer')">
+          <div class="class-name" style="color: var(--planet-glow);">🌟 EXPLORER</div>
+          <div class="class-desc">Relaxed voyage. 0.3x resource consumption, emergency pod save, lower risk.</div>
         </div>
-        <div class="class-option" id="optModePermadeath" onclick="selectGameMode(true)">
-          <div class="class-name">💀 PERMADEATH MODE</div>
-          <div class="class-desc">Total ship destruction is permanent. Hall of Fame leaderboard score saved.</div>
+        <div class="class-option selected" id="optModeSurvival" onclick="selectGameMode('survival')">
+          <div class="class-name" style="color: var(--amber-glow);">🛡️ SURVIVAL</div>
+          <div class="class-desc">Standard survival. 1.0x resource drain, distress pod escape option.</div>
+        </div>
+        <div class="class-option" id="optModePermadeath" onclick="selectGameMode('permadeath')">
+          <div class="class-name" style="color: var(--red-alert);">💀 IRON CAPTAIN</div>
+          <div class="class-desc">Hardcore permadeath. 1.2x resources, destruction is permanent (+50% score bonus).</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.76rem; color: var(--cyan-glow); font-weight: bold; margin-top: 6px;">⚔️ FLEET DIFFICULTY LEVEL:</div>
+      <div class="class-selector" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="class-option" id="optDiffCadet" onclick="selectDifficulty('cadet')">
+          <div class="class-name" style="color: var(--green-status);">🌱 CADET</div>
+          <div class="class-desc">Novice. 0.7x resource drain, 0.7x enemy HP/DMG, +500 Cr supply boost.</div>
+        </div>
+        <div class="class-option selected" id="optDiffCommander" onclick="selectDifficulty('commander')">
+          <div class="class-name" style="color: var(--cyan-glow);">⚓ COMMANDER</div>
+          <div class="class-desc">Normal. 1.0x resource drain, 1.0x enemy HP/DMG. Balanced fleet standards.</div>
+        </div>
+        <div class="class-option" id="optDiffAdmiral" onclick="selectDifficulty('admiral')">
+          <div class="class-name" style="color: var(--amber-alert);">⚡ ADMIRAL</div>
+          <div class="class-desc">Hard. 1.5x resource drain, 1.4x enemy HP/DMG, aggressive hostiles.</div>
         </div>
       </div>
 
@@ -2115,11 +2136,17 @@
         state.credits = 1500; state.crew = 20;
       }
 
+      if (state.difficulty === 'cadet') {
+        state.credits += 500;
+        state.fuel = Math.min(state.maxFuel, state.fuel + 20);
+        state.energy = Math.min(state.maxEnergy, state.energy + 20);
+      }
+
       document.getElementById('initModal').style.display = 'none';
       generateSectorGrid();
       updateUI();
       playSound('good');
-      addLog(`Commissioned ${state.shipClass} [${state.shipName}]. Sector ${state.currentBiome.name} launched.`, 'good');
+      addLog(`Commissioned ${state.shipClass} [${state.shipName}] under ${(state.gameMode||'SURVIVAL').toUpperCase()} mode & ${(state.difficulty||'COMMANDER').toUpperCase()} difficulty.`, 'good');
     }
 
     function updateUI() {
@@ -2177,9 +2204,23 @@
       }
 
       if (document.getElementById('modeTagDisplay')) {
-        document.getElementById('modeTagDisplay').innerText = state.permadeath ? 'PERMADEATH' : 'STANDARD';
-        document.getElementById('modeTagDisplay').style.borderColor = state.permadeath ? 'var(--red-alert)' : 'var(--amber-alert)';
-        document.getElementById('modeTagDisplay').style.color = state.permadeath ? 'var(--red-alert)' : 'var(--amber-alert)';
+        let mName = 'SURVIVAL';
+        let mCol = 'var(--amber-alert)';
+        if (state.gameMode === 'explorer') { mName = 'EXPLORER'; mCol = 'var(--planet-glow)'; }
+        else if (state.gameMode === 'permadeath') { mName = 'IRON CAPTAIN'; mCol = 'var(--red-alert)'; }
+        document.getElementById('modeTagDisplay').innerText = mName;
+        document.getElementById('modeTagDisplay').style.borderColor = mCol;
+        document.getElementById('modeTagDisplay').style.color = mCol;
+      }
+
+      if (document.getElementById('diffTagDisplay')) {
+        let dName = 'COMMANDER';
+        let dCol = 'var(--cyan-glow)';
+        if (state.difficulty === 'cadet') { dName = 'CADET'; dCol = 'var(--green-status)'; }
+        else if (state.difficulty === 'admiral') { dName = 'ADMIRAL'; dCol = 'var(--amber-alert)'; }
+        document.getElementById('diffTagDisplay').innerText = dName;
+        document.getElementById('diffTagDisplay').style.borderColor = dCol;
+        document.getElementById('diffTagDisplay').style.color = dCol;
       }
 
       // Current cell object
@@ -2220,8 +2261,10 @@
       state.shipY = newY;
       let fuelCost = 1;
       if (state.officers && state.officers[0].assigned && Math.random() < 0.5) fuelCost = 0;
-      state.fuel = Math.max(0, state.fuel - fuelCost);
-      state.energy = Math.max(0, state.energy - 1);
+
+      const resMult = getResourceConsumptionMultiplier();
+      if (Math.random() < resMult) state.fuel = Math.max(0, state.fuel - fuelCost);
+      if (Math.random() < resMult) state.energy = Math.max(0, state.energy - 1);
 
       state.moveCount++; checkSectorObjectiveProgress(3, 1); checkSectorObjectiveProgress(8, 1);
       if (state.moveCount % 6 === 0 && state.crew > 0) {
@@ -3357,15 +3400,20 @@
         preset = ENEMY_PRESETS[Math.floor(Math.random() * ENEMY_PRESETS.length)];
       }
 
+      const enemyMult = getEnemyDifficultyMultiplier();
+      const calcHull = Math.round(preset.hull * enemyMult);
+      const calcShields = Math.round(preset.shields * enemyMult);
+      const calcWeap = Math.max(5, Math.round(preset.weaponPower * enemyMult));
+
       combatState.active = true;
       combatState.targetSubsystem = 'HULL';
       combatState.playerEvading = false;
       state.bossStage = 1;
       combatState.enemy = {
         name: preset.name,
-        hull: preset.hull, maxHull: preset.hull,
-        shields: preset.shields, maxShields: preset.shields,
-        weaponPower: preset.weaponPower,
+        hull: calcHull, maxHull: calcHull,
+        shields: calcShields, maxShields: calcShields,
+        weaponPower: calcWeap,
         weaponsDamaged: false,
         evasion: preset.evasion,
         enginesDamaged: false,
@@ -3737,13 +3785,40 @@
       } catch (e) {}
     }
 
+    function getResourceConsumptionMultiplier() {
+      let modeMult = 1.0;
+      if (state.gameMode === 'explorer') modeMult = 0.3;
+      else if (state.gameMode === 'permadeath') modeMult = 1.2;
+
+      let diffMult = 1.0;
+      if (state.difficulty === 'cadet') diffMult = 0.7;
+      else if (state.difficulty === 'admiral') diffMult = 1.5;
+
+      return modeMult * diffMult;
+    }
+
+    function getEnemyDifficultyMultiplier() {
+      if (state.difficulty === 'cadet') return 0.7;
+      if (state.difficulty === 'admiral') return 1.4;
+      return 1.0;
+    }
+
     function calculateCurrentScore() {
       const distScore = (state.moveCount || 0) * 100;
       const crScore = state.credits || 0;
       const batScore = (state.battlesWon || 0) * 500;
       const relicScore = (state.artifacts || 0) * 800;
-      const permBonus = state.permadeath ? 2000 : 0;
-      return distScore + crScore + batScore + relicScore + permBonus;
+      const baseScore = distScore + crScore + batScore + relicScore;
+
+      let modeMult = 1.0;
+      if (state.gameMode === 'explorer') modeMult = 0.8;
+      else if (state.gameMode === 'permadeath') modeMult = 1.5;
+
+      let diffMult = 1.0;
+      if (state.difficulty === 'cadet') diffMult = 0.8;
+      else if (state.difficulty === 'admiral') diffMult = 1.3;
+
+      return Math.round(baseScore * modeMult * diffMult);
     }
 
     function recordHighScore() {
@@ -3757,6 +3832,8 @@
         credits: state.credits || 0,
         battles: state.battlesWon || 0,
         score: finalScore,
+        mode: (state.gameMode || 'survival').toUpperCase(),
+        difficulty: (state.difficulty || 'commander').toUpperCase(),
         permadeath: !!state.permadeath,
         date: `SD ${stardate}`
       };
@@ -3768,10 +3845,27 @@
       return entry;
     }
 
-    function selectGameMode(isPermadeath) {
-      state.permadeath = isPermadeath;
-      document.getElementById('optModeNormal').classList.toggle('selected', !isPermadeath);
-      document.getElementById('optModePermadeath').classList.toggle('selected', isPermadeath);
+    function selectGameMode(mode) {
+      state.gameMode = mode;
+      state.permadeath = (mode === 'permadeath');
+      ['optModeExplorer', 'optModeSurvival', 'optModePermadeath'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('selected');
+      });
+      if (mode === 'explorer' && document.getElementById('optModeExplorer')) document.getElementById('optModeExplorer').classList.add('selected');
+      else if (mode === 'survival' && document.getElementById('optModeSurvival')) document.getElementById('optModeSurvival').classList.add('selected');
+      else if (mode === 'permadeath' && document.getElementById('optModePermadeath')) document.getElementById('optModePermadeath').classList.add('selected');
+    }
+
+    function selectDifficulty(diff) {
+      state.difficulty = diff;
+      ['optDiffCadet', 'optDiffCommander', 'optDiffAdmiral'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('selected');
+      });
+      if (diff === 'cadet' && document.getElementById('optDiffCadet')) document.getElementById('optDiffCadet').classList.add('selected');
+      else if (diff === 'commander' && document.getElementById('optDiffCommander')) document.getElementById('optDiffCommander').classList.add('selected');
+      else if (diff === 'admiral' && document.getElementById('optDiffAdmiral')) document.getElementById('optDiffAdmiral').classList.add('selected');
     }
 
     function openLeaderboardModal() {

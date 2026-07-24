@@ -128,6 +128,9 @@ typedef struct {
     int inGameOverModal;
     char gameOverReason[64];
     int leaderboardCategory;
+    // Phase 12 Game Modes & Difficulty Levels
+    int gameMode;   // 0: Explorer, 1: Survival, 2: Permadeath Iron Captain
+    int difficulty; // 0: Cadet, 1: Commander, 2: Admiral
 } StarshipState;
 
 static StarshipState g_State = {
@@ -159,7 +162,8 @@ static StarshipState g_State = {
     2, 2, 2,
     100, 100, 100, 100,
     0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, "", 0
+    0, 0, 0, 0, 0, 0, "", 0,
+    1, 1 // gameMode: 1 (Survival), difficulty: 1 (Commander)
 };
 
 
@@ -219,8 +223,39 @@ typedef struct {
 static CaptainsLogEntry g_CaptainsLog[64];
 static int g_CaptainsLogCount = 0;
 
+double GetResourceConsumptionMultiplier() {
+    double modeMult = 1.0;
+    if (g_State.gameMode == 0) modeMult = 0.3;       // Explorer
+    else if (g_State.gameMode == 2) modeMult = 1.2;  // Iron Captain
+
+    double diffMult = 1.0;
+    if (g_State.difficulty == 0) diffMult = 0.7;     // Cadet
+    else if (g_State.difficulty == 2) diffMult = 1.5; // Admiral
+
+    return modeMult * diffMult;
+}
+
+double GetEnemyDifficultyMultiplier() {
+    if (g_State.difficulty == 0) return 0.7; // Cadet
+    if (g_State.difficulty == 2) return 1.4; // Admiral
+    return 1.0; // Commander
+}
+
+double GetScoreMultiplier() {
+    double modeMult = 1.0;
+    if (g_State.gameMode == 0) modeMult = 0.8;
+    else if (g_State.gameMode == 2) modeMult = 1.5;
+
+    double diffMult = 1.0;
+    if (g_State.difficulty == 0) diffMult = 0.8;
+    else if (g_State.difficulty == 2) diffMult = 1.3;
+
+    return modeMult * diffMult;
+}
+
 int CalculateCurrentScore() {
-    return (g_State.moveCount * 100) + g_State.credits + (g_State.battlesWon * 500) + (g_State.artifacts * 800) + (g_State.permadeath ? 2000 : 0);
+    int baseScore = (g_State.moveCount * 100) + g_State.credits + (g_State.battlesWon * 500) + (g_State.artifacts * 800);
+    return (int)(baseScore * GetScoreMultiplier());
 }
 
 void RecordHighScore() {
@@ -607,6 +642,10 @@ static HWND hBtnLdbCatAll = NULL, hBtnLdbCatDist = NULL, hBtnLdbCatCr = NULL, hB
 static HWND hBtnLogClose = NULL;
 static HWND hBtnGameOverRestart = NULL;
 
+// Phase 12 Game Modes & Difficulty Controls
+static HWND hBtnMode0 = NULL, hBtnMode1 = NULL, hBtnMode2 = NULL;
+static HWND hBtnDiff0 = NULL, hBtnDiff1 = NULL, hBtnDiff2 = NULL;
+
 typedef struct {
     const char* sectorName;
     double mult[5];
@@ -762,8 +801,13 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnClass1,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnClass2,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnClass3,      g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnMode0,       g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnMode1,       g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnMode2,       g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnDiff0,       g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnDiff1,       g_State.inInitModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnDiff2,       g_State.inInitModal ? SW_SHOW : SW_HIDE);
     ShowWindow(hBtnConfirmInit, g_State.inInitModal ? SW_SHOW : SW_HIDE);
-    ShowWindow(hBtnToggleMode,  g_State.inInitModal ? SW_SHOW : SW_HIDE);
 
     // Station Modal Buttons
     ShowWindow(hBtnStRefuel,        g_State.inStationModal ? SW_SHOW : SW_HIDE);
@@ -889,6 +933,13 @@ void ApplyShipClassStats() {
         g_State.maxShields = 85; g_State.shields = 85;
         g_State.credits = 1500; g_State.crew = 20; g_State.ore = 0; g_State.gas = 0; g_State.artifacts = 0; g_State.scraps = 25;
     }
+
+    if (g_State.difficulty == 0) { // Cadet bonus
+        g_State.credits += 500;
+        g_State.fuel = (g_State.fuel + 20 > g_State.maxFuel) ? g_State.maxFuel : g_State.fuel + 20;
+        g_State.energy = (g_State.energy + 20 > g_State.maxEnergy) ? g_State.maxEnergy : g_State.energy + 20;
+    }
+    g_State.permadeath = (g_State.gameMode == 2) ? 1 : 0;
     g_State.upgradeHullLvl = 0;
     g_State.upgradeCannonsLvl = 0;
     g_State.upgradeShieldsLvl = 0;
@@ -2163,12 +2214,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSE     = CreateWindowA("BUTTON", "SE",   WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 765, 338, 60, 21, hwnd, (HMENU)209, NULL, NULL);
 
             // Init Modal Buttons
-            hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 150, 380, 28, hwnd, (HMENU)301, NULL, NULL);
-            hBtnClass1 = CreateWindowA("BUTTON", "[2] FRIGATE (Mining)",    WS_CHILD | BS_PUSHBUTTON, 230, 184, 380, 28, hwnd, (HMENU)302, NULL, NULL);
-            hBtnClass2 = CreateWindowA("BUTTON", "[3] INTERCEPTOR (Tactical)",WS_CHILD | BS_PUSHBUTTON, 230, 218, 380, 28, hwnd, (HMENU)303, NULL, NULL);
-            hBtnClass3 = CreateWindowA("BUTTON", "[4] CRUISER (Deep Space)",WS_CHILD | BS_PUSHBUTTON, 230, 252, 380, 28, hwnd, (HMENU)304, NULL, NULL);
-            hBtnToggleMode  = CreateWindowA("BUTTON", "[MODE: 🛡️ STANDARD VOYAGE]", WS_CHILD | BS_PUSHBUTTON, 230, 286, 380, 26, hwnd, (HMENU)306, NULL, NULL);
-            hBtnConfirmInit = CreateWindowA("BUTTON", "🚀 INITIALIZE COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 230, 318, 380, 32, hwnd, (HMENU)305, NULL, NULL);
+            hBtnClass0 = CreateWindowA("BUTTON", "[1] CORVETTE (Explorer)", WS_CHILD | BS_PUSHBUTTON, 230, 105, 380, 22, hwnd, (HMENU)301, NULL, NULL);
+            hBtnClass1 = CreateWindowA("BUTTON", "[2] FRIGATE (Mining)",    WS_CHILD | BS_PUSHBUTTON, 230, 130, 380, 22, hwnd, (HMENU)302, NULL, NULL);
+            hBtnClass2 = CreateWindowA("BUTTON", "[3] INTERCEPTOR (Tactical)",WS_CHILD | BS_PUSHBUTTON, 230, 155, 380, 22, hwnd, (HMENU)303, NULL, NULL);
+            hBtnClass3 = CreateWindowA("BUTTON", "[4] CRUISER (Deep Space)",WS_CHILD | BS_PUSHBUTTON, 230, 180, 380, 22, hwnd, (HMENU)304, NULL, NULL);
+
+            hBtnMode0  = CreateWindowA("BUTTON", "🌟 EXPLORER", WS_CHILD | BS_PUSHBUTTON, 230, 232, 122, 25, hwnd, (HMENU)306, NULL, NULL);
+            hBtnMode1  = CreateWindowA("BUTTON", "🛡️ SURVIVAL", WS_CHILD | BS_PUSHBUTTON, 357, 232, 122, 25, hwnd, (HMENU)307, NULL, NULL);
+            hBtnMode2  = CreateWindowA("BUTTON", "💀 IRON CAPTAIN", WS_CHILD | BS_PUSHBUTTON, 484, 232, 126, 25, hwnd, (HMENU)308, NULL, NULL);
+
+            hBtnDiff0  = CreateWindowA("BUTTON", "🌱 CADET",     WS_CHILD | BS_PUSHBUTTON, 230, 280, 122, 25, hwnd, (HMENU)309, NULL, NULL);
+            hBtnDiff1  = CreateWindowA("BUTTON", "⚓ COMMANDER", WS_CHILD | BS_PUSHBUTTON, 357, 280, 122, 25, hwnd, (HMENU)310, NULL, NULL);
+            hBtnDiff2  = CreateWindowA("BUTTON", "⚡ ADMIRAL",   WS_CHILD | BS_PUSHBUTTON, 484, 280, 126, 25, hwnd, (HMENU)311, NULL, NULL);
+
+            hBtnConfirmInit = CreateWindowA("BUTTON", "🚀 INITIALIZE COMMAND DECK", WS_CHILD | BS_PUSHBUTTON, 230, 320, 380, 32, hwnd, (HMENU)305, NULL, NULL);
 
             // Leaderboard Modal Buttons
             hBtnLdbCatAll  = CreateWindowA("BUTTON", "🌟 OVERALL",  WS_CHILD | BS_PUSHBUTTON, 210, 80, 95, 24, hwnd, (HMENU)1201, NULL, NULL);
@@ -2477,8 +2536,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_State.inCaptainsLogModal = 1;
                 UpdateControlVisibility(hwnd);
             } else if (id == 306) {
-                g_State.permadeath = !g_State.permadeath;
-                SetWindowTextA(hBtnToggleMode, g_State.permadeath ? "[MODE: 💀 PERMADEATH MODE]" : "[MODE: 🛡️ STANDARD VOYAGE]");
+                g_State.gameMode = 0; g_State.permadeath = 0;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 307) {
+                g_State.gameMode = 1; g_State.permadeath = 0;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 308) {
+                g_State.gameMode = 2; g_State.permadeath = 1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 309) {
+                g_State.difficulty = 0;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 310) {
+                g_State.difficulty = 1;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 311) {
+                g_State.difficulty = 2;
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (id >= 1201 && id <= 1204) {
                 g_State.leaderboardCategory = id - 1201;
@@ -2889,21 +2962,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(hdc, &modalOverlay, hDimBrush);
                 DeleteObject(hDimBrush);
 
-                RECT modalCard = {210, 70, 630, 370};
+                RECT modalCard = {210, 50, 630, 378};
                 FillRect(hdc, &modalCard, hPanelBrush);
                 FrameRect(hdc, &modalCard, (HBRUSH)GetStockObject(WHITE_BRUSH));
 
                 SelectObject(hdc, hTitleFont);
                 SetTextColor(hdc, RGB(0, 240, 255));
-                TextOutA(hdc, 230, 85, "🚀 COMMISSION STARSHIP", 22);
+                TextOutA(hdc, 230, 58, "🚀 COMMISSION STARSHIP", 22);
 
                 SelectObject(hdc, hMonoFont);
                 SetTextColor(hdc, RGB(160, 190, 220));
-                TextOutA(hdc, 230, 115, "Captain, select vessel blueprint to launch sector exploration:", 61);
+                TextOutA(hdc, 230, 82, "Captain, select blueprint, game mode & difficulty level:", 56);
 
                 // Highlight selected class
-                int selY = 150 + (g_State.selectedClass * 34);
-                RECT selRect = {228, selY - 2, 612, selY + 28};
+                int selY = 105 + (g_State.selectedClass * 25);
+                RECT selRect = {228, selY - 2, 612, selY + 22};
                 HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB(0, 240, 255));
                 HPEN hOldP = (HPEN)SelectObject(hdc, hSelPen);
                 HBRUSH hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -2911,6 +2984,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SelectObject(hdc, hOldP);
                 SelectObject(hdc, hOldB);
                 DeleteObject(hSelPen);
+
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 230, 212, "🎮 GAME MODE:", 13);
+                int modeX = 228 + (g_State.gameMode * 127);
+                RECT modeRect = {modeX, 230, modeX + 125, 259};
+                HPEN hModePen = CreatePen(PS_SOLID, 2, RGB(255, 170, 0));
+                hOldP = (HPEN)SelectObject(hdc, hModePen);
+                hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Rectangle(hdc, modeRect.left, modeRect.top, modeRect.right, modeRect.bottom);
+                SelectObject(hdc, hOldP);
+                SelectObject(hdc, hOldB);
+                DeleteObject(hModePen);
+
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 230, 262, "⚔️ FLEET DIFFICULTY:", 20);
+                int diffX = 228 + (g_State.difficulty * 127);
+                RECT diffRect = {diffX, 278, diffX + 125, 307};
+                HPEN hDiffPen = CreatePen(PS_SOLID, 2, RGB(57, 255, 20));
+                hOldP = (HPEN)SelectObject(hdc, hDiffPen);
+                hOldB = (HBRUSH)SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                Rectangle(hdc, diffRect.left, diffRect.top, diffRect.right, diffRect.bottom);
+                SelectObject(hdc, hOldP);
+                SelectObject(hdc, hOldB);
+                DeleteObject(hDiffPen);
             } else if (g_State.inStationModal) {
                 RECT modalOverlay = {10, 48, 830, 393};
                 HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
