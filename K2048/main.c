@@ -925,7 +925,8 @@ int Move(int dx, int dy) {
                             if (grid[ni][nj] > stats_highestTile) {
                                 stats_highestTile = grid[ni][nj];
                             }
-                            if (grid[ni][nj] == 2048 && !hasWon && !campaignMode) {
+                            int isWinTile = (ruleset == 1) ? (grid[ni][nj] >= 2584) : ((ruleset == 2) ? (grid[ni][nj] >= 1536) : (grid[ni][nj] >= 2048));
+                            if (isWinTile && !hasWon && !campaignMode) {
                                 win = 1;
                                 hasWon = 1;
                             }
@@ -1047,7 +1048,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_TIMER:
             if (wParam == 4) {
                 frameAnimCount++;
-                if (particleCount > 0) {
+                int hasMilestone = 0;
+                for (int i=0; i<grid_size; i++) {
+                    for (int j=0; j<grid_size; j++) {
+                        if (grid[i][j] >= 1024 || grid[i][j] == -2) { hasMilestone = 1; break; }
+                    }
+                    if (hasMilestone) break;
+                }
+                if (particleCount > 0 || hasMilestone) {
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
                 return 0;
@@ -1288,7 +1296,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
+            KillTimer(hwnd, 3);
+            KillTimer(hwnd, 4);
             SaveBest();
+            SaveStats();
             PostQuitMessage(0);
             return 0;
     }
