@@ -1,14 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>KPac</title>
 <style>
-  body { margin: 0; background-color: #000; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-  canvas { image-rendering: pixelated; width: 100%; height: 100%; max-width: 600px; max-height: 600px; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #030611;
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  #game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #080d1a;
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 15px rgba(30, 136, 229, 0.3);
+    border: 1px solid #1e88e5;
+  }
+  canvas {
+    image-rendering: pixelated;
+    width: 300px;
+    height: 340px;
+    border-radius: 6px;
+    background-color: #030611;
+  }
+  .skills-bar {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    width: 100%;
+    max-width: 300px;
+  }
+  .skill-btn {
+    flex: 1;
+    background: linear-gradient(185deg, #1565c0, #0d47a1);
+    color: #fff;
+    border: 1px solid #42a5f5;
+    border-radius: 6px;
+    padding: 6px 4px;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+  .skill-btn:hover:not(:disabled) {
+    background: linear-gradient(185deg, #1e88e5, #1565c0);
+    box-shadow: 0 0 8px rgba(66, 165, 245, 0.6);
+  }
+  .skill-btn:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+  .skill-btn:disabled {
+    background: #1a2332;
+    border-color: #37474f;
+    color: #78909c;
+    cursor: not-allowed;
+  }
+  .skill-btn.active {
+    background: linear-gradient(185deg, #00c853, #00a152);
+    border-color: #69f0ae;
+    box-shadow: 0 0 10px rgba(105, 240, 174, 0.8);
+  }
 </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="300" height="300"></canvas>
+<div id="game-container">
+  <canvas id="gameCanvas" width="300" height="340"></canvas>
+  <div class="skills-bar">
+    <button id="btnFreeze" class="skill-btn" onclick="triggerFreezeSkill()">Freeze [F]</button>
+    <button id="btnSprint" class="skill-btn" onclick="triggerSpeedSkill()">Sprint [S]</button>
+    <button id="btnMagnet" class="skill-btn" onclick="triggerMagnetSkill()">Magnet [M]</button>
+    <button id="btnShield" class="skill-btn" onclick="triggerShieldSkill()">Shield [B]</button>
+  </div>
+</div>
+
 <script>
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
@@ -16,8 +94,10 @@
   const COLS = 15;
   const ROWS = 15;
   const TS = 20;
-  
+
+  // 20 Unique Campaign Maps
   const maps = [
+      // Stage 1: Classic Maze
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
@@ -35,6 +115,7 @@
           [1,1,1,3,2,2,2,1,2,2,2,3,1,1,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 2: Central Square
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
@@ -52,6 +133,7 @@
           [1,3,1,1,1,1,2,2,2,1,1,1,1,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 3: Diamond Arena
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
@@ -69,6 +151,7 @@
           [1,3,2,2,2,2,2,3,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 4: Cross Tunnel
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
@@ -86,6 +169,7 @@
           [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 5: Inward Spiral
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,1,2,2,2,1,2,2,2,1,2,3,1],
@@ -103,6 +187,7 @@
           [1,4,2,1,2,2,2,1,2,2,2,1,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 6: Twin Chamber
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,4,2,2,2,2,2,1,2,2,2,2,2,4,1],
@@ -120,6 +205,7 @@
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 7: Grid Labyrinth
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
@@ -137,6 +223,7 @@
           [1,4,2,2,2,1,2,2,2,1,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 8: Concentric Rings
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
@@ -154,6 +241,7 @@
           [1,4,2,2,2,2,2,2,2,2,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 9: Checkerboard Fortress
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,1,2,1,2,1,2,1,2,1,2,3,1],
@@ -171,6 +259,7 @@
           [1,4,2,1,2,1,2,1,2,1,2,1,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 10: Central Hub
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
@@ -188,6 +277,7 @@
           [1,4,2,2,2,2,2,2,2,2,2,2,2,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 11: Frost Vault
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,5,2,2,2,2,1,2,1,2,2,2,2,5,1],
@@ -205,6 +295,7 @@
           [1,5,2,2,2,2,1,2,1,2,2,2,2,5,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 12: Dual Warp Arena
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
@@ -222,6 +313,7 @@
           [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 13: Lightning Chamber
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,5,2,1,2,2,2,2,2,2,2,1,2,5,1],
@@ -239,6 +331,7 @@
           [1,5,2,1,2,2,2,2,2,2,2,1,2,5,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 14: Pinwheel Crossroads
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,3,2,2,2,1,2,5,2,1,2,2,2,3,1],
@@ -256,6 +349,7 @@
           [1,3,2,2,2,1,2,5,2,1,2,2,2,3,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ],
+      // Stage 15: Blockade Maze
       [
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
           [1,5,2,2,2,2,2,2,2,2,2,2,2,5,1],
@@ -272,16 +366,118 @@
           [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1],
           [1,5,2,2,2,2,2,2,2,2,2,2,2,5,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 16: Warp Tunnel Heavy
+      [
+          [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1],
+          [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
+          [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
+          [1,2,1,4,2,2,2,1,2,2,2,4,1,2,1],
+          [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
+          [0,0,0,2,1,2,2,1,2,2,1,2,0,0,0],
+          [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1],
+          [0,0,0,2,2,2,1,0,1,2,2,2,0,0,0],
+          [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1],
+          [0,0,0,2,1,2,2,1,2,2,1,2,0,0,0],
+          [1,2,2,2,1,1,2,2,2,1,1,2,2,2,1],
+          [1,2,1,5,2,2,2,1,2,2,2,5,1,2,1],
+          [1,2,1,1,2,1,2,1,2,1,2,1,1,2,1],
+          [1,3,2,2,2,1,2,2,2,1,2,2,2,3,1],
+          [1,1,1,1,1,1,0,0,0,1,1,1,1,1,1]
+      ],
+      // Stage 17: Speed Zone Arena
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,4,4,4,2,2,2,1,2,2,2,4,4,4,1],
+          [1,4,1,1,1,2,1,1,1,2,1,1,1,4,1],
+          [1,4,1,3,2,2,2,4,2,2,2,3,1,4,1],
+          [1,2,1,2,1,1,2,1,2,1,1,2,1,2,1],
+          [1,2,2,2,1,4,4,4,4,4,1,2,2,2,1],
+          [1,1,1,2,1,4,1,1,1,4,1,2,1,1,1],
+          [0,0,0,2,4,4,1,0,1,4,4,2,0,0,0],
+          [1,1,1,2,1,4,1,1,1,4,1,2,1,1,1],
+          [1,2,2,2,1,4,4,4,4,4,1,2,2,2,1],
+          [1,2,1,2,1,1,2,1,2,1,1,2,1,2,1],
+          [1,4,1,3,2,2,2,4,2,2,2,3,1,4,1],
+          [1,4,1,1,1,2,1,1,1,2,1,1,1,4,1],
+          [1,4,4,4,2,2,2,1,2,2,2,4,4,4,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 18: Spiral Shadow Labyrinth
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,2,1,1],
+          [1,5,2,2,2,2,2,2,2,2,2,1,2,5,1],
+          [1,2,1,1,1,1,1,1,1,1,2,1,1,2,1],
+          [1,2,1,3,2,2,2,2,2,1,2,1,2,2,1],
+          [1,2,1,2,1,1,1,1,2,1,2,1,2,1,1],
+          [0,2,1,2,1,0,0,0,2,1,2,1,2,2,0],
+          [1,1,1,2,1,2,1,1,1,1,2,1,1,2,1],
+          [1,2,2,2,1,2,2,2,2,2,2,1,2,2,1],
+          [1,2,1,1,1,1,1,1,1,1,1,1,2,1,1],
+          [1,5,2,2,2,2,2,2,2,2,2,2,2,5,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,2,2,2,2,2,2,2,2,2,2,3,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 19: The Gauntlet
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,1,3,2,1,2,1,2,3,1,2,3,1],
+          [1,1,2,1,1,2,1,2,1,2,1,1,2,1,1],
+          [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,2,1,4,2,2,2,5,2,2,2,4,1,2,1],
+          [1,2,1,1,1,1,1,1,1,1,1,1,1,2,1],
+          [0,2,2,2,2,2,2,0,2,2,2,2,2,2,0],
+          [1,2,1,1,1,1,1,1,1,1,1,1,1,2,1],
+          [1,2,1,4,2,2,2,5,2,2,2,4,1,2,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,2,2,2,2,2,2,1,2,2,2,2,2,2,1],
+          [1,1,2,1,1,2,1,2,1,2,1,1,2,1,1],
+          [1,3,2,1,3,2,1,2,1,2,3,1,2,3,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+      ],
+      // Stage 20: Ghost King Lair (Boss Chamber)
+      [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,2,1,5,2,2,2,2,2,2,2,5,1,2,1],
+          [1,2,1,2,1,1,1,0,1,1,1,2,1,2,1],
+          [1,2,2,2,1,0,0,0,0,0,1,2,2,2,1],
+          [1,1,1,2,1,0,0,0,0,0,1,2,1,1,1],
+          [0,0,0,2,0,0,0,0,0,0,0,2,0,0,0],
+          [1,1,1,2,1,0,0,0,0,0,1,2,1,1,1],
+          [1,2,2,2,1,0,0,0,0,0,1,2,2,2,1],
+          [1,2,1,2,1,1,1,0,1,1,1,2,1,2,1],
+          [1,2,1,4,2,2,2,2,2,2,2,4,1,2,1],
+          [1,2,1,1,1,1,2,1,2,1,1,1,1,2,1],
+          [1,3,2,2,2,2,2,1,2,2,2,2,2,3,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
       ]
   ];
   let map = [];
   
   let px, py, pdx, pdy, ndx, ndy;
   let ghosts = [];
+  let numGhosts = 5;
+
+  // Active Skills & Timers
+  let freezeSkillTimer = 0, freezeCooldown = 0;
+  let speedSkillTimer = 0, speedCooldown = 0;
+  let magnetSkillTimer = 0, magnetCooldown = 0;
+  let shieldActive = 0, shieldCooldown = 0;
+
+  // Stage 20 Boss State
+  let bossHp = 8;
+  let bossMaxHp = 8;
+  let phantomSpawnTimer = 0;
+
   let score = 0, gameOver = 0, dotCount = 0, frameCount = 0;
   let level = 1;
   let frightTimer = 0;
-  let freezeTimer = 0;
   let highScore = parseInt(localStorage.getItem('kpac_highscore') || 0);
   let statsGamesPlayed = parseInt(localStorage.getItem('kpac_games') || 0);
   let statsGhostsEaten = parseInt(localStorage.getItem('kpac_ghosts') || 0);
@@ -290,12 +486,10 @@
   let paused = false;
   let fruitActive = 0;
   let fruitTimer = 0;
-  let speedTimer = 0;
   
   let diffMode = 1; // 0 = Easy, 1 = Normal, 2 = Hard
   let saveMsgText = '';
   let saveMsgTimer = 0;
-  let numGhosts = 4;
 
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playSound(freq, dur, type='square') {
@@ -319,7 +513,14 @@
       if (e.key === '1') { diffMode = 0; saveMsgText = 'DIFF: EASY'; saveMsgTimer = 20; playSound(400, 0.1, 'sine'); }
       if (e.key === '2') { diffMode = 1; saveMsgText = 'DIFF: NORMAL'; saveMsgTimer = 20; playSound(500, 0.1, 'sine'); }
       if (e.key === '3') { diffMode = 2; saveMsgText = 'DIFF: HARD'; saveMsgTimer = 20; playSound(600, 0.1, 'sine'); }
-      if ((e.key === 's' || e.key === 'S') && !gameOver) saveGame();
+
+      // Active Skills hotkeys
+      if (e.key === 'f' || e.key === 'F') triggerFreezeSkill();
+      if (e.key === 's' || e.key === 'S') triggerSpeedSkill();
+      if (e.key === 'm' || e.key === 'M') triggerMagnetSkill();
+      if (e.key === 'b' || e.key === 'B') triggerShieldSkill();
+
+      if ((e.key === 'v' || e.key === 'V') && !gameOver) saveGame();
       if (e.key === 'l' || e.key === 'L') loadGame();
   });
   document.addEventListener('keyup', e => keys[e.key] = false);
@@ -330,12 +531,61 @@
       return 3;
   }
 
+  function triggerFreezeSkill() {
+      if (freezeCooldown === 0 && !gameOver && !paused) {
+          freezeSkillTimer = 60;
+          freezeCooldown = 150;
+          saveMsgText = 'FREEZE SKILL!';
+          saveMsgTimer = 25;
+          playSound(800, 0.25, 'sine');
+          addPopup(px * TS + TS/2, py * TS + TS/2, 'FREEZE!', '#ffffff');
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffffff', 12);
+      }
+  }
+
+  function triggerSpeedSkill() {
+      if (speedCooldown === 0 && !gameOver && !paused) {
+          speedSkillTimer = 80;
+          speedCooldown = 150;
+          saveMsgText = 'SPEED SPRINT!';
+          saveMsgTimer = 25;
+          playSound(950, 0.2, 'triangle');
+          addPopup(px * TS + TS/2, py * TS + TS/2, 'SPRINT!', '#00ffff');
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#00ffff', 12);
+      }
+  }
+
+  function triggerMagnetSkill() {
+      if (magnetCooldown === 0 && !gameOver && !paused) {
+          magnetSkillTimer = 50;
+          magnetCooldown = 150;
+          saveMsgText = 'DOT MAGNET!';
+          saveMsgTimer = 25;
+          playSound(650, 0.3, 'sine');
+          addPopup(px * TS + TS/2, py * TS + TS/2, 'MAGNET!', '#ffeb3b');
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#ffeb3b', 12);
+      }
+  }
+
+  function triggerShieldSkill() {
+      if (shieldCooldown === 0 && !gameOver && !paused) {
+          shieldActive = 1;
+          shieldCooldown = 200;
+          saveMsgText = 'GHOST SHIELD!';
+          saveMsgTimer = 25;
+          playSound(750, 0.3, 'square');
+          addPopup(px * TS + TS/2, py * TS + TS/2, 'SHIELD!', '#00e5ff');
+          addSparks(px * TS + TS/2, py * TS + TS/2, '#00e5ff', 12);
+      }
+  }
+
   function saveGame() {
       const data = {
           px, py, pdx, pdy, ndx, ndy,
           ghosts, map, score, level, lives, diffMode,
-          frightTimer, freezeTimer, speedTimer,
-          dotCount, frameCount, fruitActive, fruitTimer, gameOver
+          frightTimer, freezeSkillTimer, speedSkillTimer, magnetSkillTimer, shieldActive,
+          freezeCooldown, speedCooldown, magnetCooldown, shieldCooldown,
+          bossHp, dotCount, frameCount, fruitActive, fruitTimer, gameOver
       };
       localStorage.setItem('kpac_save_state', JSON.stringify(data));
       saveMsgText = 'GAME SAVED';
@@ -358,8 +608,17 @@
           ghosts = data.ghosts; map = data.map;
           score = data.score; level = data.level; lives = data.lives;
           diffMode = data.diffMode !== undefined ? data.diffMode : 1;
-          frightTimer = data.frightTimer; freezeTimer = data.freezeTimer;
-          speedTimer = data.speedTimer; dotCount = data.dotCount;
+          frightTimer = data.frightTimer;
+          freezeSkillTimer = data.freezeSkillTimer || 0;
+          speedSkillTimer = data.speedSkillTimer || 0;
+          magnetSkillTimer = data.magnetSkillTimer || 0;
+          shieldActive = data.shieldActive || 0;
+          freezeCooldown = data.freezeCooldown || 0;
+          speedCooldown = data.speedCooldown || 0;
+          magnetCooldown = data.magnetCooldown || 0;
+          shieldCooldown = data.shieldCooldown || 0;
+          bossHp = data.bossHp || 8;
+          dotCount = data.dotCount;
           frameCount = data.frameCount; fruitActive = data.fruitActive;
           fruitTimer = data.fruitTimer; gameOver = data.gameOver;
           paused = false;
@@ -392,25 +651,53 @@
 
   function init(keepScore) {
       if (!keepScore) { score = 0; level = 1; lives = getInitLives(); }
-      const mapIndex = (level - 1) % 15;
+      const mapIndex = (level - 1) % 20;
       map = maps[mapIndex].map(row => [...row]);
       px = 7; py = 12;
       pdx = 0; pdy = 0; ndx = 0; ndy = 0;
+
+      // 5 AI Ghost Personalities:
+      // Ghost 0: Blinky (Red Chaser)
+      // Ghost 1: Pinky (Pink Interceptor)
+      // Ghost 2: Inky (Cyan Flanker)
+      // Ghost 3: Clyde (Orange Patrol)
+      // Ghost 4: Sue (Purple Stalker)
       ghosts = [
-          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744'},
-          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292'},
-          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff'},
-          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100'},
-          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#00e676'}
+          {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0},
+          {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0},
+          {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0},
+          {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0},
+          {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0}
       ];
+
+      if (level === 20) {
+          // Stage 20 Ghost King Boss
+          ghosts.push({x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0});
+          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0});
+          ghosts.push({x: 0, y: 0, dirX: 0, dirY: 0, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 0});
+          numGhosts = 6;
+          bossHp = 8;
+          bossMaxHp = 8;
+          phantomSpawnTimer = 0;
+      } else if (level >= 4) {
+          numGhosts = 5;
+      } else if (level === 3) {
+          numGhosts = 4;
+      } else if (level === 2) {
+          numGhosts = 3;
+      } else {
+          numGhosts = 2;
+      }
+
       frightTimer = 0;
-      freezeTimer = 0;
-      if (!keepScore) { score = 0; level = 1; lives = getInitLives(); }
+      freezeSkillTimer = 0; freezeCooldown = 0;
+      speedSkillTimer = 0; speedCooldown = 0;
+      magnetSkillTimer = 0; magnetCooldown = 0;
+      shieldActive = 0; shieldCooldown = 0;
       gameOver = 0; dotCount = 0; frameCount = 0;
       paused = false;
       fruitActive = 0;
       fruitTimer = 0;
-      speedTimer = 0;
       popups = [];
       particles = [];
       
@@ -419,6 +706,18 @@
               if (map[r][c] >= 2 && map[r][c] <= 5) dotCount++;
           }
       }
+  }
+
+  function updateSkillButtons() {
+      document.getElementById('btnFreeze').disabled = freezeCooldown > 0;
+      document.getElementById('btnSprint').disabled = speedCooldown > 0;
+      document.getElementById('btnMagnet').disabled = magnetCooldown > 0;
+      document.getElementById('btnShield').disabled = shieldCooldown > 0 || shieldActive > 0;
+
+      document.getElementById('btnFreeze').classList.toggle('active', freezeSkillTimer > 0);
+      document.getElementById('btnSprint').classList.toggle('active', speedSkillTimer > 0);
+      document.getElementById('btnMagnet').classList.toggle('active', magnetSkillTimer > 0);
+      document.getElementById('btnShield').classList.toggle('active', shieldActive > 0);
   }
 
   function update() {
@@ -432,41 +731,73 @@
       if (keys['ArrowLeft'] || keys['a']) { ndx = -1; ndy = 0; }
       if (keys['ArrowRight'] || keys['d']) { ndx = 1; ndy = 0; }
       if (keys['ArrowUp'] || keys['w']) { ndx = 0; ndy = -1; }
-      if (keys['ArrowDown'] || keys['s']) { ndx = 0; ndy = 1; }
+      if (keys['ArrowDown']) { ndx = 0; ndy = 1; }
       
-      if (freezeTimer > 0) freezeTimer--;
-      
+      if (freezeCooldown > 0) freezeCooldown--;
+      if (speedCooldown > 0) speedCooldown--;
+      if (magnetCooldown > 0) magnetCooldown--;
+      if (shieldCooldown > 0) shieldCooldown--;
+
+      if (freezeSkillTimer > 0) freezeSkillTimer--;
       if (frightTimer > 0) frightTimer--;
+
+      updateSkillButtons();
+
+      // Stage 20 Phantom Clone Spawner
+      if (level === 20 && bossHp > 0) {
+          phantomSpawnTimer++;
+          if (phantomSpawnTimer >= 50) {
+              phantomSpawnTimer = 0;
+              for (let k = 6; k <= 7; k++) {
+                  if (ghosts[k].phantomTimer <= 0) {
+                      ghosts[k] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ce93d8', type: 6, isPhantom: 1, phantomTimer: 80};
+                      if (numGhosts < 8) numGhosts = 8;
+                      break;
+                  }
+              }
+          }
+      }
+      for (let k = 6; k <= 7; k++) {
+          if (ghosts[k].isPhantom && ghosts[k].phantomTimer > 0) {
+              ghosts[k].phantomTimer--;
+          }
+      }
       
-      let baseGhostSpeed = Math.max(1, 4 - Math.floor(level/3));
+      let baseGhostSpeed = Math.max(1, 4 - Math.floor(level/4));
       if (diffMode === 0) baseGhostSpeed += 1;
       if (diffMode === 2) baseGhostSpeed = Math.max(1, baseGhostSpeed - 1);
       let ghostSpeed = baseGhostSpeed;
       if (frightTimer > 0) ghostSpeed *= 2;
-      numGhosts = (level > 5) ? ghosts.length : 4;
       
-      if (freezeTimer === 0 && frameCount % ghostSpeed === 0) {
+      if (freezeSkillTimer === 0 && frameCount % ghostSpeed === 0) {
           const dirs = [[1,0], [-1,0], [0,1], [0,-1]];
           for (let i = 0; i < numGhosts; i++) {
               let g = ghosts[i];
+              if (g.isPhantom && g.phantomTimer <= 0) continue;
+
               let oldX = g.x, oldY = g.y;
               if (frightTimer === 0) {
                   let tx = px, ty = py;
-                  if (i === 1) {
-                      tx = px + pdx * 2; ty = py + pdy * 2;
-                  } else if (i === 2) {
+                  if (g.type === 1) { // Pinky
+                      tx = px + pdx * 3; ty = py + pdy * 3;
+                  } else if (g.type === 2) { // Inky
                       tx = px - pdx * 2; ty = py - pdy * 2;
-                  } else if (i === 3) {
+                  } else if (g.type === 3) { // Clyde
                       let distToPac = Math.abs(g.x - px) + Math.abs(g.y - py);
                       if (distToPac > 6) { tx = px; ty = py; }
                       else { tx = 0; ty = ROWS - 1; }
-                  } else if (i === 4) {
+                  } else if (g.type === 4) { // Sue
+                      tx = px - pdx * 3; ty = py - pdy * 3;
+                  } else if (g.type === 5) { // Ghost King Boss
                       tx = px; ty = py;
+                  } else if (g.type === 6) { // Phantom Clone
+                      tx = px + Math.floor(Math.random() * 5 - 2);
+                      ty = py + Math.floor(Math.random() * 5 - 2);
                   }
                   
                   let best_d = -1;
                   let min_dist = 9999;
-                  let randThreshold = diffMode === 0 ? 0.4 : (diffMode === 2 ? 0.05 : 0.2);
+                  let randThreshold = diffMode === 0 ? 0.35 : (diffMode === 2 ? 0.1 : 0.2);
                   if (Math.random() < randThreshold) {
                       best_d = Math.floor(Math.random() * 4);
                   } else {
@@ -514,8 +845,8 @@
           }
       }
       
-      if (speedTimer > 0) speedTimer--;
-      let playerMoves = (speedTimer > 0) ? true : (frameCount % 2 === 0);
+      if (speedSkillTimer > 0) speedSkillTimer--;
+      let playerMoves = (speedSkillTimer > 0) ? true : (frameCount % 2 === 0);
       
       if (playerMoves) {
           let nx = px + pdx, ny = py + pdy;
@@ -532,12 +863,12 @@
                       addSparks(cx, cy, '#ffb852', 10);
                   }
                   else if (map[py][px] === 4) {
-                      score += 20; speedTimer = 80; playSound(900, 0.1, 'triangle');
+                      score += 20; speedSkillTimer = 80; playSound(900, 0.1, 'triangle');
                       addPopup(cx, cy, 'SPEED!', '#00ffff');
                       addSparks(cx, cy, '#00ffff', 8);
                   }
                   else if (map[py][px] === 5) {
-                      score += 30; freezeTimer = 100; playSound(700, 0.2, 'sine');
+                      score += 30; freezeSkillTimer = 60; playSound(700, 0.2, 'sine');
                       addPopup(cx, cy, 'FREEZE!', '#ffffff');
                       addSparks(cx, cy, '#ffffff', 8);
                   }
@@ -549,9 +880,37 @@
                   map[py][px] = 0;
                   dotCount--;
                   if (dotCount === 0) {
-                      level++;
-                      playSound(800, 0.5, 'sine');
-                      init(true);
+                      if (level === 20) {
+                          gameOver = 2; // Victory!
+                          statsGamesPlayed++;
+                          localStorage.setItem('kpac_games', statsGamesPlayed);
+                          playSound(1200, 0.8, 'sine');
+                      } else {
+                          level++;
+                          playSound(800, 0.5, 'sine');
+                          init(true);
+                      }
+                  }
+              }
+          }
+      }
+
+      // Dot Magnet Skill
+      if (magnetSkillTimer > 0) {
+          magnetSkillTimer--;
+          for (let r = py - 3; r <= py + 3; r++) {
+              for (let c = px - 3; c <= px + 3; c++) {
+                  if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                      if (map[r][c] >= 2 && map[r][c] <= 5) {
+                          let cx = c * TS + TS/2, cy = r * TS + TS/2;
+                          if (map[r][c] === 3) { score += 40; frightTimer = 50; addPopup(cx, cy, '+40', '#ffb852'); }
+                          else if (map[r][c] === 4) { score += 20; speedSkillTimer = 80; addPopup(cx, cy, 'SPEED!', '#00ffff'); }
+                          else if (map[r][c] === 5) { score += 30; freezeSkillTimer = 60; addPopup(cx, cy, 'FREEZE!', '#ffffff'); }
+                          else { score += 10; }
+                          map[r][c] = 0;
+                          dotCount--;
+                          addSparks(cx, cy, '#ffeb3b', 4);
+                      }
                   }
               }
           }
@@ -559,18 +918,46 @@
       
       for (let i = 0; i < numGhosts; i++) {
           let g = ghosts[i];
+          if (g.isPhantom && g.phantomTimer <= 0) continue;
+
           if (px === g.x && py === g.y) {
               let cx = px * TS + TS/2, cy = py * TS + TS/2;
               if (frightTimer > 0) {
-                  score += 200;
-                  statsGhostsEaten++;
-                  localStorage.setItem('kpac_ghosts', statsGhostsEaten);
-                  if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
-                  if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
-                  playSound(800, 0.1, 'triangle');
-                  addPopup(cx, cy, '+200', '#ffeb3b');
-                  addSparks(cx, cy, '#ff1744', 12);
+                  if (g.type === 5) { // Ghost King Boss
+                      bossHp--;
+                      score += 500;
+                      addPopup(cx, cy, 'BOSS HIT! -1HP', '#ffd700');
+                      addSparks(cx, cy, '#ffd700', 16);
+                      g.x = 7; g.y = 6;
+                      playSound(900, 0.3, 'square');
+                      if (bossHp <= 0) {
+                          score += 2000;
+                          gameOver = 2; // Victory!
+                          statsGamesPlayed++;
+                          localStorage.setItem('kpac_games', statsGamesPlayed);
+                      }
+                  } else if (g.type === 6) { // Phantom Clone
+                      score += 100;
+                      g.phantomTimer = 0;
+                      addPopup(cx, cy, '+100', '#ce93d8');
+                  } else {
+                      score += 200;
+                      statsGhostsEaten++;
+                      localStorage.setItem('kpac_ghosts', statsGhostsEaten);
+                      if (score > highScore) { highScore = score; localStorage.setItem('kpac_highscore', highScore); }
+                      if (score > statsMaxScore) { statsMaxScore = score; localStorage.setItem('kpac_maxscore', statsMaxScore); }
+                      playSound(800, 0.1, 'triangle');
+                      addPopup(cx, cy, '+200', '#ffeb3b');
+                      addSparks(cx, cy, '#ff1744', 12);
+                      g.x = 7; g.y = 6;
+                  }
+              } else if (shieldActive) {
+                  // Ghost Shield Absorbs hit!
+                  shieldActive = 0;
                   g.x = 7; g.y = 6;
+                  addPopup(cx, cy, 'SHIELD ABSORBED!', '#00e5ff');
+                  addSparks(cx, cy, '#00e5ff', 16);
+                  playSound(1000, 0.3, 'sine');
               } else {
                   playSound(200, 0.5, 'sawtooth');
                   addSparks(cx, cy, '#ffeb3b', 16);
@@ -582,18 +969,19 @@
                   } else {
                       px = 7; py = 12;
                       pdx = 0; pdy = 0; ndx = 0; ndy = 0;
-                      ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744'};
-                      ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292'};
-                      ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff'};
-                      ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100'};
-                      ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#00e676'};
+                      ghosts[0] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ff1744', type: 0, isPhantom: 0, phantomTimer: 0};
+                      ghosts[1] = {x: 6, y: 7, dirX: -1, dirY: 0, color: '#f06292', type: 1, isPhantom: 0, phantomTimer: 0};
+                      ghosts[2] = {x: 8, y: 7, dirX: 1, dirY: 0, color: '#00e5ff', type: 2, isPhantom: 0, phantomTimer: 0};
+                      ghosts[3] = {x: 7, y: 7, dirX: 0, dirY: 1, color: '#ff9100', type: 3, isPhantom: 0, phantomTimer: 0};
+                      ghosts[4] = {x: 7, y: 5, dirX: 0, dirY: -1, color: '#ab47bc', type: 4, isPhantom: 0, phantomTimer: 0};
+                      if (level === 20) ghosts[5] = {x: 7, y: 6, dirX: 0, dirY: -1, color: '#ffd700', type: 5, isPhantom: 0, phantomTimer: 0};
                   }
                   break;
               }
           }
       }
       
-      if (dotCount < 50 && fruitActive === 0 && fruitTimer === 0 && Math.random() < 0.005) {
+      if (dotCount < 40 && fruitActive === 0 && fruitTimer === 0 && Math.random() < 0.006) {
           fruitActive = 1;
           fruitTimer = 100;
       }
@@ -750,15 +1138,24 @@
 
       let mouth = 0.05 + Math.abs(Math.sin(frame * 0.4)) * 0.35 * Math.PI;
 
-      if (speedTimer > 0) {
-          ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+      if (shieldActive) {
+          ctx.strokeStyle = '#00e5ff';
+          ctx.lineWidth = 3;
+          ctx.shadowColor = '#00e5ff';
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.arc(cx, cy, TS/2 + 3, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+      } else if (speedTimer > 0) {
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
           ctx.lineWidth = 2;
           ctx.beginPath();
           ctx.arc(cx, cy, TS/2 + 2, 0, Math.PI * 2);
           ctx.stroke();
       }
 
-      ctx.fillStyle = '#ffeb3b';
+      ctx.fillStyle = shieldActive ? '#00e5ff' : '#ffeb3b';
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.arc(cx, cy, TS/2 - 1, angle + mouth, angle + Math.PI * 2 - mouth);
@@ -775,6 +1172,8 @@
   }
 
   function drawGhost(ctx, g, frame, frightTimer) {
+      if (g.isPhantom && g.phantomTimer <= 0) return;
+
       let cx = g.x * TS + TS/2, cy = g.y * TS + TS/2;
       let w = TS - 4;
       let x = cx - w/2, y = cy - w/2;
@@ -797,6 +1196,18 @@
       ctx.lineTo(x, y + w);
       ctx.closePath();
       ctx.fill();
+
+      if (g.type === 5) { // Ghost King Crown
+          ctx.fillStyle = '#ffd700';
+          ctx.beginPath();
+          ctx.moveTo(cx - 5, y - 2);
+          ctx.lineTo(cx - 3, y - 6);
+          ctx.lineTo(cx, y - 3);
+          ctx.lineTo(cx + 3, y - 6);
+          ctx.lineTo(cx + 5, y - 2);
+          ctx.closePath();
+          ctx.fill();
+      }
 
       if (!isScared) {
           let eyeDx = (g.dirX || 0) * 2;
@@ -833,9 +1244,7 @@
 
   function draw() {
       ctx.fillStyle = '#030611';
-      ctx.fillRect(0, 0, 300, 300);
-      
-      numGhosts = (level > 5) ? ghosts.length : 4;
+      ctx.fillRect(0, 0, 300, 340);
 
       for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
@@ -877,25 +1286,38 @@
       ctx.fillStyle = '#fff';
       ctx.font = '10px monospace';
       const diffNames = ['EASY', 'NORM', 'HARD'];
-      ctx.fillText(`Lv:${level} Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 10);
-      ctx.fillText(`Diff:${diffNames[diffMode]} [1-3:Diff S:Save L:Load]`, 4, 19);
+      ctx.fillText(`Lv:${level}/20 Sc:${score} HI:${highScore} Lvs:${lives}`, 4, 308);
+      ctx.fillText(`Diff:${diffNames[diffMode]} [F:Frz S:Spr M:Mag B:Shd V:Save L:Load]`, 4, 320);
+
+      if (level === 20 && bossHp > 0) {
+          ctx.fillStyle = '#ffd700';
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText(`BOSS KING HP:${bossHp}/${bossMaxHp}`, 180, 308);
+      }
       
       if (saveMsgTimer > 0) {
           ctx.fillStyle = '#ffeb3b';
           ctx.font = 'bold 12px monospace';
-          ctx.fillText(saveMsgText, 90, 175);
+          ctx.fillText(saveMsgText, 85, 175);
       }
 
       if (gameOver) {
-          ctx.fillStyle = gameOver === 1 ? '#ff1744' : '#00e676';
-          ctx.font = '12px monospace';
-          ctx.fillText(gameOver === 1 ? 'GAME OVER' : 'YOU WIN!', 120, 140);
+          if (gameOver === 2) {
+              ctx.fillStyle = '#00e676';
+              ctx.font = 'bold 12px monospace';
+              ctx.fillText('CAMPAIGN VICTORY!', 85, 140);
+          } else {
+              ctx.fillStyle = '#ff1744';
+              ctx.font = 'bold 12px monospace';
+              ctx.fillText('GAME OVER', 115, 140);
+          }
           ctx.fillStyle = '#fff';
+          ctx.font = '10px monospace';
           ctx.fillText(`Games: ${statsGamesPlayed} Ghosts: ${statsGhostsEaten} Max: ${statsMaxScore}`, 35, 160);
       } else if (paused) {
           ctx.fillStyle = '#ffeb3b';
-          ctx.font = '12px monospace';
-          ctx.fillText('PAUSED', 130, 150);
+          ctx.font = 'bold 12px monospace';
+          ctx.fillText('PAUSED', 125, 150);
       }
   }
 
@@ -907,4 +1329,3 @@
 </script>
 </body>
 </html>
-
