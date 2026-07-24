@@ -54,10 +54,10 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAlchemy (Fantasy crafting & element discovery)
-**Phase:** 1 (next to do)
-**Status:** Ready to start Phase 1
+**Phase:** 2 (next to do)
+**Status:** Phase 1 completed
 
-- [ ] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
+- [x] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
 - [ ] Phase 2: Core web HTML element discovery game (4 basic elements: Fire, Water, Earth, Air; Transmutation Crucible combining 2 elements; inventory grid & discovery counter).
 - [ ] Phase 3: Native C version (`KAlchemy/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
 - [ ] Phase 4: Dark theme UI styling (mystical arcane laboratory theme: deep violet/slate background, glowing rune borders, golden element badges).

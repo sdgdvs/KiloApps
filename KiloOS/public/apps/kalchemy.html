@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KAlchemy - Fantasy Crafting & Element Discovery</title>
+  <style>
+    :root {
+      --bg-dark: #0e0f19;
+      --bg-panel: #161829;
+      --bg-crucible: #1e1b36;
+      --accent-gold: #f1c40f;
+      --accent-purple: #9b59b6;
+      --accent-blue: #3498db;
+      --accent-emerald: #2ecc71;
+      --text-main: #e0e6ed;
+      --text-muted: #8a99ad;
+      --border-color: #2c324d;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header Bar */
+    header {
+      background: linear-gradient(90deg, #131424 0%, #1c1e36 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 10px rgba(241, 196, 15, 0.3);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 18px;
+      font-size: 0.9rem;
+    }
+
+    .stat-badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-badge span.val {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* App Container */
+    .app-main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 280px 1fr 300px;
+      gap: 12px;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    .panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--accent-gold);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Grimoire (Element List) */
+    .grimoire-search {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .grimoire-search input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .element-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      align-content: start;
+    }
+
+    .element-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .element-card:hover {
+      background: rgba(155, 89, 182, 0.15);
+      border-color: var(--accent-purple);
+      transform: translateY(-2px);
+    }
+
+    .element-icon {
+      font-size: 1.6rem;
+    }
+
+    .element-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* Crucible Lab Panel */
+    .crucible-panel {
+      background: var(--bg-crucible);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+
+    .crucible-vessel {
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(155, 89, 182, 0.2) 0%, rgba(22, 24, 41, 0.8) 70%);
+      border: 2px dashed var(--accent-purple);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 30px rgba(155, 89, 182, 0.15);
+      margin-bottom: 25px;
+    }
+
+    .slots-container {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 25px;
+    }
+
+    .crucible-slot {
+      width: 90px;
+      height: 90px;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .crucible-slot.active {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 12px rgba(241, 196, 15, 0.2);
+    }
+
+    .btn-transmute {
+      background: linear-gradient(135deg, #8e44ad, #2980b9);
+      border: none;
+      color: white;
+      font-weight: 700;
+      padding: 12px 28px;
+      border-radius: 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-transmute:hover {
+      transform: scale(1.04);
+      box-shadow: 0 6px 20px rgba(142, 68, 173, 0.6);
+    }
+
+    .btn-transmute:active {
+      transform: scale(0.98);
+    }
+
+    .crucible-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Log / Journal Panel */
+    .log-content {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .log-entry {
+      background: rgba(0, 0, 0, 0.2);
+      border-left: 3px solid var(--accent-purple);
+      padding: 8px 10px;
+      border-radius: 0 4px 4px 0;
+      line-height: 1.4;
+    }
+
+    .log-entry.discovery {
+      border-left-color: var(--accent-gold);
+      background: rgba(241, 196, 15, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span style="font-size:1.5rem">🧪</span>
+      <h1>KAlchemy</h1>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-badge">
+        <span>📖 Discovered:</span>
+        <span class="val" id="stat-discovered">4 / 100</span>
+      </div>
+      <div class="stat-badge">
+        <span>✨ Essence:</span>
+        <span class="val" id="stat-essence">100</span>
+      </div>
+      <div class="stat-badge">
+        <span>🪙 Gold:</span>
+        <span class="val" id="stat-gold">50</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-main">
+    <!-- Left: Grimoire -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>Elemental Grimoire</span>
+        <span style="font-size:0.75rem; color:var(--text-muted)">Tier 1</span>
+      </div>
+      <div class="grimoire-search">
+        <input type="text" id="search-input" placeholder="Search elements..." />
+      </div>
+      <div class="element-grid" id="element-grid">
+        <!-- Elements injected by JS -->
+      </div>
+    </div>
+
+    <!-- Center: Crucible -->
+    <div class="panel crucible-panel">
+      <div class="crucible-vessel">
+        <span style="font-size:3rem; opacity:0.7">🔮</span>
+      </div>
+
+      <div class="slots-container">
+        <div class="crucible-slot" id="slot-1" onclick="clearSlot(1)">
+          <span style="font-size:0.75rem; color:var(--text-muted)">Slot 1</span>
+          <span style="font-size:0.85rem; font-weight:600">Select</span>
+        </div>
+        <div class="crucible-slot" id="slot-2" onclick="clearSlot(2)">
+          <span style="font-size:0.75rem; color:var(--text-muted)">Slot 2</span>
+          <span style="font-size:0.85rem; font-weight:600">Select</span>
+        </div>
+      </div>
+
+      <button class="btn-transmute" onclick="transmute()">✨ Transmute</button>
+
+      <div class="crucible-actions">
+        <button class="btn-secondary" onclick="clearCrucible()">Clear Crucible</button>
+      </div>
+    </div>
+
+    <!-- Right: Log -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>Alchemist's Log</span>
+      </div>
+      <div class="log-content" id="log-content">
+        <div class="log-entry discovery">
+          <strong>Welcome, Apprentice Alchemist!</strong><br />
+          Combine elements in the Crucible to discover new arcane compounds.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Starter Elements
+    const elements = [
+      { id: 'fire', name: 'Fire', icon: '🔥', tier: 1 },
+      { id: 'water', name: 'Water', icon: '💧', tier: 1 },
+      { id: 'earth', name: 'Earth', icon: '🌱', tier: 1 },
+      { id: 'air', name: 'Air', icon: '💨', tier: 1 }
+    ];
+
+    let selectedSlots = [null, null];
+
+    function renderGrimoire() {
+      const grid = document.getElementById('element-grid');
+      grid.innerHTML = '';
+      elements.forEach(el => {
+        const card = document.createElement('div');
+        card.className = 'element-card';
+        card.innerHTML = `
+          <div class="element-icon">${el.icon}</div>
+          <div class="element-name">${el.name}</div>
+        `;
+        card.onclick = () => selectElement(el);
+        grid.appendChild(card);
+      });
+    }
+
+    function selectElement(el) {
+      if (!selectedSlots[0]) {
+        selectedSlots[0] = el;
+      } else if (!selectedSlots[1]) {
+        selectedSlots[1] = el;
+      } else {
+        selectedSlots[0] = el;
+      }
+      updateSlotsUI();
+      playChime(520);
+    }
+
+    function updateSlotsUI() {
+      const slot1 = document.getElementById('slot-1');
+      const slot2 = document.getElementById('slot-2');
+
+      if (selectedSlots[0]) {
+        slot1.innerHTML = `<span style="font-size:1.8rem">${selectedSlots[0].icon}</span><span style="font-size:0.75rem">${selectedSlots[0].name}</span>`;
+        slot1.classList.add('active');
+      } else {
+        slot1.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted)">Slot 1</span><span style="font-size:0.85rem; font-weight:600">Select</span>`;
+        slot1.classList.remove('active');
+      }
+
+      if (selectedSlots[1]) {
+        slot2.innerHTML = `<span style="font-size:1.8rem">${selectedSlots[1].icon}</span><span style="font-size:0.75rem">${selectedSlots[1].name}</span>`;
+        slot2.classList.add('active');
+      } else {
+        slot2.innerHTML = `<span style="font-size:0.75rem; color:var(--text-muted)">Slot 2</span><span style="font-size:0.85rem; font-weight:600">Select</span>`;
+        slot2.classList.remove('active');
+      }
+    }
+
+    function clearSlot(index) {
+      selectedSlots[index - 1] = null;
+      updateSlotsUI();
+    }
+
+    function clearCrucible() {
+      selectedSlots = [null, null];
+      updateSlotsUI();
+    }
+
+    function transmute() {
+      if (!selectedSlots[0] || !selectedSlots[1]) {
+        addLog("Place two elements into the Crucible before transmuting.", false);
+        return;
+      }
+      addLog(`Attempted transmutation of ${selectedSlots[0].name} + ${selectedSlots[1].name}...`, false);
+      playChime(784);
+    }
+
+    function addLog(msg, isDiscovery) {
+      const log = document.getElementById('log-content');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${isDiscovery ? 'discovery' : ''}`;
+      entry.innerHTML = msg;
+      log.prepend(entry);
+    }
+
+    // Simple Web Audio API Synthesizer Sound
+    function playChime(freq) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (e) {}
+    }
+
+    // Init
+    renderGrimoire();
+  </script>
+</body>
+</html>
