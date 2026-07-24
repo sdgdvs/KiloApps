@@ -24,6 +24,13 @@
       --glow-purple: rgba(155, 89, 182, 0.5);
       --glow-gold: rgba(243, 156, 18, 0.5);
       --glow-blue: rgba(52, 152, 219, 0.4);
+
+      /* Tier Colors */
+      --tier-1-color: #3498db;
+      --tier-2-color: #2ecc71;
+      --tier-3-color: #e67e22;
+      --tier-4-color: #9b59b6;
+      --tier-5-color: #f1c40f;
     }
 
     * {
@@ -52,7 +59,7 @@
       background: linear-gradient(90deg, #0d0c1d 0%, #171433 50%, #0d0c1d 100%);
       border-bottom: 2px solid var(--accent-purple);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px var(--glow-purple);
-      padding: 12px 24px;
+      padding: 10px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -117,18 +124,18 @@
     /* Golden Element Badges in Stats Bar */
     .stats-bar {
       display: flex;
-      gap: 16px;
-      font-size: 0.88rem;
+      gap: 12px;
+      font-size: 0.85rem;
     }
 
     .stat-badge {
       background: linear-gradient(135deg, rgba(243, 156, 18, 0.12) 0%, rgba(155, 89, 182, 0.15) 100%);
       border: 1px solid var(--border-gold);
       border-radius: 20px;
-      padding: 6px 16px;
+      padding: 5px 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       box-shadow: 0 0 10px rgba(243, 156, 18, 0.25), inset 0 0 8px rgba(243, 156, 18, 0.1);
       position: relative;
     }
@@ -155,7 +162,7 @@
     .app-main {
       flex: 1;
       display: grid;
-      grid-template-columns: 320px 1fr 340px;
+      grid-template-columns: 360px 1fr 340px;
       gap: 16px;
       padding: 16px;
       overflow: hidden;
@@ -180,10 +187,10 @@
 
     /* Glowing Rune Header */
     .panel-header {
-      padding: 12px 18px;
+      padding: 10px 16px;
       background: linear-gradient(90deg, rgba(22, 21, 46, 0.95), rgba(35, 28, 66, 0.95));
       border-bottom: 1px solid var(--accent-purple);
-      font-size: 0.95rem;
+      font-size: 0.92rem;
       font-weight: 700;
       color: var(--accent-gold);
       display: flex;
@@ -209,9 +216,47 @@
       margin-right: 6px;
     }
 
-    /* Grimoire (Element List) Search & Grid */
+    /* Tier Filter Buttons Bar */
+    .tier-filter-bar {
+      display: flex;
+      gap: 4px;
+      padding: 8px 10px;
+      background: rgba(10, 9, 20, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    .tier-tab {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tier-tab:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .tier-tab.active {
+      border-color: var(--accent-gold);
+      color: var(--accent-gold-light);
+      background: rgba(243, 156, 18, 0.15);
+      box-shadow: 0 0 8px rgba(243, 156, 18, 0.3);
+    }
+
+    /* Grimoire Search */
     .grimoire-search {
-      padding: 12px 14px;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--border-color);
       background: rgba(10, 9, 20, 0.4);
     }
@@ -221,9 +266,9 @@
       background: rgba(9, 9, 20, 0.7);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      padding: 9px 14px;
+      padding: 7px 12px;
       color: var(--text-main);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       outline: none;
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
       transition: all 0.25s ease;
@@ -237,10 +282,10 @@
     .element-grid {
       flex: 1;
       overflow-y: auto;
-      padding: 14px;
+      padding: 12px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      gap: 10px;
       align-content: start;
     }
 
@@ -257,11 +302,11 @@
       background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(155, 89, 182, 0.05));
       border: 1px solid var(--border-color);
       border-radius: 10px;
-      padding: 14px 10px;
+      padding: 10px 8px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       cursor: pointer;
       transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
@@ -278,9 +323,11 @@
       background: var(--accent-purple);
     }
 
-    .element-card.basic::before {
-      background: var(--accent-blue);
-    }
+    .element-card.t1::before { background: var(--tier-1-color); }
+    .element-card.t2::before { background: var(--tier-2-color); }
+    .element-card.t3::before { background: var(--tier-3-color); }
+    .element-card.t4::before { background: var(--tier-4-color); }
+    .element-card.t5::before { background: var(--tier-5-color); }
 
     .element-card.discovered {
       border: 1px solid var(--border-gold);
@@ -289,7 +336,6 @@
     }
 
     .element-card.discovered::before {
-      background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light));
       box-shadow: 0 0 8px var(--accent-gold);
     }
 
@@ -302,24 +348,24 @@
 
     .element-badge-tag {
       position: absolute;
-      top: 5px;
-      right: 5px;
-      font-size: 0.6rem;
-      background: rgba(243, 156, 18, 0.2);
+      top: 4px;
+      right: 4px;
+      font-size: 0.58rem;
+      background: rgba(0,0,0,0.5);
       color: var(--accent-gold-light);
-      border: 1px solid var(--accent-gold);
+      border: 1px solid var(--border-color);
       border-radius: 4px;
       padding: 1px 4px;
       font-weight: 700;
     }
 
     .element-icon {
-      font-size: 2rem;
+      font-size: 1.8rem;
       filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
     }
 
     .element-name {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-align: center;
       color: var(--text-main);
@@ -331,7 +377,7 @@
       background: var(--bg-crucible);
       align-items: center;
       justify-content: center;
-      padding: 30px 20px;
+      padding: 24px 20px;
       position: relative;
       background-image: 
         radial-gradient(circle at center, rgba(155, 89, 182, 0.15) 0%, transparent 70%),
@@ -366,13 +412,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .rune-ring {
       position: absolute;
-      width: 210px;
-      height: 210px;
+      width: 200px;
+      height: 200px;
       border-radius: 50%;
       border: 1px solid rgba(243, 156, 18, 0.4);
       box-shadow: 0 0 15px var(--glow-gold), inset 0 0 15px var(--glow-purple);
@@ -398,8 +444,8 @@
     }
 
     .crucible-vessel {
-      width: 160px;
-      height: 160px;
+      width: 150px;
+      height: 150px;
       border-radius: 50%;
       background: radial-gradient(circle, rgba(155, 89, 182, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
       border: 2px dashed var(--accent-gold);
@@ -425,20 +471,20 @@
     }
 
     .crucible-orb {
-      font-size: 3.8rem;
+      font-size: 3.5rem;
       filter: drop-shadow(0 0 15px rgba(243, 156, 18, 0.6));
     }
 
     .slots-container {
       display: flex;
-      gap: 25px;
-      margin-bottom: 25px;
+      gap: 20px;
+      margin-bottom: 20px;
       z-index: 2;
     }
 
     .crucible-slot {
-      width: 110px;
-      height: 110px;
+      width: 105px;
+      height: 105px;
       border: 2px dashed var(--border-color);
       border-radius: 14px;
       background: rgba(9, 9, 20, 0.6);
@@ -470,9 +516,9 @@
       border: 1px solid var(--accent-gold-light);
       color: #ffffff;
       font-weight: 800;
-      padding: 14px 40px;
+      padding: 12px 36px;
       border-radius: 30px;
-      font-size: 1.05rem;
+      font-size: 1rem;
       letter-spacing: 0.5px;
       cursor: pointer;
       box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4), 0 0 15px var(--glow-gold);
@@ -494,8 +540,8 @@
 
     .crucible-actions {
       display: flex;
-      gap: 14px;
-      margin-top: 20px;
+      gap: 12px;
+      margin-top: 16px;
       z-index: 2;
     }
 
@@ -503,9 +549,9 @@
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
       color: var(--text-muted);
-      padding: 8px 18px;
+      padding: 7px 16px;
       border-radius: 8px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -518,15 +564,44 @@
       box-shadow: 0 0 10px rgba(243, 156, 18, 0.2);
     }
 
+    /* Discovery Notification Toast Overlay */
+    .discovery-toast {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: linear-gradient(135deg, #16152e 0%, #2e1d4d 100%);
+      border: 2px solid var(--accent-gold);
+      border-radius: 12px;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px var(--glow-gold);
+      z-index: 100;
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .discovery-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .discovery-toast .toast-icon { font-size: 2.2rem; }
+    .discovery-toast .toast-title { font-size: 0.9rem; font-weight: 800; color: var(--accent-gold-light); text-transform: uppercase; }
+    .discovery-toast .toast-sub { font-size: 0.8rem; color: var(--text-main); }
+
     /* Log / Journal Panel */
     .log-content {
       flex: 1;
-      padding: 16px;
+      padding: 14px;
       overflow-y: auto;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
     .log-content::-webkit-scrollbar {
@@ -541,7 +616,7 @@
       background: rgba(9, 9, 20, 0.5);
       border-left: 3px solid var(--accent-purple);
       border-radius: 0 8px 8px 0;
-      padding: 12px 14px;
+      padding: 10px 12px;
       line-height: 1.45;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       position: relative;
@@ -555,13 +630,21 @@
       box-shadow: 0 0 12px rgba(243, 156, 18, 0.25);
     }
 
+    .log-entry.tier-unlock {
+      border-left-color: var(--accent-emerald);
+      border: 1px solid var(--accent-emerald);
+      border-left-width: 4px;
+      background: linear-gradient(90deg, rgba(46, 204, 113, 0.2) 0%, rgba(15, 14, 30, 0.8) 100%);
+      box-shadow: 0 0 14px rgba(46, 204, 113, 0.3);
+    }
+
     .log-entry.fizzle {
       border-left-color: var(--accent-crimson);
       background: rgba(231, 76, 60, 0.08);
     }
 
     .log-time {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--accent-purple-glow);
       font-weight: 600;
       margin-bottom: 3px;
@@ -580,7 +663,11 @@
     <div class="stats-bar">
       <div class="stat-badge">
         <span class="label">Discovered:</span>
-        <span class="val" id="stat-discovered">4 / 20</span>
+        <span class="val" id="stat-discovered">4 / 56</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Highest Tier:</span>
+        <span class="val" id="stat-tier">T1 Basic</span>
       </div>
       <div class="stat-badge">
         <span class="label">Essence:</span>
@@ -594,12 +681,32 @@
   </header>
 
   <div class="app-main">
+    <!-- Discovery Toast Notification -->
+    <div class="discovery-toast" id="discovery-toast">
+      <span class="toast-icon" id="toast-icon">✨</span>
+      <div>
+        <div class="toast-title" id="toast-title">New Discovery!</div>
+        <div class="toast-sub" id="toast-sub">You crafted Steam ♨️</div>
+      </div>
+    </div>
+
     <!-- Left: Grimoire -->
     <div class="panel">
       <div class="panel-header">
         <div><span class="rune-mark">ᛟ</span><span>Elemental Grimoire</span></div>
         <span style="font-size:0.75rem; color:var(--text-muted)" id="grimoire-count">4 Elements</span>
       </div>
+
+      <!-- Tier Filters -->
+      <div class="tier-filter-bar" id="tier-filter-bar">
+        <button class="tier-tab active" onclick="setTierFilter(0)">All</button>
+        <button class="tier-tab" onclick="setTierFilter(1)">T1 Basic</button>
+        <button class="tier-tab" onclick="setTierFilter(2)">T2 Nature</button>
+        <button class="tier-tab" onclick="setTierFilter(3)">T3 Metallurgy</button>
+        <button class="tier-tab" onclick="setTierFilter(4)">T4 Arcane</button>
+        <button class="tier-tab" onclick="setTierFilter(5)">T5 Celestial</button>
+      </div>
+
       <div class="grimoire-search">
         <input type="text" id="search-input" placeholder="Filter discovered elements..." oninput="renderGrimoire()" />
       </div>
@@ -645,62 +752,155 @@
         <div class="log-entry discovery">
           <div class="log-time">System</div>
           <strong>Welcome Apprentice Alchemist!</strong><br />
-          Select elements from your Grimoire to place into the Transmutation Crucible and combine them to discover new arcane compounds.
+          Select elements from your Grimoire to place into the Transmutation Crucible and combine them to discover 50+ secondary compounds across 5 Tiers.
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Complete Element Database (20 elements)
-    const ALL_ELEMENTS = [
-      // 4 Basic Starter Elements
-      { id: 'fire', name: 'Fire', icon: '🔥', basic: true },
-      { id: 'water', name: 'Water', icon: '💧', basic: true },
-      { id: 'earth', name: 'Earth', icon: '🌱', basic: true },
-      { id: 'air', name: 'Air', icon: '💨', basic: true },
-
-      // Discoverable Tier 2 & 3 Elements
-      { id: 'steam', name: 'Steam', icon: '♨️', basic: false },
-      { id: 'lava', name: 'Lava', icon: '🌋', basic: false },
-      { id: 'energy', name: 'Energy', icon: '⚡', basic: false },
-      { id: 'mud', name: 'Mud', icon: '🧱', basic: false },
-      { id: 'rain', name: 'Rain', icon: '🌧️', basic: false },
-      { id: 'dust', name: 'Dust', icon: '🧹', basic: false },
-      { id: 'obsidian', name: 'Obsidian', icon: '💎', basic: false },
-      { id: 'stone', name: 'Stone', icon: '🪨', basic: false },
-      { id: 'plant', name: 'Plant', icon: '🌿', basic: false },
-      { id: 'cloud', name: 'Cloud', icon: '☁️', basic: false },
-      { id: 'gunpowder', name: 'Gunpowder', icon: '💥', basic: false },
-      { id: 'life', name: 'Life', icon: '🧬', basic: false },
-      { id: 'charcoal', name: 'Charcoal', icon: '🪵', basic: false },
-      { id: 'swamps', name: 'Swamps', icon: '🐊', basic: false },
-      { id: 'metal', name: 'Metal', icon: '⚙️', basic: false },
-      { id: 'golem', name: 'Golem', icon: '🤖', basic: false }
+    const TIERS = [
+      { id: 1, name: 'Basic', threshold: 0, color: '#3498db', icon: '🔹' },
+      { id: 2, name: 'Nature', threshold: 4, color: '#2ecc71', icon: '🌿' },
+      { id: 3, name: 'Metallurgy', threshold: 12, color: '#e67e22', icon: '⚙️' },
+      { id: 4, name: 'Arcane', threshold: 24, color: '#9b59b6', icon: '✨' },
+      { id: 5, name: 'Celestial', threshold: 38, color: '#f1c40f', icon: '⭐' }
     ];
 
-    // Combinations map: [el1, el2] -> resultId
+    const ALL_ELEMENTS = [
+      // Tier 1: Basic (4)
+      { id: 'fire', name: 'Fire', icon: '🔥', tier: 1, basic: true },
+      { id: 'water', name: 'Water', icon: '💧', tier: 1, basic: true },
+      { id: 'earth', name: 'Earth', icon: '🌱', tier: 1, basic: true },
+      { id: 'air', name: 'Air', icon: '💨', tier: 1, basic: true },
+
+      // Tier 2: Nature (12)
+      { id: 'steam', name: 'Steam', icon: '♨️', tier: 2, basic: false },
+      { id: 'lava', name: 'Lava', icon: '🌋', tier: 2, basic: false },
+      { id: 'energy', name: 'Energy', icon: '⚡', tier: 2, basic: false },
+      { id: 'mud', name: 'Mud', icon: '🧱', tier: 2, basic: false },
+      { id: 'rain', name: 'Rain', icon: '🌧️', tier: 2, basic: false },
+      { id: 'dust', name: 'Dust', icon: '🧹', tier: 2, basic: false },
+      { id: 'stone', name: 'Stone', icon: '🪨', tier: 2, basic: false },
+      { id: 'plant', name: 'Plant', icon: '🌿', tier: 2, basic: false },
+      { id: 'cloud', name: 'Cloud', icon: '☁️', tier: 2, basic: false },
+      { id: 'charcoal', name: 'Charcoal', icon: '🪵', tier: 2, basic: false },
+      { id: 'swamp', name: 'Swamp', icon: '🐊', tier: 2, basic: false },
+      { id: 'tree', name: 'Tree', icon: '🌲', tier: 2, basic: false },
+
+      // Tier 3: Metallurgy (12)
+      { id: 'metal', name: 'Metal', icon: '⚙️', tier: 3, basic: false },
+      { id: 'sand', name: 'Sand', icon: '🏖️', tier: 3, basic: false },
+      { id: 'glass', name: 'Glass', icon: '🔍', tier: 3, basic: false },
+      { id: 'rust', name: 'Rust', icon: '🛢️', tier: 3, basic: false },
+      { id: 'blade', name: 'Blade', icon: '🗡️', tier: 3, basic: false },
+      { id: 'boiler', name: 'Boiler', icon: '🫕', tier: 3, basic: false },
+      { id: 'electricity', name: 'Electricity', icon: '🔌', tier: 3, basic: false },
+      { id: 'wire', name: 'Wire', icon: '🪢', tier: 3, basic: false },
+      { id: 'gunpowder', name: 'Gunpowder', icon: '💥', tier: 3, basic: false },
+      { id: 'explosion', name: 'Explosion', icon: '💣', tier: 3, basic: false },
+      { id: 'magnet', name: 'Magnet', icon: '🧲', tier: 3, basic: false },
+      { id: 'clay', name: 'Clay', icon: '🏺', tier: 3, basic: false },
+
+      // Tier 4: Arcane (14)
+      { id: 'life', name: 'Life', icon: '🧬', tier: 4, basic: false },
+      { id: 'golem', name: 'Golem', icon: '🤖', tier: 4, basic: false },
+      { id: 'magic', name: 'Magic', icon: '✨', tier: 4, basic: false },
+      { id: 'mana', name: 'Mana', icon: '🔮', tier: 4, basic: false },
+      { id: 'phoenix', name: 'Phoenix', icon: '🦅', tier: 4, basic: false },
+      { id: 'dragon', name: 'Dragon', icon: '🐲', tier: 4, basic: false },
+      { id: 'crystal', name: 'Crystal', icon: '💎', tier: 4, basic: false },
+      { id: 'rune', name: 'Rune', icon: '📜', tier: 4, basic: false },
+      { id: 'potion', name: 'Potion', icon: '🧪', tier: 4, basic: false },
+      { id: 'elixir', name: 'Elixir', icon: '🍾', tier: 4, basic: false },
+      { id: 'nether', name: 'Nether', icon: '🔥', tier: 4, basic: false },
+      { id: 'shadow', name: 'Shadow', icon: '🌑', tier: 4, basic: false },
+      { id: 'light', name: 'Light', icon: '💡', tier: 4, basic: false },
+      { id: 'spirit', name: 'Spirit', icon: '👻', tier: 4, basic: false },
+
+      // Tier 5: Celestial (14)
+      { id: 'sun', name: 'Sun', icon: '☀️', tier: 5, basic: false },
+      { id: 'moon', name: 'Moon', icon: '🌙', tier: 5, basic: false },
+      { id: 'star', name: 'Star', icon: '⭐', tier: 5, basic: false },
+      { id: 'comet', name: 'Comet', icon: '☄️', tier: 5, basic: false },
+      { id: 'meteor', name: 'Meteor', icon: '☄️', tier: 5, basic: false },
+      { id: 'galaxy', name: 'Galaxy', icon: '🌌', tier: 5, basic: false },
+      { id: 'cosmos', name: 'Cosmos', icon: '🌌', tier: 5, basic: false },
+      { id: 'eclipse', name: 'Eclipse', icon: '🌒', tier: 5, basic: false },
+      { id: 'gold', name: 'Gold', icon: '🪙', tier: 5, basic: false },
+      { id: 'starlight', name: 'Starlight', icon: '✨', tier: 5, basic: false },
+      { id: 'supernova', name: 'Supernova', icon: '💥', tier: 5, basic: false },
+      { id: 'blackhole', name: 'Black Hole', icon: '🕳️', tier: 5, basic: false },
+      { id: 'time', name: 'Time', icon: '⏳', tier: 5, basic: false },
+      { id: 'eternity', name: 'Eternity', icon: '♾️', tier: 5, basic: false }
+    ];
+
     const RECIPES = [
-      { ingredients: ['fire', 'water'], result: 'steam' },
-      { ingredients: ['fire', 'earth'], result: 'lava' },
+      // T2 Nature (12)
+      { ingredients: ['water', 'fire'], result: 'steam' },
+      { ingredients: ['earth', 'fire'], result: 'lava' },
       { ingredients: ['fire', 'air'], result: 'energy' },
-      { ingredients: ['water', 'earth'], result: 'mud' },
+      { ingredients: ['earth', 'water'], result: 'mud' },
       { ingredients: ['water', 'air'], result: 'rain' },
       { ingredients: ['earth', 'air'], result: 'dust' },
-      { ingredients: ['lava', 'water'], result: 'obsidian' },
       { ingredients: ['lava', 'air'], result: 'stone' },
       { ingredients: ['earth', 'rain'], result: 'plant' },
       { ingredients: ['air', 'rain'], result: 'cloud' },
-      { ingredients: ['fire', 'dust'], result: 'gunpowder' },
-      { ingredients: ['energy', 'water'], result: 'life' },
       { ingredients: ['fire', 'plant'], result: 'charcoal' },
-      { ingredients: ['mud', 'plant'], result: 'swamps' },
+      { ingredients: ['mud', 'plant'], result: 'swamp' },
+      { ingredients: ['plant', 'earth'], result: 'tree' },
+
+      // T3 Metallurgy (12)
       { ingredients: ['stone', 'fire'], result: 'metal' },
-      { ingredients: ['life', 'metal'], result: 'golem' }
+      { ingredients: ['stone', 'air'], result: 'sand' },
+      { ingredients: ['sand', 'fire'], result: 'glass' },
+      { ingredients: ['metal', 'water'], result: 'rust' },
+      { ingredients: ['metal', 'stone'], result: 'blade' },
+      { ingredients: ['metal', 'steam'], result: 'boiler' },
+      { ingredients: ['metal', 'energy'], result: 'electricity' },
+      { ingredients: ['electricity', 'fire'], result: 'wire' },
+      { ingredients: ['fire', 'dust'], result: 'gunpowder' },
+      { ingredients: ['gunpowder', 'fire'], result: 'explosion' },
+      { ingredients: ['metal', 'electricity'], result: 'magnet' },
+      { ingredients: ['mud', 'fire'], result: 'clay' },
+
+      // T4 Arcane (14)
+      { ingredients: ['energy', 'water'], result: 'life' },
+      { ingredients: ['life', 'metal'], result: 'golem' },
+      { ingredients: ['energy', 'air'], result: 'magic' },
+      { ingredients: ['magic', 'water'], result: 'mana' },
+      { ingredients: ['fire', 'life'], result: 'phoenix' },
+      { ingredients: ['lava', 'life'], result: 'dragon' },
+      { ingredients: ['stone', 'magic'], result: 'crystal' },
+      { ingredients: ['stone', 'mana'], result: 'rune' },
+      { ingredients: ['plant', 'mana'], result: 'potion' },
+      { ingredients: ['potion', 'magic'], result: 'elixir' },
+      { ingredients: ['lava', 'magic'], result: 'nether' },
+      { ingredients: ['air', 'magic'], result: 'shadow' },
+      { ingredients: ['fire', 'magic'], result: 'light' },
+      { ingredients: ['life', 'air'], result: 'spirit' },
+
+      // T5 Celestial (14)
+      { ingredients: ['fire', 'light'], result: 'sun' },
+      { ingredients: ['stone', 'light'], result: 'moon' },
+      { ingredients: ['sun', 'energy'], result: 'star' },
+      { ingredients: ['star', 'water'], result: 'comet' },
+      { ingredients: ['star', 'stone'], result: 'meteor' },
+      { ingredients: ['star', 'cloud'], result: 'galaxy' },
+      { ingredients: ['galaxy', 'magic'], result: 'cosmos' },
+      { ingredients: ['sun', 'moon'], result: 'eclipse' },
+      { ingredients: ['metal', 'sun'], result: 'gold' },
+      { ingredients: ['star', 'light'], result: 'starlight' },
+      { ingredients: ['star', 'explosion'], result: 'supernova' },
+      { ingredients: ['cosmos', 'shadow'], result: 'blackhole' },
+      { ingredients: ['cosmos', 'energy'], result: 'time' },
+      { ingredients: ['time', 'magic'], result: 'eternity' }
     ];
 
     // State
     let discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
+    let unlockedTiers = new Set([1, 2]); // Tier 1 (0 elements) and Tier 2 (4 elements)
+    let activeTierFilter = 0; // 0 = All
     let selectedSlots = [null, null];
     let essence = 100;
 
@@ -723,6 +923,27 @@
         }
         if (savedEssence) essence = parseInt(savedEssence, 10) || 100;
       } catch(e){}
+      checkTierUnlocks(false);
+    }
+
+    function checkTierUnlocks(notify = true) {
+      const count = discoveredIds.size;
+      let highestTier = 1;
+
+      TIERS.forEach(t => {
+        if (count >= t.threshold) {
+          highestTier = Math.max(highestTier, t.id);
+          if (!unlockedTiers.has(t.id)) {
+            unlockedTiers.add(t.id);
+            if (notify) {
+              triggerToast(`🔓 TIER ${t.id} UNLOCKED!`, `${t.name} Elements are now accessible!`, t.icon);
+              addLog(`🔓 <strong>TIER UNLOCKED!</strong> Tier ${t.id} (<strong>${t.name}</strong>) is now accessible!`, false, false, true);
+              playFanfareTier();
+            }
+          }
+        }
+      });
+      return highestTier;
     }
 
     function updateStats() {
@@ -730,12 +951,28 @@
       document.getElementById('stat-essence').innerText = essence;
       document.getElementById('grimoire-count').innerText = `${discoveredIds.size} Elements`;
 
+      const highestTier = checkTierUnlocks(false);
+      const tierObj = TIERS.find(t => t.id === highestTier);
+      document.getElementById('stat-tier').innerText = `T${highestTier} ${tierObj ? tierObj.name : ''}`;
+
       let rank = "Apprentice";
-      if (discoveredIds.size >= 20) rank = "Grand Master";
-      else if (discoveredIds.size >= 15) rank = "Master Alchemist";
-      else if (discoveredIds.size >= 10) rank = "Journeyman";
-      else if (discoveredIds.size >= 6) rank = "Adept";
+      const size = discoveredIds.size;
+      if (size >= 50) rank = "Celestial Master";
+      else if (size >= 38) rank = "Grand Alchemist";
+      else if (size >= 24) rank = "Master Alchemist";
+      else if (size >= 12) rank = "Journeyman";
+      else if (size >= 4) rank = "Adept";
       document.getElementById('stat-rank').innerText = rank;
+    }
+
+    function setTierFilter(tierId) {
+      activeTierFilter = tierId;
+      const tabs = document.querySelectorAll('.tier-tab');
+      tabs.forEach((tab, idx) => {
+        if (idx === tierId) tab.classList.add('active');
+        else tab.classList.remove('active');
+      });
+      renderGrimoire();
     }
 
     function renderGrimoire() {
@@ -745,13 +982,14 @@
 
       ALL_ELEMENTS.forEach(el => {
         if (!discoveredIds.has(el.id)) return;
+        if (activeTierFilter > 0 && el.tier !== activeTierFilter) return;
         if (search && !el.name.toLowerCase().includes(search)) return;
 
         const card = document.createElement('div');
-        card.className = `element-card ${el.basic ? 'basic' : 'discovered'}`;
-        const badgeTag = el.basic 
-          ? `<span class="element-badge-tag" style="background:rgba(52,152,219,0.2); border-color:var(--accent-blue); color:#74b9ff">PRIMAL</span>` 
-          : `<span class="element-badge-tag">✦ GOLD</span>`;
+        card.className = `element-card t${el.tier} ${el.basic ? 'basic' : 'discovered'}`;
+        const tierObj = TIERS.find(t => t.id === el.tier);
+        const badgeTag = `<span class="element-badge-tag" style="border-color:${tierObj.color}; color:${tierObj.color}">T${el.tier} ${tierObj.name}</span>`;
+
         card.innerHTML = `
           ${badgeTag}
           <div class="element-icon">${el.icon}</div>
@@ -808,21 +1046,22 @@
     }
 
     function resetProgress() {
-      if (confirm("Reset all discovered elements back to the starter four?")) {
+      if (confirm("Reset all discovered elements back to starter 4?")) {
         discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
+        unlockedTiers = new Set([1, 2]);
         selectedSlots = [null, null];
         essence = 100;
         saveState();
         updateStats();
         renderGrimoire();
         updateSlotsUI();
-        addLog("Journal reset. Basic elements restored.", false, false);
+        addLog("Journal reset. Basic elements restored.", false, false, false);
       }
     }
 
     function transmute() {
       if (!selectedSlots[0] || !selectedSlots[1]) {
-        addLog("Place two elements into the Crucible before transmuting.", false, false);
+        addLog("Place two elements into the Crucible before transmuting.", false, false, false);
         playChime(220, 'sawtooth', 0.2);
         return;
       }
@@ -845,26 +1084,40 @@
 
         if (match) {
           const resElement = ALL_ELEMENTS.find(e => e.id === match.result);
+          const reqTier = TIERS.find(t => t.id === resElement.tier);
+
+          // Check if user has unlocked the tier for this result element
+          if (discoveredIds.size < reqTier.threshold) {
+            orb.innerText = '🔒';
+            addLog(`🔒 <strong>TIER LOCKED!</strong> Crafting <strong>${resElement.name}</strong> requires Tier ${reqTier.id} (${reqTier.name}) - discover ${reqTier.threshold} elements to unlock!`, false, true, false);
+            playChime(180, 'sawtooth', 0.3);
+            setTimeout(() => { orb.innerText = '🔮'; }, 1500);
+            return;
+          }
+
           const isNew = !discoveredIds.has(resElement.id);
 
           if (isNew) {
             discoveredIds.add(resElement.id);
             essence += 50;
             saveState();
+
+            checkTierUnlocks(true);
             updateStats();
             renderGrimoire();
             orb.innerText = resElement.icon;
 
-            addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+50 Essence)`, true, false);
-            playFanfare();
+            triggerToast(`NEW DISCOVERY!`, `You created ${resElement.name} ${resElement.icon} (+50 Essence)`, resElement.icon);
+            addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} [Tier ${resElement.tier} ${reqTier.name}] by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+50 Essence)`, true, false, false);
+            playFanfareDiscovery();
           } else {
             orb.innerText = resElement.icon;
-            addLog(`Created <strong>${resElement.name}</strong> ${resElement.icon} (${selectedSlots[0].name} + ${selectedSlots[1].name}). Already recorded in Grimoire.`, false, false);
+            addLog(`Created <strong>${resElement.name}</strong> ${resElement.icon} (${selectedSlots[0].name} + ${selectedSlots[1].name}). Already recorded in Grimoire.`, false, false, false);
             playChime(659, 'sine', 0.25);
           }
         } else {
           orb.innerText = '💨';
-          addLog(`The reaction fizzles! No transmutation found for ${selectedSlots[0].name} + ${selectedSlots[1].name}.`, false, true);
+          addLog(`The reaction fizzles! No transmutation found for ${selectedSlots[0].name} + ${selectedSlots[1].name}.`, false, true, false);
           playChime(180, 'sawtooth', 0.3);
         }
 
@@ -872,11 +1125,21 @@
       }, 400);
     }
 
-    function addLog(msg, isDiscovery, isFizzle) {
+    function triggerToast(title, sub, icon) {
+      const toast = document.getElementById('discovery-toast');
+      document.getElementById('toast-title').innerText = title;
+      document.getElementById('toast-sub').innerText = sub;
+      document.getElementById('toast-icon').innerText = icon;
+      toast.classList.add('show');
+      setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+
+    function addLog(msg, isDiscovery, isFizzle, isTierUnlock) {
       const log = document.getElementById('log-content');
       const entry = document.createElement('div');
       let typeClass = '';
-      if (isDiscovery) typeClass = 'discovery';
+      if (isTierUnlock) typeClass = 'tier-unlock';
+      else if (isDiscovery) typeClass = 'discovery';
       else if (isFizzle) typeClass = 'fizzle';
 
       const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -905,10 +1168,17 @@
       } catch (e) {}
     }
 
-    function playFanfare() {
+    function playFanfareDiscovery() {
       const notes = [523.25, 659.25, 783.99, 1046.50];
       notes.forEach((freq, idx) => {
         setTimeout(() => playChime(freq, 'triangle', 0.35), idx * 110);
+      });
+    }
+
+    function playFanfareTier() {
+      const notes = [440, 554.37, 659.25, 880];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => playChime(freq, 'sine', 0.4), idx * 120);
       });
     }
 
