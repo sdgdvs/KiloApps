@@ -1,211 +1,1095 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>KConverter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KConverter Pro</title>
 <style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a, #1e1b4b, #0f172a);
+    --panel-bg: rgba(30, 41, 59, 0.7);
+    --panel-border: rgba(255, 255, 255, 0.12);
+    --panel-hover: rgba(255, 255, 255, 0.05);
+    --accent-blue: #38bdf8;
+    --accent-indigo: #6366f1;
+    --accent-purple: #a855f7;
+    --accent-pink: #ec4899;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --card-bg: rgba(15, 23, 42, 0.4);
+    --radius-lg: 14px;
+    --radius-md: 8px;
+    --radius-sm: 6px;
+    --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+  }
+
+  * { box-sizing: border-box; }
+
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
-    font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; 
-    background: linear-gradient(135deg, #1e1e1e, #121212); 
-    color: #f0f0f0; 
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    background: var(--bg-gradient); 
+    color: var(--text-primary); 
     user-select: none;
+    overflow-x: hidden;
   }
+
   .app-container { 
-    padding: 16px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; 
+    padding: 16px; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100vh; 
+    max-width: 900px;
+    margin: 0 auto;
+    box-sizing: border-box; 
+    gap: 12px;
   }
+
+  /* Header */
   .header { 
-    font-size: 20px; font-weight: 600; margin-bottom: 16px; text-align: center; 
-    background: linear-gradient(to right, #77a2df, #3b73c4);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+  }
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-indigo));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  }
+
+  .header-title { 
+    font-size: 18px; 
+    font-weight: 700; 
+    background: linear-gradient(to right, #38bdf8, #818cf8, #c084fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
   }
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+
+  /* Top Navigation Tabs */
+  .nav-tabs { 
+    display: flex; 
+    gap: 6px; 
+    background: rgba(15, 23, 42, 0.5);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--panel-border);
+    overflow-x: auto;
+  }
+
+  .nav-tab { 
+    flex: 1; 
+    min-width: max-content;
+    padding: 6px 12px; 
+    text-align: center; 
+    cursor: pointer; 
+    border-radius: var(--radius-sm); 
+    font-size: 13px; 
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .nav-tab:hover {
+    color: var(--text-primary);
+    background: var(--panel-hover);
+  }
+
+  .nav-tab.active { 
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2)); 
+    border-color: rgba(56, 189, 248, 0.4);
+    color: var(--accent-blue); 
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(56, 189, 248, 0.15);
+  }
+
+  /* Controls Panel */
+  .controls-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Main View Container */
+  .main-panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-lg);
     padding: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     flex: 1;
+    overflow-y: auto;
   }
-  .row { display: flex; flex-direction: column; gap: 4px; }
-  label { font-size: 12px; color: #aaa; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
-  select, input {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* Category Selector Tabs */
+  .cat-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 10px;
+  }
+
+  .cat-tab {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+  }
+
+  .cat-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+  }
+
+  .cat-tab.active {
+    background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
     color: #fff;
-    padding: 10px;
-    border-radius: 6px;
-    font-size: 16px;
+    border-color: transparent;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+  }
+
+  /* Forms and Inputs */
+  .row { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  select, input, button {
+    background: var(--input-bg);
+    border: 1px solid var(--panel-border);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
     font-family: inherit;
     outline: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
   }
+
   select:hover, input:hover:not([readonly]) {
-    background: rgba(0, 0, 0, 0.3);
     border-color: rgba(255, 255, 255, 0.3);
   }
+
   select:focus, input:focus {
-    border-color: #5a8bd4;
-    box-shadow: 0 0 0 3px rgba(90, 139, 212, 0.3);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+  }
+
+  button {
+    cursor: pointer;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.3));
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: var(--text-primary);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  button:hover {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.4), rgba(99, 102, 241, 0.5));
+    border-color: var(--accent-blue);
     transform: translateY(-1px);
   }
-  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-  .tab { 
-    flex: 1; padding: 8px 0; text-align: center; cursor: pointer; 
-    background: rgba(255, 255, 255, 0.05); border-radius: 6px; 
-    font-size: 14px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid transparent;
+
+  button:active {
+    transform: translateY(0);
   }
-  .tab:hover {
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-2px);
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 4px;
   }
-  .tab.active { 
-    background: rgba(90, 139, 212, 0.2); 
-    border-color: rgba(90, 139, 212, 0.5);
-    color: #8ab4f8; font-weight: 600;
-    box-shadow: 0 4px 10px rgba(90, 139, 212, 0.2);
+
+  .btn-danger {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #fca5a5;
   }
-  .glass-panel {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
+
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.4);
+    border-color: #ef4444;
+  }
+
+  /* Single Convert Card Layout */
+  .convert-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  @media (max-width: 600px) {
+    .convert-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .swap-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    align-self: center;
+    justify-self: center;
+    margin-top: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 16px;
+  }
+
+  .formula-badge {
+    background: var(--card-bg);
+    border: 1px solid var(--panel-border);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--accent-blue);
     display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Batch Conversion Table */
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    background: var(--card-bg);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    text-align: left;
+  }
+
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  th {
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* Favorites Grid */
+  .fav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+  }
+
+  .fav-card {
+    background: var(--card-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: var(--radius-md);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .fav-card:hover {
+    border-color: var(--accent-blue);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .fav-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .fav-pair {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--accent-blue);
+  }
+
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #10b981;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Hidden view state */
+  .view-pane {
+    display: none;
     flex-direction: column;
     gap: 12px;
     flex: 1;
-    transition: transform 0.3s, box-shadow 0.3s;
   }
-  .glass-panel:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+
+  .view-pane.active {
+    display: flex;
+  }
+
+  /* Search input */
+  .search-box {
+    width: 100%;
+    margin-bottom: 8px;
   }
 </style>
 </head>
 <body>
   <div class="app-container">
-    <div class="header">KConverter</div>
-    <div class="glass-panel">
-      <div class="tabs">
-        <div class="tab active" onclick="setMode('length')">Length</div>
-        <div class="tab" onclick="setMode('weight')">Weight</div>
-        <div class="tab" onclick="setMode('temp')">Temp</div>
+    <!-- Header -->
+    <header class="header">
+      <div class="title-group">
+        <div class="app-logo">K</div>
+        <div class="header-title">KConverter Pro</div>
       </div>
-
-      <div class="row">
-        <label>From</label>
-        <div style="display:flex; gap:8px;">
-          <input type="number" id="inputVal" value="1" oninput="convert()" style="flex:1" />
-          <select id="unitFrom" onchange="convert()" style="flex:1"></select>
+      
+      <div class="controls-bar">
+        <div class="control-group">
+          <label for="precisionSel">Decimals:</label>
+          <select id="precisionSel" onchange="convert(); renderBatch();" class="btn-sm" aria-label="Decimal Precision">
+            <option value="auto">Auto</option>
+            <option value="0">0</option>
+            <option value="2">2</option>
+            <option value="4" selected>4</option>
+            <option value="6">6</option>
+            <option value="8">8</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="notationSel">Format:</label>
+          <select id="notationSel" onchange="convert(); renderBatch();" class="btn-sm" aria-label="Notation Format">
+            <option value="std" selected>Standard</option>
+            <option value="sci">Scientific (1e+N)</option>
+          </select>
         </div>
       </div>
+    </header>
 
-      <div class="row" style="margin-top:8px;">
-        <label>To</label>
-        <div style="display:flex; gap:8px;">
-          <input type="text" id="outputVal" readonly style="flex:1; background:rgba(0,0,0,0.4);" />
-          <select id="unitTo" onchange="convert()" style="flex:1"></select>
+    <!-- Top Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <div class="nav-tab active" role="tab" id="tab-single" onclick="switchView('single')">Single Convert</div>
+      <div class="nav-tab" role="tab" id="tab-batch" onclick="switchView('batch')">Batch Mode</div>
+      <div class="nav-tab" role="tab" id="tab-fav" onclick="switchView('fav')">Favorites ⭐</div>
+      <div class="nav-tab" role="tab" id="tab-custom" onclick="switchView('custom')">Custom Units 🛠️</div>
+      <div class="nav-tab" role="tab" id="tab-history" onclick="switchView('history')">History Log 📜</div>
+    </nav>
+
+    <!-- Main Content Panel -->
+    <main class="main-panel">
+      <!-- Category Tabs (shared for single/batch) -->
+      <div class="cat-tabs" id="categoryContainer"></div>
+
+      <!-- VIEW 1: SINGLE CONVERSION -->
+      <section id="view-single" class="view-pane active">
+        <div class="convert-grid">
+          <div class="row">
+            <label for="inputVal">From</label>
+            <input type="number" id="inputVal" value="1" step="any" oninput="convert()" aria-label="Value to convert" />
+            <select id="unitFrom" onchange="convert()" aria-label="Unit from"></select>
+          </div>
+
+          <button class="swap-btn" onclick="swapUnits()" title="Swap Units" aria-label="Swap units">⇄</button>
+
+          <div class="row">
+            <label for="outputVal">To (Result)</label>
+            <div style="display: flex; gap: 6px;">
+              <input type="text" id="outputVal" readonly style="flex:1; background: rgba(0,0,0,0.4);" aria-label="Converted output" aria-live="polite" />
+              <button onclick="copyToClipboard(document.getElementById('outputVal').value)" title="Copy Result" aria-label="Copy result">📋</button>
+            </div>
+            <select id="unitTo" onchange="convert()" aria-label="Unit to"></select>
+          </div>
         </div>
-      </div>
-    </div>
+
+        <div class="formula-badge">
+          <span id="formulaText">1 Meter = 1.0000 Meter</span>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-sm" onclick="pinCurrentFavorite()" title="Pin to Favorites">⭐ Pin Pair</button>
+            <button class="btn-sm" onclick="copyFormula()" title="Copy Equation">📋 Copy Eq</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: BATCH MODE -->
+      <section id="view-batch" class="view-pane">
+        <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div class="row" style="flex: 1; min-width: 160px;">
+            <label for="batchInputVal">Input Value</label>
+            <input type="number" id="batchInputVal" value="1" step="any" oninput="renderBatch()" aria-label="Batch input value" />
+          </div>
+          <div class="row" style="flex: 1; min-width: 160px;">
+            <label for="batchUnitFrom">Base Unit</label>
+            <select id="batchUnitFrom" onchange="renderBatch()" aria-label="Batch base unit"></select>
+          </div>
+          <div class="row" style="flex: 1.5; min-width: 200px;">
+            <label for="batchSearch">Filter Results</label>
+            <input type="text" id="batchSearch" placeholder="Search unit name..." oninput="renderBatch()" aria-label="Filter batch units" />
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Unit Name</th>
+                <th>Converted Value</th>
+                <th style="width: 80px; text-align: center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="batchTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VIEW 3: FAVORITES -->
+      <section id="view-fav" class="view-pane">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label>Pinned Favorite Conversions</label>
+          <span style="font-size: 12px; color: var(--text-muted);">Click any favorite to convert</span>
+        </div>
+        <div class="fav-grid" id="favContainer"></div>
+      </section>
+
+      <!-- VIEW 4: CUSTOM UNITS -->
+      <section id="view-custom" class="view-pane">
+        <div class="row" style="background: var(--card-bg); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--panel-border);">
+          <label>Add Custom Unit Formula</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-top: 6px;">
+            <div>
+              <label for="customCatSel">Category</label>
+              <select id="customCatSel" style="width:100%"></select>
+            </div>
+            <div>
+              <label for="customUnitName">Unit Name</label>
+              <input type="text" id="customUnitName" placeholder="e.g. Parsec" style="width:100%" />
+            </div>
+            <div>
+              <label for="customFactor">Factor (relative to base)</label>
+              <input type="number" id="customFactor" placeholder="e.g. 1000" step="any" style="width:100%" />
+            </div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+            * Factor is how many base units equal 1 custom unit (e.g. for Length base unit Meters, 1 km factor = 1000).
+          </div>
+          <button style="margin-top: 10px; align-self: flex-start;" onclick="addCustomUnit()">➕ Add Custom Unit</button>
+        </div>
+
+        <label style="margin-top: 10px;">User Defined Units</label>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Unit Name</th>
+                <th>Multiplier Factor</th>
+                <th style="width: 80px; text-align: center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="customTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- VIEW 5: HISTORY LOG -->
+      <section id="view-history" class="view-pane">
+        <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+          <input type="text" id="historySearch" class="search-box" placeholder="Search conversion history..." oninput="renderHistory()" style="flex:1; max-width: 300px; margin-bottom: 0;" />
+          <div style="display: flex; gap: 6px;">
+            <button class="btn-sm" onclick="exportHistoryCSV()">📥 Export CSV</button>
+            <button class="btn-sm" onclick="exportHistoryJSON()">📥 Export JSON</button>
+            <button class="btn-sm btn-danger" onclick="clearHistory()">🗑️ Clear Log</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper" style="flex: 1;">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Category</th>
+                <th>From</th>
+                <th>To (Result)</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
 
+  <div id="toast" class="toast">Copied to clipboard!</div>
+
   <script>
-    const units = {
+    // System Built-in Base Units & Multipliers
+    const baseUnits = {
       length: {
         m: { name: 'Meters', factor: 1 },
         km: { name: 'Kilometers', factor: 1000 },
-        mi: { name: 'Miles', factor: 1609.34 },
+        cm: { name: 'Centimeters', factor: 0.01 },
+        mm: { name: 'Millimeters', factor: 0.001 },
+        mi: { name: 'Miles', factor: 1609.344 },
+        yd: { name: 'Yards', factor: 0.9144 },
         ft: { name: 'Feet', factor: 0.3048 },
-        in: { name: 'Inches', factor: 0.0254 }
+        in: { name: 'Inches', factor: 0.0254 },
+        nmi: { name: 'Nautical Miles', factor: 1852 }
       },
       weight: {
         kg: { name: 'Kilograms', factor: 1 },
         g: { name: 'Grams', factor: 0.001 },
-        lb: { name: 'Pounds', factor: 0.453592 },
-        oz: { name: 'Ounces', factor: 0.0283495 }
+        mg: { name: 'Milligrams', factor: 0.000001 },
+        t: { name: 'Metric Tons', factor: 1000 },
+        lb: { name: 'Pounds', factor: 0.45359237 },
+        oz: { name: 'Ounces', factor: 0.028349523125 },
+        st: { name: 'Stone', factor: 6.35029 }
       },
       temp: {
         c: { name: 'Celsius' },
         f: { name: 'Fahrenheit' },
         k: { name: 'Kelvin' }
+      },
+      data: {
+        b: { name: 'Bytes', factor: 1 },
+        kb: { name: 'Kilobytes (KB)', factor: 1024 },
+        mb: { name: 'Megabytes (MB)', factor: 1048576 },
+        gb: { name: 'Gigabytes (GB)', factor: 1073741824 },
+        tb: { name: 'Terabytes (TB)', factor: 1099511627776 },
+        pb: { name: 'Petabytes (PB)', factor: 1125899906842624 }
+      },
+      speed: {
+        mps: { name: 'Meters / sec (m/s)', factor: 1 },
+        kph: { name: 'Kilometers / hr (km/h)', factor: 0.277778 },
+        mph: { name: 'Miles / hr (mph)', factor: 0.44704 },
+        knot: { name: 'Knots', factor: 0.514444 },
+        fps: { name: 'Feet / sec (ft/s)', factor: 0.3048 }
+      },
+      area: {
+        sqm: { name: 'Square Meters (m²)', factor: 1 },
+        sqkm: { name: 'Square Kilometers (km²)', factor: 1000000 },
+        sqft: { name: 'Square Feet (ft²)', factor: 0.092903 },
+        acre: { name: 'Acres', factor: 4046.856 },
+        ha: { name: 'Hectares', factor: 10000 }
+      },
+      volume: {
+        l: { name: 'Liters (L)', factor: 1 },
+        ml: { name: 'Milliliters (mL)', factor: 0.001 },
+        cbm: { name: 'Cubic Meters (m³)', factor: 1000 },
+        gal: { name: 'Gallons (US)', factor: 3.78541 },
+        qt: { name: 'Quarts (US)', factor: 0.946353 },
+        floz: { name: 'Fluid Ounces (US)', factor: 0.0295735 }
+      },
+      time: {
+        sec: { name: 'Seconds', factor: 1 },
+        min: { name: 'Minutes', factor: 60 },
+        hr: { name: 'Hours', factor: 3600 },
+        day: { name: 'Days', factor: 86400 },
+        wk: { name: 'Weeks', factor: 604800 },
+        yr: { name: 'Years (365d)', factor: 31536000 }
       }
     };
 
-    let currentMode = 'length';
+    let categories = {
+      length: 'Length',
+      weight: 'Weight',
+      temp: 'Temperature',
+      data: 'Data Storage',
+      speed: 'Speed',
+      area: 'Area',
+      volume: 'Volume',
+      time: 'Time'
+    };
 
-    function setMode(mode) {
-      currentMode = mode;
-      document.querySelectorAll('.tab').forEach(el => {
-        el.classList.remove('active');
-        if (el.innerText.toLowerCase().startsWith(mode.substring(0,4))) {
-          el.classList.add('active');
-        }
+    let currentCategory = 'length';
+    let favorites = JSON.parse(localStorage.getItem('kconv_favs') || '[]');
+    let customUnits = JSON.parse(localStorage.getItem('kconv_custom_units') || '[]');
+    let historyLog = JSON.parse(localStorage.getItem('kconv_history') || '[]');
+
+    // Initialize App
+    window.onload = () => {
+      renderCategories();
+      populateDropdowns();
+      renderCustomUnitsTable();
+      renderFavorites();
+      renderHistory();
+      convert();
+    };
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.innerText = msg || 'Copied to clipboard!';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function copyToClipboard(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!'));
+    }
+
+    function switchView(viewName) {
+      document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.view-pane').forEach(pane => pane.classList.remove('active'));
+
+      document.getElementById(`tab-${viewName}`).classList.add('active');
+      document.getElementById(`view-${viewName}`).classList.add('active');
+
+      if (viewName === 'batch') renderBatch();
+      if (viewName === 'fav') renderFavorites();
+      if (viewName === 'history') renderHistory();
+    }
+
+    function renderCategories() {
+      const container = document.getElementById('categoryContainer');
+      const customCatSel = document.getElementById('customCatSel');
+      container.innerHTML = '';
+      customCatSel.innerHTML = '';
+
+      for (const [key, name] of Object.entries(categories)) {
+        const catBtn = document.createElement('div');
+        catBtn.className = `cat-tab ${key === currentCategory ? 'active' : ''}`;
+        catBtn.innerText = name;
+        catBtn.onclick = () => selectCategory(key);
+        container.appendChild(catBtn);
+
+        customCatSel.innerHTML += `<option value="${key}">${name}</option>`;
+      }
+    }
+
+    function selectCategory(catKey) {
+      currentCategory = catKey;
+      document.querySelectorAll('.cat-tab').forEach(t => {
+        t.classList.toggle('active', t.innerText === categories[catKey]);
       });
       populateDropdowns();
       convert();
+      renderBatch();
+    }
+
+    function getAllUnitsForCategory(catKey) {
+      const list = { ...(baseUnits[catKey] || {}) };
+      customUnits.filter(u => u.category === catKey).forEach(u => {
+        list[`custom_${u.id}`] = { name: u.name, factor: u.factor };
+      });
+      return list;
     }
 
     function populateDropdowns() {
       const uf = document.getElementById('unitFrom');
       const ut = document.getElementById('unitTo');
-      uf.innerHTML = ''; ut.innerHTML = '';
-      
-      const modeUnits = units[currentMode];
-      let first = true, second = null;
-      
-      for (const [key, val] of Object.entries(modeUnits)) {
-        uf.innerHTML += `<option value="${key}">${val.name}</option>`;
-        ut.innerHTML += `<option value="${key}">${val.name}</option>`;
-        if (first) { first = false; }
-        else if (!second) { second = key; }
+      const buf = document.getElementById('batchUnitFrom');
+
+      uf.innerHTML = ''; ut.innerHTML = ''; buf.innerHTML = '';
+
+      const modeUnits = getAllUnitsForCategory(currentCategory);
+      let keys = Object.keys(modeUnits);
+
+      keys.forEach((key, idx) => {
+        const u = modeUnits[key];
+        uf.innerHTML += `<option value="${key}">${u.name}</option>`;
+        ut.innerHTML += `<option value="${key}">${u.name}</option>`;
+        buf.innerHTML += `<option value="${key}">${u.name}</option>`;
+      });
+
+      if (keys.length > 1) {
+        ut.value = keys[1];
       }
-      if (second) { ut.value = second; }
+    }
+
+    function formatNumber(num) {
+      if (isNaN(num)) return '';
+      const prec = document.getElementById('precisionSel').value;
+      const notat = document.getElementById('notationSel').value;
+
+      if (notat === 'sci') {
+        return num.toExponential(prec === 'auto' ? 4 : parseInt(prec));
+      }
+
+      if (prec === 'auto') {
+        let str = num.toFixed(6);
+        return str.replace(/\.?0+$/, '');
+      }
+
+      return num.toFixed(parseInt(prec));
     }
 
     function convert() {
       const val = parseFloat(document.getElementById('inputVal').value);
       if (isNaN(val)) {
         document.getElementById('outputVal').value = '';
+        document.getElementById('formulaText').innerText = 'Enter a valid number';
         return;
       }
 
-      const from = document.getElementById('unitFrom').value;
-      const to = document.getElementById('unitTo').value;
+      const fromKey = document.getElementById('unitFrom').value;
+      const toKey = document.getElementById('unitTo').value;
+      const modeUnits = getAllUnitsForCategory(currentCategory);
+
+      if (!modeUnits[fromKey] || !modeUnits[toKey]) return;
+
       let result = 0;
-
-      if (currentMode === 'temp') {
+      if (currentCategory === 'temp') {
         let celsius = 0;
-        if (from === 'c') celsius = val;
-        else if (from === 'f') celsius = (val - 32) * 5/9;
-        else if (from === 'k') celsius = val - 273.15;
+        if (fromKey === 'c') celsius = val;
+        else if (fromKey === 'f') celsius = (val - 32) * 5/9;
+        else if (fromKey === 'k') celsius = val - 273.15;
 
-        if (to === 'c') result = celsius;
-        else if (to === 'f') result = (celsius * 9/5) + 32;
-        else if (to === 'k') result = celsius + 273.15;
+        if (toKey === 'c') result = celsius;
+        else if (toKey === 'f') result = (celsius * 9/5) + 32;
+        else if (toKey === 'k') result = celsius + 273.15;
       } else {
-        const modeUnits = units[currentMode];
-        const baseVal = val * modeUnits[from].factor;
-        result = baseVal / modeUnits[to].factor;
+        const baseVal = val * modeUnits[fromKey].factor;
+        result = baseVal / modeUnits[toKey].factor;
       }
 
-      // Format nicely (up to 4 decimal places)
-      let pretty = result.toFixed(4);
-      pretty = pretty.replace(/\.?0+$/, ''); // remove trailing zeros
-      if (pretty === '') pretty = '0';
-      
-      document.getElementById('outputVal').value = pretty;
+      const formattedResult = formatNumber(result);
+      document.getElementById('outputVal').value = formattedResult;
+
+      // Formula display
+      const fromName = modeUnits[fromKey].name;
+      const toName = modeUnits[toKey].name;
+      document.getElementById('formulaText').innerText = `${val} ${fromName} = ${formattedResult} ${toName}`;
+
+      // Log conversion to history (throttled)
+      logHistory(currentCategory, val, fromName, formattedResult, toName);
     }
 
-    window.onload = () => {
-      setMode('length');
-    };
+    function swapUnits() {
+      const uf = document.getElementById('unitFrom');
+      const ut = document.getElementById('unitTo');
+      const temp = uf.value;
+      uf.value = ut.value;
+      ut.value = temp;
+      convert();
+    }
+
+    function copyFormula() {
+      const text = document.getElementById('formulaText').innerText;
+      copyToClipboard(text);
+    }
+
+    /* BATCH CONVERSION MODE */
+    function renderBatch() {
+      const val = parseFloat(document.getElementById('batchInputVal').value);
+      const fromKey = document.getElementById('batchUnitFrom').value;
+      const search = document.getElementById('batchSearch').value.toLowerCase();
+      const tbody = document.getElementById('batchTableBody');
+
+      tbody.innerHTML = '';
+
+      if (isNaN(val)) return;
+
+      const modeUnits = getAllUnitsForCategory(currentCategory);
+      if (!modeUnits[fromKey]) return;
+
+      for (const [key, u] of Object.entries(modeUnits)) {
+        if (search && !u.name.toLowerCase().includes(search)) continue;
+
+        let res = 0;
+        if (currentCategory === 'temp') {
+          let celsius = 0;
+          if (fromKey === 'c') celsius = val;
+          else if (fromKey === 'f') celsius = (val - 32) * 5/9;
+          else if (fromKey === 'k') celsius = val - 273.15;
+
+          if (key === 'c') res = celsius;
+          else if (key === 'f') res = (celsius * 9/5) + 32;
+          else if (key === 'k') res = celsius + 273.15;
+        } else {
+          const baseVal = val * modeUnits[fromKey].factor;
+          res = baseVal / u.factor;
+        }
+
+        const formatted = formatNumber(res);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${u.name}</strong></td>
+          <td style="color: var(--accent-blue); font-weight:600;">${formatted}</td>
+          <td style="text-align: center;"><button class="btn-sm" onclick="copyToClipboard('${formatted}')">📋 Copy</button></td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    /* FAVORITES SYSTEM */
+    function pinCurrentFavorite() {
+      const fromKey = document.getElementById('unitFrom').value;
+      const toKey = document.getElementById('unitTo').value;
+      const modeUnits = getAllUnitsForCategory(currentCategory);
+
+      const fav = {
+        id: Date.now(),
+        category: currentCategory,
+        categoryName: categories[currentCategory],
+        fromKey,
+        toKey,
+        fromName: modeUnits[fromKey].name,
+        toName: modeUnits[toKey].name
+      };
+
+      // avoid duplicate
+      if (!favorites.some(f => f.category === fav.category && f.fromKey === fav.fromKey && f.toKey === fav.toKey)) {
+        favorites.push(fav);
+        localStorage.setItem('kconv_favs', JSON.stringify(favorites));
+        showToast('Pinned to Favorites! ⭐');
+        renderFavorites();
+      } else {
+        showToast('Pair already pinned!');
+      }
+    }
+
+    function renderFavorites() {
+      const container = document.getElementById('favContainer');
+      container.innerHTML = '';
+
+      if (favorites.length === 0) {
+        container.innerHTML = '<div style="color: var(--text-muted); font-size: 13px;">No pinned favorites yet. Click "Pin Pair" in Single Convert mode!</div>';
+        return;
+      }
+
+      favorites.forEach(fav => {
+        const card = document.createElement('div');
+        card.className = 'fav-card';
+        card.innerHTML = `
+          <div class="fav-header">
+            <span>${fav.categoryName}</span>
+            <button class="btn-sm btn-danger" style="padding:2px 6px;" onclick="event.stopPropagation(); removeFavorite(${fav.id})">✕</button>
+          </div>
+          <div class="fav-pair">${fav.fromName} ➔ ${fav.toName}</div>
+        `;
+        card.onclick = () => loadFavorite(fav);
+        container.appendChild(card);
+      });
+    }
+
+    function removeFavorite(id) {
+      favorites = favorites.filter(f => f.id !== id);
+      localStorage.setItem('kconv_favs', JSON.stringify(favorites));
+      renderFavorites();
+    }
+
+    function loadFavorite(fav) {
+      selectCategory(fav.category);
+      document.getElementById('unitFrom').value = fav.fromKey;
+      document.getElementById('unitTo').value = fav.toKey;
+      switchView('single');
+      convert();
+    }
+
+    /* CUSTOM UNITS SYSTEM */
+    function addCustomUnit() {
+      const cat = document.getElementById('customCatSel').value;
+      const name = document.getElementById('customUnitName').value.trim();
+      const factor = parseFloat(document.getElementById('customFactor').value);
+
+      if (!name || isNaN(factor) || factor <= 0) {
+        alert('Please provide a valid Unit Name and positive numerical Factor.');
+        return;
+      }
+
+      const newUnit = {
+        id: Date.now(),
+        category: cat,
+        name,
+        factor
+      };
+
+      customUnits.push(newUnit);
+      localStorage.setItem('kconv_custom_units', JSON.stringify(customUnits));
+
+      document.getElementById('customUnitName').value = '';
+      document.getElementById('customFactor').value = '';
+
+      showToast(`Custom Unit "${name}" added!`);
+      renderCustomUnitsTable();
+      populateDropdowns();
+    }
+
+    function renderCustomUnitsTable() {
+      const tbody = document.getElementById('customTableBody');
+      tbody.innerHTML = '';
+
+      if (customUnits.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">No custom units added yet.</td></tr>';
+        return;
+      }
+
+      customUnits.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${categories[u.category] || u.category}</td>
+          <td><strong>${u.name}</strong></td>
+          <td>${u.factor}</td>
+          <td style="text-align: center;">
+            <button class="btn-sm btn-danger" onclick="deleteCustomUnit(${u.id})">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteCustomUnit(id) {
+      customUnits = customUnits.filter(u => u.id !== id);
+      localStorage.setItem('kconv_custom_units', JSON.stringify(customUnits));
+      renderCustomUnitsTable();
+      populateDropdowns();
+      convert();
+    }
+
+    /* HISTORY LOG SYSTEM */
+    let lastLogTime = 0;
+    function logHistory(catKey, fromVal, fromName, toValStr, toName) {
+      const now = Date.now();
+      if (now - lastLogTime < 1500) return; // avoid logging on every keystroke
+      lastLogTime = now;
+
+      const item = {
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        category: categories[catKey] || catKey,
+        from: `${fromVal} ${fromName}`,
+        to: `${toValStr} ${toName}`
+      };
+
+      historyLog.unshift(item);
+      if (historyLog.length > 50) historyLog.pop(); // keep last 50
+      localStorage.setItem('kconv_history', JSON.stringify(historyLog));
+    }
+
+    function renderHistory() {
+      const tbody = document.getElementById('historyTableBody');
+      const query = document.getElementById('historySearch').value.toLowerCase();
+      tbody.innerHTML = '';
+
+      const filtered = historyLog.filter(h => 
+        !query || h.category.toLowerCase().includes(query) || h.from.toLowerCase().includes(query) || h.to.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">No history log available.</td></tr>';
+        return;
+      }
+
+      filtered.forEach(h => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color: var(--text-muted); font-size: 11px;">${h.time}</td>
+          <td>${h.category}</td>
+          <td>${h.from}</td>
+          <td style="color: var(--accent-blue); font-weight:600;">${h.to}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function clearHistory() {
+      historyLog = [];
+      localStorage.removeItem('kconv_history');
+      renderHistory();
+      showToast('History cleared');
+    }
+
+    function exportHistoryCSV() {
+      if (historyLog.length === 0) {
+        alert('History is empty!');
+        return;
+      }
+      let csv = 'Time,Category,From,To\n';
+      historyLog.forEach(h => {
+        csv += `"${h.time}","${h.category}","${h.from}","${h.to}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kconverter_history.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportHistoryJSON() {
+      if (historyLog.length === 0) {
+        alert('History is empty!');
+        return;
+      }
+      const json = JSON.stringify(historyLog, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kconverter_history.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   </script>
 </body>
 </html>

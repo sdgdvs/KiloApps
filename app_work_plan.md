@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KConverter
+**Target App:** KTodo
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KConverter
 - KTodo
 - KGraph
 - KTimer
@@ -77,7 +76,4 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KTask (Added Process Priority Adjuster, CPU/RAM Rolling Sparkline Charts, Process Snapshot Exports [CSV/JSON], Kill Confirmation Modal, and System Summary)
 - KSys (Added Hardware Component Inspector, Diagnostic Stress & Memory Benchmarks, Event History Log Viewer, and Report Export [TXT/JSON/HTML])
 - KRogue (Added Character Classes & Races, Custom Dungeon Seed Generator, Equipment & Inventory Slots, Magic Spellbook, Run History Leaderboard, and Save/Resume State)
-
-
-
-
+- KConverter (Added Single & Batch Conversion Modes, Favorite Pairs Pinning, Custom Unit Formula Creator, Searchable Conversion History Log with CSV/JSON Export, and Precision/Scientific Notation Controls)
