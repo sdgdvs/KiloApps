@@ -1,56 +1,140 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
+<title>KBreakout - Campaign Expansion</title>
 <style>
-body { background: #14141e; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; font-family: monospace; }
-canvas { background: #1a1a24; border: 2px solid #33c; border-radius: 4px; box-shadow: 0 0 10px rgba(51,51,204,0.5); }
-#ui { position: absolute; top: 10px; left: 10px; z-index: 10; font-size: 16px; text-shadow: 1px 1px 0 #000; pointer-events: none; }
+* { box-sizing: border-box; }
+body { background: #0e0e17; color: #fff; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, monospace; user-select: none; }
+#game-container { position: relative; display: flex; flex-direction: column; align-items: center; background: #141422; border: 2px solid #3b3b6d; border-radius: 8px; box-shadow: 0 0 20px rgba(59,59,109,0.6); padding: 10px; }
+#ui { display: flex; justify-content: space-between; align-items: center; width: 400px; padding: 4px 8px; background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 4px; font-size: 13px; font-weight: bold; margin-bottom: 8px; text-shadow: 1px 1px 0 #000; }
+.ui-val { color: #00ffff; }
+#boss-bar-container { display: none; width: 400px; background: #201020; border: 1px solid #ff0055; border-radius: 4px; margin-bottom: 6px; padding: 3px 6px; }
+#boss-bar-title { font-size: 11px; color: #ff3377; font-weight: bold; text-align: center; margin-bottom: 2px; }
+#boss-bar-bg { width: 100%; height: 10px; background: #400018; border-radius: 2px; overflow: hidden; border: 1px solid #800030; }
+#boss-bar-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #ff6600); transition: width 0.1s; }
+canvas { background: #10101a; border: 1px solid #282845; border-radius: 4px; cursor: crosshair; }
+#skill-bar { display: flex; justify-content: space-between; width: 400px; margin-top: 8px; gap: 4px; }
+.skill-btn { flex: 1; background: #1e1e36; border: 1px solid #3a3a60; border-radius: 4px; padding: 6px 2px; color: #aaa; font-size: 11px; font-weight: bold; text-align: center; cursor: pointer; transition: all 0.15s; }
+.skill-btn.ready { background: #2a2a54; border-color: #00ffff; color: #fff; box-shadow: 0 0 6px rgba(0,255,255,0.3); }
+.skill-btn.ready:hover { background: #3a3a74; color: #00ffff; transform: translateY(-1px); }
+.skill-btn.active { background: #0088aa; border-color: #00ffff; color: #fff; animation: pulse 0.5s infinite alternate; }
+.skill-key { display: inline-block; background: #111; color: #00ffff; padding: 1px 4px; border-radius: 3px; margin-right: 2px; }
+@keyframes pulse { 0% { box-shadow: 0 0 4px #00ffff; } 100% { box-shadow: 0 0 12px #00ffff; } }
 </style>
 </head>
 <body>
-<div id="ui">L<span id="lv_txt">1</span> Sc: <span id="sc">0</span> Hi: <span id="hi">0</span> Lv: <span id="lv">3</span> Br: <span id="brk">0</span></div>
-<canvas id="c" width="400" height="400"></canvas>
+
+<div id="game-container">
+    <div id="ui">
+        <div>STG: <span id="stg" class="ui-val">1/20</span></div>
+        <div>SC: <span id="sc" class="ui-val">0</span></div>
+        <div>HI: <span id="hi" class="ui-val">0</span></div>
+        <div>LIVES: <span id="lv" class="ui-val">3</span></div>
+        <div>BRKS: <span id="brk" class="ui-val">0</span></div>
+    </div>
+    
+    <div id="boss-bar-container">
+        <div id="boss-bar-title">STAGE 20 BOSS FORTRESS CORE</div>
+        <div id="boss-bar-bg"><div id="boss-bar-fill"></div></div>
+    </div>
+
+    <canvas id="c" width="400" height="420"></canvas>
+
+    <div id="skill-bar">
+        <div id="btn-laser" class="skill-btn ready" onclick="useSkill('laser')"><span class="skill-key">L</span>LASER</div>
+        <div id="btn-multi" class="skill-btn ready" onclick="useSkill('multi')"><span class="skill-key">M</span>SPLIT</div>
+        <div id="btn-fire" class="skill-btn ready" onclick="useSkill('fire')"><span class="skill-key">F</span>FIREBALL</div>
+        <div id="btn-barrier" class="skill-btn ready" onclick="useSkill('barrier')"><span class="skill-key">B</span>BARRIER</div>
+    </div>
+</div>
+
 <script>
 const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
-let w = cvs.width, h = cvs.height;
-let pad_w = 60, pad_h = 10, pad_x = w/2 - pad_w/2;
-let ball_x = w/2, ball_y = h-50, ball_size = 8, ball_dx = 0, ball_dy = 0;
-let state = 0; // 0=start, 1=play, 2=gameover
+const w = cvs.width, h = cvs.height;
+
+// Game State
+let state = 0; // 0=start, 1=play, 2=gameover, 3=victory
 let score = 0, high_score = parseInt(localStorage.getItem('kbreakout_hi')||'0');
 let lifetime_bricks = parseInt(localStorage.getItem('kbreakout_bricks')||'0');
-let level = 1;
-document.getElementById('hi').innerText = high_score; document.getElementById('brk').innerText = lifetime_bricks; document.getElementById('lv_txt').innerText = level;
-let diff = 0, speed = 3;
-let lives = 3;
-let power_active = 0, power_x = 0, power_y = 0, paddle_timer = 0, power_type = 0, pierce_timer = 0;
-let sticky_timer = 0, ball_stuck = 0, ball_stuck_offset = 0;
-let laser_timer = 0, lasers = [];
-let ufo_active = 0, ufo_x = 0, ufo_y = 25, ufo_dx = 2, ufo_timer = 300;
-let keys = {};
-let particles = [];
-let ball_trail = [];
-const ROWS = 5, COLS = 10, BR_W = w/COLS, BR_H = 20;
+let level = 1, diff = 0, speed = 3.5, lives = 3;
+
+// Paddle
+let pad_w = 60, pad_h = 10, pad_x = w/2 - pad_w/2;
+
+// Multi-Ball system
+let balls = [];
+
+// Timers & Powerups
+let power_active = 0, power_x = 0, power_y = 0, power_type = 0;
+let paddle_timer = 0, sticky_timer = 0;
+
+// Active Skills & Cooldowns
+let cd_laser = 0, dur_laser = 0;
+let cd_multi = 0;
+let cd_fire = 0, dur_fire = 0;
+let cd_barrier = 0, dur_barrier = 0;
+
+// Lasers
+let lasers = [];
+
+// UFO Drone
+let ufo_active = 0, ufo_x = 0, ufo_y = 25, ufo_dx = 2, ufo_timer = 250;
+let ufo_bullet = { active: 0, x: 0, y: 0 };
+
+// Hazard Shields
+let shield_active = 0, shield_x = 100, shield_y = 120, shield_w = 70, shield_dx = 2;
+
+// Boss Fortress (Stage 20 & Stage 10)
+let boss_active = 0, boss_hp = 50, boss_max_hp = 50;
+let boss_x = w/2 - 50, boss_y = 35, boss_w = 100, boss_h = 40;
+let boss_shield_angle = 0;
+let boss_bullets = [];
+
+// Bricks Grid
+const ROWS = 6, COLS = 10, BR_W = w/COLS, BR_H = 16;
 let bricks = [];
-let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let bricks_left = 0;
+
+// Particle & Trail system
+let particles = [];
+let keys = {};
+
+const STAGE_NAMES = [
+    "1. Warming Up", "2. Checkerboard", "3. Pyramid Citadel", "4. Minefield",
+    "5. Portal Vault", "6. Invader Matrix", "7. Steel Fortress", "8. Twin Towers",
+    "9. Quantum Grid", "10. Outpost Sub-Boss", "11. Spiral Helix", "12. Castle Bastion",
+    "13. Aegis Wall", "14. Diamond Vault", "15. Volcanic Core", "16. Shield Generator",
+    "17. Dreadnought", "18. Warp Core", "19. Citadel Gate", "20. BOSS FORTRESS"
+];
+
+// Web Audio API
+let audioCtx = null;
+function initAudio() {
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
 
 function playTone(f, type, dur) {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    let osc = audioCtx.createOscillator();
-    let gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + dur);
+    if(!audioCtx) return;
+    try {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + dur);
+    } catch(e){}
 }
 
 function spawnParticles(x, y, color, count) {
     for (let i = 0; i < count; i++) {
         let angle = Math.random() * Math.PI * 2;
-        let spd = 1 + Math.random() * 3.5;
+        let spd = 1 + Math.random() * 4;
         particles.push({
             x: x, y: y,
             vx: Math.cos(angle) * spd,
@@ -62,467 +146,736 @@ function spawnParticles(x, y, color, count) {
     }
 }
 
-function getBrickColor(r, c, type) {
-    if (type === 9) return '#8899a6';
-    if (type === 2) return '#ff4444';
-    const rowColors = ['#ff3366', '#ff9933', '#ffcc00', '#33cc66', '#33ccff'];
+function getBrickColor(type, r, c) {
+    if (type === 9) return '#7a8a99'; // Steel
+    if (type === 2) return '#ff4444'; // 2-hit
+    if (type === 3) return '#b87333'; // 3-hit Bronze
+    if (type === 4) return '#ff6600'; // Explosive
+    if (type === 5) return '#aa00ff'; // Portal
+    if (type === 6) return '#00ffcc'; // Mystery
+    const rowColors = ['#ff3366', '#ff9933', '#ffcc00', '#33cc66', '#33ccff', '#cc66ff'];
     return rowColors[r % rowColors.length];
 }
 
 function drawBrick(r, c, type, bx, by) {
-    let baseColor = getBrickColor(r, c, type);
+    let baseColor = getBrickColor(type, r, c);
     ctx.fillStyle = baseColor;
     ctx.fillRect(bx + 1, by + 1, BR_W - 2, BR_H - 2);
 
     // Bevel highlights & shadows
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.fillRect(bx + 1, by + 1, BR_W - 2, 3);
-    ctx.fillRect(bx + 1, by + 1, 3, BR_H - 2);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    ctx.fillRect(bx + 1, by + 1, BR_W - 2, 2);
+    ctx.fillRect(bx + 1, by + 1, 2, BR_H - 2);
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
-    ctx.fillRect(bx + 1, by + BR_H - 4, BR_W - 2, 3);
-    ctx.fillRect(bx + BR_W - 4, by + 1, 3, BR_H - 2);
+    ctx.fillRect(bx + 1, by + BR_H - 3, BR_W - 2, 2);
+    ctx.fillRect(bx + BR_W - 3, by + 1, 2, BR_H - 2);
 
-    // Inner details & textures
-    if (type === 9) { // Silver metal plates
-        ctx.strokeStyle = '#e0e0e0';
-        ctx.lineWidth = 1;
+    // Special Brick Textures
+    if (type === 9) { // Steel X
+        ctx.strokeStyle = '#d0d8e0'; ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(bx + 4, by + 4); ctx.lineTo(bx + BR_W - 4, by + BR_H - 4);
-        ctx.moveTo(bx + BR_W - 4, by + 4); ctx.lineTo(bx + 4, by + BR_H - 4);
+        ctx.moveTo(bx + 4, by + 3); ctx.lineTo(bx + BR_W - 4, by + BR_H - 3);
+        ctx.moveTo(bx + BR_W - 4, by + 3); ctx.lineTo(bx + 4, by + BR_H - 3);
         ctx.stroke();
-    } else if (type === 2) { // Reinforced armor plate
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
+    } else if (type === 3) { // 3-Hit Metal Stripes
+        ctx.strokeStyle = '#ffe0a0'; ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(bx + BR_W/2, by + 3); ctx.lineTo(bx + BR_W/2 - 4, by + BR_H/2);
-        ctx.lineTo(bx + BR_W/2 + 4, by + BR_H - 3);
+        ctx.moveTo(bx + 6, by + 2); ctx.lineTo(bx + 6, by + BR_H - 2);
+        ctx.moveTo(bx + BR_W - 6, by + 2); ctx.lineTo(bx + BR_W - 6, by + BR_H - 2);
         ctx.stroke();
-    }
-}
-
-function drawPaddle() {
-    let py = h - 30;
-    let grad = ctx.createLinearGradient(pad_x, py, pad_x, py + pad_h);
-    grad.addColorStop(0, '#88a0c0');
-    grad.addColorStop(0.3, '#334466');
-    grad.addColorStop(0.7, '#1a2436');
-    grad.addColorStop(1, '#5577aa');
-    ctx.fillStyle = grad;
-    
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(pad_x, py, pad_w, pad_h, 4);
-    else ctx.rect(pad_x, py, pad_w, pad_h);
-    ctx.fill();
-
-    ctx.fillStyle = '#ccedff';
-    ctx.fillRect(pad_x + 4, py + 1, pad_w - 8, 2);
-
-    let ledColor = (Math.floor(Date.now() / 200) % 2 === 0) ? '#00ffff' : '#0088ff';
-    ctx.fillStyle = ledColor;
-    ctx.fillRect(pad_x + 2, py + 3, 3, pad_h - 6);
-    ctx.fillRect(pad_x + pad_w - 5, py + 3, 3, pad_h - 6);
-
-    let glowOpacity = (Math.sin(Date.now() / 100) + 1) / 2 * 0.6 + 0.4;
-    let coreColor = sticky_timer > 0 ? `rgba(0, 100, 255, ${glowOpacity})` :
-                    laser_timer > 0 ? `rgba(0, 255, 255, ${glowOpacity})` :
-                    `rgba(255, 200, 0, ${glowOpacity})`;
-    ctx.fillStyle = coreColor;
-    ctx.fillRect(pad_x + pad_w / 2 - 8, py + 3, 16, pad_h - 6);
-
-    if (laser_timer > 0) {
-        ctx.fillStyle = '#0ff';
-        ctx.fillRect(pad_x, py - 4, 3, 4);
-        ctx.fillRect(pad_x + pad_w - 3, py - 4, 3, 4);
-    }
-}
-
-function updateAndDrawBall() {
-    if (state === 0) return;
-    if (!ball_stuck) {
-        ball_trail.push({x: ball_x + ball_size/2, y: ball_y + ball_size/2});
-        if (ball_trail.length > 8) ball_trail.shift();
-    } else {
-        ball_trail = [];
-    }
-
-    for (let i = 0; i < ball_trail.length; i++) {
-        let t = ball_trail[i];
-        let alpha = (i + 1) / ball_trail.length * 0.4;
-        let radius = (ball_size / 2) * ((i + 1) / ball_trail.length);
-        ctx.fillStyle = pierce_timer > 0 ? `rgba(255, 50, 50, ${alpha})` : `rgba(0, 220, 255, ${alpha})`;
+    } else if (type === 4) { // Explosive Core
+        ctx.fillStyle = '#ffff00';
         ctx.beginPath();
-        ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
+        ctx.arc(bx + BR_W/2, by + BR_H/2, 3, 0, Math.PI*2);
         ctx.fill();
+    } else if (type === 5) { // Portal Swirl
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(bx + BR_W/2, by + BR_H/2, 4, 0, Math.PI*1.5);
+        ctx.stroke();
+    } else if (type === 6) { // Mystery Mark
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('?', bx + BR_W/2, by + BR_H/2);
     }
-
-    let bx = ball_x + ball_size / 2;
-    let by = ball_y + ball_size / 2;
-    let radGrad = ctx.createRadialGradient(bx - 1, by - 1, 1, bx, by, ball_size);
-    if (pierce_timer > 0) {
-        radGrad.addColorStop(0, '#ffffff');
-        radGrad.addColorStop(0.4, '#ff3333');
-        radGrad.addColorStop(1, '#990000');
-    } else {
-        radGrad.addColorStop(0, '#ffffff');
-        radGrad.addColorStop(0.4, '#33ffff');
-        radGrad.addColorStop(1, '#0066cc');
-    }
-    ctx.fillStyle = radGrad;
-    ctx.beginPath();
-    ctx.arc(bx, by, ball_size / 2 + 1, 0, Math.PI * 2);
-    ctx.fill();
-}
-
-function drawPowerup(x, y, type) {
-    let pw = 14, ph = 14;
-    let color = '#fff', label = '?';
-    if (type === 1) { color = '#ffcc00'; label = 'E'; }
-    else if (type === 2) { color = '#33cc33'; label = '+'; }
-    else if (type === 3) { color = '#ff3333'; label = 'P'; }
-    else if (type === 4) { color = '#3366ff'; label = 'S'; }
-    else if (type === 5) { color = '#00ffff'; label = 'L'; }
-
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(x - pw/2, y - ph/2, pw, ph, 4);
-    else ctx.rect(x - pw/2, y - ph/2, pw, ph);
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.fillStyle = '#000';
-    ctx.font = 'bold 10px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(label, x, y);
-}
-
-function drawUFO(x, y) {
-    ctx.fillStyle = 'rgba(0, 255, 255, 0.7)';
-    ctx.beginPath();
-    ctx.arc(x + 15, y + 4, 7, Math.PI, 0);
-    ctx.fill();
-
-    let ufoGrad = ctx.createLinearGradient(x, y + 4, x, y + 10);
-    ufoGrad.addColorStop(0, '#d000d0');
-    ufoGrad.addColorStop(1, '#500050');
-    ctx.fillStyle = ufoGrad;
-    ctx.beginPath();
-    ctx.ellipse(x + 15, y + 7, 15, 4, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    let lightColor = (Math.floor(Date.now() / 150) % 2 === 0) ? '#ff00ff' : '#00ffff';
-    ctx.fillStyle = lightColor;
-    ctx.fillRect(x + 5, y + 8, 3, 2);
-    ctx.fillRect(x + 14, y + 9, 3, 2);
-    ctx.fillRect(x + 22, y + 8, 3, 2);
 }
 
 function initLevel() {
     bricks = [];
     particles = [];
-    ball_trail = [];
-    let bCount = 0;
-    for(let r=0; r<ROWS; r++) {
+    lasers = [];
+    boss_bullets = [];
+    ufo_bullet.active = 0;
+    bricks_left = 0;
+    
+    // Skill cooldowns & durations reset
+    dur_laser = 0; dur_fire = 0; dur_barrier = 0;
+    cd_laser = 0; cd_multi = 0; cd_fire = 0; cd_barrier = 0;
+
+    paddle_timer = 0; sticky_timer = 0; power_active = 0;
+    pad_w = diff === 1 ? 45 : 65;
+    pad_x = w/2 - pad_w/2;
+
+    // Reset single ball
+    balls = [{
+        x: w/2, y: h - 45,
+        dx: speed * (Math.random() > 0.5 ? 1 : -1),
+        dy: -speed,
+        stuck: 1,
+        stuck_offset: pad_w/2,
+        trail: []
+    }];
+
+    // Boss & Shield setup
+    boss_active = (level === 10 || level === 20);
+    if (level === 10) { boss_hp = 25; boss_max_hp = 25; }
+    else if (level === 20) { boss_hp = 50; boss_max_hp = 50; }
+
+    shield_active = (level >= 14);
+    shield_x = 50; shield_dx = 2 + (level >= 16 ? 1 : 0);
+
+    ufo_active = 0;
+    ufo_timer = 200;
+
+    // Generate Stage Bricks Architecture
+    for (let r = 0; r < ROWS; r++) {
         let row = [];
-        for(let c=0; c<COLS; c++) {
+        for (let c = 0; c < COLS; c++) {
             let v = 0;
-            let L = level % 10;
-            if (L === 1) {
-                if (r === 1 && c % 3 === 1) v = 9; else if (r === 2) v = 2; else v = 1;
-            } else if (L === 2) {
-                if ((r+c)%2 === 0) v = 1; else if (r === 0) v = 9;
-            } else if (L === 3) {
-                if (c >= r && c < COLS - r) v = (r === 0) ? 2 : 1;
-            } else if (L === 4) {
-                if ((r===1 && (c===2 || c===7))) v = 9;
-                else if (r===3 && (c>1 && c<8)) v = 2;
-                else if (r===4 && (c===2 || c===7)) v = 1;
-            } else if (L === 5) {
-                if (c === 2 || c === 7) v = 9; else v = (r%2===0) ? 2 : 1;
-            } else if (L === 6) {
-                if ((r+c)%2 === 0) v = 2; else v = 9;
-                if (v === 9 && (r===4 || r===0)) v = 1;
-            } else if (L === 7) {
-                if (Math.abs(r - 2) + Math.abs(c - 4) < 3) v = 2;
-            } else if (L === 8) {
-                if (c === 1 || c === 8) v = 9; else v = 2;
-            } else if (L === 9) {
-                if (c >= r && c < COLS - r) v = 2;
-            } else {
-                v = 2;
+            if (level === 1) {
+                if (r === 0) v = 2; else if (r <= 3) v = 1;
+            } else if (level === 2) { // Checkerboard
+                v = ((r + c) % 2 === 0) ? 1 : 2;
+                if ((r === 0 || r === 4) && (c === 0 || c === 9)) v = 9;
+            } else if (level === 3) { // Pyramid Citadel
+                if (c >= r && c < COLS - r) v = (r === 0) ? 6 : (r === 1) ? 3 : 1;
+            } else if (level === 4) { // Minefield
+                if ((r + c) % 3 === 0) v = 4; else v = (r % 2 === 0) ? 2 : 1;
+            } else if (level === 5) { // Portal Vault
+                if (c === 0 || c === 9 || r === 0) v = 5; else if (r === 2 && (c === 4 || c === 5)) v = 6; else v = 2;
+            } else if (level === 6) { // Invader Matrix
+                if ((r === 1 && (c === 2 || c === 7)) || (r === 2 && c >= 2 && c <= 7) || (r === 3 && (c === 1 || c === 4 || c === 5 || c === 8))) v = 3;
+                else if (r === 2 && (c === 4 || c === 5)) v = 4;
+            } else if (level === 7) { // Steel Fortress
+                if (r === 2 && (c !== 2 && c !== 7)) v = 9; else if (r < 2) v = 3; else v = 4;
+            } else if (level === 8) { // Twin Towers
+                if (c <= 2 || c >= 7) v = (r % 2 === 0) ? 3 : 2; else if (r === 1 && (c === 4 || c === 5)) v = 5;
+            } else if (level === 9) { // Quantum Grid
+                let pat = [1, 2, 4, 5, 6, 3];
+                v = pat[(r * COLS + c) % pat.length];
+            } else if (level === 10) { // Outpost Sub-Boss
+                if (r >= 2) v = (r === 2) ? 3 : 2;
+            } else if (level === 11) { // Spiral Helix
+                if ((r === 0 && c < 8) || (c === 8 && r < 4) || (r === 4 && c > 1) || (c === 1 && r > 1)) v = (r % 2 === 0) ? 3 : 5; else v = 1;
+            } else if (level === 12) { // Castle Bastion
+                if (r === 0 && c % 2 === 0) v = 9; else if (r === 1) v = 3; else v = 4;
+            } else if (level === 13) { // Aegis Wall
+                if (r === 1) v = 3; else if (r === 2) v = 4; else if (r === 3) v = 6; else v = 1;
+            } else if (level === 14) { // Diamond Vault
+                if (Math.abs(r - 2) + Math.abs(c - 4.5) <= 3) v = (r === 2) ? 4 : 3;
+            } else if (level === 15) { // Volcanic Core
+                if (r >= 1 && r <= 2 && c >= 4 && c <= 5) v = 4; else v = 3;
+            } else if (level === 16) { // Shield Generator
+                if (c === 2 || c === 7) v = 5; else v = (r % 2 === 0) ? 3 : 2;
+            } else if (level === 17) { // Dreadnought
+                if (r === 0) v = 9; else if (r <= 2) v = 3; else v = 4;
+            } else if (level === 18) { // Warp Core
+                if ((r === 1 || r === 3) && (c === 2 || c === 7)) v = 5; else v = (r % 2 === 0) ? 4 : 3;
+            } else if (level === 19) { // Citadel Gate
+                if (r === 1) v = 9; else if (r === 2) v = 3; else v = 4;
+            } else if (level === 20) { // BOSS FORTRESS
+                if (r >= 3) v = (r === 3) ? 3 : 2;
             }
+
             row.push(v);
-            if (v !== 0 && v !== 9) bCount++;
+            if (v !== 0 && v !== 9) bricks_left++;
         }
         bricks.push(row);
     }
-    if (bCount === 0) bricks[0][0] = 1;
-    power_active = 0;
-    paddle_timer = 0;
-    pierce_timer = 0;
-    sticky_timer = 0;
-    laser_timer = 0;
-    ball_stuck = 0;
-    lasers = [];
-    ufo_active = 0;
-    ufo_timer = 300;
-    pad_w = diff === 1 ? 40 : 60;
-    pad_x = w/2 - pad_w/2;
-    ball_x = w/2;
-    ball_y = h-50;
-    ball_dx = speed * (Math.random()>0.5?1:-1);
-    ball_dy = -speed;
+    if (bricks_left === 0 && !boss_active) { bricks[0][0] = 1; bricks_left = 1; }
+
+    updateUI();
 }
 
-window.onkeydown = e => keys[e.key] = 1;
-window.onkeyup = e => {
-    keys[e.key] = 0;
-    if(state !== 1) {
-        if(e.key === 'Enter') { diff = 0; speed = 3; score = 0; lives = 3; level = 1; pad_w = 60; initLevel(); state = 1; }
-        if(e.key === ' ') { diff = 1; speed = 5; score = 0; lives = 3; level = 1; pad_w = 40; initLevel(); state = 1; }
+function updateUI() {
+    document.getElementById('stg').innerText = `${level}/20`;
+    document.getElementById('sc').innerText = score;
+    document.getElementById('hi').innerText = high_score;
+    document.getElementById('lv').innerText = lives;
+    document.getElementById('brk').innerText = lifetime_bricks;
+
+    const bBar = document.getElementById('boss-bar-container');
+    if (boss_active) {
+        bBar.style.display = 'block';
+        document.getElementById('boss-bar-title').innerText = level === 10 ? "STAGE 10 SUB-BOSS OUTPOST" : "STAGE 20 BOSS FORTRESS CORE";
+        let pct = Math.max(0, (boss_hp / boss_max_hp) * 100);
+        document.getElementById('boss-bar-fill').style.width = `${pct}%`;
+    } else {
+        bBar.style.display = 'none';
+    }
+
+    // Skill button states
+    updateSkillBtn('btn-laser', cd_laser, dur_laser);
+    updateSkillBtn('btn-multi', cd_multi, 0);
+    updateSkillBtn('btn-fire', cd_fire, dur_fire);
+    updateSkillBtn('btn-barrier', cd_barrier, dur_barrier);
+}
+
+function updateSkillBtn(id, cd, dur) {
+    let btn = document.getElementById(id);
+    if (dur > 0) {
+        btn.className = 'skill-btn active';
+    } else if (cd <= 0) {
+        btn.className = 'skill-btn ready';
+    } else {
+        btn.className = 'skill-btn';
+    }
+}
+
+function useSkill(type) {
+    if (state !== 1) return;
+    initAudio();
+    if (type === 'laser' && cd_laser <= 0) {
+        dur_laser = 360; cd_laser = 720; // 6s active, 12s cd
+        playTone(800, 'square', 0.2);
+    } else if (type === 'multi' && cd_multi <= 0) {
+        cd_multi = 900; // 15s cd
+        let count = balls.length;
+        for (let i = 0; i < count; i++) {
+            if (balls.length >= 16) break;
+            let b = balls[i];
+            balls.push({ x: b.x, y: b.y, dx: b.dx + 2, dy: b.dy, stuck: 0, stuck_offset: 0, trail: [] });
+            balls.push({ x: b.x, y: b.y, dx: b.dx - 2, dy: b.dy, stuck: 0, stuck_offset: 0, trail: [] });
+        }
+        playTone(600, 'sine', 0.3);
+    } else if (type === 'fire' && cd_fire <= 0) {
+        dur_fire = 480; cd_fire = 900; // 8s active, 15s cd
+        playTone(400, 'sawtooth', 0.3);
+    } else if (type === 'barrier' && cd_barrier <= 0) {
+        dur_barrier = 600; cd_barrier = 1080; // 10s active, 18s cd
+        playTone(900, 'sine', 0.3);
+    }
+    updateUI();
+}
+
+function triggerExplosion(r, c) {
+    playTone(200, 'sawtooth', 0.3);
+    for (let nr = r - 1; nr <= r + 1; nr++) {
+        for (let nc = c - 1; nc <= c + 1; nc++) {
+            if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) {
+                if (bricks[nr][nc] !== 0 && bricks[nr][nc] !== 9) {
+                    let bx = nc * BR_W + BR_W/2, by = nr * BR_H + 35 + BR_H/2;
+                    spawnParticles(bx, by, '#ff6600', 8);
+                    let isExp = (bricks[nr][nc] === 4);
+                    bricks[nr][nc] = 0;
+                    bricks_left--;
+                    score += 15;
+                    lifetime_bricks++;
+                    if (isExp && (nr !== r || nc !== c)) {
+                        triggerExplosion(nr, nc);
+                    }
+                }
+            }
+        }
+    }
+}
+
+window.onkeydown = e => {
+    keys[e.key] = 1;
+    if (e.key === 'l' || e.key === 'L') useSkill('laser');
+    if (e.key === 'm' || e.key === 'M') useSkill('multi');
+    if (e.key === 'f' || e.key === 'F') useSkill('fire');
+    if (e.key === 'b' || e.key === 'B') useSkill('barrier');
+    if (state !== 1) {
+        if (e.key === 'Enter') { diff = 0; speed = 3.5; score = 0; lives = 3; level = 1; initLevel(); state = 1; }
+        if (e.key === ' ') { diff = 1; speed = 5.0; score = 0; lives = 3; level = 1; initLevel(); state = 1; }
+    }
+};
+window.onkeyup = e => keys[e.key] = 0;
+
+cvs.onmousemove = e => {
+    if (state === 1) {
+        let rect = cvs.getBoundingClientRect();
+        pad_x = e.clientX - rect.left - pad_w/2;
+        if (pad_x < 0) pad_x = 0;
+        if (pad_x > w - pad_w) pad_x = w - pad_w;
     }
 };
 
-cvs.onmousemove = e => {
-    if(state === 1) {
-        let rect = cvs.getBoundingClientRect();
-        pad_x = e.clientX - rect.left - pad_w/2;
-        if(pad_x < 0) pad_x = 0;
-        if(pad_x > w - pad_w) pad_x = w - pad_w;
+cvs.onclick = () => {
+    initAudio();
+    if (state === 1) {
+        for (let b of balls) {
+            if (b.stuck) { b.stuck = 0; b.dy = -speed; }
+        }
     }
 };
 
 function loop() {
     requestAnimationFrame(loop);
-    ctx.clearRect(0,0,w,h);
-    
-    if(state === 1) {
-        if(keys['ArrowLeft']) pad_x -= 6;
-        if(keys['ArrowRight']) pad_x += 6;
-        if(pad_x < 0) pad_x = 0;
-        if(pad_x > w - pad_w) pad_x = w - pad_w;
-        
-        if (ball_stuck) {
-            ball_x = pad_x + ball_stuck_offset;
-            ball_y = h - 30 - ball_size;
-            if (keys['ArrowUp'] || keys[' ']) {
-                ball_stuck = 0;
-                ball_dy = -speed;
-            }
-        } else {
-            ball_x += ball_dx;
-            ball_y += ball_dy;
-            
-            if(ball_x < 0) { ball_x = 0; ball_dx = -ball_dx; }
-            if(ball_x > w - ball_size) { ball_x = w - ball_size; ball_dx = -ball_dx; }
-            if(ball_y < 0) { ball_y = 0; ball_dy = -ball_dy; }
-            
-            if(ball_y + ball_size > h - 30 && ball_y < h - 30 + pad_h && ball_x + ball_size > pad_x && ball_x < pad_x + pad_w) {
-                ball_y = h - 30 - ball_size;
-                ball_dy = -ball_dy;
-                let hit = (ball_x + ball_size/2) - (pad_x + pad_w/2);
-                ball_dx = hit * 0.2;
-                if(Math.abs(ball_dx) < 1) ball_dx = ball_dx > 0 ? 1 : -1;
-                playTone(400, 'square', 0.1);
-                spawnParticles(ball_x + ball_size/2, ball_y + ball_size, '#00ffff', 5);
-                if (sticky_timer > 0) {
-                    ball_stuck = 1;
-                    ball_stuck_offset = ball_x - pad_x;
-                }
-            }
-            
-            if(ball_y > h) {
-                lives--;
-                power_active = 0;
-                sticky_timer = 0;
-                laser_timer = 0;
-                ball_stuck = 0;
-                if (lives <= 0) {
-                    state = 2;
-                    playTone(150, 'sawtooth', 0.5);
-                    if(score > high_score) { high_score = score; localStorage.setItem('kbreakout_hi', high_score); } localStorage.setItem('kbreakout_bricks', lifetime_bricks); document.getElementById('hi').innerText = high_score; document.getElementById('brk').innerText = lifetime_bricks; document.getElementById('lv_txt').innerText = level;
-                } else {
-                    paddle_timer = 0;
-                    pad_w = diff === 1 ? 40 : 60;
-                    pad_x = w/2 - pad_w/2;
-                    ball_x = w/2;
-                    ball_y = h-50;
-                    ball_dx = speed * (Math.random()>0.5?1:-1);
-                    ball_dy = -speed;
-                    playTone(250, 'sawtooth', 0.3);
-                }
-            }
+    ctx.clearRect(0, 0, w, h);
+
+    if (state === 1) {
+        // Skill Cooldowns & Durations Update
+        if (dur_laser > 0) dur_laser--;
+        if (dur_fire > 0) dur_fire--;
+        if (dur_barrier > 0) dur_barrier--;
+        if (cd_laser > 0) cd_laser--;
+        if (cd_multi > 0) cd_multi--;
+        if (cd_fire > 0) cd_fire--;
+        if (cd_barrier > 0) cd_barrier--;
+        if (paddle_timer > 0) { paddle_timer--; if (paddle_timer === 0) pad_w = diff === 1 ? 45 : 65; }
+
+        updateUI();
+
+        // Paddle Movement
+        if (keys['ArrowLeft'] || keys['a'] || keys['A']) pad_x -= 6;
+        if (keys['ArrowRight'] || keys['d'] || keys['D']) pad_x += 6;
+        if (pad_x < 0) pad_x = 0;
+        if (pad_x > w - pad_w) pad_x = w - pad_w;
+
+        // Laser Paddle Auto-fire
+        if (dur_laser > 0 && dur_laser % 15 === 0) {
+            lasers.push({ x: pad_x + 5, y: h - 30 });
+            lasers.push({ x: pad_x + pad_w - 5, y: h - 30 });
+            playTone(900, 'square', 0.05);
         }
-        
-        if (power_active) {
-            power_y += 3;
-            if (power_y + 10 > h - 30 && power_y < h - 30 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
-                power_active = 0;
-                spawnParticles(power_x, power_y, '#ffffff', 10);
-                if (power_type === 1) { paddle_timer = 300; pad_w = diff === 1 ? 80 : 100; }
-                else if (power_type === 2) { lives++; }
-                else if (power_type === 3) { pierce_timer = 300; }
-                else if (power_type === 4) { sticky_timer = 300; }
-                else if (power_type === 5) { laser_timer = 300; }
-                playTone(300, 'sine', 0.2);
-            }
-            if (power_y > h) power_active = 0;
-        }
-        
-        if (paddle_timer > 0) {
-            paddle_timer--;
-            if (paddle_timer === 0) pad_w = diff === 1 ? 40 : 60;
-        }
-        if (pierce_timer > 0) pierce_timer--;
-        if (sticky_timer > 0) sticky_timer--;
-        
-        if (laser_timer > 0) {
-            laser_timer--;
-            if (laser_timer % 30 === 0) {
-                lasers.push({x: pad_x + pad_w/2, y: h - 30});
-            }
-        }
-        
-        if (ufo_active) {
-            ufo_x += ufo_dx;
-            if (ufo_x < 0 || ufo_x > w - 30) ufo_dx = -ufo_dx;
-            if (ball_x + ball_size > ufo_x && ball_x < ufo_x + 30 && ball_y + ball_size > ufo_y && ball_y < ufo_y + 10) {
-                ufo_active = 0;
-                ball_dy = -ball_dy;
-                score += 50 + diff * 50;
-                spawnParticles(ufo_x + 15, ufo_y + 5, '#ff00ff', 15);
-                playTone(500, 'square', 0.1);
-            }
-        } else {
-            if (ufo_timer > 0) ufo_timer--;
-            else if (level >= 3) { ufo_active = 1; ufo_x = 0; ufo_dx = 2 + diff; ufo_timer = 400 + Math.random()*400; }
-        }
-        
+
+        // Update Lasers
         for (let i = lasers.length - 1; i >= 0; i--) {
-            lasers[i].y -= 5;
-            if (lasers[i].y < 0) {
+            lasers[i].y -= 7;
+            let l = lasers[i];
+            if (l.y < 0) { lasers.splice(i, 1); continue; }
+
+            // Laser vs Boss
+            if (boss_active && l.x > boss_x && l.x < boss_x + boss_w && l.y > boss_y && l.y < boss_y + boss_h) {
+                boss_hp--;
+                spawnParticles(l.x, l.y, '#ff0055', 4);
+                playTone(350, 'triangle', 0.05);
                 lasers.splice(i, 1);
+                if (boss_hp <= 0) {
+                    score += 500;
+                    spawnParticles(boss_x + boss_w/2, boss_y + boss_h/2, '#ff0055', 40);
+                    boss_active = 0;
+                    level++;
+                    if (level > 20) { state = 3; SaveHighScore(); } else initLevel();
+                }
                 continue;
             }
-            let r = Math.floor((lasers[i].y - 40) / BR_H);
-            let c = Math.floor(lasers[i].x / BR_W);
+
+            // Laser vs Bricks
+            let r = Math.floor((l.y - 35) / BR_H);
+            let c = Math.floor(l.x / BR_W);
             if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
                 if (bricks[r][c] !== 0 && bricks[r][c] !== 9) {
-                    let bx = c * BR_W, by = r * BR_H + 40;
-                    if (bricks[r][c] === 2) {
-                        bricks[r][c] = 1; score += 5; lifetime_bricks++; playTone(700, 'square', 0.05);
-                        spawnParticles(bx + BR_W/2, by + BR_H/2, '#ff4444', 6);
-                    } else {
-                        spawnParticles(bx + BR_W/2, by + BR_H/2, getBrickColor(r, c, bricks[r][c]), 10);
-                        bricks[r][c] = 0; score += 10; lifetime_bricks++; playTone(600, 'square', 0.05);
-                    }
+                    let bx = c * BR_W + BR_W/2, by = r * BR_H + 35 + BR_H/2;
+                    let type = bricks[r][c];
+                    spawnParticles(bx, by, getBrickColor(type, r, c), 6);
+                    if (type === 4) { triggerExplosion(r, c); }
+                    else if (type > 1 && type !== 6) { bricks[r][c]--; score += 5; }
+                    else { bricks[r][c] = 0; bricks_left--; score += 10; lifetime_bricks++; }
                     lasers.splice(i, 1);
                 }
             }
         }
-        
-        let bLeft = 0;
-        for(let r=0; r<ROWS; r++) {
-            for(let c=0; c<COLS; c++) {
-                if(bricks[r][c]) {
-                    if (bricks[r][c] !== 9) bLeft++;
-                    let bx = c * BR_W, by = r * BR_H + 40;
-                    if(!ball_stuck && ball_x + ball_size > bx && ball_x < bx + BR_W && ball_y + ball_size > by && ball_y < by + BR_H) {
-                        if (bricks[r][c] === 9) {
-                            ball_dy = -ball_dy;
-                            spawnParticles(ball_x, ball_y, '#aaaaaa', 5);
-                            playTone(800, 'square', 0.05);
-                        } else if (bricks[r][c] === 2) {
-                            if (pierce_timer > 0) {
-                                spawnParticles(bx + BR_W/2, by + BR_H/2, '#ff4444', 12);
-                                bricks[r][c] = 0; bLeft--; lifetime_bricks++; score += 5 + diff * 5; playTone(700, 'square', 0.05);
-                            } else {
-                                spawnParticles(bx + BR_W/2, by + BR_H/2, '#ff4444', 6);
-                                bricks[r][c] = 1; ball_dy = -ball_dy; lifetime_bricks++; score += 5 + diff * 5; playTone(700, 'square', 0.05);
-                            }
-                        } else {
-                            spawnParticles(bx + BR_W/2, by + BR_H/2, getBrickColor(r, c, bricks[r][c]), 12);
-                            bricks[r][c] = 0;
-                            bLeft--;
-                            if (pierce_timer <= 0) ball_dy = -ball_dy;
-                            lifetime_bricks++;
-                            score += 10 + diff * 10;
-                            playTone(600, 'square', 0.05);
-                            if (!power_active && Math.random() < 0.2) {
-                                power_active = 1;
-                                power_type = Math.floor(Math.random() * 5) + 1;
-                                power_x = bx + BR_W/2;
-                                power_y = by;
-                            }
-                        }
-                    }
-                    drawBrick(r, c, bricks[r][c], bx, by);
-                }
+
+        // Update Moving Hazard Shield
+        if (shield_active) {
+            shield_x += shield_dx;
+            if (shield_x < 10 || shield_x + shield_w > w - 10) shield_dx = -shield_dx;
+        }
+
+        // Update UFO Drone
+        if (ufo_active) {
+            ufo_x += ufo_dx;
+            if (ufo_x < 10 || ufo_x + 30 > w - 10) ufo_dx = -ufo_dx;
+
+            // UFO Firing Bullet
+            if (!ufo_bullet.active && Math.random() < 0.02) {
+                ufo_bullet = { active: 1, x: ufo_x + 15, y: ufo_y + 10 };
+            }
+        } else {
+            if (ufo_timer > 0) ufo_timer--;
+            else if (level >= 3) { ufo_active = 1; ufo_x = 10; ufo_dx = 2 + (diff * 0.5); ufo_timer = 300; }
+        }
+
+        // Update UFO Bullet
+        if (ufo_bullet.active) {
+            ufo_bullet.y += 3.5;
+            if (ufo_bullet.y > h - 30 && ufo_bullet.y < h - 20 && ufo_bullet.x > pad_x && ufo_bullet.x < pad_x + pad_w) {
+                ufo_bullet.active = 0;
+                playTone(150, 'sawtooth', 0.2);
+                spawnParticles(ufo_bullet.x, ufo_bullet.y, '#ff00ff', 10);
+                score = Math.max(0, score - 25);
+            } else if (ufo_bullet.y > h) ufo_bullet.active = 0;
+        }
+
+        // Update Boss Attacks
+        if (boss_active) {
+            boss_shield_angle += 0.04;
+            if (Math.random() < 0.03 && boss_bullets.length < 4) {
+                boss_bullets.push({ x: boss_x + 20, y: boss_y + boss_h, dy: 3 });
+                boss_bullets.push({ x: boss_x + boss_w - 20, y: boss_y + boss_h, dy: 3 });
             }
         }
-        
-        if(bLeft === 0) {
-            if (level % 3 === 0) speed += 0.5;
-            level++;
-            initLevel();
+        for (let i = boss_bullets.length - 1; i >= 0; i--) {
+            let bb = boss_bullets[i];
+            bb.y += bb.dy;
+            if (bb.y > h - 30 && bb.y < h - 20 && bb.x > pad_x && bb.x < pad_x + pad_w) {
+                boss_bullets.splice(i, 1);
+                playTone(120, 'sawtooth', 0.25);
+                spawnParticles(bb.x, bb.y, '#ff0055', 8);
+            } else if (bb.y > h) boss_bullets.splice(i, 1);
+        }
+
+        // Update Powerup Falling
+        if (power_active) {
+            power_y += 2.5;
+            if (power_y + 10 > h - 30 && power_y < h - 30 + pad_h && power_x + 10 > pad_x && power_x < pad_x + pad_w) {
+                power_active = 0;
+                spawnParticles(power_x, power_y, '#ffffff', 10);
+                playTone(700, 'sine', 0.2);
+                if (power_type === 1) { paddle_timer = 350; pad_w = diff === 1 ? 75 : 95; }
+                else if (power_type === 2) { lives++; }
+                else if (power_type === 3) { dur_fire = 480; }
+                else if (power_type === 4) { sticky_timer = 300; }
+                else if (power_type === 5) { dur_laser = 360; }
+                else if (power_type === 6) { dur_barrier = 600; }
+                else if (power_type === 7) { useSkill('multi'); }
+            }
+            if (power_y > h) power_active = 0;
+        }
+
+        // Update Balls
+        for (let i = balls.length - 1; i >= 0; i--) {
+            let b = balls[i];
+
+            if (b.stuck) {
+                b.x = pad_x + b.stuck_offset;
+                b.y = h - 30 - 8;
+                if (keys['ArrowUp'] || keys[' ']) {
+                    b.stuck = 0;
+                    b.dy = -speed;
+                }
+                continue;
+            }
+
+            b.x += b.dx;
+            b.y += b.dy;
+
+            // Trail
+            b.trail.push({ x: b.x, y: b.y });
+            if (b.trail.length > 6) b.trail.shift();
+
+            // Wall Collisions
+            if (b.x < 0) { b.x = 0; b.dx = -b.dx; }
+            if (b.x > w - 8) { b.x = w - 8; b.dx = -b.dx; }
+            if (b.y < 0) { b.y = 0; b.dy = -b.dy; }
+
+            // Safety Barrier Floor Collision
+            if (dur_barrier > 0 && b.y >= h - 15) {
+                b.y = h - 15;
+                b.dy = -Math.abs(b.dy);
+                spawnParticles(b.x, h - 5, '#00ffff', 6);
+                playTone(500, 'sine', 0.1);
+            }
+
+            // Hazard Shield Collision
+            if (shield_active && b.y + 8 > shield_y && b.y < shield_y + 10 && b.x + 8 > shield_x && b.x < shield_x + shield_w) {
+                b.dy = -b.dy;
+                spawnParticles(b.x, b.y, '#00ffff', 6);
+                playTone(450, 'square', 0.05);
+            }
+
+            // UFO Collision
+            if (ufo_active && b.x + 8 > ufo_x && b.x < ufo_x + 30 && b.y + 8 > ufo_y && b.y < ufo_y + 12) {
+                ufo_active = 0;
+                b.dy = -b.dy;
+                score += 100;
+                spawnParticles(ufo_x + 15, ufo_y + 6, '#ff00ff', 15);
+                playTone(650, 'square', 0.1);
+                power_active = 1; power_type = 6; power_x = ufo_x + 15; power_y = ufo_y;
+            }
+
+            // Boss Fortress Collision
+            if (boss_active && b.x + 8 > boss_x && b.x < boss_x + boss_w && b.y + 8 > boss_y && b.y < boss_y + boss_h) {
+                boss_hp -= (dur_fire > 0 ? 2 : 1);
+                if (dur_fire <= 0) b.dy = -b.dy;
+                spawnParticles(b.x, b.y, '#ff0055', 8);
+                playTone(300, 'triangle', 0.1);
+                if (boss_hp <= 0) {
+                    score += 1000;
+                    spawnParticles(boss_x + boss_w/2, boss_y + boss_h/2, '#ff0055', 50);
+                    boss_active = 0;
+                    level++;
+                    if (level > 20) { state = 3; SaveHighScore(); } else initLevel();
+                    break;
+                }
+            }
+
+            // Paddle Collision
+            if (b.y + 8 > h - 30 && b.y < h - 30 + pad_h && b.x + 8 > pad_x && b.x < pad_x + pad_w) {
+                b.y = h - 30 - 8;
+                b.dy = -Math.abs(b.dy);
+                let hitPos = (b.x + 4) - (pad_x + pad_w / 2);
+                b.dx = hitPos * 0.22;
+                if (Math.abs(b.dx) < 1) b.dx = b.dx > 0 ? 1.5 : -1.5;
+                playTone(400, 'square', 0.08);
+                spawnParticles(b.x + 4, h - 30, '#00ffff', 4);
+
+                if (sticky_timer > 0) {
+                    b.stuck = 1;
+                    b.stuck_offset = b.x - pad_x;
+                }
+            }
+
+            // Bricks Collision
+            let r = Math.floor((b.y - 35) / BR_H);
+            let c = Math.floor(b.x / BR_W);
+            if (r >= 0 && r < ROWS && c >= 0 && c < COLS) {
+                let type = bricks[r][c];
+                if (type !== 0) {
+                    let bx = c * BR_W + BR_W/2, by = r * BR_H + 35 + BR_H/2;
+
+                    if (type === 9) { // Steel Unbreakable
+                        if (dur_fire <= 0) b.dy = -b.dy;
+                        spawnParticles(b.x, b.y, '#d0d8e0', 4);
+                        playTone(750, 'square', 0.04);
+                    } else if (type === 4) { // Explosive
+                        bricks[r][c] = 0; bricks_left--;
+                        if (dur_fire <= 0) b.dy = -b.dy;
+                        triggerExplosion(r, c);
+                    } else if (type === 5) { // Portal Warp
+                        bricks[r][c] = 0; bricks_left--; score += 20; lifetime_bricks++;
+                        spawnParticles(bx, by, '#aa00ff', 12);
+                        playTone(950, 'sine', 0.15);
+                        b.x = 20 + Math.random() * (w - 40);
+                        b.y = 150;
+                        b.dx = (Math.random() > 0.5 ? 1 : -1) * (speed + 1);
+                        b.dy = speed;
+                    } else if (type === 6) { // Mystery Drop
+                        bricks[r][c] = 0; bricks_left--; score += 25; lifetime_bricks++;
+                        spawnParticles(bx, by, '#00ffcc', 10);
+                        playTone(850, 'sine', 0.1);
+                        power_active = 1; power_type = Math.floor(Math.random() * 7) + 1;
+                        power_x = bx; power_y = by;
+                    } else { // Normal / Reinforced
+                        spawnParticles(bx, by, getBrickColor(type, r, c), 8);
+                        if (dur_fire > 0) {
+                            bricks[r][c] = 0; bricks_left--; score += 15; lifetime_bricks++;
+                        } else {
+                            bricks[r][c]--;
+                            if (bricks[r][c] === 0) { bricks_left--; score += 10; lifetime_bricks++; }
+                            else score += 5;
+                            b.dy = -b.dy;
+                        }
+                        playTone(600, 'square', 0.05);
+
+                        // Random powerup spawn
+                        if (!power_active && Math.random() < 0.18) {
+                            power_active = 1;
+                            power_type = Math.floor(Math.random() * 7) + 1;
+                            power_x = bx; power_y = by;
+                        }
+                    }
+
+                    if (bricks_left <= 0 && !boss_active) {
+                        level++;
+                        if (level > 20) { state = 3; SaveHighScore(); } else initLevel();
+                        break;
+                    }
+                }
+            }
+
+            // Ball Out of Bottom
+            if (b.y > h && dur_barrier <= 0) {
+                balls.splice(i, 1);
+            }
+        }
+
+        // Check if all balls lost
+        if (balls.length === 0) {
+            lives--;
+            power_active = 0; sticky_timer = 0; dur_laser = 0; dur_fire = 0;
+            if (lives <= 0) {
+                state = 2; SaveHighScore();
+                playTone(150, 'sawtooth', 0.5);
+            } else {
+                balls = [{
+                    x: w/2, y: h - 45,
+                    dx: speed * (Math.random() > 0.5 ? 1 : -1),
+                    dy: -speed,
+                    stuck: 1,
+                    stuck_offset: pad_w/2,
+                    trail: []
+                }];
+                playTone(250, 'sawtooth', 0.3);
+            }
         }
     }
-    
-    if (state !== 0) drawPaddle();
-    if (power_active) drawPowerup(power_x, power_y, power_type);
-    if (ufo_active) drawUFO(ufo_x, ufo_y);
-    
-    // Draw lasers
-    ctx.fillStyle = '#0ff';
+
+    // RENDER PASS
+    render();
+}
+
+function render() {
+    // Render Bricks
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if (bricks[r][c]) {
+                drawBrick(r, c, bricks[r][c], c * BR_W, r * BR_H + 35);
+            }
+        }
+    }
+
+    // Render Hazard Shield
+    if (shield_active && state === 1) {
+        let sGrad = ctx.createLinearGradient(shield_x, shield_y, shield_x + shield_w, shield_y);
+        sGrad.addColorStop(0, '#00ffff'); sGrad.addColorStop(0.5, '#ffffff'); sGrad.addColorStop(1, '#00ffff');
+        ctx.fillStyle = sGrad;
+        ctx.fillRect(shield_x, shield_y, shield_w, 8);
+        ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 8;
+        ctx.fillRect(shield_x, shield_y, shield_w, 8);
+        ctx.shadowBlur = 0;
+    }
+
+    // Render UFO Drone
+    if (ufo_active && state === 1) {
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+        ctx.beginPath(); ctx.arc(ufo_x + 15, ufo_y + 3, 6, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = '#ff00ff';
+        ctx.beginPath(); ctx.ellipse(ufo_x + 15, ufo_y + 6, 15, 4, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    if (ufo_bullet.active && state === 1) {
+        ctx.fillStyle = '#ff00ff';
+        ctx.fillRect(ufo_bullet.x - 2, ufo_bullet.y, 4, 8);
+    }
+
+    // Render Boss Fortress
+    if (boss_active && state === 1) {
+        ctx.fillStyle = '#ff0055';
+        ctx.fillRect(boss_x, boss_y, boss_w, boss_h);
+        ctx.fillStyle = '#ffff00';
+        ctx.fillRect(boss_x + 10, boss_y + 10, boss_w - 20, boss_h - 20);
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`CORE: ${boss_hp}`, boss_x + boss_w/2, boss_y + boss_h/2);
+
+        // Orbiting Shields
+        let sx1 = boss_x + boss_w/2 + Math.cos(boss_shield_angle) * 70;
+        let sy1 = boss_y + boss_h/2 + Math.sin(boss_shield_angle) * 30;
+        let sx2 = boss_x + boss_w/2 - Math.cos(boss_shield_angle) * 70;
+        let sy2 = boss_y + boss_h/2 - Math.sin(boss_shield_angle) * 30;
+        ctx.fillStyle = '#00ffff';
+        ctx.beginPath(); ctx.arc(sx1, sy1, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx2, sy2, 8, 0, Math.PI*2); ctx.fill();
+    }
+    for (let bb of boss_bullets) {
+        ctx.fillStyle = '#ff3377';
+        ctx.beginPath(); ctx.arc(bb.x, bb.y, 4, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Render Safety Barrier Floor
+    if (dur_barrier > 0 && state === 1) {
+        ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 3;
+        ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.moveTo(0, h - 5); ctx.lineTo(w, h - 5); ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+
+    // Render Paddle
+    if (state === 1) {
+        let py = h - 30;
+        ctx.fillStyle = dur_laser > 0 ? '#00ffff' : sticky_timer > 0 ? '#3388ff' : '#4466aa';
+        ctx.fillRect(pad_x, py, pad_w, pad_h);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(pad_x + 4, py + 1, pad_w - 8, 2);
+
+        if (dur_laser > 0) {
+            ctx.fillStyle = '#00ffff';
+            ctx.fillRect(pad_x, py - 4, 4, 4);
+            ctx.fillRect(pad_x + pad_w - 4, py - 4, 4, 4);
+        }
+    }
+
+    // Render Lasers
+    ctx.fillStyle = '#00ffff';
     for (let l of lasers) {
         ctx.fillRect(l.x - 2, l.y - 6, 4, 10);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(l.x - 1, l.y - 5, 2, 4);
-        ctx.fillStyle = '#0ff';
     }
-    
-    // Particle system update & render
+
+    // Render Powerup Drop
+    if (power_active && state === 1) {
+        let labels = ['E', '+', 'P', 'S', 'L', 'B', 'M'];
+        let colors = ['#ffcc00', '#33cc33', '#ff3333', '#3366ff', '#00ffff', '#00ffcc', '#ff00ff'];
+        ctx.fillStyle = colors[power_type - 1] || '#fff';
+        ctx.fillRect(power_x - 7, power_y - 7, 14, 14);
+        ctx.fillStyle = '#000'; ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(labels[power_type - 1] || '?', power_x, power_y);
+    }
+
+    // Render Balls
+    for (let b of balls) {
+        // Trail
+        for (let i = 0; i < b.trail.length; i++) {
+            let t = b.trail[i];
+            let alpha = (i + 1) / b.trail.length * 0.4;
+            ctx.fillStyle = dur_fire > 0 ? `rgba(255, 100, 0, ${alpha})` : `rgba(0, 220, 255, ${alpha})`;
+            ctx.beginPath(); ctx.arc(t.x + 4, t.y + 4, 3, 0, Math.PI*2); ctx.fill();
+        }
+
+        ctx.fillStyle = dur_fire > 0 ? '#ff3300' : '#00ffff';
+        ctx.beginPath(); ctx.arc(b.x + 4, b.y + 4, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(b.x + 3, b.y + 3, 2, 0, Math.PI*2); ctx.fill();
+    }
+
+    // Render Particles
     for (let i = particles.length - 1; i >= 0; i--) {
         let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.03;
-        if (p.life <= 0) {
-            particles.splice(i, 1);
-        } else {
-            ctx.fillStyle = p.color;
-            ctx.globalAlpha = p.life;
+        p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+        if (p.life <= 0) particles.splice(i, 1);
+        else {
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
             ctx.fillRect(p.x, p.y, p.size, p.size);
             ctx.globalAlpha = 1.0;
         }
     }
-    
-    updateAndDrawBall();
-    
-    document.getElementById('sc').innerText = score;
-    document.getElementById('lv').innerText = lives;
-    document.getElementById('lv_txt').innerText = level;
-    document.getElementById('brk').innerText = lifetime_bricks;
-    document.getElementById('hi').innerText = high_score; 
-    
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px monospace';
-    if(state === 0) {
-        ctx.fillText('KBreakout', w/2, h/2 - 20);
-        ctx.font = '14px monospace';
-        ctx.fillText('Press ENTER for Easy', w/2, h/2 + 20);
-        ctx.fillText('Press SPACE for Hard', w/2, h/2 + 40);
-    } else if(state === 2) {
+
+    // Text Overlays
+    ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    if (state === 0) {
+        ctx.font = 'bold 22px monospace';
+        ctx.fillText('KBREAKOUT LOOP 7', w/2, h/2 - 40);
+        ctx.font = '13px monospace';
+        ctx.fillStyle = '#00ffff';
+        ctx.fillText('20 Stages - Boss Fortress - Active Skills', w/2, h/2 - 10);
+        ctx.fillStyle = '#fff';
+        ctx.fillText('Press ENTER for Easy Mode', w/2, h/2 + 25);
+        ctx.fillText('Press SPACE for Hard Mode', w/2, h/2 + 45);
+    } else if (state === 2) {
+        ctx.font = 'bold 24px monospace'; ctx.fillStyle = '#ff3355';
         ctx.fillText('GAME OVER', w/2, h/2 - 20);
-        ctx.font = '14px monospace';
-        ctx.fillText('Press ENTER for Easy', w/2, h/2 + 20);
-        ctx.fillText('Press SPACE for Hard', w/2, h/2 + 40);
+        ctx.font = '13px monospace'; ctx.fillStyle = '#fff';
+        ctx.fillText('Press ENTER for Easy Mode', w/2, h/2 + 20);
+        ctx.fillText('Press SPACE for Hard Mode', w/2, h/2 + 40);
+    } else if (state === 3) {
+        ctx.font = 'bold 24px monospace'; ctx.fillStyle = '#00ffcc';
+        ctx.fillText('VICTORY! CAMPAIGN CLEARED', w/2, h/2 - 20);
+        ctx.font = '13px monospace'; ctx.fillStyle = '#fff';
+        ctx.fillText(`Final Score: ${score}`, w/2, h/2 + 15);
+        ctx.fillText('Press ENTER to Play Again', w/2, h/2 + 40);
     }
 }
+
+function SaveHighScore() {
+    if (score > high_score) { high_score = score; localStorage.setItem('kbreakout_hi', high_score); }
+    localStorage.setItem('kbreakout_bricks', lifetime_bricks);
+}
+
 loop();
 </script>
 </body>
