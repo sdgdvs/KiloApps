@@ -691,6 +691,87 @@
       background: var(--border-cyan);
       color: #fff;
     }
+
+    /* Comprehensive Help & Star Captain Codex Styles (Phase 14) */
+    .codex-modal-card {
+      width: 780px;
+      max-width: 96vw;
+      border-color: var(--purple-anomaly);
+    }
+    .codex-tab-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      border-bottom: 1px solid var(--border-cyan);
+      padding-bottom: 8px;
+    }
+    .codex-tab-btn {
+      background: rgba(12, 28, 52, 0.85);
+      border: 1px solid var(--border-cyan);
+      color: var(--text-muted);
+      padding: 6px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+      flex: 1;
+      text-align: center;
+    }
+    .codex-tab-btn:hover {
+      color: var(--cyan-glow);
+      border-color: var(--cyan-glow);
+    }
+    .codex-tab-btn.active {
+      background: rgba(176, 38, 255, 0.25);
+      border-color: var(--purple-anomaly);
+      color: #fff;
+      font-weight: bold;
+      box-shadow: 0 0 10px rgba(176, 38, 255, 0.4);
+    }
+    .codex-content-area {
+      max-height: 420px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding-right: 6px;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .codex-section-title {
+      color: var(--purple-anomaly);
+      font-size: 0.92rem;
+      font-weight: bold;
+      border-bottom: 1px dashed var(--border-cyan);
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+      margin-top: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .codex-section-title:first-child { margin-top: 0; }
+    .codex-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 0.75rem;
+    }
+    .codex-table th, .codex-table td {
+      border: 1px solid #142a44;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .codex-table th {
+      background: rgba(10, 24, 48, 0.9);
+      color: var(--cyan-glow);
+    }
+    .codex-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      margin-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -702,6 +783,7 @@
     </div>
     <div class="header-info">
       <button class="audio-toggle" id="btnAudioToggle" onclick="toggleAudio()">🔊 AUDIO: ON</button>
+      <button class="audio-toggle" style="border-color: var(--purple-anomaly); color: var(--purple-anomaly);" onclick="openCodexModal()">❓ CODEX & HELP</button>
       <button class="audio-toggle" style="border-color: var(--amber-glow); color: var(--amber-glow);" onclick="openLeaderboardModal()">🏆 HALL OF FAME</button>
       <button class="audio-toggle" style="border-color: var(--green-status); color: var(--green-status);" onclick="openCaptainsLogModal()">📖 CAPTAIN'S LOG</button>
       <button class="audio-toggle" style="border-color: var(--cyan-glow); color: var(--cyan-glow);" onclick="openSectorMapModal()">🗺️ SECTOR MAP (15 S)</button>
@@ -1373,6 +1455,27 @@
       <button class="action-btn" style="justify-content: center; margin-top: 6px;" onclick="confirmShipName()">
         🚀 INITIALIZE COMMAND DECK
       </button>
+    </div>
+  </div>
+
+  <!-- Comprehensive Help & Star Captain Codex Modal (Phase 14) -->
+  <div class="modal-overlay" id="codexModal" style="display: none;">
+    <div class="modal-card codex-modal-card">
+      <div class="panel-header" style="font-size: 1rem; border-color: var(--purple-anomaly); color: var(--purple-anomaly);">
+        <span>📖 STAR CAPTAIN CODEX & COMPREHENSIVE HELP</span>
+        <button class="audio-toggle" style="border-color: var(--purple-anomaly); color: var(--purple-anomaly);" onclick="closeCodexModal()">✕ CLOSE CODEX</button>
+      </div>
+
+      <div class="codex-tab-bar">
+        <button class="codex-tab-btn active" id="btnCodexTabControls" onclick="selectCodexTab('controls')">🎮 CONTROLS & HOW-TO-PLAY</button>
+        <button class="codex-tab-btn" id="btnCodexTabSectors" onclick="selectCodexTab('sectors')">🌌 SECTOR & BIOME GUIDE</button>
+        <button class="codex-tab-btn" id="btnCodexTabAliens" onclick="selectCodexTab('aliens')">👾 ALIEN FACTIONS</button>
+        <button class="codex-tab-btn" id="btnCodexTabSystems" onclick="selectCodexTab('systems')">🚀 SHIP SYSTEMS & TECH</button>
+      </div>
+
+      <div class="codex-content-area" id="codexTabContent">
+        <!-- Tab Content Rendered via JS -->
+      </div>
     </div>
   </div>
 
@@ -4113,6 +4216,199 @@
       state.captainsLog = [];
     }
 
+    // Phase 14: Star Captain Codex Logic
+    function openCodexModal() {
+      selectCodexTab('controls');
+      playSound('dock');
+      document.getElementById('codexModal').style.display = 'flex';
+    }
+
+    function closeCodexModal() {
+      document.getElementById('codexModal').style.display = 'none';
+    }
+
+    function selectCodexTab(tab) {
+      ['Controls', 'Sectors', 'Aliens', 'Systems'].forEach(t => {
+        const btn = document.getElementById(`btnCodexTab${t}`);
+        if (btn) btn.classList.toggle('active', tab.toLowerCase() === t.toLowerCase());
+      });
+      const container = document.getElementById('codexTabContent');
+      if (!container) return;
+
+      if (tab === 'controls') {
+        container.innerHTML = `
+          <div class="codex-section-title">🕹️ STARSHIP COMMAND & CONTROL REFERENCE</div>
+          <p style="color: #a0c0e0; margin-bottom: 8px;">Master vessel navigation and combat subsystem hotkeys across the 8x8 sector grid:</p>
+          <table class="codex-table">
+            <thead>
+              <tr><th>KEY / INPUT</th><th>COMMAND ACTION</th><th>RESOURCE COST / EFFECT</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b style="color: var(--cyan-glow);">W A S D / Arrow Keys</b></td><td>Move Starship across sector grid</td><td>-1 Hyper Fuel / -1 Reactor Energy</td></tr>
+              <tr><td><b style="color: var(--cyan-glow);">Spacebar</b></td><td>Long-Range Sector Sensor Scan</td><td>Reveals hidden anomalies, hostiles & outposts</td></tr>
+              <tr><td><b style="color: var(--cyan-glow);">P Key</b></td><td>Orbital Planet Telemetry Scan</td><td>Extracts Minerals, Plasma Gas & Artifacts</td></tr>
+              <tr><td><b style="color: var(--cyan-glow);">H / ? Key</b></td><td>Toggle Star Captain Codex & Manual</td><td>Displays this reference manual overlay</td></tr>
+              <tr><td><b style="color: var(--cyan-glow);">Click Outpost Tile</b></td><td>Dock at Frontier Outpost</td><td>Access Market, Repairs, Crew Roster & Upgrades</td></tr>
+              <tr><td><b style="color: var(--cyan-glow);">T / N / R / H (In Combat)</b></td><td>Trigger Emergency Power-ups</td><td>Engages Time Dilation, Nova, Drones or Hyper-Shield</td></tr>
+            </tbody>
+          </table>
+
+          <div class="codex-section-title">⚙️ GAME MODES & DIFFICULTY SETTINGS</div>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px;">
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--border-cyan); padding: 8px; border-radius: 4px;">
+              <span class="codex-badge" style="background: rgba(0,240,255,0.2); color: var(--cyan-glow); border: 1px solid var(--cyan-glow);">EXPLORER</span>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;">70% lower fuel & energy consumption. Respawns on death. 0.8x score multiplier.</p>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--amber-alert); padding: 8px; border-radius: 4px;">
+              <span class="codex-badge" style="background: rgba(255,170,0,0.2); color: var(--amber-alert); border: 1px solid var(--amber-alert);">SURVIVAL</span>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;">Standard star captain challenge. Balanced hazard encounters and standard scoring (1.0x).</p>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--red-alert); padding: 8px; border-radius: 4px;">
+              <span class="codex-badge" style="background: rgba(255,51,102,0.2); color: var(--red-alert); border: 1px solid var(--red-alert);">IRON CAPTAIN</span>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;">Permadeath active! Hull loss ends the voyage. 1.5x score bonus for high score glory.</p>
+            </div>
+          </div>
+        `;
+      } else if (tab === 'sectors') {
+        container.innerHTML = `
+          <div class="codex-section-title">🌌 GALACTIC SECTOR BIOMES & HAZARDS</div>
+          <table class="codex-table">
+            <thead>
+              <tr><th>BIOME TYPE</th><th>ENVIRONMENTAL PROFILE</th><th>HAZARD & MECHANIC</th><th>RESOURCE SPECIALTY</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b style="color: var(--green-status);">TERRAN SYSTEM</b></td>
+                <td>Habitable sector space with stable solar orbits</td>
+                <td>Standard pirate encounters & clear flight lines</td>
+                <td>Balanced Ore, Gas & Outpost Trading</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--amber-glow);">VOLCANIC SYSTEM</b></td>
+                <td>High geothermal solar radiation & mantle flares</td>
+                <td>Solar Flares deal 2-6 DMG directly to Shields/Hull</td>
+                <td>+50% Mineral Ore yield per planet scan</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--purple-anomaly);">NEBULA CLOUD</b></td>
+                <td>Ionized plasma nebulae and electromagnetic gas</td>
+                <td>Drains deflector shields but charges reactor energy</td>
+                <td>+50% Plasma Gas yield & Quantum Anomalies</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--cyan-glow);">ASTEROID BELT</b></td>
+                <td>Dense asteroid storm fields & debris streams</td>
+                <td>25% chance of asteroid impact DMG during move</td>
+                <td>+100% Titanium Ore & Ancient Relics</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="codex-section-title">🪐 PLANETARY TELEMETRY TYPES</div>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px;">
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--green-status); padding: 6px; border-radius: 4px; text-align: center;">
+              <div style="color: var(--green-status); font-weight: bold;">Terran Prime</div>
+              <div style="font-size: 0.7rem; color: #a0c0e0; margin-top: 2px;">Moderate minerals & gas</div>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--amber-glow); padding: 6px; border-radius: 4px; text-align: center;">
+              <div style="color: var(--amber-glow); font-weight: bold;">Volcanic Core</div>
+              <div style="font-size: 0.7rem; color: #a0c0e0; margin-top: 2px;">Rich Mineral Ore veins</div>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--purple-anomaly); padding: 6px; border-radius: 4px; text-align: center;">
+              <div style="color: var(--purple-anomaly); font-weight: bold;">Gas Giant</div>
+              <div style="font-size: 0.7rem; color: #a0c0e0; margin-top: 2px;">High Plasma Gas reserves</div>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--cyan-glow); padding: 6px; border-radius: 4px; text-align: center;">
+              <div style="color: var(--cyan-glow); font-weight: bold;">Ancient Relic Moon</div>
+              <div style="font-size: 0.7rem; color: #a0c0e0; margin-top: 2px;">Guaranteed Precursor Relics</div>
+            </div>
+          </div>
+        `;
+      } else if (tab === 'aliens') {
+        container.innerHTML = `
+          <div class="codex-section-title">👾 ALIEN SPECIES & FACTIONS ENCYCLOPEDIA</div>
+          <table class="codex-table">
+            <thead>
+              <tr><th>FACTION NAME</th><th>CLASS & TYPE</th><th>THREAT LEVEL</th><th>TACTICAL WEAKNESS & TACTICS</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b style="color: var(--red-alert);">Zanthari Raiders</b></td>
+                <td>Cybernetic Pirates / Corvettes</td>
+                <td><span class="codex-badge" style="background: rgba(255,170,0,0.2); color: var(--amber-alert);">MODERATE</span></td>
+                <td>Aggressive ambushers. Target laser weapon subsystems to lower power.</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--red-alert);">Void Harvesters</b></td>
+                <td>Heavy Armored Dreadnoughts</td>
+                <td><span class="codex-badge" style="background: rgba(255,51,102,0.2); color: var(--red-alert);">CRITICAL / BOSS</span></td>
+                <td>Heavy shields & plasma cannons. Use Hyper-Shield and Plasma Salvo.</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--purple-anomaly);">Chrono-Wardens</b></td>
+                <td>Phase-Shifting Frigates</td>
+                <td><span class="codex-badge" style="background: rgba(176,38,255,0.2); color: var(--purple-anomaly);">HIGH</span></td>
+                <td>High combat evasion rating. Freeze action with Time Dilation (T).</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--blue-station);">Centauri Guild</b></td>
+                <td>Neutral Trade Merchants</td>
+                <td><span class="codex-badge" style="background: rgba(59,130,246,0.2); color: var(--blue-station);">NEUTRAL</span></td>
+                <td>Operates Frontier Outposts, Commodity Markets & repair docks.</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--amber-alert);">Krynn Swarm</b></td>
+                <td>Mine-Layers & Swarm Drones</td>
+                <td><span class="codex-badge" style="background: rgba(255,170,0,0.2); color: var(--amber-alert);">MODERATE</span></td>
+                <td>Deploys orbital minefields. Use Plasma Nova (N) to blast minefields.</td>
+              </tr>
+              <tr>
+                <td><b style="color: var(--cyan-glow);">Ancient Precursors</b></td>
+                <td>Extinct Builder Race</td>
+                <td><span class="codex-badge" style="background: rgba(0,240,255,0.2); color: var(--cyan-glow);">ANCIENT</span></td>
+                <td>Left behind Relic Moons and relic tech. High value salvage targets.</td>
+              </tr>
+            </tbody>
+          </table>
+        `;
+      } else if (tab === 'systems') {
+        container.innerHTML = `
+          <div class="codex-section-title">🚀 SHIP SUBSYSTEMS & TACTICAL POWER-UPS</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--border-cyan); padding: 8px; border-radius: 4px;">
+              <div style="color: var(--cyan-glow); font-weight: bold; font-size: 0.82rem;">⚡ SUB-SYSTEM POWER ALLOCATION</div>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;">Allocate up to 6 MW of reactor power between <b>Shields</b> (+absorption), <b>Engines</b> (+evasion), and <b>Weapons</b> (+damage output).</p>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--purple-anomaly); padding: 8px; border-radius: 4px;">
+              <div style="color: var(--purple-anomaly); font-weight: bold; font-size: 0.82rem;">⌛ TIME DILATION MATRIX</div>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;"><b>20 Energy</b>: Temporarily distorts tachyon stream, freezing enemy combat turns for 3 full combat turns.</p>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--red-alert); padding: 8px; border-radius: 4px;">
+              <div style="color: var(--red-alert); font-weight: bold; font-size: 0.82rem;">💥 PLASMA NOVA DISCHARGE</div>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;"><b>30 Energy</b>: Emits a 60+ direct plasma damage blast in combat or clears all adjacent sector space hazards.</p>
+            </div>
+            <div style="background: rgba(4,14,28,0.8); border: 1px solid var(--green-status); padding: 8px; border-radius: 4px;">
+              <div style="color: var(--green-status); font-weight: bold; font-size: 0.82rem;">🛠️ NANO REPAIR DRONES</div>
+              <p style="font-size: 0.72rem; color: #a0c0e0; margin-top: 4px;"><b>20 Energy + 15 Scrap</b>: Deploys nano-bots to instantly repair +40 Hull HP and restore all subsystems to 100% integrity.</p>
+            </div>
+          </div>
+
+          <div class="codex-section-title">👨‍✈️ OFFICER ROSTER SYNERGIES</div>
+          <table class="codex-table">
+            <thead>
+              <tr><th>OFFICER ROLE</th><th>NAME</th><th>PASSIVE SYNERGY</th><th>TACTICAL ACTIVE ABILITY</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b style="color: var(--cyan-glow);">Pilot</b></td><td>Cmdr. Vance</td><td>+15% Evasion & 50% fuel efficiency</td><td>Hyper-Evade: Guarantees combat dodge</td></tr>
+              <tr><td><b style="color: var(--green-status);">Engineer</b></td><td>Chief Logan</td><td>+20% Shield Boost & +10 Max Hull</td><td>Emergency Repair: +40 Shields & +20 Hull</td></tr>
+              <tr><td><b style="color: var(--amber-glow);">Gunner</b></td><td>Lt. Cross</td><td>+25% Laser DMG output</td><td>Plasma Salvo: Next attack deals 2x DMG</td></tr>
+              <tr><td><b style="color: var(--purple-anomaly);">Science</b></td><td>Dr. Astra</td><td>+50% Scan & Mining Yields</td><td>Deep Sensor Pulse: Maps sector & +25 Energy</td></tr>
+            </tbody>
+          </table>
+        `;
+      }
+    }
+
     // Keyboard Navigation Listener
     window.addEventListener('keydown', (e) => {
       if (document.getElementById('initModal').style.display !== 'none' ||
@@ -4124,7 +4420,13 @@
           document.getElementById('leaderboardModal').style.display !== 'none' ||
           document.getElementById('captainsLogModal').style.display !== 'none' ||
           document.getElementById('gameOverModal').style.display !== 'none' ||
-          document.getElementById('tradeModal').style.display !== 'none') return;
+          document.getElementById('tradeModal').style.display !== 'none' ||
+          document.getElementById('codexModal').style.display !== 'none') {
+        if ((e.key === 'Escape' || e.key === 'h' || e.key === 'H') && document.getElementById('codexModal').style.display !== 'none') {
+          closeCodexModal();
+        }
+        return;
+      }
 
       if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') moveShip(0, -1);
       else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') moveShip(0, 1);
@@ -4132,6 +4434,7 @@
       else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveShip(1, 0);
       else if (e.key === 'p' || e.key === 'P') btnScanPlanet();
       else if (e.key === ' ') btnScanSector();
+      else if (e.key === 'h' || e.key === 'H' || e.key === '?') openCodexModal();
     });
 
     window.addEventListener('resize', initCanvasStars);

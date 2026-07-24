@@ -131,6 +131,9 @@ typedef struct {
     // Phase 12 Game Modes & Difficulty Levels
     int gameMode;   // 0: Explorer, 1: Survival, 2: Permadeath Iron Captain
     int difficulty; // 0: Cadet, 1: Commander, 2: Admiral
+    // Phase 14 Comprehensive Help & Codex
+    int inCodexModal;
+    int codexTab; // 0: Controls, 1: Sectors, 2: Aliens, 3: Systems
 } StarshipState;
 
 static StarshipState g_State = {
@@ -163,7 +166,8 @@ static StarshipState g_State = {
     100, 100, 100, 100,
     0, 0, 0, 1,
     0, 0, 0, 0, 0, 0, "", 0,
-    1, 1 // gameMode: 1 (Survival), difficulty: 1 (Commander)
+    1, 1, // gameMode: 1 (Survival), difficulty: 1 (Commander)
+    0, 0  // inCodexModal: 0, codexTab: 0
 };
 
 
@@ -650,6 +654,10 @@ static HWND hBtnGameOverRestart = NULL;
 static HWND hBtnMode0 = NULL, hBtnMode1 = NULL, hBtnMode2 = NULL;
 static HWND hBtnDiff0 = NULL, hBtnDiff1 = NULL, hBtnDiff2 = NULL;
 
+// Phase 14 Star Captain Codex & Help Controls
+static HWND hBtnCodex = NULL;
+static HWND hBtnCodexTab0 = NULL, hBtnCodexTab1 = NULL, hBtnCodexTab2 = NULL, hBtnCodexTab3 = NULL, hBtnCodexClose = NULL;
+
 typedef struct {
     const char* sectorName;
     double mult[5];
@@ -775,7 +783,7 @@ static HFONT hMonoFont = NULL;
 static HFONT hBoldFont = NULL;
 
 void UpdateControlVisibility(HWND hwnd) {
-    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal && !g_State.inSectorMapModal && !g_State.inLeaderboardModal && !g_State.inCaptainsLogModal && !g_State.inGameOverModal);
+    BOOL inMain = (!g_State.inInitModal && !g_State.inStationModal && !g_State.inPlanetModal && !g_State.inEncounterModal && !g_State.inCombatModal && !g_State.inUpgradeModal && !g_State.inCrewModal && !g_State.inTradeModal && !g_State.inSectorMapModal && !g_State.inLeaderboardModal && !g_State.inCaptainsLogModal && !g_State.inGameOverModal && !g_State.inCodexModal);
 
     // Main Deck Action & Nav Buttons
     ShowWindow(hBtnScan,       inMain ? SW_SHOW : SW_HIDE);
@@ -903,6 +911,13 @@ void UpdateControlVisibility(HWND hwnd) {
     ShowWindow(hBtnLogClose, g_State.inCaptainsLogModal ? SW_SHOW : SW_HIDE);
 
     ShowWindow(hBtnGameOverRestart, g_State.inGameOverModal ? SW_SHOW : SW_HIDE);
+
+    // Phase 14 Codex Modal Buttons
+    ShowWindow(hBtnCodexTab0,  g_State.inCodexModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCodexTab1,  g_State.inCodexModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCodexTab2,  g_State.inCodexModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCodexTab3,  g_State.inCodexModal ? SW_SHOW : SW_HIDE);
+    ShowWindow(hBtnCodexClose, g_State.inCodexModal ? SW_SHOW : SW_HIDE);
 
     InvalidateRect(hwnd, NULL, TRUE);
 }
@@ -2174,6 +2189,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnModeToggle  = CreateWindowA("BUTTON", "🌌 GRAPHICAL", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 500, 8, 105, 24, hwnd, (HMENU)101, NULL, NULL);
             hBtnHallOfFame  = CreateWindowA("BUTTON", "🏆 HALL OF FAME", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 275, 8, 115, 24, hwnd, (HMENU)119, NULL, NULL);
             hBtnCaptainsLog = CreateWindowA("BUTTON", "📖 LOG",           WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 205, 8, 65, 24, hwnd, (HMENU)120, NULL, NULL);
+            hBtnCodex       = CreateWindowA("BUTTON", "[?] CODEX",       WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 135, 8, 65, 24, hwnd, (HMENU)121, NULL, NULL);
 
             // Right Panel Action Buttons
             hBtnScan       = CreateWindowA("BUTTON", "📡 SCAN SECTOR", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 630, 48, 195, 19, hwnd, (HMENU)102, NULL, NULL);
@@ -2245,6 +2261,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Game Over Restart Button
             hBtnGameOverRestart = CreateWindowA("BUTTON", "🚀 COMMISSION NEW VOYAGE", WS_CHILD | BS_PUSHBUTTON, 230, 320, 380, 34, hwnd, (HMENU)1301, NULL, NULL);
+
+            // Phase 14 Codex Modal Buttons
+            hBtnCodexTab0  = CreateWindowA("BUTTON", "[1] CONTROLS", WS_CHILD | BS_PUSHBUTTON, 40, 80, 110, 24, hwnd, (HMENU)1210, NULL, NULL);
+            hBtnCodexTab1  = CreateWindowA("BUTTON", "[2] SECTORS",  WS_CHILD | BS_PUSHBUTTON, 155, 80, 110, 24, hwnd, (HMENU)1211, NULL, NULL);
+            hBtnCodexTab2  = CreateWindowA("BUTTON", "[3] ALIENS",   WS_CHILD | BS_PUSHBUTTON, 270, 80, 110, 24, hwnd, (HMENU)1212, NULL, NULL);
+            hBtnCodexTab3  = CreateWindowA("BUTTON", "[4] SYSTEMS",  WS_CHILD | BS_PUSHBUTTON, 385, 80, 110, 24, hwnd, (HMENU)1213, NULL, NULL);
+            hBtnCodexClose = CreateWindowA("BUTTON", "CLOSE CODEX", WS_CHILD | BS_PUSHBUTTON, 505, 80, 110, 24, hwnd, (HMENU)1214, NULL, NULL);
 
             // Station Modal Buttons
             hBtnStRefuel        = CreateWindowA("BUTTON", "⛽ REFUEL HYPER TANK (+30 Fuel - 40 Cr)",  WS_CHILD | BS_PUSHBUTTON, 230, 130, 380, 24, hwnd, (HMENU)401, NULL, NULL);
@@ -2360,7 +2383,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_KEYDOWN: {
-            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal || g_State.inEncounterModal || g_State.inCombatModal) break;
+            if (g_State.inInitModal || g_State.inStationModal || g_State.inPlanetModal || g_State.inEncounterModal || g_State.inCombatModal || g_State.inCodexModal) {
+                if ((wParam == 'H' || wParam == 'h' || wParam == VK_OEM_2 || wParam == VK_ESCAPE) && g_State.inCodexModal) {
+                    g_State.inCodexModal = 0;
+                    UpdateControlVisibility(hwnd);
+                }
+                break;
+            }
 
             switch (wParam) {
                 case VK_UP:    MoveShip(hwnd, 0, -1); break;
@@ -2376,6 +2405,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case 'N':      UsePlasmaNova(hwnd);   break;
                 case 'R':      UseNanoDrones(hwnd);   break;
                 case 'J':      UseHyperShield(hwnd);  break;
+                case 'H': case 'h': case VK_OEM_2: g_State.inCodexModal = 1; UpdateControlVisibility(hwnd); break;
                 case VK_SPACE: ExecuteScan(hwnd);     break;
             }
             break;
@@ -2538,6 +2568,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateControlVisibility(hwnd);
             } else if (id == 120) {
                 g_State.inCaptainsLogModal = 1;
+                UpdateControlVisibility(hwnd);
+            } else if (id == 121) {
+                g_State.inCodexModal = 1;
+                UpdateControlVisibility(hwnd);
+            } else if (id == 1210) {
+                g_State.codexTab = 0; InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 1211) {
+                g_State.codexTab = 1; InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 1212) {
+                g_State.codexTab = 2; InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 1213) {
+                g_State.codexTab = 3; InvalidateRect(hwnd, NULL, TRUE);
+            } else if (id == 1214) {
+                g_State.inCodexModal = 0;
                 UpdateControlVisibility(hwnd);
             } else if (id == 306) {
                 g_State.gameMode = 0; g_State.permadeath = 0;
@@ -3441,6 +3485,106 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetTextColor(hdc, cCol);
                     TextOutA(hdc, 200, yPos, logLine, (int)lstrlenA(logLine));
                     yPos += 26;
+                }
+            } else if (g_State.inCodexModal) {
+                RECT modalOverlay = {10, 48, 830, 393};
+                HBRUSH hDimBrush = CreateSolidBrush(RGB(4, 10, 22));
+                FillRect(hdc, &modalOverlay, hDimBrush);
+                DeleteObject(hDimBrush);
+
+                RECT modalCard = {25, 52, 815, 388};
+                FillRect(hdc, &modalCard, hPanelBrush);
+                HBRUSH hPurpleBorder = CreateSolidBrush(RGB(176, 38, 255));
+                FrameRect(hdc, &modalCard, hPurpleBorder);
+                DeleteObject(hPurpleBorder);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(176, 38, 255));
+                TextOutA(hdc, 40, 58, "STAR CAPTAIN CODEX & COMPREHENSIVE HELP MANUAL", 45);
+
+                SelectObject(hdc, hMonoFont);
+                const char* tabTitles[4] = {
+                    "[TAB 1: COMMAND & CONTROL HOTKEY REFERENCE]",
+                    "[TAB 2: GALACTIC SECTORS, BIOMES & HAZARDS]",
+                    "[TAB 3: ALIEN SPECIES & FACTIONS ENCYCLOPEDIA]",
+                    "[TAB 4: VESSEL SUBSYSTEMS & POWER-UPS]"
+                };
+                SetTextColor(hdc, RGB(0, 240, 255));
+                TextOutA(hdc, 40, 110, tabTitles[g_State.codexTab], (int)lstrlenA(tabTitles[g_State.codexTab]));
+
+                int y = 135;
+                if (g_State.codexTab == 0) { // Controls
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== HOTKEYS & NAVIGATION COMMANDS ==", 35); y += 20;
+                    SetTextColor(hdc, RGB(196, 225, 255));
+                    TextOutA(hdc, 45, y, "W, A, S, D / Arrow Keys : Move Starship across 8x8 sector grid (-1 Fuel)", 72); y += 18;
+                    TextOutA(hdc, 45, y, "Spacebar                 : Long-Range Sector Sensor Scan (reveals grid items)", 77); y += 18;
+                    TextOutA(hdc, 45, y, "P Key                    : Orbital Planet Telemetry Scan (harvests Ore/Gas/Relics)", 81); y += 18;
+                    TextOutA(hdc, 45, y, "H or ? Key               : Toggle Star Captain Codex Manual Overlay", 67); y += 18;
+                    TextOutA(hdc, 45, y, "Mouse Click Outpost      : Dock at Station for Trade, Repairs & Upgrades", 69); y += 24;
+
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== GAME VOYAGE MODES & DIFFICULTIES ==", 38); y += 20;
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    TextOutA(hdc, 45, y, "EXPLORER    : 70% lower resource costs | Casual exploration (0.8x Score)", 72); y += 18;
+                    SetTextColor(hdc, RGB(255, 170, 0));
+                    TextOutA(hdc, 45, y, "SURVIVAL    : Balanced hazard events & normal difficulty (1.0x Score)", 69); y += 18;
+                    SetTextColor(hdc, RGB(255, 51, 102));
+                    TextOutA(hdc, 45, y, "IRON CAPTAIN: Permadeath active! Loss of vessel ends game (1.5x Score)", 71); y += 18;
+                    SetTextColor(hdc, RGB(57, 255, 20));
+                    TextOutA(hdc, 45, y, "DIFFICULTY  : Cadet (0.7x hazard), Commander (1.0x), Admiral (1.4x nightmare)", 76);
+                } else if (g_State.codexTab == 1) { // Sectors & Biomes
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== GALACTIC SECTOR BIOMES & HAZARDS ==", 38); y += 20;
+                    SetTextColor(hdc, RGB(57, 255, 20));
+                    TextOutA(hdc, 45, y, "TERRAN SYSTEM   : Stable orbits, balanced outposts & moderate pirates", 69); y += 18;
+                    SetTextColor(hdc, RGB(255, 170, 0));
+                    TextOutA(hdc, 45, y, "VOLCANIC SYSTEM : Geothermal flares (2-6 DMG) | +50% Mineral Ore yield", 70); y += 18;
+                    SetTextColor(hdc, RGB(176, 38, 255));
+                    TextOutA(hdc, 45, y, "NEBULA CLOUD    : Ionized gas drains shields, charges reactor | +50% Gas", 72); y += 18;
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    TextOutA(hdc, 45, y, "ASTEROID BELT   : Asteroid impacts (25% chance) | +100% Ore & Relics", 68); y += 24;
+
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== CELESTIAL OBJECTS & PLANETARY SURVEYS ==", 43); y += 20;
+                    SetTextColor(hdc, RGB(196, 225, 255));
+                    TextOutA(hdc, 45, y, "Stars            : Solar radiation harvesting restores +25 Energy", 65); y += 18;
+                    TextOutA(hdc, 45, y, "Outposts         : Docking perimeter for Repairs, Trade & Officer Hiring", 71); y += 18;
+                    TextOutA(hdc, 45, y, "Planetary Types  : Terran Prime, Volcanic Core, Gas Giant, Relic Moon", 68); y += 18;
+                    TextOutA(hdc, 45, y, "Asteroid Mining  : Extract Ore with Mining Lasers (15 Energy cost)", 66);
+                } else if (g_State.codexTab == 2) { // Alien Species
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== ALIEN SPECIES & FACTIONS ENCYCLOPEDIA ==", 43); y += 20;
+                    SetTextColor(hdc, RGB(255, 51, 102));
+                    TextOutA(hdc, 45, y, "Zanthari Pirates : Cybernetic assault raiders. Weak to laser weapon target.", 75); y += 18;
+                    TextOutA(hdc, 45, y, "Void Harvesters  : Heavy Dreadnoughts with plasma. Weak to Hyper-Shield.", 73); y += 18;
+                    SetTextColor(hdc, RGB(176, 38, 255));
+                    TextOutA(hdc, 45, y, "Chrono-Wardens   : Quantum phase frigates. High evasion. Freeze with Dilation.", 77); y += 18;
+                    SetTextColor(hdc, RGB(59, 130, 246));
+                    TextOutA(hdc, 45, y, "Centauri Guild   : Neutral trading merchants operating Outposts & Markets.", 73); y += 18;
+                    SetTextColor(hdc, RGB(255, 170, 0));
+                    TextOutA(hdc, 45, y, "Krynn Drone Hive : Mine-layer drones. Blast orbital minefields with Nova.", 73); y += 18;
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    TextOutA(hdc, 45, y, "Ancient Precursors: Extinct builder race. Relic moons grant high-value relics.", 77);
+                } else if (g_State.codexTab == 3) { // Ship Systems
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== SUBSYSTEMS & TACTICAL POWER-UPS ==", 37); y += 20;
+                    SetTextColor(hdc, RGB(176, 38, 255));
+                    TextOutA(hdc, 45, y, "Time Dilation (T) : 20 Energy | Freezes enemy combat turns for 3 turns", 70); y += 18;
+                    SetTextColor(hdc, RGB(255, 51, 102));
+                    TextOutA(hdc, 45, y, "Plasma Nova (N)   : 30 Energy | Dealt 60+ plasma DMG or clears space hazards", 75); y += 18;
+                    SetTextColor(hdc, RGB(57, 255, 20));
+                    TextOutA(hdc, 45, y, "Nano Drones (R)   : 20 Energy, 15 Scrap | +40 Hull HP & restores 100% sys", 73); y += 18;
+                    SetTextColor(hdc, RGB(0, 240, 255));
+                    TextOutA(hdc, 45, y, "Hyper-Shield (H)  : 25 Energy | Invincible defense matrix for 2 turns", 69); y += 24;
+
+                    SetTextColor(hdc, RGB(255, 200, 0));
+                    TextOutA(hdc, 40, y, "== OFFICER CREW SYNERGIES ==", 28); y += 20;
+                    SetTextColor(hdc, RGB(196, 225, 255));
+                    TextOutA(hdc, 45, y, "Cmdr. Vance (Pilot)   : +15% Evasion | Active: Hyper-Evade dodge", 64); y += 18;
+                    TextOutA(hdc, 45, y, "Chief Logan (Engineer): +20% Shields | Active: +40 Shields / +20 Hull", 69); y += 18;
+                    TextOutA(hdc, 45, y, "Lt. Cross (Gunner)    : +25% Laser DMG | Active: Plasma Salvo (2x DMG)", 70); y += 18;
+                    TextOutA(hdc, 45, y, "Dr. Astra (Science)   : +50% Mining Yield | Active: Map sector & +25 Energy", 75);
                 }
             } else if (g_State.inGameOverModal) {
                 RECT modalOverlay = {10, 48, 830, 393};
