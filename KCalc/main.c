@@ -50,6 +50,8 @@ rand_t m_rand;
 #define E  2.71828182845904523536
 
 HWND hDisplay;
+HFONT hFont;
+HBRUSH hDisplayBgBrush;
 char displayBuffer[64] = "0";
 double operand1 = 0;
 int operator = 0;
@@ -57,10 +59,12 @@ double memoryStore = 0.0;
 int isNewOperand = 1;
 
 void FormatDisplay(double val) {
-    if (val == 0.0) {
+    if (val != val || val > 1e308 || val < -1e308) {
+        my_strcpy(displayBuffer, "Error");
+    } else if (val == 0.0) {
         my_strcpy(displayBuffer, "0");
     } else {
-        m_sprintf(displayBuffer, "%.8g", val);
+        m_sprintf(displayBuffer, "%.10g", val);
     }
     SetWindowTextA(hDisplay, displayBuffer);
 }
@@ -108,9 +112,9 @@ void DoCalculate() {
     else if (operator == '-') res = operand1 - operand2;
     else if (operator == '*') res = operand1 * operand2;
     else if (operator == '/') {
-        if (operand2 != 0) res = operand1 / operand2;
+        if (operand2 != 0.0) res = operand1 / operand2;
         else {
-            my_strcpy(displayBuffer, "ERR_MEM_LEAK: 0x8FA0B2");
+            my_strcpy(displayBuffer, "Error");
             SetWindowTextA(hDisplay, displayBuffer);
             isNewOperand = 1;
             operator = 0;
@@ -118,7 +122,16 @@ void DoCalculate() {
         }
     }
     else if (operator == '^') res = m_pow(operand1, operand2);
-    else if (operator == '%') res = m_fmod(operand1, operand2);
+    else if (operator == '%') {
+        if (operand2 != 0.0) res = m_fmod(operand1, operand2);
+        else {
+            my_strcpy(displayBuffer, "Error");
+            SetWindowTextA(hDisplay, displayBuffer);
+            isNewOperand = 1;
+            operator = 0;
+            return;
+        }
+    }
     
     operand1 = res;
     FormatDisplay(res);
@@ -131,22 +144,57 @@ void DoUnary(int type) {
     if (type == 1) res = m_sin(val); // sin
     else if (type == 2) res = m_cos(val); // cos
     else if (type == 3) res = m_tan(val); // tan
-    else if (type == 4) res = m_log(val); // ln
-    else if (type == 5) res = m_log10(val); // log
-    else if (type == 6) { if(val>=0) res = m_sqrt(val); else res = 0; } // sqrt
+    else if (type == 4) { // ln
+        if (val <= 0) {
+            my_strcpy(displayBuffer, "Error");
+            SetWindowTextA(hDisplay, displayBuffer);
+            isNewOperand = 1;
+            return;
+        }
+        res = m_log(val);
+    }
+    else if (type == 5) { // log
+        if (val <= 0) {
+            my_strcpy(displayBuffer, "Error");
+            SetWindowTextA(hDisplay, displayBuffer);
+            isNewOperand = 1;
+            return;
+        }
+        res = m_log10(val);
+    }
+    else if (type == 6) { // sqr (sqrt)
+        if (val < 0) {
+            my_strcpy(displayBuffer, "Error");
+            SetWindowTextA(hDisplay, displayBuffer);
+            isNewOperand = 1;
+            return;
+        }
+        res = m_sqrt(val);
+    }
     else if (type == 7) res = m_exp(val); // exp
     else if (type == 8) res = -val; // +/-
-    else if (type == 9) { if(val!=0) res = 1.0 / val; else res = 0; } // 1/x
+    else if (type == 9) { // 1/x
+        if (val == 0) {
+            my_strcpy(displayBuffer, "Error");
+            SetWindowTextA(hDisplay, displayBuffer);
+            isNewOperand = 1;
+            return;
+        }
+        res = 1.0 / val;
+    }
     else if (type == 10) res = PI;
     else if (type == 11) res = E;
     else if (type == 12) { // n!
-        if (val < 0) res = 0;
-        else {
-            int n = (int)val;
-            double f = 1;
-            for (int i = 2; i <= n; i++) f *= i;
-            res = f;
+        if (val < 0 || val > 170) {
+            my_strcpy(displayBuffer, "Error");
+            SetWindowTextA(hDisplay, displayBuffer);
+            isNewOperand = 1;
+            return;
         }
+        int n = (int)val;
+        double f = 1;
+        for (int i = 2; i <= n; i++) f *= i;
+        res = f;
     }
     else if (type == 13) res = val < 0 ? -val : val; // abs
     else if (type == 14) res = (double)m_rand() / 32767.0; // rand
@@ -175,8 +223,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             m_fmod = (fmod_t)GetProcAddress(hMsvcrt, "fmod");
             m_rand = (rand_t)GetProcAddress(hMsvcrt, "rand");
 
+            hDisplayBgBrush = CreateSolidBrush(RGB(15, 23, 42));
+
             hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "STATIC", "0", WS_CHILD | WS_VISIBLE | SS_RIGHT, 10, 10, 285, 28, hwnd, NULL, NULL, NULL);
-            HFONT hFont = CreateFontA(24, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
+            hFont = CreateFontA(24, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Consolas");
             SendMessageA(hDisplay, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             char labels[40][6] = {
@@ -203,7 +253,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for(int i=0; i<40; i++) {
                 int col = i % 5;
                 int row = i / 5;
-                if (ids[i]) CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10 + col * 57, 50 + row * 40, 52, 35, hwnd, (HMENU)ids[i], NULL, NULL);
+                if (ids[i]) CreateWindowA("BUTTON", labels[i], WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10 + col * 57, 50 + row * 40, 52, 35, hwnd, (HMENU)(INT_PTR)ids[i], NULL, NULL);
+            }
+            break;
+        }
+        case WM_CTLCOLORSTATIC: {
+            if ((HWND)lParam == hDisplay) {
+                HDC hdcStatic = (HDC)wParam;
+                SetTextColor(hdcStatic, RGB(255, 255, 255));
+                SetBkColor(hdcStatic, RGB(15, 23, 42));
+                return (INT_PTR)hDisplayBgBrush;
             }
             break;
         }
@@ -245,7 +304,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
-            DeleteObject((HGDIOBJ)SendMessageA(hDisplay, WM_GETFONT, 0, 0));
+            if (hFont) DeleteObject(hFont);
+            if (hDisplayBgBrush) DeleteObject(hDisplayBgBrush);
             PostQuitMessage(0);
             return 0;
     }
@@ -261,8 +321,8 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));
 
     RegisterClassA(&wc);
-    // Adjusted dimensions: 320x420 for extra row
-    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 320, 420, NULL, NULL, wc.hInstance, NULL);
+    // Dimensions: 320x430 for comfortable button layout and display
+    HWND hwnd = CreateWindowExA(0, "KCalcClass", "KCalc", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, 320, 430, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -276,6 +336,7 @@ void __stdcall MainEntry() {
                 if (!(GetKeyState(VK_SHIFT) & 0x8000)) cmd = key;
                 else if (key == '8') cmd = '*';
                 else if (key == '5') cmd = '%';
+                else if (key == '9') cmd = 1001; // sin or handled by button
             }
             else if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) cmd = key - VK_NUMPAD0 + '0';
             else if (key == VK_ADD) cmd = '+';

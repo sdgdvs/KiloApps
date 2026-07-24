@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KCalc</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
 <style>
@@ -29,30 +30,31 @@
   }
   
   .calc { 
-    padding: 20px; 
+    padding: 16px; 
     display: flex; 
     flex-direction: column; 
     height: 100%; 
     box-sizing: border-box; 
-    gap: 20px; 
+    gap: 12px; 
   }
   
   .display-container {
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid var(--border-color);
     border-radius: 16px;
-    padding: 16px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
     backdrop-filter: blur(10px);
-    height: 90px;
+    height: 80px;
+    box-sizing: border-box;
   }
 
   .display { 
     font-family: 'JetBrains Mono', 'Consolas', monospace;
-    font-size: 42px; 
+    font-size: 36px; 
     font-weight: 300; 
     text-align: right; 
     overflow-x: auto; 
@@ -62,31 +64,30 @@
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
   }
   
-  /* Scrollbar hiding */
   .display::-webkit-scrollbar { display: none; }
   
   .keys { 
     display: grid; 
     grid-template-columns: repeat(5, 1fr); 
     grid-template-rows: repeat(8, 1fr);
-    gap: 12px; 
+    gap: 8px; 
     flex: 1; 
   }
   
   button { 
     font-family: 'Inter', sans-serif; 
-    font-size: 20px; 
+    font-size: 18px; 
     font-weight: 400; 
     border: 1px solid var(--border-color); 
-    border-radius: 14px; 
+    border-radius: 12px; 
     background: var(--btn-bg); 
     color: var(--text-main); 
     cursor: pointer; 
-    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); 
+    transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); 
     padding: 0; 
     backdrop-filter: blur(12px); 
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -94,8 +95,8 @@
   
   button:hover { 
     background: var(--btn-hover); 
-    transform: translateY(-2px); 
-    box-shadow: 0 6px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+    transform: translateY(-1px); 
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
   }
   
   button:active { 
@@ -105,13 +106,18 @@
     transition: all 0.05s;
   }
   
+  button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
   button.operator { 
     background: var(--primary); 
     color: #000; 
     font-weight: 600; 
     border: none; 
     box-shadow: 0 4px 12px rgba(90, 139, 212, 0.4), inset 0 1px 0 rgba(255,255,255,0.3); 
-    font-size: 24px; 
+    font-size: 22px; 
   }
   
   button.operator:hover { 
@@ -126,7 +132,7 @@
   
   button.func { 
     background: var(--secondary); 
-    font-size: 15px; 
+    font-size: 14px; 
     font-weight: 500; 
     color: var(--text-muted); 
     border-color: rgba(255,255,255,0.03); 
@@ -151,63 +157,63 @@
 <body>
   <div class="calc">
     <div class="display-container">
-      <div class="display" id="disp">0</div>
+      <div class="display" id="disp" aria-live="polite">0</div>
     </div>
     <div class="keys">
       <!-- Row 0 -->
-      <button class="func" onclick="memClear()">MC</button>
-      <button class="func" onclick="memRecall()">MR</button>
-      <button class="func" onclick="memAdd()">M+</button>
-      <button class="func" onclick="memSub()">M-</button>
-      <button class="func danger" onclick="clearDisp()" aria-label="Clear">C</button>
+      <button class="func" onclick="memClear()" aria-label="Memory Clear">MC</button>
+      <button class="func" onclick="memRecall()" aria-label="Memory Recall">MR</button>
+      <button class="func" onclick="memAdd()" aria-label="Memory Add">M+</button>
+      <button class="func" onclick="memSub()" aria-label="Memory Subtract">M-</button>
+      <button class="func danger" onclick="clearDisp()" aria-label="Clear All">C</button>
 
       <!-- Row 1 -->
-      <button class="func" onclick="append('Math.sin(')">sin</button>
-      <button class="func" onclick="append('Math.cos(')">cos</button>
-      <button class="func" onclick="append('Math.tan(')">tan</button>
-      <button class="operator" onclick="append('(')">(</button>
-      <button class="operator" onclick="append(')')">)</button>
+      <button class="func" onclick="append('Math.sin(')" aria-label="Sine">sin</button>
+      <button class="func" onclick="append('Math.cos(')" aria-label="Cosine">cos</button>
+      <button class="func" onclick="append('Math.tan(')" aria-label="Tangent">tan</button>
+      <button class="operator" onclick="append('(')" aria-label="Open Parenthesis">(</button>
+      <button class="operator" onclick="append(')')" aria-label="Close Parenthesis">)</button>
 
-      <!-- Row 2 (New) -->
-      <button class="func" onclick="append('fact(')">n!</button>
-      <button class="func" onclick="append('Math.abs(')">abs</button>
-      <button class="func" onclick="append('Math.random()')">rnd</button>
-      <button class="func" onclick="append('**2')">x²</button>
-      <button class="func" onclick="append('10**')">10ˣ</button>
+      <!-- Row 2 -->
+      <button class="func" onclick="append('fact(')" aria-label="Factorial">n!</button>
+      <button class="func" onclick="append('Math.abs(')" aria-label="Absolute Value">abs</button>
+      <button class="func" onclick="append('Math.random()')" aria-label="Random Number">rnd</button>
+      <button class="func" onclick="append('**2')" aria-label="Square">x²</button>
+      <button class="func" onclick="append('10**')" aria-label="Ten to Power of X">10ˣ</button>
       
       <!-- Row 3 -->
-      <button class="func" onclick="append('Math.log(')">ln</button>
-      <button onclick="append('7')">7</button>
-      <button onclick="append('8')">8</button>
-      <button onclick="append('9')">9</button>
+      <button class="func" onclick="append('Math.log(')" aria-label="Natural Logarithm">ln</button>
+      <button onclick="append('7')" aria-label="7">7</button>
+      <button onclick="append('8')" aria-label="8">8</button>
+      <button onclick="append('9')" aria-label="9">9</button>
       <button class="operator" onclick="append('/')" aria-label="Divide">÷</button>
 
-      <!-- Row 3 -->
-      <button class="func" onclick="append('Math.log10(')">log</button>
-      <button onclick="append('4')">4</button>
-      <button onclick="append('5')">5</button>
-      <button onclick="append('6')">6</button>
+      <!-- Row 4 -->
+      <button class="func" onclick="append('Math.log10(')" aria-label="Logarithm Base 10">log</button>
+      <button onclick="append('4')" aria-label="4">4</button>
+      <button onclick="append('5')" aria-label="5">5</button>
+      <button onclick="append('6')" aria-label="6">6</button>
       <button class="operator" onclick="append('*')" aria-label="Multiply">×</button>
 
-      <!-- Row 4 -->
+      <!-- Row 5 -->
       <button class="func" onclick="append('Math.sqrt(')" aria-label="Square Root">√</button>
-      <button onclick="append('1')">1</button>
-      <button onclick="append('2')">2</button>
-      <button onclick="append('3')">3</button>
+      <button onclick="append('1')" aria-label="1">1</button>
+      <button onclick="append('2')" aria-label="2">2</button>
+      <button onclick="append('3')" aria-label="3">3</button>
       <button class="operator" onclick="append('-')" aria-label="Subtract">−</button>
 
-      <!-- Row 5 -->
-      <button class="func" onclick="append('**')">^</button>
+      <!-- Row 6 -->
+      <button class="func" onclick="append('**')" aria-label="Exponent">^</button>
       <button class="func" onclick="append('Math.PI')" aria-label="Pi">π</button>
-      <button onclick="append('0')">0</button>
-      <button onclick="append('.')">.</button>
+      <button onclick="append('0')" aria-label="0">0</button>
+      <button onclick="append('.')" aria-label="Decimal Point">.</button>
       <button class="operator" onclick="append('+')" aria-label="Add">+</button>
 
-      <!-- Row 6 -->
-      <button class="func" onclick="append('Math.exp(')">eˣ</button>
-      <button class="func" onclick="append('Math.E')">e</button>
+      <!-- Row 7 -->
+      <button class="func" onclick="append('Math.exp(')" aria-label="E to Power of X">eˣ</button>
+      <button class="func" onclick="append('Math.E')" aria-label="Euler Constant E">e</button>
       <button class="func danger" onclick="backspace()" aria-label="Backspace">⌫</button>
-      <button class="operator" onclick="append('%')">mod</button>
+      <button class="operator" onclick="append('%')" aria-label="Modulo">mod</button>
       <button class="operator" onclick="calc()" aria-label="Equals">=</button>
     </div>
   </div>
@@ -217,9 +223,11 @@
     let memoryStore = 0.0;
     
     function fact(n) {
-      if (n < 0) return NaN;
+      if (typeof n !== 'number' || isNaN(n) || n < 0) return NaN;
+      if (n > 170) return Infinity;
+      n = Math.floor(n);
       let f = 1;
-      for (let i = 2; i <= Math.floor(n); i++) f *= i;
+      for (let i = 2; i <= n; i++) f *= i;
       return f;
     }
     
@@ -231,17 +239,20 @@
         .replace(/Math\.log10\(/g, 'log(')
         .replace(/Math\.log\(/g, 'ln(')
         .replace(/Math\.abs\(/g, 'abs(')
+        .replace(/fact\(/g, 'fact(')
         .replace(/Math\.random\(\)/g, 'rnd')
         .replace(/Math\.sqrt\(/g, '√(')
         .replace(/Math\.exp\(/g, 'e^(')
         .replace(/Math\.PI/g, 'π')
         .replace(/Math\.E/g, 'e')
+        .replace(/10\*\*/g, '10^')
+        .replace(/\*\*2/g, '²')
         .replace(/\*\*/g, '^')
         .replace(/\*/g, '×')
         .replace(/\//g, '÷')
         .replace(/-/g, '−');
       d.textContent = pretty === '' ? '0' : pretty;
-      d.scrollLeft = d.scrollWidth; // Auto-scroll to end
+      d.scrollLeft = d.scrollWidth;
     }
 
     function append(val) {
@@ -257,18 +268,31 @@
 
     function memClear() { memoryStore = 0.0; }
     function memRecall() { append(String(memoryStore)); }
+    
+    function getEvalExpr() {
+      let evalExpr = expr
+        .replace(/([0-9\)])(?=Math|fact|\()/g, '$1*')
+        .replace(/(Math\.(?:PI|E)|\))(?=[0-9]|Math|fact|\()/g, '$1*');
+      
+      let openCount = (evalExpr.match(/\(/g) || []).length;
+      let closeCount = (evalExpr.match(/\)/g) || []).length;
+      while (openCount > closeCount) {
+        evalExpr += ')';
+        closeCount++;
+      }
+      return evalExpr;
+    }
+
     function memAdd() {
       try {
-        let evalExpr = expr.replace(/([0-9\)])(?=Math|\()/g, '$1*').replace(/(Math\.(?:PI|E)|\))(?=[0-9])/g, '$1*').replace(/(Math\.(?:PI|E))(?=Math|\()/g, '$1*');
-        let res = eval(evalExpr);
-        if (!isNaN(res)) memoryStore += res;
+        let res = eval(getEvalExpr());
+        if (typeof res === 'number' && !isNaN(res) && isFinite(res)) memoryStore += res;
       } catch {}
     }
     function memSub() {
       try {
-        let evalExpr = expr.replace(/([0-9\)])(?=Math|\()/g, '$1*').replace(/(Math\.(?:PI|E)|\))(?=[0-9])/g, '$1*').replace(/(Math\.(?:PI|E))(?=Math|\()/g, '$1*');
-        let res = eval(evalExpr);
-        if (!isNaN(res)) memoryStore -= res;
+        let res = eval(getEvalExpr());
+        if (typeof res === 'number' && !isNaN(res) && isFinite(res)) memoryStore -= res;
       } catch {}
     }
     
@@ -292,23 +316,56 @@
     
     function calc() {
       try { 
-        let evalExpr = expr
-          .replace(/([0-9\)])(?=Math|\()/g, '$1*')
-          .replace(/(Math\.(?:PI|E)|\))(?=[0-9])/g, '$1*')
-          .replace(/(Math\.(?:PI|E))(?=Math|\()/g, '$1*');
-
+        let evalExpr = getEvalExpr();
         let res = eval(evalExpr); 
-        if (res === Infinity || res === -Infinity) res = 'ERR_MEM_LEAK: 0x8FA0B2';
-        else if (res === undefined || isNaN(res)) res = 'Error';
-        else {
-          // Format long numbers
+        if (res === undefined || isNaN(res) || !isFinite(res)) {
+          expr = 'Error';
+        } else {
           res = Number(res.toPrecision(12)).toString();
+          expr = String(res);
         }
-        expr = String(res);
       }
-      catch { expr = 'Error'; }
+      catch { 
+        expr = 'Error'; 
+      }
       render();
     }
+
+    // Keyboard navigation and shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
+      if (e.key >= '0' && e.key <= '9') {
+        append(e.key);
+      } else if (e.key === '.') {
+        append('.');
+      } else if (e.key === '+') {
+        append('+');
+      } else if (e.key === '-') {
+        append('-');
+      } else if (e.key === '*') {
+        append('*');
+      } else if (e.key === '/') {
+        e.preventDefault();
+        append('/');
+      } else if (e.key === '%') {
+        append('%');
+      } else if (e.key === '^') {
+        append('**');
+      } else if (e.key === '(') {
+        append('(');
+      } else if (e.key === ')') {
+        append(')');
+      } else if (e.key === 'Enter' || e.key === '=') {
+        e.preventDefault();
+        calc();
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        backspace();
+      } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
+        clearDisp();
+      }
+    });
   </script>
 </body>
 </html>
