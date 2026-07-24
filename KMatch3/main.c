@@ -112,8 +112,185 @@ void UpdateParticles() {
         if (particles[i].life > 0) {
             particles[i].x += particles[i].vx;
             particles[i].y += particles[i].vy;
+            particles[i].vy += 0.2f;
             particles[i].life -= particles[i].decay;
         }
+    }
+}
+
+int laserRowTimer[ROWS] = {0};
+int laserColTimer[COLS] = {0};
+
+void DrawFacetedGem(HDC hdc, int cx, int cy, int size, int colorIdx, int typeIdx, int isIce) {
+    if (typeIdx == TYPE_RAINBOW) {
+        HBRUSH bgRing = CreateSolidBrush(RGB(255, 215, 0));
+        HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, bgRing);
+        HPEN oldP = (HPEN)SelectObject(hdc, goldPen);
+        Ellipse(hdc, cx - 19, cy - 19, cx + 19, cy + 19);
+        
+        POINT pts[16];
+        for (int i = 0; i < 16; i++) {
+            float r = (i % 2 == 0) ? 20.0f : 9.0f;
+            float a = (float)i * 3.14159f / 8.0f;
+            pts[i].x = cx + (int)(cosf(a) * r);
+            pts[i].y = cy + (int)(sinf(a) * r);
+        }
+        Polygon(hdc, pts, 16);
+
+        HBRUSH coreB = CreateSolidBrush(RGB(255, 255, 255));
+        SelectObject(hdc, coreB);
+        Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
+        DeleteObject(coreB);
+
+        SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+        DeleteObject(bgRing); DeleteObject(goldPen);
+    } else {
+        COLORREF mainC = colors[colorIdx % 6];
+        COLORREF lightC, darkC;
+        switch (colorIdx % 6) {
+            case 0: lightC = RGB(255, 120, 140); darkC = RGB(120, 0, 25); break;
+            case 1: lightC = RGB(100, 255, 140); darkC = RGB(0, 80, 20); break;
+            case 2: lightC = RGB(140, 180, 255); darkC = RGB(0, 25, 120); break;
+            case 3: lightC = RGB(255, 235, 100); darkC = RGB(160, 90, 0); break;
+            case 4: lightC = RGB(230, 140, 255); darkC = RGB(70, 0, 110); break;
+            case 5: default: lightC = RGB(180, 255, 255); darkC = RGB(0, 100, 130); break;
+        }
+
+        HBRUSH mainB = CreateSolidBrush(mainC);
+        HBRUSH lightB = CreateSolidBrush(lightC);
+        HBRUSH darkB = CreateSolidBrush(darkC);
+        HBRUSH whiteB = CreateSolidBrush(RGB(255, 255, 255));
+        HPEN penDark = CreatePen(PS_SOLID, 1, darkC);
+        HPEN oldP = (HPEN)SelectObject(hdc, penDark);
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, mainB);
+
+        int c = colorIdx % 6;
+        if (c == 0) {
+            POINT pOct[8] = {{cx-7, cy-17}, {cx+7, cy-17}, {cx+17, cy-7}, {cx+17, cy+7}, {cx+7, cy+17}, {cx-7, cy+17}, {cx-17, cy+7}, {cx-17, cy-7}};
+            Polygon(hdc, pOct, 8);
+            POINT pTop[4] = {{cx-7, cy-17}, {cx+7, cy-17}, {cx+11, cy-9}, {cx-11, cy-9}};
+            POINT pBot[4] = {{cx-11, cy+9}, {cx+11, cy+9}, {cx+7, cy+17}, {cx-7, cy+17}};
+            POINT pLeft[4] = {{cx-17, cy-7}, {cx-11, cy-9}, {cx-11, cy+9}, {cx-17, cy+7}};
+            POINT pRight[4] = {{cx+11, cy-9}, {cx+17, cy-7}, {cx+17, cy+7}, {cx+11, cy+9}};
+            POINT pCenter[4] = {{cx-11, cy-9}, {cx+11, cy-9}, {cx+11, cy+9}, {cx-11, cy+9}};
+            SelectObject(hdc, lightB); Polygon(hdc, pTop, 4); Polygon(hdc, pLeft, 4);
+            SelectObject(hdc, darkB); Polygon(hdc, pBot, 4); Polygon(hdc, pRight, 4);
+            SelectObject(hdc, mainB); Polygon(hdc, pCenter, 4);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-5, cy-13, cx-1, cy-9);
+        } else if (c == 1) {
+            RECT rOuter = { cx-16, cy-14, cx+16, cy+14 };
+            RoundRect(hdc, rOuter.left, rOuter.top, rOuter.right, rOuter.bottom, 6, 6);
+            POINT pTop[4] = {{cx-16, cy-14}, {cx+16, cy-14}, {cx+10, cy-8}, {cx-10, cy-8}};
+            POINT pBot[4] = {{cx-10, cy+8}, {cx+10, cy+8}, {cx+16, cy+14}, {cx-16, cy+14}};
+            POINT pLeft[4] = {{cx-16, cy-14}, {cx-10, cy-8}, {cx-10, cy+8}, {cx-16, cy+14}};
+            POINT pRight[4] = {{cx+10, cy-8}, {cx+16, cy-14}, {cx+16, cy+14}, {cx+10, cy+8}};
+            SelectObject(hdc, lightB); Polygon(hdc, pTop, 4); Polygon(hdc, pLeft, 4);
+            SelectObject(hdc, darkB); Polygon(hdc, pBot, 4); Polygon(hdc, pRight, 4);
+            RECT rCenter = { cx-10, cy-8, cx+10, cy+8 };
+            SelectObject(hdc, mainB); FillRect(hdc, &rCenter, mainB);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-12, cy-12, cx-7, cy-7);
+        } else if (c == 2) {
+            RECT rOuter = { cx-15, cy-15, cx+15, cy+15 };
+            RoundRect(hdc, rOuter.left, rOuter.top, rOuter.right, rOuter.bottom, 8, 8);
+            POINT pStar1[3] = {{cx, cy-15}, {cx+7, cy}, {cx-7, cy}};
+            POINT pStar2[3] = {{cx, cy+15}, {cx+7, cy}, {cx-7, cy}};
+            POINT pStar3[3] = {{cx-15, cy}, {cx, cy-7}, {cx, cy+7}};
+            POINT pStar4[3] = {{cx+15, cy}, {cx, cy-7}, {cx, cy+7}};
+            SelectObject(hdc, lightB); Polygon(hdc, pStar1, 3); Polygon(hdc, pStar3, 3);
+            SelectObject(hdc, darkB); Polygon(hdc, pStar2, 3); Polygon(hdc, pStar4, 3);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-7, cy-9, cx-2, cy-4);
+        } else if (c == 3) {
+            POINT pDiamond[4] = {{cx, cy-18}, {cx+17, cy}, {cx, cy+18}, {cx-17, cy}};
+            Polygon(hdc, pDiamond, 4);
+            POINT p1[3] = {{cx, cy-18}, {cx+17, cy}, {cx, cy}};
+            POINT p2[3] = {{cx, cy-18}, {cx-17, cy}, {cx, cy}};
+            POINT p3[3] = {{cx, cy+18}, {cx+17, cy}, {cx, cy}};
+            POINT p4[3] = {{cx, cy+18}, {cx-17, cy}, {cx, cy}};
+            SelectObject(hdc, lightB); Polygon(hdc, p1, 3);
+            SelectObject(hdc, whiteB); Polygon(hdc, p2, 3);
+            SelectObject(hdc, darkB); Polygon(hdc, p3, 3); Polygon(hdc, p4, 3);
+        } else if (c == 4) {
+            POINT pHex[6] = {{cx, cy-17}, {cx+15, cy-8}, {cx+13, cy+13}, {cx, cy+17}, {cx-13, cy+13}, {cx-15, cy-8}};
+            Polygon(hdc, pHex, 6);
+            POINT p1[3] = {{cx, cy-17}, {cx+15, cy-8}, {cx, cy}};
+            POINT p2[3] = {{cx, cy-17}, {cx-15, cy-8}, {cx, cy}};
+            POINT p3[3] = {{cx-15, cy-8}, {cx-13, cy+13}, {cx, cy}};
+            POINT p4[3] = {{cx+15, cy-8}, {cx+13, cy+13}, {cx, cy}};
+            SelectObject(hdc, lightB); Polygon(hdc, p1, 3);
+            SelectObject(hdc, whiteB); Polygon(hdc, p2, 3);
+            SelectObject(hdc, darkB); Polygon(hdc, p3, 3); Polygon(hdc, p4, 3);
+        } else {
+            Ellipse(hdc, cx-16, cy-16, cx+16, cy+16);
+            POINT pStar1[4] = {{cx, cy-16}, {cx+6, cy-6}, {cx, cy}, {cx-6, cy-6}};
+            POINT pStar2[4] = {{cx+16, cy}, {cx+6, cy+6}, {cx, cy}, {cx+6, cy-6}};
+            POINT pStar3[4] = {{cx, cy+16}, {cx-6, cy+6}, {cx, cy}, {cx+6, cy+6}};
+            POINT pStar4[4] = {{cx-17, cy}, {cx-6, cy-6}, {cx, cy}, {cx-6, cy+6}};
+            SelectObject(hdc, lightB); Polygon(hdc, pStar1, 4); Polygon(hdc, pStar4, 4);
+            SelectObject(hdc, darkB); Polygon(hdc, pStar2, 4); Polygon(hdc, pStar3, 4);
+            SelectObject(hdc, whiteB); Ellipse(hdc, cx-3, cy-3, cx+3, cy+3);
+        }
+
+        SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+        DeleteObject(mainB); DeleteObject(lightB); DeleteObject(darkB); DeleteObject(whiteB); DeleteObject(penDark);
+
+        if (typeIdx == TYPE_HORIZ) {
+            HPEN goldP = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+            HBRUSH goldB = CreateSolidBrush(RGB(255, 170, 0));
+            HPEN oP = (HPEN)SelectObject(hdc, goldP);
+            HBRUSH oB = (HBRUSH)SelectObject(hdc, goldB);
+            Ellipse(hdc, cx-19, cy-19, cx+19, cy+19);
+            POINT arrL[3] = {{cx-16, cy}, {cx-7, cy-5}, {cx-7, cy+5}};
+            POINT arrR[3] = {{cx+16, cy}, {cx+7, cy-5}, {cx+7, cy+5}};
+            SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+            Polygon(hdc, arrL, 3); Polygon(hdc, arrR, 3);
+            RECT lineR = {cx-7, cy-2, cx+7, cy+2};
+            FillRect(hdc, &lineR, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SelectObject(hdc, oP); SelectObject(hdc, oB);
+            DeleteObject(goldP); DeleteObject(goldB);
+        } else if (typeIdx == TYPE_VERT) {
+            HPEN cyanP = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+            HBRUSH cyanB = CreateSolidBrush(RGB(0, 136, 255));
+            HPEN oP = (HPEN)SelectObject(hdc, cyanP);
+            HBRUSH oB = (HBRUSH)SelectObject(hdc, cyanB);
+            Ellipse(hdc, cx-19, cy-19, cx+19, cy+19);
+            POINT arrU[3] = {{cx, cy-16}, {cx-5, cy-7}, {cx+5, cy-7}};
+            POINT arrD[3] = {{cx, cy+16}, {cx-5, cy+7}, {cx+5, cy+7}};
+            SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+            Polygon(hdc, arrU, 3); Polygon(hdc, arrD, 3);
+            RECT lineR = {cx-2, cy-7, cx+2, cy+7};
+            FillRect(hdc, &lineR, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            SelectObject(hdc, oP); SelectObject(hdc, oB);
+            DeleteObject(cyanP); DeleteObject(cyanB);
+        } else if (typeIdx == TYPE_BOMB) {
+            HBRUSH darkBomb = CreateSolidBrush(RGB(15, 15, 15));
+            HPEN redP = CreatePen(PS_SOLID, 2, RGB(255, 40, 40));
+            HPEN oP = (HPEN)SelectObject(hdc, redP);
+            HBRUSH oB = (HBRUSH)SelectObject(hdc, darkBomb);
+            Ellipse(hdc, cx-16, cy-16, cx+16, cy+16);
+            HBRUSH redCore = CreateSolidBrush(RGB(255, 40, 40));
+            SelectObject(hdc, redCore);
+            Ellipse(hdc, cx-6, cy-6, cx+6, cy+6);
+            DeleteObject(redCore);
+            HBRUSH sparkB = CreateSolidBrush(RGB(255, 200, 0));
+            SelectObject(hdc, sparkB);
+            Ellipse(hdc, cx+8, cy-17, cx+14, cy-11);
+            DeleteObject(sparkB);
+            SelectObject(hdc, oP); SelectObject(hdc, oB);
+            DeleteObject(darkBomb); DeleteObject(redP);
+        }
+    }
+
+    if (isIce) {
+        HBRUSH iceBrush = CreateSolidBrush(RGB(0, 229, 255));
+        RECT iRect = { cx-19, cy-19, cx+19, cy+19 };
+        FrameRect(hdc, &iRect, iceBrush);
+        DeleteObject(iceBrush);
+        HPEN iceP = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        HPEN oP = (HPEN)SelectObject(hdc, iceP);
+        MoveToEx(hdc, cx-14, cy-9, NULL); LineTo(hdc, cx+4, cy+9);
+        MoveToEx(hdc, cx+9, cy-14, NULL); LineTo(hdc, cx-9, cy+14);
+        SelectObject(hdc, oP); DeleteObject(iceP);
     }
 }
 
@@ -214,7 +391,7 @@ void DrawBoard(HDC hdc) {
         sprintf(buf, "Timed Rush | Score: %d/%d | Time: %ds", score, targetScore, moves);
     }
 
-    SetTextColor(hdc, RGB(255, 255, 255));
+    SetTextColor(hdc, RGB(255, 215, 0));
     SetBkMode(hdc, TRANSPARENT);
     TextOut(hdc, BOARD_X, 8, buf, strlen(buf));
     
@@ -236,14 +413,42 @@ void DrawBoard(HDC hdc) {
     SetTextColor(hdc, powerupMode ? RGB(255, 100, 100) : RGB(255, 215, 0));
     TextOut(hdc, BOARD_X, 46, powerupBuf, strlen(powerupBuf));
 
+    // 3D Golden/Stone Board Outer Frame
+    RECT outerFrame = { BOARD_X - 8, BOARD_Y - 8, BOARD_X + COLS * CELL_SIZE + 8, BOARD_Y + ROWS * CELL_SIZE + 8 };
+    HBRUSH frameBrush = CreateSolidBrush(RGB(160, 115, 15));
+    FillRect(hdc, &outerFrame, frameBrush);
+    DeleteObject(frameBrush);
+
+    HPEN framePenHigh = CreatePen(PS_SOLID, 2, RGB(240, 190, 40));
+    HPEN framePenLow = CreatePen(PS_SOLID, 2, RGB(70, 50, 5));
+    HPEN oldPen = (HPEN)SelectObject(hdc, framePenHigh);
+
+    MoveToEx(hdc, outerFrame.left, outerFrame.bottom, NULL);
+    LineTo(hdc, outerFrame.left, outerFrame.top);
+    LineTo(hdc, outerFrame.right, outerFrame.top);
+    SelectObject(hdc, framePenLow);
+    LineTo(hdc, outerFrame.right, outerFrame.bottom);
+    LineTo(hdc, outerFrame.left, outerFrame.bottom);
+
+    // Corner Studs
+    HBRUSH studB = CreateSolidBrush(RGB(255, 215, 0));
+    SelectObject(hdc, studB);
+    Ellipse(hdc, outerFrame.left+2, outerFrame.top+2, outerFrame.left+7, outerFrame.top+7);
+    Ellipse(hdc, outerFrame.right-7, outerFrame.top+2, outerFrame.right-2, outerFrame.top+7);
+    Ellipse(hdc, outerFrame.left+2, outerFrame.bottom-7, outerFrame.left+7, outerFrame.bottom-2);
+    Ellipse(hdc, outerFrame.right-7, outerFrame.bottom-7, outerFrame.right-2, outerFrame.bottom-2);
+    SelectObject(hdc, oldPen);
+    DeleteObject(studB); DeleteObject(framePenHigh); DeleteObject(framePenLow);
+
+    // Grid Cell Sockets
     for (int r = 0; r < ROWS; r++) {
         for (int c = 0; c < COLS; c++) {
             RECT rect = { BOARD_X + c * CELL_SIZE, BOARD_Y + r * CELL_SIZE, 
                           BOARD_X + (c + 1) * CELL_SIZE, BOARD_Y + (r + 1) * CELL_SIZE };
-            HBRUSH bg = CreateSolidBrush(RGB(45, 45, 45));
+            HBRUSH bg = CreateSolidBrush(RGB(22, 16, 28));
             FillRect(hdc, &rect, bg);
             DeleteObject(bg);
-            HBRUSH border = CreateSolidBrush(RGB(85, 85, 85));
+            HBRUSH border = CreateSolidBrush(RGB(40, 32, 50));
             FrameRect(hdc, &rect, border);
             DeleteObject(border);
         }
@@ -282,67 +487,31 @@ void DrawBoard(HDC hdc) {
             }
 
             if (stoneGrid[r][c]) {
-                HBRUSH stoneBrush = CreateSolidBrush(RGB(100, 100, 100));
+                HBRUSH stoneBrush = CreateSolidBrush(RGB(80, 80, 85));
                 FillRect(hdc, &rect, stoneBrush);
                 DeleteObject(stoneBrush);
 
-                HBRUSH stoneBorder = CreateSolidBrush(RGB(60, 60, 60));
+                HBRUSH stoneBorder = CreateSolidBrush(RGB(50, 50, 55));
                 FrameRect(hdc, &rect, stoneBorder);
                 DeleteObject(stoneBorder);
 
-                HPEN pen = CreatePen(PS_SOLID, 2, RGB(140, 140, 140));
+                HPEN pen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
                 HPEN oldPen = (HPEN)SelectObject(hdc, pen);
-                MoveToEx(hdc, rect.left + 5, rect.top + 5, NULL);
-                LineTo(hdc, rect.right - 5, rect.bottom - 5);
-                MoveToEx(hdc, rect.right - 5, rect.top + 5, NULL);
-                LineTo(hdc, rect.left + 5, rect.bottom - 5);
-                SelectObject(hdc, oldPen);
-                DeleteObject(pen);
+                int cx = rect.left + CELL_SIZE/2, cy = rect.top + CELL_SIZE/2;
+                MoveToEx(hdc, cx - 10, cy, NULL); LineTo(hdc, cx + 10, cy);
+                MoveToEx(hdc, cx, cy - 10, NULL); LineTo(hdc, cx, cy + 10);
+                SelectObject(hdc, oldPen); DeleteObject(pen);
                 continue;
             }
 
             if (grid[r][c] == -1) continue;
 
-            HBRUSH brush = CreateSolidBrush(typeGrid[r][c] == TYPE_RAINBOW ? RGB(255, 255, 255) : colors[grid[r][c]]);
-            FillRect(hdc, &rect, brush);
-            DeleteObject(brush);
-
-            if (typeGrid[r][c] == TYPE_HORIZ) {
-                RECT hRect = { rect.left, rect.top + CELL_SIZE/2 - 4, rect.right, rect.top + CELL_SIZE/2 + 4 };
-                HBRUSH b = CreateSolidBrush(RGB(255, 255, 255));
-                FillRect(hdc, &hRect, b);
-                DeleteObject(b);
-            } else if (typeGrid[r][c] == TYPE_VERT) {
-                RECT vRect = { rect.left + CELL_SIZE/2 - 4, rect.top, rect.left + CELL_SIZE/2 + 4, rect.bottom };
-                HBRUSH b = CreateSolidBrush(RGB(255, 255, 255));
-                FillRect(hdc, &vRect, b);
-                DeleteObject(b);
-            } else if (typeGrid[r][c] == TYPE_RAINBOW) {
-                RECT cRect = { rect.left + 12, rect.top + 12, rect.right - 12, rect.bottom - 12 };
-                HBRUSH b = CreateSolidBrush(RGB(255, 215, 0));
-                FillRect(hdc, &cRect, b);
-                DeleteObject(b);
-            } else if (typeGrid[r][c] == TYPE_BOMB) {
-                HBRUSH b = CreateSolidBrush(RGB(40, 40, 40));
-                RECT bRect = { rect.left + 10, rect.top + 10, rect.right - 10, rect.bottom - 10 };
-                FillRect(hdc, &bRect, b);
-                DeleteObject(b);
-
-                HBRUSH dot = CreateSolidBrush(RGB(255, 50, 50));
-                RECT dRect = { rect.left + 18, rect.top + 18, rect.right - 18, rect.bottom - 18 };
-                FillRect(hdc, &dRect, dot);
-                DeleteObject(dot);
-            }
-
-            if (iceGrid[r][c]) {
-                RECT iRect = { rect.left + 2, rect.top + 2, rect.right - 2, rect.bottom - 2 };
-                HBRUSH b = CreateHatchBrush(HS_BDIAGONAL, RGB(0, 255, 255));
-                FillRect(hdc, &iRect, b);
-                DeleteObject(b);
-            }
+            int cx = drawX + CELL_SIZE / 2;
+            int cy = drawY + CELL_SIZE / 2;
+            DrawFacetedGem(hdc, cx, cy, CELL_SIZE, grid[r][c], typeGrid[r][c], iceGrid[r][c]);
 
             if (r == selR && c == selC) {
-                HBRUSH border = CreateSolidBrush((powerupMode == 1) ? RGB(255, 0, 0) : RGB(255, 255, 255));
+                HBRUSH border = CreateSolidBrush((powerupMode == 1) ? RGB(255, 0, 0) : RGB(255, 215, 0));
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
                 
@@ -351,6 +520,26 @@ void DrawBoard(HDC hdc) {
                 FrameRect(hdc, &rect, border);
                 DeleteObject(border);
             }
+        }
+    }
+
+    // Laser Beam Overlays
+    for (int r = 0; r < ROWS; r++) {
+        if (laserRowTimer[r] > 0) {
+            RECT lRect = { BOARD_X, BOARD_Y + r * CELL_SIZE + 18, BOARD_X + COLS * CELL_SIZE, BOARD_Y + r * CELL_SIZE + 32 };
+            HBRUSH lB = CreateSolidBrush(RGB(255, 255, 255));
+            FillRect(hdc, &lRect, lB);
+            DeleteObject(lB);
+            laserRowTimer[r]--;
+        }
+    }
+    for (int c = 0; c < COLS; c++) {
+        if (laserColTimer[c] > 0) {
+            RECT lRect = { BOARD_X + c * CELL_SIZE + 18, BOARD_Y, BOARD_X + c * CELL_SIZE + 32, BOARD_Y + ROWS * CELL_SIZE };
+            HBRUSH lB = CreateSolidBrush(RGB(0, 229, 255));
+            FillRect(hdc, &lRect, lB);
+            DeleteObject(lB);
+            laserColTimer[c]--;
         }
     }
     SelectClipRgn(hdc, NULL);
@@ -391,8 +580,10 @@ void AddDestroy(int r, int c) {
     }
 
     if (typeGrid[r][c] == TYPE_HORIZ) {
+        laserRowTimer[r] = 10;
         for (int i = 0; i < COLS; i++) AddDestroy(r, i);
     } else if (typeGrid[r][c] == TYPE_VERT) {
+        laserColTimer[c] = 10;
         for (int i = 0; i < ROWS; i++) AddDestroy(i, c);
     } else if (typeGrid[r][c] == TYPE_RAINBOW) {
         int tcolor = rand() % 6;

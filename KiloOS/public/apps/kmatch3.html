@@ -5,41 +5,58 @@
 <title>KMatch3</title>
 <style>
   body {
-    margin: 0; padding: 0; background-color: #1e1e1e; color: #fff; font-family: sans-serif;
+    margin: 0; padding: 0; background: radial-gradient(circle at center, #261f30 0%, #110d18 100%); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex; flex-direction: column; align-items: center; min-height: 100vh;
   }
-  h1 { margin: 10px 0 5px 0; font-size: 24px; }
-  .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 5px; font-size: 15px; font-weight: bold; }
+  h1 {
+    margin: 10px 0 5px 0; font-size: 26px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 2px 4px rgba(0,0,0,0.8);
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .info { display: flex; justify-content: space-between; width: 400px; margin-bottom: 5px; font-size: 14px; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
   #board {
-    width: 400px; height: 400px; background-color: #2d2d2d; border: 2px solid #555;
-    position: relative; touch-action: none; user-select: none; overflow: hidden; border-radius: 6px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle at center, #231b2e 0%, #0c0813 100%);
+    border: 8px solid #b8860b; border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.95), 0 0 20px rgba(255,215,0,0.25);
+    position: relative; touch-action: none; user-select: none; overflow: hidden;
   }
 
   .cell {
-    border-radius: 4px; display: flex; justify-content: center; align-items: center;
-    cursor: pointer; transition: transform 0.2s, top 0.2s, left 0.2s, opacity 0.2s;
+    border-radius: 8px; display: flex; justify-content: center; align-items: center;
+    cursor: pointer; transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.22s ease-out, left 0.22s ease-out, opacity 0.2s;
     position: absolute; width: 48px; height: 48px; box-sizing: border-box;
-  }
-  .stone-tile {
-    background: #646464 !important; border: 2px solid #3c3c3c !important; cursor: not-allowed;
-    background-image: repeating-linear-gradient(45deg, #505050, #505050 5px, #646464 5px, #646464 10px) !important;
-  }
-  .ice-overlay {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    background: repeating-linear-gradient(45deg, rgba(0,255,255,0.25), rgba(0,255,255,0.25) 5px, rgba(0,255,255,0.5) 5px, rgba(0,255,255,0.5) 10px);
-    pointer-events: none; border-radius: 4px; z-index: 5;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.4) 100%);
+    box-shadow: inset 0 0 6px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5);
   }
   .powerup-btn {
-    background: #444; color: #fff; border: 1px solid #777; padding: 4px 8px; cursor: pointer; border-radius: 4px; font-size: 12px; font-weight: bold;
-    transition: background 0.2s, border-color 0.2s;
+    background: linear-gradient(180deg, #444 0%, #222 100%); color: #ffd700; border: 1px solid #777; padding: 5px 10px; cursor: pointer; border-radius: 6px; font-size: 12px; font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: all 0.2s;
   }
-  .powerup-btn:hover { background: #555; }
-  .powerup-btn.active { background: #900; border-color: #f00; }
+  .powerup-btn:hover { background: linear-gradient(180deg, #555 0%, #333 100%); border-color: #ffd700; transform: translateY(-1px); }
+  .powerup-btn.active { background: linear-gradient(180deg, #cc0000 0%, #660000 100%); border-color: #ff3333; box-shadow: 0 0 10px #ff0000; }
 
-  .cell.selected { border: 2px solid #fff; box-sizing: border-box; transform: scale(1.1); z-index: 10; }
+  .cell.selected {
+    outline: 3px solid #ffd700; outline-offset: -2px;
+    transform: scale(1.15) translateZ(0); z-index: 20;
+    box-shadow: 0 0 20px #ffd700, inset 0 0 10px #ffd700;
+    animation: pulseSelect 0.8s infinite alternate ease-in-out;
+  }
+  @keyframes pulseSelect {
+    0% { filter: drop-shadow(0 0 4px #ffd700); }
+    100% { filter: drop-shadow(0 0 12px #ffffff); }
+  }
   .particle {
-    position: absolute; width: 6px; height: 6px; border-radius: 50%;
-    pointer-events: none; z-index: 100;
+    position: absolute; pointer-events: none; z-index: 100; border-radius: 50%;
+  }
+  .laser-beam {
+    position: absolute; pointer-events: none; z-index: 90;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0) 100%);
+    box-shadow: 0 0 15px #00e5ff, 0 0 30px #ffffff;
+    animation: laserFlash 0.35s forwards ease-out;
+  }
+  @keyframes laserFlash {
+    0% { opacity: 1; transform: scaleY(2); }
+    100% { opacity: 0; transform: scaleY(0.1); }
   }
 </style>
 </head>
@@ -167,17 +184,65 @@
 
     let particles = [];
     
+    function createScorePopup(x, y, text, color='#ffd700') {
+      let popup = document.createElement('div');
+      popup.style.position = 'absolute';
+      popup.style.left = x + 'px';
+      popup.style.top = y + 'px';
+      popup.style.color = color;
+      popup.style.fontSize = '16px';
+      popup.style.fontWeight = '900';
+      popup.style.pointerEvents = 'none';
+      popup.style.zIndex = '150';
+      popup.style.textShadow = '0 0 6px #000, 0 0 10px ' + color;
+      popup.style.transition = 'all 0.5s ease-out';
+      popup.textContent = text;
+      boardEl.appendChild(popup);
+      requestAnimationFrame(() => {
+        popup.style.top = (y - 30) + 'px';
+        popup.style.opacity = '0';
+        popup.style.transform = 'scale(1.2)';
+      });
+      setTimeout(() => popup.remove(), 500);
+    }
+
+    function fireLaserRow(r) {
+      let beam = document.createElement('div');
+      beam.className = 'laser-beam';
+      beam.style.top = (r * 50 + 20) + 'px';
+      beam.style.left = '0px';
+      beam.style.width = '400px';
+      beam.style.height = '10px';
+      boardEl.appendChild(beam);
+      setTimeout(() => beam.remove(), 350);
+    }
+
+    function fireLaserCol(c) {
+      let beam = document.createElement('div');
+      beam.className = 'laser-beam';
+      beam.style.left = (c * 50 + 20) + 'px';
+      beam.style.top = '0px';
+      beam.style.height = '400px';
+      beam.style.width = '10px';
+      boardEl.appendChild(beam);
+      setTimeout(() => beam.remove(), 350);
+    }
+
     function createParticles(x, y, color) {
-      for (let i = 0; i < 15; i++) {
+      for (let i = 0; i < 18; i++) {
         let p = document.createElement('div');
         p.className = 'particle';
+        let size = Math.floor(Math.random() * 6) + 4;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
         p.style.backgroundColor = color;
+        p.style.boxShadow = `0 0 ${size}px ${color}`;
         p.style.left = x + 'px';
         p.style.top = y + 'px';
         boardEl.appendChild(p);
         
         let angle = Math.random() * Math.PI * 2;
-        let speed = Math.random() * 4 + 2;
+        let speed = Math.random() * 5 + 2;
         particles.push({
           el: p, x: x, y: y,
           vx: Math.cos(angle) * speed,
@@ -193,6 +258,7 @@
         let p = particles[i];
         p.x += p.vx;
         p.y += p.vy;
+        p.vy += 0.15;
         p.life -= p.decay;
         if (p.life <= 0) {
           if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
@@ -207,7 +273,150 @@
     }
     requestAnimationFrame(updateParticles);
 
-    function createCellElement(r, c, color, type, isStone) {
+    function getColorIndex(colorStr) {
+      if (typeof colorStr === 'number') return colorStr;
+      let idx = COLORS.indexOf(colorStr);
+      return idx >= 0 ? idx : 0;
+    }
+
+    function getGemSVG(colorIdx, type, isStone, isIce) {
+      if (isStone) {
+        return `<svg width="48" height="48" viewBox="0 0 48 48">
+          <defs>
+            <linearGradient id="stoneGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7a7a7a"/>
+              <stop offset="50%" stop-color="#545454"/>
+              <stop offset="100%" stop-color="#383838"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="44" height="44" rx="6" fill="url(#stoneGrad)" stroke="#222" stroke-width="2"/>
+          <rect x="5" y="5" width="38" height="38" rx="4" fill="none" stroke="#888" stroke-width="1" opacity="0.6"/>
+          <path d="M 10 12 L 20 22 L 16 34 M 20 22 L 32 18 L 38 28" stroke="#1f1f1f" stroke-width="2" fill="none"/>
+          <path d="M 11 13 L 21 23 M 21 23 L 33 19" stroke="#999" stroke-width="1" fill="none" opacity="0.7"/>
+          <circle cx="24" cy="24" r="8" fill="none" stroke="#ffd700" stroke-width="1.5" opacity="0.8"/>
+          <path d="M 24 16 L 24 32 M 16 24 L 32 24" stroke="#ffd700" stroke-width="1.5" opacity="0.8"/>
+        </svg>`;
+      }
+
+      const GEM_COLORS = [
+        { name: 'ruby', main: '#e60039', light: '#ff6688', dark: '#800020' },
+        { name: 'emerald', main: '#00cc44', light: '#66ff99', dark: '#00551b' },
+        { name: 'sapphire', main: '#1a66ff', light: '#80b3ff', dark: '#002b80' },
+        { name: 'topaz', main: '#ffaa00', light: '#ffdd66', dark: '#996600' },
+        { name: 'amethyst', main: '#b300ff', light: '#e680ff', dark: '#4d0080' },
+        { name: 'diamond', main: '#00d9ff', light: '#b3f7ff', dark: '#006680' }
+      ];
+
+      let g = GEM_COLORS[colorIdx] || GEM_COLORS[0];
+      let svgContent = '';
+
+      if (type === 3) {
+        svgContent = `
+          <defs>
+            <radialGradient id="rbGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#ffffff"/>
+              <stop offset="35%" stop-color="#ffff00"/>
+              <stop offset="70%" stop-color="#ff00cc"/>
+              <stop offset="100%" stop-color="#00ffff"/>
+            </radialGradient>
+          </defs>
+          <circle cx="24" cy="24" r="20" fill="url(#rbGrad)" stroke="#fff" stroke-width="2"/>
+          <path d="M 24 4 L 28 18 L 42 24 L 28 30 L 24 44 L 20 30 L 6 24 L 20 18 Z" fill="#ffd700" stroke="#fff" stroke-width="1.5"/>
+          <path d="M 24 10 L 26 20 L 36 24 L 26 28 L 24 38 L 22 28 L 12 24 L 22 20 Z" fill="#ffffff" opacity="0.9"/>
+          <circle cx="24" cy="24" r="4" fill="#ffffff"/>
+        `;
+      } else {
+        if (colorIdx === 0) {
+          svgContent = `
+            <polygon points="16,6 32,6 42,16 42,32 32,42 16,42 6,32 6,16" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
+            <polygon points="16,6 32,6 36,14 12,14" fill="${g.light}" opacity="0.8"/>
+            <polygon points="6,16 12,14 12,34 6,32" fill="${g.light}" opacity="0.5"/>
+            <polygon points="42,16 36,14 36,34 42,32" fill="${g.dark}"/>
+            <polygon points="16,42 32,42 36,34 12,34" fill="${g.dark}"/>
+            <polygon points="12,14 36,14 36,34 12,34" fill="${g.main}"/>
+            <polygon points="16,6 24,6 20,14 12,14" fill="#ffffff" opacity="0.75"/>
+          `;
+        } else if (colorIdx === 1) {
+          svgContent = `
+            <rect x="7" y="9" width="34" height="30" rx="4" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
+            <polygon points="7,9 41,9 35,15 13,15" fill="${g.light}" opacity="0.8"/>
+            <polygon points="7,9 13,15 13,33 7,39" fill="${g.light}" opacity="0.4"/>
+            <polygon points="41,9 35,15 35,33 41,39" fill="${g.dark}"/>
+            <polygon points="7,39 41,39 35,33 13,33" fill="${g.dark}"/>
+            <rect x="13" y="15" width="22" height="18" fill="${g.main}"/>
+            <path d="M 9 11 L 22 11 L 18 15 L 13 15 Z" fill="#ffffff" opacity="0.8"/>
+          `;
+        } else if (colorIdx === 2) {
+          svgContent = `
+            <rect x="8" y="8" width="32" height="32" rx="8" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
+            <polygon points="24,8 32,16 24,24 16,16" fill="${g.light}" opacity="0.75"/>
+            <polygon points="24,24 32,32 24,40 16,32" fill="${g.dark}"/>
+            <polygon points="8,24 16,16 24,24 16,32" fill="${g.light}" opacity="0.45"/>
+            <polygon points="40,24 32,16 24,24 32,32" fill="${g.dark}"/>
+            <circle cx="17" cy="15" r="3" fill="#ffffff" opacity="0.85"/>
+          `;
+        } else if (colorIdx === 3) {
+          svgContent = `
+            <polygon points="24,5 42,24 24,43 6,24" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
+            <polygon points="24,5 42,24 24,24" fill="${g.light}" opacity="0.8"/>
+            <polygon points="24,5 6,24 24,24" fill="${g.light}" opacity="0.5"/>
+            <polygon points="24,43 42,24 24,24" fill="${g.dark}"/>
+            <polygon points="24,43 6,24 24,24" fill="${g.dark}" opacity="0.8"/>
+            <polygon points="24,5 31,13 24,20" fill="#ffffff" opacity="0.85"/>
+          `;
+        } else if (colorIdx === 4) {
+          svgContent = `
+            <path d="M 24 5 L 40 18 L 36 38 L 12 38 L 8 18 Z" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
+            <polygon points="24,5 40,18 24,22" fill="${g.light}" opacity="0.85"/>
+            <polygon points="24,5 8,18 24,22" fill="${g.light}" opacity="0.5"/>
+            <polygon points="8,18 12,38 24,22" fill="${g.dark}" opacity="0.8"/>
+            <polygon points="40,18 36,38 24,22" fill="${g.dark}"/>
+            <polygon points="12,38 36,38 24,22" fill="${g.dark}"/>
+            <path d="M 24 5 L 32 12 L 24 16 Z" fill="#ffffff" opacity="0.9"/>
+          `;
+        } else {
+          svgContent = `
+            <circle cx="24" cy="24" r="19" fill="${g.main}" stroke="${g.dark}" stroke-width="1.5"/>
+            <polygon points="24,7 32,15 24,24 16,15" fill="${g.light}" opacity="0.9"/>
+            <polygon points="32,15 41,24 32,33 24,24" fill="${g.dark}"/>
+            <polygon points="24,24 32,33 24,41 16,33" fill="${g.dark}"/>
+            <polygon points="16,15 24,24 16,33 7,24" fill="${g.light}" opacity="0.5"/>
+            <circle cx="24" cy="24" r="5" fill="#ffffff" opacity="0.85"/>
+          `;
+        }
+
+        if (type === 1) {
+          svgContent += `
+            <circle cx="24" cy="24" r="21" fill="none" stroke="#ffaa00" stroke-width="2.5" stroke-dasharray="6 3"/>
+            <path d="M 6 24 L 16 17 L 16 21 L 32 21 L 32 17 L 42 24 L 32 31 L 32 27 L 16 27 L 16 31 Z" fill="#ffffff" stroke="#ff4400" stroke-width="1.5"/>
+          `;
+        } else if (type === 2) {
+          svgContent += `
+            <circle cx="24" cy="24" r="21" fill="none" stroke="#00e5ff" stroke-width="2.5" stroke-dasharray="6 3"/>
+            <path d="M 24 6 L 17 16 L 21 16 L 21 32 L 17 32 L 24 42 L 31 32 L 27 32 L 27 16 L 31 16 Z" fill="#ffffff" stroke="#0088ff" stroke-width="1.5"/>
+          `;
+        } else if (type === 4) {
+          svgContent += `
+            <circle cx="24" cy="24" r="20" fill="none" stroke="#ff2244" stroke-width="2"/>
+            <rect x="14" y="14" width="20" height="20" rx="4" fill="#111111" opacity="0.85" stroke="#ff3333" stroke-width="1.5"/>
+            <text x="24" y="29" font-family="sans-serif" font-weight="900" font-size="13" fill="#ff3333" text-anchor="middle">💣</text>
+            <circle cx="34" cy="14" r="3" fill="#ffaa00"/>
+            <path d="M 34 14 Q 38 10 36 6" fill="none" stroke="#ffffff" stroke-width="1.5"/>
+          `;
+        }
+      }
+
+      if (isIce) {
+        svgContent += `
+          <rect x="2" y="2" width="44" height="44" rx="5" fill="rgba(0, 229, 255, 0.25)" stroke="#00e5ff" stroke-width="1.5"/>
+          <path d="M 6 12 L 22 28 M 28 8 L 40 20 M 10 38 L 38 10" stroke="#ffffff" stroke-width="1.5" opacity="0.8"/>
+        `;
+      }
+
+      return `<svg width="48" height="48" viewBox="0 0 48 48">${svgContent}</svg>`;
+    }
+
+    function createCellElement(r, c, color, type, isStone, isIce = false) {
         let cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.r = r;
@@ -215,23 +424,8 @@
         cell.style.top = (r * 50 + 1) + 'px';
         cell.style.left = (c * 50 + 1) + 'px';
 
-        if (isStone) {
-            cell.classList.add('stone-tile');
-            cell.innerHTML = '<div style="font-size:18px;color:#bbb;font-weight:bold;">✖</div>';
-            cell.addEventListener('click', onCellClick);
-            return cell;
-        }
-
-        cell.style.backgroundColor = type === 3 ? '#ffffff' : color;
-        if (type === 1) cell.innerHTML = '<div style="width:100%;height:8px;background:#fff;border-radius:4px"></div>';
-        if (type === 2) cell.innerHTML = '<div style="height:100%;width:8px;background:#fff;border-radius:4px"></div>';
-        if (type === 3) cell.innerHTML = '<div style="width:22px;height:22px;background:#ffd700;border-radius:50%;border:2px solid #fff"></div>';
-        if (type === 4) cell.innerHTML = '<div style="width:24px;height:24px;background:#222;border-radius:50%;display:flex;justify-content:center;align-items:center;color:#ff3333;font-size:12px;font-weight:bold;">B</div>';
-
-        let ice = document.createElement('div');
-        ice.className = 'ice-overlay';
-        ice.style.display = 'none';
-        cell.appendChild(ice);
+        let cIdx = getColorIndex(color);
+        cell.innerHTML = getGemSVG(cIdx, type, isStone, isIce);
 
         cell.addEventListener('click', onCellClick);
         return cell;
@@ -320,7 +514,7 @@
         let c = Math.floor(Math.random() * COLS);
         if (!grid[r][c].stone && !grid[r][c].ice) {
           grid[r][c].ice = true;
-          grid[r][c].el.querySelector('.ice-overlay').style.display = 'block';
+          grid[r][c].el.innerHTML = getGemSVG(getColorIndex(grid[r][c].color), grid[r][c].type, false, true);
           iceToPlace--;
         }
       }
@@ -358,7 +552,7 @@
             if (grid[r][c] && !grid[r][c].stone && !grid[r][c].ice) {
               let color = COLORS[Math.floor(Math.random() * COLORS.length)];
               grid[r][c].color = color;
-              grid[r][c].el.style.backgroundColor = grid[r][c].type === 3 ? '#ffffff' : color;
+              grid[r][c].el.innerHTML = getGemSVG(getColorIndex(color), grid[r][c].type, false, false);
             }
           }
         }
@@ -419,8 +613,7 @@
             for (let c = 0; c < COLS; c++) {
               let savedCell = state.grid[r][c];
               if (savedCell) {
-                let cell = createCellElement(r, c, savedCell.color, savedCell.type, savedCell.stone);
-                if (savedCell.ice) cell.querySelector('.ice-overlay').style.display = 'block';
+                let cell = createCellElement(r, c, savedCell.color, savedCell.type, savedCell.stone, savedCell.ice);
                 boardEl.appendChild(cell);
                 row.push({ color: savedCell.color, type: savedCell.type, ice: savedCell.ice, stone: savedCell.stone, el: cell });
               } else {
@@ -712,11 +905,15 @@
           if (grid[m.r][m.c]) {
             if (grid[m.r][m.c].ice) {
                 grid[m.r][m.c].ice = false;
-                grid[m.r][m.c].el.querySelector('.ice-overlay').style.display = 'none';
+                grid[m.r][m.c].el.innerHTML = getGemSVG(getColorIndex(grid[m.r][m.c].color), grid[m.r][m.c].type, false, false);
             }
+            if (grid[m.r][m.c].type === 1) fireLaserRow(m.r);
+            if (grid[m.r][m.c].type === 2) fireLaserCol(m.c);
+            if (grid[m.r][m.c].type === 4) createScorePopup(m.c * 50 + 10, m.r * 50 + 10, 'BOOM!', '#ff3333');
             let color = grid[m.r][m.c].color || '#ffffff';
             if (grid[m.r][m.c].type === 3) color = '#ffffff';
             createParticles(m.c * 50 + 25, m.r * 50 + 25, color);
+            createScorePopup(m.c * 50 + 10, m.r * 50 + 10, `+${10 * comboMultiplier}`);
             grid[m.r][m.c].el.style.transform = 'scale(0)';
             grid[m.r][m.c].el.style.opacity = '0';
           }
