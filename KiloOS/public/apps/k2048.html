@@ -120,11 +120,11 @@
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--container-border);
             border-radius: 20px;
-            padding: 30px;
+            padding: 24px;
             box-shadow: var(--container-shadow);
             text-align: center;
             width: 100%;
-            max-width: 450px;
+            max-width: 460px;
             position: relative;
             box-sizing: border-box;
         }
@@ -133,12 +133,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
 
         h1 {
             margin: 0;
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 800;
             color: var(--text-color);
             text-shadow: var(--title-shadow);
@@ -147,27 +147,72 @@
 
         .score-container {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
 
         .score-box {
             background: var(--score-bg);
             color: var(--text-color);
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             display: flex;
             flex-direction: column;
             border: 1px solid rgba(255,255,255,0.05);
-            min-width: 60px;
+            min-width: 55px;
         }
 
         .score-box span {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             text-transform: uppercase;
             color: var(--score-c);
             margin-bottom: 2px;
+        }
+
+        .stage-banner {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            padding: 6px 12px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffd700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skills-bar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .skill-btn {
+            background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+            border: 1px solid rgba(255,255,255,0.25);
+            color: var(--text-color);
+            padding: 8px 4px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .skill-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .board-container {
@@ -177,7 +222,7 @@
             background: var(--board-bg);
             border-radius: 16px;
             padding: 2.5%;
-            margin: 0 auto 25px auto;
+            margin: 0 auto 15px auto;
             box-sizing: border-box;
             box-shadow: 0 12px 32px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.25), inset 0 -4px 8px rgba(0,0,0,0.5), 0 0 0 5px rgba(120, 80, 50, 0.35);
         }
@@ -212,7 +257,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: 800;
             color: #fff;
             z-index: 2;
@@ -242,48 +287,69 @@
             border-top-right-radius: 9px;
         }
 
+        .tile-frozen .tile-inner {
+            border: 3px solid #80d8ff;
+            box-shadow: 0 0 14px #40c4ff, inset 0 0 8px #80d8ff !important;
+        }
+
+        .frozen-badge {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 0.7rem;
+            color: #80d8ff;
+            text-shadow: 0 0 5px #00e5ff;
+            font-weight: 800;
+            pointer-events: none;
+        }
+
         .val-2 .tile-inner { background: var(--t2-bg); color: var(--t2-c); box-shadow: var(--t2-sh); }
         .val-4 .tile-inner { background: var(--t4-bg); color: var(--t4-c); box-shadow: var(--t4-sh); }
         .val-8 .tile-inner { background: var(--t8-bg); color: var(--t8-c); box-shadow: var(--t8-sh); }
         .val-16 .tile-inner { background: var(--t16-bg); color: var(--t16-c); box-shadow: var(--t16-sh); }
         .val-32 .tile-inner { background: var(--t32-bg); color: var(--t32-c); box-shadow: var(--t32-sh); }
         .val-64 .tile-inner { background: var(--t64-bg); color: var(--t64-c); box-shadow: var(--t64-sh); }
-        .val-128 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.8rem; }
-        .val-256 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.8rem; }
-        .val-512 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.8rem; }
-        .val-1024 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
-        .val-2048 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
+        .val-128 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.6rem; }
+        .val-256 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.6rem; }
+        .val-512 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.6rem; }
+        .val-1024 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.3rem; }
+        .val-2048 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.3rem; }
+        .val-4096 .tile-inner { background: linear-gradient(145deg, #e040fb, #aa00ff); color: #fff; box-shadow: 0 0 25px #e040fb; font-size: 1.2rem; }
+        .val-8192 .tile-inner { background: linear-gradient(145deg, #00e5ff, #00b0ff); color: #fff; box-shadow: 0 0 30px #00e5ff; font-size: 1.2rem; }
+        
         .val-1 .tile-inner { background: var(--t2-bg); color: var(--t2-c); box-shadow: var(--t2-sh); }
         .val-3 .tile-inner { background: var(--t4-bg); color: var(--t4-c); box-shadow: var(--t4-sh); }
         .val-5 .tile-inner { background: var(--t8-bg); color: var(--t8-c); box-shadow: var(--t8-sh); }
         .val-13 .tile-inner { background: var(--t16-bg); color: var(--t16-c); box-shadow: var(--t16-sh); }
         .val-21 .tile-inner { background: var(--t32-bg); color: var(--t32-c); box-shadow: var(--t32-sh); }
         .val-34 .tile-inner { background: var(--t64-bg); color: var(--t64-c); box-shadow: var(--t64-sh); }
-        .val-55 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.8rem; }
-        .val-89 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.8rem; }
-        .val-144 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.5rem; }
-        .val-233 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
-        .val-377 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
-        .val-610 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
-        .val-987 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
-        .val-1597 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
-        .val-2584 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
-        .val-4181 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
+        .val-55 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.6rem; }
+        .val-89 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.6rem; }
+        .val-144 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.3rem; }
+        .val-233 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.3rem; }
+        .val-377 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.3rem; }
+        .val-610 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.3rem; }
+        .val-987 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.3rem; }
+        .val-1597 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.1rem; }
+        .val-2584 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.1rem; }
+        .val-4181 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.1rem; }
+        .val-6765 .tile-inner { background: linear-gradient(145deg, #00e5ff, #00b0ff); color: #fff; box-shadow: 0 0 30px #00e5ff; font-size: 1.1rem; }
         .val-6 .tile-inner { background: var(--t16-bg); color: var(--t16-c); box-shadow: var(--t16-sh); }
         .val-12 .tile-inner { background: var(--t32-bg); color: var(--t32-c); box-shadow: var(--t32-sh); }
         .val-24 .tile-inner { background: var(--t64-bg); color: var(--t64-c); box-shadow: var(--t64-sh); }
-        .val-48 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.8rem; }
-        .val-96 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.8rem; }
-        .val-192 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.5rem; }
-        .val-384 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.5rem; }
-        .val-768 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.5rem; }
-        .val-1536 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
-        .val-3072 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.2rem; }
+        .val-48 .tile-inner { background: var(--t128-bg); color: var(--t128-c); box-shadow: var(--t128-sh); font-size: 1.6rem; }
+        .val-96 .tile-inner { background: var(--t256-bg); color: var(--t256-c); box-shadow: var(--t256-sh); font-size: 1.6rem; }
+        .val-192 .tile-inner { background: var(--t512-bg); color: var(--t512-c); box-shadow: var(--t512-sh); font-size: 1.3rem; }
+        .val-384 .tile-inner { background: var(--t1024-bg); color: var(--t1024-c); box-shadow: var(--t1024-sh); font-size: 1.3rem; }
+        .val-768 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.3rem; }
+        .val-1536 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.1rem; }
+        .val-3072 .tile-inner { background: var(--t2048-bg); color: var(--t2048-c); box-shadow: var(--t2048-sh); font-size: 1.1rem; }
+        .val-6144 .tile-inner { background: linear-gradient(145deg, #00e5ff, #00b0ff); color: #fff; box-shadow: 0 0 30px #00e5ff; font-size: 1.1rem; }
         .val--1 .tile-inner { background: linear-gradient(145deg, #666, #444); color: #fff; box-shadow: inset 0 2px 1px rgba(255,255,255,0.3); }
-        .val--2 .tile-inner { background: linear-gradient(145deg, #ffe042, #f5a623); color: #000; box-shadow: 0 0 15px #ffd700; font-size: 2rem; }
-        .val--3 .tile-inner { background: linear-gradient(145deg, #ff5252, #c62828); color: #fff; box-shadow: 0 0 15px rgba(229, 57, 53, 0.8); font-size: 2rem; }
+        .val--2 .tile-inner { background: linear-gradient(145deg, #ffe042, #f5a623); color: #000; box-shadow: 0 0 15px #ffd700; font-size: 1.8rem; }
+        .val--3 .tile-inner { background: linear-gradient(145deg, #ff5252, #c62828); color: #fff; box-shadow: 0 0 15px rgba(229, 57, 53, 0.8); font-size: 1.8rem; }
 
-        .val-2048, .val-377, .val-768, .val-1597, .val-2584, .val-4181, .val-4096 {
+        .val-2048, .val-377, .val-768, .val-1597, .val-2584, .val-4181, .val-4096, .val-8192 {
             animation: milestoneAura 2s infinite alternate ease-in-out;
         }
 
@@ -313,7 +379,7 @@
 
         .controls {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             width: 100%;
             flex-wrap: wrap;
         }
@@ -322,9 +388,9 @@
             background: var(--btn-bg);
             color: var(--btn-c);
             border: 1px solid var(--btn-border);
-            padding: 12px 24px;
+            padding: 10px 16px;
             border-radius: 8px;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -340,12 +406,12 @@
         .size-controls {
             display: flex;
             gap: 5px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         button.size-btn {
-            padding: 8px 0;
-            font-size: 0.9rem;
+            padding: 6px 0;
+            font-size: 0.85rem;
             opacity: 0.7;
         }
         
@@ -358,7 +424,7 @@
         .game-over {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(5px);
             border-radius: 20px;
             display: flex;
@@ -377,7 +443,7 @@
         }
 
         .game-over h2 {
-            font-size: 3rem;
+            font-size: 2.5rem;
             margin-bottom: 20px;
             color: #fff;
         }
@@ -388,23 +454,23 @@
         
         @media (max-width: 500px) {
             .container { padding: 15px; width: 95%; }
-            h1 { font-size: 2.2rem; }
-            .tile { font-size: 1.5rem; }
+            h1 { font-size: 2rem; }
+            .tile { font-size: 1.4rem; }
         }
     </style>
 </head>
 <body>
     <div class="container" role="main">
         <div class="header">
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <h1>2048</h1>
-                <div id="timer-display" style="font-size: 1.5rem; font-weight: bold; color: #ff5555; display: none;" aria-label="Remaining Time">60s</div>
-                <select id="ruleset-select" onchange="setRuleset(this.value)" aria-label="Game Ruleset" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
+                <div id="timer-display" style="font-size: 1.3rem; font-weight: bold; color: #ff5555; display: none;" aria-label="Remaining Time">60s</div>
+                <select id="ruleset-select" onchange="setRuleset(this.value)" aria-label="Game Ruleset" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 4px; border-radius: 5px; cursor: pointer; outline: none; font-size:0.8rem;">
                     <option value="classic">Classic</option>
                     <option value="fibonacci">Fibonacci</option>
                     <option value="threes">Threes</option>
                 </select>
-                <select id="theme-select" onchange="setTheme(this.value)" aria-label="UI Theme" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 5px; border-radius: 5px; cursor: pointer; outline: none;">
+                <select id="theme-select" onchange="setTheme(this.value)" aria-label="UI Theme" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 4px; border-radius: 5px; cursor: pointer; outline: none; font-size:0.8rem;">
                     <option value="default">Dark</option>
                     <option value="classic">Classic</option>
                     <option value="pastel">Pastel</option>
@@ -421,33 +487,38 @@
                 </div>
             </div>
         </div>
+
+        <div class="stage-banner" id="stage-banner" style="display:none;">
+            <span id="stage-title">Stage 1: 3x3 Beginner</span>
+            <span id="stage-moves">Moves: 60/60</span>
+        </div>
+
         <div class="size-controls" role="toolbar" aria-label="Grid Size Selector">
             <button class="btn size-btn" onclick="setGridSize(3, this)" aria-label="3 by 3 Grid">3x3</button>
             <button class="btn size-btn active" onclick="setGridSize(4, this)" aria-label="4 by 4 Grid">4x4</button>
             <button class="btn size-btn" onclick="setGridSize(5, this)" aria-label="5 by 5 Grid">5x5</button>
             <button class="btn size-btn" onclick="setGridSize(6, this)" aria-label="6 by 6 Grid">6x6</button>
         </div>
-        <div id="powerup-display" style="text-align:center; color:var(--text-color); margin-bottom:15px; font-weight:bold;" aria-label="Available Powerups">
-            Shuf (E): 3 | Ham (Q): 3 | Rot (X): 3 | Upg (V): 1
+
+        <div class="skills-bar" role="toolbar" aria-label="Active Powerup Skills">
+            <button class="skill-btn" onclick="useUpgradeSkill()" id="btn-upg" title="Tile Upgrade (U)">[U] Upgrade (<span id="cnt-upg">3</span>)</button>
+            <button class="skill-btn" onclick="useRotateSkill()" id="btn-rot" title="Grid Rotate (R)">[R] Rotate (<span id="cnt-rot">3</span>)</button>
+            <button class="skill-btn" onclick="useHammerSkill()" id="btn-ham" title="Tile Smasher (H)">[H] Hammer (<span id="cnt-ham">3</span>)</button>
+            <button class="skill-btn" onclick="useUndoSkill()" id="btn-undo" title="Free Undo (Z)">[Z] Undo (<span id="cnt-undo">5</span>)</button>
         </div>
+
         <div class="board-container" aria-label="Game Board">
-            <div class="grid" id="grid-bg">
-                <!-- empty cells -->
-            </div>
-            <div class="tiles" id="tiles-container">
-                <!-- absolute positioned tiles -->
-            </div>
+            <div class="grid" id="grid-bg"></div>
+            <div class="tiles" id="tiles-container"></div>
             <canvas id="fx-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></canvas>
         </div>
+
         <div class="controls" role="toolbar" aria-label="Game Controls">
             <button class="btn" onclick="initGame()" aria-label="Start New Game">New Game</button>
             <button class="btn" onclick="toggleCampaign()" id="camp-btn" aria-label="Toggle Campaign Mode">Camp: Off</button>
             <button class="btn" onclick="toggleTimeAttack()" id="ta-btn" aria-label="Toggle Time Attack Mode">Time: Off</button>
             <button class="btn" onclick="toggleAutoPlay()" id="ap-btn" aria-label="Toggle Auto-Play">Auto: Off</button>
-            <button class="btn" onclick="toggleObstacles()" id="obs-btn" aria-label="Toggle Obstacles">Obs: Off</button>
-            <button class="btn" onclick="toggleBombs()" id="bomb-btn" aria-label="Toggle Bombs">Bomb: Off</button>
             <button class="btn" onclick="showStats()" aria-label="Show Statistics">Stats</button>
-            <button class="btn" onclick="undoMove()" aria-label="Undo Last Move">Undo</button>
             <button class="btn" onclick="showHelp()" aria-label="Show Help">Help</button>
         </div>
 
@@ -459,49 +530,44 @@
 
         <div class="game-over" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
             <h2 id="help-title">How to Play</h2>
-            <div id="help-content" style="color:white; font-size:1rem; margin-bottom:20px; text-align:left; line-height:1.4; max-height: 60vh; overflow-y: auto; padding: 10px; width: 90%;">
-                <p><b>Controls:</b> Arrow keys, WASD, or swipe to move tiles.</p>
-                <p><b>Hotkeys:</b><br>
-                U / Ctrl+Z: Undo<br>
-                E: Shuffle Powerup<br>
-                Q: Hammer Powerup<br>
-                X: Rotate Powerup<br>
-                V: Upgrade Powerup<br>
-                P: Auto-Play<br>
-                O: Toggle Obstacles<br>
-                B: Toggle Bombs<br>
-                F: Toggle Fibonacci Mode<br>
-                T: Change Theme<br>
-                I: Statistics<br>
-                M: Time Attack<br>
-                3, 4, 5, 6: Change Grid Size</p>
-                <p><b>Fibonacci/Threes Mode:</b> Merge Fib numbers or 1+2=3, 3+3=6.</p>
-                <p><b>Obstacles/Bombs:</b> Unmergeable blocks drop occasionally. Bombs destroy any tile.</p>
-                <p><b>Time Attack:</b> You have 60 seconds. Game over when time runs out.</p>
+            <div id="help-content" style="color:white; font-size:0.95rem; margin-bottom:20px; text-align:left; line-height:1.4; max-height: 60vh; overflow-y: auto; padding: 10px; width: 90%;">
+                <p><b>Controls:</b> Arrow keys, WASD, or swipe to slide tiles.</p>
+                <p><b>Active Skills / Hotkeys:</b><br>
+                <b>U</b>: Tile Upgrade (Doubles lowest tile)<br>
+                <b>R</b>: Grid Rotate (Rotates grid 90° clockwise)<br>
+                <b>H</b>: Hammer Smasher (Destroys 1 unwanted tile)<br>
+                <b>Z / Ctrl+Z</b>: Free Undo (Reverts last move)<br>
+                <b>N</b>: New Game / Restart<br>
+                <b>C</b>: Campaign Mode (30 Stages)<br>
+                <b>M</b>: Time Attack Toggle<br>
+                <b>P</b>: Auto-Play Toggle<br>
+                <b>F</b>: Cycle Ruleset<br>
+                <b>T</b>: Cycle Theme<br>
+                <b>3, 4, 5, 6</b>: Change Grid Dimensions</p>
+                <p><b>Special Tile Mechanics:</b><br>
+                ❄ <b>Frozen Tiles:</b> Must be merged TWICE to thaw and clear.<br>
+                💣 <b>Bomb Tiles:</b> Merging explodes 3x3 surrounding cells.<br>
+                ⭐ <b>Wildcard Gems:</b> Merges with any tile to upgrade it.<br>
+                ✖ <b>Stone Obstacles:</b> Impassable blocker blocks.</p>
             </div>
             <button class="btn" onclick="closeHelp()" style="width: auto;" aria-label="Close Help Dialog">Close</button>
         </div>
 
         <div class="game-over" id="game-over" role="dialog" aria-modal="true" aria-labelledby="go-title">
             <h2 id="go-title">Game Over!</h2>
-            <button class="btn" onclick="initGame()" style="width: auto;" aria-label="Restart Game">Try Again</button>
+            <button class="btn" onclick="restartOrNextStage()" style="width: auto;" aria-label="Try Again">Try Again</button>
         </div>
     </div>
 
     <script>
-        // Safe LocalStorage Wrappers to prevent crashes in restricted iframe / sandbox
         function safeGetStorage(key, fallback) {
             try {
                 const val = localStorage.getItem(key);
                 return val !== null ? val : fallback;
-            } catch (e) {
-                return fallback;
-            }
+            } catch (e) { return fallback; }
         }
         function safeSetStorage(key, val) {
-            try {
-                localStorage.setItem(key, val);
-            } catch (e) {}
+            try { localStorage.setItem(key, val); } catch (e) {}
         }
 
         const gridBg = document.getElementById('grid-bg');
@@ -540,18 +606,10 @@
             safeSetStorage('k2048_theme', themeName);
             themeSelect.value = themeName;
         }
-        
         let savedTheme = safeGetStorage('k2048_theme', 'default');
         setTheme(savedTheme);
 
         let gridSize = 4;
-
-        for (let i = 0; i < gridSize * gridSize; i++) {
-            const cell = document.createElement('div');
-            cell.classList.add('grid-cell');
-            gridBg.appendChild(cell);
-        }
-
         let grid = [];
         let score = 0;
         let ruleset = 'classic';
@@ -580,20 +638,59 @@
         let autoPlayInterval = null;
 
         let obstaclesEnabled = false;
+        let frozenTilesEnabled = false;
         let bombsEnabled = false;
         let moveCount = 0;
+        let movesLeft = 0;
+        let movesMax = 0;
 
         let campaignMode = false;
         let campaignLevel = 1;
-        
+
         let powerupsShuffles = 3;
         let powerupsHammers = 3;
         let powerupsRotates = 3;
-        let powerupsUpgrades = 1;
-        
+        let powerupsUpgrades = 3;
+        let powerupsUndos = 5;
+
+        const campaignStages = [
+            { level: 1,  size: 3, target: 256,  movesMax: 60,  timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 1: 3x3 Beginner (256)" },
+            { level: 2,  size: 4, target: 512,  movesMax: 100, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 2: 4x4 Standard (512)" },
+            { level: 3,  size: 4, target: 512,  movesMax: 80,  timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 3: Stone Blockers (512)" },
+            { level: 4,  size: 4, target: 1024, movesMax: 120, timeLimit: 90,  ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 4: Sprint Timer (1024)" },
+            { level: 5,  size: 5, target: 1024, movesMax: 150, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 5: Frozen Expansion (1024)" },
+            { level: 6,  size: 5, target: 2048, movesMax: 180, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 6: Bomb Hazards (2048)" },
+            { level: 7,  size: 5, target: 2584, movesMax: 180, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 0, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 7: Fibonacci Grid (2584)" },
+            { level: 8,  size: 4, target: 1536, movesMax: 100, timeLimit: 0,   ruleset: 'threes',    obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 8: Threes Challenge (1536)" },
+            { level: 9,  size: 6, target: 2048, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: false, bombsEnabled: false, desc: "Stage 9: Mega 6x6 Field (2048)" },
+            { level: 10, size: 5, target: 2048, movesMax: 150, timeLimit: 100, ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 10: Frozen & Explosive (2048)" },
+            { level: 11, size: 4, target: 2048, movesMax: 110, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: false, desc: "Stage 11: Tight Quarters (2048)" },
+            { level: 12, size: 5, target: 4096, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 12: Frostbite 5x5 (4096)" },
+            { level: 13, size: 5, target: 4096, movesMax: 180, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 13: Demolition Zone (4096)" },
+            { level: 14, size: 6, target: 4181, movesMax: 220, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 14: Fibonacci Grand 6x6 (4181)" },
+            { level: 15, size: 5, target: 3072, movesMax: 180, timeLimit: 0,   ruleset: 'threes',    obstacles: 2, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 15: Threes Mayhem (3072)" },
+            { level: 16, size: 4, target: 2048, movesMax: 90,  timeLimit: 60,  ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 16: Speed Blitz (2048)" },
+            { level: 17, size: 5, target: 4096, movesMax: 160, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 17: Ice & Stone (4096)" },
+            { level: 18, size: 6, target: 4096, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 18: Frozen Explosions (4096)" },
+            { level: 19, size: 5, target: 4096, movesMax: 150, timeLimit: 90,  ruleset: 'classic',   obstacles: 2, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 19: Time Crunch 5x5 (4096)" },
+            { level: 20, size: 6, target: 8192, movesMax: 250, timeLimit: 0,   ruleset: 'classic',   obstacles: 0, frozenEnabled: false, bombsEnabled: false, desc: "Stage 20: Titan Field (8192)" },
+            { level: 21, size: 4, target: 2048, movesMax: 80,  timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 21: Narrow Escape (2048)" },
+            { level: 22, size: 5, target: 4096, movesMax: 170, timeLimit: 0,   ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 22: Hazard Mayhem (4096)" },
+            { level: 23, size: 5, target: 6765, movesMax: 200, timeLimit: 0,   ruleset: 'fibonacci', obstacles: 2, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 23: Fibonacci Master (6765)" },
+            { level: 24, size: 6, target: 6144, movesMax: 250, timeLimit: 0,   ruleset: 'threes',    obstacles: 4, frozenEnabled: false, bombsEnabled: true,  desc: "Stage 24: Threes Titan (6144)" },
+            { level: 25, size: 5, target: 8192, movesMax: 200, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: false, desc: "Stage 25: Fortified Grid (8192)" },
+            { level: 26, size: 6, target: 8192, movesMax: 220, timeLimit: 0,   ruleset: 'classic',   obstacles: 2, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 26: Glacial Blast 6x6 (8192)" },
+            { level: 27, size: 5, target: 8192, movesMax: 180, timeLimit: 120, ruleset: 'classic',   obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 27: Chaos Time Attack (8192)" },
+            { level: 28, size: 6, target: 8192, movesMax: 250, timeLimit: 0,   ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 28: Minefield 6x6 (8192)" },
+            { level: 29, size: 6, target: 8192, movesMax: 220, timeLimit: 150, ruleset: 'fibonacci', obstacles: 3, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 29: Ultimate Trial (8192)" },
+            { level: 30, size: 6, target: 8192, movesMax: 180, timeLimit: 180, ruleset: 'classic',   obstacles: 4, frozenEnabled: true,  bombsEnabled: true,  desc: "Stage 30: 8192 Grandmaster Challenge" }
+        ];
+
         function updatePowerupsDisplay() {
-            const disp = document.getElementById('powerup-display');
-            if (disp) disp.textContent = `Shuf (E): ${powerupsShuffles} | Ham (Q): ${powerupsHammers} | Rot (X): ${powerupsRotates} | Upg (V): ${powerupsUpgrades}`;
+            document.getElementById('cnt-upg').textContent = powerupsUpgrades;
+            document.getElementById('cnt-rot').textContent = powerupsRotates;
+            document.getElementById('cnt-ham').textContent = powerupsHammers;
+            document.getElementById('cnt-undo').textContent = powerupsUndos;
         }
 
         let audioCtx = null;
@@ -624,88 +721,57 @@
             if (campaignMode) {
                 startCampaignLevel();
             } else {
+                document.getElementById('stage-banner').style.display = 'none';
                 initGame();
             }
         }
 
         function startCampaignLevel() {
-            gridSize = 4; timeAttackEnabled = false; obstaclesEnabled = false; bombsEnabled = false; ruleset = 'classic';
-            if (campaignLevel === 2) { timeAttackEnabled = true; }
-            else if (campaignLevel === 3) { obstaclesEnabled = true; }
-            else if (campaignLevel === 4) { gridSize = 5; timeAttackEnabled = true; obstaclesEnabled = true; }
-            else if (campaignLevel === 5) { gridSize = 5; timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'fibonacci'; }
-            else if (campaignLevel === 6) { gridSize = 5; bombsEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel === 7) { gridSize = 6; obstaclesEnabled = true; bombsEnabled = true; }
-            else if (campaignLevel === 8) { gridSize = 6; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
-            else if (campaignLevel === 9) { gridSize = 4; timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel === 10) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; }
-            else if (campaignLevel === 11) { gridSize = 5; timeAttackEnabled = true; }
-            else if (campaignLevel === 12) { gridSize = 5; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
-            else if (campaignLevel === 13) { gridSize = 4; timeAttackEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel === 14) { gridSize = 6; obstaclesEnabled = true; ruleset = 'fibonacci'; }
-            else if (campaignLevel === 15) { gridSize = 5; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel === 16) { gridSize = 6; timeAttackEnabled = true; }
-            else if (campaignLevel === 17) { gridSize = 5; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
-            else if (campaignLevel === 18) { gridSize = 6; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel === 19) { gridSize = 4; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; }
-            else if (campaignLevel === 20) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'fibonacci'; }
+            if (campaignLevel < 1) campaignLevel = 1;
+            if (campaignLevel > 30) campaignLevel = 30;
+            const stage = campaignStages[campaignLevel - 1];
 
-            else if (campaignLevel === 21) { gridSize = 5; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel === 22) { gridSize = 6; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel === 23) { gridSize = 4; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel === 24) { gridSize = 5; ruleset = 'threes'; }
-            else if (campaignLevel === 25) { gridSize = 6; ruleset = 'fibonacci'; }
-            else if (campaignLevel === 26) { gridSize = 5; timeAttackEnabled = true; obstaclesEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel === 27) { gridSize = 4; bombsEnabled = true; obstaclesEnabled = true; ruleset = 'classic'; }
-            else if (campaignLevel === 28) { gridSize = 6; timeAttackEnabled = true; bombsEnabled = true; ruleset = 'threes'; }
-            else if (campaignLevel === 29) { gridSize = 5; ruleset = 'fibonacci'; timeAttackEnabled = true; }
-            else if (campaignLevel >= 30) { gridSize = 6; timeAttackEnabled = true; obstaclesEnabled = true; bombsEnabled = true; ruleset = 'threes'; }
+            gridSize = stage.size;
+            timeAttackEnabled = stage.timeLimit > 0;
+            timeRemaining = stage.timeLimit;
+            obstaclesEnabled = stage.obstacles > 0;
+            frozenTilesEnabled = stage.frozenEnabled;
+            bombsEnabled = stage.bombsEnabled;
+            ruleset = stage.ruleset;
+            movesMax = stage.movesMax;
+            movesLeft = stage.movesMax;
+
+            document.getElementById('ruleset-select').value = ruleset;
+            document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: On" : "Time: Off";
 
             setGridSize(gridSize);
-            document.getElementById('ta-btn').textContent = timeAttackEnabled ? "Time: On" : "Time: Off";
-            document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
-            document.getElementById('ruleset-select').value = ruleset;
-            if (!campaignMode) initGame();
-            if (campaignMode) {
-                if (campaignLevel === 2) timeRemaining = 120;
-                else if (campaignLevel === 4) timeRemaining = 90;
-                else if (campaignLevel === 5) timeRemaining = 60;
-                else if (campaignLevel === 8) timeRemaining = 90;
-                else if (campaignLevel === 9) timeRemaining = 60;
-                else if (campaignLevel === 10) timeRemaining = 120;
-                else if (campaignLevel === 11) timeRemaining = 100;
-                else if (campaignLevel === 13) timeRemaining = 50;
-                else if (campaignLevel === 15) timeRemaining = 80;
-                else if (campaignLevel === 16) timeRemaining = 120;
-                else if (campaignLevel === 19) timeRemaining = 45;
-                else if (campaignLevel === 20) timeRemaining = 90;
 
-                else if (campaignLevel === 21) timeRemaining = 120;
-                else if (campaignLevel === 23) timeRemaining = 90;
-                else if (campaignLevel === 26) timeRemaining = 100;
-                else if (campaignLevel === 28) timeRemaining = 150;
-                else if (campaignLevel === 29) timeRemaining = 120;
-                else if (campaignLevel >= 30) timeRemaining = 180;
+            const banner = document.getElementById('stage-banner');
+            banner.style.display = 'flex';
+            document.getElementById('stage-title').textContent = stage.desc;
+            document.getElementById('stage-moves').textContent = `Moves: ${movesLeft}/${movesMax}`;
 
-                if (timeAttackEnabled) {
-                    document.getElementById('timer-display').textContent = timeRemaining + "s";
-                    document.getElementById('timer-display').style.display = "block";
-                } else {
-                    document.getElementById('timer-display').style.display = "none";
+            if (stage.obstacles > 0) {
+                let placed = 0;
+                while (placed < stage.obstacles) {
+                    let idx = Math.floor(Math.random() * (gridSize * gridSize));
+                    if (grid[idx] === null) {
+                        const tile = { id: tileIdCounter++, val: -1, x: idx % gridSize, y: Math.floor(idx / gridSize), frozen: false };
+                        grid[idx] = tile;
+                        tiles.push(tile);
+                        createTileEl(tile, true);
+                        placed++;
+                    }
                 }
             }
         }
 
-        function toggleObstacles() {
-            obstaclesEnabled = !obstaclesEnabled;
-            document.getElementById('obs-btn').textContent = obstaclesEnabled ? "Obs: On" : "Obs: Off";
-            initGame();
-        }
-
-        function toggleBombs() {
-            bombsEnabled = !bombsEnabled;
-            document.getElementById('bomb-btn').textContent = bombsEnabled ? "Bomb: On" : "Bomb: Off";
-            initGame();
+        function restartOrNextStage() {
+            if (campaignMode) {
+                startCampaignLevel();
+            } else {
+                initGame();
+            }
         }
 
         function toggleAutoPlay() {
@@ -736,14 +802,15 @@
             initGame();
         }
 
-        // Represents a tile: {id, val, x, y, el}
         let tiles = [];
 
         function setGridSize(size, btnEl) {
             if (isAnimating) return;
             gridSize = size;
-            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-            if (btnEl) btnEl.classList.add('active');
+            document.querySelectorAll('.size-btn').forEach((b, idx) => {
+                if (idx === size - 3) b.classList.add('active');
+                else b.classList.remove('active');
+            });
 
             bestScore = parseInt(safeGetStorage('k2048_best_score_' + gridSize + (ruleset === 'fibonacci' ? '_fib' : (ruleset === 'threes' ? '_threes' : '')), '0')) || 0;
             if (gridSize === 4 && ruleset === 'classic' && bestScore === 0) {
@@ -764,7 +831,27 @@
                 gridBg.appendChild(cell);
             }
             
-            initGame();
+            if (!campaignMode) initGame();
+            else {
+                grid = Array(gridSize * gridSize).fill(null);
+                tiles.forEach(t => { if (t.el) t.el.remove(); });
+                tiles = [];
+                score = 0;
+                isGameOverState = false;
+                isAnimating = false;
+                historyStack = [];
+                gameStarted = false;
+                moveCount = 0;
+                powerupsShuffles = 3;
+                powerupsHammers = 3;
+                powerupsRotates = 3;
+                powerupsUpgrades = 3;
+                powerupsUndos = 5;
+                updatePowerupsDisplay();
+                gameOverEl.classList.remove('active');
+                addRandomTile();
+                addRandomTile();
+            }
         }
 
         function initGame() {
@@ -778,10 +865,12 @@
             gameStarted = false;
             moveCount = 0;
             timeRemaining = 60;
+            movesLeft = movesMax;
             powerupsShuffles = 3;
             powerupsHammers = 3;
             powerupsRotates = 3;
-            powerupsUpgrades = 1;
+            powerupsUpgrades = 3;
+            powerupsUndos = 5;
             updatePowerupsDisplay();
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
@@ -809,6 +898,8 @@
         setTimeout(resizeFxCanvas, 100);
 
         function getTileHexColor(val) {
+            if (val >= 8192) return '#00e5ff';
+            if (val >= 4096) return '#e040fb';
             if (val >= 2048) return '#ffd700';
             if (val >= 1024) return '#5bc3f8';
             if (val >= 512) return '#5cd883';
@@ -885,29 +976,32 @@
             }
         }
 
-        function getBadgeSvgHtml(val) {
+        function getBadgeSvgHtml(val, frozen) {
+            let svg = '';
             if (val >= 2048) {
-                return `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:16px; height:16px; fill:#ffd700; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events:none;"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>`;
+                svg = `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:16px; height:16px; fill:#ffd700; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events:none;"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>`;
             } else if (val >= 1024) {
-                return `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:14px; height:14px; fill:#e0f7fa; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events:none;"><polygon points="12,2 22,12 12,22 2,12"/></svg>`;
-            } else if (val >= 256) {
-                return `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:13px; height:13px; fill:#fff59d; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events:none;"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>`;
+                svg = `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:14px; height:14px; fill:#e0f7fa; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5)); pointer-events:none;"><polygon points="12,2 22,12 12,22 2,12"/></svg>`;
             } else if (val === -3) {
-                return `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:15px; height:15px; fill:#ff5252; pointer-events:none;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+                svg = `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:15px; height:15px; fill:#ff5252; pointer-events:none;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
             } else if (val === -2) {
-                return `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:15px; height:15px; fill:#ffd700; pointer-events:none;"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>`;
+                svg = `<svg viewBox="0 0 24 24" style="position:absolute; top:4px; right:4px; width:15px; height:15px; fill:#ffd700; pointer-events:none;"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9"/></svg>`;
             }
-            return '';
+
+            if (frozen) {
+                svg += `<div class="frozen-badge">❄</div>`;
+            }
+            return svg;
         }
 
         function createTileEl(tile, isNew) {
             const el = document.createElement('div');
-            el.className = `tile val-${tile.val} ${isNew ? 'new' : ''}`;
+            el.className = `tile val-${tile.val} ${tile.frozen ? 'tile-frozen' : ''} ${isNew ? 'new' : ''}`;
             el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
             
             const inner = document.createElement('div');
             inner.className = 'tile-inner';
-            inner.innerHTML = (tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : (tile.val === -3 ? 'B' : tile.val))) + getBadgeSvgHtml(tile.val);
+            inner.innerHTML = (tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : (tile.val === -3 ? 'B' : tile.val))) + getBadgeSvgHtml(tile.val, tile.frozen);
             el.appendChild(inner);
             
             tilesContainer.appendChild(el);
@@ -921,9 +1015,9 @@
         function updateTileEl(tile, isMerged) {
             if (!tile.el) return;
             tile.el.style.transform = `translate(calc(${tile.x} * var(--translate-pct, 113.1868%)), calc(${tile.y} * var(--translate-pct, 113.1868%)))`;
-            tile.el.className = `tile val-${tile.val} ${isMerged ? 'merged' : ''}`;
+            tile.el.className = `tile val-${tile.val} ${tile.frozen ? 'tile-frozen' : ''} ${isMerged ? 'merged' : ''}`;
             if (tile.el.firstChild) {
-                tile.el.firstChild.innerHTML = (tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : (tile.val === -3 ? 'B' : tile.val))) + getBadgeSvgHtml(tile.val);
+                tile.el.firstChild.innerHTML = (tile.val === -2 ? 'W' : (tile.val === -1 ? 'X' : (tile.val === -3 ? 'B' : tile.val))) + getBadgeSvgHtml(tile.val, tile.frozen);
             }
             if (isMerged) {
                 setTimeout(() => { if (tile.el) tile.el.classList.remove('merged'); }, 200);
@@ -941,18 +1035,24 @@
                 if (ruleset === 'fibonacci') val = 1;
                 else if (ruleset === 'threes') val = Math.random() < 0.5 ? 1 : 2;
 
+                let isFrozen = false;
+
                 if (obstaclesEnabled && moveCount > 0 && moveCount % 5 === 0) {
                     val = -1;
-                } else if (bombsEnabled && Math.random() < 0.033) {
+                } else if (bombsEnabled && Math.random() < 0.04) {
                     val = -3;
                 } else if (Math.random() < 0.05) {
                     val = -2;
+                } else if (frozenTilesEnabled && Math.random() < 0.3) {
+                    isFrozen = true;
                 }
+
                 const tile = {
                     id: tileIdCounter++,
                     val: val,
                     x: randomIdx % gridSize,
-                    y: Math.floor(randomIdx / gridSize)
+                    y: Math.floor(randomIdx / gridSize),
+                    frozen: isFrozen
                 };
                 if (val > stats.highestTile && val !== -1 && val !== -2) {
                     stats.highestTile = val;
@@ -970,41 +1070,14 @@
                 bestScore = score;
                 safeSetStorage(key, bestScore);
                 if (gridSize === 4 && ruleset === 'classic') {
-                    safeSetStorage('k2048_best_score', bestScore); // Backwards compat
+                    safeSetStorage('k2048_best_score', bestScore);
                 }
             }
             if (campaignMode) {
-                let target = 128;
-                if (campaignLevel === 3) target = 256;
-                else if (campaignLevel === 4) target = 512;
-                else if (campaignLevel === 5) target = 55;
-                else if (campaignLevel === 6) target = 192;
-                else if (campaignLevel === 7) target = 1024;
-                else if (campaignLevel === 8) target = 144;
-                else if (campaignLevel === 9) target = 96;
-                else if (campaignLevel === 10) target = 2048;
-                else if (campaignLevel === 11) target = 1024;
-                else if (campaignLevel === 12) target = 144;
-                else if (campaignLevel === 13) target = 48;
-                else if (campaignLevel === 14) target = 1597;
-                else if (campaignLevel === 15) target = 384;
-                else if (campaignLevel === 16) target = 4096;
-                else if (campaignLevel === 17) target = 610;
-                else if (campaignLevel === 18) target = 768;
-                else if (campaignLevel === 19) target = 8192;
-                else if (campaignLevel === 20) target = 2584;
-                else if (campaignLevel === 21) target = 2048;
-                else if (campaignLevel === 22) target = 4096;
-                else if (campaignLevel === 23) target = 1024;
-                else if (campaignLevel === 24) target = 1536;
-                else if (campaignLevel === 25) target = 6765;
-                else if (campaignLevel === 26) target = 4096;
-                else if (campaignLevel === 27) target = 512;
-                else if (campaignLevel === 28) target = 3072;
-                else if (campaignLevel === 29) target = 10946;
-                else if (campaignLevel >= 30) target = 6144;
-                scoreEl.innerHTML = score + "<br><span style='font-size:0.5em'>Target: " + target + "</span>";
+                const stage = campaignStages[campaignLevel - 1];
+                scoreEl.innerHTML = score + "<br><span style='font-size:0.5em'>Target: " + stage.target + "</span>";
                 bestScoreEl.textContent = "Lvl " + campaignLevel;
+                document.getElementById('stage-moves').textContent = `Moves: ${movesLeft}/${movesMax}`;
             } else {
                 scoreEl.textContent = score;
                 bestScoreEl.textContent = bestScore;
@@ -1054,14 +1127,31 @@
                 if (i + 1 < filtered.length && filtered[i].val !== -1 && filtered[i+1].val !== -1) {
                     let mergeResult = getMergeResult(filtered[i].val, filtered[i+1].val);
                     if (mergeResult !== 0) {
-                        if (mergeResult === -100) {
+                        if (mergeResult === -100) { // Bomb explosion
                             score += 10;
+                            let targetX = filtered[i+1].x;
+                            let targetY = filtered[i+1].y;
+                            for (let r = targetY - 1; r <= targetY + 1; r++) {
+                                for (let c = targetX - 1; c <= targetX + 1; c++) {
+                                    if (r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
+                                        let pos = r * gridSize + c;
+                                        if (grid[pos]) {
+                                            if (grid[pos].el) grid[pos].el.remove();
+                                            tiles = tiles.filter(ti => ti.id !== grid[pos].id);
+                                            grid[pos] = null;
+                                        }
+                                    }
+                                }
+                            }
+                            spawnWebParticles(targetX, targetY, -3);
                             i += 2;
                             continue;
                         } else {
+                            let isFrozenMerge = filtered[i].frozen || filtered[i+1].frozen;
                             let mergedTile = {
                                 ...filtered[i],
                                 val: mergeResult,
+                                frozen: false, // Thaws out on merge!
                                 mergePartner: filtered[i+1]
                             };
                             result.push(mergedTile);
@@ -1069,39 +1159,15 @@
                             stats.tilesMerged++;
                             if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
                             if (campaignMode && mergedTile.val > 0) {
-                                let target = 128;
-                                if (campaignLevel === 3) target = 256;
-                                else if (campaignLevel === 4) target = 512;
-                                else if (campaignLevel === 5) target = 55;
-                                else if (campaignLevel === 6) target = 192;
-                                else if (campaignLevel === 7) target = 1024;
-                                else if (campaignLevel === 8) target = 144;
-                                else if (campaignLevel === 9) target = 96;
-                                else if (campaignLevel === 10) target = 2048;
-                                else if (campaignLevel === 11) target = 1024;
-                                else if (campaignLevel === 12) target = 144;
-                                else if (campaignLevel === 13) target = 48;
-                                else if (campaignLevel === 14) target = 1597;
-                                else if (campaignLevel === 15) target = 384;
-                                else if (campaignLevel === 16) target = 4096;
-                                else if (campaignLevel === 17) target = 610;
-                                else if (campaignLevel === 18) target = 768;
-                                else if (campaignLevel === 19) target = 8192;
-                                else if (campaignLevel === 20) target = 2584;
-                                else if (campaignLevel === 21) target = 2048;
-                                else if (campaignLevel === 22) target = 4096;
-                                else if (campaignLevel === 23) target = 1024;
-                                else if (campaignLevel === 24) target = 1536;
-                                else if (campaignLevel === 25) target = 6765;
-                                else if (campaignLevel === 26) target = 4096;
-                                else if (campaignLevel === 27) target = 512;
-                                else if (campaignLevel === 28) target = 3072;
-                                else if (campaignLevel === 29) target = 10946;
-                                else if (campaignLevel >= 30) target = 6144;
+                                let target = campaignStages[campaignLevel - 1].target;
                                 if (mergedTile.val >= target) {
                                     setTimeout(() => {
-                                        alert("Level " + campaignLevel + " Complete!");
+                                        alert("Stage " + campaignLevel + " Complete!");
                                         campaignLevel++;
+                                        if (campaignLevel > 30) {
+                                            alert("Congratulations! You completed all 30 Campaign Stages!");
+                                            campaignLevel = 1;
+                                        }
                                         startCampaignLevel();
                                     }, 100);
                                 }
@@ -1215,17 +1281,105 @@
         function cloneState() {
             let clonedGrid = grid.map(tile => {
                 if (!tile) return null;
-                return { id: tile.id, val: tile.val, x: tile.x, y: tile.y };
+                return { id: tile.id, val: tile.val, x: tile.x, y: tile.y, frozen: tile.frozen };
             });
-            return { grid: clonedGrid, score: score };
+            return { grid: clonedGrid, score: score, movesLeft: movesLeft };
         }
 
-        function undoMove() {
-            if (historyStack.length === 0 || isAnimating) return;
+        function useUpgradeSkill() {
+            if (powerupsUpgrades <= 0 || isGameOverState || isAnimating) return;
+            let minVal = 999999;
+            let targetTile = null;
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i] !== null && grid[i].val > 0 && grid[i].val < minVal) {
+                    minVal = grid[i].val;
+                    targetTile = grid[i];
+                }
+            }
+            if (targetTile !== null) {
+                powerupsUpgrades--;
+                updatePowerupsDisplay();
+                let nextVal = minVal * 2;
+                if (ruleset === 'fibonacci') {
+                    const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
+                    let fIdx = fibs.indexOf(minVal);
+                    if (fIdx >= 0) nextVal = fibs[fIdx+1];
+                } else if (ruleset === 'threes') {
+                    if (minVal === 1 || minVal === 2) nextVal = 3;
+                    else nextVal = minVal * 2;
+                }
+                targetTile.val = nextVal;
+                targetTile.frozen = false;
+                updateTileEl(targetTile, true);
+                spawnWebParticles(targetTile.x, targetTile.y, nextVal);
+                playBeep(nextVal);
+            }
+        }
+
+        function useRotateSkill() {
+            if (powerupsRotates <= 0 || isGameOverState || isAnimating) return;
+            powerupsRotates--;
+            updatePowerupsDisplay();
+            let tempGrid = Array(gridSize * gridSize).fill(null);
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    let tile = grid[i * gridSize + j];
+                    if (tile) {
+                        let newX = gridSize - 1 - i;
+                        let newY = j;
+                        tile.x = newX;
+                        tile.y = newY;
+                        tempGrid[newY * gridSize + newX] = tile;
+                        updateTileEl(tile, false);
+                    }
+                }
+            }
+            grid = tempGrid;
+            playBeep(400);
+        }
+
+        function useHammerSkill() {
+            if (powerupsHammers <= 0 || isGameOverState || isAnimating) return;
+            let targetTile = null;
+            let targetPos = -1;
+            // Prefer stone obstacle
+            for (let i=0; i<grid.length; i++) {
+                if (grid[i] !== null && grid[i].val === -1) {
+                    targetTile = grid[i];
+                    targetPos = i;
+                    break;
+                }
+            }
+            if (!targetTile) {
+                let minVal = 999999;
+                for (let i=0; i<grid.length; i++) {
+                    if (grid[i] !== null && grid[i].val > 0 && grid[i].val < minVal) {
+                        minVal = grid[i].val;
+                        targetTile = grid[i];
+                        targetPos = i;
+                    }
+                }
+            }
+            if (targetTile !== null) {
+                powerupsHammers--;
+                updatePowerupsDisplay();
+                spawnWebParticles(targetTile.x, targetTile.y, -3);
+                grid[targetPos] = null;
+                if (targetTile.el) targetTile.el.remove();
+                tiles = tiles.filter(t => t.id !== targetTile.id);
+                playBeep(200);
+            }
+        }
+
+        function useUndoSkill() {
+            if (historyStack.length === 0 || powerupsUndos <= 0 || isAnimating) return;
+            powerupsUndos--;
+            updatePowerupsDisplay();
             let lastState = historyStack.pop();
             
             grid = lastState.grid;
             score = lastState.score;
+            movesLeft = lastState.movesLeft;
             isGameOverState = false;
             gameOverEl.classList.remove('active');
             
@@ -1240,6 +1394,7 @@
                 }
             }
             updateScore();
+            playBeep(500);
         }
 
         function handleInput(dir) {
@@ -1254,6 +1409,10 @@
 
             if (changed) {
                 moveCount++;
+                if (movesMax > 0) {
+                    movesLeft--;
+                }
+
                 if (!gameStarted) {
                     gameStarted = true;
                     if (timeAttackEnabled) {
@@ -1278,39 +1437,14 @@
                 playBeep(max_val);
 
                 if (campaignMode) {
-                    let target = 128;
-                    if (campaignLevel === 3) target = 256;
-                    else if (campaignLevel === 4) target = 512;
-                    else if (campaignLevel === 5) target = 55;
-                    else if (campaignLevel === 6) target = 192;
-                    else if (campaignLevel === 7) target = 1024;
-                    else if (campaignLevel === 8) target = 144;
-                    else if (campaignLevel === 9) target = 96;
-                    else if (campaignLevel === 10) target = 2048;
-                    else if (campaignLevel === 11) target = 1024;
-                    else if (campaignLevel === 12) target = 144;
-                    else if (campaignLevel === 13) target = 48;
-                    else if (campaignLevel === 14) target = 1597;
-                    else if (campaignLevel === 15) target = 384;
-                    else if (campaignLevel === 16) target = 4096;
-                    else if (campaignLevel === 17) target = 610;
-                    else if (campaignLevel === 18) target = 768;
-                    else if (campaignLevel === 19) target = 8192;
-                    else if (campaignLevel === 20) target = 2584;
-                    else if (campaignLevel === 21) target = 2048;
-                    else if (campaignLevel === 22) target = 4096;
-                    else if (campaignLevel === 23) target = 1024;
-                    else if (campaignLevel === 24) target = 1536;
-                    else if (campaignLevel === 25) target = 6765;
-                    else if (campaignLevel === 26) target = 4096;
-                    else if (campaignLevel === 27) target = 512;
-                    else if (campaignLevel === 28) target = 3072;
-                    else if (campaignLevel === 29) target = 10946;
-                    else if (campaignLevel >= 30) target = 6144;
-                    
+                    let target = campaignStages[campaignLevel - 1].target;
                     if (max_val >= target) {
-                        alert("Level " + campaignLevel + " Complete!");
+                        alert("Stage " + campaignLevel + " Complete!");
                         campaignLevel++;
+                        if (campaignLevel > 30) {
+                            alert("Congratulations! You completed all 30 Campaign Stages!");
+                            campaignLevel = 1;
+                        }
                         startCampaignLevel();
                         return true;
                     }
@@ -1320,17 +1454,26 @@
                 if (historyStack.length > 50) historyStack.shift();
                 updateScore();
                 isAnimating = true;
+
                 setTimeout(() => {
                     addRandomTile();
                     isAnimating = false;
                     saveStats();
-                    if (isGameOver()) {
+
+                    if (movesMax > 0 && movesLeft <= 0) {
+                        isGameOverState = true;
+                        stats.gamesPlayed++;
+                        saveStats();
+                        gameOverEl.querySelector('h2').textContent = "Out of Moves!";
+                        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+                        setTimeout(() => gameOverEl.classList.add('active'), 400);
+                    } else if (isGameOver()) {
                         isGameOverState = true;
                         stats.gamesPlayed++;
                         saveStats();
                         gameOverEl.querySelector('h2').textContent = "Game Over!";
                         if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-                        setTimeout(() => gameOverEl.classList.add('active'), 500);
+                        setTimeout(() => gameOverEl.classList.add('active'), 400);
                     }
                 }, 150);
             }
@@ -1350,117 +1493,20 @@
 
             if (autoPlayEnabled && e.key.toLowerCase() !== 'p') toggleAutoPlay();
 
-            if (e.key === 'z' && e.ctrlKey) { undoMove(); return; }
+            if (e.key === 'z' && e.ctrlKey) { useUndoSkill(); return; }
             let k = e.key.toLowerCase();
-            if (k === 'u') { undoMove(); return; }
+            if (k === 'u') { useUpgradeSkill(); return; }
+            if (k === 'r') { useRotateSkill(); return; }
+            if (k === 'h') { useHammerSkill(); return; }
+            if (k === 'z') { useUndoSkill(); return; }
+            if (k === 'n') { restartOrNextStage(); return; }
+            if (k === 'c') { toggleCampaign(); return; }
             if (k === 'p') { toggleAutoPlay(); return; }
-            if (k === 'o') { toggleObstacles(); return; }
-            if (k === 'e') {
-                if (powerupsShuffles > 0 && !isGameOverState && !isAnimating) {
-                    powerupsShuffles--;
-                    updatePowerupsDisplay();
-                    let nonNullTiles = grid.filter(t => t !== null && t.val !== -1);
-                    let emptyOrFilledPositions = [];
-                    for (let i=0; i<grid.length; i++) {
-                        if (grid[i] === null || grid[i].val !== -1) {
-                            emptyOrFilledPositions.push(i);
-                        }
-                    }
-                    nonNullTiles.sort(() => Math.random() - 0.5);
-                    
-                    for (let i=0; i<emptyOrFilledPositions.length; i++) {
-                        grid[emptyOrFilledPositions[i]] = null;
-                    }
-                    let idx = 0;
-                    for (let pos of emptyOrFilledPositions) {
-                        if (idx < nonNullTiles.length) {
-                            let tile = nonNullTiles[idx];
-                            tile.x = pos % gridSize;
-                            tile.y = Math.floor(pos / gridSize);
-                            grid[pos] = tile;
-                            updateTileEl(tile, false);
-                            idx++;
-                        }
-                    }
-                }
-                return;
-            }
-            if (k === 'x') {
-                if (powerupsRotates > 0 && !isGameOverState && !isAnimating) {
-                    powerupsRotates--;
-                    updatePowerupsDisplay();
-                    let tempGrid = Array(gridSize * gridSize).fill(null);
-                    for (let i = 0; i < gridSize; i++) {
-                        for (let j = 0; j < gridSize; j++) {
-                            let tile = grid[i * gridSize + j];
-                            if (tile) {
-                                let newX = gridSize - 1 - i;
-                                let newY = j;
-                                tile.x = newX;
-                                tile.y = newY;
-                                tempGrid[newY * gridSize + newX] = tile;
-                                updateTileEl(tile, false);
-                            }
-                        }
-                    }
-                    grid = tempGrid;
-                }
-                return;
-            }
-            if (k === 'v') {
-                if (powerupsUpgrades > 0 && !isGameOverState && !isAnimating) {
-                    let maxVal = -1;
-                    let targetTile = null;
-                    for (let i = 0; i < grid.length; i++) {
-                        if (grid[i] !== null && grid[i].val > maxVal) {
-                            maxVal = grid[i].val;
-                            targetTile = grid[i];
-                        }
-                    }
-                    if (targetTile !== null) {
-                        powerupsUpgrades--;
-                        updatePowerupsDisplay();
-                        let nextVal = maxVal * 2;
-                        if (ruleset === 'fibonacci') {
-                            const fibs = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597, 2584, 4181, 6765, 10946, 17711, 28657, 46368, 75025];
-                            let fIdx = fibs.indexOf(maxVal);
-                            if (fIdx >= 0) nextVal = fibs[fIdx+1];
-                        } else if (ruleset === 'threes') {
-                            if (maxVal === 1 || maxVal === 2) nextVal = 3;
-                            else nextVal = maxVal * 2;
-                        }
-                        targetTile.val = nextVal;
-                        updateTileEl(targetTile, true);
-                    }
-                }
-                return;
-            }
-            if (k === 'q') {
-                if (powerupsHammers > 0 && !isGameOverState && !isAnimating) {
-                    let minVal = 9999999;
-                    let targetTile = null;
-                    let targetPos = -1;
-                    for (let i=0; i<grid.length; i++) {
-                        if (grid[i] !== null && grid[i].val > 0 && grid[i].val < minVal) {
-                            minVal = grid[i].val;
-                            targetTile = grid[i];
-                            targetPos = i;
-                        }
-                    }
-                    if (targetTile !== null) {
-                        powerupsHammers--;
-                        updatePowerupsDisplay();
-                        grid[targetPos] = null;
-                        if (targetTile.el) targetTile.el.remove();
-                        tiles = tiles.filter(t => t.id !== targetTile.id);
-                    }
-                }
-                return;
-            }
             if (k === 'f') { 
-                let newRuleset = ruleset === 'classic' ? 'fibonacci' : 'classic';
-                document.getElementById('ruleset-select').value = newRuleset;
-                setRuleset(newRuleset); 
+                let modes = ['classic', 'fibonacci', 'threes'];
+                let next = modes[(modes.indexOf(ruleset) + 1) % modes.length];
+                document.getElementById('ruleset-select').value = next;
+                setRuleset(next); 
                 return; 
             }
             if (k === 't') { 
@@ -1471,7 +1517,7 @@
             }
             if (k === 'i') { showStats(); return; }
             if (k === 'm') { toggleTimeAttack(); return; }
-            if (k === 'h') { showHelp(); return; }
+            if (k === '?' || (e.shiftKey && k === 'h')) { showHelp(); return; }
             if (e.key >= '3' && e.key <= '6') { 
                 let btn = document.querySelectorAll('.size-btn')[parseInt(e.key)-3];
                 setGridSize(parseInt(e.key), btn); 
