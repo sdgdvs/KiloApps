@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KAudio
+**Target App:** KBBS
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -167,3 +167,5 @@ Pass 1 Complete.
 
 ## Pass 3 Completed Apps
 - **K2048**: Added `localStorage` try/catch safety wrappers (`safeGetStorage`, `safeSetStorage`), self-canceling `requestAnimationFrame` loop, non-passive `touchmove` scroll prevention, keydown input scoping, and ARIA roles/labels in `k2048.html`. Corrected game mode win conditions, added active particle/milestone timer invalidations, and added explicit `KillTimer` cleanups on `WM_DESTROY` in `main.c`.
+
+- **KAudio**: Added Web Audio API context auto-resumption, master gain node (0.25) to prevent clipping, click-free exponential release ramps, touch screen event support, and ARIA piano key attributes in `kaudio.html`. Added mouse click-and-drag key playing, auto-repeat keyboard guards, exact `AdjustWindowRect` sizing, and MIDI note clamping in `main.c`.
