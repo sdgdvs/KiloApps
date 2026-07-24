@@ -112,7 +112,9 @@
     transition: border-color 0.2s;
   }
 
-  input[type="text"]:focus, input[type="password"]:focus, select:focus {
+  input[type="text"]:focus-visible, input[type="password"]:focus-visible, select:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 1px;
     border-color: var(--accent-blue);
   }
 
@@ -172,6 +174,12 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow-y: auto;
+    position: relative;
+  }
+
+  .table-container.drag-over {
+    border: 2px dashed var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.05);
   }
 
   table {
@@ -276,55 +284,55 @@
 </head>
 <body>
 
-<div class="header">
+<header class="header">
   <div class="title-group">
-    <div class="app-icon">KZ</div>
-    <div class="app-title">KZip Archiver Studio</div>
+    <div class="app-icon" aria-hidden="true">KZ</div>
+    <h1 class="app-title">KZip Archiver Studio</h1>
   </div>
-  <div class="stats-pill" id="statsPill">0 Files | 0 B</div>
-</div>
+  <div class="stats-pill" id="statsPill" aria-live="polite">0 Files | 0 B</div>
+</header>
 
-<div class="toolbar">
+<div class="toolbar" role="toolbar" aria-label="Archive Controls">
   <div class="toolbar-group">
-    <span class="toolbar-label">Filter:</span>
-    <input type="text" id="searchInput" class="search-input" placeholder="Search files...">
+    <label for="searchInput" class="toolbar-label">Filter:</label>
+    <input type="text" id="searchInput" class="search-input" placeholder="Search files..." aria-label="Filter files by name">
   </div>
 
   <div class="toolbar-group">
-    <span class="toolbar-label">Method:</span>
-    <select id="compMethod">
+    <label for="compMethod" class="toolbar-label">Method:</label>
+    <select id="compMethod" aria-label="Compression method">
       <option value="1">RLE Fast (Run-Length)</option>
       <option value="0">Store (Uncompressed)</option>
     </select>
   </div>
 
   <div class="toolbar-group">
-    <span class="toolbar-label">Password:</span>
-    <input type="password" id="passwordInput" class="password-input" placeholder="Optional password">
+    <label for="passwordInput" class="toolbar-label">Password:</label>
+    <input type="password" id="passwordInput" class="password-input" placeholder="Optional password" aria-label="Archive password">
   </div>
 </div>
 
-<div class="actions-row">
-  <button id="btnOpen">📂 Open .kza</button>
-  <button id="btnAdd">➕ Add File...</button>
-  <button id="btnRemove" class="btn-danger">🗑️ Remove</button>
-  <button id="btnPack" class="btn-primary">📦 Pack to .kza</button>
-  <button id="btnExtractSel">🎯 Extract Selected</button>
-  <button id="btnExtractAll">⚡ Extract All</button>
-  <button id="btnVerify">🛡️ Verify CRC32</button>
+<div class="actions-row" role="region" aria-label="Archive Operations">
+  <button id="btnOpen" aria-label="Open KZA archive">📂 Open .kza</button>
+  <button id="btnAdd" aria-label="Add file to archive">➕ Add File...</button>
+  <button id="btnRemove" class="btn-danger" aria-label="Remove selected files">🗑️ Remove</button>
+  <button id="btnPack" class="btn-primary" aria-label="Pack archive to KZA file">📦 Pack to .kza</button>
+  <button id="btnExtractSel" aria-label="Extract selected files">🎯 Extract Selected</button>
+  <button id="btnExtractAll" aria-label="Extract all files">⚡ Extract All</button>
+  <button id="btnVerify" aria-label="Verify CRC32 integrity">🛡️ Verify CRC32</button>
 </div>
 
-<div class="table-container">
+<div class="table-container" id="dropZone" tabindex="0" aria-label="Archive file list. Press Delete to remove selected files.">
   <table>
     <thead>
       <tr>
-        <th style="width: 30px;"><input type="checkbox" id="selectAll"></th>
-        <th>Filename</th>
-        <th>Original Size</th>
-        <th>Packed Size</th>
-        <th>Savings</th>
-        <th>CRC32</th>
-        <th>Method</th>
+        <th scope="col" style="width: 30px;"><input type="checkbox" id="selectAll" aria-label="Select all files"></th>
+        <th scope="col">Filename</th>
+        <th scope="col">Original Size</th>
+        <th scope="col">Packed Size</th>
+        <th scope="col">Savings</th>
+        <th scope="col">CRC32</th>
+        <th scope="col">Method</th>
       </tr>
     </thead>
     <tbody id="fileTableBody">
@@ -332,22 +340,22 @@
   </table>
 </div>
 
-<div class="status-footer">
-  <span id="statusMessage">Ready.</span>
-  <span id="overallSavings">Total Savings: 0%</span>
-</div>
+<footer class="status-footer">
+  <span id="statusMessage" aria-live="polite">Ready.</span>
+  <span id="overallSavings" aria-live="polite">Total Savings: 0%</span>
+</footer>
 
 <!-- Integrity Modal -->
-<div class="modal-overlay" id="verifyModal">
+<div class="modal-overlay" id="verifyModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal-box">
     <div class="modal-header">
-      <span>Checksum & Integrity Verification</span>
-      <button style="padding: 2px 8px;" id="btnCloseModal">✕</button>
+      <span id="modalTitle">Checksum & Integrity Verification</span>
+      <button style="padding: 2px 8px;" id="btnCloseModal" aria-label="Close modal window">✕</button>
     </div>
     <div class="modal-body" id="modalReport">
     </div>
     <div style="display: flex; justify-content: flex-end;">
-      <button class="btn-primary" id="btnOkModal">Close Report</button>
+      <button class="btn-primary" id="btnOkModal" aria-label="Close report">Close Report</button>
     </div>
   </div>
 </div>
@@ -357,6 +365,7 @@
   let selectedIndices = new Set();
   let currentReqId = 0;
   const callbacks = {};
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB max per file
 
   const fileTableBody = document.getElementById('fileTableBody');
   const searchInput = document.getElementById('searchInput');
@@ -366,6 +375,7 @@
   const statusMessage = document.getElementById('statusMessage');
   const overallSavings = document.getElementById('overallSavings');
   const selectAll = document.getElementById('selectAll');
+  const dropZone = document.getElementById('dropZone');
 
   const btnOpen = document.getElementById('btnOpen');
   const btnAdd = document.getElementById('btnAdd');
@@ -380,9 +390,28 @@
   const btnCloseModal = document.getElementById('btnCloseModal');
   const btnOkModal = document.getElementById('btnOkModal');
 
+  // HTML Security Escaping
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Safe Filename Extraction (Prevents Path Traversal)
+  function sanitizeFilename(filename) {
+    if (!filename) return 'unnamed_file';
+    let safeName = filename.replace(/^.*[\\\/]/, '').replace(/\.\./g, '').trim();
+    safeName = safeName.replace(/[<>:"|?*]/g, '_');
+    return safeName || 'unnamed_file';
+  }
+
   window.addEventListener('message', (e) => {
     const msg = e.data;
-    if (callbacks[msg.requestId]) {
+    if (msg && callbacks[msg.requestId]) {
       callbacks[msg.requestId](msg);
       delete callbacks[msg.requestId];
     }
@@ -398,6 +427,7 @@
 
   // CRC32 Calculation
   function calculateCRC32(bytes) {
+    if (!bytes) return '00000000';
     let crc = 0xFFFFFFFF;
     for (let i = 0; i < bytes.length; i++) {
       crc ^= bytes[i];
@@ -411,6 +441,7 @@
 
   // RLE Compression
   function compressRLE(bytes) {
+    if (!bytes) return new Uint8Array(0);
     const out = [];
     let i = 0;
     while (i < bytes.length) {
@@ -430,8 +461,10 @@
     return new Uint8Array(out);
   }
 
-  // RLE Decompression
+  // RLE Decompression with strict bounds checking
   function decompressRLE(bytes, targetSize) {
+    if (!bytes || !targetSize || targetSize <= 0) return new Uint8Array(0);
+    if (targetSize > MAX_FILE_SIZE) throw new Error("Decompressed size exceeds safety limit.");
     const out = new Uint8Array(targetSize);
     let inIdx = 0, outIdx = 0;
     while (inIdx < bytes.length && outIdx < targetSize) {
@@ -452,7 +485,7 @@
 
   // XOR Cipher Stream
   function cryptXOR(bytes, keyHashNum) {
-    if (!keyHashNum) return bytes;
+    if (!keyHashNum || !bytes) return bytes;
     const out = new Uint8Array(bytes.length);
     for (let i = 0; i < bytes.length; i++) {
       const k = (keyHashNum + i * 31 + (keyHashNum >> (i % 8))) & 0xFF;
@@ -462,6 +495,7 @@
   }
 
   function base64ToUint8(b64) {
+    if (!b64) return new Uint8Array(0);
     const str = atob(b64.includes(',') ? b64.split(',')[1] : b64);
     const u8 = new Uint8Array(str.length);
     for (let i = 0; i < str.length; i++) u8[i] = str.charCodeAt(i);
@@ -469,6 +503,7 @@
   }
 
   function uint8ToBase64(u8) {
+    if (!u8) return '';
     let binary = '';
     const len = u8.byteLength;
     for (let i = 0; i < len; i++) {
@@ -501,6 +536,8 @@
       }
 
       const tr = document.createElement('tr');
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('aria-selected', selectedIndices.has(idx) ? 'true' : 'false');
       if (selectedIndices.has(idx)) {
         tr.classList.add('selected');
       }
@@ -515,15 +552,25 @@
         renderTable();
       };
 
+      tr.onkeydown = (e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          if (selectedIndices.has(idx)) selectedIndices.delete(idx);
+          else selectedIndices.add(idx);
+          renderTable();
+        }
+      };
+
       const ratio = f.uncompSize > 0 ? Math.max(0, Math.round(100 - (f.compSize * 100 / f.uncompSize))) : 0;
+      const safeName = escapeHtml(f.name);
 
       tr.innerHTML = `
-        <td><input type="checkbox" ${selectedIndices.has(idx) ? 'checked' : ''} data-idx="${idx}"></td>
-        <td style="font-weight: 500;">${f.name}</td>
+        <td><input type="checkbox" ${selectedIndices.has(idx) ? 'checked' : ''} data-idx="${idx}" aria-label="Select ${safeName}"></td>
+        <td style="font-weight: 500;">${safeName}</td>
         <td>${formatBytes(f.uncompSize)}</td>
         <td>${formatBytes(f.compSize)}</td>
         <td style="color: ${ratio > 0 ? 'var(--accent-green)' : 'var(--text-muted)'}">${ratio}%</td>
-        <td style="font-family: monospace;">0x${f.crc32}</td>
+        <td style="font-family: monospace;">0x${escapeHtml(f.crc32)}</td>
         <td><span class="badge ${f.method === 1 ? 'badge-rle' : 'badge-store'}">${f.method === 1 ? 'RLE' : 'Store'}</span></td>
       `;
 
@@ -565,88 +612,102 @@
   };
 
   btnAdd.onclick = async () => {
-    const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
-    if (res.path) {
-      const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
-      if (readRes.data) {
-        const filename = res.path.split('/').pop();
-        const rawBytes = base64ToUint8(readRes.data);
-        const crc = calculateCRC32(rawBytes);
-        const method = parseInt(compMethod.value);
+    try {
+      const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+      if (res && res.path) {
+        const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
+        if (readRes && readRes.data) {
+          const rawFilename = res.path.split('/').pop();
+          const filename = sanitizeFilename(rawFilename);
+          const rawBytes = base64ToUint8(readRes.data);
 
-        let packedBytes = rawBytes;
-        let compSize = rawBytes.length;
-        let actualMethod = 0;
-
-        if (method === 1 && rawBytes.length > 0) {
-          const rleBytes = compressRLE(rawBytes);
-          if (rleBytes.length < rawBytes.length) {
-            packedBytes = rleBytes;
-            compSize = rleBytes.length;
-            actualMethod = 1;
+          if (rawBytes.length > MAX_FILE_SIZE) {
+            return alert("File exceeds safety limit of 100MB.");
           }
+
+          const crc = calculateCRC32(rawBytes);
+          const method = parseInt(compMethod.value);
+
+          let packedBytes = rawBytes;
+          let compSize = rawBytes.length;
+          let actualMethod = 0;
+
+          if (method === 1 && rawBytes.length > 0) {
+            const rleBytes = compressRLE(rawBytes);
+            if (rleBytes.length < rawBytes.length) {
+              packedBytes = rleBytes;
+              compSize = rleBytes.length;
+              actualMethod = 1;
+            }
+          }
+
+          files.push({
+            name: filename,
+            uncompSize: rawBytes.length,
+            compSize: compSize,
+            crc32: crc,
+            method: actualMethod,
+            rawBytes: rawBytes,
+            packedBytes: packedBytes
+          });
+
+          renderTable();
         }
-
-        files.push({
-          name: filename,
-          uncompSize: rawBytes.length,
-          compSize: compSize,
-          crc32: crc,
-          method: actualMethod,
-          rawBytes: rawBytes,
-          packedBytes: packedBytes
-        });
-
-        renderTable();
       }
+    } catch (err) {
+      alert("Error adding file: " + err.message);
     }
   };
 
   btnPack.onclick = async () => {
     if (files.length === 0) return alert("Nothing to pack!");
-    const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
-    if (res.path) {
-      let path = res.path;
-      if (!path.endsWith('.kza')) path += '.kza';
+    try {
+      const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
+      if (res && res.path) {
+        let path = res.path;
+        if (!path.endsWith('.kza')) path += '.kza';
 
-      const pass = passwordInput.value;
-      const pwdHashNum = pass ? parseInt(calculateCRC32(new TextEncoder().encode(pass)), 16) : 0;
+        const pass = passwordInput.value;
+        const pwdHashNum = pass ? parseInt(calculateCRC32(new TextEncoder().encode(pass)), 16) : 0;
 
-      const exportFiles = files.map(f => {
-        let payload = f.packedBytes;
-        if (pwdHashNum) {
-          payload = cryptXOR(payload, pwdHashNum);
-        }
-        return {
-          name: f.name,
-          uncompSize: f.uncompSize,
-          compSize: f.compSize,
-          crc32: f.crc32,
-          method: f.method,
-          data: uint8ToBase64(payload)
+        const exportFiles = files.map(f => {
+          let payload = f.packedBytes;
+          if (pwdHashNum) {
+            payload = cryptXOR(payload, pwdHashNum);
+          }
+          return {
+            name: sanitizeFilename(f.name),
+            uncompSize: f.uncompSize,
+            compSize: f.compSize,
+            crc32: f.crc32,
+            method: f.method,
+            data: uint8ToBase64(payload)
+          };
+        });
+
+        const archiveData = {
+          magic: 'KZA2',
+          flags: pwdHashNum ? 1 : 0,
+          pwdHash: pwdHashNum,
+          files: exportFiles
         };
-      });
 
-      const archiveData = {
-        magic: 'KZA2',
-        flags: pwdHashNum ? 1 : 0,
-        pwdHash: pwdHashNum,
-        files: exportFiles
-      };
-
-      const jsonStr = JSON.stringify(archiveData);
-      const b64 = 'data:application/json;base64,' + btoa(jsonStr);
-      await sendToOS({ type: 'VFS_WRITE', path: path, data: b64 });
-      alert("Packed archive successfully to " + path);
+        const jsonStr = JSON.stringify(archiveData);
+        const b64 = 'data:application/json;base64,' + btoa(jsonStr);
+        await sendToOS({ type: 'VFS_WRITE', path: path, data: b64 });
+        alert("Packed archive successfully to " + path);
+      }
+    } catch (err) {
+      alert("Failed to pack archive: " + err.message);
     }
   };
 
   btnOpen.onclick = async () => {
-    const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
-    if (res.path) {
-      const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
-      if (readRes.data) {
-        try {
+    try {
+      const res = await sendToOS({ type: 'VFS_SHOW_OPEN' });
+      if (res && res.path) {
+        const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
+        if (readRes && readRes.data) {
           const jsonStr = atob(readRes.data.includes(',') ? readRes.data.split(',')[1] : readRes.data);
           const parsed = JSON.parse(jsonStr);
 
@@ -667,7 +728,11 @@
               }
             }
 
-            parsed.files.forEach(f => {
+            for (const f of parsed.files) {
+              if (f.uncompSize > MAX_FILE_SIZE || f.compSize > MAX_FILE_SIZE) {
+                alert(`File ${f.name} exceeds max size limit (100MB). Skipping.`);
+                continue;
+              }
               let payload = base64ToUint8(f.data);
               if (pwdHashNum) {
                 payload = cryptXOR(payload, pwdHashNum);
@@ -677,7 +742,7 @@
                 raw = decompressRLE(payload, f.uncompSize);
               }
               files.push({
-                name: f.name,
+                name: sanitizeFilename(f.name),
                 uncompSize: f.uncompSize,
                 compSize: f.compSize,
                 crc32: f.crc32,
@@ -685,14 +750,14 @@
                 rawBytes: raw,
                 packedBytes: payload
               });
-            });
+            }
           } else if (Array.isArray(parsed)) {
             // Legacy KZA v1 format
-            parsed.forEach(f => {
+            for (const f of parsed) {
               const raw = base64ToUint8(f.data);
               const crc = calculateCRC32(raw);
               files.push({
-                name: f.name,
+                name: sanitizeFilename(f.name),
                 uncompSize: raw.length,
                 compSize: raw.length,
                 crc32: crc,
@@ -700,13 +765,13 @@
                 rawBytes: raw,
                 packedBytes: raw
               });
-            });
+            }
           }
           renderTable();
-        } catch (e) {
-          alert("Failed to parse archive format!");
         }
       }
+    } catch (e) {
+      alert("Failed to parse archive format: " + e.message);
     }
   };
 
@@ -715,8 +780,9 @@
     let count = 0;
     for (const idx of selectedIndices) {
       const f = files[idx];
+      const safeName = sanitizeFilename(f.name);
       const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(f.rawBytes);
-      await sendToOS({ type: 'VFS_WRITE', path: '/' + f.name, data: b64 });
+      await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
       count++;
     }
     alert(`Extracted ${count} selected file(s) to root directory!`);
@@ -726,8 +792,9 @@
     if (files.length === 0) return alert("Archive is empty!");
     let count = 0;
     for (const f of files) {
+      const safeName = sanitizeFilename(f.name);
       const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(f.rawBytes);
-      await sendToOS({ type: 'VFS_WRITE', path: '/' + f.name, data: b64 });
+      await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
       count++;
     }
     alert(`Extracted ${count} file(s) to root directory!`);
@@ -744,11 +811,12 @@
       const isMatch = (calcCrc.toUpperCase() === f.crc32.toUpperCase());
       if (isMatch) passCount++; else failCount++;
 
+      const safeName = escapeHtml(f.name);
       const div = document.createElement('div');
       div.className = 'verify-row';
       div.innerHTML = `
-        <span>${f.name}</span>
-        <span>Stored: 0x${f.crc32} | Calc: 0x${calcCrc} <span class="${isMatch ? 'pass-text' : 'fail-text'}">[${isMatch ? 'PASS' : 'FAIL'}]</span></span>
+        <span>${safeName}</span>
+        <span>Stored: 0x${escapeHtml(f.crc32)} | Calc: 0x${escapeHtml(calcCrc)} <span class="${isMatch ? 'pass-text' : 'fail-text'}">[${isMatch ? 'PASS' : 'FAIL'}]</span></span>
       `;
       modalReport.appendChild(div);
     });
@@ -762,12 +830,82 @@
     modalReport.appendChild(summaryDiv);
 
     verifyModal.classList.add('active');
+    btnOkModal.focus();
   };
 
-  btnCloseModal.onclick = () => verifyModal.classList.remove('active');
-  btnOkModal.onclick = () => verifyModal.classList.remove('active');
+  function closeModal() {
+    verifyModal.classList.remove('active');
+  }
+
+  btnCloseModal.onclick = closeModal;
+  btnOkModal.onclick = closeModal;
+
+  // Global Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && verifyModal.classList.contains('active')) {
+      closeModal();
+    } else if (e.key === 'Delete' && selectedIndices.size > 0 && document.activeElement !== searchInput && document.activeElement !== passwordInput) {
+      btnRemove.click();
+    }
+  });
+
+  // Drag and Drop File Support
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('drag-over');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('drag-over');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+      Array.from(e.dataTransfer.files).forEach(file => {
+        if (file.size > MAX_FILE_SIZE) {
+          alert(`File ${file.name} exceeds max size limit of 100MB.`);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          const rawBytes = new Uint8Array(evt.target.result);
+          const crc = calculateCRC32(rawBytes);
+          const method = parseInt(compMethod.value);
+
+          let packedBytes = rawBytes;
+          let compSize = rawBytes.length;
+          let actualMethod = 0;
+
+          if (method === 1 && rawBytes.length > 0) {
+            const rleBytes = compressRLE(rawBytes);
+            if (rleBytes.length < rawBytes.length) {
+              packedBytes = rleBytes;
+              compSize = rleBytes.length;
+              actualMethod = 1;
+            }
+          }
+
+          files.push({
+            name: sanitizeFilename(file.name),
+            uncompSize: rawBytes.length,
+            compSize: compSize,
+            crc32: crc,
+            method: actualMethod,
+            rawBytes: rawBytes,
+            packedBytes: packedBytes
+          });
+
+          renderTable();
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    }
+  });
 
   renderTable();
 </script>
 </body>
 </html>
+

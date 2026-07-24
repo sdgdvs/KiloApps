@@ -1,4 +1,4 @@
-﻿#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <commdlg.h>
 
@@ -8,13 +8,13 @@
 
 #define W 680
 #define H 460
+#define MAX_FILES 100
+#define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 
 HWND hListBox, hEditSearch, hEditPassword, hComboCompress;
 HWND hBtnOpen, hBtnAdd, hBtnRemove, hBtnPack, hBtnExtractSel, hBtnExtractAll, hBtnVerify;
 HWND hStatus;
 HFONT hFont;
-
-#define MAX_FILES 100
 
 typedef struct {
     char name[256];
@@ -51,8 +51,28 @@ char FastToLower(char c) {
     return c;
 }
 
+// Sanitize filename to prevent directory traversal or invalid characters
+void SanitizeFilename(const char* inName, char* outBuf, size_t outSize) {
+    if (!inName || !outBuf || outSize == 0) return;
+    const char* p = inName;
+    for (int i = 0; inName[i]; i++) {
+        if (inName[i] == '\\' || inName[i] == '/') p = inName + i + 1;
+    }
+    while (*p == '.' || *p == ' ' || *p == '/' || *p == '\\') p++;
+    if (!*p) p = "extracted_file";
+
+    size_t idx = 0;
+    for (; p[idx] && idx < outSize - 1; idx++) {
+        char c = p[idx];
+        if (c == '<' || c == '>' || c == ':' || c == '"' || c == '|' || c == '?' || c == '*') c = '_';
+        outBuf[idx] = c;
+    }
+    outBuf[idx] = '\0';
+}
+
 // CRC32 Calculation
 DWORD CalculateCRC32(const unsigned char* data, DWORD size) {
+    if (!data && size > 0) return 0;
     DWORD crc = 0xFFFFFFFF;
     for (DWORD i = 0; i < size; i++) {
         crc ^= data[i];
@@ -66,8 +86,9 @@ DWORD CalculateCRC32(const unsigned char* data, DWORD size) {
     return crc ^ 0xFFFFFFFF;
 }
 
-// Simple RLE Compression
+// Simple RLE Compression with bounds safety
 DWORD CompressRLE(const unsigned char* in, DWORD inSize, unsigned char* out) {
+    if (!in || !out || inSize == 0) return 0;
     DWORD inIdx = 0, outIdx = 0;
     while (inIdx < inSize) {
         unsigned char b = in[inIdx];
@@ -90,13 +111,14 @@ DWORD CompressRLE(const unsigned char* in, DWORD inSize, unsigned char* out) {
     return outIdx;
 }
 
-// Simple RLE Decompression
+// Simple RLE Decompression with strict bounds safety
 DWORD DecompressRLE(const unsigned char* in, DWORD inSize, unsigned char* out, DWORD outCapacity) {
+    if (!in || !out || inSize == 0 || outCapacity == 0) return 0;
     DWORD inIdx = 0, outIdx = 0;
     while (inIdx < inSize && outIdx < outCapacity) {
         unsigned char b = in[inIdx++];
         if (b == 0xFF) {
-            if (inIdx + 1 >= inSize) break;
+            if (inIdx + 2 > inSize) break;
             unsigned char count = in[inIdx++];
             unsigned char val = in[inIdx++];
             for (DWORD i = 0; i < count && outIdx < outCapacity; i++) {
@@ -111,7 +133,7 @@ DWORD DecompressRLE(const unsigned char* in, DWORD inSize, unsigned char* out, D
 
 // Simple XOR Cipher for Password Protection Simulation
 void CryptData(char* data, DWORD size, DWORD key) {
-    if (key == 0) return;
+    if (!data || key == 0) return;
     for (DWORD i = 0; i < size; i++) {
         BYTE k = (BYTE)((key + i * 31 + (key >> (i % 8))) & 0xFF);
         data[i] ^= k;
@@ -121,6 +143,7 @@ void CryptData(char* data, DWORD size, DWORD key) {
 // Case-insensitive substring match
 int ContainsString(const char* str, const char* sub) {
     if (!sub || !*sub) return 1;
+    if (!str) return 0;
     char s1[256], s2[256];
     int i = 0;
     for (; str[i] && i < 255; i++) s1[i] = FastToLower(str[i]);
@@ -203,16 +226,39 @@ void ClearArchive() {
 
 void AddFileToArchive(const char* filepath) {
     if (numFiles >= MAX_FILES) {
-        MessageBoxA(NULL, "Archive is full!", "Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Archive limit reached (Max 100 files).", "KZip Error", MB_OK | MB_ICONERROR);
         return;
     }
     HANDLE hFile = CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return;
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(NULL, "Failed to open target file.", "KZip Error", MB_OK | MB_ICONERROR);
+        return;
+    }
 
     DWORD size = GetFileSize(hFile, NULL);
+    if (size > MAX_FILE_SIZE) {
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "File exceeds maximum size limit (100MB).", "KZip Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
     char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size ? size : 1);
-    DWORD read;
-    if (size > 0) ReadFile(hFile, buf, size, &read, NULL);
+    if (!buf) {
+        CloseHandle(hFile);
+        MessageBoxA(NULL, "Out of memory allocating file buffer.", "KZip Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    DWORD read = 0;
+    if (size > 0) {
+        ReadFile(hFile, buf, size, &read, NULL);
+        if (read != size) {
+            HeapFree(GetProcessHeap(), 0, buf);
+            CloseHandle(hFile);
+            MessageBoxA(NULL, "Failed to read full file contents.", "KZip Error", MB_OK | MB_ICONERROR);
+            return;
+        }
+    }
     CloseHandle(hFile);
 
     const char* filename = filepath;
@@ -222,22 +268,27 @@ void AddFileToArchive(const char* filepath) {
 
     DWORD compressMode = (DWORD)SendMessage(hComboCompress, CB_GETCURSEL, 0, 0); // 0 = Store, 1 = RLE
 
-    lstrcpyA(archive[numFiles].name, filename);
+    lstrcpynA(archive[numFiles].name, filename, sizeof(archive[numFiles].name));
     archive[numFiles].uncompSize = size;
     archive[numFiles].crc32 = CalculateCRC32((const unsigned char*)buf, size);
     archive[numFiles].data = buf;
 
     if (compressMode == 1 && size > 0) {
-        unsigned char* compBuf = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size * 2 + 16);
-        DWORD compLen = CompressRLE((const unsigned char*)buf, size, compBuf);
-        if (compLen < size) {
-            archive[numFiles].compSize = compLen;
-            archive[numFiles].method = 1;
+        unsigned char* compBuf = (unsigned char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size * 3 + 16);
+        if (compBuf) {
+            DWORD compLen = CompressRLE((const unsigned char*)buf, size, compBuf);
+            if (compLen > 0 && compLen < size) {
+                archive[numFiles].compSize = compLen;
+                archive[numFiles].method = 1;
+            } else {
+                archive[numFiles].compSize = size;
+                archive[numFiles].method = 0;
+            }
+            HeapFree(GetProcessHeap(), 0, compBuf);
         } else {
             archive[numFiles].compSize = size;
             archive[numFiles].method = 0;
         }
-        HeapFree(GetProcessHeap(), 0, compBuf);
     } else {
         archive[numFiles].compSize = size;
         archive[numFiles].method = 0;
@@ -255,7 +306,7 @@ void PackArchive(const char* filepath) {
 
     HANDLE hFile = CreateFileA(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        MessageBoxA(NULL, "Failed to create archive file.", "Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Failed to create output archive file.", "Error", MB_OK | MB_ICONERROR);
         return;
     }
 
@@ -269,7 +320,7 @@ void PackArchive(const char* filepath) {
         flags |= 0x01; // Encrypted flag
     }
 
-    DWORD written;
+    DWORD written = 0;
     WriteFile(hFile, "KZA2", 4, &written, NULL);
     WriteFile(hFile, &flags, sizeof(DWORD), &written, NULL);
     WriteFile(hFile, &pwdHash, sizeof(DWORD), &written, NULL);
@@ -285,18 +336,20 @@ void PackArchive(const char* filepath) {
         WriteFile(hFile, &archive[i].method, sizeof(DWORD), &written, NULL);
 
         char* payload = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, archive[i].compSize ? archive[i].compSize : 1);
-        if (archive[i].method == 1 && archive[i].uncompSize > 0) {
-            CompressRLE((const unsigned char*)archive[i].data, archive[i].uncompSize, (unsigned char*)payload);
-        } else if (archive[i].uncompSize > 0) {
-            memcpy(payload, archive[i].data, archive[i].uncompSize);
-        }
+        if (payload) {
+            if (archive[i].method == 1 && archive[i].uncompSize > 0) {
+                CompressRLE((const unsigned char*)archive[i].data, archive[i].uncompSize, (unsigned char*)payload);
+            } else if (archive[i].uncompSize > 0 && archive[i].data) {
+                memcpy(payload, archive[i].data, archive[i].uncompSize);
+            }
 
-        if (flags & 0x01) {
-            CryptData(payload, archive[i].compSize, pwdHash);
-        }
+            if (flags & 0x01) {
+                CryptData(payload, archive[i].compSize, pwdHash);
+            }
 
-        WriteFile(hFile, payload, archive[i].compSize, &written, NULL);
-        HeapFree(GetProcessHeap(), 0, payload);
+            WriteFile(hFile, payload, archive[i].compSize, &written, NULL);
+            HeapFree(GetProcessHeap(), 0, payload);
+        }
     }
 
     CloseHandle(hFile);
@@ -305,10 +358,13 @@ void PackArchive(const char* filepath) {
 
 void OpenArchive(const char* filepath) {
     HANDLE hFile = CreateFileA(filepath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return;
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(NULL, "Failed to open archive file.", "Error", MB_OK | MB_ICONERROR);
+        return;
+    }
 
     char magic[4] = {0};
-    DWORD read;
+    DWORD read = 0;
     ReadFile(hFile, magic, 4, &read, NULL);
 
     BOOL isV2 = (magic[0] == 'K' && magic[1] == 'Z' && magic[2] == 'A' && magic[3] == '2');
@@ -316,7 +372,7 @@ void OpenArchive(const char* filepath) {
 
     if (!isV1 && !isV2) {
         CloseHandle(hFile);
-        MessageBoxA(NULL, "Invalid KZA archive format.", "Error", MB_OK | MB_ICONERROR);
+        MessageBoxA(NULL, "Invalid or unsupported KZA archive format.", "Error", MB_OK | MB_ICONERROR);
         return;
     }
 
@@ -333,7 +389,7 @@ void OpenArchive(const char* filepath) {
             DWORD userHash = CalculateCRC32((const unsigned char*)userPass, lstrlenA(userPass));
             if (userHash != pwdHash) {
                 CloseHandle(hFile);
-                MessageBoxA(NULL, "Archive is password protected! Please enter the correct password in the Password field.", "Access Denied", MB_OK | MB_ICONERROR);
+                MessageBoxA(NULL, "Archive is password protected! Please enter the correct password in the Pass field.", "Access Denied", MB_OK | MB_ICONERROR);
                 return;
             }
         }
@@ -349,6 +405,7 @@ void OpenArchive(const char* filepath) {
         if (nameLen > sizeof(archive[i].name) || nameLen == 0) break;
 
         ReadFile(hFile, archive[i].name, nameLen, &read, NULL);
+        archive[i].name[sizeof(archive[i].name) - 1] = '\0';
 
         if (isV2) {
             ReadFile(hFile, &archive[i].uncompSize, sizeof(DWORD), &read, NULL);
@@ -361,7 +418,13 @@ void OpenArchive(const char* filepath) {
             archive[i].method = 0;
         }
 
+        if (archive[i].compSize > MAX_FILE_SIZE || archive[i].uncompSize > MAX_FILE_SIZE) {
+            break; // Exceeds safe bounds
+        }
+
         char* payload = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, archive[i].compSize ? archive[i].compSize : 1);
+        if (!payload) break;
+
         ReadFile(hFile, payload, archive[i].compSize, &read, NULL);
 
         if (isV2 && (flags & 0x01)) {
@@ -369,6 +432,11 @@ void OpenArchive(const char* filepath) {
         }
 
         archive[i].data = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, archive[i].uncompSize ? archive[i].uncompSize : 1);
+        if (!archive[i].data) {
+            HeapFree(GetProcessHeap(), 0, payload);
+            break;
+        }
+
         if (archive[i].method == 1 && archive[i].uncompSize > 0) {
             DecompressRLE((const unsigned char*)payload, archive[i].compSize, (unsigned char*)archive[i].data, archive[i].uncompSize);
         } else if (archive[i].uncompSize > 0) {
@@ -390,15 +458,19 @@ void OpenArchive(const char* filepath) {
 
 void ExtractSingleFile(int realIndex) {
     if (realIndex < 0 || realIndex >= numFiles) return;
-    HANDLE hFile = CreateFileA(archive[realIndex].name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    char safeName[256] = {0};
+    SanitizeFilename(archive[realIndex].name, safeName, sizeof(safeName));
+
+    HANDLE hFile = CreateFileA(safeName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
-        DWORD written;
-        if (archive[realIndex].uncompSize > 0) {
+        DWORD written = 0;
+        if (archive[realIndex].uncompSize > 0 && archive[realIndex].data) {
             WriteFile(hFile, archive[realIndex].data, archive[realIndex].uncompSize, &written, NULL);
         }
         CloseHandle(hFile);
-        char msg[300];
-        wsprintfA(msg, "Extracted '%s' to current directory.", archive[realIndex].name);
+        char msg[320];
+        wsprintfA(msg, "Extracted '%s' to current directory.", safeName);
         MessageBoxA(NULL, msg, "KZip", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxA(NULL, "Failed to create extracted file.", "Error", MB_OK | MB_ICONERROR);
@@ -406,13 +478,19 @@ void ExtractSingleFile(int realIndex) {
 }
 
 void ExtractAll() {
-    if (numFiles == 0) return;
+    if (numFiles == 0) {
+        MessageBoxA(NULL, "No files to extract.", "KZip", MB_OK | MB_ICONWARNING);
+        return;
+    }
     int count = 0;
     for (int i = 0; i < numFiles; i++) {
-        HANDLE hFile = CreateFileA(archive[i].name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        char safeName[256] = {0};
+        SanitizeFilename(archive[i].name, safeName, sizeof(safeName));
+
+        HANDLE hFile = CreateFileA(safeName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE) {
-            DWORD written;
-            if (archive[i].uncompSize > 0) {
+            DWORD written = 0;
+            if (archive[i].uncompSize > 0 && archive[i].data) {
                 WriteFile(hFile, archive[i].data, archive[i].uncompSize, &written, NULL);
             }
             CloseHandle(hFile);
@@ -430,7 +508,7 @@ void VerifyIntegrity() {
         return;
     }
     int passed = 0, failed = 0;
-    char report[1024] = "ARCHIVE CHECKSUM VERIFICATION REPORT:\n\n";
+    char report[4096] = "ARCHIVE CHECKSUM VERIFICATION REPORT:\n\n";
 
     for (int i = 0; i < numFiles; i++) {
         DWORD calcCRC = CalculateCRC32((const unsigned char*)archive[i].data, archive[i].uncompSize);
@@ -442,7 +520,7 @@ void VerifyIntegrity() {
             failed++;
             wsprintfA(line, "[FAIL] %s - Stored: 0x%08X vs Calc: 0x%08X (CORRUPTED)\n", archive[i].name, archive[i].crc32, calcCRC);
         }
-        if (lstrlenA(report) + lstrlenA(line) < sizeof(report) - 100) {
+        if (lstrlenA(report) + lstrlenA(line) < sizeof(report) - 128) {
             lstrcatA(report, line);
         }
     }
@@ -480,18 +558,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hEditPassword = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_PASSWORD | ES_AUTOHSCRAWL, 410, 10, 100, 22, hwnd, (HMENU)103, NULL, NULL);
 
             // Action Buttons Row
-            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE, 10, H - 75, 75, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE, 90, H - 75, 70, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE, 165, H - 75, 65, 24, hwnd, (HMENU)5, NULL, NULL);
-            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack .kza", WS_CHILD | WS_VISIBLE, 235, H - 75, 75, 24, hwnd, (HMENU)3, NULL, NULL);
-            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Extract Sel", WS_CHILD | WS_VISIBLE, 315, H - 75, 80, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Extract All", WS_CHILD | WS_VISIBLE, 400, H - 75, 75, 24, hwnd, (HMENU)6, NULL, NULL);
-            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify CRC", WS_CHILD | WS_VISIBLE, 480, H - 75, 75, 24, hwnd, (HMENU)7, NULL, NULL);
+            hBtnOpen = CreateWindowEx(0, "BUTTON", "Open .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, H - 75, 75, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnAdd = CreateWindowEx(0, "BUTTON", "Add File", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 90, H - 75, 70, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnRemove = CreateWindowEx(0, "BUTTON", "Remove", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 165, H - 75, 65, 24, hwnd, (HMENU)5, NULL, NULL);
+            hBtnPack = CreateWindowEx(0, "BUTTON", "Pack .kza", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 235, H - 75, 75, 24, hwnd, (HMENU)3, NULL, NULL);
+            hBtnExtractSel = CreateWindowEx(0, "BUTTON", "Extract Sel", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 315, H - 75, 80, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnExtractAll = CreateWindowEx(0, "BUTTON", "Extract All", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 400, H - 75, 75, 24, hwnd, (HMENU)6, NULL, NULL);
+            hBtnVerify = CreateWindowEx(0, "BUTTON", "Verify CRC", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 480, H - 75, 75, 24, hwnd, (HMENU)7, NULL, NULL);
 
             // ListBox
             hListBox = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", "",
-                WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL,
-                10, 40, W - 35, H - 125, hwnd, NULL, NULL, NULL);
+                WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP,
+                10, 40, W - 35, H - 125, hwnd, (HMENU)100, NULL, NULL);
 
             // Status Bar Label
             hStatus = CreateWindowEx(WS_EX_STATICEDGE, "STATIC", "Ready", WS_CHILD | WS_VISIBLE | SS_LEFT, 10, H - 45, W - 35, 20, hwnd, NULL, NULL, NULL);
@@ -505,7 +583,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int id = LOWORD(wParam);
             int code = HIWORD(wParam);
 
-            if (id == 101 && code == EN_CHANGE) {
+            if (id == 100 && code == LBN_DBLCLK) { // Double-click list item to extract
+                int sel = (int)SendMessage(hListBox, LB_GETCURSEL, 0, 0);
+                if (sel != LB_ERR && sel < numVisible) {
+                    ExtractSingleFile(visibleIndices[sel]);
+                }
+            } else if (id == 101 && code == EN_CHANGE) {
                 RefreshList();
             } else if (id == 1) { // Open
                 char file[260] = {0};
@@ -612,8 +695,11 @@ void MainEntry() {
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        if (!IsDialogMessage(hwnd, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     ExitProcess(0);
 }
+
