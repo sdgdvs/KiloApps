@@ -6,19 +6,24 @@
   <title>KAlchemy - Fantasy Crafting & Element Discovery</title>
   <style>
     :root {
-      --bg-dark: #0d0f1b;
-      --bg-panel: #16182c;
-      --bg-crucible: #1c1836;
+      --bg-dark: #090914;
+      --bg-slate: #0f1021;
+      --bg-panel: #16152e;
+      --bg-crucible: #1d183d;
       --accent-gold: #f39c12;
+      --accent-gold-light: #f1c40f;
       --accent-purple: #9b59b6;
+      --accent-purple-glow: #b05cdb;
       --accent-blue: #3498db;
       --accent-emerald: #2ecc71;
       --accent-crimson: #e74c3c;
-      --text-main: #e0e6ed;
-      --text-muted: #8a99ad;
-      --border-color: #2c324d;
-      --glow-purple: rgba(155, 89, 182, 0.4);
-      --glow-gold: rgba(243, 156, 18, 0.4);
+      --text-main: #e2e8f0;
+      --text-muted: #8b9bb4;
+      --border-color: #2e2850;
+      --border-gold: #d4ac0d;
+      --glow-purple: rgba(155, 89, 182, 0.5);
+      --glow-gold: rgba(243, 156, 18, 0.5);
+      --glow-blue: rgba(52, 152, 219, 0.4);
     }
 
     * {
@@ -31,6 +36,10 @@
     body {
       font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(155, 89, 182, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(243, 156, 18, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(15, 16, 33, 1) 0%, rgba(9, 9, 20, 1) 100%);
       color: var(--text-main);
       height: 100vh;
       display: flex;
@@ -38,15 +47,34 @@
       overflow: hidden;
     }
 
-    /* Header Bar */
+    /* Arcane Laboratory Header */
     header {
-      background: linear-gradient(90deg, #101224 0%, #1a1c38 100%);
-      border-bottom: 1px solid var(--border-color);
+      background: linear-gradient(90deg, #0d0c1d 0%, #171433 50%, #0d0c1d 100%);
+      border-bottom: 2px solid var(--accent-purple);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px var(--glow-purple);
       padding: 12px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      position: relative;
+      z-index: 10;
+    }
+
+    header::after {
+      content: 'ᛟ ᚱ ᚲ ᚠ ᛗ ᛉ ᛏ';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: var(--accent-gold);
+      letter-spacing: 12px;
+      text-shadow: 0 0 8px var(--accent-gold);
+      pointer-events: none;
+      background: var(--bg-dark);
+      padding: 0 12px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
     }
 
     .brand {
@@ -56,107 +84,163 @@
     }
 
     .brand-icon {
-      font-size: 1.8rem;
-      filter: drop-shadow(0 0 8px var(--accent-gold));
+      font-size: 2rem;
+      filter: drop-shadow(0 0 10px var(--accent-gold));
+      animation: pulseIcon 3s infinite alternate ease-in-out;
+    }
+
+    @keyframes pulseIcon {
+      from { transform: scale(1); filter: drop-shadow(0 0 8px var(--accent-gold)); }
+      to { transform: scale(1.08); filter: drop-shadow(0 0 16px var(--accent-gold-light)); }
     }
 
     .brand h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
+      font-size: 1.45rem;
+      font-weight: 800;
       color: var(--accent-gold);
-      letter-spacing: 0.5px;
-      text-shadow: 0 0 12px rgba(243, 156, 18, 0.3);
-    }
-
-    .brand .subtitle {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      margin-left: 8px;
-    }
-
-    .stats-bar {
-      display: flex;
-      gap: 16px;
-      font-size: 0.9rem;
-    }
-
-    .stat-badge {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 6px 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-shadow: 0 0 14px rgba(243, 156, 18, 0.5), 0 2px 4px rgba(0,0,0,0.8);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    .stat-badge span.val {
-      font-weight: 700;
-      color: #fff;
+    .brand .subtitle {
+      font-size: 0.75rem;
+      color: var(--accent-purple-glow);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
     }
 
-    /* App Container */
+    /* Golden Element Badges in Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      font-size: 0.88rem;
+    }
+
+    .stat-badge {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.12) 0%, rgba(155, 89, 182, 0.15) 100%);
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.25), inset 0 0 8px rgba(243, 156, 18, 0.1);
+      position: relative;
+    }
+
+    .stat-badge::before {
+      content: '✦';
+      color: var(--accent-gold);
+      font-size: 0.75rem;
+      text-shadow: 0 0 5px var(--accent-gold);
+    }
+
+    .stat-badge span.label {
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .stat-badge span.val {
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      text-shadow: 0 0 8px rgba(241, 196, 15, 0.6);
+    }
+
+    /* Main Grid Layout */
     .app-main {
       flex: 1;
       display: grid;
-      grid-template-columns: 300px 1fr 320px;
-      gap: 14px;
-      padding: 14px;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 16px;
+      padding: 16px;
       overflow: hidden;
     }
 
+    /* Arcane Panel Base Styling with Glowing Rune Borders */
     .panel {
       background: var(--bg-panel);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5), 0 0 12px var(--glow-purple);
+      position: relative;
+      transition: box-shadow 0.3s ease;
     }
 
+    .panel:hover {
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 18px var(--glow-purple);
+    }
+
+    /* Glowing Rune Header */
     .panel-header {
       padding: 12px 18px;
-      background: rgba(0, 0, 0, 0.25);
-      border-bottom: 1px solid var(--border-color);
+      background: linear-gradient(90deg, rgba(22, 21, 46, 0.95), rgba(35, 28, 66, 0.95));
+      border-bottom: 1px solid var(--accent-purple);
       font-size: 0.95rem;
       font-weight: 700;
       color: var(--accent-gold);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      text-shadow: 0 0 8px rgba(243, 156, 18, 0.3);
+      position: relative;
     }
 
-    /* Grimoire (Element List) */
+    .panel-header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+    }
+
+    .panel-header .rune-mark {
+      font-size: 0.8rem;
+      color: var(--accent-purple-glow);
+      margin-right: 6px;
+    }
+
+    /* Grimoire (Element List) Search & Grid */
     .grimoire-search {
-      padding: 10px 12px;
+      padding: 12px 14px;
       border-bottom: 1px solid var(--border-color);
-      background: rgba(0,0,0,0.15);
+      background: rgba(10, 9, 20, 0.4);
     }
 
     .grimoire-search input {
       width: 100%;
-      background: rgba(0, 0, 0, 0.35);
+      background: rgba(9, 9, 20, 0.7);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 8px 12px;
+      border-radius: 8px;
+      padding: 9px 14px;
       color: var(--text-main);
       font-size: 0.85rem;
       outline: none;
-      transition: border-color 0.2s;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+      transition: all 0.25s ease;
     }
 
     .grimoire-search input:focus {
       border-color: var(--accent-purple);
+      box-shadow: 0 0 12px var(--glow-purple), inset 0 2px 4px rgba(0,0,0,0.5);
     }
 
     .element-grid {
       flex: 1;
       overflow-y: auto;
-      padding: 12px;
+      padding: 14px;
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 12px;
       align-content: start;
     }
 
@@ -168,135 +252,240 @@
       border-radius: 3px;
     }
 
+    /* Golden Element Badge / Cards Styling */
     .element-card {
-      background: rgba(255, 255, 255, 0.04);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(155, 89, 182, 0.05));
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 12px 8px;
+      border-radius: 10px;
+      padding: 14px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: relative;
+      overflow: hidden;
     }
 
-    .element-card:hover {
-      background: rgba(155, 89, 182, 0.18);
-      border-color: var(--accent-purple);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px var(--glow-purple);
+    .element-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent-purple);
     }
 
-    .element-card.basic {
-      border-left: 3px solid var(--accent-blue);
+    .element-card.basic::before {
+      background: var(--accent-blue);
     }
 
     .element-card.discovered {
-      border-left: 3px solid var(--accent-gold);
+      border: 1px solid var(--border-gold);
+      background: linear-gradient(145deg, rgba(243, 156, 18, 0.1), rgba(155, 89, 182, 0.08));
+      box-shadow: 0 0 8px rgba(243, 156, 18, 0.15);
+    }
+
+    .element-card.discovered::before {
+      background: linear-gradient(90deg, var(--accent-gold), var(--accent-gold-light));
+      box-shadow: 0 0 8px var(--accent-gold);
+    }
+
+    .element-card:hover {
+      transform: translateY(-3px) scale(1.02);
+      border-color: var(--accent-gold);
+      box-shadow: 0 6px 16px var(--glow-gold);
+      background: linear-gradient(145deg, rgba(243, 156, 18, 0.18), rgba(155, 89, 182, 0.15));
+    }
+
+    .element-badge-tag {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      font-size: 0.6rem;
+      background: rgba(243, 156, 18, 0.2);
+      color: var(--accent-gold-light);
+      border: 1px solid var(--accent-gold);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-weight: 700;
     }
 
     .element-icon {
-      font-size: 1.8rem;
+      font-size: 2rem;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.5));
     }
 
     .element-name {
-      font-size: 0.82rem;
-      font-weight: 600;
+      font-size: 0.85rem;
+      font-weight: 700;
       text-align: center;
+      color: var(--text-main);
+      letter-spacing: 0.3px;
     }
 
-    /* Crucible Lab Panel */
+    /* Arcane Laboratory Crucible Panel */
     .crucible-panel {
       background: var(--bg-crucible);
       align-items: center;
       justify-content: center;
       padding: 30px 20px;
       position: relative;
-      background-image: radial-gradient(circle at center, rgba(155, 89, 182, 0.08) 0%, transparent 70%);
+      background-image: 
+        radial-gradient(circle at center, rgba(155, 89, 182, 0.15) 0%, transparent 70%),
+        radial-gradient(circle at center, rgba(243, 156, 18, 0.05) 0%, transparent 50%);
+      border: 1px solid var(--accent-purple);
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--glow-purple);
+    }
+
+    .crucible-panel::before {
+      content: 'ᛟ';
+      position: absolute;
+      top: 15px;
+      left: 20px;
+      font-size: 1.5rem;
+      color: rgba(243, 156, 18, 0.3);
+      text-shadow: 0 0 6px var(--accent-gold);
+    }
+
+    .crucible-panel::after {
+      content: 'ᚱ';
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 1.5rem;
+      color: rgba(155, 89, 182, 0.3);
+      text-shadow: 0 0 6px var(--accent-purple);
+    }
+
+    /* Transmutation Circle & Vessel */
+    .transmutation-circle {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    .rune-ring {
+      position: absolute;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      border: 1px solid rgba(243, 156, 18, 0.4);
+      box-shadow: 0 0 15px var(--glow-gold), inset 0 0 15px var(--glow-purple);
+      animation: rotateRune 40s linear infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .rune-ring::before {
+      content: 'ᛟ   ᚱ   ᚲ   ᛗ   ᛉ   ᛏ   ᛋ   ᚠ';
+      position: absolute;
+      font-size: 0.7rem;
+      color: var(--accent-gold);
+      letter-spacing: 6px;
+      text-shadow: 0 0 5px var(--accent-gold);
+    }
+
+    @keyframes rotateRune {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
 
     .crucible-vessel {
-      width: 170px;
-      height: 170px;
+      width: 160px;
+      height: 160px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(155, 89, 182, 0.25) 0%, rgba(22, 24, 44, 0.85) 75%);
-      border: 2px dashed var(--accent-purple);
+      background: radial-gradient(circle, rgba(155, 89, 182, 0.3) 0%, rgba(15, 14, 30, 0.95) 80%);
+      border: 2px dashed var(--accent-gold);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: 0 0 35px var(--glow-purple);
-      margin-bottom: 25px;
+      box-shadow: 0 0 35px var(--glow-purple), inset 0 0 20px rgba(155, 89, 182, 0.4);
       transition: all 0.3s ease;
+      z-index: 2;
     }
 
     .crucible-vessel.reacting {
-      animation: pulseGlow 0.6s infinite alternate;
-      border-color: var(--accent-gold);
-      box-shadow: 0 0 50px var(--glow-gold);
+      animation: pulseCrucible 0.6s infinite alternate;
+      border-color: var(--accent-gold-light);
+      box-shadow: 0 0 60px var(--glow-gold), inset 0 0 30px var(--glow-gold);
     }
 
-    @keyframes pulseGlow {
-      from { transform: scale(1); box-shadow: 0 0 25px var(--glow-purple); }
-      to { transform: scale(1.06); box-shadow: 0 0 55px var(--glow-gold); }
+    @keyframes pulseCrucible {
+      from { transform: scale(1); box-shadow: 0 0 30px var(--glow-purple); }
+      to { transform: scale(1.08); box-shadow: 0 0 60px var(--glow-gold); }
     }
 
     .crucible-orb {
-      font-size: 3.5rem;
-      filter: drop-shadow(0 0 10px rgba(255,255,255,0.4));
+      font-size: 3.8rem;
+      filter: drop-shadow(0 0 15px rgba(243, 156, 18, 0.6));
     }
 
     .slots-container {
       display: flex;
-      gap: 30px;
+      gap: 25px;
       margin-bottom: 25px;
+      z-index: 2;
     }
 
     .crucible-slot {
-      width: 100px;
-      height: 100px;
+      width: 110px;
+      height: 110px;
       border: 2px dashed var(--border-color);
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      background: rgba(9, 9, 20, 0.6);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 6px;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.25s ease;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
     }
 
     .crucible-slot:hover {
       border-color: var(--accent-purple);
+      box-shadow: 0 0 15px var(--glow-purple);
     }
 
     .crucible-slot.active {
       border-style: solid;
       border-color: var(--accent-gold);
-      background: rgba(243, 156, 18, 0.1);
-      box-shadow: 0 0 15px rgba(243, 156, 18, 0.25);
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.15), rgba(155, 89, 182, 0.15));
+      box-shadow: 0 0 20px var(--glow-gold), inset 0 0 10px rgba(243, 156, 18, 0.2);
     }
 
+    /* Golden Transmutation Button */
     .btn-transmute {
-      background: linear-gradient(135deg, #8e44ad, #2980b9);
-      border: none;
-      color: white;
-      font-weight: 700;
-      padding: 14px 36px;
-      border-radius: 25px;
+      background: linear-gradient(135deg, #d4ac0d 0%, #f39c12 50%, #8e44ad 100%);
+      border: 1px solid var(--accent-gold-light);
+      color: #ffffff;
+      font-weight: 800;
+      padding: 14px 40px;
+      border-radius: 30px;
       font-size: 1.05rem;
+      letter-spacing: 0.5px;
       cursor: pointer;
-      box-shadow: 0 4px 18px rgba(142, 68, 173, 0.45);
-      transition: all 0.2s;
+      box-shadow: 0 6px 20px rgba(243, 156, 18, 0.4), 0 0 15px var(--glow-gold);
+      transition: all 0.25s ease;
+      text-transform: uppercase;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+      z-index: 2;
     }
 
     .btn-transmute:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 6px 24px rgba(142, 68, 173, 0.65);
+      transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 8px 28px rgba(243, 156, 18, 0.6), 0 0 25px var(--glow-gold);
+      background: linear-gradient(135deg, #f1c40f 0%, #f39c12 50%, #9b59b6 100%);
     }
 
     .btn-transmute:active {
@@ -305,36 +494,39 @@
 
     .crucible-actions {
       display: flex;
-      gap: 12px;
-      margin-top: 18px;
+      gap: 14px;
+      margin-top: 20px;
+      z-index: 2;
     }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.05);
       border: 1px solid var(--border-color);
       color: var(--text-muted);
       padding: 8px 18px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-size: 0.85rem;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
 
     .btn-secondary:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.15);
-      border-color: var(--text-muted);
+      color: var(--accent-gold);
+      background: rgba(243, 156, 18, 0.1);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.2);
     }
 
     /* Log / Journal Panel */
     .log-content {
       flex: 1;
-      padding: 14px;
+      padding: 16px;
       overflow-y: auto;
       font-size: 0.85rem;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .log-content::-webkit-scrollbar {
@@ -346,16 +538,21 @@
     }
 
     .log-entry {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(9, 9, 20, 0.5);
       border-left: 3px solid var(--accent-purple);
-      padding: 10px 12px;
-      border-radius: 0 6px 6px 0;
-      line-height: 1.4;
+      border-radius: 0 8px 8px 0;
+      padding: 12px 14px;
+      line-height: 1.45;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      position: relative;
     }
 
     .log-entry.discovery {
       border-left-color: var(--accent-gold);
-      background: rgba(243, 156, 18, 0.1);
+      border: 1px solid var(--border-gold);
+      border-left-width: 4px;
+      background: linear-gradient(90deg, rgba(243, 156, 18, 0.15) 0%, rgba(15, 14, 30, 0.8) 100%);
+      box-shadow: 0 0 12px rgba(243, 156, 18, 0.25);
     }
 
     .log-entry.fizzle {
@@ -365,8 +562,9 @@
 
     .log-time {
       font-size: 0.7rem;
-      color: var(--text-muted);
-      margin-bottom: 2px;
+      color: var(--accent-purple-glow);
+      font-weight: 600;
+      margin-bottom: 3px;
     }
   </style>
 </head>
@@ -377,19 +575,19 @@
       <div>
         <h1>KAlchemy</h1>
       </div>
-      <span class="subtitle">Element Discovery Lab</span>
+      <span class="subtitle">Arcane Laboratory</span>
     </div>
     <div class="stats-bar">
       <div class="stat-badge">
-        <span>📖 Discovered:</span>
+        <span class="label">Discovered:</span>
         <span class="val" id="stat-discovered">4 / 20</span>
       </div>
       <div class="stat-badge">
-        <span>✨ Essence:</span>
+        <span class="label">Essence:</span>
         <span class="val" id="stat-essence">100</span>
       </div>
       <div class="stat-badge">
-        <span>🏆 Rank:</span>
+        <span class="label">Rank:</span>
         <span class="val" id="stat-rank">Apprentice</span>
       </div>
     </div>
@@ -399,7 +597,7 @@
     <!-- Left: Grimoire -->
     <div class="panel">
       <div class="panel-header">
-        <span>Elemental Grimoire</span>
+        <div><span class="rune-mark">ᛟ</span><span>Elemental Grimoire</span></div>
         <span style="font-size:0.75rem; color:var(--text-muted)" id="grimoire-count">4 Elements</span>
       </div>
       <div class="grimoire-search">
@@ -412,8 +610,11 @@
 
     <!-- Center: Crucible -->
     <div class="panel crucible-panel">
-      <div class="crucible-vessel" id="crucible-vessel">
-        <span class="crucible-orb" id="crucible-orb">🔮</span>
+      <div class="transmutation-circle">
+        <div class="rune-ring"></div>
+        <div class="crucible-vessel" id="crucible-vessel">
+          <span class="crucible-orb" id="crucible-orb">🔮</span>
+        </div>
       </div>
 
       <div class="slots-container">
@@ -438,7 +639,7 @@
     <!-- Right: Log -->
     <div class="panel">
       <div class="panel-header">
-        <span>Alchemist's Journal</span>
+        <div><span class="rune-mark">ᚲ</span><span>Alchemist's Journal</span></div>
       </div>
       <div class="log-content" id="log-content">
         <div class="log-entry discovery">
@@ -548,7 +749,11 @@
 
         const card = document.createElement('div');
         card.className = `element-card ${el.basic ? 'basic' : 'discovered'}`;
+        const badgeTag = el.basic 
+          ? `<span class="element-badge-tag" style="background:rgba(52,152,219,0.2); border-color:var(--accent-blue); color:#74b9ff">PRIMAL</span>` 
+          : `<span class="element-badge-tag">✦ GOLD</span>`;
         card.innerHTML = `
+          ${badgeTag}
           <div class="element-icon">${el.icon}</div>
           <div class="element-name">${el.name}</div>
         `;

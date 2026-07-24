@@ -92,12 +92,16 @@ static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
 static HBRUSH hCrucibleBrush = NULL;
 static HBRUSH hVesselBrush = NULL;
+static HBRUSH hGoldBadgeBrush = NULL;
 static HPEN hVesselPen = NULL;
 static HPEN hGoldPen = NULL;
+static HPEN hPurplePen = NULL;
+static HPEN hInnerGlowPen = NULL;
 static HFONT hTitleFont = NULL;
 static HFONT hHeaderFont = NULL;
 static HFONT hUIFont = NULL;
 static HFONT hSlotFont = NULL;
+static HFONT hBadgeFont = NULL;
 
 static void AddJournalLog(const char* text) {
     if (!g_hJournalEdit) return;
@@ -192,16 +196,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             InitGameState();
 
-            hBgBrush = CreateSolidBrush(RGB(13, 15, 27));
-            hPanelBrush = CreateSolidBrush(RGB(22, 24, 44));
-            hCrucibleBrush = CreateSolidBrush(RGB(28, 24, 54));
-            hVesselBrush = CreateSolidBrush(RGB(45, 35, 80));
+            hBgBrush = CreateSolidBrush(RGB(9, 9, 20));          // Deep violet/slate
+            hPanelBrush = CreateSolidBrush(RGB(22, 21, 46));       // Mystical panel background
+            hCrucibleBrush = CreateSolidBrush(RGB(29, 24, 61));    // Arcane laboratory crucible
+            hVesselBrush = CreateSolidBrush(RGB(55, 38, 95));      // Arcane purple vessel
+            hGoldBadgeBrush = CreateSolidBrush(RGB(45, 35, 12));   // Golden badge fill
             hVesselPen = CreatePen(PS_DASH, 2, RGB(155, 89, 182));
+            hPurplePen = CreatePen(PS_SOLID, 2, RGB(155, 89, 182));
             hGoldPen = CreatePen(PS_SOLID, 2, RGB(243, 156, 18));
-            hTitleFont = CreateFontA(22, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hHeaderFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hUIFont = CreateFontA(14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
-            hSlotFont = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hInnerGlowPen = CreatePen(PS_SOLID, 1, RGB(241, 196, 15));
+
+            hTitleFont = CreateFontA(21, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hHeaderFont = CreateFontA(15, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hUIFont = CreateFontA(13, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hSlotFont = CreateFontA(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
+            hBadgeFont = CreateFontA(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
 
             // Grimoire Search Input
             g_hSearchEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
@@ -359,32 +368,66 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdc = BeginPaint(hwnd, &ps);
             SetBkMode(hdc, TRANSPARENT);
 
+            // Helper macro for drawing glowing panel borders
+            #define DRAW_RUNE_PANEL(r, brush) { \
+                FillRect(hdc, &(r), (brush)); \
+                HGDIOBJ pOldP = SelectObject(hdc, hPurplePen); \
+                Rectangle(hdc, (r).left, (r).top, (r).right, (r).bottom); \
+                SelectObject(hdc, hGoldPen); \
+                Rectangle(hdc, (r).left + 2, (r).top + 2, (r).right - 2, (r).bottom - 2); \
+                SelectObject(hdc, pOldP); \
+            }
+
             // Top Header Bar
             RECT headerRect = { 20, 10, 765, 60 };
-            FillRect(hdc, &headerRect, hPanelBrush);
-            FrameRect(hdc, &headerRect, (HBRUSH)GetStockObject(GRAY_BRUSH));
+            DRAW_RUNE_PANEL(headerRect, hPanelBrush);
 
             SelectObject(hdc, hTitleFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 35, 20, "KAlchemy - Element Discovery Lab", 32);
+            TextOutA(hdc, 35, 18, "KALCHEMY - Arcane Laboratory", 28);
 
-            SelectObject(hdc, hUIFont);
-            char statsStr[128];
+            // Rank calculation
             const char* rankStr = "Apprentice";
             if (g_State.discoveredCount >= 20) rankStr = "Grand Master";
             else if (g_State.discoveredCount >= 15) rankStr = "Master Alchemist";
             else if (g_State.discoveredCount >= 10) rankStr = "Journeyman";
             else if (g_State.discoveredCount >= 6) rankStr = "Adept";
 
-            wsprintfA(statsStr, "Discovered: %d/%d  |  Essence: %d  |  Rank: %s", 
-                g_State.discoveredCount, TOTAL_ELEMENTS, g_State.essence, rankStr);
-            SetTextColor(hdc, RGB(160, 220, 255));
-            TextOutA(hdc, 400, 24, statsStr, lstrlenA(statsStr));
+            // Golden Element Badges in Header
+            SelectObject(hdc, hBadgeFont);
+            HGDIOBJ oldBrush = SelectObject(hdc, hGoldBadgeBrush);
+            HGDIOBJ oldPen = SelectObject(hdc, hGoldPen);
+
+            // Badge 1: Discovered
+            RECT badge1 = { 375, 18, 490, 52 };
+            RoundRect(hdc, badge1.left, badge1.top, badge1.right, badge1.bottom, 8, 8);
+            char b1Str[32];
+            wsprintfA(b1Str, "Discovered: %d/%d", g_State.discoveredCount, TOTAL_ELEMENTS);
+            SetTextColor(hdc, RGB(255, 215, 0));
+            DrawTextA(hdc, b1Str, -1, &badge1, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+            // Badge 2: Essence
+            RECT badge2 = { 498, 18, 613, 52 };
+            RoundRect(hdc, badge2.left, badge2.top, badge2.right, badge2.bottom, 8, 8);
+            char b2Str[32];
+            wsprintfA(b2Str, "Essence: %d", g_State.essence);
+            SetTextColor(hdc, RGB(255, 215, 0));
+            DrawTextA(hdc, b2Str, -1, &badge2, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+            // Badge 3: Rank
+            RECT badge3 = { 621, 18, 750, 52 };
+            RoundRect(hdc, badge3.left, badge3.top, badge3.right, badge3.bottom, 8, 8);
+            char b3Str[64];
+            wsprintfA(b3Str, "Rank: %s", rankStr);
+            SetTextColor(hdc, RGB(255, 215, 0));
+            DrawTextA(hdc, b3Str, -1, &badge3, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+            SelectObject(hdc, oldBrush);
+            SelectObject(hdc, oldPen);
 
             // Left Panel - Element Grimoire
             RECT leftPanel = { 20, 68, 265, 523 };
-            FillRect(hdc, &leftPanel, hPanelBrush);
-            FrameRect(hdc, &leftPanel, (HBRUSH)GetStockObject(GRAY_BRUSH));
+            DRAW_RUNE_PANEL(leftPanel, hPanelBrush);
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
@@ -393,27 +436,45 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char countStr[32];
             wsprintfA(countStr, "(%d Elements)", g_State.discoveredCount);
             SelectObject(hdc, hUIFont);
-            SetTextColor(hdc, RGB(160, 170, 190));
+            SetTextColor(hdc, RGB(180, 160, 220));
             TextOutA(hdc, 175, 76, countStr, lstrlenA(countStr));
+
+            // Draw Golden Badge Frames around Discovered Element Buttons
+            SelectObject(hdc, hGoldPen);
+            for (int i = 0; i < TOTAL_ELEMENTS; i++) {
+                if (g_State.discovered[i] && IsWindowVisible(g_hElemButtons[i])) {
+                    RECT btnR;
+                    GetWindowRect(g_hElemButtons[i], &btnR);
+                    MapWindowPoints(NULL, hwnd, (LPPOINT)&btnR, 2);
+                    InflateRect(&btnR, 2, 2);
+                    HGDIOBJ pNullBrush = GetStockObject(NULL_BRUSH);
+                    HGDIOBJ pOldB = SelectObject(hdc, pNullBrush);
+                    Rectangle(hdc, btnR.left, btnR.top, btnR.right, btnR.bottom);
+                    SelectObject(hdc, pOldB);
+                }
+            }
 
             // Center Panel - Transmutation Crucible
             RECT centerPanel = { 275, 68, 510, 523 };
-            FillRect(hdc, &centerPanel, hCrucibleBrush);
-            FrameRect(hdc, &centerPanel, (HBRUSH)GetStockObject(GRAY_BRUSH));
+            DRAW_RUNE_PANEL(centerPanel, hCrucibleBrush);
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
             TextOutA(hdc, 295, 74, "Transmutation Crucible", 22);
 
-            // Draw Vessel Graphic (Ellipse)
-            HGDIOBJ oldBrush = SelectObject(hdc, hVesselBrush);
-            HGDIOBJ oldPen = SelectObject(hdc, hVesselPen);
-            Ellipse(hdc, 350, 100, 435, 185);
+            // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
+            SelectObject(hdc, hGoldPen);
+            HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
+            SelectObject(hdc, pNullB);
+            Ellipse(hdc, 340, 92, 445, 193); // Outer golden rune ring
+
+            SelectObject(hdc, hVesselBrush);
+            SelectObject(hdc, hPurplePen);
+            Ellipse(hdc, 350, 102, 435, 183); // Core vessel ellipse
+
             SelectObject(hdc, hSlotFont);
-            SetTextColor(hdc, RGB(220, 200, 255));
-            TextOutA(hdc, 368, 134, "Crucible", 8);
-            SelectObject(hdc, oldBrush);
-            SelectObject(hdc, oldPen);
+            SetTextColor(hdc, RGB(241, 196, 15));
+            TextOutA(hdc, 364, 135, "Crucible", 8);
 
             // Status message centered below crucible buttons
             SelectObject(hdc, hUIFont);
@@ -423,8 +484,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Right Panel - Journal & Log
             RECT rightPanel = { 520, 68, 765, 523 };
-            FillRect(hdc, &rightPanel, hPanelBrush);
-            FrameRect(hdc, &rightPanel, (HBRUSH)GetStockObject(GRAY_BRUSH));
+            DRAW_RUNE_PANEL(rightPanel, hPanelBrush);
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
@@ -439,10 +499,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HDC hdcEdit = (HDC)wParam;
             HWND hEdit = (HWND)lParam;
             if (hEdit == g_hJournalEdit || hEdit == g_hSearchEdit) {
-                SetTextColor(hdcEdit, RGB(220, 230, 242));
-                SetBkColor(hdcEdit, RGB(16, 18, 32));
+                SetTextColor(hdcEdit, RGB(226, 232, 240));
+                SetBkColor(hdcEdit, RGB(16, 14, 32));
                 static HBRUSH hEditBg = NULL;
-                if (!hEditBg) hEditBg = CreateSolidBrush(RGB(16, 18, 32));
+                if (!hEditBg) hEditBg = CreateSolidBrush(RGB(16, 14, 32));
                 return (INT_PTR)hEditBg;
             }
             break;
@@ -461,12 +521,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hPanelBrush) DeleteObject(hPanelBrush);
             if (hCrucibleBrush) DeleteObject(hCrucibleBrush);
             if (hVesselBrush) DeleteObject(hVesselBrush);
+            if (hGoldBadgeBrush) DeleteObject(hGoldBadgeBrush);
             if (hVesselPen) DeleteObject(hVesselPen);
+            if (hPurplePen) DeleteObject(hPurplePen);
             if (hGoldPen) DeleteObject(hGoldPen);
+            if (hInnerGlowPen) DeleteObject(hInnerGlowPen);
             if (hTitleFont) DeleteObject(hTitleFont);
             if (hHeaderFont) DeleteObject(hHeaderFont);
             if (hUIFont) DeleteObject(hUIFont);
             if (hSlotFont) DeleteObject(hSlotFont);
+            if (hBadgeFont) DeleteObject(hBadgeFont);
             PostQuitMessage(0);
             break;
 
