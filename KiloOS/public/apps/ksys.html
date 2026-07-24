@@ -3,85 +3,1064 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KSys</title>
+<title>KSys - System Diagnostics & Benchmarks</title>
 <style>
-  body { margin: 0; background-color: #f0f0f0; display: flex; height: 100vh; overflow: hidden; padding: 10px; box-sizing: border-box; }
-  textarea { flex: 1; width: 100%; resize: none; font-family: "Consolas", monospace; font-size: 16px; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; background: white; }
+  :root {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-card: #182234;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-green: #4ade80;
+    --accent-amber: #fbbf24;
+    --accent-purple: #c084fc;
+    --accent-red: #f87171;
+    --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Header */
+  header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 16px;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+  }
+
+  .brand-title h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .brand-title p {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .top-stats {
+    display: flex;
+    gap: 20px;
+  }
+
+  .stat-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent-green);
+    box-shadow: 0 0 8px var(--accent-green);
+  }
+
+  /* Nav Tabs */
+  nav {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    padding: 0 20px;
+    gap: 4px;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-main);
+    background-color: rgba(255,255,255,0.03);
+  }
+
+  .tab-btn.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+    background-color: rgba(56, 189, 248, 0.05);
+  }
+
+  /* Main View Layout */
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.25s ease-in-out;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Grid Layouts */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  /* Cards */
+  .card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--card-shadow);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .card-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent-blue);
+  }
+
+  .info-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+
+  .info-label {
+    color: var(--text-muted);
+  }
+
+  .info-val {
+    font-family: 'Consolas', monospace;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: right;
+  }
+
+  /* Buttons */
+  .btn {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  .btn:hover {
+    filter: brightness(1.15);
+    transform: translateY(-1px);
+  }
+
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .btn-accent {
+    background: linear-gradient(135deg, #059669, #10b981);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    box-shadow: none;
+  }
+
+  .btn-outline:hover {
+    background-color: rgba(255,255,255,0.05);
+    border-color: var(--accent-blue);
+  }
+
+  /* Progress & Benchmarks */
+  .bench-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .meter-bar {
+    width: 100%;
+    height: 10px;
+    background-color: var(--bg-primary);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 12px 0;
+    border: 1px solid var(--border-color);
+  }
+
+  .meter-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    transition: width 0.3s ease;
+  }
+
+  .score-display {
+    font-size: 28px;
+    font-family: 'Consolas', monospace;
+    font-weight: 700;
+    color: var(--accent-amber);
+    margin: 10px 0;
+  }
+
+  /* Event Log Table */
+  .log-toolbar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .search-input, .select-input {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+
+  .search-input { flex: 1; }
+
+  .log-container {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+  }
+
+  .log-row {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: grid;
+    grid-template-columns: 140px 90px 1fr;
+    gap: 10px;
+  }
+
+  .log-row:last-child { border-bottom: none; }
+
+  .log-time { color: var(--text-muted); }
+  .log-level { font-weight: bold; }
+  .log-level.INFO { color: var(--accent-blue); }
+  .log-level.WARN { color: var(--accent-amber); }
+  .log-level.ERROR { color: var(--accent-red); }
+  .log-level.BENCH { color: var(--accent-purple); }
+
+  /* Export Report Preview */
+  .report-preview {
+    width: 100%;
+    height: 360px;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--accent-green);
+    font-family: 'Consolas', monospace;
+    padding: 14px;
+    font-size: 12px;
+    resize: none;
+    white-space: pre;
+    overflow: auto;
+  }
+
+  .export-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  /* Custom Scrollbars */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #475569; }
 </style>
 </head>
 <body>
-  <textarea id="out" readonly aria-label="System Information"></textarea>
+
+  <header>
+    <div class="brand">
+      <div class="brand-logo">KS</div>
+      <div class="brand-title">
+        <h1>KSys Workstation Diagnostic & Benchmark Suite</h1>
+        <p>System Utility & Hardware Performance Inspector</p>
+      </div>
+    </div>
+    <div class="top-stats">
+      <div class="stat-badge">
+        <span class="dot"></span>
+        <span id="header-uptime">Uptime: 00:00:00</span>
+      </div>
+      <div class="stat-badge">
+        <span>⚡ Cores: <strong id="header-cores">--</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <nav>
+    <button class="tab-btn active" onclick="switchTab('inspector')">🔍 Component Inspector</button>
+    <button class="tab-btn" onclick="switchTab('benchmarks')">⚡ Diagnostic Benchmarks</button>
+    <button class="tab-btn" onclick="switchTab('logs')">📋 Event History Logs</button>
+    <button class="tab-btn" onclick="switchTab('export')">💾 System Report Export</button>
+  </nav>
+
+  <main>
+    <!-- Hardware Inspector Tab -->
+    <section id="tab-inspector" class="tab-content active">
+      <div class="grid-3">
+        <!-- CPU Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>💻 Processor (CPU)</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">Logical Cores:</span><span class="info-val" id="cpu-cores">--</span></div>
+            <div class="info-item"><span class="info-label">Architecture / Platform:</span><span class="info-val" id="cpu-arch">--</span></div>
+            <div class="info-item"><span class="info-label">Hardware Concurrency:</span><span class="info-val" id="cpu-threads">--</span></div>
+            <div class="info-item"><span class="info-label">User Agent Kernel:</span><span class="info-val" id="cpu-agent">--</span></div>
+          </div>
+        </div>
+
+        <!-- RAM Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>🧠 System Memory (RAM)</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">Estimated Memory:</span><span class="info-val" id="ram-size">--</span></div>
+            <div class="info-item"><span class="info-label">JS Heap Limit:</span><span class="info-val" id="ram-limit">--</span></div>
+            <div class="info-item"><span class="info-label">JS Heap Allocated:</span><span class="info-val" id="ram-allocated">--</span></div>
+            <div class="info-item"><span class="info-label">JS Heap Used:</span><span class="info-val" id="ram-used">--</span></div>
+          </div>
+        </div>
+
+        <!-- GPU Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>🖥️ GPU & Display</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">Resolution:</span><span class="info-val" id="gpu-res">--</span></div>
+            <div class="info-item"><span class="info-label">Color Depth:</span><span class="info-val" id="gpu-depth">--</span></div>
+            <div class="info-item"><span class="info-label">Device Pixel Ratio:</span><span class="info-val" id="gpu-dpr">--</span></div>
+            <div class="info-item"><span class="info-label">WebGL Renderer:</span><span class="info-val" id="gpu-renderer">--</span></div>
+          </div>
+        </div>
+
+        <!-- Storage Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>💽 Disk & Storage</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">Storage Quota:</span><span class="info-val" id="disk-quota">--</span></div>
+            <div class="info-item"><span class="info-label">Storage Used:</span><span class="info-val" id="disk-used">--</span></div>
+            <div class="info-item"><span class="info-label">Storage Available:</span><span class="info-val" id="disk-free">--</span></div>
+            <div class="info-item"><span class="info-label">Persisted Storage:</span><span class="info-val" id="disk-persisted">--</span></div>
+          </div>
+        </div>
+
+        <!-- Network Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>🌐 Network Interface</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">Status:</span><span class="info-val" id="net-status">--</span></div>
+            <div class="info-item"><span class="info-label">Connection Type:</span><span class="info-val" id="net-type">--</span></div>
+            <div class="info-item"><span class="info-label">Estimated Downlink:</span><span class="info-val" id="net-downlink">--</span></div>
+            <div class="info-item"><span class="info-label">Estimated RTT:</span><span class="info-val" id="net-rtt">--</span></div>
+          </div>
+        </div>
+
+        <!-- OS & Environment Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>⚙️ OS & Environment</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">Language:</span><span class="info-val" id="os-lang">--</span></div>
+            <div class="info-item"><span class="info-label">Timezone:</span><span class="info-val" id="os-tz">--</span></div>
+            <div class="info-item"><span class="info-label">Cookies Enabled:</span><span class="info-val" id="os-cookies">--</span></div>
+            <div class="info-item"><span class="info-label">Online State:</span><span class="info-val" id="os-online">--</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Benchmarks Tab -->
+    <section id="tab-benchmarks" class="tab-content">
+      <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
+        <button class="btn btn-accent" id="btn-run-all" onclick="runAllBenchmarks()">▶ Run All Diagnostic Benchmarks</button>
+        <span id="bench-status-text" style="font-size: 13px; color: var(--text-muted);">Ready to test CPU, RAM, and Storage throughput.</span>
+      </div>
+
+      <div class="grid-3">
+        <!-- CPU Stress Test -->
+        <div class="card bench-card">
+          <div>
+            <div class="card-header">
+              <h2>⚡ CPU Benchmark</h2>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Executes single & multi-threaded mathematical matrix stress calculations.
+            </p>
+            <div class="meter-bar"><div class="meter-fill" id="cpu-bench-progress"></div></div>
+            <div class="score-display" id="cpu-score">-- MFLOPS</div>
+            <div class="info-item"><span class="info-label">Thread Workers:</span><span class="info-val" id="cpu-worker-count">--</span></div>
+            <div class="info-item"><span class="info-label">Execution Time:</span><span class="info-val" id="cpu-exec-time">-- ms</span></div>
+          </div>
+          <button class="btn btn-outline" style="margin-top: 16px;" onclick="runCpuBenchmark()">Test CPU</button>
+        </div>
+
+        <!-- RAM Speed Estimator -->
+        <div class="card bench-card">
+          <div>
+            <div class="card-header">
+              <h2>🧠 RAM Throughput</h2>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Allocates 64MB Float64 buffers to measure sequential memory write and read bandwidth.
+            </p>
+            <div class="meter-bar"><div class="meter-fill" id="ram-bench-progress"></div></div>
+            <div class="score-display" id="ram-score">-- MB/s</div>
+            <div class="info-item"><span class="info-label">Write Speed:</span><span class="info-val" id="ram-write-speed">-- MB/s</span></div>
+            <div class="info-item"><span class="info-label">Read Speed:</span><span class="info-val" id="ram-read-speed">-- MB/s</span></div>
+          </div>
+          <button class="btn btn-outline" style="margin-top: 16px;" onclick="runRamBenchmark()">Test RAM</button>
+        </div>
+
+        <!-- Storage I/O Test -->
+        <div class="card bench-card">
+          <div>
+            <div class="card-header">
+              <h2>💽 Disk I/O Test</h2>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Tests storage buffer read/write speeds using Blob chunk streaming and IndexedDB sync.
+            </p>
+            <div class="meter-bar"><div class="meter-fill" id="disk-bench-progress"></div></div>
+            <div class="score-display" id="disk-score">-- MB/s</div>
+            <div class="info-item"><span class="info-label">Write Throughput:</span><span class="info-val" id="disk-write-speed">-- MB/s</span></div>
+            <div class="info-item"><span class="info-label">Read Throughput:</span><span class="info-val" id="disk-read-speed">-- MB/s</span></div>
+          </div>
+          <button class="btn btn-outline" style="margin-top: 16px;" onclick="runDiskBenchmark()">Test Disk I/O</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Event Logs Tab -->
+    <section id="tab-logs" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>📋 System Event History Viewer</h2>
+          <div>
+            <button class="btn btn-outline" onclick="clearLogs()">Clear</button>
+            <button class="btn btn-outline" onclick="exportLogs()">Export Log</button>
+          </div>
+        </div>
+        <div class="log-toolbar">
+          <input type="text" id="log-search" class="search-input" placeholder="Search log entries..." oninput="filterLogs()">
+          <select id="log-filter-level" class="select-input" onchange="filterLogs()">
+            <option value="ALL">All Levels</option>
+            <option value="INFO">INFO</option>
+            <option value="BENCH">BENCHMARK</option>
+            <option value="WARN">WARNING</option>
+            <option value="ERROR">ERROR</option>
+          </select>
+        </div>
+        <div class="log-container" id="log-list">
+          <!-- Log rows appended dynamically -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Export Report Tab -->
+    <section id="tab-export" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2>💾 Detailed System Information Report</h2>
+          <button class="btn btn-outline" onclick="generateReport()">🔄 Refresh Audit Report</button>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+          Comprehensive snapshot of hardware specifications, diagnostic scores, and runtime telemetry.
+        </p>
+        <textarea id="report-preview" class="report-preview" readonly aria-label="System Report Preview"></textarea>
+        <div class="export-actions">
+          <button class="btn" onclick="downloadReport('txt')">📄 Download TXT Report</button>
+          <button class="btn btn-accent" onclick="downloadReport('json')">📊 Download JSON Report</button>
+          <button class="btn" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);" onclick="downloadReport('html')">🌐 Download HTML Report</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
 <script>
-  const out = document.getElementById('out');
-  
-  async function update() {
-      let info = "--- System Information ---\n\n";
-      
-      const cores = navigator.hardwareConcurrency || "Unknown";
-      info += `Processor Cores: ${cores}\n`;
-      info += `Platform: ${navigator.platform || "Unknown"}\n`;
-      info += `Language: ${navigator.language || "Unknown"}\n`;
-      info += `User Agent:\n${navigator.userAgent || "Unknown"}\n\n`;
-      
-      info += "--- Memory Information ---\n\n";
-      
-      if (navigator.deviceMemory) {
-          info += `Device Memory: ~${navigator.deviceMemory} GB\n\n`;
-      } else {
-          info += `Device Memory: Restricted by Browser\n\n`;
-      }
-      
-      info += "--- Network Information ---\n\n";
-      if (navigator.connection) {
-          info += `Type: ${navigator.connection.effectiveType || "Unknown"}\n`;
-          info += `Downlink: ${navigator.connection.downlink || 0} Mbps\n`;
-          info += `RTT: ${navigator.connection.rtt || 0} ms\n\n`;
-      } else {
-          info += "Network Information: Restricted by Browser\n\n";
-      }
+  // Global State & Event Logs
+  const startTime = Date.now();
+  const eventLogs = [];
+  let benchResults = {
+    cpuScore: null,
+    ramScore: null,
+    diskScore: null
+  };
 
-      info += "--- Storage Information ---\n\n";
-      if (navigator.storage && navigator.storage.estimate) {
-          try {
-              const estimate = await navigator.storage.estimate();
-              const totalMB = Math.round((estimate.quota || 0) / (1024 * 1024));
-              const usedMB = Math.round((estimate.usage || 0) / (1024 * 1024));
-              info += `Estimated Quota: ${totalMB} MB\n`;
-              info += `Estimated Usage: ${usedMB} MB\n\n`;
-          } catch(e) {
-              info += "Storage Estimate Failed\n\n";
-          }
-      } else {
-          info += "Storage Information: Restricted by Browser\n\n";
-      }
-
-      info += "--- Display Information ---\n\n";
-      if (window.screen) {
-          info += `Screen Resolution: ${window.screen.width || 0}x${window.screen.height || 0}\n`;
-          info += `Color Depth: ${window.screen.colorDepth || 0} bits\n`;
-      } else {
-          info += "Screen Resolution: Unknown\nColor Depth: Unknown\n";
-      }
-      info += `Pixel Ratio: ${window.devicePixelRatio || 1}\n\n`;
-
-      info += "--- Power Status ---\n\n";
-      if (navigator.getBattery) {
-          try {
-              const battery = await navigator.getBattery();
-              info += `Charging: ${battery.charging ? "Yes" : "No"}\n`;
-              info += `Battery Level: ${Math.round((battery.level || 0) * 100)}%\n\n`;
-          } catch(e) {
-              info += "Power Status: Unavailable\n\n";
-          }
-      } else {
-          info += "Power Status: Unsupported by Browser\n\n";
-      }
-
-      if (out) out.value = info;
+  function logEvent(level, message) {
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const entry = { timestamp, level, message };
+    eventLogs.unshift(entry);
+    renderLogs();
   }
-  
-  update();
-  setInterval(update, 1000);
+
+  function renderLogs() {
+    const listEl = document.getElementById('log-list');
+    if (!listEl) return;
+    const filterLevel = document.getElementById('log-filter-level').value;
+    const searchText = document.getElementById('log-search').value.toLowerCase();
+
+    listEl.innerHTML = '';
+    const filtered = eventLogs.filter(e => {
+      const matchLevel = (filterLevel === 'ALL' || e.level === filterLevel);
+      const matchSearch = e.message.toLowerCase().includes(searchText) || e.timestamp.includes(searchText);
+      return matchLevel && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<div style="padding: 16px; color: var(--text-muted); text-align: center;">No event logs match criteria.</div>';
+      return;
+    }
+
+    filtered.forEach(e => {
+      const row = document.createElement('div');
+      row.className = 'log-row';
+      row.innerHTML = `<span class="log-time">${e.timestamp}</span><span class="log-level ${e.level}">[${e.level}]</span><span>${escapeHtml(e.message)}</span>`;
+      listEl.appendChild(row);
+    });
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function filterLogs() { renderLogs(); }
+  function clearLogs() { eventLogs.length = 0; logEvent('INFO', 'Event history logs cleared'); }
+
+  function exportLogs() {
+    const content = eventLogs.map(e => `[${e.timestamp}] [${e.level}] ${e.message}`).join('\n');
+    downloadBlob(content, 'ksys_event_log.txt', 'text/plain');
+  }
+
+  // Navigation
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+    const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+    if (activeBtn) activeBtn.classList.add('active');
+    const targetContent = document.getElementById('tab-' + tabId);
+    if (targetContent) targetContent.classList.add('active');
+
+    if (tabId === 'export') {
+      generateReport();
+    }
+  }
+
+  // System Hardware Inspector Updates
+  async function inspectHardware() {
+    // CPU
+    const cores = navigator.hardwareConcurrency || "Unknown";
+    document.getElementById('cpu-cores').textContent = cores;
+    document.getElementById('cpu-threads').textContent = cores + " Threads";
+    document.getElementById('cpu-arch').textContent = navigator.platform || "Unknown";
+    document.getElementById('cpu-agent').textContent = (navigator.userAgent || "").split(' ')[0] || "Unknown";
+    document.getElementById('header-cores').textContent = cores;
+
+    // RAM
+    if (navigator.deviceMemory) {
+      document.getElementById('ram-size').textContent = `~${navigator.deviceMemory} GB`;
+    } else {
+      document.getElementById('ram-size').textContent = "Restricted by Browser";
+    }
+
+    if (performance && performance.memory) {
+      const mem = performance.memory;
+      document.getElementById('ram-limit').textContent = Math.round(mem.jsHeapSizeLimit / (1024 * 1024)) + " MB";
+      document.getElementById('ram-allocated').textContent = Math.round(mem.totalJSHeapSize / (1024 * 1024)) + " MB";
+      document.getElementById('ram-used').textContent = Math.round(mem.usedJSHeapSize / (1024 * 1024)) + " MB";
+    } else {
+      document.getElementById('ram-limit').textContent = "N/A";
+      document.getElementById('ram-allocated').textContent = "N/A";
+      document.getElementById('ram-used').textContent = "N/A";
+    }
+
+    // GPU & Display
+    document.getElementById('gpu-res').textContent = `${window.screen.width || 0} x ${window.screen.height || 0}`;
+    document.getElementById('gpu-depth').textContent = `${window.screen.colorDepth || 0} bits`;
+    document.getElementById('gpu-dpr').textContent = window.devicePixelRatio || 1;
+
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+        document.getElementById('gpu-renderer').textContent = renderer || "Generic WebGL";
+      } else {
+        document.getElementById('gpu-renderer').textContent = "Software / Canvas2D";
+      }
+    } catch(e) {
+      document.getElementById('gpu-renderer').textContent = "Unavailable";
+    }
+
+    // Storage
+    if (navigator.storage && navigator.storage.estimate) {
+      try {
+        const est = await navigator.storage.estimate();
+        const quotaMB = Math.round((est.quota || 0) / (1024 * 1024));
+        const usedMB = Math.round((est.usage || 0) / (1024 * 1024));
+        const freeMB = Math.max(0, quotaMB - usedMB);
+        document.getElementById('disk-quota').textContent = quotaMB + " MB";
+        document.getElementById('disk-used').textContent = usedMB + " MB";
+        document.getElementById('disk-free').textContent = freeMB + " MB";
+      } catch(e) {
+        document.getElementById('disk-quota').textContent = "Error";
+      }
+    } else {
+      document.getElementById('disk-quota').textContent = "Restricted";
+    }
+
+    if (navigator.storage && navigator.storage.persisted) {
+      const isPersisted = await navigator.storage.persisted();
+      document.getElementById('disk-persisted').textContent = isPersisted ? "Yes (Persistent)" : "No (Temporary)";
+    } else {
+      document.getElementById('disk-persisted').textContent = "Unknown";
+    }
+
+    // Network
+    document.getElementById('net-status').textContent = navigator.onLine ? "Connected" : "Offline";
+    if (navigator.connection) {
+      document.getElementById('net-type').textContent = navigator.connection.effectiveType || "Unknown";
+      document.getElementById('net-downlink').textContent = (navigator.connection.downlink || 0) + " Mbps";
+      document.getElementById('net-rtt').textContent = (navigator.connection.rtt || 0) + " ms";
+    } else {
+      document.getElementById('net-type').textContent = "Standard HTTP";
+      document.getElementById('net-downlink').textContent = "N/A";
+      document.getElementById('net-rtt').textContent = "N/A";
+    }
+
+    // OS
+    document.getElementById('os-lang').textContent = navigator.language || "Unknown";
+    document.getElementById('os-tz').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone || "Unknown";
+    document.getElementById('os-cookies').textContent = navigator.cookieEnabled ? "Yes" : "No";
+    document.getElementById('os-online').textContent = navigator.onLine ? "Online" : "Offline";
+  }
+
+  // Uptime Counter
+  function updateUptime() {
+    const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+    const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+    const secs = String(elapsedSec % 60).padStart(2, '0');
+    document.getElementById('header-uptime').textContent = `Uptime: ${hrs}:${mins}:${secs}`;
+  }
+
+  // Diagnostic Benchmarks
+  async function runCpuBenchmark() {
+    logEvent('BENCH', 'Starting CPU Multi-thread stress benchmark...');
+    const progress = document.getElementById('cpu-bench-progress');
+    const scoreEl = document.getElementById('cpu-score');
+    progress.style.width = '20%';
+
+    const workerCount = navigator.hardwareConcurrency || 4;
+    document.getElementById('cpu-worker-count').textContent = workerCount;
+
+    const workerCode = `
+      self.onmessage = function(e) {
+        const start = performance.now();
+        let ops = 0;
+        const iterations = e.data.iterations;
+        for (let i = 0; i < iterations; i++) {
+          ops += Math.sqrt(i) * Math.sin(i) + Math.cos(i);
+        }
+        const time = performance.now() - start;
+        self.postMessage({ ops, time });
+      };
+    `;
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(blob);
+    const iterations = 5000000;
+    const startAll = performance.now();
+
+    const promises = [];
+    for (let i = 0; i < workerCount; i++) {
+      promises.push(new Promise(resolve => {
+        const w = new Worker(workerUrl);
+        w.onmessage = (msg) => {
+          w.terminate();
+          resolve(msg.data);
+        };
+        w.postMessage({ iterations });
+      }));
+    }
+
+    progress.style.width = '60%';
+    const results = await Promise.all(promises);
+    URL.revokeObjectURL(workerUrl);
+
+    const totalTime = performance.now() - startAll;
+    const totalOps = workerCount * iterations;
+    const mflops = Math.round((totalOps / (totalTime / 1000)) / 100000);
+
+    progress.style.width = '100%';
+    scoreEl.textContent = `${mflops} MFLOPS`;
+    document.getElementById('cpu-exec-time').textContent = `${Math.round(totalTime)} ms`;
+
+    benchResults.cpuScore = `${mflops} MFLOPS`;
+    logEvent('BENCH', `CPU Benchmark Complete: ${mflops} MFLOPS across ${workerCount} workers (${Math.round(totalTime)}ms)`);
+  }
+
+  async function runRamBenchmark() {
+    logEvent('BENCH', 'Starting RAM Read/Write Speed benchmark...');
+    const progress = document.getElementById('ram-bench-progress');
+    const scoreEl = document.getElementById('ram-score');
+    progress.style.width = '20%';
+
+    const bufferSize = 32 * 1024 * 1024; // 32MB Float64Array (256MB raw)
+    const array = new Float64Array(bufferSize);
+
+    // Write speed test
+    progress.style.width = '50%';
+    const startWrite = performance.now();
+    for (let i = 0; i < bufferSize; i++) {
+      array[i] = i * 1.5;
+    }
+    const writeTimeSec = (performance.now() - startWrite) / 1000;
+    const bytesWrittenMB = (bufferSize * 8) / (1024 * 1024);
+    const writeSpeedMBs = Math.round(bytesWrittenMB / writeTimeSec);
+
+    // Read speed test
+    progress.style.width = '80%';
+    let dummySum = 0;
+    const startRead = performance.now();
+    for (let i = 0; i < bufferSize; i += 4) {
+      dummySum += array[i];
+    }
+    const readTimeSec = (performance.now() - startRead) / 1000;
+    const bytesReadMB = (bufferSize * 8) / (1024 * 1024);
+    const readSpeedMBs = Math.round(bytesReadMB / readTimeSec);
+
+    progress.style.width = '100%';
+    const avgSpeed = Math.round((writeSpeedMBs + readSpeedMBs) / 2);
+    scoreEl.textContent = `${avgSpeed} MB/s`;
+
+    document.getElementById('ram-write-speed').textContent = `${writeSpeedMBs} MB/s`;
+    document.getElementById('ram-read-speed').textContent = `${readSpeedMBs} MB/s`;
+
+    benchResults.ramScore = `${avgSpeed} MB/s (W: ${writeSpeedMBs} MB/s, R: ${readSpeedMBs} MB/s)`;
+    logEvent('BENCH', `RAM Speed Test Complete: Write ${writeSpeedMBs} MB/s | Read ${readSpeedMBs} MB/s`);
+  }
+
+  async function runDiskBenchmark() {
+    logEvent('BENCH', 'Starting Disk Storage I/O throughput test...');
+    const progress = document.getElementById('disk-bench-progress');
+    const scoreEl = document.getElementById('disk-score');
+    progress.style.width = '20%';
+
+    const chunkSize = 10 * 1024 * 1024; // 10MB test payload
+    const testData = new Uint8Array(chunkSize);
+    for (let i = 0; i < chunkSize; i++) testData[i] = i % 256;
+
+    // Write Test using IndexedDB storage sync
+    progress.style.width = '50%';
+    const startWrite = performance.now();
+    const db = await openTestDb();
+    await writeToDb(db, testData);
+    const writeTimeSec = (performance.now() - startWrite) / 1000;
+    const writeMBs = Math.round((chunkSize / (1024 * 1024)) / writeTimeSec);
+
+    // Read Test
+    progress.style.width = '80%';
+    const startRead = performance.now();
+    const readData = await readFromDb(db);
+    const readTimeSec = (performance.now() - startRead) / 1000;
+    const readMBs = Math.round((chunkSize / (1024 * 1024)) / readTimeSec);
+
+    await clearTestDb(db);
+
+    progress.style.width = '100%';
+    const avgScore = Math.round((writeMBs + readMBs) / 2);
+    scoreEl.textContent = `${avgScore} MB/s`;
+
+    document.getElementById('disk-write-speed').textContent = `${writeMBs} MB/s`;
+    document.getElementById('disk-read-speed').textContent = `${readMBs} MB/s`;
+
+    benchResults.diskScore = `${avgScore} MB/s (W: ${writeMBs} MB/s, R: ${readMBs} MB/s)`;
+    logEvent('BENCH', `Disk I/O Test Complete: Write ${writeMBs} MB/s | Read ${readMBs} MB/s`);
+  }
+
+  function openTestDb() {
+    return new Promise(resolve => {
+      const req = indexedDB.open('KSysBenchDb', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('chunks');
+      req.onsuccess = () => resolve(req.result);
+    });
+  }
+
+  function writeToDb(db, data) {
+    return new Promise(resolve => {
+      const tx = db.transaction('chunks', 'readwrite');
+      tx.objectStore('chunks').put(data, 'bench_chunk');
+      tx.oncomplete = () => resolve();
+    });
+  }
+
+  function readFromDb(db) {
+    return new Promise(resolve => {
+      const tx = db.transaction('chunks', 'readonly');
+      const req = tx.objectStore('chunks').get('bench_chunk');
+      req.onsuccess = () => resolve(req.result);
+    });
+  }
+
+  function clearTestDb(db) {
+    return new Promise(resolve => {
+      const tx = db.transaction('chunks', 'readwrite');
+      tx.objectStore('chunks').clear();
+      tx.oncomplete = () => resolve();
+    });
+  }
+
+  async function runAllBenchmarks() {
+    const btn = document.getElementById('btn-run-all');
+    btn.disabled = true;
+    document.getElementById('bench-status-text').textContent = 'Executing full diagnostic test suite...';
+
+    await runCpuBenchmark();
+    await runRamBenchmark();
+    await runDiskBenchmark();
+
+    document.getElementById('bench-status-text').textContent = 'All benchmarks finished successfully.';
+    btn.disabled = false;
+    logEvent('INFO', 'Full Diagnostic Benchmark suite finished.');
+  }
+
+  // System Report Export Generator
+  function generateReportText() {
+    const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+    const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+    const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+    const secs = String(elapsedSec % 60).padStart(2, '0');
+
+    let r = `=================================================================\n`;
+    r += `       KSYS WORKSTATION SYSTEM DIAGNOSTICS REPORT               \n`;
+    r += `=================================================================\n`;
+    r += `Generated On      : ${new Date().toLocaleString()}\n`;
+    r += `Session Uptime    : ${hrs}:${mins}:${secs}\n`;
+    r += `Platform          : ${navigator.platform}\n`;
+    r += `User Agent        : ${navigator.userAgent}\n\n`;
+
+    r += `-----------------------------------------------------------------\n`;
+    r += `1. HARDWARE SPECIFICATIONS & INSPECTOR                           \n`;
+    r += `-----------------------------------------------------------------\n`;
+    r += `CPU Logical Cores : ${navigator.hardwareConcurrency || 'Unknown'}\n`;
+    r += `Device Memory     : ${navigator.deviceMemory ? navigator.deviceMemory + ' GB' : 'Restricted'}\n`;
+    r += `Screen Resolution : ${window.screen.width} x ${window.screen.height} (${window.screen.colorDepth}-bit)\n`;
+    r += `Device Pixel Ratio: ${window.devicePixelRatio || 1}\n`;
+    r += `Network Online    : ${navigator.onLine ? 'Yes' : 'No'}\n`;
+    if (navigator.connection) {
+      r += `Network Conn Type : ${navigator.connection.effectiveType || 'N/A'}\n`;
+      r += `Network Downlink  : ${navigator.connection.downlink || 'N/A'} Mbps\n`;
+    }
+    r += `Language / Locale : ${navigator.language}\n`;
+    r += `Timezone          : ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n\n`;
+
+    r += `-----------------------------------------------------------------\n`;
+    r += `2. DIAGNOSTIC BENCHMARK RESULTS                                 \n`;
+    r += `-----------------------------------------------------------------\n`;
+    r += `CPU Benchmark     : ${benchResults.cpuScore || 'Not Executed'}\n`;
+    r += `RAM Throughput    : ${benchResults.ramScore || 'Not Executed'}\n`;
+    r += `Disk I/O Speed    : ${benchResults.diskScore || 'Not Executed'}\n\n`;
+
+    r += `-----------------------------------------------------------------\n`;
+    r += `3. EVENT HISTORY LOG SNAPSHOT (${eventLogs.length} Entries)                    \n`;
+    r += `-----------------------------------------------------------------\n`;
+    eventLogs.slice(0, 15).forEach(e => {
+      r += `[${e.timestamp}] [${e.level}] ${e.message}\n`;
+    });
+    r += `=================================================================\n`;
+
+    return r;
+  }
+
+  function generateReport() {
+    const txt = generateReportText();
+    document.getElementById('report-preview').value = txt;
+  }
+
+  function downloadReport(format) {
+    const reportText = generateReportText();
+
+    if (format === 'txt') {
+      downloadBlob(reportText, 'ksys_system_report.txt', 'text/plain');
+    } else if (format === 'json') {
+      const jsonObj = {
+        title: "KSys System Diagnostics Report",
+        timestamp: new Date().toISOString(),
+        uptime: document.getElementById('header-uptime').textContent,
+        system: {
+          platform: navigator.platform,
+          userAgent: navigator.userAgent,
+          language: navigator.language,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        },
+        hardware: {
+          cpuCores: navigator.hardwareConcurrency || "Unknown",
+          deviceMemoryGB: navigator.deviceMemory || "Restricted",
+          screen: `${window.screen.width}x${window.screen.height}`,
+          colorDepth: window.screen.colorDepth,
+          pixelRatio: window.devicePixelRatio
+        },
+        benchmarks: benchResults,
+        eventLogs: eventLogs
+      };
+      downloadBlob(JSON.stringify(jsonObj, null, 2), 'ksys_system_report.json', 'application/json');
+    } else if (format === 'html') {
+      const htmlContent = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"><title>KSys Diagnostic Report</title>
+<style>
+  body { font-family: monospace; background: #0f172a; color: #38bdf8; padding: 20px; }
+  h1 { border-bottom: 2px solid #334155; padding-bottom: 8px; color: #4ade80; }
+  pre { background: #1e293b; padding: 16px; border-radius: 8px; border: 1px solid #334155; color: #f8fafc; overflow: auto; }
+</style>
+</head>
+<body>
+  <h1>KSys System Diagnostics & Performance Audit Report</h1>
+  <pre>${escapeHtml(reportText)}</pre>
+</body>
+</html>`;
+      downloadBlob(htmlContent, 'ksys_system_report.html', 'text/html');
+    }
+  }
+
+  function downloadBlob(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logEvent('INFO', `Exported system report file: ${filename}`);
+  }
+
+  // Initialization
+  window.addEventListener('DOMContentLoaded', () => {
+    logEvent('INFO', 'KSys System Inspector & Diagnostic Workstation initialized');
+    inspectHardware();
+    setInterval(updateUptime, 1000);
+    setInterval(inspectHardware, 5000);
+  });
 </script>
 </body>
 </html>
