@@ -1,165 +1,642 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRead - Advanced Document & E-Reader</title>
 <style>
+  :root {
+    --bg-main: #fcfcfc;
+    --text-main: #24292e;
+    --bg-toolbar: #f3f4f6;
+    --border-color: #e5e7eb;
+    --btn-bg: #ffffff;
+    --btn-hover: #f3f4f6;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --accent-light: rgba(37, 99, 235, 0.15);
+    --mark-bg: #fef08a;
+    --mark-color: #854d0e;
+    --mark-active: #f97316;
+    --drawer-bg: #ffffff;
+    --font-family: 'Georgia', serif;
+  }
+
+  body.theme-dark {
+    --bg-main: #121214;
+    --text-main: #e4e4e7;
+    --bg-toolbar: #1c1c20;
+    --border-color: #27272a;
+    --btn-bg: #27272a;
+    --btn-hover: #3f3f46;
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --accent-light: rgba(59, 130, 246, 0.2);
+    --mark-bg: #854d0e;
+    --mark-color: #fef08a;
+    --mark-active: #ea580c;
+    --drawer-bg: #18181b;
+  }
+
+  body.theme-sepia {
+    --bg-main: #fbf0d9;
+    --text-main: #433422;
+    --bg-toolbar: #f4e4c1;
+    --border-color: #e6d3ad;
+    --btn-bg: #f5e9ce;
+    --btn-hover: #ebd9b4;
+    --accent: #b45309;
+    --accent-hover: #92400e;
+    --accent-light: rgba(180, 83, 9, 0.15);
+    --mark-bg: #fcd34d;
+    --mark-color: #78350f;
+    --mark-active: #d97706;
+    --drawer-bg: #f8ecce;
+  }
+
+  body.theme-contrast {
+    --bg-main: #000000;
+    --text-main: #00ff66;
+    --bg-toolbar: #090909;
+    --border-color: #00ff66;
+    --btn-bg: #000000;
+    --btn-hover: #003311;
+    --accent: #00ff66;
+    --accent-hover: #66ff99;
+    --accent-light: rgba(0, 255, 102, 0.2);
+    --mark-bg: #ffff00;
+    --mark-color: #000000;
+    --mark-active: #ff0055;
+    --drawer-bg: #050505;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    background: #fdfdfd;
-    color: #333;
-    font-family: 'Georgia', serif;
-    margin: 0;
-    padding: 0;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-family);
     height: 100vh;
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
-    transition: background 0.3s, color 0.3s;
+    overflow: hidden;
+    transition: background-color 0.3s, color 0.3s;
   }
-  body.dark {
-    background: #121212;
-    color: #e0e0e0;
+
+  /* Progress Bar */
+  .progress-container {
+    width: 100%;
+    height: 3px;
+    background: transparent;
+    position: relative;
   }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.1s linear;
+  }
+
+  /* Toolbar */
   .toolbar {
-    background: #eee;
-    border-bottom: 1px solid #ddd;
-    padding: 10px 20px;
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 16px;
     display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    z-index: 10;
   }
-  body.dark .toolbar {
-    background: #1a1a1a;
-    border-color: #333;
-  }
+
   .toolbar-group {
     display: flex;
-    gap: 10px;
+    gap: 6px;
     align-items: center;
   }
-  button, label.btn {
-    background: #fff;
-    border: 1px solid #ccc;
+
+  .btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
     padding: 6px 12px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
-    color: #333;
-    transition: all 0.2s;
+    font-size: 13px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    user-select: none;
   }
-  button:hover, label.btn:hover { background: #f0f0f0; }
-  
-  body.dark button, body.dark label.btn {
-    background: #2a2a2a;
-    border-color: #444;
-    color: #e0e0e0;
+  .btn:hover {
+    background: var(--btn-hover);
+    border-color: var(--accent);
   }
-  body.dark button:hover, body.dark label.btn:hover { background: #3a3a3a; }
-  
+  .btn:active { transform: scale(0.98); }
+  .btn.active {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+  body.theme-contrast .btn.active {
+    color: #000000;
+  }
+
   .file-input { display: none; }
-  
+
+  select.btn {
+    padding-right: 20px;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23888" height="12" viewBox="0 0 24 24" width="12" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+  }
+
+  /* Search Panel */
+  .search-panel {
+    background: var(--bg-toolbar);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 16px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    font-family: system-ui, sans-serif;
+    font-size: 13px;
+    animation: slideDown 0.2s ease-out;
+  }
+  .search-panel.open { display: flex; }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .search-input {
+    background: var(--btn-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 6px 10px;
+    border-radius: 6px;
+    outline: none;
+    width: 220px;
+    font-size: 13px;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  .search-stats {
+    font-size: 12px;
+    color: var(--text-main);
+    opacity: 0.8;
+    min-width: 70px;
+  }
+
+  /* Reader Area */
   .reader-container {
     flex: 1;
     overflow-y: auto;
-    padding: 40px;
+    padding: 40px 20px;
     display: flex;
     justify-content: center;
     scroll-behavior: smooth;
+    position: relative;
   }
+
   .content {
-    max-width: 800px;
+    max-width: 780px;
     width: 100%;
     font-size: 18px;
     line-height: 1.6;
+    letter-spacing: 0px;
     white-space: pre-wrap;
     word-wrap: break-word;
+    outline: none;
+    padding-bottom: 100px;
   }
-  
+
+  mark.search-match {
+    background-color: var(--mark-bg);
+    color: var(--mark-color);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+  mark.search-match.active {
+    background-color: var(--mark-active);
+    color: #ffffff;
+    font-weight: bold;
+    outline: 2px solid var(--mark-active);
+  }
+
+  mark.user-highlight {
+    border-bottom: 2px solid var(--accent);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  mark.hl-yellow { background-color: rgba(254, 240, 138, 0.4); }
+  mark.hl-green { background-color: rgba(187, 247, 208, 0.4); }
+  mark.hl-blue { background-color: rgba(191, 219, 254, 0.4); }
+  mark.hl-pink { background-color: rgba(251, 207, 232, 0.4); }
+
   .empty-state {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #888;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-main);
+    opacity: 0.7;
+    font-family: system-ui, sans-serif;
+    gap: 12px;
   }
-  .empty-state p { margin-top: 10px; }
-  
-  .status-bar {
-    background: #eee;
-    border-top: 1px solid #ddd;
-    padding: 5px 20px;
-    font-size: 12px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  .empty-icon {
+    font-size: 48px;
+  }
+
+  /* Drawers / Modals */
+  .drawer {
+    position: fixed;
+    top: 0;
+    right: -380px;
+    width: 360px;
+    height: 100%;
+    background: var(--drawer-bg);
+    border-left: 1px solid var(--border-color);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    z-index: 100;
+    transition: right 0.3s ease;
     display: flex;
-    justify-content: flex-end;
-    gap: 20px;
+    flex-direction: column;
+    font-family: system-ui, sans-serif;
   }
-  body.dark .status-bar {
-    background: #1a1a1a;
-    border-color: #333;
-    color: #aaa;
+  .drawer.open { right: 0; }
+
+  .drawer-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .drawer-title { font-size: 16px; font-weight: 600; }
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bookmark-card, .note-card {
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .bookmark-snippet, .note-snippet {
+    font-style: italic;
+    opacity: 0.85;
+    border-left: 3px solid var(--accent);
+    padding-left: 8px;
+    line-height: 1.4;
+  }
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    opacity: 0.6;
+  }
+  .card-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+
+  /* Modal Dialog */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal-content {
+    background: var(--drawer-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 480px;
+    width: 90%;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    font-family: system-ui, sans-serif;
+  }
+  .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--bg-toolbar);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-val { font-size: 22px; font-weight: 700; color: var(--accent); }
+  .stat-lbl { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+
+  /* Selection Popover */
+  .selection-popover {
+    position: absolute;
+    display: none;
+    background: var(--drawer-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 50;
+    gap: 4px;
+    align-items: center;
+  }
+  .color-dot {
+    width: 18px; height: 18px; border-radius: 50%; cursor: pointer; border: 1px solid rgba(0,0,0,0.2);
+  }
+  .dot-yellow { background: #fef08a; }
+  .dot-green { background: #bbf7d0; }
+  .dot-blue { background: #bfdbfe; }
+  .dot-pink { background: #fbcfe8; }
+
+  /* Status Bar */
+  .status-bar {
+    background: var(--bg-toolbar);
+    border-top: 1px solid var(--border-color);
+    padding: 6px 16px;
+    font-size: 12px;
+    font-family: system-ui, sans-serif;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+  }
+  .status-left, .status-right {
+    display: flex;
+    gap: 16px;
   }
 </style>
 </head>
-<body>
+<body class="theme-light">
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
   <div class="toolbar">
     <div class="toolbar-group">
-      <label class="btn" tabindex="0" id="btnOpenLabel" aria-label="Open File" role="button">
-        Open File
-        <input type="file" id="fileInp" class="file-input" accept=".txt,.md,.csv,.log" tabindex="-1">
+      <label class="btn" id="btnOpenLabel" tabindex="0" role="button" aria-label="Open Document File">
+        📁 Open
+        <input type="file" id="fileInp" class="file-input" accept=".txt,.md,.csv,.log,.json">
       </label>
-      <button id="btnClear" aria-label="Clear Document">Clear</button>
-
+      <button class="btn" id="btnClear" title="Clear Document">🗑️ Clear</button>
+      <button class="btn" id="btnToggleSearch" title="Find Text (Ctrl+F)">🔍 Search</button>
+      <button class="btn" id="btnBookmark" title="Add Bookmark">🔖 Bookmark</button>
+      <button class="btn" id="btnToggleBookmarks" title="Saved Bookmarks">📚 Bookmarks</button>
+      <button class="btn" id="btnToggleNotes" title="Highlights & Notes">📝 Notes</button>
     </div>
-    <div class="toolbar-group">
-      <button id="btnAUp" aria-label="Increase Font Size">A+</button>
-      <button id="btnADown" aria-label="Decrease Font Size">A-</button>
-      <button id="btnTheme" aria-label="Toggle Dark Mode">Dark Mode</button>
 
+    <div class="toolbar-group">
+      <select class="btn" id="selTheme" title="Theme Selector">
+        <option value="theme-light">☀️ Light</option>
+        <option value="theme-dark">🌙 Dark</option>
+        <option value="theme-sepia">📜 Sepia</option>
+        <option value="theme-contrast">⚡ High Contrast</option>
+      </select>
+
+      <select class="btn" id="selFont" title="Font Family">
+        <option value="'Georgia', serif">Serif (Georgia)</option>
+        <option value="system-ui, sans-serif">Sans-Serif (System UI)</option>
+        <option value="'Consolas', monospace">Monospace (Consolas)</option>
+      </select>
+
+      <button class="btn" id="btnFontDown" title="Decrease Font Size">A-</button>
+      <button class="btn" id="btnFontUp" title="Increase Font Size">A+</button>
+
+      <select class="btn" id="selLineHeight" title="Line Spacing">
+        <option value="1.4">Line 1.4</option>
+        <option value="1.6" selected>Line 1.6</option>
+        <option value="1.8">Line 1.8</option>
+        <option value="2.0">Line 2.0</option>
+      </select>
+
+      <button class="btn" id="btnStats" title="Reading Statistics">📊 Stats</button>
     </div>
   </div>
-  
-  <div class="reader-container" id="readerContainer" aria-live="polite">
+
+  <!-- Search Bar Panel -->
+  <div class="search-panel" id="searchPanel">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search in document...">
+    <button class="btn" id="btnCaseSensitive" title="Toggle Case Sensitivity">Aa</button>
+    <button class="btn" id="btnPrevMatch" title="Previous Match (Shift+Enter)">▲</button>
+    <button class="btn" id="btnNextMatch" title="Next Match (Enter)">▼</button>
+    <span class="search-stats" id="searchStats">0 / 0</span>
+    <button class="btn" id="btnCloseSearch">✕</button>
+  </div>
+
+  <!-- Reader Body -->
+  <div class="reader-container" id="readerContainer">
     <div class="empty-state" id="emptyState">
-      <h3>No Document Loaded</h3>
-      <p>Open a text file to begin reading.</p>
+      <div class="empty-icon">📖</div>
+      <h2>No Document Loaded</h2>
+      <p>Click <strong>Open</strong> or drag & drop a text file here to begin reading.</p>
     </div>
     <div class="content" id="textContent" style="display:none;"></div>
+
+    <!-- Interactive Selection Popover -->
+    <div class="selection-popover" id="selectionPopover">
+      <span style="font-size: 11px; margin-right: 4px;">Highlight:</span>
+      <div class="color-dot dot-yellow" data-color="yellow" title="Yellow Highlight"></div>
+      <div class="color-dot dot-green" data-color="green" title="Green Highlight"></div>
+      <div class="color-dot dot-blue" data-color="blue" title="Blue Highlight"></div>
+      <div class="color-dot dot-pink" data-color="pink" title="Pink Highlight"></div>
+      <button class="btn" id="btnAddNote" style="padding: 2px 6px; font-size: 11px;">+ Note</button>
+    </div>
   </div>
 
+  <!-- Bookmarks Drawer -->
+  <div class="drawer" id="bookmarksDrawer">
+    <div class="drawer-header">
+      <span class="drawer-title">🔖 Bookmarks</span>
+      <button class="btn" id="btnCloseBookmarks">✕</button>
+    </div>
+    <div class="drawer-body" id="bookmarksList">
+      <p style="opacity: 0.6; font-size: 13px;">No bookmarks saved yet.</p>
+    </div>
+  </div>
+
+  <!-- Notes & Highlights Drawer -->
+  <div class="drawer" id="notesDrawer">
+    <div class="drawer-header">
+      <span class="drawer-title">📝 Highlights & Notes</span>
+      <button class="btn" id="btnCloseNotes">✕</button>
+    </div>
+    <div class="drawer-body" id="notesList">
+      <p style="opacity: 0.6; font-size: 13px;">No notes or highlights added.</p>
+    </div>
+    <div style="padding: 12px; border-top: 1px solid var(--border-color); display: flex; gap: 8px;">
+      <button class="btn" id="btnExportJSON" style="flex: 1;">📥 Export JSON</button>
+      <button class="btn" id="btnExportTXT" style="flex: 1;">📄 Export TXT</button>
+    </div>
+  </div>
+
+  <!-- Reading Statistics Modal -->
+  <div class="modal-overlay" id="statsModal">
+    <div class="modal-content">
+      <div class="modal-title">📊 Reading Statistics Engine</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="statWords">0</div>
+          <div class="stat-lbl">Total Words</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statChars">0</div>
+          <div class="stat-lbl">Characters</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statLines">0</div>
+          <div class="stat-lbl">Lines</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statWPM">200</div>
+          <div class="stat-lbl">Est. Speed (WPM)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statTimeSpent">0s</div>
+          <div class="stat-lbl">Time Spent</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statTimeRemaining">0m</div>
+          <div class="stat-lbl">Est. Time Left</div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <button class="btn" id="btnCloseStats">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
   <div class="status-bar" id="statusBar" style="display:none;">
-    <span id="statWords">Words: 0</span>
-    <span id="statLines">Lines: 0</span>
-    <span id="statChars">Chars: 0</span>
+    <div class="status-left">
+      <span id="sbProgress">0% Read</span>
+      <span id="sbWords">Words: 0</span>
+      <span id="sbLines">Lines: 0</span>
+    </div>
+    <div class="status-right">
+      <span id="sbTimeSpent">Active: 00:00</span>
+      <span id="sbTimeRem">Remaining: --</span>
+    </div>
   </div>
 
   <script>
+    // DOM Elements
     const fileInp = document.getElementById('fileInp');
-    const btnClear = document.getElementById('btnClear');
-    const btnAUp = document.getElementById('btnAUp');
-    const btnADown = document.getElementById('btnADown');
-    const btnTheme = document.getElementById('btnTheme');
-    
-    const readerContainer = document.getElementById('readerContainer');
-    const emptyState = document.getElementById('emptyState');
-    const textContent = document.getElementById('textContent');
-    const statusBar = document.getElementById('statusBar');
-    const statWords = document.getElementById('statWords');
-    const statLines = document.getElementById('statLines');
-    const statChars = document.getElementById('statChars');
-
-    let currentText = '';
-    try { currentText = localStorage.getItem('kread_text') || ''; } catch(e) {}
-    let currentScroll = 0;
-    try { currentScroll = parseInt(localStorage.getItem('kread_scroll') || '0'); } catch(e) {}
-    let fontSize = 18;
-    try { fontSize = parseInt(localStorage.getItem('kread_fontsize') || '18'); } catch(e) {}
-    let isDark = false;
-    try { isDark = localStorage.getItem('kread_dark') === 'true'; } catch(e) {}
-
     const btnOpenLabel = document.getElementById('btnOpenLabel');
+    const btnClear = document.getElementById('btnClear');
+    const btnToggleSearch = document.getElementById('btnToggleSearch');
+    const btnBookmark = document.getElementById('btnBookmark');
+    const btnToggleBookmarks = document.getElementById('btnToggleBookmarks');
+    const btnToggleNotes = document.getElementById('btnToggleNotes');
+    
+    const selTheme = document.getElementById('selTheme');
+    const selFont = document.getElementById('selFont');
+    const btnFontDown = document.getElementById('btnFontDown');
+    const btnFontUp = document.getElementById('btnFontUp');
+    const selLineHeight = document.getElementById('selLineHeight');
+    const btnStats = document.getElementById('btnStats');
+
+    const searchPanel = document.getElementById('searchPanel');
+    const searchInput = document.getElementById('searchInput');
+    const btnCaseSensitive = document.getElementById('btnCaseSensitive');
+    const btnPrevMatch = document.getElementById('btnPrevMatch');
+    const btnNextMatch = document.getElementById('btnNextMatch');
+    const searchStats = document.getElementById('searchStats');
+    const btnCloseSearch = document.getElementById('btnCloseSearch');
+
+    const readerContainer = document.getElementById('readerContainer');
+    const textContent = document.getElementById('textContent');
+    const emptyState = document.getElementById('emptyState');
+    const progressBar = document.getElementById('progressBar');
+    const statusBar = document.getElementById('statusBar');
+
+    const bookmarksDrawer = document.getElementById('bookmarksDrawer');
+    const bookmarksList = document.getElementById('bookmarksList');
+    const btnCloseBookmarks = document.getElementById('btnCloseBookmarks');
+
+    const notesDrawer = document.getElementById('notesDrawer');
+    const notesList = document.getElementById('notesList');
+    const btnCloseNotes = document.getElementById('btnCloseNotes');
+    const btnExportJSON = document.getElementById('btnExportJSON');
+    const btnExportTXT = document.getElementById('btnExportTXT');
+
+    const statsModal = document.getElementById('statsModal');
+    const btnCloseStats = document.getElementById('btnCloseStats');
+
+    const selectionPopover = document.getElementById('selectionPopover');
+    const btnAddNote = document.getElementById('btnAddNote');
+
+    // App State
+    let currentText = '';
+    let currentScroll = 0;
+    let fontSize = 18;
+    let theme = 'theme-light';
+    let fontFamily = "'Georgia', serif";
+    let lineHeight = '1.6';
+    let bookmarks = [];
+    let notes = [];
+
+    // Search state
+    let searchMatches = [];
+    let currentMatchIdx = -1;
+    let isCaseSensitive = false;
+
+    // Reading statistics state
+    let totalSecondsSpent = 0;
+    let timerInterval = null;
+    let wordsCount = 0;
+
+    // Load saved settings
+    try {
+      currentText = localStorage.getItem('kread_text') || '';
+      currentScroll = parseInt(localStorage.getItem('kread_scroll') || '0');
+      fontSize = parseInt(localStorage.getItem('kread_fontsize') || '18');
+      theme = localStorage.getItem('kread_theme') || 'theme-light';
+      fontFamily = localStorage.getItem('kread_fontfamily') || "'Georgia', serif";
+      lineHeight = localStorage.getItem('kread_lineheight') || '1.6';
+      bookmarks = JSON.parse(localStorage.getItem('kread_bookmarks') || '[]');
+      notes = JSON.parse(localStorage.getItem('kread_notes') || '[]');
+      totalSecondsSpent = parseInt(localStorage.getItem('kread_time_spent') || '0');
+    } catch(e) { console.warn('Storage read error', e); }
+
+    function safeSetItem(k, v) {
+      try { localStorage.setItem(k, typeof v === 'object' ? JSON.stringify(v) : v); } catch(e) {}
+    }
+
+    // Keyboard accessibility for Open label
     btnOpenLabel.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -167,92 +644,548 @@
       }
     });
 
-    function safeSetItem(k, v) {
-      try { localStorage.setItem(k, v); } catch(e) { console.warn("Storage full", e); }
+    // Theme & Styling setup
+    function applyStylesAndTheme() {
+      document.body.className = theme;
+      selTheme.value = theme;
+      selFont.value = fontFamily;
+      selLineHeight.value = lineHeight;
+      textContent.style.fontSize = fontSize + 'px';
+      textContent.style.fontFamily = fontFamily;
+      textContent.style.lineHeight = lineHeight;
     }
 
+    selTheme.onchange = (e) => {
+      theme = e.target.value;
+      safeSetItem('kread_theme', theme);
+      applyStylesAndTheme();
+    };
 
+    selFont.onchange = (e) => {
+      fontFamily = e.target.value;
+      safeSetItem('kread_fontfamily', fontFamily);
+      applyStylesAndTheme();
+    };
+
+    selLineHeight.onchange = (e) => {
+      lineHeight = e.target.value;
+      safeSetItem('kread_lineheight', lineHeight);
+      applyStylesAndTheme();
+    };
+
+    btnFontUp.onclick = () => {
+      fontSize = Math.min(fontSize + 2, 38);
+      safeSetItem('kread_fontsize', fontSize);
+      applyStylesAndTheme();
+    };
+
+    btnFontDown.onclick = () => {
+      fontSize = Math.max(fontSize - 2, 12);
+      safeSetItem('kread_fontsize', fontSize);
+      applyStylesAndTheme();
+    };
+
+    // Load & Render Content
+    function renderContent() {
+      if (!currentText) {
+        emptyState.style.display = 'flex';
+        textContent.style.display = 'none';
+        statusBar.style.display = 'none';
+        progressBar.style.width = '0%';
+        stopReadingTimer();
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      textContent.style.display = 'block';
+      statusBar.style.display = 'flex';
+
+      // Render text with highlight marks if notes exist
+      renderTextWithHighlights();
+      updateStats();
+      startReadingTimer();
+
+      setTimeout(() => {
+        readerContainer.scrollTop = currentScroll;
+        updateScrollProgress();
+      }, 30);
+    }
+
+    function renderTextWithHighlights() {
+      if (searchMatches.length > 0) return; // Search mode overrides standard rendering temporarily
+      
+      // Escape HTML
+      let html = escapeHtml(currentText);
+      textContent.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Scroll & Progress Tracking
+    function updateScrollProgress() {
+      const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+      if (scrollable <= 0) {
+        progressBar.style.width = '100%';
+        document.getElementById('sbProgress').textContent = '100% Read';
+        return;
+      }
+      const pct = Math.min(100, Math.max(0, Math.round((readerContainer.scrollTop / scrollable) * 100)));
+      progressBar.style.width = pct + '%';
+      document.getElementById('sbProgress').textContent = pct + '% Read';
+    }
+
+    let scrollTimeout;
+    readerContainer.onscroll = () => {
+      updateScrollProgress();
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        if (currentText) {
+          currentScroll = readerContainer.scrollTop;
+          safeSetItem('kread_scroll', currentScroll);
+        }
+      }, 300);
+    };
+
+    // Reading Statistics Engine
     function updateStats() {
       if (!currentText) return;
       const chars = currentText.length;
       const lines = chars > 0 ? currentText.split(/\r\n|\r|\n/).length : 0;
-      const words = chars > 0 ? (currentText.match(/\S+/g) || []).length : 0;
-      statChars.textContent = `Chars: ${chars}`;
-      statLines.textContent = `Lines: ${lines}`;
-      statWords.textContent = `Words: ${words}`;
+      wordsCount = chars > 0 ? (currentText.match(/\S+/g) || []).length : 0;
+
+      document.getElementById('statWords').textContent = wordsCount.toLocaleString();
+      document.getElementById('statChars').textContent = chars.toLocaleString();
+      document.getElementById('statLines').textContent = lines.toLocaleString();
+
+      document.getElementById('sbWords').textContent = `Words: ${wordsCount.toLocaleString()}`;
+      document.getElementById('sbLines').textContent = `Lines: ${lines.toLocaleString()}`;
+
+      // Calculate time remaining based on standard 200 WPM
+      const wpm = 200;
+      const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+      const pctRemaining = scrollable > 0 ? (1 - (readerContainer.scrollTop / scrollable)) : 0;
+      const wordsRemaining = Math.round(wordsCount * pctRemaining);
+      const minsRem = Math.ceil(wordsRemaining / wpm);
+
+      document.getElementById('statTimeRemaining').textContent = `${minsRem} min`;
+      document.getElementById('sbTimeRem').textContent = `Remaining: ~${minsRem}m`;
     }
 
-    function applyState() {
-      textContent.style.fontSize = fontSize + 'px';
-      if (isDark) document.body.classList.add('dark');
-      else document.body.classList.remove('dark');
-      
-      if (currentText) {
-        emptyState.style.display = 'none';
-        textContent.style.display = 'block';
-        statusBar.style.display = 'flex';
-        textContent.textContent = currentText;
-        updateStats();
-        setTimeout(() => readerContainer.scrollTop = currentScroll, 10);
-      } else {
-        emptyState.style.display = 'flex';
-        textContent.style.display = 'none';
-        statusBar.style.display = 'none';
+    function startReadingTimer() {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        if (document.visibilityState === 'visible' && currentText) {
+          totalSecondsSpent++;
+          safeSetItem('kread_time_spent', totalSecondsSpent);
+          formatTimeSpent();
+        }
+      }, 1000);
+    }
+
+    function stopReadingTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
       }
     }
 
-    fileInp.addEventListener('change', (e) => {
+    function formatTimeSpent() {
+      const mins = Math.floor(totalSecondsSpent / 60);
+      const secs = totalSecondsSpent % 60;
+      const hours = Math.floor(mins / 60);
+      const displayMins = mins % 60;
+
+      let str = '';
+      if (hours > 0) str += `${hours}h `;
+      str += `${displayMins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      document.getElementById('sbTimeSpent').textContent = `Active: ${str}`;
+      document.getElementById('statTimeSpent').textContent = str;
+    }
+
+    btnStats.onclick = () => {
+      updateStats();
+      formatTimeSpent();
+      statsModal.classList.add('open');
+    };
+    btnCloseStats.onclick = () => statsModal.classList.remove('open');
+
+    // File Open & Clear
+    fileInp.onchange = (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = (ev) => {
         currentText = ev.target.result;
         currentScroll = 0;
+        totalSecondsSpent = 0;
         safeSetItem('kread_text', currentText);
-        safeSetItem('kread_scroll', '0');
-        applyState();
+        safeSetItem('kread_scroll', 0);
+        safeSetItem('kread_time_spent', 0);
+        renderContent();
       };
       reader.readAsText(file);
       fileInp.value = '';
-    });
+    };
 
     btnClear.onclick = () => {
-      currentText = '';
-      currentScroll = 0;
-      try { localStorage.removeItem('kread_text'); } catch(e) {}
-      safeSetItem('kread_scroll', '0');
-      applyState();
+      if (confirm('Clear loaded document and reset reading session?')) {
+        currentText = '';
+        currentScroll = 0;
+        try {
+          localStorage.removeItem('kread_text');
+          localStorage.removeItem('kread_scroll');
+        } catch(e) {}
+        renderContent();
+      }
     };
 
-    btnAUp.onclick = () => {
-      fontSize = Math.min(fontSize + 2, 48);
-      safeSetItem('kread_fontsize', fontSize);
-      applyState();
+    // Drag and Drop File Support
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        const file = e.dataTransfer.files[0];
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          currentText = ev.target.result;
+          currentScroll = 0;
+          safeSetItem('kread_text', currentText);
+          safeSetItem('kread_scroll', 0);
+          renderContent();
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // In-Document Real-Time Search & Highlight Navigation
+    btnToggleSearch.onclick = toggleSearchPanel;
+    btnCloseSearch.onclick = toggleSearchPanel;
+
+    function toggleSearchPanel() {
+      const isOpen = searchPanel.classList.toggle('open');
+      btnToggleSearch.classList.toggle('active', isOpen);
+      if (isOpen) {
+        searchInput.focus();
+        if (searchInput.value.trim()) executeSearch();
+      } else {
+        clearSearchHighlights();
+      }
+    }
+
+    btnCaseSensitive.onclick = () => {
+      isCaseSensitive = !isCaseSensitive;
+      btnCaseSensitive.classList.toggle('active', isCaseSensitive);
+      executeSearch();
     };
 
-    btnADown.onclick = () => {
-      fontSize = Math.max(fontSize - 2, 12);
-      safeSetItem('kread_fontsize', fontSize);
-      applyState();
+    searchInput.oninput = executeSearch;
+    searchInput.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        if (e.shiftKey) navigateSearchMatch(-1);
+        else navigateSearchMatch(1);
+      } else if (e.key === 'Escape') {
+        toggleSearchPanel();
+      }
     };
 
-    btnTheme.onclick = () => {
-      isDark = !isDark;
-      safeSetItem('kread_dark', isDark);
-      applyState();
-    };
+    btnPrevMatch.onclick = () => navigateSearchMatch(-1);
+    btnNextMatch.onclick = () => navigateSearchMatch(1);
 
-    let scrollTimeout;
-    readerContainer.onscroll = () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        if (currentText) {
-          safeSetItem('kread_scroll', readerContainer.scrollTop);
+    function executeSearch() {
+      const query = searchInput.value;
+      if (!query || !currentText) {
+        clearSearchHighlights();
+        searchStats.textContent = '0 / 0';
+        return;
+      }
+
+      const flags = isCaseSensitive ? 'g' : 'gi';
+      const regex = new RegExp(escapeRegex(query), flags);
+
+      let html = escapeHtml(currentText);
+      let matchCount = 0;
+      
+      const queryEscaped = escapeHtml(query);
+      const regexEscaped = new RegExp(escapeRegex(queryEscaped), flags);
+
+      html = html.replace(regexEscaped, (m) => {
+        matchCount++;
+        return `<mark class="search-match" data-idx="${matchCount - 1}">${m}</mark>`;
+      });
+
+      textContent.innerHTML = html;
+      searchMatches = Array.from(textContent.querySelectorAll('mark.search-match'));
+      searchStats.textContent = searchMatches.length > 0 ? `1 / ${searchMatches.length}` : '0 / 0';
+
+      if (searchMatches.length > 0) {
+        currentMatchIdx = 0;
+        activateSearchMatch(0);
+      } else {
+        currentMatchIdx = -1;
+      }
+    }
+
+    function clearSearchHighlights() {
+      searchMatches = [];
+      currentMatchIdx = -1;
+      if (currentText) renderTextWithHighlights();
+    }
+
+    function navigateSearchMatch(dir) {
+      if (searchMatches.length === 0) return;
+      currentMatchIdx = (currentMatchIdx + dir + searchMatches.length) % searchMatches.length;
+      activateSearchMatch(currentMatchIdx);
+    }
+
+    function activateSearchMatch(idx) {
+      searchMatches.forEach((el, i) => {
+        if (i === idx) {
+          el.classList.add('active');
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          el.classList.remove('active');
         }
-      }, 500);
+      });
+      searchStats.textContent = `${idx + 1} / ${searchMatches.length}`;
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // Bookmarks Engine
+    btnBookmark.onclick = addBookmark;
+
+    function addBookmark() {
+      if (!currentText) return;
+      const scrollable = readerContainer.scrollHeight - readerContainer.clientHeight;
+      const pct = scrollable > 0 ? Math.round((readerContainer.scrollTop / scrollable) * 100) : 0;
+      
+      // Get snippet text around current scroll
+      const snippet = currentText.substring(0, 120).replace(/\s+/g, ' ') + '...';
+      const bm = {
+        id: Date.now(),
+        scroll: readerContainer.scrollTop,
+        pct: pct,
+        snippet: snippet,
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      bookmarks.unshift(bm);
+      safeSetItem('kread_bookmarks', bookmarks);
+      renderBookmarks();
+      bookmarksDrawer.classList.add('open');
+      btnToggleBookmarks.classList.add('active');
+    }
+
+    function renderBookmarks() {
+      if (bookmarks.length === 0) {
+        bookmarksList.innerHTML = '<p style="opacity: 0.6; font-size: 13px;">No bookmarks saved yet.</p>';
+        return;
+      }
+      bookmarksList.innerHTML = bookmarks.map(bm => `
+        <div class="bookmark-card">
+          <div class="card-meta">
+            <span>Progress: <strong>${bm.pct}%</strong></span>
+            <span>${bm.date}</span>
+          </div>
+          <div class="bookmark-snippet">${escapeHtml(bm.snippet)}</div>
+          <div class="card-actions">
+            <button class="btn" onclick="jumpToBookmark(${bm.scroll})">Jump</button>
+            <button class="btn" onclick="deleteBookmark(${bm.id})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.jumpToBookmark = (scrollPos) => {
+      readerContainer.scrollTop = scrollPos;
+      bookmarksDrawer.classList.remove('open');
+      btnToggleBookmarks.classList.remove('active');
     };
 
-    applyState();
+    window.deleteBookmark = (id) => {
+      bookmarks = bookmarks.filter(b => b.id !== id);
+      safeSetItem('kread_bookmarks', bookmarks);
+      renderBookmarks();
+    };
+
+    btnToggleBookmarks.onclick = () => {
+      const open = bookmarksDrawer.classList.toggle('open');
+      btnToggleBookmarks.classList.toggle('active', open);
+      if (open) {
+        notesDrawer.classList.remove('open');
+        btnToggleNotes.classList.remove('active');
+        renderBookmarks();
+      }
+    };
+    btnCloseBookmarks.onclick = () => {
+      bookmarksDrawer.classList.remove('open');
+      btnToggleBookmarks.classList.remove('active');
+    };
+
+    // Text Selection, Highlights & Notes
+    readerContainer.onmouseup = handleTextSelection;
+
+    function handleTextSelection(e) {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !textContent.contains(sel.anchorNode)) {
+        selectionPopover.style.display = 'none';
+        return;
+      }
+      const selectedText = sel.toString().trim();
+      if (selectedText.length < 2) {
+        selectionPopover.style.display = 'none';
+        return;
+      }
+
+      // Position popover
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      const containerRect = readerContainer.getBoundingClientRect();
+
+      selectionPopover.style.top = (rect.top - containerRect.top - 40 + readerContainer.scrollTop) + 'px';
+      selectionPopover.style.left = (rect.left - containerRect.left + (rect.width / 2) - 60) + 'px';
+      selectionPopover.style.display = 'flex';
+    }
+
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.onclick = (e) => {
+        const color = e.target.getAttribute('data-color');
+        createHighlight(color, '');
+      };
+    });
+
+    btnAddNote.onclick = () => {
+      const noteTxt = prompt('Enter your note/annotation for this text:');
+      if (noteTxt !== null) {
+        createHighlight('yellow', noteTxt);
+      }
+    };
+
+    function createHighlight(color, noteText) {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed) return;
+      const text = sel.toString().trim();
+      
+      const item = {
+        id: Date.now(),
+        text: text,
+        note: noteText,
+        color: color,
+        date: new Date().toLocaleDateString()
+      };
+
+      notes.unshift(item);
+      safeSetItem('kread_notes', notes);
+      selectionPopover.style.display = 'none';
+      sel.removeAllRanges();
+      renderNotes();
+      notesDrawer.classList.add('open');
+      btnToggleNotes.classList.add('active');
+    }
+
+    function renderNotes() {
+      if (notes.length === 0) {
+        notesList.innerHTML = '<p style="opacity: 0.6; font-size: 13px;">No notes or highlights added.</p>';
+        return;
+      }
+      notesList.innerHTML = notes.map(n => `
+        <div class="note-card">
+          <div class="card-meta">
+            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${getHighlightColorCode(n.color)};"></span>
+            <span>${n.date}</span>
+          </div>
+          <div class="note-snippet">${escapeHtml(n.text)}</div>
+          ${n.note ? `<div style="font-weight: 500; font-size: 12px; margin-top: 4px;">💬 ${escapeHtml(n.note)}</div>` : ''}
+          <div class="card-actions">
+            <button class="btn" onclick="deleteNote(${n.id})">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getHighlightColorCode(c) {
+      switch(c) {
+        case 'green': return '#bbf7d0';
+        case 'blue': return '#bfdbfe';
+        case 'pink': return '#fbcfe8';
+        default: return '#fef08a';
+      }
+    }
+
+    window.deleteNote = (id) => {
+      notes = notes.filter(n => n.id !== id);
+      safeSetItem('kread_notes', notes);
+      renderNotes();
+    };
+
+    btnToggleNotes.onclick = () => {
+      const open = notesDrawer.classList.toggle('open');
+      btnToggleNotes.classList.toggle('active', open);
+      if (open) {
+        bookmarksDrawer.classList.remove('open');
+        btnToggleBookmarks.classList.remove('active');
+        renderNotes();
+      }
+    };
+    btnCloseNotes.onclick = () => {
+      notesDrawer.classList.remove('open');
+      btnToggleNotes.classList.remove('active');
+    };
+
+    // Notes Exporting
+    btnExportJSON.onclick = () => {
+      if (notes.length === 0 && bookmarks.length === 0) {
+        alert('No notes or bookmarks to export.');
+        return;
+      }
+      const data = { notes, bookmarks, exportedAt: new Date().toISOString() };
+      downloadFile('kread_highlights_export.json', JSON.stringify(data, null, 2), 'application/json');
+    };
+
+    btnExportTXT.onclick = () => {
+      if (notes.length === 0) {
+        alert('No highlights/notes to export.');
+        return;
+      }
+      let txt = `KREAD HIGHLIGHTS & NOTES EXPORT\n===============================\n\n`;
+      notes.forEach((n, i) => {
+        txt += `[${i + 1}] Date: ${n.date}\n`;
+        txt += `Text: "${n.text}"\n`;
+        if (n.note) txt += `Note: ${n.note}\n`;
+        txt += `-------------------------------\n`;
+      });
+      downloadFile('kread_notes_export.txt', txt, 'text/plain');
+    };
+
+    function downloadFile(filename, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        toggleSearchPanel();
+      } else if (e.key === 'Escape') {
+        if (searchPanel.classList.contains('open')) toggleSearchPanel();
+        bookmarksDrawer.classList.remove('open');
+        notesDrawer.classList.remove('open');
+        statsModal.classList.remove('open');
+      }
+    });
+
+    // Initialize
+    applyStylesAndTheme();
+    renderContent();
   </script>
 </body>
 </html>
