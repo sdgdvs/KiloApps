@@ -87,8 +87,8 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 | Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
 |------------|-----------------|------------------------|--------|-------|
 | KMines     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic board sizes (8x8 to 24x24), treasure chests, speedruns, Sonar/Detector/Shield powerups, Blitz combo multipliers. |
-| KRogue     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: Expanded to 30 levels across 6 biomes, moved Astaroth the Fallen to L30, added Arch-Mage, Lich Lord, Shadow Assassin, Shadow Behemoth, Mimic Chests, 3 trap types, Meteor Strike [M], Invisibility Cloak [I], Divine Blessing [D] spells. |
-| KSnake     | Tier 1          | Feature-Expanded       | Loop 6 Completed | Full parity. Loop 6 completed: Expanded to 15-level campaign win, added Portals, and Tracker Bug enemies. |
+| KRogue     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: Expanded to 30 levels across 6 biomes, moved Astaroth the Fallen to L30, added Arch-Mage, Lich Lord, Shadow Assassin, Shadow Behemoth, Mimic Chests, 3 trap types, Meteor Strike [M], Invisibility Cloak [I], Divine Miracle [D] spells. |
+| KSnake     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign with custom mazes, moving portals, CPU rival snakes, Hydra Viper Boss, Golden Apple / Poison Berry / Speed Berry, and G/F/M active skills. |
 | KTetris    | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 stages, added Bomb power-up, and Earthquake mechanics. |
 | KPong      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 levels, added Horizontal Obstacle, and Freeze power-up. |
 | KMaze      | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded to 30 levels, Darkness mechanic, Minotaur enemy, Pickaxe. |
@@ -118,6 +118,7 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 **Loop 7**
 - [x] KRogue (Expanded to 30 levels across 6 biomes, moved Astaroth the Fallen to L30, added Arch-Mage, Lich Lord, Shadow Assassin, Shadow Behemoth, Mimic Chests, 3 trap types, Meteor Strike [M], Invisibility Cloak [I], Divine Miracle [D] spells to both EXE and HTML)
 - [x] KMines (Expanded Campaign to 20 stages with dynamic board sizes 8x8 to 24x24, hidden Treasure Chests, timed speedrun stages, Sonar [R], Detector [D], Blast Shield [S] power-ups, and Blitz rapid-clear combo multipliers to both EXE and HTML)
+- [x] KSnake (Expanded Campaign to 20 stages with custom maze obstacle maps, moving portals, CPU rival snakes, Stage 20 Hydra Viper Boss, Golden Apple / Poison Berry / Speed Berry fruits, and Ghost [G], Time Slow [F], Food Magnet [M] active skills to both EXE and HTML)
 
 **Loop 6**
 - [x] KQuest (Expanded Campaign to 15 chapter dungeons, added multi-stage boss encounters, and 4 battle spells & consumables (Lightning Storm, Holy Shield, Phoenix Elixir, Berserk Might) to both EXE and HTML)
