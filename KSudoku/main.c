@@ -23,21 +23,35 @@ COLORREF themes[3][9] = {
 #define T_HL 7
 #define T_ERR 8
 
-int board[9][9];
-int solution[9][9];
-int fixed[9][9];
-int sel_r = -1, sel_c = -1;
-int error_cells[9][9];
-int notes[9][9][10];
-int fog_cells[9][9];
-int notesMode = 0;
-int elapsedTime = 0; // In Rush mode, countdown from 180
-int score = 0;
-int awarded[9][9];
-int timerActive = 0;
+#define MAX_GRID 16
 
-HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnRush;
-HFONT hFont, hFontSmall;
+int gridSize = 9;
+int boxW = 3;
+int boxH = 3;
+
+int board[MAX_GRID][MAX_GRID];
+int solution[MAX_GRID][MAX_GRID];
+int fixed[MAX_GRID][MAX_GRID];
+int error_cells[MAX_GRID][MAX_GRID];
+int notes[MAX_GRID][MAX_GRID][17]; // 1..16
+int fog_cells[MAX_GRID][MAX_GRID];
+int awarded[MAX_GRID][MAX_GRID];
+
+// Cage sum constraints
+int cage_id[MAX_GRID][MAX_GRID];
+int cage_sum[MAX_GRID * MAX_GRID];
+int cage_is_topleft[MAX_GRID][MAX_GRID];
+int num_cages = 0;
+
+int sel_r = -1, sel_c = -1;
+int notesMode = 0;
+int elapsedTime = 0;
+int score = 0;
+int timerActive = 0;
+int freezeTime = 0;
+
+HWND hBtnNew, hBtnNotes, hBtnValidate, hBtnHint, hBtnUndo, hBtnRedo, hBtnSettings, hBtnAutoFill, hBtnCampaign, hBtnMagic, hBtnShield, hBtnFreeze, hBtnRush;
+HFONT hFont, hFontSmall, hFontTiny;
 
 typedef struct {
     int theme;
@@ -111,7 +125,7 @@ void PlaySudokuSound(int soundType) {
         case 2: Beep(659, 30); break;  // Input note/number
         case 3: Beep(784, 50); break;  // Correct placement
         case 4: Beep(220, 150); break; // Error strike
-        case 5: Beep(1047, 80); break; // Wand / Shield powerup
+        case 5: Beep(1047, 80); break; // Wand / Shield / Freeze skill
         case 6:                        // Win fanfare
             Beep(523, 70); Beep(659, 70); Beep(784, 70); Beep(1047, 140);
             break;
@@ -122,8 +136,8 @@ void PlaySudokuSound(int soundType) {
 }
 
 typedef struct {
-    int board[9][9];
-    int notes[9][9][10];
+    int board[MAX_GRID][MAX_GRID];
+    int notes[MAX_GRID][MAX_GRID][17];
     int score;
 } ActionState;
 
@@ -140,10 +154,10 @@ void PushState() {
         undoCapacity = undoCapacity == 0 ? 16 : undoCapacity * 2;
         undoStack = (ActionState*)realloc(undoStack, undoCapacity * sizeof(ActionState));
     }
-    for(int r=0; r<9; r++) {
-        for(int c=0; c<9; c++) {
+    for(int r=0; r<gridSize; r++) {
+        for(int c=0; c<gridSize; c++) {
             undoStack[undoCount].board[r][c] = board[r][c];
-            for(int i=0; i<10; i++) undoStack[undoCount].notes[r][c][i] = notes[r][c][i];
+            for(int i=0; i<=16; i++) undoStack[undoCount].notes[r][c][i] = notes[r][c][i];
         }
     }
     undoStack[undoCount].score = score;
@@ -157,20 +171,20 @@ void Undo() {
             redoCapacity = redoCapacity == 0 ? 16 : redoCapacity * 2;
             redoStack = (ActionState*)realloc(redoStack, redoCapacity * sizeof(ActionState));
         }
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 redoStack[redoCount].board[r][c] = board[r][c];
-                for(int i=0; i<10; i++) redoStack[redoCount].notes[r][c][i] = notes[r][c][i];
+                for(int i=0; i<=16; i++) redoStack[redoCount].notes[r][c][i] = notes[r][c][i];
             }
         }
         redoStack[redoCount].score = score;
         redoCount++;
         
         undoCount--;
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 board[r][c] = undoStack[undoCount].board[r][c];
-                for(int i=0; i<10; i++) notes[r][c][i] = undoStack[undoCount].notes[r][c][i];
+                for(int i=0; i<=16; i++) notes[r][c][i] = undoStack[undoCount].notes[r][c][i];
                 error_cells[r][c] = 0;
             }
         }
@@ -185,20 +199,20 @@ void Redo() {
             undoCapacity = undoCapacity == 0 ? 16 : undoCapacity * 2;
             undoStack = (ActionState*)realloc(undoStack, undoCapacity * sizeof(ActionState));
         }
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 undoStack[undoCount].board[r][c] = board[r][c];
-                for(int i=0; i<10; i++) undoStack[undoCount].notes[r][c][i] = notes[r][c][i];
+                for(int i=0; i<=16; i++) undoStack[undoCount].notes[r][c][i] = notes[r][c][i];
             }
         }
         undoStack[undoCount].score = score;
         undoCount++;
         
         redoCount--;
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 board[r][c] = redoStack[redoCount].board[r][c];
-                for(int i=0; i<10; i++) notes[r][c][i] = redoStack[redoCount].notes[r][c][i];
+                for(int i=0; i<=16; i++) notes[r][c][i] = redoStack[redoCount].notes[r][c][i];
                 error_cells[r][c] = 0;
             }
         }
@@ -223,10 +237,11 @@ int lastDailyDate = 0;
 int isDailyGame = 0;
 
 int isCampaignMode = 0;
-int campaignStage = 0; // 0 to 14 (15 stages total)
+int campaignStage = 0; // 0 to 19 (20 stages total)
 int magicWands = 3;
 int shields = 1;
 int shieldActive = 0;
+int freezeCharges = 2;
 int strikes = 0;
 int maxCampaignStage = 0;
 int totalWandsUsed = 0;
@@ -290,14 +305,20 @@ void SaveDailyStats() {
 }
 
 typedef struct {
-    int board[9][9];
-    int solution[9][9];
-    int fixed[9][9];
-    int notes[9][9][10];
-    int fog_cells[9][9];
+    int gridSize, boxW, boxH;
+    int board[MAX_GRID][MAX_GRID];
+    int solution[MAX_GRID][MAX_GRID];
+    int fixed[MAX_GRID][MAX_GRID];
+    int notes[MAX_GRID][MAX_GRID][17];
+    int fog_cells[MAX_GRID][MAX_GRID];
+    int cage_id[MAX_GRID][MAX_GRID];
+    int cage_sum[MAX_GRID * MAX_GRID];
+    int cage_is_topleft[MAX_GRID][MAX_GRID];
+    int num_cages;
     int elapsedTime;
+    int freezeTime;
     int score;
-    int awarded[9][9];
+    int awarded[MAX_GRID][MAX_GRID];
     int currentDiffIdx;
     int gameActive;
     int isDailyGame;
@@ -306,6 +327,7 @@ typedef struct {
     int magicWands;
     int shields;
     int shieldActive;
+    int freezeCharges;
     int strikes;
     int isRushMode;
 } GameState;
@@ -315,18 +337,28 @@ int LoadGameState() {
     if(!f) return 0;
     GameState state;
     if(fread(&state, sizeof(GameState), 1, f) == 1 && state.gameActive) {
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        gridSize = state.gridSize > 0 ? state.gridSize : 9;
+        boxW = state.boxW > 0 ? state.boxW : 3;
+        boxH = state.boxH > 0 ? state.boxH : 3;
+        num_cages = state.num_cages;
+
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 board[r][c] = state.board[r][c];
                 solution[r][c] = state.solution[r][c];
                 fixed[r][c] = state.fixed[r][c];
                 awarded[r][c] = state.awarded[r][c];
                 fog_cells[r][c] = state.fog_cells[r][c];
+                cage_id[r][c] = state.cage_id[r][c];
+                cage_is_topleft[r][c] = state.cage_is_topleft[r][c];
                 error_cells[r][c] = 0;
-                for(int i=0; i<10; i++) notes[r][c][i] = state.notes[r][c][i];
+                for(int i=0; i<=16; i++) notes[r][c][i] = state.notes[r][c][i];
             }
         }
+        for(int k=0; k<=num_cages; k++) cage_sum[k] = state.cage_sum[k];
+
         elapsedTime = state.elapsedTime;
+        freezeTime = state.freezeTime;
         score = state.score;
         currentDiffIdx = state.currentDiffIdx;
         gameActive = 1;
@@ -336,6 +368,7 @@ int LoadGameState() {
         magicWands = state.magicWands;
         shields = state.shields;
         shieldActive = state.shieldActive;
+        freezeCharges = state.freezeCharges;
         strikes = state.strikes;
         isRushMode = state.isRushMode;
         timerActive = 1;
@@ -355,18 +388,28 @@ void SaveGameState() {
     }
     FILE *f = fopen("ksudoku_save.dat", "wb");
     if (f) {
-        GameState state;
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        GameState state = {0};
+        state.gridSize = gridSize;
+        state.boxW = boxW;
+        state.boxH = boxH;
+        state.num_cages = num_cages;
+
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 state.board[r][c] = board[r][c];
                 state.solution[r][c] = solution[r][c];
                 state.fixed[r][c] = fixed[r][c];
                 state.awarded[r][c] = awarded[r][c];
                 state.fog_cells[r][c] = fog_cells[r][c];
-                for(int i=0; i<10; i++) state.notes[r][c][i] = notes[r][c][i];
+                state.cage_id[r][c] = cage_id[r][c];
+                state.cage_is_topleft[r][c] = cage_is_topleft[r][c];
+                for(int i=0; i<=16; i++) state.notes[r][c][i] = notes[r][c][i];
             }
         }
+        for(int k=0; k<=num_cages; k++) state.cage_sum[k] = cage_sum[k];
+
         state.elapsedTime = elapsedTime;
+        state.freezeTime = freezeTime;
         state.score = score;
         state.currentDiffIdx = currentDiffIdx;
         state.gameActive = gameActive;
@@ -376,6 +419,7 @@ void SaveGameState() {
         state.magicWands = magicWands;
         state.shields = shields;
         state.shieldActive = shieldActive;
+        state.freezeCharges = freezeCharges;
         state.strikes = strikes;
         state.isRushMode = isRushMode;
         fwrite(&state, sizeof(GameState), 1, f);
@@ -399,11 +443,11 @@ void ClearFogAround(int r, int c) {
     for(int i=0; i<4; i++) {
         int nr = r + dr[i];
         int nc = c + dc[i];
-        if (nr >= 0 && nr < 9 && nc >= 0 && nc < 9) fog_cells[nr][nc] = 0;
+        if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) fog_cells[nr][nc] = 0;
     }
-    int br = (r/3)*3, bc = (c/3)*3;
-    for(int i=0; i<3; i++) {
-        for(int j=0; j<3; j++) {
+    int br = (r / boxH) * boxH, bc = (c / boxW) * boxW;
+    for(int i=0; i<boxH; i++) {
+        for(int j=0; j<boxW; j++) {
             fog_cells[br+i][bc+j] = 0;
         }
     }
@@ -421,9 +465,20 @@ void UpdatePowerupButtons() {
         else sprintf(buf, "Shield (%d)", shields);
         SetWindowTextA(hBtnShield, buf);
     }
+    if (hBtnFreeze) {
+        char buf[32];
+        if (freezeTime > 0) sprintf(buf, "Frozen (%ds)", freezeTime);
+        else sprintf(buf, "Freeze (%d)", freezeCharges);
+        SetWindowTextA(hBtnFreeze, buf);
+    }
 }
 
-void GenerateBoardEx(int removal, int isDaily, int fogCount, int isRush) {
+void GenerateBoardEx(int gSize, int removal, int isDaily, int fogCount, int cageCount, int isRush) {
+    gridSize = gSize;
+    if (gridSize == 4) { boxW = 2; boxH = 2; }
+    else if (gridSize == 16) { boxW = 4; boxH = 4; }
+    else { gridSize = 9; boxW = 3; boxH = 3; }
+
     isDailyGame = isDaily;
     isRushMode = isRush;
     if (isDaily) {
@@ -434,68 +489,71 @@ void GenerateBoardEx(int removal, int isDaily, int fogCount, int isRush) {
     } else {
         srand((unsigned int)time(NULL));
     }
-    int base[9][9] = {
-        {1,2,3, 4,5,6, 7,8,9},
-        {4,5,6, 7,8,9, 1,2,3},
-        {7,8,9, 1,2,3, 4,5,6},
-        {2,3,1, 5,6,4, 8,9,7},
-        {5,6,4, 8,9,7, 2,3,1},
-        {8,9,7, 2,3,1, 5,6,4},
-        {3,1,2, 6,4,5, 9,7,8},
-        {6,4,5, 9,7,8, 3,1,2},
-        {9,7,8, 3,1,2, 6,4,5}
-    };
-    int nums[9] = {1,2,3,4,5,6,7,8,9};
-    ShuffleArray(nums, 9);
-    for(int r=0; r<9; r++)
-        for(int c=0; c<9; c++)
-            solution[r][c] = nums[base[r][c]-1];
-            
-    for(int band=0; band<3; band++) {
-        int rows[3] = {0,1,2};
-        ShuffleArray(rows, 3);
-        int temp[3][9];
-        for(int i=0; i<3; i++)
-            for(int c=0; c<9; c++) temp[i][c] = solution[band*3 + rows[i]][c];
-        for(int i=0; i<3; i++)
-            for(int c=0; c<9; c++) solution[band*3 + i][c] = temp[i][c];
+
+    // Base Sudoku solution matrix: (r*boxW + r/boxW + c) % gridSize + 1
+    for(int r=0; r<gridSize; r++) {
+        for(int c=0; c<gridSize; c++) {
+            solution[r][c] = ((r * boxW + r / boxW + c) % gridSize) + 1;
+        }
     }
-    
-    for(int band=0; band<3; band++) {
-        int cols[3] = {0,1,2};
-        ShuffleArray(cols, 3);
-        int temp[9][3];
-        for(int i=0; i<3; i++)
-            for(int r=0; r<9; r++) temp[r][i] = solution[r][band*3 + cols[i]];
-        for(int i=0; i<3; i++)
-            for(int r=0; r<9; r++) solution[r][band*3 + i] = temp[r][i];
+
+    // Symbol permutation
+    int nums[17];
+    for(int i=0; i<gridSize; i++) nums[i] = i+1;
+    ShuffleArray(nums, gridSize);
+    for(int r=0; r<gridSize; r++)
+        for(int c=0; c<gridSize; c++)
+            solution[r][c] = nums[solution[r][c]-1];
+
+    // Row band shuffle
+    for(int band=0; band<boxW; band++) {
+        int rows[4] = {0,1,2,3};
+        ShuffleArray(rows, boxH);
+        int temp[4][MAX_GRID];
+        for(int i=0; i<boxH; i++)
+            for(int c=0; c<gridSize; c++) temp[i][c] = solution[band*boxH + rows[i]][c];
+        for(int i=0; i<boxH; i++)
+            for(int c=0; c<gridSize; c++) solution[band*boxH + i][c] = temp[i][c];
     }
-    
-    for(int r=0; r<9; r++) {
-        for(int c=0; c<9; c++) {
+
+    // Col band shuffle
+    for(int band=0; band<boxH; band++) {
+        int cols[4] = {0,1,2,3};
+        ShuffleArray(cols, boxW);
+        int temp[MAX_GRID][4];
+        for(int i=0; i<boxW; i++)
+            for(int r=0; r<gridSize; r++) temp[r][i] = solution[r][band*boxW + cols[i]];
+        for(int i=0; i<boxW; i++)
+            for(int r=0; r<gridSize; r++) solution[r][band*boxW + i] = temp[r][i];
+    }
+
+    for(int r=0; r<gridSize; r++) {
+        for(int c=0; c<gridSize; c++) {
             board[r][c] = solution[r][c];
             fixed[r][c] = 1;
             error_cells[r][c] = 0;
             fog_cells[r][c] = 0;
+            cage_id[r][c] = 0;
+            cage_is_topleft[r][c] = 0;
         }
     }
-    
+
     while(removal > 0) {
-        int r = rand() % 9;
-        int c = rand() % 9;
+        int r = rand() % gridSize;
+        int c = rand() % gridSize;
         if(board[r][c] != 0) {
             board[r][c] = 0;
             fixed[r][c] = 0;
             removal--;
         }
     }
-    
-    // Apply fog cells among empty cells
+
+    // Apply Fog cells among empty cells
     if (fogCount > 0) {
-        int emptyCells[81][2];
+        int emptyCells[MAX_GRID * MAX_GRID][2];
         int numEmpty = 0;
-        for(int r=0; r<9; r++) {
-            for(int c=0; c<9; c++) {
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
                 if(board[r][c] == 0) {
                     emptyCells[numEmpty][0] = r;
                     emptyCells[numEmpty][1] = c;
@@ -511,20 +569,91 @@ void GenerateBoardEx(int removal, int isDaily, int fogCount, int isRush) {
             numEmpty--;
         }
     }
-    
-    for(int r=0; r<9; r++) {
-        for(int c=0; c<9; c++) {
-            for(int i=0; i<10; i++) notes[r][c][i] = 0;
+
+    // Apply Killer Sudoku Cages
+    num_cages = 0;
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+
+    for (int k = 1; k <= cageCount; k++) {
+        int r = rand() % gridSize;
+        int c = rand() % gridSize;
+        int tries = 0;
+        while (cage_id[r][c] != 0 && tries < 100) {
+            r = rand() % gridSize;
+            c = rand() % gridSize;
+            tries++;
+        }
+        if (cage_id[r][c] != 0) continue;
+
+        int targetSize = 2 + (rand() % (gridSize == 4 ? 2 : 3));
+        int cageCells[4][2];
+        int currentSize = 1;
+        cageCells[0][0] = r;
+        cageCells[0][1] = c;
+        cage_id[r][c] = k;
+
+        while (currentSize < targetSize) {
+            int baseIdx = rand() % currentSize;
+            int br = cageCells[baseIdx][0];
+            int bc = cageCells[baseIdx][1];
+            int dir = rand() % 4;
+            int nr = br + dr[dir];
+            int nc = bc + dc[dir];
+            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize && cage_id[nr][nc] == 0) {
+                cage_id[nr][nc] = k;
+                cageCells[currentSize][0] = nr;
+                cageCells[currentSize][1] = nc;
+                currentSize++;
+            } else {
+                int found = 0;
+                for (int d = 0; d < 4; d++) {
+                    int tr = br + dr[d], tc = bc + dc[d];
+                    if (tr >= 0 && tr < gridSize && tc >= 0 && tc < gridSize && cage_id[tr][tc] == 0) {
+                        cage_id[tr][tc] = k;
+                        cageCells[currentSize][0] = tr;
+                        cageCells[currentSize][1] = tc;
+                        currentSize++;
+                        found = 1;
+                        break;
+                    }
+                }
+                if (!found) break;
+            }
+        }
+
+        int sum = 0;
+        int minPos = 9999;
+        int topR = 0, topC = 0;
+        for (int i = 0; i < currentSize; i++) {
+            int cr = cageCells[i][0];
+            int cc = cageCells[i][1];
+            sum += solution[cr][cc];
+            int pos = cr * gridSize + cc;
+            if (pos < minPos) {
+                minPos = pos;
+                topR = cr;
+                topC = cc;
+            }
+        }
+        cage_sum[k] = sum;
+        cage_is_topleft[topR][topC] = 1;
+        num_cages = k;
+    }
+
+    for(int r=0; r<gridSize; r++) {
+        for(int c=0; c<gridSize; c++) {
+            for(int i=0; i<=16; i++) notes[r][c][i] = 0;
             awarded[r][c] = 0;
         }
     }
-    
+
     if (isRushMode) {
-        elapsedTime = 180; // 180s countdown timer
+        elapsedTime = 180;
     } else {
         elapsedTime = 0;
     }
-    
+    freezeTime = 0;
     score = 0;
     timerActive = 1;
     gameActive = 1;
@@ -532,20 +661,50 @@ void GenerateBoardEx(int removal, int isDaily, int fogCount, int isRush) {
     SaveGameState();
 }
 
+// 20 Stages Campaign Table
+typedef struct {
+    int gSize;
+    int removal;
+    int fogCount;
+    int cageCount;
+} CampaignStageDef;
+
+CampaignStageDef campaignStages[20] = {
+    {4,  6,  0, 0}, // Stage 1: 4x4 Mini Easy
+    {4,  8,  1, 1}, // Stage 2: 4x4 Mini Medium
+    {4,  10, 2, 2}, // Stage 3: 4x4 Mini Hard
+    {9,  28, 0, 0}, // Stage 4: 9x9 Classic Easy
+    {9,  32, 1, 1}, // Stage 5: 9x9 Classic Easy+
+    {9,  38, 2, 2}, // Stage 6: 9x9 Classic Medium
+    {9,  42, 3, 3}, // Stage 7: 9x9 Classic Medium+
+    {9,  48, 4, 4}, // Stage 8: 9x9 Classic Hard
+    {9,  52, 5, 5}, // Stage 9: 9x9 Classic Hard+
+    {9,  56, 6, 6}, // Stage 10: 9x9 Classic Expert
+    {9,  60, 7, 7}, // Stage 11: 9x9 Classic Expert+
+    {16, 80, 2, 2}, // Stage 12: 16x16 Hexadoku Easy
+    {16, 100,4, 4}, // Stage 13: 16x16 Hexadoku Medium
+    {16, 120,6, 6}, // Stage 14: 16x16 Hexadoku Hard
+    {9,  58, 6, 8}, // Stage 15: 9x9 Killer Master
+    {9,  62, 10,6}, // Stage 16: 9x9 Fog Nightmare
+    {16, 140,8, 8}, // Stage 17: 16x16 Hexadoku Expert
+    {9,  65, 8, 8}, // Stage 18: 9x9 Fiendish Blitz
+    {16, 155,10,10},// Stage 19: 16x16 Hexadoku Fiendish
+    {16, 165,12,12} // Stage 20: Stage 20 Fiendish Master Challenge
+};
+
 void StartCampaignStage(HWND hwnd, int stage) {
     isCampaignMode = 1;
     isRushMode = 0;
     campaignStage = stage;
-    if (campaignStage > 14) campaignStage = 14;
+    if (campaignStage > 19) campaignStage = 19;
     magicWands = 3;
     shields = 1;
     shieldActive = 0;
+    freezeCharges = 2;
     strikes = 0;
     
-    int campaignRems[15] = {25, 30, 35, 40, 45, 48, 51, 54, 57, 60, 63, 65, 67, 69, 72};
-    int campaignFogCount[15] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8};
-    
-    GenerateBoardEx(campaignRems[campaignStage], 0, campaignFogCount[campaignStage], 0);
+    CampaignStageDef def = campaignStages[campaignStage];
+    GenerateBoardEx(def.gSize, def.removal, 0, def.fogCount, def.cageCount, 0);
     sel_r = -1; sel_c = -1;
     UpdatePowerupButtons();
     InvalidateRect(hwnd, NULL, TRUE);
@@ -557,18 +716,19 @@ void StartRushMode(HWND hwnd) {
     shields = 1;
     shieldActive = 0;
     magicWands = 1;
+    freezeCharges = 1;
     currentDiffIdx = 3;
     stats[3].played++;
     SaveStats();
-    GenerateBoardEx(45, 0, 0, 1);
+    GenerateBoardEx(9, 45, 0, 0, 0, 1);
     sel_r = -1; sel_c = -1;
     UpdatePowerupButtons();
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
 void CheckWin(HWND hwnd) {
-    for(int r=0; r<9; r++)
-        for(int c=0; c<9; c++)
+    for(int r=0; r<gridSize; r++)
+        for(int c=0; c<gridSize; c++)
             if(board[r][c] != solution[r][c]) return;
             
     timerActive = 0;
@@ -576,9 +736,9 @@ void CheckWin(HWND hwnd) {
     TriggerVictoryParticles();
     
     if (isRushMode) {
-        score += elapsedTime * 10 + 500; // Completion bonus for Rush
+        score += elapsedTime * 10 + 500;
         stats[3].won++;
-        if (stats[3].bestTime == -1 || elapsedTime > stats[3].bestTime) stats[3].bestTime = elapsedTime; // For Rush, higher time left is better
+        if (stats[3].bestTime == -1 || elapsedTime > stats[3].bestTime) stats[3].bestTime = elapsedTime;
         if (score > stats[3].bestScore) stats[3].bestScore = score;
         SaveStats();
         gameActive = 0;
@@ -596,7 +756,7 @@ void CheckWin(HWND hwnd) {
     if (gameActive) {
         if (isCampaignMode) {
             if (campaignStage > maxCampaignStage) { maxCampaignStage = campaignStage; SaveCampaignStats(); }
-            if (campaignStage < 14) {
+            if (campaignStage < 19) {
                 char msg[256];
                 sprintf(msg, "Stage %d Clear!\nTime: %02d:%02d\nScore: %d\nReady for Stage %d?", campaignStage+1, elapsedTime/60, elapsedTime%60, score, campaignStage+2);
                 MessageBoxA(hwnd, msg, "KSudoku Campaign", MB_OK);
@@ -609,7 +769,7 @@ void CheckWin(HWND hwnd) {
                 return;
             } else {
                 char msg[256];
-                sprintf(msg, "CONGRATULATIONS!!\nYou completed all 15 Stages of the KSudoku Campaign!\nFinal Score: %d", score);
+                sprintf(msg, "CONGRATULATIONS!!\nYou completed all 20 Stages of the KSudoku Campaign!\nFinal Score: %d", score);
                 MessageBoxA(hwnd, msg, "Campaign Complete!", MB_OK);
                 gameActive = 0;
                 SaveGameState();
@@ -698,32 +858,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentDiffIdx = 1;
                 stats[currentDiffIdx].played++;
                 SaveStats();
-                GenerateBoardEx(40, 0, 0, 0);
+                GenerateBoardEx(9, 40, 0, 0, 0, 0);
             }
-            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 8, 70, 100, hwnd, (HMENU)4, NULL, NULL);
+            HWND hComboDifficulty = CreateWindowA("COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 8, 65, 100, hwnd, (HMENU)4, NULL, NULL);
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Easy");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Medium");
             SendMessageA(hComboDifficulty, CB_ADDSTRING, 0, (LPARAM)"Hard");
             SendMessageA(hComboDifficulty, CB_SETCURSEL, currentDiffIdx < 3 ? currentDiffIdx : 1, 0);
             
-            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 85, 8, 40, 28, hwnd, (HMENU)1, NULL, NULL);
-            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 130, 8, 65, 28, hwnd, (HMENU)13, NULL, NULL);
-            hBtnRush = CreateWindowA("BUTTON", "Rush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 200, 8, 45, 28, hwnd, (HMENU)14, NULL, NULL);
-            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 250, 8, 40, 28, hwnd, (HMENU)10, NULL, NULL);
-            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 295, 8, 45, 28, hwnd, (HMENU)6, NULL, NULL);
-            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 8, 55, 28, hwnd, (HMENU)9, NULL, NULL);
+            hBtnNew = CreateWindowA("BUTTON", "New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 8, 40, 28, hwnd, (HMENU)1, NULL, NULL);
+            hBtnCampaign = CreateWindowA("BUTTON", "Campaign", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 125, 8, 65, 28, hwnd, (HMENU)13, NULL, NULL);
+            hBtnRush = CreateWindowA("BUTTON", "Rush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 195, 8, 45, 28, hwnd, (HMENU)14, NULL, NULL);
+            HWND hBtnDaily = CreateWindowA("BUTTON", "Daily", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 8, 40, 28, hwnd, (HMENU)10, NULL, NULL);
+            HWND hBtnStats = CreateWindowA("BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 290, 8, 45, 28, hwnd, (HMENU)6, NULL, NULL);
+            hBtnSettings = CreateWindowA("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 340, 8, 55, 28, hwnd, (HMENU)9, NULL, NULL);
             
             hBtnNotes = CreateWindowA("BUTTON", "Notes: OFF", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 40, 65, 28, hwnd, (HMENU)3, NULL, NULL);
-            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 40, 55, 28, hwnd, (HMENU)2, NULL, NULL);
-            hBtnHint = CreateWindowA("BUTTON", "Hint", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 140, 40, 40, 28, hwnd, (HMENU)5, NULL, NULL);
-            hBtnMagic = CreateWindowA("BUTTON", "Wand (3)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 185, 40, 55, 28, hwnd, (HMENU)12, NULL, NULL);
+            hBtnValidate = CreateWindowA("BUTTON", "Validate", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 80, 40, 50, 28, hwnd, (HMENU)2, NULL, NULL);
+            hBtnHint = CreateWindowA("BUTTON", "Hint (H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 135, 40, 50, 28, hwnd, (HMENU)5, NULL, NULL);
+            hBtnMagic = CreateWindowA("BUTTON", "Wand (3)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 190, 40, 50, 28, hwnd, (HMENU)12, NULL, NULL);
             hBtnShield = CreateWindowA("BUTTON", "Shield (1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 245, 40, 55, 28, hwnd, (HMENU)15, NULL, NULL);
-            hBtnAutoFill = CreateWindowA("BUTTON", "Auto", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 40, 40, 28, hwnd, (HMENU)11, NULL, NULL);
-            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 40, 40, 28, hwnd, (HMENU)7, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 395, 40, 40, 28, hwnd, (HMENU)8, NULL, NULL);
+            hBtnAutoFill = CreateWindowA("BUTTON", "Auto (P)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 305, 40, 45, 28, hwnd, (HMENU)11, NULL, NULL);
+            hBtnFreeze = CreateWindowA("BUTTON", "Freeze (F)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 355, 40, 55, 28, hwnd, (HMENU)16, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 415, 40, 40, 28, hwnd, (HMENU)7, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 460, 40, 40, 28, hwnd, (HMENU)8, NULL, NULL);
 
             hFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
             hFontSmall = CreateFontA(14, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+            hFontTiny = CreateFontA(10, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial");
+
             SetTimer(hwnd, 1, 1000, NULL);
             SetTimer(hwnd, 2, 30, NULL);
             UpdatePowerupButtons();
@@ -736,7 +899,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 1 && timerActive) {
-                if (isRushMode) {
+                if (freezeTime > 0) {
+                    freezeTime--;
+                    UpdatePowerupButtons();
+                } else if (isRushMode) {
                     elapsedTime--;
                     if (elapsedTime <= 0) {
                         elapsedTime = 0;
@@ -766,7 +932,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveStats();
                 undoCount = 0; redoCount = 0;
                 isCampaignMode = 0; isRushMode = 0;
-                GenerateBoardEx(removal, 0, 0, 0);
+                GenerateBoardEx(9, removal, 0, 0, 0, 0);
                 sel_r = -1; sel_c = -1;
                 PlaySudokuSound(1);
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -782,7 +948,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     currentDiffIdx = 1;
                     undoCount = 0; redoCount = 0;
                     isCampaignMode = 0; isRushMode = 0;
-                    GenerateBoardEx(40, 1, 0, 0);
+                    GenerateBoardEx(9, 40, 1, 0, 0, 0);
                     sel_r = -1; sel_c = -1;
                     PlaySudokuSound(1);
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -792,7 +958,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 time_t t = time(NULL);
                 struct tm* tm_info = localtime(&t);
                 int todayStr = (tm_info->tm_year + 1900) * 10000 + (tm_info->tm_mon + 1) * 100 + tm_info->tm_mday;
-                sprintf(msg, "[Daily Challenge & Progress]\nDaily Streak: %d | Completed Today: %s\nCampaign Max Stage: %d / 15\nWands Used: %d | Shields Used: %d\n\n",
+                sprintf(msg, "[Daily Challenge & Progress]\nDaily Streak: %d | Completed Today: %s\nCampaign Max Stage: %d / 20\nWands Used: %d | Shields Used: %d\n\n",
                         dailyStreak, (lastDailyDate == todayStr) ? "Yes" : "No", maxCampaignStage + 1, totalWandsUsed, totalShieldsUsed);
 
                 const char* diffs[] = {"Easy", "Medium", "Hard", "Rush Mode"};
@@ -813,8 +979,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 PlaySudokuSound(1);
             } else if (LOWORD(wParam) == 2) { // Validate
                 int errorCount = 0;
-                for(int r=0; r<9; r++) {
-                    for(int c=0; c<9; c++) {
+                for(int r=0; r<gridSize; r++) {
+                    for(int c=0; c<gridSize; c++) {
                         if (!fixed[r][c] && board[r][c] != 0 && board[r][c] != solution[r][c]) {
                             error_cells[r][c] = 1;
                             errorCount++;
@@ -831,18 +997,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (LOWORD(wParam) == 5) { // Hint
-                if (sel_r >= 0 && sel_c >= 0 && !fixed[sel_r][sel_c]) {
-                    if (board[sel_r][sel_c] != solution[sel_r][sel_c]) {
-                        PushState();
-                        score = max(0, score - 150);
-                        board[sel_r][sel_c] = solution[sel_r][sel_c];
-                        awarded[sel_r][sel_c] = 1;
-                        error_cells[sel_r][sel_c] = 0;
-                        ClearFogAround(sel_r, sel_c);
-                        PlaySudokuSound(3);
-                        CheckWin(hwnd);
+            } else if (LOWORD(wParam) == 5) { // Smart Hint
+                int targetR = sel_r, targetC = sel_c;
+                if (targetR < 0 || targetC < 0 || fixed[targetR][targetC] || board[targetR][targetC] == solution[targetR][targetC]) {
+                    targetR = -1; targetC = -1;
+                    for (int r=0; r<gridSize; r++) {
+                        for (int c=0; c<gridSize; c++) {
+                            if (!fixed[r][c] && board[r][c] != solution[r][c]) {
+                                targetR = r; targetC = c; break;
+                            }
+                        }
+                        if (targetR >= 0) break;
                     }
+                }
+                if (targetR >= 0 && targetC >= 0) {
+                    PushState();
+                    score = max(0, score - 150);
+                    board[targetR][targetC] = solution[targetR][targetC];
+                    awarded[targetR][targetC] = 1;
+                    error_cells[targetR][targetC] = 0;
+                    ClearFogAround(targetR, targetC);
+                    PlaySudokuSound(3);
+                    CheckWin(hwnd);
                 }
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -854,21 +1030,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Redo();
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
-            } else if (LOWORD(wParam) == 11) { // Auto-fill Notes
+            } else if (LOWORD(wParam) == 11) { // Auto-fill Pencil Notes
                 PushState();
-                for(int r=0; r<9; r++) {
-                    for(int c=0; c<9; c++) {
-                        if(board[r][c] == 0) {
-                            for(int i=1; i<=9; i++) notes[r][c][i] = 0;
-                            for(int num=1; num<=9; num++) {
+                for(int r=0; r<gridSize; r++) {
+                    for(int c=0; c<gridSize; c++) {
+                        if(board[r][c] == 0 && !fog_cells[r][c]) {
+                            for(int i=1; i<=gridSize; i++) notes[r][c][i] = 0;
+                            for(int num=1; num<=gridSize; num++) {
                                 int invalid = 0;
-                                for(int i=0; i<9; i++) {
+                                for(int i=0; i<gridSize; i++) {
                                     if(i != c && board[r][i] == num) invalid = 1;
                                     if(i != r && board[i][c] == num) invalid = 1;
                                 }
-                                int br = (r/3)*3, bc = (c/3)*3;
-                                for(int i=0; i<3; i++) {
-                                    for(int j=0; j<3; j++) {
+                                int br = (r/boxH)*boxH, bc = (c/boxW)*boxW;
+                                for(int i=0; i<boxH; i++) {
+                                    for(int j=0; j<boxW; j++) {
                                         if((br+i != r || bc+j != c) && board[br+i][bc+j] == num) invalid = 1;
                                     }
                                 }
@@ -881,18 +1057,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveGameState();
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (LOWORD(wParam) == 13) { // Campaign
-                StartCampaignStage(hwnd, maxCampaignStage > 14 ? 14 : maxCampaignStage);
+                StartCampaignStage(hwnd, maxCampaignStage > 19 ? 19 : maxCampaignStage);
             } else if (LOWORD(wParam) == 12) { // Magic Wand
                 if (magicWands > 0) {
                     int emptyCount = 0;
-                    for(int r=0; r<9; r++)
-                        for(int c=0; c<9; c++)
+                    for(int r=0; r<gridSize; r++)
+                        for(int c=0; c<gridSize; c++)
                             if(!fixed[r][c] && board[r][c] != solution[r][c]) emptyCount++;
                     if(emptyCount > 0) {
                         int target = rand() % emptyCount;
                         int idx = 0;
-                        for(int r=0; r<9; r++) {
-                            for(int c=0; c<9; c++) {
+                        for(int r=0; r<gridSize; r++) {
+                            for(int c=0; c<gridSize; c++) {
                                 if(!fixed[r][c] && board[r][c] != solution[r][c]) {
                                     if(idx == target) {
                                         PushState();
@@ -928,6 +1104,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveGameState();
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if (LOWORD(wParam) == 16) { // Time Freeze
+                if (freezeCharges > 0 || freezeTime > 0) {
+                    if (freezeCharges > 0) freezeCharges--;
+                    freezeTime += 20;
+                    PlaySudokuSound(5);
+                    UpdatePowerupButtons();
+                    SaveGameState();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             } else if (LOWORD(wParam) == 9) { // Settings
                 if(!hSettingsWnd) {
                     RECT rc; GetWindowRect(hwnd, &rc);
@@ -945,15 +1130,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(sel_r == -1) sel_r = 0, sel_c = 0;
             else {
                 if(wParam == VK_UP) sel_r = max(0, sel_r - 1);
-                if(wParam == VK_DOWN) sel_r = min(8, sel_r + 1);
+                if(wParam == VK_DOWN) sel_r = min(gridSize - 1, sel_r + 1);
                 if(wParam == VK_LEFT) sel_c = max(0, sel_c - 1);
-                if(wParam == VK_RIGHT) sel_c = min(8, sel_c + 1);
+                if(wParam == VK_RIGHT) sel_c = min(gridSize - 1, sel_c + 1);
             }
             PlaySudokuSound(1);
             
-            if(wParam >= '1' && wParam <= '9') {
+            int inputNum = 0;
+            if (wParam >= '1' && wParam <= '9') inputNum = wParam - '0';
+            else if (gridSize == 16 && (wParam >= 'A' && wParam <= 'G')) inputNum = 10 + (wParam - 'A');
+            else if (gridSize == 16 && (wParam >= 'a' && wParam <= 'g')) inputNum = 10 + (wParam - 'a');
+
+            if (wParam == 'H' || wParam == 'h') { SendMessageA(hwnd, WM_COMMAND, 5, 0); return 0; }
+            if (wParam == 'P' || wParam == 'p') { SendMessageA(hwnd, WM_COMMAND, 11, 0); return 0; }
+            if (wParam == 'S' || wParam == 's') { SendMessageA(hwnd, WM_COMMAND, 15, 0); return 0; }
+            if (wParam == 'F' || wParam == 'f') {
+                if (gridSize == 16 && (GetKeyState(VK_SHIFT) & 0x8000)) inputNum = 15;
+                else { SendMessageA(hwnd, WM_COMMAND, 16, 0); return 0; }
+            }
+            if (wParam == 'W' || wParam == 'w') { SendMessageA(hwnd, WM_COMMAND, 12, 0); return 0; }
+            if (wParam == 'N' || wParam == 'n') { SendMessageA(hwnd, WM_COMMAND, 3, 0); return 0; }
+
+            if(inputNum >= 1 && inputNum <= gridSize) {
                 if(!fixed[sel_r][sel_c]) {
-                    int num = wParam - '0';
+                    int num = inputNum;
                     if (notesMode) {
                         if (board[sel_r][sel_c] == 0) {
                             PushState();
@@ -964,20 +1164,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (board[sel_r][sel_c] != num) {
                             PushState();
                             int invalid = 0;
-                            for(int i=0; i<9; i++) {
+                            for(int i=0; i<gridSize; i++) {
                                 if(i != sel_c && board[sel_r][i] == num) invalid = 1;
                                 if(i != sel_r && board[i][sel_c] == num) invalid = 1;
                             }
-                            int br = (sel_r/3)*3, bc = (sel_c/3)*3;
-                            for(int r=0; r<3; r++) {
-                                for(int c=0; c<3; c++) {
+                            int br = (sel_r/boxH)*boxH, bc = (sel_c/boxW)*boxW;
+                            for(int r=0; r<boxH; r++) {
+                                for(int c=0; c<boxW; c++) {
                                     if((br+r != sel_r || bc+c != sel_c) && board[br+r][bc+c] == num) invalid = 1;
+                                }
+                            }
+
+                            // Killer Sudoku Cage Check
+                            if (cage_id[sel_r][sel_c] > 0) {
+                                int cid = cage_id[sel_r][sel_c];
+                                int cageSum = 0, cageCountCells = 0, cageFilled = 0;
+                                int dup = 0;
+                                for (int r=0; r<gridSize; r++) {
+                                    for (int c=0; c<gridSize; c++) {
+                                        if (cage_id[r][c] == cid) {
+                                            cageCountCells++;
+                                            int val = (r == sel_r && c == sel_c) ? num : board[r][c];
+                                            if (val > 0) {
+                                                cageFilled++;
+                                                cageSum += val;
+                                            }
+                                        }
+                                    }
+                                }
+                                if (cageSum > cage_sum[cid] || (cageFilled == cageCountCells && cageSum != cage_sum[cid])) {
+                                    invalid = 1;
                                 }
                             }
                             
                             if(invalid) {
                                 if (shieldActive) {
-                                    shieldActive = 0; // Shield absorbs error!
+                                    shieldActive = 0;
                                     UpdatePowerupButtons();
                                     PlaySudokuSound(5);
                                 } else {
@@ -1020,14 +1242,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         PushState();
                         board[sel_r][sel_c] = 0;
                         error_cells[sel_r][sel_c] = 0;
-                        for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                        for(int i=0; i<=16; i++) notes[sel_r][sel_c][i] = 0;
                         PlaySudokuSound(2);
                     } else {
                         int hasNotes = 0;
-                        for(int i=0; i<10; i++) if (notes[sel_r][sel_c][i]) hasNotes = 1;
+                        for(int i=0; i<=16; i++) if (notes[sel_r][sel_c][i]) hasNotes = 1;
                         if (hasNotes) {
                             PushState();
-                            for(int i=0; i<10; i++) notes[sel_r][sel_c][i] = 0;
+                            for(int i=0; i<=16; i++) notes[sel_r][sel_c][i] = 0;
                             PlaySudokuSound(2);
                         }
                     }
@@ -1036,8 +1258,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Undo();
             } else if(wParam == 'Y' && (GetKeyState(VK_CONTROL) & 0x8000)) {
                 Redo();
-            } else if(wParam == 'N') {
-                SendMessageA(hwnd, WM_COMMAND, 3, 0);
             }
             SaveGameState();
             InvalidateRect(hwnd, NULL, TRUE);
@@ -1046,8 +1266,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN: {
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            int start_x = 40, start_y = 75, cell_sz = 40;
-            if(x >= start_x && x < start_x + 9*cell_sz && y >= start_y && y < start_y + 9*cell_sz) {
+            int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+            int start_x = 40, start_y = 75;
+            if(x >= start_x && x < start_x + gridSize*cell_sz && y >= start_y && y < start_y + gridSize*cell_sz) {
                 sel_c = (x - start_x) / cell_sz;
                 sel_r = (y - start_y) / cell_sz;
                 PlaySudokuSound(1);
@@ -1060,7 +1281,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            // Background
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
             HBRUSH hbg = CreateSolidBrush(themes[prefs.theme][T_BG]);
@@ -1072,22 +1292,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
             
             char info[128];
+            char freezeStr[32] = "";
+            if (freezeTime > 0) sprintf(freezeStr, " [FROZEN %ds]", freezeTime);
+
             if (isCampaignMode) {
-                sprintf(info, "Stage: %d/15   Time: %02d:%02d   Score: %d", campaignStage+1, elapsedTime/60, elapsedTime%60, score);
-                TextOutA(hdc, 40, 48, info, strlen(info));
+                sprintf(info, "Stage: %d/20 (%dx%d)   Strikes: %d/3   Time: %02d:%02d%s   Score: %d", campaignStage+1, gridSize, gridSize, strikes, elapsedTime/60, elapsedTime%60, freezeStr, score);
+                TextOutA(hdc, 20, 48, info, strlen(info));
             } else if (isRushMode) {
-                sprintf(info, "RUSH MODE   Time Left: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
-                TextOutA(hdc, 40, 48, info, strlen(info));
+                sprintf(info, "RUSH MODE   Time Left: %02d:%02d%s   Score: %d", elapsedTime/60, elapsedTime%60, freezeStr, score);
+                TextOutA(hdc, 20, 48, info, strlen(info));
             } else {
-                sprintf(info, "Time: %02d:%02d   Score: %d", elapsedTime/60, elapsedTime%60, score);
-                TextOutA(hdc, 40, 48, info, strlen(info));
+                sprintf(info, "Time: %02d:%02d%s   Score: %d", elapsedTime/60, elapsedTime%60, freezeStr, score);
+                TextOutA(hdc, 20, 48, info, strlen(info));
             }
             
-            int start_x = 40, start_y = 75, cell_sz = 40;
-            int board_w = 9 * cell_sz;
+            int cell_sz = (gridSize == 4) ? 80 : (gridSize == 16 ? 22 : 40);
+            int start_x = 40, start_y = 75;
+            int board_w = gridSize * cell_sz;
 
-            // 3D Wooden / Slate Outer Board Frame
-            RECT outerFrame = {start_x - 8, start_y - 8, start_x + board_w + 8, start_y + board_w + 8};
+            RECT outerFrame = {start_x - 6, start_y - 6, start_x + board_w + 6, start_y + board_w + 6};
             HBRUSH hFrameBrush = CreateSolidBrush(RGB(30, 41, 59));
             FillRect(hdc, &outerFrame, hFrameBrush);
             DeleteObject(hFrameBrush);
@@ -1113,19 +1336,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 highlight_val = board[sel_r][sel_c];
             }
             
-            // Draw cells with recessed slots and 3D tactile tile styling
-            for(int r=0; r<9; r++) {
-                for(int c=0; c<9; c++) {
+            // Draw cells
+            for(int r=0; r<gridSize; r++) {
+                for(int c=0; c<gridSize; c++) {
                     RECT rc = {start_x + c*cell_sz, start_y + r*cell_sz, start_x + (c+1)*cell_sz, start_y + (r+1)*cell_sz};
                     RECT cellInner = {rc.left + 1, rc.top + 1, rc.right - 1, rc.bottom - 1};
                     
                     HBRUSH cellBg = NULL;
                     if(r == sel_r && c == sel_c) {
                         cellBg = CreateSolidBrush(RGB(37, 99, 235));
-                    } else if(sel_r >= 0 && (r == sel_r || c == sel_c || (r/3 == sel_r/3 && c/3 == sel_c/3))) {
+                    } else if(sel_r >= 0 && (r == sel_r || c == sel_c || (r/boxH == sel_r/boxH && c/boxW == sel_c/boxW))) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
                     } else if(prefs.highlightSame && highlight_val && board[r][c] == highlight_val) {
                         cellBg = CreateSolidBrush(themes[prefs.theme][T_HL]);
+                    } else if(cage_id[r][c] > 0) {
+                        cellBg = CreateSolidBrush(RGB(42, 45, 25));
                     } else if(fixed[r][c] && board[r][c] != 0) {
                         cellBg = CreateSolidBrush(RGB(24, 34, 56));
                     } else {
@@ -1134,6 +1359,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     FillRect(hdc, &cellInner, cellBg);
                     DeleteObject(cellBg);
+
+                    // Cage dotted border
+                    if (cage_id[r][c] > 0) {
+                        HPEN hCagePen = CreatePen(PS_DOT, 1, RGB(234, 179, 8));
+                        oldPen = (HPEN)SelectObject(hdc, hCagePen);
+                        HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
+                        HBRUSH oldB = (HBRUSH)SelectObject(hdc, hNullB);
+                        Rectangle(hdc, cellInner.left, cellInner.top, cellInner.right, cellInner.bottom);
+                        SelectObject(hdc, oldB);
+                        SelectObject(hdc, oldPen);
+                        DeleteObject(hCagePen);
+                    }
 
                     // Recessed inset cell bevel
                     HPEN hInsetShadow = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
@@ -1152,7 +1389,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(hInsetShadow);
                     DeleteObject(hInsetHighlight);
 
-                    // Red Pulsing Collision Warning Aura Box
+                    // Error Box
                     if(error_cells[r][c]) {
                         HPEN hErrPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
                         oldPen = (HPEN)SelectObject(hdc, hErrPen);
@@ -1164,7 +1401,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(hErrPen);
                     }
 
-                    // Selected Cell Glowing Aura Border
+                    // Selected Aura
                     if(r == sel_r && c == sel_c) {
                         HPEN hSelPen = CreatePen(PS_SOLID, 2, RGB(147, 197, 253));
                         oldPen = (HPEN)SelectObject(hdc, hSelPen);
@@ -1176,23 +1413,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(hSelPen);
                     }
                     
+                    // Top-Left Cage Sum Text
+                    if (cage_is_topleft[r][c] && cage_id[r][c] > 0) {
+                        HFONT oldF = (HFONT)SelectObject(hdc, hFontTiny);
+                        SetTextColor(hdc, RGB(250, 204, 21));
+                        char cbuf[8];
+                        sprintf(cbuf, "%d", cage_sum[cage_id[r][c]]);
+                        TextOutA(hdc, rc.left + 2, rc.top + 1, cbuf, strlen(cbuf));
+                        SelectObject(hdc, oldF);
+                    }
+
                     if (fog_cells[r][c] && board[r][c] == 0) {
-                        // Shrouded / Fog Cell
-                        HFONT oldFnt = (HFONT)SelectObject(hdc, hFont);
+                        HFONT oldFnt = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
                         SetTextColor(hdc, RGB(148, 163, 184));
                         RECT textRc = rc;
                         textRc.top += 2;
                         DrawTextA(hdc, "?", -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                         SelectObject(hdc, oldFnt);
                     } else if(board[r][c] != 0) {
-                        char buf[2];
-                        sprintf(buf, "%d", board[r][c]);
+                        char buf[4];
+                        int val = board[r][c];
+                        if (gridSize == 16 && val >= 10) sprintf(buf, "%c", 'A' + (val - 10));
+                        else sprintf(buf, "%d", val);
                         
-                        // 3D Engraved text shadow for fixed initial cells
                         if(fixed[r][c] && !error_cells[r][c]) {
                             SetTextColor(hdc, RGB(0, 0, 0));
-                            RECT shadowRc = rc; shadowRc.left += 1; shadowRc.top += 3;
+                            RECT shadowRc = rc; shadowRc.left += 1; shadowRc.top += 2;
+                            HFONT curF = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
                             DrawTextA(hdc, buf, -1, &shadowRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                            SelectObject(hdc, curF);
                             SetTextColor(hdc, RGB(248, 250, 252));
                         } else if(error_cells[r][c]) {
                             SetTextColor(hdc, RGB(248, 113, 113));
@@ -1200,25 +1449,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             SetTextColor(hdc, themes[prefs.theme][T_MUTABLE]);
                         }
                         
+                        HFONT curF = (HFONT)SelectObject(hdc, gridSize == 16 ? hFontSmall : hFont);
                         RECT textRc = rc;
-                        textRc.top += 1;
+                        if (cage_is_topleft[r][c]) textRc.top += 4;
                         DrawTextA(hdc, buf, -1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        SelectObject(hdc, curF);
                     } else {
                         int hasNotes = 0;
-                        for(int i=1; i<=9; i++) if(notes[r][c][i]) hasNotes = 1;
-                        if(hasNotes) {
+                        for(int i=1; i<=gridSize; i++) if(notes[r][c][i]) hasNotes = 1;
+                        if(hasNotes && gridSize <= 9) {
                             HFONT oldFnt = (HFONT)SelectObject(hdc, hFontSmall);
-                            for(int i=1; i<=9; i++) {
+                            for(int i=1; i<=gridSize; i++) {
                                 if(notes[r][c][i]) {
-                                    int sub_r = (i-1) / 3;
-                                    int sub_c = (i-1) % 3;
+                                    int sub_r = (i-1) / boxW;
+                                    int sub_c = (i-1) % boxW;
                                     RECT noteRc = rc;
-                                    noteRc.left += sub_c * (cell_sz / 3) + 1;
-                                    noteRc.right = noteRc.left + (cell_sz / 3) - 1;
-                                    noteRc.top += sub_r * (cell_sz / 3) + 1;
-                                    noteRc.bottom = noteRc.top + (cell_sz / 3) - 1;
+                                    noteRc.left += sub_c * (cell_sz / boxW) + 1;
+                                    noteRc.right = noteRc.left + (cell_sz / boxW) - 1;
+                                    noteRc.top += sub_r * (cell_sz / boxH) + 1;
+                                    noteRc.bottom = noteRc.top + (cell_sz / boxH) - 1;
                                     
-                                    // Pencil note mini-pip badge background
                                     HBRUSH hPipBrush = CreateSolidBrush(RGB(30, 58, 100));
                                     FillRect(hdc, &noteRc, hPipBrush);
                                     DeleteObject(hPipBrush);
@@ -1235,35 +1485,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw grid lines with thick 3x3 block divider 3D effect
-            for(int i=0; i<=9; i++) {
-                int thick = (i % 3 == 0);
-                COLORREF gridCol = thick ? RGB(248, 250, 252) : themes[prefs.theme][T_GRID_THIN];
-                HPEN hPen = CreatePen(PS_SOLID, thick ? 3 : 1, gridCol);
-                HPEN oldPen = (HPEN)SelectObject(hdc, hPen);
-                
+            // Draw grid lines with thick block dividers
+            for(int i=0; i<=gridSize; i++) {
+                int thickV = (i % boxW == 0);
+                COLORREF gridColV = thickV ? RGB(248, 250, 252) : themes[prefs.theme][T_GRID_THIN];
+                HPEN hPenV = CreatePen(PS_SOLID, thickV ? 3 : 1, gridColV);
+                HPEN oldPenV = (HPEN)SelectObject(hdc, hPenV);
                 MoveToEx(hdc, start_x + i*cell_sz, start_y, NULL);
-                LineTo(hdc, start_x + i*cell_sz, start_y + 9*cell_sz);
-                
+                LineTo(hdc, start_x + i*cell_sz, start_y + gridSize*cell_sz);
+                SelectObject(hdc, oldPenV);
+                DeleteObject(hPenV);
+
+                int thickH = (i % boxH == 0);
+                COLORREF gridColH = thickH ? RGB(248, 250, 252) : themes[prefs.theme][T_GRID_THIN];
+                HPEN hPenH = CreatePen(PS_SOLID, thickH ? 3 : 1, gridColH);
+                HPEN oldPenH = (HPEN)SelectObject(hdc, hPenH);
                 MoveToEx(hdc, start_x, start_y + i*cell_sz, NULL);
-                LineTo(hdc, start_x + 9*cell_sz, start_y + i*cell_sz);
-                
-                SelectObject(hdc, oldPen);
-                DeleteObject(hPen);
-
-                if (thick && i > 0 && i < 9) {
-                    HPEN hShadPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
-                    HPEN oldP = (HPEN)SelectObject(hdc, hShadPen);
-                    
-                    MoveToEx(hdc, start_x + i*cell_sz + 2, start_y, NULL);
-                    LineTo(hdc, start_x + i*cell_sz + 2, start_y + 9*cell_sz);
-                    
-                    MoveToEx(hdc, start_x, start_y + i*cell_sz + 2, NULL);
-                    LineTo(hdc, start_x + 9*cell_sz, start_y + i*cell_sz + 2);
-
-                    SelectObject(hdc, oldP);
-                    DeleteObject(hShadPen);
-                }
+                LineTo(hdc, start_x + gridSize*cell_sz, start_y + i*cell_sz);
+                SelectObject(hdc, oldPenH);
+                DeleteObject(hPenH);
             }
 
             // Draw Victory Confetti Particles
@@ -1301,6 +1541,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             KillTimer(hwnd, 1);
             DeleteObject(hFont);
             DeleteObject(hFontSmall);
+            DeleteObject(hFontTiny);
             PostQuitMessage(0);
             break;
         default:
@@ -1326,7 +1567,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     wcs.lpszClassName = "SettingsClass";
     RegisterClassA(&wcs);
     
-    RECT rc = {0, 0, 440, 480}; 
+    RECT rc = {0, 0, 520, 520}; 
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX), FALSE);
     
     HWND hwnd = CreateWindowA("KSudokuClass", "KSudoku", WS_OVERLAPPEDWINDOW & ~(WS_THICKFRAME | WS_MAXIMIZEBOX),
@@ -1347,4 +1588,3 @@ void MainEntry() {
     int ret = WinMain(hInst, NULL, GetCommandLineA(), SW_SHOWDEFAULT);
     ExitProcess(ret);
 }
-

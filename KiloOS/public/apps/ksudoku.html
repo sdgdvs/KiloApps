@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KSudoku</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
         :root {
             --bg-color: #0f172a;
@@ -77,9 +77,9 @@
 
         .app-container {
             width: 100%;
-            max-width: 600px;
+            max-width: 620px;
             height: 100%;
-            max-height: 870px;
+            max-height: 920px;
             background: var(--glass-bg);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
@@ -88,18 +88,18 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 16px;
             box-sizing: border-box;
         }
 
         header {
             text-align: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         h1 {
             margin: 0;
-            font-size: 1.8rem;
+            font-size: 1.7rem;
             font-weight: 600;
             letter-spacing: -0.025em;
         }
@@ -107,29 +107,33 @@
         .info-bar {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             color: var(--accent);
+            background: rgba(15, 23, 42, 0.4);
+            padding: 6px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
         }
 
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 6px;
+            gap: 4px;
             justify-content: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         button {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--text-main);
-            padding: 6px 12px;
+            padding: 5px 10px;
             border-radius: 8px;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -146,11 +150,11 @@
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             color: var(--text-main);
-            padding: 6px;
+            padding: 5px;
             border-radius: 8px;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             outline: none;
         }
 
@@ -168,13 +172,11 @@
 
         .sudoku-board {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            gap: 6px;
+            gap: 4px;
             width: 100%;
-            max-width: 390px;
+            max-width: 410px;
             aspect-ratio: 1;
-            padding: 8px;
+            padding: 6px;
             border-radius: 16px;
             border: 4px solid #334155;
             background: linear-gradient(145deg, #1e293b, #0f172a);
@@ -183,25 +185,50 @@
             box-sizing: border-box;
         }
 
-        .block {
-            display: grid;
+        .sudoku-board.grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+        .sudoku-board.grid-9 {
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            gap: 3px;
+        }
+        .sudoku-board.grid-16 {
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 2px;
+            padding: 4px;
+        }
+
+        .block {
+            display: grid;
+            gap: 2px;
             background: rgba(15, 23, 42, 0.9);
-            padding: 3px;
+            padding: 2px;
             border-radius: 8px;
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.6), 0 1px 2px rgba(255,255,255,0.05);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
+        .block.block-2 {
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+        }
+        .block.block-3 {
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+        .block.block-4 {
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+        }
 
         .cell {
             background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
-            border-radius: 6px;
+            border-radius: 4px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.45rem;
+            font-size: 1.4rem;
             font-weight: 500;
             cursor: pointer;
             color: #60a5fa;
@@ -209,6 +236,13 @@
             box-shadow: inset 1px 1px 3px rgba(255,255,255,0.08), inset -2px -2px 4px rgba(0,0,0,0.5);
             position: relative;
             user-select: none;
+        }
+        .grid-16 .cell {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .grid-4 .cell {
+            font-size: 2rem;
         }
 
         .cell:hover {
@@ -246,6 +280,21 @@
             animation: errorPulse 0.8s infinite alternate ease-in-out;
         }
 
+        .cell.cage {
+            border: 1.5px dashed #eab308 !important;
+            background: rgba(234, 179, 8, 0.08);
+        }
+        .cage-sum {
+            position: absolute;
+            top: 1px;
+            left: 2px;
+            font-size: 0.55rem;
+            color: #fde047;
+            font-weight: 700;
+            line-height: 1;
+            pointer-events: none;
+        }
+
         @keyframes errorPulse {
             0% { transform: scale(1); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
             100% { transform: scale(1.06); box-shadow: 0 0 20px rgba(239, 68, 68, 1); }
@@ -260,18 +309,26 @@
 
         .numpad {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
+            gap: 6px;
             width: 100%;
-            max-width: 390px;
-            margin-top: 16px;
+            max-width: 410px;
+            margin-top: 12px;
+        }
+        .numpad.np-9 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .numpad.np-4 {
+            grid-template-columns: repeat(5, 1fr);
+        }
+        .numpad.np-16 {
+            grid-template-columns: repeat(9, 1fr);
         }
 
         .numpad button {
-            padding: 12px 0;
-            font-size: 1.25rem;
+            padding: 8px 0;
+            font-size: 1.1rem;
             font-weight: 700;
-            border-radius: 12px;
+            border-radius: 10px;
             background: linear-gradient(145deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.9));
             border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
@@ -279,16 +336,6 @@
             transition: all 0.12s ease;
             position: relative;
             overflow: hidden;
-        }
-
-        .numpad button::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 40%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent);
-            border-top-left-radius: 11px;
-            border-top-right-radius: 11px;
-            pointer-events: none;
         }
 
         .numpad button:hover {
@@ -318,8 +365,8 @@
             width: 100%;
             height: 100%;
             pointer-events: none;
-            font-size: 0.65rem;
-            padding: 2px;
+            font-size: 0.6rem;
+            padding: 1px;
             box-sizing: border-box;
         }
 
@@ -423,29 +470,21 @@
         <div class="controls">
             <button id="btn-notes">Notes: OFF</button>
             <button id="btn-validate">Validate</button>
-            <button id="btn-hint">Hint</button>
-            <button id="btn-magic">Wand (3)</button>
-            <button id="btn-shield">Shield (1)</button>
-            <button id="btn-autofill">Auto</button>
+            <button id="btn-hint" title="Smart Hint (H)">Hint (H)</button>
+            <button id="btn-magic" title="Magic Wand (W)">Wand (3)</button>
+            <button id="btn-shield" title="Mistake Shield (S)">Shield (1)</button>
+            <button id="btn-autofill" title="Pencil Auto-Fill (P)">Auto (P)</button>
+            <button id="btn-freeze" title="Time Freeze (F)">Freeze (F)</button>
             <button id="btn-undo" title="Undo (Ctrl+Z)">Undo</button>
             <button id="btn-redo" title="Redo (Ctrl+Y)">Redo</button>
         </div>
         <div class="main-content">
-            <div class="sudoku-board" id="board">
+            <div class="sudoku-board grid-9" id="board">
                 <!-- Cells generated by JS -->
             </div>
             
-            <div class="numpad" id="numpad">
-                <button data-val="1">1</button>
-                <button data-val="2">2</button>
-                <button data-val="3">3</button>
-                <button data-val="4">4</button>
-                <button data-val="5">5</button>
-                <button data-val="6">6</button>
-                <button data-val="7">7</button>
-                <button data-val="8">8</button>
-                <button data-val="9">9</button>
-                <button data-val="0" class="clear">Clear</button>
+            <div class="numpad np-9" id="numpad">
+                <!-- Buttons generated by JS -->
             </div>
         </div>
     </div>
@@ -493,6 +532,7 @@
         const btnHint = document.getElementById('btn-hint');
         const btnMagic = document.getElementById('btn-magic');
         const btnShield = document.getElementById('btn-shield');
+        const btnFreeze = document.getElementById('btn-freeze');
         const btnCampaign = document.getElementById('btn-campaign');
         const btnRush = document.getElementById('btn-rush');
         const btnUndo = document.getElementById('btn-undo');
@@ -570,20 +610,28 @@
                 }
             } catch(e) {}
         }
+
+        let gridSize = 9;
+        let boxW = 3, boxH = 3;
         
         let board = [];
         let solution = [];
         let notes = [];
         let fog = [];
+        let cageId = [];
+        let cageSum = [];
+        let cageTopLeft = [];
+
         let notesMode = false;
         let selectedCell = null;
-        let cells = []; // Array of length 81
+        let cells = []; // Array of length gridSize * gridSize
         
         let undoStack = [];
         let redoStack = [];
 
         let timerInterval = null;
         let elapsedTime = 0;
+        let freezeTime = 0;
         let score = 0;
         let awarded = [];
         let originalBoard = [];
@@ -612,11 +660,35 @@
         let isRushMode = false;
         
         let isCampaignMode = false;
-        let campaignStage = 0; // 0 to 14
+        let campaignStage = 0; // 0 to 19 (20 stages)
         let magicWands = 3;
         let shields = 1;
         let shieldActive = false;
+        let freezeCharges = 2;
         let strikes = 0;
+
+        const campaignStageDefs = [
+            { gSize: 4,  removal: 6,   fog: 0,  cages: 0 },
+            { gSize: 4,  removal: 8,   fog: 1,  cages: 1 },
+            { gSize: 4,  removal: 10,  fog: 2,  cages: 2 },
+            { gSize: 9,  removal: 28,  fog: 0,  cages: 0 },
+            { gSize: 9,  removal: 32,  fog: 1,  cages: 1 },
+            { gSize: 9,  removal: 38,  fog: 2,  cages: 2 },
+            { gSize: 9,  removal: 42,  fog: 3,  cages: 3 },
+            { gSize: 9,  removal: 48,  fog: 4,  cages: 4 },
+            { gSize: 9,  removal: 52,  fog: 5,  cages: 5 },
+            { gSize: 9,  removal: 56,  fog: 6,  cages: 6 },
+            { gSize: 9,  removal: 60,  fog: 7,  cages: 7 },
+            { gSize: 16, removal: 80,  fog: 2,  cages: 2 },
+            { gSize: 16, removal: 100, fog: 4,  cages: 4 },
+            { gSize: 16, removal: 120, fog: 6,  cages: 6 },
+            { gSize: 9,  removal: 58,  fog: 6,  cages: 8 },
+            { gSize: 9,  removal: 62,  fog: 10, cages: 6 },
+            { gSize: 16, removal: 140, fog: 8,  cages: 8 },
+            { gSize: 9,  removal: 65,  fog: 8,  cages: 8 },
+            { gSize: 16, removal: 155, fog: 10, cages: 10 },
+            { gSize: 16, removal: 165, fog: 12, cages: 12 }
+        ];
 
         let settings = JSON.parse(localStorage.getItem('ksudoku_prefs')) || {
             theme: 'classic-dark',
@@ -625,16 +697,20 @@
         };
 
         function updateUIState() {
+            let freezeStr = freezeTime > 0 ? ` [FROZEN ${freezeTime}s]` : '';
+            let formatTime = (t) => `${Math.floor(t / 60).toString().padStart(2, '0')}:${(t % 60).toString().padStart(2, '0')}`;
+            
             if (isCampaignMode) {
-                document.getElementById('timer').textContent = `Stage: ${campaignStage+1}/15 | Strikes: ${strikes}/3 | Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+                document.getElementById('timer').textContent = `Stage: ${campaignStage+1}/20 (${gridSize}x${gridSize}) | Strikes: ${strikes}/3 | Time: ${formatTime(elapsedTime)}${freezeStr}`;
             } else if (isRushMode) {
-                document.getElementById('timer').textContent = `RUSH | Time Left: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+                document.getElementById('timer').textContent = `RUSH | Time Left: ${formatTime(elapsedTime)}${freezeStr}`;
             } else {
-                document.getElementById('timer').textContent = `Time: ${Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:${(elapsedTime % 60).toString().padStart(2, '0')}`;
+                document.getElementById('timer').textContent = `Time: ${formatTime(elapsedTime)}${freezeStr}`;
             }
             document.getElementById('score').textContent = `Score: ${score}`;
             btnMagic.textContent = `Wand (${magicWands})`;
             btnShield.textContent = shieldActive ? `Shield ON` : `Shield (${shields})`;
+            btnFreeze.textContent = freezeTime > 0 ? `Frozen (${freezeTime}s)` : `Freeze (${freezeCharges})`;
         }
 
         function applySettings() {
@@ -656,8 +732,8 @@
                 return;
             }
             const state = {
-                board, solution, notes, fog, elapsedTime, score, currentDifficulty, awarded, originalBoard, undoStack, redoStack, isDailyGame,
-                isCampaignMode, campaignStage, magicWands, shields, shieldActive, strikes, isRushMode
+                gridSize, boxW, boxH, board, solution, notes, fog, cageId, cageSum, cageTopLeft, elapsedTime, freezeTime, score, awarded, originalBoard, undoStack, redoStack, isDailyGame,
+                isCampaignMode, campaignStage, magicWands, shields, shieldActive, freezeCharges, strikes, isRushMode
             };
             localStorage.setItem('ksudoku_save', JSON.stringify(state));
         }
@@ -667,11 +743,18 @@
             if (!saved) return false;
             try {
                 const state = JSON.parse(saved);
+                gridSize = state.gridSize || 9;
+                boxW = state.boxW || 3;
+                boxH = state.boxH || 3;
                 board = state.board;
                 solution = state.solution;
                 notes = state.notes;
-                fog = state.fog || Array(9).fill().map(() => Array(9).fill(false));
+                fog = state.fog || Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+                cageId = state.cageId || Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+                cageSum = state.cageSum || [];
+                cageTopLeft = state.cageTopLeft || Array(gridSize).fill().map(() => Array(gridSize).fill(false));
                 elapsedTime = state.elapsedTime;
+                freezeTime = state.freezeTime || 0;
                 score = state.score;
                 currentDifficulty = state.currentDifficulty;
                 awarded = state.awarded;
@@ -685,37 +768,44 @@
                 magicWands = state.magicWands !== undefined ? state.magicWands : 3;
                 shields = state.shields !== undefined ? state.shields : 1;
                 shieldActive = state.shieldActive || false;
+                freezeCharges = state.freezeCharges !== undefined ? state.freezeCharges : 2;
                 strikes = state.strikes || 0;
                 isRushMode = state.isRushMode || false;
                 
                 let sel = document.getElementById('sel-difficulty');
                 if(sel) sel.value = currentDifficulty;
                 
-                if (timerInterval) clearInterval(timerInterval);
-                timerInterval = setInterval(() => {
-                    if (isRushMode) {
-                        elapsedTime--;
-                        if (elapsedTime <= 0) {
-                            elapsedTime = 0;
-                            clearInterval(timerInterval);
-                            timerInterval = null;
-                            gameActive = false;
-                            playSound('fail');
-                            saveGameState();
-                            alert("Time's Up! Rush Mode Failed.");
-                        }
-                    } else {
-                        elapsedTime++;
-                    }
-                    updateUIState();
-                    saveGameState();
-                }, 1000);
-                
+                initUI();
+                startTimer();
                 updateUIState();
                 return true;
             } catch(e) {
                 return false;
             }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (freezeTime > 0) {
+                    freezeTime--;
+                } else if (isRushMode) {
+                    elapsedTime--;
+                    if (elapsedTime <= 0) {
+                        elapsedTime = 0;
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        gameActive = false;
+                        playSound('fail');
+                        saveGameState();
+                        alert("Time's Up! Rush Mode Failed.");
+                    }
+                } else {
+                    elapsedTime++;
+                }
+                updateUIState();
+                saveGameState();
+            }, 1000);
         }
 
         function saveStats() {
@@ -734,7 +824,7 @@
             <div class="stat-grid">
                 <div>Daily Streak: ${stats.dailyStreak}</div>
                 <div>Completed Today: ${completedToday}</div>
-                <div>Campaign Stage: ${stats.maxCampaignStage+1} / 15</div>
+                <div>Campaign Stage: ${stats.maxCampaignStage+1} / 20</div>
                 <div>Wands Used: ${stats.totalWandsUsed}</div>
                 <div>Shields Used: ${stats.totalShieldsUsed}</div>
             </div>`;
@@ -789,10 +879,10 @@
             score = prevState.score;
             document.getElementById('score').textContent = `Score: ${score}`;
             playSound('select');
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
                     renderCell(r, c);
-                    cells[r * 9 + c].classList.remove('error');
+                    cells[r * gridSize + c].classList.remove('error');
                 }
             }
             updateHighlights();
@@ -814,10 +904,10 @@
             score = nextState.score;
             document.getElementById('score').textContent = `Score: ${score}`;
             playSound('select');
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
+            for (let r = 0; r < gridSize; r++) {
+                for (let c = 0; c < gridSize; c++) {
                     renderCell(r, c);
-                    cells[r * 9 + c].classList.remove('error');
+                    cells[r * gridSize + c].classList.remove('error');
                 }
             }
             updateHighlights();
@@ -830,27 +920,15 @@
             let dc = [0, 0, -1, 1];
             for(let i=0; i<4; i++) {
                 let nr = r + dr[i], nc = c + dc[i];
-                if (nr>=0 && nr<9 && nc>=0 && nc<9) fog[nr][nc] = false;
+                if (nr>=0 && nr<gridSize && nc>=0 && nc<gridSize) fog[nr][nc] = false;
             }
-            let br = Math.floor(r/3)*3, bc = Math.floor(c/3)*3;
-            for(let i=0; i<3; i++) {
-                for(let j=0; j<3; j++) {
+            let br = Math.floor(r/boxH)*boxH, bc = Math.floor(c/boxW)*boxW;
+            for(let i=0; i<boxH; i++) {
+                for(let j=0; j<boxW; j++) {
                     fog[br+i][bc+j] = false;
                 }
             }
         }
-
-        const baseSolution = [
-            [1, 2, 3, 4, 5, 6, 7, 8, 9],
-            [4, 5, 6, 7, 8, 9, 1, 2, 3],
-            [7, 8, 9, 1, 2, 3, 4, 5, 6],
-            [2, 3, 1, 5, 6, 4, 8, 9, 7],
-            [5, 6, 4, 8, 9, 7, 2, 3, 1],
-            [8, 9, 7, 2, 3, 1, 5, 6, 4],
-            [3, 1, 2, 6, 4, 5, 9, 7, 8],
-            [6, 4, 5, 9, 7, 8, 3, 1, 2],
-            [9, 7, 8, 3, 1, 2, 6, 4, 5]
-        ];
 
         function shuffleArray(array, rng) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -859,7 +937,12 @@
             }
         }
 
-        function generateBoard(daily = false, rush = false) {
+        function generateBoard(gSize = 9, daily = false, rush = false, fogCount = 0, cageCount = 0) {
+            gridSize = gSize;
+            if (gridSize === 4) { boxW = 2; boxH = 2; }
+            else if (gridSize === 16) { boxW = 4; boxH = 4; }
+            else { gridSize = 9; boxW = 3; boxH = 3; }
+
             isDailyGame = daily;
             isRushMode = rush;
             let rng = Math.random;
@@ -873,83 +956,68 @@
                 };
             }
 
-            let grid = JSON.parse(JSON.stringify(baseSolution));
-            let nums = [1,2,3,4,5,6,7,8,9];
+            // Generate base solution matrix
+            let grid = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+            for(let r=0; r<gridSize; r++) {
+                for(let c=0; c<gridSize; c++) {
+                    grid[r][c] = ((r * boxW + Math.floor(r / boxW) + c) % gridSize) + 1;
+                }
+            }
+
+            let nums = Array.from({length: gridSize}, (_, i) => i + 1);
             shuffleArray(nums, rng);
-            for(let r=0; r<9; r++) {
-                for(let c=0; c<9; c++) {
+            for(let r=0; r<gridSize; r++) {
+                for(let c=0; c<gridSize; c++) {
                     grid[r][c] = nums[grid[r][c]-1];
                 }
             }
             
-            for(let band=0; band<3; band++) {
-                let rows = [0,1,2];
+            // Row band shuffle
+            for(let band=0; band<boxW; band++) {
+                let rows = Array.from({length: boxH}, (_, i) => i);
                 shuffleArray(rows, rng);
-                let r0 = [...grid[band*3 + rows[0]]];
-                let r1 = [...grid[band*3 + rows[1]]];
-                let r2 = [...grid[band*3 + rows[2]]];
-                grid[band*3] = r0;
-                grid[band*3+1] = r1;
-                grid[band*3+2] = r2;
+                let temp = rows.map(i => [...grid[band*boxH + i]]);
+                for(let i=0; i<boxH; i++) grid[band*boxH + i] = temp[i];
             }
             
-            for(let band=0; band<3; band++) {
-                let cols = [0,1,2];
+            // Col band shuffle
+            for(let band=0; band<boxH; band++) {
+                let cols = Array.from({length: boxW}, (_, i) => i);
                 shuffleArray(cols, rng);
-                for(let r=0; r<9; r++) {
-                    let c0 = grid[r][band*3 + cols[0]];
-                    let c1 = grid[r][band*3 + cols[1]];
-                    let c2 = grid[r][band*3 + cols[2]];
-                    grid[r][band*3] = c0;
-                    grid[r][band*3+1] = c1;
-                    grid[r][band*3+2] = c2;
+                for(let r=0; r<gridSize; r++) {
+                    let temp = cols.map(i => grid[r][band*boxW + i]);
+                    for(let i=0; i<boxW; i++) grid[r][band*boxW + i] = temp[i];
                 }
             }
             
             solution = JSON.parse(JSON.stringify(grid));
-            awarded = Array(9).fill().map(() => Array(9).fill(false));
-            fog = Array(9).fill().map(() => Array(9).fill(false));
+            awarded = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+            fog = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+            cageId = Array(gridSize).fill().map(() => Array(gridSize).fill(0));
+            cageTopLeft = Array(gridSize).fill().map(() => Array(gridSize).fill(false));
+            cageSum = [0];
 
             if (rush) elapsedTime = 180;
             else elapsedTime = 0;
+            freezeTime = 0;
             
             score = 0;
-            if (timerInterval) clearInterval(timerInterval);
-            updateUIState();
-            timerInterval = setInterval(() => {
-                if (isRushMode) {
-                    elapsedTime--;
-                    if (elapsedTime <= 0) {
-                        elapsedTime = 0;
-                        clearInterval(timerInterval);
-                        timerInterval = null;
-                        gameActive = false;
-                        playSound('fail');
-                        saveGameState();
-                        alert("Time's Up! Rush Mode Failed.");
-                    }
-                } else {
-                    elapsedTime++;
-                }
-                updateUIState();
-                saveGameState();
-            }, 1000);
+            startTimer();
             
             let difficultySelect = document.getElementById('sel-difficulty');
             let removal = daily ? 40 : (difficultySelect ? parseInt(difficultySelect.value) : 40);
             if (rush) removal = 45;
-            let fogCount = 0;
             
             if (isCampaignMode) {
-                let rems = [25, 30, 35, 40, 45, 48, 51, 54, 57, 60, 63, 65, 67, 69, 72];
-                let fogs = [0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 5, 6, 6, 7, 8];
-                removal = rems[campaignStage];
-                fogCount = fogs[campaignStage];
+                let def = campaignStageDefs[campaignStage];
+                removal = def.removal;
+                fogCount = def.fog;
+                cageCount = def.cages;
             }
             
             currentDifficulty = daily ? 40 : removal;
             
-            if (!daily && !isCampaignMode && !rush) {
+            if (!daily && !isCampaignMode && !rush && stats[currentDifficulty]) {
                 stats[currentDifficulty].played++;
                 saveStats();
             }
@@ -958,8 +1026,8 @@
             board = JSON.parse(JSON.stringify(grid));
             let empties = [];
             while(removal > 0) {
-                let r = Math.floor(rng() * 9);
-                let c = Math.floor(rng() * 9);
+                let r = Math.floor(rng() * gridSize);
+                let c = Math.floor(rng() * gridSize);
                 if(board[r][c] !== 0) {
                     board[r][c] = 0;
                     empties.push({r, c});
@@ -973,30 +1041,92 @@
                 empties.splice(idx, 1);
             }
 
+            // Generate Killer Sudoku Cages
+            let dr = [-1, 1, 0, 0];
+            let dc = [0, 0, -1, 1];
+            for (let k = 1; k <= cageCount; k++) {
+                let r = Math.floor(rng() * gridSize);
+                let c = Math.floor(rng() * gridSize);
+                let tries = 0;
+                while (cageId[r][c] !== 0 && tries < 100) {
+                    r = Math.floor(rng() * gridSize);
+                    c = Math.floor(rng() * gridSize);
+                    tries++;
+                }
+                if (cageId[r][c] !== 0) continue;
+
+                let targetSize = 2 + Math.floor(rng() * (gridSize === 4 ? 2 : 3));
+                let cageCells = [{r, c}];
+                cageId[r][c] = k;
+
+                while (cageCells.length < targetSize) {
+                    let base = cageCells[Math.floor(rng() * cageCells.length)];
+                    let dir = Math.floor(rng() * 4);
+                    let nr = base.r + dr[dir], nc = base.c + dc[dir];
+                    if (nr>=0 && nr<gridSize && nc>=0 && nc<gridSize && cageId[nr][nc] === 0) {
+                        cageId[nr][nc] = k;
+                        cageCells.push({r: nr, c: nc});
+                    } else {
+                        let found = false;
+                        for (let d = 0; d < 4; d++) {
+                            let tr = base.r + dr[d], tc = base.c + dc[d];
+                            if (tr>=0 && tr<gridSize && tc>=0 && tc<gridSize && cageId[tr][tc] === 0) {
+                                cageId[tr][tc] = k;
+                                cageCells.push({r: tr, c: tc});
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) break;
+                    }
+                }
+
+                let sum = cageCells.reduce((acc, cell) => acc + solution[cell.r][cell.c], 0);
+                cageCells.sort((a, b) => (a.r * gridSize + a.c) - (b.r * gridSize + b.c));
+                cageTopLeft[cageCells[0].r][cageCells[0].c] = true;
+                cageSum[k] = sum;
+            }
+
             originalBoard = JSON.parse(JSON.stringify(board));
-            notes = Array(9).fill().map(() => Array(9).fill().map(() => Array(10).fill(false)));
+            notes = Array(gridSize).fill().map(() => Array(gridSize).fill().map(() => Array(gridSize + 1).fill(false)));
             undoStack = [];
             redoStack = [];
+            initUI();
             saveGameState();
         }
 
         function renderCell(r, c) {
-            let cell = cells[r * 9 + c];
+            let cell = cells[r * gridSize + c];
             cell.innerHTML = '';
-            cell.classList.remove('fog');
+            cell.classList.remove('fog', 'cage');
+
+            if (cageId[r][c] > 0) {
+                cell.classList.add('cage');
+            }
+
+            if (cageTopLeft[r][c] && cageId[r][c] > 0) {
+                let span = document.createElement('span');
+                span.className = 'cage-sum';
+                span.textContent = cageSum[cageId[r][c]];
+                cell.appendChild(span);
+            }
 
             if (fog[r][c] && board[r][c] === 0) {
                 cell.classList.add('fog');
-                cell.textContent = '?';
+                let txt = document.createTextNode('?');
+                cell.appendChild(txt);
             } else if (board[r][c] !== 0) {
-                cell.textContent = board[r][c];
+                let val = board[r][c];
+                let displayVal = (gridSize === 16 && val >= 10) ? String.fromCharCode(65 + val - 10) : val;
+                let txt = document.createTextNode(displayVal);
+                cell.appendChild(txt);
             } else {
                 let hasNotes = false;
-                for(let i=1; i<=9; i++) if (notes[r][c][i]) hasNotes = true;
-                if (hasNotes) {
+                for(let i=1; i<=gridSize; i++) if (notes[r][c][i]) hasNotes = true;
+                if (hasNotes && gridSize <= 9) {
                     let grid = document.createElement('div');
                     grid.className = 'notes-grid';
-                    for (let i = 1; i <= 9; i++) {
+                    for (let i = 1; i <= gridSize; i++) {
                         let div = document.createElement('div');
                         div.className = 'note-item ' + (notes[r][c][i] ? 'note-active' : 'note-inactive');
                         div.textContent = i;
@@ -1009,17 +1139,22 @@
 
         function initUI() {
             boardEl.innerHTML = '';
-            cells = new Array(81);
+            boardEl.className = `sudoku-board grid-${gridSize}`;
+            cells = new Array(gridSize * gridSize);
             
-            for(let b=0; b<9; b++) {
+            let numBlocks = gridSize;
+            let blockW = boxW;
+            let blockH = boxH;
+            
+            for(let b=0; b<numBlocks; b++) {
                 let block = document.createElement('div');
-                block.className = 'block';
-                for(let i=0; i<9; i++) {
-                    let r = Math.floor(b / 3) * 3 + Math.floor(i / 3);
-                    let c = (b % 3) * 3 + (i % 3);
+                block.className = `block block-${blockW}`;
+                for(let i=0; i<gridSize; i++) {
+                    let r = Math.floor(b / blockW) * blockH + Math.floor(i / blockW);
+                    let c = (b % blockW) * blockW + (i % blockW);
                     let cell = document.createElement('div');
                     cell.className = 'cell';
-                    if (originalBoard[r][c] !== 0) {
+                    if (originalBoard[r] && originalBoard[r][c] !== 0) {
                         cell.classList.add('fixed');
                     }
                     cell.dataset.r = r;
@@ -1027,11 +1162,26 @@
                     
                     cell.addEventListener('click', () => selectCell(r, c));
                     block.appendChild(cell);
-                    cells[r * 9 + c] = cell;
+                    cells[r * gridSize + c] = cell;
                     renderCell(r, c);
                 }
                 boardEl.appendChild(block);
             }
+
+            // Build dynamic Numpad
+            numpadEl.innerHTML = '';
+            numpadEl.className = `numpad np-${gridSize}`;
+            for (let i = 1; i <= gridSize; i++) {
+                let btn = document.createElement('button');
+                btn.dataset.val = i;
+                btn.textContent = (gridSize === 16 && i >= 10) ? String.fromCharCode(65 + i - 10) : i;
+                numpadEl.appendChild(btn);
+            }
+            let btnClear = document.createElement('button');
+            btnClear.dataset.val = 0;
+            btnClear.className = 'clear';
+            btnClear.textContent = 'Clear';
+            numpadEl.appendChild(btnClear);
         }
         
         function selectCell(r, c) {
@@ -1041,15 +1191,36 @@
         }
         
         function isValidPlacement(r, c, num) {
-            for (let i = 0; i < 9; i++) {
+            for (let i = 0; i < gridSize; i++) {
                 if (i !== c && board[r][i] === num) return false;
                 if (i !== r && board[i][c] === num) return false;
             }
-            let br = Math.floor(r / 3) * 3;
-            let bc = Math.floor(c / 3) * 3;
-            for (let i = 0; i < 3; i++) {
-                for (let j = 0; j < 3; j++) {
+            let br = Math.floor(r / boxH) * boxH;
+            let bc = Math.floor(c / boxW) * boxW;
+            for (let i = 0; i < boxH; i++) {
+                for (let j = 0; j < boxW; j++) {
                     if ((br + i !== r || bc + j !== c) && board[br + i][bc + j] === num) return false;
+                }
+            }
+
+            // Killer Sudoku Cage Check
+            if (cageId[r][c] > 0) {
+                let cid = cageId[r][c];
+                let currentSum = 0, countCells = 0, filledCells = 0;
+                for (let cr=0; cr<gridSize; cr++) {
+                    for (let cc=0; cc<gridSize; cc++) {
+                        if (cageId[cr][cc] === cid) {
+                            countCells++;
+                            let val = (cr === r && cc === c) ? num : board[cr][cc];
+                            if (val > 0) {
+                                filledCells++;
+                                currentSum += val;
+                            }
+                        }
+                    }
+                }
+                if (currentSum > cageSum[cid] || (filledCells === countCells && currentSum !== cageSum[cid])) {
+                    return false;
                 }
             }
             return true;
@@ -1069,7 +1240,7 @@
                 if (selectedCell && cr === selectedCell.r && cc === selectedCell.c) {
                     cell.classList.add('selected');
                 } else if (selectedCell && (cr === selectedCell.r || cc === selectedCell.c || 
-                           (Math.floor(cr/3) === Math.floor(selectedCell.r/3) && Math.floor(cc/3) === Math.floor(selectedCell.c/3)))) {
+                           (Math.floor(cr/boxH) === Math.floor(selectedCell.r/boxH) && Math.floor(cc/boxW) === Math.floor(selectedCell.c/boxW)))) {
                     cell.classList.add('highlight');
                 } else if (settings.highlightSame && val && board[cr][cc] === val && val !== 0) {
                     cell.classList.add('highlight');
@@ -1079,7 +1250,7 @@
         
         function inputNumber(num) {
             if (!selectedCell) return;
-            let cell = cells[selectedCell.r * 9 + selectedCell.c];
+            let cell = cells[selectedCell.r * gridSize + selectedCell.c];
             if (cell.classList.contains('fixed')) return;
             
             if (notesMode && num !== 0) {
@@ -1098,10 +1269,10 @@
                     playSound('input');
                 } else {
                     let hasNotes = false;
-                    for (let i = 1; i <= 9; i++) if (notes[selectedCell.r][selectedCell.c][i]) hasNotes = true;
+                    for (let i = 1; i <= gridSize; i++) if (notes[selectedCell.r][selectedCell.c][i]) hasNotes = true;
                     if (hasNotes) {
                         pushState();
-                        for (let i = 1; i <= 9; i++) notes[selectedCell.r][selectedCell.c][i] = false;
+                        for (let i = 1; i <= gridSize; i++) notes[selectedCell.r][selectedCell.c][i] = false;
                         playSound('input');
                     }
                 }
@@ -1110,7 +1281,7 @@
                     pushState();
                     if (!isValidPlacement(selectedCell.r, selectedCell.c, num)) {
                         if (shieldActive) {
-                            shieldActive = false; // Shield absorbs error!
+                            shieldActive = false;
                             updateUIState();
                             playSound('powerup');
                         } else {
@@ -1140,7 +1311,7 @@
                     }
                     board[selectedCell.r][selectedCell.c] = num;
                     clearFogAround(selectedCell.r, selectedCell.c);
-                    for (let r=0; r<9; r++) for (let c=0; c<9; c++) renderCell(r, c);
+                    for (let r=0; r<gridSize; r++) for (let c=0; c<gridSize; c++) renderCell(r, c);
                     
                     if (num === solution[selectedCell.r][selectedCell.c]) {
                         if (!awarded[selectedCell.r][selectedCell.c]) {
@@ -1170,7 +1341,6 @@
                 confettiCanvas.id = 'confetti-canvas';
                 document.querySelector('.app-container').appendChild(confettiCanvas);
             }
-            const rect = boardEl.getBoundingClientRect();
             const containerRect = document.querySelector('.app-container').getBoundingClientRect();
             confettiCanvas.width = containerRect.width;
             confettiCanvas.height = containerRect.height;
@@ -1238,8 +1408,8 @@
             if (!filled) return;
             
             let correct = true;
-            for(let r=0; r<9; r++) {
-                for(let c=0; c<9; c++) {
+            for(let r=0; r<gridSize; r++) {
+                for(let c=0; c<gridSize; c++) {
                     if (board[r][c] !== solution[r][c]) {
                         correct = false;
                         break;
@@ -1281,7 +1451,7 @@
                             stats.maxCampaignStage = campaignStage;
                             saveStats();
                         }
-                        if (campaignStage < 14) {
+                        if (campaignStage < 19) {
                             setTimeout(() => {
                                 let m = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
                                 let s = (elapsedTime % 60).toString().padStart(2, '0');
@@ -1298,7 +1468,7 @@
                             return;
                         } else {
                             setTimeout(() => {
-                                alert(`CONGRATULATIONS!!\nYou completed all 15 Stages of the KSudoku Campaign!\nFinal Score: ${score}`);
+                                alert(`CONGRATULATIONS!!\nYou completed all 20 Stages of the KSudoku Campaign!\nFinal Score: ${score}`);
                                 boardEl.classList.remove('board-win');
                             }, 500);
                             boardEl.classList.add('board-win');
@@ -1320,7 +1490,7 @@
                             stats.lastDailyDate = todayStr;
                             saveStats();
                         }
-                    } else {
+                    } else if (stats[currentDifficulty]) {
                         stats[currentDifficulty].won++;
                         if (elapsedTime < stats[currentDifficulty].bestTime) stats[currentDifficulty].bestTime = elapsedTime;
                         if (score > stats[currentDifficulty].bestScore) stats[currentDifficulty].bestScore = score;
@@ -1356,19 +1526,30 @@
                 doRedo();
                 return;
             }
-            if (e.key === 'n' || e.key === 'N') {
-                btnNotes.click();
-            } else if (e.key >= '1' && e.key <= '9') {
-                inputNumber(parseInt(e.key));
+            
+            let keyUpper = e.key.toUpperCase();
+            if (keyUpper === 'H') { btnHint.click(); return; }
+            if (keyUpper === 'P') { btnAutofill.click(); return; }
+            if (keyUpper === 'S') { btnShield.click(); return; }
+            if (keyUpper === 'F' && !e.shiftKey) { btnFreeze.click(); return; }
+            if (keyUpper === 'W') { btnMagic.click(); return; }
+            if (keyUpper === 'N') { btnNotes.click(); return; }
+
+            let val = 0;
+            if (e.key >= '1' && e.key <= '9') val = parseInt(e.key);
+            else if (gridSize === 16 && keyUpper >= 'A' && keyUpper <= 'G') val = 10 + (keyUpper.charCodeAt(0) - 65);
+
+            if (val > 0) {
+                inputNumber(val);
             } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
                 inputNumber(0);
             } else if (selectedCell) {
                 let r = selectedCell.r;
                 let c = selectedCell.c;
                 if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
-                if (e.key === 'ArrowDown') r = Math.min(8, r + 1);
+                if (e.key === 'ArrowDown') r = Math.min(gridSize - 1, r + 1);
                 if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
-                if (e.key === 'ArrowRight') c = Math.min(8, c + 1);
+                if (e.key === 'ArrowRight') c = Math.min(gridSize - 1, c + 1);
                 
                 if (e.key.startsWith('Arrow')) {
                     e.preventDefault();
@@ -1380,8 +1561,7 @@
         btnNew.addEventListener('click', () => {
             isCampaignMode = false;
             isRushMode = false;
-            generateBoard(false, false);
-            initUI();
+            generateBoard(9, false, false);
             selectedCell = null;
             updateHighlights();
         });
@@ -1393,187 +1573,164 @@
                 shields = 1;
                 shieldActive = false;
                 magicWands = 1;
+                freezeCharges = 1;
                 stats.rush.played++;
                 saveStats();
-                generateBoard(false, true);
-                initUI();
+                generateBoard(9, false, true);
                 selectedCell = null;
                 updateHighlights();
-                updateUIState();
             });
         }
-        
+
+        document.getElementById('btn-daily').addEventListener('click', () => {
+            let d = new Date();
+            let todayStr = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+            if (stats.lastDailyDate === todayStr) {
+                alert("You have already completed today's challenge!");
+            } else {
+                isCampaignMode = false;
+                isRushMode = false;
+                generateBoard(9, true, false);
+                selectedCell = null;
+                updateHighlights();
+            }
+        });
+
         function startCampaignStage(stage) {
             isCampaignMode = true;
             isRushMode = false;
-            campaignStage = Math.min(14, stage);
+            campaignStage = stage;
+            if (campaignStage > 19) campaignStage = 19;
             magicWands = 3;
             shields = 1;
             shieldActive = false;
+            freezeCharges = 2;
             strikes = 0;
-            generateBoard(false, false);
-            initUI();
+            let def = campaignStageDefs[campaignStage];
+            generateBoard(def.gSize, false, false, def.fog, def.cages);
             selectedCell = null;
             updateHighlights();
-            updateUIState();
         }
 
-        if (btnCampaign) {
-            btnCampaign.addEventListener('click', () => {
-                startCampaignStage(stats.maxCampaignStage > 14 ? 14 : stats.maxCampaignStage);
-            });
-        }
-        
-        const btnDaily = document.getElementById('btn-daily');
-        if (btnDaily) {
-            btnDaily.addEventListener('click', () => {
-                let dObj = new Date();
-                let todayStr = dObj.getFullYear() * 10000 + (dObj.getMonth() + 1) * 100 + dObj.getDate();
-                if (stats.lastDailyDate === todayStr) {
-                    alert("You have already completed today's challenge!");
-                } else {
-                    isCampaignMode = false;
-                    isRushMode = false;
-                    generateBoard(true, false);
-                    initUI();
-                    selectedCell = null;
-                    updateHighlights();
-                }
-            });
-        }
-        
-        btnStats.addEventListener('click', showStats);
-        btnCloseStats.addEventListener('click', () => statsModal.style.display = 'none');
-        
-        btnSettings.addEventListener('click', () => settingsModal.style.display = 'flex');
-        btnCloseSettings.addEventListener('click', () => {
-            settingsModal.style.display = 'none';
-            settings.theme = selTheme.value;
-            settings.highlightSame = chkHighlight.checked;
-            settings.soundEnabled = chkSound.checked;
-            savePrefs();
+        btnCampaign.addEventListener('click', () => {
+            startCampaignStage(stats.maxCampaignStage > 19 ? 19 : stats.maxCampaignStage);
         });
-        
+
         btnNotes.addEventListener('click', () => {
             notesMode = !notesMode;
             btnNotes.textContent = notesMode ? 'Notes: ON' : 'Notes: OFF';
             playSound('select');
-            if (notesMode) {
-                btnNotes.style.backgroundColor = 'var(--accent)';
-                btnNotes.style.color = '#fff';
-            } else {
-                btnNotes.style.backgroundColor = '';
-                btnNotes.style.color = '';
-            }
         });
-        
+
         btnValidate.addEventListener('click', () => {
-            let errorCount = 0;
-            for(let r=0; r<9; r++) {
-                for(let c=0; c<9; c++) {
-                    let idx = r * 9 + c;
-                    let cell = cells[idx];
-                    if (!cell.classList.contains('fixed')) {
-                        if (board[r][c] !== 0 && board[r][c] !== solution[r][c]) {
-                            cell.classList.add('error');
-                            errorCount++;
-                        } else {
-                            cell.classList.remove('error');
-                        }
+            let errs = 0;
+            for(let r=0; r<gridSize; r++) {
+                for(let c=0; c<gridSize; c++) {
+                    let cell = cells[r * gridSize + c];
+                    if (!cell.classList.contains('fixed') && board[r][c] !== 0 && board[r][c] !== solution[r][c]) {
+                        cell.classList.add('error');
+                        errs++;
+                    } else {
+                        cell.classList.remove('error');
                     }
                 }
             }
-            if (errorCount > 0) {
-                score = Math.max(0, score - errorCount * 20);
+            if (errs > 0) {
+                score = Math.max(0, score - errs * 20);
                 playSound('error');
-                updateUIState();
             } else {
                 playSound('correct');
             }
+            updateUIState();
             saveGameState();
         });
 
-        if (btnMagic) {
-            btnMagic.addEventListener('click', () => {
-                if (magicWands > 0) {
-                    let emptyOrWrong = [];
-                    for(let r=0; r<9; r++) {
-                        for(let c=0; c<9; c++) {
-                            let cell = cells[r * 9 + c];
-                            if (!cell.classList.contains('fixed') && board[r][c] !== solution[r][c]) {
-                                emptyOrWrong.push({r, c});
-                            }
+        btnHint.addEventListener('click', () => {
+            let targetR = selectedCell ? selectedCell.r : -1;
+            let targetC = selectedCell ? selectedCell.c : -1;
+            if (targetR < 0 || targetC < 0 || originalBoard[targetR][targetC] !== 0 || board[targetR][targetC] === solution[targetR][targetC]) {
+                targetR = -1; targetC = -1;
+                for (let r=0; r<gridSize; r++) {
+                    for (let c=0; c<gridSize; c++) {
+                        if (originalBoard[r][c] === 0 && board[r][c] !== solution[r][c]) {
+                            targetR = r; targetC = c; break;
                         }
                     }
-                    if(emptyOrWrong.length > 0) {
-                        let target = emptyOrWrong[Math.floor(Math.random() * emptyOrWrong.length)];
-                        pushState();
-                        board[target.r][target.c] = solution[target.r][target.c];
-                        awarded[target.r][target.c] = true;
-                        magicWands--;
-                        stats.totalWandsUsed++;
-                        score += 50;
-                        clearFogAround(target.r, target.c);
-                        for(let r=0; r<9; r++) for(let c=0; c<9; c++) renderCell(r, c);
-                        cells[target.r * 9 + target.c].classList.remove('error', 'flash-error');
-                        playSound('powerup');
-                        updateHighlights();
-                        updateUIState();
-                        saveGameState();
-                        saveStats();
-                        checkWin();
-                    }
+                    if (targetR >= 0) break;
                 }
-            });
-        }
-
-        if (btnShield) {
-            btnShield.addEventListener('click', () => {
-                if (shields > 0 && !shieldActive) {
-                    shields--;
-                    shieldActive = true;
-                    stats.totalShieldsUsed++;
-                    playSound('powerup');
-                    updateUIState();
-                    saveStats();
-                    saveGameState();
-                }
-            });
-        }
-
-        btnHint.addEventListener('click', () => {
-            if (!selectedCell) return;
-            let r = selectedCell.r;
-            let c = selectedCell.c;
-            let cell = cells[r * 9 + c];
-            if (cell.classList.contains('fixed')) return;
-            
-            if (board[r][c] !== solution[r][c]) {
+            }
+            if (targetR >= 0 && targetC >= 0) {
                 pushState();
                 score = Math.max(0, score - 150);
-                board[r][c] = solution[r][c];
-                awarded[r][c] = true; 
-                clearFogAround(r, c);
-                for(let row=0; row<9; row++) for(let col=0; col<9; col++) renderCell(row, col);
-                cell.classList.remove('error', 'flash-error');
+                board[targetR][targetC] = solution[targetR][targetC];
+                awarded[targetR][targetC] = true;
+                clearFogAround(targetR, targetC);
                 playSound('correct');
-                updateHighlights();
+                renderCell(targetR, targetC);
                 updateUIState();
                 saveGameState();
                 checkWin();
             }
         });
 
-        btnUndo.addEventListener('click', doUndo);
-        btnRedo.addEventListener('click', doRedo);
-        
+        btnMagic.addEventListener('click', () => {
+            if (magicWands > 0) {
+                let empties = [];
+                for(let r=0; r<gridSize; r++) {
+                    for(let c=0; c<gridSize; c++) {
+                        if (originalBoard[r][c] === 0 && board[r][c] !== solution[r][c]) {
+                            empties.push({r, c});
+                        }
+                    }
+                }
+                if (empties.length > 0) {
+                    let p = empties[Math.floor(Math.random() * empties.length)];
+                    pushState();
+                    board[p.r][p.c] = solution[p.r][p.c];
+                    awarded[p.r][p.c] = true;
+                    clearFogAround(p.r, p.c);
+                    magicWands--;
+                    stats.totalWandsUsed++;
+                    score += 50;
+                    playSound('powerup');
+                    renderCell(p.r, p.c);
+                    updateUIState();
+                    saveStats();
+                    saveGameState();
+                    checkWin();
+                }
+            }
+        });
+
+        btnShield.addEventListener('click', () => {
+            if (shields > 0 && !shieldActive) {
+                shields--;
+                shieldActive = true;
+                stats.totalShieldsUsed++;
+                playSound('powerup');
+                updateUIState();
+                saveStats();
+                saveGameState();
+            }
+        });
+
+        btnFreeze.addEventListener('click', () => {
+            if (freezeCharges > 0 || freezeTime > 0) {
+                if (freezeCharges > 0) freezeCharges--;
+                freezeTime += 20;
+                playSound('powerup');
+                updateUIState();
+                saveGameState();
+            }
+        });
+
         btnAutofill.addEventListener('click', () => {
             pushState();
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    if (board[r][c] === 0) {
-                        for(let i=1; i<=9; i++) notes[r][c][i] = false;
-                        for (let num = 1; num <= 9; num++) {
+            for(let r=0; r<gridSize; r++) {
+                for(let c=0; c<gridSize; c++) {
+                    if(board[r][c] === 0 && !fog[r][c]) {
+                        for(let i=1; i<=gridSize; i++) notes[r][c][i] = false;
+                        for(let num=1; num<=gridSize; num++) {
                             if (isValidPlacement(r, c, num)) {
                                 notes[r][c][num] = true;
                             }
@@ -1582,20 +1739,27 @@
                 }
             }
             playSound('input');
+            for(let r=0; r<gridSize; r++) for(let c=0; c<gridSize; c++) renderCell(r, c);
             saveGameState();
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    renderCell(r, c);
-                }
-            }
         });
 
-        // Initialize
-        applySettings();
+        btnUndo.addEventListener('click', doUndo);
+        btnRedo.addEventListener('click', doRedo);
+        btnStats.addEventListener('click', showStats);
+        btnCloseStats.addEventListener('click', () => statsModal.style.display = 'none');
+        btnSettings.addEventListener('click', () => settingsModal.style.display = 'flex');
+        btnCloseSettings.addEventListener('click', () => settingsModal.style.display = 'none');
+
+        selTheme.addEventListener('change', (e) => { settings.theme = e.target.value; savePrefs(); });
+        chkHighlight.addEventListener('change', (e) => { settings.highlightSame = e.target.checked; savePrefs(); });
+        chkSound.addEventListener('change', (e) => { settings.soundEnabled = e.target.checked; savePrefs(); });
+
         if (!loadGameState()) {
-            generateBoard();
+            generateBoard(9, false, false);
+            applySettings();
+        } else {
+            applySettings();
         }
-        initUI();
     </script>
 </body>
 </html>
