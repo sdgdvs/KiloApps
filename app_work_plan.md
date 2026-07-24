@@ -41,8 +41,6 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KChess
 - KChat
 - KBBS (Added Auto-Login feature for Dialing Directory)
-- KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export)
-
 - KAudio (Added Sequencer - Record and Playback)
 - KClock (Added Alarms feature)
 - KPong (Added Difficulty Levels)
@@ -78,3 +76,4 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KGraph (Added Multi-Function Plotting y1-y5, Derivative & Simpson Integral Calculators, Roots & Intersections Finders, Interactive Value Tracing Cursor, Preset Library, and CSV/JSON/PNG Export)
 - KTimer (Added Multi-Timer Engine [concurrent named timers], Pomodoro Work/Break Cycle Manager with Stats, Lap Split Analysis & CSV/TXT Export, Alarm Presets Library, and Sound Alerts & Visual Progress Ring)
 - KContacts (Added Real-time Search & Group Filters, vCard [.vcf] & CSV Import/Export, Duplicates Merger, Contact Avatar Initial/Color Generator, and Quick Action buttons for Email/Phone)
+- KRead (Added Real-Time Search & Highlight Navigation, Bookmarks Drawer & Persistence, Reading Statistics Engine [WPM & Time Remaining], Reader Themes & Font Controls, Highlights/Notes & JSON/TXT Export)
