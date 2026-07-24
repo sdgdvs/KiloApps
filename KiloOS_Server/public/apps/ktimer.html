@@ -6,24 +6,35 @@
 <title>KTimer</title>
 <style>
   :root {
-    --bg-color: #111;
-    --card-bg: #1a1a1a;
-    --border-color: #333;
+    --bg-color: #121318;
+    --card-bg: #1a1c23;
+    --card-hover: #222530;
+    --border-color: #2e3240;
     --primary-color: #5a8bd4;
     --primary-hover: #6ba0f0;
-    --text-main: #e0e0e0;
-    --text-muted: #888;
-    --danger-color: #e74c3c;
+    --text-main: #f0f2f5;
+    --text-muted: #8c93a4;
+    --danger-color: #ff5252;
+    --success-color: #4cd964;
+    --warning-color: #ff9500;
+    --pomo-work: #ff5252;
+    --pomo-short: #4cd964;
+    --pomo-long: #20c997;
+    --accent-glow: rgba(90, 139, 212, 0.25);
   }
   
+  * {
+    box-sizing: border-box;
+    user-select: none;
+  }
+
   body {
     background: var(--bg-color);
     color: var(--text-main);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     margin: 0;
     padding: 0;
     height: 100vh;
-    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -41,57 +52,73 @@
     border: 0;
   }
 
-  .tabs {
+  /* Navigation Bar */
+  .nav-tabs {
     display: flex;
-    background: #181818;
+    background: #16181f;
     border-bottom: 1px solid var(--border-color);
+    padding: 0 8px;
+    gap: 4px;
   }
   
-  .tab {
+  .tab-btn {
     flex: 1;
-    padding: 14px;
+    padding: 12px 6px;
     text-align: center;
     cursor: pointer;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 12px;
     letter-spacing: 0.5px;
     color: var(--text-muted);
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: all 0.2s ease;
     outline: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
-  .tab:hover, .tab:focus-visible {
-    color: #fff;
+  .tab-btn:hover, .tab-btn:focus-visible {
+    color: var(--text-main);
     background: rgba(255, 255, 255, 0.04);
   }
   
-  .tab.active {
-    color: #fff;
-    background: #222;
+  .tab-btn.active {
+    color: #ffffff;
     border-bottom: 2px solid var(--primary-color);
+    background: rgba(90, 139, 212, 0.08);
   }
 
-  .content {
+  /* Main View Panels */
+  .view-panel {
     flex: 1;
-    padding: 20px;
-    display: flex;
+    padding: 16px;
+    display: none;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    position: relative;
+    justify-content: flex-start;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #3a3f50 transparent;
   }
-  
+
+  .view-panel.active {
+    display: flex;
+  }
+
+  /* Progress Ring Container */
   .ring-container {
     position: relative;
-    width: 240px;
-    height: 240px;
+    width: 210px;
+    height: 210px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 25px;
+    margin: 8px 0 16px 0;
+    flex-shrink: 0;
   }
 
   .progress-ring {
@@ -102,7 +129,7 @@
   }
 
   .progress-ring-circle {
-    transition: stroke-dashoffset 0.05s linear;
+    transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease;
   }
   
   .display-wrapper {
@@ -111,30 +138,39 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 200px;
+    width: 180px;
+    text-align: center;
   }
 
-  .display {
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 32px;
-    font-weight: bold;
+  .time-display {
+    font-family: 'Consolas', 'Cascadia Code', 'Courier New', monospace;
+    font-size: 28px;
+    font-weight: 700;
     color: var(--primary-color);
-    text-shadow: 0 0 15px rgba(90, 139, 212, 0.4);
+    text-shadow: 0 0 12px var(--accent-glow);
     margin: 0;
     z-index: 10;
-    user-select: none;
+  }
+
+  .sub-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   .timer-input {
     background: transparent;
     border: none;
-    border-bottom: 2px solid #444;
+    border-bottom: 2px solid var(--border-color);
     color: var(--primary-color);
     font-family: 'Consolas', monospace;
-    font-size: 32px;
+    font-size: 28px;
     font-weight: bold;
     text-align: center;
-    width: 180px;
+    width: 160px;
     outline: none;
     z-index: 10;
     transition: border-color 0.2s;
@@ -148,32 +184,40 @@
     border-bottom-color: var(--danger-color);
     color: var(--danger-color);
   }
-  
-  .controls {
+
+  /* Control Buttons */
+  .controls-row {
     display: flex;
-    gap: 15px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 12px;
   }
 
   button.btn {
-    background: #2a2a2a;
-    color: white;
-    border: 1px solid #444;
-    padding: 12px 28px;
-    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 8px 18px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 600;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    letter-spacing: 0.8px;
+    transition: all 0.2s ease;
     outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
   }
 
   button.btn:hover, button.btn:focus-visible {
-    background: #333;
-    border-color: #555;
+    background: var(--card-hover);
+    border-color: #454b5e;
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
   }
 
   button.btn:active {
@@ -183,104 +227,542 @@
   button.btn.primary {
     background: var(--primary-color);
     border-color: var(--primary-color);
-    color: #000;
-    box-shadow: 0 4px 15px rgba(90, 139, 212, 0.3);
+    color: #0b111e;
+    font-weight: 700;
   }
 
   button.btn.primary:hover, button.btn.primary:focus-visible {
     background: var(--primary-hover);
     border-color: var(--primary-hover);
-    box-shadow: 0 6px 20px rgba(90, 139, 212, 0.4);
+    box-shadow: 0 4px 15px var(--accent-glow);
   }
 
-  .laps-container {
-    margin-top: 20px;
-    width: 240px;
-    height: 120px;
-    overflow-y: auto;
+  button.btn.danger {
+    background: rgba(255, 82, 82, 0.15);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+  }
+
+  button.btn.danger:hover {
+    background: var(--danger-color);
+    color: #fff;
+  }
+
+  button.btn.sm {
+    padding: 4px 10px;
+    font-size: 11px;
+    border-radius: 4px;
+  }
+
+  /* Section Containers */
+  .section-box {
+    width: 100%;
+    max-width: 440px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 8px 12px;
-    font-family: 'Consolas', monospace;
-    font-size: 13px;
-    color: #aaa;
-    box-sizing: border-box;
-    scrollbar-width: thin;
+    padding: 12px;
+    margin-bottom: 12px;
   }
 
-  .lap-item {
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* Lap Stats & Table */
+  .lap-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .stat-card {
+    background: #14161d;
+    padding: 6px 4px;
+    border-radius: 6px;
+    border: 1px solid #242735;
+  }
+
+  .stat-val {
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-main);
+  }
+
+  .stat-lbl {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .laps-list {
+    max-height: 140px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+  }
+
+  .lap-row {
     display: flex;
     justify-content: space-between;
-    padding: 4px 0;
-    border-bottom: 1px solid #282828;
+    align-items: center;
+    padding: 5px 8px;
+    border-bottom: 1px solid #242735;
   }
 
-  .lap-item:last-child {
+  .lap-row:last-child {
     border-bottom: none;
   }
 
-  .hint-text {
+  .lap-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  .lap-badge.fastest {
+    background: rgba(76, 217, 100, 0.2);
+    color: var(--success-color);
+  }
+
+  .lap-badge.slowest {
+    background: rgba(255, 82, 82, 0.2);
+    color: var(--danger-color);
+  }
+
+  /* Presets Library */
+  .presets-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .chip-btn {
+    background: #242735;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .chip-btn:hover {
+    background: var(--primary-color);
+    color: #000;
+  }
+
+  .custom-preset-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .preset-input {
+    flex: 1;
+    background: #14161d;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  /* Multi-Timer Grid */
+  .multitimer-form {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    max-width: 440px;
+    margin-bottom: 12px;
+  }
+
+  .multitimer-form input {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .multitimer-form input.name-input {
+    flex: 2;
+  }
+  .multitimer-form input.time-input {
+    flex: 1;
+    text-align: center;
+    font-family: 'Consolas', monospace;
+  }
+
+  .multitimer-grid {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .multitimer-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .multitimer-card.finished {
+    border-color: var(--danger-color);
+    animation: flashBorder 1s infinite alternate;
+  }
+
+  @keyframes flashBorder {
+    0% { box-shadow: 0 0 4px rgba(255, 82, 82, 0.4); }
+    100% { box-shadow: 0 0 14px rgba(255, 82, 82, 0.9); }
+  }
+
+  .mt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .mt-name {
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .mt-time {
+    font-family: 'Consolas', monospace;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary-color);
+  }
+
+  .mt-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #14161d;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .mt-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+    width: 100%;
+    transition: width 0.2s linear;
+  }
+
+  .mt-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  /* Sound & Settings Controls */
+  .sound-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 11px;
     color: var(--text-muted);
-    margin-top: 6px;
+  }
+
+  .sound-select {
+    background: #14161d;
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  /* Pomodoro Specific */
+  .pomo-dots {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .pomo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2e3240;
+  }
+
+  .pomo-dot.filled {
+    background: var(--pomo-work);
+  }
+
+  .pomo-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .pomo-setting-item label {
+    font-size: 10px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .pomo-setting-item input {
+    width: 100%;
+    background: #14161d;
+    border: 1px solid var(--border-color);
+    color: #fff;
+    padding: 4px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 12px;
   }
 </style>
 </head>
 <body>
-  <div class="tabs" role="tablist" aria-label="Timer & Stopwatch Tabs">
-    <button class="tab active" id="tabStopwatch" role="tab" aria-selected="true" aria-controls="contentStopwatch" tabindex="0">STOPWATCH</button>
-    <button class="tab" id="tabTimer" role="tab" aria-selected="false" aria-controls="contentTimer" tabindex="-1">TIMER</button>
-  </div>
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs" role="tablist" aria-label="Timer Mode Tabs">
+    <button class="tab-btn active" id="tabStopwatch" role="tab" aria-selected="true" aria-controls="panelStopwatch" tabindex="0">
+      ⏱️ STOPWATCH
+    </button>
+    <button class="tab-btn" id="tabTimer" role="tab" aria-selected="false" aria-controls="panelTimer" tabindex="-1">
+      ⏳ TIMER
+    </button>
+    <button class="tab-btn" id="tabMulti" role="tab" aria-selected="false" aria-controls="panelMulti" tabindex="-1">
+      🎛️ MULTI-TIMER
+    </button>
+    <button class="tab-btn" id="tabPomodoro" role="tab" aria-selected="false" aria-controls="panelPomodoro" tabindex="-1">
+      🍅 POMODORO
+    </button>
+  </nav>
   
-  <!-- Stopwatch Content -->
-  <main class="content" id="contentStopwatch" role="tabpanel" aria-labelledby="tabStopwatch">
+  <!-- STOPWATCH PANEL -->
+  <main class="view-panel active" id="panelStopwatch" role="tabpanel" aria-labelledby="tabStopwatch">
     <div class="ring-container">
-      <svg class="progress-ring" height="240" width="240" aria-hidden="true">
-        <circle fill="transparent" stroke="#222" stroke-width="6" r="110" cx="120" cy="120" />
-        <circle class="progress-ring-circle" id="swRing" fill="transparent" stroke="var(--primary-color)" stroke-width="8" stroke-linecap="round" r="110" cx="120" cy="120" stroke-dasharray="691.15" stroke-dashoffset="691.15" />
+      <svg class="progress-ring" height="210" width="210" aria-hidden="true">
+        <circle fill="transparent" stroke="#1f222d" stroke-width="6" r="95" cx="105" cy="105" />
+        <circle class="progress-ring-circle" id="swRing" fill="transparent" stroke="var(--primary-color)" stroke-width="8" stroke-linecap="round" r="95" cx="105" cy="105" stroke-dasharray="596.9" stroke-dashoffset="596.9" />
       </svg>
       <div class="display-wrapper">
-        <div class="display" id="swDisplay" aria-live="polite" aria-atomic="true" aria-label="Stopwatch time">00:00:00.000</div>
+        <div class="time-display" id="swDisplay" aria-live="polite" aria-label="Stopwatch time">00:00:00.000</div>
+        <div class="sub-label" id="swSubLabel">Stopwatch</div>
       </div>
     </div>
-    <div class="controls">
+
+    <div class="controls-row">
       <button class="btn primary" id="swBtnStart" aria-label="Start stopwatch">Start</button>
       <button class="btn" id="swBtnLap" aria-label="Record lap time">Lap</button>
       <button class="btn" id="swBtnReset" aria-label="Reset stopwatch">Reset</button>
     </div>
-    <div class="laps-container" id="swLaps" aria-live="polite" aria-label="Recorded lap times"></div>
+
+    <div class="section-box">
+      <div class="section-title">
+        <span>Lap Analysis & Export</span>
+        <div>
+          <button class="btn sm" id="swBtnExportCsv" title="Export Laps CSV">CSV</button>
+          <button class="btn sm" id="swBtnExportTxt" title="Export Laps TXT">TXT</button>
+        </div>
+      </div>
+      <div class="lap-stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="swStatTotalLaps">0</div>
+          <div class="stat-lbl">Laps</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="swStatFastest">--:--</div>
+          <div class="stat-lbl">Fastest</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="swStatSlowest">--:--</div>
+          <div class="stat-lbl">Slowest</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="swStatAvg">--:--</div>
+          <div class="stat-lbl">Avg Split</div>
+        </div>
+      </div>
+      <div class="laps-list" id="swLapsList" aria-label="Recorded lap times">
+        <div style="text-align:center; color:var(--text-muted); padding:10px; font-size:11px;">No laps recorded yet</div>
+      </div>
+    </div>
   </main>
   
-  <!-- Timer Content -->
-  <main class="content" id="contentTimer" role="tabpanel" aria-labelledby="tabTimer" style="display: none;">
+  <!-- TIMER PANEL -->
+  <main class="view-panel" id="panelTimer" role="tabpanel" aria-labelledby="tabTimer">
     <div class="ring-container">
-      <svg class="progress-ring" height="240" width="240" aria-hidden="true">
-        <circle fill="transparent" stroke="#222" stroke-width="6" r="110" cx="120" cy="120" />
-        <circle class="progress-ring-circle" id="tmRing" fill="transparent" stroke="var(--primary-color)" stroke-width="8" stroke-linecap="round" r="110" cx="120" cy="120" stroke-dasharray="691.15" stroke-dashoffset="0" />
+      <svg class="progress-ring" height="210" width="210" aria-hidden="true">
+        <circle fill="transparent" stroke="#1f222d" stroke-width="6" r="95" cx="105" cy="105" />
+        <circle class="progress-ring-circle" id="tmRing" fill="transparent" stroke="var(--primary-color)" stroke-width="8" stroke-linecap="round" r="95" cx="105" cy="105" stroke-dasharray="596.9" stroke-dashoffset="0" />
       </svg>
       <div class="display-wrapper">
         <label for="tmInput" class="sr-only">Timer duration (HH:MM:SS)</label>
         <input type="text" id="tmInput" class="timer-input" value="00:05:00" placeholder="00:05:00" aria-label="Timer Duration">
-        <div class="display" id="tmDisplay" style="display: none;" aria-live="polite" aria-atomic="true" aria-label="Remaining time">00:00:00</div>
+        <div class="time-display" id="tmDisplay" style="display: none;" aria-live="polite" aria-label="Remaining time">00:05:00</div>
+        <div class="sub-label" id="tmSubLabel">Countdown Timer</div>
       </div>
     </div>
-    <div class="controls">
-      <button class="btn primary" id="tmBtnStart" aria-label="Start countdown timer">Start</button>
-      <button class="btn" id="tmBtnReset" aria-label="Reset countdown timer">Reset</button>
+
+    <div class="controls-row">
+      <button class="btn primary" id="tmBtnStart" aria-label="Start timer">Start</button>
+      <button class="btn" id="tmBtnReset" aria-label="Reset timer">Reset</button>
     </div>
-    <div class="hint-text" id="tmHint">Enter format HH:MM:SS or MM:SS</div>
+
+    <!-- Alarm Presets Library -->
+    <div class="section-box">
+      <div class="section-title">
+        <span>Presets Library</span>
+        <div class="sound-controls">
+          <span>🔊 Sound:</span>
+          <select id="soundTypeSelect" class="sound-select" aria-label="Alarm Sound Type">
+            <option value="chime">Chime</option>
+            <option value="beep">Beep</option>
+            <option value="gong">Gong</option>
+            <option value="bell">Bell</option>
+            <option value="mute">Mute</option>
+          </select>
+          <button class="btn sm" id="btnTestSound" title="Test Alarm Sound">Test</button>
+        </div>
+      </div>
+      <div class="presets-chips" id="quickPresets">
+        <button class="chip-btn" data-time="00:01:00">1m</button>
+        <button class="chip-btn" data-time="00:03:00">3m</button>
+        <button class="chip-btn" data-time="00:05:00">5m</button>
+        <button class="chip-btn" data-time="00:10:00">10m</button>
+        <button class="chip-btn" data-time="00:15:00">15m</button>
+        <button class="chip-btn" data-time="00:25:00">25m</button>
+        <button class="chip-btn" data-time="00:30:00">30m</button>
+        <button class="chip-btn" data-time="01:00:00">60m</button>
+      </div>
+
+      <div class="section-title" style="margin-top:10px;">Custom Saved Presets</div>
+      <div class="presets-chips" id="customPresetsChips"></div>
+      <div class="custom-preset-row">
+        <input type="text" id="customPresetName" class="preset-input" placeholder="Preset Label (e.g., Tea)">
+        <button class="btn sm primary" id="btnSaveCustomPreset">Save Preset</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- MULTI-TIMER PANEL -->
+  <main class="view-panel" id="panelMulti" role="tabpanel" aria-labelledby="tabMulti">
+    <form class="multitimer-form" id="mtForm" onsubmit="return false;">
+      <input type="text" id="mtNameInput" class="name-input" placeholder="Timer Name (e.g., Tea Steeping)" required>
+      <input type="text" id="mtTimeInput" class="time-input" placeholder="MM:SS" value="05:00" required>
+      <button class="btn primary sm" type="submit" id="mtBtnAdd">+ Add</button>
+    </form>
+
+    <div class="controls-row" style="width:100%; max-width:440px; justify-content:space-between; margin-bottom:8px;">
+      <div style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Active Timers</div>
+      <div style="display:flex; gap:4px;">
+        <button class="btn sm" id="mtBtnStartAll">Start All</button>
+        <button class="btn sm" id="mtBtnPauseAll">Pause All</button>
+        <button class="btn sm danger" id="mtBtnClearFinished">Clear Done</button>
+      </div>
+    </div>
+
+    <div class="multitimer-grid" id="mtGrid">
+      <div style="text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">No active timers. Create one above!</div>
+    </div>
+  </main>
+
+  <!-- POMODORO PANEL -->
+  <main class="view-panel" id="panelPomodoro" role="tabpanel" aria-labelledby="tabPomodoro">
+    <div class="ring-container">
+      <svg class="progress-ring" height="210" width="210" aria-hidden="true">
+        <circle fill="transparent" stroke="#1f222d" stroke-width="6" r="95" cx="105" cy="105" />
+        <circle class="progress-ring-circle" id="pomoRing" fill="transparent" stroke="var(--pomo-work)" stroke-width="8" stroke-linecap="round" r="95" cx="105" cy="105" stroke-dasharray="596.9" stroke-dashoffset="0" />
+      </svg>
+      <div class="display-wrapper">
+        <div class="time-display" id="pomoDisplay" style="color:var(--pomo-work);" aria-live="polite">25:00</div>
+        <div class="sub-label" id="pomoPhaseLabel">WORK SESSION</div>
+        <div class="pomo-dots" id="pomoDots">
+          <div class="pomo-dot filled"></div>
+          <div class="pomo-dot"></div>
+          <div class="pomo-dot"></div>
+          <div class="pomo-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-row">
+      <button class="btn primary" id="pomoBtnStart" aria-label="Start Pomodoro">Start</button>
+      <button class="btn" id="pomoBtnSkip" aria-label="Skip Phase">Skip Phase</button>
+      <button class="btn" id="pomoBtnReset" aria-label="Reset Pomodoro">Reset</button>
+    </div>
+
+    <div class="section-box">
+      <div class="section-title">
+        <span>Pomodoro Statistics</span>
+        <span id="pomoStreakText" style="font-size:10px; color:var(--success-color);">🔥 0 sessions today</span>
+      </div>
+      <div class="lap-stats-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="pomoStatCompleted">0</div>
+          <div class="stat-lbl">Completed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="pomoStatFocusMins">0m</div>
+          <div class="stat-lbl">Focus Time</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="pomoStatCycleCount">1</div>
+          <div class="stat-lbl">Cycle</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="pomoStatTarget">4</div>
+          <div class="stat-lbl">Target</div>
+        </div>
+      </div>
+
+      <div class="section-title" style="margin-top:10px;">Cycle Settings (Mins)</div>
+      <div class="pomo-settings-grid">
+        <div class="pomo-setting-item">
+          <label for="pomoCfgWork">Work</label>
+          <input type="number" id="pomoCfgWork" value="25" min="1" max="120">
+        </div>
+        <div class="pomo-setting-item">
+          <label for="pomoCfgShort">Short Break</label>
+          <input type="number" id="pomoCfgShort" value="5" min="1" max="60">
+        </div>
+        <div class="pomo-setting-item">
+          <label for="pomoCfgLong">Long Break</label>
+          <input type="number" id="pomoCfgLong" value="15" min="1" max="60">
+        </div>
+      </div>
+    </div>
   </main>
 
   <script>
-    const circumference = 2 * Math.PI * 110; // ~691.15
-    const MAX_LAPS = 500;
+    const RING_CIRCUMFERENCE = 2 * Math.PI * 95; // ~596.9
 
-    // --- Safe LocalStorage Helper ---
+    // --- LocalStorage Helpers ---
     function safeStorageGet(key, defaultVal) {
       try {
         const val = localStorage.getItem(key);
-        return val !== null ? val : defaultVal;
+        return val !== null ? JSON.parse(val) : defaultVal;
       } catch (e) {
         return defaultVal;
       }
@@ -288,81 +770,197 @@
 
     function safeStorageSet(key, val) {
       try {
-        localStorage.setItem(key, val);
+        localStorage.setItem(key, JSON.stringify(val));
       } catch (e) {}
     }
 
-    // --- Tab Switching & Keyboard Accessibility ---
-    const tabStopwatch = document.getElementById('tabStopwatch');
-    const tabTimer = document.getElementById('tabTimer');
-    const contentStopwatch = document.getElementById('contentStopwatch');
-    const contentTimer = document.getElementById('contentTimer');
+    // --- Web Audio Synthesizer ---
+    function playAudioAlert(soundType) {
+      try {
+        const type = soundType || document.getElementById('soundTypeSelect').value;
+        if (type === 'mute') return;
 
-    function switchTab(target) {
-      if (target === 'stopwatch') {
-        tabStopwatch.classList.add('active');
-        tabStopwatch.setAttribute('aria-selected', 'true');
-        tabStopwatch.setAttribute('tabindex', '0');
-        tabTimer.classList.remove('active');
-        tabTimer.setAttribute('aria-selected', 'false');
-        tabTimer.setAttribute('tabindex', '-1');
-        contentStopwatch.style.display = 'flex';
-        contentTimer.style.display = 'none';
-        safeStorageSet('ktimer_active_tab', 'stopwatch');
-      } else {
-        tabTimer.classList.add('active');
-        tabTimer.setAttribute('aria-selected', 'true');
-        tabTimer.setAttribute('tabindex', '0');
-        tabStopwatch.classList.remove('active');
-        tabStopwatch.setAttribute('aria-selected', 'false');
-        tabStopwatch.setAttribute('tabindex', '-1');
-        contentTimer.style.display = 'flex';
-        contentStopwatch.style.display = 'none';
-        safeStorageSet('ktimer_active_tab', 'timer');
-      }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        const now = ctx.currentTime;
+
+        if (type === 'chime') {
+          const freqs = [523.25, 659.25, 783.99]; // C5, E5, G5
+          freqs.forEach((freq, idx) => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+            gain.gain.setValueAtTime(0.15, now + idx * 0.15);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 0.6);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.15);
+            osc.stop(now + idx * 0.15 + 0.6);
+          });
+        } else if (type === 'beep') {
+          [0, 0.2, 0.4].forEach(t => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, now + t);
+            gain.gain.setValueAtTime(0.1, now + t);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.1);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + t);
+            osc.stop(now + t + 0.1);
+          });
+        } else if (type === 'gong') {
+          let osc = ctx.createOscillator();
+          let gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 1.2);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 1.2);
+        } else if (type === 'bell') {
+          [600, 900, 1200].forEach(f => {
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.8);
+          });
+        }
+
+        setTimeout(() => {
+          try { ctx.close(); } catch(e) {}
+        }, 1500);
+      } catch (e) {}
     }
 
-    tabStopwatch.onclick = () => switchTab('stopwatch');
-    tabTimer.onclick = () => switchTab('timer');
+    document.getElementById('btnTestSound').onclick = () => playAudioAlert();
 
-    [tabStopwatch, tabTimer].forEach(tab => {
-      tab.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-          const next = tab === tabStopwatch ? tabTimer : tabStopwatch;
-          next.focus();
-          next.click();
-        }
+    // --- Tab Switching ---
+    const tabs = [
+      { btn: document.getElementById('tabStopwatch'), panel: document.getElementById('panelStopwatch'), name: 'stopwatch' },
+      { btn: document.getElementById('tabTimer'), panel: document.getElementById('panelTimer'), name: 'timer' },
+      { btn: document.getElementById('tabMulti'), panel: document.getElementById('panelMulti'), name: 'multi' },
+      { btn: document.getElementById('tabPomodoro'), panel: document.getElementById('panelPomodoro'), name: 'pomodoro' }
+    ];
+
+    function switchTab(name) {
+      tabs.forEach(t => {
+        const active = t.name === name;
+        t.btn.classList.toggle('active', active);
+        t.btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.btn.setAttribute('tabindex', active ? '0' : '-1');
+        t.panel.classList.toggle('active', active);
       });
+      safeStorageSet('ktimer_active_tab', name);
+    }
+
+    tabs.forEach(t => {
+      t.btn.onclick = () => switchTab(t.name);
+      t.btn.onkeydown = (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          let idx = tabs.findIndex(x => x.name === t.name);
+          idx = e.key === 'ArrowRight' ? (idx + 1) % tabs.length : (idx - 1 + tabs.length) % tabs.length;
+          tabs[idx].btn.focus();
+          switchTab(tabs[idx].name);
+        }
+      };
     });
 
-    // --- Stopwatch Logic ---
+    // --- Formatting Utility Functions ---
+    function formatMs(ms, includeMilli = false) {
+      if (ms < 0) ms = 0;
+      let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
+      let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
+      let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
+      if (includeMilli) {
+        let milli = Math.floor(ms % 1000).toString().padStart(3, '0');
+        return `${h}:${m}:${s}.${milli}`;
+      }
+      return `${h}:${m}:${s}`;
+    }
+
+    function parseTimeInput(valStr) {
+      if (!valStr || typeof valStr !== 'string') return 0;
+      const parts = valStr.trim().split(':').map(p => parseInt(p, 10) || 0);
+      let h = 0, m = 0, s = 0;
+      if (parts.length === 3) [h, m, s] = parts;
+      else if (parts.length === 2) [m, s] = parts;
+      else if (parts.length === 1) s = parts[0];
+      return (Math.max(0, h) * 3600 + Math.max(0, m) * 60 + Math.max(0, s)) * 1000;
+    }
+
+    // ==========================================
+    // 1. STOPWATCH ENGINE & LAP ANALYSIS
+    // ==========================================
     let swStart = 0;
     let swElapsed = 0;
     let swInterval = null;
-    let lapCount = 0;
+    let swLaps = []; // array of { id, totalMs, splitMs }
 
     const swDisplay = document.getElementById('swDisplay');
     const swBtnStart = document.getElementById('swBtnStart');
     const swBtnLap = document.getElementById('swBtnLap');
     const swBtnReset = document.getElementById('swBtnReset');
     const swRing = document.getElementById('swRing');
-    const swLaps = document.getElementById('swLaps');
-
-    function formatStopwatchTime(ms) {
-      if (ms < 0) ms = 0;
-      let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
-      let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-      let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-      let milli = Math.floor(ms % 1000).toString().padStart(3, '0');
-      return `${h}:${m}:${s}.${milli}`;
-    }
+    const swLapsList = document.getElementById('swLapsList');
 
     function updateSw() {
       let currentMs = swElapsed + (swInterval ? performance.now() - swStart : 0);
-      swDisplay.innerText = formatStopwatchTime(currentMs);
-      
+      swDisplay.innerText = formatMs(currentMs, true);
       let progress = (currentMs % 60000) / 60000;
-      swRing.style.strokeDashoffset = circumference - (progress * circumference);
+      swRing.style.strokeDashoffset = RING_CIRCUMFERENCE - (progress * RING_CIRCUMFERENCE);
+    }
+
+    function renderLaps() {
+      swLapsList.innerHTML = '';
+      if (swLaps.length === 0) {
+        swLapsList.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:10px; font-size:11px;">No laps recorded yet</div>';
+        document.getElementById('swStatTotalLaps').innerText = '0';
+        document.getElementById('swStatFastest').innerText = '--:--';
+        document.getElementById('swStatSlowest').innerText = '--:--';
+        document.getElementById('swStatAvg').innerText = '--:--';
+        return;
+      }
+
+      let minSplit = Math.min(...swLaps.map(l => l.splitMs));
+      let maxSplit = Math.max(...swLaps.map(l => l.splitMs));
+      let sumSplit = swLaps.reduce((acc, l) => acc + l.splitMs, 0);
+      let avgSplit = Math.round(sumSplit / swLaps.length);
+
+      document.getElementById('swStatTotalLaps').innerText = swLaps.length.toString();
+      document.getElementById('swStatFastest').innerText = formatMs(minSplit, true).substring(3, 11);
+      document.getElementById('swStatSlowest').innerText = formatMs(maxSplit, true).substring(3, 11);
+      document.getElementById('swStatAvg').innerText = formatMs(avgSplit, true).substring(3, 11);
+
+      swLaps.slice().reverse().forEach((lap, idx) => {
+        let isFastest = swLaps.length > 1 && lap.splitMs === minSplit;
+        let isSlowest = swLaps.length > 1 && lap.splitMs === maxSplit;
+        let badgeHtml = isFastest ? '<span class="lap-badge fastest">⚡ FASTEST</span>' :
+                        (isSlowest ? '<span class="lap-badge slowest">🐢 SLOWEST</span>' : '');
+
+        let row = document.createElement('div');
+        row.className = 'lap-row';
+        row.innerHTML = `
+          <span>Lap ${lap.id} ${badgeHtml}</span>
+          <span style="color:var(--text-muted);">Split: ${formatMs(lap.splitMs, true)}</span>
+          <span style="font-weight:bold;">${formatMs(lap.totalMs, true)}</span>
+        `;
+        swLapsList.appendChild(row);
+      });
     }
 
     swBtnStart.onclick = () => {
@@ -371,28 +969,27 @@
         swInterval = null;
         swElapsed += performance.now() - swStart;
         swBtnStart.innerText = "Start";
-        swBtnStart.setAttribute('aria-label', 'Start stopwatch');
         swBtnStart.classList.add("primary");
       } else {
         swStart = performance.now();
-        if (swInterval) clearInterval(swInterval);
-        swInterval = setInterval(updateSw, 20);
+        swInterval = setInterval(updateSw, 25);
         swBtnStart.innerText = "Stop";
-        swBtnStart.setAttribute('aria-label', 'Stop stopwatch');
         swBtnStart.classList.remove("primary");
       }
     };
 
     swBtnLap.onclick = () => {
-      if (!swInterval) return;
-      if (lapCount >= MAX_LAPS) return;
-      lapCount++;
-      let currentMs = swElapsed + performance.now() - swStart;
-      
-      let lapItem = document.createElement('div');
-      lapItem.className = 'lap-item';
-      lapItem.innerHTML = `<span>Lap ${lapCount}</span><span>${formatStopwatchTime(currentMs)}</span>`;
-      swLaps.prepend(lapItem);
+      let currentMs = swElapsed + (swInterval ? performance.now() - swStart : 0);
+      if (currentMs <= 0) return;
+      let prevTotal = swLaps.length > 0 ? swLaps[swLaps.length - 1].totalMs : 0;
+      let splitMs = currentMs - prevTotal;
+
+      swLaps.push({
+        id: swLaps.length + 1,
+        totalMs: currentMs,
+        splitMs: splitMs
+      });
+      renderLaps();
     };
 
     swBtnReset.onclick = () => {
@@ -401,201 +998,472 @@
         swInterval = null;
       }
       swElapsed = 0;
-      lapCount = 0;
-      swLaps.innerHTML = "";
+      swLaps = [];
       swBtnStart.innerText = "Start";
-      swBtnStart.setAttribute('aria-label', 'Start stopwatch');
       swBtnStart.classList.add("primary");
       updateSw();
-      swRing.style.strokeDashoffset = circumference;
+      renderLaps();
+      swRing.style.strokeDashoffset = RING_CIRCUMFERENCE;
     };
 
-    // --- Timer Logic ---
-    let timerTarget = 0;
-    let timerRemaining = 0;
-    let timerTotal = 0;
-    let timerInterval = null;
+    // CSV & TXT Exporters
+    document.getElementById('swBtnExportCsv').onclick = () => {
+      if (swLaps.length === 0) return alert('No laps recorded to export.');
+      let csv = 'Lap,Split Time,Total Time,Split Seconds\n';
+      swLaps.forEach(l => {
+        csv += `${l.id},${formatMs(l.splitMs, true)},${formatMs(l.totalMs, true)},${(l.splitMs / 1000).toFixed(3)}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ktimer_laps_${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById('swBtnExportTxt').onclick = () => {
+      if (swLaps.length === 0) return alert('No laps recorded to export.');
+      let txt = `=======================================\n` +
+                `KTIMER LAP SPLIT ANALYSIS REPORT\n` +
+                `Exported: ${new Date().toLocaleString()}\n` +
+                `Total Laps: ${swLaps.length}\n` +
+                `=======================================\n\n` +
+                `LAP #  | SPLIT DURATION   | TOTAL ELAPSED\n` +
+                `---------------------------------------\n`;
+      swLaps.forEach(l => {
+        txt += `${l.id.toString().padEnd(6)}| ${formatMs(l.splitMs, true)} | ${formatMs(l.totalMs, true)}\n`;
+      });
+      const blob = new Blob([txt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ktimer_laps_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // ==========================================
+    // 2. SINGLE COUNTDOWN TIMER & PRESETS LIBRARY
+    // ==========================================
+    let tmTarget = 0;
+    let tmRemaining = 0;
+    let tmTotal = 0;
+    let tmInterval = null;
 
     const tmDisplay = document.getElementById('tmDisplay');
     const tmInput = document.getElementById('tmInput');
     const tmBtnStart = document.getElementById('tmBtnStart');
     const tmBtnReset = document.getElementById('tmBtnReset');
     const tmRing = document.getElementById('tmRing');
-    const tmHint = document.getElementById('tmHint');
 
-    // Restore saved timer input
-    const savedTimer = safeStorageGet('ktimer_preset', '00:05:00');
-    tmInput.value = savedTimer;
+    let customPresets = safeStorageGet('ktimer_custom_presets', [
+      { name: 'Tea Steeping', time: '00:03:00' },
+      { name: 'Workout Rest', time: '00:01:30' }
+    ]);
 
-    function formatTimerDisplay(ms) {
-      if (ms < 0) ms = 0;
-      let h = Math.floor(ms / 3600000).toString().padStart(2, '0');
-      let m = Math.floor((ms % 3600000) / 60000).toString().padStart(2, '0');
-      let s = Math.floor((ms % 60000) / 1000).toString().padStart(2, '0');
-      return `${h}:${m}:${s}`;
+    function renderCustomPresets() {
+      const container = document.getElementById('customPresetsChips');
+      container.innerHTML = '';
+      customPresets.forEach((p, i) => {
+        let btn = document.createElement('button');
+        btn.className = 'chip-btn';
+        btn.innerHTML = `${p.name} (${p.time.substring(3)}) <span style="margin-left:4px; opacity:0.6;">&times;</span>`;
+        btn.onclick = (e) => {
+          if (e.target.tagName === 'SPAN') {
+            customPresets.splice(i, 1);
+            safeStorageSet('ktimer_custom_presets', customPresets);
+            renderCustomPresets();
+          } else {
+            tmInput.value = p.time;
+          }
+        };
+        container.appendChild(btn);
+      });
     }
+    renderCustomPresets();
 
-    function parseTimeInput(valStr) {
-      if (!valStr || typeof valStr !== 'string') return 0;
-      const clean = valStr.trim();
-      if (!clean) return 0;
-      
-      const parts = clean.split(':').map(p => p.trim());
-      let h = 0, m = 0, s = 0;
-      
-      if (parts.length === 3) {
-        h = parseInt(parts[0], 10) || 0;
-        m = parseInt(parts[1], 10) || 0;
-        s = parseInt(parts[2], 10) || 0;
-      } else if (parts.length === 2) {
-        m = parseInt(parts[0], 10) || 0;
-        s = parseInt(parts[1], 10) || 0;
-      } else if (parts.length === 1) {
-        s = parseInt(parts[0], 10) || 0;
-      } else {
-        return 0;
-      }
-      
-      if (h < 0) h = 0;
-      if (m < 0) m = 0;
-      if (s < 0) s = 0;
+    document.querySelectorAll('#quickPresets .chip-btn').forEach(btn => {
+      btn.onclick = () => {
+        tmInput.value = btn.dataset.time;
+      };
+    });
 
-      const totalSec = h * 3600 + m * 60 + s;
-      if (totalSec <= 0 || totalSec > 359999) return 0;
-      return totalSec * 1000;
-    }
+    document.getElementById('btnSaveCustomPreset').onclick = () => {
+      let name = document.getElementById('customPresetName').value.trim();
+      let timeVal = tmInput.value.trim();
+      if (!name) return alert('Please enter a preset label.');
+      let ms = parseTimeInput(timeVal);
+      if (ms <= 0) return alert('Please set a valid time duration first.');
 
-    function playAlarm() {
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
-        if (ctx.state === 'suspended') {
-          ctx.resume();
-        }
-        
-        for (let i = 0; i < 3; i++) {
-          let osc = ctx.createOscillator();
-          let gain = ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(600, ctx.currentTime + i * 0.4);
-          osc.frequency.setValueAtTime(800, ctx.currentTime + i * 0.4 + 0.1);
-          gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.4);
-          gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + i * 0.4 + 0.3);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start(ctx.currentTime + i * 0.4);
-          osc.stop(ctx.currentTime + i * 0.4 + 0.3);
-        }
-
-        setTimeout(() => {
-          try { ctx.close(); } catch(e) {}
-        }, 1800);
-      } catch (e) {}
-    }
+      customPresets.push({ name, time: formatMs(ms) });
+      safeStorageSet('ktimer_custom_presets', customPresets);
+      document.getElementById('customPresetName').value = '';
+      renderCustomPresets();
+    };
 
     function updateTimer() {
-      timerRemaining = timerTarget - Date.now();
-      if (timerRemaining <= 0) {
-        timerRemaining = 0;
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          timerInterval = null;
+      tmRemaining = tmTarget - Date.now();
+      if (tmRemaining <= 0) {
+        tmRemaining = 0;
+        if (tmInterval) {
+          clearInterval(tmInterval);
+          tmInterval = null;
         }
         tmBtnStart.innerText = "Start";
-        tmBtnStart.setAttribute('aria-label', 'Start countdown timer');
         tmBtnStart.classList.add("primary");
-        playAlarm();
+        playAudioAlert();
         tmInput.style.display = 'block';
         tmDisplay.style.display = 'none';
         tmRing.style.strokeDashoffset = 0;
       } else {
-        tmDisplay.innerText = formatTimerDisplay(timerRemaining);
-        let progress = timerTotal > 0 ? (timerRemaining / timerTotal) : 0;
-        tmRing.style.strokeDashoffset = circumference - (progress * circumference);
+        tmDisplay.innerText = formatMs(tmRemaining);
+        let progress = tmTotal > 0 ? (tmRemaining / tmTotal) : 0;
+        tmRing.style.strokeDashoffset = RING_CIRCUMFERENCE - (progress * RING_CIRCUMFERENCE);
       }
     }
 
-    tmInput.addEventListener('blur', () => {
-      let ms = parseTimeInput(tmInput.value);
-      if (ms > 0) {
-        tmInput.classList.remove('invalid');
-        tmInput.value = formatTimerDisplay(ms);
-        safeStorageSet('ktimer_preset', tmInput.value);
-      } else {
-        tmInput.classList.add('invalid');
-      }
-    });
-
-    tmInput.addEventListener('focus', () => {
-      tmInput.classList.remove('invalid');
-    });
-
     tmBtnStart.onclick = () => {
-      if (timerInterval) {
-        // Pause
-        clearInterval(timerInterval);
-        timerInterval = null;
+      if (tmInterval) {
+        clearInterval(tmInterval);
+        tmInterval = null;
         tmBtnStart.innerText = "Resume";
-        tmBtnStart.setAttribute('aria-label', 'Resume countdown timer');
         tmBtnStart.classList.add("primary");
       } else {
-        // Start / Resume
         if (tmInput.style.display !== 'none') {
           let ms = parseTimeInput(tmInput.value);
-          if (ms <= 0) {
-            tmInput.classList.add('invalid');
-            tmHint.innerText = "Please enter valid time (e.g., 00:05:00)";
-            return;
-          }
-          tmInput.classList.remove('invalid');
-          tmHint.innerText = "Enter format HH:MM:SS or MM:SS";
-          timerRemaining = ms;
-          timerTotal = ms;
-          tmInput.value = formatTimerDisplay(ms);
-          safeStorageSet('ktimer_preset', tmInput.value);
+          if (ms <= 0) return alert('Invalid time format. Use HH:MM:SS or MM:SS');
+          tmRemaining = ms;
+          tmTotal = ms;
           tmInput.style.display = 'none';
           tmDisplay.style.display = 'block';
         }
-        
-        if (timerRemaining > 0) {
-          timerTarget = Date.now() + timerRemaining;
-          if (timerInterval) clearInterval(timerInterval);
-          timerInterval = setInterval(updateTimer, 50);
+        if (tmRemaining > 0) {
+          tmTarget = Date.now() + tmRemaining;
+          tmInterval = setInterval(updateTimer, 50);
           updateTimer();
           tmBtnStart.innerText = "Pause";
-          tmBtnStart.setAttribute('aria-label', 'Pause countdown timer');
           tmBtnStart.classList.remove("primary");
         }
       }
     };
 
     tmBtnReset.onclick = () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+      if (tmInterval) {
+        clearInterval(tmInterval);
+        tmInterval = null;
       }
-      timerRemaining = 0;
-      timerTotal = 0;
+      tmRemaining = 0;
+      tmTotal = 0;
       tmBtnStart.innerText = "Start";
-      tmBtnStart.setAttribute('aria-label', 'Start countdown timer');
       tmBtnStart.classList.add("primary");
       tmInput.style.display = 'block';
       tmDisplay.style.display = 'none';
       tmRing.style.strokeDashoffset = 0;
     };
 
-    // Restore saved tab
-    const savedTab = safeStorageGet('ktimer_active_tab', 'stopwatch');
-    if (savedTab === 'timer') {
-      switchTab('timer');
+    // ==========================================
+    // 3. MULTI-TIMER ENGINE
+    // ==========================================
+    let multiTimers = safeStorageGet('ktimer_multi_list', []);
+    let mtTickInterval = null;
+
+    function saveMultiTimers() {
+      safeStorageSet('ktimer_multi_list', multiTimers);
     }
 
-    // Cleanup on window unload
-    window.addEventListener('beforeunload', () => {
-      if (swInterval) clearInterval(swInterval);
-      if (timerInterval) clearInterval(timerInterval);
+    function renderMultiTimers() {
+      const grid = document.getElementById('mtGrid');
+      grid.innerHTML = '';
+      if (multiTimers.length === 0) {
+        grid.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:12px;">No active timers. Create one above!</div>';
+        return;
+      }
+
+      multiTimers.forEach((t, i) => {
+        let pct = t.totalMs > 0 ? (t.remainingMs / t.totalMs) * 100 : 0;
+        let card = document.createElement('div');
+        card.className = `multitimer-card ${t.remainingMs === 0 ? 'finished' : ''}`;
+        card.innerHTML = `
+          <div class="mt-header">
+            <span class="mt-name">${t.name}</span>
+            <span class="mt-time">${formatMs(t.remainingMs)}</span>
+          </div>
+          <div class="mt-bar-bg">
+            <div class="mt-bar-fill" style="width:${pct.toFixed(1)}%;"></div>
+          </div>
+          <div class="mt-actions">
+            ${t.remainingMs > 0 ? `<button class="btn sm ${t.isRunning ? '' : 'primary'}" onclick="toggleMultiTimer(${i})">${t.isRunning ? 'Pause' : 'Start'}</button>` : '<span style="font-size:11px; color:var(--danger-color); font-weight:bold;">DONE 🔔</span>'}
+            <button class="btn sm" onclick="resetMultiTimer(${i})">Reset</button>
+            <button class="btn sm danger" onclick="deleteMultiTimer(${i})">&times;</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function tickMultiTimers() {
+      let now = Date.now();
+      let hasActive = false;
+
+      multiTimers.forEach(t => {
+        if (t.isRunning) {
+          hasActive = true;
+          let delta = now - t.lastTick;
+          t.lastTick = now;
+          t.remainingMs = Math.max(0, t.remainingMs - delta);
+          if (t.remainingMs === 0) {
+            t.isRunning = false;
+            playAudioAlert();
+          }
+        }
+      });
+
+      renderMultiTimers();
+      saveMultiTimers();
+    }
+
+    function startMultiTick() {
+      if (!mtTickInterval) {
+        mtTickInterval = setInterval(tickMultiTimers, 200);
+      }
+    }
+
+    document.getElementById('mtForm').onsubmit = (e) => {
+      e.preventDefault();
+      let name = document.getElementById('mtNameInput').value.trim();
+      let timeVal = document.getElementById('mtTimeInput').value.trim();
+      let ms = parseTimeInput(timeVal);
+      if (!name || ms <= 0) return alert('Please specify a valid name and time.');
+
+      multiTimers.push({
+        id: Date.now(),
+        name: name,
+        totalMs: ms,
+        remainingMs: ms,
+        isRunning: true,
+        lastTick: Date.now()
+      });
+
+      document.getElementById('mtNameInput').value = '';
+      startMultiTick();
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    window.toggleMultiTimer = (idx) => {
+      let t = multiTimers[idx];
+      if (!t) return;
+      if (t.isRunning) {
+        t.isRunning = false;
+      } else if (t.remainingMs > 0) {
+        t.isRunning = true;
+        t.lastTick = Date.now();
+        startMultiTick();
+      }
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    window.resetMultiTimer = (idx) => {
+      let t = multiTimers[idx];
+      if (!t) return;
+      t.isRunning = false;
+      t.remainingMs = t.totalMs;
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    window.deleteMultiTimer = (idx) => {
+      multiTimers.splice(idx, 1);
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    document.getElementById('mtBtnStartAll').onclick = () => {
+      let now = Date.now();
+      multiTimers.forEach(t => {
+        if (t.remainingMs > 0) {
+          t.isRunning = true;
+          t.lastTick = now;
+        }
+      });
+      startMultiTick();
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    document.getElementById('mtBtnPauseAll').onclick = () => {
+      multiTimers.forEach(t => t.isRunning = false);
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    document.getElementById('mtBtnClearFinished').onclick = () => {
+      multiTimers = multiTimers.filter(t => t.remainingMs > 0);
+      renderMultiTimers();
+      saveMultiTimers();
+    };
+
+    renderMultiTimers();
+    if (multiTimers.some(t => t.isRunning)) startMultiTick();
+
+    // ==========================================
+    // 4. POMODORO WORK/BREAK CYCLE ENGINE & STATS
+    // ==========================================
+    const POMO_STATE = { WORK: 'WORK', SHORT_BREAK: 'SHORT_BREAK', LONG_BREAK: 'LONG_BREAK' };
+    let pomoState = POMO_STATE.WORK;
+    let pomoCycleCount = 1;
+    let pomoRemaining = 25 * 60 * 1000;
+    let pomoTotal = 25 * 60 * 1000;
+    let pomoTargetTime = 0;
+    let pomoInterval = null;
+
+    let pomoStats = safeStorageGet('ktimer_pomo_stats', {
+      completedSessions: 0,
+      totalFocusMins: 0,
+      todaySessions: 0,
+      lastDate: new Date().toDateString()
     });
+
+    if (pomoStats.lastDate !== new Date().toDateString()) {
+      pomoStats.todaySessions = 0;
+      pomoStats.lastDate = new Date().toDateString();
+      safeStorageSet('ktimer_pomo_stats', pomoStats);
+    }
+
+    const pomoDisplay = document.getElementById('pomoDisplay');
+    const pomoPhaseLabel = document.getElementById('pomoPhaseLabel');
+    const pomoRing = document.getElementById('pomoRing');
+    const pomoDots = document.getElementById('pomoDots');
+    const pomoBtnStart = document.getElementById('pomoBtnStart');
+
+    function updatePomoStatsUI() {
+      document.getElementById('pomoStatCompleted').innerText = pomoStats.completedSessions.toString();
+      document.getElementById('pomoStatFocusMins').innerText = `${pomoStats.totalFocusMins}m`;
+      document.getElementById('pomoStatCycleCount').innerText = pomoCycleCount.toString();
+      document.getElementById('pomoStreakText').innerText = `🔥 ${pomoStats.todaySessions} sessions today`;
+    }
+    updatePomoStatsUI();
+
+    function getPomoDuration(state) {
+      if (state === POMO_STATE.WORK) return (parseInt(document.getElementById('pomoCfgWork').value, 10) || 25) * 60 * 1000;
+      if (state === POMO_STATE.SHORT_BREAK) return (parseInt(document.getElementById('pomoCfgShort').value, 10) || 5) * 60 * 1000;
+      return (parseInt(document.getElementById('pomoCfgLong').value, 10) || 15) * 60 * 1000;
+    }
+
+    function renderPomoUI() {
+      pomoDisplay.innerText = formatMs(pomoRemaining).substring(3);
+      let pct = pomoTotal > 0 ? (pomoRemaining / pomoTotal) : 0;
+      pomoRing.style.strokeDashoffset = RING_CIRCUMFERENCE - (pct * RING_CIRCUMFERENCE);
+
+      if (pomoState === POMO_STATE.WORK) {
+        pomoPhaseLabel.innerText = "WORK SESSION 🧠";
+        pomoDisplay.style.color = "var(--pomo-work)";
+        pomoRing.setAttribute('stroke', "var(--pomo-work)");
+      } else if (pomoState === POMO_STATE.SHORT_BREAK) {
+        pomoPhaseLabel.innerText = "SHORT BREAK ☕";
+        pomoDisplay.style.color = "var(--pomo-short)";
+        pomoRing.setAttribute('stroke', "var(--pomo-short)");
+      } else {
+        pomoPhaseLabel.innerText = "LONG BREAK 🌴";
+        pomoDisplay.style.color = "var(--pomo-long)";
+        pomoRing.setAttribute('stroke', "var(--pomo-long)");
+      }
+
+      pomoDots.innerHTML = '';
+      for (let i = 1; i <= 4; i++) {
+        let dot = document.createElement('div');
+        dot.className = `pomo-dot ${i <= pomoCycleCount ? 'filled' : ''}`;
+        pomoDots.appendChild(dot);
+      }
+    }
+
+    function advancePomoPhase() {
+      playAudioAlert('chime');
+      if (pomoState === POMO_STATE.WORK) {
+        let workMins = Math.round(pomoTotal / 60000);
+        pomoStats.completedSessions++;
+        pomoStats.todaySessions++;
+        pomoStats.totalFocusMins += workMins;
+        safeStorageSet('ktimer_pomo_stats', pomoStats);
+        updatePomoStatsUI();
+
+        if (pomoCycleCount >= 4) {
+          pomoState = POMO_STATE.LONG_BREAK;
+          pomoCycleCount = 1;
+        } else {
+          pomoState = POMO_STATE.SHORT_BREAK;
+          pomoCycleCount++;
+        }
+      } else {
+        pomoState = POMO_STATE.WORK;
+      }
+
+      pomoTotal = getPomoDuration(pomoState);
+      pomoRemaining = pomoTotal;
+      renderPomoUI();
+    }
+
+    function tickPomo() {
+      pomoRemaining = pomoTargetTime - Date.now();
+      if (pomoRemaining <= 0) {
+        pomoRemaining = 0;
+        if (pomoInterval) {
+          clearInterval(pomoInterval);
+          pomoInterval = null;
+        }
+        pomoBtnStart.innerText = "Start";
+        pomoBtnStart.classList.add("primary");
+        advancePomoPhase();
+      } else {
+        renderPomoUI();
+      }
+    }
+
+    pomoBtnStart.onclick = () => {
+      if (pomoInterval) {
+        clearInterval(pomoInterval);
+        pomoInterval = null;
+        pomoBtnStart.innerText = "Resume";
+        pomoBtnStart.classList.add("primary");
+      } else {
+        pomoTargetTime = Date.now() + pomoRemaining;
+        pomoInterval = setInterval(tickPomo, 100);
+        pomoBtnStart.innerText = "Pause";
+        pomoBtnStart.classList.remove("primary");
+      }
+    };
+
+    document.getElementById('pomoBtnSkip').onclick = () => {
+      if (pomoInterval) {
+        clearInterval(pomoInterval);
+        pomoInterval = null;
+      }
+      pomoBtnStart.innerText = "Start";
+      pomoBtnStart.classList.add("primary");
+      advancePomoPhase();
+    };
+
+    document.getElementById('pomoBtnReset').onclick = () => {
+      if (pomoInterval) {
+        clearInterval(pomoInterval);
+        pomoInterval = null;
+      }
+      pomoState = POMO_STATE.WORK;
+      pomoCycleCount = 1;
+      pomoTotal = getPomoDuration(pomoState);
+      pomoRemaining = pomoTotal;
+      pomoBtnStart.innerText = "Start";
+      pomoBtnStart.classList.add("primary");
+      renderPomoUI();
+    };
+
+    renderPomoUI();
+
+    // Restore Saved Active Tab
+    const savedTab = safeStorageGet('ktimer_active_tab', 'stopwatch');
+    switchTab(savedTab);
   </script>
 </body>
 </html>

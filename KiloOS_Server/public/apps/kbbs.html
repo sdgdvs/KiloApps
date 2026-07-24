@@ -3,26 +3,59 @@
 <head>
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#ece9d8; font-family:Tahoma,sans-serif; font-size:12px; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+        body { background:#09090b; font-family:'Inter', system-ui, sans-serif; font-size:13px; height:100vh; display:flex; flex-direction:column; overflow:hidden; color: #a1a1aa; }
 
-        .conn-bar { display:flex; align-items:center; gap:4px; padding:4px 6px; background:#ece9d8; border-bottom:1px solid #aca899; }
-        .conn-bar input[type="text"], .conn-bar select { border:1px solid #7f9db9; padding:2px 4px; font-family:Tahoma; font-size:12px; }
-        .conn-bar input:disabled { background:#e8e8e8; color:#999; cursor:not-allowed; }
-        .conn-bar button { font-family:Tahoma; font-size:11px; padding:2px 8px; cursor:pointer; background:#ece9d8; border:1px solid #999; }
-        .conn-bar button:active { background:#ccc; }
-        #host { width:160px; }
-        #port { width:48px; }
-        #bbsSelect { width:160px; margin-left: 8px; }
+        .conn-bar { 
+            display:flex; align-items:center; gap:8px; padding:12px 16px; 
+            background:rgba(24, 24, 27, 0.7); backdrop-filter:blur(8px); 
+            -webkit-backdrop-filter:blur(8px);
+            border-bottom:1px solid rgba(255, 255, 255, 0.05); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); z-index: 10;
+        }
+        .conn-bar span { font-weight: 600; color: #d4d4d8; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .conn-bar input[type="text"], .conn-bar select { 
+            background: rgba(0, 0, 0, 0.5); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.3); 
+            padding: 6px 10px; border-radius: 6px; font-family: 'Inter', sans-serif; font-size: 13px; transition: all 0.2s; outline: none;
+        }
+        .conn-bar input[type="text"]:focus, .conn-bar select:focus { border-color: #0ea5e9; box-shadow: 0 0 8px rgba(14, 165, 233, 0.3); }
+        .conn-bar input:disabled { background:rgba(255, 255, 255, 0.02); color:#52525b; border-color: rgba(255, 255, 255, 0.05); cursor:not-allowed; }
+        .conn-bar select option { background: #18181b; color: #e4e4e7; }
+        
+        .conn-bar button { 
+            font-family:'Inter', sans-serif; font-weight: 600; font-size:12px; padding:6px 14px; cursor:pointer; 
+            background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); color: #fff; 
+            border: 1px solid #0369a1; border-radius: 6px; text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.2); transition: all 0.1s;
+        }
+        .conn-bar button:active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        
+        #host { width:220px; }
+        #port { width:60px; text-align: center; }
+        #bbsSelect { width:220px; margin-left: auto; }
 
         /* Main area */
-        .main { flex:1; display:flex; overflow:hidden; }
+        .main { flex:1; display:flex; overflow:hidden; position: relative; }
 
         /* Terminal */
-        .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; }
-        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; }
+        .term-wrap { flex:1; display:flex; flex-direction:column; background:#000; position: relative; }
+        #terminal { flex:1; display:block; image-rendering:pixelated; cursor:text; z-index: 1; }
+
+        /* CRT Scanline overlay */
+        .term-wrap::after {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%; z-index: 2; pointer-events: none;
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.8);
+            display: var(--crt-display, block);
+        }
 
         /* Status bar */
-        .status-bar { padding:2px 6px; background:#ece9d8; border-top:1px solid #fff; font-size:11px; color:#444; display:flex; justify-content:space-between; }
+        .status-bar { 
+            padding:6px 16px; background:#09090b; border-top:1px solid rgba(255,255,255,0.05); 
+            font-size:11px; font-weight: 500; color:#71717a; display:flex; justify-content:space-between; 
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.2); z-index: 10;
+        }
+        #statusInfo { color: #10b981; text-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
 <body>
@@ -31,12 +64,143 @@
         <input type="text" id="host" placeholder="" value="" disabled title="EXE only feature. Select a BBS from the dropdown.">
         <span>Port:</span>
         <input type="text" id="port" value="23" disabled title="EXE only feature">
-        <button id="btnConn" onclick="toggleConnect()">Connect</button>
-        <select id="bbsSelect"></select>
+        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
+            <input type="checkbox" id="localEcho"> Echo
+        </label>
+        <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 4px;">
+            <input type="checkbox" id="crtToggle" checked onchange="toggleCRT()"> CRT
+        </label>
+        <button id="btnConn" onclick="initAudio(); toggleConnect()">Connect</button>
+        <button id="btnDir" onclick="showDialingDir()">Directory</button>
+        <button id="btnMacros" onclick="showMacros()" style="margin-left:4px;">Macros</button>
+        <button id="btnXmDl" onclick="startTransfer(1)" title="XMODEM Download" style="background: linear-gradient(180deg, #10b981 0%, #059669 100%); border-color: #047857; margin-left:8px;">DL (XM)</button>
+        <button id="btnXmUl" onclick="startTransfer(2)" title="XMODEM Upload" style="background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); border-color: #b45309;">UL (XM)</button>
+        <button id="btnZmDl" onclick="startTransfer(3)" title="ZMODEM Download" style="background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 100%); border-color: #0369a1; margin-left:4px;">DL (ZM)</button>
+        <button id="btnZmUl" onclick="startTransfer(4)" title="ZMODEM Upload" style="background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">UL (ZM)</button>
+        <button id="btnSettings" onclick="showSettings()" style="margin-left:4px;">Settings</button>
+        <button id="btnCapture" onclick="toggleCapture()" style="margin-left:4px; background: linear-gradient(180deg, #52525b 0%, #3f3f46 100%); border-color: #27272a;">Capture: OFF</button>
+        <button id="btnHelp" onclick="showHelp()" style="margin-left:4px; background: linear-gradient(180deg, #8b5cf6 0%, #6d28d9 100%); border-color: #5b21b6;">Help</button>
+        <input type="file" id="fileUpload" style="display:none" onchange="handleFileUpload(event)">
     </div>
     <div class="main">
         <div class="term-wrap">
-            <canvas id="terminal" tabindex="0"></canvas>
+            <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative;">
+                <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen" style="flex: 1;"></canvas>
+                <div id="scrollContainer" style="width: 16px; height: 100%; overflow-y: scroll; background: #09090b; border-left: 1px solid #27272a; z-index: 3; display: none;" onscroll="handleScroll(event)">
+                    <div id="scrollSpacer" style="height: 100px;"></div>
+                </div>
+            </div>
+        </div>
+        <!-- Dialing Directory Modal -->
+        <div id="dialingDir" role="dialog" aria-modal="true" aria-label="Dialing Directory" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                    <span>Dialing Directory</span>
+                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeDialingDir()">X</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <div style="width: 250px; border-right: 1px solid #27272a; overflow-y: auto;" id="dirList"></div>
+                    <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Name</label><br><input type="text" id="dirName" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Host (IP/Domain)</label><br><input type="text" id="dirHost" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                        <div style="display:flex; gap:8px;">
+                            <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Port</label><br><input type="number" id="dirPort" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                            <div style="flex:1;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Connection Type</label><br><select id="dirType" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"><option value="telnet">Telnet</option><option value="ws">WebSocket</option></select></div>
+                        </div>
+                        <div style="margin-top:4px;"><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Auto-Login (Wait~Send~Wait~Send)</label><br><input type="text" id="dirAutoLogin" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;" placeholder="ogin:~sysop\r~assword:~secret\r"></div>
+                        <div style="margin-top:auto; display:flex; gap:8px;">
+                            <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveEntry()">Save</button>
+                            <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteEntry()">Delete</button>
+                            <button style="background:#27272a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:auto;" onclick="newEntry()">New</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 16px; border-top: 1px solid #27272a; display: flex; justify-content: flex-end; gap: 8px;">
+                    <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="connectSelected()">Connect</button>
+                </div>
+            </div>
+        </div>
+        <!-- Macros Modal -->
+        <div id="macrosDir" role="dialog" aria-modal="true" aria-label="Macros Settings" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                    <span>Macros (Alt + Key)</span>
+                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeMacros()">X</button>
+                </div>
+                <div style="flex: 1; display: flex; overflow: hidden;">
+                    <div style="width: 200px; border-right: 1px solid rgba(255,255,255,0.1); overflow-y: auto;" id="macroList"></div>
+                    <div style="flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Key (e.g. L)</label><br><input type="text" id="macroKey" maxlength="1" style="width:50px; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; text-transform:uppercase;"></div>
+                        <div style="flex:1; display:flex; flex-direction:column;">
+                            <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">String Sequence (use \r for enter)</label>
+                            <textarea id="macroString" style="flex:1; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; resize:none; font-family:monospace;"></textarea>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="saveMacro()">Save</button>
+                            <button style="background:#ef4444; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="deleteMacro()">Delete</button>
+                            <button style="background:#27272a; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-left:auto;" onclick="newMacro()">New</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Settings Modal -->
+        <div id="settingsModal" role="dialog" aria-modal="true" aria-label="Display Settings" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+            <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 300px; max-width: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                    <span>Display Settings</span>
+                    <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeSettings()">X</button>
+                </div>
+                <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+                    <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Font Size (px)</label><br><input type="number" id="setFontSize" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                    <div><label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Blink Rate (ms)</label><br><input type="number" id="setBlinkRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px;"></div>
+                    <div>
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600;">Baud Rate Emulation</label><br>
+                        <select id="setBaudRate" style="width:100%; background:#09090b; border:1px solid #27272a; color:#fff; padding:8px; border-radius:4px; outline:none; margin-top:4px; font-family:'Inter', sans-serif; font-size:13px;">
+                            <option value="0">Instant (Default)</option>
+                            <option value="14400">14400 bps</option>
+                            <option value="9600">9600 bps</option>
+                            <option value="2400">2400 bps</option>
+                            <option value="1200">1200 bps</option>
+                            <option value="300">300 bps</option>
+                        </select>
+                    </div>
+                    <label style="color: #d4d4d8; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="setLocalEcho"> Local Echo
+                    </label>
+                    <div style="margin-top:8px;">
+                        <label style="font-size:11px; text-transform:uppercase; color:#71717a; font-weight:600; display:flex; justify-content:space-between; align-items:center;">
+                            Palette
+                            <button onclick="resetPalette()" style="background:transparent; border:none; color:#0ea5e9; font-size:11px; cursor:pointer; text-decoration:underline;">Reset</button>
+                        </label>
+                        <div id="paletteContainer" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:4px;"></div>
+                    </div>
+                    <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 16px; border-radius:4px; cursor:pointer; font-weight:600; margin-top: 8px;" onclick="saveSettings()">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Help Modal -->
+    <div id="helpModal" role="dialog" aria-modal="true" aria-label="Help and Quick Reference" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+        <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 450px; max-width: 95%; max-height: 80%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+            <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
+                <span>Help / Quick Reference</span>
+                <button style="background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" onclick="closeHelp()">X</button>
+            </div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; color: #e4e4e7; line-height: 1.5; font-size: 13px;">
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Dialing Directory:</strong> Save and quick-connect to your favorite BBSs.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">XMODEM / ZMODEM:</strong> Transfer files using classic protocols. Click DL to download from the BBS, UL to upload.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">ANSI Music:</strong> Fully supports ANSI-M music codes. Play tones directly from BBS games and menus.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Macros:</strong> Bind Alt+Key to string sequences. Use \r for Enter. Great for quick logins.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Display Settings:</strong> Adjust font size, blink rate, and the 16-color PC palette.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Scrollback:</strong> Use the scrollbar or Shift+PgUp/PgDn to view terminal history.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Copy/Paste:</strong> Click and drag to select text, then copy. Ctrl+V to paste into the terminal.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Session Capture:</strong> Toggle capture ON to save all incoming text to a local file.</div>
+                <div style="margin-bottom: 8px;"><strong style="color: #0ea5e9;">Baud Rate Emulation:</strong> Simulate old modem speeds (e.g. 2400 bps) in Settings.</div>
+            </div>
+            <div style="padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: flex-end;">
+                <button style="background:#0ea5e9; color:#fff; border:none; padding:8px 24px; border-radius:4px; cursor:pointer; font-weight:600;" onclick="closeHelp()">OK</button>
+            </div>
         </div>
     </div>
     <div class="status-bar">
@@ -45,27 +209,546 @@
     </div>
 
     <script>
+    function toggleCRT() {
+        const crt = document.getElementById('crtToggle').checked;
+        document.querySelector('.term-wrap').style.setProperty('--crt-display', crt ? 'block' : 'none');
+        document.getElementById('terminal').style.filter = crt ? 'contrast(1.1) brightness(1.2) drop-shadow(0 0 1px rgba(255,255,255,0.3))' : 'none';
+    }
+    document.addEventListener("DOMContentLoaded", () => { toggleCRT(); loadSettings(); });
+
+    function showHelp() { document.getElementById('helpModal').style.display = 'flex'; }
+    function closeHelp() { document.getElementById('helpModal').style.display = 'none'; }
+
     // ─── Configuration ───
-    const COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
+    let COLS = 80, ROWS = 25, CELL_W = 8, CELL_H = 16;
     const canvas = document.getElementById('terminal');
     const ctx = canvas.getContext('2d');
-    let ws = null, bytesRx = 0;
+    let ws = null, bytesRx = 0, bytesTx = 0;
+    
+    let rxQueue = "";
+    let baudFraction = 0;
+    let lastBaudTime = Date.now();
+    setInterval(() => {
+        let now = Date.now();
+        let dt = now - lastBaudTime;
+        lastBaudTime = now;
+        if (dt > 1000) dt = 1000;
+        let baud = (typeof kbbsSettings !== 'undefined') ? (kbbsSettings.baudRate || 0) : 0;
+        if (baud === 0 || rxQueue.length > 50000) {
+            if (rxQueue.length > 0) {
+                processData(rxQueue);
+                rxQueue = "";
+            }
+        } else {
+            let cps = baud / 10;
+            baudFraction += (cps * dt) / 1000;
+            let chars = Math.floor(baudFraction);
+            if (chars > 0 && rxQueue.length > 0) {
+                baudFraction -= chars;
+                let take = Math.min(chars, rxQueue.length);
+                let chunk = rxQueue.substring(0, take);
+                rxQueue = rxQueue.substring(take);
+                processData(chunk);
+            } else if (rxQueue.length === 0) {
+                baudFraction = 0;
+            }
+        }
+    }, 16);
 
-    // ─── ANSI Color Palette (standard 16) ───
-    const COLORS = [
-        '#000000','#aa0000','#00aa00','#aa5500',
-        '#0000aa','#aa00aa','#00aaaa','#aaaaaa',
-        '#555555','#ff5555','#55ff55','#ffff55',
-        '#5555ff','#ff55ff','#55ffff','#ffffff'
+    // ─── XMODEM State ───
+    const XMODEM_SOH = 0x01, XMODEM_EOT = 0x04, XMODEM_ACK = 0x06;
+    const XMODEM_NAK = 0x15, XMODEM_CAN = 0x18, XMODEM_SUB = 0x1A;
+    let xmodemActive = 0, xmodemState = 0, xmodemBlockNum = 1;
+    let xmodemData = [], xmodemBlockBuf = [];
+    let uploadData = null, uploadOffset = 0;
+    let transferStatusEl = null;
+
+    // ─── ZMODEM State ───
+    let zmState = 'IDLE', zmExpectedData = '';
+    let zmDlBuf = [], zmDlEscaped = false, zmDlHdrBuf = '', zmDlBin32 = false, zmDlDataType = 0, zmDlCrcBuf = [];
+    let zmUlData = null, zmUlName = "", zmUlOffset = 0;
+    let zmFileName = "", zmFileSize = 0;
+    let sigBuf = [0,0,0,0,0,0];
+
+    function updateTransferUI(text) {
+        if(!transferStatusEl) {
+            transferStatusEl = document.createElement('div');
+            transferStatusEl.style.position = 'absolute';
+            transferStatusEl.style.top = '50%';
+            transferStatusEl.style.left = '50%';
+            transferStatusEl.style.transform = 'translate(-50%, -50%)';
+            transferStatusEl.style.background = '#18181b';
+            transferStatusEl.style.border = '2px solid #0ea5e9';
+            transferStatusEl.style.padding = '20px';
+            transferStatusEl.style.color = '#fff';
+            transferStatusEl.style.zIndex = '100';
+            transferStatusEl.style.borderRadius = '8px';
+            transferStatusEl.style.textAlign = 'center';
+            transferStatusEl.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+            document.querySelector('.term-wrap').appendChild(transferStatusEl);
+        }
+        let proto = xmodemActive >= 3 ? 'ZMODEM' : 'XMODEM';
+        let dir = (xmodemActive === 1 || xmodemActive === 3) ? 'DOWNLOAD' : 'UPLOAD';
+        transferStatusEl.innerHTML = `<strong>${proto} ${dir}</strong><br><br><span style="color:#10b981">${text}</span>`;
+    }
+
+    function endTransfer(msg) {
+        if (transferStatusEl) {
+            transferStatusEl.innerHTML = `<strong>${xmodemActive >= 3 ? 'ZMODEM' : 'XMODEM'}</strong><br><br><span style="color:#ef4444">${msg}</span>`;
+            setTimeout(() => {
+                if(transferStatusEl) transferStatusEl.remove();
+                transferStatusEl = null;
+            }, 2000);
+        }
+        if (msg.includes("Complete")) playChime('done');
+        xmodemActive = 0;
+    }
+
+    function startTransfer(type) {
+        if (!ws || ws.readyState !== 1) { alert("Connect first"); return; }
+        if (xmodemActive) return;
+        xmodemActive = type;
+        xmodemState = 0;
+        xmodemBlockNum = 1;
+        xmodemData = [];
+        xmodemBlockBuf = [];
+        
+        if (type === 1) {
+            updateTransferUI("Waiting for host to start...");
+            ws.send(new Uint8Array([XMODEM_NAK]));
+            bytesTx++; updateBytes();
+        } else if (type === 2) {
+            document.getElementById('fileUpload').click();
+        } else if (type === 3) {
+            updateTransferUI("Starting ZMODEM DL...");
+            zmState = 'IDLE'; zmExpectedData = '';
+            zmodemSendHex(1, 0); // ZRINIT
+        } else if (type === 4) {
+            document.getElementById('fileUpload').click();
+        }
+    }
+
+    function handleFileUpload(e) {
+        if (!e.target.files.length) { endTransfer("Cancelled"); return; }
+        let file = e.target.files[0];
+        let reader = new FileReader();
+        reader.onload = function(evt) {
+            uploadData = new Uint8Array(evt.target.result);
+            uploadOffset = 0;
+            if (xmodemActive === 2) {
+                updateTransferUI("Waiting for NAK...");
+            } else if (xmodemActive === 4) {
+                zmUlData = uploadData;
+                zmUlName = file.name;
+                zmUlOffset = 0;
+                zmState = 'WAIT_ZRINIT';
+                updateTransferUI("Sending ZRQINIT...");
+                zmodemSendHex(0, 0); // ZRQINIT
+            }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+    }
+
+    function saveFile(dataArray) {
+        let blob = new Blob([new Uint8Array(dataArray)]);
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'downloaded_file.bin';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function sendXmodemBlock() {
+        let buf = new Uint8Array(132);
+        buf[0] = XMODEM_SOH;
+        buf[1] = xmodemBlockNum & 0xFF;
+        buf[2] = 255 - buf[1];
+        let len = Math.min(128, uploadData.length - uploadOffset);
+        if (len <= 0 && uploadOffset >= uploadData.length) {
+            ws.send(new Uint8Array([XMODEM_EOT]));
+            bytesTx++; updateBytes();
+            xmodemState = 2;
+            return;
+        }
+        for (let i=0; i<len; i++) buf[3+i] = uploadData[uploadOffset+i];
+        for (let i=len; i<128; i++) buf[3+i] = XMODEM_SUB;
+        let csum = 0;
+        for (let i=3; i<131; i++) csum += buf[i];
+        buf[131] = csum & 0xFF;
+        
+        // Over WS telnet proxy, we might need to escape 0xFF
+        // But our proxy just takes raw WS bytes and passes them.
+        // Wait, KBBSProxy natively forwards bytes. If it does telnet escaping,
+        // it might expect US to escape 0xFF in binary. 
+        // Let's escape 0xFF just in case it passes through telnet.
+        let out = [];
+        for (let i=0; i<132; i++) {
+            out.push(buf[i]);
+            if (buf[i] === 0xFF) out.push(0xFF);
+        }
+        ws.send(new Uint8Array(out));
+        bytesTx += out.length; updateBytes();
+        uploadOffset += len;
+        updateTransferUI(`Uploading... ${uploadOffset} / ${uploadData.length} bytes`);
+    }
+
+    function zmodemUpdateCrc(crc, c) {
+        crc ^= (c << 8);
+        for (let i = 0; i < 8; i++) {
+            if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+            else crc = crc << 1;
+        }
+        return crc & 0xFFFF;
+    }
+    function wsSendEscaped(arr) {
+        let out = [];
+        for (let i=0; i<arr.length; i++) { out.push(arr[i]); if (arr[i] === 0xFF) out.push(0xFF); }
+        ws.send(new Uint8Array(out)); bytesTx += out.length; updateBytes();
+    }
+    function zmodemSendHex(type, flags) {
+        let f0 = flags & 0xff, f1 = (flags >> 8) & 0xff, f2 = (flags >> 16) & 0xff, f3 = (flags >> 24) & 0xff;
+        let crc = 0;
+        crc = zmodemUpdateCrc(crc, type); crc = zmodemUpdateCrc(crc, f0); crc = zmodemUpdateCrc(crc, f1);
+        crc = zmodemUpdateCrc(crc, f2); crc = zmodemUpdateCrc(crc, f3); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
+        let hex = (n) => n.toString(16).padStart(2, '0');
+        let str = '**\x18B' + hex(type) + hex(f0) + hex(f1) + hex(f2) + hex(f3) + hex((crc>>8)&0xff) + hex(crc&0xff) + '\r\n\x11';
+        let out = []; for(let i=0; i<str.length; i++) out.push(str.charCodeAt(i));
+        wsSendEscaped(out);
+    }
+    function zmodemEscape(buf) {
+        let out = [];
+        for(let i=0; i<buf.length; i++) {
+            let c = buf[i];
+            if (c === 0x18 || c === 0x10 || c === 0x11 || c === 0x13 || c === 0x0D || c === 0x8D || c === 0x90 || c === 0x91 || c === 0x93) {
+                out.push(0x18);
+                if (c === 0x0D) out.push(0x4D); else if (c === 0x8D) out.push(0xCD); else out.push(c ^ 0x40);
+            } else out.push(c);
+        }
+        return out;
+    }
+    function zmodemMakeBinHeader(type, flags) {
+        let f0 = flags & 0xff, f1 = (flags >> 8) & 0xff, f2 = (flags >> 16) & 0xff, f3 = (flags >> 24) & 0xff;
+        let crc = 0;
+        crc = zmodemUpdateCrc(crc, type); crc = zmodemUpdateCrc(crc, f0); crc = zmodemUpdateCrc(crc, f1);
+        crc = zmodemUpdateCrc(crc, f2); crc = zmodemUpdateCrc(crc, f3); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
+        let esc = zmodemEscape([type, f0, f1, f2, f3, (crc>>8)&0xff, crc&0xff]);
+        return [0x2A, 0x18, 0x41].concat(esc);
+    }
+    function zmodemSendDataPacket(hdrBytes, data, endType) {
+        let escData = zmodemEscape(data);
+        let crc = 0;
+        for(let i=0; i<data.length; i++) crc = zmodemUpdateCrc(crc, data[i]);
+        crc = zmodemUpdateCrc(crc, endType); crc = zmodemUpdateCrc(crc, 0); crc = zmodemUpdateCrc(crc, 0);
+        let escCrc = zmodemEscape([(crc>>8)&0xff, crc&0xff]);
+        let out = hdrBytes.concat(escData);
+        out.push(0x18); out.push(endType); out = out.concat(escCrc);
+        wsSendEscaped(out);
+    }
+    function handleZmodemHeader(type, f0, f1, f2, f3) {
+        if (xmodemActive === 3) { // DL
+            if (type === 0) { zmodemSendHex(1, 0); } // ZRINIT
+            else if (type === 4) { zmExpectedData = 'FILE'; zmState = 'DATA_READ'; zmDlBuf = []; } // ZFILE
+            else if (type === 10) { zmExpectedData = 'DATA'; zmState = 'DATA_READ'; zmDlBuf = []; } // ZDATA
+            else if (type === 11) { zmodemSendHex(1, 0); } // ZEOF -> ZRINIT
+            else if (type === 8) { // ZFIN
+                zmodemSendHex(8, 0); wsSendEscaped([0x4F, 0x4F]);
+                saveFile(xmodemData); endTransfer("Complete");
+            }
+        } else if (xmodemActive === 4) { // UL
+            let offset = f0 | (f1<<8) | (f2<<16) | (f3<<24);
+            if (type === 1) { // ZRINIT
+                if (zmState === 'WAIT_ZRINIT') {
+                    zmState = 'WAIT_ZRPOS';
+                    let hdr = zmodemMakeBinHeader(4, 0);
+                    let payload = [];
+                    for(let i=0; i<zmUlName.length; i++) payload.push(zmUlName.charCodeAt(i));
+                    payload.push(0);
+                    let sizeStr = zmUlData.length.toString();
+                    for(let i=0; i<sizeStr.length; i++) payload.push(sizeStr.charCodeAt(i));
+                    payload.push(0);
+                    zmodemSendDataPacket(hdr, payload, 0x6B); // ZCRCW
+                } else if (zmState === 'WAIT_FIN_ACK') {
+                    zmState = 'DONE'; endTransfer("Complete");
+                }
+            } else if (type === 9) { // ZRPOS
+                if (zmState === 'WAIT_ZRPOS' || zmState === 'SENDING_DATA') {
+                    zmUlOffset = offset; zmState = 'SENDING_DATA';
+                    wsSendEscaped(zmodemMakeBinHeader(10, zmUlOffset));
+                    sendZmodemUlChunks();
+                }
+            } else if (type === 3) { // ZACK
+                if (zmState === 'WAIT_ACK') { zmState = 'SENDING_DATA'; sendZmodemUlChunks(); }
+            } else if (type === 8) { // ZFIN
+                wsSendEscaped([0x4F, 0x4F]); endTransfer("Complete");
+            }
+        }
+    }
+    function sendZmodemUlChunks() {
+        if (xmodemActive !== 4) return;
+        if (zmUlOffset >= zmUlData.length) {
+            zmodemSendHex(11, zmUlOffset); zmState = 'WAIT_ZRINIT'; return;
+        }
+        let chunk = zmUlData.slice(zmUlOffset, zmUlOffset + 1024);
+        zmUlOffset += chunk.length;
+        let endType = (zmUlOffset >= zmUlData.length) ? 0x6B : 0x69; // ZCRCW or ZCRCG
+        if (endType === 0x6B) zmState = 'WAIT_ACK';
+        zmodemSendDataPacket([], chunk, endType);
+        updateTransferUI(`Uploading... ${zmUlOffset} / ${zmUlData.length} bytes`);
+        if (endType === 0x69) setTimeout(sendZmodemUlChunks, 10);
+    }
+
+    function processTransferByte(code) {
+        if (xmodemActive === 1) { // DL
+            if (xmodemState === 0) {
+                if (code === XMODEM_SOH) {
+                    xmodemState = 1;
+                    xmodemBlockBuf = [code];
+                } else if (code === XMODEM_EOT) {
+                    ws.send(new Uint8Array([XMODEM_ACK]));
+                    bytesTx++; updateBytes();
+                    saveFile(xmodemData);
+                    endTransfer("Download Complete");
+                } else if (code === XMODEM_CAN) {
+                    endTransfer("Cancelled by host");
+                }
+            } else if (xmodemState === 1) {
+                xmodemBlockBuf.push(code);
+                if (xmodemBlockBuf.length === 132) {
+                    let blk = xmodemBlockBuf[1];
+                    let inv = xmodemBlockBuf[2];
+                    if (blk === (255 - inv) && blk === (xmodemBlockNum & 0xFF)) {
+                        let csum = 0;
+                        for (let i=3; i<131; i++) csum += xmodemBlockBuf[i];
+                        if ((csum & 0xFF) === xmodemBlockBuf[131]) {
+                            for (let i=3; i<131; i++) xmodemData.push(xmodemBlockBuf[i]);
+                            xmodemBlockNum++;
+                            ws.send(new Uint8Array([XMODEM_ACK]));
+                            bytesTx++; updateBytes();
+                            updateTransferUI(`Downloading... ${xmodemData.length} bytes`);
+                            xmodemState = 0;
+                            return;
+                        }
+                    }
+                    ws.send(new Uint8Array([XMODEM_NAK]));
+                    bytesTx++; updateBytes();
+                    xmodemState = 0;
+                }
+            }
+        } else if (xmodemActive === 2) { // UL
+            if (xmodemState === 0) {
+                if (code === XMODEM_NAK || code === 0x43) {
+                    xmodemState = 1;
+                    sendXmodemBlock();
+                } else if (code === XMODEM_CAN) {
+                    endTransfer("Upload Cancelled");
+                }
+            } else if (xmodemState === 1) {
+                if (code === XMODEM_ACK) {
+                    xmodemBlockNum++;
+                    sendXmodemBlock();
+                } else if (code === XMODEM_NAK) {
+                    uploadOffset = Math.max(0, uploadOffset - 128);
+                    sendXmodemBlock();
+                } else if (code === XMODEM_CAN) {
+                    endTransfer("Upload Cancelled");
+                }
+            } else if (xmodemState === 2) {
+                if (code === XMODEM_ACK) {
+                    endTransfer("Upload Complete");
+                }
+            }
+        } else if (xmodemActive === 3 || xmodemActive === 4) {
+            if (code === 0x11 || code === 0x13 || code === 0x91 || code === 0x93) return; // ignore XON/XOFF
+            if (code === 0x18) { zmDlEscaped = true; return; }
+            if (zmDlEscaped) {
+                zmDlEscaped = false;
+                if (code === 0x4D || code === 0xcd) code = 0x0d;
+                else if (code === 0x8d) code = 0x8d;
+                else if (code === 0x42) { zmState = 'HEX_HEADER'; zmDlHdrBuf = ''; return; } // B
+                else if (code === 0x41 || code === 0x43) { zmState = 'BIN_HEADER'; zmDlHdrBuf = []; zmDlBin32 = (code===0x43); return; } // A/C
+                else if (code >= 0x68 && code <= 0x6B) { zmDlDataType = code; zmState = 'DATA_CRC'; zmDlCrcBuf = []; return; }
+                else code = code ^ 0x40; // unescape
+            }
+            if (zmState === 'HEX_HEADER') {
+                zmDlHdrBuf += String.fromCharCode(code);
+                if (zmDlHdrBuf.length === 14) {
+                    let type = parseInt(zmDlHdrBuf.substr(0,2), 16), f0 = parseInt(zmDlHdrBuf.substr(2,2), 16), f1 = parseInt(zmDlHdrBuf.substr(4,2), 16);
+                    let f2 = parseInt(zmDlHdrBuf.substr(6,2), 16), f3 = parseInt(zmDlHdrBuf.substr(8,2), 16);
+                    zmState = 'IDLE'; handleZmodemHeader(type, f0, f1, f2, f3);
+                }
+            } else if (zmState === 'BIN_HEADER') {
+                zmDlHdrBuf.push(code);
+                if (zmDlHdrBuf.length === (zmDlBin32 ? 9 : 7)) {
+                    let type = zmDlHdrBuf[0], f0 = zmDlHdrBuf[1], f1 = zmDlHdrBuf[2], f2 = zmDlHdrBuf[3], f3 = zmDlHdrBuf[4];
+                    zmState = 'IDLE'; handleZmodemHeader(type, f0, f1, f2, f3);
+                }
+            } else if (zmState === 'DATA_CRC') {
+                zmDlCrcBuf.push(code);
+                if (zmDlCrcBuf.length === (zmDlBin32 ? 4 : 2)) {
+                    if (zmExpectedData === 'FILE') {
+                        let fileEnd = zmDlBuf.indexOf(0);
+                        if (fileEnd !== -1) {
+                            zmFileName = String.fromCharCode.apply(null, zmDlBuf.slice(0, fileEnd));
+                            let rest = String.fromCharCode.apply(null, zmDlBuf.slice(fileEnd+1));
+                            zmFileSize = parseInt(rest.split(' ')[0]) || 0;
+                        }
+                        zmExpectedData = ''; zmState = 'IDLE'; zmDlBuf = []; zmodemSendHex(9, 0); // ZRPOS 0
+                    } else if (zmExpectedData === 'DATA') {
+                        for(let i=0; i<zmDlBuf.length; i++) xmodemData.push(zmDlBuf[i]);
+                        zmDlBuf = [];
+                        updateTransferUI(`Downloading... ${xmodemData.length} / ${zmFileSize} bytes`);
+                        if (zmDlDataType === 0x6B) zmodemSendHex(3, xmodemData.length); // ZACK
+                        zmState = 'IDLE';
+                    } else zmState = 'IDLE';
+                }
+            } else if (zmState === 'DATA_READ') {
+                zmDlBuf.push(code);
+            }
+        }
+    }
+
+    function updateBytes() {
+        document.getElementById('bytesInfo').textContent = 'RX: ' + bytesRx + ' B | TX: ' + bytesTx + ' B';
+    }
+
+    // ─── ANSI Color Palette (16-color PC palette) ───
+    const DEFAULT_COLORS = [
+        '#000000', '#aa0000', '#00aa00', '#aa5500', // 0-3: Black, Red, Green, Brown
+        '#0000aa', '#aa00aa', '#00aaaa', '#aaaaaa', // 4-7: Blue, Magenta, Cyan, Light Gray
+        '#555555', '#ff5555', '#55ff55', '#ffff55', // 8-11: Bright variants
+        '#5555ff', '#ff55ff', '#55ffff', '#ffffff'  // 12-15: Bright variants
     ];
+    let COLORS = [...DEFAULT_COLORS];
+
+    // ─── CP437 to Unicode Map ───
+    const CP437 = [
+        '\0','\u263A','\u263B','\u2665','\u2666','\u2663','\u2660','\u2022','\u25D8','\u25CB','\u25D9','\u2642','\u2640','\u266A','\u266B','\u263C',
+        '\u25BA','\u25C4','\u2195','\u203C','\u00B6','\u00A7','\u25AC','\u21A8','\u2191','\u2193','\u2192','\u2190','\u221F','\u2194','\u25B2','\u25BC',
+        ' ','!','"','#','$','%','&','\'','(',')','*','+',',','-','.','/',
+        '0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
+        '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
+        'P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_',
+        '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
+        'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','\u2302',
+        '\u00C7','\u00FC','\u00E9','\u00E2','\u00E4','\u00E0','\u00E5','\u00E7','\u00EA','\u00EB','\u00E8','\u00EF','\u00EE','\u00EC','\u00C4','\u00C5',
+        '\u00C9','\u00E6','\u00C6','\u00F4','\u00F6','\u00F2','\u00FB','\u00F9','\u00FF','\u00D6','\u00DC','\u00A2','\u00A3','\u00A5','\u20A7','\u0192',
+        '\u00E1','\u00ED','\u00F3','\u00FA','\u00F1','\u00D1','\u00AA','\u00BA','\u00BF','\u2310','\u00AC','\u00BD','\u00BC','\u00A1','\u00AB','\u00BB',
+        '\u2591','\u2592','\u2593','\u2502','\u2524','\u2561','\u2562','\u2556','\u2555','\u2563','\u2551','\u2557','\u255D','\u255C','\u255B','\u2510',
+        '\u2514','\u2534','\u252C','\u251C','\u2500','\u253C','\u255E','\u255F','\u255A','\u2554','\u2569','\u2566','\u2560','\u2550','\u256C','\u2567',
+        '\u2568','\u2564','\u2565','\u2559','\u2558','\u2552','\u2553','\u256B','\u256A','\u2518','\u250C','\u2588','\u2584','\u258C','\u2590','\u2580',
+        '\u03B1','\u00DF','\u0393','\u03C0','\u03A3','\u03C3','\u03BC','\u03C4','\u03A6','\u0398','\u03A9','\u03B4','\u221E','\u03C6','\u03B5','\u2229',
+        '\u2261','\u00B1','\u2265','\u2264','\u2320','\u2321','\u00F7','\u2248','\u00B0','\u2219','\u00B7','\u221A','\u207F','\u00B2','\u25A0','\u00A0'
+    ];
+
+    // ─── Audio ───
+    let audioCtx = null;
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+    
+    function playToneSync(freq, durSec, time) {
+        if (!audioCtx) return;
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        gain.gain.setValueAtTime(0.05, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + durSec);
+        osc.start(time);
+        osc.stop(time + durSec);
+    }
+    
+    function getFreq(note, octave) {
+        const notes = { 'C':0, 'C#':1, 'D':2, 'D#':3, 'E':4, 'F':5, 'F#':6, 'G':7, 'G#':8, 'A':9, 'A#':10, 'B':11 };
+        let n = note[0].toUpperCase();
+        let base = notes[n] || 0;
+        if (note.length > 1) {
+            if (note[1] === '+' || note[1] === '#') base++;
+            else if (note[1] === '-') base--;
+        }
+        return 440 * Math.pow(2, (octave - 4) + (base - 9) / 12);
+    }
+
+    function parseNum(str, i, def) {
+        let num = 0, found = false;
+        while(i < str.length && str[i] >= '0' && str[i] <= '9') {
+            num = num * 10 + (str[i].charCodeAt(0) - 48); found = true; i++;
+        }
+        return { val: found ? num : def, next: i };
+    }
+
+    function playANSI(str) {
+        initAudio();
+        let octave = 4, tempo = 120, length = 4;
+        let p = 0, time = audioCtx.currentTime;
+        while(p < str.length) {
+            let c = str[p++].toUpperCase();
+            if (c === 'O') { let res = parseNum(str, p, octave); octave = res.val; p = res.next; }
+            else if (c === 'T') { let res = parseNum(str, p, tempo); tempo = res.val; p = res.next; }
+            else if (c === 'L') { let res = parseNum(str, p, length); length = res.val; p = res.next; }
+            else if ((c >= 'A' && c <= 'G') || c === 'P') {
+                let note = c;
+                if (p < str.length && (str[p] === '+' || str[p] === '#' || str[p] === '-')) note += str[p++];
+                let res = parseNum(str, p, length);
+                let curLen = res.val; p = res.next;
+                let dots = 0;
+                while(p < str.length && str[p] === '.') { dots++; p++; }
+                let dur = (60 / tempo) * (4 / curLen);
+                for(let i=0; i<dots; i++) dur += dur / 2;
+                if (c !== 'P') playToneSync(getFreq(note, octave), dur, time);
+                time += dur;
+            } else if (c === 'M') {
+                if (p < str.length) p++; // skip F, B, N etc
+            } else if (c === '<') { octave = Math.max(0, octave - 1); }
+            else if (c === '>') { octave = Math.min(6, octave + 1); }
+        }
+    }
+    
+    function playChime(type) {
+        initAudio();
+        let t = audioCtx.currentTime;
+        if (type === 'connect') {
+            playToneSync(523.25, 0.1, t);
+            playToneSync(659.25, 0.1, t + 0.1);
+            playToneSync(783.99, 0.2, t + 0.2);
+        } else if (type === 'done') {
+            playToneSync(783.99, 0.1, t);
+            playToneSync(1046.50, 0.2, t + 0.1);
+        }
+    }
 
     // ─── Screen Buffer ───
     let screen = [];
     let curX = 0, curY = 0, savX = 0, savY = 0;
     let curFg = 7, curBg = 0, curBold = false, curBlink = false;
-    let ansiState = 0, ansiParams = ''; // 0=normal, 1=esc, 2=csi
+    let ansiState = 0, ansiParams = ''; // 0=normal, 1=esc, 2=csi, 5=music
+    let ansiMusicBuf = '';
     let scrollOffset = 0;
     const MAX_LINES = 1000;
+
+    let selStart = null;
+    let selEnd = null;
+    let selDragging = false;
+
+    function isSelected(r, c) {
+        if (!selStart || !selEnd) return false;
+        let r1 = selStart.r, c1 = selStart.c;
+        let r2 = selEnd.r, c2 = selEnd.c;
+        if (r1 > r2 || (r1 === r2 && c1 > c2)) {
+            r1 = selEnd.r; c1 = selEnd.c;
+            r2 = selStart.r; c2 = selStart.c;
+        }
+        if (r < r1 || r > r2) return false;
+        if (r === r1 && r === r2) return c >= c1 && c <= c2;
+        if (r === r1) return c >= c1;
+        if (r === r2) return c <= c2;
+        return true;
+    }
 
     function initScreen() {
         screen = [];
@@ -75,7 +758,7 @@
             screen.push(row);
         }
         curX = curY = 0; curFg = 7; curBg = 0; curBold = false; curBlink = false;
-        ansiState = 0; ansiParams = '';
+        ansiState = 0; ansiParams = ''; ansiMusicBuf = '';
         scrollOffset = 0;
     }
 
@@ -93,17 +776,36 @@
     }
 
     function render() {
-        ctx.font = CELL_H + 'px monospace';
+        ctx.font = CELL_H + 'px "Consolas", "Courier New", monospace';
         ctx.textBaseline = 'top';
         const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const cell = screen[startRow + r][c] || {ch: ' ', fg: 7, bg: 0, blink: false};
-                ctx.fillStyle = COLORS[cell.bg] || COLORS[0];
-                ctx.fillRect(c * CELL_W, r * CELL_H, CELL_W, CELL_H);
+                const x = c * CELL_W;
+                const y = r * CELL_H;
+                
+                const selected = isSelected(startRow + r, c);
+                ctx.fillStyle = selected ? (COLORS[cell.fg] || COLORS[7]) : (COLORS[cell.bg] || COLORS[0]);
+                ctx.fillRect(x, y, CELL_W, CELL_H);
+                
                 if (!cell.blink || window.blinkToggle) {
-                    ctx.fillStyle = COLORS[cell.fg] || COLORS[7];
-                    ctx.fillText(cell.ch, c * CELL_W, r * CELL_H);
+                    ctx.fillStyle = selected ? (COLORS[cell.bg] || COLORS[0]) : (COLORS[cell.fg] || COLORS[7]);
+                    const code = cell.ch.charCodeAt(0);
+                    // Perfect block mappings
+                    if (code === 0x2588) { ctx.fillRect(x, y, CELL_W, CELL_H); }
+                    else if (code === 0x2584) { ctx.fillRect(x, y + CELL_H/2, CELL_W, CELL_H/2); }
+                    else if (code === 0x2580) { ctx.fillRect(x, y, CELL_W, CELL_H/2); }
+                    else if (code === 0x258C) { ctx.fillRect(x, y, CELL_W/2, CELL_H); }
+                    else if (code === 0x2590) { ctx.fillRect(x + CELL_W/2, y, CELL_W/2, CELL_H); }
+                    else if (code >= 0x2591 && code <= 0x2593) {
+                        const alphas = { 0x2591: 0.25, 0x2592: 0.5, 0x2593: 0.75 };
+                        ctx.globalAlpha = alphas[code];
+                        ctx.fillRect(x, y, CELL_W, CELL_H);
+                        ctx.globalAlpha = 1.0;
+                    } else if (cell.ch !== ' ' && cell.ch !== '\0') {
+                        ctx.fillText(cell.ch, x + Math.max(0, (CELL_W - ctx.measureText(cell.ch).width) / 2), y);
+                    }
                 }
             }
         }
@@ -116,11 +818,49 @@
         }
     }
 
+    function updateScrollbar() {
+        const sc = document.getElementById('scrollContainer');
+        const sp = document.getElementById('scrollSpacer');
+        if (screen.length <= ROWS) {
+            sc.style.display = 'none';
+            return;
+        }
+        sc.style.display = 'block';
+        const itemH = 20; // arbitrary height per row
+        sp.style.height = (screen.length * itemH) + 'px';
+        
+        // Prevent recursive loop by ignoring if it's programmatic scroll
+        if (!window.isScrollingProgrammatically) {
+            window.isScrollingProgrammatically = true;
+            sc.scrollTop = (screen.length - ROWS - scrollOffset) * itemH;
+            setTimeout(() => window.isScrollingProgrammatically = false, 10);
+        }
+    }
+
+    function handleScroll(e) {
+        if (window.isScrollingProgrammatically) return;
+        const sc = e.target;
+        const itemH = 20;
+        let visibleTopRow = Math.round(sc.scrollTop / itemH);
+        visibleTopRow = Math.max(0, Math.min(visibleTopRow, screen.length - ROWS));
+        
+        scrollOffset = screen.length - ROWS - visibleTopRow;
+        render();
+    }
+
     function scrollUp() {
         let row = [];
         for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
         screen.push(row);
-        if (screen.length > MAX_LINES) screen.shift();
+        if (screen.length > MAX_LINES) {
+            screen.shift();
+        }
+        if (scrollOffset > 0) {
+            scrollOffset++;
+            let maxOffset = Math.max(0, screen.length - ROWS);
+            if (scrollOffset > maxOffset) scrollOffset = maxOffset;
+        }
+        updateScrollbar();
     }
 
     function putChar(ch) {
@@ -128,7 +868,7 @@
         if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; }
         const fg = curBold && curFg < 8 ? curFg + 8 : curFg;
         const activeY = screen.length - ROWS + curY;
-        screen[activeY][curX] = { ch: ch, fg: fg, bg: curBg, blink: curBlink };
+        screen[activeY][curX] = { ch: CP437[ch.charCodeAt(0) & 0xFF], fg: fg, bg: curBg, blink: curBlink };
         curX++;
     }
 
@@ -163,6 +903,17 @@
             else if (p === 25) curBlink = false;
             else if (p === 7) { let t = curFg; curFg = curBg; curBg = t; } // reverse
             else if (p >= 30 && p <= 37) curFg = p - 30;
+            else if (p === 38 || p === 48) {
+                if (i + 1 < parts.length && parts[i + 1] === 5) {
+                    if (i + 2 < parts.length) {
+                        let col = parts[i + 2] & 0x0F;
+                        if (p === 38) curFg = col; else curBg = col;
+                    }
+                    i += 2;
+                } else if (i + 1 < parts.length && parts[i + 1] === 2) {
+                    i += 4;
+                }
+            }
             else if (p === 39) curFg = 7;
             else if (p >= 40 && p <= 47) curBg = p - 40;
             else if (p === 49) curBg = 0;
@@ -176,6 +927,7 @@
         const n = p[0] || 1;
         switch (cmd) {
             case 'm': parseSGR(params || '0'); break;
+            case 'M': ansiState = 5; ansiMusicBuf = ''; break;
             case 'H': case 'f':
                 curY = Math.max(0, Math.min((p[0] || 1) - 1, ROWS - 1));
                 curX = Math.max(0, Math.min((p[1] || 1) - 1, COLS - 1));
@@ -207,18 +959,73 @@
             case 'S': for (let i = 0; i < n; i++) scrollUp(); break;
             case 'T':
                 for (let i = 0; i < n; i++) {
-                    screen.pop();
                     let row = [];
                     for (let c = 0; c < COLS; c++) row.push({ ch: ' ', fg: 7, bg: 0, blink: false });
-                    screen.unshift(row);
+                    screen.splice(screen.length - ROWS, 0, row);
+                    screen.pop();
                 }
                 break;
         }
     }
 
     function feedByte(ch) {
-        const code = ch.charCodeAt(0);
+        const code = ch.charCodeAt(0) & 0xFF;
+
+        if (ansiState === 10) {
+            // Telnet: after IAC
+            if (code >= 251 && code <= 254) ansiState = 11; // WILL/WONT/DO/DONT
+            else if (code === 0xFF) { 
+                ansiState = 0; // Escaped 0xFF data
+                if (xmodemActive) { processTransferByte(0xFF); return; }
+                putChar(String.fromCharCode(0xFF));
+            } else {
+                ansiState = 0;
+            }
+            return;
+        } else if (ansiState === 11) {
+            ansiState = 0;
+            return;
+        }
+
+        if (code === 0xFF) { 
+            ansiState = 10; 
+            return; 
+        }
+        
+        sigBuf.shift(); sigBuf.push(code);
+        if (sigBuf[0]===0x2A && sigBuf[1]===0x2A && sigBuf[2]===0x18 && sigBuf[3]===0x42 && sigBuf[4]===0x30 && sigBuf[5]===0x30) {
+            if (!xmodemActive) { startTransfer(3); return; }
+        }
+
+        if (xmodemActive) {
+            processTransferByte(code);
+            return;
+        }
+
+        if (ansiState === 5) {
+            if (code === 0x0E) { // Ctrl+N
+                playANSI(ansiMusicBuf);
+                ansiState = 0;
+            } else if (code === 0x1B) { // Unexpected escape
+                playANSI(ansiMusicBuf);
+                ansiState = 1;
+                ansiParams = '';
+            } else {
+                ansiMusicBuf += ch;
+                if (ansiMusicBuf.length > 2048) {
+                    playANSI(ansiMusicBuf);
+                    ansiState = 0;
+                }
+            }
+            return;
+        }
+
         if (ansiState === 0) {
+            if (window.captureActive) {
+                if (code === 0x0D || code === 0x0A || code === 0x08 || code === 0x09 || code >= 0x20) {
+                    window.captureBuffer += (code >= 0x20) ? CP437[code] : ch;
+                }
+            }
             if (code === 0x1B) { ansiState = 1; ansiParams = ''; }
             else if (code === 0x0D) curX = 0;  // CR
             else if (code === 0x0A) { curY++; if (curY >= ROWS) { scrollUp(); curY = ROWS - 1; } } // LF
@@ -226,15 +1033,13 @@
             else if (code === 0x09) { curX = Math.min(COLS - 1, (Math.floor(curX / 8) + 1) * 8); } // TAB
             else if (code === 0x07) { /* BEL - ignore */ }
             else if (code >= 0x20) putChar(ch);
-            // Handle telnet IAC sequences
-            else if (code === 0xFF) { ansiState = 10; } // IAC
         } else if (ansiState === 1) {
             if (ch === '[') ansiState = 2;
             else if (ch === ']') ansiState = 3; // OSC - eat until BEL/ST
             else ansiState = 0;
         } else if (ansiState === 2) {
             if ((code >= 0x30 && code <= 0x3F)) { ansiParams += ch; } // digits, semicolons, ?
-            else if (code >= 0x40 && code <= 0x7E) { processCSI(ansiParams, ch); ansiState = 0; }
+            else if (code >= 0x40 && code <= 0x7E) { processCSI(ansiParams, ch); if (ansiState !== 5) ansiState = 0; }
             else { ansiState = 0; }
         } else if (ansiState === 3) {
             // OSC - eat until BEL (0x07) or ST (ESC \)
@@ -243,25 +1048,46 @@
         } else if (ansiState === 4) {
             // After ESC in OSC
             ansiState = 0; // ST = ESC \ ends OSC
-        } else if (ansiState === 10) {
-            // Telnet: after IAC, eat command byte
-            if (code >= 251 && code <= 254) ansiState = 11; // WILL/WONT/DO/DONT - need option byte
-            else ansiState = 0;
-        } else if (ansiState === 11) {
-            // Telnet: option byte after WILL/WONT/DO/DONT
-            ansiState = 0;
         }
     }
 
     function processData(data) {
         for (let i = 0; i < data.length; i++) feedByte(data[i]);
-        if (data.length > 0) scrollOffset = 0;
+        if (data.length > 0) {
+            scrollOffset = 0;
+            updateScrollbar();
+        }
         render();
     }
 
     // ─── WebSocket Connection ───
-    function toggleConnect() {
-        if (ws) { ws.close(); return; }
+    let autoLoginSteps = [];
+    let autoLoginIndex = 0;
+    let autoLoginBuffer = "";
+
+    function connectTo(host, port, isWs) {
+        if (ws) { ws.close(); ws = null; }
+        document.getElementById('host').value = host;
+        document.getElementById('port').value = port;
+        const autologin = document.getElementById('dirAutoLogin') ? document.getElementById('dirAutoLogin').value.trim() : "";
+        autoLoginSteps = [];
+        if (autologin) {
+            let parts = autologin.split('~');
+            for(let i=0; i<parts.length-1; i+=2) {
+                autoLoginSteps.push({ expect: parts[i], send: parts[i+1] });
+            }
+        }
+        autoLoginIndex = 0;
+        autoLoginBuffer = "";
+        toggleConnect(true);
+    }
+
+    function toggleConnect(forceConnect) {
+        if (ws) { 
+            ws.close(); 
+            if (forceConnect !== true) return; 
+            ws = null;
+        }
         const host = document.getElementById('host').value.trim();
         const port = document.getElementById('port').value.trim();
         if (!host) return;
@@ -280,7 +1106,8 @@
         initScreen();
         render();
         setStatus('connecting', 'Connecting to ' + url + '...');
-        bytesRx = 0;
+        bytesRx = 0; bytesTx = 0;
+        updateBytes();
 
         try {
             ws = new WebSocket(url);
@@ -289,6 +1116,7 @@
                 setStatus('connected', 'Connected to ' + host);
                 document.getElementById('btnConn').textContent = 'Disconnect';
                 canvas.focus();
+                playChime('connect');
             };
             ws.onmessage = (e) => {
                 let text;
@@ -300,13 +1128,28 @@
                     text = e.data;
                 }
                 bytesRx += text.length;
-                document.getElementById('bytesInfo').textContent = bytesRx + ' bytes';
-                processData(text);
+                updateBytes();
+                rxQueue += text;
+                
+                if (autoLoginIndex < autoLoginSteps.length) {
+                    autoLoginBuffer += text;
+                    if (autoLoginBuffer.length > 2000) autoLoginBuffer = autoLoginBuffer.substring(autoLoginBuffer.length - 1000);
+                    let expected = autoLoginSteps[autoLoginIndex].expect;
+                    if (expected && autoLoginBuffer.includes(expected)) {
+                        let toSend = autoLoginSteps[autoLoginIndex].send.replace(/\\r/g, '\r').replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+                        let out = new Uint8Array(toSend.length);
+                        for(let k=0; k<toSend.length; k++) out[k] = toSend.charCodeAt(k);
+                        if (ws && ws.readyState === 1) ws.send(out);
+                        autoLoginBuffer = "";
+                        autoLoginIndex++;
+                    }
+                }
             };
             ws.onclose = () => {
                 setStatus('disconnected', 'Disconnected');
                 document.getElementById('btnConn').textContent = 'Connect';
                 ws = null;
+                if (window.captureActive) toggleCapture();
             };
             ws.onerror = () => {
                 setStatus('disconnected', 'Connection failed');
@@ -315,6 +1158,39 @@
             setStatus('disconnected', 'Error: ' + err.message);
             ws = null;
         }
+    }
+
+    window.captureActive = false;
+    window.captureBuffer = "";
+    
+    function toggleCapture() {
+        window.captureActive = !window.captureActive;
+        const btn = document.getElementById('btnCapture');
+        if (window.captureActive) {
+            window.captureBuffer = "";
+            btn.textContent = "Capture: ON";
+            btn.style.background = "linear-gradient(180deg, #ef4444 0%, #dc2626 100%)";
+            btn.style.borderColor = "#b91c1c";
+        } else {
+            btn.textContent = "Capture: OFF";
+            btn.style.background = "linear-gradient(180deg, #52525b 0%, #3f3f46 100%)";
+            btn.style.borderColor = "#27272a";
+            promptSaveCapture();
+        }
+    }
+    
+    function promptSaveCapture() {
+        if (!window.captureBuffer) return;
+        if (confirm("Save captured session log to kbbs_capture.txt?")) {
+            let blob = new Blob([window.captureBuffer], {type: 'text/plain'});
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'kbbs_capture.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        window.captureBuffer = "";
     }
 
     function setStatus(state, text) {
@@ -333,8 +1209,12 @@
             case 'ArrowLeft': seq = '\x1B[D'; break;
             case 'Home': seq = '\x1B[H'; break;
             case 'End': seq = '\x1B[F'; break;
-            case 'PageUp': seq = '\x1B[5~'; break;
-            case 'PageDown': seq = '\x1B[6~'; break;
+            case 'PageUp': 
+                if (e.shiftKey) { scrollOffset = Math.min(scrollOffset + Math.floor(ROWS/2), Math.max(0, screen.length - ROWS)); e.preventDefault(); updateScrollbar(); render(); return; }
+                seq = '\x1B[5~'; break;
+            case 'PageDown': 
+                if (e.shiftKey) { scrollOffset = Math.max(0, scrollOffset - Math.floor(ROWS/2)); e.preventDefault(); updateScrollbar(); render(); return; }
+                seq = '\x1B[6~'; break;
             case 'Delete': seq = '\x1B[3~'; break;
             case 'Insert': seq = '\x1B[2~'; break;
             case 'Escape': seq = '\x1B'; break;
@@ -354,8 +1234,28 @@
             case 'F11': seq = '\x1B[23~'; break;
             case 'F12': seq = '\x1B[24~'; break;
             default:
+                if (e.altKey && e.key.length === 1) {
+                    const k = e.key.toUpperCase();
+                    if ((k >= 'A' && k <= 'Z') || (k >= '0' && k <= '9')) {
+                        const mac = dynMacros.find(m => m.key === k);
+                        if (mac) {
+                            const translated = mac.str.replace(/\\r/g, '\r')
+                                                      .replace(/\\n/g, '\n')
+                                                      .replace(/\\t/g, '\t')
+                                                      .replace(/\\e/g, '\x1B');
+                            ws.send(translated);
+                            bytesTx += translated.length; updateBytes();
+                            e.preventDefault();
+                            scrollOffset = 0;
+                            render();
+                            return;
+                        }
+                    }
+                }
                 if (e.key.length === 1 && !e.ctrlKey && !e.altKey) {
                     ws.send(e.key);
+                    bytesTx += 1; updateBytes();
+                    if (document.getElementById('localEcho').checked) processData(e.key);
                     e.preventDefault();
                     return;
                 }
@@ -363,84 +1263,320 @@
                     const code = e.key.toUpperCase().charCodeAt(0) - 64;
                     if (code >= 0 && code <= 31) {
                         ws.send(String.fromCharCode(code));
+                        bytesTx += 1; updateBytes();
+                        if (document.getElementById('localEcho').checked) processData(String.fromCharCode(code));
                         e.preventDefault();
                         return;
                     }
                 }
                 return;
         }
-        if (seq) { ws.send(seq); e.preventDefault(); scrollOffset = 0; render(); }
+        if (seq) { 
+            ws.send(seq); 
+            bytesTx += seq.length; updateBytes();
+            e.preventDefault(); 
+            scrollOffset = 0; 
+            render(); 
+        }
     });
     
     canvas.addEventListener('wheel', (e) => {
         if (e.deltaY < 0) {
-            scrollOffset = Math.min(scrollOffset + 3, screen.length - ROWS);
+            scrollOffset = Math.min(scrollOffset + 3, Math.max(0, screen.length - ROWS));
         } else {
             scrollOffset = Math.max(0, scrollOffset - 3);
         }
+        updateScrollbar();
         render();
     }, {passive: true});
 
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+        const c = Math.floor(x / CELL_W);
+        const r = Math.floor(y / CELL_H);
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+            const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
+            selStart = { r: startRow + r, c: c };
+            selEnd = { r: startRow + r, c: c };
+            selDragging = true;
+            render();
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (selDragging) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            const c = Math.max(0, Math.min(COLS - 1, Math.floor(x / CELL_W)));
+            const r = Math.max(0, Math.min(ROWS - 1, Math.floor(y / CELL_H)));
+            const startRow = Math.max(0, screen.length - ROWS - scrollOffset);
+            selEnd = { r: startRow + r, c: c };
+            render();
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (selDragging) {
+            selDragging = false;
+            if (selStart.r === selEnd.r && selStart.c === selEnd.c) {
+                selStart = null;
+                selEnd = null;
+                render();
+            } else {
+                let r1 = selStart.r, c1 = selStart.c;
+                let r2 = selEnd.r, c2 = selEnd.c;
+                if (r1 > r2 || (r1 === r2 && c1 > c2)) {
+                    r1 = selEnd.r; c1 = selEnd.c;
+                    r2 = selStart.r; c2 = selStart.c;
+                }
+                let text = "";
+                for (let r = r1; r <= r2; r++) {
+                    let sc = (r === r1) ? c1 : 0;
+                    let ec = (r === r2) ? c2 : COLS - 1;
+                    let lineStr = "";
+                    for (let c = sc; c <= ec; c++) {
+                        if (r < screen.length && c < COLS) {
+                            let ch = screen[r][c].ch;
+                            lineStr += (ch === '\0' || ch === '\u00A0') ? ' ' : ch;
+                        }
+                    }
+                    text += lineStr.replace(/\s+$/, '');
+                    if (r < r2) text += "\n";
+                }
+                navigator.clipboard.writeText(text).catch(()=>{});
+            }
+        }
+    });
+
     // ─── BBS Directory ───
-    const BBS_LIST = [
-        { cat: '🎮 Gaming', name: '20 For Beers', host: '20forbeers.com', port: 1337, ws: false },
-        { cat: '🎮 Gaming', name: 'Mutiny BBS', host: 'mutinybbs.com', port: 23, ws: false },
-        { cat: '🎮 Gaming', name: 'Borderline BBS', host: 'borderlinebbs.dyndns.org', port: 9023, ws: false },
-        { cat: '🎮 Gaming', name: 'Dreamline BBS', host: 'din.asciiattic.com', port: 23, ws: false },
-        { cat: '🎮 Gaming', name: 'Bottomless Abyss', host: 'bbs.bottomlessabyss.net', port: 2323, ws: false },
-        { cat: '🎮 Gaming', name: 'Dark Realms', host: 'bbs.darkrealms.ca', port: 23, ws: false },
-        { cat: '🎮 Gaming', name: 'Throwback BBS', host: 'bbs.throwbackbbs.com', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Vertrauen', host: 'vert.synchro.net', port: 11235, ws: true },
-        { cat: '💬 Social', name: 'Electronic Chicken', host: 'bbs.electronicchicken.com', port: 8080, ws: true },
-        { cat: '💬 Social', name: 'Capitol City Online', host: 'capitolcityonline.net', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Agency BBS', host: 'bbs.agency', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Xibalba', host: 'xibalba.l33t.codes', port: 44510, ws: false },
-        { cat: '💬 Social', name: 'Black Flag', host: 'blackflag.acid.org', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Absinthe', host: 'bbs.absinthe.ws', port: 23, ws: false },
-        { cat: '💬 Social', name: 'Broken Bubble', host: 'bbs.thebrokenbubble.com', port: 23, ws: false },
-        { cat: '📁 Files', name: 'Titanic BBS', host: 'ttb.rgbbs.info', port: 23, ws: false },
-        { cat: '📁 Files', name: "Al's Geek Lab", host: 'bbs.alsgeeklab.com', port: 2323, ws: false },
-        { cat: '📁 Files', name: 'Retrocampus BBS', host: 'bbs.retrocampus.com', port: 23, ws: false },
-        { cat: '📁 Files', name: 'Air & Wave BBS', host: 'bbs.airandwave.net', port: 2323, ws: false },
-        { cat: '📁 Files', name: 'BBS NZ', host: 'bbs.nz', port: 23, ws: false },
-        { cat: '🎨 Art', name: 'Blocktronics HQ', host: 'blocktronics.org', port: 23, ws: false },
-        { cat: '🎨 Art', name: 'The Keep', host: 'bbs.thekeep.net', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: '13th Leader', host: '13leader.net', port: 8023, ws: false },
-        { cat: '🖥️ Retro', name: '8-Bit Boyz', host: 'bbs.8bitboyz.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: 'Particles BBS', host: 'particlesbbs.dyndns.org', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: '300 Baud', host: '300baud.dynu.net', port: 2525, ws: false },
-        { cat: '🖥️ Retro', name: 'Fozztexx', host: 'bbs.fozztexx.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: 'Clutch BBS', host: 'clutchbbs.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: 'End of the Line', host: 'bbs.endofthelinebbs.com', port: 23, ws: false },
-        { cat: '🖥️ Retro', name: '20 For Beers', host: '20forbeers.com', port: 1337, ws: false }
+    const DEFAULT_BBS_LIST = [
+        { cat: '🎮 Gaming', name: '20 For Beers', host: '20forbeers.com', port: 1337, type: 'telnet' },
+        { cat: '🎮 Gaming', name: 'Mutiny BBS', host: 'mutinybbs.com', port: 23, type: 'telnet' },
+        { cat: '🎮 Gaming', name: 'Borderline BBS', host: 'borderlinebbs.dyndns.org', port: 9023, type: 'telnet' },
+        { cat: '💬 Social', name: 'Vertrauen', host: 'vert.synchro.net', port: 11235, type: 'ws' },
+        { cat: '💬 Social', name: 'Electronic Chicken', host: 'bbs.electronicchicken.com', port: 8080, type: 'ws' },
+        { cat: '📁 Files', name: 'Titanic BBS', host: 'ttb.rgbbs.info', port: 23, type: 'telnet' },
+        { cat: '🎨 Art', name: 'Blocktronics HQ', host: 'blocktronics.org', port: 23, type: 'telnet' },
+        { cat: '🖥️ Retro', name: '13th Leader', host: '13leader.net', port: 8023, type: 'telnet' }
     ];
 
-    function connectTo(host, port, isWs) {
-        document.getElementById('host').value = isWs ? 'ws://' + host + ':' + port : host;
-        document.getElementById('port').value = port;
-        if (ws) ws.close();
-        setTimeout(() => toggleConnect(), 100);
+    let dynBbsList = [];
+    let selectedIndex = -1;
+
+    function loadDirectory() {
+        const saved = localStorage.getItem('kbbs_directory');
+        if (saved) {
+            try { dynBbsList = JSON.parse(saved); } catch(e) { dynBbsList = DEFAULT_BBS_LIST.slice(); }
+        } else {
+            dynBbsList = DEFAULT_BBS_LIST.slice();
+        }
     }
 
-    function renderBBSList() {
-        const sel = document.getElementById('bbsSelect');
-        sel.innerHTML = '<option value="">-- Select BBS --</option>';
-        BBS_LIST.forEach((bbs, i) => {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = bbs.name;
-            sel.appendChild(opt);
+    function saveDirectory() {
+        localStorage.setItem('kbbs_directory', JSON.stringify(dynBbsList));
+    }
+
+    function renderDirList() {
+        const lst = document.getElementById('dirList');
+        lst.innerHTML = '';
+        dynBbsList.forEach((bbs, i) => {
+            const div = document.createElement('div');
+            div.textContent = bbs.name;
+            div.style.padding = '10px 16px';
+            div.style.cursor = 'pointer';
+            div.style.borderBottom = '1px solid #27272a';
+            div.style.color = (i === selectedIndex) ? '#fff' : '#a1a1aa';
+            div.style.background = (i === selectedIndex) ? '#0ea5e9' : 'transparent';
+            div.onmouseover = () => { if (i !== selectedIndex) div.style.background = '#27272a'; };
+            div.onmouseout = () => { if (i !== selectedIndex) div.style.background = 'transparent'; };
+            div.onclick = () => selectEntry(i);
+            lst.appendChild(div);
         });
-        sel.addEventListener('change', () => {
-            if (sel.value === '') return;
-            const bbs = BBS_LIST[sel.value];
-            connectTo(bbs.host, bbs.port, bbs.ws);
+    }
+
+    function selectEntry(idx) {
+        selectedIndex = idx;
+        renderDirList();
+        if (idx >= 0 && idx < dynBbsList.length) {
+            const bbs = dynBbsList[idx];
+            document.getElementById('dirName').value = bbs.name || '';
+            document.getElementById('dirHost').value = bbs.host || '';
+            document.getElementById('dirPort').value = bbs.port || 23;
+            document.getElementById('dirType').value = bbs.type || (bbs.ws ? 'ws' : 'telnet');
+            if (document.getElementById('dirAutoLogin')) document.getElementById('dirAutoLogin').value = bbs.autologin || '';
+        }
+    }
+
+    function newEntry() {
+        selectedIndex = -1;
+        renderDirList();
+        document.getElementById('dirName').value = 'New BBS';
+        document.getElementById('dirHost').value = '';
+        document.getElementById('dirPort').value = '23';
+        document.getElementById('dirType').value = 'telnet';
+        if (document.getElementById('dirAutoLogin')) document.getElementById('dirAutoLogin').value = '';
+    }
+
+    function saveEntry() {
+        const name = document.getElementById('dirName').value.trim();
+        const host = document.getElementById('dirHost').value.trim();
+        const port = parseInt(document.getElementById('dirPort').value) || 23;
+        const type = document.getElementById('dirType').value;
+        const autologin = document.getElementById('dirAutoLogin') ? document.getElementById('dirAutoLogin').value.trim() : '';
+        if (!name || !host) return;
+
+        const entry = { name, host, port, type, autologin };
+        if (selectedIndex >= 0) {
+            dynBbsList[selectedIndex] = entry;
+        } else {
+            dynBbsList.push(entry);
+            selectedIndex = dynBbsList.length - 1;
+        }
+        saveDirectory();
+        renderDirList();
+    }
+
+    function deleteEntry() {
+        if (selectedIndex >= 0) {
+            dynBbsList.splice(selectedIndex, 1);
+            selectedIndex = -1;
+            saveDirectory();
+            renderDirList();
+        }
+    }
+
+    function connectSelected() {
+        const name = document.getElementById('dirName').value.trim();
+        const host = document.getElementById('dirHost').value.trim();
+        const port = parseInt(document.getElementById('dirPort').value) || 23;
+        const type = document.getElementById('dirType').value;
+        if (host) {
+            closeDialingDir();
+            connectTo(host, port, type === 'ws');
+        }
+    }
+
+    function showDialingDir() {
+        document.getElementById('dialingDir').style.display = 'flex';
+        loadDirectory();
+        if (selectedIndex < 0 && dynBbsList.length > 0) selectedIndex = 0;
+        renderDirList();
+        selectEntry(selectedIndex);
+    }
+    
+    function closeDialingDir() {
+        document.getElementById('dialingDir').style.display = 'none';
+        canvas.focus();
+    }
+
+    // ─── Macros ───
+    let dynMacros = [];
+    let selectedMacroIndex = -1;
+
+    function loadMacros() {
+        const saved = localStorage.getItem('kbbs_macros');
+        if (saved) {
+            try { dynMacros = JSON.parse(saved); } catch(e) { dynMacros = []; }
+        } else {
+            dynMacros = [];
+        }
+    }
+
+    function saveMacros() {
+        localStorage.setItem('kbbs_macros', JSON.stringify(dynMacros));
+    }
+
+    function renderMacroList() {
+        const lst = document.getElementById('macroList');
+        lst.innerHTML = '';
+        dynMacros.forEach((m, i) => {
+            const div = document.createElement('div');
+            div.textContent = 'Alt + ' + m.key;
+            div.style.padding = '10px 16px';
+            div.style.cursor = 'pointer';
+            div.style.borderBottom = '1px solid #27272a';
+            div.style.color = (i === selectedMacroIndex) ? '#fff' : '#a1a1aa';
+            div.style.background = (i === selectedMacroIndex) ? '#0ea5e9' : 'transparent';
+            div.onmouseover = () => { if (i !== selectedMacroIndex) div.style.background = '#27272a'; };
+            div.onmouseout = () => { if (i !== selectedMacroIndex) div.style.background = 'transparent'; };
+            div.onclick = () => selectMacro(i);
+            lst.appendChild(div);
         });
+    }
+
+    function selectMacro(idx) {
+        selectedMacroIndex = idx;
+        renderMacroList();
+        if (idx >= 0 && idx < dynMacros.length) {
+            const m = dynMacros[idx];
+            document.getElementById('macroKey').value = m.key || '';
+            document.getElementById('macroString').value = m.str || '';
+        }
+    }
+
+    function newMacro() {
+        selectedMacroIndex = -1;
+        renderMacroList();
+        document.getElementById('macroKey').value = '';
+        document.getElementById('macroString').value = '';
+    }
+
+    function saveMacro() {
+        let key = document.getElementById('macroKey').value.trim().toUpperCase();
+        const str = document.getElementById('macroString').value;
+        if (!key || key.length !== 1) return;
+        if (!((key >= 'A' && key <= 'Z') || (key >= '0' && key <= '9'))) return;
+
+        const entry = { key, str };
+        if (selectedMacroIndex >= 0) {
+            dynMacros[selectedMacroIndex] = entry;
+        } else {
+            const existing = dynMacros.findIndex(m => m.key === key);
+            if (existing >= 0) {
+                dynMacros[existing] = entry;
+                selectedMacroIndex = existing;
+            } else {
+                dynMacros.push(entry);
+                selectedMacroIndex = dynMacros.length - 1;
+            }
+        }
+        saveMacros();
+        renderMacroList();
+    }
+
+    function deleteMacro() {
+        if (selectedMacroIndex >= 0) {
+            dynMacros.splice(selectedMacroIndex, 1);
+            selectedMacroIndex = -1;
+            saveMacros();
+            renderMacroList();
+        }
+    }
+
+    function showMacros() {
+        document.getElementById('macrosDir').style.display = 'flex';
+        loadMacros();
+        if (selectedMacroIndex < 0 && dynMacros.length > 0) selectedMacroIndex = 0;
+        renderMacroList();
+        selectMacro(selectedMacroIndex);
+    }
+    
+    function closeMacros() {
+        document.getElementById('macrosDir').style.display = 'none';
+        canvas.focus();
     }
 
     // ─── Init ───
     initScreen();
-    renderBBSList();
+    loadMacros();
+    // No more bbsSelect render
     // Welcome message
     const welcome = [
         '\x1B[1;36m╔══════════════════════════════════════════════════════════════════════════════╗',
@@ -452,8 +1588,8 @@
         '║\x1B[0;37m  Minimalist BBS Terminal Client                      v1.0 — Web Edition   \x1B[1;36m║',
         '╚══════════════════════════════════════════════════════════════════════════════╝\x1B[0m',
         '',
-        '\x1B[1;32m  ► \x1B[0;37mSelect a BBS from the dropdown menu above',
-        '\x1B[1;32m  ► \x1B[0;37mOr enter a WebSocket address (ws://host:port)',
+        '\x1B[1;32m  ► \x1B[0;37mClick "Directory" to browse and manage your favorite BBS systems',
+        '\x1B[1;32m  ► \x1B[0;37mOr enter an address manually and click Connect',
         '',
         '\x1B[0;36m  Raw telnet connections are routed via your dedicated KBBSProxy.',
         '\x1B[0;36m  Local connections require KBBSProxy to be running locally.',
@@ -470,10 +1606,112 @@
 
     // Cursor and text blink
     window.blinkToggle = true;
-    setInterval(() => { 
-        window.blinkToggle = !window.blinkToggle;
-        if (document.hasFocus()) render(); 
-    }, 500);
+    let blinkInterval = null;
+    function updateBlinkInterval(rate) {
+        if (blinkInterval) clearInterval(blinkInterval);
+        blinkInterval = setInterval(() => { 
+            window.blinkToggle = !window.blinkToggle;
+            if (document.hasFocus()) render(); 
+        }, rate || 500);
+    }
+    updateBlinkInterval(500);
+    
+    // ─── Settings ───
+    let kbbsSettings = { fontSize: 16, blinkRateMs: 500, localEcho: false, palette: null, baudRate: 0 };
+
+    function loadSettings() {
+        const saved = localStorage.getItem('kbbs_display_settings');
+        if (saved) {
+            try { kbbsSettings = { ...kbbsSettings, ...JSON.parse(saved) }; } catch(e){}
+        }
+        if (kbbsSettings.palette && kbbsSettings.palette.length === 16) {
+            COLORS = [...kbbsSettings.palette];
+        }
+        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
+        CELL_H = kbbsSettings.fontSize || 16;
+        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
+        updateBlinkInterval(kbbsSettings.blinkRateMs || 500);
+        resizeCanvas();
+    }
+
+    function saveSettings() {
+        kbbsSettings.fontSize = parseInt(document.getElementById('setFontSize').value) || 16;
+        if (kbbsSettings.fontSize < 8) kbbsSettings.fontSize = 8;
+        kbbsSettings.blinkRateMs = parseInt(document.getElementById('setBlinkRate').value) || 500;
+        if (kbbsSettings.blinkRateMs < 100) kbbsSettings.blinkRateMs = 100;
+        kbbsSettings.baudRate = parseInt(document.getElementById('setBaudRate').value) || 0;
+        kbbsSettings.localEcho = document.getElementById('setLocalEcho').checked;
+        
+        let newPalette = [];
+        for (let i = 0; i < 16; i++) {
+            let pInput = document.getElementById('pal_' + i);
+            if (pInput) newPalette.push(pInput.value);
+        }
+        if (newPalette.length === 16) {
+            kbbsSettings.palette = newPalette;
+            COLORS = [...newPalette];
+        }
+
+        document.getElementById('localEcho').checked = kbbsSettings.localEcho;
+        CELL_H = kbbsSettings.fontSize;
+        CELL_W = Math.max(1, Math.floor(CELL_H / 2));
+        
+        localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
+        updateBlinkInterval(kbbsSettings.blinkRateMs);
+        resizeCanvas();
+        closeSettings();
+    }
+
+    function resetPalette() {
+        kbbsSettings.palette = [...DEFAULT_COLORS];
+        COLORS = [...DEFAULT_COLORS];
+        for (let i = 0; i < 16; i++) {
+            let pInput = document.getElementById('pal_' + i);
+            if (pInput) pInput.value = COLORS[i];
+        }
+        render();
+    }
+
+    function showSettings() {
+        document.getElementById('setFontSize').value = kbbsSettings.fontSize;
+        document.getElementById('setBlinkRate').value = kbbsSettings.blinkRateMs;
+        document.getElementById('setBaudRate').value = kbbsSettings.baudRate || 0;
+        document.getElementById('setLocalEcho').checked = kbbsSettings.localEcho;
+        
+        const pc = document.getElementById('paletteContainer');
+        pc.innerHTML = '';
+        for(let i=0; i<16; i++) {
+            const input = document.createElement('input');
+            input.type = 'color';
+            input.id = 'pal_' + i;
+            input.value = COLORS[i];
+            input.style.width = '24px';
+            input.style.height = '24px';
+            input.style.padding = '0';
+            input.style.border = 'none';
+            input.style.borderRadius = '2px';
+            input.style.cursor = 'pointer';
+            input.title = 'Color ' + i;
+            input.addEventListener('input', (e) => {
+                COLORS[i] = e.target.value;
+                render();
+            });
+            pc.appendChild(input);
+        }
+        
+        document.getElementById('settingsModal').style.display = 'flex';
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsModal').style.display = 'none';
+        canvas.focus();
+    }
+    
+    document.getElementById('localEcho').addEventListener('change', (e) => {
+        kbbsSettings.localEcho = e.target.checked;
+        localStorage.setItem('kbbs_display_settings', JSON.stringify(kbbsSettings));
+    });
+
     </script>
 </body>
 </html>

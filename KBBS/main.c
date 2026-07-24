@@ -1,11 +1,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <windows.h>
+#include <commdlg.h>
 
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "kernel32.lib")
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "comdlg32.lib")
+
+void SetStatusText(const char* text);
 
 #define WM_SOCKET (WM_USER + 1)
 
@@ -16,6 +20,8 @@
 #define STATE_ESC    1
 #define STATE_CSI    2
 #define STATE_MUSIC  3
+#define STATE_OSC    4
+#define STATE_OSC_ESC 5
 
 #define TELNET_IAC   0xFF
 #define TELNET_WILL  0xFB
@@ -43,11 +49,15 @@ void my_memset(void* dest, int c, size_t count) {
         *bytes++ = (char)c;
     }
 }
+void my_memcpy(void* dest, const void* src, size_t count) { char* d = (char*)dest; const char* s = (const char*)src; while (count--) *d++ = *s++; }
 #pragma optimize("", on)
+
+#pragma function(memset, memcpy)
+void* memset(void* dest, int c, size_t count) { my_memset(dest, c, count); return dest; }
+void* memcpy(void* dest, const void* src, size_t count) { my_memcpy(dest, src, count); return dest; }
 
 void my_strcpy(char* d, const char* s) { while (*s) *d++ = *s++; *d = 0; }
 int my_strlen(const char* s) { int l = 0; while (s[l]) l++; return l; }
-void my_memcpy(void* dest, const void* src, size_t count) { char* d = (char*)dest; const char* s = (const char*)src; while (count--) *d++ = *s++; }
 char* my_strstr(const char* haystack, const char* needle) {
     if (!*needle) return (char*)haystack;
     while (*haystack) {
@@ -95,6 +105,15 @@ COLORREF defaultAnsiColors[16] = {
     0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF   /* bright blue, bright magenta, bright cyan, white */
 };
 COLORREF ansiColors[16] = {0};
+HBRUSH hAnsiBrushes[16] = {0};
+
+void UpdateAnsiBrushes(void) {
+    int i;
+    for (i = 0; i < 16; i++) {
+        if (hAnsiBrushes[i]) DeleteObject(hAnsiBrushes[i]);
+        hAnsiBrushes[i] = CreateSolidBrush(ansiColors[i]);
+    }
+}
 
 const WCHAR cp437[256] = {
     0x0020, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, 0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
@@ -208,6 +227,7 @@ void LoadSettings(void) {
         }
         ansiColors[i] = kbbsSettings.palette[i];
     }
+    UpdateAnsiBrushes();
 }
 
 void SaveSettings(void) {
@@ -217,6 +237,7 @@ void SaveSettings(void) {
         WriteFile(hFile, &kbbsSettings, sizeof(kbbsSettings), &written, NULL);
         CloseHandle(hFile);
     }
+    UpdateAnsiBrushes();
 }
 
 
@@ -1126,8 +1147,6 @@ INT_PTR CALLBACK MacrosProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
     return FALSE;
 }
 
-void ClearScreen(void) {
-
 #define IDD_HELP 4000
 INT_PTR CALLBACK HelpProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_COMMAND && (LOWORD(wParam) == 1 || LOWORD(wParam) == 2)) {
@@ -1216,6 +1235,7 @@ INT_PTR CALLBACK SettingsProc(HWND hdlg, UINT msg, WPARAM wParam, LPARAM lParam)
     return FALSE;
 }
 
+void ClearScreen(void) {
     int r, c;
     for (r = 0; r < MAX_LINES; r++) {
         for (c = 0; c < TERM_COLS; c++) {
@@ -1312,6 +1332,17 @@ void ProcessSGR(int* params, int count) {
         else if (p == 5) { curFg |= 0x80; } /* Blink on */
         else if (p == 25) { curFg &= ~0x80; } /* Blink off */
         else if (p >= 30 && p <= 37) { curFg = (curFg & 0x80) | (unsigned char)(p - 30); }
+        else if (p == 38 || p == 48) {
+            if (i + 1 < count && params[i+1] == 5) {
+                if (i + 2 < count && params[i+2] < 16) {
+                    if (p == 38) curFg = (curFg & 0x80) | (unsigned char)params[i+2];
+                    else curBg = (unsigned char)params[i+2];
+                }
+                i += 2;
+            } else if (i + 1 < count && params[i+1] == 2) {
+                i += 4;
+            }
+        }
         else if (p >= 40 && p <= 47) { curBg = (unsigned char)(p - 40); }
         else if (p >= 90 && p <= 97) { curFg = (curFg & 0x80) | (unsigned char)(p - 90 + 8); }
         else if (p >= 100 && p <= 107) { curBg = (unsigned char)(p - 100 + 8); }
@@ -1485,9 +1516,21 @@ void ProcessByte(unsigned char ch) {
             if (ch == '[') {
                 ansiState = STATE_CSI;
                 ansiParamLen = 0;
+            } else if (ch == ']') {
+                ansiState = STATE_OSC;
             } else {
                 ansiState = STATE_NORMAL;
             }
+            break;
+        case STATE_OSC:
+            if (ch == '\a') {
+                ansiState = STATE_NORMAL;
+            } else if (ch == 0x1B) {
+                ansiState = STATE_OSC_ESC;
+            }
+            break;
+        case STATE_OSC_ESC:
+            ansiState = STATE_NORMAL;
             break;
         case STATE_CSI:
             if ((ch >= '0' && ch <= '9') || ch == ';' || ch == '?') {
@@ -1514,6 +1557,10 @@ void ProcessByte(unsigned char ch) {
             } else {
                 if (ansiMusicLen < (int)(sizeof(ansiMusicBuf) - 1)) {
                     ansiMusicBuf[ansiMusicLen++] = (char)ch;
+                } else {
+                    ansiMusicBuf[ansiMusicLen] = 0;
+                    PlayANSI(ansiMusicBuf);
+                    ansiState = STATE_NORMAL;
                 }
             }
             break;
@@ -2072,6 +2119,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(memDC, OPAQUE);
             
             int viewTop = activeTop - scrollOffset;
+            if (viewTop < 0) viewTop = 0;
+            if (viewTop > MAX_LINES - TERM_ROWS) viewTop = MAX_LINES - TERM_ROWS;
             for (r = 0; r < TERM_ROWS; r++) {
                 for (c = 0; c < TERM_COLS; c++) {
                     unsigned char raw = (unsigned char)screen[viewTop + r][c].ch;
@@ -2079,13 +2128,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if ((screen[viewTop + r][c].fg & 0x80) && !blinkState) {
                         wch = L' ';
                     }
-                    COLORREF fgColor = ansiColors[screen[viewTop + r][c].fg & 0x0F];
-                    COLORREF bgColor = ansiColors[screen[viewTop + r][c].bg & 0x0F];
+                    unsigned char fgIdx = screen[viewTop + r][c].fg & 0x0F;
+                    unsigned char bgIdx = screen[viewTop + r][c].bg & 0x0F;
+                    COLORREF fgColor = ansiColors[fgIdx];
+                    COLORREF bgColor = ansiColors[bgIdx];
                     
                     if (IsSelected(viewTop + r, c)) {
-                        COLORREF tmp = fgColor;
-                        fgColor = bgColor;
-                        bgColor = tmp;
+                        unsigned char tmp = fgIdx;
+                        fgIdx = bgIdx;
+                        bgIdx = tmp;
+                        fgColor = ansiColors[fgIdx];
+                        bgColor = ansiColors[bgIdx];
                     }
                     
                     SetTextColor(memDC, fgColor);
@@ -2098,56 +2151,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     
                     if (raw == 0xDB) { /* Full block */
                         RECT rBlock = { x, y, x + w, y + h };
-                        HBRUSH hBr = CreateSolidBrush(fgColor);
-                        FillRect(memDC, &rBlock, hBr);
-                        DeleteObject(hBr);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[fgIdx]);
                     } else if (raw == 0xDC) { /* Lower half block */
                         RECT rBlock = { x, y, x + w, y + h };
-                        HBRUSH hBg = CreateSolidBrush(bgColor);
-                        FillRect(memDC, &rBlock, hBg);
-                        DeleteObject(hBg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[bgIdx]);
                         rBlock.top = y + h / 2;
-                        HBRUSH hFg = CreateSolidBrush(fgColor);
-                        FillRect(memDC, &rBlock, hFg);
-                        DeleteObject(hFg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[fgIdx]);
                     } else if (raw == 0xDF) { /* Upper half block */
                         RECT rBlock = { x, y, x + w, y + h };
-                        HBRUSH hBg = CreateSolidBrush(bgColor);
-                        FillRect(memDC, &rBlock, hBg);
-                        DeleteObject(hBg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[bgIdx]);
                         rBlock.bottom = y + h / 2;
-                        HBRUSH hFg = CreateSolidBrush(fgColor);
-                        FillRect(memDC, &rBlock, hFg);
-                        DeleteObject(hFg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[fgIdx]);
                     } else if (raw == 0xDD) { /* Left half block */
                         RECT rBlock = { x, y, x + w, y + h };
-                        HBRUSH hBg = CreateSolidBrush(bgColor);
-                        FillRect(memDC, &rBlock, hBg);
-                        DeleteObject(hBg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[bgIdx]);
                         rBlock.right = x + w / 2;
-                        HBRUSH hFg = CreateSolidBrush(fgColor);
-                        FillRect(memDC, &rBlock, hFg);
-                        DeleteObject(hFg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[fgIdx]);
                     } else if (raw == 0xDE) { /* Right half block */
                         RECT rBlock = { x, y, x + w, y + h };
-                        HBRUSH hBg = CreateSolidBrush(bgColor);
-                        FillRect(memDC, &rBlock, hBg);
-                        DeleteObject(hBg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[bgIdx]);
                         rBlock.left = x + w / 2;
-                        HBRUSH hFg = CreateSolidBrush(fgColor);
-                        FillRect(memDC, &rBlock, hFg);
-                        DeleteObject(hFg);
+                        FillRect(memDC, &rBlock, hAnsiBrushes[fgIdx]);
                     } else if (raw >= 0xB0 && raw <= 0xB2) { /* Shades */
-                        /* We simulate shades via alternating pixels, but standard TextOutW is often better and less complex */
                         TextOutW(memDC, x, y, &wch, 1);
                     } else {
                         if (raw != ' ' && raw != 0) {
                             TextOutW(memDC, x, y, &wch, 1);
                         } else {
                             RECT rBlock = { x, y, x + w, y + h };
-                            HBRUSH hBg = CreateSolidBrush(bgColor);
-                            FillRect(memDC, &rBlock, hBg);
-                            DeleteObject(hBg);
+                            FillRect(memDC, &rBlock, hAnsiBrushes[bgIdx]);
                         }
                     }
                 }
@@ -2163,7 +2195,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvertRect(memDC, &cursorRect);
             }
 
-            RECT clientRect;
             GetClientRect(hwnd, &clientRect);
             int drawW = clientRect.right - clientRect.left - termX * 2;
             int drawH = clientRect.bottom - clientRect.top - termY - dpiScale(24);
@@ -2174,10 +2205,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             /* Draw transfer overlay if active */
             if (transferActive) {
-                HFONT uiFont = CreateFontA(dpiScale(14), 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-                    ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
-                    DEFAULT_PITCH | FF_SWISS, "Tahoma");
-                HFONT oldUIFont = (HFONT)SelectObject(winDC, uiFont);
+                HFONT oldUIFont = (HFONT)SelectObject(winDC, hUIFont);
                 
                 RECT rOverlay = { clientRect.right/2 - dpiScale(120), clientRect.bottom/2 - dpiScale(40), clientRect.right/2 + dpiScale(120), clientRect.bottom/2 + dpiScale(40) };
                 HBRUSH br = CreateSolidBrush(RGB(24, 24, 27));
@@ -2207,7 +2235,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(winDC, transferStatusMsg, -1, &rMsg, DT_CENTER | DT_TOP);
                 
                 SelectObject(winDC, oldUIFont);
-                DeleteObject(uiFont);
             }
 
             SelectObject(memDC, oldFont);
@@ -2391,6 +2418,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         for (int r = r1; r <= r2; r++) {
                             int sc = (r == r1) ? c1 : 0;
                             int ec = (r == r2) ? c2 : TERM_COLS - 1;
+                            int lineStartP = p;
                             for (int c = sc; c <= ec; c++) {
                                 if (r >= 0 && r < MAX_LINES && c >= 0 && c < TERM_COLS) {
                                     unsigned char raw = (unsigned char)screen[r][c].ch;
@@ -2398,6 +2426,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     wbuf[p++] = (wch == 0) ? L' ' : wch;
                                 }
                             }
+                            while (p > lineStartP && wbuf[p - 1] == L' ') p--;
                             if (r < r2) { wbuf[p++] = L'\r'; wbuf[p++] = L'\n'; }
                         }
                         wbuf[p] = 0;
@@ -2534,6 +2563,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (hTermFont) DeleteObject(hTermFont);
             if (hUIFont) DeleteObject(hUIFont);
             if (hBgBrush) DeleteObject(hBgBrush);
+            {
+                int i;
+                for (i = 0; i < 16; i++) {
+                    if (hAnsiBrushes[i]) { DeleteObject(hAnsiBrushes[i]); hAnsiBrushes[i] = NULL; }
+                }
+            }
             if (captureBuffer) { GlobalFree(captureBuffer); captureBuffer = NULL; }
             if (rxBuffer) { GlobalFree(rxBuffer); rxBuffer = NULL; }
             if (zmDlBuf) { GlobalFree(zmDlBuf); zmDlBuf = NULL; }

@@ -85,14 +85,14 @@
     <div class="main">
         <div class="term-wrap">
             <div style="display: flex; flex: 1; width: 100%; height: 100%; position: relative;">
-                <canvas id="terminal" tabindex="0" style="flex: 1;"></canvas>
+                <canvas id="terminal" tabindex="0" role="img" aria-label="BBS Terminal Screen" style="flex: 1;"></canvas>
                 <div id="scrollContainer" style="width: 16px; height: 100%; overflow-y: scroll; background: #09090b; border-left: 1px solid #27272a; z-index: 3; display: none;" onscroll="handleScroll(event)">
                     <div id="scrollSpacer" style="height: 100px;"></div>
                 </div>
             </div>
         </div>
         <!-- Dialing Directory Modal -->
-        <div id="dialingDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+        <div id="dialingDir" role="dialog" aria-modal="true" aria-label="Dialing Directory" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
             <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
                 <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
                     <span>Dialing Directory</span>
@@ -121,7 +121,7 @@
             </div>
         </div>
         <!-- Macros Modal -->
-        <div id="macrosDir" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+        <div id="macrosDir" role="dialog" aria-modal="true" aria-label="Macros Settings" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
             <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 600px; max-width: 95%; height: 500px; max-height: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
                 <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
                     <span>Macros (Alt + Key)</span>
@@ -145,7 +145,7 @@
             </div>
         </div>
         <!-- Settings Modal -->
-        <div id="settingsModal" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+        <div id="settingsModal" role="dialog" aria-modal="true" aria-label="Display Settings" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
             <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 300px; max-width: 95%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
                 <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
                     <span>Display Settings</span>
@@ -181,7 +181,7 @@
         </div>
     </div>
     <!-- Help Modal -->
-    <div id="helpModal" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
+    <div id="helpModal" role="dialog" aria-modal="true" aria-label="Help and Quick Reference" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center;">
         <div style="background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; width: 450px; max-width: 95%; max-height: 80%; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
             <div style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; color: #fff; font-size: 16px; display: flex; justify-content: space-between;">
                 <span>Help / Quick Reference</span>
@@ -234,7 +234,7 @@
         lastBaudTime = now;
         if (dt > 1000) dt = 1000;
         let baud = (typeof kbbsSettings !== 'undefined') ? (kbbsSettings.baudRate || 0) : 0;
-        if (baud === 0) {
+        if (baud === 0 || rxQueue.length > 50000) {
             if (rxQueue.length > 0) {
                 processData(rxQueue);
                 rxQueue = "";
@@ -903,6 +903,17 @@
             else if (p === 25) curBlink = false;
             else if (p === 7) { let t = curFg; curFg = curBg; curBg = t; } // reverse
             else if (p >= 30 && p <= 37) curFg = p - 30;
+            else if (p === 38 || p === 48) {
+                if (i + 1 < parts.length && parts[i + 1] === 5) {
+                    if (i + 2 < parts.length) {
+                        let col = parts[i + 2] & 0x0F;
+                        if (p === 38) curFg = col; else curBg = col;
+                    }
+                    i += 2;
+                } else if (i + 1 < parts.length && parts[i + 1] === 2) {
+                    i += 4;
+                }
+            }
             else if (p === 39) curFg = 7;
             else if (p >= 40 && p <= 47) curBg = p - 40;
             else if (p === 49) curBg = 0;
@@ -1001,6 +1012,10 @@
                 ansiParams = '';
             } else {
                 ansiMusicBuf += ch;
+                if (ansiMusicBuf.length > 2048) {
+                    playANSI(ansiMusicBuf);
+                    ansiState = 0;
+                }
             }
             return;
         }
@@ -1325,12 +1340,14 @@
                 for (let r = r1; r <= r2; r++) {
                     let sc = (r === r1) ? c1 : 0;
                     let ec = (r === r2) ? c2 : COLS - 1;
+                    let lineStr = "";
                     for (let c = sc; c <= ec; c++) {
                         if (r < screen.length && c < COLS) {
                             let ch = screen[r][c].ch;
-                            text += (ch === '\0' || ch === '\u00A0') ? ' ' : ch;
+                            lineStr += (ch === '\0' || ch === '\u00A0') ? ' ' : ch;
                         }
                     }
+                    text += lineStr.replace(/\s+$/, '');
                     if (r < r2) text += "\n";
                 }
                 navigator.clipboard.writeText(text).catch(()=>{});
