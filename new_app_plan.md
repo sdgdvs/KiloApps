@@ -54,8 +54,8 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KAlchemy (Fantasy crafting & element discovery)
-**Phase:** 7 (next to do)
-**Status:** Phases 1-6 complete
+**Phase:** 8 (next to do)
+**Status:** Phases 1-7 complete
 
 - [x] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
 - [x] Phase 2: Core web HTML element discovery game (4 basic elements: Fire, Water, Earth, Air; Transmutation Crucible combining 2 elements; inventory grid & discovery counter).
@@ -63,7 +63,7 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 - [x] Phase 4: Dark theme UI styling (mystical arcane laboratory theme: deep violet/slate background, glowing rune borders, golden element badges).
 - [x] Phase 5: Expanded Recipe Matrix & Tiering — Add 50+ secondary elements across 5 tiers (Basic, Nature, Metallurgy, Arcane, Celestial) with tier unlock thresholds and discovery notifications.
 - [x] Phase 6: Alchemist's Research Hints & Oracle System — Add hint system offering vague or specific combination clues using Alchemical Dust earned per new discovery.
-- [ ] Phase 7: Element Essence Distillation & Extraction — Add Laboratory Equipment (Retort, Alembic, Crucible, Anvil) allowing players to break down complex elements back into base essences.
+- [x] Phase 7: Element Essence Distillation & Extraction — Add Laboratory Equipment (Retort, Alembic, Crucible, Anvil) allowing players to break down complex elements back into base essences.
 - [ ] Phase 8: Master Alchemist Guild Quests — Add procedural quest board where guild patrons request specific potions, metals, or magical artifacts for Gold and XP rewards.
 - [ ] Phase 9: Laboratory Upgrades & Enchanter Workshop — Add shop to upgrade Crucible capacity, Essence extraction yield, Auto-sorter, and Catalyst speed using Gold.
 - [ ] Phase 10: Potion Brewing & Effect Tester — Add Potion Brewing cauldrons combining discoverable herbs and essences to create usable buff elixirs (Strength, Invisibility, Mana, Elixir of Life).
