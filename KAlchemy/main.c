@@ -182,6 +182,7 @@ typedef struct {
     int unlockedTiers[TOTAL_TIERS];
     int discoveredCount;
     int essence;
+    int dust;
     int slot1;
     int slot2;
     int selectedTierFilter; // 0 = All, 1..5 = T1..T5
@@ -337,6 +338,7 @@ static void InitGameState() {
     g_State.unlockedTiers[1] = 1; // Nature (threshold 4)
     g_State.discoveredCount = 4;
     g_State.essence = 100;
+    g_State.dust = 100;
     g_State.slot1 = -1;
     g_State.slot2 = -1;
     g_State.selectedTierFilter = 0;
@@ -421,6 +423,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
             CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
             CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
+
+            // Oracle & Research Hint Buttons
+            CreateWindowA("BUTTON", "💡 Hint (20)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 285, 440, 105, 30, hwnd, (HMENU)204, NULL, NULL);
+            CreateWindowA("BUTTON", "👁️ Oracle (50)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 395, 440, 105, 30, hwnd, (HMENU)205, NULL, NULL);
 
             // Journal Log Edit Control (Read-Only)
             g_hJournalEdit = CreateWindowA("EDIT", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_BORDER,
@@ -526,6 +532,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             g_State.discovered[res] = 1;
                             g_State.discoveredCount++;
                             g_State.essence += 50;
+                            g_State.dust += 25;
 
                             CheckTierUnlocks();
                             UpdateGrimoireGrid();
@@ -533,7 +540,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
 
                             char logMsg[256];
-                            wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+50 Essence)",
+                            wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+25 Dust)",
                                 g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name);
                             AddJournalLog(logMsg);
 
@@ -578,6 +585,123 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     Beep(400, 100);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            }
+            // Vague Research Hint (204)
+            else if (id == 204) {
+                const int COST = 20;
+                if (g_State.dust < COST) {
+                    lstrcpyA(g_State.lastStatus, "Need 20 Dust for Research Hint!");
+                    char msg[256];
+                    wsprintfA(msg, "⚠️ Not enough Alchemical Dust! Need %d Dust (You have %d).", COST, g_State.dust);
+                    AddJournalLog(msg);
+                    Beep(220, 100);
+                } else {
+                    int matchIdx = -1;
+                    int foundBothKnown = -1;
+                    int foundOneKnown = -1;
+
+                    for (int r = 0; r < TOTAL_RECIPES; r++) {
+                        int res = g_Recipes[r].result;
+                        if (!g_State.discovered[res]) {
+                            int e1 = g_Recipes[r].ingredient1;
+                            int e2 = g_Recipes[r].ingredient2;
+                            if (g_State.discovered[e1] && g_State.discovered[e2]) {
+                                if (foundBothKnown == -1) foundBothKnown = r;
+                            } else if (g_State.discovered[e1] || g_State.discovered[e2]) {
+                                if (foundOneKnown == -1) foundOneKnown = r;
+                            }
+                            if (matchIdx == -1) matchIdx = r;
+                        }
+                    }
+
+                    if (foundOneKnown >= 0) matchIdx = foundOneKnown;
+                    else if (foundBothKnown >= 0) matchIdx = foundBothKnown;
+
+                    if (matchIdx < 0) {
+                        AddJournalLog("🔮 The Oracle Whispers: All elements in the cosmos have already been discovered!");
+                        Beep(880, 150);
+                    } else {
+                        g_State.dust -= COST;
+                        int res = g_Recipes[matchIdx].result;
+                        int e1 = g_Recipes[matchIdx].ingredient1;
+                        int e2 = g_Recipes[matchIdx].ingredient2;
+                        int knownIng = g_State.discovered[e1] ? e1 : (g_State.discovered[e2] ? e2 : e1);
+
+                        wsprintfA(g_State.lastStatus, "💡 Hint: %s + ??? -> %s", g_Elements[knownIng].name, g_Elements[res].name);
+                        char logMsg[256];
+                        wsprintfA(logMsg, "💡 RESEARCH HINT (-%d Dust): Element '%s' (Tier %d) is crafted using '%s' and another element!",
+                            COST, g_Elements[res].name, g_Elements[res].tier, g_Elements[knownIng].name);
+                        AddJournalLog(logMsg);
+
+                        Beep(349, 80);
+                        Beep(440, 80);
+                        Beep(523, 100);
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Oracle Vision (205)
+            else if (id == 205) {
+                const int COST = 50;
+                if (g_State.dust < COST) {
+                    lstrcpyA(g_State.lastStatus, "Need 50 Dust for Oracle Vision!");
+                    char msg[256];
+                    wsprintfA(msg, "⚠️ Not enough Alchemical Dust! Need %d Dust (You have %d).", COST, g_State.dust);
+                    AddJournalLog(msg);
+                    Beep(220, 100);
+                } else {
+                    int foundBothKnown = -1;
+                    int matchIdx = -1;
+
+                    for (int r = 0; r < TOTAL_RECIPES; r++) {
+                        int res = g_Recipes[r].result;
+                        if (!g_State.discovered[res]) {
+                            int e1 = g_Recipes[r].ingredient1;
+                            int e2 = g_Recipes[r].ingredient2;
+                            if (g_State.discovered[e1] && g_State.discovered[e2]) {
+                                foundBothKnown = r;
+                                break;
+                            }
+                            if (matchIdx == -1) matchIdx = r;
+                        }
+                    }
+
+                    if (foundBothKnown >= 0) matchIdx = foundBothKnown;
+
+                    if (matchIdx < 0) {
+                        AddJournalLog("🔮 The Oracle Whispers: All elements in the cosmos have already been discovered!");
+                        Beep(880, 150);
+                    } else {
+                        g_State.dust -= COST;
+                        int res = g_Recipes[matchIdx].result;
+                        int e1 = g_Recipes[matchIdx].ingredient1;
+                        int e2 = g_Recipes[matchIdx].ingredient2;
+
+                        if (g_State.discovered[e1] && g_State.discovered[e2]) {
+                            g_State.slot1 = e1;
+                            g_State.slot2 = e2;
+                            UpdateSlotButtonText();
+                            wsprintfA(g_State.lastStatus, "🔮 Oracle: %s + %s -> %s (Placed!)", g_Elements[e1].name, g_Elements[e2].name, g_Elements[res].name);
+                            char logMsg[256];
+                            wsprintfA(logMsg, "👁️ ORACLE VISION (-%d Dust): Transmute %s + %s = %s! (Ingredients placed in Crucible!)",
+                                COST, g_Elements[e1].name, g_Elements[e2].name, g_Elements[res].name);
+                            AddJournalLog(logMsg);
+                        } else {
+                            wsprintfA(g_State.lastStatus, "🔮 Oracle: %s + %s -> %s", g_Elements[e1].name, g_Elements[e2].name, g_Elements[res].name);
+                            char logMsg[256];
+                            wsprintfA(logMsg, "👁️ ORACLE VISION (-%d Dust): Recipe revealed: %s + %s = %s!",
+                                COST, g_Elements[e1].name, g_Elements[e2].name, g_Elements[res].name);
+                            AddJournalLog(logMsg);
+                        }
+
+                        Beep(440, 70);
+                        Beep(554, 70);
+                        Beep(659, 70);
+                        Beep(880, 70);
+                        Beep(1108, 120);
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         }
@@ -636,11 +760,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b2Str, -1, &badge2, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 3: Essence
+            // Badge 3: Alchemical Dust
             RECT badge3 = { 570, 18, 655, 52 };
             RoundRect(hdc, badge3.left, badge3.top, badge3.right, badge3.bottom, 8, 8);
             char b3Str[32];
-            wsprintfA(b3Str, "Essence: %d", g_State.essence);
+            wsprintfA(b3Str, "Dust: %d", g_State.dust);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b3Str, -1, &badge3, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 

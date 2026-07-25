@@ -643,6 +643,84 @@
       background: rgba(231, 76, 60, 0.08);
     }
 
+    .log-entry.oracle {
+      border-left-color: var(--accent-gold-light);
+      border: 1px solid var(--border-gold);
+      border-left-width: 4px;
+      background: linear-gradient(90deg, rgba(155, 89, 182, 0.2) 0%, rgba(243, 156, 18, 0.15) 100%);
+      box-shadow: 0 0 15px rgba(155, 89, 182, 0.25);
+    }
+
+    /* Oracle & Hints Section */
+    .oracle-section {
+      margin-top: 14px;
+      padding: 12px;
+      background: linear-gradient(135deg, rgba(155, 89, 182, 0.12) 0%, rgba(243, 156, 18, 0.1) 100%);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 90%;
+      box-shadow: 0 0 15px rgba(243, 156, 18, 0.15), inset 0 0 10px rgba(155, 89, 182, 0.1);
+      z-index: 2;
+    }
+
+    .oracle-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-shadow: 0 0 8px rgba(241, 196, 15, 0.5);
+    }
+
+    .oracle-buttons {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-oracle {
+      flex: 1;
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.9), rgba(45, 30, 75, 0.9));
+      border: 1px solid var(--accent-purple);
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    .btn-oracle:hover {
+      border-color: var(--accent-gold);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px var(--glow-gold);
+      background: linear-gradient(135deg, rgba(40, 25, 75, 0.95), rgba(70, 45, 110, 0.95));
+    }
+
+    .btn-oracle .cost-tag {
+      font-size: 0.65rem;
+      color: var(--accent-gold-light);
+      background: rgba(243, 156, 18, 0.2);
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 1px 6px;
+      font-weight: 800;
+    }
+
     .log-time {
       font-size: 0.68rem;
       color: var(--accent-purple-glow);
@@ -670,8 +748,8 @@
         <span class="val" id="stat-tier">T1 Basic</span>
       </div>
       <div class="stat-badge">
-        <span class="label">Essence:</span>
-        <span class="val" id="stat-essence">100</span>
+        <span class="label">Alchemical Dust:</span>
+        <span class="val" id="stat-dust">100</span>
       </div>
       <div class="stat-badge">
         <span class="label">Rank:</span>
@@ -740,6 +818,21 @@
       <div class="crucible-actions">
         <button class="btn-secondary" onclick="clearCrucible()">Clear Crucible</button>
         <button class="btn-secondary" onclick="resetProgress()">Reset Progress</button>
+      </div>
+
+      <!-- Alchemist's Oracle & Research Hints Section -->
+      <div class="oracle-section">
+        <div class="oracle-title">🔮 Alchemist's Oracle & Research</div>
+        <div class="oracle-buttons">
+          <button class="btn-oracle" onclick="getVagueHint()">
+            <span>💡 Vague Hint</span>
+            <span class="cost-tag">20 Dust</span>
+          </button>
+          <button class="btn-oracle" onclick="getOracleVision()">
+            <span>👁️ Oracle Vision</span>
+            <span class="cost-tag">50 Dust</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -902,26 +995,26 @@
     let unlockedTiers = new Set([1, 2]); // Tier 1 (0 elements) and Tier 2 (4 elements)
     let activeTierFilter = 0; // 0 = All
     let selectedSlots = [null, null];
-    let essence = 100;
+    let dust = 100; // Alchemical Dust
 
     function saveState() {
       try {
         localStorage.setItem('kalchemy_discovered', JSON.stringify(Array.from(discoveredIds)));
-        localStorage.setItem('kalchemy_essence', essence);
+        localStorage.setItem('kalchemy_dust', dust);
       } catch(e){}
     }
 
     function loadState() {
       try {
         const savedDisc = localStorage.getItem('kalchemy_discovered');
-        const savedEssence = localStorage.getItem('kalchemy_essence');
+        const savedDust = localStorage.getItem('kalchemy_dust') || localStorage.getItem('kalchemy_essence');
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
             discoveredIds = new Set(arr);
           }
         }
-        if (savedEssence) essence = parseInt(savedEssence, 10) || 100;
+        if (savedDust !== null) dust = parseInt(savedDust, 10) || 100;
       } catch(e){}
       checkTierUnlocks(false);
     }
@@ -948,7 +1041,8 @@
 
     function updateStats() {
       document.getElementById('stat-discovered').innerText = `${discoveredIds.size} / ${ALL_ELEMENTS.length}`;
-      document.getElementById('stat-essence').innerText = essence;
+      const dustElem = document.getElementById('stat-dust') || document.getElementById('stat-essence');
+      if (dustElem) dustElem.innerText = dust;
       document.getElementById('grimoire-count').innerText = `${discoveredIds.size} Elements`;
 
       const highestTier = checkTierUnlocks(false);
@@ -1050,7 +1144,7 @@
         discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
         unlockedTiers = new Set([1, 2]);
         selectedSlots = [null, null];
-        essence = 100;
+        dust = 100;
         saveState();
         updateStats();
         renderGrimoire();
@@ -1099,7 +1193,7 @@
 
           if (isNew) {
             discoveredIds.add(resElement.id);
-            essence += 50;
+            dust += 25; // Earn Alchemical Dust on new discovery
             saveState();
 
             checkTierUnlocks(true);
@@ -1107,8 +1201,8 @@
             renderGrimoire();
             orb.innerText = resElement.icon;
 
-            triggerToast(`NEW DISCOVERY!`, `You created ${resElement.name} ${resElement.icon} (+50 Essence)`, resElement.icon);
-            addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} [Tier ${resElement.tier} ${reqTier.name}] by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+50 Essence)`, true, false, false);
+            triggerToast(`NEW DISCOVERY!`, `You created ${resElement.name} ${resElement.icon} (+25 Dust)`, resElement.icon);
+            addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} [Tier ${resElement.tier} ${reqTier.name}] by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+25 Alchemical Dust)`, true, false, false);
             playFanfareDiscovery();
           } else {
             orb.innerText = resElement.icon;
@@ -1125,6 +1219,85 @@
       }, 400);
     }
 
+    function getVagueHint() {
+      const COST = 20;
+      if (dust < COST) {
+        addLog(`⚠️ <strong>Not enough Alchemical Dust!</strong> Need ${COST} Dust (You have ${dust}). Craft new elements to earn Dust!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      const undiscoveredRecipes = RECIPES.filter(r => !discoveredIds.has(r.result));
+      if (undiscoveredRecipes.length === 0) {
+        addLog("🔮 <strong>The Oracle Whispers:</strong> All elements in the cosmos have already been discovered!", false, false, false, 'oracle');
+        playChime(880, 'sine', 0.3);
+        return;
+      }
+
+      let candidate = undiscoveredRecipes.find(r => discoveredIds.has(r.ingredients[0]) || discoveredIds.has(r.ingredients[1]));
+      if (!candidate) candidate = undiscoveredRecipes[0];
+
+      const resEl = ALL_ELEMENTS.find(e => e.id === candidate.result);
+      const ing1El = ALL_ELEMENTS.find(e => e.id === candidate.ingredients[0]);
+      const ing2El = ALL_ELEMENTS.find(e => e.id === candidate.ingredients[1]);
+      const knownIng = discoveredIds.has(ing1El.id) ? ing1El : (discoveredIds.has(ing2El.id) ? ing2El : ing1El);
+
+      dust -= COST;
+      saveState();
+      updateStats();
+
+      const hintMsg = `💡 <strong>RESEARCH HINT (-${COST} Dust):</strong> Element <strong>${resEl.name}</strong> ${resEl.icon} (Tier ${resEl.tier}) is crafted using <strong>${knownIng.name}</strong> ${knownIng.icon} and another element!`;
+      addLog(hintMsg, false, false, false, 'oracle');
+      triggerToast("💡 Research Hint", `Combine ${knownIng.name} ${knownIng.icon} + ??? → ${resEl.name} ${resEl.icon}`, resEl.icon);
+      playOracleSound(false);
+    }
+
+    function getOracleVision() {
+      const COST = 50;
+      if (dust < COST) {
+        addLog(`⚠️ <strong>Not enough Alchemical Dust!</strong> Need ${COST} Dust (You have ${dust}). Craft new elements to earn Dust!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      const undiscoveredRecipes = RECIPES.filter(r => !discoveredIds.has(r.result));
+      if (undiscoveredRecipes.length === 0) {
+        addLog("🔮 <strong>The Oracle Whispers:</strong> All elements in the cosmos have already been discovered!", false, false, false, 'oracle');
+        playChime(880, 'sine', 0.3);
+        return;
+      }
+
+      let candidate = undiscoveredRecipes.find(r => discoveredIds.has(r.ingredients[0]) && discoveredIds.has(r.ingredients[1]));
+      let bothDiscovered = true;
+
+      if (!candidate) {
+        bothDiscovered = false;
+        candidate = undiscoveredRecipes.find(r => discoveredIds.has(r.ingredients[0]) || discoveredIds.has(r.ingredients[1])) || undiscoveredRecipes[0];
+      }
+
+      const resEl = ALL_ELEMENTS.find(e => e.id === candidate.result);
+      const ing1El = ALL_ELEMENTS.find(e => e.id === candidate.ingredients[0]);
+      const ing2El = ALL_ELEMENTS.find(e => e.id === candidate.ingredients[1]);
+
+      dust -= COST;
+      saveState();
+      updateStats();
+
+      if (bothDiscovered) {
+        selectedSlots[0] = ing1El;
+        selectedSlots[1] = ing2El;
+        updateSlotsUI();
+        const msg = `👁️ <strong>ORACLE VISION (-${COST} Dust):</strong> Transmute <strong>${ing1El.name}</strong> ${ing1El.icon} + <strong>${ing2El.name}</strong> ${ing2El.icon} = <strong>${resEl.name}</strong> ${resEl.icon}! (Placed in Crucible!)`;
+        addLog(msg, false, false, false, 'oracle');
+        triggerToast("👁️ Oracle Vision", `${ing1El.name} + ${ing2El.name} → ${resEl.name} (Placed in Crucible!)`, resEl.icon);
+      } else {
+        const msg = `👁️ <strong>ORACLE VISION (-${COST} Dust):</strong> Recipe revealed: <strong>${ing1El.name}</strong> ${ing1El.icon} + <strong>${ing2El.name}</strong> ${ing2El.icon} = <strong>${resEl.name}</strong> ${resEl.icon}!`;
+        addLog(msg, false, false, false, 'oracle');
+        triggerToast("👁️ Oracle Vision", `${ing1El.name} + ${ing2El.name} → ${resEl.name}`, resEl.icon);
+      }
+      playOracleSound(true);
+    }
+
     function triggerToast(title, sub, icon) {
       const toast = document.getElementById('discovery-toast');
       document.getElementById('toast-title').innerText = title;
@@ -1134,11 +1307,12 @@
       setTimeout(() => { toast.classList.remove('show'); }, 3500);
     }
 
-    function addLog(msg, isDiscovery, isFizzle, isTierUnlock) {
+    function addLog(msg, isDiscovery, isFizzle, isTierUnlock, specialType) {
       const log = document.getElementById('log-content');
       const entry = document.createElement('div');
       let typeClass = '';
-      if (isTierUnlock) typeClass = 'tier-unlock';
+      if (specialType === 'oracle') typeClass = 'oracle';
+      else if (isTierUnlock) typeClass = 'tier-unlock';
       else if (isDiscovery) typeClass = 'discovery';
       else if (isFizzle) typeClass = 'fizzle';
 
@@ -1147,6 +1321,20 @@
       entry.className = `log-entry ${typeClass}`;
       entry.innerHTML = `<div class="log-time">${timeStr}</div>${msg}`;
       log.prepend(entry);
+    }
+
+    function playOracleSound(isVision) {
+      if (isVision) {
+        const notes = [440, 554.37, 659.25, 880, 1108.73];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => playChime(freq, 'sine', 0.4), idx * 80);
+        });
+      } else {
+        const notes = [349.23, 440, 523.25];
+        notes.forEach((freq, idx) => {
+          setTimeout(() => playChime(freq, 'triangle', 0.3), idx * 100);
+        });
+      }
     }
 
     // Audio Synthesizer
