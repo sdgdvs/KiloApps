@@ -791,6 +791,111 @@
       border-left-width: 4px;
       background: linear-gradient(90deg, rgba(231, 76, 60, 0.15) 0%, rgba(15, 14, 30, 0.8) 100%);
     }
+
+    /* Quest Board Panel Styles */
+    .quest-board-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 6px 12px;
+      z-index: 2;
+    }
+
+    .quest-card {
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.95), rgba(38, 29, 68, 0.95));
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(243, 156, 18, 0.1);
+      transition: all 0.25s ease;
+    }
+
+    .quest-card:hover {
+      border-color: var(--accent-gold-light);
+      box-shadow: 0 6px 20px rgba(243, 156, 18, 0.25);
+    }
+
+    .quest-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .quest-patron {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quest-request {
+      font-size: 0.8rem;
+      color: var(--text-main);
+    }
+
+    .quest-rewards {
+      display: flex;
+      gap: 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    .reward-gold { color: #f1c40f; }
+    .reward-xp { color: #9b59b6; }
+
+    .btn-turnin {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      border: 1px solid #2ecc71;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-turnin:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 16px rgba(46, 204, 113, 0.6);
+    }
+
+    .btn-turnin.disabled {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-reroll {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.2), rgba(155, 89, 182, 0.2));
+      border: 1px solid var(--border-gold);
+      color: var(--accent-gold-light);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reroll:hover {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.35), rgba(155, 89, 182, 0.35));
+      box-shadow: 0 0 12px var(--glow-gold);
+    }
   </style>
 </head>
 <body>
@@ -816,8 +921,16 @@
         <span class="val" id="stat-essence">100</span>
       </div>
       <div class="stat-badge">
-        <span class="label">Alchemical Dust:</span>
+        <span class="label">Dust:</span>
         <span class="val" id="stat-dust">100</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Gold:</span>
+        <span class="val" id="stat-gold">100 💰</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Guild:</span>
+        <span class="val" id="stat-guild">Lvl 1</span>
       </div>
       <div class="stat-badge">
         <span class="label">Rank:</span>
@@ -869,10 +982,16 @@
         <button class="equip-tab" id="equip-retort" onclick="selectEquipment('retort')">⚗️ Retort</button>
         <button class="equip-tab" id="equip-alembic" onclick="selectEquipment('alembic')">🧪 Alembic</button>
         <button class="equip-tab" id="equip-anvil" onclick="selectEquipment('anvil')">🔨 Anvil</button>
+        <button class="equip-tab" id="equip-quests" onclick="selectEquipment('quests')">📜 Guild Quests</button>
       </div>
 
       <div class="equipment-desc" id="equipment-desc">
         <strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.
+      </div>
+
+      <!-- Guild Quest Board Container (Shown in Quests mode) -->
+      <div class="quest-board-container" id="quest-board-container" style="display: none;">
+        <!-- Injected by JS -->
       </div>
 
       <div class="transmutation-circle">
@@ -1077,13 +1196,59 @@
     let selectedSlots = [null, null];
     let essence = 100; // Alchemical Essence
     let dust = 100; // Alchemical Dust
-    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil'
+    let gold = 100; // Gold Currency
+    let guildXP = 0; // Guild XP
+    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil', 'quests'
+    let quests = [];
+
+    const PATRONS = [
+      { name: 'Archmage Vaelen', icon: '🧙' },
+      { name: 'Royal Blacksmith Thorin', icon: '🛡️' },
+      { name: 'Grand Apothecary Lysandra', icon: '🧪' },
+      { name: 'Shadow Broker Corvus', icon: '🗡️' },
+      { name: 'Elder Botanist Rowan', icon: '🌿' },
+      { name: 'High Envoy Cassian', icon: '👑' },
+      { name: 'Dragon Slayer Ignis', icon: '🐲' },
+      { name: 'Astrologer Stella', icon: '🔮' },
+      { name: 'Master Merchant Barnaby', icon: '⚖️' },
+      { name: 'Guildmaster Aurelius', icon: '📜' }
+    ];
+
+    function generateQuestSlot(slotIdx) {
+      const patron = PATRONS[Math.floor(Math.random() * PATRONS.length)];
+      const highestTier = checkTierUnlocks(false);
+      const possibleElements = ALL_ELEMENTS.filter(e => e.tier <= highestTier);
+      const target = possibleElements[Math.floor(Math.random() * possibleElements.length)];
+      const goldReward = target.tier * 35 + Math.floor(Math.random() * 20);
+      const xpReward = target.tier * 50;
+
+      return {
+        id: 'q_' + Date.now() + '_' + slotIdx + '_' + Math.floor(Math.random() * 1000),
+        patronName: patron.name,
+        patronIcon: patron.icon,
+        targetId: target.id,
+        targetName: target.name,
+        targetIcon: target.icon,
+        targetTier: target.tier,
+        goldReward: goldReward,
+        xpReward: xpReward
+      };
+    }
+
+    function initQuests() {
+      if (!quests || quests.length === 0) {
+        quests = [generateQuestSlot(0), generateQuestSlot(1), generateQuestSlot(2)];
+      }
+    }
 
     function saveState() {
       try {
         localStorage.setItem('kalchemy_discovered', JSON.stringify(Array.from(discoveredIds)));
         localStorage.setItem('kalchemy_dust', dust);
         localStorage.setItem('kalchemy_essence', essence);
+        localStorage.setItem('kalchemy_gold', gold);
+        localStorage.setItem('kalchemy_guildXP', guildXP);
+        localStorage.setItem('kalchemy_quests', JSON.stringify(quests));
       } catch(e){}
     }
 
@@ -1092,6 +1257,9 @@
         const savedDisc = localStorage.getItem('kalchemy_discovered');
         const savedDust = localStorage.getItem('kalchemy_dust');
         const savedEssence = localStorage.getItem('kalchemy_essence');
+        const savedGold = localStorage.getItem('kalchemy_gold');
+        const savedXP = localStorage.getItem('kalchemy_guildXP');
+        const savedQuests = localStorage.getItem('kalchemy_quests');
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
@@ -1100,7 +1268,14 @@
         }
         if (savedDust !== null) dust = parseInt(savedDust, 10) || 100;
         if (savedEssence !== null) essence = parseInt(savedEssence, 10) || 100;
+        if (savedGold !== null) gold = parseInt(savedGold, 10) || 100;
+        if (savedXP !== null) guildXP = parseInt(savedXP, 10) || 0;
+        if (savedQuests) {
+          const qArr = JSON.parse(savedQuests);
+          if (Array.isArray(qArr) && qArr.length === 3) quests = qArr;
+        }
       } catch(e){}
+      initQuests();
       checkTierUnlocks(false);
     }
 
@@ -1113,20 +1288,125 @@
       const descEl = document.getElementById('equipment-desc');
       const actionBtn = document.getElementById('btn-main-action');
 
-      if (mode === 'crucible') {
-        descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
-        actionBtn.innerHTML = "✨ Transmute Elements";
-      } else if (mode === 'retort') {
-        descEl.innerHTML = "<strong>Retort:</strong> Distill a complex element to extract primary ingredient & essence.";
-        actionBtn.innerHTML = "⚗️ Distill Primary Essence";
-      } else if (mode === 'alembic') {
-        descEl.innerHTML = "<strong>Alembic:</strong> Extract fractional 2nd constituent essence & ingredient.";
-        actionBtn.innerHTML = "🧪 Extract Secondary Essence";
-      } else if (mode === 'anvil') {
-        descEl.innerHTML = "<strong>Anvil:</strong> Shatter a complex element to harvest raw Alchemical Essence & Dust.";
-        actionBtn.innerHTML = "🔨 Crush for Essence";
+      const transCircle = document.querySelector('.transmutation-circle');
+      const slotsCont = document.querySelector('.slots-container');
+      const mainActBtn = document.getElementById('btn-main-action');
+      const crucActions = document.querySelector('.crucible-actions');
+      const oracleSec = document.querySelector('.oracle-section');
+      const qBoardCont = document.getElementById('quest-board-container');
+
+      if (mode === 'quests') {
+        descEl.innerHTML = "<strong>Guild Quest Board:</strong> Complete patron orders for Gold & Guild XP rewards!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (qBoardCont) qBoardCont.style.display = 'flex';
+        renderQuestBoard();
+      } else {
+        if (transCircle) transCircle.style.display = 'flex';
+        if (slotsCont) slotsCont.style.display = 'flex';
+        if (mainActBtn) mainActBtn.style.display = 'block';
+        if (crucActions) crucActions.style.display = 'flex';
+        if (oracleSec) oracleSec.style.display = 'flex';
+        if (qBoardCont) qBoardCont.style.display = 'none';
+
+        if (mode === 'crucible') {
+          descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
+          actionBtn.innerHTML = "✨ Transmute Elements";
+        } else if (mode === 'retort') {
+          descEl.innerHTML = "<strong>Retort:</strong> Distill a complex element to extract primary ingredient & essence.";
+          actionBtn.innerHTML = "⚗️ Distill Primary Essence";
+        } else if (mode === 'alembic') {
+          descEl.innerHTML = "<strong>Alembic:</strong> Extract fractional 2nd constituent essence & ingredient.";
+          actionBtn.innerHTML = "🧪 Extract Secondary Essence";
+        } else if (mode === 'anvil') {
+          descEl.innerHTML = "<strong>Anvil:</strong> Shatter a complex element to harvest raw Alchemical Essence & Dust.";
+          actionBtn.innerHTML = "🔨 Crush for Essence";
+        }
       }
       playChime(450, 'sine', 0.1);
+    }
+
+    function renderQuestBoard() {
+      const cont = document.getElementById('quest-board-container');
+      if (!cont) return;
+      initQuests();
+
+      const guildLvl = 1 + Math.floor(guildXP / 200);
+
+      let html = `
+        <div style="font-size:0.9rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          📜 Master Alchemist Guild Board (Lvl ${guildLvl})
+        </div>
+      `;
+
+      quests.forEach((q, idx) => {
+        const isDiscovered = discoveredIds.has(q.targetId);
+        html += `
+          <div class="quest-card">
+            <div class="quest-info">
+              <div class="quest-patron"><span>${q.patronIcon}</span><span>${q.patronName}</span></div>
+              <div class="quest-request">Requires: <strong>${q.targetName}</strong> ${q.targetIcon} <span style="font-size:0.7rem; color:var(--accent-purple-glow); border:1px solid var(--border-color); border-radius:4px; padding:0 4px">T${q.targetTier}</span></div>
+              <div class="quest-rewards">
+                <span class="reward-gold">💰 +${q.goldReward} Gold</span>
+                <span class="reward-xp">⭐ +${q.xpReward} XP</span>
+              </div>
+            </div>
+            ${isDiscovered ? 
+              `<button class="btn-turnin" onclick="turnInQuest(${idx})">🎁 Turn In</button>` : 
+              `<button class="btn-turnin disabled" disabled>🔒 Need Craft</button>`}
+          </div>
+        `;
+      });
+
+      html += `
+        <div style="text-align:center;">
+          <button class="btn-reroll" onclick="rerollQuests()">🔄 Reroll Quests (15 Gold)</button>
+        </div>
+      `;
+
+      cont.innerHTML = html;
+    }
+
+    function turnInQuest(slotIdx) {
+      if (slotIdx < 0 || slotIdx >= quests.length) return;
+      const q = quests[slotIdx];
+      if (!discoveredIds.has(q.targetId)) {
+        addLog(`⚠️ You have not discovered <strong>${q.targetName}</strong> yet!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      gold += q.goldReward;
+      guildXP += q.xpReward;
+
+      triggerToast("📜 Quest Completed!", `Fulfilled ${q.patronName}'s request for +${q.goldReward} Gold, +${q.xpReward} XP!`, q.targetIcon);
+      addLog(`📜 <strong>QUEST COMPLETED!</strong> Delivered <strong>${q.targetName}</strong> ${q.targetIcon} to <strong>${q.patronName}</strong>! (+${q.goldReward} Gold, +${q.xpReward} Guild XP)`, true, false, false, 'oracle');
+
+      playFanfareDiscovery();
+
+      quests[slotIdx] = generateQuestSlot(slotIdx);
+      saveState();
+      updateStats();
+      renderQuestBoard();
+    }
+
+    function rerollQuests() {
+      const COST = 15;
+      if (gold < COST) {
+        addLog(`⚠️ <strong>Not enough Gold!</strong> Need ${COST} Gold to reroll quest board.`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      gold -= COST;
+      quests = [generateQuestSlot(0), generateQuestSlot(1), generateQuestSlot(2)];
+      saveState();
+      updateStats();
+      renderQuestBoard();
+      addLog(`🔄 Rerolled Master Alchemist Guild Quest Board (-${COST} Gold).`, false, false, false);
+      playChime(500, 'sine', 0.15);
     }
 
     function handleMainAction() {
@@ -1162,6 +1442,10 @@
       if (dustElem) dustElem.innerText = dust;
       const essElem = document.getElementById('stat-essence');
       if (essElem) essElem.innerText = essence;
+      const goldElem = document.getElementById('stat-gold');
+      if (goldElem) goldElem.innerText = `${gold} 💰`;
+      const guildElem = document.getElementById('stat-guild');
+      if (guildElem) guildElem.innerText = `Lvl ${1 + Math.floor(guildXP / 200)} (${guildXP} XP)`;
       document.getElementById('grimoire-count').innerText = `${discoveredIds.size} Elements`;
 
       const highestTier = checkTierUnlocks(false);
@@ -1265,10 +1549,15 @@
         selectedSlots = [null, null];
         essence = 100;
         dust = 100;
+        gold = 100;
+        guildXP = 0;
+        quests = [];
+        initQuests();
         saveState();
         updateStats();
         renderGrimoire();
         updateSlotsUI();
+        if (activeEquipment === 'quests') renderQuestBoard();
         addLog("Journal reset. Basic elements restored.", false, false, false);
       }
     }

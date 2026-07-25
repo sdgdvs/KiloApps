@@ -177,15 +177,40 @@ static const Recipe g_Recipes[TOTAL_RECIPES] = {
     { 54, 30, 55 } // Time + Magic -> Eternity
 };
 
+#define TOTAL_PATRONS 10
+static const char* g_Patrons[TOTAL_PATRONS] = {
+    "Archmage Vaelen",
+    "Royal Blacksmith Thorin",
+    "Grand Apothecary Lysandra",
+    "Shadow Broker Corvus",
+    "Elder Botanist Rowan",
+    "High Envoy Cassian",
+    "Dragon Slayer Ignis",
+    "Astrologer Stella",
+    "Master Merchant Barnaby",
+    "Guildmaster Aurelius"
+};
+
+typedef struct {
+    int patronIdx;
+    int targetId;
+    int goldReward;
+    int xpReward;
+} Quest;
+
 typedef struct {
     int discovered[TOTAL_ELEMENTS];
     int unlockedTiers[TOTAL_TIERS];
     int discoveredCount;
     int essence;
     int dust;
+    int gold;
+    int guildXP;
+    int guildLevel;
+    Quest quests[3];
     int slot1;
     int slot2;
-    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil
+    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil, 4 = Quests
     int selectedTierFilter; // 0 = All, 1..5 = T1..T5
     int currentPage;
     int buttonElemMap[GRID_SIZE];
@@ -196,7 +221,9 @@ typedef struct {
 static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
-static HWND g_hEquipButtons[4];
+static HWND g_hEquipButtons[5];
+static HWND g_hQuestTurnInButtons[3];
+static HWND g_hQuestRerollButton = NULL;
 static HWND g_hMainActionButton = NULL;
 static HWND g_hSlot1Button = NULL;
 static HWND g_hSlot2Button = NULL;
@@ -331,7 +358,72 @@ static int CheckTierUnlocks() {
     return highestTier;
 }
 
+static unsigned int g_RandSeed = 12345;
+
+static int FastRand() {
+    g_RandSeed = g_RandSeed * 1103515245 + 12345;
+    return (int)((g_RandSeed / 65536) & 0x7FFF);
+}
+
+static void GenerateQuest(int slotIdx) {
+    if (slotIdx < 0 || slotIdx >= 3) return;
+    g_State.quests[slotIdx].patronIdx = FastRand() % TOTAL_PATRONS;
+
+    int highestTier = 1;
+    for (int t = 0; t < TOTAL_TIERS; t++) {
+        if (g_State.discoveredCount >= g_Tiers[t].threshold) highestTier = g_Tiers[t].id;
+    }
+    int candidates[TOTAL_ELEMENTS];
+    int candCount = 0;
+    for (int i = 0; i < TOTAL_ELEMENTS; i++) {
+        if (g_Elements[i].tier <= highestTier) {
+            candidates[candCount++] = i;
+        }
+    }
+    if (candCount == 0) candidates[candCount++] = 0;
+    int target = candidates[FastRand() % candCount];
+
+    g_State.quests[slotIdx].targetId = target;
+    g_State.quests[slotIdx].goldReward = g_Elements[target].tier * 35 + (FastRand() % 20);
+    g_State.quests[slotIdx].xpReward = g_Elements[target].tier * 50;
+}
+
+static void UpdateEquipmentUI(HWND hwnd) {
+    int isQuests = (g_State.selectedEquipment == 4);
+
+    if (isQuests) {
+        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
+        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
+        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
+
+        for (int q = 0; q < 3; q++) {
+            if (g_hQuestTurnInButtons[q]) {
+                ShowWindow(g_hQuestTurnInButtons[q], SW_SHOW);
+                int targetId = g_State.quests[q].targetId;
+                if (g_State.discovered[targetId]) {
+                    EnableWindow(g_hQuestTurnInButtons[q], TRUE);
+                    SetWindowTextA(g_hQuestTurnInButtons[q], "Turn In");
+                } else {
+                    EnableWindow(g_hQuestTurnInButtons[q], FALSE);
+                    SetWindowTextA(g_hQuestTurnInButtons[q], "Locked");
+                }
+            }
+        }
+        if (g_hQuestRerollButton) ShowWindow(g_hQuestRerollButton, SW_SHOW);
+    } else {
+        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_SHOW);
+        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_SHOW);
+        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_SHOW);
+
+        for (int q = 0; q < 3; q++) {
+            if (g_hQuestTurnInButtons[q]) ShowWindow(g_hQuestTurnInButtons[q], SW_HIDE);
+        }
+        if (g_hQuestRerollButton) ShowWindow(g_hQuestRerollButton, SW_HIDE);
+    }
+}
+
 static void InitGameState() {
+    g_RandSeed = GetTickCount();
     memset(&g_State, 0, sizeof(AlchemyState));
     g_State.discovered[0] = 1; // Fire
     g_State.discovered[1] = 1; // Water
@@ -342,12 +434,18 @@ static void InitGameState() {
     g_State.discoveredCount = 4;
     g_State.essence = 100;
     g_State.dust = 100;
+    g_State.gold = 100;
+    g_State.guildXP = 0;
+    g_State.guildLevel = 1;
     g_State.slot1 = -1;
     g_State.slot2 = -1;
     g_State.selectedTierFilter = 0;
     g_State.currentPage = 0;
     lstrcpyA(g_State.lastStatus, "Transmutation Crucible Ready");
     g_State.searchFilter[0] = '\0';
+    for (int q = 0; q < 3; q++) {
+        GenerateQuest(q);
+    }
 }
 
 static void UpdateSlotButtonText() {
@@ -419,10 +517,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateGrimoireGrid();
 
             // Laboratory Equipment Nav Buttons
-            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 96, 54, 22, hwnd, (HMENU)700, NULL, NULL);
-            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 337, 96, 52, 22, hwnd, (HMENU)701, NULL, NULL);
-            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 392, 96, 52, 22, hwnd, (HMENU)702, NULL, NULL);
-            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 447, 96, 52, 22, hwnd, (HMENU)703, NULL, NULL);
+            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 96, 42, 22, hwnd, (HMENU)700, NULL, NULL);
+            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 324, 96, 38, 22, hwnd, (HMENU)701, NULL, NULL);
+            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 364, 96, 42, 22, hwnd, (HMENU)702, NULL, NULL);
+            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 408, 96, 34, 22, hwnd, (HMENU)703, NULL, NULL);
+            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 444, 96, 52, 22, hwnd, (HMENU)704, NULL, NULL);
 
             // Crucible Slots
             g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 295, 200, 90, 50, hwnd, (HMENU)301, NULL, NULL);
@@ -432,6 +531,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hMainActionButton = CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
             CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
             CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
+
+            // Quest Controls (Initially hidden until Quests tab selected)
+            g_hQuestTurnInButtons[0] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 155, 65, 26, hwnd, (HMENU)800, NULL, NULL);
+            g_hQuestTurnInButtons[1] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 235, 65, 26, hwnd, (HMENU)801, NULL, NULL);
+            g_hQuestTurnInButtons[2] = CreateWindowA("BUTTON", "Turn In", WS_CHILD | BS_PUSHBUTTON, 430, 315, 65, 26, hwnd, (HMENU)802, NULL, NULL);
+            g_hQuestRerollButton = CreateWindowA("BUTTON", "🔄 Reroll (15 Gold)", WS_CHILD | BS_PUSHBUTTON, 325, 385, 140, 28, hwnd, (HMENU)803, NULL, NULL);
 
             // Oracle & Research Hint Buttons
             CreateWindowA("BUTTON", "💡 Hint (20)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 285, 440, 105, 30, hwnd, (HMENU)204, NULL, NULL);
@@ -506,8 +611,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Beep(350, 50);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil)
-            else if (id >= 700 && id <= 703) {
+            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests)
+            else if (id >= 700 && id <= 704) {
                 g_State.selectedEquipment = id - 700;
                 if (g_hMainActionButton) {
                     if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
@@ -515,7 +620,53 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (g_State.selectedEquipment == 2) SetWindowTextA(g_hMainActionButton, "🧪 Extract Alembic");
                     else if (g_State.selectedEquipment == 3) SetWindowTextA(g_hMainActionButton, "🔨 Crush Anvil");
                 }
+                UpdateEquipmentUI(hwnd);
                 Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Quest Turn In Buttons (800, 801, 802)
+            else if (id >= 800 && id <= 802) {
+                int qIdx = id - 800;
+                int targetId = g_State.quests[qIdx].targetId;
+                if (g_State.discovered[targetId]) {
+                    g_State.gold += g_State.quests[qIdx].goldReward;
+                    g_State.guildXP += g_State.quests[qIdx].xpReward;
+                    g_State.guildLevel = 1 + (g_State.guildXP / 200);
+
+                    char logMsg[256];
+                    wsprintfA(logMsg, "📜 QUEST COMPLETED! Delivered %s to %s! (+%d Gold, +%d Guild XP)",
+                        g_Elements[targetId].name, g_Patrons[g_State.quests[qIdx].patronIdx],
+                        g_State.quests[qIdx].goldReward, g_State.quests[qIdx].xpReward);
+                    AddJournalLog(logMsg);
+                    wsprintfA(g_State.lastStatus, "Fulfilled %s's order!", g_Patrons[g_State.quests[qIdx].patronIdx]);
+
+                    Beep(523, 60); Beep(659, 60); Beep(784, 60); Beep(1046, 100);
+
+                    GenerateQuest(qIdx);
+                    UpdateEquipmentUI(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else {
+                    AddJournalLog("⚠️ You must discover/craft the requested element before turning in!");
+                    Beep(220, 100);
+                }
+            }
+            // Quest Reroll Button (803)
+            else if (id == 803) {
+                const int COST = 15;
+                if (g_State.gold < COST) {
+                    lstrcpyA(g_State.lastStatus, "Need 15 Gold to reroll quests!");
+                    AddJournalLog("⚠️ Not enough Gold to reroll quest board! (Cost: 15 Gold)");
+                    Beep(220, 100);
+                } else {
+                    g_State.gold -= COST;
+                    GenerateQuest(0);
+                    GenerateQuest(1);
+                    GenerateQuest(2);
+                    AddJournalLog("🔄 Rerolled Master Alchemist Guild Quest Board (-15 Gold).");
+                    lstrcpyA(g_State.lastStatus, "Guild Quests Rerolled");
+                    Beep(500, 80);
+                    UpdateEquipmentUI(hwnd);
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Main Action (Transmute / Distill / Extract / Crush)
@@ -863,42 +1014,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldPen = SelectObject(hdc, hGoldPen);
 
             // Badge 1: Discovered
-            RECT badge1 = { 240, 18, 335, 52 };
-            RoundRect(hdc, badge1.left, badge1.top, badge1.right, badge1.bottom, 8, 8);
+            RECT badge1 = { 205, 18, 285, 52 };
+            RoundRect(hdc, badge1.left, badge1.top, badge1.right, badge1.bottom, 6, 6);
             char b1Str[32];
             wsprintfA(b1Str, "Disc: %d/%d", g_State.discoveredCount, TOTAL_ELEMENTS);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b1Str, -1, &badge1, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             // Badge 2: Highest Tier
-            RECT badge2 = { 340, 18, 435, 52 };
-            RoundRect(hdc, badge2.left, badge2.top, badge2.right, badge2.bottom, 8, 8);
+            RECT badge2 = { 290, 18, 375, 52 };
+            RoundRect(hdc, badge2.left, badge2.top, badge2.right, badge2.bottom, 6, 6);
             char b2Str[32];
             wsprintfA(b2Str, "T%d %s", highestTier, g_Tiers[highestTier - 1].name);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b2Str, -1, &badge2, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             // Badge 3: Essence
-            RECT badge3 = { 440, 18, 535, 52 };
-            RoundRect(hdc, badge3.left, badge3.top, badge3.right, badge3.bottom, 8, 8);
+            RECT badge3 = { 380, 18, 455, 52 };
+            RoundRect(hdc, badge3.left, badge3.top, badge3.right, badge3.bottom, 6, 6);
             char b3Str[32];
-            wsprintfA(b3Str, "Essence: %d", g_State.essence);
+            wsprintfA(b3Str, "Ess: %d", g_State.essence);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b3Str, -1, &badge3, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             // Badge 4: Alchemical Dust
-            RECT badge4 = { 540, 18, 635, 52 };
-            RoundRect(hdc, badge4.left, badge4.top, badge4.right, badge4.bottom, 8, 8);
+            RECT badge4 = { 460, 18, 535, 52 };
+            RoundRect(hdc, badge4.left, badge4.top, badge4.right, badge4.bottom, 6, 6);
             char b4Str[32];
             wsprintfA(b4Str, "Dust: %d", g_State.dust);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b4Str, -1, &badge4, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 5: Rank
-            RECT badge5 = { 640, 18, 755, 52 };
-            RoundRect(hdc, badge5.left, badge5.top, badge5.right, badge5.bottom, 8, 8);
+            // Badge 5: Gold
+            RECT badge5 = { 540, 18, 615, 52 };
+            RoundRect(hdc, badge5.left, badge5.top, badge5.right, badge5.bottom, 6, 6);
+            char b5Str[32];
+            wsprintfA(b5Str, "Gold: %d", g_State.gold);
             SetTextColor(hdc, RGB(255, 215, 0));
-            DrawTextA(hdc, rankStr, -1, &badge5, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+            DrawTextA(hdc, b5Str, -1, &badge5, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+            // Badge 6: Guild Level
+            RECT badge6 = { 620, 18, 695, 52 };
+            RoundRect(hdc, badge6.left, badge6.top, badge6.right, badge6.bottom, 6, 6);
+            char b6Str[32];
+            wsprintfA(b6Str, "Lvl %d", g_State.guildLevel);
+            SetTextColor(hdc, RGB(255, 215, 0));
+            DrawTextA(hdc, b6Str, -1, &badge6, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+            // Badge 7: Rank
+            RECT badge7 = { 700, 18, 755, 52 };
+            RoundRect(hdc, badge7.left, badge7.top, badge7.right, badge7.bottom, 6, 6);
+            SetTextColor(hdc, RGB(255, 215, 0));
+            DrawTextA(hdc, rankStr, -1, &badge7, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             SelectObject(hdc, oldBrush);
             SelectObject(hdc, oldPen);
@@ -926,31 +1093,67 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_State.selectedEquipment == 1) { modeTitle = "Retort Distillation"; vesselLabel = "Retort"; }
             else if (g_State.selectedEquipment == 2) { modeTitle = "Alembic Extraction"; vesselLabel = "Alembic"; }
             else if (g_State.selectedEquipment == 3) { modeTitle = "Anvil Essence Smelter"; vesselLabel = "Anvil"; }
+            else if (g_State.selectedEquipment == 4) { modeTitle = "Guild Quest Board"; vesselLabel = "Quests"; }
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
             TextOutA(hdc, 290, 74, modeTitle, lstrlenA(modeTitle));
 
-            // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
-            SelectObject(hdc, hGoldPen);
-            HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
-            SelectObject(hdc, pNullB);
-            Ellipse(hdc, 340, 122, 445, 193); // Outer golden rune ring
+            if (g_State.selectedEquipment == 4) {
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(180, 160, 220));
+                char subTitle[64];
+                wsprintfA(subTitle, "Guild Level %d (%d XP)", g_State.guildLevel, g_State.guildXP);
+                TextOutA(hdc, 290, 122, subTitle, lstrlenA(subTitle));
 
-            SelectObject(hdc, hVesselBrush);
-            SelectObject(hdc, hPurplePen);
-            Ellipse(hdc, 350, 126, 435, 189); // Core vessel ellipse
+                for (int q = 0; q < 3; q++) {
+                    RECT qCard = { 285, 142 + q * 80, 420, 212 + q * 80 };
+                    FillRect(hdc, &qCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, qCard.left, qCard.top, qCard.right, qCard.bottom);
 
-            SelectObject(hdc, hSlotFont);
-            SetTextColor(hdc, RGB(241, 196, 15));
-            RECT vLabelRect = { 350, 138, 435, 175 };
-            DrawTextA(hdc, vesselLabel, -1, &vLabelRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                    int pIdx = g_State.quests[q].patronIdx;
+                    int tId = g_State.quests[q].targetId;
 
-            // Status message centered below crucible buttons
-            SelectObject(hdc, hUIFont);
-            SetTextColor(hdc, RGB(120, 230, 180));
-            RECT statusRect = { 285, 390, 500, 440 };
-            DrawTextA(hdc, g_State.lastStatus, -1, &statusRect, DT_CENTER | DT_WORDBREAK);
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char patronStr[64];
+                    wsprintfA(patronStr, "%s", g_Patrons[pIdx]);
+                    TextOutA(hdc, qCard.left + 6, qCard.top + 6, patronStr, lstrlenA(patronStr));
+
+                    SetTextColor(hdc, RGB(226, 232, 240));
+                    char reqStr[64];
+                    wsprintfA(reqStr, "Order: %s (T%d)", g_Elements[tId].name, g_Elements[tId].tier);
+                    TextOutA(hdc, qCard.left + 6, qCard.top + 26, reqStr, lstrlenA(reqStr));
+
+                    SetTextColor(hdc, RGB(46, 204, 113));
+                    char rewStr[64];
+                    wsprintfA(rewStr, "+%d Gold, +%d XP", g_State.quests[q].goldReward, g_State.quests[q].xpReward);
+                    TextOutA(hdc, qCard.left + 6, qCard.top + 46, rewStr, lstrlenA(rewStr));
+                    SelectObject(hdc, oldP);
+                }
+            } else {
+                // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
+                SelectObject(hdc, hGoldPen);
+                HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
+                SelectObject(hdc, pNullB);
+                Ellipse(hdc, 340, 122, 445, 193); // Outer golden rune ring
+
+                SelectObject(hdc, hVesselBrush);
+                SelectObject(hdc, hPurplePen);
+                Ellipse(hdc, 350, 126, 435, 189); // Core vessel ellipse
+
+                SelectObject(hdc, hSlotFont);
+                SetTextColor(hdc, RGB(241, 196, 15));
+                RECT vLabelRect = { 350, 138, 435, 175 };
+                DrawTextA(hdc, vesselLabel, -1, &vLabelRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+                // Status message centered below crucible buttons
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(120, 230, 180));
+                RECT statusRect = { 285, 390, 500, 440 };
+                DrawTextA(hdc, g_State.lastStatus, -1, &statusRect, DT_CENTER | DT_WORDBREAK);
+            }
 
             // Right Panel - Journal & Log
             RECT rightPanel = { 520, 68, 765, 523 };
