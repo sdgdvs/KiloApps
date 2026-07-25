@@ -11,33 +11,33 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-07-23)
-- **Total Apps:** 71 registered in App.jsx.
+## Current State (as of 2026-07-25)
+- **Total Apps:** 72 application directories.
 - **KiloOS Version:** 0.3.60
-- **Games:** 25 registered game titles (TARGET HIT ✅). Plus KQuest in progress.
+- **Games:** 27 titles (25 target hit + KStarship + KAlchemy).
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 
-### Game Library (25 titles)
-K2048, KAsteroids, KBreakout, KChess, KConnect4, KDarts, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest (in progress), KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KSudoku, KTetris, KTowers, KWords.
+### Game Library (27 titles)
+K2048, KAlchemy (Phase 9), KAsteroids, KBreakout, KChess, KConnect4, KDarts, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords.
 
 ### Content Depth
-- Original 12 games: 6 loops of content expansion complete (Loops 1-6). Campaign modes with 15-30 levels, multiple power-ups, boss enemies, biomes, statistics tracking.
-- Creator games (KSudoku, KAsteroids, KFreecell, KConnect4, KHangman, KSimon, KMatch3, KWords, KGo): Loops 5-6 content passes complete.
-- Newest games (KDarts, KTowers, KReversi): Created through Phase 14, awaiting first content loop.
-- KQuest: RPG in progress (Phase 9 of 14).
+- Original 12 games: **7 loops** of content expansion complete. Campaign modes with 20-35 levels, multiple power-ups, boss enemies, biomes.
+- Creator games: Loops 5-7 content passes.
+- Newest games (KDarts, KTowers, KReversi): Created through Phase 14, entering content loops.
+- KQuest: RPG complete (Phase 14). KStarship: Complete (Phase 14). KAlchemy: Phase 9 in progress.
 
-### Graphics
-New Graphics agent (activated by Director #1) adding pixel-art sprites and animations. Loop 1 complete for: KSpace, KPac, KSnake, KTetris, KBreakout. Working through remaining games.
+### Graphics Agent (NEW)
+**Loop 1 COMPLETE for all 22 games in queue.** Custom sprites for every game: detailed pixel-art player/enemy sprites, 3D board textures, card portraits, particle FX, animations. Working through remaining games (KTowers, KWords, KReversi, KQuest, KStarship).
 
 ### QA
-Pass 1 complete (46 apps). Pass 2 in progress: ~25 apps done. Next: KTask.
+Pass 2 in progress: ~30+ apps tested with deeper quality checks.
 
-### Feature Expander
-Round-robin feature additions across all apps. Recently: KMedia (advanced playback), KPass (password strength), KNote (search/pin/export), KPac (save/load), KMaze (save/load). Working through queue normally.
+### Feature Expander (RESURRECTED)
+Back online after quota issues. Massive output: KTask, KSys, KRogue, KConverter, KTodo, KGraph, KTimer, KContacts, KRead, KBase, KJournal, KPad, KNote, KPass, KMedia all received substantial feature upgrades.
 
 ### Creator
-KReversi complete (Phase 14). KDarts complete. KTowers complete. Now building KQuest (RPG — Phase 9). Directive updated to focus on deep fantasy/sci-fi games.
+KQuest complete (Phase 14). KStarship complete (Phase 14). Now building KAlchemy (fantasy crafting game, Phase 9). Concrete phase descriptions working well — no more infinite loops.
 
 ## Milestones
 
