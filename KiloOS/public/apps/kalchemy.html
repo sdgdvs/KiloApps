@@ -722,10 +722,74 @@
     }
 
     .log-time {
-      font-size: 0.68rem;
+    /* Equipment Selector Bar & Descriptions */
+    .equipment-nav {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      background: rgba(10, 9, 20, 0.7);
+      padding: 5px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      z-index: 2;
+    }
+
+    .equip-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .equip-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .equip-tab.active {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(155, 89, 182, 0.25));
+      color: var(--accent-gold-light);
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
+    }
+
+    .equipment-desc {
+      font-size: 0.75rem;
       color: var(--accent-purple-glow);
-      font-weight: 600;
-      margin-bottom: 3px;
+      text-align: center;
+      margin-bottom: 12px;
+      min-height: 20px;
+      z-index: 2;
+      padding: 0 10px;
+    }
+
+    .log-entry.retort {
+      border-left-color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      border-left-width: 4px;
+      background: linear-gradient(90deg, rgba(52, 152, 219, 0.15) 0%, rgba(15, 14, 30, 0.8) 100%);
+    }
+
+    .log-entry.alembic {
+      border-left-color: var(--accent-emerald);
+      border: 1px solid var(--accent-emerald);
+      border-left-width: 4px;
+      background: linear-gradient(90deg, rgba(46, 204, 113, 0.15) 0%, rgba(15, 14, 30, 0.8) 100%);
+    }
+
+    .log-entry.anvil {
+      border-left-color: var(--accent-crimson);
+      border: 1px solid var(--accent-crimson);
+      border-left-width: 4px;
+      background: linear-gradient(90deg, rgba(231, 76, 60, 0.15) 0%, rgba(15, 14, 30, 0.8) 100%);
     }
   </style>
 </head>
@@ -746,6 +810,10 @@
       <div class="stat-badge">
         <span class="label">Highest Tier:</span>
         <span class="val" id="stat-tier">T1 Basic</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Essence:</span>
+        <span class="val" id="stat-essence">100</span>
       </div>
       <div class="stat-badge">
         <span class="label">Alchemical Dust:</span>
@@ -793,8 +861,20 @@
       </div>
     </div>
 
-    <!-- Center: Crucible -->
+    <!-- Center: Laboratory Panel -->
     <div class="panel crucible-panel">
+      <!-- Equipment Selector Nav -->
+      <div class="equipment-nav">
+        <button class="equip-tab active" id="equip-crucible" onclick="selectEquipment('crucible')">🫕 Crucible</button>
+        <button class="equip-tab" id="equip-retort" onclick="selectEquipment('retort')">⚗️ Retort</button>
+        <button class="equip-tab" id="equip-alembic" onclick="selectEquipment('alembic')">🧪 Alembic</button>
+        <button class="equip-tab" id="equip-anvil" onclick="selectEquipment('anvil')">🔨 Anvil</button>
+      </div>
+
+      <div class="equipment-desc" id="equipment-desc">
+        <strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.
+      </div>
+
       <div class="transmutation-circle">
         <div class="rune-ring"></div>
         <div class="crucible-vessel" id="crucible-vessel">
@@ -813,7 +893,7 @@
         </div>
       </div>
 
-      <button class="btn-transmute" onclick="transmute()">✨ Transmute Elements</button>
+      <button class="btn-transmute" id="btn-main-action" onclick="handleMainAction()">✨ Transmute Elements</button>
 
       <div class="crucible-actions">
         <button class="btn-secondary" onclick="clearCrucible()">Clear Crucible</button>
@@ -995,19 +1075,23 @@
     let unlockedTiers = new Set([1, 2]); // Tier 1 (0 elements) and Tier 2 (4 elements)
     let activeTierFilter = 0; // 0 = All
     let selectedSlots = [null, null];
+    let essence = 100; // Alchemical Essence
     let dust = 100; // Alchemical Dust
+    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil'
 
     function saveState() {
       try {
         localStorage.setItem('kalchemy_discovered', JSON.stringify(Array.from(discoveredIds)));
         localStorage.setItem('kalchemy_dust', dust);
+        localStorage.setItem('kalchemy_essence', essence);
       } catch(e){}
     }
 
     function loadState() {
       try {
         const savedDisc = localStorage.getItem('kalchemy_discovered');
-        const savedDust = localStorage.getItem('kalchemy_dust') || localStorage.getItem('kalchemy_essence');
+        const savedDust = localStorage.getItem('kalchemy_dust');
+        const savedEssence = localStorage.getItem('kalchemy_essence');
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
@@ -1015,8 +1099,41 @@
           }
         }
         if (savedDust !== null) dust = parseInt(savedDust, 10) || 100;
+        if (savedEssence !== null) essence = parseInt(savedEssence, 10) || 100;
       } catch(e){}
       checkTierUnlocks(false);
+    }
+
+    function selectEquipment(mode) {
+      activeEquipment = mode;
+      document.querySelectorAll('.equip-tab').forEach(tab => tab.classList.remove('active'));
+      const activeTab = document.getElementById(`equip-${mode}`);
+      if (activeTab) activeTab.classList.add('active');
+
+      const descEl = document.getElementById('equipment-desc');
+      const actionBtn = document.getElementById('btn-main-action');
+
+      if (mode === 'crucible') {
+        descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
+        actionBtn.innerHTML = "✨ Transmute Elements";
+      } else if (mode === 'retort') {
+        descEl.innerHTML = "<strong>Retort:</strong> Distill a complex element to extract primary ingredient & essence.";
+        actionBtn.innerHTML = "⚗️ Distill Primary Essence";
+      } else if (mode === 'alembic') {
+        descEl.innerHTML = "<strong>Alembic:</strong> Extract fractional 2nd constituent essence & ingredient.";
+        actionBtn.innerHTML = "🧪 Extract Secondary Essence";
+      } else if (mode === 'anvil') {
+        descEl.innerHTML = "<strong>Anvil:</strong> Shatter a complex element to harvest raw Alchemical Essence & Dust.";
+        actionBtn.innerHTML = "🔨 Crush for Essence";
+      }
+      playChime(450, 'sine', 0.1);
+    }
+
+    function handleMainAction() {
+      if (activeEquipment === 'crucible') transmute();
+      else if (activeEquipment === 'retort') distillRetort();
+      else if (activeEquipment === 'alembic') extractAlembic();
+      else if (activeEquipment === 'anvil') crushAnvil();
     }
 
     function checkTierUnlocks(notify = true) {
@@ -1041,8 +1158,10 @@
 
     function updateStats() {
       document.getElementById('stat-discovered').innerText = `${discoveredIds.size} / ${ALL_ELEMENTS.length}`;
-      const dustElem = document.getElementById('stat-dust') || document.getElementById('stat-essence');
+      const dustElem = document.getElementById('stat-dust');
       if (dustElem) dustElem.innerText = dust;
+      const essElem = document.getElementById('stat-essence');
+      if (essElem) essElem.innerText = essence;
       document.getElementById('grimoire-count').innerText = `${discoveredIds.size} Elements`;
 
       const highestTier = checkTierUnlocks(false);
@@ -1144,6 +1263,7 @@
         discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
         unlockedTiers = new Set([1, 2]);
         selectedSlots = [null, null];
+        essence = 100;
         dust = 100;
         saveState();
         updateStats();
@@ -1193,6 +1313,7 @@
 
           if (isNew) {
             discoveredIds.add(resElement.id);
+            essence += 25;
             dust += 25; // Earn Alchemical Dust on new discovery
             saveState();
 
@@ -1217,6 +1338,131 @@
 
         setTimeout(() => { orb.innerText = '🔮'; }, 1500);
       }, 400);
+    }
+
+    function distillRetort() {
+      if (!selectedSlots[0]) {
+        addLog("Place a complex element into Slot 1 to distill in the Retort.", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      const el = selectedSlots[0];
+      if (el.basic || el.tier === 1) {
+        addLog(`⚠️ Primordial base element <strong>${el.name}</strong> cannot be distilled!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      const recipe = RECIPES.find(r => r.result === el.id);
+      if (!recipe) {
+        addLog(`No distillation recipe found for ${el.name}.`, false, true, false);
+        return;
+      }
+      const ing1 = ALL_ELEMENTS.find(e => e.id === recipe.ingredients[0]);
+      const isNew = !discoveredIds.has(ing1.id);
+      if (isNew) {
+        discoveredIds.add(ing1.id);
+        checkTierUnlocks(true);
+        renderGrimoire();
+      }
+      essence += 30;
+      dust += 15;
+      saveState();
+      updateStats();
+
+      const orb = document.getElementById('crucible-orb');
+      orb.innerText = ing1.icon;
+      setTimeout(() => { orb.innerText = '🔮'; }, 1500);
+
+      triggerToast("⚗️ Retort Distillation", `Extracted ${ing1.name} ${ing1.icon} (+30 Essence, +15 Dust)`, ing1.icon);
+      addLog(`⚗️ <strong>RETORT DISTILLATION:</strong> Distilled <strong>${el.name}</strong> ${el.icon} to extract primary essence <strong>${ing1.name}</strong> ${ing1.icon}! (+30 Essence, +15 Dust)`, true, false, false, 'retort');
+      playRetortSound();
+    }
+
+    function extractAlembic() {
+      if (!selectedSlots[0]) {
+        addLog("Place a complex element into Slot 1 to extract in the Alembic.", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      const el = selectedSlots[0];
+      if (el.basic || el.tier === 1) {
+        addLog(`⚠️ Primordial base element <strong>${el.name}</strong> cannot be extracted!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      const recipe = RECIPES.find(r => r.result === el.id);
+      if (!recipe) {
+        addLog(`No extraction recipe found for ${el.name}.`, false, true, false);
+        return;
+      }
+      const ing2 = ALL_ELEMENTS.find(e => e.id === recipe.ingredients[1]);
+      const isNew = !discoveredIds.has(ing2.id);
+      if (isNew) {
+        discoveredIds.add(ing2.id);
+        checkTierUnlocks(true);
+        renderGrimoire();
+      }
+      essence += 30;
+      dust += 15;
+      saveState();
+      updateStats();
+
+      const orb = document.getElementById('crucible-orb');
+      orb.innerText = ing2.icon;
+      setTimeout(() => { orb.innerText = '🔮'; }, 1500);
+
+      triggerToast("🧪 Alembic Extraction", `Extracted ${ing2.name} ${ing2.icon} (+30 Essence, +15 Dust)`, ing2.icon);
+      addLog(`🧪 <strong>ALEMBIC EXTRACTION:</strong> Extracted secondary essence <strong>${ing2.name}</strong> ${ing2.icon} from <strong>${el.name}</strong> ${el.icon}! (+30 Essence, +15 Dust)`, true, false, false, 'alembic');
+      playAlembicSound();
+    }
+
+    function crushAnvil() {
+      if (!selectedSlots[0]) {
+        addLog("Place a complex element into Slot 1 to crush on the Anvil.", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      const el = selectedSlots[0];
+      if (el.basic || el.tier === 1) {
+        addLog(`⚠️ Primordial base element <strong>${el.name}</strong> cannot be crushed!`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      const essenceGain = el.tier * 30;
+      const dustGain = el.tier * 25;
+      essence += essenceGain;
+      dust += dustGain;
+      saveState();
+      updateStats();
+
+      const orb = document.getElementById('crucible-orb');
+      orb.innerText = '💥';
+      setTimeout(() => { orb.innerText = '🔮'; }, 1500);
+
+      triggerToast("🔨 Anvil Crushed", `Smashed ${el.name} ${el.icon} (+${essenceGain} Essence, +${dustGain} Dust)`, '💥');
+      addLog(`🔨 <strong>ANVIL ESSENCE HARVEST:</strong> Smashed <strong>${el.name}</strong> ${el.icon} [Tier ${el.tier}] into pure base essence! (+${essenceGain} Essence, +${dustGain} Alchemical Dust)`, true, false, false, 'anvil');
+      playAnvilSound();
+    }
+
+    function playRetortSound() {
+      const freqs = [350, 440, 554, 659, 880];
+      freqs.forEach((f, idx) => {
+        setTimeout(() => playChime(f, 'sine', 0.15), idx * 60);
+      });
+    }
+
+    function playAlembicSound() {
+      const freqs = [523, 659, 784, 1046, 1318];
+      freqs.forEach((f, idx) => {
+        setTimeout(() => playChime(f, 'triangle', 0.15), idx * 60);
+      });
+    }
+
+    function playAnvilSound() {
+      playChime(120, 'sawtooth', 0.25);
+      setTimeout(() => playChime(300, 'square', 0.2), 80);
+      setTimeout(() => playChime(600, 'sine', 0.25), 160);
     }
 
     function getVagueHint() {

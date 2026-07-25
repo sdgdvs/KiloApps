@@ -185,6 +185,7 @@ typedef struct {
     int dust;
     int slot1;
     int slot2;
+    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil
     int selectedTierFilter; // 0 = All, 1..5 = T1..T5
     int currentPage;
     int buttonElemMap[GRID_SIZE];
@@ -195,6 +196,8 @@ typedef struct {
 static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
+static HWND g_hEquipButtons[4];
+static HWND g_hMainActionButton = NULL;
 static HWND g_hSlot1Button = NULL;
 static HWND g_hSlot2Button = NULL;
 static HWND g_hSearchEdit = NULL;
@@ -415,12 +418,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             UpdateGrimoireGrid();
 
+            // Laboratory Equipment Nav Buttons
+            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 96, 54, 22, hwnd, (HMENU)700, NULL, NULL);
+            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 337, 96, 52, 22, hwnd, (HMENU)701, NULL, NULL);
+            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 392, 96, 52, 22, hwnd, (HMENU)702, NULL, NULL);
+            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 447, 96, 52, 22, hwnd, (HMENU)703, NULL, NULL);
+
             // Crucible Slots
             g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 295, 200, 90, 50, hwnd, (HMENU)301, NULL, NULL);
             g_hSlot2Button = CreateWindowA("BUTTON", "[ Slot 2 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 400, 200, 90, 50, hwnd, (HMENU)302, NULL, NULL);
 
             // Action Buttons
-            CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
+            g_hMainActionButton = CreateWindowA("BUTTON", "✨ Transmute", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 315, 265, 155, 40, hwnd, (HMENU)201, NULL, NULL);
             CreateWindowA("BUTTON", "Clear Crucible", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 315, 125, 28, hwnd, (HMENU)202, NULL, NULL);
             CreateWindowA("BUTTON", "Reset Progress", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 330, 350, 125, 26, hwnd, (HMENU)203, NULL, NULL);
 
@@ -497,69 +506,178 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Beep(350, 50);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Transmute action
+            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil)
+            else if (id >= 700 && id <= 703) {
+                g_State.selectedEquipment = id - 700;
+                if (g_hMainActionButton) {
+                    if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
+                    else if (g_State.selectedEquipment == 1) SetWindowTextA(g_hMainActionButton, "⚗️ Distill Retort");
+                    else if (g_State.selectedEquipment == 2) SetWindowTextA(g_hMainActionButton, "🧪 Extract Alembic");
+                    else if (g_State.selectedEquipment == 3) SetWindowTextA(g_hMainActionButton, "🔨 Crush Anvil");
+                }
+                Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Main Action (Transmute / Distill / Extract / Crush)
             else if (id == 201) {
-                if (g_State.slot1 < 0 || g_State.slot2 < 0) {
-                    lstrcpyA(g_State.lastStatus, "Select 2 elements for Crucible!");
-                    AddJournalLog("Place two elements into the Crucible before transmuting.");
-                    Beep(220, 100);
-                } else {
-                    int e1 = g_State.slot1;
-                    int e2 = g_State.slot2;
-                    int matchIdx = -1;
+                if (g_State.selectedEquipment == 0) { // Crucible Transmute
+                    if (g_State.slot1 < 0 || g_State.slot2 < 0) {
+                        lstrcpyA(g_State.lastStatus, "Select 2 elements for Crucible!");
+                        AddJournalLog("Place two elements into the Crucible before transmuting.");
+                        Beep(220, 100);
+                    } else {
+                        int e1 = g_State.slot1;
+                        int e2 = g_State.slot2;
+                        int matchIdx = -1;
 
-                    for (int r = 0; r < TOTAL_RECIPES; r++) {
-                        if ((g_Recipes[r].ingredient1 == e1 && g_Recipes[r].ingredient2 == e2) ||
-                            (g_Recipes[r].ingredient1 == e2 && g_Recipes[r].ingredient2 == e1)) {
-                            matchIdx = r;
-                            break;
+                        for (int r = 0; r < TOTAL_RECIPES; r++) {
+                            if ((g_Recipes[r].ingredient1 == e1 && g_Recipes[r].ingredient2 == e2) ||
+                                (g_Recipes[r].ingredient1 == e2 && g_Recipes[r].ingredient2 == e1)) {
+                                matchIdx = r;
+                                break;
+                            }
                         }
-                    }
 
-                    if (matchIdx >= 0) {
-                        int res = g_Recipes[matchIdx].result;
-                        int resTier = g_Elements[res].tier;
-                        int reqThreshold = g_Tiers[resTier - 1].threshold;
+                        if (matchIdx >= 0) {
+                            int res = g_Recipes[matchIdx].result;
+                            int resTier = g_Elements[res].tier;
+                            int reqThreshold = g_Tiers[resTier - 1].threshold;
 
-                        if (g_State.discoveredCount < reqThreshold) {
-                            wsprintfA(g_State.lastStatus, "🔒 Tier %d (%s) Locked!", resTier, g_Tiers[resTier - 1].name);
+                            if (g_State.discoveredCount < reqThreshold) {
+                                wsprintfA(g_State.lastStatus, "🔒 Tier %d (%s) Locked!", resTier, g_Tiers[resTier - 1].name);
+                                char logMsg[256];
+                                wsprintfA(logMsg, "🔒 TIER LOCKED! Crafting %s requires Tier %d (%s) - discover %d elements!",
+                                    g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, reqThreshold);
+                                AddJournalLog(logMsg);
+                                Beep(180, 150);
+                            } else if (!g_State.discovered[res]) {
+                                g_State.discovered[res] = 1;
+                                g_State.discoveredCount++;
+                                g_State.essence += 25;
+                                g_State.dust += 25;
+
+                                CheckTierUnlocks();
+                                UpdateGrimoireGrid();
+
+                                wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
+
+                                char logMsg[256];
+                                wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+25 Dust)",
+                                    g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name);
+                                AddJournalLog(logMsg);
+
+                                PlayDiscoveryFanfare();
+                            } else {
+                                wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
+                                char logMsg[256];
+                                wsprintfA(logMsg, "Created %s (%s + %s). Already recorded in Grimoire.",
+                                    g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
+                                AddJournalLog(logMsg);
+                                Beep(659, 120);
+                            }
+                        } else {
+                            wsprintfA(g_State.lastStatus, "Reaction Fizzled!");
                             char logMsg[256];
-                            wsprintfA(logMsg, "🔒 TIER LOCKED! Crafting %s requires Tier %d (%s) - discover %d elements!",
-                                g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, reqThreshold);
+                            wsprintfA(logMsg, "Reaction fizzled! No transmutation for %s + %s.",
+                                g_Elements[e1].name, g_Elements[e2].name);
                             AddJournalLog(logMsg);
                             Beep(180, 150);
-                        } else if (!g_State.discovered[res]) {
-                            g_State.discovered[res] = 1;
-                            g_State.discoveredCount++;
-                            g_State.essence += 50;
-                            g_State.dust += 25;
-
-                            CheckTierUnlocks();
-                            UpdateGrimoireGrid();
-
-                            wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
-
-                            char logMsg[256];
-                            wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+25 Dust)",
-                                g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name);
-                            AddJournalLog(logMsg);
-
-                            PlayDiscoveryFanfare();
-                        } else {
-                            wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
-                            char logMsg[256];
-                            wsprintfA(logMsg, "Created %s (%s + %s). Already recorded in Grimoire.",
-                                g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
-                            AddJournalLog(logMsg);
-                            Beep(659, 120);
                         }
+                    }
+                } else if (g_State.selectedEquipment == 1) { // Retort Distillation
+                    if (g_State.slot1 < 0) {
+                        lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
+                        AddJournalLog("Place a complex element into Slot 1 to distill in the Retort.");
+                        Beep(220, 100);
                     } else {
-                        wsprintfA(g_State.lastStatus, "Reaction Fizzled!");
-                        char logMsg[256];
-                        wsprintfA(logMsg, "Reaction fizzled! No transmutation for %s + %s.",
-                            g_Elements[e1].name, g_Elements[e2].name);
-                        AddJournalLog(logMsg);
-                        Beep(180, 150);
+                        int e1 = g_State.slot1;
+                        if (g_Elements[e1].isBasic || g_Elements[e1].tier == 1) {
+                            wsprintfA(g_State.lastStatus, "Primordial %s cannot be distilled!", g_Elements[e1].name);
+                            AddJournalLog("⚠️ Primordial base elements cannot be distilled!");
+                            Beep(220, 100);
+                        } else {
+                            int matchIdx = -1;
+                            for (int r = 0; r < TOTAL_RECIPES; r++) {
+                                if (g_Recipes[r].result == e1) { matchIdx = r; break; }
+                            }
+                            if (matchIdx >= 0) {
+                                int ing1 = g_Recipes[matchIdx].ingredient1;
+                                if (!g_State.discovered[ing1]) {
+                                    g_State.discovered[ing1] = 1;
+                                    g_State.discoveredCount++;
+                                    CheckTierUnlocks();
+                                    UpdateGrimoireGrid();
+                                }
+                                g_State.essence += 30;
+                                g_State.dust += 15;
+                                wsprintfA(g_State.lastStatus, "Retort: Distilled %s -> %s!", g_Elements[e1].name, g_Elements[ing1].name);
+                                char logMsg[256];
+                                wsprintfA(logMsg, "⚗️ RETORT DISTILLATION: Distilled %s to extract primary essence %s! (+30 Essence, +15 Dust)",
+                                    g_Elements[e1].name, g_Elements[ing1].name);
+                                AddJournalLog(logMsg);
+                                Beep(350, 50); Beep(440, 50); Beep(554, 50); Beep(659, 70);
+                            }
+                        }
+                    }
+                } else if (g_State.selectedEquipment == 2) { // Alembic Extraction
+                    if (g_State.slot1 < 0) {
+                        lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
+                        AddJournalLog("Place a complex element into Slot 1 to extract in the Alembic.");
+                        Beep(220, 100);
+                    } else {
+                        int e1 = g_State.slot1;
+                        if (g_Elements[e1].isBasic || g_Elements[e1].tier == 1) {
+                            wsprintfA(g_State.lastStatus, "Primordial %s cannot be extracted!", g_Elements[e1].name);
+                            AddJournalLog("⚠️ Primordial base elements cannot be extracted!");
+                            Beep(220, 100);
+                        } else {
+                            int matchIdx = -1;
+                            for (int r = 0; r < TOTAL_RECIPES; r++) {
+                                if (g_Recipes[r].result == e1) { matchIdx = r; break; }
+                            }
+                            if (matchIdx >= 0) {
+                                int ing2 = g_Recipes[matchIdx].ingredient2;
+                                if (!g_State.discovered[ing2]) {
+                                    g_State.discovered[ing2] = 1;
+                                    g_State.discoveredCount++;
+                                    CheckTierUnlocks();
+                                    UpdateGrimoireGrid();
+                                }
+                                g_State.essence += 30;
+                                g_State.dust += 15;
+                                wsprintfA(g_State.lastStatus, "Alembic: Extracted %s -> %s!", g_Elements[e1].name, g_Elements[ing2].name);
+                                char logMsg[256];
+                                wsprintfA(logMsg, "🧪 ALEMBIC EXTRACTION: Extracted secondary essence %s from %s! (+30 Essence, +15 Dust)",
+                                    g_Elements[ing2].name, g_Elements[e1].name);
+                                AddJournalLog(logMsg);
+                                Beep(523, 50); Beep(659, 50); Beep(784, 50); Beep(1046, 70);
+                            }
+                        }
+                    }
+                } else if (g_State.selectedEquipment == 3) { // Anvil Crushing
+                    if (g_State.slot1 < 0) {
+                        lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
+                        AddJournalLog("Place a complex element into Slot 1 to crush on the Anvil.");
+                        Beep(220, 100);
+                    } else {
+                        int e1 = g_State.slot1;
+                        if (g_Elements[e1].isBasic || g_Elements[e1].tier == 1) {
+                            wsprintfA(g_State.lastStatus, "Primordial %s cannot be crushed!", g_Elements[e1].name);
+                            AddJournalLog("⚠️ Primordial base elements cannot be crushed!");
+                            Beep(220, 100);
+                        } else {
+                            int tier = g_Elements[e1].tier;
+                            int essGain = tier * 30;
+                            int dustGain = tier * 25;
+                            g_State.essence += essGain;
+                            g_State.dust += dustGain;
+                            wsprintfA(g_State.lastStatus, "Anvil: Smashed %s (+%d Ess, +%d Dust)!", g_Elements[e1].name, essGain, dustGain);
+                            char logMsg[256];
+                            wsprintfA(logMsg, "🔨 ANVIL ESSENCE HARVEST: Smashed %s [Tier %d] into pure base essence! (+%d Essence, +%d Dust)",
+                                g_Elements[e1].name, tier, essGain, dustGain);
+                            AddJournalLog(logMsg);
+                            Beep(120, 100); Beep(300, 70); Beep(600, 90);
+                        }
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -745,34 +863,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldPen = SelectObject(hdc, hGoldPen);
 
             // Badge 1: Discovered
-            RECT badge1 = { 360, 18, 465, 52 };
+            RECT badge1 = { 240, 18, 335, 52 };
             RoundRect(hdc, badge1.left, badge1.top, badge1.right, badge1.bottom, 8, 8);
             char b1Str[32];
-            wsprintfA(b1Str, "Discovered: %d/%d", g_State.discoveredCount, TOTAL_ELEMENTS);
+            wsprintfA(b1Str, "Disc: %d/%d", g_State.discoveredCount, TOTAL_ELEMENTS);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b1Str, -1, &badge1, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             // Badge 2: Highest Tier
-            RECT badge2 = { 470, 18, 565, 52 };
+            RECT badge2 = { 340, 18, 435, 52 };
             RoundRect(hdc, badge2.left, badge2.top, badge2.right, badge2.bottom, 8, 8);
             char b2Str[32];
-            wsprintfA(b2Str, "Tier: T%d %s", highestTier, g_Tiers[highestTier - 1].name);
+            wsprintfA(b2Str, "T%d %s", highestTier, g_Tiers[highestTier - 1].name);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b2Str, -1, &badge2, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 3: Alchemical Dust
-            RECT badge3 = { 570, 18, 655, 52 };
+            // Badge 3: Essence
+            RECT badge3 = { 440, 18, 535, 52 };
             RoundRect(hdc, badge3.left, badge3.top, badge3.right, badge3.bottom, 8, 8);
             char b3Str[32];
-            wsprintfA(b3Str, "Dust: %d", g_State.dust);
+            wsprintfA(b3Str, "Essence: %d", g_State.essence);
             SetTextColor(hdc, RGB(255, 215, 0));
             DrawTextA(hdc, b3Str, -1, &badge3, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
-            // Badge 4: Rank
-            RECT badge4 = { 660, 18, 755, 52 };
+            // Badge 4: Alchemical Dust
+            RECT badge4 = { 540, 18, 635, 52 };
             RoundRect(hdc, badge4.left, badge4.top, badge4.right, badge4.bottom, 8, 8);
+            char b4Str[32];
+            wsprintfA(b4Str, "Dust: %d", g_State.dust);
             SetTextColor(hdc, RGB(255, 215, 0));
-            DrawTextA(hdc, rankStr, -1, &badge4, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+            DrawTextA(hdc, b4Str, -1, &badge4, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+
+            // Badge 5: Rank
+            RECT badge5 = { 640, 18, 755, 52 };
+            RoundRect(hdc, badge5.left, badge5.top, badge5.right, badge5.bottom, 8, 8);
+            SetTextColor(hdc, RGB(255, 215, 0));
+            DrawTextA(hdc, rankStr, -1, &badge5, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             SelectObject(hdc, oldBrush);
             SelectObject(hdc, oldPen);
@@ -791,27 +917,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(180, 160, 220));
             TextOutA(hdc, 175, 76, countStr, lstrlenA(countStr));
 
-            // Center Panel - Transmutation Crucible
+            // Center Panel - Transmutation Crucible / Laboratory Equipment
             RECT centerPanel = { 275, 68, 510, 523 };
             DRAW_RUNE_PANEL(centerPanel, hCrucibleBrush);
 
+            const char* modeTitle = "Transmutation Crucible";
+            const char* vesselLabel = "Crucible";
+            if (g_State.selectedEquipment == 1) { modeTitle = "Retort Distillation"; vesselLabel = "Retort"; }
+            else if (g_State.selectedEquipment == 2) { modeTitle = "Alembic Extraction"; vesselLabel = "Alembic"; }
+            else if (g_State.selectedEquipment == 3) { modeTitle = "Anvil Essence Smelter"; vesselLabel = "Anvil"; }
+
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
-            TextOutA(hdc, 295, 74, "Transmutation Crucible", 22);
+            TextOutA(hdc, 290, 74, modeTitle, lstrlenA(modeTitle));
 
             // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
             SelectObject(hdc, hGoldPen);
             HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
             SelectObject(hdc, pNullB);
-            Ellipse(hdc, 340, 92, 445, 193); // Outer golden rune ring
+            Ellipse(hdc, 340, 122, 445, 193); // Outer golden rune ring
 
             SelectObject(hdc, hVesselBrush);
             SelectObject(hdc, hPurplePen);
-            Ellipse(hdc, 350, 102, 435, 183); // Core vessel ellipse
+            Ellipse(hdc, 350, 126, 435, 189); // Core vessel ellipse
 
             SelectObject(hdc, hSlotFont);
             SetTextColor(hdc, RGB(241, 196, 15));
-            TextOutA(hdc, 364, 135, "Crucible", 8);
+            RECT vLabelRect = { 350, 138, 435, 175 };
+            DrawTextA(hdc, vesselLabel, -1, &vLabelRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
             // Status message centered below crucible buttons
             SelectObject(hdc, hUIFont);
