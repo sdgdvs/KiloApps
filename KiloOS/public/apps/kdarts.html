@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KDarts - Loop 6 Campaign Expansion</title>
+<title>KDarts - 3D Sisal Dartboard & Dynamic Graphics Overhaul</title>
 <style>
   * { box-sizing: border-box; }
   body {
@@ -172,7 +172,7 @@
     <canvas id="gameCanvas" width="600" height="600"></canvas>
     
     <div id="helpPanel" class="panel">
-      <h3 style="margin-top:0; color:#00d2ff;">KDarts - Loop 6 Expansion</h3>
+      <h3 style="margin-top:0; color:#00d2ff;">KDarts - 3D Visual Edition</h3>
       <h4 style="margin-bottom:4px; color:#ffd700;">General Controls</h4>
       <p style="font-size:13px; margin-top:0;">Aim with mouse and click to throw. Aim wobbles dynamically over time. Throw 3 darts per turn.</p>
       
@@ -186,7 +186,7 @@
 
       <h4 style="margin-bottom:4px; color:#ffd700;">Game Modes</h4>
       <p style="font-size:13px; margin-top:0;">
-        <strong>501 / 301:</strong> Reach exactly 0. Bust if < 0 or = 1.<br>
+        <strong>501 / 301:</strong> Reach exactly 0. Bust if &lt; 0 or = 1.<br>
         <strong>Cricket:</strong> Close 15-20 and Bullseye (3 hits each).<br>
         <strong>Around the Clock (ATC):</strong> Hit numbers 1 through 20 in sequence.<br>
         <strong>Bullseye Blitz:</strong> First to score 10 Bullseye hits (Outer=1, Inner=2).
@@ -212,7 +212,7 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioCtx = new AudioContext();
 
 let soundEnabled = true;
-let dartColor = '#0ff';
+let dartColor = '#00f0ff';
 
 function toggleHelp() {
     const p = document.getElementById('helpPanel');
@@ -224,8 +224,8 @@ function toggleSound() {
 }
 function changeDartStyle() {
     const style = document.getElementById('dartStyle').value;
-    if (style === 'cyan') dartColor = '#0ff';
-    if (style === 'red') dartColor = '#ff3333';
+    if (style === 'cyan') dartColor = '#00f0ff';
+    if (style === 'red') dartColor = '#ff2a2a';
     if (style === 'gold') dartColor = '#ffd700';
 }
 
@@ -337,6 +337,47 @@ let t = 0;
 let historyStack = [];
 let redoStack = [];
 let aiTimeoutId = null;
+
+// Global FX state
+let particles = [];
+let floatingTexts = [];
+let trailParticles = [];
+let shakeTime = 0;
+let shakeMag = 0;
+
+function triggerShake(mag, duration) {
+    shakeMag = mag;
+    shakeTime = duration;
+}
+
+function spawnSparks(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 5.0;
+        particles.push({
+            x: x, y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 1.0,
+            size: 1.5 + Math.random() * 3.0,
+            color: color,
+            alpha: 1.0,
+            life: 0,
+            maxLife: 20 + Math.random() * 20
+        });
+    }
+}
+
+function spawnFloatingText(x, y, text, color) {
+    floatingTexts.push({
+        x: x, y: y,
+        vy: -1.2,
+        text: text,
+        color: color || '#ffd700',
+        alpha: 1.0,
+        life: 0,
+        maxLife: 50
+    });
+}
 
 const CX = 300;
 const CY = 300;
@@ -686,7 +727,13 @@ function throwDart(rawX, rawY) {
     const pts = hit.number * hit.mult;
     
     playSound('whoosh');
-    darts.push({targetX: finalX, targetY: finalY, x: 300, y: 600, pts: pts, number: hit.number, mult: hit.mult, progress: 0, animating: true});
+    darts.push({
+        targetX: finalX, targetY: finalY, 
+        x: 300, y: 600, 
+        pts: pts, number: hit.number, mult: hit.mult, 
+        progress: 0, animating: true,
+        wobbleAmp: 0
+    });
     dartsLeft--;
     totalDarts[currentPlayer]++;
 
@@ -888,25 +935,374 @@ function getHitDetails(x, y) {
     return {number: scores[idx], mult: mult};
 }
 
-function drawPie(cx, cy, r, a1, a2, color) {
+function draw3DSisalDartboard() {
+    // 1. Mahogany Wooden Cabinet Surround Frame
+    const cabinetGrad = ctx.createRadialGradient(CX, CY, BOARD_R * 0.95, CX, CY, BOARD_R * 1.35);
+    cabinetGrad.addColorStop(0, '#100804');
+    cabinetGrad.addColorStop(0.3, '#2a150a');
+    cabinetGrad.addColorStop(0.7, '#180c05');
+    cabinetGrad.addColorStop(1, '#090402');
+    
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, a1, a2);
-    ctx.fillStyle = color;
+    ctx.arc(CX, CY, BOARD_R * 1.35, 0, Math.PI * 2);
+    ctx.fillStyle = cabinetGrad;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#050201';
+    ctx.lineWidth = 4;
     ctx.stroke();
+
+    // Brass corner bolts on cabinet
+    for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
+        const bx = CX + Math.cos(a + Math.PI/4) * (BOARD_R * 1.22);
+        const by = CY + Math.sin(a + Math.PI/4) * (BOARD_R * 1.22);
+        ctx.beginPath();
+        ctx.arc(bx, by, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#d4af37';
+        ctx.fill();
+        ctx.strokeStyle = '#5c4710';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+    }
+
+    // Inner board background shadow rim
+    ctx.beginPath();
+    ctx.arc(CX, CY, BOARD_R, 0, Math.PI * 2);
+    ctx.fillStyle = '#0a0a0c';
+    ctx.fill();
+    
+    // 2. 3D Sisal Segment Beds
+    const segments = 20;
+    const angleStep = (Math.PI * 2) / segments;
+    const startOffset = -Math.PI / 2 - angleStep / 2;
+    const scores = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+
+    for (let i = 0; i < segments; i++) {
+        const a1 = startOffset + i * angleStep;
+        const a2 = a1 + angleStep;
+        const isRed = (i % 2 === 0);
+        
+        let colorRed = '#c8102e';
+        let colorGreen = '#008751';
+        let colorBlack = '#18181c';
+        let colorCream = '#f4ebd0';
+        
+        if (magnetActive[currentPlayer]) {
+            colorRed = '#ff3344';
+            colorGreen = '#00e070';
+        }
+        
+        // Double Ring
+        drawSisalSlice(CX, CY, R * 1.0, R * 0.952, a1, a2, isRed ? colorRed : colorGreen);
+        // Outer Single Bed
+        drawSisalSlice(CX, CY, R * 0.952, R * 0.629, a1, a2, isRed ? colorBlack : colorCream);
+        // Triple Ring
+        drawSisalSlice(CX, CY, R * 0.629, R * 0.582, a1, a2, isRed ? colorRed : colorGreen);
+        // Inner Single Bed
+        drawSisalSlice(CX, CY, R * 0.582, R * 0.093, a1, a2, isRed ? colorBlack : colorCream);
+    }
+    
+    // Outer Bull (Green)
+    drawSisalCircle(CX, CY, R * 0.093, '#008751');
+    // Inner Bull (Crimson & Gold)
+    draw3DBullseye(CX, CY, R * 0.037);
+
+    // Micro Sisal Fiber Stippling / Ring Highlights
+    ctx.beginPath();
+    ctx.arc(CX, CY, R * 0.78, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth = 12;
+    ctx.stroke();
+
+    // 3. Metallic Wire Spider Grid (Spider Lines & Intersections)
+    drawMetallicWireSpider(startOffset, angleStep, segments);
+
+    // 4. Outer Metallic Number Wire Ring
+    drawMetallicNumberRing(startOffset, angleStep, segments, scores);
 }
 
-function drawCircle(cx, cy, r, color) {
+function drawSisalSlice(cx, cy, rOuter, rInner, a1, a2, color) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, rOuter, a1, a2, false);
+    ctx.arc(cx, cy, rInner, a2, a1, true);
+    ctx.closePath();
+    
+    ctx.fillStyle = color;
+    ctx.fill();
+    
+    // Radial depth lighting overlay
+    const gradient = ctx.createRadialGradient(cx, cy, rInner, cx, cy, rOuter);
+    gradient.addColorStop(0, 'rgba(0,0,0,0.18)');
+    gradient.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0.25)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+}
+
+function drawSisalCircle(cx, cy, r, color) {
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
     ctx.fillStyle = color;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grad.addColorStop(0, 'rgba(255,255,255,0.15)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.35)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+}
+
+function draw3DBullseye(cx, cy, r) {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#c8102e';
+    ctx.fill();
+    
+    const grad = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, 1, cx, cy, r);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.3, '#ffd700');
+    grad.addColorStop(0.8, '#c8102e');
+    grad.addColorStop(1, '#660000');
+    ctx.fillStyle = grad;
+    ctx.fill();
+    
+    ctx.strokeStyle = '#ffd700';
     ctx.lineWidth = 1;
     ctx.stroke();
+}
+
+function drawMetallicWireSpider(startOffset, angleStep, segments) {
+    const ringRadii = [R * 1.0, R * 0.952, R * 0.629, R * 0.582, R * 0.093, R * 0.037];
+    
+    for (let r of ringRadii) {
+        // Shadow line
+        ctx.beginPath();
+        ctx.arc(CX + 0.8, CY + 0.8, r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // Base metallic wire
+        ctx.beginPath();
+        ctx.arc(CX, CY, r, 0, Math.PI * 2);
+        ctx.strokeStyle = '#b0b5bd';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        
+        // Highlight wire line
+        ctx.beginPath();
+        ctx.arc(CX - 0.4, CY - 0.4, r, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+    }
+
+    for (let i = 0; i < segments; i++) {
+        const a = startOffset + i * angleStep;
+        const x1 = CX + Math.cos(a) * (R * 0.093);
+        const y1 = CY + Math.sin(a) * (R * 0.093);
+        const x2 = CX + Math.cos(a) * (R * 1.0);
+        const y2 = CY + Math.sin(a) * (R * 1.0);
+        
+        // Wire shadow
+        ctx.beginPath();
+        ctx.moveTo(x1 + 0.8, y1 + 0.8);
+        ctx.lineTo(x2 + 0.8, y2 + 0.8);
+        ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // Wire base
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = '#b0b5bd';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+        
+        // Wire highlight
+        ctx.beginPath();
+        ctx.moveTo(x1 - 0.4, y1 - 0.4);
+        ctx.lineTo(x2 - 0.4, y2 - 0.4);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 0.6;
+        ctx.stroke();
+
+        // Metallic staples at intersections
+        for (let r of [R * 1.0, R * 0.952, R * 0.629, R * 0.582]) {
+            const sx = CX + Math.cos(a) * r;
+            const sy = CY + Math.sin(a) * r;
+            
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1.8, 0, Math.PI * 2);
+            ctx.fillStyle = '#e8ecf0';
+            ctx.fill();
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+        }
+    }
+}
+
+function drawMetallicNumberRing(startOffset, angleStep, segments, scores) {
+    ctx.beginPath();
+    ctx.arc(CX, CY, R * 1.15, 0, Math.PI * 2);
+    ctx.strokeStyle = '#8a909a';
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.arc(CX - 0.5, CY - 0.5, R * 1.15, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    ctx.font = 'bold 21px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    for (let i = 0; i < segments; i++) {
+        const a = startOffset + i * angleStep + angleStep / 2;
+        const nx = CX + Math.cos(a) * (R * 1.15);
+        const ny = CY + Math.sin(a) * (R * 1.15);
+        const numStr = scores[i].toString();
+        
+        ctx.fillStyle = '#000000';
+        ctx.fillText(numStr, nx + 1.5, ny + 1.5);
+        
+        const nGrad = ctx.createLinearGradient(nx - 10, ny - 10, nx + 10, ny + 10);
+        nGrad.addColorStop(0, '#ffffff');
+        nGrad.addColorStop(0.5, '#e0e4e8');
+        nGrad.addColorStop(1, '#9a9ea6');
+        ctx.fillStyle = nGrad;
+        ctx.fillText(numStr, nx, ny);
+    }
+}
+
+function drawDetailedDart(ctx, x, y, scale, angle, styleColor, isAnimating) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.scale(scale, scale);
+
+    // 1. Soft Drop Shadow (when landed/near landing)
+    if (!isAnimating) {
+        ctx.save();
+        ctx.transform(1, 0.35, 0, 0.35, 6, 10);
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-4, -12);
+        ctx.lineTo(-5, -34);
+        ctx.lineTo(-2, -54);
+        ctx.lineTo(-12, -76);
+        ctx.lineTo(0, -82);
+        ctx.lineTo(12, -76);
+        ctx.lineTo(2, -54);
+        ctx.lineTo(5, -34);
+        ctx.lineTo(4, -12);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 2. Steel Needle Tip (0,0) to (0, -14)
+    const tipGrad = ctx.createLinearGradient(-1.5, 0, 1.5, 0);
+    tipGrad.addColorStop(0, '#777');
+    tipGrad.addColorStop(0.5, '#ffffff');
+    tipGrad.addColorStop(1, '#555');
+    ctx.fillStyle = tipGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-1.5, -14);
+    ctx.lineTo(1.5, -14);
+    ctx.closePath();
+    ctx.fill();
+
+    // 3. Brass / Tungsten Grip Barrel (-14 to -38)
+    let bGrad;
+    if (styleColor === '#ffd700') {
+        bGrad = ctx.createLinearGradient(-4.5, 0, 4.5, 0);
+        bGrad.addColorStop(0, '#8a6d1c');
+        bGrad.addColorStop(0.3, '#fff2a3');
+        bGrad.addColorStop(0.7, '#d4af37');
+        bGrad.addColorStop(1, '#5c4710');
+    } else {
+        bGrad = ctx.createLinearGradient(-4.5, 0, 4.5, 0);
+        bGrad.addColorStop(0, '#44444c');
+        bGrad.addColorStop(0.3, '#ffffff');
+        bGrad.addColorStop(0.7, '#aaaaaa');
+        bGrad.addColorStop(1, '#222228');
+    }
+    ctx.fillStyle = bGrad;
+    ctx.beginPath();
+    ctx.rect(-4.5, -38, 9, 24);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Knurling grip ridges
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 1;
+    for (let bY = -34; bY <= -18; bY += 3.5) {
+        ctx.beginPath();
+        ctx.moveTo(-4, bY);
+        ctx.lineTo(4, bY);
+        ctx.stroke();
+    }
+
+    // 4. Aluminum Shaft (-38 to -58)
+    const sGrad = ctx.createLinearGradient(-2, 0, 2, 0);
+    sGrad.addColorStop(0, '#222');
+    sGrad.addColorStop(0.5, '#ddd');
+    sGrad.addColorStop(1, '#111');
+    ctx.fillStyle = sGrad;
+    ctx.fillRect(-2, -58, 4, 20);
+
+    // Shaft O-ring
+    ctx.fillStyle = '#ff3333';
+    ctx.fillRect(-2.5, -40, 5, 2);
+
+    // 5. 3D Tail Flights (-58 to -84)
+    const fColor = styleColor || '#00f0ff';
+    const fGrad = ctx.createLinearGradient(-14, 0, 14, 0);
+    fGrad.addColorStop(0, fColor);
+    fGrad.addColorStop(0.5, '#ffffff');
+    fGrad.addColorStop(1, fColor);
+
+    // Vertical Main Fin
+    ctx.fillStyle = fGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -58);
+    ctx.lineTo(-14, -72);
+    ctx.lineTo(-11, -84);
+    ctx.lineTo(0, -78);
+    ctx.lineTo(11, -84);
+    ctx.lineTo(14, -72);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Horizontal Cross Fin (3D perspective)
+    ctx.fillStyle = fColor;
+    ctx.beginPath();
+    ctx.moveTo(0, -60);
+    ctx.lineTo(-6, -70);
+    ctx.lineTo(-4, -78);
+    ctx.lineTo(0, -76);
+    ctx.lineTo(4, -78);
+    ctx.lineTo(6, -70);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Flight Tail Cap
+    ctx.fillStyle = '#111';
+    ctx.fillRect(-1.5, -86, 3, 4);
+
+    ctx.restore();
 }
 
 function update() {
@@ -917,105 +1313,132 @@ function update() {
     wobbleX = Math.sin(t * 1.3) * amp + Math.sin(t * 0.8) * (amp * 0.6);
     wobbleY = Math.cos(t * 1.5) * amp + Math.sin(t * 0.9) * (amp * 0.6);
     
+    let shakeX = 0, shakeY = 0;
+    if (shakeTime > 0) {
+        shakeX = (Math.random() - 0.5) * shakeMag;
+        shakeY = (Math.random() - 0.5) * shakeMag;
+        shakeTime--;
+        shakeMag *= 0.85;
+    }
+    
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    ctx.beginPath();
-    ctx.arc(CX, CY, BOARD_R, 0, Math.PI * 2);
-    ctx.fillStyle = '#0c0c0e';
-    ctx.fill();
+    ctx.save();
+    ctx.translate(shakeX, shakeY);
     
-    const segments = 20;
-    const angleStep = (Math.PI * 2) / segments;
-    const startOffset = -Math.PI / 2 - angleStep / 2;
-    const scores = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
-    
-    for (let i = 0; i < segments; i++) {
-        const a1 = startOffset + i * angleStep;
-        const a2 = a1 + angleStep;
-        const isRed = (i % 2 === 0);
-        
-        let colorRed = '#d00000';
-        let colorGreen = '#00a300';
-        if (magnetActive[currentPlayer]) {
-            colorRed = '#ff5050';
-            colorGreen = '#50dc50';
-        }
-        
-        drawPie(CX, CY, R * 1.0, a1, a2, isRed ? colorRed : colorGreen);   // Double
-        drawPie(CX, CY, R * 0.952, a1, a2, isRed ? '#111' : '#e8e6d1');    // Outer Single
-        drawPie(CX, CY, R * 0.629, a1, a2, isRed ? colorRed : colorGreen); // Triple
-        drawPie(CX, CY, R * 0.582, a1, a2, isRed ? '#111' : '#e8e6d1');    // Inner Single
-    }
-    
-    drawCircle(CX, CY, R * 0.093, '#00a300');
-    drawCircle(CX, CY, R * 0.037, '#d00000');
-    
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 22px "Segoe UI", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (let i = 0; i < segments; i++) {
-        const a = startOffset + i * angleStep + angleStep / 2;
-        const nx = CX + Math.cos(a) * (R * 1.15);
-        const ny = CY + Math.sin(a) * (R * 1.15);
-        ctx.fillText(scores[i], nx, ny);
-    }
+    draw3DSisalDartboard();
     
     for (let i = 0; i < darts.length; i++) {
         let d = darts[i];
+        let renderX, renderY, scale, angle = 0;
+        let isAnimating = d.animating;
+        
         if (d.animating) {
-            d.progress += 0.1;
+            d.progress += 0.08;
             if (d.progress >= 1.0) {
                 d.progress = 1.0;
                 d.animating = false;
-                if (d.number === 25) playSound('cheer');
-                else playSound('thud');
+                d.wobbleAmp = d.number === 25 ? 12 : (d.mult === 3 ? 9 : 6);
+                triggerShake(d.number === 25 ? 10 : (d.mult === 3 ? 7 : 4), 10);
+                
+                if (d.number === 25) {
+                    playSound('cheer');
+                    spawnSparks(d.targetX, d.targetY, '#ffd700', 35);
+                    spawnSparks(d.targetX, d.targetY, '#ff3333', 20);
+                    spawnFloatingText(d.targetX, d.targetY - 20, d.mult === 2 ? "DOUBLE BULL! 50" : "BULLSEYE! 25", '#ffd700');
+                } else {
+                    playSound('thud');
+                    let col = d.mult === 3 ? '#00ff88' : (d.mult === 2 ? '#ff4444' : '#ffffff');
+                    spawnSparks(d.targetX, d.targetY, col, d.mult === 3 ? 25 : (d.mult === 2 ? 18 : 12));
+                    
+                    let txt = d.mult === 3 ? `TRIPLE ${d.number}! +${d.pts}` : (d.mult === 2 ? `DOUBLE ${d.number}! +${d.pts}` : (d.pts > 0 ? `+${d.pts}` : "MISS!"));
+                    let txtCol = d.mult === 3 ? '#00ffcc' : (d.mult === 2 ? '#ff6666' : '#ffffff');
+                    spawnFloatingText(d.targetX, d.targetY - 20, txt, txtCol);
+                }
             }
+            
             let ease = 1 - Math.pow(1 - d.progress, 3);
-            d.x = 300 + (d.targetX - 300) * ease;
-            d.y = 600 + (d.targetY - 600) * ease;
+            let arc = Math.sin(d.progress * Math.PI) * 110;
+            renderX = 300 + (d.targetX - 300) * ease;
+            renderY = 600 + (d.targetY - 600) * ease - arc;
+            scale = 2.4 - d.progress * 1.4;
+            angle = (1 - d.progress) * -0.4;
+            
+            if (Math.random() < 0.6) {
+                trailParticles.push({
+                    x: renderX, y: renderY + 30 * scale,
+                    vx: (Math.random() - 0.5) * 1.5, vy: 1.5 + Math.random() * 2,
+                    size: 1.5, color: dartColor, alpha: 0.8, life: 0, maxLife: 10
+                });
+            }
         } else {
-            d.x = d.targetX;
-            d.y = d.targetY;
+            renderX = d.targetX;
+            renderY = d.targetY;
+            scale = 1.0;
+            if (d.wobbleAmp > 0.05) {
+                angle = Math.sin(t * 28) * (d.wobbleAmp * (Math.PI / 180));
+                d.wobbleAmp *= 0.88;
+            }
         }
         
-        let scale = d.animating ? (1.5 - d.progress * 0.5) : 1.0;
-        
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x + 15 * scale, d.y + 25 * scale);
-        ctx.strokeStyle = '#ccc';
-        ctx.lineWidth = 2 * scale;
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.moveTo(d.x + 15 * scale, d.y + 25 * scale);
-        ctx.lineTo(d.x + 25 * scale, d.y + 15 * scale);
-        ctx.lineTo(d.x + 35 * scale, d.y + 25 * scale);
-        ctx.lineTo(d.x + 25 * scale, d.y + 35 * scale);
-        ctx.closePath();
-        ctx.fillStyle = dartColor;
-        ctx.fill();
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 1 * scale;
-        ctx.stroke();
-        
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, 2 * scale, 0, Math.PI * 2);
-        ctx.fillStyle = '#fff';
-        ctx.fill();
+        drawDetailedDart(ctx, renderX, renderY, scale, angle, dartColor, isAnimating);
     }
     
+    for (let i = trailParticles.length - 1; i >= 0; i--) {
+        let p = trailParticles[i];
+        p.life++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha = 1 - (p.life / p.maxLife);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        if (p.life >= p.maxLife) trailParticles.splice(i, 1);
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.life++;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.15;
+        p.alpha = 1 - (p.life / p.maxLife);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+        if (p.life >= p.maxLife) particles.splice(i, 1);
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        let ft = floatingTexts[i];
+        ft.life++;
+        ft.y += ft.vy;
+        ft.alpha = 1 - (ft.life / ft.maxLife);
+        ctx.font = 'bold 18px "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#000';
+        ctx.globalAlpha = Math.max(0, ft.alpha);
+        ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.globalAlpha = 1.0;
+        if (ft.life >= ft.maxLife) floatingTexts.splice(i, 1);
+    }
+
     let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
     if (state === 'PLAYING' && isP1OrHuman) {
         const tx = mouseX + wobbleX;
         const ty = mouseY + wobbleY;
         
         ctx.beginPath();
-        ctx.moveTo(tx - 15, ty);
-        ctx.lineTo(tx + 15, ty);
-        ctx.moveTo(tx, ty - 15);
-        ctx.lineTo(tx, ty + 15);
+        ctx.moveTo(tx - 18, ty); ctx.lineTo(tx + 18, ty);
+        ctx.moveTo(tx, ty - 18); ctx.lineTo(tx, ty + 18);
         ctx.strokeStyle = focusActive[currentPlayer] ? '#00ff88' : '#ffff00';
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -1023,17 +1446,25 @@ function update() {
         ctx.beginPath();
         ctx.arc(tx, ty, 10, 0, Math.PI * 2);
         ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(tx, ty, 3, 0, Math.PI * 2);
+        ctx.fillStyle = focusActive[currentPlayer] ? '#00ff88' : '#ffff00';
+        ctx.fill();
         
         if (windSpeed > 0) {
             ctx.beginPath();
             ctx.moveTo(tx, ty);
             ctx.lineTo(tx + windX, ty + windY);
             ctx.strokeStyle = '#ff6464';
+            ctx.lineWidth = 1.8;
             ctx.setLineDash([3, 3]);
             ctx.stroke();
             ctx.setLineDash([]);
         }
     }
+
+    ctx.restore();
     
     requestAnimationFrame(update);
 }

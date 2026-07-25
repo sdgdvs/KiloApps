@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KDarts
 - KTowers
 - KWords
 - KReversi
@@ -108,9 +107,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KFreecell
 - KSudoku
 - KGo
+- KDarts
 
 ## Completed Work Log
 
+- **KDarts (Loop 1):** Implemented 3D Sisal Dartboard with rich red/green double & triple rings, black/ivory single beds, golden bullseye, metallic wire spider lines, wire staples at ring joints, 1-20 metal number wire ring; detailed 3D dart sprites with steel points, brass/tungsten knurled grip barrels, aluminum shafts, and 4-fin 3D perspective tail flights (cyan/red/gold); parabolic throwing trajectory animation with flight pitch tilt & motion trail sparks; impact thud camera shake, landed dart wobble vibration, and score spark particle bursts / floating text popups (+60 TRIPLE 20!, +50 BULLSEYE!) for both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
 - **KGo (Loop 1):** Implemented 3D Kaya wood Go board with rich warm wood grain texturing, solid mahogany bevel frame border, traditional grid line intersections, star point Hoshi dots (3x3, 9x9, 13x13, 19x19); 3D convex Black Slate stones with subtle specular sheen highlight & White Clam Shell stones with iridescent ring textures, specular sheen & drop shadows; last-move pulsing marker indicator ring; territory visualizer overlay with glowing subtle dots; and capture stone vanish particle spark bursts for both Web HTML (kgo.html) and Native C Win32 GDI (KGo/main.c).
 - **KSpace (Loop 1):** Implemented custom player fighter sprite, 7 distinct enemy craft sprites (scout, chaser predator, purple saucer, heavy armored, cyan swift, rotating asteroid, red boss dreadnought), thruster flame frame animation, rotating energy shield, glowing plasma bullets, animated powerups, and a multi-color particle explosion system for both Web (kspace.html) and Native C GDI (KSpace/main.c).
 - **KPac (Loop 1):** Implemented animated mouth chomp cycle for Pac-Man (with direction-based angles and speed boost aura), distinct ghost sprites (Blinky, Pinky, Inky, Clyde, Green) with movement-direction eye tracking and scared/flashing states, arcade-style double neon wall tiles, glowing pellets, pulsing power pellets, lightning speed item, frost freeze item, cherry fruit sprite, particle sparks, and floating score popups for both Web Canvas (kpac.html) and Native C Win32 GDI (KPac/main.c).

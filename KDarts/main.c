@@ -85,35 +85,93 @@ typedef struct {
     int mult;
     float progress;
     int animating;
+    float wobbleAmp;
 } Dart;
 
-int isCampaign = 0;
-int campaignStage = 0; // 0..14
-int gameMode = MODE_501;
-int aiDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard, 3=Legend, 4=Human
-int currentPlayer = 0; // 0=Player 1, 1=AI/Player 2
-int soundEnabled = 1;
-int dartStyle = 0; // 0=Cyan, 1=Red, 2=Gold
+typedef struct {
+    float x, y, vx, vy;
+    COLORREF color;
+    int life, maxLife;
+    float size;
+} Particle;
 
-// Scoring state
+typedef struct {
+    float x, y, vy;
+    char text[32];
+    COLORREF color;
+    int life, maxLife;
+} ScoreText;
+
+#define MAX_PARTICLES 64
+#define MAX_SCORE_TEXTS 16
+static Particle particles[MAX_PARTICLES];
+static int particleCount = 0;
+static ScoreText scoreTexts[MAX_SCORE_TEXTS];
+static int scoreTextCount = 0;
+
+static int shakeTime = 0;
+static float shakeMag = 0.0f;
+
+void TriggerShake(float mag, int duration) {
+    shakeMag = mag;
+    shakeTime = duration;
+}
+
+void SpawnSparks(float x, float y, COLORREF color, int count) {
+    for (int i = 0; i < count; i++) {
+        if (particleCount >= MAX_PARTICLES) break;
+        float angle = ((float)rand() / RAND_MAX) * 2.0f * (float)PI;
+        float speed = 1.5f + ((float)rand() / RAND_MAX) * 4.5f;
+        particles[particleCount].x = x;
+        particles[particleCount].y = y;
+        particles[particleCount].vx = cosf(angle) * speed;
+        particles[particleCount].vy = sinf(angle) * speed - 1.0f;
+        particles[particleCount].color = color;
+        particles[particleCount].size = 1.5f + ((float)rand() / RAND_MAX) * 2.5f;
+        particles[particleCount].life = 0;
+        particles[particleCount].maxLife = 20 + (rand() % 20);
+        particleCount++;
+    }
+}
+
+void SpawnScoreText(float x, float y, const char* txt, COLORREF color) {
+    if (scoreTextCount >= MAX_SCORE_TEXTS) {
+        memmove(&scoreTexts[0], &scoreTexts[1], sizeof(ScoreText) * (MAX_SCORE_TEXTS - 1));
+        scoreTextCount--;
+    }
+    scoreTexts[scoreTextCount].x = x;
+    scoreTexts[scoreTextCount].y = y;
+    scoreTexts[scoreTextCount].vy = -1.2f;
+    strncpy(scoreTexts[scoreTextCount].text, txt, 31);
+    scoreTexts[scoreTextCount].color = color;
+    scoreTexts[scoreTextCount].life = 0;
+    scoreTexts[scoreTextCount].maxLife = 50;
+    scoreTextCount++;
+}
+
+int isCampaign = 0;
+int campaignStage = 0;
+int gameMode = MODE_501;
+int aiDifficulty = 1;
+int currentPlayer = 0;
+int soundEnabled = 1;
+int dartStyle = 0;
+
 int scores[2] = {501, 501};
 int prevScores[2] = {501, 501};
-int cricketHits[2][7] = {{0}}; // 20, 19, 18, 17, 16, 15, 25
-int atcTarget[2] = {1, 1}; // 1..20
-int blitzHits[2] = {0, 0}; // 0..10
+int cricketHits[2][7] = {{0}};
+int atcTarget[2] = {1, 1};
+int blitzHits[2] = {0, 0};
 
-// Stats
 int totalDarts[2] = {0, 0};
 int highestCheckout[2] = {0, 0};
 
-// Power-ups
 int focusActive[2] = {0, 0};
 int focusUses[2] = {2, 2};
 int magnetActive[2] = {0, 0};
 int magnetUses[2] = {2, 2};
 int undoUses[2] = {1, 1};
 
-// Wind & Wobble
 float windX = 0.0f, windY = 0.0f;
 int windSpeed = 0;
 float windAngle = 0.0f;
@@ -122,7 +180,7 @@ int currentWobbleAmp = 15;
 int dartsLeft = 3;
 Dart darts[3];
 int dartsCount = 0;
-int gameState = 0; // 0=PLAYING, 1=TURN_END, 2=WON, 3=CAMPAIGN_OVER
+int gameState = 0;
 int mouseX = CX, mouseY = CY;
 int wobbleX = 0, wobbleY = 0;
 float t = 0.0f;
@@ -634,6 +692,7 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
         darts[dartsCount].mult = mult;
         darts[dartsCount].progress = 0.0f;
         darts[dartsCount].animating = 1;
+        darts[dartsCount].wobbleAmp = 0.0f;
         dartsCount++;
     }
     
@@ -727,23 +786,23 @@ void ThrowDart(HWND hwnd, int tx, int ty, int isAI) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
-void DrawPieSlice(HDC hdc, int r, float a1, float a2, COLORREF color) {
+void DrawPieSliceGDI(HDC hdc, int cx, int cy, int r, float a1, float a2, COLORREF color) {
     HBRUSH brush = CreateSolidBrush(color);
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(80, 80, 80));
+    HPEN pen = CreatePen(PS_NULL, 0, 0);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     
-    int left = CX - r;
-    int top = CY - r;
-    int right = CX + r;
-    int bottom = CY + r;
+    int left = cx - r;
+    int top = cy - r;
+    int right = cx + r;
+    int bottom = cy + r;
     
     int dxs = (int)(cosf(a2) * 1000.0f);
     int dys = (int)(sinf(a2) * 1000.0f);
     int dxe = (int)(cosf(a1) * 1000.0f);
     int dye = (int)(sinf(a1) * 1000.0f);
     
-    Pie(hdc, left, top, right, bottom, CX + dxs, CY + dys, CX + dxe, CY + dye);
+    Pie(hdc, left, top, right, bottom, cx + dxs, cy + dys, cx + dxe, cy + dye);
     
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
@@ -751,18 +810,265 @@ void DrawPieSlice(HDC hdc, int r, float a1, float a2, COLORREF color) {
     DeleteObject(pen);
 }
 
-void DrawCircle(HDC hdc, int r, COLORREF color) {
+void DrawCircleGDI(HDC hdc, int cx, int cy, int r, COLORREF color, COLORREF border) {
     HBRUSH brush = CreateSolidBrush(color);
     HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
-    HPEN pen = CreatePen(PS_SOLID, 1, RGB(80, 80, 80));
+    HPEN pen = CreatePen(PS_SOLID, 1, border);
     HPEN oldPen = (HPEN)SelectObject(hdc, pen);
     
-    Ellipse(hdc, CX - r, CY - r, CX + r, CY + r);
+    Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
     
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
     DeleteObject(brush);
     DeleteObject(pen);
+}
+
+void Draw3DSisalDartboardGDI(HDC hdc, int cx, int cy) {
+    // 1. Mahogany Cabinet Frame
+    DrawCircleGDI(hdc, cx, cy, (int)(BOARD_R * 1.35f), RGB(26, 12, 5), RGB(9, 4, 2));
+    DrawCircleGDI(hdc, cx, cy, (int)(BOARD_R * 1.02f), RGB(10, 10, 12), RGB(20, 20, 24));
+
+    // Brass corner bolts
+    for (int k = 0; k < 4; k++) {
+        float a = k * ((float)PI / 2.0f) + (float)PI / 4.0f;
+        int bx = cx + (int)(cosf(a) * (BOARD_R * 1.22f));
+        int by = cy + (int)(sinf(a) * (BOARD_R * 1.22f));
+        DrawCircleGDI(hdc, bx, by, 5, RGB(212, 175, 55), RGB(92, 71, 16));
+    }
+
+    // 2. 3D Sisal Segment Beds
+    float angleStep = (2.0f * (float)PI) / 20.0f;
+    float startOffset = -(float)PI / 2.0f - angleStep / 2.0f;
+    int scoresArray[] = {20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5};
+    
+    for (int i = 0; i < 20; i++) {
+        float a1 = startOffset + i * angleStep;
+        float a2 = a1 + angleStep;
+        int isRed = (i % 2 == 0);
+        
+        COLORREF colorRed = RGB(200, 16, 46);
+        COLORREF colorGreen = RGB(0, 135, 81);
+        COLORREF colorBlack = RGB(24, 24, 28);
+        COLORREF colorCream = RGB(244, 235, 208);
+        
+        if (magnetActive[currentPlayer]) {
+            colorRed = RGB(255, 68, 68);
+            colorGreen = RGB(0, 224, 112);
+        }
+        
+        DrawPieSliceGDI(hdc, cx, cy, (int)(R * 1.0f), a1, a2, isRed ? colorRed : colorGreen);
+        DrawPieSliceGDI(hdc, cx, cy, (int)(R * 0.952f), a1, a2, isRed ? colorBlack : colorCream);
+        DrawPieSliceGDI(hdc, cx, cy, (int)(R * 0.629f), a1, a2, isRed ? colorRed : colorGreen);
+        DrawPieSliceGDI(hdc, cx, cy, (int)(R * 0.582f), a1, a2, isRed ? colorBlack : colorCream);
+    }
+    
+    // Outer Bull & Inner Bull
+    DrawCircleGDI(hdc, cx, cy, (int)(R * 0.093f), RGB(0, 135, 81), RGB(0, 80, 50));
+    DrawCircleGDI(hdc, cx, cy, (int)(R * 0.037f), RGB(200, 16, 46), RGB(255, 215, 0));
+    DrawCircleGDI(hdc, cx - 1, cy - 1, (int)(R * 0.015f), RGB(255, 255, 255), RGB(255, 255, 255));
+
+    // 3. Metallic Wire Spider Grid (Rings & Radial Spokes)
+    float ringRadii[] = {R * 1.0f, R * 0.952f, R * 0.629f, R * 0.582f, R * 0.093f, R * 0.037f};
+    for (int k = 0; k < 6; k++) {
+        int r = (int)ringRadii[k];
+        // Shadow line
+        HPEN sPen = CreatePen(PS_SOLID, 2, RGB(20, 20, 20));
+        HPEN oldP = (HPEN)SelectObject(hdc, sPen);
+        HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, nullBr);
+        Ellipse(hdc, cx - r + 1, cy - r + 1, cx + r + 1, cy + r + 1);
+        SelectObject(hdc, oldP); DeleteObject(sPen);
+        
+        // Base wire
+        HPEN wPen = CreatePen(PS_SOLID, 1, RGB(180, 185, 195));
+        SelectObject(hdc, wPen);
+        Ellipse(hdc, cx - r, cy - r, cx + r, cy + r);
+        SelectObject(hdc, oldP); SelectObject(hdc, oldB); DeleteObject(wPen);
+    }
+
+    for (int i = 0; i < 20; i++) {
+        float a = startOffset + i * angleStep;
+        int x1 = cx + (int)(cosf(a) * (R * 0.093f));
+        int y1 = cy + (int)(sinf(a) * (R * 0.093f));
+        int x2 = cx + (int)(cosf(a) * (R * 1.0f));
+        int y2 = cy + (int)(sinf(a) * (R * 1.0f));
+        
+        // Wire Shadow
+        HPEN sPen = CreatePen(PS_SOLID, 2, RGB(20, 20, 20));
+        HPEN oldP = (HPEN)SelectObject(hdc, sPen);
+        MoveToEx(hdc, x1 + 1, y1 + 1, NULL);
+        LineTo(hdc, x2 + 1, y2 + 1);
+        SelectObject(hdc, oldP); DeleteObject(sPen);
+        
+        // Base Wire
+        HPEN wPen = CreatePen(PS_SOLID, 1, RGB(210, 215, 225));
+        SelectObject(hdc, wPen);
+        MoveToEx(hdc, x1, y1, NULL);
+        LineTo(hdc, x2, y2);
+        SelectObject(hdc, oldP); DeleteObject(wPen);
+
+        // Metallic staples at intersections
+        float stapleRadii[] = {R * 1.0f, R * 0.952f, R * 0.629f, R * 0.582f};
+        for (int k = 0; k < 4; k++) {
+            int sx = cx + (int)(cosf(a) * stapleRadii[k]);
+            int sy = cy + (int)(sinf(a) * stapleRadii[k]);
+            DrawCircleGDI(hdc, sx, sy, 2, RGB(230, 235, 240), RGB(50, 50, 50));
+        }
+    }
+
+    // 4. Outer Metallic Number Wire Ring
+    int numR = (int)(R * 1.15f);
+    HPEN nrPen = CreatePen(PS_SOLID, 2, RGB(140, 145, 155));
+    HPEN oldP = (HPEN)SelectObject(hdc, nrPen);
+    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, nullBr);
+    Ellipse(hdc, cx - numR, cy - numR, cx + numR, cy + numR);
+    SelectObject(hdc, oldP); SelectObject(hdc, oldB); DeleteObject(nrPen);
+
+    // 1-20 Metal Wire Numbers
+    SetBkMode(hdc, TRANSPARENT);
+    HFONT font = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+                            OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+                            DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    HFONT oldFont = (HFONT)SelectObject(hdc, font);
+    
+    for (int i = 0; i < 20; i++) {
+        float a = startOffset + i * angleStep + angleStep / 2.0f;
+        int nx = cx + (int)(cosf(a) * numR);
+        int ny = cy + (int)(sinf(a) * numR);
+        char numStr[3];
+        sprintf(numStr, "%d", scoresArray[i]);
+        SIZE sz;
+        GetTextExtentPoint32(hdc, numStr, strlen(numStr), &sz);
+        
+        // Shadow
+        SetTextColor(hdc, RGB(0, 0, 0));
+        TextOut(hdc, nx - sz.cx/2 + 1, ny - sz.cy/2 + 1, numStr, strlen(numStr));
+        // Metallic Face
+        SetTextColor(hdc, RGB(235, 240, 245));
+        TextOut(hdc, nx - sz.cx/2, ny - sz.cy/2, numStr, strlen(numStr));
+    }
+    SelectObject(hdc, oldFont);
+    DeleteObject(font);
+}
+
+void DrawDetailed3DDart(HDC hdc, int x, int y, float scale, float angle, int style, int isAnimating) {
+    float cosA = cosf(angle);
+    float sinA = sinf(angle);
+    
+    #define TRANSFORM_PT(px, py, outX, outY) do { \
+        float sx = (float)(px) * scale; \
+        float sy = (float)(py) * scale; \
+        outX = x + (int)(sx * cosA - sy * sinA); \
+        outY = y + (int)(sx * sinA + sy * cosA); \
+    } while(0)
+
+    if (!isAnimating) {
+        POINT shadowPts[10];
+        int pxs[] = {0, -4, -5, -2, -12, 0, 12, 2, 5, 4};
+        int pys[] = {0, -12, -34, -54, -76, -82, -76, -54, -34, -12};
+        for(int k=0; k<10; k++) {
+            TRANSFORM_PT(pxs[k] + 6, pys[k] + 10, shadowPts[k].x, shadowPts[k].y);
+        }
+        HBRUSH shBr = CreateSolidBrush(RGB(10, 10, 10));
+        HPEN shPen = CreatePen(PS_NULL, 0, 0);
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, shBr);
+        HPEN oldP = (HPEN)SelectObject(hdc, shPen);
+        Polygon(hdc, shadowPts, 10);
+        SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+        DeleteObject(shBr); DeleteObject(shPen);
+    }
+
+    // Steel Tip (0,0) to (0,-14)
+    POINT tipPts[3];
+    TRANSFORM_PT(0, 0, tipPts[0].x, tipPts[0].y);
+    TRANSFORM_PT(-2, -14, tipPts[1].x, tipPts[1].y);
+    TRANSFORM_PT(2, -14, tipPts[2].x, tipPts[2].y);
+    
+    HBRUSH tipBr = CreateSolidBrush(RGB(220, 225, 230));
+    HPEN tipPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+    HBRUSH oldB = (HBRUSH)SelectObject(hdc, tipBr);
+    HPEN oldP = (HPEN)SelectObject(hdc, tipPen);
+    Polygon(hdc, tipPts, 3);
+    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+    DeleteObject(tipBr); DeleteObject(tipPen);
+
+    // Brass / Tungsten Barrel (-14 to -38)
+    POINT barPts[4];
+    TRANSFORM_PT(-4, -14, barPts[0].x, barPts[0].y);
+    TRANSFORM_PT(4, -14, barPts[1].x, barPts[1].y);
+    TRANSFORM_PT(4, -38, barPts[2].x, barPts[2].y);
+    TRANSFORM_PT(-4, -38, barPts[3].x, barPts[3].y);
+
+    COLORREF bColor = (style == 2) ? RGB(230, 190, 50) : RGB(180, 185, 190);
+    HBRUSH barBr = CreateSolidBrush(bColor);
+    HPEN barPen = CreatePen(PS_SOLID, 1, RGB(40, 40, 40));
+    oldB = (HBRUSH)SelectObject(hdc, barBr);
+    oldP = (HPEN)SelectObject(hdc, barPen);
+    Polygon(hdc, barPts, 4);
+    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+    DeleteObject(barBr); DeleteObject(barPen);
+
+    // Knurling ridges
+    HPEN ridgePen = CreatePen(PS_SOLID, 1, RGB(50, 50, 50));
+    oldP = (HPEN)SelectObject(hdc, ridgePen);
+    for(int bY = -34; bY <= -18; bY += 4) {
+        int lx1, ly1, lx2, ly2;
+        TRANSFORM_PT(-4, bY, lx1, ly1);
+        TRANSFORM_PT(4, bY, lx2, ly2);
+        MoveToEx(hdc, lx1, ly1, NULL);
+        LineTo(hdc, lx2, ly2);
+    }
+    SelectObject(hdc, oldP); DeleteObject(ridgePen);
+
+    // Aluminum Shaft (-38 to -58)
+    POINT shfPts[4];
+    TRANSFORM_PT(-2, -38, shfPts[0].x, shfPts[0].y);
+    TRANSFORM_PT(2, -38, shfPts[1].x, shfPts[1].y);
+    TRANSFORM_PT(2, -58, shfPts[2].x, shfPts[2].y);
+    TRANSFORM_PT(-2, -58, shfPts[3].x, shfPts[3].y);
+
+    HBRUSH shfBr = CreateSolidBrush(RGB(60, 60, 65));
+    HPEN shfPen = CreatePen(PS_SOLID, 1, RGB(20, 20, 20));
+    oldB = (HBRUSH)SelectObject(hdc, shfBr);
+    oldP = (HPEN)SelectObject(hdc, shfPen);
+    Polygon(hdc, shfPts, 4);
+    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+    DeleteObject(shfBr); DeleteObject(shfPen);
+
+    // 3D Tail Flights (-58 to -84)
+    COLORREF fColor = RGB(0, 240, 255);
+    if (style == 1) fColor = RGB(255, 42, 42);
+    else if (style == 2) fColor = RGB(255, 215, 0);
+
+    POINT fin1[6];
+    TRANSFORM_PT(0, -58, fin1[0].x, fin1[0].y);
+    TRANSFORM_PT(-14, -72, fin1[1].x, fin1[1].y);
+    TRANSFORM_PT(-11, -84, fin1[2].x, fin1[2].y);
+    TRANSFORM_PT(0, -78, fin1[3].x, fin1[3].y);
+    TRANSFORM_PT(11, -84, fin1[4].x, fin1[4].y);
+    TRANSFORM_PT(14, -72, fin1[5].x, fin1[5].y);
+
+    HBRUSH fltBr = CreateSolidBrush(fColor);
+    HPEN fltPen = CreatePen(PS_SOLID, 1, RGB(10, 10, 10));
+    oldB = (HBRUSH)SelectObject(hdc, fltBr);
+    oldP = (HPEN)SelectObject(hdc, fltPen);
+    Polygon(hdc, fin1, 6);
+
+    POINT fin2[6];
+    TRANSFORM_PT(0, -60, fin2[0].x, fin2[0].y);
+    TRANSFORM_PT(-6, -70, fin2[1].x, fin2[1].y);
+    TRANSFORM_PT(-4, -78, fin2[2].x, fin2[2].y);
+    TRANSFORM_PT(0, -76, fin2[3].x, fin2[3].y);
+    TRANSFORM_PT(4, -78, fin2[4].x, fin2[4].y);
+    TRANSFORM_PT(6, -70, fin2[5].x, fin2[5].y);
+
+    Polygon(hdc, fin2, 6);
+    SelectObject(hdc, oldB); SelectObject(hdc, oldP);
+    DeleteObject(fltBr); DeleteObject(fltPen);
+
+    #undef TRANSFORM_PT
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -846,7 +1152,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             else if (LOWORD(wParam) == 109) { Redo(hwnd); }
             else if (LOWORD(wParam) == 110) {
                 MessageBox(hwnd, 
-                    "KDarts - Loop 6 Campaign & Expansion:\n\n"
+                    "KDarts - 3D Visual Edition:\n\n"
                     "Controls:\n"
                     "- Aim with mouse, click to throw. Press F for Focus (slows wobble), M for Magnet (expands double/triple rings), U for Undo Dart (re-throw 1 bad dart).\n"
                     "- Keyboard: 1-5 for Modes, C for Campaign, F for Focus, M for Magnet, U for Undo Dart.\n\n"
@@ -884,19 +1190,63 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             
             for (int i = 0; i < dartsCount; i++) {
                 if (darts[i].animating) {
-                    darts[i].progress += 0.1f;
+                    darts[i].progress += 0.08f;
                     if (darts[i].progress >= 1.0f) {
                         darts[i].progress = 1.0f;
                         darts[i].animating = 0;
-                        if (darts[i].number == 25) PlayGameSound(3);
-                        else PlayGameSound(2);
+                        darts[i].wobbleAmp = (darts[i].number == 25) ? 12.0f : ((darts[i].mult == 3) ? 9.0f : 6.0f);
+                        TriggerShake((darts[i].number == 25) ? 10.0f : ((darts[i].mult == 3) ? 7.0f : 4.0f), 10);
+                        
+                        if (darts[i].number == 25) {
+                            PlayGameSound(3);
+                            SpawnSparks((float)darts[i].targetX, (float)darts[i].targetY, RGB(255, 215, 0), 35);
+                            SpawnSparks((float)darts[i].targetX, (float)darts[i].targetY, RGB(255, 51, 51), 20);
+                            SpawnScoreText((float)darts[i].targetX, (float)darts[i].targetY - 20, 
+                                           darts[i].mult == 2 ? "DOUBLE BULL! 50" : "BULLSEYE! 25", RGB(255, 215, 0));
+                        } else {
+                            PlayGameSound(2);
+                            COLORREF col = (darts[i].mult == 3) ? RGB(0, 255, 136) : ((darts[i].mult == 2) ? RGB(255, 68, 68) : RGB(255, 255, 255));
+                            SpawnSparks((float)darts[i].targetX, (float)darts[i].targetY, col, (darts[i].mult == 3) ? 25 : ((darts[i].mult == 2) ? 18 : 12));
+                            
+                            char txt[32];
+                            if (darts[i].mult == 3) sprintf(txt, "TRIPLE %d! +%d", darts[i].number, darts[i].pts);
+                            else if (darts[i].mult == 2) sprintf(txt, "DOUBLE %d! +%d", darts[i].number, darts[i].pts);
+                            else if (darts[i].pts > 0) sprintf(txt, "+%d", darts[i].pts);
+                            else strcpy(txt, "MISS!");
+                            
+                            COLORREF txtCol = (darts[i].mult == 3) ? RGB(0, 255, 204) : ((darts[i].mult == 2) ? RGB(255, 102, 102) : RGB(255, 255, 255));
+                            SpawnScoreText((float)darts[i].targetX, (float)darts[i].targetY - 20, txt, txtCol);
+                        }
                     }
                     float ease = 1.0f - powf(1.0f - darts[i].progress, 3.0f);
+                    float arc = sinf(darts[i].progress * (float)PI) * 110.0f;
                     darts[i].x = CX + (darts[i].targetX - CX) * ease;
-                    darts[i].y = 750.0f + (darts[i].targetY - 750.0f) * ease;
+                    darts[i].y = 750.0f + (darts[i].targetY - 750.0f) * ease - arc;
                 } else {
                     darts[i].x = (float)darts[i].targetX;
                     darts[i].y = (float)darts[i].targetY;
+                }
+            }
+            
+            // Update particles
+            for (int i = particleCount - 1; i >= 0; i--) {
+                particles[i].life++;
+                particles[i].x += particles[i].vx;
+                particles[i].y += particles[i].vy;
+                particles[i].vy += 0.15f;
+                if (particles[i].life >= particles[i].maxLife) {
+                    particles[i] = particles[particleCount - 1];
+                    particleCount--;
+                }
+            }
+
+            // Update floating score text
+            for (int i = scoreTextCount - 1; i >= 0; i--) {
+                scoreTexts[i].life++;
+                scoreTexts[i].y += scoreTexts[i].vy;
+                if (scoreTexts[i].life >= scoreTexts[i].maxLife) {
+                    scoreTexts[i] = scoreTexts[scoreTextCount - 1];
+                    scoreTextCount--;
                 }
             }
             
@@ -931,7 +1281,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
             
         case WM_LBUTTONDOWN: {
-            if (mouseY < 170 && mouseX > 15 && mouseX < 700) return 0; // Ignore top UI panel clicks
+            if (mouseY < 170 && mouseX > 15 && mouseX < 700) return 0;
             
             int isP1OrHuman = (currentPlayer == 0 || (!isCampaign && aiDifficulty == 4));
             if (gameState == 0 && isP1OrHuman) {
@@ -972,68 +1322,30 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             DeleteObject(uiBrush);
             DeleteObject(uiPen);
             
-            // Board background
-            HBRUSH boardBg = CreateSolidBrush(RGB(12, 12, 14));
-            HBRUSH oldBr = (HBRUSH)SelectObject(memDC, boardBg);
-            Ellipse(memDC, CX - BOARD_R, CY - BOARD_R, CX + BOARD_R, CY + BOARD_R);
-            SelectObject(memDC, oldBr);
-            DeleteObject(boardBg);
-            
-            // Draw segments
-            float angleStep = (2.0f * (float)PI) / 20.0f;
-            float startOffset = -(float)PI / 2.0f - angleStep / 2.0f;
-            int scoresArray[] = {20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5};
-            
-            for (int i = 0; i < 20; i++) {
-                float a1 = startOffset + i * angleStep;
-                float a2 = a1 + angleStep;
-                int isRed = (i % 2 == 0);
-                
-                COLORREF colorRed = RGB(208, 0, 0);
-                COLORREF colorGreen = RGB(0, 163, 0);
-                COLORREF colorBlack = RGB(17, 17, 17);
-                COLORREF colorWhite = RGB(232, 230, 209);
-                
-                if (magnetActive[currentPlayer]) {
-                    colorRed = RGB(255, 80, 80);
-                    colorGreen = RGB(80, 220, 80);
-                }
-                
-                DrawPieSlice(memDC, (int)(R * 1.0f), a1, a2, isRed ? colorRed : colorGreen);
-                DrawPieSlice(memDC, (int)(R * 0.952f), a1, a2, isRed ? colorBlack : colorWhite);
-                DrawPieSlice(memDC, (int)(R * 0.629f), a1, a2, isRed ? colorRed : colorGreen);
-                DrawPieSlice(memDC, (int)(R * 0.582f), a1, a2, isRed ? colorBlack : colorWhite);
+            // Calculate screen shake
+            int shakeX = 0, shakeY = 0;
+            if (shakeTime > 0) {
+                shakeX = (int)(((float)rand()/RAND_MAX - 0.5f) * shakeMag);
+                shakeY = (int)(((float)rand()/RAND_MAX - 0.5f) * shakeMag);
+                shakeTime--;
+                shakeMag *= 0.85f;
             }
+
+            // Draw 3D Sisal Dartboard with metallic wire spider
+            Draw3DSisalDartboardGDI(memDC, CX + shakeX, CY + shakeY);
             
-            DrawCircle(memDC, (int)(R * 0.093f), RGB(0, 163, 0));
-            DrawCircle(memDC, (int)(R * 0.037f), RGB(208, 0, 0));
-            
-            // Draw numbers
+            // Header Text & Score UI
             SetBkMode(memDC, TRANSPARENT);
-            SetTextColor(memDC, RGB(255, 255, 255));
             HFONT font = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                     DEFAULT_PITCH | FF_SWISS, "Segoe UI");
-            HFONT oldFont = (HFONT)SelectObject(memDC, font);
-            
-            for (int i = 0; i < 20; i++) {
-                float a = startOffset + i * angleStep + angleStep / 2.0f;
-                int nx = CX + (int)(cosf(a) * (R * 1.15f));
-                int ny = CY + (int)(sinf(a) * (R * 1.15f));
-                char numStr[3];
-                sprintf(numStr, "%d", scoresArray[i]);
-                SIZE sz;
-                GetTextExtentPoint32(memDC, numStr, strlen(numStr), &sz);
-                TextOut(memDC, nx - sz.cx/2, ny - sz.cy/2, numStr, strlen(numStr));
-            }
-            
             HFONT largeFont = CreateFont(36, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
                                     DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             const char* p2Name = isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty == 4 ? "P2" : "AI");
             
-            SelectObject(memDC, font);
+            HFONT oldFont = (HFONT)SelectObject(memDC, font);
             SetTextColor(memDC, RGB(255, 215, 0));
             char titleLine[128];
             if (isCampaign) {
@@ -1099,7 +1411,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             GetTextExtentPoint32(memDC, statusMsg, strlen(statusMsg), &sz);
             TextOut(memDC, CX - sz.cx/2, 138, statusMsg, strlen(statusMsg));
             
-            // Power-ups & Wind Badge at bottom of UI panel
             char pwrBadge[128];
             sprintf(pwrBadge, "Focus(F): %d/2 %s | Magnet(M): %d/2 %s | Undo(U): %d/1 | Wind: %d mph", 
                     focusUses[currentPlayer], focusActive[currentPlayer] ? "[ACTIVE]" : "",
@@ -1109,61 +1420,69 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             GetTextExtentPoint32(memDC, pwrBadge, strlen(pwrBadge), &sz);
             TextOut(memDC, CX - sz.cx/2, 152, pwrBadge, strlen(pwrBadge));
             
-            // Draw thrown darts
+            // Draw Darts
             for (int i = 0; i < dartsCount; i++) {
-                float scale = darts[i].animating ? (1.5f - darts[i].progress * 0.5f) : 1.0f;
-                int dx = (int)darts[i].x;
-                int dy = (int)darts[i].y;
+                int renderX = (int)darts[i].x + shakeX;
+                int renderY = (int)darts[i].y + shakeY;
+                float scale = 1.0f;
+                float angle = 0.0f;
+                int isAnim = darts[i].animating;
                 
-                HPEN shaftPen = CreatePen(PS_SOLID, (int)(2.0f * scale), RGB(200, 200, 200));
-                HPEN oldPen = (HPEN)SelectObject(memDC, shaftPen);
-                MoveToEx(memDC, dx, dy, NULL);
-                LineTo(memDC, dx + (int)(15.0f * scale), dy + (int)(25.0f * scale));
-                SelectObject(memDC, oldPen);
-                DeleteObject(shaftPen);
+                if (isAnim) {
+                    scale = 2.4f - darts[i].progress * 1.4f;
+                    angle = (1.0f - darts[i].progress) * -0.4f;
+                } else {
+                    if (darts[i].wobbleAmp > 0.05f) {
+                        angle = sinf(t * 28.0f) * (darts[i].wobbleAmp * ((float)PI / 180.0f));
+                        darts[i].wobbleAmp *= 0.88f;
+                    }
+                }
                 
-                POINT flight[4];
-                flight[0].x = dx + (int)(15.0f * scale); flight[0].y = dy + (int)(25.0f * scale);
-                flight[1].x = dx + (int)(25.0f * scale); flight[1].y = dy + (int)(15.0f * scale);
-                flight[2].x = dx + (int)(35.0f * scale); flight[2].y = dy + (int)(25.0f * scale);
-                flight[3].x = dx + (int)(25.0f * scale); flight[3].y = dy + (int)(35.0f * scale);
-                
-                COLORREF fColor = RGB(0, 255, 255);
-                if (dartStyle == 1) fColor = RGB(255, 51, 51);
-                else if (dartStyle == 2) fColor = RGB(255, 215, 0);
-                HBRUSH fBrush = CreateSolidBrush(fColor);
-                HPEN fPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-                HBRUSH oldFBr = (HBRUSH)SelectObject(memDC, fBrush);
-                HPEN oldFPen = (HPEN)SelectObject(memDC, fPen);
-                Polygon(memDC, flight, 4);
-                SelectObject(memDC, oldFBr);
-                SelectObject(memDC, oldFPen);
-                DeleteObject(fBrush);
-                DeleteObject(fPen);
-                
-                HBRUSH tBrush = CreateSolidBrush(RGB(255, 255, 255));
-                HBRUSH oldTBr = (HBRUSH)SelectObject(memDC, tBrush);
-                int r = (int)(2.0f * scale);
-                Ellipse(memDC, dx - r, dy - r, dx + r, dy + r);
-                SelectObject(memDC, oldTBr);
-                DeleteObject(tBrush);
+                DrawDetailed3DDart(memDC, renderX, renderY, scale, angle, dartStyle, isAnim);
             }
             
-            // Draw crosshair
+            // Draw Spark Particles
+            for (int i = 0; i < particleCount; i++) {
+                int px = (int)particles[i].x + shakeX;
+                int py = (int)particles[i].y + shakeY;
+                int pSize = (int)particles[i].size;
+                HBRUSH pBr = CreateSolidBrush(particles[i].color);
+                HPEN pPen = CreatePen(PS_NULL, 0, 0);
+                HBRUSH oldB = (HBRUSH)SelectObject(memDC, pBr);
+                HPEN oldP = (HPEN)SelectObject(memDC, pPen);
+                Ellipse(memDC, px - pSize, py - pSize, px + pSize, py + pSize);
+                SelectObject(memDC, oldB); SelectObject(memDC, oldP);
+                DeleteObject(pBr); DeleteObject(pPen);
+            }
+
+            // Draw Floating Score Texts
+            for (int i = 0; i < scoreTextCount; i++) {
+                int tx = (int)scoreTexts[i].x + shakeX;
+                int ty = (int)scoreTexts[i].y + shakeY;
+                GetTextExtentPoint32(memDC, scoreTexts[i].text, strlen(scoreTexts[i].text), &sz);
+                
+                SetTextColor(memDC, RGB(0, 0, 0));
+                TextOut(memDC, tx - sz.cx/2 + 1, ty - sz.cy/2 + 1, scoreTexts[i].text, strlen(scoreTexts[i].text));
+                SetTextColor(memDC, scoreTexts[i].color);
+                TextOut(memDC, tx - sz.cx/2, ty - sz.cy/2, scoreTexts[i].text, strlen(scoreTexts[i].text));
+            }
+
+            // Crosshair
             int isP1OrHuman = (currentPlayer == 0 || (!isCampaign && aiDifficulty == 4));
             if (gameState == 0 && isP1OrHuman) {
-                int tx = mouseX + wobbleX;
-                int ty = mouseY + wobbleY;
+                int tx = mouseX + wobbleX + shakeX;
+                int ty = mouseY + wobbleY + shakeY;
                 
                 COLORREF crossColor = focusActive[currentPlayer] ? RGB(0, 255, 128) : RGB(255, 255, 0);
                 HPEN cPen = CreatePen(PS_SOLID, 2, crossColor);
                 HPEN oldCPen = (HPEN)SelectObject(memDC, cPen);
                 
-                MoveToEx(memDC, tx - 15, ty, NULL); LineTo(memDC, tx + 15, ty);
-                MoveToEx(memDC, tx, ty - 15, NULL); LineTo(memDC, tx, ty + 15);
+                MoveToEx(memDC, tx - 18, ty, NULL); LineTo(memDC, tx + 18, ty);
+                MoveToEx(memDC, tx, ty - 18, NULL); LineTo(memDC, tx, ty + 18);
                 Arc(memDC, tx - 10, ty - 10, tx + 10, ty + 10, tx, ty - 10, tx, ty - 10);
                 
-                // Wind indicator vector line on crosshair
+                DrawCircleGDI(memDC, tx, ty, 2, crossColor, crossColor);
+
                 if (windSpeed > 0) {
                     HPEN wPen = CreatePen(PS_DOT, 1, RGB(255, 100, 100));
                     SelectObject(memDC, wPen);
@@ -1208,7 +1527,7 @@ void __stdcall MainEntry() {
     RegisterClass(&wc);
     
     HWND hwnd = CreateWindowEx(
-        0, "KDartsClass", "KDarts - Loop 6 Campaign Expansion", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+        0, "KDartsClass", "KDarts - 3D Visual Edition", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, 735, 780,
         NULL, NULL, wc.hInstance, NULL
     );
