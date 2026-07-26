@@ -45,7 +45,7 @@ Before creating any new app, check for overlap with the existing suite. The foll
 - **Calculators/Converters:** KCalc, KConverter, KBase — no more calculator or unit converter variants.
 - **Time/Clocks:** KClock, KTimer, KCalendar — no more clock or timer variants.
 - **Chat/Messaging:** KChat, KChatServer, KBBS, KMail — no more chat or email apps.
-- **Existing Games:** K2048, KAsteroids, KBreakout, KChess, KConnect4, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KRogue, KSimon, KSnake, KSolitaire, KSpace, KSudoku, KTetris, KWords — do NOT recreate these genres.
+- **Existing Games:** K2048, KAlchemy, KAsteroids, KBreakout, KChess, KConnect4, KDarts, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords — do NOT recreate these genres.
 
 When choosing a new app, ask: "Does this do something fundamentally different from every existing app?" If the answer is no, pick something else.
 
