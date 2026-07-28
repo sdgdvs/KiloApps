@@ -25,6 +25,7 @@
 </style>
 </head>
 <body>
+<div id="aria-status" role="status" aria-live="polite" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">White's turn</div>
 <canvas id="cvs" width="540" height="580" tabindex="0" role="application" aria-label="Chess game"></canvas>
 <script>
   const cvs = document.getElementById('cvs');
@@ -216,18 +217,18 @@
           if (!isAttackCheck && dy === 0 && adx === 2) {
               if (isWhite) {
                   if (wKingMoved) return false;
-                  if (tx === 6 && !wRookRMoved && board[7][5] === 0 && board[7][6] === 0) {
+                  if (tx === 6 && !wRookRMoved && board[7][7] === 4 && board[7][5] === 0 && board[7][6] === 0) {
                       if (!isSquareAttacked(4, 7, false) && !isSquareAttacked(5, 7, false) && !isSquareAttacked(6, 7, false)) return true;
                   }
-                  if (tx === 2 && !wRookLMoved && board[7][1] === 0 && board[7][2] === 0 && board[7][3] === 0) {
+                  if (tx === 2 && !wRookLMoved && board[7][0] === 4 && board[7][1] === 0 && board[7][2] === 0 && board[7][3] === 0) {
                       if (!isSquareAttacked(4, 7, false) && !isSquareAttacked(3, 7, false) && !isSquareAttacked(2, 7, false)) return true;
                   }
               } else {
                   if (bKingMoved) return false;
-                  if (tx === 6 && !bRookRMoved && board[0][5] === 0 && board[0][6] === 0) {
+                  if (tx === 6 && !bRookRMoved && board[0][7] === 10 && board[0][5] === 0 && board[0][6] === 0) {
                       if (!isSquareAttacked(4, 0, true) && !isSquareAttacked(5, 0, true) && !isSquareAttacked(6, 0, true)) return true;
                   }
-                  if (tx === 2 && !bRookLMoved && board[0][1] === 0 && board[0][2] === 0 && board[0][3] === 0) {
+                  if (tx === 2 && !bRookLMoved && board[0][0] === 10 && board[0][1] === 0 && board[0][2] === 0 && board[0][3] === 0) {
                       if (!isSquareAttacked(4, 0, true) && !isSquareAttacked(3, 0, true) && !isSquareAttacked(2, 0, true)) return true;
                   }
               }
@@ -330,26 +331,50 @@
           dstP: board[ty][tx],
           epX: epX, epY: epY,
           wkm: wKingMoved, wrl: wRookLMoved, wrr: wRookRMoved,
-          bkm: bKingMoved, brl: bRookLMoved, brr: bRookRMoved
+          bkm: bKingMoved, brl: bRookLMoved, brr: bRookRMoved,
+          capturedEPPawn: 0, capturedEPX: -1, capturedEPY: -1
       };
-      board[ty][tx] = ms.srcP;
-      board[sy][sx] = 0;
       let isWhite = ms.srcP <= 6;
       let pType = isWhite ? ms.srcP : ms.srcP - 6;
+
+      if (pType === 1 && tx === epX && ty === (isWhite ? epY - 1 : epY + 1)) {
+          ms.capturedEPPawn = board[epY][epX];
+          ms.capturedEPX = epX;
+          ms.capturedEPY = epY;
+          board[epY][epX] = 0;
+      }
+
+      board[ty][tx] = ms.srcP;
+      board[sy][sx] = 0;
+
       if (pType === 1 && (ty === 0 || ty === 7)) {
           board[ty][tx] = isWhite ? 5 : 11;
       }
       if (pType === 6) { if (isWhite) wKingMoved = true; else bKingMoved = true; }
       if (pType === 4) {
-          if (isWhite) { if (sx === 0) wRookLMoved = true; if (sx === 7) wRookRMoved = true; }
-          else { if (sx === 0) bRookLMoved = true; if (sx === 7) bRookRMoved = true; }
+          if (isWhite) { if (sx === 0 && sy === 7) wRookLMoved = true; if (sx === 7 && sy === 7) wRookRMoved = true; }
+          else { if (sx === 0 && sy === 0) bRookLMoved = true; if (sx === 7 && sy === 0) bRookRMoved = true; }
       }
+      if (tx === 0 && ty === 7) wRookLMoved = true;
+      if (tx === 7 && ty === 7) wRookRMoved = true;
+      if (tx === 0 && ty === 0) bRookLMoved = true;
+      if (tx === 7 && ty === 0) bRookRMoved = true;
+
+      if (pType === 1 && Math.abs(ty - sy) === 2) {
+          epX = tx; epY = ty;
+      } else {
+          epX = -1; epY = -1;
+      }
+
       return ms;
   }
 
   function unmakeMoveSim(sx, sy, tx, ty, ms) {
       board[sy][sx] = ms.srcP;
       board[ty][tx] = ms.dstP;
+      if (ms.capturedEPPawn !== 0) {
+          board[ms.capturedEPY][ms.capturedEPX] = ms.capturedEPPawn;
+      }
       epX = ms.epX; epY = ms.epY;
       wKingMoved = ms.wkm; wRookLMoved = ms.wrl; wRookRMoved = ms.wrr;
       bKingMoved = ms.bkm; bRookLMoved = ms.brl; bRookRMoved = ms.brr;
@@ -360,6 +385,7 @@
 
       if (isMaximizing) { // Black turn
           let maxEval = -999999;
+          let movesFound = false;
           for (let sy = 0; sy < 8; sy++) {
               for (let sx = 0; sx < 8; sx++) {
                   if (board[sy][sx] > 6) {
@@ -367,6 +393,7 @@
                           for (let tx = 0; tx < 8; tx++) {
                               if (isValidMove(sx, sy, tx, ty, false)) {
                                   if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, false)) {
+                                      movesFound = true;
                                       let ms = makeMoveSim(sx, sy, tx, ty);
                                       let evalScore = minimaxAB(depth - 1, alpha, beta, false);
                                       unmakeMoveSim(sx, sy, tx, ty, ms);
@@ -380,9 +407,22 @@
                   }
               }
           }
-          return maxEval === -999999 ? evaluateBoardStatic() : maxEval;
+          if (!movesFound) {
+              let kx = -1, ky = -1;
+              for (let y = 0; y < 8; y++) {
+                  for (let x = 0; x < 8; x++) {
+                      if (board[y][x] === 12) { kx = x; ky = y; break; }
+                  }
+              }
+              if (kx !== -1 && isSquareAttacked(kx, ky, true)) {
+                  return -100000 + depth;
+              }
+              return 0;
+          }
+          return maxEval;
       } else { // White turn
           let minEval = 999999;
+          let movesFound = false;
           for (let sy = 0; sy < 8; sy++) {
               for (let sx = 0; sx < 8; sx++) {
                   if (board[sy][sx] !== 0 && board[sy][sx] <= 6) {
@@ -390,6 +430,7 @@
                           for (let tx = 0; tx < 8; tx++) {
                               if (isValidMove(sx, sy, tx, ty, false)) {
                                   if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, true)) {
+                                      movesFound = true;
                                       let ms = makeMoveSim(sx, sy, tx, ty);
                                       let evalScore = minimaxAB(depth - 1, alpha, beta, true);
                                       unmakeMoveSim(sx, sy, tx, ty, ms);
@@ -403,7 +444,19 @@
                   }
               }
           }
-          return minEval === 999999 ? evaluateBoardStatic() : minEval;
+          if (!movesFound) {
+              let kx = -1, ky = -1;
+              for (let y = 0; y < 8; y++) {
+                  for (let x = 0; x < 8; x++) {
+                      if (board[y][x] === 6) { kx = x; ky = y; break; }
+                  }
+              }
+              if (kx !== -1 && isSquareAttacked(kx, ky, false)) {
+                  return 100000 - depth;
+              }
+              return 0;
+          }
+          return minEval;
       }
   }
 
@@ -539,9 +592,17 @@
       whiteTurn = true;
       gameOver = false;
       winner = 0;
-      lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
+                                      lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
       moveAnimation = null;
       particles = [];
+  }
+
+  let kbX = 4, kbY = 6;
+  let kbActive = false;
+
+  function updateAriaStatus(msg) {
+      const el = document.getElementById('aria-status');
+      if (el) el.textContent = msg;
   }
 
   function handleHotkey(key) {
@@ -576,20 +637,36 @@
               playSound('check');
           }
       } else if (k === 'u') {
-          if (!gameOver && whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
+          if (whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
               undoPowerups--;
               board = undoBoard.map(row => [...row]);
               wKingMoved = undoWKM; wRookLMoved = undoWRL; wRookRMoved = undoWRR;
               bKingMoved = undoBKM; bRookLMoved = undoBRL; bRookRMoved = undoBRR;
               epX = undoEpX; epY = undoEpY;
               selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
-              canUndo = false; hintActive = false; moveAnimation = null;
+              canUndo = false; hintActive = false; moveAnimation = null; gameOver = false; winner = 0;
               playSound('move');
           }
       }
   }
 
-  window.addEventListener('keydown', (e) => handleHotkey(e.key));
+  window.addEventListener('keydown', (e) => {
+      const k = e.key;
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'Escape'].includes(k)) {
+          e.preventDefault();
+          kbActive = true;
+          if (k === 'ArrowUp') kbY = Math.max(0, kbY - 1);
+          if (k === 'ArrowDown') kbY = Math.min(7, kbY + 1);
+          if (k === 'ArrowLeft') kbX = Math.max(0, kbX - 1);
+          if (k === 'ArrowRight') kbX = Math.min(7, kbX + 1);
+          if (k === 'Escape') { selX = -1; selY = -1; }
+          if (k === ' ' || k === 'Enter') {
+              handleSquareClick(kbX, kbY);
+          }
+      } else {
+          handleHotkey(k);
+      }
+  });
 
   function performMove(sx, sy, tx, ty) {
       let isCaptured = board[ty][tx] !== 0;
@@ -625,9 +702,14 @@
           if (isWhiteMove) wKingMoved = true; else bKingMoved = true;
       }
       if (pType === 4) {
-          if (isWhiteMove) { if (sx === 0) wRookLMoved = true; if (sx === 7) wRookRMoved = true; }
-          else { if (sx === 0) bRookLMoved = true; if (sx === 7) bRookRMoved = true; }
+          if (isWhiteMove) { if (sx === 0 && sy === 7) wRookLMoved = true; if (sx === 7 && sy === 7) wRookRMoved = true; }
+          else { if (sx === 0 && sy === 0) bRookLMoved = true; if (sx === 7 && sy === 0) bRookRMoved = true; }
       }
+      if (tx === 0 && ty === 7) wRookLMoved = true;
+      if (tx === 7 && ty === 7) wRookRMoved = true;
+      if (tx === 0 && ty === 0) bRookLMoved = true;
+      if (tx === 7 && ty === 0) bRookRMoved = true;
+
       if (pType === 1 && Math.abs(ty - sy) === 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
       
       board[sy][sx] = 0;
@@ -642,6 +724,21 @@
 
       whiteTurn = !whiteTurn;
 
+      // Check Insufficient Material (King vs King)
+      let pieceCount = 0;
+      for (let r = 0; r < 8; r++) {
+          for (let c = 0; c < 8; c++) {
+              if (board[r][c] !== 0) pieceCount++;
+          }
+      }
+      if (pieceCount <= 2) {
+          gameOver = true;
+          winner = 3;
+          updateAriaStatus("Draw by Insufficient Material");
+          if (aiMode) { statsDraws++; saveStats(); }
+          return;
+      }
+
       if (!hasLegalMoves(whiteTurn)) {
           gameOver = true;
           let kx = -1, ky = -1;
@@ -653,11 +750,15 @@
           if (kx !== -1 && ky !== -1 && isSquareAttacked(kx, ky, !whiteTurn)) {
               winner = !whiteTurn ? 1 : 2;
               playSound('check');
+              updateAriaStatus(winner === 1 ? "Checkmate! White Wins!" : "Checkmate! Black Wins!");
               if (aiMode) { if (winner === 1) statsWins++; else statsLosses++; saveStats(); }
           } else {
               winner = 3;
+              updateAriaStatus("Stalemate!");
               if (aiMode) { statsDraws++; saveStats(); }
           }
+      } else {
+          updateAriaStatus(whiteTurn ? "White's Turn" : "Black's Turn");
       }
   }
 
@@ -715,6 +816,83 @@
           performMove(chosen.sx, chosen.sy, chosen.tx, chosen.ty);
       }
   }
+
+  function handleSquareClick(tx, ty) {
+      if (gameOver) {
+          if (gameMode === 0 && winner === 1 && currentStage < 20) {
+              currentStage++;
+          }
+          resetGame();
+          return;
+      }
+      if (aiMode && !whiteTurn) return;
+      
+      if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
+          hintActive = false;
+          if (selX === -1) {
+              if (board[ty][tx] !== 0) {
+                  let isWhite = board[ty][tx] <= 6;
+                  if ((whiteTurn && isWhite) || (!whiteTurn && !isWhite)) {
+                      selX = tx; selY = ty;
+                  }
+              }
+          } else {
+              if (selX === tx && selY === ty) {
+                  selX = -1; selY = -1;
+              } else {
+                  let p = board[selY][selX];
+                  let isWhite = p <= 6;
+                  let dstP = board[ty][tx];
+                  let dstIsWhite = dstP <= 6;
+                  
+                  if (dstP !== 0 && isWhite === dstIsWhite) {
+                      selX = tx; selY = ty;
+                  } else {
+                      if (isValidMove(selX, selY, tx, ty, false)) {
+                          if (!simulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
+                              if (whiteTurn) {
+                                  undoBoard = board.map(row => [...row]);
+                                  undoWKM = wKingMoved; undoWRL = wRookLMoved; undoWRR = wRookRMoved;
+                                  undoBKM = bKingMoved; undoBRL = bRookLMoved; undoBRR = bRookRMoved;
+                                  undoEpX = epX; undoEpY = epY;
+                                  canUndo = true;
+                              }
+
+                              let curSelX = selX; let curSelY = selY;
+                              selX = -1; selY = -1;
+
+                              performMove(curSelX, curSelY, tx, ty);
+
+                              if (aiMode && !whiteTurn && !gameOver) {
+                                  setTimeout(doBlackAIMove, 350);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
+  }
+
+  cvs.onmousedown = (e) => {
+      const rect = cvs.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      // Check skill buttons
+      if (my >= 475 && my <= 505) {
+          if (mx >= 45 && mx <= 125) { handleHotkey('h'); return; }
+          if (mx >= 135 && mx <= 215) { handleHotkey('u'); return; }
+          if (mx >= 225 && mx <= 305) { handleHotkey('f'); return; }
+          if (mx >= 315 && mx <= 395) { handleHotkey('m'); return; }
+          if (mx >= 405 && mx <= 495) { handleHotkey('p'); return; }
+      }
+
+      const tx = Math.floor((mx - OX) / TS);
+      const ty = Math.floor((my - OY) / TS);
+      kbX = tx; kbY = ty; kbActive = false;
+      handleSquareClick(tx, ty);
+  };
 
   function drawChessPieceSprite(ctx, p, x, y, size, alpha = 1.0, scale = 1.0) {
       if (p === 0) return;
@@ -974,6 +1152,12 @@
                   ctx.strokeStyle = "#38bdf8";
                   ctx.lineWidth = 2.5;
                   ctx.strokeRect(px + 2, py + 2, TS - 4, TS - 4);
+              }
+
+              if (kbActive && x === kbX && y === kbY) {
+                  ctx.strokeStyle = "#38bdf8";
+                  ctx.lineWidth = 3;
+                  ctx.strokeRect(px + 3, py + 3, TS - 6, TS - 6);
               }
 
               if (selX !== -1 && isValidMove(selX, selY, x, y, false)) {

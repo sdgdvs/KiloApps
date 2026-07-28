@@ -51,6 +51,9 @@ int hintSx = -1, hintSy = -1, hintTx = -1, hintTy = -1;
 int undoBoard[8][8];
 int undoWKM = 0, undoWRL = 0, undoWRR = 0, undoBKM = 0, undoBRL = 0, undoBRR = 0, undoEpX = -1, undoEpY = -1;
 
+int kbX = 4, kbY = 6;
+int kbActive = 0;
+
 // Blitz Timer
 float blitzTimeWhite = 180.0f;
 float blitzTimeBlack = 180.0f;
@@ -210,18 +213,18 @@ int IsValidMove(int sx, int sy, int tx, int ty, int isAttackCheck) {
         if (!isAttackCheck && dy == 0 && adx == 2) {
             if (isWhite) {
                 if (wKingMoved) return 0;
-                if (tx == 6 && !wRookRMoved && board[7][5] == 0 && board[7][6] == 0) {
+                if (tx == 6 && !wRookRMoved && board[7][7] == 4 && board[7][5] == 0 && board[7][6] == 0) {
                     if (!IsSquareAttacked(4, 7, 0) && !IsSquareAttacked(5, 7, 0) && !IsSquareAttacked(6, 7, 0)) return 1;
                 }
-                if (tx == 2 && !wRookLMoved && board[7][1] == 0 && board[7][2] == 0 && board[7][3] == 0) {
+                if (tx == 2 && !wRookLMoved && board[7][0] == 4 && board[7][1] == 0 && board[7][2] == 0 && board[7][3] == 0) {
                     if (!IsSquareAttacked(4, 7, 0) && !IsSquareAttacked(3, 7, 0) && !IsSquareAttacked(2, 7, 0)) return 1;
                 }
             } else {
                 if (bKingMoved) return 0;
-                if (tx == 6 && !bRookRMoved && board[0][5] == 0 && board[0][6] == 0) {
+                if (tx == 6 && !bRookRMoved && board[0][7] == 10 && board[0][5] == 0 && board[0][6] == 0) {
                     if (!IsSquareAttacked(4, 0, 1) && !IsSquareAttacked(5, 0, 1) && !IsSquareAttacked(6, 0, 1)) return 1;
                 }
-                if (tx == 2 && !bRookLMoved && board[0][1] == 0 && board[0][2] == 0 && board[0][3] == 0) {
+                if (tx == 2 && !bRookLMoved && board[0][0] == 10 && board[0][1] == 0 && board[0][2] == 0 && board[0][3] == 0) {
                     if (!IsSquareAttacked(4, 0, 1) && !IsSquareAttacked(3, 0, 1) && !IsSquareAttacked(2, 0, 1)) return 1;
                 }
             }
@@ -321,6 +324,7 @@ int EvaluateBoardStatic(void) {
 
 typedef struct {
     int srcP, dstP, epX, epY, wkm, wrl, wrr, bkm, brl, brr;
+    int capturedEPPawn, capturedEPX, capturedEPY;
 } MoveState;
 
 static void MakeMoveSim(int sx, int sy, int tx, int ty, MoveState* ms) {
@@ -329,24 +333,43 @@ static void MakeMoveSim(int sx, int sy, int tx, int ty, MoveState* ms) {
     ms->epX = epX; ms->epY = epY;
     ms->wkm = wKingMoved; ms->wrl = wRookLMoved; ms->wrr = wRookRMoved;
     ms->bkm = bKingMoved; ms->brl = bRookLMoved; ms->brr = bRookRMoved;
+    ms->capturedEPPawn = 0; ms->capturedEPX = -1; ms->capturedEPY = -1;
+
+    int isWhite = (ms->srcP <= 6);
+    int pType = isWhite ? ms->srcP : ms->srcP - 6;
+
+    if (pType == 1 && tx == epX && ty == (isWhite ? epY - 1 : epY + 1)) {
+        ms->capturedEPPawn = board[epY][epX];
+        ms->capturedEPX = epX;
+        ms->capturedEPY = epY;
+        board[epY][epX] = 0;
+    }
 
     board[ty][tx] = ms->srcP;
     board[sy][sx] = 0;
-    int isWhite = (ms->srcP <= 6);
-    int pType = isWhite ? ms->srcP : ms->srcP - 6;
+
     if (pType == 1 && (ty == 0 || ty == 7)) {
         board[ty][tx] = isWhite ? 5 : 11;
     }
     if (pType == 6) { if (isWhite) wKingMoved = 1; else bKingMoved = 1; }
     if (pType == 4) {
-        if (isWhite) { if (sx == 0) wRookLMoved = 1; if (sx == 7) wRookRMoved = 1; }
-        else { if (sx == 0) bRookLMoved = 1; if (sx == 7) bRookRMoved = 1; }
+        if (isWhite) { if (sx == 0 && sy == 7) wRookLMoved = 1; if (sx == 7 && sy == 7) wRookRMoved = 1; }
+        else { if (sx == 0 && sy == 0) bRookLMoved = 1; if (sx == 7 && sy == 0) bRookRMoved = 1; }
     }
+    if (tx == 0 && ty == 7) wRookLMoved = 1;
+    if (tx == 7 && ty == 7) wRookRMoved = 1;
+    if (tx == 0 && ty == 0) bRookLMoved = 1;
+    if (tx == 7 && ty == 0) bRookRMoved = 1;
+
+    if (pType == 1 && my_abs(ty - sy) == 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
 }
 
 static void UnmakeMoveSim(int sx, int sy, int tx, int ty, const MoveState* ms) {
     board[sy][sx] = ms->srcP;
     board[ty][tx] = ms->dstP;
+    if (ms->capturedEPPawn != 0) {
+        board[ms->capturedEPY][ms->capturedEPX] = ms->capturedEPPawn;
+    }
     epX = ms->epX; epY = ms->epY;
     wKingMoved = ms->wkm; wRookLMoved = ms->wrl; wRookRMoved = ms->wrr;
     bKingMoved = ms->bkm; bRookLMoved = ms->brl; bRookRMoved = ms->brr;
@@ -357,6 +380,7 @@ int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
 
     if (isMaximizing) { // Black's turn
         int maxEval = -999999;
+        int movesFound = 0;
         for (int sy = 0; sy < 8; sy++) {
             for (int sx = 0; sx < 8; sx++) {
                 if (board[sy][sx] > 6) {
@@ -364,6 +388,7 @@ int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
                         for (int tx = 0; tx < 8; tx++) {
                             if (IsValidMove(sx, sy, tx, ty, 0)) {
                                 if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 0)) {
+                                    movesFound = 1;
                                     MoveState ms;
                                     MakeMoveSim(sx, sy, tx, ty, &ms);
                                     int eval = MinimaxAB(depth - 1, alpha, beta, 0);
@@ -378,9 +403,22 @@ int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
                 }
             }
         }
-        return (maxEval == -999999) ? EvaluateBoardStatic() : maxEval;
+        if (!movesFound) {
+            int kx = -1, ky = -1;
+            for (int y = 0; y < 8; y++) {
+                for (int x = 0; x < 8; x++) {
+                    if (board[y][x] == 12) { kx = x; ky = y; break; }
+                }
+            }
+            if (kx != -1 && IsSquareAttacked(kx, ky, 1)) {
+                return -100000 + depth;
+            }
+            return 0;
+        }
+        return maxEval;
     } else { // White's turn
         int minEval = 999999;
+        int movesFound = 0;
         for (int sy = 0; sy < 8; sy++) {
             for (int sx = 0; sx < 8; sx++) {
                 if (board[sy][sx] != 0 && board[sy][sx] <= 6) {
@@ -388,6 +426,7 @@ int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
                         for (int tx = 0; tx < 8; tx++) {
                             if (IsValidMove(sx, sy, tx, ty, 0)) {
                                 if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 1)) {
+                                    movesFound = 1;
                                     MoveState ms;
                                     MakeMoveSim(sx, sy, tx, ty, &ms);
                                     int eval = MinimaxAB(depth - 1, alpha, beta, 1);
@@ -402,7 +441,19 @@ int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
                 }
             }
         }
-        return (minEval == 999999) ? EvaluateBoardStatic() : minEval;
+        if (!movesFound) {
+            int kx = -1, ky = -1;
+            for (int y = 0; y < 8; y++) {
+                for (int x = 0; x < 8; x++) {
+                    if (board[y][x] == 6) { kx = x; ky = y; break; }
+                }
+            }
+            if (kx != -1 && IsSquareAttacked(kx, ky, 0)) {
+                return 100000 - depth;
+            }
+            return 0;
+        }
+        return minEval;
     }
 }
 
@@ -718,9 +769,14 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
         if (isWhiteMove) wKingMoved = 1; else bKingMoved = 1;
     }
     if (pType == 4) {
-        if (isWhiteMove) { if (sx == 0) wRookLMoved = 1; if (sx == 7) wRookRMoved = 1; }
-        else { if (sx == 0) bRookLMoved = 1; if (sx == 7) bRookRMoved = 1; }
+        if (isWhiteMove) { if (sx == 0 && sy == 7) wRookLMoved = 1; if (sx == 7 && sy == 7) wRookRMoved = 1; }
+        else { if (sx == 0 && sy == 0) bRookLMoved = 1; if (sx == 7 && sy == 0) bRookRMoved = 1; }
     }
+    if (tx == 0 && ty == 7) wRookLMoved = 1;
+    if (tx == 7 && ty == 7) wRookRMoved = 1;
+    if (tx == 0 && ty == 0) bRookLMoved = 1;
+    if (tx == 7 && ty == 0) bRookRMoved = 1;
+
     if (pType == 1 && my_abs(ty - sy) == 2) { epX = tx; epY = ty; } else { epX = -1; epY = -1; }
 
     board[sy][sx] = 0;
@@ -734,6 +790,20 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     }
 
     whiteTurn = !whiteTurn;
+
+    int pieceCount = 0;
+    for (int r = 0; r < 8; r++) {
+        for (int c = 0; c < 8; c++) {
+            if (board[r][c] != 0) pieceCount++;
+        }
+    }
+    if (pieceCount <= 2) {
+        gameOver = 1;
+        winner = 3;
+        if (aiMode) { statsDraws++; SaveStatsFreestanding(); }
+        SetTimer(hwnd, 2, 30, NULL);
+        return;
+    }
 
     if (!HasLegalMoves(whiteTurn)) {
         gameOver = 1;
@@ -944,6 +1014,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
+                    if (kbActive && x == kbX && y == kbY) {
+                        HPEN kbPen = CreatePen(PS_SOLID, 3, RGB(56, 189, 248));
+                        oldPen = SelectObject(memDC, kbPen);
+                        HGDIOBJ oldNull = SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                        Rectangle(memDC, rc.left + 3, rc.top + 3, rc.right - 3, rc.bottom - 3);
+                        SelectObject(memDC, oldNull);
+                        SelectObject(memDC, oldPen);
+                        DeleteObject(kbPen);
+                    }
+
                     int p = board[y][x];
                     int isAnimatingThisPiece = (g_slide.active && (int)((g_slide.targetX - OX) / TS) == x && (int)((g_slide.targetY - OY) / TS) == y);
                     if (p != 0 && !isAnimatingThisPiece) {
@@ -1024,7 +1104,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(245, 158, 11));
                 if (winner == 1) DrawTextA(memDC, gameMode == 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Stage 2" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (winner == 2) DrawTextA(memDC, "Checkmate! Black Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else DrawTextA(memDC, "Stalemate / Time Out! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else DrawTextA(memDC, "Stalemate / Time Out / Draw! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             } else {
                 SetTextColor(memDC, whiteTurn ? RGB(250, 250, 250) : RGB(148, 163, 184));
                 char turnBuf[128];
@@ -1044,7 +1124,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             EndPaint(hwnd, &ps);
             break;
         }
+        case WM_ERASEBKGND:
+            return 1;
         case WM_KEYDOWN: {
+            if (wParam == VK_UP) { kbY = (kbY > 0) ? kbY - 1 : 0; kbActive = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (wParam == VK_DOWN) { kbY = (kbY < 7) ? kbY + 1 : 7; kbActive = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (wParam == VK_LEFT) { kbX = (kbX > 0) ? kbX - 1 : 0; kbActive = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (wParam == VK_RIGHT) { kbX = (kbX < 7) ? kbX + 1 : 7; kbActive = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (wParam == VK_ESCAPE) { selX = -1; selY = -1; kbActive = 0; InvalidateRect(hwnd, NULL, FALSE); break; }
+            if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                kbActive = 1;
+                LPARAM lp = MAKELPARAM(OX + kbX * TS + TS / 2, OY + kbY * TS + TS / 2);
+                SendMessage(hwnd, WM_LBUTTONDOWN, 0, lp);
+                break;
+            }
             if (wParam == 'R') {
                 if (gameOver && gameMode == 0 && winner == 1) {
                     if (currentStage < 20) currentStage++;
@@ -1077,14 +1170,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 'U') { // UNDO MOVE SKILL
-                if (!gameOver && whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
+                if (whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
                     undoPowerups--;
                     for(int y=0; y<8; y++) for(int x=0; x<8; x++) board[y][x] = undoBoard[y][x];
                     wKingMoved = undoWKM; wRookLMoved = undoWRL; wRookRMoved = undoWRR;
                     bKingMoved = undoBKM; bRookLMoved = undoBRL; bRookRMoved = undoBRR;
                     epX = undoEpX; epY = undoEpY;
                     selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
-                    canUndo = 0; g_slide.active = 0; hintActive = 0;
+                    canUndo = 0; g_slide.active = 0; hintActive = 0; gameOver = 0; winner = 0;
                     MessageBeep(MB_OK);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
