@@ -1,19 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KChat Server</title>
     <style>
-        body { margin:0; padding:20px; background:#ece9d8; font-family: Tahoma, sans-serif; font-size:12px; }
-        .box { background: white; border: 1px solid #7f9db9; padding: 15px; text-align: center; }
-        h3 { margin-top: 0; }
+        :root {
+            --bg-color: #09090b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(15, 23, 42, 0.65);
+        }
+        body { 
+            margin: 0; 
+            padding: 24px; 
+            background: radial-gradient(circle at top left, #1e1b4b, var(--bg-color) 80%);
+            font-family: 'Inter', -apple-system, sans-serif; 
+            font-size: 14px; 
+            color: var(--text-main);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            box-sizing: border-box; 
+        }
+        .box { 
+            background: var(--card-bg); 
+            border: 1px solid var(--border); 
+            border-radius: 12px;
+            padding: 28px; 
+            max-width: 480px; 
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        h1 { 
+            margin-top: 0; 
+            font-size: 20px; 
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        p { 
+            color: var(--text-muted); 
+            line-height: 1.5; 
+            margin: 12px 0;
+        }
+        .badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 16px;
+        }
+        .instructions {
+            text-align: left;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-top: 16px;
+        }
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+            color: var(--text-main);
+        }
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        .instructions li:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h3>KChat Server</h3>
-        <p>The KChat Server is a native console application. It does not run in the browser sandbox.</p>
-        <p>To use it, please download the native <b>.exe</b> using the download button in the titlebar.</p>
-        <p>Once downloaded, run it on your machine, enter a port (e.g. 6667) and click Start Server.</p>
-        <p>Friends can then connect to your IP address using the KChat app.</p>
-    </div>
+    <main class="box" role="main" aria-labelledby="title">
+        <span class="badge">Native Desktop Companion</span>
+        <h1 id="title">KChat Server</h1>
+        <p>KChat Server is a high-performance native Win32/WinSock application designed to run outside the web browser sandbox for multi-user chat hosting.</p>
+        
+        <div class="instructions">
+            <ol>
+                <li>Click the <b>Download Native Exe</b> button in the titlebar.</li>
+                <li>Run <code>KChatServer.exe</code> on your Windows host machine.</li>
+                <li>Specify a port (default: <code>6667</code>) and click <b>Start Server</b>.</li>
+                <li>Share your IP address with peers to connect via <b>KChat</b>.</li>
+            </ol>
+        </div>
+    </main>
 </body>
 </html>

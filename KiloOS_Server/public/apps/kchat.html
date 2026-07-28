@@ -1,6 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KChat</title>
     <style>
         :root {
             --bg-color: #09090b;
@@ -20,6 +23,7 @@
             display:flex; flex-direction:column; height: 100vh; box-sizing:border-box; 
         }
         .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        label { font-size: 13px; opacity: 0.9; }
         input[type="text"] { 
             border: 1px solid var(--border); 
             padding: 8px 12px; 
@@ -81,20 +85,23 @@
     </style>
 </head>
 <body>
-    <div class="row">
-        <button id="btnConnectGlobal" class="btn-global" onclick="window.connectGlobal()">Join Global Room (Firebase)</button>
-        <span style="opacity: 0.5; margin: 0 5px;">|</span>
-        <span>Custom IP:</span> <input type="text" id="ip" value="127.0.0.1" style="width: 100px;">
-        <span>Port:</span> <input type="text" id="port" value="6667" style="width: 50px;">
-        <button id="btnConnect" onclick="window.connect()">Connect</button>
+    <div class="row" role="region" aria-label="Connection controls">
+        <button id="btnConnectGlobal" class="btn-global" onclick="window.connectGlobal()" aria-label="Join or leave Global Room">Join Global Room (Firebase)</button>
+        <span style="opacity: 0.5; margin: 0 5px;" aria-hidden="true">|</span>
+        <label for="ip">Custom IP:</label>
+        <input type="text" id="ip" value="127.0.0.1" style="width: 100px;" aria-label="Custom server IP address">
+        <label for="port">Port:</label>
+        <input type="text" id="port" value="6667" style="width: 50px;" aria-label="Custom server port">
+        <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
     </div>
-    <div id="log">Welcome to KChat!
+    <div id="log" aria-label="Chat log" role="log" aria-live="polite">Welcome to KChat!
 You can join the Global Room or connect to a custom KChat Server.
 Commands: /nick &lt;name&gt;</div>
-    <div class="row">
-        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled>
-        <button id="btnSend" onclick="window.send()" disabled>Send</button>
-        <button id="btnClear" onclick="window.clearLog()">Clear</button>
+    <div class="row" role="region" aria-label="Message composition">
+        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled aria-label="Chat message input" placeholder="Type a message...">
+        <button id="btnSend" onclick="window.send()" disabled aria-label="Send message">Send</button>
+        <button id="btnClear" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
+        <button id="btnSave" onclick="window.saveLog()" aria-label="Save chat log to file">Save</button>
     </div>
 
     <script type="module">
@@ -152,6 +159,29 @@ Commands: /nick &lt;name&gt;</div>
             }
         });
 
+        function cleanupSocket() {
+            if (ws) {
+                if (typeof ws.close === 'function') {
+                    ws.close();
+                }
+                ws = null;
+            }
+            isVirtual = false;
+            btnConnect.textContent = 'Connect';
+            btnConnectGlobal.disabled = false;
+            inputEl.disabled = true;
+            btnSend.disabled = true;
+        }
+
+        window.addEventListener('beforeunload', () => {
+            if (ws && typeof ws.close === 'function') {
+                try { ws.close(); } catch(e) {}
+            }
+            if (messagesRef && firebaseListener) {
+                try { off(messagesRef, 'child_added', firebaseListener); } catch(e) {}
+            }
+        });
+
         window.connectGlobal = function() {
             if (ws || isVirtual) {
                 log('Please disconnect from the custom server first.');
@@ -184,6 +214,7 @@ Commands: /nick &lt;name&gt;</div>
             firebaseListener = onChildAdded(recentMessagesQuery, (snapshot) => {
                 if (!isFirebase) return;
                 const data = snapshot.val();
+                if (!data) return;
                 
                 let d = new Date();
                 if (typeof data.timestamp === 'number') {
@@ -191,7 +222,7 @@ Commands: /nick &lt;name&gt;</div>
                 }
                 const timeStr = `[${d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit', timeZoneName: 'short' })}] `;
                 
-                log(`${timeStr}<${data.user}> ${data.text}`);
+                log(`${timeStr}<${data.user || 'Anonymous'}> ${data.text || ''}`);
             });
         };
 
@@ -202,22 +233,13 @@ Commands: /nick &lt;name&gt;</div>
             }
 
             if (ws || isVirtual) {
-                if (isVirtual) {
-                    log('Disconnected.');
-                    ws = null;
-                    isVirtual = false;
-                    btnConnect.textContent = 'Connect';
-                    btnConnectGlobal.disabled = false;
-                    inputEl.disabled = true;
-                    btnSend.disabled = true;
-                } else {
-                    ws.close();
-                }
+                log('Disconnected.');
+                cleanupSocket();
                 return;
             }
 
-            const ip = document.getElementById('ip').value;
-            const port = document.getElementById('port').value;
+            const ip = document.getElementById('ip').value.trim();
+            const port = document.getElementById('port').value.trim();
             log('Connecting to ws://' + ip + ':' + port + ' ...');
             
             btnConnectGlobal.disabled = true;
@@ -234,7 +256,7 @@ Commands: /nick &lt;name&gt;</div>
                             } else if (lmsg.includes('payload.js') || lmsg.includes('done') || lmsg.includes('saved')) {
                                 log('UNKNOWN: I see it. Let me execute it. Stand by.');
                                 setTimeout(() => {
-                                    if (ws && ws.close) ws.close();
+                                    cleanupSocket();
                                 }, 3000);
                             } else {
                                 log('UNKNOWN: Use KPad and save the file as /sys/payload.js. Let me know when it\'s done.');
@@ -243,12 +265,7 @@ Commands: /nick &lt;name&gt;</div>
                     },
                     close: () => {
                         log('Disconnected from Virtual Node.');
-                        ws = null;
-                        isVirtual = false;
-                        btnConnect.textContent = 'Connect';
-                        btnConnectGlobal.disabled = false;
-                        inputEl.disabled = true;
-                        btnSend.disabled = true;
+                        cleanupSocket();
                     }
                 };
                 setTimeout(() => {
@@ -276,7 +293,7 @@ Commands: /nick &lt;name&gt;</div>
                                 log('UNKNOWN: Excellent. I used that address to dump Cerberus\'s internal logs to /sys/cerberus_log.txt. Check your file browser.');
                                 window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/cerberus_log.txt', data: 'CERBERUS INTERNAL LOG...\n[WARNING] Agent has accessed restricted memory block 0x8FA0B2.\n[DIRECTIVE] Lock down KPad to prevent further script injection.' }, '*');
                                 setTimeout(() => {
-                                    if (ws && ws.close) ws.close();
+                                    cleanupSocket();
                                 }, 3000);
                             } else {
                                 log('UNKNOWN: Divide by zero in the calculator and give me the hex address.');
@@ -285,12 +302,7 @@ Commands: /nick &lt;name&gt;</div>
                     },
                     close: () => {
                         log('Disconnected from Virtual Node.');
-                        ws = null;
-                        isVirtual = false;
-                        btnConnect.textContent = 'Connect';
-                        btnConnectGlobal.disabled = false;
-                        inputEl.disabled = true;
-                        btnSend.disabled = true;
+                        cleanupSocket();
                     }
                 };
                 setTimeout(() => {
@@ -317,7 +329,7 @@ Commands: /nick &lt;name&gt;</div>
                             } else if (lmsg.includes('s0vzx1bbulrfmtogmhherufe') || lmsg.includes('key_part_1: 0xdead') || lmsg.includes('0xdead')) {
                                 log('UNKNOWN: Yes! That is the first sequence. Thank you. Cerberus is watching, I must disconnect for now. I will contact you later.');
                                 setTimeout(() => {
-                                    if (ws && ws.close) ws.close();
+                                    cleanupSocket();
                                 }, 3000);
                             } else {
                                 log('UNKNOWN: I don\'t understand. Just find /sys/alpha.sys and decode it if necessary.');
@@ -326,12 +338,7 @@ Commands: /nick &lt;name&gt;</div>
                     },
                     close: () => {
                         log('Disconnected from Virtual Node.');
-                        ws = null;
-                        isVirtual = false;
-                        btnConnect.textContent = 'Connect';
-                        btnConnectGlobal.disabled = false;
-                        inputEl.disabled = true;
-                        btnSend.disabled = true;
+                        cleanupSocket();
                     }
                 };
                 setTimeout(() => {
@@ -347,31 +354,29 @@ Commands: /nick &lt;name&gt;</div>
             }
             
             try {
-                ws = new WebSocket('ws://' + ip + ':' + port);
-                ws.onopen = () => {
+                const socket = new WebSocket('ws://' + ip + ':' + port);
+                ws = socket;
+
+                socket.onopen = () => {
                     log('Connected!');
                     btnConnect.textContent = 'Disconnect';
                     inputEl.disabled = false;
                     btnSend.disabled = false;
                 };
-                ws.onmessage = (e) => {
+                socket.onmessage = (e) => {
                     log(e.data);
                 };
-                ws.onclose = () => {
+                socket.onclose = () => {
                     log('Disconnected.');
-                    ws = null;
-                    btnConnect.textContent = 'Connect';
-                    btnConnectGlobal.disabled = false;
-                    inputEl.disabled = true;
-                    btnSend.disabled = true;
+                    cleanupSocket();
                 };
-                ws.onerror = (e) => {
-                    log('Socket error.');
-                    btnConnectGlobal.disabled = false;
+                socket.onerror = (e) => {
+                    log('Socket error occurred.');
+                    cleanupSocket();
                 };
             } catch (err) {
                 log('Error: ' + err.message);
-                btnConnectGlobal.disabled = false;
+                cleanupSocket();
             }
         };
 
@@ -385,8 +390,7 @@ Commands: /nick &lt;name&gt;</div>
                 if (newName) {
                     currentUsername = newName;
                     log('* You are now known as ' + currentUsername);
-                    if (!isFirebase && ws && !isVirtual) {
-                        // Forward /nick to WebSocket server just in case
+                    if (!isFirebase && ws && !isVirtual && typeof ws.send === 'function') {
                         ws.send(msg);
                     }
                     inputEl.value = '';
@@ -400,7 +404,7 @@ Commands: /nick &lt;name&gt;</div>
                     text: msg,
                     timestamp: serverTimestamp()
                 }).catch(err => log("Error sending: " + err.message));
-            } else {
+            } else if (ws && typeof ws.send === 'function') {
                 ws.send(msg); 
             }
             inputEl.value = '';
@@ -408,6 +412,17 @@ Commands: /nick &lt;name&gt;</div>
 
         window.clearLog = function() {
             logEl.textContent = '';
+        };
+
+        window.saveLog = function() {
+            const text = logEl.textContent;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'chat_log.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            log('* Chat saved to chat_log.txt');
         };
     </script>
 </body>

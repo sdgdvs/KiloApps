@@ -36,6 +36,11 @@ int my_strncmp(const char* a, const char* b, int n) {
     if (n == 0) return 0;
     return *(unsigned char*)a - *(unsigned char*)b;
 }
+void my_strncpy(char* d, const char* s, int n) {
+    int i = 0;
+    while (i < n - 1 && s[i]) { d[i] = s[i]; i++; }
+    d[i] = 0;
+}
 void my_itoa(int val, char* buf) {
     char t[16]; int i = 0, j = 0;
     if (val == 0) { buf[0] = '0'; buf[1] = 0; return; }
@@ -89,7 +94,7 @@ void SHA1Update(SHA1_CTX* context, const unsigned char* data, unsigned int len) 
     my_memcpy(&context->buffer[j], &data[i], len - i);
 }
 void SHA1Final(unsigned char digest[20], SHA1_CTX* context) {
-    unsigned int i, j;
+    unsigned int i;
     unsigned char finalcount[8];
     for (i = 0; i < 8; i++) finalcount[i] = (unsigned char)((context->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) & 255);
     unsigned char c = 0200;
@@ -144,18 +149,21 @@ struct Client {
 struct Client clients[MAX_CLIENTS];
 SOCKET listenSocket = INVALID_SOCKET;
 HWND hLog, hPort, hBtn, hMotd;
+HFONT hUIFont = NULL;
 char logBuf[16384] = "";
 char motd[256] = "Welcome to KChat!";
 
 void Log(const char* msg) {
     int len = my_strlen(logBuf);
     int mlen = my_strlen(msg);
-    if (len + mlen + 5 > sizeof(logBuf)) {
+    if (mlen > 4000) mlen = 4000;
+    if (len + mlen + 5 > (int)sizeof(logBuf)) {
         my_strcpy(logBuf, logBuf + (len / 2));
         len = my_strlen(logBuf);
     }
-    my_strcpy(logBuf + len, msg);
-    my_strcpy(logBuf + len + mlen, "\r\n");
+    my_strncpy(logBuf + len, msg, mlen + 1);
+    len = my_strlen(logBuf);
+    my_strcpy(logBuf + len, "\r\n");
     SetWindowTextA(hLog, logBuf);
     SendMessageA(hLog, EM_LINESCROLL, 0, 9999);
 }
@@ -194,24 +202,28 @@ void HandleMessage(int cidx, char* msg) {
     // Strip newlines
     for (int i=0; msg[i]; i++) if (msg[i] == '\r' || msg[i] == '\n') msg[i] = 0;
     if (!msg[0]) return;
+
+    // Truncate long incoming messages safely to prevent stack overflow
+    if (my_strlen(msg) > 400) {
+        msg[400] = '\0';
+    }
     
     if (my_strncmp(msg, "/join ", 6) == 0) {
-        my_strcpy(clients[cidx].room, msg + 6);
+        my_strncpy(clients[cidx].room, msg + 6, 31);
         char out[128]; my_memset(out, 0, sizeof(out));
         my_strcpy(out, "System: Joined ");
-        my_strcpy(out + 15, msg + 6);
+        my_strncpy(out + 15, msg + 6, 100);
         SendRaw(clients[cidx].s, out, clients[cidx].is_ws);
     } else if (my_strncmp(msg, "/nick ", 6) == 0) {
-        my_strcpy(clients[cidx].nick, msg + 6);
+        my_strncpy(clients[cidx].nick, msg + 6, 31);
         char out[128]; my_memset(out, 0, sizeof(out));
         my_strcpy(out, "System: Nickname changed to ");
-        my_strcpy(out + my_strlen(out), msg + 6);
+        my_strncpy(out + my_strlen(out), msg + 6, 90);
         SendRaw(clients[cidx].s, out, clients[cidx].is_ws);
     } else if (my_strcmp(msg, "/list") == 0) {
         SendRaw(clients[cidx].s, "System: Active Rooms:", clients[cidx].is_ws);
         for (int i=0; i<MAX_CLIENTS; i++) {
             if (clients[i].s != INVALID_SOCKET) {
-                // very simple duplicate avoidance would be nice, but skipping for minimal size
                 SendRaw(clients[cidx].s, clients[i].room, clients[cidx].is_ws);
             }
         }
@@ -225,17 +237,17 @@ void HandleMessage(int cidx, char* msg) {
     } else if (my_strncmp(msg, "/me ", 4) == 0) {
         char out[512]; my_memset(out, 0, sizeof(out));
         my_strcpy(out, "* ");
-        my_strcpy(out + my_strlen(out), clients[cidx].nick);
+        my_strncpy(out + my_strlen(out), clients[cidx].nick, 31);
         my_strcpy(out + my_strlen(out), " ");
-        my_strcpy(out + my_strlen(out), msg + 4);
+        my_strncpy(out + my_strlen(out), msg + 4, 400);
         Broadcast(clients[cidx].room, out);
         Log(out);
     } else {
         char out[512]; my_memset(out, 0, sizeof(out));
         my_strcpy(out, "[");
-        my_strcpy(out + 1, clients[cidx].nick);
+        my_strncpy(out + 1, clients[cidx].nick, 31);
         my_strcpy(out + my_strlen(out), "] ");
-        my_strcpy(out + my_strlen(out), msg);
+        my_strncpy(out + my_strlen(out), msg, 400);
         Broadcast(clients[cidx].room, out);
         Log(out);
     }
@@ -273,7 +285,7 @@ void ProcessData(int cidx) {
         if (key_start) {
             char key[256]; my_memset(key, 0, sizeof(key));
             int ki = 0;
-            while (*key_start && *key_start != '\r' && *key_start != '\n') key[ki++] = *key_start++;
+            while (*key_start && *key_start != '\r' && *key_start != '\n' && ki < 200) key[ki++] = *key_start++;
             my_strcpy(key + ki, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11");
             
             SHA1_CTX ctx;
@@ -297,7 +309,7 @@ void ProcessData(int cidx) {
             if (motd[0]) {
                 char m[512]; my_memset(m, 0, sizeof(m));
                 my_strcpy(m, "System MOTD: ");
-                my_strcpy(m + my_strlen(m), motd);
+                my_strncpy(m + my_strlen(m), motd, 450);
                 SendRaw(c->s, m, 1);
             }
         }
@@ -309,7 +321,6 @@ void ProcessData(int cidx) {
         while (c->buf_len >= 2) {
             unsigned char b1 = c->buf[0];
             unsigned char b2 = c->buf[1];
-            int fin = (b1 & 0x80) != 0;
             int opcode = b1 & 0x0F;
             int masked = (b2 & 0x80) != 0;
             int payload_len = b2 & 0x7F;
@@ -345,6 +356,7 @@ void ProcessData(int cidx) {
                 for (int i=0; i<len; i++) {
                     payload[i] = c->buf[header_len + i] ^ (masked ? mask[i % 4] : 0);
                 }
+                payload[len] = '\0';
                 HandleMessage(cidx, payload);
             }
             
@@ -358,6 +370,7 @@ void ProcessData(int cidx) {
         static char msg[4096]; my_memset(msg, 0, sizeof(msg));
         int len = c->buf_len > 4000 ? 4000 : c->buf_len;
         my_memcpy(msg, c->buf, len);
+        msg[len] = '\0';
         HandleMessage(cidx, msg);
         c->buf_len = 0;
     }
@@ -366,6 +379,9 @@ void ProcessData(int cidx) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            WSADATA wsa;
+            WSAStartup(MAKEWORD(2,2), &wsa);
+
             for (int i=0; i<MAX_CLIENTS; i++) {
                 clients[i].s = INVALID_SOCKET;
                 clients[i].buf_len = 0;
@@ -381,11 +397,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hLog = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_VSCROLL|ES_MULTILINE|ES_AUTOVSCROLL|ES_READONLY, 10, 40, 365, 260, hwnd, 0, 0, 0);
             
-            HFONT hFont = CreateFontA(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Tahoma");
-            SendMessageA(hPort, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hMotd, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
-            SendMessageA(hLog, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hUIFont = CreateFontA(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+            SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hMotd, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hBtn, WM_SETFONT, (WPARAM)hUIFont, TRUE);
+            SendMessageA(hLog, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             break;
         }
         case WM_COMMAND: {
@@ -400,10 +416,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 GetWindowTextA(hMotd, motd, 255);
                 
-                WSADATA wsa;
-                WSAStartup(MAKEWORD(2,2), &wsa);
-                
                 listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+                if (listenSocket == INVALID_SOCKET) {
+                    Log("Socket creation failed.");
+                    break;
+                }
+
                 struct sockaddr_in addr;
                 addr.sin_family = AF_INET;
                 addr.sin_addr.s_addr = INADDR_ANY;
@@ -420,7 +438,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 char m[64]; my_memset(m, 0, sizeof(m));
                 my_strcpy(m, "Server started on port ");
-                my_strcpy(m + my_strlen(m), portStr);
+                my_strncpy(m + my_strlen(m), portStr, 16);
                 Log(m);
                 EnableWindow(hBtn, FALSE);
                 EnableWindow(hPort, FALSE);
@@ -429,10 +447,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_SOCKET: {
-            if (WSAGETSELECTERROR(lParam)) {
-                // Ignore disconnect errors silently
-            }
             SOCKET s = (SOCKET)wParam;
+            if (WSAGETSELECTERROR(lParam)) {
+                if (s == listenSocket) {
+                    Log("Listen socket error.");
+                    closesocket(listenSocket);
+                    listenSocket = INVALID_SOCKET;
+                    EnableWindow(hBtn, TRUE);
+                    EnableWindow(hPort, TRUE);
+                    EnableWindow(hMotd, TRUE);
+                } else {
+                    for (int i=0; i<MAX_CLIENTS; i++) {
+                        if (clients[i].s == s) {
+                            clients[i].s = INVALID_SOCKET;
+                            closesocket(s);
+                            Log("Client disconnected due to error.");
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
             if (WSAGETSELECTEVENT(lParam) == FD_ACCEPT) {
                 SOCKET client = accept(s, NULL, NULL);
                 if (client != INVALID_SOCKET) {
@@ -457,7 +492,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 // Raw TCP can send immediately, WS must wait for handshake
                                 char m[512]; my_memset(m, 0, sizeof(m));
                                 my_strcpy(m, "System MOTD: ");
-                                my_strcpy(m + my_strlen(m), motd);
+                                my_strncpy(m + my_strlen(m), motd, 450);
                                 SendRaw(client, m, 0);
                             }
                             found = 1;
@@ -493,6 +528,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            for (int i=0; i<MAX_CLIENTS; i++) {
+                if (clients[i].s != INVALID_SOCKET) {
+                    closesocket(clients[i].s);
+                    clients[i].s = INVALID_SOCKET;
+                }
+            }
+            if (listenSocket != INVALID_SOCKET) {
+                closesocket(listenSocket);
+                listenSocket = INVALID_SOCKET;
+            }
+            if (hUIFont) DeleteObject(hUIFont);
+            WSACleanup();
             PostQuitMessage(0);
             return 0;
     }

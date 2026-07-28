@@ -22,6 +22,7 @@ SOCKET s = INVALID_SOCKET;
 HWND hLog, hIp, hPort, hBtn, hInput, hSend, hClear, hSave;
 char logBuf[16384] = "";
 HFONT hUIFont = NULL;
+WNDPROC oldInputProc = NULL;
 
 void my_strcpy(char* d, const char* s) { while (*s) *d++ = *s++; *d = 0; }
 int my_strlen(const char* s) { int l = 0; while (s[l]) l++; return l; }
@@ -30,26 +31,45 @@ int my_atoi(const char* str) {
     while (*str >= '0' && *str <= '9') { v = v * 10 + (*str - '0'); str++; }
     return v;
 }
+void my_strncpy(char* d, const char* s, int n) {
+    int i = 0;
+    while (i < n - 1 && s[i]) { d[i] = s[i]; i++; }
+    d[i] = 0;
+}
 
 void Log(const char* msg) {
     int len = my_strlen(logBuf);
     int mlen = my_strlen(msg);
-    if (len + mlen + 5 > sizeof(logBuf)) {
+    if (mlen > 4000) mlen = 4000;
+    if (len + mlen + 5 > (int)sizeof(logBuf)) {
         int cut = len / 2;
         while (cut < len && logBuf[cut] != '\n') cut++;
         if (cut < len) cut++;
         my_strcpy(logBuf, logBuf + cut);
         len = my_strlen(logBuf);
     }
-    my_strcpy(logBuf + len, msg);
-    my_strcpy(logBuf + len + mlen, "\r\n");
+    my_strncpy(logBuf + len, msg, mlen + 1);
+    len = my_strlen(logBuf);
+    my_strcpy(logBuf + len, "\r\n");
     SetWindowTextA(hLog, logBuf);
     SendMessageA(hLog, EM_LINESCROLL, 0, 9999);
+}
+
+LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_KEYDOWN && wParam == VK_RETURN) {
+        HWND hParent = GetParent(hwnd);
+        SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(101, BN_CLICKED), (LPARAM)GetDlgItem(hParent, 101));
+        return 0;
+    }
+    return CallWindowProcA(oldInputProc, hwnd, msg, wParam, lParam);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            WSADATA wsa;
+            WSAStartup(MAKEWORD(2,2), &wsa);
+
             CreateWindowA("STATIC", "IP:", WS_CHILD|WS_VISIBLE, 10, 10, 20, 20, hwnd, 0, 0, 0);
             hIp = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "127.0.0.1", WS_CHILD|WS_VISIBLE|ES_AUTOHSCROLL, 35, 10, 100, 24, hwnd, 0, 0, 0);
             
@@ -65,6 +85,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hClear = CreateWindowA("BUTTON", "Clear", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 280, 270, 50, 24, hwnd, (HMENU)102, 0, 0);
             hSave = CreateWindowA("BUTTON", "Save", WS_CHILD|WS_VISIBLE|BS_PUSHBUTTON, 335, 270, 50, 24, hwnd, (HMENU)103, 0, 0);
             
+            oldInputProc = (WNDPROC)SetWindowLongPtrA(hInput, GWLP_WNDPROC, (LONG_PTR)InputSubclassProc);
+
             hUIFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             SendMessageA(hIp, WM_SETFONT, (WPARAM)hUIFont, TRUE);
             SendMessageA(hPort, WM_SETFONT, (WPARAM)hUIFont, TRUE);
@@ -101,17 +123,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GetWindowTextA(hPort, portStr, 16);
                 int port = my_atoi(portStr);
                 
-                WSADATA wsa;
-                WSAStartup(MAKEWORD(2,2), &wsa);
-                
                 s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-                
+                if (s == INVALID_SOCKET) {
+                    Log("Failed to create socket.");
+                    break;
+                }
+
                 // Get host by name dynamically
                 struct hostent *he = gethostbyname(ip);
                 if (!he) {
                     Log("Invalid IP/Host.");
                     closesocket(s);
                     s = INVALID_SOCKET;
+                    SetWindowTextA(hBtn, "Connect");
                     break;
                 }
                 
@@ -121,7 +145,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 addr.sin_port = htons(port);
                 
                 WSAAsyncSelect(s, hwnd, WM_SOCKET, FD_CONNECT | FD_READ | FD_CLOSE);
-                connect(s, (struct sockaddr*)&addr, sizeof(addr));
+                if (connect(s, (struct sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+                    if (WSAGetLastError() != WSAEWOULDBLOCK) {
+                        Log("Connection failed.");
+                        closesocket(s);
+                        s = INVALID_SOCKET;
+                        SetWindowTextA(hBtn, "Connect");
+                        break;
+                    }
+                }
                 Log("Connecting...");
                 EnableWindow(hBtn, FALSE);
             } else if (LOWORD(wParam) == 101) { // Send
@@ -188,6 +220,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_DESTROY:
             if (s != INVALID_SOCKET) closesocket(s);
             if (hUIFont) DeleteObject(hUIFont);
+            WSACleanup();
             PostQuitMessage(0);
             return 0;
     }
