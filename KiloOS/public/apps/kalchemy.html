@@ -1305,8 +1305,9 @@
     let dust = 100; // Alchemical Dust
     let gold = 100; // Gold Currency
     let guildXP = 0; // Guild XP
-    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil', 'quests'
+    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil', 'quests', 'workshop'
     let quests = [];
+    let upgrades = { crucibleCap: 0, essenceYield: 0, autoSorter: 0, catalystSpeed: 0 };
 
     const PATRONS = [
       { name: 'Archmage Vaelen', icon: '🧙' },
@@ -1356,6 +1357,7 @@
         localStorage.setItem('kalchemy_gold', gold);
         localStorage.setItem('kalchemy_guildXP', guildXP);
         localStorage.setItem('kalchemy_quests', JSON.stringify(quests));
+        localStorage.setItem('kalchemy_upgrades', JSON.stringify(upgrades));
       } catch(e){}
     }
 
@@ -1367,6 +1369,7 @@
         const savedGold = localStorage.getItem('kalchemy_gold');
         const savedXP = localStorage.getItem('kalchemy_guildXP');
         const savedQuests = localStorage.getItem('kalchemy_quests');
+        const savedUpgrades = localStorage.getItem('kalchemy_upgrades');
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
@@ -1380,6 +1383,17 @@
         if (savedQuests) {
           const qArr = JSON.parse(savedQuests);
           if (Array.isArray(qArr) && qArr.length === 3) quests = qArr;
+        }
+        if (savedUpgrades) {
+          const uObj = JSON.parse(savedUpgrades);
+          if (uObj && typeof uObj === 'object') {
+            upgrades = {
+              crucibleCap: uObj.crucibleCap || 0,
+              essenceYield: uObj.essenceYield || 0,
+              autoSorter: uObj.autoSorter || 0,
+              catalystSpeed: uObj.catalystSpeed || 0
+            };
+          }
         }
       } catch(e){}
       initQuests();
@@ -1401,6 +1415,12 @@
       const crucActions = document.querySelector('.crucible-actions');
       const oracleSec = document.querySelector('.oracle-section');
       const qBoardCont = document.getElementById('quest-board-container');
+      const wShopCont = document.getElementById('workshop-container');
+      const autoFillBtn = document.getElementById('btn-auto-fill');
+
+      if (autoFillBtn) {
+        autoFillBtn.style.display = (upgrades.autoSorter > 0 && mode === 'crucible') ? 'inline-block' : 'none';
+      }
 
       if (mode === 'quests') {
         descEl.innerHTML = "<strong>Guild Quest Board:</strong> Complete patron orders for Gold & Guild XP rewards!";
@@ -1410,7 +1430,18 @@
         if (crucActions) crucActions.style.display = 'none';
         if (oracleSec) oracleSec.style.display = 'none';
         if (qBoardCont) qBoardCont.style.display = 'flex';
+        if (wShopCont) wShopCont.style.display = 'none';
         renderQuestBoard();
+      } else if (mode === 'workshop') {
+        descEl.innerHTML = "<strong>Enchanter Workshop:</strong> Upgrade laboratory apparatus with Gold to boost yields, capacity & automation!";
+        if (transCircle) transCircle.style.display = 'none';
+        if (slotsCont) slotsCont.style.display = 'none';
+        if (mainActBtn) mainActBtn.style.display = 'none';
+        if (crucActions) crucActions.style.display = 'none';
+        if (oracleSec) oracleSec.style.display = 'none';
+        if (qBoardCont) qBoardCont.style.display = 'none';
+        if (wShopCont) wShopCont.style.display = 'flex';
+        renderWorkshop();
       } else {
         if (transCircle) transCircle.style.display = 'flex';
         if (slotsCont) slotsCont.style.display = 'flex';
@@ -1418,6 +1449,7 @@
         if (crucActions) crucActions.style.display = 'flex';
         if (oracleSec) oracleSec.style.display = 'flex';
         if (qBoardCont) qBoardCont.style.display = 'none';
+        if (wShopCont) wShopCont.style.display = 'none';
 
         if (mode === 'crucible') {
           descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
@@ -1649,6 +1681,145 @@
       playChime(300, 'sine', 0.1);
     }
 
+    const UPGRADE_DEFS = [
+      {
+        key: 'crucibleCap',
+        name: 'Crucible Capacity',
+        icon: '🫕',
+        max: 5,
+        costs: [50, 100, 200, 350, 500],
+        desc: 'Increases Crucible transmutation yield & bonus essence (+15% per level).'
+      },
+      {
+        key: 'essenceYield',
+        name: 'Essence Extraction Yield',
+        icon: '⚗️',
+        max: 5,
+        costs: [40, 80, 160, 300, 500],
+        desc: 'Increases Essence & Dust harvested from Retort, Alembic & Anvil (+25% per level).'
+      },
+      {
+        key: 'autoSorter',
+        name: 'Auto-Sorter',
+        icon: '⚡',
+        max: 5,
+        costs: [60, 120, 250, 450, 700],
+        desc: 'Unlocks and upgrades Auto-Fill button to instantly load valid recipes into Crucible.'
+      },
+      {
+        key: 'catalystSpeed',
+        name: 'Catalyst Speed',
+        icon: '🔥',
+        max: 5,
+        costs: [45, 90, 180, 320, 500],
+        desc: 'Accelerates reactions & grants Critical Transmutation chance (+15% per level for bonus Gold & Essence).'
+      }
+    ];
+
+    function renderWorkshop() {
+      const cont = document.getElementById('workshop-container');
+      if (!cont) return;
+
+      let html = `
+        <div style="font-size:0.9rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🧙 Enchanter Workshop & Laboratory Upgrades
+        </div>
+      `;
+
+      UPGRADE_DEFS.forEach(upg => {
+        const curLvl = upgrades[upg.key] || 0;
+        const isMax = curLvl >= upg.max;
+        const nextCost = isMax ? 0 : upg.costs[curLvl];
+        const canAfford = !isMax && gold >= nextCost;
+
+        html += `
+          <div class="upgrade-card">
+            <div class="upgrade-info">
+              <div class="upgrade-name">
+                <span>${upg.icon} ${upg.name}</span>
+                <span class="upgrade-lvl">Lvl ${curLvl}/${upg.max}</span>
+              </div>
+              <div class="upgrade-desc">${upg.desc}</div>
+              <div class="upgrade-cost">
+                ${isMax ? '<span class="max-tag">MAX LEVEL</span>' : `<span style="color:#f1c40f">Cost: ${nextCost} Gold 💰</span>`}
+              </div>
+            </div>
+            ${isMax ? 
+              `<button class="btn-upgrade disabled" disabled>⭐ MAX</button>` : 
+              `<button class="btn-upgrade ${canAfford ? '' : 'disabled'}" ${canAfford ? `onclick="buyUpgrade('${upg.key}')"` : 'disabled'}>⬆️ Upgrade</button>`}
+          </div>
+        `;
+      });
+
+      cont.innerHTML = html;
+    }
+
+    function buyUpgrade(key) {
+      const upg = UPGRADE_DEFS.find(u => u.key === key);
+      if (!upg) return;
+      const curLvl = upgrades[key] || 0;
+      if (curLvl >= upg.max) return;
+      const cost = upg.costs[curLvl];
+
+      if (gold < cost) {
+        addLog(`⚠️ <strong>Not enough Gold!</strong> Need ${cost} Gold to purchase ${upg.name}.`, false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      gold -= cost;
+      upgrades[key] = curLvl + 1;
+      saveState();
+      updateStats();
+      renderWorkshop();
+
+      triggerToast("🧙 Workshop Upgrade!", `Upgraded ${upg.name} to Level ${upgrades[key]}!`, upg.icon);
+      addLog(`🧙 <strong>WORKSHOP UPGRADE:</strong> Upgraded <strong>${upg.name}</strong> ${upg.icon} to Level ${upgrades[key]}! (-${cost} Gold)`, true, false, false, 'oracle');
+      playFanfareTier();
+    }
+
+    function autoFillCrucible() {
+      if ((upgrades.autoSorter || 0) <= 0) {
+        addLog("⚠️ Unlock Auto-Sorter in the Enchanter Workshop first!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      const undiscoveredRecipes = RECIPES.filter(r => 
+        !discoveredIds.has(r.result) && 
+        discoveredIds.has(r.ingredients[0]) && 
+        discoveredIds.has(r.ingredients[1])
+      );
+
+      let targetRecipe = null;
+      if (undiscoveredRecipes.length > 0) {
+        targetRecipe = undiscoveredRecipes[Math.floor(Math.random() * undiscoveredRecipes.length)];
+      } else {
+        const validRecipes = RECIPES.filter(r => 
+          discoveredIds.has(r.ingredients[0]) && 
+          discoveredIds.has(r.ingredients[1])
+        );
+        if (validRecipes.length > 0) {
+          targetRecipe = validRecipes[Math.floor(Math.random() * validRecipes.length)];
+        }
+      }
+
+      if (!targetRecipe) {
+        addLog("⚡ Auto-Sorter: No valid ingredient combinations found in Grimoire!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      const ing1 = ALL_ELEMENTS.find(e => e.id === targetRecipe.ingredients[0]);
+      const ing2 = ALL_ELEMENTS.find(e => e.id === targetRecipe.ingredients[1]);
+
+      selectedSlots[0] = ing1;
+      selectedSlots[1] = ing2;
+      updateSlotsUI();
+      addLog(`⚡ <strong>AUTO-SORTER:</strong> Placed <strong>${ing1.name}</strong> ${ing1.icon} and <strong>${ing2.name}</strong> ${ing2.icon} into Crucible!`, false, false, false);
+      playChime(600, 'sine', 0.15);
+    }
+
     function resetProgress() {
       if (confirm("Reset all discovered elements back to starter 4?")) {
         discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
@@ -1659,12 +1830,14 @@
         gold = 100;
         guildXP = 0;
         quests = [];
+        upgrades = { crucibleCap: 0, essenceYield: 0, autoSorter: 0, catalystSpeed: 0 };
         initQuests();
         saveState();
         updateStats();
         renderGrimoire();
         updateSlotsUI();
         if (activeEquipment === 'quests') renderQuestBoard();
+        if (activeEquipment === 'workshop') renderWorkshop();
         addLog("Journal reset. Basic elements restored.", false, false, false);
       }
     }
@@ -1709,8 +1882,23 @@
 
           if (isNew) {
             discoveredIds.add(resElement.id);
-            essence += 25;
-            dust += 25; // Earn Alchemical Dust on new discovery
+
+            const capBonusMult = 1 + (upgrades.crucibleCap || 0) * 0.15;
+            const essGain = Math.floor(25 * capBonusMult);
+            const dustGain = Math.floor(25 * capBonusMult);
+            essence += essGain;
+            dust += dustGain;
+
+            // Critical Transmutation check
+            const critChance = (upgrades.catalystSpeed || 0) * 0.15;
+            const isCrit = Math.random() < critChance;
+            let critStr = "";
+            if (isCrit) {
+              essence += 20;
+              gold += 15;
+              critStr = ` 🔥 <strong>CRITICAL TRANSMUTATION!</strong> (+20 Essence, +15 Gold)`;
+            }
+
             saveState();
 
             checkTierUnlocks(true);
@@ -1718,8 +1906,8 @@
             renderGrimoire();
             orb.innerText = resElement.icon;
 
-            triggerToast(`NEW DISCOVERY!`, `You created ${resElement.name} ${resElement.icon} (+25 Dust)`, resElement.icon);
-            addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} [Tier ${resElement.tier} ${reqTier.name}] by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+25 Alchemical Dust)`, true, false, false);
+            triggerToast(`NEW DISCOVERY!`, `Created ${resElement.name} ${resElement.icon} (+${dustGain} Dust)`, resElement.icon);
+            addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} [Tier ${resElement.tier} ${reqTier.name}] by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+${dustGain} Alchemical Dust)${critStr}`, true, false, false);
             playFanfareDiscovery();
           } else {
             orb.innerText = resElement.icon;
@@ -1760,8 +1948,12 @@
         checkTierUnlocks(true);
         renderGrimoire();
       }
-      essence += 30;
-      dust += 15;
+
+      const yieldMult = 1 + (upgrades.essenceYield || 0) * 0.25;
+      const essGain = Math.floor(30 * yieldMult);
+      const dustGain = Math.floor(15 * yieldMult);
+      essence += essGain;
+      dust += dustGain;
       saveState();
       updateStats();
 
@@ -1769,8 +1961,8 @@
       orb.innerText = ing1.icon;
       setTimeout(() => { orb.innerText = '🔮'; }, 1500);
 
-      triggerToast("⚗️ Retort Distillation", `Extracted ${ing1.name} ${ing1.icon} (+30 Essence, +15 Dust)`, ing1.icon);
-      addLog(`⚗️ <strong>RETORT DISTILLATION:</strong> Distilled <strong>${el.name}</strong> ${el.icon} to extract primary essence <strong>${ing1.name}</strong> ${ing1.icon}! (+30 Essence, +15 Dust)`, true, false, false, 'retort');
+      triggerToast("⚗️ Retort Distillation", `Extracted ${ing1.name} ${ing1.icon} (+${essGain} Essence, +${dustGain} Dust)`, ing1.icon);
+      addLog(`⚗️ <strong>RETORT DISTILLATION:</strong> Distilled <strong>${el.name}</strong> ${el.icon} to extract primary essence <strong>${ing1.name}</strong> ${ing1.icon}! (+${essGain} Essence, +${dustGain} Dust)`, true, false, false, 'retort');
       playRetortSound();
     }
 
@@ -1798,8 +1990,12 @@
         checkTierUnlocks(true);
         renderGrimoire();
       }
-      essence += 30;
-      dust += 15;
+
+      const yieldMult = 1 + (upgrades.essenceYield || 0) * 0.25;
+      const essGain = Math.floor(30 * yieldMult);
+      const dustGain = Math.floor(15 * yieldMult);
+      essence += essGain;
+      dust += dustGain;
       saveState();
       updateStats();
 
@@ -1807,8 +2003,8 @@
       orb.innerText = ing2.icon;
       setTimeout(() => { orb.innerText = '🔮'; }, 1500);
 
-      triggerToast("🧪 Alembic Extraction", `Extracted ${ing2.name} ${ing2.icon} (+30 Essence, +15 Dust)`, ing2.icon);
-      addLog(`🧪 <strong>ALEMBIC EXTRACTION:</strong> Extracted secondary essence <strong>${ing2.name}</strong> ${ing2.icon} from <strong>${el.name}</strong> ${el.icon}! (+30 Essence, +15 Dust)`, true, false, false, 'alembic');
+      triggerToast("🧪 Alembic Extraction", `Extracted ${ing2.name} ${ing2.icon} (+${essGain} Essence, +${dustGain} Dust)`, ing2.icon);
+      addLog(`🧪 <strong>ALEMBIC EXTRACTION:</strong> Extracted secondary essence <strong>${ing2.name}</strong> ${ing2.icon} from <strong>${el.name}</strong> ${el.icon}! (+${essGain} Essence, +${dustGain} Dust)`, true, false, false, 'alembic');
       playAlembicSound();
     }
 
@@ -1825,8 +2021,9 @@
         return;
       }
 
-      const essenceGain = el.tier * 30;
-      const dustGain = el.tier * 25;
+      const yieldMult = 1 + (upgrades.essenceYield || 0) * 0.25;
+      const essenceGain = Math.floor(el.tier * 30 * yieldMult);
+      const dustGain = Math.floor(el.tier * 25 * yieldMult);
       essence += essenceGain;
       dust += dustGain;
       saveState();

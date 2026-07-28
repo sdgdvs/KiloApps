@@ -210,20 +210,31 @@ typedef struct {
     Quest quests[3];
     int slot1;
     int slot2;
-    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil, 4 = Quests
+    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil, 4 = Quests, 5 = Workshop
     int selectedTierFilter; // 0 = All, 1..5 = T1..T5
     int currentPage;
     int buttonElemMap[GRID_SIZE];
+    int upgradeCrucibleCap;
+    int upgradeEssenceYield;
+    int upgradeAutoSorter;
+    int upgradeCatalystSpeed;
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
 
+static const int g_CrucibleCapCosts[5] = { 50, 100, 200, 350, 500 };
+static const int g_EssenceYieldCosts[5] = { 40, 80, 160, 300, 500 };
+static const int g_AutoSorterCosts[5] = { 60, 120, 250, 450, 700 };
+static const int g_CatalystSpeedCosts[5] = { 45, 90, 180, 320, 500 };
+
 static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
-static HWND g_hEquipButtons[5];
+static HWND g_hEquipButtons[6];
 static HWND g_hQuestTurnInButtons[3];
 static HWND g_hQuestRerollButton = NULL;
+static HWND g_hUpgradeButtons[4];
+static HWND g_hAutoFillButton = NULL;
 static HWND g_hMainActionButton = NULL;
 static HWND g_hSlot1Button = NULL;
 static HWND g_hSlot2Button = NULL;
@@ -390,12 +401,28 @@ static void GenerateQuest(int slotIdx) {
 
 static void UpdateEquipmentUI(HWND hwnd) {
     int isQuests = (g_State.selectedEquipment == 4);
+    int isWorkshop = (g_State.selectedEquipment == 5);
+    int isCrucible = (g_State.selectedEquipment == 0);
 
-    if (isQuests) {
+    if (isQuests || isWorkshop) {
         if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
         if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
         if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
+    } else {
+        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_SHOW);
+        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_SHOW);
+        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_SHOW);
+    }
 
+    if (g_hAutoFillButton) {
+        if (isCrucible && g_State.upgradeAutoSorter > 0) {
+            ShowWindow(g_hAutoFillButton, SW_SHOW);
+        } else {
+            ShowWindow(g_hAutoFillButton, SW_HIDE);
+        }
+    }
+
+    if (isQuests) {
         for (int q = 0; q < 3; q++) {
             if (g_hQuestTurnInButtons[q]) {
                 ShowWindow(g_hQuestTurnInButtons[q], SW_SHOW);
@@ -411,14 +438,40 @@ static void UpdateEquipmentUI(HWND hwnd) {
         }
         if (g_hQuestRerollButton) ShowWindow(g_hQuestRerollButton, SW_SHOW);
     } else {
-        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_SHOW);
-        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_SHOW);
-        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_SHOW);
-
         for (int q = 0; q < 3; q++) {
             if (g_hQuestTurnInButtons[q]) ShowWindow(g_hQuestTurnInButtons[q], SW_HIDE);
         }
         if (g_hQuestRerollButton) ShowWindow(g_hQuestRerollButton, SW_HIDE);
+    }
+
+    if (isWorkshop) {
+        int lvls[4] = { g_State.upgradeCrucibleCap, g_State.upgradeEssenceYield, g_State.upgradeAutoSorter, g_State.upgradeCatalystSpeed };
+        int costs[4] = {
+            (lvls[0] < 5 ? g_CrucibleCapCosts[lvls[0]] : 0),
+            (lvls[1] < 5 ? g_EssenceYieldCosts[lvls[1]] : 0),
+            (lvls[2] < 5 ? g_AutoSorterCosts[lvls[2]] : 0),
+            (lvls[3] < 5 ? g_CatalystSpeedCosts[lvls[3]] : 0)
+        };
+
+        for (int u = 0; u < 4; u++) {
+            if (g_hUpgradeButtons[u]) {
+                ShowWindow(g_hUpgradeButtons[u], SW_SHOW);
+                if (lvls[u] >= 5) {
+                    SetWindowTextA(g_hUpgradeButtons[u], "MAX");
+                    EnableWindow(g_hUpgradeButtons[u], FALSE);
+                } else if (g_State.gold < costs[u]) {
+                    SetWindowTextA(g_hUpgradeButtons[u], "Upgrade");
+                    EnableWindow(g_hUpgradeButtons[u], FALSE);
+                } else {
+                    SetWindowTextA(g_hUpgradeButtons[u], "Upgrade");
+                    EnableWindow(g_hUpgradeButtons[u], TRUE);
+                }
+            }
+        }
+    } else {
+        for (int u = 0; u < 4; u++) {
+            if (g_hUpgradeButtons[u]) ShowWindow(g_hUpgradeButtons[u], SW_HIDE);
+        }
     }
 }
 
@@ -517,11 +570,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateGrimoireGrid();
 
             // Laboratory Equipment Nav Buttons
-            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 280, 96, 42, 22, hwnd, (HMENU)700, NULL, NULL);
-            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 324, 96, 38, 22, hwnd, (HMENU)701, NULL, NULL);
-            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 364, 96, 42, 22, hwnd, (HMENU)702, NULL, NULL);
-            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 408, 96, 34, 22, hwnd, (HMENU)703, NULL, NULL);
-            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 444, 96, 52, 22, hwnd, (HMENU)704, NULL, NULL);
+            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 278, 96, 36, 22, hwnd, (HMENU)700, NULL, NULL);
+            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 96, 34, 22, hwnd, (HMENU)701, NULL, NULL);
+            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 96, 38, 22, hwnd, (HMENU)702, NULL, NULL);
+            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 389, 96, 30, 22, hwnd, (HMENU)703, NULL, NULL);
+            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 420, 96, 38, 22, hwnd, (HMENU)704, NULL, NULL);
+            g_hEquipButtons[5] = CreateWindowA("BUTTON", "Shop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 459, 96, 46, 22, hwnd, (HMENU)705, NULL, NULL);
+
+            // Workshop Upgrade Buttons (Initially hidden)
+            g_hUpgradeButtons[0] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 142, 65, 24, hwnd, (HMENU)900, NULL, NULL);
+            g_hUpgradeButtons[1] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 202, 65, 24, hwnd, (HMENU)901, NULL, NULL);
+            g_hUpgradeButtons[2] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 262, 65, 24, hwnd, (HMENU)902, NULL, NULL);
+            g_hUpgradeButtons[3] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 322, 65, 24, hwnd, (HMENU)903, NULL, NULL);
+
+            // Auto-Fill Button for Crucible
+            g_hAutoFillButton = CreateWindowA("BUTTON", "⚡ Auto", WS_CHILD | BS_PUSHBUTTON, 280, 315, 46, 28, hwnd, (HMENU)904, NULL, NULL);
 
             // Crucible Slots
             g_hSlot1Button = CreateWindowA("BUTTON", "[ Slot 1 ]", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON, 295, 200, 90, 50, hwnd, (HMENU)301, NULL, NULL);
@@ -611,8 +674,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Beep(350, 50);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests)
-            else if (id >= 700 && id <= 704) {
+            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests, 705 = Shop)
+            else if (id >= 700 && id <= 705) {
                 g_State.selectedEquipment = id - 700;
                 if (g_hMainActionButton) {
                     if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
@@ -622,6 +685,77 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 UpdateEquipmentUI(hwnd);
                 Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Workshop Upgrades (900, 901, 902, 903)
+            else if (id >= 900 && id <= 903) {
+                int uIdx = id - 900;
+                int* pLvl = NULL;
+                const int* pCosts = NULL;
+                const char* uName = NULL;
+
+                if (uIdx == 0) { pLvl = &g_State.upgradeCrucibleCap; pCosts = g_CrucibleCapCosts; uName = "Crucible Capacity"; }
+                else if (uIdx == 1) { pLvl = &g_State.upgradeEssenceYield; pCosts = g_EssenceYieldCosts; uName = "Essence Extraction Yield"; }
+                else if (uIdx == 2) { pLvl = &g_State.upgradeAutoSorter; pCosts = g_AutoSorterCosts; uName = "Auto-Sorter"; }
+                else if (uIdx == 3) { pLvl = &g_State.upgradeCatalystSpeed; pCosts = g_CatalystSpeedCosts; uName = "Catalyst Speed"; }
+
+                if (pLvl && pCosts && *pLvl < 5) {
+                    int cost = pCosts[*pLvl];
+                    if (g_State.gold >= cost) {
+                        g_State.gold -= cost;
+                        (*pLvl)++;
+                        char logMsg[256];
+                        wsprintfA(logMsg, "🧙 WORKSHOP UPGRADE: Upgraded %s to Level %d! (-%d Gold)", uName, *pLvl, cost);
+                        AddJournalLog(logMsg);
+                        wsprintfA(g_State.lastStatus, "Upgraded %s to Lvl %d!", uName, *pLvl);
+                        Beep(523, 60); Beep(659, 60); Beep(784, 80);
+                        UpdateEquipmentUI(hwnd);
+                    } else {
+                        AddJournalLog("⚠️ Not enough Gold for Workshop Upgrade!");
+                        Beep(220, 100);
+                    }
+                }
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Auto-Fill Crucible Button (904)
+            else if (id == 904) {
+                if (g_State.upgradeAutoSorter <= 0) {
+                    AddJournalLog("⚠️ Unlock Auto-Sorter in the Enchanter Workshop first!");
+                    Beep(220, 100);
+                } else {
+                    int matchIdx = -1;
+                    int foundBothDiscovered = -1;
+
+                    for (int r = 0; r < TOTAL_RECIPES; r++) {
+                        int e1 = g_Recipes[r].ingredient1;
+                        int e2 = g_Recipes[r].ingredient2;
+                        int res = g_Recipes[r].result;
+                        if (g_State.discovered[e1] && g_State.discovered[e2]) {
+                            if (!g_State.discovered[res] && foundBothDiscovered == -1) {
+                                foundBothDiscovered = r;
+                            }
+                            if (matchIdx == -1) matchIdx = r;
+                        }
+                    }
+
+                    if (foundBothDiscovered >= 0) matchIdx = foundBothDiscovered;
+
+                    if (matchIdx >= 0) {
+                        g_State.slot1 = g_Recipes[matchIdx].ingredient1;
+                        g_State.slot2 = g_Recipes[matchIdx].ingredient2;
+                        UpdateSlotButtonText();
+                        char logMsg[256];
+                        wsprintfA(logMsg, "⚡ AUTO-SORTER: Placed %s and %s into Crucible!",
+                            g_Elements[g_State.slot1].name, g_Elements[g_State.slot2].name);
+                        AddJournalLog(logMsg);
+                        wsprintfA(g_State.lastStatus, "Auto-Sorter Loaded %s + %s",
+                            g_Elements[g_State.slot1].name, g_Elements[g_State.slot2].name);
+                        Beep(600, 80);
+                    } else {
+                        AddJournalLog("⚡ Auto-Sorter: No valid ingredient combinations found in Grimoire!");
+                        Beep(220, 100);
+                    }
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Quest Turn In Buttons (800, 801, 802)
@@ -704,17 +838,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             } else if (!g_State.discovered[res]) {
                                 g_State.discovered[res] = 1;
                                 g_State.discoveredCount++;
-                                g_State.essence += 25;
-                                g_State.dust += 25;
+
+                                int capMult = 100 + (g_State.upgradeCrucibleCap * 15);
+                                int essGain = 25 * capMult / 100;
+                                int dustGain = 25 * capMult / 100;
+                                g_State.essence += essGain;
+                                g_State.dust += dustGain;
+
+                                int critChance = g_State.upgradeCatalystSpeed * 15;
+                                int isCrit = ((FastRand() % 100) < critChance);
+                                char critLogStr[64] = "";
+                                if (isCrit) {
+                                    g_State.essence += 20;
+                                    g_State.gold += 15;
+                                    lstrcpyA(critLogStr, " [CRITICAL TRANSMUTE! +20 Ess, +15 Gold]");
+                                }
 
                                 CheckTierUnlocks();
                                 UpdateGrimoireGrid();
 
                                 wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
 
-                                char logMsg[256];
-                                wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+25 Dust)",
-                                    g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name);
+                                char logMsg[320];
+                                wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
+                                    g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name, dustGain, critLogStr);
                                 AddJournalLog(logMsg);
 
                                 PlayDiscoveryFanfare();
@@ -759,12 +906,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     CheckTierUnlocks();
                                     UpdateGrimoireGrid();
                                 }
-                                g_State.essence += 30;
-                                g_State.dust += 15;
+                                int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
+                                int essGain = 30 * yieldMult / 100;
+                                int dustGain = 15 * yieldMult / 100;
+                                g_State.essence += essGain;
+                                g_State.dust += dustGain;
                                 wsprintfA(g_State.lastStatus, "Retort: Distilled %s -> %s!", g_Elements[e1].name, g_Elements[ing1].name);
                                 char logMsg[256];
-                                wsprintfA(logMsg, "⚗️ RETORT DISTILLATION: Distilled %s to extract primary essence %s! (+30 Essence, +15 Dust)",
-                                    g_Elements[e1].name, g_Elements[ing1].name);
+                                wsprintfA(logMsg, "⚗️ RETORT DISTILLATION: Distilled %s to extract primary essence %s! (+%d Essence, +%d Dust)",
+                                    g_Elements[e1].name, g_Elements[ing1].name, essGain, dustGain);
                                 AddJournalLog(logMsg);
                                 Beep(350, 50); Beep(440, 50); Beep(554, 50); Beep(659, 70);
                             }
@@ -794,12 +944,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     CheckTierUnlocks();
                                     UpdateGrimoireGrid();
                                 }
-                                g_State.essence += 30;
-                                g_State.dust += 15;
+                                int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
+                                int essGain = 30 * yieldMult / 100;
+                                int dustGain = 15 * yieldMult / 100;
+                                g_State.essence += essGain;
+                                g_State.dust += dustGain;
                                 wsprintfA(g_State.lastStatus, "Alembic: Extracted %s -> %s!", g_Elements[e1].name, g_Elements[ing2].name);
                                 char logMsg[256];
-                                wsprintfA(logMsg, "🧪 ALEMBIC EXTRACTION: Extracted secondary essence %s from %s! (+30 Essence, +15 Dust)",
-                                    g_Elements[ing2].name, g_Elements[e1].name);
+                                wsprintfA(logMsg, "🧪 ALEMBIC EXTRACTION: Extracted secondary essence %s from %s! (+%d Essence, +%d Dust)",
+                                    g_Elements[ing2].name, g_Elements[e1].name, essGain, dustGain);
                                 AddJournalLog(logMsg);
                                 Beep(523, 50); Beep(659, 50); Beep(784, 50); Beep(1046, 70);
                             }
@@ -818,8 +971,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             Beep(220, 100);
                         } else {
                             int tier = g_Elements[e1].tier;
-                            int essGain = tier * 30;
-                            int dustGain = tier * 25;
+                            int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
+                            int essGain = (tier * 30) * yieldMult / 100;
+                            int dustGain = (tier * 25) * yieldMult / 100;
                             g_State.essence += essGain;
                             g_State.dust += dustGain;
                             wsprintfA(g_State.lastStatus, "Anvil: Smashed %s (+%d Ess, +%d Dust)!", g_Elements[e1].name, essGain, dustGain);
@@ -1094,6 +1248,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (g_State.selectedEquipment == 2) { modeTitle = "Alembic Extraction"; vesselLabel = "Alembic"; }
             else if (g_State.selectedEquipment == 3) { modeTitle = "Anvil Essence Smelter"; vesselLabel = "Anvil"; }
             else if (g_State.selectedEquipment == 4) { modeTitle = "Guild Quest Board"; vesselLabel = "Quests"; }
+            else if (g_State.selectedEquipment == 5) { modeTitle = "Enchanter Workshop"; vesselLabel = "Workshop"; }
 
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
@@ -1130,6 +1285,53 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char rewStr[64];
                     wsprintfA(rewStr, "+%d Gold, +%d XP", g_State.quests[q].goldReward, g_State.quests[q].xpReward);
                     TextOutA(hdc, qCard.left + 6, qCard.top + 46, rewStr, lstrlenA(rewStr));
+                    SelectObject(hdc, oldP);
+                }
+            } else if (g_State.selectedEquipment == 5) {
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(180, 160, 220));
+                TextOutA(hdc, 290, 120, "Laboratory Upgrades & Shop", 26);
+
+                const char* upgNames[4] = { "Crucible Cap", "Essence Yield", "Auto-Sorter", "Catalyst Speed" };
+                const char* upgDescs[4] = {
+                    "+15% transmute yield/lvl",
+                    "+25% extraction yield",
+                    "Unlocks Auto-Fill button",
+                    "+15% critical chance"
+                };
+                int lvls[4] = { g_State.upgradeCrucibleCap, g_State.upgradeEssenceYield, g_State.upgradeAutoSorter, g_State.upgradeCatalystSpeed };
+                int costs[4] = {
+                    (lvls[0] < 5 ? g_CrucibleCapCosts[lvls[0]] : 0),
+                    (lvls[1] < 5 ? g_EssenceYieldCosts[lvls[1]] : 0),
+                    (lvls[2] < 5 ? g_AutoSorterCosts[lvls[2]] : 0),
+                    (lvls[3] < 5 ? g_CatalystSpeedCosts[lvls[3]] : 0)
+                };
+
+                for (int u = 0; u < 4; u++) {
+                    RECT uCard = { 285, 138 + u * 60, 425, 192 + u * 60 };
+                    FillRect(hdc, &uCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, uCard.left, uCard.top, uCard.right, uCard.bottom);
+
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char nameStr[64];
+                    wsprintfA(nameStr, "%s (Lvl %d/5)", upgNames[u], lvls[u]);
+                    TextOutA(hdc, uCard.left + 6, uCard.top + 4, nameStr, lstrlenA(nameStr));
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(200, 210, 225));
+                    TextOutA(hdc, uCard.left + 6, uCard.top + 18, upgDescs[u], lstrlenA(upgDescs[u]));
+
+                    if (lvls[u] >= 5) {
+                        SetTextColor(hdc, RGB(46, 204, 113));
+                        TextOutA(hdc, uCard.left + 6, uCard.top + 34, "MAX LEVEL", 9);
+                    } else {
+                        SetTextColor(hdc, RGB(241, 196, 15));
+                        char costStr[32];
+                        wsprintfA(costStr, "Cost: %d Gold", costs[u]);
+                        TextOutA(hdc, uCard.left + 6, uCard.top + 34, costStr, lstrlenA(costStr));
+                    }
                     SelectObject(hdc, oldP);
                 }
             } else {
