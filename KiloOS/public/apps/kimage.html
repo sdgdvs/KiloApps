@@ -17,7 +17,7 @@
     --accent-active: #2563eb;
     --danger: #ef4444;
     --success: #22c55e;
-    --panel-width: 300px;
+    --panel-width: 310px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
@@ -97,7 +97,7 @@
   button.danger { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
   button.danger:hover { background: rgba(239, 68, 68, 0.4); }
 
-  .icon-btn { padding: 7px; border-radius: 6px; }
+  .icon-btn { padding: 7px 10px; border-radius: 6px; }
 
   /* Main Layout */
   .main-container {
@@ -235,16 +235,16 @@
   }
   .crop-handle {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     background: #ffffff;
-    border: 1px solid var(--accent);
+    border: 2px solid var(--accent);
     border-radius: 2px;
   }
-  .crop-handle.nw { top: -5px; left: -5px; cursor: nwse-resize; }
-  .crop-handle.ne { top: -5px; right: -5px; cursor: nesw-resize; }
-  .crop-handle.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
-  .crop-handle.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+  .crop-handle.nw { top: -6px; left: -6px; cursor: nwse-resize; }
+  .crop-handle.ne { top: -6px; right: -6px; cursor: nesw-resize; }
+  .crop-handle.sw { bottom: -6px; left: -6px; cursor: nesw-resize; }
+  .crop-handle.se { bottom: -6px; right: -6px; cursor: nwse-resize; }
 
   /* Empty State */
   .empty-state {
@@ -277,7 +277,7 @@
     gap: 8px;
     overflow-x: auto;
     padding: 4px 0;
-    max-width: 60%;
+    max-width: 55%;
   }
   .playlist-strip::-webkit-scrollbar { height: 4px; }
   .playlist-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
@@ -298,8 +298,8 @@
   /* Histogram Canvas */
   #histCanvas {
     width: 100%;
-    height: 120px;
-    background: rgba(0,0,0,0.4);
+    height: 125px;
+    background: rgba(0,0,0,0.5);
     border-radius: 6px;
     border: 1px solid var(--glass-border);
   }
@@ -322,6 +322,23 @@
   .meta-table td:last-child {
     color: var(--text-main);
     word-break: break-all;
+  }
+
+  /* Progress Bar for Slideshow */
+  .slideshow-progress {
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 25;
+  }
+  .slideshow-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.1s linear;
   }
 
   /* Utility classes */
@@ -352,7 +369,7 @@
     <!-- Zoom & Quick Actions -->
     <div class="toolbar-section hidden" id="viewTools">
       <button id="btnZoomOut" class="icon-btn" title="Zoom Out">-</button>
-      <span id="zoomLevel" style="font-size:12px; min-width:40px; text-align:center;">100%</span>
+      <span id="zoomLevel" style="font-size:12px; min-width:44px; text-align:center;">100%</span>
       <button id="btnZoomIn" class="icon-btn" title="Zoom In">+</button>
       <button id="btnZoomReset" title="Fit to Screen">1:1</button>
       <button id="btnToggleRight" title="Histogram & Metadata">
@@ -387,23 +404,25 @@
             <input type="range" id="sliderContrast" min="-100" max="100" value="0">
           </div>
           <div class="control-group">
-            <label>Blur <span class="val" id="valBlur">0px</span></label>
-            <input type="range" id="sliderBlur" min="0" max="20" value="0">
-          </div>
-          <div class="control-group">
             <label>Saturation <span class="val" id="valSaturation">0</span></label>
             <input type="range" id="sliderSaturation" min="-100" max="100" value="0">
+          </div>
+          <div class="control-group">
+            <label>Blur <span class="val" id="valBlur">0px</span></label>
+            <input type="range" id="sliderBlur" min="0" max="20" value="0">
           </div>
 
           <div class="control-group" style="margin-top:10px;">
             <label>Filter Presets</label>
             <div class="preset-grid">
-              <button id="btnFilterNone">Normal</button>
+              <button id="btnFilterNone" class="active">Normal</button>
               <button id="btnFilterGrayscale">Grayscale</button>
               <button id="btnFilterSepia">Sepia</button>
               <button id="btnFilterInvert">Invert</button>
               <button id="btnFilterVintage">Vintage</button>
               <button id="btnFilterWarm">Warm</button>
+              <button id="btnFilterCool">Cool</button>
+              <button id="btnFilterDramatic">Dramatic</button>
             </div>
           </div>
 
@@ -425,7 +444,7 @@
           </div>
 
           <div class="control-group" style="margin-top:16px;">
-            <label>Crop Tool</label>
+            <label>Interactive Crop Tool</label>
             <button id="btnToggleCrop">Enable Crop Tool</button>
             <div id="cropControls" class="hidden" style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
               <select id="cropAspectSelect">
@@ -433,6 +452,7 @@
                 <option value="1:1">1:1 Square</option>
                 <option value="4:3">4:3 Standard</option>
                 <option value="16:9">16:9 Widescreen</option>
+                <option value="9:16">9:16 Portrait</option>
               </select>
               <div class="row">
                 <button id="btnApplyCrop" class="primary" style="flex:1;">Apply Crop</button>
@@ -463,8 +483,8 @@
           </div>
 
           <div class="control-group" style="margin-top:20px;">
-            <label>Export Settings</label>
-            <span style="font-size:11px; color:var(--text-muted);">Format</span>
+            <label>Export & Format Conversion</label>
+            <span style="font-size:11px; color:var(--text-muted);">Target Format</span>
             <select id="exportFormat">
               <option value="image/png">PNG (.png)</option>
               <option value="image/jpeg">JPEG (.jpg)</option>
@@ -520,6 +540,11 @@
         </div>
       </div>
 
+      <!-- Slideshow Timer Bar -->
+      <div class="slideshow-progress hidden" id="slideshowProgress">
+        <div class="slideshow-bar" id="slideshowBar"></div>
+      </div>
+
     </div>
 
     <!-- Right Inspector Panel -->
@@ -534,7 +559,7 @@
         </div>
 
         <div class="control-group" style="margin-top:12px;">
-          <label>File & Image Metadata</label>
+          <label>File & Image Properties</label>
           <table class="meta-table">
             <tbody id="metaTableBody">
               <tr><td>File Name</td><td id="metaName">-</td></tr>
@@ -542,20 +567,21 @@
               <tr><td>File Size</td><td id="metaSize">-</td></tr>
               <tr><td>Dimensions</td><td id="metaDim">-</td></tr>
               <tr><td>Aspect Ratio</td><td id="metaAspect">-</td></tr>
-              <tr><td>Color Depth</td><td>24-bit RGB</td></tr>
+              <tr><td>Megapixels</td><td id="metaMP">-</td></tr>
             </tbody>
           </table>
         </div>
 
         <div class="control-group" style="margin-top:12px;">
-          <label>EXIF Camera Data</label>
+          <label>EXIF Camera Inspector</label>
           <table class="meta-table">
             <tbody id="exifTableBody">
-              <tr><td>Camera</td><td id="exifCamera">None / N/A</td></tr>
+              <tr><td>Camera / Make</td><td id="exifCamera">N/A</td></tr>
               <tr><td>Date Taken</td><td id="exifDate">N/A</td></tr>
-              <tr><td>Exposure</td><td id="exifExposure">N/A</td></tr>
-              <tr><td>F-Number</td><td id="exifAperture">N/A</td></tr>
+              <tr><td>Exposure Time</td><td id="exifExposure">N/A</td></tr>
+              <tr><td>Aperture</td><td id="exifAperture">N/A</td></tr>
               <tr><td>ISO Speed</td><td id="exifISO">N/A</td></tr>
+              <tr><td>Software</td><td id="exifSoftware">N/A</td></tr>
             </tbody>
           </table>
         </div>
@@ -567,14 +593,15 @@
   <!-- Bottom Slideshow & Playlist Bar -->
   <div class="bottom-bar hidden" id="bottomBar">
     <div class="row">
-      <button id="btnPrev" class="icon-btn" title="Previous Image">◀</button>
-      <button id="btnPlayPause" class="primary" title="Play Slideshow">▶ Play</button>
-      <button id="btnNext" class="icon-btn" title="Next Image">▶</button>
+      <button id="btnPrev" class="icon-btn" title="Previous Image (←)">◀</button>
+      <button id="btnPlayPause" class="primary" title="Play/Pause Slideshow (Space)">▶ Play</button>
+      <button id="btnNext" class="icon-btn" title="Next Image (→)">▶</button>
       <select id="slideshowInterval" style="padding:4px 8px;">
         <option value="1000">1 Sec</option>
         <option value="2000">2 Secs</option>
         <option value="3000" selected>3 Secs</option>
         <option value="5000">5 Secs</option>
+        <option value="10000">10 Secs</option>
       </select>
     </div>
 
@@ -583,7 +610,7 @@
 
     <div class="row">
       <span id="playlistCounter" style="font-size:12px; color:var(--text-muted);">0 / 0</span>
-      <button id="btnFullscreen" class="icon-btn" title="Toggle Fullscreen">⛶</button>
+      <button id="btnFullscreen" class="icon-btn" title="Toggle Fullscreen (F)">⛶</button>
     </div>
   </div>
 
@@ -599,7 +626,7 @@
     adjustments: { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' },
     crop: { active: false, x: 0, y: 0, w: 0, h: 0 },
     draw: { active: false, isDrawing: false, color: '#3b82f6', size: 4, paths: [] },
-    slideshow: { playing: false, timer: null, interval: 3000 }
+    slideshow: { playing: false, timer: null, animFrame: null, startTime: 0, interval: 3000 }
   };
 
   // UI Elements
@@ -621,7 +648,9 @@
     histCtx: document.getElementById('histCanvas').getContext('2d'),
     playlistStrip: document.getElementById('playlistStrip'),
     playlistCounter: document.getElementById('playlistCounter'),
-    cropOverlay: document.getElementById('cropOverlay')
+    cropOverlay: document.getElementById('cropOverlay'),
+    slideshowProgress: document.getElementById('slideshowProgress'),
+    slideshowBar: document.getElementById('slideshowBar')
   };
 
   // Setup Event Listeners
@@ -634,6 +663,21 @@
     e.preventDefault();
     if (e.dataTransfer.files.length) loadFiles(e.dataTransfer.files);
   };
+
+  // Keyboard Shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowLeft') {
+      selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
+    } else if (e.key === 'ArrowRight') {
+      selectImage((state.currentIndex + 1) % state.playlist.length);
+    } else if (e.key === ' ') {
+      e.preventDefault();
+      toggleSlideshow();
+    } else if (e.key === 'f' || e.key === 'F') {
+      toggleFullscreen();
+    }
+  });
 
   // Tab switching
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -652,13 +696,16 @@
     if (!validFiles.length) return;
 
     let loadedCount = 0;
+    const initialLen = state.playlist.length;
+
     validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onload = (e) => {
+        const arrayBuffer = e.target.result;
+        const blob = new Blob([arrayBuffer], { type: file.type });
         const img = new Image();
         img.onload = () => {
-          // Basic EXIF extraction for JPEGs
-          const exif = parseExif(e.target.result);
+          const exif = parseExif(arrayBuffer);
           state.playlist.push({
             file,
             img,
@@ -671,9 +718,10 @@
           if (loadedCount === validFiles.length) {
             updatePlaylistUI();
             if (state.currentIndex === -1) selectImage(0);
+            else selectImage(initialLen);
           }
         };
-        img.src = URL.createObjectURL(file);
+        img.src = URL.createObjectURL(blob);
       };
       reader.readAsArrayBuffer(file);
     });
@@ -718,18 +766,21 @@
     document.getElementById('inputHeight').value = item.img.height;
 
     // Render metadata
+    const mp = ((item.img.width * item.img.height) / 1000000).toFixed(2);
     document.getElementById('metaName').textContent = item.name;
     document.getElementById('metaType').textContent = item.type.split('/')[1]?.toUpperCase() || 'IMAGE';
     document.getElementById('metaSize').textContent = item.size;
     document.getElementById('metaDim').textContent = `${item.img.width} × ${item.img.height} px`;
     document.getElementById('metaAspect').textContent = getAspectRatio(item.img.width, item.img.height);
+    document.getElementById('metaMP').textContent = `${mp} MP`;
 
     // Render EXIF
-    document.getElementById('exifCamera').textContent = item.exif.camera || 'None / N/A';
+    document.getElementById('exifCamera').textContent = item.exif.camera || 'N/A';
     document.getElementById('exifDate').textContent = item.exif.date || 'N/A';
     document.getElementById('exifExposure').textContent = item.exif.exposure || 'N/A';
     document.getElementById('exifAperture').textContent = item.exif.aperture || 'N/A';
     document.getElementById('exifISO').textContent = item.exif.iso || 'N/A';
+    document.getElementById('exifSoftware').textContent = item.exif.software || 'N/A';
 
     renderCanvas();
   }
@@ -760,6 +811,8 @@
     else if (adj.preset === 'invert') filterStr += ' invert(100%)';
     else if (adj.preset === 'vintage') filterStr += ' sepia(50%) contrast(120%) brightness(90%)';
     else if (adj.preset === 'warm') filterStr += ' sepia(30%) saturate(140%)';
+    else if (adj.preset === 'cool') filterStr += ' hue-rotate(180deg) saturate(120%)';
+    else if (adj.preset === 'dramatic') filterStr += ' contrast(150%) saturate(130%)';
 
     ctx.filter = filterStr;
 
@@ -800,7 +853,6 @@
     const h = ui.mainCanvas.height;
     if (!w || !h) return;
 
-    // Sample step for performance on large images
     const step = Math.max(1, Math.floor((w * h) / 100000));
     const imgData = ui.ctx.getImageData(0, 0, w, h).data;
 
@@ -815,8 +867,8 @@
     }
 
     const maxVal = Math.max(...rCount, ...gCount, ...bCount) || 1;
-    const hw = ui.histCanvas.width = ui.histCanvas.clientWidth;
-    const hh = ui.histCanvas.height = ui.histCanvas.clientHeight;
+    const hw = ui.histCanvas.width = ui.histCanvas.clientWidth || 280;
+    const hh = ui.histCanvas.height = ui.histCanvas.clientHeight || 125;
     const hctx = ui.histCtx;
 
     hctx.clearRect(0, 0, hw, hh);
@@ -836,9 +888,9 @@
     }
 
     hctx.globalCompositeOperation = 'screen';
-    drawChannel(rCount, 'rgba(239, 68, 68, 0.6)');
-    drawChannel(gCount, 'rgba(34, 197, 94, 0.6)');
-    drawChannel(bCount, 'rgba(59, 130, 246, 0.6)');
+    drawChannel(rCount, 'rgba(239, 68, 68, 0.65)');
+    drawChannel(gCount, 'rgba(34, 197, 94, 0.65)');
+    drawChannel(bCount, 'rgba(59, 130, 246, 0.65)');
     hctx.globalCompositeOperation = 'source-over';
   }
 
@@ -866,15 +918,19 @@
     document.getElementById('valBlur').textContent = '0px';
     document.getElementById('sliderSaturation').value = 0;
     document.getElementById('valSaturation').textContent = '0';
+    document.querySelectorAll('.preset-grid button').forEach(b => b.classList.remove('active'));
+    document.getElementById('btnFilterNone')?.classList.add('active');
   }
   document.getElementById('btnResetAdjustments').onclick = () => { resetAdjustments(); renderCanvas(); };
 
   // Presets
-  const presets = ['None', 'Grayscale', 'Sepia', 'Invert', 'Vintage', 'Warm'];
+  const presets = ['None', 'Grayscale', 'Sepia', 'Invert', 'Vintage', 'Warm', 'Cool', 'Dramatic'];
   presets.forEach(p => {
     const el = document.getElementById(`btnFilter${p}`);
     if (el) {
       el.onclick = () => {
+        document.querySelectorAll('.preset-grid button').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
         state.adjustments.preset = p.toLowerCase();
         renderCanvas();
       };
@@ -895,6 +951,7 @@
   // Toggle Right Inspector
   document.getElementById('btnToggleRight').onclick = () => {
     ui.rightPanel.classList.toggle('hidden');
+    renderHistogram();
   };
 
   // Crop Tool Implementation
@@ -921,11 +978,24 @@
     ui.cropOverlay.style.height = `${state.crop.h}px`;
   }
 
+  document.getElementById('cropAspectSelect').onchange = (e) => {
+    const val = e.target.value;
+    if (val === 'free') return;
+    const parts = val.split(':').map(Number);
+    const aspect = parts[0] / parts[1];
+    state.crop.h = state.crop.w / aspect;
+    if (state.crop.y + state.crop.h > ui.mainCanvas.height) {
+      state.crop.h = ui.mainCanvas.height - state.crop.y;
+      state.crop.w = state.crop.h * aspect;
+    }
+    updateCropOverlayUI();
+  };
+
   document.getElementById('btnApplyCrop').onclick = () => {
     const croppedCtx = document.createElement('canvas').getContext('2d');
-    croppedCtx.canvas.width = state.crop.w;
-    croppedCtx.canvas.height = state.crop.h;
-    croppedCtx.drawImage(ui.mainCanvas, state.crop.x, state.crop.y, state.crop.w, state.crop.h, 0, 0, state.crop.w, state.crop.h);
+    croppedCtx.canvas.width = Math.max(1, Math.round(state.crop.w));
+    croppedCtx.canvas.height = Math.max(1, Math.round(state.crop.h));
+    croppedCtx.drawImage(ui.mainCanvas, state.crop.x, state.crop.y, state.crop.w, state.crop.h, 0, 0, croppedCtx.canvas.width, croppedCtx.canvas.height);
 
     const newImg = new Image();
     newImg.onload = () => {
@@ -934,7 +1004,7 @@
       btnToggleCrop.classList.remove('primary');
       cropControls.classList.add('hidden');
       ui.cropOverlay.style.display = 'none';
-      renderCanvas();
+      selectImage(state.currentIndex);
     };
     newImg.src = croppedCtx.canvas.toDataURL();
   };
@@ -972,7 +1042,7 @@
     const newImg = new Image();
     newImg.onload = () => {
       state.playlist[state.currentIndex].img = newImg;
-      renderCanvas();
+      selectImage(state.currentIndex);
     };
     newImg.src = resCtx.canvas.toDataURL();
   };
@@ -1043,66 +1113,195 @@
     const link = document.createElement('a');
     const name = (state.playlist[state.currentIndex]?.name || 'edited_image').split('.')[0];
     link.download = `${name}_edited${extMap[fmt] || '.png'}`;
-    link.href = ui.mainCanvas.toDataURL(fmt, quality);
+
+    if (fmt === 'image/bmp') {
+      const bmpBlob = canvasToBMP(ui.mainCanvas);
+      link.href = URL.createObjectURL(bmpBlob);
+    } else {
+      link.href = ui.mainCanvas.toDataURL(fmt, quality);
+    }
     link.click();
   };
+
+  function canvasToBMP(canvas) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    const rowSize = Math.floor((24 * w + 31) / 32) * 4;
+    const pixelArraySize = rowSize * h;
+    const fileSize = 54 + pixelArraySize;
+
+    const buffer = new ArrayBuffer(fileSize);
+    const view = new DataView(buffer);
+
+    view.setUint16(0, 0x4D42, true);
+    view.setUint32(2, fileSize, true);
+    view.setUint32(6, 0, true);
+    view.setUint32(10, 54, true);
+
+    view.setUint32(14, 40, true);
+    view.setInt32(18, w, true);
+    view.setInt32(22, h, true);
+    view.setUint16(26, 1, true);
+    view.setUint16(28, 24, true);
+    view.setUint32(30, 0, true);
+    view.setUint32(34, pixelArraySize, true);
+
+    let offset = 54;
+    for (let y = h - 1; y >= 0; y--) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        view.setUint8(offset++, data[i + 2]);
+        view.setUint8(offset++, data[i + 1]);
+        view.setUint8(offset++, data[i]);
+      }
+      for (let p = 0; p < rowSize - w * 3; p++) {
+        view.setUint8(offset++, 0);
+      }
+    }
+    return new Blob([buffer], { type: 'image/bmp' });
+  }
 
   // Slideshow
   document.getElementById('btnPrev').onclick = () => selectImage((state.currentIndex - 1 + state.playlist.length) % state.playlist.length);
   document.getElementById('btnNext').onclick = () => selectImage((state.currentIndex + 1) % state.playlist.length);
 
   const btnPlayPause = document.getElementById('btnPlayPause');
-  btnPlayPause.onclick = () => {
+  btnPlayPause.onclick = toggleSlideshow;
+
+  function toggleSlideshow() {
     state.slideshow.playing = !state.slideshow.playing;
     btnPlayPause.textContent = state.slideshow.playing ? '⏸ Pause' : '▶ Play';
+    ui.slideshowProgress.classList.toggle('hidden', !state.slideshow.playing);
+
     if (state.slideshow.playing) {
-      state.slideshow.timer = setInterval(() => {
-        selectImage((state.currentIndex + 1) % state.playlist.length);
-      }, state.slideshow.interval);
+      state.slideshow.startTime = performance.now();
+      runSlideshowLoop();
     } else {
-      clearInterval(state.slideshow.timer);
+      cancelAnimationFrame(state.slideshow.animFrame);
+      ui.slideshowBar.style.width = '0%';
     }
-  };
+  }
+
+  function runSlideshowLoop() {
+    if (!state.slideshow.playing) return;
+    const now = performance.now();
+    const elapsed = now - state.slideshow.startTime;
+    const progress = Math.min(100, (elapsed / state.slideshow.interval) * 100);
+    ui.slideshowBar.style.width = `${progress}%`;
+
+    if (elapsed >= state.slideshow.interval) {
+      selectImage((state.currentIndex + 1) % state.playlist.length);
+      state.slideshow.startTime = performance.now();
+    }
+    state.slideshow.animFrame = requestAnimationFrame(runSlideshowLoop);
+  }
 
   document.getElementById('slideshowInterval').onchange = (e) => {
     state.slideshow.interval = parseInt(e.target.value);
     if (state.slideshow.playing) {
-      clearInterval(state.slideshow.timer);
-      state.slideshow.timer = setInterval(() => {
-        selectImage((state.currentIndex + 1) % state.playlist.length);
-      }, state.slideshow.interval);
+      state.slideshow.startTime = performance.now();
     }
   };
 
-  document.getElementById('btnFullscreen').onclick = () => {
+  document.getElementById('btnFullscreen').onclick = toggleFullscreen;
+
+  function toggleFullscreen() {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
+      document.documentElement.requestFullscreen().catch(() => {});
     } else {
-      document.exitFullscreen();
+      document.exitFullscreen().catch(() => {});
     }
-  };
+  }
 
-  // Basic EXIF Parser Helper
+  // Robust EXIF Parser
   function parseExif(arrayBuffer) {
-    const res = { camera: '', date: '', exposure: '', aperture: '', iso: '' };
+    const res = { camera: '', date: '', exposure: '', aperture: '', iso: '', software: '' };
     try {
-      const data = new DataView(arrayBuffer);
-      if (data.getUint16(0, false) !== 0xFFD8) return res; // Not JPEG
-      let length = data.byteLength, offset = 2;
+      const view = new DataView(arrayBuffer);
+      if (view.getUint16(0, false) !== 0xFFD8) return res;
+      let length = view.byteLength, offset = 2;
       while (offset < length) {
-        if (data.getUint16(offset, false) === 0xFFE1) {
-          // APP1 Marker found
-          const str = String.fromCharCode.apply(null, new Uint8Array(arrayBuffer, offset + 4, 4));
-          if (str === 'Exif') {
-            res.camera = 'Standard EXIF Header';
-            res.date = new Date().toLocaleDateString();
+        const marker = view.getUint16(offset, false);
+        offset += 2;
+        if (marker === 0xFFE1) {
+          if (view.getUint32(offset + 2, false) === 0x45786966) {
+            const littleEndian = view.getUint16(offset + 8, false) === 0x4949;
+            const tiffOffset = offset + 8;
+            const firstIFD = view.getUint32(tiffOffset + 4, littleEndian);
+            if (firstIFD) {
+              parseIFD(view, tiffOffset, tiffOffset + firstIFD, littleEndian, res);
+            }
           }
           break;
+        } else if ((marker & 0xFF00) !== 0xFF00) {
+          break;
+        } else {
+          offset += view.getUint16(offset, false);
         }
-        offset += 2 + data.getUint16(offset + 2, false);
       }
     } catch(e) {}
     return res;
+  }
+
+  function parseIFD(view, tiffOffset, dirOffset, littleEndian, res) {
+    try {
+      const entries = view.getUint16(dirOffset, littleEndian);
+      for (let i = 0; i < entries; i++) {
+        const entryOffset = dirOffset + 2 + i * 12;
+        const tag = view.getUint16(entryOffset, littleEndian);
+        if (tag === 0x010F) res.camera = getString(view, tiffOffset, entryOffset, littleEndian);
+        else if (tag === 0x0110) {
+          const model = getString(view, tiffOffset, entryOffset, littleEndian);
+          res.camera = res.camera ? `${res.camera} ${model}` : model;
+        } else if (tag === 0x0132) res.date = getString(view, tiffOffset, entryOffset, littleEndian);
+        else if (tag === 0x0131) res.software = getString(view, tiffOffset, entryOffset, littleEndian);
+        else if (tag === 0x8769) {
+          const subIFD = view.getUint32(entryOffset + 8, littleEndian);
+          parseExifSubIFD(view, tiffOffset, tiffOffset + subIFD, littleEndian, res);
+        }
+      }
+    } catch(e) {}
+  }
+
+  function parseExifSubIFD(view, tiffOffset, dirOffset, littleEndian, res) {
+    try {
+      const entries = view.getUint16(dirOffset, littleEndian);
+      for (let i = 0; i < entries; i++) {
+        const entryOffset = dirOffset + 2 + i * 12;
+        const tag = view.getUint16(entryOffset, littleEndian);
+        if (tag === 0x829A) {
+          const ptr = tiffOffset + view.getUint32(entryOffset + 8, littleEndian);
+          const num = view.getUint32(ptr, littleEndian);
+          const den = view.getUint32(ptr + 4, littleEndian);
+          if (den) res.exposure = num < den ? `1/${Math.round(den / num)}s` : `${(num / den).toFixed(1)}s`;
+        } else if (tag === 0x829D) {
+          const ptr = tiffOffset + view.getUint32(entryOffset + 8, littleEndian);
+          const num = view.getUint32(ptr, littleEndian);
+          const den = view.getUint32(ptr + 4, littleEndian);
+          if (den) res.aperture = `f/${(num / den).toFixed(1)}`;
+        } else if (tag === 0x8827) {
+          res.iso = `ISO ${view.getUint16(entryOffset + 8, littleEndian)}`;
+        } else if (tag === 0x9003 || tag === 0x9004) {
+          res.date = getString(view, tiffOffset, entryOffset, littleEndian);
+        }
+      }
+    } catch(e) {}
+  }
+
+  function getString(view, tiffOffset, entryOffset, littleEndian) {
+    const count = view.getUint32(entryOffset + 4, littleEndian);
+    const valOffset = count > 4 ? tiffOffset + view.getUint32(entryOffset + 8, littleEndian) : entryOffset + 8;
+    let str = '';
+    for (let i = 0; i < count - 1; i++) {
+      const char = view.getUint8(valOffset + i);
+      if (char === 0) break;
+      str += String.fromCharCode(char);
+    }
+    return str.trim();
   }
 
   // Utilities
