@@ -3,369 +3,1305 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KCalc</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<title>KCalc Pro - Scientific & Financial Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-color: #050505;
-    --btn-bg: rgba(255, 255, 255, 0.05);
-    --btn-hover: rgba(255, 255, 255, 0.1);
-    --btn-active: rgba(255, 255, 255, 0.15);
-    --primary: #5a8bd4;
-    --primary-hover: #6ba0f0;
-    --primary-active: #4a7bc4;
-    --secondary: rgba(255, 255, 255, 0.02);
-    --text-main: #ffffff;
-    --text-muted: #888888;
+    --bg-main: #090b10;
+    --card-bg: rgba(18, 22, 32, 0.75);
+    --btn-bg: rgba(255, 255, 255, 0.04);
+    --btn-hover: rgba(255, 255, 255, 0.09);
+    --btn-active: rgba(255, 255, 255, 0.16);
+    --primary: #4f46e5;
+    --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    --accent-glow: rgba(99, 102, 241, 0.35);
+    --secondary-bg: rgba(255, 255, 255, 0.02);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
     --border-color: rgba(255, 255, 255, 0.08);
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
   }
+  
+  * { box-sizing: border-box; }
   
   body, html { 
     margin: 0; padding: 0; width: 100%; height: 100%; 
-    font-family: 'Inter', -apple-system, sans-serif; 
-    background: radial-gradient(circle at center, #1a1a24 0%, #050505 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+    background: radial-gradient(circle at 50% 0%, #171b2d 0%, #090b10 100%);
     color: var(--text-main); 
     user-select: none;
     overflow: hidden;
   }
   
-  .calc { 
-    padding: 16px; 
+  .app-container { 
     display: flex; 
     flex-direction: column; 
-    height: 100%; 
-    box-sizing: border-box; 
-    gap: 12px; 
-  }
-  
-  .display-container {
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-    backdrop-filter: blur(10px);
-    height: 80px;
-    box-sizing: border-box;
+    height: 100vh; 
+    width: 100vw;
+    padding: 12px; 
+    gap: 10px; 
+    max-width: 1200px;
+    margin: 0 auto;
   }
 
-  .display { 
-    font-family: 'JetBrains Mono', 'Consolas', monospace;
-    font-size: 36px; 
-    font-weight: 300; 
-    text-align: right; 
-    overflow-x: auto; 
-    white-space: nowrap; 
-    color: #fff; 
-    letter-spacing: -1px;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
-  }
-  
-  .display::-webkit-scrollbar { display: none; }
-  
-  .keys { 
-    display: grid; 
-    grid-template-columns: repeat(5, 1fr); 
-    grid-template-rows: repeat(8, 1fr);
-    gap: 8px; 
-    flex: 1; 
-  }
-  
-  button { 
-    font-family: 'Inter', sans-serif; 
-    font-size: 18px; 
-    font-weight: 400; 
-    border: 1px solid var(--border-color); 
-    border-radius: 12px; 
-    background: var(--btn-bg); 
-    color: var(--text-main); 
-    cursor: pointer; 
-    transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1); 
-    padding: 0; 
-    backdrop-filter: blur(12px); 
-    -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 3px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  /* Header Navigation Bar */
+  .header {
     display: flex;
     align-items: center;
-    justify-content: center;
-  }
-  
-  button:hover { 
-    background: var(--btn-hover); 
-    transform: translateY(-1px); 
-    box-shadow: 0 5px 10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
-  }
-  
-  button:active { 
-    background: var(--btn-active); 
-    transform: translateY(1px); 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    transition: all 0.05s;
-  }
-  
-  button:focus-visible {
-    outline: 2px solid var(--primary);
-    outline-offset: 2px;
+    justify-content: space-between;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 8px 14px;
+    backdrop-filter: blur(16px);
   }
 
-  button.operator { 
-    background: var(--primary); 
-    color: #000; 
-    font-weight: 600; 
-    border: none; 
-    box-shadow: 0 4px 12px rgba(90, 139, 212, 0.4), inset 0 1px 0 rgba(255,255,255,0.3); 
-    font-size: 22px; 
-  }
-  
-  button.operator:hover { 
-    background: var(--primary-hover); 
-    box-shadow: 0 6px 16px rgba(90, 139, 212, 0.5), inset 0 1px 0 rgba(255,255,255,0.4);
-  }
-  
-  button.operator:active { 
-    background: var(--primary-active); 
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.3); 
-  }
-  
-  button.func { 
-    background: var(--secondary); 
-    font-size: 14px; 
-    font-weight: 500; 
-    color: var(--text-muted); 
-    border-color: rgba(255,255,255,0.03); 
-  }
-  
-  button.func:hover {
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: -0.5px;
     color: #fff;
   }
 
-  button.danger {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border-color: rgba(239, 68, 68, 0.2);
+  .logo-icon {
+    width: 24px;
+    height: 24px;
+    background: var(--primary-gradient);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    box-shadow: 0 0 10px var(--accent-glow);
   }
 
-  button.danger:hover {
-    background: rgba(239, 68, 68, 0.2);
-    color: #fca5a5;
+  .mode-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 3px;
+    border: 1px solid var(--border-color);
+  }
+
+  .tab-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.active {
+    background: var(--primary-gradient);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--accent-glow);
+  }
+
+  .header-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .badge-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .badge-btn:hover { background: rgba(255,255,255,0.1); }
+  .badge-btn.active { background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+
+  /* Main Workspace Layout */
+  .workspace {
+    display: flex;
+    flex: 1;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .calc-pane {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  /* Display Section */
+  .display-card {
+    background: rgba(5, 7, 12, 0.85);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.7), 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(12px);
+    min-height: 100px;
+    position: relative;
+  }
+
+  .sub-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    min-height: 18px;
+    text-align: right;
+    white-space: nowrap;
+    overflow-x: auto;
+    letter-spacing: 0.5px;
+  }
+  .sub-display::-webkit-scrollbar { display: none; }
+
+  .main-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 34px;
+    font-weight: 400;
+    color: #ffffff;
+    text-align: right;
+    white-space: nowrap;
+    overflow-x: auto;
+    letter-spacing: -1px;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.15);
+    margin-top: 4px;
+  }
+  .main-display::-webkit-scrollbar { display: none; }
+
+  .display-status {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    display: flex;
+    gap: 6px;
+  }
+  .status-chip {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+  }
+  .status-chip.highlight { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+
+  /* Expression Input Box */
+  .formula-bar {
+    display: flex;
+    gap: 8px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px 10px;
+    align-items: center;
+  }
+  .formula-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .formula-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    outline: none;
+  }
+
+  /* View Containers */
+  .view-panel {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .view-panel.active { display: flex; }
+
+  /* Scientific Keyboard Grid */
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 7px;
+    flex: 1;
+  }
+
+  .calc-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--btn-bg);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+
+  .calc-btn:hover {
+    background: var(--btn-hover);
+    transform: translateY(-1px);
+    border-color: rgba(255,255,255,0.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  .calc-btn:active {
+    background: var(--btn-active);
+    transform: translateY(1px);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .calc-btn.op {
+    background: var(--primary-gradient);
+    color: #ffffff;
+    font-weight: 600;
+    border: none;
+    font-size: 16px;
+    box-shadow: 0 4px 12px var(--accent-glow);
+  }
+  .calc-btn.op:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 6px 16px var(--accent-glow);
+  }
+
+  .calc-btn.func {
+    background: var(--secondary-bg);
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .calc-btn.mem {
+    background: rgba(59, 130, 246, 0.08);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.2);
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .calc-btn.mem:hover { background: rgba(59, 130, 246, 0.18); }
+
+  .calc-btn.danger {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.25);
+    font-weight: 600;
+  }
+  .calc-btn.danger:hover { background: rgba(239, 68, 68, 0.25); color: #fca5a5; }
+
+  .calc-btn.num {
+    font-weight: 600;
+    font-size: 16px;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  /* Financial Mode View Layout */
+  .financial-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .fin-tool-nav {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+  }
+
+  .fin-tab {
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .fin-tab:hover { color: #fff; background: var(--btn-hover); }
+  .fin-tab.active { background: rgba(99, 102, 241, 0.2); color: #818cf8; border-color: #6366f1; }
+
+  .fin-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    backdrop-filter: blur(12px);
+  }
+
+  .fin-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .form-group input, .form-group select {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: #6366f1;
+  }
+
+  .fin-result-box {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .fin-res-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: #34d399;
+  }
+
+  /* Scientific Constants Panel */
+  .constants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .constant-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .constant-card:hover {
+    background: var(--btn-hover);
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .const-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .const-symbol { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: #818cf8; }
+  .const-val { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* History Tape Drawer & View */
+  .history-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .history-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 12px;
+    outline: none;
+  }
+
+  .action-btn {
+    background: var(--btn-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .action-btn:hover { background: var(--btn-hover); border-color: rgba(255,255,255,0.2); }
+
+  .history-list {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .history-item {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    transition: all 0.15s;
+  }
+  .history-item:hover { border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.05); }
+
+  .hist-meta { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); }
+  .hist-expr { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-muted); }
+  .hist-res { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: #fff; text-align: right; }
+
+  .hist-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .mini-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .mini-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.12); }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+  @media (max-width: 768px) {
+    .keypad-grid { grid-template-columns: repeat(5, 1fr); }
+    .header { flex-direction: column; gap: 8px; align-items: stretch; }
+    .mode-tabs { justify-content: center; }
   }
 </style>
 </head>
 <body>
-  <div class="calc">
-    <div class="display-container">
-      <div class="display" id="disp" aria-live="polite">0</div>
+
+<div class="app-container">
+  <!-- Header Bar -->
+  <header class="header">
+    <div class="logo">
+      <div class="logo-icon">K</div>
+      <span>KCalc Pro</span>
     </div>
-    <div class="keys">
-      <!-- Row 0 -->
-      <button class="func" onclick="memClear()" aria-label="Memory Clear">MC</button>
-      <button class="func" onclick="memRecall()" aria-label="Memory Recall">MR</button>
-      <button class="func" onclick="memAdd()" aria-label="Memory Add">M+</button>
-      <button class="func" onclick="memSub()" aria-label="Memory Subtract">M-</button>
-      <button class="func danger" onclick="clearDisp()" aria-label="Clear All">C</button>
 
-      <!-- Row 1 -->
-      <button class="func" onclick="append('Math.sin(')" aria-label="Sine">sin</button>
-      <button class="func" onclick="append('Math.cos(')" aria-label="Cosine">cos</button>
-      <button class="func" onclick="append('Math.tan(')" aria-label="Tangent">tan</button>
-      <button class="operator" onclick="append('(')" aria-label="Open Parenthesis">(</button>
-      <button class="operator" onclick="append(')')" aria-label="Close Parenthesis">)</button>
+    <nav class="mode-tabs">
+      <button class="tab-btn active" onclick="switchView('scientific')">Scientific</button>
+      <button class="tab-btn" onclick="switchView('financial')">Financial</button>
+      <button class="tab-btn" onclick="switchView('constants')">Constants</button>
+      <button class="tab-btn" onclick="switchView('history')">History Tape</button>
+    </nav>
 
-      <!-- Row 2 -->
-      <button class="func" onclick="append('fact(')" aria-label="Factorial">n!</button>
-      <button class="func" onclick="append('Math.abs(')" aria-label="Absolute Value">abs</button>
-      <button class="func" onclick="append('Math.random()')" aria-label="Random Number">rnd</button>
-      <button class="func" onclick="append('**2')" aria-label="Square">x²</button>
-      <button class="func" onclick="append('10**')" aria-label="Ten to Power of X">10ˣ</button>
-      
-      <!-- Row 3 -->
-      <button class="func" onclick="append('Math.log(')" aria-label="Natural Logarithm">ln</button>
-      <button onclick="append('7')" aria-label="7">7</button>
-      <button onclick="append('8')" aria-label="8">8</button>
-      <button onclick="append('9')" aria-label="9">9</button>
-      <button class="operator" onclick="append('/')" aria-label="Divide">÷</button>
-
-      <!-- Row 4 -->
-      <button class="func" onclick="append('Math.log10(')" aria-label="Logarithm Base 10">log</button>
-      <button onclick="append('4')" aria-label="4">4</button>
-      <button onclick="append('5')" aria-label="5">5</button>
-      <button onclick="append('6')" aria-label="6">6</button>
-      <button class="operator" onclick="append('*')" aria-label="Multiply">×</button>
-
-      <!-- Row 5 -->
-      <button class="func" onclick="append('Math.sqrt(')" aria-label="Square Root">√</button>
-      <button onclick="append('1')" aria-label="1">1</button>
-      <button onclick="append('2')" aria-label="2">2</button>
-      <button onclick="append('3')" aria-label="3">3</button>
-      <button class="operator" onclick="append('-')" aria-label="Subtract">−</button>
-
-      <!-- Row 6 -->
-      <button class="func" onclick="append('**')" aria-label="Exponent">^</button>
-      <button class="func" onclick="append('Math.PI')" aria-label="Pi">π</button>
-      <button onclick="append('0')" aria-label="0">0</button>
-      <button onclick="append('.')" aria-label="Decimal Point">.</button>
-      <button class="operator" onclick="append('+')" aria-label="Add">+</button>
-
-      <!-- Row 7 -->
-      <button class="func" onclick="append('Math.exp(')" aria-label="E to Power of X">eˣ</button>
-      <button class="func" onclick="append('Math.E')" aria-label="Euler Constant E">e</button>
-      <button class="func danger" onclick="backspace()" aria-label="Backspace">⌫</button>
-      <button class="operator" onclick="append('%')" aria-label="Modulo">mod</button>
-      <button class="operator" onclick="calc()" aria-label="Equals">=</button>
+    <div class="header-controls">
+      <button id="degRadBtn" class="badge-btn active" onclick="toggleDegRad()">DEG</button>
+      <button id="memBadge" class="badge-btn" onclick="showMemoryModal()">M: 0</button>
     </div>
-  </div>
-  <script>
-    let d = document.getElementById('disp');
-    let expr = '';
-    let memoryStore = 0.0;
+  </header>
+
+  <!-- Workspace -->
+  <main class="workspace">
+    <div class="calc-pane">
+      <!-- Screen Display -->
+      <div class="display-card">
+        <div class="display-status">
+          <span id="angleChip" class="status-chip highlight">DEG</span>
+          <span id="memChip" class="status-chip" style="display:none;">MEM</span>
+        </div>
+        <div class="sub-display" id="subDisp"></div>
+        <div class="main-display" id="mainDisp" aria-live="polite">0</div>
+      </div>
+
+      <!-- Formula Expression Direct Bar -->
+      <div class="formula-bar">
+        <span class="formula-label">fx</span>
+        <input type="text" id="formulaInput" class="formula-input" placeholder="Type formula e.g. sin(30) + sqrt(144)..." onkeydown="handleFormulaKey(event)">
+        <button class="action-btn" onclick="evalFormulaInput()">Eval</button>
+      </div>
+
+      <!-- View 1: Scientific Calculator Keypad -->
+      <div id="view-scientific" class="view-panel active">
+        <div class="keypad-grid">
+          <!-- Row 0: Memory & Clear -->
+          <button class="calc-btn mem" onclick="memClear()" title="Memory Clear">MC</button>
+          <button class="calc-btn mem" onclick="memRecall()" title="Memory Recall">MR</button>
+          <button class="calc-btn mem" onclick="memStore()" title="Memory Store">MS</button>
+          <button class="calc-btn mem" onclick="memAdd()" title="Memory Add">M+</button>
+          <button class="calc-btn mem" onclick="memSub()" title="Memory Subtract">M-</button>
+          <button class="calc-btn danger" onclick="backspace()" title="Backspace">⌫</button>
+          <button class="calc-btn danger" onclick="clearAll()" title="Clear All">C</button>
+
+          <!-- Row 1: Trigonometric -->
+          <button class="calc-btn func" onclick="append('sin(')">sin</button>
+          <button class="calc-btn func" onclick="append('cos(')">cos</button>
+          <button class="calc-btn func" onclick="append('tan(')">tan</button>
+          <button class="calc-btn func" onclick="append('asin(')">asin</button>
+          <button class="calc-btn func" onclick="append('acos(')">acos</button>
+          <button class="calc-btn func" onclick="append('atan(')">atan</button>
+          <button class="calc-btn op" onclick="append('(')">(</button>
+
+          <!-- Row 2: Powers & Logs -->
+          <button class="calc-btn func" onclick="append('ln(')">ln</button>
+          <button class="calc-btn func" onclick="append('log(')">log</button>
+          <button class="calc-btn func" onclick="append('log2(')">log₂</button>
+          <button class="calc-btn func" onclick="append('e^(')">eˣ</button>
+          <button class="calc-btn func" onclick="append('10^(')">10ˣ</button>
+          <button class="calc-btn func" onclick="append('^')">xʸ</button>
+          <button class="calc-btn op" onclick="append(')')">)</button>
+
+          <!-- Row 3: Roots & Exponents -->
+          <button class="calc-btn func" onclick="append('sqrt(')">√</button>
+          <button class="calc-btn func" onclick="append('cbrt(')">∛</button>
+          <button class="calc-btn func" onclick="append('^2')">x²</button>
+          <button class="calc-btn func" onclick="append('^3')">x³</button>
+          <button class="calc-btn func" onclick="append('1/')">1/x</button>
+          <button class="calc-btn func" onclick="append('fact(')">n!</button>
+          <button class="calc-btn op" onclick="append('%')">mod</button>
+
+          <!-- Row 4: Keypad 7-9 -->
+          <button class="calc-btn func" onclick="append('pi')">π</button>
+          <button class="calc-btn func" onclick="append('e')">e</button>
+          <button class="calc-btn num" onclick="append('7')">7</button>
+          <button class="calc-btn num" onclick="append('8')">8</button>
+          <button class="calc-btn num" onclick="append('9')">9</button>
+          <button class="calc-btn op" onclick="append('/')">÷</button>
+          <button class="calc-btn func" onclick="append('abs(')">|x|</button>
+
+          <!-- Row 5: Keypad 4-6 -->
+          <button class="calc-btn func" onclick="append('floor(')">floor</button>
+          <button class="calc-btn func" onclick="append('ceil(')">ceil</button>
+          <button class="calc-btn num" onclick="append('4')">4</button>
+          <button class="calc-btn num" onclick="append('5')">5</button>
+          <button class="calc-btn num" onclick="append('6')">6</button>
+          <button class="calc-btn op" onclick="append('*')">×</button>
+          <button class="calc-btn func" onclick="append('rnd')">rnd</button>
+
+          <!-- Row 6: Keypad 1-3 -->
+          <button class="calc-btn func" onclick="append('Ans')">Ans</button>
+          <button class="calc-btn func" onclick="toggleSign()">±</button>
+          <button class="calc-btn num" onclick="append('1')">1</button>
+          <button class="calc-btn num" onclick="append('2')">2</button>
+          <button class="calc-btn num" onclick="append('3')">3</button>
+          <button class="calc-btn op" onclick="append('-')">−</button>
+          <button class="calc-btn op" onclick="append('%')">%</button>
+
+          <!-- Row 7: Keypad 0 -->
+          <button class="calc-btn num" onclick="append('00')">00</button>
+          <button class="calc-btn num" onclick="append('0')">0</button>
+          <button class="calc-btn num" onclick="append('.')">.</button>
+          <button class="calc-btn op" style="grid-column: span 2;" onclick="append('+')">+</button>
+          <button class="calc-btn op" style="grid-column: span 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="calculate()">=</button>
+        </div>
+      </div>
+
+      <!-- View 2: Financial Calculators -->
+      <div id="view-financial" class="view-panel">
+        <div class="financial-container">
+          <div class="fin-tool-nav">
+            <button class="fin-tab active" onclick="switchFinTool('pmt')">Loan Payment (PMT)</button>
+            <button class="fin-tab" onclick="switchFinTool('fv')">Future Value (FV)</button>
+            <button class="fin-tab" onclick="switchFinTool('margin')">Profit Margin</button>
+            <button class="fin-tab" onclick="switchFinTool('cagr')">CAGR</button>
+          </div>
+
+          <!-- Tool 1: PMT -->
+          <div id="fin-pmt" class="fin-card">
+            <h3>Loan & Mortgage Monthly Payment (PMT)</h3>
+            <div class="fin-form-grid">
+              <div class="form-group">
+                <label>Loan Amount ($)</label>
+                <input type="number" id="pmt-principal" value="250000" placeholder="250000">
+              </div>
+              <div class="form-group">
+                <label>Annual Interest Rate (%)</label>
+                <input type="number" step="0.01" id="pmt-rate" value="6.5" placeholder="6.5">
+              </div>
+              <div class="form-group">
+                <label>Loan Term (Years)</label>
+                <input type="number" id="pmt-years" value="30" placeholder="30">
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcPMT()">Calculate PMT</button>
+            
+            <div class="fin-result-box">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">Estimated Monthly Payment</div>
+                <div id="pmt-res" class="fin-res-val">$0.00</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);" id="pmt-total-interest">Total Interest: $0</div>
+                <button class="mini-btn" onclick="sendToCalc(document.getElementById('pmt-res').dataset.rawVal)">Use Result</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 2: FV -->
+          <div id="fin-fv" class="fin-card" style="display:none;">
+            <h3>Compound Interest Future Value (FV)</h3>
+            <div class="fin-form-grid">
+              <div class="form-group">
+                <label>Initial Investment ($)</label>
+                <input type="number" id="fv-principal" value="10000">
+              </div>
+              <div class="form-group">
+                <label>Annual Return Rate (%)</label>
+                <input type="number" step="0.1" id="fv-rate" value="8">
+              </div>
+              <div class="form-group">
+                <label>Investment Period (Years)</label>
+                <input type="number" id="fv-years" value="10">
+              </div>
+              <div class="form-group">
+                <label>Compounding Frequency</label>
+                <select id="fv-freq">
+                  <option value="12">Monthly</option>
+                  <option value="1">Annually</option>
+                  <option value="4">Quarterly</option>
+                  <option value="365">Daily</option>
+                </select>
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcFV()">Calculate FV</button>
+
+            <div class="fin-result-box">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">Future Value</div>
+                <div id="fv-res" class="fin-res-val">$0.00</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px; color:var(--text-muted);" id="fv-growth">Total Growth: $0</div>
+                <button class="mini-btn" onclick="sendToCalc(document.getElementById('fv-res').dataset.rawVal)">Use Result</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 3: Profit Margin -->
+          <div id="fin-margin" class="fin-card" style="display:none;">
+            <h3>Profit Margin & Markup Calculator</h3>
+            <div class="fin-form-grid">
+              <div class="form-group">
+                <label>Cost Price ($)</label>
+                <input type="number" id="margin-cost" value="50">
+              </div>
+              <div class="form-group">
+                <label>Selling Price ($)</label>
+                <input type="number" id="margin-sell" value="80">
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcMargin()">Calculate Margin</button>
+
+            <div class="fin-result-box">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">Gross Profit</div>
+                <div id="margin-profit" class="fin-res-val">$0.00</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:12px; color:var(--text-muted);" id="margin-pct">Margin: 0%</div>
+                <div style="font-size:12px; color:var(--text-muted);" id="markup-pct">Markup: 0%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tool 4: CAGR -->
+          <div id="fin-cagr" class="fin-card" style="display:none;">
+            <h3>Compound Annual Growth Rate (CAGR)</h3>
+            <div class="fin-form-grid">
+              <div class="form-group">
+                <label>Initial Value ($)</label>
+                <input type="number" id="cagr-start" value="1000">
+              </div>
+              <div class="form-group">
+                <label>Final Value ($)</label>
+                <input type="number" id="cagr-end" value="2500">
+              </div>
+              <div class="form-group">
+                <label>Time Period (Years)</label>
+                <input type="number" id="cagr-years" value="5">
+              </div>
+            </div>
+            <button class="action-btn" style="background:var(--primary); color:#fff; align-self:flex-start;" onclick="calcCAGR()">Calculate CAGR</button>
+
+            <div class="fin-result-box">
+              <div>
+                <div style="font-size:12px; color:var(--text-muted);">CAGR Rate</div>
+                <div id="cagr-res" class="fin-res-val">0.00%</div>
+              </div>
+              <button class="mini-btn" onclick="sendToCalc(document.getElementById('cagr-res').dataset.rawVal)">Use Result</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View 3: Scientific Constants Library -->
+      <div id="view-constants" class="view-panel">
+        <div class="constants-grid" id="constantsGrid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- View 4: Calculation History Tape -->
+      <div id="view-history" class="view-panel">
+        <div class="history-container">
+          <div class="history-toolbar">
+            <input type="text" id="histSearch" class="search-input" placeholder="Search calculation history..." oninput="renderHistory()">
+            <button class="action-btn" onclick="exportHistoryCSV()">Export CSV</button>
+            <button class="action-btn" onclick="exportHistoryTXT()">Export TXT</button>
+            <button class="action-btn danger" onclick="clearHistory()">Clear</button>
+          </div>
+
+          <div class="history-list" id="historyList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // State variables
+  let expr = '';
+  let lastAns = 0;
+  let memoryStore = 0.0;
+  let multiMemory = { M1: 0, M2: 0, M3: 0 };
+  let isDeg = true;
+  let historyTape = [];
+
+  // Constants Library Data
+  const SCI_CONSTANTS = [
+    { name: 'Speed of Light', symbol: 'c', val: 299792458, unit: 'm/s' },
+    { name: 'Planck Constant', symbol: 'h', val: 6.62607015e-34, unit: 'J·s' },
+    { name: 'Gravitational Constant', symbol: 'G', val: 6.67430e-11, unit: 'm³/kg·s²' },
+    { name: 'Avogadro Constant', symbol: 'N_A', val: 6.02214076e23, unit: 'mol⁻¹' },
+    { name: 'Boltzmann Constant', symbol: 'k_B', val: 1.380649e-23, unit: 'J/K' },
+    { name: 'Gas Constant', symbol: 'R', val: 8.314462618, unit: 'J/(mol·K)' },
+    { name: 'Elementary Charge', symbol: 'e_charge', val: 1.602176634e-19, unit: 'C' },
+    { name: 'Electron Mass', symbol: 'm_e', val: 9.1093837e-31, unit: 'kg' },
+    { name: 'Proton Mass', symbol: 'm_p', val: 1.6726219e-27, unit: 'kg' },
+    { name: 'Vacuum Permittivity', symbol: 'ε_0', val: 8.8541878e-12, unit: 'F/m' },
+    { name: 'Standard Gravity', symbol: 'g', val: 9.80665, unit: 'm/s²' },
+    { name: 'Pi', symbol: 'π', val: Math.PI, unit: 'rad' },
+    { name: 'Euler Constant', symbol: 'e', val: Math.E, unit: 'num' },
+    { name: 'Golden Ratio', symbol: 'ϕ', val: 1.618033988749895, unit: 'num' }
+  ];
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    populateConstants();
+    render();
+    loadHistoryFromStorage();
+  });
+
+  function switchView(viewName) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+
+    const activeTab = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.textContent.toLowerCase().includes(viewName.substring(0, 4)));
+    if (activeTab) activeTab.classList.add('active');
+
+    const panel = document.getElementById('view-' + viewName);
+    if (panel) panel.classList.add('active');
+  }
+
+  function toggleDegRad() {
+    isDeg = !isDeg;
+    const btn = document.getElementById('degRadBtn');
+    const chip = document.getElementById('angleChip');
+    btn.textContent = isDeg ? 'DEG' : 'RAD';
+    chip.textContent = isDeg ? 'DEG' : 'RAD';
+    if (isDeg) { btn.classList.add('active'); chip.classList.add('highlight'); }
+    else { btn.classList.remove('active'); chip.classList.remove('highlight'); }
+  }
+
+  function append(val) {
+    if (expr === 'Error' || expr.startsWith('ERR')) expr = '';
+    expr += val;
+    render();
+  }
+
+  function clearAll() {
+    expr = '';
+    document.getElementById('subDisp').textContent = '';
+    render();
+  }
+
+  function backspace() {
+    if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
     
-    function fact(n) {
-      if (typeof n !== 'number' || isNaN(n) || n < 0) return NaN;
-      if (n > 170) return Infinity;
-      n = Math.floor(n);
-      let f = 1;
-      for (let i = 2; i <= n; i++) f *= i;
-      return f;
+    const keywords = ['sin(', 'cos(', 'tan(', 'asin(', 'acos(', 'atan(', 'ln(', 'log(', 'log2(', 'sqrt(', 'cbrt(', 'fact(', 'abs(', 'floor(', 'ceil(', '10^(', 'e^(', 'Ans'];
+    let removed = false;
+    for (let k of keywords) {
+      if (expr.endsWith(k)) {
+        expr = expr.substring(0, expr.length - k.length);
+        removed = true;
+        break;
+      }
     }
+    if (!removed) {
+      expr = expr.slice(0, -1);
+    }
+    render();
+  }
+
+  function toggleSign() {
+    if (!expr) { expr = '-'; }
+    else if (expr.startsWith('-')) { expr = expr.substring(1); }
+    else { expr = '-' + expr; }
+    render();
+  }
+
+  function render() {
+    const mainDisp = document.getElementById('mainDisp');
+    const formulaInput = document.getElementById('formulaInput');
     
-    function render() {
-      let pretty = expr
-        .replace(/Math\.sin\(/g, 'sin(')
-        .replace(/Math\.cos\(/g, 'cos(')
-        .replace(/Math\.tan\(/g, 'tan(')
-        .replace(/Math\.log10\(/g, 'log(')
-        .replace(/Math\.log\(/g, 'ln(')
-        .replace(/Math\.abs\(/g, 'abs(')
-        .replace(/fact\(/g, 'fact(')
-        .replace(/Math\.random\(\)/g, 'rnd')
-        .replace(/Math\.sqrt\(/g, '√(')
-        .replace(/Math\.exp\(/g, 'e^(')
-        .replace(/Math\.PI/g, 'π')
-        .replace(/Math\.E/g, 'e')
-        .replace(/10\*\*/g, '10^')
-        .replace(/\*\*2/g, '²')
-        .replace(/\*\*/g, '^')
-        .replace(/\*/g, '×')
-        .replace(/\//g, '÷')
-        .replace(/-/g, '−');
-      d.textContent = pretty === '' ? '0' : pretty;
-      d.scrollLeft = d.scrollWidth;
+    let pretty = expr
+      .replace(/\*/g, '×')
+      .replace(/\//g, '÷')
+      .replace(/-/g, '−')
+      .replace(/\^2/g, '²')
+      .replace(/\^3/g, '³');
+
+    mainDisp.textContent = pretty === '' ? '0' : pretty;
+    formulaInput.value = expr;
+    mainDisp.scrollLeft = mainDisp.scrollWidth;
+
+    // Memory status chip
+    const memChip = document.getElementById('memChip');
+    const memBadge = document.getElementById('memBadge');
+    memBadge.textContent = 'M: ' + (Number.isInteger(memoryStore) ? memoryStore : memoryStore.toFixed(2));
+    if (memoryStore !== 0) {
+      memChip.style.display = 'inline-block';
+      memBadge.classList.add('active');
+    } else {
+      memChip.style.display = 'none';
+      memBadge.classList.remove('active');
+    }
+  }
+
+  // Memory functions
+  function memClear() { memoryStore = 0.0; render(); }
+  function memRecall() { append(String(memoryStore)); }
+  function memStore() {
+    try {
+      let val = evalExpression(expr);
+      if (!isNaN(val) && isFinite(val)) memoryStore = val;
+    } catch {}
+    render();
+  }
+  function memAdd() {
+    try {
+      let val = evalExpression(expr);
+      if (!isNaN(val) && isFinite(val)) memoryStore += val;
+    } catch {}
+    render();
+  }
+  function memSub() {
+    try {
+      let val = evalExpression(expr);
+      if (!isNaN(val) && isFinite(val)) memoryStore -= val;
+    } catch {}
+    render();
+  }
+
+  function showMemoryModal() {
+    alert(`Memory Registers:\nActive M: ${memoryStore}\nM1: ${multiMemory.M1}\nM2: ${multiMemory.M2}\nM3: ${multiMemory.M3}`);
+  }
+
+  // Safe Math Expression Evaluator
+  function fact(n) {
+    if (n < 0 || isNaN(n)) return NaN;
+    if (n > 170) return Infinity;
+    n = Math.floor(n);
+    let f = 1;
+    for (let i = 2; i <= n; i++) f *= i;
+    return f;
+  }
+
+  function evalExpression(inputStr) {
+    if (!inputStr) return 0;
+    
+    let sanitized = inputStr
+      .replace(/Ans/g, String(lastAns))
+      .replace(/pi/g, String(Math.PI))
+      .replace(/e/g, String(Math.E))
+      .replace(/(\d+)\%/g, '($1/100)');
+
+    // DEG/RAD handling for trig functions
+    const degMultiplier = isDeg ? (Math.PI / 180) : 1;
+    const radMultiplier = isDeg ? (180 / Math.PI) : 1;
+
+    // Define context functions
+    const ctx = {
+      sin: (x) => Math.sin(x * degMultiplier),
+      cos: (x) => Math.cos(x * degMultiplier),
+      tan: (x) => Math.tan(x * degMultiplier),
+      asin: (x) => Math.asin(x) * radMultiplier,
+      acos: (x) => Math.acos(x) * radMultiplier,
+      atan: (x) => Math.atan(x) * radMultiplier,
+      ln: (x) => Math.log(x),
+      log: (x) => Math.log10(x),
+      log2: (x) => Math.log2(x),
+      sqrt: (x) => Math.sqrt(x),
+      cbrt: (x) => Math.cbrt(x),
+      abs: (x) => Math.abs(x),
+      floor: (x) => Math.floor(x),
+      ceil: (x) => Math.ceil(x),
+      fact: (x) => fact(x),
+      rnd: () => Math.random()
+    };
+
+    // Replace caret with power operator
+    sanitized = sanitized.replace(/\^/g, '**');
+
+    // Auto-insert implicit multiplication: e.g. 5( -> 5*( or 5sin -> 5*sin
+    sanitized = sanitized.replace(/([0-9\)])(?=[a-zA-Z\(])/g, '$1*');
+
+    // Auto balance parentheses
+    let openParen = (sanitized.match(/\(/g) || []).length;
+    let closeParen = (sanitized.match(/\)/g) || []).length;
+    while (openParen > closeParen) {
+      sanitized += ')';
+      closeParen++;
     }
 
-    function append(val) {
-      if (expr === 'Error' || expr.startsWith('ERR')) expr = '';
-      expr += val;
-      render();
-    }
+    // Safe execution context wrapper
+    const fn = new Function('ctx', `
+      with (ctx) {
+        return (${sanitized});
+      }
+    `);
     
-    function clearDisp() { 
-      expr = ''; 
-      render();
-    }
+    return fn(ctx);
+  }
 
-    function memClear() { memoryStore = 0.0; }
-    function memRecall() { append(String(memoryStore)); }
-    
-    function getEvalExpr() {
-      let evalExpr = expr
-        .replace(/([0-9\)])(?=Math|fact|\()/g, '$1*')
-        .replace(/(Math\.(?:PI|E)|\))(?=[0-9]|Math|fact|\()/g, '$1*');
-      
-      let openCount = (evalExpr.match(/\(/g) || []).length;
-      let closeCount = (evalExpr.match(/\)/g) || []).length;
-      while (openCount > closeCount) {
-        evalExpr += ')';
-        closeCount++;
-      }
-      return evalExpr;
-    }
+  function calculate() {
+    if (!expr) return;
+    try {
+      let rawResult = evalExpression(expr);
+      if (rawResult === undefined || isNaN(rawResult) || !isFinite(rawResult)) {
+        document.getElementById('subDisp').textContent = expr + ' =';
+        expr = 'Error';
+      } else {
+        // Round floating point jitter
+        let formattedRes = Number(rawResult.toPrecision(12));
+        document.getElementById('subDisp').textContent = expr + ' =';
+        
+        // Add to history tape
+        addHistoryEntry(expr, formattedRes);
 
-    function memAdd() {
-      try {
-        let res = eval(getEvalExpr());
-        if (typeof res === 'number' && !isNaN(res) && isFinite(res)) memoryStore += res;
-      } catch {}
+        lastAns = formattedRes;
+        expr = String(formattedRes);
+      }
+    } catch (e) {
+      document.getElementById('subDisp').textContent = expr + ' =';
+      expr = 'Error';
     }
-    function memSub() {
-      try {
-        let res = eval(getEvalExpr());
-        if (typeof res === 'number' && !isNaN(res) && isFinite(res)) memoryStore -= res;
-      } catch {}
+    render();
+  }
+
+  function handleFormulaKey(e) {
+    if (e.key === 'Enter') {
+      evalFormulaInput();
+    } else {
+      expr = e.target.value;
     }
+  }
+
+  function evalFormulaInput() {
+    expr = document.getElementById('formulaInput').value;
+    calculate();
+  }
+
+  // Financial Calculators Logic
+  function switchFinTool(toolId) {
+    document.querySelectorAll('.fin-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
     
-    function backspace() { 
-      if (expr === 'Error' || expr.startsWith('ERR')) { expr = ''; render(); return; }
-      
-      const funcs = ['Math.sin(', 'Math.cos(', 'Math.tan(', 'Math.log10(', 'Math.log(', 'Math.abs(', 'fact(', 'Math.random()', 'Math.sqrt(', 'Math.exp(', 'Math.PI', 'Math.E', '**2', '10**', '**'];
-      let removedFunc = false;
-      for (let f of funcs) {
-        if (expr.endsWith(f)) {
-          expr = expr.substring(0, expr.length - f.length);
-          removedFunc = true;
-          break;
-        }
-      }
-      if (!removedFunc) {
-        expr = expr.slice(0, -1);
-      }
+    document.getElementById('fin-pmt').style.display = toolId === 'pmt' ? 'flex' : 'none';
+    document.getElementById('fin-fv').style.display = toolId === 'fv' ? 'flex' : 'none';
+    document.getElementById('fin-margin').style.display = toolId === 'margin' ? 'flex' : 'none';
+    document.getElementById('fin-cagr').style.display = toolId === 'cagr' ? 'flex' : 'none';
+  }
+
+  function calcPMT() {
+    const P = parseFloat(document.getElementById('pmt-principal').value);
+    const r = parseFloat(document.getElementById('pmt-rate').value) / 100 / 12;
+    const n = parseFloat(document.getElementById('pmt-years').value) * 12;
+
+    if (P > 0 && r > 0 && n > 0) {
+      const pmt = (P * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+      const totalPaid = pmt * n;
+      const totalInterest = totalPaid - P;
+
+      const pmtElem = document.getElementById('pmt-res');
+      pmtElem.textContent = '$' + pmt.toFixed(2);
+      pmtElem.dataset.rawVal = pmt.toFixed(4);
+      document.getElementById('pmt-total-interest').textContent = `Total Interest: $${totalInterest.toFixed(2)}`;
+    }
+  }
+
+  function calcFV() {
+    const P = parseFloat(document.getElementById('fv-principal').value);
+    const r = parseFloat(document.getElementById('fv-rate').value) / 100;
+    const t = parseFloat(document.getElementById('fv-years').value);
+    const n = parseFloat(document.getElementById('fv-freq').value);
+
+    if (P >= 0 && r >= 0 && t > 0) {
+      const fv = P * Math.pow(1 + (r / n), n * t);
+      const fvElem = document.getElementById('fv-res');
+      fvElem.textContent = '$' + fv.toFixed(2);
+      fvElem.dataset.rawVal = fv.toFixed(4);
+      document.getElementById('fv-growth').textContent = `Total Growth: $${(fv - P).toFixed(2)}`;
+    }
+  }
+
+  function calcMargin() {
+    const cost = parseFloat(document.getElementById('margin-cost').value);
+    const sell = parseFloat(document.getElementById('margin-sell').value);
+
+    if (cost > 0 && sell > 0) {
+      const profit = sell - cost;
+      const marginPct = (profit / sell) * 100;
+      const markupPct = (profit / cost) * 100;
+
+      const profitElem = document.getElementById('margin-profit');
+      profitElem.textContent = '$' + profit.toFixed(2);
+      profitElem.dataset.rawVal = profit.toFixed(2);
+      document.getElementById('margin-pct').textContent = `Margin: ${marginPct.toFixed(2)}%`;
+      document.getElementById('markup-pct').textContent = `Markup: ${markupPct.toFixed(2)}%`;
+    }
+  }
+
+  function calcCAGR() {
+    const startVal = parseFloat(document.getElementById('cagr-start').value);
+    const endVal = parseFloat(document.getElementById('cagr-end').value);
+    const years = parseFloat(document.getElementById('cagr-years').value);
+
+    if (startVal > 0 && endVal > 0 && years > 0) {
+      const cagr = (Math.pow(endVal / startVal, 1 / years) - 1) * 100;
+      const cagrElem = document.getElementById('cagr-res');
+      cagrElem.textContent = cagr.toFixed(2) + '%';
+      cagrElem.dataset.rawVal = cagr.toFixed(4);
+    }
+  }
+
+  function sendToCalc(val) {
+    if (val) {
+      switchView('scientific');
+      expr = val;
       render();
     }
-    
-    function calc() {
-      try { 
-        let evalExpr = getEvalExpr();
-        let res = eval(evalExpr); 
-        if (res === undefined || isNaN(res) || !isFinite(res)) {
-          expr = 'Error';
-        } else {
-          res = Number(res.toPrecision(12)).toString();
-          expr = String(res);
-        }
-      }
-      catch { 
-        expr = 'Error'; 
-      }
-      render();
-    }
+  }
 
-    // Keyboard navigation and shortcuts
-    document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      
-      if (e.key >= '0' && e.key <= '9') {
-        append(e.key);
-      } else if (e.key === '.') {
-        append('.');
-      } else if (e.key === '+') {
-        append('+');
-      } else if (e.key === '-') {
-        append('-');
-      } else if (e.key === '*') {
-        append('*');
-      } else if (e.key === '/') {
-        e.preventDefault();
-        append('/');
-      } else if (e.key === '%') {
-        append('%');
-      } else if (e.key === '^') {
-        append('**');
-      } else if (e.key === '(') {
-        append('(');
-      } else if (e.key === ')') {
-        append(')');
-      } else if (e.key === 'Enter' || e.key === '=') {
-        e.preventDefault();
-        calc();
-      } else if (e.key === 'Backspace') {
-        e.preventDefault();
-        backspace();
-      } else if (e.key === 'Escape' || e.key.toLowerCase() === 'c') {
-        clearDisp();
-      }
+  // Constants Library Populate
+  function populateConstants() {
+    const container = document.getElementById('constantsGrid');
+    container.innerHTML = '';
+    
+    SCI_CONSTANTS.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'constant-card';
+      card.onclick = () => {
+        switchView('scientific');
+        append(String(c.val));
+      };
+      card.innerHTML = `
+        <div>
+          <div class="const-name">${c.name}</div>
+          <div class="const-val">${c.val.toPrecision(6)} ${c.unit}</div>
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <span class="const-symbol">${c.symbol}</span>
+        </div>
+      `;
+      container.appendChild(card);
     });
-  </script>
+  }
+
+  // History Tape Logic
+  function addHistoryEntry(formula, result) {
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    historyTape.unshift({ time, formula, result });
+    if (historyTape.length > 200) historyTape.pop();
+    saveHistoryToStorage();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const query = document.getElementById('histSearch').value.toLowerCase();
+    list.innerHTML = '';
+
+    const filtered = historyTape.filter(h => h.formula.toLowerCase().includes(query) || String(h.result).includes(query));
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px; font-size:13px;">No calculation history available</div>';
+      return;
+    }
+
+    filtered.forEach(h => {
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <div class="hist-meta">
+          <span>Formula</span>
+          <span>${h.time}</span>
+        </div>
+        <div class="hist-expr">${h.formula}</div>
+        <div class="hist-res">= ${h.result}</div>
+        <div class="hist-actions">
+          <button class="mini-btn" onclick="recallFormula('${h.formula.replace(/'/g, "\\'")}')">Recall Expression</button>
+          <button class="mini-btn" onclick="sendToCalc('${h.result}')">Recall Result</button>
+        </div>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function recallFormula(f) {
+    switchView('scientific');
+    expr = f;
+    render();
+  }
+
+  function clearHistory() {
+    historyTape = [];
+    saveHistoryToStorage();
+    renderHistory();
+  }
+
+  function saveHistoryToStorage() {
+    try { localStorage.setItem('kcalc_history', JSON.stringify(historyTape)); } catch {}
+  }
+
+  function loadHistoryFromStorage() {
+    try {
+      const saved = localStorage.getItem('kcalc_history');
+      if (saved) historyTape = JSON.parse(saved);
+    } catch {}
+    renderHistory();
+  }
+
+  // Export Tape to CSV
+  function exportHistoryCSV() {
+    if (historyTape.length === 0) { alert('History is empty!'); return; }
+    let csv = 'Time,Expression,Result\n';
+    historyTape.forEach(h => {
+      csv += `"${h.time}","${h.formula.replace(/"/g, '""')}","${h.result}"\n`;
+    });
+    downloadFile('kcalc_history.csv', csv, 'text/csv');
+  }
+
+  // Export Tape to TXT
+  function exportHistoryTXT() {
+    if (historyTape.length === 0) { alert('History is empty!'); return; }
+    let txt = '=== KCalc Pro Calculation History ===\n\n';
+    historyTape.forEach(h => {
+      txt += `[${h.time}] ${h.formula} = ${h.result}\n`;
+    });
+    downloadFile('kcalc_history.txt', txt, 'text/plain');
+  }
+
+  function downloadFile(filename, text, mimeType) {
+    const blob = new Blob([text], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Global Keyboard Shortcuts
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT') return;
+
+    if (e.key >= '0' && e.key <= '9') append(e.key);
+    else if (e.key === '.') append('.');
+    else if (e.key === '+') append('+');
+    else if (e.key === '-') append('-');
+    else if (e.key === '*') append('*');
+    else if (e.key === '/') { e.preventDefault(); append('/'); }
+    else if (e.key === '%') append('%');
+    else if (e.key === '^') append('^');
+    else if (e.key === '(') append('(');
+    else if (e.key === ')') append(')');
+    else if (e.key === 'Enter' || e.key === '=') { e.preventDefault(); calculate(); }
+    else if (e.key === 'Backspace') { e.preventDefault(); backspace(); }
+    else if (e.key === 'Escape') clearAll();
+  });
+</script>
 </body>
 </html>
