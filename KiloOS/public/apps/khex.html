@@ -1,219 +1,1304 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KHex</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KHex - Hex & Binary Data Utility Suite</title>
 <style>
   :root {
-    --bg-color: #0f172a;
-    --panel-bg: rgba(30, 41, 59, 0.7);
-    --border-color: rgba(255, 255, 255, 0.1);
+    --bg-color: #090d16;
+    --panel-bg: rgba(21, 30, 48, 0.75);
+    --card-bg: rgba(30, 41, 64, 0.6);
+    --input-bg: rgba(13, 20, 36, 0.85);
+    --border-color: rgba(255, 255, 255, 0.12);
+    --border-hover: rgba(59, 130, 246, 0.4);
     --text-primary: #f8fafc;
     --text-secondary: #94a3b8;
-    --accent-color: #3b82f6;
-    --accent-hover: #60a5fa;
-    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    --text-dim: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-purple: #8b5cf6;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --shadow-main: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
   }
-  
-  body { 
-    margin: 0; 
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-    background-color: var(--bg-color); 
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 16px;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    background: linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%);
     color: var(--text-primary);
-    display: flex; 
-    flex-direction: column; 
-    align-items: center;
-    justify-content: center;
-    padding: 15px; 
-    box-sizing: border-box; 
-    height: 100vh; 
-    overflow: hidden; 
-    backdrop-filter: blur(10px);
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-x: hidden;
   }
-  
-  .container {
+
+  /* Header Bar */
+  .header {
     background: var(--panel-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 20px;
-    box-shadow: var(--shadow);
-    width: 100%;
-    max-width: 320px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-main);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+  }
+
+  .brand-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(90deg, #ffffff, #93c5fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand-sub {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: var(--accent-cyan);
+    font-family: monospace;
+  }
+
+  /* Navigation Tabs */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    background: var(--panel-bg);
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+
+  /* Tab View Layout */
+  .tab-content {
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .tab-content.active {
+    display: flex;
+  }
+
+  /* Grid Layouts */
+  .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+
+  /* Panels & Cards */
+  .panel {
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    backdrop-filter: blur(12px);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    gap: 12px;
+    box-shadow: var(--shadow-main);
   }
-  
-  .container:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+
+  .panel-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 4px;
   }
-  
-  .row { 
-    display: flex; 
+
+  .panel-title .title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Forms and Controls */
+  .form-group {
+    display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
   }
-  
-  .label { 
-    font-size: 0.85rem;
+
+  .form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  label {
+    font-size: 0.78rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.5px;
   }
-  
-  input[type="text"] { 
+
+  input[type="text"], input[type="number"], select, textarea {
     width: 100%;
-    padding: 10px 12px; 
-    font-family: 'JetBrains Mono', 'Consolas', monospace; 
-    font-size: 1.1rem;
-    background: rgba(15, 23, 42, 0.6);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color); 
+    padding: 8px 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.9rem;
     outline: none;
+    transition: all 0.2s ease;
   }
-  
-  input[type="text"]:focus {
-    border-color: var(--accent-color);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
-    background: rgba(15, 23, 42, 0.9);
+
+  textarea {
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.4;
   }
-  
-  /* Adds subtle glowing border animation on input */
-  @keyframes input-pulse {
-    0% { border-color: var(--accent-color); }
-    50% { border-color: var(--accent-hover); box-shadow: 0 0 8px rgba(96, 165, 250, 0.4); }
-    100% { border-color: var(--accent-color); }
+
+  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
   }
-  
-  input[type="text"].updated {
-    animation: input-pulse 0.4s ease;
+
+  .btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid var(--border-color);
+  }
+
+  .btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+    border: none;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #60a5fa, var(--accent-blue));
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  }
+
+  .btn-cyan {
+    background: linear-gradient(135deg, var(--accent-cyan), #0891b2);
+    border: none;
+  }
+  .btn-cyan:hover {
+    background: linear-gradient(135deg, #22d3ee, var(--accent-cyan));
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);
+  }
+
+  .btn-purple {
+    background: linear-gradient(135deg, var(--accent-purple), #7c3aed);
+    border: none;
+  }
+  .btn-purple:hover {
+    background: linear-gradient(135deg, #a78bfa, var(--accent-purple));
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* Data Inspector Grid */
+  .inspector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+  }
+
+  .inspector-item {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .inspector-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .inspector-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    color: var(--accent-cyan);
+    word-break: break-all;
+    user-select: all;
+  }
+
+  /* Binary Bit Grid */
+  .bit-grid {
+    display: grid;
+    grid-template-columns: repeat(32, 1fr);
+    gap: 2px;
+    background: var(--input-bg);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+  }
+
+  .bit-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .bit-num {
+    font-size: 0.55rem;
+    color: var(--text-dim);
+  }
+
+  .bit-val {
+    width: 100%;
+    text-align: center;
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--text-secondary);
+    padding: 2px 0;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+  }
+
+  .bit-box.on .bit-val {
+    background: var(--accent-blue);
+    color: #fff;
+    box-shadow: 0 0 4px rgba(59, 130, 246, 0.5);
+  }
+
+  /* Hex View Table */
+  .hex-container {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .hex-row {
+    display: flex;
+    line-height: 1.5;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .hex-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .hex-offset {
+    color: var(--accent-purple);
+    width: 90px;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  .hex-bytes {
+    display: flex;
+    gap: 8px;
+    flex-grow: 1;
+  }
+
+  .hex-byte-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .hex-byte {
+    color: var(--text-primary);
+    width: 22px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+
+  .hex-byte:hover {
+    background: rgba(59, 130, 246, 0.3);
+    color: #fff;
+  }
+
+  .hex-byte.selected {
+    background: var(--accent-cyan);
+    color: #000;
+    font-weight: bold;
+  }
+
+  .hex-byte.highlight {
+    background: var(--accent-amber);
+    color: #000;
+    font-weight: bold;
+  }
+
+  .hex-ascii {
+    color: var(--accent-emerald);
+    width: 160px;
+    flex-shrink: 0;
+    letter-spacing: 1px;
+    user-select: none;
+    margin-left: 15px;
+    border-left: 1px solid var(--border-color);
+    padding-left: 10px;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    background: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: monospace;
+  }
+
+  /* Utility output boxes */
+  .output-box {
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--accent-cyan);
+    word-break: break-all;
+    white-space: pre-wrap;
+    max-height: 250px;
+    overflow-y: auto;
   }
 </style>
 </head>
 <body>
-  <div class="container">
-    <div class="row">
-      <div class="label">Hexadecimal</div>
-      <input type="text" id="hex" value="0" autocomplete="off" spellcheck="false" aria-label="Hexadecimal">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <div class="brand-icon">0x</div>
+      <div>
+        <div class="brand-title">KHex Suite</div>
+        <div class="brand-sub">Hex & Binary Data Inspector & Manipulation Tool</div>
+      </div>
     </div>
-    <div class="row">
-      <div class="label">Decimal</div>
-      <input type="text" id="dec" value="0" autocomplete="off" spellcheck="false" aria-label="Decimal">
-    </div>
-    <div class="row">
-      <div class="label">Binary</div>
-      <input type="text" id="bin" value="0" autocomplete="off" spellcheck="false" aria-label="Binary">
-    </div>
-    <div class="row">
-      <div class="label">Octal</div>
-      <input type="text" id="oct" value="0" autocomplete="off" spellcheck="false" aria-label="Octal">
-    </div>
-    <div class="row">
-      <div class="label">ASCII</div>
-      <input type="text" id="asc" value="0" autocomplete="off" spellcheck="false" aria-label="ASCII">
+    <div class="header-actions">
+      <div class="badge" id="endianBadge">LE (Little Endian)</div>
+      <button class="btn btn-sm" id="toggleEndianBtn">Swap Endianness</button>
     </div>
   </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('converter')">⚡ Converter & Inspector</button>
+    <button class="tab-btn" onclick="switchTab('editor')">🔍 Hex Viewer & Buffer</button>
+    <button class="tab-btn" onclick="switchTab('search')">🔎 Search & Replace</button>
+    <button class="tab-btn" onclick="switchTab('hashes')">🔐 Checksum & Hashes</button>
+    <button class="tab-btn" onclick="switchTab('operations')">🛠️ Byte Operations</button>
+    <button class="tab-btn" onclick="switchTab('export')">💾 Data Export</button>
+  </div>
+
+  <!-- TAB 1: Base Converter & Data Inspector -->
+  <div id="tab-converter" class="tab-content active">
+    <div class="grid-2">
+      <!-- Quick Base Converter -->
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">🔄 Base Converter</div>
+          <button class="btn btn-sm" onclick="resetConverter()">Reset</button>
+        </div>
+        <div class="form-group">
+          <label>Hexadecimal (0x)</label>
+          <input type="text" id="hexInput" value="0x12345678" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Decimal (Unsigned 32-bit)</label>
+          <input type="text" id="decInput" value="305419896" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Binary</label>
+          <input type="text" id="binInput" value="00010010001101000101011001111000" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Octal</label>
+          <input type="text" id="octInput" value="2215053170" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>ASCII Representation</label>
+          <input type="text" id="ascInput" value="4Vx" spellcheck="false" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- Multi-Type Data Inspector Panel -->
+      <div class="panel">
+        <div class="panel-title">
+          <div class="title-left">🔬 Multi-Type Data Inspector</div>
+          <span style="font-size:0.75rem; color:var(--text-secondary);" id="inspectorOffsetLabel">Selected: 4 Bytes</span>
+        </div>
+        <div class="inspector-grid">
+          <div class="inspector-item"><div class="inspector-label">Int8 (Signed)</div><div class="inspector-value" id="valInt8">120</div></div>
+          <div class="inspector-item"><div class="inspector-label">Uint8 (Unsigned)</div><div class="inspector-value" id="valUint8">120</div></div>
+          <div class="inspector-item"><div class="inspector-label">Int16 (Signed)</div><div class="inspector-value" id="valInt16">22136</div></div>
+          <div class="inspector-item"><div class="inspector-label">Uint16 (Unsigned)</div><div class="inspector-value" id="valUint16">22136</div></div>
+          <div class="inspector-item"><div class="inspector-label">Int32 (Signed)</div><div class="inspector-value" id="valInt32">305419896</div></div>
+          <div class="inspector-item"><div class="inspector-label">Uint32 (Unsigned)</div><div class="inspector-value" id="valUint32">305419896</div></div>
+          <div class="inspector-item"><div class="inspector-label">Float (32-bit IEEE 754)</div><div class="inspector-value" id="valFloat">5.6904566e-28</div></div>
+          <div class="inspector-item"><div class="inspector-label">Double (64-bit IEEE 754)</div><div class="inspector-value" id="valDouble">1.50897587e-315</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 32-bit Interactive Bit Grid Panel -->
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">🔢 32-Bit Bitfield Manipulator (Click bits to toggle)</div>
+        <button class="btn btn-sm" onclick="clearBits()">Clear All</button>
+      </div>
+      <div class="bit-grid" id="bitGrid"></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Hex Viewer & Buffer -->
+  <div id="tab-editor" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">📂 Buffer Source</div>
+        <div class="form-row">
+          <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)">
+          <button class="btn btn-cyan btn-sm" onclick="document.getElementById('fileInput').click()">Open File</button>
+          <button class="btn btn-sm" onclick="loadSampleBuffer()">Load Sample Data</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Input Text / ASCII Stream to load into Buffer</label>
+        <textarea id="rawTextBuffer" placeholder="Type or paste text here to update binary buffer...">Hello KHex World! 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ</textarea>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">🖥️ Interactive Hex View (16 Bytes / Row)</div>
+        <div class="form-row">
+          <span style="font-size:0.75rem; color:var(--text-secondary);" id="bufferSizeLabel">Buffer Size: 0 Bytes</span>
+        </div>
+      </div>
+      <div class="hex-container" id="hexViewContainer"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: Search & Replace -->
+  <div id="tab-search" class="tab-content">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">🔎 Pattern Search & Replace</div>
+        <div class="form-group">
+          <label>Search Mode</label>
+          <select id="searchMode">
+            <option value="ascii">ASCII String Search (e.g. "Hello")</option>
+            <option value="hex">Hex Bytes Search (e.g. "48 65 6C 6C 6F" or "48656C6C6F")</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Search Pattern</label>
+          <input type="text" id="searchPattern" placeholder="Enter string or hex pattern...">
+        </div>
+        <div class="form-group">
+          <label>Replacement Pattern</label>
+          <input type="text" id="replacePattern" placeholder="Replacement string or hex pattern...">
+        </div>
+        <div class="form-row" style="margin-top:8px;">
+          <button class="btn btn-primary" onclick="executeSearch()">Find Next</button>
+          <button class="btn btn-purple" onclick="executeReplaceAll()">Replace All</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📍 Match Results</div>
+        <div class="output-box" id="searchResultsBox">No search executed yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: Checksum & Cryptographic Hash Suite -->
+  <div id="tab-hashes" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">🔐 Hash & Checksum Suite</div>
+        <button class="btn btn-cyan btn-sm" onclick="computeHashes()">Recalculate Hashes</button>
+      </div>
+      <div class="inspector-grid">
+        <div class="inspector-item"><div class="inspector-label">Checksum 8-bit (Sum)</div><div class="inspector-value" id="hashSum8">0x00</div></div>
+        <div class="inspector-item"><div class="inspector-label">Checksum 16-bit</div><div class="inspector-value" id="hashSum16">0x0000</div></div>
+        <div class="inspector-item"><div class="inspector-label">Checksum 32-bit</div><div class="inspector-value" id="hashSum32">0x00000000</div></div>
+        <div class="inspector-item"><div class="inspector-label">XOR 8-bit Checksum</div><div class="inspector-value" id="hashXor8">0x00</div></div>
+        <div class="inspector-item"><div class="inspector-label">CRC32 (Standard IEEE)</div><div class="inspector-value" id="hashCRC32">0x00000000</div></div>
+        <div class="inspector-item" style="grid-column: span 2;"><div class="inspector-label">MD5 Digest</div><div class="inspector-value" id="hashMD5">d41d8cd98f00b204e9800998ecf8427e</div></div>
+        <div class="inspector-item" style="grid-column: span 2;"><div class="inspector-label">SHA-256 Digest</div><div class="inspector-value" id="hashSHA256">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: Byte Operations -->
+  <div id="tab-operations" class="tab-content">
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-title">🛠️ Byte Manipulation Tool</div>
+        <div class="form-group">
+          <label>Operation Type</label>
+          <select id="opType">
+            <option value="invert">Invert / Bitwise NOT (~x)</option>
+            <option value="xor">XOR Mask (Key in Hex)</option>
+            <option value="fill">Fill Buffer with Byte Value</option>
+            <option value="swap16">Endian Swap 16-bit Words</option>
+            <option value="swap32">Endian Swap 32-bit Words</option>
+            <option value="reverse">Reverse Entire Buffer</option>
+          </select>
+        </div>
+        <div class="form-group" id="opArgGroup">
+          <label>Argument (Hex / Byte Value)</label>
+          <input type="text" id="opArg" value="FF" placeholder="Hex value (e.g. AA or 5A)">
+        </div>
+        <button class="btn btn-purple" style="margin-top:8px;" onclick="applyByteOperation()">Apply Operation to Buffer</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">📋 Operation Result Preview</div>
+        <div class="output-box" id="opPreviewBox">Result will appear here...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: Data Export -->
+  <div id="tab-export" class="tab-content">
+    <div class="panel">
+      <div class="panel-title">
+        <div class="title-left">💾 Binary Data Export Formats</div>
+        <div class="form-row">
+          <button class="btn btn-primary btn-sm" onclick="copyExportText()">Copy to Clipboard</button>
+          <button class="btn btn-cyan btn-sm" onclick="downloadRawFile()">Download RAW Binary</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Export Preset</label>
+        <select id="exportPreset" onchange="generateExport()">
+          <option value="hexdump">Formatted Hex Dump</option>
+          <option value="carray">C / C++ Byte Array (const unsigned char data[])</option>
+          <option value="pybytes">Python bytes literal (b'\x...')</option>
+          <option value="base64">Base64 Encoded Stream</option>
+          <option value="hexstr">Continuous Raw Hex String</option>
+        </select>
+      </div>
+      <div class="output-box" id="exportOutputBox" style="min-height: 200px;"></div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span id="statusOffset">Offset: 0x00000000 (0)</span>
+    <span id="statusSelected">Selection: None</span>
+    <span id="statusLength">Total Length: 0 Bytes</span>
+  </div>
+
 <script>
-  const hex = document.getElementById('hex');
-  const dec = document.getElementById('dec');
-  const bin = document.getElementById('bin');
-  const oct = document.getElementById('oct');
-  const asc = document.getElementById('asc');
-  
-  let updating = false;
-  
-  function triggerAnimation(el) {
-    el.classList.remove('updated');
-    void el.offsetWidth; // trigger reflow
-    el.classList.add('updated');
-  }
-  
-  function updateFrom(source) {
-      if (updating) return;
-      updating = true;
-      
-      let val = 0;
-      try {
-          if (source === hex) {
-              val = parseInt(hex.value.replace(/[^0-9a-fA-F]/g, ''), 16) || 0;
-          } else if (source === dec) {
-              val = parseInt(dec.value.replace(/[^0-9]/g, ''), 10) || 0;
-          } else if (source === bin) {
-              val = parseInt(bin.value.replace(/[^01]/g, ''), 2) || 0;
-          } else if (source === oct) {
-              val = parseInt(oct.value.replace(/[^0-7]/g, ''), 8) || 0;
-          } else if (source === asc) {
-              let str = asc.value;
-              let cval = 0;
-              let cnt = 0;
-              for (let i = 0; i < str.length && cnt < 4; i++) {
-                  cval = (cval << 8) | (str.charCodeAt(i) & 0xFF);
-                  cnt++;
-              }
-              val = cval;
-          }
-      } catch(e) {}
-      
-      // Simulate 32-bit unsigned for exact KHex parity
-      val = val >>> 0; 
-      
-      if (source !== hex) {
-          hex.value = val.toString(16).toUpperCase();
-          triggerAnimation(hex);
-      }
-      if (source !== dec) {
-          dec.value = val.toString(10);
-          triggerAnimation(dec);
-      }
-      if (source !== bin) {
-          bin.value = val.toString(2);
-          triggerAnimation(bin);
-      }
-      if (source !== oct) {
-          oct.value = val.toString(8);
-          triggerAnimation(oct);
-      }
-      if (source !== asc) {
-          if (val === 0) {
-              asc.value = "0";
-          } else {
-              let s = "";
-              let started = false;
-              for (let i = 3; i >= 0; i--) {
-                  let c = (val >>> (i * 8)) & 0xFF;
-                  if (c !== 0) started = true;
-                  if (started) {
-                      if (c >= 32 && c <= 126) s += String.fromCharCode(c);
-                      else s += ".";
-                  }
-              }
-              asc.value = s || "0";
-          }
-          triggerAnimation(asc);
-      }
-      
-      updating = false;
-  }
-  
-  hex.addEventListener('input', () => updateFrom(hex));
-  dec.addEventListener('input', () => updateFrom(dec));
-  bin.addEventListener('input', () => updateFrom(bin));
-  oct.addEventListener('input', () => updateFrom(oct));
-  asc.addEventListener('input', () => updateFrom(asc));
-  
-  // Select all text on focus for quick replacing
-  [hex, dec, bin, oct, asc].forEach(el => {
-    el.addEventListener('focus', function() {
-      this.select();
-    });
+  // Global State Buffer
+  let binaryBuffer = new Uint8Array([0x48, 0x65, 0x6C, 0x6C, 0x6F, 0x20, 0x4B, 0x48, 0x65, 0x78, 0x21, 0x20, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39]);
+  let isLittleEndian = true;
+  let selectedOffset = 0;
+  let activeTab = 'converter';
+  let isUpdating = false;
+
+  // Initialize UI
+  document.addEventListener('DOMContentLoaded', () => {
+    initBitGrid();
+    updateFromHex(document.getElementById('hexInput').value);
+    renderHexView();
+    computeHashes();
+    generateExport();
   });
+
+  // Endianness Toggle
+  document.getElementById('toggleEndianBtn').addEventListener('click', () => {
+    isLittleEndian = !isLittleEndian;
+    document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
+    updateInspector();
+  });
+
+  // Tab Switcher
+  function switchTab(tabId) {
+    activeTab = tabId;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById('tab-' + tabId).classList.add('active');
+
+    if (tabId === 'editor') renderHexView();
+    if (tabId === 'hashes') computeHashes();
+    if (tabId === 'export') generateExport();
+  }
+
+  // --- TAB 1: BASE CONVERTER & INSPECTOR LOGIC ---
+  const hexInput = document.getElementById('hexInput');
+  const decInput = document.getElementById('decInput');
+  const binInput = document.getElementById('binInput');
+  const octInput = document.getElementById('octInput');
+  const ascInput = document.getElementById('ascInput');
+
+  hexInput.addEventListener('input', () => updateFromHex(hexInput.value));
+  decInput.addEventListener('input', () => updateFromDec(decInput.value));
+  binInput.addEventListener('input', () => updateFromBin(binInput.value));
+  octInput.addEventListener('input', () => updateFromOct(octInput.value));
+  ascInput.addEventListener('input', () => updateFromAsc(ascInput.value));
+
+  function updateFromHex(valStr) {
+    if (isUpdating) return;
+    isUpdating = true;
+    let clean = valStr.replace(/[^0-9a-fA-F]/g, '');
+    let val = parseInt(clean, 16) || 0;
+    val = val >>> 0;
+    setAllInputs(val, 'hex');
+    isUpdating = false;
+  }
+
+  function updateFromDec(valStr) {
+    if (isUpdating) return;
+    isUpdating = true;
+    let clean = valStr.replace(/[^0-9]/g, '');
+    let val = parseInt(clean, 10) || 0;
+    val = val >>> 0;
+    setAllInputs(val, 'dec');
+    isUpdating = false;
+  }
+
+  function updateFromBin(valStr) {
+    if (isUpdating) return;
+    isUpdating = true;
+    let clean = valStr.replace(/[^01]/g, '');
+    let val = parseInt(clean, 2) || 0;
+    val = val >>> 0;
+    setAllInputs(val, 'bin');
+    isUpdating = false;
+  }
+
+  function updateFromOct(valStr) {
+    if (isUpdating) return;
+    isUpdating = true;
+    let clean = valStr.replace(/[^0-7]/g, '');
+    let val = parseInt(clean, 8) || 0;
+    val = val >>> 0;
+    setAllInputs(val, 'oct');
+    isUpdating = false;
+  }
+
+  function updateFromAsc(valStr) {
+    if (isUpdating) return;
+    isUpdating = true;
+    let val = 0;
+    for (let i = 0; i < valStr.length && i < 4; i++) {
+      val = (val << 8) | (valStr.charCodeAt(i) & 0xFF);
+    }
+    val = val >>> 0;
+    setAllInputs(val, 'asc');
+    isUpdating = false;
+  }
+
+  function setAllInputs(val, src) {
+    if (src !== 'hex') hexInput.value = '0x' + val.toString(16).toUpperCase();
+    if (src !== 'dec') decInput.value = val.toString(10);
+    if (src !== 'bin') binInput.value = val.toString(2).padStart(32, '0');
+    if (src !== 'oct') octInput.value = val.toString(8);
+    if (src !== 'asc') {
+      let s = '';
+      for (let i = 3; i >= 0; i--) {
+        let b = (val >>> (i * 8)) & 0xFF;
+        if (b >= 32 && b <= 126) s += String.fromCharCode(b);
+        else if (b !== 0) s += '.';
+      }
+      ascInput.value = s || '';
+    }
+
+    updateInspectorFromVal(val);
+    updateBitGridFromVal(val);
+  }
+
+  function resetConverter() {
+    updateFromHex('0');
+  }
+
+  // --- DATA INSPECTOR PANEL ---
+  function updateInspectorFromVal(val32) {
+    let buf = new ArrayBuffer(8);
+    let view = new DataView(buf);
+    view.setUint32(0, val32, isLittleEndian);
+
+    document.getElementById('valInt8').innerText = view.getInt8(0);
+    document.getElementById('valUint8').innerText = view.getUint8(0);
+    document.getElementById('valInt16').innerText = view.getInt16(0, isLittleEndian);
+    document.getElementById('valUint16').innerText = view.getUint16(0, isLittleEndian);
+    document.getElementById('valInt32').innerText = view.getInt32(0, isLittleEndian);
+    document.getElementById('valUint32').innerText = view.getUint32(0, isLittleEndian);
+    document.getElementById('valFloat').innerText = view.getFloat32(0, isLittleEndian).toExponential(5);
+    
+    // Fill 64-bit with pattern
+    view.setUint32(4, val32, isLittleEndian);
+    document.getElementById('valDouble').innerText = view.getFloat64(0, isLittleEndian).toExponential(8);
+  }
+
+  function updateInspector() {
+    let val = parseInt(hexInput.value.replace(/[^0-9a-fA-F]/g, ''), 16) || 0;
+    updateInspectorFromVal(val >>> 0);
+  }
+
+  // --- BIT GRID LOGIC ---
+  function initBitGrid() {
+    const grid = document.getElementById('bitGrid');
+    grid.innerHTML = '';
+    for (let i = 31; i >= 0; i--) {
+      const box = document.createElement('div');
+      box.className = 'bit-box';
+      box.id = 'bit-' + i;
+      box.onclick = () => toggleBit(i);
+
+      const num = document.createElement('div');
+      num.className = 'bit-num';
+      num.innerText = i;
+
+      const val = document.createElement('div');
+      val.className = 'bit-val';
+      val.innerText = '0';
+
+      box.appendChild(num);
+      box.appendChild(val);
+      grid.appendChild(box);
+    }
+  }
+
+  function updateBitGridFromVal(val32) {
+    for (let i = 0; i < 32; i++) {
+      let bit = (val32 >>> i) & 1;
+      let el = document.getElementById('bit-' + i);
+      if (el) {
+        if (bit) el.classList.add('on');
+        else el.classList.remove('on');
+        el.querySelector('.bit-val').innerText = bit;
+      }
+    }
+  }
+
+  function toggleBit(index) {
+    let val = parseInt(hexInput.value.replace(/[^0-9a-fA-F]/g, ''), 16) || 0;
+    val ^= (1 << index);
+    updateFromHex('0x' + (val >>> 0).toString(16));
+  }
+
+  function clearBits() {
+    updateFromHex('0');
+  }
+
+  // --- TAB 2: HEX VIEWER & EDITOR LOGIC ---
+  const textBuf = document.getElementById('rawTextBuffer');
+  textBuf.addEventListener('input', () => {
+    let encoder = new TextEncoder();
+    binaryBuffer = encoder.encode(textBuf.value);
+    renderHexView();
+  });
+
+  function loadSampleBuffer() {
+    let sample = "KHex - High-Performance Binary Inspector & Hex Manipulator. 0123456789 ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    textBuf.value = sample;
+    binaryBuffer = new TextEncoder().encode(sample);
+    renderHexView();
+  }
+
+  function handleFileSelect(e) {
+    let file = e.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(evt) {
+      binaryBuffer = new Uint8Array(evt.target.result);
+      textBuf.value = "[Loaded binary file: " + file.name + " (" + binaryBuffer.length + " bytes)]";
+      renderHexView();
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function renderHexView(highlightRange = null) {
+    const container = document.getElementById('hexViewContainer');
+    container.innerHTML = '';
+    document.getElementById('bufferSizeLabel').innerText = 'Buffer Size: ' + binaryBuffer.length + ' Bytes';
+    document.getElementById('statusLength').innerText = 'Total Length: ' + binaryBuffer.length + ' Bytes';
+
+    if (binaryBuffer.length === 0) {
+      container.innerText = 'Buffer is empty.';
+      return;
+    }
+
+    let rows = Math.ceil(binaryBuffer.length / 16);
+    for (let r = 0; r < rows; r++) {
+      let rowEl = document.createElement('div');
+      rowEl.className = 'hex-row';
+
+      // Offset
+      let offsetEl = document.createElement('div');
+      offsetEl.className = 'hex-offset';
+      let offset = r * 16;
+      offsetEl.innerText = '0x' + offset.toString(16).padStart(8, '0').toUpperCase();
+      rowEl.appendChild(offsetEl);
+
+      // Hex Bytes
+      let bytesGroup = document.createElement('div');
+      bytesGroup.className = 'hex-bytes';
+
+      let asciiStr = '';
+      for (let i = 0; i < 16; i++) {
+        let idx = offset + i;
+        if (i === 8) {
+          let gap = document.createElement('span');
+          gap.style.width = '8px';
+          bytesGroup.appendChild(gap);
+        }
+
+        let bEl = document.createElement('div');
+        bEl.className = 'hex-byte';
+
+        if (idx < binaryBuffer.length) {
+          let b = binaryBuffer[idx];
+          bEl.innerText = b.toString(16).padStart(2, '0').toUpperCase();
+          bEl.onclick = () => selectByte(idx);
+
+          if (selectedOffset === idx) bEl.classList.add('selected');
+          if (highlightRange && idx >= highlightRange.start && idx < highlightRange.end) {
+            bEl.classList.add('highlight');
+          }
+
+          if (b >= 32 && b <= 126) asciiStr += String.fromCharCode(b);
+          else asciiStr += '.';
+        } else {
+          bEl.innerText = '  ';
+          bEl.style.cursor = 'default';
+          asciiStr += ' ';
+        }
+        bytesGroup.appendChild(bEl);
+      }
+      rowEl.appendChild(bytesGroup);
+
+      // ASCII
+      let asciiEl = document.createElement('div');
+      asciiEl.className = 'hex-ascii';
+      asciiEl.innerText = asciiStr;
+      rowEl.appendChild(asciiEl);
+
+      container.appendChild(rowEl);
+    }
+  }
+
+  function selectByte(idx) {
+    selectedOffset = idx;
+    document.getElementById('statusOffset').innerText = 'Offset: 0x' + idx.toString(16).padStart(8, '0').toUpperCase() + ' (' + idx + ')';
+    document.getElementById('statusSelected').innerText = 'Byte: 0x' + binaryBuffer[idx].toString(16).toUpperCase() + ' (' + binaryBuffer[idx] + ')';
+    
+    // Read 4 bytes from selected byte for Data Inspector
+    let val = 0;
+    for (let i = 0; i < 4 && (idx + i) < binaryBuffer.length; i++) {
+      if (isLittleEndian) {
+        val |= (binaryBuffer[idx + i] << (i * 8));
+      } else {
+        val = (val << 8) | binaryBuffer[idx + i];
+      }
+    }
+    updateFromHex('0x' + (val >>> 0).toString(16));
+    renderHexView();
+  }
+
+  // --- TAB 3: SEARCH & REPLACE LOGIC ---
+  function executeSearch() {
+    let mode = document.getElementById('searchMode').value;
+    let pattern = document.getElementById('searchPattern').value;
+    let resultsBox = document.getElementById('searchResultsBox');
+
+    if (!pattern) {
+      resultsBox.innerText = 'Please specify a search pattern.';
+      return;
+    }
+
+    let searchBytes = [];
+    if (mode === 'ascii') {
+      searchBytes = Array.from(new TextEncoder().encode(pattern));
+    } else {
+      let clean = pattern.replace(/[^0-9a-fA-F]/g, '');
+      for (let i = 0; i < clean.length; i += 2) {
+        searchBytes.push(parseInt(clean.substr(i, 2), 16) || 0);
+      }
+    }
+
+    if (searchBytes.length === 0) {
+      resultsBox.innerText = 'Invalid search pattern.';
+      return;
+    }
+
+    let matches = [];
+    for (let i = 0; i <= binaryBuffer.length - searchBytes.length; i++) {
+      let match = true;
+      for (let j = 0; j < searchBytes.length; j++) {
+        if (binaryBuffer[i + j] !== searchBytes[j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) matches.push(i);
+    }
+
+    if (matches.length === 0) {
+      resultsBox.innerText = 'No matches found.';
+    } else {
+      let resText = 'Found ' + matches.length + ' match(es):\n';
+      matches.forEach((off, idx) => {
+        resText += '[' + (idx + 1) + '] Offset: 0x' + off.toString(16).toUpperCase() + ' (' + off + ')\n';
+      });
+      resultsBox.innerText = resText;
+      
+      // Select & highlight first match
+      selectedOffset = matches[0];
+      renderHexView({ start: matches[0], end: matches[0] + searchBytes.length });
+    }
+  }
+
+  function executeReplaceAll() {
+    let mode = document.getElementById('searchMode').value;
+    let sPattern = document.getElementById('searchPattern').value;
+    let rPattern = document.getElementById('replacePattern').value;
+    let resultsBox = document.getElementById('searchResultsBox');
+
+    if (!sPattern) return;
+
+    let sBytes = (mode === 'ascii') ? Array.from(new TextEncoder().encode(sPattern)) :
+      sPattern.replace(/[^0-9a-fA-F]/g, '').match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
+
+    let rBytes = (mode === 'ascii') ? Array.from(new TextEncoder().encode(rPattern)) :
+      rPattern.replace(/[^0-9a-fA-F]/g, '').match(/.{1,2}/g)?.map(b => parseInt(b, 16)) || [];
+
+    if (!sBytes.length) return;
+
+    let newBuf = [];
+    let count = 0;
+    let i = 0;
+    while (i < binaryBuffer.length) {
+      let match = true;
+      if (i <= binaryBuffer.length - sBytes.length) {
+        for (let j = 0; j < sBytes.length; j++) {
+          if (binaryBuffer[i + j] !== sBytes[j]) {
+            match = false;
+            break;
+          }
+        }
+      } else {
+        match = false;
+      }
+
+      if (match) {
+        count++;
+        rBytes.forEach(b => newBuf.push(b));
+        i += sBytes.length;
+      } else {
+        newBuf.push(binaryBuffer[i]);
+        i++;
+      }
+    }
+
+    binaryBuffer = new Uint8Array(newBuf);
+    textBuf.value = new TextDecoder().decode(binaryBuffer);
+    resultsBox.innerText = 'Replaced ' + count + ' occurrence(s).';
+    renderHexView();
+  }
+
+  // --- TAB 4: CHECKSUM & HASH SUITE LOGIC ---
+  function computeHashes() {
+    if (!binaryBuffer.length) return;
+
+    // Sum8, Sum16, Sum32, XOR8
+    let sum8 = 0, sum16 = 0, sum32 = 0, xor8 = 0;
+    for (let i = 0; i < binaryBuffer.length; i++) {
+      let b = binaryBuffer[i];
+      sum8 = (sum8 + b) & 0xFF;
+      sum16 = (sum16 + b) & 0xFFFF;
+      sum32 = (sum32 + b) >>> 0;
+      xor8 ^= b;
+    }
+
+    document.getElementById('hashSum8').innerText = '0x' + sum8.toString(16).padStart(2, '0').toUpperCase();
+    document.getElementById('hashSum16').innerText = '0x' + sum16.toString(16).padStart(4, '0').toUpperCase();
+    document.getElementById('hashSum32').innerText = '0x' + sum32.toString(16).padStart(8, '0').toUpperCase();
+    document.getElementById('hashXor8').innerText = '0x' + xor8.toString(16).padStart(2, '0').toUpperCase();
+
+    // CRC32
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < binaryBuffer.length; i++) {
+      crc ^= binaryBuffer[i];
+      for (let j = 0; j < 8; j++) {
+        crc = (crc >>> 1) ^ (crc & 1 ? 0xEDB88320 : 0);
+      }
+    }
+    crc = (crc ^ 0xFFFFFFFF) >>> 0;
+    document.getElementById('hashCRC32').innerText = '0x' + crc.toString(16).padStart(8, '0').toUpperCase();
+
+    // MD5 & SHA-256
+    document.getElementById('hashMD5').innerText = calcMD5(binaryBuffer);
+    calcSHA256(binaryBuffer).then(res => {
+      document.getElementById('hashSHA256').innerText = res;
+    });
+  }
+
+  // Pure JS MD5 Implementation
+  function calcMD5(buf) {
+    function md5cycle(x, k) {
+      let a = x[0], b = x[1], c = x[2], d = x[3];
+      a = ff(a, b, c, d, k[0], 7, -680876936); d = ff(d, a, b, c, k[1], 12, -389564586); c = ff(c, d, a, b, k[2], 17,  606105819); b = ff(b, c, d, a, k[3], 22, -1044525330);
+      a = ff(a, b, c, d, k[4], 7, -176418897); d = ff(d, a, b, c, k[5], 12,  1200080426); c = ff(c, d, a, b, k[6], 17, -1473231341); b = ff(b, c, d, a, k[7], 22, -45705983);
+      a = ff(a, b, c, d, k[8], 7,  1770035416); d = ff(d, a, b, c, k[9], 12, -1958414417); c = ff(c, d, a, b, k[10], 17, -42063); b = ff(b, c, d, a, k[11], 22, -1990404162);
+      a = ff(a, b, c, d, k[12], 7,  1804603682); d = ff(d, a, b, c, k[13], 12, -40341101); c = ff(c, d, a, b, k[14], 17, -1502002290); b = ff(b, c, d, a, k[15], 22,  1236535329);
+      a = gg(a, b, c, d, k[1], 5, -165796510); d = gg(d, a, b, c, k[6], 9, -1069501632); c = gg(c, d, a, b, k[11], 14,  643717713); b = gg(b, c, d, a, k[0], 20, -373897302);
+      a = gg(a, b, c, d, k[5], 5, -701558691); d = gg(d, a, b, c, k[10], 9,  38016083); c = gg(c, d, a, b, k[15], 14, -660478335); b = gg(b, c, d, a, k[4], 20, -405537848);
+      a = gg(a, b, c, d, k[9], 5,  568446438); d = gg(d, a, b, c, k[14], 9, -1019803690); c = gg(c, d, a, b, k[3], 14, -187363961); b = gg(b, c, d, a, k[8], 20,  1163531501);
+      a = gg(a, b, c, d, k[13], 5, -1444681467); d = gg(d, a, b, c, k[2], 9, -51403784); c = gg(c, d, a, b, k[7], 14,  1735328473); b = gg(b, c, d, a, k[12], 20, -1926607734);
+      a = hh(a, b, c, d, k[5], 4, -378558); d = hh(d, a, b, c, k[8], 11, -2022574463); c = hh(c, d, a, b, k[11], 16,  1839030562); b = hh(b, c, d, a, k[14], 23, -35309556);
+      a = hh(a, b, c, d, k[1], 4, -1530992060); d = hh(d, a, b, c, k[4], 11,  1272893353); c = hh(c, d, a, b, k[7], 16, -155497632); b = hh(b, c, d, a, k[10], 23, -1094730640);
+      a = hh(a, b, c, d, k[13], 4,  681279174); d = hh(d, a, b, c, k[0], 11, -358537222); c = hh(c, d, a, b, k[3], 16, -722521979); b = hh(b, c, d, a, k[6], 23,  76029189);
+      a = ii(a, b, c, d, k[0], 6, -198630844); d = ii(d, a, b, c, k[7], 10,  1126891415); c = ii(c, d, a, b, k[14], 15, -1416354905); b = ii(b, c, d, a, k[5], 21, -57434055);
+      a = ii(a, b, c, d, k[12], 6,  1700485571); d = ii(d, a, b, c, k[3], 10, -1894980106); c = ii(c, d, a, b, k[10], 15, -1051523); b = ii(b, c, d, a, k[1], 21, -2054922799);
+      a = ii(a, b, c, d, k[8], 6,  1873313359); d = ii(d, a, b, c, k[15], 10, -30611744); c = ii(c, d, a, b, k[6], 15, -1560198380); b = ii(b, c, d, a, k[13], 21,  1309151649);
+      x[0] = add32(a, x[0]); x[1] = add32(b, x[1]); x[2] = add32(c, x[2]); x[3] = add32(d, x[3]);
+    }
+    function cmn(q, a, b, x, s, t) { a = add32(add32(a, q), add32(x, t)); return add32((a << s) | (a >>> (32 - s)), b); }
+    function ff(a, b, c, d, x, s, t) { return cmn((b & c) | ((~b) & d), a, b, x, s, t); }
+    function gg(a, b, c, d, x, s, t) { return cmn((b & d) | (c & (~d)), a, b, x, s, t); }
+    function hh(a, b, c, d, x, s, t) { return cmn(b ^ c ^ d, a, b, x, s, t); }
+    function ii(a, b, c, d, x, s, t) { return cmn(c ^ (b | (~d)), a, b, x, s, t); }
+    function add32(a, b) { return (a + b) & 0xFFFFFFFF; }
+
+    let n = buf.length, state = [1732584193, -271733879, -1732584194, 271733878], i, x = [];
+    for (i = 0; i < n - 3; i += 4) {
+      x.push(buf[i] | (buf[i+1] << 8) | (buf[i+2] << 16) | (buf[i+3] << 24));
+    }
+    let tail = [0,0,0,0], left = n - i;
+    for (let j = 0; j < left; j++) tail[j] = buf[i + j];
+    x.push(tail[0] | (tail[1] << 8) | (tail[2] << 16) | (tail[3] << 24));
+    while (x.length % 16 !== 14) x.push(0);
+    x.push(n * 8); x.push(0);
+    for (i = 0; i < x.length; i += 16) md5cycle(state, x.slice(i, i + 16));
+    return state.map(v => (v >>> 0).toString(16).padStart(8, '0').match(/../g).reverse().join('')).join('');
+  }
+
+  // SHA-256 via SubtleCrypto (or fallback)
+  async function calcSHA256(buf) {
+    if (window.crypto && crypto.subtle) {
+      try {
+        let hashBuf = await crypto.subtle.digest('SHA-256', buf);
+        let hashArr = Array.from(new Uint8Array(hashBuf));
+        return hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+      } catch(e) {}
+    }
+    return "SHA256 computation supported";
+  }
+
+  // --- TAB 5: BYTE OPERATIONS LOGIC ---
+  function applyByteOperation() {
+    let type = document.getElementById('opType').value;
+    let argStr = document.getElementById('opArg').value.replace(/[^0-9a-fA-F]/g, '');
+    let argVal = parseInt(argStr, 16) || 0;
+    let previewBox = document.getElementById('opPreviewBox');
+
+    let newBuf = new Uint8Array(binaryBuffer.length);
+    newBuf.set(binaryBuffer);
+
+    if (type === 'invert') {
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] = (~newBuf[i]) & 0xFF;
+    } else if (type === 'xor') {
+      for (let i = 0; i < newBuf.length; i++) newBuf[i] ^= (argVal & 0xFF);
+    } else if (type === 'fill') {
+      newBuf.fill(argVal & 0xFF);
+    } else if (type === 'swap16') {
+      for (let i = 0; i < newBuf.length - 1; i += 2) {
+        let tmp = newBuf[i];
+        newBuf[i] = newBuf[i + 1];
+        newBuf[i + 1] = tmp;
+      }
+    } else if (type === 'swap32') {
+      for (let i = 0; i < newBuf.length - 3; i += 4) {
+        let t0 = newBuf[i], t1 = newBuf[i+1];
+        newBuf[i] = newBuf[i+3];
+        newBuf[i+1] = newBuf[i+2];
+        newBuf[i+2] = t1;
+        newBuf[i+3] = t0;
+      }
+    } else if (type === 'reverse') {
+      newBuf.reverse();
+    }
+
+    binaryBuffer = newBuf;
+    textBuf.value = new TextDecoder().decode(binaryBuffer);
+    previewBox.innerText = 'Operation "' + type + '" applied successfully to ' + binaryBuffer.length + ' bytes.';
+    renderHexView();
+  }
+
+  // --- TAB 6: DATA EXPORT LOGIC ---
+  function generateExport() {
+    let preset = document.getElementById('exportPreset').value;
+    let box = document.getElementById('exportOutputBox');
+    let out = '';
+
+    if (preset === 'hexdump') {
+      let rows = Math.ceil(binaryBuffer.length / 16);
+      for (let r = 0; r < rows; r++) {
+        let off = (r * 16).toString(16).padStart(8, '0').toUpperCase();
+        let hexPart = '';
+        let asciiPart = '';
+        for (let i = 0; i < 16; i++) {
+          let idx = r * 16 + i;
+          if (idx < binaryBuffer.length) {
+            let b = binaryBuffer[idx];
+            hexPart += b.toString(16).padStart(2, '0').toUpperCase() + ' ';
+            asciiPart += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+          } else {
+            hexPart += '   ';
+          }
+        }
+        out += off + '  ' + hexPart + ' |' + asciiPart + '|\n';
+      }
+    } else if (preset === 'carray') {
+      out = 'const unsigned char data[' + binaryBuffer.length + '] = {\n  ';
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += '0x' + binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
+        if (i < binaryBuffer.length - 1) out += ', ';
+        if ((i + 1) % 12 === 0) out += '\n  ';
+      }
+      out += '\n};';
+    } else if (preset === 'pybytes') {
+      out = 'data = b"';
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += '\\x' + binaryBuffer[i].toString(16).padStart(2, '0');
+      }
+      out += '"';
+    } else if (preset === 'base64') {
+      let str = '';
+      for (let i = 0; i < binaryBuffer.length; i++) str += String.fromCharCode(binaryBuffer[i]);
+      out = btoa(str);
+    } else if (preset === 'hexstr') {
+      for (let i = 0; i < binaryBuffer.length; i++) {
+        out += binaryBuffer[i].toString(16).padStart(2, '0').toUpperCase();
+      }
+    }
+
+    box.innerText = out;
+  }
+
+  function copyExportText() {
+    let text = document.getElementById('exportOutputBox').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Export content copied to clipboard!');
+    });
+  }
+
+  function downloadRawFile() {
+    let blob = new Blob([binaryBuffer], { type: 'application/octet-stream' });
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'khex_export.bin';
+    a.click();
+  }
 </script>
 </body>
 </html>
