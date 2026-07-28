@@ -206,107 +206,25 @@
         .game-container {
             display: flex;
             justify-content: center;
-            align-items: flex-end;
-            gap: 16px;
-            margin: 10px 0 20px 0;
-            min-height: 280px;
-            padding: 20px 30px;
+            align-items: center;
+            margin: 5px 0 15px 0;
+            padding: 10px;
             background: var(--panel-bg);
             border-radius: 16px;
             border: 1px solid var(--border-color);
             max-width: 900px;
             width: 100%;
             position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
         }
 
-        .peg-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 12px;
-            transition: all 0.2s;
-            flex: 1;
-            max-width: 160px;
-            min-width: 110px;
-        }
-
-        .peg-wrapper:hover {
-            background: rgba(56, 189, 248, 0.08);
-        }
-
-        .peg-wrapper.selected {
-            background: rgba(56, 189, 248, 0.15);
-            outline: 2px dashed var(--accent-color);
-        }
-
-        .peg-wrapper.hint-from {
-            outline: 2px solid var(--warning-color);
-            background: rgba(245, 158, 11, 0.15);
-        }
-
-        .peg-wrapper.hint-to {
-            outline: 2px solid var(--success-color);
-            background: rgba(34, 197, 94, 0.15);
-        }
-
-        .peg-label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-dim);
-            margin-top: 6px;
-        }
-
-        .peg-area {
+        #ktowersCanvas {
             width: 100%;
-            height: 220px;
-            position: relative;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            border-bottom: 8px solid #475569;
-            border-radius: 0 0 4px 4px;
-        }
-
-        .peg-pole {
-            position: absolute;
-            width: 10px;
-            height: 100%;
-            background: linear-gradient(180deg, #64748b 0%, #334155 100%);
-            bottom: 0;
-            z-index: 0;
-            border-radius: 5px 5px 0 0;
-        }
-
-        .disc {
-            height: 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(0, 0, 0, 0.4);
-            margin-bottom: 2px;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 800;
-            color: rgba(255, 255, 255, 0.9);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: transform 0.15s ease, bottom 0.2s ease;
-            position: relative;
-        }
-
-        .disc.locked {
-            background: #475569 !important;
-            border: 2px solid var(--danger-color);
-            color: #f87171;
-        }
-
-        .disc.locked::after {
-            content: '🔒';
-            font-size: 10px;
-            position: absolute;
-            right: 4px;
+            height: auto;
+            max-width: 860px;
+            border-radius: 12px;
+            background: #090d16;
+            cursor: pointer;
         }
 
         .controls-grid {
@@ -424,7 +342,9 @@
 
     <div class="message-toast" id="messageToast"></div>
 
-    <div class="game-container" id="gameArea"></div>
+    <div class="game-container">
+        <canvas id="ktowersCanvas" width="860" height="380"></canvas>
+    </div>
 
     <div class="controls-grid">
         <button class="btn-powerup" onclick="undoMove()" id="undoBtn" disabled>↩️ Undo [U]</button>
@@ -467,9 +387,17 @@
             { id: 15, name: "Grandmaster Summit",disks: 10,pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 }
         ];
 
-        const DISK_COLORS = [
-            '#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', 
-            '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
+        const DISK_THEMES = [
+            { main: '#ef4444', side: '#b91c1c', top: '#fca5a5', name: 'Ruby Glass' },
+            { main: '#f97316', side: '#c2410c', top: '#fdba74', name: 'Amber Copper' },
+            { main: '#f59e0b', side: '#b45309', top: '#fde047', name: 'Gold Terrace' },
+            { main: '#10b981', side: '#047857', top: '#6ee7b7', name: 'Emerald Prism' },
+            { main: '#06b6d4', side: '#0e7490', top: '#67e8f9', name: 'Cyan Glass' },
+            { main: '#3b82f6', side: '#1d4ed8', top: '#93c5fd', name: 'Sapphire Tower' },
+            { main: '#6366f1', side: '#4338ca', top: '#a5b4fc', name: 'Cobalt Plaza' },
+            { main: '#8b5cf6', side: '#6d28d9', top: '#c4b5fd', name: 'Amethyst Skyscraper' },
+            { main: '#ec4899', side: '#be185d', top: '#f9a8d4', name: 'Neon Rose' },
+            { main: '#f43f5e', side: '#be123c', top: '#fda4af', name: 'Crimson Pinnacle' }
         ];
 
         // ----------------------------------------------------
@@ -513,7 +441,7 @@
         // ----------------------------------------------------
         // Game State Variables
         // ----------------------------------------------------
-        let currentMode = 'campaign'; // 'campaign' | 'free'
+        let currentMode = 'campaign';
         let currentStageIdx = 0;
         let numPegs = 3;
         let numDiscs = 4;
@@ -530,7 +458,13 @@
         let freezeCharges = 3;
         let timerInterval = null;
         let autoSolveInterval = null;
-        let hintHighlight = null; // { from, to }
+        let hintHighlight = null;
+
+        // Visual / Physics Animation State
+        let discAnimPos = {}; // pegIdx_discVal -> currentY
+        let fireworks = [];
+        let globalAnimTime = 0;
+        let hoverPeg = -1;
 
         // Local Storage
         let campaignStats = JSON.parse(localStorage.getItem('ktowers_campaign_v2') || '{}');
@@ -661,6 +595,8 @@
             freezeSeconds = 0;
             freezeCharges = 3;
             hintHighlight = null;
+            fireworks = [];
+            discAnimPos = {};
 
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = null;
@@ -764,7 +700,6 @@
                 // Pick up top disc
                 if (pegs[pegIdx].length > 0) {
                     const topDisc = pegs[pegIdx][pegs[pegIdx].length - 1];
-                    // Check locked disk rule
                     if (config.lockedDisk > 0 && topDisc === config.lockedDisk && moves < config.lockDuration) {
                         document.getElementById('messageToast').innerText = `🔒 Disk ${config.lockedDisk} is locked for ${config.lockDuration - moves} more moves!`;
                         playSound('error');
@@ -783,7 +718,6 @@
                 playSound('drop');
                 render();
             } else {
-                // Move disk from selectedPeg to pegIdx
                 if (config.adjOnly && Math.abs(selectedPeg - pegIdx) !== 1) {
                     document.getElementById('messageToast').innerText = "⚡ Adjacent pegs only!";
                     playSound('error');
@@ -805,7 +739,6 @@
 
                     if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
 
-                    // Check Move Limit constraint
                     if (config.moveLimit > 0 && moves > config.moveLimit && pegs[numPegs - 1].length !== numDiscs) {
                         render();
                         triggerGameOver(`Exceeded move limit of ${config.moveLimit}!`);
@@ -826,16 +759,13 @@
         }
 
         // ----------------------------------------------------
-        // Optimal Solver & Hint Engine (Frame-Stewart + BFS)
+        // Optimal Solver & Hint Engine
         // ----------------------------------------------------
         function getBFSNextMove() {
             const targetPeg = numPegs - 1;
             const config = getCurrentStageConfig();
-
-            // Check if win state
             if (pegs[targetPeg].length === numDiscs) return null;
 
-            // Simple BFS solver for any state
             const queue = [];
             const visited = new Set();
 
@@ -869,7 +799,6 @@
                     if (state[from].length === 0) continue;
                     const topDisc = state[from][state[from].length - 1];
 
-                    // Lock check
                     if (config.lockedDisk > 0 && topDisc === config.lockedDisk && (moves + path.length) < config.lockDuration) {
                         continue;
                     }
@@ -879,7 +808,6 @@
                         if (config.adjOnly && Math.abs(from - to) !== 1) continue;
 
                         if (state[to].length === 0 || state[to][state[to].length - 1] > topDisc) {
-                            // Create next state
                             const nextState = state.map(p => [...p]);
                             nextState[to].push(nextState[from].pop());
                             const nextCode = encodeState(nextState);
@@ -955,6 +883,9 @@
                     }
                 }
 
+                // Spawn victory fireworks
+                spawnVictoryFireworks();
+
                 playSound('win');
                 showWinModal(stars);
                 return true;
@@ -1006,58 +937,437 @@
         }
 
         // ----------------------------------------------------
-        // Rendering Engine
+        // Victory Fireworks System
         // ----------------------------------------------------
+        function spawnVictoryFireworks() {
+            fireworks = [];
+            for (let i = 0; i < 6; i++) {
+                spawnExplosion(150 + Math.random() * 560, 60 + Math.random() * 120);
+            }
+        }
+
+        function spawnExplosion(x, y) {
+            const colors = ['#f43f5e', '#38bdf8', '#f59e0b', '#10b981', '#a855f7', '#f472b6', '#fef08a'];
+            for (let i = 0; i < 45; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 6;
+                fireworks.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1.0,
+                    decay: 0.015 + Math.random() * 0.02,
+                    size: 2.5 + Math.random() * 3
+                });
+            }
+        }
+
+        function updateAndDrawFireworks(ctx) {
+            if (won && Math.random() < 0.12 && fireworks.length < 150) {
+                spawnExplosion(100 + Math.random() * 660, 50 + Math.random() * 140);
+            }
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                const p = fireworks[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08; // gravity
+                p.life -= p.decay;
+                if (p.life <= 0) {
+                    fireworks.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        // ----------------------------------------------------
+        // Canvas 3D Graphics Engine & Renderer
+        // ----------------------------------------------------
+        const canvas = document.getElementById('ktowersCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const pegAreaW = canvas.width / numPegs;
+            hoverPeg = Math.floor(mouseX / pegAreaW);
+        });
+
+        canvas.addEventListener('mouseleave', () => { hoverPeg = -1; });
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+            const pegAreaW = canvas.width / numPegs;
+            const clickedPeg = Math.floor(mouseX / pegAreaW);
+            handlePegClick(clickedPeg);
+        });
+
         function render() {
             document.getElementById('moveDisplay').innerText = moves;
             document.getElementById('undoBtn').disabled = moveHistory.length === 0 || won || gameOver;
             document.getElementById('hintBtn').disabled = won || gameOver || !!autoSolveInterval;
             document.getElementById('freezeBtn').disabled = won || gameOver || freezeCharges <= 0;
+        }
 
-            const gameArea = document.getElementById('gameArea');
-            gameArea.innerHTML = '';
+        function draw3DSkyscraperBlock(ctx, x, y, width, height, theme, discSize, isLocked, isTopDisc) {
+            const depth = 12; // 3D depth extrusion
+            const slant = 10; // isometric slant
+
+            // 3D Shadow underneath
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + height + 2, width/2 + 4, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 1. Side Facade (Right 3D Wall)
+            ctx.fillStyle = theme.side;
+            ctx.beginPath();
+            ctx.moveTo(x + width/2, y);
+            ctx.lineTo(x + width/2 + slant, y - depth);
+            ctx.lineTo(x + width/2 + slant, y + height - depth);
+            ctx.lineTo(x + width/2, y + height);
+            ctx.closePath();
+            ctx.fill();
+
+            // 2. Top Roof Facade
+            ctx.fillStyle = theme.top;
+            ctx.beginPath();
+            ctx.moveTo(x - width/2, y);
+            ctx.lineTo(x - width/2 + slant, y - depth);
+            ctx.lineTo(x + width/2 + slant, y - depth);
+            ctx.lineTo(x + width/2, y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.stroke();
+
+            // Rooftop Helipad & Solar Panel details for top/larger discs
+            if (width > 60) {
+                ctx.save();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.ellipse(x + slant/2, y - depth/2, 10, 4, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 8px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('H', x + slant/2, y - depth/2);
+                ctx.restore();
+            }
+
+            // Antenna spire with blinking red light on top disc block
+            if (isTopDisc || discSize === 1) {
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, y - depth);
+                ctx.lineTo(x, y - depth - 16);
+                ctx.stroke();
+
+                // Blinking Beacon
+                const blink = Math.floor(globalAnimTime / 20) % 2 === 0;
+                ctx.fillStyle = blink ? '#ef4444' : '#7f1d1d';
+                ctx.shadowColor = '#ef4444';
+                ctx.shadowBlur = blink ? 8 : 0;
+                ctx.beginPath();
+                ctx.arc(x, y - depth - 16, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+
+            // 3. Front Facade Main Wall
+            const grad = ctx.createLinearGradient(x - width/2, y, x + width/2, y + height);
+            grad.addColorStop(0, theme.main);
+            grad.addColorStop(1, theme.side);
+            ctx.fillStyle = grad;
+            ctx.fillRect(x - width/2, y, width, height);
+
+            ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x - width/2, y, width, height);
+
+            // 4. Window Lighting Animation Grid
+            const cols = Math.max(3, Math.floor(width / 16));
+            const rows = 2;
+            const wWidth = 4;
+            const wHeight = 5;
+            const padX = (width - cols * wWidth) / (cols + 1);
+            const padY = (height - rows * wHeight) / (rows + 1);
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const wx = (x - width/2) + padX + c * (wWidth + padX);
+                    const wy = y + padY + r * (wHeight + padY);
+
+                    // Dynamic flickering window light
+                    const winSeed = Math.sin(discSize * 17 + r * 5 + c * 3 + globalAnimTime * 0.05);
+                    const isLit = winSeed > -0.2;
+                    ctx.fillStyle = isLit ? (winSeed > 0.6 ? '#a5f3fc' : '#fef08a') : '#1e293b';
+                    if (isLit) {
+                        ctx.shadowColor = ctx.fillStyle;
+                        ctx.shadowBlur = 4;
+                    }
+                    ctx.fillRect(wx, wy, wWidth, wHeight);
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // 5. Special Locked Disc Steel Cage / Armor
+            if (isLocked) {
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+                ctx.fillRect(x - width/2, y, width, height);
+
+                // Steel cage stripes
+                ctx.strokeStyle = '#ef4444';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x - width/2, y); ctx.lineTo(x + width/2, y + height);
+                ctx.moveTo(x - width/2, y + height); ctx.lineTo(x + width/2, y);
+                ctx.stroke();
+
+                // Lock icon badge
+                ctx.fillStyle = '#ef4444';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('🔒', x, y + height/2 + 4);
+            } else {
+                // Skyscraper Level Number Tag
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Segoe UI, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(discSize, x, y + height/2 + 1);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        // Continuous Animation Loop
+        function animateLoop() {
+            globalAnimTime++;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const config = getCurrentStageConfig();
+            const w = canvas.width;
+            const h = canvas.height;
+            const pegAreaWidth = w / numPegs;
+            const groundY = h - 65;
+
+            // ----------------------------------------------------
+            // 1. City Night Sky & Stars Background
+            // ----------------------------------------------------
+            const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
+            bgGrad.addColorStop(0, '#090d16');
+            bgGrad.addColorStop(0.7, '#0f172a');
+            bgGrad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, w, h);
+
+            // Twinkling Stars
+            for (let i = 0; i < 30; i++) {
+                const sx = (i * 37) % w;
+                const sy = (i * 19) % (h * 0.4);
+                const alpha = 0.3 + 0.7 * Math.sin(globalAnimTime * 0.04 + i);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fillRect(sx, sy, 1.5, 1.5);
+            }
+
+            // Distant City Skyline Silhouettes
+            ctx.fillStyle = '#0f172a';
+            for (let i = 0; i < 16; i++) {
+                const bx = i * 60 - 20;
+                const bw = 50;
+                const bh = 40 + ((i * 31) % 60);
+                ctx.fillRect(bx, groundY - 120 - bh, bw, bh);
+                // Tiny yellow windows on distant skyline
+                if (i % 2 === 0) {
+                    ctx.fillStyle = 'rgba(253, 224, 71, 0.2)';
+                    ctx.fillRect(bx + 10, groundY - 110 - bh, 6, 8);
+                    ctx.fillRect(bx + 25, groundY - 95 - bh, 6, 8);
+                    ctx.fillStyle = '#0f172a';
+                }
+            }
+
+            // ----------------------------------------------------
+            // 2. 3D Asphalt Street Grid & Sidewalk Kerbs
+            // ----------------------------------------------------
+            // Asphalt Road Base
+            const roadGrad = ctx.createLinearGradient(0, groundY, 0, h);
+            roadGrad.addColorStop(0, '#1e293b');
+            roadGrad.addColorStop(1, '#0f172a');
+            ctx.fillStyle = roadGrad;
+            ctx.fillRect(0, groundY, w, h - groundY);
+
+            // Sidewalk Kerb Top Line
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(0, groundY - 6, w, 6);
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, groundY, w, 3);
+
+            // Yellow Lane Markings & Crosswalk Stripes
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([16, 12]);
+            ctx.beginPath();
+            ctx.moveTo(0, groundY + 30);
+            ctx.lineTo(w, groundY + 30);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+
+            // Street Lamps at side borders
+            [15, w - 15].forEach(lx => {
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(lx, groundY);
+                ctx.lineTo(lx, groundY - 70);
+                ctx.lineTo(lx + (lx < 100 ? 10 : -10), groundY - 75);
+                ctx.stroke();
+
+                // Street Lamp Glow Light Cone
+                const lampGlow = ctx.createRadialGradient(lx, groundY - 75, 2, lx, groundY - 75, 25);
+                lampGlow.addColorStop(0, 'rgba(254, 240, 138, 0.8)');
+                lampGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+                ctx.fillStyle = lampGlow;
+                ctx.beginPath();
+                ctx.arc(lx, groundY - 75, 25, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Compass Clues & Viewing Directions along street grid edge
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = 'bold 11px Segoe UI, monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText('🧭 STREET GRID: [WEST] ⬅️', 25, groundY + 52);
+            ctx.textAlign = 'right';
+            ctx.fillText('➡️ [EAST] | EYE VIEW 👁️', w - 25, groundY + 52);
+
+            // ----------------------------------------------------
+            // 3. Peg Foundations & Pylons
+            // ----------------------------------------------------
+            for (let p = 0; p < numPegs; p++) {
+                const baseX = pegAreaWidth * p + pegAreaWidth / 2;
+                const isTarget = (p === numPegs - 1);
+                const isHovered = (hoverPeg === p);
+
+                // Peg Selection Beam (Anti-Grav Vertical Shaft)
+                if (selectedPeg === p || hintHighlight?.from === p || hintHighlight?.to === p || isHovered) {
+                    let beamColor = 'rgba(56, 189, 248, 0.15)';
+                    let borderColor = 'rgba(56, 189, 248, 0.5)';
+                    if (selectedPeg === p) {
+                        beamColor = 'rgba(56, 189, 248, 0.25)';
+                        borderColor = '#38bdf8';
+                    } else if (hintHighlight?.from === p) {
+                        beamColor = 'rgba(245, 158, 11, 0.25)';
+                        borderColor = '#f59e0b';
+                    } else if (hintHighlight?.to === p) {
+                        beamColor = 'rgba(34, 197, 94, 0.25)';
+                        borderColor = '#22c55e';
+                    }
+
+                    const beamGrad = ctx.createLinearGradient(baseX - 45, 0, baseX + 45, 0);
+                    beamGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                    beamGrad.addColorStop(0.5, beamColor);
+                    beamGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                    ctx.fillStyle = beamGrad;
+                    ctx.fillRect(baseX - 50, 40, 100, groundY - 40);
+
+                    ctx.strokeStyle = borderColor;
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([6, 6]);
+                    ctx.strokeRect(baseX - 48, 40, 96, groundY - 40);
+                    ctx.setLineDash([]);
+                }
+
+                // Concrete Launchpad Foundation Pedestal
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(baseX - pegAreaWidth * 0.4, groundY - 12, pegAreaWidth * 0.8, 12);
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(baseX - pegAreaWidth * 0.4 + 4, groundY - 12, pegAreaWidth * 0.8 - 8, 3);
+
+                // Steel Lattice Pole / Pylon
+                const poleGrad = ctx.createLinearGradient(baseX - 5, 0, baseX + 5, 0);
+                poleGrad.addColorStop(0, '#475569');
+                poleGrad.addColorStop(0.5, '#cbd5e1');
+                poleGrad.addColorStop(1, '#334155');
+                ctx.fillStyle = poleGrad;
+                ctx.fillRect(baseX - 5, groundY - 220, 10, 208);
+
+                // Pole Cap Spire
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(baseX, groundY - 220, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Peg Label Badge below foundation
+                ctx.fillStyle = isTarget ? '#38bdf8' : '#e2e8f0';
+                ctx.font = 'bold 12px Segoe UI, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`PEG ${p + 1}${isTarget ? ' (TARGET)' : ''}`, baseX, groundY + 18);
+            }
+
+            // ----------------------------------------------------
+            // 4. Skyscraper Building Blocks (Discs) Rendering & Physics
+            // ----------------------------------------------------
+            const blockHeight = 24;
+            const spacing = 4;
 
             pegs.forEach((peg, pIdx) => {
-                const wrapper = document.createElement('div');
-                let wrapperClasses = 'peg-wrapper';
-                if (selectedPeg === pIdx) wrapperClasses += ' selected';
-                if (hintHighlight && hintHighlight.from === pIdx) wrapperClasses += ' hint-from';
-                if (hintHighlight && hintHighlight.to === pIdx) wrapperClasses += ' hint-to';
-                wrapper.className = wrapperClasses;
-                wrapper.onclick = () => handlePegClick(pIdx);
+                const baseX = pegAreaWidth * pIdx + pegAreaWidth / 2;
 
-                const pegArea = document.createElement('div');
-                pegArea.className = 'peg-area';
+                peg.forEach((discSize, stackIdx) => {
+                    const isLocked = (config.lockedDisk > 0 && discSize === config.lockedDisk && moves < config.lockDuration);
+                    const theme = DISK_THEMES[(discSize - 1) % DISK_THEMES.length];
+                    const isTopDisc = (stackIdx === peg.length - 1);
 
-                const pole = document.createElement('div');
-                pole.className = 'peg-pole';
-                pegArea.appendChild(pole);
+                    // Target Y for disc stack
+                    let targetY = groundY - 12 - (stackIdx + 1) * (blockHeight + spacing);
 
-                peg.forEach(discSize => {
-                    const disc = document.createElement('div');
-                    let isLocked = (config.lockedDisk > 0 && discSize === config.lockedDisk && moves < config.lockDuration);
-                    disc.className = 'disc' + (isLocked ? ' locked' : '');
+                    // If this top disc is selected on selectedPeg, float it higher up the pole
+                    if (selectedPeg === pIdx && isTopDisc) {
+                        targetY = groundY - 220;
+                    }
 
-                    // Calculate width proportionally (30px to 140px)
-                    const widthPct = 30 + ((discSize) / numDiscs) * 70;
-                    disc.style.width = widthPct + '%';
-                    disc.style.backgroundColor = DISK_COLORS[(discSize - 1) % DISK_COLORS.length];
-                    disc.innerText = discSize;
+                    // Key for tracking drop physics interpolation
+                    const key = `${pIdx}_${discSize}`;
+                    if (discAnimPos[key] === undefined) {
+                        discAnimPos[key] = targetY - 40; // start slightly higher
+                    }
+                    // Smooth lerp physics towards target Y
+                    discAnimPos[key] += (targetY - discAnimPos[key]) * 0.3;
+                    const renderY = discAnimPos[key];
 
-                    pegArea.appendChild(disc);
+                    // Proportional Skyscraper Block Width
+                    const widthPct = 0.35 + (discSize / numDiscs) * 0.55;
+                    const blockWidth = pegAreaWidth * widthPct;
+
+                    draw3DSkyscraperBlock(ctx, baseX, renderY, blockWidth, blockHeight, theme, discSize, isLocked, isTopDisc);
                 });
-
-                const label = document.createElement('div');
-                label.className = 'peg-label';
-                label.innerText = `Peg ${pIdx + 1}` + (pIdx === numPegs - 1 ? ' (Target)' : '');
-
-                wrapper.appendChild(pegArea);
-                wrapper.appendChild(label);
-                gameArea.appendChild(wrapper);
             });
+
+            // ----------------------------------------------------
+            // 5. Victory Celebration Fireworks Update
+            // ----------------------------------------------------
+            updateAndDrawFireworks(ctx);
+
+            requestAnimationFrame(animateLoop);
         }
+
+        // Start render loop
+        requestAnimationFrame(animateLoop);
 
         // ----------------------------------------------------
         // Keyboard Hotkeys
@@ -1084,13 +1394,13 @@
             document.getElementById('modalTitle').style.color = "var(--accent-color)";
             document.getElementById('modalStars').innerText = "🏰";
             document.getElementById('modalBody').innerHTML = `
-                <p><strong>Goal:</strong> Move all discs to the target peg (last peg).</p>
+                <p><strong>Goal:</strong> Move all skyscraper blocks to the target peg (last peg).</p>
                 <p><strong>Rules:</strong></p>
                 <ul>
-                    <li>Only top discs can be moved.</li>
-                    <li>Cannot place a larger disc on a smaller disc.</li>
-                    <li><strong>Adjacent Only:</strong> Disks can only move to neighboring pegs.</li>
-                    <li><strong>Locked Disks:</strong> Certain disks cannot move until turn requirement is met.</li>
+                    <li>Only top skyscraper blocks can be moved.</li>
+                    <li>Cannot place a larger block on a smaller block.</li>
+                    <li><strong>Adjacent Only:</strong> Blocks can only move to neighboring pegs.</li>
+                    <li><strong>Locked Disks:</strong> Certain blocks cannot move until turn requirement is met.</li>
                 </ul>
                 <p><strong>Power-ups & Keys:</strong></p>
                 <ul>

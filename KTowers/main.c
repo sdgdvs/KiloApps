@@ -6,6 +6,7 @@
 #define MAX_DISCS 10
 #define MAX_PEGS 5
 #define TOTAL_STAGES 15
+#define MAX_PARTICLES 250
 
 typedef struct {
     int id;
@@ -38,17 +39,23 @@ StageConfig CAMPAIGN_STAGES[TOTAL_STAGES] = {
     { 15, "Grandmaster Summit",10,5, 0,  0,  FALSE, 0, 0, 31 }
 };
 
-COLORREF colors[10] = {
-    RGB(239, 68, 68),   // #ef4444
-    RGB(249, 115, 22),  // #f97316
-    RGB(245, 158, 11),  // #f59e0b
-    RGB(16, 185, 129),  // #10b981
-    RGB(6, 182, 212),   // #06b6d4
-    RGB(59, 130, 246),  // #3b82f6
-    RGB(99, 102, 241),  // #6366f1
-    RGB(139, 92, 246),  // #8b5cf6
-    RGB(236, 72, 153),  // #ec4899
-    RGB(244, 63, 94)    // #f43f5e
+typedef struct {
+    COLORREF main;
+    COLORREF side;
+    COLORREF top;
+} DiscTheme;
+
+DiscTheme DISC_THEMES[10] = {
+    { RGB(239, 68, 68),  RGB(185, 28, 28),  RGB(252, 165, 165) },
+    { RGB(249, 115, 22), RGB(194, 65, 12),  RGB(253, 186, 116) },
+    { RGB(245, 158, 11), RGB(180, 83, 9),   RGB(253, 224, 71)  },
+    { RGB(16, 185, 129), RGB(4, 120, 87),   RGB(110, 231, 183) },
+    { RGB(6, 182, 212),  RGB(14, 116, 144), RGB(103, 232, 249) },
+    { RGB(59, 130, 246), RGB(29, 78, 216),  RGB(147, 197, 253) },
+    { RGB(99, 102, 241), RGB(67, 56, 202),  RGB(165, 180, 252) },
+    { RGB(139, 92, 246), RGB(109, 40, 217), RGB(196, 181, 253) },
+    { RGB(236, 72, 153), RGB(190, 24, 93),  RGB(249, 168, 212) },
+    { RGB(244, 63, 94),  RGB(190, 18, 60),  RGB(253, 164, 175) }
 };
 
 typedef struct {
@@ -104,6 +111,21 @@ int hintFrom = -1;
 int hintTo = -1;
 char statusMessage[256] = "";
 
+// Graphics / Animation State
+int animTick = 0;
+float discAnimY[MAX_PEGS][MAX_DISCS];
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    COLORREF color;
+    int life;
+    int maxLife;
+} Particle;
+
+Particle particles[MAX_PARTICLES];
+int particleCount = 0;
+
 // Controls
 HWND hModeBtn, hStageMinusBtn, hStagePlusBtn, hStageLabel;
 HWND hPegMinusBtn, hPegPlusBtn, hDiscMinusBtn, hDiscPlusBtn;
@@ -111,15 +133,15 @@ HWND hUndoBtn, hHintBtn, hFreezeBtn, hAutoBtn, hRestartBtn, hHelpBtn;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(INT_PTR)lpParam;
-    if (type == 1) { // pickup
+    if (type == 1) {
         Beep(600, 40);
-    } else if (type == 2) { // drop
+    } else if (type == 2) {
         Beep(450, 40);
-    } else if (type == 3) { // error
+    } else if (type == 3) {
         Beep(180, 100);
-    } else if (type == 4) { // freeze
+    } else if (type == 4) {
         Beep(800, 80); Beep(1200, 120);
-    } else if (type == 5) { // win
+    } else if (type == 5) {
         Beep(523, 80); Beep(659, 80); Beep(784, 80); Beep(1046, 160);
     }
     return 0;
@@ -198,12 +220,11 @@ BOOL GetBFSNextMove(int* outFrom, int* outTo) {
 
     int head = 0, tail = 0;
 
-    // Initial state
-    memcpy(bfsQueue[tail].pegs, pegs, sizeof(pegs));
-    memcpy(bfsQueue[tail].pegCounts, pegCounts, sizeof(pegCounts));
     bfsQueue[tail].firstFrom = -1;
     bfsQueue[tail].firstTo = -1;
     bfsQueue[tail].depth = 0;
+    memcpy(bfsQueue[tail].pegs, pegs, sizeof(pegs));
+    memcpy(bfsQueue[tail].pegCounts, pegCounts, sizeof(pegCounts));
     tail++;
 
     while (head < tail && tail < 4800) {
@@ -221,7 +242,6 @@ BOOL GetBFSNextMove(int* outFrom, int* outTo) {
             if (curr.pegCounts[f] == 0) continue;
             int topDisc = curr.pegs[f][curr.pegCounts[f] - 1];
 
-            // Lock check
             if (cfg.lockedDisk > 0 && topDisc == cfg.lockedDisk && (moves + curr.depth) < cfg.lockDuration) {
                 continue;
             }
@@ -283,6 +303,34 @@ void UpdateControlsVisibility() {
     }
 }
 
+void SpawnFireworks() {
+    particleCount = 0;
+    COLORREF colors[] = { RGB(244, 63, 94), RGB(56, 189, 248), RGB(245, 158, 11), RGB(16, 185, 129), RGB(168, 85, 247) };
+    for (int i = 0; i < 200; i++) {
+        particles[i].x = 150 + rand() % 550;
+        particles[i].y = 100 + rand() % 150;
+        float angle = (float)(rand() % 360) * 3.14159f / 180.0f;
+        float speed = 2.0f + (float)(rand() % 60) / 10.0f;
+        particles[i].vx = cosf(angle) * speed;
+        particles[i].vy = sinf(angle) * speed;
+        particles[i].color = colors[rand() % 5];
+        particles[i].life = 40 + rand() % 40;
+        particles[i].maxLife = particles[i].life;
+    }
+    particleCount = 200;
+}
+
+void UpdateParticles() {
+    for (int i = 0; i < particleCount; i++) {
+        if (particles[i].life > 0) {
+            particles[i].x += particles[i].vx;
+            particles[i].y += particles[i].vy;
+            particles[i].vy += 0.15f; // gravity
+            particles[i].life--;
+        }
+    }
+}
+
 void InitGame(HWND hwnd) {
     StageConfig cfg = GetCurrentConfig();
     numPegs = cfg.pegs;
@@ -291,6 +339,12 @@ void InitGame(HWND hwnd) {
     memset(pegCounts, 0, sizeof(pegCounts));
     for (int i = numDiscs; i >= 1; i--) {
         pegs[0][pegCounts[0]++] = i;
+    }
+
+    for (int p = 0; p < MAX_PEGS; p++) {
+        for (int d = 0; d < MAX_DISCS; d++) {
+            discAnimY[p][d] = -1.0f;
+        }
     }
 
     selectedPeg = -1;
@@ -303,6 +357,7 @@ void InitGame(HWND hwnd) {
     freezeCharges = 3;
     hintFrom = -1;
     hintTo = -1;
+    particleCount = 0;
     strcpy(statusMessage, "");
 
     if (timerRunning) {
@@ -316,7 +371,7 @@ void InitGame(HWND hwnd) {
     }
 
     UpdateControlsVisibility();
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 void CheckWinOrLoss(HWND hwnd) {
@@ -344,6 +399,7 @@ void CheckWinOrLoss(HWND hwnd) {
             }
         }
 
+        SpawnFireworks();
         PlaySoundEffect(5);
         sprintf(statusMessage, "STAGE CLEARED! Stars: %d | Moves: %d | Time: %02d:%02d", stars, moves, elapsedSeconds/60, elapsedSeconds%60);
     } else if (cfg.moveLimit > 0 && moves > cfg.moveLimit) {
@@ -369,7 +425,7 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             if (cfg.lockedDisk > 0 && topDisc == cfg.lockedDisk && moves < cfg.lockDuration) {
                 sprintf(statusMessage, "Disk %d is locked for %d more moves!", cfg.lockedDisk, cfg.lockDuration - moves);
                 PlaySoundEffect(3);
-                InvalidateRect(hwnd, NULL, TRUE);
+                InvalidateRect(hwnd, NULL, FALSE);
                 return;
             }
             selectedPeg = clickedPeg;
@@ -387,7 +443,7 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             strcpy(statusMessage, "Adjacent Pegs Only!");
             selectedPeg = -1;
             PlaySoundEffect(3);
-            InvalidateRect(hwnd, NULL, TRUE);
+            InvalidateRect(hwnd, NULL, FALSE);
             return;
         }
 
@@ -428,7 +484,7 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             PlaySoundEffect(3);
         }
     }
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 void UndoMove(HWND hwnd) {
@@ -445,7 +501,7 @@ void UndoMove(HWND hwnd) {
     hintFrom = -1; hintTo = -1;
     strcpy(statusMessage, "");
     PlaySoundEffect(2);
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 void ApplyHint(HWND hwnd) {
@@ -454,10 +510,10 @@ void ApplyHint(HWND hwnd) {
     if (GetBFSNextMove(&f, &t)) {
         hintFrom = f;
         hintTo = t;
-        InvalidateRect(hwnd, NULL, TRUE);
+        InvalidateRect(hwnd, NULL, FALSE);
     } else {
         strcpy(statusMessage, "No hint available!");
-        InvalidateRect(hwnd, NULL, TRUE);
+        InvalidateRect(hwnd, NULL, FALSE);
     }
 }
 
@@ -466,7 +522,7 @@ void UseTimeFreeze(HWND hwnd) {
     if (freezeCharges <= 0) {
         strcpy(statusMessage, "No Freeze charges remaining!");
         PlaySoundEffect(3);
-        InvalidateRect(hwnd, NULL, TRUE);
+        InvalidateRect(hwnd, NULL, FALSE);
         return;
     }
     freezeCharges--;
@@ -476,7 +532,111 @@ void UseTimeFreeze(HWND hwnd) {
         timerRunning = TRUE;
         SetTimer(hwnd, 1, 1000, NULL);
     }
-    InvalidateRect(hwnd, NULL, TRUE);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+// ----------------------------------------------------
+// GDI 3D Skyscraper Block Renderer
+// ----------------------------------------------------
+void Draw3DSkyscraperBlockGDI(HDC hdc, int x, int y, int width, int height, DiscTheme theme, int discSize, BOOL isLocked, BOOL isTopDisc) {
+    int slant = 8;
+    int depth = 10;
+
+    // 1. Right Side Facade (3D Wall Polygon)
+    POINT sidePts[4] = {
+        { x + width/2, y },
+        { x + width/2 + slant, y - depth },
+        { x + width/2 + slant, y + height - depth },
+        { x + width/2, y + height }
+    };
+    HBRUSH sideBrush = CreateSolidBrush(theme.side);
+    HGDIOBJ oldBrush = SelectObject(hdc, sideBrush);
+    HPEN nullPen = CreatePen(PS_NULL, 0, 0);
+    HGDIOBJ oldPen = SelectObject(hdc, nullPen);
+    Polygon(hdc, sidePts, 4);
+
+    // 2. Top Roof Facade Polygon
+    POINT topPts[4] = {
+        { x - width/2, y },
+        { x - width/2 + slant, y - depth },
+        { x + width/2 + slant, y - depth },
+        { x + width/2, y }
+    };
+    HBRUSH topBrush = CreateSolidBrush(theme.top);
+    SelectObject(hdc, topBrush);
+    Polygon(hdc, topPts, 4);
+    DeleteObject(topBrush);
+    DeleteObject(sideBrush);
+
+    // Antenna Spire on top block
+    if (isTopDisc || discSize == 1) {
+        HPEN spirePen = CreatePen(PS_SOLID, 2, RGB(203, 213, 225));
+        SelectObject(hdc, spirePen);
+        MoveToEx(hdc, x, y - depth, NULL);
+        LineTo(hdc, x, y - depth - 14);
+        DeleteObject(spirePen);
+
+        // Blinking Beacon
+        BOOL blink = ((animTick / 10) % 2 == 0);
+        HBRUSH bBrush = CreateSolidBrush(blink ? RGB(239, 68, 68) : RGB(127, 29, 29));
+        SelectObject(hdc, bBrush);
+        Ellipse(hdc, x - 3, y - depth - 17, x + 3, y - depth - 11);
+        DeleteObject(bBrush);
+    }
+
+    // 3. Front Facade Main Rect
+    RECT fRect = { x - width/2, y, x + width/2, y + height };
+    HBRUSH mainBrush = CreateSolidBrush(theme.main);
+    FillRect(hdc, &fRect, mainBrush);
+    DeleteObject(mainBrush);
+
+    HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(15, 23, 42));
+    SelectObject(hdc, borderPen);
+    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(hdc, fRect.left, fRect.top, fRect.right, fRect.bottom);
+    DeleteObject(borderPen);
+
+    // 4. Window Grid Animation
+    int cols = (width / 14);
+    if (cols < 2) cols = 2;
+    int padX = (width - cols * 4) / (cols + 1);
+
+    for (int c = 0; c < cols; c++) {
+        int wx = (x - width/2) + padX + c * (4 + padX);
+        int wy1 = y + 4;
+        int wy2 = y + 13;
+
+        int seed1 = (discSize * 13 + c * 7 + animTick / 4) % 10;
+        COLORREF wColor1 = (seed1 > 2) ? (seed1 > 6 ? RGB(165, 243, 252) : RGB(254, 240, 138)) : RGB(30, 41, 59);
+        HBRUSH wBrush1 = CreateSolidBrush(wColor1);
+        RECT wR1 = { wx, wy1, wx + 4, wy1 + 5 };
+        FillRect(hdc, &wR1, wBrush1);
+        DeleteObject(wBrush1);
+
+        RECT wR2 = { wx, wy2, wx + 4, wy2 + 5 };
+        FillRect(hdc, &wR2, wBrush1);
+    }
+
+    // 5. Text Label / Locked Overlay
+    if (isLocked) {
+        HPEN cagePen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+        SelectObject(hdc, cagePen);
+        MoveToEx(hdc, fRect.left, fRect.top, NULL); LineTo(hdc, fRect.right, fRect.bottom);
+        MoveToEx(hdc, fRect.left, fRect.bottom, NULL); LineTo(hdc, fRect.right, fRect.top);
+        DeleteObject(cagePen);
+
+        SetTextColor(hdc, RGB(239, 68, 68));
+        TextOut(hdc, x - 14, y + 3, "LOCK", 4);
+    } else {
+        char buf[8];
+        sprintf(buf, "%d", discSize);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        TextOut(hdc, x - 4, y + 3, buf, strlen(buf));
+    }
+
+    SelectObject(hdc, oldPen);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(nullPen);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -506,11 +666,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hRestartBtn = CreateWindow("BUTTON", "Restart [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 45, 85, 28, hwnd, (HMENU)5, NULL, NULL);
             hHelpBtn = CreateWindow("BUTTON", "Help [?]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 460, 45, 75, 28, hwnd, (HMENU)6, NULL, NULL);
 
+            SetTimer(hwnd, 3, 30, NULL); // 30fps animation timer
             InitGame(hwnd);
             break;
         }
         case WM_TIMER: {
-            if (wParam == 1) { // 1 sec tick
+            if (wParam == 1) { // 1 sec clock
                 if (!won && !gameOver) {
                     if (freezeSeconds > 0) {
                         freezeSeconds--;
@@ -525,7 +686,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         PlaySoundEffect(3);
                         sprintf(statusMessage, "STAGE FAILED! Time limit expired!");
                     }
-                    InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (wParam == 2) { // Auto solve step
                 if (won || gameOver) {
@@ -543,20 +703,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SetWindowText(hAutoBtn, "Auto-Solve");
                     }
                 }
+            } else if (wParam == 3) { // 30fps Animation Tick
+                animTick++;
+                if (won) UpdateParticles();
+                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
-            if (id == 101) { // Mode Toggle
+            if (id == 101) {
                 mode = (mode == 0) ? 1 : 0;
                 InitGame(hwnd);
-            } else if (id == 102) { // Stage -
+            } else if (id == 102) {
                 if (currentStageIdx > 0) {
                     currentStageIdx--;
                     InitGame(hwnd);
                 }
-            } else if (id == 104) { // Stage +
+            } else if (id == 104) {
                 if (currentStageIdx < TOTAL_STAGES - 1) {
                     BOOL isUnlocked = (currentStageIdx == 0) || (stageStats[CAMPAIGN_STAGES[currentStageIdx].id].stars > 0);
                     if (isUnlocked) {
@@ -587,16 +751,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 6) {
                 MessageBox(hwnd,
                     "How to Play KTowers\n\n"
-                    "Goal: Move all discs to the target (last) peg.\n\n"
+                    "Goal: Move all skyscraper blocks to the target (last) peg.\n\n"
                     "Rules:\n"
-                    "- Only top discs can be moved.\n"
-                    "- Larger discs cannot be placed on smaller discs.\n"
-                    "- Adjacent Only: Discs can only move to neighboring pegs.\n"
+                    "- Only top skyscraper blocks can be moved.\n"
+                    "- Larger blocks cannot be placed on smaller blocks.\n"
+                    "- Adjacent Only: Blocks can only move to neighboring pegs.\n"
                     "- Locked Disks: Cannot move until turn requirement is met.\n\n"
                     "Controls:\n"
-                    "- Click peg to pick/drop disk or use keys 1 to 5.\n"
+                    "- Click peg to pick/drop block or use keys 1 to 5.\n"
                     "- [U] Undo last move.\n"
-                    "- [H] Optimal Hint (Frame-Stewart algorithm).\n"
+                    "- [H] Optimal Hint.\n"
                     "- [F] Time Freeze (pauses timer for 15s).",
                     "Help / Instructions", MB_OK | MB_ICONINFORMATION);
             }
@@ -637,17 +801,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int width = rc.right - rc.left;
             int height = rc.bottom - rc.top;
 
-            // Background
-            HBRUSH bgBrush = CreateSolidBrush(RGB(15, 23, 42));
-            FillRect(hdc, &rc, bgBrush);
+            // Double Buffering
+            HDC memDC = CreateCompatibleDC(hdc);
+            HBITMAP memBM = CreateCompatibleBitmap(hdc, width, height);
+            HGDIOBJ oldBM = SelectObject(memDC, memBM);
+
+            // 1. Background City Sky & Stars
+            HBRUSH bgBrush = CreateSolidBrush(RGB(9, 13, 22));
+            FillRect(memDC, &rc, bgBrush);
             DeleteObject(bgBrush);
 
-            SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(248, 250, 252));
+            SetBkMode(memDC, TRANSPARENT);
+
+            // Stars
+            for (int i = 0; i < 30; i++) {
+                int sx = (i * 37) % width;
+                int sy = (i * 19) % (int)(height * 0.45);
+                SetPixel(memDC, sx, sy, RGB(255, 255, 255));
+                SetPixel(memDC, sx + 1, sy, RGB(200, 220, 255));
+            }
 
             StageConfig cfg = GetCurrentConfig();
 
-            // Status Banner Line 1: Stage Info & Rules
+            // Status Banner Line 1
             char line1[256];
             char rulesStr[128] = "";
             if (cfg.adjOnly) strcat(rulesStr, " [Adjacent Only]");
@@ -657,101 +833,138 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             sprintf(line1, "%s %s", cfg.name, rulesStr);
             HFONT fontBold = CreateFont(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            HGDIOBJ oldFont = SelectObject(hdc, fontBold);
-            TextOut(hdc, 15, 80, line1, strlen(line1));
+            HGDIOBJ oldFont = SelectObject(memDC, fontBold);
+            SetTextColor(memDC, RGB(56, 189, 248));
+            TextOut(memDC, 15, 80, line1, strlen(line1));
 
-            // Line 2: Stats & Freeze badge
+            // Line 2: Stats
             char line2[256];
             char freezeStr[32] = "";
             if (freezeSeconds > 0) sprintf(freezeStr, " | FROZEN (%ds)", freezeSeconds);
             sprintf(line2, "Time: %02d:%02d%s | Moves: %d / Par: %d | Freeze Charges: %d",
                     elapsedSeconds/60, elapsedSeconds%60, freezeStr, moves, cfg.par, freezeCharges);
-            SetTextColor(hdc, freezeSeconds > 0 ? RGB(6, 182, 212) : RGB(148, 163, 184));
-            TextOut(hdc, 15, 105, line2, strlen(line2));
+            SetTextColor(memDC, freezeSeconds > 0 ? RGB(6, 182, 212) : RGB(148, 163, 184));
+            TextOut(memDC, 15, 105, line2, strlen(line2));
 
             if (strlen(statusMessage) > 0) {
-                SetTextColor(hdc, won ? RGB(34, 197, 94) : RGB(239, 68, 68));
-                TextOut(hdc, 15, 130, statusMessage, strlen(statusMessage));
+                SetTextColor(memDC, won ? RGB(34, 197, 94) : RGB(239, 68, 68));
+                TextOut(memDC, 15, 130, statusMessage, strlen(statusMessage));
             }
 
-            SelectObject(hdc, oldFont);
+            SelectObject(memDC, oldFont);
             DeleteObject(fontBold);
 
-            // Draw Pegs & Disks
+            // 2. 3D Asphalt Street Grid & Sidewalk Base
             int pegAreaWidth = width / numPegs;
-            int groundY = height - 60;
+            int groundY = height - 65;
 
+            RECT roadRect = { 0, groundY, width, height };
+            HBRUSH roadBrush = CreateSolidBrush(RGB(30, 41, 59));
+            FillRect(memDC, &roadRect, roadBrush);
+            DeleteObject(roadBrush);
+
+            RECT kerbRect = { 0, groundY - 6, width, groundY };
+            HBRUSH kerbBrush = CreateSolidBrush(RGB(71, 85, 105));
+            FillRect(memDC, &kerbRect, kerbBrush);
+            DeleteObject(kerbBrush);
+
+            // Yellow Lane Markings
+            HPEN yellowPen = CreatePen(PS_DASH, 2, RGB(245, 158, 11));
+            HGDIOBJ oPen = SelectObject(memDC, yellowPen);
+            MoveToEx(memDC, 0, groundY + 30, NULL);
+            LineTo(memDC, width, groundY + 30);
+            SelectObject(memDC, oPen);
+            DeleteObject(yellowPen);
+
+            // Street Grid Compass Clues
+            SetTextColor(memDC, RGB(148, 163, 184));
+            TextOut(memDC, 20, groundY + 45, "STREET GRID: [WEST] <--", 23);
+            TextOut(memDC, width - 210, groundY + 45, "--> [EAST] | EYE VIEW", 21);
+
+            // 3. Draw Peg Foundation Pedestals & Lattice Pylons
             HBRUSH poleBrush = CreateSolidBrush(RGB(100, 116, 139));
-            HBRUSH baseBrush = CreateSolidBrush(RGB(71, 85, 105));
+            HBRUSH baseBrush = CreateSolidBrush(RGB(51, 65, 85));
 
             for (int i = 0; i < numPegs; i++) {
                 int baseX = pegAreaWidth * i + pegAreaWidth / 2;
 
-                // Peg Selection / Hint highlight
+                // Selection / Hint Light Shaft Beam
                 if (selectedPeg == i || hintFrom == i || hintTo == i) {
                     COLORREF hlColor = (selectedPeg == i) ? RGB(56, 189, 248) :
                                        (hintFrom == i) ? RGB(245, 158, 11) : RGB(34, 197, 94);
-                    HBRUSH hlBrush = CreateSolidBrush(hlColor);
-                    RECT hlRect = { baseX - pegAreaWidth/2 + 8, groundY - 220, baseX + pegAreaWidth/2 - 8, groundY + 12 };
-                    FrameRect(hdc, &hlRect, hlBrush);
-                    DeleteObject(hlBrush);
+                    HPEN hlPen = CreatePen(PS_DOT, 1, hlColor);
+                    HGDIOBJ oldP = SelectObject(memDC, hlPen);
+                    RECT hlRect = { baseX - pegAreaWidth/2 + 8, groundY - 220, baseX + pegAreaWidth/2 - 8, groundY };
+                    FrameRect(memDC, &hlRect, (HBRUSH)GetStockObject(WHITE_BRUSH));
+                    SelectObject(memDC, oldP);
+                    DeleteObject(hlPen);
                 }
 
-                // Pole
+                // Steel Lattice Pole
                 RECT poleRect = { baseX - 5, groundY - 200, baseX + 5, groundY };
-                FillRect(hdc, &poleRect, poleBrush);
+                FillRect(memDC, &poleRect, poleBrush);
 
-                // Base
-                RECT bRect = { baseX - pegAreaWidth/2 + 10, groundY, baseX + pegAreaWidth/2 - 10, groundY + 8 };
-                FillRect(hdc, &bRect, baseBrush);
+                // Concrete Pedestal Base
+                RECT bRect = { baseX - pegAreaWidth/2 + 12, groundY - 12, baseX + pegAreaWidth/2 - 12, groundY };
+                FillRect(memDC, &bRect, baseBrush);
 
                 // Label
                 char pLabel[32];
                 sprintf(pLabel, "Peg %d%s", i + 1, (i == numPegs - 1) ? " (Target)" : "");
-                SetTextColor(hdc, RGB(148, 163, 184));
-                TextOut(hdc, baseX - 30, groundY + 12, pLabel, strlen(pLabel));
+                SetTextColor(memDC, RGB(226, 232, 240));
+                TextOut(memDC, baseX - 30, groundY + 12, pLabel, strlen(pLabel));
             }
 
             DeleteObject(poleBrush);
             DeleteObject(baseBrush);
 
-            // Draw Discs
+            // 4. Draw 3D Skyscraper Blocks (Discs)
+            int blockH = 24;
+            int spacing = 4;
+
             for (int p = 0; p < numPegs; p++) {
                 int baseX = pegAreaWidth * p + pegAreaWidth / 2;
                 for (int j = 0; j < pegCounts[p]; j++) {
                     int discSize = pegs[p][j];
-                    int discW = (int)((30.0 + ((double)discSize / numDiscs) * (pegAreaWidth - 40)));
-                    int discH = 20;
-                    int rectY = groundY - (j + 1) * (discH + 2);
+                    int discW = (int)(35 + ((double)discSize / numDiscs) * (pegAreaWidth - 45));
 
-                    RECT dRect = { baseX - discW / 2, rectY, baseX + discW / 2, rectY + discH };
-
+                    BOOL isTopDisc = (j == pegCounts[p] - 1);
                     BOOL isLocked = (cfg.lockedDisk > 0 && discSize == cfg.lockedDisk && moves < cfg.lockDuration);
-                    COLORREF dColor = isLocked ? RGB(71, 85, 105) : colors[(discSize - 1) % 10];
 
-                    HBRUSH dBrush = CreateSolidBrush(dColor);
-                    FillRect(hdc, &dRect, dBrush);
+                    int targetY = groundY - 12 - (j + 1) * (blockH + spacing);
+                    if (selectedPeg == p && isTopDisc) {
+                        targetY = groundY - 215;
+                    }
 
-                    HPEN dPen = CreatePen(PS_SOLID, isLocked ? 2 : 1, isLocked ? RGB(239, 68, 68) : RGB(0, 0, 0));
-                    HGDIOBJ oPen = SelectObject(hdc, dPen);
-                    HGDIOBJ oBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                    // Lerp position
+                    if (discAnimY[p][j] < 0) discAnimY[p][j] = (float)targetY - 30;
+                    discAnimY[p][j] += ((float)targetY - discAnimY[p][j]) * 0.35f;
+                    int rectY = (int)discAnimY[p][j];
 
-                    RoundRect(hdc, dRect.left, dRect.top, dRect.right, dRect.bottom, 8, 8);
+                    DiscTheme theme = DISC_THEMES[(discSize - 1) % 10];
 
-                    SelectObject(hdc, oBrush);
-                    SelectObject(hdc, oPen);
-                    DeleteObject(dPen);
-                    DeleteObject(dBrush);
-
-                    // Disc text
-                    char dText[16];
-                    if (isLocked) sprintf(dText, "%d LOCK", discSize);
-                    else sprintf(dText, "%d", discSize);
-
-                    SetTextColor(hdc, RGB(255, 255, 255));
-                    TextOut(hdc, baseX - (isLocked ? 18 : 4), rectY + 2, dText, strlen(dText));
+                    Draw3DSkyscraperBlockGDI(memDC, baseX, rectY, discW, blockH, theme, discSize, isLocked, isTopDisc);
                 }
             }
+
+            // 5. Draw Victory Celebration Fireworks
+            if (won) {
+                for (int i = 0; i < particleCount; i++) {
+                    if (particles[i].life > 0) {
+                        HBRUSH pBrush = CreateSolidBrush(particles[i].color);
+                        RECT pRect = { (int)particles[i].x - 2, (int)particles[i].y - 2, (int)particles[i].x + 3, (int)particles[i].y + 3 };
+                        FillRect(memDC, &pRect, pBrush);
+                        DeleteObject(pBrush);
+                    }
+                }
+            }
+
+            // Copy double buffer to screen
+            BitBlt(hdc, 0, 0, width, height, memDC, 0, 0, SRCCOPY);
+
+            SelectObject(memDC, oldBM);
+            DeleteObject(memBM);
+            DeleteDC(memDC);
 
             EndPaint(hwnd, &ps);
             break;
