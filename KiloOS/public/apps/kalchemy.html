@@ -996,6 +996,148 @@
       font-weight: 800;
       font-size: 0.75rem;
     }
+
+    /* Phase 10: Potion Brewing & Effect Tester Styles */
+    .brewing-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 6px 12px;
+      z-index: 2;
+    }
+
+    .potion-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .potion-card {
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.95), rgba(45, 30, 75, 0.95));
+      border: 1px solid var(--border-gold);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(243, 156, 18, 0.1);
+      transition: all 0.25s ease;
+    }
+
+    .potion-card:hover {
+      border-color: var(--accent-gold-light);
+      box-shadow: 0 6px 20px rgba(243, 156, 18, 0.25);
+    }
+
+    .potion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .potion-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .potion-count-badge {
+      font-size: 0.75rem;
+      background: rgba(243, 156, 18, 0.2);
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 2px 8px;
+      color: var(--accent-gold-light);
+      font-weight: 800;
+    }
+
+    .potion-desc {
+      font-size: 0.75rem;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .btn-drink {
+      background: linear-gradient(135deg, #9b59b6, #8e44ad);
+      border: 1px solid #b05cdb;
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(155, 89, 182, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-drink:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 16px rgba(155, 89, 182, 0.6);
+    }
+
+    .btn-drink.disabled {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-color);
+      color: var(--text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .effect-tester-monitor {
+      background: linear-gradient(135deg, rgba(9, 9, 20, 0.85), rgba(30, 20, 50, 0.85));
+      border: 1px solid var(--accent-purple);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.6), 0 0 10px var(--glow-purple);
+    }
+
+    .effect-tester-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .buff-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .buff-pill {
+      background: rgba(155, 89, 182, 0.2);
+      border: 1px solid var(--accent-purple);
+      border-radius: 12px;
+      padding: 4px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 0 8px var(--glow-purple);
+      animation: pulseBuff 2s infinite alternate;
+    }
+
+    @keyframes pulseBuff {
+      from { box-shadow: 0 0 6px var(--glow-purple); }
+      to { box-shadow: 0 0 12px var(--glow-gold); }
+    }
   </style>
 </head>
 <body>
@@ -1084,6 +1226,7 @@
         <button class="equip-tab" id="equip-anvil" onclick="selectEquipment('anvil')">🔨 Anvil</button>
         <button class="equip-tab" id="equip-quests" onclick="selectEquipment('quests')">📜 Quests</button>
         <button class="equip-tab" id="equip-workshop" onclick="selectEquipment('workshop')">🧙 Workshop</button>
+        <button class="equip-tab" id="equip-brewing" onclick="selectEquipment('brewing')">🥣 Potions</button>
       </div>
 
       <div class="equipment-desc" id="equipment-desc">
@@ -1097,6 +1240,11 @@
 
       <!-- Enchanter Workshop Container (Shown in Workshop mode) -->
       <div class="workshop-container" id="workshop-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Potion Brewing & Effect Tester Container (Shown in Potions mode) -->
+      <div class="brewing-container" id="brewing-container" style="display: none;">
         <!-- Injected by JS -->
       </div>
 
@@ -1305,9 +1453,11 @@
     let dust = 100; // Alchemical Dust
     let gold = 100; // Gold Currency
     let guildXP = 0; // Guild XP
-    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil', 'quests', 'workshop'
+    let activeEquipment = 'crucible'; // 'crucible', 'retort', 'alembic', 'anvil', 'quests', 'workshop', 'brewing'
     let quests = [];
     let upgrades = { crucibleCap: 0, essenceYield: 0, autoSorter: 0, catalystSpeed: 0 };
+    let potions = { strength: 0, invisibility: 0, mana: 0, life: 0 };
+    let activeBuffs = { strength: 0, invisibility: 0, mana: 0, life: 0 };
 
     const PATRONS = [
       { name: 'Archmage Vaelen', icon: '🧙' },
@@ -1358,6 +1508,8 @@
         localStorage.setItem('kalchemy_guildXP', guildXP);
         localStorage.setItem('kalchemy_quests', JSON.stringify(quests));
         localStorage.setItem('kalchemy_upgrades', JSON.stringify(upgrades));
+        localStorage.setItem('kalchemy_potions', JSON.stringify(potions));
+        localStorage.setItem('kalchemy_buffs', JSON.stringify(activeBuffs));
       } catch(e){}
     }
 
@@ -1370,6 +1522,8 @@
         const savedXP = localStorage.getItem('kalchemy_guildXP');
         const savedQuests = localStorage.getItem('kalchemy_quests');
         const savedUpgrades = localStorage.getItem('kalchemy_upgrades');
+        const savedPotions = localStorage.getItem('kalchemy_potions');
+        const savedBuffs = localStorage.getItem('kalchemy_buffs');
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
@@ -1395,6 +1549,28 @@
             };
           }
         }
+        if (savedPotions) {
+          const pObj = JSON.parse(savedPotions);
+          if (pObj && typeof pObj === 'object') {
+            potions = {
+              strength: pObj.strength || 0,
+              invisibility: pObj.invisibility || 0,
+              mana: pObj.mana || 0,
+              life: pObj.life || 0
+            };
+          }
+        }
+        if (savedBuffs) {
+          const bObj = JSON.parse(savedBuffs);
+          if (bObj && typeof bObj === 'object') {
+            activeBuffs = {
+              strength: bObj.strength || 0,
+              invisibility: bObj.invisibility || 0,
+              mana: bObj.mana || 0,
+              life: bObj.life || 0
+            };
+          }
+        }
       } catch(e){}
       initQuests();
       checkTierUnlocks(false);
@@ -1416,6 +1592,7 @@
       const oracleSec = document.querySelector('.oracle-section');
       const qBoardCont = document.getElementById('quest-board-container');
       const wShopCont = document.getElementById('workshop-container');
+      const brewCont = document.getElementById('brewing-container');
       const autoFillBtn = document.getElementById('btn-auto-fill');
 
       if (autoFillBtn) {
@@ -1431,6 +1608,7 @@
         if (oracleSec) oracleSec.style.display = 'none';
         if (qBoardCont) qBoardCont.style.display = 'flex';
         if (wShopCont) wShopCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none';
         renderQuestBoard();
       } else if (mode === 'workshop') {
         descEl.innerHTML = "<strong>Enchanter Workshop:</strong> Upgrade laboratory apparatus with Gold to boost yields, capacity & automation!";
@@ -1441,7 +1619,20 @@
         if (oracleSec) oracleSec.style.display = 'none';
         if (qBoardCont) qBoardCont.style.display = 'none';
         if (wShopCont) wShopCont.style.display = 'flex';
+        if (brewCont) brewCont.style.display = 'none';
         renderWorkshop();
+      } else if (mode === 'brewing') {
+        descEl.innerHTML = "<strong>Potion Brewing & Effect Tester:</strong> Combine discoverable herbs & essences in the cauldron to brew buff elixirs (Strength, Invisibility, Mana, Elixir of Life) and test active magical effects!";
+        if (transCircle) transCircle.style.display = 'flex';
+        if (slotsCont) slotsCont.style.display = 'flex';
+        if (mainActBtn) mainActBtn.style.display = 'block';
+        if (crucActions) crucActions.style.display = 'flex';
+        if (oracleSec) oracleSec.style.display = 'flex';
+        if (qBoardCont) qBoardCont.style.display = 'none';
+        if (wShopCont) wShopCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'flex';
+        actionBtn.innerHTML = "🥣 Brew Buff Elixir";
+        renderBrewingUI();
       } else {
         if (transCircle) transCircle.style.display = 'flex';
         if (slotsCont) slotsCont.style.display = 'flex';
@@ -1450,6 +1641,7 @@
         if (oracleSec) oracleSec.style.display = 'flex';
         if (qBoardCont) qBoardCont.style.display = 'none';
         if (wShopCont) wShopCont.style.display = 'none';
+        if (brewCont) brewCont.style.display = 'none';
 
         if (mode === 'crucible') {
           descEl.innerHTML = "<strong>Crucible:</strong> Combine 2 elements to synthesize new compounds.";
@@ -1518,11 +1710,16 @@
         return;
       }
 
-      gold += q.goldReward;
-      guildXP += q.xpReward;
+      let gReward = q.goldReward;
+      let xReward = q.xpReward;
+      if (activeBuffs.strength > 0) gReward = Math.floor(gReward * 1.5);
+      if (activeBuffs.life > 0) xReward = Math.floor(xReward * 2.0);
 
-      triggerToast("📜 Quest Completed!", `Fulfilled ${q.patronName}'s request for +${q.goldReward} Gold, +${q.xpReward} XP!`, q.targetIcon);
-      addLog(`📜 <strong>QUEST COMPLETED!</strong> Delivered <strong>${q.targetName}</strong> ${q.targetIcon} to <strong>${q.patronName}</strong>! (+${q.goldReward} Gold, +${q.xpReward} Guild XP)`, true, false, false, 'oracle');
+      gold += gReward;
+      guildXP += xReward;
+
+      triggerToast("📜 Quest Completed!", `Fulfilled ${q.patronName}'s request for +${gReward} Gold, +${xReward} XP!`, q.targetIcon);
+      addLog(`📜 <strong>QUEST COMPLETED!</strong> Delivered <strong>${q.targetName}</strong> ${q.targetIcon} to <strong>${q.patronName}</strong>! (+${gReward} Gold, +${xReward} Guild XP)`, true, false, false, 'oracle');
 
       playFanfareDiscovery();
 
@@ -1553,6 +1750,173 @@
       else if (activeEquipment === 'retort') distillRetort();
       else if (activeEquipment === 'alembic') extractAlembic();
       else if (activeEquipment === 'anvil') crushAnvil();
+      else if (activeEquipment === 'brewing') brewPotion();
+    }
+
+    function brewPotion() {
+      if (!selectedSlots[0] || !selectedSlots[1]) {
+        addLog("Place an herb/ingredient and essence into the Cauldron slots before brewing.", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+      const id1 = selectedSlots[0].id;
+      const id2 = selectedSlots[1].id;
+
+      const isMatch = (arr1, arr2) => (arr1.includes(id1) && arr2.includes(id2)) || (arr1.includes(id2) && arr2.includes(id1));
+
+      let brewedType = null;
+      let potionName = "";
+      let potionIcon = "";
+
+      if (isMatch(['plant', 'tree', 'mud', 'swamp', 'potion'], ['energy', 'fire', 'metal'])) {
+        brewedType = 'strength'; potionName = 'Strength Elixir'; potionIcon = '💪';
+      } else if (isMatch(['plant', 'swamp', 'tree', 'mud', 'potion'], ['shadow', 'air', 'spirit'])) {
+        brewedType = 'invisibility'; potionName = 'Invisibility Elixir'; potionIcon = '👻';
+      } else if (isMatch(['plant', 'mud', 'swamp', 'tree', 'potion'], ['mana', 'magic', 'water'])) {
+        brewedType = 'mana'; potionName = 'Mana Elixir'; potionIcon = '🔮';
+      } else if (isMatch(['plant', 'tree', 'swamp', 'mud', 'potion'], ['life', 'sun', 'light', 'elixir'])) {
+        brewedType = 'life'; potionName = 'Elixir of Life'; potionIcon = '❤️';
+      }
+
+      const orb = document.getElementById('crucible-orb');
+      if (brewedType) {
+        potions[brewedType] = (potions[brewedType] || 0) + 1;
+        orb.innerText = potionIcon;
+        setTimeout(() => { orb.innerText = '🔮'; }, 1500);
+
+        triggerToast("🥣 Potion Brewed!", `Brewed ${potionName} ${potionIcon}!`, potionIcon);
+        addLog(`🥣 <strong>POTION BREWING:</strong> Combined <strong>${selectedSlots[0].name}</strong> ${selectedSlots[0].icon} + <strong>${selectedSlots[1].name}</strong> ${selectedSlots[1].icon} to brew <strong>${potionName}</strong> ${potionIcon}!`, true, false, false, 'oracle');
+        playBrewingSound();
+      } else {
+        essence += 15;
+        dust += 15;
+        orb.innerText = '🧪';
+        setTimeout(() => { orb.innerText = '🔮'; }, 1500);
+
+        triggerToast("🧪 Minor Tonic Brewed", "Brewed Minor Tonic (+15 Essence, +15 Dust)", '🧪');
+        addLog(`🧪 <strong>POTION BREWING:</strong> Brewed a <strong>Minor Tonic</strong> from ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+15 Essence, +15 Dust)`, false, false, false);
+        playChime(350, 'triangle', 0.25);
+      }
+
+      saveState();
+      updateStats();
+      renderBrewingUI();
+    }
+
+    function drinkPotion(type) {
+      if (!potions[type] || potions[type] <= 0) {
+        addLog("⚠️ You do not have any of this potion brewed in your inventory!", false, true, false);
+        playChime(220, 'sawtooth', 0.2);
+        return;
+      }
+
+      potions[type]--;
+      activeBuffs[type] = Math.min(180, (activeBuffs[type] || 0) + 60);
+
+      const defs = {
+        strength: { name: 'Strength Elixir', icon: '💪', desc: '+50% Yield & Quest Gold Bonus (60s)' },
+        invisibility: { name: 'Invisibility Elixir', icon: '👻', desc: 'Stealth Aura: Free Hints & +25 Dust (60s)' },
+        mana: { name: 'Mana Elixir', icon: '🔮', desc: 'Mana Surge: 50% Discount on Oracle & Upgrades (60s)' },
+        life: { name: 'Elixir of Life', icon: '❤️', desc: 'Divine Radiance: 2x XP & Guaranteed Crit (60s)' }
+      };
+      const p = defs[type];
+
+      triggerToast(`🧪 Tested ${p.name}!`, `Active Buff: ${p.desc}`, p.icon);
+      addLog(`🧪 <strong>EFFECT TESTER:</strong> Consumed <strong>${p.name}</strong> ${p.icon}! Activated: <strong>${p.desc}</strong>`, true, false, false, 'oracle');
+
+      playPotionDrinkSound();
+      saveState();
+      updateStats();
+      renderBrewingUI();
+    }
+
+    function renderBrewingUI() {
+      const cont = document.getElementById('brewing-container');
+      if (!cont) return;
+
+      const defs = [
+        { key: 'strength', name: 'Strength Elixir', icon: '💪', desc: '+50% Yield & Quest Gold Bonus. (Recipe: Plant/Tree + Energy/Fire/Metal)' },
+        { key: 'invisibility', name: 'Invisibility Elixir', icon: '👻', desc: 'Stealth Aura: Free Oracle hints & +25 Dust per craft. (Recipe: Plant/Swamp + Shadow/Air/Spirit)' },
+        { key: 'mana', name: 'Mana Elixir', icon: '🔮', desc: 'Mana Surge: 50% Discount on Oracle & Upgrades. (Recipe: Plant/Mud + Mana/Magic/Water)' },
+        { key: 'life', name: 'Elixir of Life', icon: '❤️', desc: 'Divine Radiance: 2x XP from Quests & 100% Critical Transmute. (Recipe: Plant/Tree + Life/Sun/Light)' }
+      ];
+
+      let html = `
+        <div style="font-size:0.9rem; font-weight:800; color:var(--accent-gold-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; text-shadow:0 0 8px rgba(243,156,18,0.4); text-align:center;">
+          🥣 Cauldron Potion Brewing & Effect Tester
+        </div>
+
+        <!-- Active Effect Monitor -->
+        <div class="effect-tester-monitor">
+          <div class="effect-tester-title">🧪 Active Effect Tester Monitor</div>
+          <div class="buff-list">
+      `;
+
+      let activeCount = 0;
+      if (activeBuffs.strength > 0) { html += `<div class="buff-pill"><span>💪 STRENGTH</span><span>${activeBuffs.strength}s</span></div>`; activeCount++; }
+      if (activeBuffs.invisibility > 0) { html += `<div class="buff-pill"><span>👻 INVISIBILITY</span><span>${activeBuffs.invisibility}s</span></div>`; activeCount++; }
+      if (activeBuffs.mana > 0) { html += `<div class="buff-pill"><span>🔮 MANA SURGE</span><span>${activeBuffs.mana}s</span></div>`; activeCount++; }
+      if (activeBuffs.life > 0) { html += `<div class="buff-pill"><span>❤️ DIVINE LIFE</span><span>${activeBuffs.life}s</span></div>`; activeCount++; }
+
+      if (activeCount === 0) {
+        html += `<span style="font-size:0.75rem; color:var(--text-muted); font-style:italic">No active elixir buffs. Brew and consume an elixir below to test its magical effect!</span>`;
+      }
+
+      html += `
+          </div>
+        </div>
+
+        <!-- Potion Inventory Grid -->
+        <div class="potion-grid">
+      `;
+
+      defs.forEach(p => {
+        const count = potions[p.key] || 0;
+        const canDrink = count > 0;
+        html += `
+          <div class="potion-card">
+            <div class="potion-header">
+              <span class="potion-name"><span>${p.icon}</span><span>${p.name}</span></span>
+              <span class="potion-count-badge">x${count}</span>
+            </div>
+            <div class="potion-desc">${p.desc}</div>
+            <button class="btn-drink ${canDrink ? '' : 'disabled'}" ${canDrink ? `onclick="drinkPotion('${p.key}')"` : 'disabled'}>
+              🧪 Drink & Test
+            </button>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      cont.innerHTML = html;
+    }
+
+    function updateBuffTimers() {
+      let changed = false;
+      ['strength', 'invisibility', 'mana', 'life'].forEach(k => {
+        if (activeBuffs[k] > 0) {
+          activeBuffs[k]--;
+          changed = true;
+        }
+      });
+      if (changed && activeEquipment === 'brewing') {
+        renderBrewingUI();
+      }
+    }
+    setInterval(updateBuffTimers, 1000);
+
+    function playBrewingSound() {
+      const freqs = [220, 330, 440, 550, 660];
+      freqs.forEach((f, idx) => {
+        setTimeout(() => playChime(f, 'sine', 0.15), idx * 80);
+      });
+    }
+
+    function playPotionDrinkSound() {
+      const freqs = [523, 659, 784, 987, 1174, 1318];
+      freqs.forEach((f, idx) => {
+        setTimeout(() => playChime(f, 'triangle', 0.12), idx * 70);
+      });
     }
 
     function checkTierUnlocks(notify = true) {
@@ -1884,14 +2248,18 @@
             discoveredIds.add(resElement.id);
 
             const capBonusMult = 1 + (upgrades.crucibleCap || 0) * 0.15;
-            const essGain = Math.floor(25 * capBonusMult);
-            const dustGain = Math.floor(25 * capBonusMult);
+            let essGain = Math.floor(25 * capBonusMult);
+            let dustGain = Math.floor(25 * capBonusMult);
+
+            if (activeBuffs.strength > 0) essGain = Math.floor(essGain * 1.5);
+            if (activeBuffs.invisibility > 0) dustGain += 25;
+
             essence += essGain;
             dust += dustGain;
 
             // Critical Transmutation check
             const critChance = (upgrades.catalystSpeed || 0) * 0.15;
-            const isCrit = Math.random() < critChance;
+            const isCrit = (activeBuffs.life > 0) || (Math.random() < critChance);
             let critStr = "";
             if (isCrit) {
               essence += 20;
@@ -2059,7 +2427,9 @@
     }
 
     function getVagueHint() {
-      const COST = 20;
+      let COST = 20;
+      if (activeBuffs.invisibility > 0) COST = 0;
+      else if (activeBuffs.mana > 0) COST = 10;
       if (dust < COST) {
         addLog(`⚠️ <strong>Not enough Alchemical Dust!</strong> Need ${COST} Dust (You have ${dust}). Craft new elements to earn Dust!`, false, true, false);
         playChime(220, 'sawtooth', 0.2);
@@ -2092,7 +2462,9 @@
     }
 
     function getOracleVision() {
-      const COST = 50;
+      let COST = 50;
+      if (activeBuffs.invisibility > 0) COST = 0;
+      else if (activeBuffs.mana > 0) COST = 25;
       if (dust < COST) {
         addLog(`⚠️ <strong>Not enough Alchemical Dust!</strong> Need ${COST} Dust (You have ${dust}). Craft new elements to earn Dust!`, false, true, false);
         playChime(220, 'sawtooth', 0.2);

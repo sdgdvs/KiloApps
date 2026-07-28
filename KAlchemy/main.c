@@ -210,7 +210,7 @@ typedef struct {
     Quest quests[3];
     int slot1;
     int slot2;
-    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil, 4 = Quests, 5 = Workshop
+    int selectedEquipment; // 0 = Crucible, 1 = Retort, 2 = Alembic, 3 = Anvil, 4 = Quests, 5 = Workshop, 6 = Potions
     int selectedTierFilter; // 0 = All, 1..5 = T1..T5
     int currentPage;
     int buttonElemMap[GRID_SIZE];
@@ -218,6 +218,14 @@ typedef struct {
     int upgradeEssenceYield;
     int upgradeAutoSorter;
     int upgradeCatalystSpeed;
+    int potionStrength;
+    int potionInvisibility;
+    int potionMana;
+    int potionLife;
+    int buffStrengthTimer;
+    int buffInvisibilityTimer;
+    int buffManaTimer;
+    int buffLifeTimer;
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
@@ -230,7 +238,8 @@ static const int g_CatalystSpeedCosts[5] = { 45, 90, 180, 320, 500 };
 static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
-static HWND g_hEquipButtons[6];
+static HWND g_hEquipButtons[7];
+static HWND g_hPotionDrinkButtons[4];
 static HWND g_hQuestTurnInButtons[3];
 static HWND g_hQuestRerollButton = NULL;
 static HWND g_hUpgradeButtons[4];
@@ -402,6 +411,7 @@ static void GenerateQuest(int slotIdx) {
 static void UpdateEquipmentUI(HWND hwnd) {
     int isQuests = (g_State.selectedEquipment == 4);
     int isWorkshop = (g_State.selectedEquipment == 5);
+    int isBrewing = (g_State.selectedEquipment == 6);
     int isCrucible = (g_State.selectedEquipment == 0);
 
     if (isQuests || isWorkshop) {
@@ -419,6 +429,20 @@ static void UpdateEquipmentUI(HWND hwnd) {
             ShowWindow(g_hAutoFillButton, SW_SHOW);
         } else {
             ShowWindow(g_hAutoFillButton, SW_HIDE);
+        }
+    }
+
+    for (int p = 0; p < 4; p++) {
+        if (g_hPotionDrinkButtons[p]) {
+            ShowWindow(g_hPotionDrinkButtons[p], isBrewing ? SW_SHOW : SW_HIDE);
+            if (isBrewing) {
+                int count = 0;
+                if (p == 0) count = g_State.potionStrength;
+                else if (p == 1) count = g_State.potionInvisibility;
+                else if (p == 2) count = g_State.potionMana;
+                else if (p == 3) count = g_State.potionLife;
+                EnableWindow(g_hPotionDrinkButtons[p], count > 0 ? TRUE : FALSE);
+            }
         }
     }
 
@@ -570,12 +594,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateGrimoireGrid();
 
             // Laboratory Equipment Nav Buttons
-            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 278, 96, 36, 22, hwnd, (HMENU)700, NULL, NULL);
-            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 315, 96, 34, 22, hwnd, (HMENU)701, NULL, NULL);
-            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 96, 38, 22, hwnd, (HMENU)702, NULL, NULL);
-            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 389, 96, 30, 22, hwnd, (HMENU)703, NULL, NULL);
-            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 420, 96, 38, 22, hwnd, (HMENU)704, NULL, NULL);
-            g_hEquipButtons[5] = CreateWindowA("BUTTON", "Shop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 459, 96, 46, 22, hwnd, (HMENU)705, NULL, NULL);
+            g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 96, 33, 22, hwnd, (HMENU)700, NULL, NULL);
+            g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 96, 31, 22, hwnd, (HMENU)701, NULL, NULL);
+            g_hEquipButtons[2] = CreateWindowA("BUTTON", "Alembic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 342, 96, 34, 22, hwnd, (HMENU)702, NULL, NULL);
+            g_hEquipButtons[3] = CreateWindowA("BUTTON", "Anvil", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 377, 96, 28, 22, hwnd, (HMENU)703, NULL, NULL);
+            g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 406, 96, 34, 22, hwnd, (HMENU)704, NULL, NULL);
+            g_hEquipButtons[5] = CreateWindowA("BUTTON", "Shop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 441, 96, 31, 22, hwnd, (HMENU)705, NULL, NULL);
+            g_hEquipButtons[6] = CreateWindowA("BUTTON", "Potions", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 473, 96, 35, 22, hwnd, (HMENU)706, NULL, NULL);
+
+            // Potion Drink Buttons (Initially hidden)
+            g_hPotionDrinkButtons[0] = CreateWindowA("BUTTON", "Drink Strength", WS_CHILD | BS_PUSHBUTTON, 282, 140, 108, 26, hwnd, (HMENU)1000, NULL, NULL);
+            g_hPotionDrinkButtons[1] = CreateWindowA("BUTTON", "Drink Invis", WS_CHILD | BS_PUSHBUTTON, 394, 140, 108, 26, hwnd, (HMENU)1001, NULL, NULL);
+            g_hPotionDrinkButtons[2] = CreateWindowA("BUTTON", "Drink Mana", WS_CHILD | BS_PUSHBUTTON, 282, 170, 108, 26, hwnd, (HMENU)1002, NULL, NULL);
+            g_hPotionDrinkButtons[3] = CreateWindowA("BUTTON", "Drink Life", WS_CHILD | BS_PUSHBUTTON, 394, 170, 108, 26, hwnd, (HMENU)1003, NULL, NULL);
+
+            SetTimer(hwnd, 1, 1000, NULL);
 
             // Workshop Upgrade Buttons (Initially hidden)
             g_hUpgradeButtons[0] = CreateWindowA("BUTTON", "Upgrade", WS_CHILD | BS_PUSHBUTTON, 432, 142, 65, 24, hwnd, (HMENU)900, NULL, NULL);
@@ -610,6 +643,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 530, 96, 225, 415, hwnd, (HMENU)402, NULL, NULL);
 
             AddJournalLog("Welcome Apprentice Alchemist!\r\nSelect elements from your Grimoire to combine in the Crucible across 5 Tiers!");
+            break;
+        }
+
+        case WM_TIMER: {
+            int changed = 0;
+            if (g_State.buffStrengthTimer > 0) { g_State.buffStrengthTimer--; changed = 1; }
+            if (g_State.buffInvisibilityTimer > 0) { g_State.buffInvisibilityTimer--; changed = 1; }
+            if (g_State.buffManaTimer > 0) { g_State.buffManaTimer--; changed = 1; }
+            if (g_State.buffLifeTimer > 0) { g_State.buffLifeTimer--; changed = 1; }
+            if (changed) InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
 
@@ -674,17 +717,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 Beep(350, 50);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
-            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests, 705 = Shop)
-            else if (id >= 700 && id <= 705) {
+            // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests, 705 = Shop, 706 = Potions)
+            else if (id >= 700 && id <= 706) {
                 g_State.selectedEquipment = id - 700;
                 if (g_hMainActionButton) {
                     if (g_State.selectedEquipment == 0) SetWindowTextA(g_hMainActionButton, "✨ Transmute");
                     else if (g_State.selectedEquipment == 1) SetWindowTextA(g_hMainActionButton, "⚗️ Distill Retort");
                     else if (g_State.selectedEquipment == 2) SetWindowTextA(g_hMainActionButton, "🧪 Extract Alembic");
                     else if (g_State.selectedEquipment == 3) SetWindowTextA(g_hMainActionButton, "🔨 Crush Anvil");
+                    else if (g_State.selectedEquipment == 6) SetWindowTextA(g_hMainActionButton, "🥣 Brew Elixir");
                 }
                 UpdateEquipmentUI(hwnd);
                 Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Potion Drink Commands (1000 = Strength, 1001 = Invis, 1002 = Mana, 1003 = Life)
+            else if (id >= 1000 && id <= 1003) {
+                int pIdx = id - 1000;
+                if (pIdx == 0 && g_State.potionStrength > 0) {
+                    g_State.potionStrength--;
+                    g_State.buffStrengthTimer += 60;
+                    AddJournalLog("🧪 EFFECT TESTER: Consumed Strength Elixir! (+50% Yield Active 60s)");
+                    wsprintfA(g_State.lastStatus, "Active Buff: Strength Elixir (60s)");
+                    Beep(300, 50); Beep(500, 50); Beep(700, 70);
+                } else if (pIdx == 1 && g_State.potionInvisibility > 0) {
+                    g_State.potionInvisibility--;
+                    g_State.buffInvisibilityTimer += 60;
+                    AddJournalLog("🧪 EFFECT TESTER: Consumed Invisibility Elixir! (Stealth Aura Active 60s)");
+                    wsprintfA(g_State.lastStatus, "Active Buff: Invisibility Elixir (60s)");
+                    Beep(400, 50); Beep(600, 50); Beep(800, 70);
+                } else if (pIdx == 2 && g_State.potionMana > 0) {
+                    g_State.potionMana--;
+                    g_State.buffManaTimer += 60;
+                    AddJournalLog("🧪 EFFECT TESTER: Consumed Mana Elixir! (Mana Surge Active 60s)");
+                    wsprintfA(g_State.lastStatus, "Active Buff: Mana Elixir (60s)");
+                    Beep(500, 50); Beep(700, 50); Beep(900, 70);
+                } else if (pIdx == 3 && g_State.potionLife > 0) {
+                    g_State.potionLife--;
+                    g_State.buffLifeTimer += 60;
+                    AddJournalLog("🧪 EFFECT TESTER: Consumed Elixir of Life! (Divine Radiance Active 60s)");
+                    wsprintfA(g_State.lastStatus, "Active Buff: Elixir of Life (60s)");
+                    Beep(600, 50); Beep(800, 50); Beep(1000, 90);
+                } else {
+                    AddJournalLog("⚠️ No potions of this type in inventory!");
+                    Beep(220, 100);
+                }
+                UpdateEquipmentUI(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Workshop Upgrades (900, 901, 902, 903)
@@ -763,14 +841,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int qIdx = id - 800;
                 int targetId = g_State.quests[qIdx].targetId;
                 if (g_State.discovered[targetId]) {
-                    g_State.gold += g_State.quests[qIdx].goldReward;
-                    g_State.guildXP += g_State.quests[qIdx].xpReward;
+                    int gRew = g_State.quests[qIdx].goldReward;
+                    int xRew = g_State.quests[qIdx].xpReward;
+                    if (g_State.buffStrengthTimer > 0) gRew = gRew * 150 / 100;
+                    if (g_State.buffLifeTimer > 0) xRew *= 2;
+
+                    g_State.gold += gRew;
+                    g_State.guildXP += xRew;
                     g_State.guildLevel = 1 + (g_State.guildXP / 200);
 
                     char logMsg[256];
                     wsprintfA(logMsg, "📜 QUEST COMPLETED! Delivered %s to %s! (+%d Gold, +%d Guild XP)",
                         g_Elements[targetId].name, g_Patrons[g_State.quests[qIdx].patronIdx],
-                        g_State.quests[qIdx].goldReward, g_State.quests[qIdx].xpReward);
+                        gRew, xRew);
                     AddJournalLog(logMsg);
                     wsprintfA(g_State.lastStatus, "Fulfilled %s's order!", g_Patrons[g_State.quests[qIdx].patronIdx]);
 
@@ -842,11 +925,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 int capMult = 100 + (g_State.upgradeCrucibleCap * 15);
                                 int essGain = 25 * capMult / 100;
                                 int dustGain = 25 * capMult / 100;
+
+                                if (g_State.buffStrengthTimer > 0) essGain = essGain * 150 / 100;
+                                if (g_State.buffInvisibilityTimer > 0) dustGain += 25;
+
                                 g_State.essence += essGain;
                                 g_State.dust += dustGain;
 
                                 int critChance = g_State.upgradeCatalystSpeed * 15;
-                                int isCrit = ((FastRand() % 100) < critChance);
+                                int isCrit = (g_State.buffLifeTimer > 0) || ((FastRand() % 100) < critChance);
                                 char critLogStr[64] = "";
                                 if (isCrit) {
                                     g_State.essence += 20;
@@ -981,8 +1068,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             wsprintfA(logMsg, "🔨 ANVIL ESSENCE HARVEST: Smashed %s [Tier %d] into pure base essence! (+%d Essence, +%d Dust)",
                                 g_Elements[e1].name, tier, essGain, dustGain);
                             AddJournalLog(logMsg);
-                            Beep(120, 100); Beep(300, 70); Beep(600, 90);
                         }
+                    }
+                } else if (g_State.selectedEquipment == 6) { // Potion Brewing
+                    if (g_State.slot1 < 0 || g_State.slot2 < 0) {
+                        lstrcpyA(g_State.lastStatus, "Select herb and essence for brewing!");
+                        AddJournalLog("Select an herb/ingredient and essence into slots to brew in Cauldron.");
+                        Beep(220, 100);
+                    } else {
+                        int e1 = g_State.slot1;
+                        int e2 = g_State.slot2;
+
+                        int isHerb1 = (e1 == 11 || e1 == 15 || e1 == 14 || e1 == 7 || e1 == 36);
+                        int isHerb2 = (e2 == 11 || e2 == 15 || e2 == 14 || e2 == 7 || e2 == 36);
+
+                        int brewedType = -1; // 0=Strength, 1=Invis, 2=Mana, 3=Life
+                        if (isHerb1 || isHerb2) {
+                            int other = isHerb1 ? e2 : e1;
+                            if (other == 6 || other == 0 || other == 16) brewedType = 0;
+                            else if (other == 39 || other == 3 || other == 41) brewedType = 1;
+                            else if (other == 31 || other == 30 || other == 1) brewedType = 2;
+                            else if (other == 28 || other == 42 || other == 40 || other == 37) brewedType = 3;
+                        }
+
+                        if (brewedType == 0) {
+                            g_State.potionStrength++;
+                            AddJournalLog("🥣 BREWING: Combined ingredients to brew Strength Elixir (💪)! (+1 Potion)");
+                            wsprintfA(g_State.lastStatus, "Brewed Strength Elixir (💪)!");
+                            Beep(440, 50); Beep(554, 50); Beep(659, 70);
+                        } else if (brewedType == 1) {
+                            g_State.potionInvisibility++;
+                            AddJournalLog("🥣 BREWING: Combined ingredients to brew Invisibility Elixir (👻)! (+1 Potion)");
+                            wsprintfA(g_State.lastStatus, "Brewed Invisibility Elixir (👻)!");
+                            Beep(523, 50); Beep(659, 50); Beep(784, 70);
+                        } else if (brewedType == 2) {
+                            g_State.potionMana++;
+                            AddJournalLog("🥣 BREWING: Combined ingredients to brew Mana Elixir (🔮)! (+1 Potion)");
+                            wsprintfA(g_State.lastStatus, "Brewed Mana Elixir (🔮)!");
+                            Beep(659, 50); Beep(784, 50); Beep(880, 70);
+                        } else if (brewedType == 3) {
+                            g_State.potionLife++;
+                            AddJournalLog("🥣 BREWING: Combined ingredients to brew Elixir of Life (❤️)! (+1 Potion)");
+                            wsprintfA(g_State.lastStatus, "Brewed Elixir of Life (❤️)!");
+                            Beep(523, 50); Beep(659, 50); Beep(880, 50); Beep(1046, 90);
+                        } else {
+                            g_State.essence += 15;
+                            g_State.dust += 15;
+                            AddJournalLog("🧪 BREWING: Brewed Minor Tonic! (+15 Essence, +15 Dust)");
+                            wsprintfA(g_State.lastStatus, "Brewed Minor Tonic (+15 Ess, +15 Dust)");
+                            Beep(350, 70);
+                        }
+                        UpdateEquipmentUI(hwnd);
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1011,9 +1147,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             // Vague Research Hint (204)
             else if (id == 204) {
-                const int COST = 20;
+                int COST = 20;
+                if (g_State.buffInvisibilityTimer > 0) COST = 0;
+                else if (g_State.buffManaTimer > 0) COST = 10;
                 if (g_State.dust < COST) {
-                    lstrcpyA(g_State.lastStatus, "Need 20 Dust for Research Hint!");
+                    lstrcpyA(g_State.lastStatus, "Need Dust for Research Hint!");
                     char msg[256];
                     wsprintfA(msg, "⚠️ Not enough Alchemical Dust! Need %d Dust (You have %d).", COST, g_State.dust);
                     AddJournalLog(msg);
@@ -1065,9 +1203,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             // Oracle Vision (205)
             else if (id == 205) {
-                const int COST = 50;
+                int COST = 50;
+                if (g_State.buffInvisibilityTimer > 0) COST = 0;
+                else if (g_State.buffManaTimer > 0) COST = 25;
                 if (g_State.dust < COST) {
-                    lstrcpyA(g_State.lastStatus, "Need 50 Dust for Oracle Vision!");
+                    lstrcpyA(g_State.lastStatus, "Need Dust for Oracle Vision!");
                     char msg[256];
                     wsprintfA(msg, "⚠️ Not enough Alchemical Dust! Need %d Dust (You have %d).", COST, g_State.dust);
                     AddJournalLog(msg);
@@ -1334,6 +1474,76 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     SelectObject(hdc, oldP);
                 }
+            } else if (g_State.selectedEquipment == 6) {
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(180, 160, 220));
+                TextOutA(hdc, 290, 120, "Cauldron Brewing & Effect Tester", 32);
+
+                // Draw Potion Inventory Cards (4 boxes)
+                const char* pNames[4] = { "Strength", "Invis", "Mana", "Life" };
+                int pCounts[4] = { g_State.potionStrength, g_State.potionInvisibility, g_State.potionMana, g_State.potionLife };
+
+                for (int p = 0; p < 4; p++) {
+                    int col = p % 2;
+                    int row = p / 2;
+                    RECT pCard = { 282 + col * 112, 138 + row * 30, 390 + col * 112, 166 + row * 30 };
+                    FillRect(hdc, &pCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, pCard.left, pCard.top, pCard.right, pCard.bottom);
+
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char pStr[32];
+                    wsprintfA(pStr, "%s: x%d", pNames[p], pCounts[p]);
+                    DrawTextA(hdc, pStr, -1, &pCard, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                    SelectObject(hdc, oldP);
+                }
+
+                // Effect Tester Status Monitor Box
+                RECT monRect = { 282, 330, 502, 430 };
+                FillRect(hdc, &monRect, hPanelBrush);
+                HGDIOBJ oldP = SelectObject(hdc, hPurplePen);
+                Rectangle(hdc, monRect.left, monRect.top, monRect.right, monRect.bottom);
+
+                SelectObject(hdc, hBadgeFont);
+                SetTextColor(hdc, RGB(243, 156, 18));
+                TextOutA(hdc, monRect.left + 8, monRect.top + 6, "EFFECT TESTER MONITOR", 21);
+
+                SelectObject(hdc, hUIFont);
+                int yOffset = monRect.top + 26;
+                int hasBuffs = 0;
+
+                if (g_State.buffStrengthTimer > 0) {
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char bStr[64]; wsprintfA(bStr, "* Strength (%ds): +50%% Yield", g_State.buffStrengthTimer);
+                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
+                    yOffset += 18; hasBuffs = 1;
+                }
+                if (g_State.buffInvisibilityTimer > 0) {
+                    SetTextColor(hdc, RGB(155, 89, 182));
+                    char bStr[64]; wsprintfA(bStr, "* Invis (%ds): Free Hints", g_State.buffInvisibilityTimer);
+                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
+                    yOffset += 18; hasBuffs = 1;
+                }
+                if (g_State.buffManaTimer > 0) {
+                    SetTextColor(hdc, RGB(54, 152, 219));
+                    char bStr[64]; wsprintfA(bStr, "* Mana (%ds): 50%% Discount", g_State.buffManaTimer);
+                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
+                    yOffset += 18; hasBuffs = 1;
+                }
+                if (g_State.buffLifeTimer > 0) {
+                    SetTextColor(hdc, RGB(46, 204, 113));
+                    char bStr[64]; wsprintfA(bStr, "* Life (%ds): 2x XP & 100%% Crit", g_State.buffLifeTimer);
+                    TextOutA(hdc, monRect.left + 8, yOffset, bStr, lstrlenA(bStr));
+                    yOffset += 18; hasBuffs = 1;
+                }
+
+                if (!hasBuffs) {
+                    SetTextColor(hdc, RGB(160, 170, 190));
+                    TextOutA(hdc, monRect.left + 8, yOffset, "No active buffs. Drink an elixir!", 33);
+                }
+
+                SelectObject(hdc, oldP);
             } else {
                 // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
                 SelectObject(hdc, hGoldPen);
