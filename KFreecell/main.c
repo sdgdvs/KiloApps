@@ -20,10 +20,11 @@ typedef struct {
     int s; // 0=Spades, 1=Hearts, 2=Clubs, 3=Diamonds
     int r; // 1-13
     int color; // 0=Black, 1=Red
+    int frozen; // 0=Normal, 1=Frozen
 } Card;
 
 Card deck[52];
-#define MAX_FREE_CELLS 5
+#define MAX_FREE_CELLS 6
 Card freeCells[MAX_FREE_CELLS];
 int freeCellsOccupied[MAX_FREE_CELLS];
 int numFreeCells = 4;
@@ -46,12 +47,16 @@ int statsPlayed = 0;
 int statsWins = 0;
 int statsStreak = 0;
 int statsBestStreak = 0;
+int statsBestTime = 0;
 int campaignStage = 1;
 int maxCampaignStage = 1;
 int powerupsShuffle = 1;
 int powerupsWand = 1;
 int powerupsExtraCell = 1;
 int settingsCardBack = 0;
+
+int extraCellActive = 0;
+int extraCellTimer = 0;
 
 int moves = 0;
 int timeElapsed = 0;
@@ -87,7 +92,6 @@ typedef struct {
 #define MAX_ANIMS 52
 Animation anims[MAX_ANIMS];
 
-// Victory Cascade Physics
 typedef struct {
     int active;
     Card c;
@@ -157,6 +161,7 @@ int GetCardY(int type, int idx, int cIdx, RECT clientRect) {
 typedef struct {
     Card freeCells[MAX_FREE_CELLS];
     int freeCellsOccupied[MAX_FREE_CELLS];
+    int numFreeCells;
     int found[4];
     Card tab[8][52];
     int tabCount[8];
@@ -179,6 +184,7 @@ void PushUndo() {
         undoStack[undoCount].freeCells[i] = freeCells[i];
         undoStack[undoCount].freeCellsOccupied[i] = freeCellsOccupied[i];
     }
+    undoStack[undoCount].numFreeCells = numFreeCells;
     for(int i=0; i<4; i++) {
         undoStack[undoCount].found[i] = found[i];
     }
@@ -217,6 +223,22 @@ void PlaySoundEffect(int type) {
     CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
+void ThawCheck() {
+    for (int i = 0; i < 8; i++) {
+        if (tabCount[i] > 0) {
+            tab[i][tabCount[i] - 1].frozen = 0;
+        }
+    }
+}
+
+void ThawAdjacent(int col) {
+    for (int c = col - 1; c <= col + 1; c++) {
+        if (c >= 0 && c < 8 && tabCount[c] > 0) {
+            tab[c][tabCount[c] - 1].frozen = 0;
+        }
+    }
+}
+
 void StartVictoryCascade(HWND hwnd) {
     RECT clientRect; GetClientRect(hwnd, &clientRect);
     cascadeActive = 1;
@@ -227,6 +249,7 @@ void StartVictoryCascade(HWND hwnd) {
             cascadeCards[idx].c.s = s;
             cascadeCards[idx].c.r = r;
             cascadeCards[idx].c.color = (s==1||s==3)?1:0;
+            cascadeCards[idx].c.frozen = 0;
             cascadeCards[idx].x = (float)GetCardX(2, s, 0, clientRect);
             cascadeCards[idx].y = (float)GetCardY(2, s, 0, clientRect);
             cascadeCards[idx].vx = (float)((rand() % 16) - 8);
@@ -241,33 +264,32 @@ void StartVictoryCascade(HWND hwnd) {
 void ShowStats(HWND hwnd) {
     WCHAR msg[512];
     int pct = statsPlayed > 0 ? (statsWins * 100) / statsPlayed : 0;
-    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d\nCampaign Progress: Stage %d / 15\nTime Attack Wins: %d\nBest Time Attack Win: %d sec",
-              statsPlayed, statsWins, pct, statsStreak, statsBestStreak, maxCampaignStage, statsTimeAttackWins, statsBestTimeAttackTime);
+    wsprintfW(msg, L"Games Played: %d\nWins: %d (%d%%)\nCurrent Streak: %d\nBest Streak: %d\nBest Time: %d sec\nCampaign Progress: Stage %d / 20\nTime Attack Wins: %d\nBest Time Attack Win: %d sec",
+              statsPlayed, statsWins, pct, statsStreak, statsBestStreak, statsBestTime, maxCampaignStage, statsTimeAttackWins, statsBestTimeAttackTime);
     MessageBoxW(hwnd, msg, L"Statistics", MB_OK | MB_ICONINFORMATION);
 }
 
 void ShowHelp(HWND hwnd) {
     WCHAR msg[2048] = 
-        L"How to Play Freecell\n\n"
+        L"How to Play Freecell (Loop 7 Expansion)\n\n"
         L"Rules:\n"
         L"- Build all 4 foundations from Ace to King by suit.\n"
-        L"- Move cards between tableau columns. Cards must be placed in descending order and alternating colors.\n"
-        L"- You can use the free cells at the top left to temporarily store single cards.\n"
+        L"- Move cards between tableau columns. Cards must be placed in descending order (Alt colors or Baker's Suit).\n"
+        L"- Free cells store single cards. Extra cells can be unlocked temporarily.\n"
         L"- Moving multiple cards requires enough empty free cells/columns.\n"
-        L"- Cards can be moved to empty tableau columns (some campaign stages require Kings).\n\n"
-        L"Controls:\n"
-        L"- Click a card to select it, then click a destination to move.\n"
-        L"- Cards move to foundations automatically when safe.\n"
-        L"- Key bindings: [N]ew Game, [Z]Undo, [S]tats, [C]hange Card Back, [M]ode Toggle, [+]Next Seed, [-]Prev Seed, [P]Shuffle, [W]Wand, [E]Extra Cell, [F5]Save, [F9]Load, [H]elp.\n\n"
+        L"- Some campaign stages restrict empty columns to Kings only or contain Frozen cards.\n"
+        L"- Frozen cards thaw when exposed at column top or when adjacent plays occur.\n\n"
+        L"Active Skills & Controls:\n"
+        L"- [W] Magic Wand: Auto-detects and plays optimal safe cards.\n"
+        L"- [E] Extra Freecell: Unlocks +1 temporary Free Cell slot for 30 seconds!\n"
+        L"- [A] Auto-Solve: Continuously sweeps safe cards to foundations.\n"
+        L"- [U] / [Z] Free Undo: Unlimited move undo.\n"
+        L"- [P] Shuffle: Shuffles remaining tableau cards in place.\n"
+        L"- Key bindings: [N]ew Game, [S]tats, [C]hange Card Back, [M]ode Toggle, [+]Next Seed, [-]Prev Seed, [F5]Save, [F9]Load, [H]elp.\n\n"
         L"Modes:\n"
-        L"- Random Deal: A completely shuffled deck.\n"
-        L"- Numbered Deal: Deals based on a specific seed number (use +/- to change).\n"
-        L"- Campaign: 15 stages of increasing difficulty (fewer free cells, Baker's Game rules, King-only spaces).\n"
-        L"- Time Attack: 180s countdown timer! Foundations give +15s bonus time.\n\n"
-        L"Power-ups:\n"
-        L"- [P] Shuffle: Shuffles tableau cards in place (1 per game).\n"
-        L"- [W] Magic Wand: Automatically sweeps safe cards to foundations (1 per game).\n"
-        L"- [E] Extra Cell: Adds +1 temporary Free Cell slot (1 per game).";
+        L"- Random Deal / Numbered Deal.\n"
+        L"- Campaign: 20 stages featuring 4-cell, 3-cell, 2-cell constraints, Baker's rules, King-only spaces, Frozen cards, and Stage 20 Grandmaster Challenge.\n"
+        L"- Time Attack: 180s countdown timer! Foundations give +15s bonus time.";
     MessageBoxW(hwnd, msg, L"Help", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -278,6 +300,7 @@ void UndoMove(HWND hwnd) {
             freeCells[i] = undoStack[undoCount].freeCells[i];
             freeCellsOccupied[i] = undoStack[undoCount].freeCellsOccupied[i];
         }
+        numFreeCells = undoStack[undoCount].numFreeCells;
         for(int i=0; i<4; i++) {
             found[i] = undoStack[undoCount].found[i];
         }
@@ -300,6 +323,7 @@ void SaveGame(HWND hwnd) {
     if(f) {
         fwrite(&freeCells, sizeof(freeCells), 1, f);
         fwrite(&freeCellsOccupied, sizeof(freeCellsOccupied), 1, f);
+        fwrite(&numFreeCells, sizeof(numFreeCells), 1, f);
         fwrite(&found, sizeof(found), 1, f);
         fwrite(&tab, sizeof(tab), 1, f);
         fwrite(&tabCount, sizeof(tabCount), 1, f);
@@ -308,6 +332,7 @@ void SaveGame(HWND hwnd) {
         fwrite(&statsWins, sizeof(statsWins), 1, f);
         fwrite(&statsStreak, sizeof(statsStreak), 1, f);
         fwrite(&statsBestStreak, sizeof(statsBestStreak), 1, f);
+        fwrite(&statsBestTime, sizeof(statsBestTime), 1, f);
         fwrite(&gameMode, sizeof(gameMode), 1, f);
         fwrite(&currentSeed, sizeof(currentSeed), 1, f);
         fwrite(&undoCount, sizeof(undoCount), 1, f);
@@ -333,6 +358,7 @@ void LoadGame(HWND hwnd) {
     if(f) {
         fread(&freeCells, sizeof(freeCells), 1, f);
         fread(&freeCellsOccupied, sizeof(freeCellsOccupied), 1, f);
+        if(fread(&numFreeCells, sizeof(numFreeCells), 1, f) != 1) numFreeCells = 4;
         fread(&found, sizeof(found), 1, f);
         fread(&tab, sizeof(tab), 1, f);
         fread(&tabCount, sizeof(tabCount), 1, f);
@@ -341,6 +367,7 @@ void LoadGame(HWND hwnd) {
         fread(&statsWins, sizeof(statsWins), 1, f);
         fread(&statsStreak, sizeof(statsStreak), 1, f);
         fread(&statsBestStreak, sizeof(statsBestStreak), 1, f);
+        if(fread(&statsBestTime, sizeof(statsBestTime), 1, f) != 1) statsBestTime = 0;
         if(fread(&gameMode, sizeof(gameMode), 1, f) != 1) gameMode = 0;
         if(fread(&currentSeed, sizeof(currentSeed), 1, f) != 1) currentSeed = 1;
         fread(&undoCount, sizeof(undoCount), 1, f);
@@ -382,6 +409,8 @@ void InitGame() {
     moves = 0;
     timeElapsed = 0;
     lastTimeTick = GetTickCount();
+    extraCellActive = 0;
+    extraCellTimer = 0;
 
     won = 0;
     selType = -1;
@@ -389,25 +418,32 @@ void InitGame() {
     ClearAnims();
     
     emptyKingOnly = 0;
+    int frozenCount = 0;
     if (gameMode == 2) {
-        if (campaignStage == 1) { numFreeCells = 5; buildRule = 0; }
-        else if (campaignStage == 2) { numFreeCells = 5; buildRule = 1; }
-        else if (campaignStage == 3) { numFreeCells = 4; buildRule = 0; }
-        else if (campaignStage == 4) { numFreeCells = 4; buildRule = 0; }
-        else if (campaignStage == 5) { numFreeCells = 4; buildRule = 1; }
-        else if (campaignStage == 6) { numFreeCells = 4; buildRule = 1; }
-        else if (campaignStage == 7) { numFreeCells = 3; buildRule = 0; }
-        else if (campaignStage == 8) { numFreeCells = 3; buildRule = 0; }
-        else if (campaignStage == 9) { numFreeCells = 3; buildRule = 1; }
-        else if (campaignStage == 10) { numFreeCells = 2; buildRule = 0; }
-        else if (campaignStage == 11) { numFreeCells = 3; buildRule = 1; }
-        else if (campaignStage == 12) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 1; }
-        else if (campaignStage == 13) { numFreeCells = 2; buildRule = 1; }
-        else if (campaignStage == 14) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; }
-        else if (campaignStage >= 15) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; }
+        if (campaignStage == 1) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 0; }
+        else if (campaignStage == 2) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 0; }
+        else if (campaignStage == 3) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 1; }
+        else if (campaignStage == 4) { numFreeCells = 4; buildRule = 1; emptyKingOnly = 1; }
+        else if (campaignStage == 5) { numFreeCells = 4; buildRule = 0; emptyKingOnly = 0; frozenCount = 4; }
+        else if (campaignStage == 6) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; }
+        else if (campaignStage == 7) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 0; }
+        else if (campaignStage == 8) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 1; }
+        else if (campaignStage == 9) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; }
+        else if (campaignStage == 10) { numFreeCells = 3; buildRule = 0; emptyKingOnly = 0; frozenCount = 6; }
+        else if (campaignStage == 11) { numFreeCells = 3; buildRule = 1; emptyKingOnly = 1; frozenCount = 6; }
+        else if (campaignStage == 12) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 0; }
+        else if (campaignStage == 13) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 0; }
+        else if (campaignStage == 14) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 1; }
+        else if (campaignStage == 15) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; }
+        else if (campaignStage == 16) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 0; frozenCount = 8; }
+        else if (campaignStage == 17) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 0; frozenCount = 8; }
+        else if (campaignStage == 18) { numFreeCells = 2; buildRule = 0; emptyKingOnly = 1; frozenCount = 8; }
+        else if (campaignStage == 19) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; frozenCount = 8; }
+        else if (campaignStage >= 20) { numFreeCells = 2; buildRule = 1; emptyKingOnly = 1; frozenCount = 10; }
     } else {
         numFreeCells = 4;
         buildRule = 0;
+        emptyKingOnly = 0;
     }
     powerupsShuffle = 1;
     powerupsWand = 1;
@@ -433,6 +469,7 @@ void InitGame() {
             deck[c].s = s;
             deck[c].r = r;
             deck[c].color = (s==1 || s==3) ? 1 : 0;
+            deck[c].frozen = 0;
             deckPtrs[c] = &deck[c];
             c++;
         }
@@ -461,6 +498,19 @@ void InitGame() {
         tab[c][tabCount[c]++] = *deckPtrs[i];
         c = (c + 1) % 8;
     }
+
+    if (frozenCount > 0) {
+        int count = 0;
+        for (int j = 4; j >= 1 && count < frozenCount; j--) {
+            for (int i = 0; i < 8 && count < frozenCount; i++) {
+                if (j < tabCount[i]) {
+                    tab[i][j].frozen = 1;
+                    count++;
+                }
+            }
+        }
+    }
+    ThawCheck();
 }
 
 int GetMaxMoveCount() {
@@ -472,6 +522,7 @@ int GetMaxMoveCount() {
 }
 
 int CanMoveToTab(Card c, int tIdx) {
+    if (c.frozen) return 0;
     if(tabCount[tIdx] == 0) {
         if (emptyKingOnly) return c.r == 13;
         return 1;
@@ -485,9 +536,11 @@ int CanMoveToTab(Card c, int tIdx) {
 
 int GetDraggableGroup(int tIdx, int startIdx) {
     if(startIdx >= tabCount[tIdx]) return 0;
+    if(tab[tIdx][startIdx].frozen) return 0;
     for(int i=startIdx+1; i<tabCount[tIdx]; i++) {
         Card prev = tab[tIdx][i-1];
         Card curr = tab[tIdx][i];
+        if (curr.frozen) return 0;
         if (buildRule == 1) {
             if(curr.s != prev.s || curr.r != prev.r - 1) return 0;
         } else {
@@ -505,7 +558,8 @@ void CheckWin(HWND hwnd) {
             statsWins++;
             statsStreak++;
             if (statsStreak > statsBestStreak) statsBestStreak = statsStreak;
-            if (gameMode == 2 && campaignStage < 15) {
+            if (statsBestTime == 0 || timeElapsed < statsBestTime) statsBestTime = timeElapsed;
+            if (gameMode == 2 && campaignStage < 20) {
                 campaignStage++;
                 if (campaignStage > maxCampaignStage) maxCampaignStage = campaignStage;
             }
@@ -524,6 +578,7 @@ void CheckWin(HWND hwnd) {
 }
 
 int IsSafeToAutoMove(Card c) {
+    if (c.frozen) return 0;
     if (c.r <= 2) return 1;
     int minOppFound = 14;
     for (int i = 0; i < 4; i++) {
@@ -545,7 +600,7 @@ int AutoComplete(HWND hwnd) {
         for (int i = 0; i < numFreeCells; i++) {
             if (freeCellsOccupied[i]) {
                 Card c = freeCells[i];
-                if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
+                if (!c.frozen && c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
                     RECT clientRect; GetClientRect(hwnd, &clientRect);
                     StartAnim(c, GetCardX(0, i, 0, clientRect), GetCardY(0, i, 0, clientRect), GetCardX(2, c.s, 0, clientRect), GetCardY(2, c.s, 0, clientRect));
                     PushUndo();
@@ -564,7 +619,7 @@ int AutoComplete(HWND hwnd) {
         for (int i = 0; i < 8; i++) {
             if (tabCount[i] > 0) {
                 Card c = tab[i][tabCount[i]-1];
-                if (c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
+                if (!c.frozen && c.r == found[c.s] + 1 && IsSafeToAutoMove(c)) {
                     RECT clientRect; GetClientRect(hwnd, &clientRect);
                     StartAnim(c, GetCardX(1, i, tabCount[i]-1, clientRect), GetCardY(1, i, tabCount[i]-1, clientRect), GetCardX(2, c.s, 0, clientRect), GetCardY(2, c.s, 0, clientRect));
                     PushUndo();
@@ -579,6 +634,7 @@ int AutoComplete(HWND hwnd) {
             }
         }
     }
+    ThawCheck();
     return anyMoved;
 }
 
@@ -586,7 +642,44 @@ void UseWandPowerup(HWND hwnd) {
     if (gameInProgress && won == 0 && powerupsWand > 0) {
         powerupsWand--;
         PlaySoundEffect(3);
-        AutoComplete(hwnd);
+        int moved = AutoComplete(hwnd);
+        if (!moved) {
+            for (int i = 0; i < 8; i++) {
+                if (tabCount[i] > 0) {
+                    Card c = tab[i][tabCount[i]-1];
+                    if (!c.frozen && c.r == found[c.s] + 1) {
+                        PushUndo();
+                        found[c.s] = c.r;
+                        tabCount[i]--;
+                        moves++;
+                        moved = 1;
+                        break;
+                    }
+                }
+            }
+            if (!moved) {
+                for (int i = 0; i < numFreeCells; i++) {
+                    if (!freeCellsOccupied[i]) {
+                        for (int t = 0; t < 8; t++) {
+                            if (tabCount[t] > 0) {
+                                Card c = tab[t][tabCount[t]-1];
+                                if (!c.frozen) {
+                                    PushUndo();
+                                    freeCells[i] = c;
+                                    freeCellsOccupied[i] = 1;
+                                    tabCount[t]--;
+                                    moves++;
+                                    moved = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (moved) break;
+                    }
+                }
+            }
+        }
+        ThawCheck();
         CheckWin(hwnd);
         InvalidateRect(hwnd, NULL, TRUE);
     }
@@ -597,13 +690,25 @@ void UseExtraCellPowerup(HWND hwnd) {
         if (numFreeCells < MAX_FREE_CELLS) {
             powerupsExtraCell--;
             numFreeCells++;
+            extraCellActive = 1;
+            extraCellTimer = 30;
             PlaySoundEffect(3);
             InvalidateRect(hwnd, NULL, TRUE);
         }
     }
 }
 
-// Draw Suit Vector Shapes in GDI
+void UseAutoSolvePowerup(HWND hwnd) {
+    if (gameInProgress && won == 0) {
+        int moved = AutoComplete(hwnd);
+        if (moved) {
+            PlaySoundEffect(3);
+            CheckWin(hwnd);
+            InvalidateRect(hwnd, NULL, TRUE);
+        }
+    }
+}
+
 void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
     COLORREF color = (suitIdx == 1 || suitIdx == 3) ? RGB(211, 47, 47) : RGB(30, 30, 30);
     HBRUSH fillBrush = CreateSolidBrush(color);
@@ -612,25 +717,25 @@ void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
     SelectObject(hdc, nullPen);
     
     int r = size / 2;
-    if (suitIdx == 0) { // Spades
+    if (suitIdx == 0) {
         POINT topPt[3] = {{cx, cy - r}, {cx - r + 1, cy + r/3}, {cx + r - 1, cy + r/3}};
         Polygon(hdc, topPt, 3);
         Ellipse(hdc, cx - r, cy - r/4, cx, cy + r/2);
         Ellipse(hdc, cx, cy - r/4, cx + r, cy + r/2);
         POINT stemPt[3] = {{cx, cy}, {cx - r/2, cy + r}, {cx + r/2, cy + r}};
         Polygon(hdc, stemPt, 3);
-    } else if (suitIdx == 1) { // Hearts
+    } else if (suitIdx == 1) {
         Ellipse(hdc, cx - r, cy - r, cx + 1, cy + r/4);
         Ellipse(hdc, cx - 1, cy - r, cx + r, cy + r/4);
         POINT botPt[3] = {{cx - r + 1, cy - r/4}, {cx + r - 1, cy - r/4}, {cx, cy + r}};
         Polygon(hdc, botPt, 3);
-    } else if (suitIdx == 2) { // Clubs
+    } else if (suitIdx == 2) {
         Ellipse(hdc, cx - r/2 - 1, cy - r, cx + r/2 + 1, cy);
         Ellipse(hdc, cx - r, cy - r/2, cx, cy + r/2);
         Ellipse(hdc, cx, cy - r/2, cx + r, cy + r/2);
         POINT stemPt[3] = {{cx, cy}, {cx - r/2, cy + r}, {cx + r/2, cy + r}};
         Polygon(hdc, stemPt, 3);
-    } else { // Diamonds
+    } else {
         POINT diaPt[4] = {{cx, cy - r}, {cx + r, cy}, {cx, cy + r}, {cx - r, cy}};
         Polygon(hdc, diaPt, 4);
     }
@@ -640,9 +745,8 @@ void DrawSuitGDI(HDC hdc, int cx, int cy, int size, int suitIdx) {
 }
 
 void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
-    // Card Body Shading & Border
-    HBRUSH bg = CreateSolidBrush(RGB(252, 252, 252));
-    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : 1, selected ? RGB(255, 215, 0) : RGB(180, 180, 180));
+    HBRUSH bg = CreateSolidBrush(c.frozen ? RGB(224, 247, 250) : RGB(252, 252, 252));
+    HPEN pen = CreatePen(PS_SOLID, selected ? 3 : (c.frozen ? 2 : 1), selected ? RGB(255, 215, 0) : (c.frozen ? RGB(0, 188, 212) : RGB(180, 180, 180)));
     
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
@@ -651,19 +755,17 @@ void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
     DeleteObject(pen);
     
     SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, c.color ? RGB(211, 47, 47) : RGB(30, 30, 30));
+    SetTextColor(hdc, c.frozen ? RGB(0, 131, 143) : (c.color ? RGB(211, 47, 47) : RGB(30, 30, 30)));
     
     WCHAR *ranks[] = {L"A",L"2",L"3",L"4",L"5",L"6",L"7",L"8",L"9",L"10",L"J",L"Q",L"K"};
     
     HFONT hFont = CreateFontW(14, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Arial");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
     
-    // Top-left Rank Text
     RECT rT = {x + 4, y + 4, x + 24, y + 20};
     DrawTextW(hdc, ranks[c.r-1], -1, &rT, DT_LEFT | DT_TOP);
     DrawSuitGDI(hdc, x + 12, y + 26, 10, c.s);
     
-    // Bottom-right Rank Text (Rotated 180 effect simulated)
     RECT rB = {x + CELL_W - 24, y + CELL_H - 20, x + CELL_W - 4, y + CELL_H - 4};
     DrawTextW(hdc, ranks[c.r-1], -1, &rB, DT_RIGHT | DT_BOTTOM);
     DrawSuitGDI(hdc, x + CELL_W - 12, y + CELL_H - 26, 10, c.s);
@@ -671,15 +773,22 @@ void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
     SelectObject(hdc, hOldFont);
     DeleteObject(hFont);
     
-    // Center Face / Court Portrait / Pips
-    if (c.r == 1) { // Ace Emblem
+    if (c.frozen) {
+        HFONT hIceFont = CreateFontW(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+        HFONT hOldIce = (HFONT)SelectObject(hdc, hIceFont);
+        SetTextColor(hdc, RGB(0, 150, 180));
+        RECT rIce = {x + 2, y + CELL_H/2 - 8, x + CELL_W - 2, y + CELL_H/2 + 10};
+        DrawTextW(hdc, L"FROZEN", -1, &rIce, DT_CENTER | DT_SINGLELINE);
+        SelectObject(hdc, hOldIce);
+        DeleteObject(hIceFont);
+    } else if (c.r == 1) {
         DrawSuitGDI(hdc, x + CELL_W/2, y + CELL_H/2, 24, c.s);
         HPEN ringPen = CreatePen(PS_DOT, 1, RGB(212, 175, 55));
         SelectObject(hdc, ringPen);
         SelectObject(hdc, GetStockObject(NULL_BRUSH));
         Ellipse(hdc, x + CELL_W/2 - 18, y + CELL_H/2 - 18, x + CELL_W/2 + 18, y + CELL_H/2 + 18);
         DeleteObject(ringPen);
-    } else if (c.r >= 11) { // Court Portraits (J, Q, K)
+    } else if (c.r >= 11) {
         int px = x + 14, py = y + 22, pw = CELL_W - 28, ph = CELL_H - 44;
         HBRUSH portraitBg = CreateSolidBrush(RGB(253, 251, 247));
         HPEN goldPen = CreatePen(PS_SOLID, 1, RGB(212, 175, 55));
@@ -692,40 +801,31 @@ void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
         HBRUSH faceBrush = CreateSolidBrush(RGB(255, 224, 189));
         HBRUSH crownBrush = CreateSolidBrush(RGB(255, 215, 0));
         
-        if (c.r == 11) { // Jack (Knight)
-            // Plume & Helmet
+        if (c.r == 11) {
             SelectObject(hdc, suitBrush);
             POINT hat[3] = {{px + pw/2, py + 4}, {px + 4, py + 14}, {px + pw - 4, py + 14}};
             Polygon(hdc, hat, 3);
-            // Face
             SelectObject(hdc, faceBrush);
             Ellipse(hdc, px + pw/2 - 6, py + 14, px + pw/2 + 6, py + 26);
-            // Armor tunic
             SelectObject(hdc, suitBrush);
             Rectangle(hdc, px + 6, py + 26, px + pw - 6, py + ph - 4);
-        } else if (c.r == 12) { // Queen
-            // Crown
+        } else if (c.r == 12) {
             SelectObject(hdc, crownBrush);
             POINT crown[5] = {{px + 6, py + 14}, {px + 10, py + 6}, {px + pw/2, py + 10}, {px + pw - 10, py + 6}, {px + pw - 6, py + 14}};
             Polygon(hdc, crown, 5);
-            // Face & Hair
             SelectObject(hdc, faceBrush);
             Ellipse(hdc, px + pw/2 - 6, py + 14, px + pw/2 + 6, py + 26);
-            // Gown
             SelectObject(hdc, suitBrush);
             Rectangle(hdc, px + 6, py + 26, px + pw - 6, py + ph - 4);
-        } else { // King
-            // Crown
+        } else {
             SelectObject(hdc, crownBrush);
             Rectangle(hdc, px + 6, py + 6, px + pw - 6, py + 14);
-            // Face & Beard
             SelectObject(hdc, faceBrush);
             Ellipse(hdc, px + pw/2 - 7, py + 14, px + pw/2 + 7, py + 27);
             HBRUSH beardBrush = CreateSolidBrush(RGB(109, 76, 65));
             SelectObject(hdc, beardBrush);
             Ellipse(hdc, px + pw/2 - 5, py + 22, px + pw/2 + 5, py + 30);
             DeleteObject(beardBrush);
-            // Robe
             SelectObject(hdc, suitBrush);
             Rectangle(hdc, px + 4, py + 30, px + pw - 4, py + ph - 4);
         }
@@ -735,7 +835,7 @@ void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
         DeleteObject(suitBrush);
         DeleteObject(faceBrush);
         DeleteObject(crownBrush);
-    } else { // Number Pips (2-10)
+    } else {
         int cx = x + CELL_W / 2;
         int cy = y + CELL_H / 2;
         if (c.r == 2) {
@@ -756,7 +856,6 @@ void DrawCard(HDC hdc, int x, int y, Card c, int selected) {
 }
 
 void DrawEmptyCell(HDC hdc, int x, int y, int isFound, int suitIdx) {
-    // Brass / Gold Slot Outline
     HBRUSH bg = CreateSolidBrush(RGB(10, 40, 20));
     HPEN pen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
     SelectObject(hdc, bg);
@@ -772,23 +871,21 @@ void DrawEmptyCell(HDC hdc, int x, int y, int isFound, int suitIdx) {
 
 void DrawCardBack(HDC hdc, int x, int y, int type) {
     HBRUSH bg;
-    if (type == 0) bg = CreateSolidBrush(RGB(30, 60, 114)); // Royal Blue
-    else if (type == 1) bg = CreateSolidBrush(RGB(128, 0, 0)); // Crimson Red
-    else if (type == 2) bg = CreateSolidBrush(RGB(0, 77, 64)); // Emerald Green
-    else bg = CreateSolidBrush(RGB(33, 33, 33)); // Obsidian Dark
+    if (type == 0) bg = CreateSolidBrush(RGB(30, 60, 114));
+    else if (type == 1) bg = CreateSolidBrush(RGB(128, 0, 0));
+    else if (type == 2) bg = CreateSolidBrush(RGB(0, 77, 64));
+    else bg = CreateSolidBrush(RGB(33, 33, 33));
 
     HPEN pen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
     SelectObject(hdc, bg);
     SelectObject(hdc, pen);
     RoundRect(hdc, x, y, x + CELL_W, y + CELL_H, 10, 10);
     
-    // Inner Lattice
     HPEN innerPen = CreatePen(PS_SOLID, 1, RGB(255, 215, 0));
     SelectObject(hdc, innerPen);
     SelectObject(hdc, GetStockObject(NULL_BRUSH));
     RoundRect(hdc, x + 5, y + 5, x + CELL_W - 5, y + CELL_H - 5, 6, 6);
     
-    // Center Golden Shield Logo "K"
     HBRUSH goldBrush = CreateSolidBrush(RGB(212, 175, 55));
     SelectObject(hdc, goldBrush);
     POINT shield[4] = {{x + CELL_W/2, y + 25}, {x + CELL_W/2 + 14, y + 35}, {x + CELL_W/2, y + 65}, {x + CELL_W/2 - 14, y + 35}};
@@ -829,12 +926,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBITMAP hbmMem = CreateCompatibleBitmap(hdc, clientRect.right, clientRect.bottom);
             HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmMem);
             
-            // Rich Green Felt Casino Table Background
             HBRUSH hbrBg = CreateSolidBrush(RGB(16, 96, 48));
             FillRect(hdcMem, &clientRect, hbrBg);
             DeleteObject(hbrBg);
             
-            // Outer felt vignette border
             HPEN feltBorder = CreatePen(PS_SOLID, 8, RGB(8, 48, 24));
             SelectObject(hdcMem, feltBorder);
             SelectObject(hdcMem, GetStockObject(NULL_BRUSH));
@@ -843,7 +938,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetBkMode(hdcMem, TRANSPARENT);
             SetTextColor(hdcMem, RGB(255, 215, 0));
-            HFONT hTitleFont = CreateFontW(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
+            HFONT hTitleFont = CreateFontW(17, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, L"Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdcMem, hTitleFont);
             RECT titleRect = {0, 10, clientRect.right, 40};
             WCHAR titleMsg[256];
@@ -852,13 +947,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameMode == 3) {
                 int tm = timeRemaining / 60;
                 int ts = timeRemaining % 60;
-                wsprintfW(titleMsg, L"TIME LEFT: %02d:%02d (+15s)  Moves: %d  |  [M]ode: Time Attack  |  [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", tm, ts, moves, powerupsShuffle, powerupsWand, powerupsExtraCell);
+                wsprintfW(titleMsg, L"TIME LEFT: %02d:%02d (+15s)  Moves: %d  |  Time Attack  |  [W]Wand(%d) [E]Cell(%d) [A]Solve [U]Undo [P]Shuf(%d)", tm, ts, moves, powerupsWand, powerupsExtraCell, powerupsShuffle);
             } else if (gameMode == 2) {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Stage %d/15 (%s%s)  |  [M]ode [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", m, s, moves, campaignStage, buildRule==1?L"Suit":L"Color", emptyKingOnly?L"+King":L"", powerupsShuffle, powerupsWand, powerupsExtraCell);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Stage %d/20 (%s%s)  |  [W]Wand(%d) [E]Cell(%d) [A]Solve [U]Undo [P]Shuf(%d)", m, s, moves, campaignStage, buildRule==1?L"Suit":L"Color", emptyKingOnly?L"+King":L"", powerupsWand, powerupsExtraCell, powerupsShuffle);
             } else if (gameMode == 1) {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Deal #%d (+/-)  |  [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", m, s, moves, currentSeed, powerupsShuffle, powerupsWand, powerupsExtraCell);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Deal #%d (+/-)  |  [W]Wand(%d) [E]Cell(%d) [A]Solve [U]Undo [P]Shuf(%d)", m, s, moves, currentSeed, powerupsWand, powerupsExtraCell, powerupsShuffle);
             } else {
-                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  [M]ode: Random  |  [P]Shuf(%d) [W]Wand(%d) [E]Cell(%d)", m, s, moves, powerupsShuffle, powerupsWand, powerupsExtraCell);
+                wsprintfW(titleMsg, L"Time: %02d:%02d  Moves: %d  |  Random Deal  |  [W]Wand(%d) [E]Cell(%d) [A]Solve [U]Undo [P]Shuf(%d)", m, s, moves, powerupsWand, powerupsExtraCell, powerupsShuffle);
             }
             DrawTextW(hdcMem, titleMsg, -1, &titleRect, DT_CENTER | DT_TOP);
             if(won == 1) {
@@ -894,12 +989,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for(int i=0; i<4; i++) {
                 int x = group2X + i*(CELL_W + TAB_PAD_X);
                 if(found[i] > 0) {
-                    Card c = {i, found[i], (i==1||i==3)?1:0};
+                    Card c = {i, found[i], (i==1||i==3)?1:0, 0};
                     int ax, ay;
                     if(!IsAnimating(c, &ax, &ay)) {
                         DrawCard(hdcMem, x, TOP_Y, c, 0);
                     } else if(found[i] > 1) {
-                        Card cPrev = {i, found[i]-1, (i==1||i==3)?1:0};
+                        Card cPrev = {i, found[i]-1, (i==1||i==3)?1:0, 0};
                         DrawCard(hdcMem, x, TOP_Y, cPrev, 0);
                     } else {
                         DrawEmptyCell(hdcMem, x, TOP_Y, 1, i);
@@ -937,7 +1032,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Draw Cascade Cards on Win
             if (cascadeActive) {
                 for(int i=0; i<MAX_CASCADE; i++) {
                     if (cascadeCards[i].active) {
@@ -964,11 +1058,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT clientRect;
             GetClientRect(hwnd, &clientRect);
             
-            int clickedType = -1; // 0=free, 1=tab, 2=found
+            int clickedType = -1;
             int clickedIdx = -1;
             int clickedCardIdx = 0;
             
-            // Check Free Cells
             int group1X = PAD;
             for(int i=0; i<numFreeCells; i++) {
                 int x = group1X + i*(CELL_W + TAB_PAD_X);
@@ -979,7 +1072,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Check Foundations
             if(clickedType == -1) {
                 int group2X = clientRect.right - PAD - 4*(CELL_W + TAB_PAD_X);
                 for(int i=0; i<4; i++) {
@@ -992,7 +1084,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            // Check Tableau
             if(clickedType == -1) {
                 int totalTabW = 8 * CELL_W + 7 * TAB_PAD_X;
                 int tabStartX = (clientRect.right - totalTabW) / 2;
@@ -1023,8 +1114,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
             
-            if(selType == -1) { // Select
+            if(selType == -1) {
                 if(clickedType == 1 && tabCount[clickedIdx] > 0) {
+                    if (tab[clickedIdx][clickedCardIdx].frozen) {
+                        PlaySoundEffect(4);
+                        return 0;
+                    }
                     int groupSize = GetDraggableGroup(clickedIdx, clickedCardIdx);
                     if(groupSize > 0 && groupSize <= GetMaxMoveCount()) {
                         selType = clickedType;
@@ -1033,12 +1128,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         PlaySoundEffect(0);
                     }
                 } else if(clickedType == 0 && freeCellsOccupied[clickedIdx]) {
+                    if (freeCells[clickedIdx].frozen) {
+                        PlaySoundEffect(4);
+                        return 0;
+                    }
                     selType = clickedType;
                     selIdx = clickedIdx;
                     selCardIdx = 0;
                     PlaySoundEffect(0);
                 }
-            } else { // Move
+            } else {
                 int moved = 0;
                 
                 Card cardsToMove[52];
@@ -1053,7 +1152,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     cardsToMove[0] = freeCells[selIdx];
                 }
                 
-                if(clickedType == 1) { // move to tableau
+                if(clickedType == 1) {
                     int emptyFree = 0;
                     for(int i=0; i<numFreeCells; i++) if(!freeCellsOccupied[i]) emptyFree++;
                     int emptyTab = 0;
@@ -1090,9 +1189,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     moves++;
                     if(selType == 1) {
                         tabCount[selIdx] = selCardIdx;
+                        ThawAdjacent(selIdx);
                     } else if(selType == 0) {
                         freeCellsOccupied[selIdx] = 0;
+                        if (extraCellActive && extraCellTimer == 0 && selIdx == numFreeCells - 1) {
+                            numFreeCells--;
+                            extraCellActive = 0;
+                        }
                     }
+                    if (clickedType == 1) ThawAdjacent(clickedIdx);
                     PlaySoundEffect(1);
                     AutoComplete(hwnd);
                     CheckWin(hwnd);
@@ -1109,6 +1214,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if(wParam == 'Z' || wParam == 'U') {
                 UndoMove(hwnd);
+            } else if(wParam == 'A') {
+                UseAutoSolvePowerup(hwnd);
             } else if(wParam == 'S') {
                 ShowStats(hwnd);
             } else if(wParam == 'C') {
@@ -1158,6 +1265,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             tab[i][j] = flat[flatCount++];
                         }
                     }
+                    ThawCheck();
                     PlaySoundEffect(1);
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
@@ -1193,7 +1301,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         remaining = 1;
                         cascadeCards[i].x += cascadeCards[i].vx;
                         cascadeCards[i].y += cascadeCards[i].vy;
-                        cascadeCards[i].vy += 0.5f; // Gravity
+                        cascadeCards[i].vy += 0.5f;
                         
                         if (cascadeCards[i].y >= clientRect.bottom - CELL_H) {
                             cascadeCards[i].y = (float)(clientRect.bottom - CELL_H);
@@ -1211,6 +1319,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(gameInProgress && won == 0) {
                 if(now - lastTimeTick >= 1000) {
                     timeElapsed++;
+                    if (extraCellActive && extraCellTimer > 0) {
+                        extraCellTimer--;
+                        if (extraCellTimer == 0) {
+                            int extraIdx = numFreeCells - 1;
+                            if (!freeCellsOccupied[extraIdx]) {
+                                numFreeCells--;
+                                extraCellActive = 0;
+                            }
+                        }
+                    }
                     if (gameMode == 3) {
                         timeRemaining--;
                         if (timeRemaining <= 30 && timeRemaining > 0 && timeRemaining % 5 == 0) {

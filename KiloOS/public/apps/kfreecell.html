@@ -118,6 +118,18 @@
     box-shadow: 0 0 20px #ffd700, 0 10px 20px rgba(0,0,0,0.6);
     transform: translateY(-5px);
   }
+  .card.frozen {
+    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+    border: 2px solid #00bcd4;
+    color: #00838f;
+    box-shadow: 0 0 12px rgba(0, 188, 212, 0.6);
+  }
+  .card.frozen::after {
+    content: "❄ FROZEN";
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 10px; font-weight: 900; color: #006064; background: rgba(255,255,255,0.7);
+    padding: 2px 4px; border-radius: 4px; border: 1px solid #00bcd4; pointer-events: none;
+  }
   .card.red { color: #d32f2f; }
   .card.black { color: #1e1e1e; }
   
@@ -159,12 +171,13 @@
         <option value="timeattack">Time Attack</option>
       </select>
       <input type="number" id="seed-input" class="btn" style="width: 60px; display: none; background:#2d2d30; color:#fff;" value="1" min="1" max="1000000" onchange="initGame()">
-      <button class="btn" onclick="undoMove()" title="Ctrl+Z">Undo</button>
+      <button class="btn" onclick="undoMove()" title="Free Unlimited Undo [U]">Undo [U]</button>
+      <button class="btn" onclick="autoSolvePowerup()" title="Auto-Solve Safe Cards [A]">Auto-Solve [A]</button>
+      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-detect safe card [W]">Wand [W]</button>
+      <button class="btn" onclick="extraCellPowerup()" title="Extra Cell: Unlocks +1 Free Cell slot for 30s [E]">+1 Cell [E]</button>
+      <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau Cards [P]">Shuffle [P]</button>
       <button class="btn" onclick="saveGame()">Save</button>
       <button class="btn" onclick="loadGame()">Load</button>
-      <button class="btn" onclick="shufflePowerup()" title="Shuffle Tableau (1 per game) [P]">Shuffle</button>
-      <button class="btn" onclick="wandPowerup()" title="Magic Wand: Auto-sweep safe cards (1 per game) [W]">Wand</button>
-      <button class="btn" onclick="extraCellPowerup()" title="Extra Cell: Add +1 Free Cell slot (1 per game) [E]">+1 Cell</button>
       <button class="btn" onclick="showStats()">Stats</button>
       <button class="btn" onclick="showSettings()">Settings</button>
       <button class="btn" onclick="showHelp()">Help</button>
@@ -179,9 +192,9 @@
       <h2 style="margin-top:0; color:#ffd700;">Statistics</h2>
       <p>Games Played: <span id="stat-played">0</span></p>
       <p>Wins: <span id="stat-wins">0</span> (<span id="stat-winpct">0</span>%)</p>
-      <p>Current Streak: <span id="stat-streak">0</span></p>
-      <p>Best Streak: <span id="stat-best">0</span></p>
-      <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 15</p>
+      <p>Current Streak: <span id="stat-streak">0</span> | Best Streak: <span id="stat-best">0</span></p>
+      <p>Best Time: <span id="stat-besttime">--</span></p>
+      <p>Campaign Progress: Stage <span id="stat-campaign">1</span> / 20</p>
       <p>Time Attack Wins: <span id="stat-tawins">0</span> (Best Win: <span id="stat-tabest">--</span>)</p>
       <button class="btn" style="margin-top:12px;" onclick="document.getElementById('stats-modal').style.display='none'">Close</button>
     </div>
@@ -198,34 +211,30 @@
   </div>
 
   <div id="help-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000;">
-    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; max-width:520px; text-align:left; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
-      <h2 style="margin-top:0; text-align:center; color:#ffd700;">How to Play Freecell</h2>
+    <div style="background:#1e2530; padding:24px; border-radius:10px; border:2px solid #d4af37; max-width:540px; text-align:left; box-shadow: 0 0 30px rgba(0,0,0,0.8);">
+      <h2 style="margin-top:0; text-align:center; color:#ffd700;">How to Play Freecell (Loop 7 Expansion)</h2>
       <p><b>Rules:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
         <li>Build all 4 foundations from Ace to King by suit.</li>
-        <li>Move cards between tableau columns. Cards must be placed in descending order and alternating colors.</li>
-        <li>You can use free cells at the top left to temporarily store single cards.</li>
-        <li>Moving multiple cards requires enough empty free cells/columns (calculated automatically).</li>
-        <li>Cards can be moved to empty tableau columns (some campaign stages require Kings).</li>
+        <li>Move cards between tableau columns (Alt colors or Baker's Suit rules).</li>
+        <li>Use Free Cells at the top left to store single cards. Extra cells can be unlocked temporarily.</li>
+        <li>Moving multiple cards requires enough empty free cells/columns.</li>
+        <li>Some campaign stages restrict empty tableau slots to Kings only or contain Frozen cards.</li>
+        <li>Frozen cards thaw when exposed at column top or when adjacent plays occur.</li>
       </ul>
-      <p><b>Controls:</b></p>
+      <p><b>Active Skills & Assistance:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
-        <li>Click a card to select it, then click a destination column, free cell, or foundation to move.</li>
-        <li>Cards move to foundations automatically when safe.</li>
-        <li>Use <b>Ctrl+Z</b> to Undo moves. Hotkeys: <b>[P]</b> Shuffle, <b>[W]</b> Wand, <b>[E]</b> Extra Cell.</li>
+        <li><b>[W] Magic Wand:</b> Auto-detects and plays 1 optimal safe card to Foundation or Freecell.</li>
+        <li><b>[E] Extra Cell:</b> Unlocks +1 temporary Free Cell slot for 30 seconds!</li>
+        <li><b>[A] Auto-Solve:</b> Continuously moves safe cards to Foundations.</li>
+        <li><b>[U] / [Z] Free Undo:</b> Unlimited move undo.</li>
+        <li><b>[P] Shuffle:</b> Shuffles remaining tableau cards in place.</li>
       </ul>
       <p><b>Modes:</b></p>
       <ul style="margin: 0; padding-left: 20px;">
-        <li><b>Random Deal:</b> A completely shuffled deck.</li>
-        <li><b>Numbered Deal:</b> Deals based on a specific seed number. Replayable!</li>
-        <li><b>Campaign Mode:</b> 15 stages of increasing difficulty.</li>
-        <li><b>Time Attack:</b> 180s countdown timer! Each foundation placement adds +15s bonus time.</li>
-      </ul>
-      <p><b>Power-ups:</b></p>
-      <ul style="margin: 0; padding-left: 20px;">
-        <li><b>[P] Shuffle:</b> Shuffles the tableau cards in place (1 use per game).</li>
-        <li><b>[W] Magic Wand:</b> Automatically sweeps safe cards to foundations (1 use per game).</li>
-        <li><b>[E] Extra Cell:</b> Grants +1 temporary Free Cell slot (1 use per game).</li>
+        <li><b>Random / Numbered Deal.</b></li>
+        <li><b>Campaign Mode:</b> 20 stages featuring 4-cell, 3-cell, 2-cell constraints, Baker's rules, King-only spaces, Frozen cards, and Stage 20 Grandmaster Challenge.</li>
+        <li><b>Time Attack:</b> 180s countdown timer! Foundations add +15s bonus time.</li>
       </ul>
       <div style="text-align:center; margin-top:15px;">
         <button class="btn" onclick="document.getElementById('help-modal').style.display='none'">Close</button>
@@ -299,6 +308,13 @@
         gain.gain.setValueAtTime(0.25, now);
         gain.gain.linearRampToValueAtTime(0, now + 1.2);
         osc.start(now); osc.stop(now + 1.2);
+      } else if (type === 'error') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
       }
     }
 
@@ -306,96 +322,81 @@
     const colors = ['black', 'red', 'black', 'red'];
     const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 
-    // SVG Suit Generator
     function getSuitSVG(s, size = 16) {
       const color = (s === 1 || s === 3) ? '#d32f2f' : '#1e1e1e';
-      if (s === 0) { // Spades
+      if (s === 0) {
         return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 2C9.5 6 4 10.5 4 14.5C4 17.5 6.5 19 9 19C10.5 19 11.5 18.2 12 17.5C12.5 18.2 13.5 19 15 19C17.5 19 20 17.5 20 14.5C20 10.5 14.5 6 12 2Z"/><path d="M12 16L9 22H15L12 16Z"/></svg>`;
-      } else if (s === 1) { // Hearts
+      } else if (s === 1) {
         return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`;
-      } else if (s === 2) { // Clubs
+      } else if (s === 2) {
         return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><circle cx="12" cy="7.5" r="4.5"/><circle cx="7.5" cy="14" r="4.5"/><circle cx="16.5" cy="14" r="4.5"/><path d="M12 14L9 22H15L12 14Z"/></svg>`;
-      } else { // Diamonds
+      } else {
         return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}"><path d="M12 2L3 12L12 22L21 12L12 2Z"/></svg>`;
       }
     }
 
-    // Court Card Portraits (J, Q, K) & Center Emblem SVG
     function getCardCenterSVG(c) {
       const isRed = (c.s === 1 || c.s === 3);
       const suitCol = isRed ? '#d32f2f' : '#1e1e1e';
       const goldCol = '#d4af37';
       
-      if (c.r === 1) { // Ace Emblem
+      if (c.r === 1) {
         return `<svg width="44" height="60" viewBox="0 0 44 60">
           <circle cx="22" cy="30" r="22" fill="none" stroke="${goldCol}" stroke-width="1.5" stroke-dasharray="3 2"/>
           <g transform="translate(10, 18)">${getSuitSVG(c.s, 24)}</g>
         </svg>`;
       }
       
-      if (c.r === 11) { // Jack Portrait
+      if (c.r === 11) {
         return `<svg width="42" height="62" viewBox="0 0 42 62">
           <rect x="2" y="2" width="38" height="58" rx="4" fill="#fdfbf7" stroke="${goldCol}" stroke-width="1.5"/>
           <path d="M6 16 L21 6 L36 16 L36 46 L21 56 L6 46 Z" fill="none" stroke="${suitCol}" stroke-width="1" opacity="0.4"/>
-          <!-- Helmet & Plume -->
           <path d="M14 18 C14 12 28 12 28 18 L30 24 L12 24 Z" fill="${suitCol}"/>
           <path d="M21 10 C18 4 24 2 28 6" stroke="${goldCol}" stroke-width="2" fill="none"/>
-          <!-- Face -->
           <circle cx="21" cy="28" r="7" fill="#ffe0bd"/>
           <circle cx="19" cy="27" r="1" fill="#333"/>
           <path d="M19 31 Q21 33 23 31" stroke="#333" stroke-width="1" fill="none"/>
-          <!-- Armor / Doublet -->
           <path d="M11 35 L31 35 L34 56 L8 56 Z" fill="${suitCol}"/>
           <path d="M21 35 L21 56" stroke="${goldCol}" stroke-width="1.5"/>
           <circle cx="21" cy="42" r="2" fill="${goldCol}"/>
-          <!-- Spearhead -->
           <path d="M33 20 L37 28 L29 28 Z" fill="${goldCol}"/>
           <line x1="33" y1="28" x2="33" y2="54" stroke="#8b5a2b" stroke-width="2"/>
         </svg>`;
       }
       
-      if (c.r === 12) { // Queen Portrait
+      if (c.r === 12) {
         return `<svg width="42" height="62" viewBox="0 0 42 62">
           <rect x="2" y="2" width="38" height="58" rx="4" fill="#fdfbf7" stroke="${goldCol}" stroke-width="1.5"/>
-          <!-- Crown -->
           <path d="M13 18 L16 12 L21 16 L26 12 L29 18 Z" fill="${goldCol}"/>
           <circle cx="16" cy="11" r="1.5" fill="${suitCol}"/>
           <circle cx="21" cy="15" r="1.5" fill="${suitCol}"/>
           <circle cx="26" cy="11" r="1.5" fill="${suitCol}"/>
-          <!-- Hair & Veil -->
           <path d="M12 20 Q21 16 30 20 Q32 36 29 48 Q21 52 13 48 Z" fill="${suitCol}" opacity="0.3"/>
-          <!-- Face -->
           <circle cx="21" cy="26" r="6.5" fill="#ffe0bd"/>
           <circle cx="19" cy="25" r="1" fill="#333"/>
           <path d="M19 29 Q21 31 23 29" stroke="#d32f2f" stroke-width="1" fill="none"/>
-          <!-- Gown & Rose -->
           <path d="M12 33 Q21 30 30 33 L33 56 L9 56 Z" fill="${suitCol}"/>
           <circle cx="21" cy="44" r="3.5" fill="#d32f2f"/>
           <circle cx="21" cy="44" r="1.5" fill="${goldCol}"/>
         </svg>`;
       }
       
-      if (c.r === 13) { // King Portrait
+      if (c.r === 13) {
         return `<svg width="42" height="62" viewBox="0 0 42 62">
           <rect x="2" y="2" width="38" height="58" rx="4" fill="#fdfbf7" stroke="${goldCol}" stroke-width="1.5"/>
-          <!-- Imperial Crown -->
           <path d="M11 18 L13 10 L21 14 L29 10 L31 18 Z" fill="${goldCol}"/>
           <path d="M21 8 L21 14" stroke="${goldCol}" stroke-width="2"/>
           <circle cx="21" cy="7" r="1.5" fill="#ffd700"/>
-          <!-- Beard & Face -->
           <circle cx="21" cy="25" r="7" fill="#ffe0bd"/>
           <path d="M14 26 C14 34 28 34 28 26 Z" fill="#6d4c41"/>
           <circle cx="19" cy="24" r="1" fill="#333"/>
-          <!-- Robe -->
           <path d="M10 32 L32 32 L35 56 L7 56 Z" fill="${suitCol}"/>
           <path d="M17 32 L17 56 M25 32 L25 56" stroke="#fff" stroke-width="2" stroke-dasharray="2 2"/>
-          <!-- Scepter & Orb -->
           <circle cx="31" cy="38" r="3" fill="${goldCol}"/>
           <line x1="31" y1="41" x2="31" y2="54" stroke="${goldCol}" stroke-width="2"/>
         </svg>`;
       }
       
-      // Number Cards 2-10 Layout
       let pips = '';
       const count = c.r;
       const suitSvg = getSuitSVG(c.s, 12);
@@ -415,13 +416,15 @@
 
     let deck = [];
     let gameInProgress = false;
-    let stats = { played: 0, wins: 0, streak: 0, bestStreak: 0, taWins: 0, taBestTime: 0 };
+    let stats = { played: 0, wins: 0, streak: 0, bestStreak: 0, bestTime: 0, taWins: 0, taBestTime: 0 };
     let settings = { cardBack: 0 };
     let campaignStage = 1;
     let maxCampaignStage = 1;
     let powerupsShuffle = 1;
     let powerupsWand = 1;
     let powerupsExtraCell = 1;
+    let extraCellActive = false;
+    let extraCellTimer = 0;
     let buildRule = 'color';
     let emptyKingOnly = false;
     let numFreeCells = 4;
@@ -453,19 +456,39 @@
       let text = `Time: ${m}:${s} | Moves: ${mvs}`;
       const mode = document.getElementById('game-mode').value;
       if (mode === 'campaign') {
-         text += ` | Stage ${campaignStage}/15 (${buildRule==='suit'?'Suit':'Color'}${emptyKingOnly?'+King':''})`;
+         text += ` | Stage ${campaignStage}/20 (${buildRule==='suit'?'Suit':'Color'}${emptyKingOnly?'+King':''})`;
       } else if (mode === 'timeattack') {
          const tm = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
          const ts = (timeRemaining % 60).toString().padStart(2, '0');
          text = `TIME LEFT: ${tm}:${ts} (+15s) | Moves: ${mvs}`;
       }
-      text += ` | P:${powerupsShuffle} W:${powerupsWand} E:${powerupsExtraCell}`;
+      let extraStr = extraCellActive ? ` E(+1 Cell ${extraCellTimer}s)` : ` E:${powerupsExtraCell}`;
+      text += ` | W:${powerupsWand}${extraStr} P:${powerupsShuffle}`;
       if(el) el.innerText = text;
+    }
+
+    function thawCheck() {
+      for(let i=0; i<8; i++) {
+        let col = state.tab[i];
+        if(col.length > 0) {
+          col[col.length - 1].frozen = false;
+        }
+      }
+    }
+
+    function thawAdjacent(colIdx) {
+      for(let c = colIdx - 1; c <= colIdx + 1; c++) {
+        if(c >= 0 && c < 8 && state.tab[c].length > 0) {
+          state.tab[c][state.tab[c].length - 1].frozen = false;
+        }
+      }
     }
 
     function undoMove() {
       if(undoStack.length > 0) {
-        state = undoStack.pop();
+        let prev = undoStack.pop();
+        state = prev;
+        numFreeCells = state.free.length;
         document.getElementById('status').innerText = "";
         updateGameInfo();
         render();
@@ -473,8 +496,14 @@
     }
 
     document.addEventListener('keydown', function(e) {
+      if (!e.ctrlKey && !e.metaKey && (e.key === 'u' || e.key === 'U')) {
+        undoMove();
+      }
       if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')) {
         undoMove();
+      }
+      if (!e.ctrlKey && !e.metaKey && (e.key === 'a' || e.key === 'A')) {
+        autoSolvePowerup();
       }
       if (!e.ctrlKey && !e.metaKey && (e.key === 'p' || e.key === 'P')) {
         shufflePowerup();
@@ -509,7 +538,7 @@
              state.tab[i].push(flat[flatIndex++]);
           }
         }
-        
+        thawCheck();
         playSound('place');
         updateGameInfo();
         render();
@@ -520,7 +549,49 @@
       if (gameInProgress && powerupsWand > 0) {
         powerupsWand--;
         playSound('flip');
-        autoComplete();
+        let moved = autoComplete();
+        if(!moved) {
+          for(let i=0; i<8; i++) {
+            let col = state.tab[i];
+            if(col.length > 0) {
+              let c = col[col.length-1];
+              if(!c.frozen && c.r === state.found[c.s] + 1) {
+                let prevState = JSON.parse(JSON.stringify(state));
+                prevState.selected = null;
+                undoStack.push(prevState);
+                state.found[c.s] = c.r;
+                col.pop();
+                state.moves = (state.moves || 0) + 1;
+                moved = true;
+                break;
+              }
+            }
+          }
+          if(!moved) {
+            for(let i=0; i<numFreeCells; i++) {
+              if(!state.free[i]) {
+                for(let t=0; t<8; t++) {
+                  let col = state.tab[t];
+                  if(col.length > 0) {
+                    let c = col[col.length-1];
+                    if(!c.frozen) {
+                      let prevState = JSON.parse(JSON.stringify(state));
+                      prevState.selected = null;
+                      undoStack.push(prevState);
+                      state.free[i] = c;
+                      col.pop();
+                      state.moves = (state.moves || 0) + 1;
+                      moved = true;
+                      break;
+                    }
+                  }
+                }
+                if(moved) break;
+              }
+            }
+          }
+        }
+        thawCheck();
         checkWin();
         updateGameInfo();
         render();
@@ -528,13 +599,27 @@
     }
 
     function extraCellPowerup() {
-      if (gameInProgress && powerupsExtraCell > 0 && numFreeCells < 5) {
+      if (gameInProgress && powerupsExtraCell > 0 && numFreeCells < 6) {
         powerupsExtraCell--;
         numFreeCells++;
+        extraCellActive = true;
+        extraCellTimer = 30;
         state.free.push(null);
         playSound('flip');
         updateGameInfo();
         render();
+      }
+    }
+
+    function autoSolvePowerup() {
+      if (gameInProgress) {
+        let moved = autoComplete();
+        if (moved) {
+          playSound('flip');
+          checkWin();
+          updateGameInfo();
+          render();
+        }
       }
     }
 
@@ -598,6 +683,7 @@
       document.getElementById('stat-winpct').innerText = pct;
       document.getElementById('stat-streak').innerText = stats.streak;
       document.getElementById('stat-best').innerText = stats.bestStreak;
+      document.getElementById('stat-besttime').innerText = stats.bestTime ? stats.bestTime + 's' : '--';
       document.getElementById('stat-campaign').innerText = maxCampaignStage;
       document.getElementById('stat-tawins').innerText = stats.taWins || 0;
       document.getElementById('stat-tabest').innerText = stats.taBestTime ? stats.taBestTime + 's' : '--';
@@ -615,7 +701,7 @@
     }
 
     function saveGame() {
-      const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle, powerupsWand, powerupsExtraCell, timeRemaining };
+      const data = { state, undoStack, stats, gameInProgress, timeElapsed, campaignStage, maxCampaignStage, powerupsShuffle, powerupsWand, powerupsExtraCell, timeRemaining, extraCellActive, extraCellTimer };
       localStorage.setItem('kfreecell_save', JSON.stringify(data));
       document.getElementById('status').innerText = "Game Saved";
     }
@@ -626,7 +712,7 @@
         const data = JSON.parse(saved);
         state = data.state;
         undoStack = data.undoStack || [];
-        stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0, taWins: 0, taBestTime: 0 };
+        stats = data.stats || { played: 0, wins: 0, streak: 0, bestStreak: 0, bestTime: 0, taWins: 0, taBestTime: 0 };
         gameInProgress = data.gameInProgress || false;
         timeElapsed = data.timeElapsed || 0;
         campaignStage = data.campaignStage || 1;
@@ -634,7 +720,10 @@
         powerupsShuffle = data.powerupsShuffle !== undefined ? data.powerupsShuffle : 1;
         powerupsWand = data.powerupsWand !== undefined ? data.powerupsWand : 1;
         powerupsExtraCell = data.powerupsExtraCell !== undefined ? data.powerupsExtraCell : 1;
+        extraCellActive = data.extraCellActive || false;
+        extraCellTimer = data.extraCellTimer || 0;
         timeRemaining = data.timeRemaining || 180;
+        numFreeCells = state.free.length;
         document.getElementById('status').innerText = "Game Loaded";
         updateGameInfo();
         render();
@@ -656,9 +745,11 @@
       gameInProgress = true;
       undoStack = [];
       deck = [];
+      extraCellActive = false;
+      extraCellTimer = 0;
       for(let s=0; s<4; s++) {
         for(let r=1; r<=13; r++) {
-          deck.push({ s, r, color: colors[s], display: ranks[r-1] });
+          deck.push({ s, r, color: colors[s], display: ranks[r-1], frozen: false });
         }
       }
       
@@ -682,25 +773,32 @@
       }
 
       emptyKingOnly = false;
+      let frozenCount = 0;
       if (mode === 'campaign') {
-         if(campaignStage === 1) { numFreeCells = 5; buildRule = 'color'; }
-         else if(campaignStage === 2) { numFreeCells = 5; buildRule = 'suit'; }
-         else if(campaignStage === 3) { numFreeCells = 4; buildRule = 'color'; }
-         else if(campaignStage === 4) { numFreeCells = 4; buildRule = 'color'; }
-         else if(campaignStage === 5) { numFreeCells = 4; buildRule = 'suit'; }
-         else if(campaignStage === 6) { numFreeCells = 4; buildRule = 'suit'; }
-         else if(campaignStage === 7) { numFreeCells = 3; buildRule = 'color'; }
-         else if(campaignStage === 8) { numFreeCells = 3; buildRule = 'color'; }
-         else if(campaignStage === 9) { numFreeCells = 3; buildRule = 'suit'; }
-         else if(campaignStage === 10) { numFreeCells = 2; buildRule = 'color'; }
-         else if(campaignStage === 11) { numFreeCells = 3; buildRule = 'suit'; }
-         else if(campaignStage === 12) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = true; }
-         else if(campaignStage === 13) { numFreeCells = 2; buildRule = 'suit'; }
-         else if(campaignStage === 14) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; }
-         else if(campaignStage >= 15) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; }
+         if(campaignStage === 1) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = false; }
+         else if(campaignStage === 2) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = false; }
+         else if(campaignStage === 3) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = true; }
+         else if(campaignStage === 4) { numFreeCells = 4; buildRule = 'suit'; emptyKingOnly = true; }
+         else if(campaignStage === 5) { numFreeCells = 4; buildRule = 'color'; emptyKingOnly = false; frozenCount = 4; }
+         else if(campaignStage === 6) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; }
+         else if(campaignStage === 7) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = false; }
+         else if(campaignStage === 8) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = true; }
+         else if(campaignStage === 9) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; }
+         else if(campaignStage === 10) { numFreeCells = 3; buildRule = 'color'; emptyKingOnly = false; frozenCount = 6; }
+         else if(campaignStage === 11) { numFreeCells = 3; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 6; }
+         else if(campaignStage === 12) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = false; }
+         else if(campaignStage === 13) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = false; }
+         else if(campaignStage === 14) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = true; }
+         else if(campaignStage === 15) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; }
+         else if(campaignStage === 16) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = false; frozenCount = 8; }
+         else if(campaignStage === 17) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = false; frozenCount = 8; }
+         else if(campaignStage === 18) { numFreeCells = 2; buildRule = 'color'; emptyKingOnly = true; frozenCount = 8; }
+         else if(campaignStage === 19) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 8; }
+         else if(campaignStage >= 20) { numFreeCells = 2; buildRule = 'suit'; emptyKingOnly = true; frozenCount = 10; }
       } else {
          numFreeCells = 4;
          buildRule = 'color';
+         emptyKingOnly = false;
       }
       powerupsShuffle = 1;
       powerupsWand = 1;
@@ -721,6 +819,17 @@
       timerInterval = setInterval(() => {
         if (gameInProgress) {
           timeElapsed++;
+          if (extraCellActive && extraCellTimer > 0) {
+            extraCellTimer--;
+            if (extraCellTimer === 0) {
+              let extraIdx = numFreeCells - 1;
+              if (!state.free[extraIdx]) {
+                numFreeCells--;
+                state.free.pop();
+                extraCellActive = false;
+              }
+            }
+          }
           const mode = document.getElementById('game-mode').value;
           if (mode === 'timeattack') {
             timeRemaining--;
@@ -730,7 +839,7 @@
             if (timeRemaining <= 0) {
               gameInProgress = false;
               document.getElementById('status').innerText = "Time Expired! Game Over.";
-              playSound('place');
+              playSound('error');
             }
           }
           updateGameInfo();
@@ -742,6 +851,19 @@
         state.tab[c].push(deck[i]);
         c = (c + 1) % 8;
       }
+
+      if (frozenCount > 0) {
+        let count = 0;
+        for (let j = 4; j >= 1 && count < frozenCount; j--) {
+          for (let i = 0; i < 8 && count < frozenCount; i++) {
+            if (j < state.tab[i].length) {
+              state.tab[i][j].frozen = true;
+              count++;
+            }
+          }
+        }
+      }
+      thawCheck();
       
       document.getElementById('status').innerText = "";
       updateGameInfo();
@@ -806,6 +928,7 @@
     }
 
     function canMoveToTab(card, targetTab) {
+      if(card.frozen) return false;
       if(targetTab.length === 0) {
         if (emptyKingOnly) return card.r === 13;
         return true;
@@ -818,16 +941,19 @@
     }
 
     function canMoveToFound(card) {
+      if(card.frozen) return false;
       let currentTop = state.found[card.s];
       return card.r === currentTop + 1;
     }
 
     function getDraggableGroup(tabIdx, startIdx) {
       let col = state.tab[tabIdx];
+      if(col[startIdx].frozen) return null;
       let group = [col[startIdx]];
       for(let i = startIdx + 1; i < col.length; i++) {
         let prev = col[i-1];
         let curr = col[i];
+        if (curr.frozen) return null;
         let valid = false;
         if (buildRule === 'suit') valid = (curr.s === prev.s && curr.r === prev.r - 1);
         else valid = (curr.color !== prev.color && curr.r === prev.r - 1);
@@ -893,18 +1019,26 @@
       if(!state.selected) {
         if(!isTarget) {
           if(type === 'tab') {
+            if (state.tab[index][cardIdx].frozen) {
+              playSound('error');
+              document.getElementById('status').innerText = "Card is frozen! Play adjacent cards to thaw.";
+              return;
+            }
             let group = getDraggableGroup(index, cardIdx);
             if(group && group.length <= getMaxMoveCount()) {
                state.selected = { type, index, cardIdx };
                playSound('flip');
             }
           } else if(type === 'free' && state.free[index]) {
+            if (state.free[index].frozen) {
+              playSound('error');
+              return;
+            }
             state.selected = { type, index, cardIdx: 0 };
             playSound('flip');
           }
         }
       } else {
-        // execute move
         let sel = state.selected;
         let cardsToMove = [];
         if(sel.type === 'tab') {
@@ -948,9 +1082,16 @@
           state.moves = (state.moves || 0) + 1;
           if(sel.type === 'tab') {
             state.tab[sel.index].splice(sel.cardIdx);
+            thawAdjacent(sel.index);
           } else if(sel.type === 'free') {
             state.free[sel.index] = null;
+            if (extraCellActive && extraCellTimer === 0 && sel.index === numFreeCells - 1) {
+              numFreeCells--;
+              state.free.pop();
+              extraCellActive = false;
+            }
           }
+          if(type === 'tab') thawAdjacent(index);
           playSound('place');
           updateGameInfo();
           autoComplete();
@@ -974,8 +1115,9 @@
           stats.wins++;
           stats.streak++;
           if (stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
+          if (!stats.bestTime || timeElapsed < stats.bestTime) stats.bestTime = timeElapsed;
           const mode = document.getElementById('game-mode').value;
-          if (mode === 'campaign' && campaignStage < 15) {
+          if (mode === 'campaign' && campaignStage < 20) {
             campaignStage++;
             if (campaignStage > maxCampaignStage) maxCampaignStage = campaignStage;
           }
@@ -992,7 +1134,6 @@
       }
     }
 
-    // Victory Cascade Bounce Animation
     function startVictoryCascade() {
       const canvas = document.getElementById('fx-canvas');
       if(!canvas) return;
@@ -1030,20 +1171,17 @@
             remaining = true;
             c.x += c.vx;
             c.y += c.vy;
-            c.vy += 0.5; // Gravity
+            c.vy += 0.5;
             
-            // Bounce off bottom
             if (c.y >= canvas.height - 106) {
               c.y = canvas.height - 106;
               c.vy = -c.vy * 0.75;
               c.vx += (Math.random() - 0.5) * 2;
             }
-            // Bounce off walls
             if (c.x <= 0 || c.x >= canvas.width - 74) {
               c.vx = -c.vx;
             }
             
-            // Draw card stamp on canvas
             ctx.fillStyle = '#ffffff';
             ctx.strokeStyle = (c.s === 1 || c.s === 3) ? '#d32f2f' : '#1e1e1e';
             ctx.lineWidth = 2;
@@ -1067,6 +1205,7 @@
     }
 
     function isSafeToAutoMove(card) {
+      if (card.frozen) return false;
       if (card.r <= 2) return true;
       let minOppFound = 14;
       for (let i = 0; i < 4; i++) {
@@ -1082,12 +1221,13 @@
 
     function autoComplete() {
       let didMove = true;
+      let anyMoved = false;
       while (didMove) {
         didMove = false;
         for (let i = 0; i < numFreeCells; i++) {
           if (state.free[i]) {
             let c = state.free[i];
-            if (c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
+            if (!c.frozen && c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
               let prevState = JSON.parse(JSON.stringify(state));
               prevState.selected = null;
               undoStack.push(prevState);
@@ -1097,6 +1237,7 @@
               if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
               updateGameInfo();
               didMove = true;
+              anyMoved = true;
               break;
             }
           }
@@ -1107,7 +1248,7 @@
           let col = state.tab[i];
           if (col.length > 0) {
             let c = col[col.length - 1];
-            if (c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
+            if (!c.frozen && c.r === state.found[c.s] + 1 && isSafeToAutoMove(c)) {
               let prevState = JSON.parse(JSON.stringify(state));
               prevState.selected = null;
               undoStack.push(prevState);
@@ -1117,11 +1258,14 @@
               if (document.getElementById('game-mode').value === 'timeattack') timeRemaining += 15;
               updateGameInfo();
               didMove = true;
+              anyMoved = true;
               break;
             }
           }
         }
       }
+      thawCheck();
+      return anyMoved;
     }
 
     function positionCard(c, rect, type, index, cardIdx) {
@@ -1137,6 +1281,12 @@
          el.style.zIndex = baseZ + c.r;
       } else {
          el.style.zIndex = baseZ;
+      }
+
+      if (c.frozen) {
+        el.classList.add('frozen');
+      } else {
+        el.classList.remove('frozen');
       }
 
       if(state.selected && state.selected.type === type && state.selected.index === index && cardIdx >= state.selected.cardIdx) {
@@ -1167,7 +1317,6 @@
         }
       }
 
-      // Free cells
       document.querySelectorAll('#free-cells .cell').forEach((el, i) => {
         el.onclick = () => handleBgClick('free', i);
         if(state.free[i]) {
@@ -1176,7 +1325,6 @@
         }
       });
 
-      // Foundations
       document.querySelectorAll('#foundations .cell').forEach((el, i) => {
         el.onclick = () => handleBgClick('found', i);
         if(state.found[i] > 0) {
@@ -1190,7 +1338,6 @@
         }
       });
 
-      // Tableau
       document.querySelectorAll('#tableau .column').forEach((el, i) => {
         el.onclick = (e) => { handleBgClick('tab', i); };
         let rect = el.getBoundingClientRect();
