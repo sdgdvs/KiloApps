@@ -18,6 +18,10 @@ typedef struct {
     bool active;
     float radius;
     int hyperdrive_cooldown;
+    int emp_cooldown;
+    int laser_cooldown;
+    int shield_cooldown;
+    int invincible_timer;
     float anim_frame;
 } Ship;
 
@@ -27,6 +31,7 @@ typedef struct {
     float radius;
     int level;
     int hp;
+    int max_hp;
     bool is_armored;
     bool active;
     float points[10];
@@ -50,9 +55,12 @@ typedef struct {
     float radius;
     bool active;
     int shoot_timer;
-    int type; // 0 = Normal, 1 = Mother Boss
+    int turret_shoot_timer;
+    int type; // 0 = Scout, 1 = Mother Cruiser, 2 = Stage 20 Mothership Core Boss
     int hp;
     int max_hp;
+    int freeze_timer;
+    float shield_angle;
     float anim_frame;
 } Ufo;
 
@@ -81,7 +89,7 @@ typedef struct {
     COLORREF color;
     bool active;
     float size;
-    int type; // 0 = spark, 1 = smoke
+    int type; // 0 = spark, 1 = smoke, 2 = storm
 } Particle;
 
 typedef struct {
@@ -116,34 +124,36 @@ typedef struct {
 } Stats;
 
 Ship ship;
-Asteroid asteroids[100];
+Asteroid asteroids[120];
 int num_asteroids = 0;
-Bullet bullets[100];
+Bullet bullets[120];
 int num_bullets = 0;
-Ufo ufos[10];
+Ufo ufos[15];
 int num_ufos = 0;
 Mine mines[30];
 int num_mines = 0;
 PowerUp powerups[30];
 int num_powerups = 0;
-Particle particles[600];
+Particle particles[700];
 int num_particles = 0;
 Shockwave shockwaves[30];
 int num_shockwaves = 0;
-Star stars[80];
+Star stars[90];
 
 int shield_timer = 0;
 int spread_timer = 0;
 int laser_timer = 0;
 int ufo_spawn_timer = 0;
+bool is_space_storm = false;
 
 Stats stats = {0};
 
 int score = 0;
-int wave = 1;
+int wave = 1; // Sector 1 to 20 in Campaign
 bool game_over = true;
 bool campaign_victory = false;
 bool keys[256] = {0};
+bool prev_keys[256] = {0};
 int game_mode = 0; // 0=Classic, 1=TimeAttack, 2=Hardcore, 3=Campaign
 int time_left = 0;
 long long last_tick_time = 0;
@@ -180,7 +190,7 @@ void PlaySoundEffect(int type) {
 }
 
 void InitStarfield() {
-    for (int i = 0; i < 80; i++) {
+    for (int i = 0; i < 90; i++) {
         stars[i].x = (float)(rand() % WIDTH);
         stars[i].y = (float)(rand() % HEIGHT);
         stars[i].size = 1.0f + (rand() % 15) / 10.0f;
@@ -260,7 +270,7 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
     }
 
     for (int p = 0; p < count; p++) {
-        if (num_particles >= 600) break;
+        if (num_particles >= 700) break;
         Particle* pt = &particles[num_particles++];
         pt->x = x; pt->y = y;
         float ang = (rand() % 360) * 3.14159f / 180.0f;
@@ -277,11 +287,11 @@ void CreateExplosion(float x, float y, COLORREF color, int count, float max_radi
 }
 
 void SpawnAsteroids(int count, int armored_count) {
-    float speedMult = 1.0f + (wave - 1) * 0.15f;
+    float speedMult = 1.0f + (wave - 1) * 0.12f;
     if (game_mode == 2) speedMult *= 1.4f;
 
     for (int i = 0; i < count; i++) {
-        if (num_asteroids >= 100) break;
+        if (num_asteroids >= 120) break;
         float x, y;
         do {
             x = (float)(rand() % WIDTH);
@@ -294,7 +304,8 @@ void SpawnAsteroids(int count, int armored_count) {
         a->radius = 40.0f;
         a->level = 3;
         a->is_armored = (i < armored_count);
-        a->hp = a->is_armored ? 2 : 1;
+        a->max_hp = a->is_armored ? 3 : 1; // Armored Asteroids take 3 hits to split
+        a->hp = a->max_hp;
         float angle = (rand() % 360) * 3.14159f / 180.0f;
         float speed = ((rand() % 200 + 100) / 100.0f) * speedMult;
         a->vx = cos(angle) * speed;
@@ -309,46 +320,86 @@ void SpawnAsteroids(int count, int armored_count) {
     }
 }
 
-void SpawnBossUfo() {
-    if (num_ufos >= 10) return;
+void SpawnBossUfo(int type) {
+    if (num_ufos >= 15) return;
     Ufo* u = &ufos[num_ufos++];
-    u->y = HEIGHT / 2.0f - 100.0f;
-    u->x = (rand() % 2 == 0) ? 0.0f : (float)WIDTH;
-    u->vx = (u->x == 0.0f) ? 1.5f : -1.5f;
-    u->vy = ((rand() % 200) - 100) / 100.0f * 1.0f;
-    u->radius = 28.0f;
+    u->y = (type == 2) ? 140.0f : (HEIGHT / 2.0f - 100.0f);
+    u->x = (type == 2) ? (WIDTH / 2.0f) : ((rand() % 2 == 0) ? 0.0f : (float)WIDTH);
+    u->vx = (type == 2) ? 0.8f : ((u->x == 0.0f) ? 1.5f : -1.5f);
+    u->vy = ((rand() % 200) - 100) / 100.0f * 0.8f;
+    u->radius = (type == 2) ? 42.0f : 28.0f;
     u->active = true;
     u->shoot_timer = 0;
-    u->type = 1; // Mother Boss
-    u->max_hp = (game_mode == 3 && wave == 15) ? 30 : (10 + wave * 2);
+    u->turret_shoot_timer = 0;
+    u->type = type; // 1 = Cruiser Boss, 2 = Stage 20 Alien Mothership Core Boss
+    u->max_hp = (type == 2) ? 50 : (12 + wave * 2);
     u->hp = u->max_hp;
+    u->freeze_timer = 0;
+    u->shield_angle = 0;
     u->anim_frame = 0;
+}
+
+void SpawnHunterSquadron(int count) {
+    for (int i = 0; i < count && num_ufos < 15; i++) {
+        Ufo* u = &ufos[num_ufos++];
+        u->y = 60.0f + (i * 90.0f);
+        u->x = (i % 2 == 0) ? -20.0f : (float)(WIDTH + 20);
+        u->vx = (u->x < 0) ? 2.5f : -2.5f;
+        u->vy = (rand() % 100 - 50) / 50.0f;
+        u->radius = 15.0f;
+        u->active = true;
+        u->shoot_timer = rand() % 40;
+        u->type = 0; // Scout Hunter
+        u->hp = 1;
+        u->max_hp = 1;
+        u->freeze_timer = 0;
+        u->anim_frame = 0;
+    }
 }
 
 void SetupWave() {
     num_asteroids = 0;
     num_ufos = 0;
     num_mines = 0;
+    is_space_storm = false;
 
-    if (game_mode == 3) { // Campaign
-        if (wave == 5 || wave == 10 || wave == 15) {
-            SpawnBossUfo();
-            SpawnAsteroids(2 + wave / 3, wave / 3);
+    if (game_mode == 3) { // 20-Sector Campaign
+        // Sector Space Storm Check
+        if (wave == 4 || wave == 6 || wave == 9 || wave == 12 || wave == 14 || wave == 17 || wave == 19) {
+            is_space_storm = true;
+        }
+
+        if (wave == 20) {
+            // Stage 20 Ultimate Alien Mothership Core Boss!
+            SpawnBossUfo(2);
+            SpawnAsteroids(4, 2);
+            for (int m = 0; m < 4 && num_mines < 30; m++) {
+                Mine* mine = &mines[num_mines++];
+                mine->x = 100.0f + m * 200.0f;
+                mine->y = 500.0f;
+                mine->vx = 0; mine->vy = 0;
+                mine->radius = 12.0f; mine->active = true; mine->anim_frame = 0;
+            }
+        } else if (wave == 5 || wave == 10 || wave == 15) {
+            SpawnBossUfo(1);
+            SpawnAsteroids(2 + wave / 3, wave / 4);
+        } else if (wave == 7 || wave == 11 || wave == 16 || wave == 18) {
+            // Hunter Squadron wave
+            int count = (wave >= 16) ? 5 : 3;
+            SpawnHunterSquadron(count);
+            SpawnAsteroids(3 + wave / 3, wave / 3);
         } else {
             int total = 3 + wave / 2;
-            int armored = (wave >= 3) ? (wave / 3) : 0;
+            int armored = (wave >= 3) ? (1 + wave / 3) : 0;
             SpawnAsteroids(total, armored);
-            if (wave >= 4) {
-                int mine_count = (wave / 4);
+            if (wave >= 3) {
+                int mine_count = (wave / 3);
                 for (int m = 0; m < mine_count && num_mines < 30; m++) {
                     Mine* mine = &mines[num_mines++];
                     mine->x = (rand() % 2 == 0) ? 0.0f : (float)WIDTH;
                     mine->y = (float)(rand() % HEIGHT);
-                    mine->vx = 0;
-                    mine->vy = 0;
-                    mine->radius = 12.0f;
-                    mine->active = true;
-                    mine->anim_frame = 0;
+                    mine->vx = 0; mine->vy = 0;
+                    mine->radius = 12.0f; mine->active = true; mine->anim_frame = 0;
                 }
             }
         }
@@ -378,6 +429,10 @@ void InitGame(int mode) {
     ship.active = true;
     ship.radius = 10.0f;
     ship.hyperdrive_cooldown = 0;
+    ship.emp_cooldown = 0;
+    ship.laser_cooldown = 0;
+    ship.shield_cooldown = 0;
+    ship.invincible_timer = 0;
     ship.anim_frame = 0;
 
     num_asteroids = 0;
@@ -401,37 +456,73 @@ void InitGame(int mode) {
 }
 
 void TriggerEmp() {
+    if (!ship.active) return;
+    ship.emp_cooldown = 900; // 15s CD
     PlaySoundEffect(5);
+
+    // Clear enemy bullets
     for (int i = 0; i < num_bullets; i++) {
         if (bullets[i].active && bullets[i].is_enemy) {
             bullets[i].active = false;
         }
     }
+
+    // Freeze & damage all UFOs
     for (int i = 0; i < num_ufos; i++) {
         if (ufos[i].active) {
-            ufos[i].hp -= 5;
+            ufos[i].freeze_timer = 300; // Freeze for 5s!
+            ufos[i].hp -= (ufos[i].type == 2 ? 8 : 5);
             if (ufos[i].hp <= 0) {
                 ufos[i].active = false;
-                score += (ufos[i].type == 1) ? 500 : 200;
-                CreateExplosion(ufos[i].x, ufos[i].y, RGB(217, 70, 239), 40, 60.0f);
+                score += (ufos[i].type == 2) ? 1500 : ((ufos[i].type == 1) ? 500 : 200);
+                CreateExplosion(ufos[i].x, ufos[i].y, RGB(217, 70, 239), 50, 70.0f);
             }
         }
     }
+
+    // Clear small/medium asteroids, damage armored
     for (int i = 0; i < num_asteroids; i++) {
-        if (asteroids[i].active && asteroids[i].is_armored) {
-            asteroids[i].hp--;
-            if (asteroids[i].hp <= 0) {
-                asteroids[i].is_armored = false;
+        if (!asteroids[i].active) continue;
+        float dist = sqrt(pow(asteroids[i].x - ship.x, 2) + pow(asteroids[i].y - ship.y, 2));
+        if (dist < 280.0f) {
+            if (asteroids[i].is_armored) {
+                asteroids[i].hp -= 2;
+                if (asteroids[i].hp <= 0) {
+                    asteroids[i].active = false;
+                    CreateExplosion(asteroids[i].x, asteroids[i].y, RGB(249, 115, 22), 25, 40.0f);
+                    score += 30;
+                }
+            } else if (asteroids[i].level <= 2) {
+                asteroids[i].active = false;
+                CreateExplosion(asteroids[i].x, asteroids[i].y, RGB(217, 70, 239), 20, 35.0f);
+                score += 15;
             }
         }
     }
-    CreateExplosion(ship.x, ship.y, RGB(217, 70, 239), 60, 100.0f);
+
+    CreateExplosion(ship.x, ship.y, RGB(217, 70, 239), 60, 120.0f);
     UpdateHighScore();
+}
+
+void TriggerLaser() {
+    if (!ship.active) return;
+    ship.laser_cooldown = 1200; // 20s CD
+    laser_timer = 360; // 6s continuous piercing laser!
+    PlaySoundEffect(1);
+}
+
+void TriggerShield() {
+    if (!ship.active) return;
+    ship.shield_cooldown = 1500; // 25s CD
+    shield_timer = 480; // 8s invincible energy barrier!
+    PlaySoundEffect(4);
 }
 
 void TriggerHyperdrive() {
     if (ship.hyperdrive_cooldown > 0 || !ship.active) return;
 
+    ship.hyperdrive_cooldown = 600; // 10s cooldown
+    ship.invincible_timer = 120; // 2s invincibility
     PlaySoundEffect(6);
     CreateExplosion(ship.x, ship.y, RGB(56, 189, 248), 25, 40.0f);
 
@@ -460,13 +551,12 @@ void TriggerHyperdrive() {
     }
     ship.vx = 0;
     ship.vy = 0;
-    ship.hyperdrive_cooldown = 600; // 10s cooldown
 
     CreateExplosion(ship.x, ship.y, RGB(56, 189, 248), 25, 40.0f);
 }
 
 void KillShip() {
-    if (shield_timer > 0) return;
+    if (shield_timer > 0 || ship.invincible_timer > 0) return;
 
     ship.active = false;
     game_over = true;
@@ -481,7 +571,7 @@ void CheckCollisions() {
         if (bullets[i].is_enemy && ship.active) {
             float dist = sqrt(pow(bullets[i].x - ship.x, 2) + pow(bullets[i].y - ship.y, 2));
             if (dist < ship.radius) {
-                if (shield_timer > 0) {
+                if (shield_timer > 0 || ship.invincible_timer > 0) {
                     bullets[i].active = false;
                     PlaySoundEffect(2);
                     CreateExplosion(bullets[i].x, bullets[i].y, RGB(56, 189, 248), 10, 20.0f);
@@ -517,6 +607,23 @@ void CheckCollisions() {
         if (!bullets[i].is_enemy) {
             for (int k = 0; k < num_ufos; k++) {
                 if (!ufos[k].active) continue;
+
+                // Stage 20 Boss Deflector Shield Check
+                if (ufos[k].type == 2) {
+                    float bAngle = atan2(bullets[i].y - ufos[k].y, bullets[i].x - ufos[k].x);
+                    float relAngle = fmodf(bAngle - ufos[k].shield_angle + 6.28318f, 6.28318f);
+                    float dist = sqrt(pow(bullets[i].x - ufos[k].x, 2) + pow(bullets[i].y - ufos[k].y, 2));
+                    // Shield covers 0 to 2.2 rad and 3.14 to 5.34 rad
+                    bool isBlockedByShield = (dist < ufos[k].radius + 18.0f && dist > ufos[k].radius - 5.0f) &&
+                        ((relAngle >= 0.0f && relAngle <= 2.2f) || (relAngle >= 3.14f && relAngle <= 5.34f));
+                    if (isBlockedByShield) {
+                        if (!bullets[i].is_laser) bullets[i].active = false;
+                        CreateExplosion(bullets[i].x, bullets[i].y, RGB(56, 189, 248), 8, 15.0f);
+                        PlaySoundEffect(1);
+                        break;
+                    }
+                }
+
                 float dist = sqrt(pow(bullets[i].x - ufos[k].x, 2) + pow(bullets[i].y - ufos[k].y, 2));
                 if (dist < ufos[k].radius) {
                     if (!bullets[i].is_laser) bullets[i].active = false;
@@ -530,11 +637,13 @@ void CheckCollisions() {
                     if (ufos[k].hp <= 0) {
                         ufos[k].active = false;
                         PlaySoundEffect(2);
-                        CreateExplosion(ufos[k].x, ufos[k].y, (ufos[k].type == 1 ? RGB(192, 132, 252) : RGB(239, 68, 68)), (ufos[k].type == 1 ? 50 : 25), (ufos[k].type == 1 ? 75.0f : 40.0f));
-                        score += (ufos[k].type == 1) ? 500 : 200;
+                        COLORREF exColor = (ufos[k].type == 2) ? RGB(239, 68, 68) : ((ufos[k].type == 1) ? RGB(192, 132, 252) : RGB(239, 68, 68));
+                        float exRad = (ufos[k].type == 2) ? 100.0f : ((ufos[k].type == 1) ? 75.0f : 40.0f);
+                        CreateExplosion(ufos[k].x, ufos[k].y, exColor, (ufos[k].type == 2 ? 80 : 35), exRad);
+                        score += (ufos[k].type == 2) ? 1500 : ((ufos[k].type == 1) ? 500 : 200);
                         UpdateHighScore();
 
-                        if (rand() % 100 < 35 && num_powerups < 30) {
+                        if (rand() % 100 < 45 && num_powerups < 30) {
                             PowerUp* pu = &powerups[num_powerups++];
                             pu->x = ufos[k].x; pu->y = ufos[k].y;
                             pu->vx = ((rand() % 100) - 50) / 50.0f; pu->vy = ((rand() % 100) - 50) / 50.0f;
@@ -569,10 +678,10 @@ void CheckCollisions() {
                         CreateExplosion(asteroids[j].x, asteroids[j].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 25, 45.0f);
                         stats.asteroids_destroyed++;
                         SaveStats();
-                        score += (4 - asteroids[j].level) * 10 + (asteroids[j].is_armored ? 20 : 0);
+                        score += (4 - asteroids[j].level) * 10 + (asteroids[j].is_armored ? 30 : 0);
                         UpdateHighScore();
 
-                        if (rand() % 100 < 18 && num_powerups < 30) {
+                        if (rand() % 100 < 20 && num_powerups < 30) {
                             PowerUp* pu = &powerups[num_powerups++];
                             pu->x = asteroids[j].x; pu->y = asteroids[j].y;
                             pu->vx = ((rand() % 100) - 50) / 50.0f; pu->vy = ((rand() % 100) - 50) / 50.0f;
@@ -580,7 +689,7 @@ void CheckCollisions() {
                             pu->life = 60 * 10; pu->active = true; pu->anim_frame = 0;
                         }
 
-                        if (asteroids[j].level > 1 && num_asteroids + 2 <= 100) {
+                        if (asteroids[j].level > 1 && num_asteroids + 2 <= 120) {
                             for (int k = 0; k < 2; k++) {
                                 Asteroid* a = &asteroids[num_asteroids++];
                                 a->x = asteroids[j].x;
@@ -588,9 +697,10 @@ void CheckCollisions() {
                                 a->radius = asteroids[j].radius / 2.0f;
                                 a->level = asteroids[j].level - 1;
                                 a->is_armored = false;
+                                a->max_hp = 1;
                                 a->hp = 1;
                                 float angle = (rand() % 360) * 3.14159f / 180.0f;
-                                float speedMult = 1.0f + (wave - 1) * 0.15f;
+                                float speedMult = 1.0f + (wave - 1) * 0.12f;
                                 float speed = ((rand() % 200 + 100) / 100.0f) * speedMult;
                                 a->vx = cos(angle) * speed;
                                 a->vy = sin(angle) * speed;
@@ -615,7 +725,7 @@ void CheckCollisions() {
             if (!mines[m].active) continue;
             float dist = sqrt(pow(ship.x - mines[m].x, 2) + pow(ship.y - mines[m].y, 2));
             if (dist < mines[m].radius + ship.radius) {
-                if (shield_timer > 0) {
+                if (shield_timer > 0 || ship.invincible_timer > 0) {
                     mines[m].active = false;
                     PlaySoundEffect(2);
                     CreateExplosion(mines[m].x, mines[m].y, RGB(168, 85, 247), 25, 45.0f);
@@ -629,7 +739,7 @@ void CheckCollisions() {
             if (!asteroids[j].active) continue;
             float dist = sqrt(pow(ship.x - asteroids[j].x, 2) + pow(ship.y - asteroids[j].y, 2));
             if (dist < asteroids[j].radius + ship.radius) {
-                if (shield_timer > 0) {
+                if (shield_timer > 0 || ship.invincible_timer > 0) {
                     asteroids[j].active = false;
                     PlaySoundEffect(2);
                     CreateExplosion(asteroids[j].x, asteroids[j].y, asteroids[j].is_armored ? RGB(249, 115, 22) : RGB(148, 163, 184), 25, 45.0f);
@@ -643,7 +753,7 @@ void CheckCollisions() {
             if (!ufos[k].active) continue;
             float dist = sqrt(pow(ship.x - ufos[k].x, 2) + pow(ship.y - ufos[k].y, 2));
             if (dist < ufos[k].radius + ship.radius) {
-                if (shield_timer > 0) {
+                if (shield_timer > 0 || ship.invincible_timer > 0) {
                     ufos[k].active = false;
                     PlaySoundEffect(2);
                     CreateExplosion(ufos[k].x, ufos[k].y, RGB(239, 68, 68), 25, 45.0f);
@@ -687,7 +797,7 @@ void CompactArrays() {
 
 void Update() {
     if (game_over) {
-        if (keys['S']) { showing_stats = true; showing_help = false; }
+        if (keys['S'] || keys['K']) { showing_stats = true; showing_help = false; }
         if (keys['H']) { showing_help = true; showing_stats = false; }
         if (keys['B']) { showing_stats = false; showing_help = false; }
         if (keys['1']) InitGame(0);
@@ -710,11 +820,20 @@ void Update() {
         }
     }
 
+    // Cooldown timers
     if (ship.hyperdrive_cooldown > 0) ship.hyperdrive_cooldown--;
+    if (ship.emp_cooldown > 0) ship.emp_cooldown--;
+    if (ship.laser_cooldown > 0) ship.laser_cooldown--;
+    if (ship.shield_cooldown > 0) ship.shield_cooldown--;
+    if (ship.invincible_timer > 0) ship.invincible_timer--;
 
-    if (keys['C'] || keys[VK_SHIFT]) {
-        TriggerHyperdrive();
-    }
+    // Key Hotkey Active Skills (Edge Triggered)
+    if ((keys['E'] && !prev_keys['E']) && ship.emp_cooldown == 0) TriggerEmp();
+    if ((keys['L'] && !prev_keys['L']) && ship.laser_cooldown == 0) TriggerLaser();
+    if ((keys['S'] && !prev_keys['S']) && ship.shield_cooldown == 0) TriggerShield();
+    if (((keys['H'] && !prev_keys['H']) || (keys['C'] && !prev_keys['C']) || (keys[VK_SHIFT] && !prev_keys[VK_SHIFT])) && ship.hyperdrive_cooldown == 0) TriggerHyperdrive();
+
+    for (int k = 0; k < 256; k++) prev_keys[k] = keys[k];
 
     if (keys[VK_LEFT]) ship.angle -= 0.05f;
     if (keys[VK_RIGHT]) ship.angle += 0.05f;
@@ -727,7 +846,7 @@ void Update() {
             PlaySoundEffect(3);
             thrust_timer = 0;
         }
-        if (num_particles < 600 && ship.active) {
+        if (num_particles < 700 && ship.active) {
             Particle* p = &particles[num_particles++];
             p->x = ship.x - cos(ship.angle) * 15.0f;
             p->y = ship.y - sin(ship.angle) * 15.0f;
@@ -736,6 +855,22 @@ void Update() {
             p->life = 15 + (rand() % 10); p->max_life = p->life;
             p->color = (rand() % 2 == 0) ? RGB(249, 115, 22) : RGB(239, 68, 68);
             p->active = true; p->type = 0; p->size = 2.5f;
+        }
+    }
+
+    // Space storm wind push effect
+    if (is_space_storm && ship.active) {
+        ship.vx += 0.015f * sin(ship.anim_frame * 0.1f);
+        ship.vy += 0.01f * cos(ship.anim_frame * 0.08f);
+        if (rand() % 100 < 15 && num_particles < 700) {
+            Particle* sp = &particles[num_particles++];
+            sp->x = (float)(rand() % WIDTH);
+            sp->y = 0;
+            sp->vx = -1.0f + (rand() % 100) / 50.0f;
+            sp->vy = 2.0f + (rand() % 100) / 50.0f;
+            sp->life = 40; sp->max_life = 40;
+            sp->color = RGB(56, 189, 248);
+            sp->active = true; sp->type = 2; sp->size = 2.0f;
         }
     }
 
@@ -752,8 +887,8 @@ void Update() {
 
     if (keys[VK_SPACE]) {
         long long now = GetTimeMs();
-        int cooldown = (laser_timer > 0) ? 100 : 200;
-        if (now - last_shoot_time > cooldown && num_bullets < 100) {
+        int cooldown = (laser_timer > 0) ? 90 : 200;
+        if (now - last_shoot_time > cooldown && num_bullets < 120) {
             PlaySoundEffect(1);
             stats.shots_fired++;
             current_shots_fired++;
@@ -761,13 +896,13 @@ void Update() {
 
             if (spread_timer > 0) {
                 for (int k = -1; k <= 1; k++) {
-                    if (num_bullets < 100) {
+                    if (num_bullets < 120) {
                         Bullet* b = &bullets[num_bullets++];
                         b->x = ship.x + cos(ship.angle) * 15.0f;
                         b->y = ship.y + sin(ship.angle) * 15.0f;
                         float ang = ship.angle + k * 0.2f;
-                        b->vx = cos(ang) * 8.5f;
-                        b->vy = sin(ang) * 8.5f;
+                        b->vx = cos(ang) * 9.0f;
+                        b->vy = sin(ang) * 9.0f;
                         b->life = 60;
                         b->active = true;
                         b->is_enemy = false;
@@ -778,8 +913,8 @@ void Update() {
                 Bullet* b = &bullets[num_bullets++];
                 b->x = ship.x + cos(ship.angle) * 15.0f;
                 b->y = ship.y + sin(ship.angle) * 15.0f;
-                b->vx = cos(ship.angle) * 8.5f;
-                b->vy = sin(ship.angle) * 8.5f;
+                b->vx = cos(ship.angle) * 9.0f;
+                b->vy = sin(ship.angle) * 9.0f;
                 b->life = 60;
                 b->active = true;
                 b->is_enemy = false;
@@ -816,24 +951,26 @@ void Update() {
         if (asteroids[i].y > HEIGHT + asteroids[i].radius) asteroids[i].y = -asteroids[i].radius;
     }
 
-    // UFO Spawning
-    if (game_mode != 3 || (wave != 5 && wave != 10 && wave != 15)) {
+    // UFO Spawning (Non-boss sectors)
+    if (game_mode != 3 || (wave != 5 && wave != 10 && wave != 15 && wave != 20 && wave != 7 && wave != 11 && wave != 16 && wave != 18)) {
         ufo_spawn_timer++;
-        int ufo_threshold = (game_mode == 2) ? 300 : 550;
+        int ufo_threshold = (game_mode == 2) ? 300 : 500;
         if (ufo_spawn_timer > ufo_threshold) {
             ufo_spawn_timer = 0;
-            if ((rand() % 100) < (int)((0.4f + (wave * 0.05f)) * 100) && num_ufos < 10) {
+            if ((rand() % 100) < (int)((0.4f + (wave * 0.04f)) * 100) && num_ufos < 15) {
                 Ufo* u = &ufos[num_ufos++];
                 u->y = 50.0f + (rand() % (HEIGHT - 100));
                 u->x = (rand() % 2 == 0) ? 0.0f : (float)WIDTH;
-                u->vx = (u->x == 0.0f) ? 2.0f : -2.0f;
+                u->vx = (u->x == 0.0f) ? 2.2f : -2.2f;
                 u->vy = ((rand() % 200) - 100) / 100.0f * 1.5f;
                 u->radius = 15.0f;
                 u->active = true;
                 u->shoot_timer = 0;
-                u->type = 0; // Normal
+                u->turret_shoot_timer = 0;
+                u->type = 0; // Normal Scout
                 u->hp = 1;
                 u->max_hp = 1;
+                u->freeze_timer = 0;
                 u->anim_frame = 0;
             }
         }
@@ -842,9 +979,16 @@ void Update() {
     // Update UFOs
     for (int i = 0; i < num_ufos; i++) {
         if (!ufos[i].active) continue;
+
+        if (ufos[i].freeze_timer > 0) {
+            ufos[i].freeze_timer--;
+            continue; // Frozen by EMP!
+        }
+
         ufos[i].x += ufos[i].vx;
         ufos[i].y += ufos[i].vy;
         ufos[i].anim_frame += 0.15f;
+        if (ufos[i].type == 2) ufos[i].shield_angle += 0.03f;
 
         if (ufos[i].y < 0) ufos[i].y = HEIGHT;
         if (ufos[i].y > HEIGHT) ufos[i].y = 0;
@@ -855,14 +999,27 @@ void Update() {
         }
 
         ufos[i].shoot_timer++;
-        int shoot_interval = (ufos[i].type == 1) ? 70 : 100;
-        if (ufos[i].shoot_timer > shoot_interval && ship.active && num_bullets < 100) {
+        int shoot_interval = (ufos[i].type == 2) ? 45 : ((ufos[i].type == 1) ? 65 : 95);
+        if (ufos[i].shoot_timer > shoot_interval && ship.active && num_bullets < 120) {
             ufos[i].shoot_timer = 0;
             float angle = atan2(ship.y - ufos[i].y, ship.x - ufos[i].x);
 
-            if (ufos[i].type == 1) { // Boss 3-shot burst
+            if (ufos[i].type == 2) { // Stage 20 Boss 4-turret cross plasma burst
+                for (int t = 0; t < 4; t++) {
+                    float tang = angle + t * (3.14159f / 2.0f);
+                    if (num_bullets < 120) {
+                        Bullet* blt = &bullets[num_bullets++];
+                        blt->x = ufos[i].x + cos(tang) * ufos[i].radius;
+                        blt->y = ufos[i].y + sin(tang) * ufos[i].radius;
+                        blt->vx = cos(tang) * 6.5f;
+                        blt->vy = sin(tang) * 6.5f;
+                        blt->life = 80; blt->active = true;
+                        blt->is_enemy = true; blt->is_laser = false;
+                    }
+                }
+            } else if (ufos[i].type == 1) { // Cruiser Boss 3-shot burst
                 for (int b = -1; b <= 1; b++) {
-                    if (num_bullets < 100) {
+                    if (num_bullets < 120) {
                         Bullet* blt = &bullets[num_bullets++];
                         blt->x = ufos[i].x; blt->y = ufos[i].y;
                         blt->vx = cos(angle + b * 0.25f) * 6.0f;
@@ -906,17 +1063,17 @@ void Update() {
             if (dist < ship.radius + 15) {
                 powerups[i].active = false;
                 PlaySoundEffect(4);
-                if (powerups[i].type == 1) shield_timer = 60 * 10;
+                if (powerups[i].type == 1) { shield_timer = 60 * 10; ship.shield_cooldown = 0; }
                 else if (powerups[i].type == 2) spread_timer = 60 * 10;
-                else if (powerups[i].type == 3) TriggerEmp();
-                else if (powerups[i].type == 4) laser_timer = 60 * 10;
+                else if (powerups[i].type == 3) { TriggerEmp(); ship.emp_cooldown = 0; }
+                else if (powerups[i].type == 4) { laser_timer = 60 * 10; ship.laser_cooldown = 0; }
                 score += 50;
                 UpdateHighScore();
             }
         }
     }
 
-    // Spawn Mines in non-boss waves
+    // Mag-Mines spawning in non-boss waves
     if (wave >= 3 && game_mode != 3) {
         if (rand() % 1000 < 5 && num_mines < 30) {
             Mine* m = &mines[num_mines++];
@@ -927,19 +1084,19 @@ void Update() {
         }
     }
 
-    // Update Mines
+    // Update Mag-Mines (Homing acceleration towards ship)
     for (int i = 0; i < num_mines; i++) {
         if (!mines[i].active) continue;
         mines[i].anim_frame += 0.1f;
         if (ship.active) {
             float ang = atan2(ship.y - mines[i].y, ship.x - mines[i].x);
-            mines[i].vx += cos(ang) * 0.035f;
-            mines[i].vy += sin(ang) * 0.035f;
+            mines[i].vx += cos(ang) * 0.04f;
+            mines[i].vy += sin(ang) * 0.04f;
         }
         float speed = sqrt(mines[i].vx * mines[i].vx + mines[i].vy * mines[i].vy);
-        if (speed > 2.5f) {
-            mines[i].vx = (mines[i].vx / speed) * 2.5f;
-            mines[i].vy = (mines[i].vy / speed) * 2.5f;
+        if (speed > 2.8f) {
+            mines[i].vx = (mines[i].vx / speed) * 2.8f;
+            mines[i].vy = (mines[i].vy / speed) * 2.8f;
         }
         mines[i].x += mines[i].vx;
         mines[i].y += mines[i].vy;
@@ -979,7 +1136,7 @@ void Update() {
     // Check Sector / Wave clear
     if (num_asteroids == 0 && num_ufos == 0) {
         if (game_mode == 3) {
-            if (wave >= 15) {
+            if (wave >= 20) {
                 campaign_victory = true;
                 game_over = true;
                 stats.campaign_wins++;
@@ -1009,14 +1166,15 @@ void Update() {
 }
 
 void Draw(HDC hdc) {
-    // Deep Space Background
-    HBRUSH bgBrush = CreateSolidBrush(RGB(9, 13, 22));
+    // Deep Space Background with Space Storm Tint
+    COLORREF bgCol = is_space_storm ? RGB(15, 23, 42) : RGB(9, 13, 22);
+    HBRUSH bgBrush = CreateSolidBrush(bgCol);
     RECT rect = {0, 0, WIDTH, HEIGHT};
     FillRect(hdc, &rect, bgBrush);
     DeleteObject(bgBrush);
 
     // Starfield Background Parallax & Twinkle
-    for (int i = 0; i < 80; i++) {
+    for (int i = 0; i < 90; i++) {
         stars[i].phase += stars[i].speed;
         int alpha = (int)(150 + sin(stars[i].phase) * 90);
         if (alpha < 40) alpha = 40; if (alpha > 255) alpha = 255;
@@ -1027,6 +1185,13 @@ void Draw(HDC hdc) {
         int sz = (int)stars[i].size;
         Ellipse(hdc, (int)stars[i].x - sz, (int)stars[i].y - sz, (int)stars[i].x + sz, (int)stars[i].y + sz);
         DeleteObject(sb); DeleteObject(sp);
+    }
+
+    // Draw Space Storm Banner / Atmospheric Sparks
+    if (is_space_storm) {
+        SetTextColor(hdc, RGB(56, 189, 248));
+        SetBkMode(hdc, TRANSPARENT);
+        TextOutA(hdc, WIDTH / 2 - 80, 8, "SECTOR SPACE STORM", 18);
     }
 
     // Draw Ship
@@ -1056,7 +1221,6 @@ void Draw(HDC hdc) {
 
         POINT pts[8];
         float c = cos(ship.angle), s = sin(ship.angle);
-        // Helper inline rotation: x' = x*c - y*s, y' = x*s + y*c
         pts[0].x = (LONG)(ship.x + (18 * c - 0 * s));   pts[0].y = (LONG)(ship.y + (18 * s + 0 * c));
         pts[1].x = (LONG)(ship.x + (8 * c - (-6) * s)); pts[1].y = (LONG)(ship.y + (8 * s + (-6) * c));
         pts[2].x = (LONG)(ship.x + (-12 * c - (-14) * s)); pts[2].y = (LONG)(ship.y + (-12 * s + (-14) * c));
@@ -1076,14 +1240,23 @@ void Draw(HDC hdc) {
         Ellipse(hdc, cx - 5, cy - 5, cx + 5, cy + 5);
         DeleteObject(glassBrush); DeleteObject(glassPen);
 
-        // Shield Bubble Aura
-        if (shield_timer > 0) {
-            HPEN shieldPen = CreatePen(PS_SOLID, 2, RGB(59, 130, 246));
+        // Shield / Invincibility Aura
+        if (shield_timer > 0 || ship.invincible_timer > 0) {
+            HPEN shieldPen = CreatePen(PS_SOLID, 2, (shield_timer > 0 ? RGB(59, 130, 246) : RGB(234, 179, 8)));
             SelectObject(hdc, shieldPen);
             SelectObject(hdc, GetStockObject(NULL_BRUSH));
             int pulse = (int)(sin(ship.anim_frame * 0.3f) * 2);
             Ellipse(hdc, (int)(ship.x - (25 + pulse)), (int)(ship.y - (25 + pulse)), (int)(ship.x + (25 + pulse)), (int)(ship.y + (25 + pulse)));
             DeleteObject(shieldPen);
+        }
+
+        // Piercing Laser Cannon Beam Graphic
+        if (laser_timer > 0) {
+            HPEN beamPen = CreatePen(PS_SOLID, 5, RGB(239, 68, 68));
+            SelectObject(hdc, beamPen);
+            MoveToEx(hdc, (int)(ship.x + c * 18.0f), (int)(ship.y + s * 18.0f), NULL);
+            LineTo(hdc, (int)(ship.x + c * 800.0f), (int)(ship.y + s * 800.0f));
+            DeleteObject(beamPen);
         }
     }
 
@@ -1130,14 +1303,59 @@ void Draw(HDC hdc) {
         if (!ufos[i].active) continue;
         float r = ufos[i].radius;
 
-        if (ufos[i].type == 1) { // Mother Boss UFO
+        if (ufos[i].type == 2) { // Stage 20 Alien Mothership Core Boss
+            // Outer Deflector Shield Ring
+            HPEN sPen = CreatePen(PS_SOLID, 3, RGB(56, 189, 248));
+            SelectObject(hdc, sPen); SelectObject(hdc, GetStockObject(NULL_BRUSH));
+            Arc(hdc, (int)(ufos[i].x - r - 18), (int)(ufos[i].y - r - 18), (int)(ufos[i].x + r + 18), (int)(ufos[i].y + r + 18),
+                (int)(ufos[i].x + cos(ufos[i].shield_angle) * (r + 18)), (int)(ufos[i].y + sin(ufos[i].shield_angle) * (r + 18)),
+                (int)(ufos[i].x + cos(ufos[i].shield_angle + 2.2f) * (r + 18)), (int)(ufos[i].y + sin(ufos[i].shield_angle + 2.2f) * (r + 18)));
+            Arc(hdc, (int)(ufos[i].x - r - 18), (int)(ufos[i].y - r - 18), (int)(ufos[i].x + r + 18), (int)(ufos[i].y + r + 18),
+                (int)(ufos[i].x + cos(ufos[i].shield_angle + 3.14f) * (r + 18)), (int)(ufos[i].y + sin(ufos[i].shield_angle + 3.14f) * (r + 18)),
+                (int)(ufos[i].x + cos(ufos[i].shield_angle + 5.34f) * (r + 18)), (int)(ufos[i].y + sin(ufos[i].shield_angle + 5.34f) * (r + 18)));
+            DeleteObject(sPen);
+
+            // Core Hull
+            HPEN bossPen = CreatePen(PS_SOLID, 3, RGB(239, 68, 68));
+            HBRUSH bossBrush = CreateSolidBrush(RGB(88, 28, 135));
+            SelectObject(hdc, bossPen); SelectObject(hdc, bossBrush);
+            Ellipse(hdc, (int)(ufos[i].x - r), (int)(ufos[i].y - r), (int)(ufos[i].x + r), (int)(ufos[i].y + r));
+
+            // Core Glowing Eye
+            HBRUSH domeB = CreateSolidBrush((ufos[i].freeze_timer > 0) ? RGB(56, 189, 248) : RGB(239, 68, 68));
+            SelectObject(hdc, domeB);
+            Ellipse(hdc, (int)(ufos[i].x - r * 0.4f), (int)(ufos[i].y - r * 0.4f), (int)(ufos[i].x + r * 0.4f), (int)(ufos[i].y + r * 0.4f));
+            DeleteObject(bossPen); DeleteObject(bossBrush); DeleteObject(domeB);
+
+            // Rotating Turrets
+            for (int t = 0; t < 4; t++) {
+                float tang = ufos[i].shield_angle + t * (3.14159f / 2.0f);
+                int tx = (int)(ufos[i].x + cos(tang) * r);
+                int ty = (int)(ufos[i].y + sin(tang) * r);
+                HBRUSH tb = CreateSolidBrush(RGB(249, 115, 22));
+                SelectObject(hdc, tb);
+                Ellipse(hdc, tx - 6, ty - 6, tx + 6, ty + 6);
+                DeleteObject(tb);
+            }
+
+            // Boss HP Bar
+            HBRUSH hpBg = CreateSolidBrush(RGB(24, 24, 27));
+            HBRUSH hpFg = CreateSolidBrush(RGB(239, 68, 68));
+            RECT barBg = {(LONG)(ufos[i].x - 40), (LONG)(ufos[i].y - r - 25), (LONG)(ufos[i].x + 40), (LONG)(ufos[i].y - r - 18)};
+            FillRect(hdc, &barBg, hpBg);
+            float pct = (float)ufos[i].hp / ufos[i].max_hp;
+            RECT barFg = {(LONG)(ufos[i].x - 40), (LONG)(ufos[i].y - r - 25), (LONG)(ufos[i].x - 40 + 80 * pct), (LONG)(ufos[i].y - r - 18)};
+            FillRect(hdc, &barFg, hpFg);
+            DeleteObject(hpBg); DeleteObject(hpFg);
+
+        } else if (ufos[i].type == 1) { // Mother Boss Cruiser
             HPEN bossPen = CreatePen(PS_SOLID, 3, RGB(168, 85, 247));
             HBRUSH bossBrush = CreateSolidBrush(RGB(88, 28, 135));
             SelectObject(hdc, bossPen); SelectObject(hdc, bossBrush);
             Ellipse(hdc, (int)(ufos[i].x - r), (int)(ufos[i].y - r * 0.4f), (int)(ufos[i].x + r), (int)(ufos[i].y + r * 0.4f));
 
             // Purple Plasma Dome
-            HBRUSH domeB = CreateSolidBrush(RGB(192, 132, 252));
+            HBRUSH domeB = CreateSolidBrush((ufos[i].freeze_timer > 0) ? RGB(56, 189, 248) : RGB(192, 132, 252));
             SelectObject(hdc, domeB);
             Pie(hdc, (int)(ufos[i].x - r * 0.6f), (int)(ufos[i].y - r * 0.8f), (int)(ufos[i].x + r * 0.6f), (int)(ufos[i].y + r * 0.2f), (int)(ufos[i].x + r * 0.6f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.6f), (int)ufos[i].y);
             DeleteObject(bossPen); DeleteObject(bossBrush); DeleteObject(domeB);
@@ -1157,8 +1375,8 @@ void Draw(HDC hdc) {
             SelectObject(hdc, ufoPen); SelectObject(hdc, ufoBrush);
             Ellipse(hdc, (int)(ufos[i].x - r), (int)(ufos[i].y - r * 0.4f), (int)(ufos[i].x + r), (int)(ufos[i].y + r * 0.4f));
 
-            // Green Dome
-            HBRUSH domeB = CreateSolidBrush(RGB(74, 222, 128));
+            // Green Dome (Cyan if frozen)
+            HBRUSH domeB = CreateSolidBrush((ufos[i].freeze_timer > 0) ? RGB(56, 189, 248) : RGB(74, 222, 128));
             SelectObject(hdc, domeB);
             Pie(hdc, (int)(ufos[i].x - r * 0.5f), (int)(ufos[i].y - r * 0.7f), (int)(ufos[i].x + r * 0.5f), (int)(ufos[i].y + r * 0.1f), (int)(ufos[i].x + r * 0.5f), (int)ufos[i].y, (int)(ufos[i].x - r * 0.5f), (int)ufos[i].y);
             DeleteObject(ufoPen); DeleteObject(ufoBrush); DeleteObject(domeB);
@@ -1252,23 +1470,32 @@ void Draw(HDC hdc) {
     if (game_mode == 1) {
         sprintf(scoreStr, "Score: %d   High: %d   Time: %ds   Mode: %s", score, current_high, time_left, modeStr);
     } else if (game_mode == 3) {
-        sprintf(scoreStr, "Score: %d   High: %d   Sector: %d/15   Mode: %s", score, current_high, wave, modeStr);
+        sprintf(scoreStr, "Score: %d   High: %d   Sector: %d/20   Mode: %s", score, current_high, wave, modeStr);
     } else {
         sprintf(scoreStr, "Score: %d   High: %d   Wave: %d   Mode: %s", score, current_high, wave, modeStr);
     }
     TextOutA(hdc, 10, 10, scoreStr, strlen(scoreStr));
 
-    // Hyperdrive indicator
+    // Active Skills Bar HUD
     if (ship.active) {
-        char hdStr[64];
-        if (ship.hyperdrive_cooldown <= 0) {
-            SetTextColor(hdc, RGB(56, 189, 248));
-            sprintf(hdStr, "[C / SHIFT] Hyperdrive READY");
-        } else {
-            SetTextColor(hdc, RGB(113, 113, 122));
-            sprintf(hdStr, "Hyperdrive: %ds", ship.hyperdrive_cooldown / 60 + 1);
-        }
-        TextOutA(hdc, 10, 30, hdStr, strlen(hdStr));
+        char skillsStr[160];
+        char empBuf[20], laserBuf[20], warpBuf[20], shieldBuf[20];
+        
+        if (ship.emp_cooldown == 0) sprintf(empBuf, "[E] EMP: READY");
+        else sprintf(empBuf, "[E] EMP: %ds", ship.emp_cooldown / 60 + 1);
+
+        if (ship.laser_cooldown == 0) sprintf(laserBuf, "[L] Laser: READY");
+        else sprintf(laserBuf, "[L] Laser: %ds", ship.laser_cooldown / 60 + 1);
+
+        if (ship.hyperdrive_cooldown == 0) sprintf(warpBuf, "[H/C/Shift] Warp: READY");
+        else sprintf(warpBuf, "[H] Warp: %ds", ship.hyperdrive_cooldown / 60 + 1);
+
+        if (ship.shield_cooldown == 0) sprintf(shieldBuf, "[S] Shield: READY");
+        else sprintf(shieldBuf, "[S] Shield: %ds", ship.shield_cooldown / 60 + 1);
+
+        sprintf(skillsStr, "%s   %s   %s   %s", empBuf, laserBuf, warpBuf, shieldBuf);
+        SetTextColor(hdc, RGB(250, 204, 21));
+        TextOutA(hdc, 10, 32, skillsStr, strlen(skillsStr));
     }
 
     // Draw Game Over / Menu / Stats / Victory
@@ -1308,23 +1535,22 @@ void Draw(HDC hdc) {
             SetTextColor(hdc, RGB(56, 189, 248));
             TextOutA(hdc, WIDTH / 2 - 45, HEIGHT / 2 - 20, "How to Play", 11);
             SetTextColor(hdc, RGB(161, 161, 170));
-            TextOutA(hdc, WIDTH / 2 - 95, HEIGHT / 2 + 10, "Arrows: Rotate & Thrust", 23);
-            TextOutA(hdc, WIDTH / 2 - 95, HEIGHT / 2 + 30, "Space: Shoot", 12);
-            TextOutA(hdc, WIDTH / 2 - 95, HEIGHT / 2 + 50, "C / Shift: Emergency Hyperdrive", 31);
-            TextOutA(hdc, WIDTH / 2 - 95, HEIGHT / 2 + 70, "Powerups: [S]hield, [P]spread, [E]mp, [L]aser", 44);
+            TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 10, "Arrows: Rotate & Thrust | Space: Shoot", 38);
+            TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 30, "Active Skills: [E]mp, [L]aser, [H]yperdrive, [S]hield", 53);
+            TextOutA(hdc, WIDTH / 2 - 110, HEIGHT / 2 + 50, "Pickups: [S]hield, [P]spread, [E]mp, [L]aser", 44);
 
             SetTextColor(hdc, RGB(250, 204, 21));
-            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 105, "[B] Back to Menu", 16);
+            TextOutA(hdc, WIDTH / 2 - 80, HEIGHT / 2 + 95, "[B] Back to Menu", 16);
         } else {
             SetTextColor(hdc, RGB(161, 161, 170));
             TextOutA(hdc, WIDTH / 2 - 70, HEIGHT / 2 - 20, "Select Mode to Play:", 20);
             TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 5, "[1] Classic - Infinite Waves", 28);
             TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 25, "[2] Time Attack - 2 Min Limit", 29);
             TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 45, "[3] Hardcore - Fast & Deadly", 28);
-            TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 65, "[4] Sector Campaign (15 Sectors)", 32);
+            TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 65, "[4] Sector Campaign (20 Sectors)", 32);
 
             SetTextColor(hdc, RGB(163, 230, 53));
-            TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 95, "[S] View Statistics", 19);
+            TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 95, "[K / S] View Statistics", 23);
             SetTextColor(hdc, RGB(110, 231, 183));
             TextOutA(hdc, WIDTH / 2 - 90, HEIGHT / 2 + 115, "[H] How to Play", 15);
         }
