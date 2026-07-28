@@ -149,6 +149,95 @@ typedef struct {
 
 Stats gameStats = {0};
 
+int GetLetterScore(char ch) {
+    if (ch >= 'a' && ch <= 'z') ch = ch - 'a' + 'A';
+    if (ch < 'A' || ch > 'Z') return 1;
+    static const int scores[26] = {
+        1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 5, 1, 3, 1, 1, 3, 10, 1, 1, 1, 1, 4, 4, 8, 4, 10
+    };
+    return scores[ch - 'A'];
+}
+
+int GetCellPx() {
+    if (gridSize <= 9) return 40;
+    if (gridSize <= 12) return 34;
+    if (gridSize <= 15) return 28;
+    return 22;
+}
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    float angle, vRot;
+    COLORREF color;
+    int size;
+    int shape;
+} ConfettiParticle;
+
+#define MAX_CONFETTI 80
+ConfettiParticle confetti[MAX_CONFETTI];
+bool confettiInitialized = false;
+
+void ResetConfetti() {
+    for(int i = 0; i < MAX_CONFETTI; i++) {
+        confetti[i].x = (float)(50 + (rand() % 750));
+        confetti[i].y = -10.0f - (float)(rand() % 300);
+        confetti[i].vx = ((rand() % 100) - 50) / 20.0f;
+        confetti[i].vy = 2.5f + (rand() % 100) / 20.0f;
+        confetti[i].angle = (float)((rand() % 360) * 0.0174533);
+        confetti[i].vRot = ((rand() % 100) - 50) / 200.0f;
+        COLORREF colors[] = {
+            RGB(255, 224, 102), RGB(104, 211, 145), RGB(99, 179, 237),
+            RGB(246, 173, 85), RGB(252, 129, 129), RGB(183, 148, 244)
+        };
+        confetti[i].color = colors[rand() % 6];
+        confetti[i].size = 6 + rand() % 7;
+        confetti[i].shape = rand() % 2;
+    }
+    confettiInitialized = true;
+}
+
+void DrawConfettiFX(HDC hdc, int width, int height) {
+    if (!confettiInitialized) ResetConfetti();
+    for(int i = 0; i < MAX_CONFETTI; i++) {
+        confetti[i].x += confetti[i].vx;
+        confetti[i].y += confetti[i].vy;
+        confetti[i].angle += confetti[i].vRot;
+        if (confetti[i].y > height + 20) {
+            confetti[i].y = -10.0f;
+            confetti[i].x = (float)(rand() % width);
+        }
+        HBRUSH cBrush = CreateSolidBrush(confetti[i].color);
+        HPEN cPen = CreatePen(PS_SOLID, 1, confetti[i].color);
+        HBRUSH oldB = (HBRUSH)SelectObject(hdc, cBrush);
+        HPEN oldP = (HPEN)SelectObject(hdc, cPen);
+
+        int px = (int)confetti[i].x;
+        int py = (int)confetti[i].y;
+        int sz = confetti[i].size;
+        int hsz = (int)(sz * cos((double)confetti[i].angle));
+        if (hsz == 0) hsz = 1;
+
+        if (confetti[i].shape == 0) {
+            RECT cRc = { px - sz/2, py - abs(hsz)/2, px + sz/2, py + abs(hsz)/2 };
+            FillRect(hdc, &cRc, cBrush);
+        } else {
+            POINT pts[5];
+            for (int k = 0; k < 5; k++) {
+                double a = confetti[i].angle + k * 1.25664;
+                pts[k].x = px + (long)(sz * cos(a));
+                pts[k].y = py + (long)(sz * sin(a));
+            }
+            Polygon(hdc, pts, 5);
+        }
+
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(cBrush);
+        DeleteObject(cPen);
+    }
+}
+
 void LoadStats() {
     FILE* fp = fopen("kwords_stats.dat", "rb");
     if (fp) {
@@ -811,8 +900,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
-            int c = (x - 20) / CELL_SIZE;
-            int r = (y - 50) / CELL_SIZE;
+            int cellPx = GetCellPx();
+            int c = (x - 26) / cellPx;
+            int r = (y - 56) / cellPx;
             if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
                 isSelecting = true;
                 startR = curR = r;
@@ -826,8 +916,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if(isSelecting) {
                 int x = LOWORD(lParam);
                 int y = HIWORD(lParam);
-                int c = (x - 20) / CELL_SIZE;
-                int r = (y - 50) / CELL_SIZE;
+                int cellPx = GetCellPx();
+                int c = (x - 26) / cellPx;
+                int r = (y - 56) / cellPx;
                 if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
                     if(curR != r || curC != c) {
                         int oldR = curR, oldC = curC;
@@ -947,12 +1038,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
             
-            HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(45, 55, 72));
-            HPEN hOldPen = (HPEN)SelectObject(hdc, gridPen);
-            
+            int cellPx = GetCellPx();
+            int boardLeft = 20;
+            int boardTop = 50;
+            int gridW = gridSize * cellPx;
+            int gridH = gridSize * cellPx;
+            int boardRight = boardLeft + gridW + 12;
+            int boardBottom = boardTop + gridH + 12;
+
+            // Draw Mahogany Wood Frame
+            HBRUSH woodOuter = CreateSolidBrush(RGB(74, 38, 16));
+            HBRUSH woodInner = CreateSolidBrush(RGB(36, 19, 11));
+            HBRUSH socketBg  = CreateSolidBrush(RGB(24, 13, 7));
+
+            RECT outerRc = { boardLeft, boardTop, boardRight, boardBottom };
+            FillRect(hdc, &outerRc, woodOuter);
+
+            RECT innerRc = { boardLeft + 6, boardTop + 6, boardRight - 6, boardBottom - 6 };
+            FillRect(hdc, &innerRc, woodInner);
+
+            HPEN woodHilite = CreatePen(PS_SOLID, 2, RGB(110, 56, 24));
+            HPEN woodShadow = CreatePen(PS_SOLID, 2, RGB(20, 10, 5));
+            HPEN oldP = (HPEN)SelectObject(hdc, woodHilite);
+
+            MoveToEx(hdc, boardLeft, boardBottom, NULL);
+            LineTo(hdc, boardLeft, boardTop);
+            LineTo(hdc, boardRight, boardTop);
+            SelectObject(hdc, woodShadow);
+            LineTo(hdc, boardRight, boardBottom);
+            LineTo(hdc, boardLeft, boardBottom);
+            SelectObject(hdc, oldP);
+
+            DeleteObject(woodOuter);
+            DeleteObject(woodInner);
+            DeleteObject(woodHilite);
+            DeleteObject(woodShadow);
+
             for(int r=0; r<gridSize; r++) {
                 for(int c=0; c<gridSize; c++) {
-                    RECT rc = { 20 + c*CELL_SIZE, 50 + r*CELL_SIZE, 20 + (c+1)*CELL_SIZE, 50 + (r+1)*CELL_SIZE };
+                    int tileX = boardLeft + 6 + c * cellPx;
+                    int tileY = boardTop + 6 + r * cellPx;
+                    RECT socketRc = { tileX, tileY, tileX + cellPx, tileY + cellPx };
+                    FillRect(hdc, &socketRc, socketBg);
                     
                     bool isSelected = false;
                     for(int i=0; i<selCount; i++) {
@@ -961,40 +1088,85 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                     
-                    if (cellAnim[r][c] > 0.0f) {
-                        int cx = (rc.left + rc.right) / 2;
-                        int cy = (rc.top + rc.bottom) / 2;
-                        int cw = (rc.right - rc.left) / 2;
-                        int ch = (rc.bottom - rc.top) / 2;
-                        int w = (int)(cw * cellAnim[r][c]);
-                        int h = (int)(ch * cellAnim[r][c]);
-                        RECT animRc = { cx - w, cy - h, cx + w, cy + h };
-                        COLORREF color = isSelected ? RGB(49, 130, 206) : RGB(56, 161, 105);
-                        HBRUSH animBrush = CreateSolidBrush(color);
-                        FillRect(hdc, &animRc, animBrush);
-                        DeleteObject(animBrush);
-                    } else if (frozenGrid[r][c]) {
-                        HBRUSH hFrozen = CreateSolidBrush(RGB(79, 209, 197));
-                        FillRect(hdc, &rc, hFrozen);
-                        DeleteObject(hFrozen);
+                    COLORREF bgTop, bgBot, borderHi, borderLo, textColor;
+                    if (isSelected) {
+                        bgTop = RGB(99, 179, 237); bgBot = RGB(49, 130, 206);
+                        borderHi = RGB(190, 227, 249); borderLo = RGB(26, 54, 93);
+                        textColor = RGB(255, 255, 255);
+                    } else if (foundGrid[r][c] || cellAnim[r][c] > 0.0f) {
+                        bgTop = RGB(104, 211, 145); bgBot = RGB(56, 161, 105);
+                        borderHi = RGB(198, 246, 213); borderLo = RGB(28, 69, 50);
+                        textColor = RGB(255, 255, 255);
                     } else if (hintedGrid[r][c]) {
-                        HBRUSH hHint = CreateSolidBrush(RGB(214, 158, 46));
-                        FillRect(hdc, &rc, hHint);
-                        DeleteObject(hHint);
+                        bgTop = RGB(255, 224, 102); bgBot = RGB(214, 158, 46);
+                        borderHi = RGB(254, 235, 200); borderLo = RGB(116, 66, 16);
+                        textColor = RGB(45, 25, 0);
+                    } else if (frozenGrid[r][c]) {
+                        bgTop = RGB(229, 255, 255); bgBot = RGB(79, 209, 197);
+                        borderHi = RGB(255, 255, 255); borderLo = RGB(40, 94, 97);
+                        textColor = RGB(13, 56, 56);
+                    } else { // Ivory / Oak Scrabble Keycap
+                        bgTop = RGB(247, 241, 227); bgBot = RGB(212, 196, 168);
+                        borderHi = RGB(255, 255, 255); borderLo = RGB(158, 122, 74);
+                        textColor = RGB(58, 35, 18);
                     }
-                    
-                    Rectangle(hdc, rc.left, rc.top, rc.right, rc.bottom);
-                    
-                    if (frozenGrid[r][c] && cellAnim[r][c] == 0.0f) SetTextColor(hdc, RGB(20, 40, 60));
-                    else if (hintedGrid[r][c] && cellAnim[r][c] == 0.0f) SetTextColor(hdc, RGB(26, 32, 44));
-                    else SetTextColor(hdc, RGB(226, 232, 240));
-                    
-                    char ch[2] = { grid[r][c], 0 };
-                    DrawText(hdc, ch, 1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+                    int pad = 2;
+                    int tW = cellPx - pad * 2;
+                    int tH = cellPx - pad * 2;
+                    int curW = tW;
+                    int curH = tH;
+                    if (cellAnim[r][c] > 0.0f && !foundGrid[r][c]) {
+                        curW = (int)(tW * (0.3f + 0.7f * cellAnim[r][c]));
+                        curH = (int)(tH * (0.3f + 0.7f * cellAnim[r][c]));
+                    }
+                    int offsetX = pad + (tW - curW) / 2;
+                    int offsetY = pad + (tH - curH) / 2;
+                    RECT tileRc = { tileX + offsetX, tileY + offsetY, tileX + offsetX + curW, tileY + offsetY + curH };
+
+                    HBRUSH shadowBrush = CreateSolidBrush(borderLo);
+                    RECT shadowRc = { tileRc.left, tileRc.top + 3, tileRc.right, tileRc.bottom + 3 };
+                    FillRect(hdc, &shadowRc, shadowBrush);
+                    DeleteObject(shadowBrush);
+
+                    HBRUSH faceBrush = CreateSolidBrush(bgBot);
+                    FillRect(hdc, &tileRc, faceBrush);
+                    DeleteObject(faceBrush);
+
+                    HPEN hiPen = CreatePen(PS_SOLID, 1, borderHi);
+                    HPEN oldP2 = (HPEN)SelectObject(hdc, hiPen);
+                    MoveToEx(hdc, tileRc.left, tileRc.bottom - 1, NULL);
+                    LineTo(hdc, tileRc.left, tileRc.top);
+                    LineTo(hdc, tileRc.right - 1, tileRc.top);
+                    SelectObject(hdc, oldP2);
+                    DeleteObject(hiPen);
+
+                    HFONT letterFont = CreateFont(curH * 3 / 5, 0, 0, 0, FW_HEAVY, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                        OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Georgia");
+                    HFONT oldF1 = (HFONT)SelectObject(hdc, letterFont);
+                    SetTextColor(hdc, textColor);
+                    char letterStr[2] = { grid[r][c], 0 };
+                    RECT textRc = { tileRc.left, tileRc.top + 1, tileRc.right, tileRc.bottom - 4 };
+                    DrawText(hdc, letterStr, 1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                    SelectObject(hdc, oldF1);
+                    DeleteObject(letterFont);
+
+                    int pts = GetLetterScore(grid[r][c]);
+                    char ptsStr[8];
+                    sprintf(ptsStr, "%d", pts);
+                    HFONT ptsFont = CreateFont(curH / 3, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                        OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
+                    HFONT oldF2 = (HFONT)SelectObject(hdc, ptsFont);
+                    SetTextColor(hdc, textColor);
+                    RECT ptsRc = { tileRc.right - (curW * 4 / 9), tileRc.bottom - (curH * 2 / 5), tileRc.right - 2, tileRc.bottom - 1 };
+                    DrawText(hdc, ptsStr, strlen(ptsStr), &ptsRc, DT_RIGHT | DT_BOTTOM | DT_SINGLELINE);
+                    SelectObject(hdc, oldF2);
+                    DeleteObject(ptsFont);
                 }
             }
+            DeleteObject(socketBg);
             
-            int listX = 20 + gridSize*CELL_SIZE + 30;
+            int listX = boardRight + 25;
             int listY = 50;
             TextOut(hdc, listX, listY, "Words to Find:", 14);
             listY += 25;
@@ -1021,6 +1193,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if(gameWon) {
+                DrawConfettiFX(hdc, 920, 850);
                 SetTextColor(hdc, RGB(255, 215, 0));
                 TextOut(hdc, listX, listY + 20, "YOU WIN!", 8);
                 SetTextColor(hdc, RGB(200, 200, 200));
@@ -1098,8 +1271,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOut(hdc, 120, 650, "Click anywhere to close help", 28);
             }
             
-            SelectObject(hdc, hOldPen);
-            DeleteObject(gridPen);
             SelectObject(hdc, hOldFont);
             DeleteObject(hFont);
             

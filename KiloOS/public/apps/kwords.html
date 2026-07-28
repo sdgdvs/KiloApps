@@ -8,7 +8,7 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 10px;
-    background-color: #0f111a;
+    background: radial-gradient(circle at center, #1b1e2e 0%, #0b0d14 100%);
     color: #e2e8f0;
     display: flex;
     flex-direction: column;
@@ -34,88 +34,143 @@
   }
   .grid-container {
     flex: 2;
-    background-color: #1e212b;
-    border: 1px solid #2d3748;
+    background: linear-gradient(145deg, #2c1810 0%, #4a2717 50%, #1f100a 100%);
+    border: 6px solid #6e3818;
+    border-radius: 14px;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    padding: 15px;
+    overflow: hidden;
   }
   .words-list {
     flex: 1;
     background-color: #1e212b;
     border: 1px solid #2d3748;
-    padding: 10px;
+    border-radius: 8px;
+    padding: 15px;
     overflow-y: auto;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
   }
   .grid {
     display: grid;
-    gap: 2px;
-    background-color: #2d3748;
-    border: 2px solid #2d3748;
+    gap: 4px;
+    background-color: #24130b;
+    border: 8px solid #542b14;
+    border-radius: 10px;
+    padding: 8px;
+    box-shadow: inset 3px 3px 12px rgba(0,0,0,0.85), 0 6px 16px rgba(0,0,0,0.6);
+    perspective: 800px;
   }
   .cell {
-    width: 30px;
-    height: 30px;
-    background-color: #282c34;
+    background: linear-gradient(135deg, #f7f1e3 0%, #e6d8c3 60%, #d4c4a8 100%);
+    border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    font-size: 18px;
+    position: relative;
     cursor: pointer;
-    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.9), inset -1px -1px 2px rgba(0,0,0,0.2), 0 4px 0 #9e7a4a, 0 6px 8px rgba(0,0,0,0.45);
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.2s ease, box-shadow 0.2s ease;
+    transform-style: preserve-3d;
+  }
+  .cell:hover {
+    transform: translateY(-2px) scale(1.04);
+  }
+  .tile-char {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: 900;
+    color: #3a2312;
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.6), -1px -1px 0px rgba(0,0,0,0.3);
+    line-height: 1;
+  }
+  .tile-pts {
+    position: absolute;
+    bottom: 2px;
+    right: 3px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: bold;
+    color: #5c3e21;
+    opacity: 0.85;
+    line-height: 1;
   }
   .cell.hint {
-    background-color: #d69e2e;
-    color: #1a202c;
+    background: linear-gradient(135deg, #ffe066 0%, #f59f00 100%) !important;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.9), 0 4px 0 #b07200, 0 0 14px rgba(245, 159, 0, 0.85) !important;
+    animation: tileBounce 0.4s ease-out;
+  }
+  .cell.hint .tile-char, .cell.hint .tile-pts {
+    color: #3b2000 !important;
   }
   .cell.frozen {
-    background-color: #4fd1c5;
-    color: #1a202c;
-    box-shadow: inset 0 0 4px #319795;
+    background: linear-gradient(135deg, #e6fffa 0%, #4fd1c5 70%, #319795 100%) !important;
+    box-shadow: inset 1px 1px 3px rgba(255,255,255,0.9), 0 4px 0 #285e61, 0 0 12px rgba(79, 209, 197, 0.65) !important;
+  }
+  .cell.frozen .tile-char, .cell.frozen .tile-pts {
+    color: #0d3838 !important;
   }
   .cell.selected {
-    background-color: #3182ce;
-    color: white;
-    transform: scale(1.1);
+    background: linear-gradient(135deg, #63b3ed 0%, #3182ce 100%) !important;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.9), 0 4px 0 #1a365d, 0 0 16px rgba(66, 153, 225, 0.95) !important;
+    transform: translateY(-4px) scale(1.1) !important;
+    z-index: 5;
+  }
+  .cell.selected .tile-char, .cell.selected .tile-pts {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6) !important;
   }
   .cell.found {
-    background-color: #38a169;
-    color: white;
-    animation: popIn 0.3s ease-out forwards;
+    background: linear-gradient(135deg, #68d391 0%, #38a169 70%, #276749 100%) !important;
+    box-shadow: inset 1px 1px 2px rgba(255,255,255,0.9), 0 4px 0 #1c4532, 0 0 16px rgba(72, 187, 120, 0.95) !important;
+    animation: tileFlip 0.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
   }
-  @keyframes popIn {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); }
+  .cell.found .tile-char, .cell.found .tile-pts {
+    color: #ffffff !important;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.6) !important;
+  }
+  @keyframes tileFlip {
+    0% { transform: rotateY(0deg) scale(1); }
+    50% { transform: rotateY(90deg) scale(1.25); }
+    100% { transform: rotateY(0deg) scale(1); }
+  }
+  @keyframes tileBounce {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-7px) scale(1.18); }
+    100% { transform: translateY(0) scale(1); }
   }
   ul {
     list-style-type: none;
     padding: 0;
   }
   li {
-    padding: 5px;
+    padding: 6px 10px;
     font-size: 16px;
     position: relative;
     width: max-content;
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, background 0.3s ease;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background: rgba(255,255,255,0.03);
   }
   li::after {
     content: '';
     position: absolute;
-    left: 5px;
+    left: 8px;
     top: 50%;
     width: 0;
     height: 2px;
-    background-color: #888;
+    background-color: #48bb78;
+    box-shadow: 0 0 6px #48bb78;
     transition: width 0.3s ease;
   }
   li.found {
-    color: #888;
+    color: #718096;
+    background: rgba(0,0,0,0.2);
   }
   li.found::after {
-    width: calc(100% - 10px);
+    width: calc(100% - 16px);
   }
   #win-message {
     display: none;
@@ -123,12 +178,22 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.85);
-    padding: 20px 30px;
-    border: 2px solid #0078d7;
+    background: rgba(15, 23, 42, 0.95);
+    padding: 25px 40px;
+    border: 3px solid #48bb78;
     text-align: center;
-    border-radius: 10px;
-    z-index: 10;
+    border-radius: 12px;
+    z-index: 20;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 25px rgba(72, 187, 120, 0.5);
+  }
+  #confetti-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
   }
   button {
     background-color: #2d3748;
@@ -205,6 +270,7 @@
   </div>
   <div class="container">
     <div class="grid-container">
+      <canvas id="confetti-canvas"></canvas>
       <div class="grid" id="grid"></div>
       <div id="win-message">
         <h2 id="win-title" style="margin:0 0 10px 0; color:#48bb78;">You Win!</h2>
@@ -545,19 +611,103 @@
         }
     }
 
+    function getLetterScore(ch) {
+        const scores = {
+            'A':1, 'B':3, 'C':3, 'D':2, 'E':1, 'F':4, 'G':2, 'H':4, 'I':1,
+            'J':8, 'K':5, 'L':1, 'M':3, 'N':1, 'O':1, 'P':3, 'Q':10, 'R':1,
+            'S':1, 'T':1, 'U':1, 'V':4, 'W':4, 'X':8, 'Y':4, 'Z':10
+        };
+        return scores[(ch || '').toUpperCase()] || 1;
+    }
+
+    let confettiAnimationId = null;
+    function triggerVictoryConfetti() {
+        const canvas = document.getElementById('confetti-canvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        const particles = [];
+        const colors = ['#f6e05e', '#68d391', '#63b3ed', '#f6ad55', '#fc8181', '#b794f4'];
+        for(let i=0; i<100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: -20 - Math.random() * (canvas.height * 0.5),
+                vx: (Math.random() - 0.5) * 4,
+                vy: 2.5 + Math.random() * 4.5,
+                rot: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.12,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: 7 + Math.random() * 8,
+                shape: Math.random() > 0.4 ? 'rect' : 'star'
+            });
+        }
+        if(confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let active = false;
+            for(let p of particles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.rot += p.vRot;
+                if(p.y < canvas.height + 30) active = true;
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.color;
+                if(p.shape === 'rect') {
+                    ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2);
+                } else {
+                    ctx.beginPath();
+                    for(let j=0; j<5; j++) {
+                        ctx.lineTo(Math.cos((18 + j * 72) * Math.PI / 180) * p.size, Math.sin((18 + j * 72) * Math.PI / 180) * p.size);
+                        ctx.lineTo(Math.cos((54 + j * 72) * Math.PI / 180) * (p.size/2), Math.sin((54 + j * 72) * Math.PI / 180) * (p.size/2));
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+            if(active) confettiAnimationId = requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
     function renderGrid() {
         const gridEl = document.getElementById('grid');
-        gridEl.style.gridTemplateColumns = `repeat(${gridSize}, 30px)`;
+        let cellPx = 30;
+        let fontPx = 16;
+        let ptsPx = 8;
+        if (gridSize <= 9) { cellPx = 40; fontPx = 22; ptsPx = 10; }
+        else if (gridSize <= 12) { cellPx = 34; fontPx = 18; ptsPx = 9; }
+        else if (gridSize <= 15) { cellPx = 28; fontPx = 15; ptsPx = 7; }
+        else if (gridSize >= 20) { cellPx = 22; fontPx = 12; ptsPx = 6; }
+
+        gridEl.style.gridTemplateColumns = `repeat(${gridSize}, ${cellPx}px)`;
         gridEl.innerHTML = '';
         
         for(let r=0; r<gridSize; r++){
             for(let c=0; c<gridSize; c++){
                 const cell = document.createElement('div');
                 cell.className = 'cell';
+                cell.style.width = cellPx + 'px';
+                cell.style.height = cellPx + 'px';
                 if (frozenGrid[r][c]) cell.classList.add('frozen');
                 cell.dataset.r = r;
                 cell.dataset.c = c;
-                cell.textContent = grid[r][c];
+
+                const charSpan = document.createElement('span');
+                charSpan.className = 'tile-char';
+                charSpan.style.fontSize = fontPx + 'px';
+                charSpan.textContent = grid[r][c];
+
+                const ptsSpan = document.createElement('span');
+                ptsSpan.className = 'tile-pts';
+                ptsSpan.style.fontSize = ptsPx + 'px';
+                ptsSpan.textContent = getLetterScore(grid[r][c]);
+
+                cell.appendChild(charSpan);
+                cell.appendChild(ptsSpan);
                 
                 cell.addEventListener('mousedown', (e) => startSelection(r, c, e));
                 cell.addEventListener('mouseenter', (e) => updateSelection(r, c, e));
@@ -682,6 +832,7 @@
                         playSound('fanfare');
                         clearInterval(timerInterval);
                         updateStatsOnWin();
+                        triggerVictoryConfetti();
                         document.getElementById('final-score').textContent = score;
                         document.getElementById('win-title').textContent = "You Win!";
                         document.getElementById('win-title').style.color = "#48bb78";
