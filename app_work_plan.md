@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KCalc
+**Target App:** KCalendar
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KCalc
 - KCalendar
 - KChart
 - KChess
@@ -77,6 +76,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KPad (Added Multi-Tab Document Sessions, Syntax Highlighting & Language Switcher, Find & Replace Panel with Regex Support, Line Numbers & Gutter Stats, and Document Export/Import)
 - KImage (Added Image Adjustments & Filters [Grayscale, Sepia, Invert, Brightness/Contrast, Blur], Transformations [Rotate 90°, Flips, Crop, Resize], RGB Color Histogram & EXIF Metadata Inspector, Auto-Slideshow Mode with Timer, and Image Export/Format Conversion [PNG/JPEG/WEBP/BMP])
 - KHex (Added Hex & ASCII Pattern Search/Replace, Data Inspector Panel [Int8..Int32, Float, Double, Endianness], Checksum & Cryptographic Hash Suite [CRC32, MD5, SHA-256], Byte Manipulation Operations [Fill, Invert, XOR Mask, Endian Swap], and Binary Data Export [Hex Dump, C Array, RAW])
+- KCalc (Added Scientific & Financial Calculators, Interactive History Tape with Recall, Memory Storage Banks [M+, M-, MR, MC, MS], Scientific Constants Library, Expression Formula Evaluator, and History Tape CSV/TXT Export)
 
 
 
