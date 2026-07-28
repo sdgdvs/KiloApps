@@ -10,32 +10,35 @@
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    user-select: none;
   }
   h1 {
     margin-top: 0;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     background: linear-gradient(135deg, #ff5252, #ffd700);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    font-size: 1.8em;
   }
   #status {
-    margin-bottom: 10px;
-    font-size: 1.2em;
+    margin-bottom: 8px;
+    font-size: 1.1em;
     font-weight: bold;
     color: #4fc3f7;
     text-shadow: 0 0 8px rgba(79,195,247,0.3);
+    min-height: 24px;
   }
   #timerContainer {
     width: 380px;
     height: 8px;
     background: #1a2233;
     border-radius: 4px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     overflow: hidden;
     display: none;
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.8);
@@ -74,9 +77,9 @@
 
   #board {
     display: grid;
-    grid-template-columns: repeat(7, 50px);
-    grid-template-rows: repeat(6, 50px);
-    gap: 6px;
+    grid-template-columns: repeat(var(--cols, 7), 44px);
+    grid-template-rows: repeat(var(--rows, 6), 44px);
+    gap: 5px;
     background: linear-gradient(180deg, #15387a 0%, #1c479c 100%);
     padding: 10px;
     border-radius: 10px;
@@ -93,8 +96,8 @@
     border-radius: 16px;
   }
   .cell {
-    width: 50px;
-    height: 50px;
+    width: 44px;
+    height: 44px;
     background: #090c14;
     border-radius: 50%;
     pointer-events: none;
@@ -118,7 +121,7 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 22px; height: 22px;
+    width: 20px; height: 20px;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffd700'><path d='M12 2l2.4 7.4h7.6l-6.2 4.5 2.4 7.4-6.2-4.5-6.2 4.5 2.4-7.4-6.2-4.5h7.6z'/></svg>");
     background-size: contain;
     background-repeat: no-repeat;
@@ -138,7 +141,7 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 22px; height: 22px;
+    width: 20px; height: 20px;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a365d'><path d='M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z'/></svg>");
     background-size: contain;
     background-repeat: no-repeat;
@@ -163,13 +166,26 @@
     box-shadow: inset 0 0 0 2px #d2691e, inset 0 -4px 6px #000;
     border: 2px dashed #ffaa44;
   }
-  .cell.bomb {
+  .cell.bomb, .cell.hover-bomb {
     background: radial-gradient(circle at 35% 30%, #555 0%, #111 70%, #000 100%);
     box-shadow: inset 0 0 0 2px #ff4400, 0 0 10px rgba(255,68,0,0.5);
   }
-  .cell.drill {
+  .cell.drill, .cell.hover-drill {
     background: radial-gradient(circle at 35% 30%, #80deea 0%, #00838f 70%, #004d40 100%);
     box-shadow: inset 0 0 0 2px #00ffff, 0 0 10px rgba(0,255,255,0.5);
+  }
+  .cell.magnet, .cell.hover-magnet {
+    background: radial-gradient(circle at 35% 30%, #e040fb 0%, #8e24aa 70%, #4a148c 100%);
+    box-shadow: inset 0 0 0 2px #ea80fc, 0 0 10px rgba(224,64,251,0.5);
+  }
+  .cell.frozen {
+    background: radial-gradient(circle, rgba(0,229,255,0.4) 0%, rgba(1,87,155,0.8) 100%) !important;
+    border: 2px solid #80d8ff !important;
+    box-shadow: 0 0 10px #00e5ff !important;
+  }
+  .cell.hint-col {
+    border: 2px solid #ffd700 !important;
+    box-shadow: 0 0 12px #ffd700, inset 0 0 8px #ffd700 !important;
   }
   .cell.highlight {
     box-shadow: 0 0 18px #fff, 0 0 30px #00ffff, inset 0 0 0 3px #ffffff !important;
@@ -194,18 +210,18 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
-    margin-top: 15px;
-    max-width: 420px;
+    gap: 6px;
+    margin-top: 8px;
+    max-width: 500px;
   }
   button, select {
-    padding: 8px 14px;
+    padding: 7px 12px;
     background: #1f2a3e;
     color: #fff;
     border: 1px solid #3b4e70;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.9em;
+    font-size: 0.85em;
     font-weight: 500;
     transition: all 0.2s ease;
   }
@@ -214,9 +230,14 @@
     border-color: #5c78aa;
     box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   }
+  button.active {
+    background: #3b5998;
+    border-color: #4fc3f7;
+    box-shadow: 0 0 8px #4fc3f7;
+  }
   #stats {
-    margin-top: 15px;
-    font-size: 0.85em;
+    margin-top: 12px;
+    font-size: 0.82em;
     color: #aaa;
     text-align: center;
     line-height: 1.5;
@@ -234,10 +255,10 @@
     border: 2px solid #3c6edb;
     box-shadow: 0 0 30px rgba(0,0,0,0.9);
     z-index: 100;
-    max-width: 320px;
+    max-width: 360px;
   }
   #helpModal h2 { margin-top: 0; color: #4fc3f7; }
-  #helpModal ul { padding-left: 20px; }
+  #helpModal ul { padding-left: 20px; font-size: 0.9em; }
   #helpModal button.close {
     margin-top: 10px;
     background: #ff5252;
@@ -258,17 +279,22 @@
   </div>
   <div class="controls-row">
     <button id="modeBtn" onclick="toggleMode()">Mode: vs AI</button>
-    <button id="bombBtn" onclick="togglePowerup(1)">Bomb (1)</button>
-    <button id="drillBtn" onclick="togglePowerup(2)">Drill (1)</button>
     <select id="diffSelect" onchange="changeDifficulty()"></select>
+    <button id="hintBtn" onclick="triggerHint()">Hint (H)</button>
+    <button id="freezeBtn" onclick="toggleFreezeSkill()">Freeze (1)</button>
+    <button onclick="undoMove()">Undo (U)</button>
   </div>
   <div class="controls-row">
-    <button onclick="undoMove()">Undo</button>
-    <button onclick="initGame()">Reset Game</button>
+    <button id="bombBtn" onclick="togglePowerup(1)">Bomb (2)</button>
+    <button id="drillBtn" onclick="togglePowerup(2)">Drill (2)</button>
+    <button id="magnetBtn" onclick="togglePowerup(3)">Mag (2)</button>
+    <button onclick="initGame()">Reset</button>
     <button id="muteBtn" onclick="toggleMute()">Mute</button>
+    <button onclick="toggleHelp()">Help</button>
+  </div>
+  <div class="controls-row">
     <button onclick="saveGame()">Save</button>
     <button onclick="loadGame()">Load</button>
-    <button onclick="toggleHelp()">Help</button>
   </div>
   <div id="stats">
     Wins (Red): <span id="s-red">0</span> |
@@ -276,28 +302,45 @@
     Draws: <span id="s-draws">0</span> <br>
     Streak: <span id="s-streak">0</span> |
     Best Streak: <span id="s-best">0</span> |
-    Max Stage: <span id="s-stage">1</span>
+    Max Stage: <span id="s-stage">1</span>/20
   </div>
   
   <div id="helpModal">
-    <h2>How to Play</h2>
-    <p><strong>Rules:</strong> Be the first to form a horizontal, vertical, or diagonal line of 4 discs.</p>
-    <p><strong>Modes:</strong> 2 Player, vs AI, 15-Stage Campaign, and Speed Mode.</p>
-    <p><strong>Power-Ups:</strong></p>
+    <h2>KConnect4 - Loop 7</h2>
+    <p><strong>Rules:</strong> Connect 4 discs vertically, horizontally, or diagonally!</p>
+    <p><strong>Campaign Mode:</strong> 20 Stages with dynamic grid sizes (7x6 to 10x8) and 4 AI Personalities (Rookie, Aggressive, Trapper, Grandmaster Minimax)!</p>
+    <p><strong>Special Discs:</strong></p>
     <ul>
-      <li><strong>Bomb:</strong> Clears 3x3 surrounding cells & drops floating discs.</li>
-      <li><strong>Drill:</strong> Clears all discs & crackable blocks in the column.</li>
+      <li><strong>Bomb (1/B):</strong> Explodes 3x3 surrounding cells.</li>
+      <li><strong>Drill/Anvil (2/D):</strong> Crushes cell directly underneath.</li>
+      <li><strong>Magnet (3/M):</strong> Pulls friendly discs from adjacent columns.</li>
+    </ul>
+    <p><strong>Active Skills:</strong></p>
+    <ul>
+      <li><strong>AI Hint (H):</strong> Highlights best move column.</li>
+      <li><strong>Undo Move (U):</strong> Reverts last turn pair.</li>
+      <li><strong>Column Freeze (F):</strong> Freezes opponent column for 2 turns.</li>
     </ul>
     <button class="close" onclick="toggleHelp()">Close</button>
   </div>
 
   <script>
     let gameMode = 1; // 0=2P, 1=vsAI, 2=Campaign, 3=Speed
-    let aiDifficulty = 0; // 0=Easy, 1=Medium, 2=Hard, 3=Expert
+    let aiPersonality = 0; // 0=Rookie, 1=Aggressive, 2=Trapper, 3=Grandmaster
     let campaignStage = 1;
-    let p1Bombs = 1, p2Bombs = 1;
-    let p1Drills = 1, p2Drills = 1;
-    let selectedPowerup = 0; // 0=normal, 1=bomb, 2=drill
+    
+    let p1Bombs = 2, p2Bombs = 2;
+    let p1Drills = 2, p2Drills = 2;
+    let p1Magnets = 2, p2Magnets = 2;
+    let p1Freezes = 1, p2Freezes = 1;
+    
+    let selectedPowerup = 0; // 0=normal, 1=bomb, 2=drill, 3=magnet
+    let isFreezeMode = false;
+    let frozenCol = -1;
+    let frozenTurns = 0;
+    let frozenPlayer = 0;
+    
+    let hintCol = -1;
     let animPowerup = 0;
     
     let turnTimeLeftMs = 7000;
@@ -374,12 +417,26 @@
         gain.gain.setValueAtTime(0.4, now);
         gain.gain.linearRampToValueAtTime(0, now + 0.25);
         osc.start(now); osc.stop(now + 0.25);
+      } else if (type === 'magnet') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500, now);
+        osc.frequency.exponentialRampToValueAtTime(900, now + 0.2);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      } else if (type === 'freeze') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(250, now);
+        osc.frequency.linearRampToValueAtTime(180, now + 0.2);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
       }
     }
 
     function toggleMode() {
       gameMode = (gameMode + 1) % 4;
-      if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2 Player';
+      if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2P';
       else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI';
       else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign';
       else document.getElementById('modeBtn').textContent = 'Mode: Speed';
@@ -393,11 +450,11 @@
       sel.innerHTML = '';
       if (gameMode === 1 || gameMode === 3) {
         sel.style.display = 'inline-block';
-        ['Easy', 'Medium', 'Hard', 'Expert'].forEach((d, i) => sel.add(new Option(d, i)));
-        sel.value = aiDifficulty;
+        ['Rookie', 'Aggressive', 'Trapper', 'Grandmaster'].forEach((d, i) => sel.add(new Option(d, i)));
+        sel.value = aiPersonality;
       } else if (gameMode === 2) {
         sel.style.display = 'inline-block';
-        for(let i=1; i<=15; i++) {
+        for(let i=1; i<=20; i++) {
           if (i <= stats.maxCampaignStage) sel.add(new Option(`Stage ${i}`, i-1));
           else sel.add(new Option(`Locked ${i}`, i-1));
         }
@@ -409,7 +466,7 @@
     
     function changeDifficulty() {
       if (gameMode === 1 || gameMode === 3) {
-        aiDifficulty = parseInt(document.getElementById('diffSelect').value);
+        aiPersonality = parseInt(document.getElementById('diffSelect').value);
       } else if (gameMode === 2) {
         let val = parseInt(document.getElementById('diffSelect').value) + 1;
         if (val <= stats.maxCampaignStage) {
@@ -423,26 +480,60 @@
     
     function togglePowerup(type) {
       if (!gameActive || (gameMode > 0 && currentPlayer === 2)) return;
-      let count = (type === 1) ? (currentPlayer === 1 ? p1Bombs : p2Bombs) : (currentPlayer === 1 ? p1Drills : p2Drills);
+      let count = (type === 1) ? (currentPlayer === 1 ? p1Bombs : p2Bombs) :
+                  (type === 2) ? (currentPlayer === 1 ? p1Drills : p2Drills) :
+                                 (currentPlayer === 1 ? p1Magnets : p2Magnets);
       if (count > 0) {
-        if (selectedPowerup === type) selectedPowerup = 0;
-        else selectedPowerup = type;
+        isFreezeMode = false;
+        selectedPowerup = (selectedPowerup === type) ? 0 : type;
         updatePowerupBtns();
         renderBoard();
       }
     }
     
+    function toggleFreezeSkill() {
+      if (!gameActive || (gameMode > 0 && currentPlayer === 2)) return;
+      let count = (currentPlayer === 1) ? p1Freezes : p2Freezes;
+      if (count > 0) {
+        selectedPowerup = 0;
+        isFreezeMode = !isFreezeMode;
+        updatePowerupBtns();
+        renderBoard();
+      }
+    }
+
+    function triggerHint() {
+      if (gameActive && !(gameMode > 0 && currentPlayer === 2)) {
+        hintCol = getBestMoveAI(currentPlayer);
+        renderBoard();
+      }
+    }
+
     function updatePowerupBtns() {
       let bCount = (currentPlayer === 1) ? p1Bombs : p2Bombs;
       let dCount = (currentPlayer === 1) ? p1Drills : p2Drills;
-      if (gameMode > 0 && currentPlayer === 2) { bCount = 0; dCount = 0; }
+      let mCount = (currentPlayer === 1) ? p1Magnets : p2Magnets;
+      let fCount = (currentPlayer === 1) ? p1Freezes : p2Freezes;
+      if (gameMode > 0 && currentPlayer === 2) { bCount = 0; dCount = 0; mCount = 0; fCount = 0; }
       
-      document.getElementById('bombBtn').textContent = (selectedPowerup === 1) ? '[Bomb]' : `Bomb (${bCount})`;
-      document.getElementById('drillBtn').textContent = (selectedPowerup === 2) ? '[Drill]' : `Drill (${dCount})`;
+      const bombBtn = document.getElementById('bombBtn');
+      const drillBtn = document.getElementById('drillBtn');
+      const magnetBtn = document.getElementById('magnetBtn');
+      const freezeBtn = document.getElementById('freezeBtn');
+
+      bombBtn.textContent = (selectedPowerup === 1) ? '[Bomb]' : `Bomb (${bCount})`;
+      drillBtn.textContent = (selectedPowerup === 2) ? '[Drill]' : `Drill (${dCount})`;
+      magnetBtn.textContent = (selectedPowerup === 3) ? '[Mag]' : `Mag (${mCount})`;
+      freezeBtn.textContent = isFreezeMode ? '[Freeze]' : `Freeze (${fCount})`;
+
+      bombBtn.classList.toggle('active', selectedPowerup === 1);
+      drillBtn.classList.toggle('active', selectedPowerup === 2);
+      magnetBtn.classList.toggle('active', selectedPowerup === 3);
+      freezeBtn.classList.toggle('active', isFreezeMode);
     }
     
-    const ROWS = 6;
-    const COLS = 7;
+    let ROWS = 6;
+    let COLS = 7;
     let board = [];
     let currentPlayer = 1;
     let gameActive = true;
@@ -478,26 +569,50 @@
       document.getElementById('s-stage').textContent = stats.maxCampaignStage;
     }
 
-    function loadCampaignStage(stage) {
-      for(let r=0; r<ROWS; r++) for(let c=0; c<COLS; c++) board[r][c] = 0;
-      aiDifficulty = 1; 
-      if (stage >= 4) aiDifficulty = 2; 
-      if (stage >= 8) aiDifficulty = 3; 
+    function getStageGridSize(stage) {
+      if (stage <= 5) return [6, 7];
+      if (stage <= 10) return [7, 8];
+      if (stage <= 15) return [8, 9];
+      return [8, 10];
+    }
 
-      if (stage == 2) { board[5][0] = 3; board[5][6] = 3; }
-      else if (stage == 3) { board[5][3] = 3; board[4][3] = 3; }
-      else if (stage == 4) { board[5][2] = 3; board[5][4] = 3; board[4][3] = 3; }
-      else if (stage == 5) { board[5][1] = 3; board[5][3] = 3; board[5][5] = 3; board[4][2] = 3; board[4][4] = 3; }
-      else if (stage == 6) { board[3][1] = 3; board[3][5] = 3; }
-      else if (stage == 7) { board[2][2] = 3; board[2][3] = 3; board[2][4] = 3; }
-      else if (stage == 8) { board[5][3] = 3; board[4][3] = 3; board[3][3] = 3; board[2][3] = 3; }
-      else if (stage == 9) { board[5][1] = 3; board[4][1] = 3; board[5][5] = 3; board[4][5] = 3; board[2][3] = 3; }
-      else if (stage == 10) { board[5][0]=3; board[5][6]=3; board[4][2]=3; board[4][4]=3; board[2][1]=3; board[2][5]=3; }
-      else if (stage == 11) { board[5][2]=4; board[5][4]=4; board[4][3]=3; }
-      else if (stage == 12) { board[4][3]=4; board[3][2]=3; board[3][4]=3; board[2][3]=4; }
-      else if (stage == 13) { board[5][2]=4; board[5][4]=4; board[4][2]=3; board[4][4]=3; board[1][3]=4; }
-      else if (stage == 14) { board[5][1]=3; board[5][5]=3; board[3][3]=4; board[1][2]=3; board[1][4]=3; }
-      else if (stage == 15) { board[5][0]=3; board[5][6]=3; board[4][3]=4; board[3][1]=3; board[3][5]=3; board[2][3]=4; }
+    function getStageAIPersonality(stage) {
+      if (stage <= 3) return 0;
+      if (stage <= 6) return 1;
+      if (stage <= 11) return 2;
+      return 3;
+    }
+
+    function loadCampaignStage(stage) {
+      const [rDim, cDim] = getStageGridSize(stage);
+      ROWS = rDim; COLS = cDim;
+      board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+      aiPersonality = getStageAIPersonality(stage);
+
+      const R = ROWS, C = COLS;
+      if (stage == 2) { board[R-1][0] = 3; board[R-1][C-1] = 3; }
+      else if (stage == 3) { board[R-1][Math.floor(C/2)] = 4; board[R-2][Math.floor(C/2)] = 4; }
+      else if (stage == 4) { board[R-1][2] = 3; board[R-1][C-3] = 3; board[R-2][Math.floor(C/2)] = 4; }
+      else if (stage == 5) { board[R-1][1] = 3; board[R-1][Math.floor(C/2)] = 3; board[R-1][C-2] = 3; board[R-2][2] = 4; board[R-2][C-3] = 4; }
+      else if (stage == 6) { board[R-1][2] = 4; board[R-1][C-3] = 4; board[R-2][3] = 3; board[R-2][C-4] = 3; }
+      else if (stage == 7) { board[R-3][2] = 3; board[R-3][3] = 3; board[R-3][4] = 3; board[R-3][5] = 3; }
+      else if (stage == 8) { board[R-1][3] = 3; board[R-2][3] = 3; board[R-3][3] = 3; board[R-4][3] = 3; }
+      else if (stage == 9) { board[R-1][1] = 3; board[R-2][1] = 3; board[R-1][C-2] = 3; board[R-2][C-2] = 3; board[R-3][Math.floor(C/2)] = 4; board[R-4][Math.floor(C/2)] = 4; }
+      else if (stage == 10) { board[R-1][0] = 3; board[R-1][C-1] = 3; board[R-2][2] = 3; board[R-2][C-3] = 3; board[R-4][1] = 4; board[R-4][C-2] = 4; }
+      else if (stage == 11) { board[R-1][2] = 4; board[R-1][C-3] = 4; board[R-2][3] = 4; board[R-2][C-4] = 4; board[R-3][Math.floor(C/2)] = 3; }
+      else if (stage == 12) { board[R-1][2] = 3; board[R-2][2] = 3; board[R-1][C-3] = 3; board[R-2][C-3] = 3; }
+      else if (stage == 13) { board[R-1][3] = 4; board[R-1][C-4] = 4; board[R-2][2] = 4; board[R-2][C-3] = 4; board[R-3][Math.floor(C/2)] = 3; board[R-4][Math.floor(C/2)] = 3; }
+      else if (stage == 14) { board[R-1][1] = 3; board[R-1][C-2] = 3; board[R-3][Math.floor(C/2)] = 4; board[R-5][2] = 3; board[R-5][C-3] = 3; }
+      else if (stage == 15) { board[R-1][0] = 3; board[R-1][C-1] = 3; board[R-2][Math.floor(C/2)] = 4; board[R-3][2] = 4; board[R-3][C-3] = 4; board[R-4][Math.floor(C/2)] = 4; }
+      else if (stage == 16) { board[R-1][0] = 3; board[R-1][1] = 3; board[R-1][C-2] = 3; board[R-1][C-1] = 3; board[R-2][4] = 4; board[R-2][5] = 4; }
+      else if (stage == 17) { board[R-2][Math.floor(C/2)-1] = 4; board[R-2][Math.floor(C/2)] = 4; board[R-3][Math.floor(C/2)-2] = 4; board[R-3][Math.floor(C/2)+1] = 4; board[R-4][Math.floor(C/2)-1] = 3; board[R-4][Math.floor(C/2)] = 3; }
+      else if (stage == 18) { board[R-1][2] = 3; board[R-2][2] = 4; board[R-3][2] = 3; board[R-1][C-3] = 4; board[R-2][C-3] = 3; board[R-3][C-3] = 4; }
+      else if (stage == 19) { board[R-1][1] = 3; board[R-1][3] = 4; board[R-1][5] = 3; board[R-1][7] = 4; board[R-2][2] = 4; board[R-2][4] = 3; board[R-2][6] = 4; }
+      else if (stage == 20) {
+        board[R-1][1] = 3; board[R-1][4] = 3; board[R-1][5] = 3; board[R-1][8] = 3;
+        board[R-2][2] = 4; board[R-2][3] = 4; board[R-2][6] = 4; board[R-2][7] = 4;
+        board[R-3][4] = 4; board[R-3][5] = 4; board[R-4][2] = 3; board[R-4][7] = 3;
+      }
     }
     
     function startSpeedTimer() {
@@ -526,48 +641,67 @@
     }
     
     function initGame() {
+      ROWS = 6; COLS = 7;
       board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
       if (gameMode === 2) loadCampaignStage(campaignStage);
       currentPlayer = 1;
       gameActive = true;
       winningCells = [];
       moveHistory = [];
-      p1Bombs = 1; p2Bombs = 1;
-      p1Drills = 1; p2Drills = 1;
+      p1Bombs = 2; p2Bombs = 2;
+      p1Drills = 2; p2Drills = 2;
+      p1Magnets = 2; p2Magnets = 2;
+      p1Freezes = 1; p2Freezes = 1;
       selectedPowerup = 0; animPowerup = 0;
+      isFreezeMode = false; frozenCol = -1; frozenTurns = 0; frozenPlayer = 0;
+      hintCol = -1;
+      
       updatePowerupBtns();
       if (aiTimeout) { clearTimeout(aiTimeout); aiTimeout = null; }
       
-      if (boardEl.children.length === 0) {
-        for (let r = 0; r < ROWS; r++) {
-          for (let c = 0; c < COLS; c++) {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.id = `cell-${r}-${c}`;
-            boardEl.appendChild(cell);
-          }
+      boardEl.style.setProperty('--cols', COLS);
+      boardEl.style.setProperty('--rows', ROWS);
+      boardEl.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.id = `cell-${r}-${c}`;
+          boardEl.appendChild(cell);
         }
       }
+      
       renderBoard();
       updateStatus();
       startSpeedTimer();
+      resizeFxCanvas();
     }
 
     function renderBoard(animatedRow = -1, animatedCol = -1) {
       for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
           const cell = document.getElementById(`cell-${r}-${c}`);
+          if (!cell) continue;
           let classes = ['cell'];
           if (board[r][c] === 1) classes.push('p1');
           if (board[r][c] === 2) classes.push('p2');
           if (board[r][c] === 3) classes.push('obstacle');
           if (board[r][c] === 4) classes.push('crackable');
           
+          if (frozenTurns > 0 && frozenCol === c) {
+            classes.push('frozen');
+          }
+
+          if (hintCol === c) {
+            classes.push('hint-col');
+          }
+          
           if (r === animatedRow && c === animatedCol) {
             classes.push('dropping');
             if (animPowerup === 1) classes.push('bomb');
             if (animPowerup === 2) classes.push('drill');
-            cell.style.setProperty('--drop-dist', `-${(r + 1) * 55}px`);
+            if (animPowerup === 3) classes.push('magnet');
+            cell.style.setProperty('--drop-dist', `-${(r + 1) * 49}px`);
           }
           
           if (winningCells.some(w => w[0] === r && w[1] === c)) {
@@ -575,6 +709,7 @@
           } else if (hoverCol === c && board[r][c] === 0 && (r === ROWS - 1 || board[r+1][c] !== 0) && gameActive && !(gameMode > 0 && currentPlayer === 2)) {
             if (selectedPowerup === 1) classes.push('hover-bomb');
             else if (selectedPowerup === 2) classes.push('hover-drill');
+            else if (selectedPowerup === 3) classes.push('hover-magnet');
             else classes.push(currentPlayer === 1 ? 'hover-p1' : 'hover-p2');
           }
           cell.className = classes.join(' ');
@@ -584,8 +719,12 @@
 
     function updateStatus() {
       if (!gameActive) return;
+      if (isFreezeMode) {
+        statusEl.textContent = "Freeze Skill: Click a column to freeze!";
+        return;
+      }
       const color = currentPlayer === 1 ? 'Red' : 'Yellow';
-      statusEl.textContent = `Player ${currentPlayer}'s turn (${color})`;
+      statusEl.textContent = `Player ${currentPlayer}'s turn (${color})${frozenTurns > 0 ? ' [Col Frozen]' : ''}`;
     }
 
     boardEl.addEventListener('mousemove', (e) => {
@@ -598,7 +737,7 @@
       }
       const rect = boardEl.getBoundingClientRect();
       const x = e.clientX - rect.left - 10;
-      const c = Math.floor(x / 55);
+      const c = Math.floor(x / 49);
       if (c >= 0 && c < COLS) {
         if (hoverCol !== c) {
           hoverCol = c;
@@ -624,11 +763,39 @@
       if (gameMode > 0 && currentPlayer === 2) return;
       const rect = boardEl.getBoundingClientRect();
       const x = e.clientX - rect.left - 10;
-      const c = Math.floor(x / 55);
+      const c = Math.floor(x / 49);
       
       if (c >= 0 && c < COLS) {
-        dropPiece(c);
+        if (isFreezeMode) {
+          let count = (currentPlayer === 1) ? p1Freezes : p2Freezes;
+          if (count > 0) {
+            frozenCol = c;
+            frozenTurns = 2;
+            frozenPlayer = currentPlayer;
+            if (currentPlayer === 1) p1Freezes--; else p2Freezes--;
+            isFreezeMode = false;
+            playSound('freeze');
+            updatePowerupBtns();
+            updateStatus();
+            renderBoard();
+          }
+        } else if (frozenTurns > 0 && frozenCol === c) {
+          playSound('invalid');
+        } else {
+          dropPiece(c);
+        }
       }
+    });
+
+    // Keybindings listener: H, U, F, B/1, D/2, M/3
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toUpperCase();
+      if (k === 'H') triggerHint();
+      else if (k === 'U') undoMove();
+      else if (k === 'F') toggleFreezeSkill();
+      else if (k === 'B' || k === '1') togglePowerup(1);
+      else if (k === 'D' || k === '2') togglePowerup(2);
+      else if (k === 'M' || k === '3') togglePowerup(3);
     });
 
     function applyGravity() {
@@ -648,22 +815,33 @@
     }
 
     function dropPiece(col) {
+      if (frozenTurns > 0 && frozenCol === col) {
+        playSound('invalid');
+        return;
+      }
+
       for (let r = ROWS - 1; r >= 0; r--) {
         if (board[r][col] === 0) {
           animPowerup = selectedPowerup;
           if (animPowerup === 1) playSound('bomb');
           else if (animPowerup === 2) playSound('drill');
+          else if (animPowerup === 3) playSound('magnet');
           else playSound('drop');
 
           moveHistory.push({
             board: JSON.stringify(board),
+            rows: ROWS, cols: COLS,
             stats: JSON.stringify(stats),
             p: currentPlayer,
             p1b: p1Bombs, p2b: p2Bombs,
-            p1d: p1Drills, p2d: p2Drills
+            p1d: p1Drills, p2d: p2Drills,
+            p1m: p1Magnets, p2m: p2Magnets,
+            p1f: p1Freezes, p2f: p2Freezes,
+            fCol: frozenCol, fTurns: frozenTurns, fPlayer: frozenPlayer
           });
           
           board[r][col] = currentPlayer;
+          hintCol = -1;
 
           if (animPowerup === 1) {
             if (currentPlayer === 1) p1Bombs--; else p2Bombs--;
@@ -671,6 +849,10 @@
             updatePowerupBtns();
           } else if (animPowerup === 2) {
             if (currentPlayer === 1) p1Drills--; else p2Drills--;
+            selectedPowerup = 0;
+            updatePowerupBtns();
+          } else if (animPowerup === 3) {
+            if (currentPlayer === 1) p1Magnets--; else p2Magnets--;
             selectedPowerup = 0;
             updatePowerupBtns();
           }
@@ -688,16 +870,37 @@
                 }
               }
               applyGravity();
-            } else if (animPowerup === 2) { // Drill effect
-              for(let rr=0; rr<ROWS; rr++) {
-                if(board[rr][col]===1 || board[rr][col]===2 || board[rr][col]===4) {
-                  board[rr][col]=0;
-                }
+            } else if (animPowerup === 2) { // Drill/Anvil effect (destroys cell directly underneath)
+              if (r + 1 < ROWS && (board[r+1][col]===1 || board[r+1][col]===2 || board[r+1][col]===4)) {
+                board[r+1][col] = 0;
               }
+              applyGravity();
+            } else if (animPowerup === 3) { // Magnet effect
+              const adjCols = [col - 1, col + 1];
+              adjCols.forEach(ac => {
+                if (ac >= 0 && ac < COLS) {
+                  for (let rr = ROWS - 1; rr >= 0; rr--) {
+                    if (board[rr][ac] === currentPlayer) {
+                      for (let rTarget = ROWS - 1; rTarget >= 0; rTarget--) {
+                        if (board[rTarget][col] === 0) {
+                          board[rTarget][col] = currentPlayer;
+                          board[rr][ac] = 0;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                }
+              });
               applyGravity();
             }
             
             animPowerup = 0;
+
+            if (frozenTurns > 0) {
+              frozenTurns--;
+              if (frozenTurns === 0) frozenCol = -1;
+            }
 
             let w1 = checkWinBoard(board, 1);
             let w2 = checkWinBoard(board, 2);
@@ -715,7 +918,7 @@
                 if (stats.lastWinner === winner) stats.streak++; else stats.streak = 1;
                 stats.lastWinner = winner;
                 if (stats.streak > stats.best) stats.best = stats.streak;
-                if (gameMode === 2 && winner === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 15) { stats.maxCampaignStage++; updateDiffSelect(); }
+                if (gameMode === 2 && winner === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 20) { stats.maxCampaignStage++; updateDiffSelect(); }
               }
               saveStats(); updateDiffSelect();
             } else if (checkWin(r, col)) {
@@ -727,7 +930,7 @@
               if (stats.lastWinner === currentPlayer) stats.streak++; else stats.streak = 1;
               stats.lastWinner = currentPlayer;
               if (stats.streak > stats.best) stats.best = stats.streak;
-              if (gameMode === 2 && currentPlayer === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 15) { stats.maxCampaignStage++; updateDiffSelect(); }
+              if (gameMode === 2 && currentPlayer === 1 && campaignStage === stats.maxCampaignStage && campaignStage < 20) { stats.maxCampaignStage++; updateDiffSelect(); }
               saveStats(); updateDiffSelect();
             } else if (checkDraw()) {
               playSound('draw');
@@ -753,13 +956,11 @@
 
     function saveGame() {
       const state = {
-        board,
-        currentPlayer,
-        gameActive,
-        winningCells,
-        moveHistory,
-        gameMode, aiDifficulty, campaignStage,
-        p1Bombs, p2Bombs, p1Drills, p2Drills
+        board, ROWS, COLS,
+        currentPlayer, gameActive, winningCells, moveHistory,
+        gameMode, aiPersonality, campaignStage,
+        p1Bombs, p2Bombs, p1Drills, p2Drills, p1Magnets, p2Magnets, p1Freezes, p2Freezes,
+        frozenCol, frozenTurns, frozenPlayer
       };
       localStorage.setItem('kconnect4_save', JSON.stringify(state));
       alert('Game Saved!');
@@ -770,18 +971,34 @@
       if (saved) {
         const state = JSON.parse(saved);
         board = state.board;
+        ROWS = state.ROWS || 6; COLS = state.COLS || 7;
         currentPlayer = state.currentPlayer;
         gameActive = state.gameActive;
         winningCells = state.winningCells || [];
         moveHistory = state.moveHistory || [];
         gameMode = state.gameMode;
-        aiDifficulty = state.aiDifficulty;
+        aiPersonality = state.aiPersonality || 0;
         campaignStage = state.campaignStage || 1;
         p1Bombs = state.p1Bombs; p2Bombs = state.p2Bombs;
-        p1Drills = state.p1Drills || 1; p2Drills = state.p2Drills || 1;
+        p1Drills = state.p1Drills || 2; p2Drills = state.p2Drills || 2;
+        p1Magnets = state.p1Magnets || 2; p2Magnets = state.p2Magnets || 2;
+        p1Freezes = state.p1Freezes || 1; p2Freezes = state.p2Freezes || 1;
+        frozenCol = state.frozenCol || -1; frozenTurns = state.frozenTurns || 0; frozenPlayer = state.frozenPlayer || 0;
         
-        updateDiffSelect(); updatePowerupBtns(); selectedPowerup = 0;
-        if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2 Player';
+        boardEl.style.setProperty('--cols', COLS);
+        boardEl.style.setProperty('--rows', ROWS);
+        boardEl.innerHTML = '';
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < COLS; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = `cell-${r}-${c}`;
+            boardEl.appendChild(cell);
+          }
+        }
+
+        updateDiffSelect(); updatePowerupBtns(); selectedPowerup = 0; isFreezeMode = false;
+        if (gameMode === 0) document.getElementById('modeBtn').textContent = 'Mode: 2P';
         else if (gameMode === 1) document.getElementById('modeBtn').textContent = 'Mode: vs AI';
         else if (gameMode === 2) document.getElementById('modeBtn').textContent = 'Mode: Campaign';
         else document.getElementById('modeBtn').textContent = 'Mode: Speed';
@@ -813,17 +1030,35 @@
         if (moveHistory.length > 0) {
           let m = moveHistory.pop();
           board = JSON.parse(m.board);
+          ROWS = m.rows || 6; COLS = m.cols || 7;
           stats = JSON.parse(m.stats);
           currentPlayer = m.p;
           p1Bombs = m.p1b; p2Bombs = m.p2b;
-          p1Drills = m.p1d || 1; p2Drills = m.p2d || 1;
+          p1Drills = m.p1d || 2; p2Drills = m.p2d || 2;
+          p1Magnets = m.p1m || 2; p2Magnets = m.p2m || 2;
+          p1Freezes = m.p1f || 1; p2Freezes = m.p2f || 1;
+          frozenCol = m.fCol || -1; frozenTurns = m.fTurns || 0; frozenPlayer = m.fPlayer || 0;
         }
       }
       
+      boardEl.style.setProperty('--cols', COLS);
+      boardEl.style.setProperty('--rows', ROWS);
+      boardEl.innerHTML = '';
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.id = `cell-${r}-${c}`;
+          boardEl.appendChild(cell);
+        }
+      }
+
       saveStats();
       gameActive = true;
       winningCells = [];
       turnTimeLeftMs = 7000;
+      isFreezeMode = false;
+      hintCol = -1;
       updateStatus();
       updatePowerupBtns();
       renderBoard();
@@ -861,13 +1096,17 @@
     }
 
     function checkDraw() {
-      return board[0].every(cell => cell !== 0);
+      for (let c = 0; c < COLS; c++) {
+        if (board[0][c] === 0) return false;
+      }
+      return true;
     }
 
     function getAvailableCols() {
       let cols = [];
       for(let c=0; c<COLS; c++) {
-        if(board[0][c] === 0) cols.push(c);
+        if (frozenTurns > 0 && frozenCol === c) continue;
+        if (board[0][c] === 0) cols.push(c);
       }
       return cols;
     }
@@ -915,8 +1154,14 @@
 
     function getValidLocations(b) {
       let locs = [];
-      let pref = [3, 2, 4, 1, 5, 0, 6];
+      let center = Math.floor(COLS / 2);
+      let pref = [center];
+      for (let step = 1; step < COLS; step++) {
+        if (center - step >= 0) pref.push(center - step);
+        if (center + step < COLS) pref.push(center + step);
+      }
       for (let c of pref) {
+        if (frozenTurns > 0 && frozenCol === c) continue;
         if (b[0][c] === 0) locs.push(c);
       }
       return locs;
@@ -945,17 +1190,18 @@
         }
         if (obs > 0) return 0;
         if (pc === 4) score += 100;
-        else if (pc === 3 && ec === 1) score += 5;
-        else if (pc === 2 && ec === 2) score += 2;
-        if (oc === 3 && ec === 1) score -= 4;
+        else if (pc === 3 && ec === 1) score += (piece === 2 && aiPersonality === 1) ? 15 : 5;
+        else if (pc === 2 && ec === 2) score += (piece === 2 && aiPersonality === 1) ? 6 : 2;
+        if (oc === 3 && ec === 1) score -= 8;
         return score;
     }
 
     function scoreBoard(b, piece) {
         let score = 0;
+        let centerCol = Math.floor(COLS / 2);
         let centerCount = 0;
-        for (let r=0; r<ROWS; r++) if (b[r][3] === piece) centerCount++;
-        score += centerCount * 3;
+        for (let r=0; r<ROWS; r++) if (b[r][centerCol] === piece) centerCount++;
+        score += centerCount * 4;
 
         for (let r=0; r<ROWS; r++) {
             for (let c=0; c<COLS-3; c++) {
@@ -1031,11 +1277,19 @@
       }
     }
 
+    function getBestMoveAI(player) {
+      let depth = COLS > 8 ? 3 : 4;
+      let res = minimax(board, depth, -Infinity, Infinity, player === 2);
+      if (res.column !== undefined && res.column !== -1) return res.column;
+      let available = getAvailableCols();
+      return available[Math.floor(Math.random() * available.length)];
+    }
+
     function aiMove() {
       aiTimeout = null;
       if(!gameActive) return;
       
-      if (aiDifficulty === 0) {
+      if (aiPersonality === 0) { // Rookie
         let available = getAvailableCols();
         if(available.length === 0) return;
         
@@ -1053,7 +1307,7 @@
         }
         dropPiece(bestCol);
       } else {
-        let depth = (aiDifficulty === 1) ? 3 : ((aiDifficulty === 2) ? 5 : 6);
+        let depth = (aiPersonality === 1) ? 3 : ((aiPersonality === 2) ? 4 : (COLS > 8 ? 4 : 5));
         let res = minimax(board, depth, -Infinity, Infinity, true);
         if (res.column !== undefined && res.column !== -1) {
           dropPiece(res.column);
@@ -1102,8 +1356,8 @@
 
       if (winningCells && winningCells.length >= 4) {
         const pts = winningCells.map(([r, c]) => {
-          const x = 12 + 10 + c * (50 + 6) + 25;
-          const y = 12 + 10 + r * (50 + 6) + 25;
+          const x = 12 + 10 + c * (44 + 5) + 22;
+          const y = 12 + 10 + r * (44 + 5) + 22;
           return { x, y };
         });
 

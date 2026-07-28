@@ -6,26 +6,40 @@
 #include <math.h>
 
 const char g_szClassName[] = "KConnect4WindowClass";
-#define ROWS 6
-#define COLS 7
+#define MAX_ROWS 10
+#define MAX_COLS 10
 
-// Board values: 0=Empty, 1=Player 1 (Red), 2=Player 2 (Yellow), 3=Obstacle (Solid), 4=Crackable Block
-int board[ROWS][COLS];
+int g_rows = 6;
+int g_cols = 7;
+
+// Board values: 0=Empty, 1=Red, 2=Yellow, 3=Obstacle (Solid), 4=Crackable Block
+int board[MAX_ROWS][MAX_COLS];
 int currentPlayer = 1;
 bool gameActive = true;
 bool isDraw = false;
 
-// Game modes: 0 = 2 Player, 1 = vs AI, 2 = Campaign, 3 = Time Attack
+// Game modes: 0 = 2 Player, 1 = vs AI, 2 = Campaign, 3 = Speed
 int gameMode = 1;
-int aiDifficulty = 0;
+int aiPersonality = 0; // 0=Rookie, 1=Aggressive, 2=Trapper, 3=Grandmaster
 int campaignStage = 1;
 
-// Power-ups: 0 = Normal, 1 = Bomb (3x3 clear), 2 = Drill (column clear)
+// Power-ups: 0 = Normal, 1 = Bomb (3x3 clear), 2 = Drill (crush underneath), 3 = Magnet (pull adjacent)
 int selectedPowerup = 0;
-int p1Bombs = 1, p2Bombs = 1;
-int p1Drills = 1, p2Drills = 1;
+int p1Bombs = 2, p2Bombs = 2;
+int p1Drills = 2, p2Drills = 2;
+int p1Magnets = 2, p2Magnets = 2;
 
-// Time attack timer
+// Active Skills: Freeze (F), Hint (H)
+int p1Freezes = 1, p2Freezes = 1;
+bool isFreezeMode = false;
+int frozenCol = -1;
+int frozenTurns = 0;
+int frozenPlayer = 0;
+
+int hintCol = -1;
+int hintTimer = 0;
+
+// Speed mode timer
 int turnTimeLeftMs = 7000;
 
 // Animation state
@@ -38,9 +52,9 @@ float animY_float = 50.0f;
 float animVY = 0.0f;
 int animBounceCount = 0;
 int animTargetY = 0;
-int animType = 0; // 0=normal drop, 1=bomb drop, 2=drill drop
+int animType = 0; // 0=normal, 1=bomb, 2=drill, 3=magnet
 
-// Particle structure for confetti FX
+// Particles
 typedef struct {
     float x, y;
     float vx, vy;
@@ -61,7 +75,7 @@ void SpawnConfetti() {
     };
     g_particleCount = MAX_PARTICLES;
     for (int i = 0; i < MAX_PARTICLES; i++) {
-        g_particles[i].x = (float)(rand() % 350 + 10);
+        g_particles[i].x = (float)(rand() % 450 + 10);
         g_particles[i].y = (float)(-(rand() % 40));
         g_particles[i].vx = ((float)(rand() % 100) - 50.0f) / 15.0f;
         g_particles[i].vy = ((float)(rand() % 100)) / 25.0f + 2.0f;
@@ -78,7 +92,7 @@ void UpdateParticles() {
         if (g_particles[i].life > 0) {
             g_particles[i].x += g_particles[i].vx;
             g_particles[i].y += g_particles[i].vy;
-            g_particles[i].vy += 0.15f; // Gravity
+            g_particles[i].vy += 0.15f;
             g_particles[i].rotation += g_particles[i].vRot;
             g_particles[i].life--;
         }
@@ -86,101 +100,84 @@ void UpdateParticles() {
 }
 
 int hoverCol = -1;
-
-int winCells[7][2];
+int winCells[MAX_COLS * MAX_ROWS][2];
 int winCellCount = 0;
 
-HWND hModeBtn, hBombBtn, hDrillBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn, hSaveBtn, hLoadBtn, hHelpBtn;
+HWND hModeBtn, hBombBtn, hDrillBtn, hMagnetBtn, hHintBtn, hFreezeBtn, hDiffSelect, hUndoBtn, hResetBtn, hMuteBtn, hSaveBtn, hLoadBtn, hHelpBtn;
 bool isMuted = false;
 
 void PlaySoundEffect(int type) {
     if (isMuted) return;
-    if (type == 1) { // Drop
-        Beep(400, 50);
-    } else if (type == 2) { // Win
-        Beep(400, 80); Beep(500, 80); Beep(600, 80); Beep(800, 120);
-    } else if (type == 3) { // Lose
-        Beep(300, 150); Beep(200, 200);
-    } else if (type == 4) { // Invalid
-        Beep(150, 100);
-    } else if (type == 5) { // Draw
-        Beep(300, 250);
-    } else if (type == 6) { // Bomb / Explosion
-        Beep(120, 150); Beep(80, 200);
-    } else if (type == 7) { // Drill
-        Beep(600, 50); Beep(450, 50); Beep(300, 100);
-    }
+    if (type == 1) { Beep(400, 50); }
+    else if (type == 2) { Beep(400, 80); Beep(500, 80); Beep(600, 80); Beep(800, 120); }
+    else if (type == 3) { Beep(300, 150); Beep(200, 200); }
+    else if (type == 4) { Beep(150, 100); }
+    else if (type == 5) { Beep(300, 250); }
+    else if (type == 6) { Beep(120, 150); Beep(80, 200); }
+    else if (type == 7) { Beep(600, 50); Beep(450, 50); Beep(300, 100); }
+    else if (type == 8) { Beep(500, 60); Beep(700, 60); Beep(900, 80); }
+    else if (type == 9) { Beep(250, 120); Beep(180, 150); }
 }
 
 void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
-    int cx = x + 20;
-    int cy = y + 20;
+    int cx = x + 18;
+    int cy = y + 18;
 
     if (cellType == 0) { // Empty cutout hole
         HBRUSH bgBrush = CreateSolidBrush(RGB(9, 12, 20));
         HPEN darkPen = CreatePen(PS_SOLID, 1, RGB(4, 6, 10));
         SelectObject(hdc, bgBrush);
         SelectObject(hdc, darkPen);
-        Ellipse(hdc, x, y, x + 40, y + 40);
+        Ellipse(hdc, x, y, x + 36, y + 36);
         DeleteObject(bgBrush);
         DeleteObject(darkPen);
 
-        // Top-left inner shadow arc
         HPEN shadowPen = CreatePen(PS_SOLID, 2, RGB(2, 3, 6));
         SelectObject(hdc, shadowPen);
-        Arc(hdc, x + 2, y + 2, x + 38, y + 38, x + 38, y + 2, x + 2, y + 38);
+        Arc(hdc, x + 2, y + 2, x + 34, y + 34, x + 34, y + 2, x + 2, y + 34);
         DeleteObject(shadowPen);
         return;
     }
 
     if (isWinCell) {
-        // Glowing cyan aura ring
         HPEN glowPen = CreatePen(PS_SOLID, 4, RGB(0, 255, 255));
         HBRUSH nullBrush = GetStockObject(NULL_BRUSH);
         SelectObject(hdc, glowPen);
         SelectObject(hdc, nullBrush);
-        Ellipse(hdc, x - 2, y - 2, x + 42, y + 42);
+        Ellipse(hdc, x - 2, y - 2, x + 38, y + 38);
         DeleteObject(glowPen);
     }
 
-    if (cellType == 1 || cellType == 100) { // Red Disc (100 = hover)
+    if (cellType == 1 || cellType == 100) { // Red Disc
         COLORREF borderColor = (cellType == 100) ? RGB(140, 40, 40) : RGB(120, 0, 0);
         COLORREF bodyColor   = (cellType == 100) ? RGB(200, 70, 70) : RGB(220, 30, 30);
         COLORREF innerRing   = (cellType == 100) ? RGB(220, 90, 90) : RGB(180, 20, 20);
 
         HPEN bPen = CreatePen(PS_SOLID, 2, borderColor);
         HBRUSH bBrush = CreateSolidBrush(bodyColor);
-        SelectObject(hdc, bPen);
-        SelectObject(hdc, bBrush);
-        Ellipse(hdc, x, y, x + 40, y + 40);
-        DeleteObject(bPen);
-        DeleteObject(bBrush);
+        SelectObject(hdc, bPen); SelectObject(hdc, bBrush);
+        Ellipse(hdc, x, y, x + 36, y + 36);
+        DeleteObject(bPen); DeleteObject(bBrush);
 
-        // Outer ridged ring detail
         HPEN rPen = CreatePen(PS_SOLID, 1, innerRing);
         HBRUSH nBrush = GetStockObject(NULL_BRUSH);
-        SelectObject(hdc, rPen);
-        SelectObject(hdc, nBrush);
-        Ellipse(hdc, x + 3, y + 3, x + 37, y + 37);
+        SelectObject(hdc, rPen); SelectObject(hdc, nBrush);
+        Ellipse(hdc, x + 3, y + 3, x + 33, y + 33);
         DeleteObject(rPen);
 
-        // 3D Glossy Specular Highlight
         HBRUSH hlBrush = CreateSolidBrush((cellType == 100) ? RGB(255, 200, 200) : RGB(255, 170, 170));
         HPEN nPen = GetStockObject(NULL_PEN);
-        SelectObject(hdc, nPen);
-        SelectObject(hdc, hlBrush);
-        Ellipse(hdc, x + 7, y + 5, x + 25, y + 17);
+        SelectObject(hdc, nPen); SelectObject(hdc, hlBrush);
+        Ellipse(hdc, x + 6, y + 4, x + 22, y + 15);
         DeleteObject(hlBrush);
 
-        // White core highlight dot
         HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, wBrush);
-        Ellipse(hdc, x + 10, y + 7, x + 18, y + 13);
+        Ellipse(hdc, x + 9, y + 6, x + 16, y + 11);
         DeleteObject(wBrush);
 
-        // Gold 5-point star emblem
         POINT starPts[10];
-        float outerR = 8.5f, innerR = 3.5f;
+        float outerR = 7.5f, innerR = 3.0f;
         for (int i = 0; i < 10; i++) {
             float angle = (i * 36 - 90) * 3.14159f / 180.0f;
             float r_curr = (i % 2 == 0) ? outerR : innerR;
@@ -189,127 +186,109 @@ void DrawDisc3D(HDC hdc, int x, int y, int cellType, bool isWinCell) {
         }
         HBRUSH starBrush = CreateSolidBrush(RGB(255, 215, 0));
         HPEN starPen = CreatePen(PS_SOLID, 1, RGB(180, 140, 0));
-        SelectObject(hdc, starPen);
-        SelectObject(hdc, starBrush);
+        SelectObject(hdc, starPen); SelectObject(hdc, starBrush);
         Polygon(hdc, starPts, 10);
-        DeleteObject(starBrush);
-        DeleteObject(starPen);
+        DeleteObject(starBrush); DeleteObject(starPen);
     }
-    else if (cellType == 2 || cellType == 200) { // Yellow Disc (200 = hover)
+    else if (cellType == 2 || cellType == 200) { // Yellow Disc
         COLORREF borderColor = (cellType == 200) ? RGB(160, 140, 40) : RGB(160, 100, 0);
         COLORREF bodyColor   = (cellType == 200) ? RGB(230, 210, 80) : RGB(255, 210, 30);
         COLORREF innerRing   = (cellType == 200) ? RGB(240, 220, 100) : RGB(220, 160, 0);
 
         HPEN bPen = CreatePen(PS_SOLID, 2, borderColor);
         HBRUSH bBrush = CreateSolidBrush(bodyColor);
-        SelectObject(hdc, bPen);
-        SelectObject(hdc, bBrush);
-        Ellipse(hdc, x, y, x + 40, y + 40);
-        DeleteObject(bPen);
-        DeleteObject(bBrush);
+        SelectObject(hdc, bPen); SelectObject(hdc, bBrush);
+        Ellipse(hdc, x, y, x + 36, y + 36);
+        DeleteObject(bPen); DeleteObject(bBrush);
 
-        // Inner ridged ring
         HPEN rPen = CreatePen(PS_SOLID, 1, innerRing);
         HBRUSH nBrush = GetStockObject(NULL_BRUSH);
-        SelectObject(hdc, rPen);
-        SelectObject(hdc, nBrush);
-        Ellipse(hdc, x + 3, y + 3, x + 37, y + 37);
+        SelectObject(hdc, rPen); SelectObject(hdc, nBrush);
+        Ellipse(hdc, x + 3, y + 3, x + 33, y + 33);
         DeleteObject(rPen);
 
-        // 3D Glossy Highlight
         HBRUSH hlBrush = CreateSolidBrush(RGB(255, 255, 200));
         HPEN nPen = GetStockObject(NULL_PEN);
-        SelectObject(hdc, nPen);
-        SelectObject(hdc, hlBrush);
-        Ellipse(hdc, x + 7, y + 5, x + 25, y + 17);
+        SelectObject(hdc, nPen); SelectObject(hdc, hlBrush);
+        Ellipse(hdc, x + 6, y + 4, x + 22, y + 15);
         DeleteObject(hlBrush);
 
-        // White core highlight
         HBRUSH wBrush = CreateSolidBrush(RGB(255, 255, 255));
         SelectObject(hdc, wBrush);
-        Ellipse(hdc, x + 10, y + 7, x + 18, y + 13);
+        Ellipse(hdc, x + 9, y + 6, x + 16, y + 11);
         DeleteObject(wBrush);
 
-        // Royal Blue Crown Emblem
         POINT crownPts[7] = {
-            {cx - 8, cy + 5}, {cx - 8, cy - 3}, {cx - 4, cy + 1},
-            {cx, cy - 6}, {cx + 4, cy + 1}, {cx + 8, cy - 3}, {cx + 8, cy + 5}
+            {cx - 7, cy + 4}, {cx - 7, cy - 3}, {cx - 3, cy + 1},
+            {cx, cy - 5}, {cx + 3, cy + 1}, {cx + 7, cy - 3}, {cx + 7, cy + 4}
         };
         HBRUSH crownBrush = CreateSolidBrush(RGB(24, 60, 150));
         HPEN crownPen = CreatePen(PS_SOLID, 1, RGB(10, 25, 80));
-        SelectObject(hdc, crownPen);
-        SelectObject(hdc, crownBrush);
+        SelectObject(hdc, crownPen); SelectObject(hdc, crownBrush);
         Polygon(hdc, crownPts, 7);
-        DeleteObject(crownBrush);
-        DeleteObject(crownPen);
+        DeleteObject(crownBrush); DeleteObject(crownPen);
     }
     else if (cellType == 3) { // Obstacle
         HBRUSH obsBrush = CreateSolidBrush(RGB(45, 45, 52));
         HPEN obsPen = CreatePen(PS_SOLID, 2, RGB(80, 80, 90));
-        SelectObject(hdc, obsPen);
-        SelectObject(hdc, obsBrush);
-        Ellipse(hdc, x, y, x + 40, y + 40);
-        DeleteObject(obsBrush);
-        DeleteObject(obsPen);
+        SelectObject(hdc, obsPen); SelectObject(hdc, obsBrush);
+        Ellipse(hdc, x, y, x + 36, y + 36);
+        DeleteObject(obsBrush); DeleteObject(obsPen);
 
-        // Warning diagonal hazard line
         HPEN warnPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
         SelectObject(hdc, warnPen);
-        MoveToEx(hdc, x + 10, y + 30, NULL);
-        LineTo(hdc, x + 30, y + 10);
+        MoveToEx(hdc, x + 8, y + 28, NULL); LineTo(hdc, x + 28, y + 8);
         DeleteObject(warnPen);
     }
     else if (cellType == 4) { // Crackable Block
         HBRUSH woodBrush = CreateSolidBrush(RGB(139, 69, 19));
         HPEN woodPen = CreatePen(PS_SOLID, 2, RGB(210, 130, 40));
-        SelectObject(hdc, woodPen);
-        SelectObject(hdc, woodBrush);
-        Ellipse(hdc, x, y, x + 40, y + 40);
+        SelectObject(hdc, woodPen); SelectObject(hdc, woodBrush);
+        Ellipse(hdc, x, y, x + 36, y + 36);
         DeleteObject(woodBrush);
 
-        // Crack line overlay
         HPEN crackPen = CreatePen(PS_SOLID, 2, RGB(50, 25, 5));
         SelectObject(hdc, crackPen);
-        MoveToEx(hdc, cx - 6, cy - 10, NULL);
-        LineTo(hdc, cx, cy);
-        LineTo(hdc, cx - 4, cy + 6);
-        LineTo(hdc, cx + 8, cy + 10);
-        DeleteObject(crackPen);
-        DeleteObject(woodPen);
+        MoveToEx(hdc, cx - 5, cy - 8, NULL); LineTo(hdc, cx, cy);
+        LineTo(hdc, cx - 3, cy + 5); LineTo(hdc, cx + 6, cy + 8);
+        DeleteObject(crackPen); DeleteObject(woodPen);
     }
     else if (cellType == 5 || cellType == 500) { // Bomb
         HBRUSH bBrush = CreateSolidBrush(RGB(25, 25, 25));
         HPEN bPen = CreatePen(PS_SOLID, 2, RGB(255, 68, 0));
-        SelectObject(hdc, bPen);
-        SelectObject(hdc, bBrush);
-        Ellipse(hdc, x + 2, y + 2, x + 38, y + 38);
-        DeleteObject(bBrush);
-        DeleteObject(bPen);
+        SelectObject(hdc, bPen); SelectObject(hdc, bBrush);
+        Ellipse(hdc, x + 2, y + 2, x + 34, y + 34);
+        DeleteObject(bBrush); DeleteObject(bPen);
 
-        // Fuse spark
         HPEN sparkPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
         SelectObject(hdc, sparkPen);
-        MoveToEx(hdc, cx, cy - 15, NULL);
-        LineTo(hdc, cx + 4, cy - 20);
+        MoveToEx(hdc, cx, cy - 12, NULL); LineTo(hdc, cx + 4, cy - 17);
         DeleteObject(sparkPen);
     }
     else if (cellType == 6 || cellType == 600) { // Drill
         HBRUSH dBrush = CreateSolidBrush(RGB(0, 150, 180));
         HPEN dPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
-        SelectObject(hdc, dPen);
-        SelectObject(hdc, dBrush);
-        Ellipse(hdc, x + 2, y + 2, x + 38, y + 38);
-        DeleteObject(dBrush);
-        DeleteObject(dPen);
+        SelectObject(hdc, dPen); SelectObject(hdc, dBrush);
+        Ellipse(hdc, x + 2, y + 2, x + 34, y + 34);
+        DeleteObject(dBrush); DeleteObject(dPen);
 
-        // Spiral drill line
         HPEN drillLine = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
         SelectObject(hdc, drillLine);
-        MoveToEx(hdc, cx - 10, cy - 10, NULL);
-        LineTo(hdc, cx + 10, cy + 10);
-        MoveToEx(hdc, cx - 8, cy, NULL);
-        LineTo(hdc, cx, cy + 8);
+        MoveToEx(hdc, cx - 8, cy - 8, NULL); LineTo(hdc, cx + 8, cy + 8);
+        MoveToEx(hdc, cx - 6, cy, NULL); LineTo(hdc, cx, cy + 6);
         DeleteObject(drillLine);
+    }
+    else if (cellType == 7 || cellType == 700) { // Magnet
+        HBRUSH mBrush = CreateSolidBrush(RGB(138, 43, 226));
+        HPEN mPen = CreatePen(PS_SOLID, 2, RGB(224, 64, 251));
+        SelectObject(hdc, mPen); SelectObject(hdc, mBrush);
+        Ellipse(hdc, x + 2, y + 2, x + 34, y + 34);
+        DeleteObject(mBrush); DeleteObject(mPen);
+
+        HPEN magLine = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        SelectObject(hdc, magLine);
+        Arc(hdc, cx - 8, cy - 8, cx + 8, cy + 8, cx - 8, cy, cx + 8, cy);
+        DeleteObject(magLine);
     }
 }
 
@@ -323,19 +302,24 @@ typedef struct {
     int maxCampaignStage;
     int totalBombs;
     int totalDrills;
+    int totalMagnets;
 } GameStats;
 
-GameStats stats = {0, 0, 0, 0, 0, 0, 1, 0, 0};
+GameStats stats = {0, 0, 0, 0, 0, 0, 1, 0, 0, 0};
 
 typedef struct {
-    int board[ROWS][COLS];
+    int board[MAX_ROWS][MAX_COLS];
+    int rows, cols;
     int currentPlayer;
     int p1Bombs, p2Bombs;
     int p1Drills, p2Drills;
+    int p1Magnets, p2Magnets;
+    int p1Freezes, p2Freezes;
+    int frozenCol, frozenTurns, frozenPlayer;
     GameStats oldStats;
 } MoveRecord;
 
-MoveRecord moveHistory[ROWS * COLS * 2];
+MoveRecord moveHistory[MAX_ROWS * MAX_COLS * 2];
 int historyCount = 0;
 
 void LoadStats() {
@@ -356,18 +340,22 @@ void SaveStats() {
 }
 
 typedef struct {
-    int board[ROWS][COLS];
+    int board[MAX_ROWS][MAX_COLS];
+    int rows, cols;
     int currentPlayer;
     bool gameActive;
     bool isDraw;
     int gameMode;
-    int aiDifficulty;
+    int aiPersonality;
     int campaignStage;
     int p1Bombs, p2Bombs;
     int p1Drills, p2Drills;
-    int winCells[7][2];
+    int p1Magnets, p2Magnets;
+    int p1Freezes, p2Freezes;
+    int frozenCol, frozenTurns, frozenPlayer;
+    int winCells[MAX_COLS * MAX_ROWS][2];
     int winCellCount;
-    MoveRecord moveHistory[ROWS * COLS * 2];
+    MoveRecord moveHistory[MAX_ROWS * MAX_COLS * 2];
     int historyCount;
 } GameState;
 
@@ -377,16 +365,18 @@ void ResetGame();
 void SaveGame() {
     GameState state;
     memcpy(state.board, board, sizeof(board));
+    state.rows = g_rows; state.cols = g_cols;
     state.currentPlayer = currentPlayer;
     state.gameActive = gameActive;
     state.isDraw = isDraw;
     state.gameMode = gameMode;
-    state.aiDifficulty = aiDifficulty;
+    state.aiPersonality = aiPersonality;
     state.campaignStage = campaignStage;
-    state.p1Bombs = p1Bombs;
-    state.p2Bombs = p2Bombs;
-    state.p1Drills = p1Drills;
-    state.p2Drills = p2Drills;
+    state.p1Bombs = p1Bombs; state.p2Bombs = p2Bombs;
+    state.p1Drills = p1Drills; state.p2Drills = p2Drills;
+    state.p1Magnets = p1Magnets; state.p2Magnets = p2Magnets;
+    state.p1Freezes = p1Freezes; state.p2Freezes = p2Freezes;
+    state.frozenCol = frozenCol; state.frozenTurns = frozenTurns; state.frozenPlayer = frozenPlayer;
     memcpy(state.winCells, winCells, sizeof(winCells));
     state.winCellCount = winCellCount;
     memcpy(state.moveHistory, moveHistory, sizeof(moveHistory));
@@ -406,22 +396,24 @@ void LoadGame(HWND hwnd) {
         GameState state;
         if (fread(&state, sizeof(GameState), 1, f) == 1) {
             memcpy(board, state.board, sizeof(board));
+            g_rows = state.rows; g_cols = state.cols;
             currentPlayer = state.currentPlayer;
             gameActive = state.gameActive;
             isDraw = state.isDraw;
             gameMode = state.gameMode;
-            aiDifficulty = state.aiDifficulty;
+            aiPersonality = state.aiPersonality;
             campaignStage = state.campaignStage;
-            p1Bombs = state.p1Bombs;
-            p2Bombs = state.p2Bombs;
-            p1Drills = state.p1Drills;
-            p2Drills = state.p2Drills;
+            p1Bombs = state.p1Bombs; p2Bombs = state.p2Bombs;
+            p1Drills = state.p1Drills; p2Drills = state.p2Drills;
+            p1Magnets = state.p1Magnets; p2Magnets = state.p2Magnets;
+            p1Freezes = state.p1Freezes; p2Freezes = state.p2Freezes;
+            frozenCol = state.frozenCol; frozenTurns = state.frozenTurns; frozenPlayer = state.frozenPlayer;
             memcpy(winCells, state.winCells, sizeof(winCells));
             winCellCount = state.winCellCount;
             memcpy(moveHistory, state.moveHistory, sizeof(moveHistory));
             historyCount = state.historyCount;
             
-            if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2 Player");
+            if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2P");
             else if (gameMode == 1) SetWindowText(hModeBtn, "Mode: vs AI");
             else if (gameMode == 2) SetWindowText(hModeBtn, "Mode: Campaign");
             else SetWindowText(hModeBtn, "Mode: Speed");
@@ -445,34 +437,60 @@ void LoadGame(HWND hwnd) {
     }
 }
 
+void GetStageGridSize(int stage, int *outRows, int *outCols) {
+    if (stage <= 5) { *outRows = 6; *outCols = 7; }
+    else if (stage <= 10) { *outRows = 7; *outCols = 8; }
+    else if (stage <= 15) { *outRows = 8; *outCols = 9; }
+    else { *outRows = 8; *outCols = 10; }
+}
+
+int GetStageAIPersonality(int stage) {
+    if (stage <= 3) return 0; // Rookie
+    if (stage <= 6) return 1; // Aggressive
+    if (stage <= 11) return 2; // Trapper
+    return 3; // Grandmaster
+}
+
 void SetupCampaignStage(int stage) {
-    for(int r=0; r<ROWS; r++)
-        for(int c=0; c<COLS; c++)
+    GetStageGridSize(stage, &g_rows, &g_cols);
+    for(int r=0; r<MAX_ROWS; r++)
+        for(int c=0; c<MAX_COLS; c++)
             board[r][c] = 0;
             
-    aiDifficulty = 1;
-    if (stage >= 4) aiDifficulty = 2;
-    if (stage >= 8) aiDifficulty = 3;
+    aiPersonality = GetStageAIPersonality(stage);
 
-    if (stage == 2) { board[5][0] = 3; board[5][6] = 3; }
-    else if (stage == 3) { board[5][3] = 3; board[4][3] = 3; }
-    else if (stage == 4) { board[5][2] = 3; board[5][4] = 3; board[4][3] = 3; }
-    else if (stage == 5) { board[5][1] = 3; board[5][3] = 3; board[5][5] = 3; board[4][2] = 3; board[4][4] = 3; }
-    else if (stage == 6) { board[3][1] = 3; board[3][5] = 3; }
-    else if (stage == 7) { board[2][2] = 3; board[2][3] = 3; board[2][4] = 3; }
-    else if (stage == 8) { board[5][3] = 3; board[4][3] = 3; board[3][3] = 3; board[2][3] = 3; }
-    else if (stage == 9) { board[5][1] = 3; board[4][1] = 3; board[5][5] = 3; board[4][5] = 3; board[2][3] = 3; }
-    else if (stage == 10) { board[5][0]=3; board[5][6]=3; board[4][2]=3; board[4][4]=3; board[2][1]=3; board[2][5]=3; }
-    else if (stage == 11) { board[5][2]=4; board[5][4]=4; board[4][3]=3; }
-    else if (stage == 12) { board[4][3]=4; board[3][2]=3; board[3][4]=3; board[2][3]=4; }
-    else if (stage == 13) { board[5][2]=4; board[5][4]=4; board[4][2]=3; board[4][4]=3; board[1][3]=4; }
-    else if (stage == 14) { board[5][1]=3; board[5][5]=3; board[3][3]=4; board[1][2]=3; board[1][4]=3; }
-    else if (stage == 15) { board[5][0]=3; board[5][6]=3; board[4][3]=4; board[3][1]=3; board[3][5]=3; board[2][3]=4; }
+    int R = g_rows;
+    int C = g_cols;
+
+    if (stage == 2) { board[R-1][0] = 3; board[R-1][C-1] = 3; }
+    else if (stage == 3) { board[R-1][C/2] = 4; board[R-2][C/2] = 4; }
+    else if (stage == 4) { board[R-1][2] = 3; board[R-1][C-3] = 3; board[R-2][C/2] = 4; }
+    else if (stage == 5) { board[R-1][1] = 3; board[R-1][C/2] = 3; board[R-1][C-2] = 3; board[R-2][2] = 4; board[R-2][C-3] = 4; }
+    else if (stage == 6) { board[R-1][2] = 4; board[R-1][C-3] = 4; board[R-2][3] = 3; board[R-2][C-4] = 3; }
+    else if (stage == 7) { board[R-3][2] = 3; board[R-3][3] = 3; board[R-3][4] = 3; board[R-3][5] = 3; }
+    else if (stage == 8) { board[R-1][3] = 3; board[R-2][3] = 3; board[R-3][3] = 3; board[R-4][3] = 3; }
+    else if (stage == 9) { board[R-1][1] = 3; board[R-2][1] = 3; board[R-1][C-2] = 3; board[R-2][C-2] = 3; board[R-3][C/2] = 4; board[R-4][C/2] = 4; }
+    else if (stage == 10) { board[R-1][0] = 3; board[R-1][C-1] = 3; board[R-2][2] = 3; board[R-2][C-3] = 3; board[R-4][1] = 4; board[R-4][C-2] = 4; }
+    else if (stage == 11) { board[R-1][2] = 4; board[R-1][C-3] = 4; board[R-2][3] = 4; board[R-2][C-4] = 4; board[R-3][C/2] = 3; }
+    else if (stage == 12) { board[R-1][2] = 3; board[R-2][2] = 3; board[R-1][C-3] = 3; board[R-2][C-3] = 3; }
+    else if (stage == 13) { board[R-1][3] = 4; board[R-1][C-4] = 4; board[R-2][2] = 4; board[R-2][C-3] = 4; board[R-3][C/2] = 3; board[R-4][C/2] = 3; }
+    else if (stage == 14) { board[R-1][1] = 3; board[R-1][C-2] = 3; board[R-3][C/2] = 4; board[R-5][2] = 3; board[R-5][C-3] = 3; }
+    else if (stage == 15) { board[R-1][0] = 3; board[R-1][C-1] = 3; board[R-2][C/2] = 4; board[R-3][2] = 4; board[R-3][C-3] = 4; board[R-4][C/2] = 4; }
+    else if (stage == 16) { board[R-1][0] = 3; board[R-1][1] = 3; board[R-1][C-2] = 3; board[R-1][C-1] = 3; board[R-2][4] = 4; board[R-2][5] = 4; }
+    else if (stage == 17) { board[R-2][C/2-1] = 4; board[R-2][C/2] = 4; board[R-3][C/2-2] = 4; board[R-3][C/2+1] = 4; board[R-4][C/2-1] = 3; board[R-4][C/2] = 3; }
+    else if (stage == 18) { board[R-1][2] = 3; board[R-2][2] = 4; board[R-3][2] = 3; board[R-1][C-3] = 4; board[R-2][C-3] = 3; board[R-3][C-3] = 4; }
+    else if (stage == 19) { board[R-1][1] = 3; board[R-1][3] = 4; board[R-1][5] = 3; board[R-1][7] = 4; board[R-2][2] = 4; board[R-2][4] = 3; board[R-2][6] = 4; }
+    else if (stage == 20) { // Stage 20 Grandmaster Challenge!
+        board[R-1][1] = 3; board[R-1][4] = 3; board[R-1][5] = 3; board[R-1][8] = 3;
+        board[R-2][2] = 4; board[R-2][3] = 4; board[R-2][6] = 4; board[R-2][7] = 4;
+        board[R-3][4] = 4; board[R-3][5] = 4; board[R-4][2] = 3; board[R-4][7] = 3;
+    }
 }
 
 void ResetGame() {
-    for(int r=0; r<ROWS; r++)
-        for(int c=0; c<COLS; c++)
+    g_rows = 6; g_cols = 7;
+    for(int r=0; r<MAX_ROWS; r++)
+        for(int c=0; c<MAX_COLS; c++)
             board[r][c] = 0;
             
     if (gameMode == 2) {
@@ -486,39 +504,47 @@ void ResetGame() {
     winCellCount = 0;
     historyCount = 0;
     selectedPowerup = 0;
-    p1Bombs = 1; p2Bombs = 1;
-    p1Drills = 1; p2Drills = 1;
+    p1Bombs = 2; p2Bombs = 2;
+    p1Drills = 2; p2Drills = 2;
+    p1Magnets = 2; p2Magnets = 2;
+    p1Freezes = 1; p2Freezes = 1;
+    isFreezeMode = false;
+    frozenCol = -1; frozenTurns = 0; frozenPlayer = 0;
+    hintCol = -1; hintTimer = 0;
     turnTimeLeftMs = 7000;
 }
 
-void UpdateBombDrillButtons() {
-    char bBuf[32], dBuf[32];
+void UpdatePowerupButtons() {
+    char bBuf[32], dBuf[32], mBuf[32], fBuf[32];
     int bCount = (currentPlayer == 1) ? p1Bombs : p2Bombs;
     int dCount = (currentPlayer == 1) ? p1Drills : p2Drills;
-    if (gameMode > 0 && currentPlayer == 2) { bCount = 0; dCount = 0; }
+    int mCount = (currentPlayer == 1) ? p1Magnets : p2Magnets;
+    int fCount = (currentPlayer == 1) ? p1Freezes : p2Freezes;
+    if (gameMode > 0 && currentPlayer == 2) { bCount = 0; dCount = 0; mCount = 0; fCount = 0; }
 
-    if (selectedPowerup == 1) wsprintf(bBuf, "[Bomb]");
-    else wsprintf(bBuf, "Bomb (%d)", bCount);
-
-    if (selectedPowerup == 2) wsprintf(dBuf, "[Drill]");
-    else wsprintf(dBuf, "Drill (%d)", dCount);
+    wsprintf(bBuf, (selectedPowerup == 1) ? "[Bomb]" : "Bomb (%d)", bCount);
+    wsprintf(dBuf, (selectedPowerup == 2) ? "[Drill]" : "Drill (%d)", dCount);
+    wsprintf(mBuf, (selectedPowerup == 3) ? "[Mag]" : "Mag (%d)", mCount);
+    wsprintf(fBuf, isFreezeMode ? "[Freeze]" : "Freeze (%d)", fCount);
 
     SetWindowText(hBombBtn, bBuf);
     SetWindowText(hDrillBtn, dBuf);
+    SetWindowText(hMagnetBtn, mBuf);
+    SetWindowText(hFreezeBtn, fBuf);
 }
 
 void UpdateDiffSelectUI() {
     SendMessage(hDiffSelect, CB_RESETCONTENT, 0, 0);
     if (gameMode == 1 || gameMode == 3) {
         ShowWindow(hDiffSelect, SW_SHOW);
-        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Easy");
-        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Medium");
-        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Hard");
-        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Expert");
-        SendMessage(hDiffSelect, CB_SETCURSEL, aiDifficulty, 0);
+        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Rookie");
+        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Aggressive");
+        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Trapper");
+        SendMessage(hDiffSelect, CB_ADDSTRING, 0, (LPARAM)"Grandmaster");
+        SendMessage(hDiffSelect, CB_SETCURSEL, aiPersonality, 0);
     } else if (gameMode == 2) {
         ShowWindow(hDiffSelect, SW_SHOW);
-        for(int i=1; i<=15; i++) {
+        for(int i=1; i<=20; i++) {
             char label[32];
             if (i <= stats.maxCampaignStage) wsprintf(label, "Stage %d", i);
             else wsprintf(label, "Locked %d", i);
@@ -534,13 +560,13 @@ bool CheckWin(int r, int c, int p) {
     int dirs[4][2] = {{0,1}, {1,0}, {1,1}, {1,-1}};
     for(int d=0; d<4; d++) {
         int count = 1;
-        int tempCells[7][2];
+        int tempCells[MAX_COLS * MAX_ROWS][2];
         tempCells[0][0] = r;
         tempCells[0][1] = c;
         for(int i=1; i<4; i++) {
             int nr = r + dirs[d][0]*i;
             int nc = c + dirs[d][1]*i;
-            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) {
+            if(nr>=0 && nr<g_rows && nc>=0 && nc<g_cols && board[nr][nc]==p) {
                 tempCells[count][0] = nr;
                 tempCells[count][1] = nc;
                 count++;
@@ -550,7 +576,7 @@ bool CheckWin(int r, int c, int p) {
         for(int i=1; i<4; i++) {
             int nr = r - dirs[d][0]*i;
             int nc = c - dirs[d][1]*i;
-            if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && board[nr][nc]==p) {
+            if(nr>=0 && nr<g_rows && nc>=0 && nc<g_cols && board[nr][nc]==p) {
                 tempCells[count][0] = nr;
                 tempCells[count][1] = nc;
                 count++;
@@ -570,30 +596,30 @@ bool CheckWin(int r, int c, int p) {
 }
 
 bool CheckDraw() {
-    for(int c=0; c<COLS; c++) {
+    for(int c=0; c<g_cols; c++) {
         if(board[0][c] == 0) return false;
     }
     return true;
 }
 
-bool checkWinBoard(int b[ROWS][COLS], int p) {
-    for (int r = 0; r < ROWS; r++) {
-        for (int c = 0; c < COLS - 3; c++) {
+bool checkWinBoard(int b[MAX_ROWS][MAX_COLS], int p) {
+    for (int r = 0; r < g_rows; r++) {
+        for (int c = 0; c < g_cols - 3; c++) {
             if (b[r][c] == p && b[r][c+1] == p && b[r][c+2] == p && b[r][c+3] == p) return true;
         }
     }
-    for (int c = 0; c < COLS; c++) {
-        for (int r = 0; r < ROWS - 3; r++) {
+    for (int c = 0; c < g_cols; c++) {
+        for (int r = 0; r < g_rows - 3; r++) {
             if (b[r][c] == p && b[r+1][c] == p && b[r+2][c] == p && b[r+3][c] == p) return true;
         }
     }
-    for (int r = 0; r < ROWS - 3; r++) {
-        for (int c = 0; c < COLS - 3; c++) {
+    for (int r = 0; r < g_rows - 3; r++) {
+        for (int c = 0; c < g_cols - 3; c++) {
             if (b[r][c] == p && b[r+1][c+1] == p && b[r+2][c+2] == p && b[r+3][c+3] == p) return true;
         }
     }
-    for (int r = 3; r < ROWS; r++) {
-        for (int c = 0; c < COLS - 3; c++) {
+    for (int r = 3; r < g_rows; r++) {
+        for (int c = 0; c < g_cols - 3; c++) {
             if (b[r][c] == p && b[r-1][c+1] == p && b[r-2][c+2] == p && b[r-3][c+3] == p) return true;
         }
     }
@@ -604,8 +630,8 @@ void ApplyGravity() {
     bool changed = true;
     while(changed) {
         changed = false;
-        for (int c = 0; c < COLS; c++) {
-            for (int r = ROWS - 2; r >= 0; r--) {
+        for (int c = 0; c < g_cols; c++) {
+            for (int r = g_rows - 2; r >= 0; r--) {
                 if ((board[r][c] == 1 || board[r][c] == 2) && board[r+1][c] == 0) {
                     board[r+1][c] = board[r][c];
                     board[r][c] = 0;
@@ -617,14 +643,14 @@ void ApplyGravity() {
 }
 
 bool SimDrop(int col, int p) {
-    for (int r = ROWS - 1; r >= 0; r--) {
+    for (int r = g_rows - 1; r >= 0; r--) {
         if (board[r][col] == 0) {
             board[r][col] = p;
-            int tempWin[7][2];
+            int tempWin[MAX_COLS * MAX_ROWS][2];
             int tempCount = winCellCount;
-            for(int i=0; i<7; i++) { tempWin[i][0]=winCells[i][0]; tempWin[i][1]=winCells[i][1]; }
+            for(int i=0; i<winCellCount; i++) { tempWin[i][0]=winCells[i][0]; tempWin[i][1]=winCells[i][1]; }
             bool win = CheckWin(r, col, p);
-            for(int i=0; i<7; i++) { winCells[i][0]=tempWin[i][0]; winCells[i][1]=tempWin[i][1]; }
+            for(int i=0; i<tempCount; i++) { winCells[i][0]=tempWin[i][0]; winCells[i][1]=tempWin[i][1]; }
             winCellCount = tempCount;
             board[r][col] = 0;
             return win;
@@ -645,38 +671,39 @@ int evaluateWindow(int w[4], int piece) {
     }
     if (obs > 0) return 0;
     if (pc == 4) score += 100;
-    else if (pc == 3 && ec == 1) score += 5;
-    else if (pc == 2 && ec == 2) score += 2;
-    if (oc == 3 && ec == 1) score -= 4;
+    else if (pc == 3 && ec == 1) score += (piece == 2 && aiPersonality == 1) ? 15 : 5;
+    else if (pc == 2 && ec == 2) score += (piece == 2 && aiPersonality == 1) ? 6 : 2;
+    if (oc == 3 && ec == 1) score -= 8;
     return score;
 }
 
-int scoreBoard(int b[ROWS][COLS], int piece) {
+int scoreBoard(int b[MAX_ROWS][MAX_COLS], int piece) {
     int score = 0;
+    int centerCol = g_cols / 2;
     int centerCount = 0;
-    for (int r=0; r<ROWS; r++) if (b[r][3] == piece) centerCount++;
-    score += centerCount * 3;
+    for (int r=0; r<g_rows; r++) if (b[r][centerCol] == piece) centerCount++;
+    score += centerCount * 4;
 
-    for (int r=0; r<ROWS; r++) {
-        for (int c=0; c<COLS-3; c++) {
+    for (int r=0; r<g_rows; r++) {
+        for (int c=0; c<g_cols-3; c++) {
             int w[4] = {b[r][c], b[r][c+1], b[r][c+2], b[r][c+3]};
             score += evaluateWindow(w, piece);
         }
     }
-    for (int c=0; c<COLS; c++) {
-        for (int r=0; r<ROWS-3; r++) {
+    for (int c=0; c<g_cols; c++) {
+        for (int r=0; r<g_rows-3; r++) {
             int w[4] = {b[r][c], b[r+1][c], b[r+2][c], b[r+3][c]};
             score += evaluateWindow(w, piece);
         }
     }
-    for (int r=0; r<ROWS-3; r++) {
-        for (int c=0; c<COLS-3; c++) {
+    for (int r=0; r<g_rows-3; r++) {
+        for (int c=0; c<g_cols-3; c++) {
             int w[4] = {b[r][c], b[r+1][c+1], b[r+2][c+2], b[r+3][c+3]};
             score += evaluateWindow(w, piece);
         }
     }
-    for (int r=3; r<ROWS; r++) {
-        for (int c=0; c<COLS-3; c++) {
+    for (int r=3; r<g_rows; r++) {
+        for (int c=0; c<g_cols-3; c++) {
             int w[4] = {b[r][c], b[r-1][c+1], b[r-2][c+2], b[r-3][c+3]};
             score += evaluateWindow(w, piece);
         }
@@ -684,23 +711,33 @@ int scoreBoard(int b[ROWS][COLS], int piece) {
     return score;
 }
 
-int getValidLocations(int b[ROWS][COLS], int locs[COLS]) {
+int getValidLocations(int b[MAX_ROWS][MAX_COLS], int locs[MAX_COLS]) {
     int count = 0;
-    int pref[COLS] = {3, 2, 4, 1, 5, 0, 6};
-    for(int i=0; i<COLS; i++) {
-        if(b[0][pref[i]] == 0) locs[count++] = pref[i];
+    int center = g_cols / 2;
+    int pref[MAX_COLS];
+    pref[0] = center;
+    int pIdx = 1;
+    for(int step=1; step<g_cols; step++) {
+        if (center - step >= 0) pref[pIdx++] = center - step;
+        if (center + step < g_cols) pref[pIdx++] = center + step;
+    }
+
+    for(int i=0; i<g_cols; i++) {
+        int c = pref[i];
+        if (frozenTurns > 0 && frozenCol == c) continue;
+        if (b[0][c] == 0) locs[count++] = c;
     }
     return count;
 }
 
-bool isTerminalNode(int b[ROWS][COLS]) {
+bool isTerminalNode(int b[MAX_ROWS][MAX_COLS]) {
     if(checkWinBoard(b, 1) || checkWinBoard(b, 2)) return true;
-    for(int c=0; c<COLS; c++) if(b[0][c] == 0) return false;
+    for(int c=0; c<g_cols; c++) if(b[0][c] == 0) return false;
     return true;
 }
 
-int getNextOpenRow(int b[ROWS][COLS], int c) {
-    for (int r = ROWS - 1; r >= 0; r--) {
+int getNextOpenRow(int b[MAX_ROWS][MAX_COLS], int c) {
+    for (int r = g_rows - 1; r >= 0; r--) {
         if (b[r][c] == 0) return r;
     }
     return -1;
@@ -711,8 +748,8 @@ typedef struct {
     int score;
 } MMResult;
 
-MMResult minimax(int b[ROWS][COLS], int depth, int alpha, int beta, bool maximizingPlayer) {
-    int validLocations[COLS];
+MMResult minimax(int b[MAX_ROWS][MAX_COLS], int depth, int alpha, int beta, bool maximizingPlayer) {
+    int validLocations[MAX_COLS];
     int count = getValidLocations(b, validLocations);
     bool isTerminal = isTerminalNode(b);
     
@@ -770,18 +807,36 @@ MMResult minimax(int b[ROWS][COLS], int depth, int alpha, int beta, bool maximiz
     }
 }
 
+int GetBestMoveAI(int player) {
+    int depth = 4;
+    if (g_cols > 8) depth = 3;
+    MMResult res = minimax(board, depth, -20000000, 20000000, (player == 2));
+    if (res.col != -1) return res.col;
+    int valid[MAX_COLS];
+    int count = getValidLocations(board, valid);
+    if (count > 0) return valid[rand() % count];
+    return 0;
+}
+
 void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
-    for (int r = ROWS - 1; r >= 0; r--) {
+    for (int r = g_rows - 1; r >= 0; r--) {
         if (board[r][col] == 0) {
-            PlaySoundEffect(powerType == 1 ? 6 : (powerType == 2 ? 7 : 1));
+            int snd = 1;
+            if (powerType == 1) snd = 6;
+            else if (powerType == 2) snd = 7;
+            else if (powerType == 3) snd = 8;
+            PlaySoundEffect(snd);
             
             // Record history
             memcpy(moveHistory[historyCount].board, board, sizeof(board));
+            moveHistory[historyCount].rows = g_rows;
+            moveHistory[historyCount].cols = g_cols;
             moveHistory[historyCount].currentPlayer = currentPlayer;
-            moveHistory[historyCount].p1Bombs = p1Bombs;
-            moveHistory[historyCount].p2Bombs = p2Bombs;
-            moveHistory[historyCount].p1Drills = p1Drills;
-            moveHistory[historyCount].p2Drills = p2Drills;
+            moveHistory[historyCount].p1Bombs = p1Bombs; moveHistory[historyCount].p2Bombs = p2Bombs;
+            moveHistory[historyCount].p1Drills = p1Drills; moveHistory[historyCount].p2Drills = p2Drills;
+            moveHistory[historyCount].p1Magnets = p1Magnets; moveHistory[historyCount].p2Magnets = p2Magnets;
+            moveHistory[historyCount].p1Freezes = p1Freezes; moveHistory[historyCount].p2Freezes = p2Freezes;
+            moveHistory[historyCount].frozenCol = frozenCol; moveHistory[historyCount].frozenTurns = frozenTurns; moveHistory[historyCount].frozenPlayer = frozenPlayer;
             moveHistory[historyCount].oldStats = stats;
             historyCount++;
 
@@ -791,6 +846,9 @@ void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
             } else if (powerType == 2) {
                 if (player == 1) p1Drills--; else p2Drills--;
                 stats.totalDrills++;
+            } else if (powerType == 3) {
+                if (player == 1) p1Magnets--; else p2Magnets--;
+                stats.totalMagnets++;
             }
 
             board[r][col] = player;
@@ -801,11 +859,14 @@ void ExecuteDrop(HWND hwnd, int col, int player, int powerType) {
             animY_float = 50.0f;
             animVY = 0.0f;
             animBounceCount = 0;
-            animTargetY = 50 + 5 + r * 45;
+
+            int colWidth = 40;
+            int boardLeft = (450 - (g_cols * 44)) / 2 + 10;
+            animTargetY = 50 + 5 + r * 44;
             animType = powerType;
             isAnimating = true;
             selectedPowerup = 0;
-            UpdateBombDrillButtons();
+            UpdatePowerupButtons();
             
             SetTimer(hwnd, 2, 16, NULL);
             break;
@@ -819,10 +880,11 @@ void AIMove(HWND hwnd) {
     int bestCol = -1;
     int powerType = 0;
     
-    if (aiDifficulty == 0) {
-        int available[COLS];
+    if (aiPersonality == 0) { // Rookie
+        int available[MAX_COLS];
         int count = 0;
-        for(int c=0; c<COLS; c++) {
+        for(int c=0; c<g_cols; c++) {
+            if (frozenTurns > 0 && frozenCol == c) continue;
             if (board[0][c] == 0) available[count++] = c;
         }
         if (count == 0) return;
@@ -840,14 +902,14 @@ void AIMove(HWND hwnd) {
         }
     } else {
         int depth = 3;
-        if (aiDifficulty == 1) depth = 3;
-        else if (aiDifficulty == 2) depth = 5;
-        else if (aiDifficulty == 3) depth = 6;
+        if (aiPersonality == 1) depth = 3;
+        else if (aiPersonality == 2) depth = 4;
+        else if (aiPersonality == 3) depth = (g_cols > 8) ? 4 : 5;
         
         MMResult res = minimax(board, depth, -20000000, 20000000, true);
         bestCol = res.col;
         if (bestCol == -1) {
-            int validLocations[COLS];
+            int validLocations[MAX_COLS];
             int count = getValidLocations(board, validLocations);
             if (count > 0) bestCol = validLocations[rand() % count];
         }
@@ -863,21 +925,44 @@ void FinishTurnEffects(HWND hwnd) {
         for(int dr=-1; dr<=1; dr++) {
             for(int dc=-1; dc<=1; dc++) {
                 int nr = animRow + dr, nc = animCol + dc;
-                if(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && (board[nr][nc] == 1 || board[nr][nc] == 2 || board[nr][nc] == 4)) {
+                if(nr>=0 && nr<g_rows && nc>=0 && nc<g_cols && (board[nr][nc] == 1 || board[nr][nc] == 2 || board[nr][nc] == 4)) {
                     board[nr][nc] = 0;
                 }
             }
         }
         ApplyGravity();
-    } else if (animType == 2) { // Drill
-        for(int r=0; r<ROWS; r++) {
-            if(board[r][animCol] == 1 || board[r][animCol] == 2 || board[r][animCol] == 4) {
-                board[r][animCol] = 0;
+    } else if (animType == 2) { // Drill / Heavy Anvil (destroys cell directly underneath)
+        if (animRow + 1 < g_rows && (board[animRow + 1][animCol] == 1 || board[animRow + 1][animCol] == 2 || board[animRow + 1][animCol] == 4)) {
+            board[animRow + 1][animCol] = 0;
+        }
+        ApplyGravity();
+    } else if (animType == 3) { // Magnet Disc (pulls friendly discs from adjacent cols)
+        int adjCols[2] = {animCol - 1, animCol + 1};
+        for (int i = 0; i < 2; i++) {
+            int ac = adjCols[i];
+            if (ac >= 0 && ac < g_cols) {
+                for (int r = g_rows - 1; r >= 0; r--) {
+                    if (board[r][ac] == animPlayer) {
+                        for (int rTarget = g_rows - 1; rTarget >= 0; rTarget--) {
+                            if (board[rTarget][animCol] == 0) {
+                                board[rTarget][animCol] = animPlayer;
+                                board[r][ac] = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
         ApplyGravity();
     }
     
+    // Decrement freeze status
+    if (frozenTurns > 0) {
+        frozenTurns--;
+        if (frozenTurns == 0) frozenCol = -1;
+    }
+
     bool w1 = checkWinBoard(board, 1);
     bool w2 = checkWinBoard(board, 2);
     
@@ -902,7 +987,7 @@ void FinishTurnEffects(HWND hwnd) {
             stats.lastWinner = winner;
             if(stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
             
-            if (gameMode == 2 && winner == 1 && campaignStage == stats.maxCampaignStage && campaignStage < 15) {
+            if (gameMode == 2 && winner == 1 && campaignStage == stats.maxCampaignStage && campaignStage < 20) {
                 stats.maxCampaignStage++;
                 UpdateDiffSelectUI();
             }
@@ -920,7 +1005,7 @@ void FinishTurnEffects(HWND hwnd) {
         stats.lastWinner = animPlayer;
         if(stats.streak > stats.bestStreak) stats.bestStreak = stats.streak;
         
-        if (gameMode == 2 && animPlayer == 1 && campaignStage == stats.maxCampaignStage && campaignStage < 15) {
+        if (gameMode == 2 && animPlayer == 1 && campaignStage == stats.maxCampaignStage && campaignStage < 20) {
             stats.maxCampaignStage++;
             UpdateDiffSelectUI();
         }
@@ -936,7 +1021,7 @@ void FinishTurnEffects(HWND hwnd) {
     } else {
         currentPlayer = (animPlayer == 1) ? 2 : 1;
         turnTimeLeftMs = 7000;
-        UpdateBombDrillButtons();
+        UpdatePowerupButtons();
         if (gameMode > 0 && currentPlayer == 2 && gameActive) {
             SetTimer(hwnd, 1, 300, NULL);
         }
@@ -948,27 +1033,56 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE:
             srand((unsigned int)time(NULL));
             LoadStats();
-            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 335, 100, 30, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hBombBtn = CreateWindow("BUTTON", "Bomb (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 115, 335, 80, 30, hwnd, (HMENU)9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hDrillBtn = CreateWindow("BUTTON", "Drill (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 200, 335, 80, 30, hwnd, (HMENU)10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 285, 337, 95, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            
-            hUndoBtn = CreateWindow("BUTTON", "Undo", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 372, 70, 30, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 85, 372, 70, 30, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 160, 372, 70, 30, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSaveBtn = CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 235, 372, 70, 30, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hLoadBtn = CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 310, 372, 70, 30, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            
-            hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 408, 70, 30, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            // Row 1 buttons
+            hModeBtn = CreateWindow("BUTTON", "Mode: vs AI", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 485, 95, 28, hwnd, (HMENU)1, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hDiffSelect = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 110, 487, 105, 200, hwnd, (HMENU)4, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHintBtn = CreateWindow("BUTTON", "Hint (H)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 220, 485, 75, 28, hwnd, (HMENU)11, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hFreezeBtn = CreateWindow("BUTTON", "Freeze (1)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 300, 485, 80, 28, hwnd, (HMENU)12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hUndoBtn = CreateWindow("BUTTON", "Undo (U)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 385, 485, 75, 28, hwnd, (HMENU)3, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
+            // Row 2 buttons
+            hBombBtn = CreateWindow("BUTTON", "Bomb (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 518, 80, 28, hwnd, (HMENU)9, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hDrillBtn = CreateWindow("BUTTON", "Drill (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 95, 518, 80, 28, hwnd, (HMENU)10, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMagnetBtn = CreateWindow("BUTTON", "Mag (2)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 180, 518, 80, 28, hwnd, (HMENU)13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hResetBtn = CreateWindow("BUTTON", "Reset", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 265, 518, 65, 28, hwnd, (HMENU)2, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hMuteBtn = CreateWindow("BUTTON", "Mute", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 335, 518, 60, 28, hwnd, (HMENU)5, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 400, 518, 60, 28, hwnd, (HMENU)8, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+
+            // Row 3 buttons
+            hSaveBtn = CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 10, 551, 65, 28, hwnd, (HMENU)6, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hLoadBtn = CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON, 80, 551, 65, 28, hwnd, (HMENU)7, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             
             UpdateDiffSelectUI();
             ResetGame();
             break;
+
+        case WM_KEYDOWN: {
+            if (isAnimating) break;
+            int key = (int)wParam;
+            if (key == 'H' || key == 'h') { // AI Hint skill
+                if (gameActive && !(gameMode > 0 && currentPlayer == 2)) {
+                    hintCol = GetBestMoveAI(currentPlayer);
+                    hintTimer = 150; // show for 150 frames (~3 sec)
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (key == 'U' || key == 'u') { // Undo move
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(3, 0), 0);
+            } else if (key == 'F' || key == 'f') { // Column Freeze skill
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(12, 0), 0);
+            } else if (key == 'B' || key == 'b' || key == '1') { // Bomb Disc
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(9, 0), 0);
+            } else if (key == 'D' || key == 'd' || key == '2') { // Drill Disc
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(10, 0), 0);
+            } else if (key == 'M' || key == 'm' || key == '3') { // Magnet Disc
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(13, 0), 0);
+            }
+            break;
+        }
             
         case WM_COMMAND:
-            if (LOWORD(wParam) == 1) {
+            if (LOWORD(wParam) == 1) { // Mode
                 gameMode = (gameMode + 1) % 4;
-                if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2 Player");
+                if (gameMode == 0) SetWindowText(hModeBtn, "Mode: 2P");
                 else if (gameMode == 1) SetWindowText(hModeBtn, "Mode: vs AI");
                 else if (gameMode == 2) SetWindowText(hModeBtn, "Mode: Campaign");
                 else SetWindowText(hModeBtn, "Mode: Speed");
@@ -982,24 +1096,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (!gameActive || (gameMode > 0 && currentPlayer == 2)) break;
                 int bCount = (currentPlayer == 1) ? p1Bombs : p2Bombs;
                 if (bCount > 0) {
-                    if (selectedPowerup == 1) selectedPowerup = 0;
-                    else selectedPowerup = 1;
-                    UpdateBombDrillButtons();
+                    selectedPowerup = (selectedPowerup == 1) ? 0 : 1;
+                    isFreezeMode = false;
+                    UpdatePowerupButtons();
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == 10) { // Drill
                 if (!gameActive || (gameMode > 0 && currentPlayer == 2)) break;
                 int dCount = (currentPlayer == 1) ? p1Drills : p2Drills;
                 if (dCount > 0) {
-                    if (selectedPowerup == 2) selectedPowerup = 0;
-                    else selectedPowerup = 2;
-                    UpdateBombDrillButtons();
+                    selectedPowerup = (selectedPowerup == 2) ? 0 : 2;
+                    isFreezeMode = false;
+                    UpdatePowerupButtons();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (LOWORD(wParam) == 13) { // Magnet
+                if (!gameActive || (gameMode > 0 && currentPlayer == 2)) break;
+                int mCount = (currentPlayer == 1) ? p1Magnets : p2Magnets;
+                if (mCount > 0) {
+                    selectedPowerup = (selectedPowerup == 3) ? 0 : 3;
+                    isFreezeMode = false;
+                    UpdatePowerupButtons();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (LOWORD(wParam) == 11) { // Optimal AI Hint
+                if (gameActive && !(gameMode > 0 && currentPlayer == 2)) {
+                    hintCol = GetBestMoveAI(currentPlayer);
+                    hintTimer = 150;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (LOWORD(wParam) == 12) { // Column Freeze skill
+                if (!gameActive || (gameMode > 0 && currentPlayer == 2)) break;
+                int fCount = (currentPlayer == 1) ? p1Freezes : p2Freezes;
+                if (fCount > 0) {
+                    isFreezeMode = !isFreezeMode;
+                    selectedPowerup = 0;
+                    UpdatePowerupButtons();
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             } else if (LOWORD(wParam) == 4 && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hDiffSelect, CB_GETCURSEL, 0, 0);
                 if (gameMode == 1 || gameMode == 3) {
-                    aiDifficulty = sel;
+                    aiPersonality = sel;
                 } else if (gameMode == 2) {
                     if (sel + 1 <= stats.maxCampaignStage) {
                         campaignStage = sel + 1;
@@ -1022,18 +1160,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == 7) {
                 LoadGame(hwnd);
             } else if (LOWORD(wParam) == 8) {
-                MessageBox(hwnd, "KConnect4 - Game Rules & Power-Ups\n\n"
-                    "Modes:\n"
-                    "- 2 Player: Play locally against a friend.\n"
-                    "- vs AI: Play against configurable AI (Easy, Medium, Hard, Expert).\n"
-                    "- Campaign: Progress through 15 handcrafted stages with obstacles!\n"
-                    "- Speed: Time Attack mode with 7-second turn timers.\n\n"
-                    "Power-Ups:\n"
-                    "- Bomb: Clears 3x3 surrounding grid and triggers gravity drop.\n"
-                    "- Drill: Clears entire column of discs and crackable blocks!\n\n"
-                    "Controls:\n"
-                    "- Click any column to drop a piece or use selected Power-Up.\n"
-                    "- Undo move anytime.", 
+                MessageBox(hwnd, "KConnect4 - Loop 7 Campaign Expansion\n\n"
+                    "Campaign Mode: 20 Stages featuring dynamic board dimensions (7x6, 8x7, 9x8, 10x8) and 4 AI Personalities (Rookie, Aggressive, Trapper, Grandmaster Minimax Alpha-Beta)!\n\n"
+                    "Special Disc Types:\n"
+                    "- Bomb Disc (1/B): Explodes 3x3 surrounding cells.\n"
+                    "- Drill/Anvil Disc (2/D): Crushes cell directly underneath.\n"
+                    "- Magnet Disc (3/M): Pulls friendly discs from adjacent columns.\n\n"
+                    "Active Skills:\n"
+                    "- AI Hint (H): Highlights optimal column.\n"
+                    "- Undo Move (U): Reverts last turn pair.\n"
+                    "- Column Freeze (F): Locks 1 opponent column for 2 turns.", 
                     "Help & Information", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == 3) { // Undo
                 if (historyCount == 0 || isAnimating) break;
@@ -1050,11 +1186,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         historyCount--;
                         MoveRecord m = moveHistory[historyCount];
                         memcpy(board, m.board, sizeof(board));
+                        g_rows = m.rows; g_cols = m.cols;
                         currentPlayer = m.currentPlayer;
-                        p1Bombs = m.p1Bombs;
-                        p2Bombs = m.p2Bombs;
-                        p1Drills = m.p1Drills;
-                        p2Drills = m.p2Drills;
+                        p1Bombs = m.p1Bombs; p2Bombs = m.p2Bombs;
+                        p1Drills = m.p1Drills; p2Drills = m.p2Drills;
+                        p1Magnets = m.p1Magnets; p2Magnets = m.p2Magnets;
+                        p1Freezes = m.p1Freezes; p2Freezes = m.p2Freezes;
+                        frozenCol = m.frozenCol; frozenTurns = m.frozenTurns; frozenPlayer = m.frozenPlayer;
                         stats = m.oldStats;
                     }
                 }
@@ -1064,17 +1202,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 isDraw = false;
                 winCellCount = 0;
                 turnTimeLeftMs = 7000;
-                UpdateBombDrillButtons();
+                isFreezeMode = false;
+                UpdatePowerupButtons();
                 if (gameMode == 3) SetTimer(hwnd, 3, 100, NULL);
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
             
         case WM_TIMER:
-            if (wParam == 1) { // AI turn timer
+            if (wParam == 1) {
                 KillTimer(hwnd, 1);
                 AIMove(hwnd);
-            } else if (wParam == 2) { // Drop animation timer with bounce physics
+            } else if (wParam == 2) {
                 animVY += 3.0f;
                 animY_float += animVY;
                 if (animY_float >= animTargetY) {
@@ -1091,13 +1230,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 animY = (int)animY_float;
                 InvalidateRect(hwnd, NULL, FALSE);
-            } else if (wParam == 3) { // Speed mode countdown timer
+            } else if (wParam == 3) {
                 if (gameMode == 3 && gameActive && !isAnimating) {
                     if (!(gameMode > 0 && currentPlayer == 2)) {
                         turnTimeLeftMs -= 100;
                         if (turnTimeLeftMs <= 0) {
                             turnTimeLeftMs = 7000;
-                            int validLocations[COLS];
+                            int validLocations[MAX_COLS];
                             int count = getValidLocations(board, validLocations);
                             if (count > 0) {
                                 int col = validLocations[rand() % count];
@@ -1107,8 +1246,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         InvalidateRect(hwnd, NULL, TRUE);
                     }
                 }
-            } else if (wParam == 4) { // Confetti particle timer
+            } else if (wParam == 4) {
                 UpdateParticles();
+                if (hintTimer > 0) {
+                    hintTimer--;
+                    if (hintTimer == 0) hintCol = -1;
+                }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
@@ -1119,7 +1262,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             RECT rect;
             GetClientRect(hwnd, &rect);
             
-            // Dark futuristic background fill
             HBRUSH bg = CreateSolidBrush(RGB(16, 20, 29));
             FillRect(hdc, &rect, bg);
             DeleteObject(bg);
@@ -1127,19 +1269,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkMode(hdc, TRANSPARENT);
             SetTextColor(hdc, RGB(79, 195, 247));
             
-            char statusText[64];
+            char statusText[96];
             if (!gameActive) {
                 if (isDraw) wsprintf(statusText, "It's a Draw! Click to reset.");
                 else wsprintf(statusText, "Player %d (%s) Wins!", currentPlayer, (currentPlayer == 1) ? "Red" : "Yellow");
+            } else if (isFreezeMode) {
+                wsprintf(statusText, "Freeze Skill: Click a column to freeze!");
             } else {
-                wsprintf(statusText, "Player %d's turn (%s)", currentPlayer, (currentPlayer == 1) ? "Red" : "Yellow");
+                wsprintf(statusText, "Player %d's turn (%s)%s", currentPlayer, (currentPlayer == 1) ? "Red" : "Yellow",
+                         (frozenTurns > 0) ? " [Col Frozen]" : "");
             }
             TextOut(hdc, 20, 15, statusText, lstrlen(statusText));
             
-            // Speed mode timer bar
             if (gameMode == 3 && gameActive) {
-                int barWidth = (315 * turnTimeLeftMs) / 7000;
-                RECT timerBg = {20, 38, 335, 44};
+                int barWidth = (410 * turnTimeLeftMs) / 7000;
+                RECT timerBg = {20, 38, 430, 44};
                 HBRUSH tBg = CreateSolidBrush(RGB(30, 40, 55));
                 FillRect(hdc, &timerBg, tBg);
                 DeleteObject(tBg);
@@ -1152,50 +1296,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             SetTextColor(hdc, RGB(170, 170, 170));
             char statsStr[128];
-            wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d) | Max Stage: %d",
+            wsprintf(statsStr, "Wins: Red %d, Yellow %d | Draws: %d | Streak: %d (Best: %d) | Max Stage: %d/20",
                      stats.redWins, stats.yellowWins, stats.draws, stats.streak, stats.bestStreak, stats.maxCampaignStage);
-            TextOut(hdc, 10, 445, statsStr, lstrlen(statsStr));
+            TextOut(hdc, 10, 582, statsStr, lstrlen(statsStr));
             
-            // --- 3D Blue Plastic Grid Board Frame ---
-            RECT frameOuter = {14, 44, 341, 331};
+            // --- Board Layout Calculations ---
+            int colWidth = 40;
+            int gap = 4;
+            int boardW = g_cols * 44 + 10;
+            int boardH = g_rows * 44 + 10;
+            int boardLeft = (480 - boardW) / 2 + 10;
+            int boardTop = 50;
+
+            RECT frameOuter = {boardLeft - 6, boardTop - 6, boardLeft + boardW + 6, boardTop + boardH + 6};
             HBRUSH frameBg = CreateSolidBrush(RGB(19, 45, 105));
             FillRect(hdc, &frameOuter, frameBg);
             DeleteObject(frameBg);
 
-            // Bevel edges for plastic frame
             HPEN topLight = CreatePen(PS_SOLID, 2, RGB(60, 115, 220));
             HPEN botDark  = CreatePen(PS_SOLID, 2, RGB(10, 22, 55));
             SelectObject(hdc, topLight);
-            MoveToEx(hdc, 14, 331, NULL); LineTo(hdc, 14, 44); LineTo(hdc, 341, 44);
+            MoveToEx(hdc, boardLeft - 6, boardTop + boardH + 6, NULL); LineTo(hdc, boardLeft - 6, boardTop - 6); LineTo(hdc, boardLeft + boardW + 6, boardTop - 6);
             SelectObject(hdc, botDark);
-            MoveToEx(hdc, 341, 44, NULL); LineTo(hdc, 341, 331); LineTo(hdc, 14, 331);
-            DeleteObject(topLight);
-            DeleteObject(botDark);
+            MoveToEx(hdc, boardLeft + boardW + 6, boardTop - 6, NULL); LineTo(hdc, boardLeft + boardW + 6, boardTop + boardH + 6); LineTo(hdc, boardLeft - 6, boardTop + boardH + 6);
+            DeleteObject(topLight); DeleteObject(botDark);
 
-            // Inner grid board surface
-            RECT boardRect = {20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5};
+            RECT boardRect = {boardLeft, boardTop, boardLeft + boardW, boardTop + boardH};
             HBRUSH boardBg = CreateSolidBrush(RGB(24, 60, 138));
             FillRect(hdc, &boardRect, boardBg);
             DeleteObject(boardBg);
-
-            // Corner silver metallic screws
-            int screwCoords[4][2] = {{17, 47}, {333, 47}, {17, 323}, {333, 323}};
-            HBRUSH screwBrush = CreateSolidBrush(RGB(180, 185, 195));
-            HPEN screwPen = CreatePen(PS_SOLID, 1, RGB(60, 65, 75));
-            SelectObject(hdc, screwBrush);
-            SelectObject(hdc, screwPen);
-            for(int k=0; k<4; k++) {
-                Ellipse(hdc, screwCoords[k][0], screwCoords[k][1], screwCoords[k][0] + 6, screwCoords[k][1] + 6);
-            }
-            DeleteObject(screwBrush);
-            DeleteObject(screwPen);
             
-            HRGN hRgn = CreateRectRgn(20, 50, 20 + COLS * 45 + 5, 50 + ROWS * 45 + 5);
+            HRGN hRgn = CreateRectRgn(boardLeft, boardTop, boardLeft + boardW, boardTop + boardH);
             SelectClipRgn(hdc, hRgn);
 
             int hoverRow = -1;
             if (hoverCol != -1 && !isAnimating && gameActive && !(gameMode > 0 && currentPlayer == 2)) {
-                for (int r = ROWS - 1; r >= 0; r--) {
+                for (int r = g_rows - 1; r >= 0; r--) {
                     if (board[r][hoverCol] == 0) {
                         hoverRow = r;
                         break;
@@ -1204,10 +1340,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             // Draw grid cells with 3D Glossy Discs
-            for (int r = 0; r < ROWS; r++) {
-                for (int c = 0; c < COLS; c++) {
-                    int x = 20 + 5 + c * 45;
-                    int y = 50 + 5 + r * 45;
+            for (int r = 0; r < g_rows; r++) {
+                for (int c = 0; c < g_cols; c++) {
+                    int x = boardLeft + 5 + c * 44;
+                    int y = boardTop + 5 + r * 44;
                     
                     bool isWinCell = false;
                     for(int i=0; i<winCellCount; i++) {
@@ -1223,40 +1359,58 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else if (board[r][c] == 0 && r == hoverRow && c == hoverCol) {
                         if (selectedPowerup == 1) typeToDraw = 500;
                         else if (selectedPowerup == 2) typeToDraw = 600;
+                        else if (selectedPowerup == 3) typeToDraw = 700;
                         else typeToDraw = (currentPlayer == 1) ? 100 : 200;
                     }
                     
                     DrawDisc3D(hdc, x, y, typeToDraw, isWinCell);
+
+                    // Frozen Column Overlay
+                    if (frozenTurns > 0 && frozenCol == c) {
+                        HBRUSH iceBrush = CreateSolidBrush(RGB(0, 180, 255));
+                        HPEN icePen = CreatePen(PS_SOLID, 1, RGB(200, 240, 255));
+                        SelectObject(hdc, icePen);
+                        SelectObject(hdc, iceBrush);
+                        Rectangle(hdc, x - 2, boardTop + 2, x + 38, boardTop + boardH - 2);
+                        DeleteObject(iceBrush); DeleteObject(icePen);
+                    }
                 }
+            }
+
+            // AI Hint Beam
+            if (hintCol >= 0 && hintCol < g_cols) {
+                int hx = boardLeft + 5 + hintCol * 44;
+                HPEN hintPen = CreatePen(PS_SOLID, 3, RGB(255, 215, 0));
+                HBRUSH nullB = GetStockObject(NULL_BRUSH);
+                SelectObject(hdc, hintPen); SelectObject(hdc, nullB);
+                Rectangle(hdc, hx, boardTop + 2, hx + 36, boardTop + boardH - 2);
+                DeleteObject(hintPen);
             }
             
             // Draw dropping disc
             if (isAnimating) {
-                int x = 20 + 5 + animCol * 45;
-                int dropType = (animType == 1) ? 5 : ((animType == 2) ? 6 : animPlayer);
+                int x = boardLeft + 5 + animCol * 44;
+                int dropType = (animType == 1) ? 5 : ((animType == 2) ? 6 : ((animType == 3) ? 7 : animPlayer));
                 DrawDisc3D(hdc, x, animY, dropType, false);
             }
 
             // Draw Winning 4-in-a-row Neon Beam Line
             if (winCellCount >= 4) {
-                int x1 = 20 + 5 + winCells[0][1] * 45 + 20;
-                int y1 = 50 + 5 + winCells[0][0] * 45 + 20;
-                int x2 = 20 + 5 + winCells[winCellCount - 1][1] * 45 + 20;
-                int y2 = 50 + 5 + winCells[winCellCount - 1][0] * 45 + 20;
+                int x1 = boardLeft + 5 + winCells[0][1] * 44 + 18;
+                int y1 = boardTop + 5 + winCells[0][0] * 44 + 18;
+                int x2 = boardLeft + 5 + winCells[winCellCount - 1][1] * 44 + 18;
+                int y2 = boardTop + 5 + winCells[winCellCount - 1][0] * 44 + 18;
 
-                // Outer cyan aura beam
                 HPEN auraPen = CreatePen(PS_SOLID, 12, RGB(0, 220, 255));
                 SelectObject(hdc, auraPen);
                 MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
                 DeleteObject(auraPen);
 
-                // Mid cyan beam
                 HPEN midPen = CreatePen(PS_SOLID, 6, RGB(160, 245, 255));
                 SelectObject(hdc, midPen);
                 MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
                 DeleteObject(midPen);
 
-                // Inner white laser core
                 HPEN corePen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
                 SelectObject(hdc, corePen);
                 MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);
@@ -1271,8 +1425,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_particles[i].life > 0) {
                     HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
                     HPEN pPen = GetStockObject(NULL_PEN);
-                    SelectObject(hdc, pBrush);
-                    SelectObject(hdc, pPen);
+                    SelectObject(hdc, pBrush); SelectObject(hdc, pPen);
                     int px = (int)g_particles[i].x;
                     int py = (int)g_particles[i].y;
                     int sz = g_particles[i].size;
@@ -1295,10 +1448,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             int xPos = LOWORD(lParam);
             int yPos = HIWORD(lParam);
+            int boardW = g_cols * 44 + 10;
+            int boardLeft = (480 - boardW) / 2 + 10;
             
-            if (xPos >= 25 && xPos <= 25 + COLS * 45 && yPos >= 55 && yPos <= 55 + ROWS * 45) {
-                int c = (xPos - 25) / 45;
-                if (c >= 0 && c < COLS) {
+            if (xPos >= boardLeft && xPos <= boardLeft + boardW && yPos >= 50 && yPos <= 50 + g_rows * 44 + 10) {
+                int c = (xPos - boardLeft - 5) / 44;
+                if (c >= 0 && c < g_cols) {
                     if (hoverCol != c) {
                         hoverCol = c;
                         InvalidateRect(hwnd, NULL, TRUE);
@@ -1337,11 +1492,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (gameMode > 0 && currentPlayer == 2) break;
             int xPos = LOWORD(lParam);
             int yPos = HIWORD(lParam);
+            int boardW = g_cols * 44 + 10;
+            int boardLeft = (480 - boardW) / 2 + 10;
             
-            if (xPos >= 25 && xPos <= 25 + COLS * 45 && yPos >= 55 && yPos <= 55 + ROWS * 45) {
-                int c = (xPos - 25) / 45;
-                if (c >= 0 && c < COLS) {
-                    if (board[0][c] == 0) {
+            if (xPos >= boardLeft && xPos <= boardLeft + boardW && yPos >= 50 && yPos <= 50 + g_rows * 44 + 10) {
+                int c = (xPos - boardLeft - 5) / 44;
+                if (c >= 0 && c < g_cols) {
+                    if (isFreezeMode) {
+                        int fCount = (currentPlayer == 1) ? p1Freezes : p2Freezes;
+                        if (fCount > 0) {
+                            frozenCol = c;
+                            frozenTurns = 2;
+                            frozenPlayer = currentPlayer;
+                            if (currentPlayer == 1) p1Freezes--; else p2Freezes--;
+                            isFreezeMode = false;
+                            PlaySoundEffect(9);
+                            UpdatePowerupButtons();
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                    } else if (frozenTurns > 0 && frozenCol == c) {
+                        PlaySoundEffect(4); // Column frozen
+                    } else if (board[0][c] == 0) {
                         ExecuteDrop(hwnd, c, currentPlayer, selectedPowerup);
                     } else {
                         PlaySoundEffect(4);
@@ -1386,9 +1557,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     hwnd = CreateWindowEx(
-        0, g_szClassName, "KConnect4",
+        0, g_szClassName, "KConnect4 - Loop 7 Campaign Expansion",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 420, 530,
+        CW_USEDEFAULT, CW_USEDEFAULT, 500, 650,
         NULL, NULL, hInstance, NULL);
 
     if(hwnd == NULL) {
