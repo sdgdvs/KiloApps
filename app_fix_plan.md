@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KChess
+**Target App:** KClock
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -179,3 +179,5 @@ Pass 1 Complete.
 - **KChart**: Added high-DPI scaling (`devicePixelRatio`), dynamic division-by-zero bounds (`Math.max(1, ...)`), Donut/Bar/Line chart mode toggle, ARIA live region updates, and touch support in `kchart.html`. Added Donut chart mode with GDI `Pie` rendering, CRT-free trig helpers (`my_sin`/`my_cos`), dynamic `WM_SIZE` layout scaling, Y-axis legend rendering, and double-buffering GDI cleanup in `main.c`.
 
 - **KChat & KChatServer**: Added `beforeunload` WebSocket/Firebase listener teardown, connection error state handling, XSS `textContent` protection, ARIA `role="log"` attributes, and redesigned server UI in `kchat.html` & `kchatserver.html`. Fixed GDI font leaks, `WSAStartup`/`WSACleanup` lifecycle management, stack buffer overflows in server message handling, `WSAGETSELECTERROR` error recovery, and Enter key message sending subclassing in `main.c`.
+
+- **KChess**: Fixed corner Rook castling rights checking, En Passant capture simulation/unmake, checkmate evaluation depth bias, ARIA live announcements, and Arrow key grid navigation in `kchess.html`. Fixed castling/en-passant simulation bugs, checkmate evaluation scoring (`-100000 + depth`), `WM_ERASEBKGND` flicker elimination, and Arrow key board cursor navigation in `main.c`.
