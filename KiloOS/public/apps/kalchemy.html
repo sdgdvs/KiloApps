@@ -1138,6 +1138,338 @@
       from { box-shadow: 0 0 6px var(--glow-purple); }
       to { box-shadow: 0 0 12px var(--glow-gold); }
     }
+  
+    /* Phase 11: Master Alchemist Codex & Recipe Book Styles */
+    .codex-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 6px 12px;
+      z-index: 2;
+    }
+
+    .codex-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .codex-container::-webkit-scrollbar-thumb {
+      background: var(--border-gold);
+      border-radius: 3px;
+    }
+
+    .tier-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      width: 100%;
+    }
+
+    .tier-summary-card {
+      background: rgba(15, 14, 30, 0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tier-summary-card:hover, .tier-summary-card.active {
+      border-color: var(--accent-gold);
+      background: rgba(243, 156, 18, 0.12);
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.2);
+    }
+
+    .tier-summary-title {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+    }
+
+    .tier-summary-count {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .tier-progress-bar-bg {
+      width: 90%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+
+    .tier-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-gold), var(--accent-purple-glow));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .codex-filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      background: rgba(9, 9, 20, 0.6);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .codex-filter-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .codex-filter-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .codex-filter-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .codex-filter-btn.active {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(155, 89, 182, 0.25));
+      color: var(--accent-gold-light);
+      border-color: var(--border-gold);
+      box-shadow: 0 0 8px rgba(243, 156, 18, 0.3);
+    }
+
+    .codex-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .codex-card {
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.95), rgba(38, 29, 68, 0.95));
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .codex-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-gold);
+      box-shadow: 0 6px 16px var(--glow-gold);
+    }
+
+    .codex-card.locked {
+      background: rgba(12, 11, 24, 0.7);
+      border-style: dashed;
+      opacity: 0.75;
+    }
+
+    .codex-card.locked:hover {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 12px var(--glow-purple);
+    }
+
+    .codex-card-icon {
+      font-size: 1.8rem;
+      filter: drop-shadow(0 0 6px rgba(243, 156, 18, 0.4));
+    }
+
+    .codex-card-name {
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-main);
+      text-align: center;
+    }
+
+    .codex-card-tier {
+      font-size: 0.65rem;
+      color: var(--accent-gold-light);
+      font-weight: 700;
+    }
+
+    .codex-card-crafts {
+      font-size: 0.65rem;
+      background: rgba(243, 156, 18, 0.2);
+      color: var(--accent-gold-light);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 1px 6px;
+      font-weight: 800;
+    }
+
+    /* Modal Overlay */
+    .codex-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(5, 5, 15, 0.82);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .codex-modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .codex-modal-card {
+      background: linear-gradient(135deg, #121026 0%, #251a45 100%);
+      border: 2px solid var(--border-gold);
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.9), 0 0 35px var(--glow-gold);
+      position: relative;
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .codex-modal-overlay.show .codex-modal-card {
+      transform: scale(1);
+    }
+
+    .codex-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .codex-modal-close:hover {
+      color: var(--accent-crimson);
+    }
+
+    .codex-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    .codex-modal-icon {
+      font-size: 3rem;
+      filter: drop-shadow(0 0 15px var(--accent-gold));
+    }
+
+    .codex-modal-title-box h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+    }
+
+    .codex-modal-meta {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .codex-lore-box {
+      background: linear-gradient(90deg, rgba(243, 156, 18, 0.08) 0%, rgba(155, 89, 182, 0.08) 100%);
+      border-left: 4px solid var(--accent-gold);
+      border-radius: 0 10px 10px 0;
+      padding: 12px 16px;
+      font-style: italic;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .codex-section-title {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .codex-recipe-box {
+      background: rgba(9, 9, 20, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 0.82rem;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .codex-uses-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 14px;
+      padding-right: 4px;
+    }
+
+    .codex-use-item {
+      background: rgba(15, 14, 30, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .codex-stats-row {
+      display: flex;
+      gap: 12px;
+      font-size: 0.78rem;
+      background: rgba(9, 9, 20, 0.8);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
   </style>
 </head>
 <body>
@@ -1227,6 +1559,7 @@
         <button class="equip-tab" id="equip-quests" onclick="selectEquipment('quests')">📜 Quests</button>
         <button class="equip-tab" id="equip-workshop" onclick="selectEquipment('workshop')">🧙 Workshop</button>
         <button class="equip-tab" id="equip-brewing" onclick="selectEquipment('brewing')">🥣 Potions</button>
+        <button class="equip-tab" id="equip-codex" onclick="selectEquipment('codex')">📖 Codex</button>
       </div>
 
       <div class="equipment-desc" id="equipment-desc">
@@ -1245,6 +1578,11 @@
 
       <!-- Potion Brewing & Effect Tester Container (Shown in Potions mode) -->
       <div class="brewing-container" id="brewing-container" style="display: none;">
+        <!-- Injected by JS -->
+      </div>
+
+      <!-- Master Alchemist Codex Container (Shown in Codex mode) -->
+      <div class="codex-container" id="codex-container" style="display: none;">
         <!-- Injected by JS -->
       </div>
 
@@ -1316,70 +1654,70 @@
 
     const ALL_ELEMENTS = [
       // Tier 1: Basic (4)
-      { id: 'fire', name: 'Fire', icon: '🔥', tier: 1, basic: true },
-      { id: 'water', name: 'Water', icon: '💧', tier: 1, basic: true },
-      { id: 'earth', name: 'Earth', icon: '🌱', tier: 1, basic: true },
-      { id: 'air', name: 'Air', icon: '💨', tier: 1, basic: true },
+      { id: 'fire', name: 'Fire', icon: '🔥', tier: 1, lore: "The primordial ember of creation, consuming all in heat and light.", basic: true },
+      { id: 'water', name: 'Water', icon: '💧', tier: 1, lore: "The flowing essence of life, cool, adaptable, and perpetual.", basic: true },
+      { id: 'earth', name: 'Earth', icon: '🌱', tier: 1, lore: "The steadfast soil and stone that anchors the living realm.", basic: true },
+      { id: 'air', name: 'Air', icon: '💨', tier: 1, lore: "The invisible current of wind that whispers through the sky.", basic: true },
 
       // Tier 2: Nature (12)
-      { id: 'steam', name: 'Steam', icon: '♨️', tier: 2, basic: false },
-      { id: 'lava', name: 'Lava', icon: '🌋', tier: 2, basic: false },
-      { id: 'energy', name: 'Energy', icon: '⚡', tier: 2, basic: false },
-      { id: 'mud', name: 'Mud', icon: '🧱', tier: 2, basic: false },
-      { id: 'rain', name: 'Rain', icon: '🌧️', tier: 2, basic: false },
-      { id: 'dust', name: 'Dust', icon: '🧹', tier: 2, basic: false },
-      { id: 'stone', name: 'Stone', icon: '🪨', tier: 2, basic: false },
-      { id: 'plant', name: 'Plant', icon: '🌿', tier: 2, basic: false },
-      { id: 'cloud', name: 'Cloud', icon: '☁️', tier: 2, basic: false },
-      { id: 'charcoal', name: 'Charcoal', icon: '🪵', tier: 2, basic: false },
-      { id: 'swamp', name: 'Swamp', icon: '🐊', tier: 2, basic: false },
-      { id: 'tree', name: 'Tree', icon: '🌲', tier: 2, basic: false },
+      { id: 'steam', name: 'Steam', icon: '♨️', tier: 2, lore: "Scalded vapor born of fire's passion meeting water's grace.", basic: false },
+      { id: 'lava', name: 'Lava', icon: '🌋', tier: 2, lore: "Molten earth coursing with unbridled subterranean fire.", basic: false },
+      { id: 'energy', name: 'Energy', icon: '⚡', tier: 2, lore: "Raw electrical spark crackling with volatile arcane power.", basic: false },
+      { id: 'mud', name: 'Mud', icon: '🧱', tier: 2, lore: "A soft slurry of earth and water, pliable and fertile.", basic: false },
+      { id: 'rain', name: 'Rain', icon: '🌧️', tier: 2, lore: "Condensing air showering sweet celestial waters upon the realm.", basic: false },
+      { id: 'dust', name: 'Dust', icon: '🧹', tier: 2, lore: "Finely particulate earth suspended in lazy air currents.", basic: false },
+      { id: 'stone', name: 'Stone', icon: '🪨', tier: 2, lore: "Cooled volcanic crust hardened into indestructible stone.", basic: false },
+      { id: 'plant', name: 'Plant', icon: '🌿', tier: 2, lore: "Green life springing forth from rain-soaked earth.", basic: false },
+      { id: 'cloud', name: 'Cloud', icon: '☁️', tier: 2, lore: "Vaporous mist floating effortlessly in the high atmosphere.", basic: false },
+      { id: 'charcoal', name: 'Charcoal', icon: '🪵', tier: 2, lore: "Scorched plant matter glowing with lingering thermal embers.", basic: false },
+      { id: 'swamp', name: 'Swamp', icon: '🐊', tier: 2, lore: "Mire of decaying flora and murky waters teeming with life.", basic: false },
+      { id: 'tree', name: 'Tree', icon: '🌲', tier: 2, lore: "Ancient tall flora rooted deep in earth drinking rain.", basic: false },
 
       // Tier 3: Metallurgy (12)
-      { id: 'metal', name: 'Metal', icon: '⚙️', tier: 3, basic: false },
-      { id: 'sand', name: 'Sand', icon: '🏖️', tier: 3, basic: false },
-      { id: 'glass', name: 'Glass', icon: '🔍', tier: 3, basic: false },
-      { id: 'rust', name: 'Rust', icon: '🛢️', tier: 3, basic: false },
-      { id: 'blade', name: 'Blade', icon: '🗡️', tier: 3, basic: false },
-      { id: 'boiler', name: 'Boiler', icon: '🫕', tier: 3, basic: false },
-      { id: 'electricity', name: 'Electricity', icon: '🔌', tier: 3, basic: false },
-      { id: 'wire', name: 'Wire', icon: '🪢', tier: 3, basic: false },
-      { id: 'gunpowder', name: 'Gunpowder', icon: '💥', tier: 3, basic: false },
-      { id: 'explosion', name: 'Explosion', icon: '💣', tier: 3, basic: false },
-      { id: 'magnet', name: 'Magnet', icon: '🧲', tier: 3, basic: false },
-      { id: 'clay', name: 'Clay', icon: '🏺', tier: 3, basic: false },
+      { id: 'metal', name: 'Metal', icon: '⚙️', tier: 3, lore: "Refined ore forged by blazing fires from dense stone.", basic: false },
+      { id: 'sand', name: 'Sand', icon: '🏖️', tier: 3, lore: "Eroded stone ground into fine golden grains by wind.", basic: false },
+      { id: 'glass', name: 'Glass', icon: '🔍', tier: 3, lore: "Vitreous crystal fused from superheated silica sand.", basic: false },
+      { id: 'rust', name: 'Rust', icon: '🛢️', tier: 3, lore: "Corroded metal decaying slowly under moisture's touch.", basic: false },
+      { id: 'blade', name: 'Blade', icon: '🗡️', tier: 3, lore: "Honed metal edge shaped by master smiths for battle.", basic: false },
+      { id: 'boiler', name: 'Boiler', icon: '🫕', tier: 3, lore: "Heavy iron vessel generating pressurized steam power.", basic: false },
+      { id: 'electricity', name: 'Electricity', icon: '🔌', tier: 3, lore: "Harnessing raw energy through conductive metallic veins.", basic: false },
+      { id: 'wire', name: 'Wire', icon: '🪢', tier: 3, lore: "Drawn metallic strand channeling electric currents.", basic: false },
+      { id: 'gunpowder', name: 'Gunpowder', icon: '💥', tier: 3, lore: "Volatile mixture of charcoal, sulfur, and fine dust.", basic: false },
+      { id: 'explosion', name: 'Explosion', icon: '💣', tier: 3, lore: "Catastrophic detonation releasing heat and pressure.", basic: false },
+      { id: 'magnet', name: 'Magnet', icon: '🧲', tier: 3, lore: "Ferromagnetic metal possessing mysterious polarity.", basic: false },
+      { id: 'clay', name: 'Clay', icon: '🏺', tier: 3, lore: "Dense malleable earth baked into pottery by fire.", basic: false },
 
       // Tier 4: Arcane (14)
-      { id: 'life', name: 'Life', icon: '🧬', tier: 4, basic: false },
-      { id: 'golem', name: 'Golem', icon: '🤖', tier: 4, basic: false },
-      { id: 'magic', name: 'Magic', icon: '✨', tier: 4, basic: false },
-      { id: 'mana', name: 'Mana', icon: '🔮', tier: 4, basic: false },
-      { id: 'phoenix', name: 'Phoenix', icon: '🦅', tier: 4, basic: false },
-      { id: 'dragon', name: 'Dragon', icon: '🐲', tier: 4, basic: false },
-      { id: 'crystal', name: 'Crystal', icon: '💎', tier: 4, basic: false },
-      { id: 'rune', name: 'Rune', icon: '📜', tier: 4, basic: false },
-      { id: 'potion', name: 'Potion', icon: '🧪', tier: 4, basic: false },
-      { id: 'elixir', name: 'Elixir', icon: '🍾', tier: 4, basic: false },
-      { id: 'nether', name: 'Nether', icon: '🔥', tier: 4, basic: false },
-      { id: 'shadow', name: 'Shadow', icon: '🌑', tier: 4, basic: false },
-      { id: 'light', name: 'Light', icon: '💡', tier: 4, basic: false },
-      { id: 'spirit', name: 'Spirit', icon: '👻', tier: 4, basic: false },
+      { id: 'life', name: 'Life', icon: '🧬', tier: 4, lore: "The divine spark animating inert energy and water.", basic: false },
+      { id: 'golem', name: 'Golem', icon: '🤖', tier: 4, lore: "Inanimate metal automaton brought to life by alchemy.", basic: false },
+      { id: 'magic', name: 'Magic', icon: '✨', tier: 4, lore: "Supernatural force woven from raw energetic currents.", basic: false },
+      { id: 'mana', name: 'Mana', icon: '🔮', tier: 4, lore: "Liquid magical essence flowing from high arcane fountains.", basic: false },
+      { id: 'phoenix', name: 'Phoenix', icon: '🦅', tier: 4, lore: "Immortal avian spirit born of sacred flame and life.", basic: false },
+      { id: 'dragon', name: 'Dragon', icon: '🐲', tier: 4, lore: "Mythical apex behemoth surging with lava and life.", basic: false },
+      { id: 'crystal', name: 'Crystal', icon: '💎', tier: 4, lore: "Gemstone infused with pure resonant magic lattice.", basic: false },
+      { id: 'rune', name: 'Rune', icon: '📜', tier: 4, lore: "Sacred glyph carved in stone and bound with mana.", basic: false },
+      { id: 'potion', name: 'Potion', icon: '🧪', tier: 4, lore: "Herbal brew distilled with mana for potent effects.", basic: false },
+      { id: 'elixir', name: 'Elixir', icon: '🍾', tier: 4, lore: "Concentrated magical remedy granting sublime power.", basic: false },
+      { id: 'nether', name: 'Nether', icon: '🔥', tier: 4, lore: "Infernal planar realm kindled by nether flames.", basic: false },
+      { id: 'shadow', name: 'Shadow', icon: '🌑', tier: 4, lore: "Ethereal gloom born where light is eclipsed by magic.", basic: false },
+      { id: 'light', name: 'Light', icon: '💡', tier: 4, lore: "Illuminating radiance bursting from magic and fire.", basic: false },
+      { id: 'spirit', name: 'Spirit', icon: '👻', tier: 4, lore: "Unbound ghostly form lingering between life and air.", basic: false },
 
       // Tier 5: Celestial (14)
-      { id: 'sun', name: 'Sun', icon: '☀️', tier: 5, basic: false },
-      { id: 'moon', name: 'Moon', icon: '🌙', tier: 5, basic: false },
-      { id: 'star', name: 'Star', icon: '⭐', tier: 5, basic: false },
-      { id: 'comet', name: 'Comet', icon: '☄️', tier: 5, basic: false },
-      { id: 'meteor', name: 'Meteor', icon: '☄️', tier: 5, basic: false },
-      { id: 'galaxy', name: 'Galaxy', icon: '🌌', tier: 5, basic: false },
-      { id: 'cosmos', name: 'Cosmos', icon: '🌌', tier: 5, basic: false },
-      { id: 'eclipse', name: 'Eclipse', icon: '🌒', tier: 5, basic: false },
-      { id: 'gold', name: 'Gold', icon: '🪙', tier: 5, basic: false },
-      { id: 'starlight', name: 'Starlight', icon: '✨', tier: 5, basic: false },
-      { id: 'supernova', name: 'Supernova', icon: '💥', tier: 5, basic: false },
-      { id: 'blackhole', name: 'Black Hole', icon: '🕳️', tier: 5, basic: false },
-      { id: 'time', name: 'Time', icon: '⏳', tier: 5, basic: false },
-      { id: 'eternity', name: 'Eternity', icon: '♾️', tier: 5, basic: false }
+      { id: 'sun', name: 'Sun', icon: '☀️', tier: 5, lore: "Blazing solar orb illuminating cosmic space.", basic: false },
+      { id: 'moon', name: 'Moon', icon: '🌙', tier: 5, lore: "Luminous celestial mirror reflecting solar light.", basic: false },
+      { id: 'star', name: 'Star', icon: '⭐', tier: 5, lore: "Distant thermonuclear furnace radiating starlight.", basic: false },
+      { id: 'comet', name: 'Comet', icon: '☄️', tier: 5, lore: "Icy celestial voyager trailing water and starlight.", basic: false },
+      { id: 'meteor', name: 'Meteor', icon: '☄️', tier: 5, lore: "Flaming cosmic rock hurtling through celestial space.", basic: false },
+      { id: 'galaxy', name: 'Galaxy', icon: '🌌', tier: 5, lore: "Spiral vortex of countless stars bound in cloud mist.", basic: false },
+      { id: 'cosmos', name: 'Cosmos', icon: '🌌', tier: 5, lore: "The infinite expanse enriched with cosmic magic.", basic: false },
+      { id: 'eclipse', name: 'Eclipse', icon: '🌒', tier: 5, lore: "Mystical alignment when moon obscures the sun.", basic: false },
+      { id: 'gold', name: 'Gold', icon: '🪙', tier: 5, lore: "Precious golden element forged in solar rays.", basic: false },
+      { id: 'starlight', name: 'Starlight', icon: '✨', tier: 5, lore: "Pure concentrated rays beaming from stars.", basic: false },
+      { id: 'supernova', name: 'Supernova', icon: '💥', tier: 5, lore: "Cataclysmic explosion seeding cosmos with gold.", basic: false },
+      { id: 'blackhole', name: 'Black Hole', icon: '🕳️', tier: 5, lore: "Gravitational singularity swallowing light.", basic: false },
+      { id: 'time', name: 'Time', icon: '⏳', tier: 5, lore: "Temporal river flowing continuously through cosmos.", basic: false },
+      { id: 'eternity', name: 'Eternity', icon: '♾️', tier: 5, lore: "Infinite timeless state beyond magic and space.", basic: false }
     ];
 
     const RECIPES = [
@@ -1444,7 +1782,11 @@
       { ingredients: ['time', 'magic'], result: 'eternity' }
     ];
 
+
     // State
+    let elementCraftCounts = {};
+    let elementUseCounts = {};
+    let codexFilter = 'all';
     let discoveredIds = new Set(['fire', 'water', 'earth', 'air']);
     let unlockedTiers = new Set([1, 2]); // Tier 1 (0 elements) and Tier 2 (4 elements)
     let activeTierFilter = 0; // 0 = All
@@ -1499,6 +1841,13 @@
       }
     }
 
+    
+    function recordElementUsage(resultId, ing1Id, ing2Id) {
+      if (resultId) elementCraftCounts[resultId] = (elementCraftCounts[resultId] || 0) + 1;
+      if (ing1Id) elementUseCounts[ing1Id] = (elementUseCounts[ing1Id] || 0) + 1;
+      if (ing2Id) elementUseCounts[ing2Id] = (elementUseCounts[ing2Id] || 0) + 1;
+    }
+
     function saveState() {
       try {
         localStorage.setItem('kalchemy_discovered', JSON.stringify(Array.from(discoveredIds)));
@@ -1509,7 +1858,9 @@
         localStorage.setItem('kalchemy_quests', JSON.stringify(quests));
         localStorage.setItem('kalchemy_upgrades', JSON.stringify(upgrades));
         localStorage.setItem('kalchemy_potions', JSON.stringify(potions));
-        localStorage.setItem('kalchemy_buffs', JSON.stringify(activeBuffs));
+                localStorage.setItem('kalchemy_buffs', JSON.stringify(activeBuffs));
+        localStorage.setItem('kalchemy_craftCounts', JSON.stringify(elementCraftCounts));
+        localStorage.setItem('kalchemy_useCounts', JSON.stringify(elementUseCounts));
       } catch(e){}
     }
 
@@ -1523,7 +1874,9 @@
         const savedQuests = localStorage.getItem('kalchemy_quests');
         const savedUpgrades = localStorage.getItem('kalchemy_upgrades');
         const savedPotions = localStorage.getItem('kalchemy_potions');
-        const savedBuffs = localStorage.getItem('kalchemy_buffs');
+                const savedBuffs = localStorage.getItem('kalchemy_buffs');
+        const savedCrafts = localStorage.getItem('kalchemy_craftCounts');
+        const savedUses = localStorage.getItem('kalchemy_useCounts');
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
@@ -1571,6 +1924,8 @@
             };
           }
         }
+        if (savedCrafts) { try { elementCraftCounts = JSON.parse(savedCrafts) || {}; } catch(e){} }
+        if (savedUses) { try { elementUseCounts = JSON.parse(savedUses) || {}; } catch(e){} }
       } catch(e){}
       initQuests();
       checkTierUnlocks(false);
@@ -1592,7 +1947,9 @@
       const oracleSec = document.querySelector('.oracle-section');
       const qBoardCont = document.getElementById('quest-board-container');
       const wShopCont = document.getElementById('workshop-container');
+      const wShopCont = document.getElementById('workshop-container');
       const brewCont = document.getElementById('brewing-container');
+      const codexCont = document.getElementById('codex-container');
       const autoFillBtn = document.getElementById('btn-auto-fill');
 
       if (autoFillBtn) {
@@ -2581,11 +2938,201 @@
       });
     }
 
+
+    function setCodexFilter(filter) {
+      codexFilter = filter;
+      renderCodex();
+    }
+
+    function renderCodex() {
+      const cont = document.getElementById('codex-container');
+      if (!cont) return;
+
+      const searchInput = document.getElementById('search-input');
+      const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+
+      let tierSummaryHtml = '<div class="tier-summary-grid">';
+      TIERS.forEach(t => {
+        const tierElems = ALL_ELEMENTS.filter(e => e.tier === t.id);
+        const discoveredInTier = tierElems.filter(e => discoveredIds.has(e.id)).length;
+        const totalInTier = tierElems.length;
+        const missingInTier = totalInTier - discoveredInTier;
+        const pct = Math.round((discoveredInTier / totalInTier) * 100);
+        const isActive = activeTierFilter === t.id;
+
+        tierSummaryHtml += `
+          <div class="tier-summary-card ${isActive ? 'active' : ''}" onclick="setTierFilter(${t.id})">
+            <span class="tier-summary-title">T${t.id} ${t.name}</span>
+            <span class="tier-summary-count">${discoveredInTier}/${totalInTier} (${missingInTier} missing)</span>
+            <div class="tier-progress-bar-bg">
+              <div class="tier-progress-bar-fill" style="width: ${pct}%"></div>
+            </div>
+          </div>
+        `;
+      });
+      tierSummaryHtml += '</div>';
+
+      let filterBarHtml = `
+        <div class="codex-filter-bar">
+          <span style="font-size:0.78rem; font-weight:800; color:var(--accent-gold-light)">
+            📖 Grimoire Codex Entries
+          </span>
+          <div class="codex-filter-btns">
+            <button class="codex-filter-btn ${codexFilter === 'all' ? 'active' : ''}" onclick="setCodexFilter('all')">All (${ALL_ELEMENTS.length})</button>
+            <button class="codex-filter-btn ${codexFilter === 'discovered' ? 'active' : ''}" onclick="setCodexFilter('discovered')">Discovered (${discoveredIds.size})</button>
+            <button class="codex-filter-btn ${codexFilter === 'missing' ? 'active' : ''}" onclick="setCodexFilter('missing')">Missing (${ALL_ELEMENTS.length - discoveredIds.size})</button>
+          </div>
+        </div>
+      `;
+
+      let gridHtml = '<div class="codex-grid">';
+      ALL_ELEMENTS.forEach(el => {
+        const isDisc = discoveredIds.has(el.id);
+        if (codexFilter === 'discovered' && !isDisc) return;
+        if (codexFilter === 'missing' && isDisc) return;
+        if (activeTierFilter > 0 && el.tier !== activeTierFilter) return;
+        if (search) {
+          const matchName = el.name.toLowerCase().includes(search);
+          const matchLore = el.lore ? el.lore.toLowerCase().includes(search) : false;
+          if (!matchName && !matchLore) return;
+        }
+
+        const craftCount = elementCraftCounts[el.id] || 0;
+        if (isDisc) {
+          gridHtml += `
+            <div class="codex-card" onclick="openCodexModal('${el.id}')">
+              <span class="codex-card-icon">${el.icon}</span>
+              <span class="codex-card-name">${el.name}</span>
+              <span class="codex-card-tier">Tier ${el.tier}</span>
+              <span class="codex-card-crafts">Crafted: x${craftCount}</span>
+            </div>
+          `;
+        } else {
+          gridHtml += `
+            <div class="codex-card locked" onclick="openCodexModal('${el.id}')">
+              <span class="codex-card-icon">❓</span>
+              <span class="codex-card-name" style="color:var(--text-muted)">Undiscovered</span>
+              <span class="codex-card-tier" style="color:var(--text-muted)">Tier ${el.tier}</span>
+              <span class="codex-card-crafts" style="background:rgba(255,255,255,0.05); color:var(--text-muted); border-color:var(--border-color)">Locked</span>
+            </div>
+          `;
+        }
+      });
+      gridHtml += '</div>';
+
+      cont.innerHTML = tierSummaryHtml + filterBarHtml + gridHtml;
+    }
+
+    function openCodexModal(elemId) {
+      const el = ALL_ELEMENTS.find(e => e.id === elemId);
+      if (!el) return;
+
+      const isDisc = discoveredIds.has(el.id);
+      const modal = document.getElementById('codex-modal-overlay');
+      const content = document.getElementById('codex-modal-content');
+
+      const recipe = RECIPES.find(r => r.result === el.id);
+      let recipeText = "";
+      if (el.basic) {
+        recipeText = `<span style="color:var(--accent-emerald)">🌱 Primordial Element — Found naturally in the realm.</span>`;
+      } else if (recipe) {
+        const ing1 = ALL_ELEMENTS.find(e => e.id === recipe.ingredients[0]);
+        const ing2 = ALL_ELEMENTS.find(e => e.id === recipe.ingredients[1]);
+        const ing1Disc = discoveredIds.has(ing1.id);
+        const ing2Disc = discoveredIds.has(ing2.id);
+
+        recipeText = `
+          <span>${ing1Disc ? `${ing1.icon} <strong>${ing1.name}</strong>` : '❓ Undiscovered'}</span>
+          <span>+</span>
+          <span>${ing2Disc ? `${ing2.icon} <strong>${ing2.name}</strong>` : '❓ Undiscovered'}</span>
+          <span>➔</span>
+          <span style="color:var(--accent-gold-light); font-weight:800">${el.icon} ${el.name}</span>
+        `;
+      } else {
+        recipeText = `<span style="color:var(--text-muted)">Unknown Alchemical Formula</span>`;
+      }
+
+      const uses = RECIPES.filter(r => r.ingredients.includes(el.id));
+      let usesHtml = "";
+      if (uses.length > 0) {
+        uses.forEach(r => {
+          const resEl = ALL_ELEMENTS.find(e => e.id === r.result);
+          const otherIngId = r.ingredients.find(i => i !== el.id) || el.id;
+          const otherIng = ALL_ELEMENTS.find(e => e.id === otherIngId);
+          const resDisc = discoveredIds.has(resEl.id);
+
+          usesHtml += `
+            <div class="codex-use-item">
+              <span>+ ${otherIng ? `${otherIng.icon} ${otherIng.name}` : 'Self'} ➔ ${resEl.icon} <strong>${resEl.name}</strong></span>
+              <span style="color:${resDisc ? 'var(--accent-emerald)' : 'var(--text-muted)'}">${resDisc ? 'Discovered' : 'Locked'}</span>
+            </div>
+          `;
+        });
+      } else {
+        usesHtml = `<div class="codex-use-item" style="color:var(--text-muted)">Apex celestial element (no further transmutations).</div>`;
+      }
+
+      const craftCount = elementCraftCounts[el.id] || 0;
+      const useCount = elementUseCounts[el.id] || 0;
+      const tierObj = TIERS.find(t => t.id === el.tier);
+
+      content.innerHTML = `
+        <div class="codex-modal-header">
+          <span class="codex-modal-icon">${isDisc ? el.icon : '❓'}</span>
+          <div class="codex-modal-title-box">
+            <h2>${isDisc ? el.name : 'Undiscovered Element'}</h2>
+            <div class="codex-modal-meta">
+              <span class="stat-badge" style="border-color:${tierObj.color}">Tier ${el.tier} ${tierObj.name}</span>
+              <span class="stat-badge">${el.basic ? 'Basic Element' : 'Alchemical Compound'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="codex-lore-box">
+          "${isDisc ? el.lore : 'The secret lore of this mysterious element remains shrouded in darkness. Experiment with elemental combinations to unlock its entry.'}"
+        </div>
+
+        <div class="codex-section-title">🧪 Synthesis Recipe</div>
+        <div class="codex-recipe-box">
+          ${recipeText}
+        </div>
+
+        <div class="codex-section-title">✨ Transmutation Uses in Alchemical Reagents</div>
+        <div class="codex-uses-list">
+          ${usesHtml}
+        </div>
+
+        <div class="codex-stats-row">
+          <span><strong>Times Crafted:</strong> ${craftCount}</span>
+          <span style="margin-left:auto"><strong>Times Used in Crucible:</strong> ${useCount}</span>
+        </div>
+      `;
+
+      modal.classList.add('show');
+      playChime(600, 'sine', 0.15);
+    }
+
+    function closeCodexModal(evt) {
+      if (evt && evt.target && evt.target.id !== 'codex-modal-overlay' && !evt.target.classList.contains('codex-modal-close')) return;
+      const modal = document.getElementById('codex-modal-overlay');
+      if (modal) modal.classList.remove('show');
+    }
+
     // Initialize
     loadState();
     updateStats();
     renderGrimoire();
     updateSlotsUI();
   </script>
+
+  <!-- Master Alchemist Codex Inspector Modal -->
+  <div class="codex-modal-overlay" id="codex-modal-overlay" onclick="closeCodexModal(event)">
+    <div class="codex-modal-card" onclick="event.stopPropagation()">
+      <button class="codex-modal-close" onclick="closeCodexModal()">✕</button>
+      <div id="codex-modal-content">
+        <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
 </body>
 </html>

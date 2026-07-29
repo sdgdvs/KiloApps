@@ -24,74 +24,75 @@ typedef struct {
     const char* name;
     int tier;
     int isBasic;
+    const char* lore;
 } Element;
 
 static const Element g_Elements[TOTAL_ELEMENTS] = {
     // Tier 1: Basic (4)
-    { 0, "Fire", 1, 1 },
-    { 1, "Water", 1, 1 },
-    { 2, "Earth", 1, 1 },
-    { 3, "Air", 1, 1 },
+    { 0, "Fire", 1, 1, "The primordial ember of creation, consuming all in heat and light." },
+    { 1, "Water", 1, 1, "The flowing essence of life, cool, adaptable, and perpetual." },
+    { 2, "Earth", 1, 1, "The steadfast soil and stone that anchors the living realm." },
+    { 3, "Air", 1, 1, "The invisible current of wind that whispers through the sky." },
 
     // Tier 2: Nature (12)
-    { 4, "Steam", 2, 0 },
-    { 5, "Lava", 2, 0 },
-    { 6, "Energy", 2, 0 },
-    { 7, "Mud", 2, 0 },
-    { 8, "Rain", 2, 0 },
-    { 9, "Dust", 2, 0 },
-    { 10, "Stone", 2, 0 },
-    { 11, "Plant", 2, 0 },
-    { 12, "Cloud", 2, 0 },
-    { 13, "Charcoal", 2, 0 },
-    { 14, "Swamp", 2, 0 },
-    { 15, "Tree", 2, 0 },
+    { 4, "Steam", 2, 0, "Scalded vapor born of fire's passion meeting water's grace." },
+    { 5, "Lava", 2, 0, "Molten earth coursing with unbridled subterranean fire." },
+    { 6, "Energy", 2, 0, "Raw electrical spark crackling with volatile arcane power." },
+    { 7, "Mud", 2, 0, "A soft slurry of earth and water, pliable and fertile." },
+    { 8, "Rain", 2, 0, "Condensing air showering sweet celestial waters upon the realm." },
+    { 9, "Dust", 2, 0, "Finely particulate earth suspended in lazy air currents." },
+    { 10, "Stone", 2, 0, "Cooled volcanic crust hardened into indestructible stone." },
+    { 11, "Plant", 2, 0, "Green life springing forth from rain-soaked earth." },
+    { 12, "Cloud", 2, 0, "Vaporous mist floating effortlessly in the high atmosphere." },
+    { 13, "Charcoal", 2, 0, "Scorched plant matter glowing with lingering thermal embers." },
+    { 14, "Swamp", 2, 0, "Mire of decaying flora and murky waters teeming with life." },
+    { 15, "Tree", 2, 0, "Ancient tall flora rooted deep in earth drinking rain." },
 
     // Tier 3: Metallurgy (12)
-    { 16, "Metal", 3, 0 },
-    { 17, "Sand", 3, 0 },
-    { 18, "Glass", 3, 0 },
-    { 19, "Rust", 3, 0 },
-    { 20, "Blade", 3, 0 },
-    { 21, "Boiler", 3, 0 },
-    { 22, "Electricity", 3, 0 },
-    { 23, "Wire", 3, 0 },
-    { 24, "Gunpowder", 3, 0 },
-    { 25, "Explosion", 3, 0 },
-    { 26, "Magnet", 3, 0 },
-    { 27, "Clay", 3, 0 },
+    { 16, "Metal", 3, 0, "Refined ore forged by blazing fires from dense stone." },
+    { 17, "Sand", 3, 0, "Eroded stone ground into fine golden grains by wind." },
+    { 18, "Glass", 3, 0, "Vitreous crystal fused from superheated silica sand." },
+    { 19, "Rust", 3, 0, "Corroded metal decaying slowly under moisture's touch." },
+    { 20, "Blade", 3, 0, "Honed metal edge shaped by master smiths for battle." },
+    { 21, "Boiler", 3, 0, "Heavy iron vessel generating pressurized steam power." },
+    { 22, "Electricity", 3, 0, "Harnessing raw energy through conductive metallic veins." },
+    { 23, "Wire", 3, 0, "Drawn metallic strand channeling electric currents." },
+    { 24, "Gunpowder", 3, 0, "Volatile mixture of charcoal, sulfur, and fine dust." },
+    { 25, "Explosion", 3, 0, "Catastrophic detonation releasing heat and pressure." },
+    { 26, "Magnet", 3, 0, "Ferromagnetic metal possessing mysterious polarity." },
+    { 27, "Clay", 3, 0, "Dense malleable earth baked into pottery by fire." },
 
     // Tier 4: Arcane (14)
-    { 28, "Life", 4, 0 },
-    { 29, "Golem", 4, 0 },
-    { 30, "Magic", 4, 0 },
-    { 31, "Mana", 4, 0 },
-    { 32, "Phoenix", 4, 0 },
-    { 33, "Dragon", 4, 0 },
-    { 34, "Crystal", 4, 0 },
-    { 35, "Rune", 4, 0 },
-    { 36, "Potion", 4, 0 },
-    { 37, "Elixir", 4, 0 },
-    { 38, "Nether", 4, 0 },
-    { 39, "Shadow", 4, 0 },
-    { 40, "Light", 4, 0 },
-    { 41, "Spirit", 4, 0 },
+    { 28, "Life", 4, 0, "The divine spark animating inert energy and water." },
+    { 29, "Golem", 4, 0, "Inanimate metal automaton brought to life by alchemy." },
+    { 30, "Magic", 4, 0, "Supernatural force woven from raw energetic currents." },
+    { 31, "Mana", 4, 0, "Liquid magical essence flowing from high arcane fountains." },
+    { 32, "Phoenix", 4, 0, "Immortal avian spirit born of sacred flame and life." },
+    { 33, "Dragon", 4, 0, "Mythical apex behemoth surging with lava and life." },
+    { 34, "Crystal", 4, 0, "Gemstone infused with pure resonant magic lattice." },
+    { 35, "Rune", 4, 0, "Sacred glyph carved in stone and bound with mana." },
+    { 36, "Potion", 4, 0, "Herbal brew distilled with mana for potent effects." },
+    { 37, "Elixir", 4, 0, "Concentrated magical remedy granting sublime power." },
+    { 38, "Nether", 4, 0, "Infernal planar realm kindled by nether flames." },
+    { 39, "Shadow", 4, 0, "Ethereal gloom born where light is eclipsed by magic." },
+    { 40, "Light", 4, 0, "Illuminating radiance bursting from magic and fire." },
+    { 41, "Spirit", 4, 0, "Unbound ghostly form lingering between life and air." },
 
     // Tier 5: Celestial (14)
-    { 42, "Sun", 5, 0 },
-    { 43, "Moon", 5, 0 },
-    { 44, "Star", 5, 0 },
-    { 45, "Comet", 5, 0 },
-    { 46, "Meteor", 5, 0 },
-    { 47, "Galaxy", 5, 0 },
-    { 48, "Cosmos", 5, 0 },
-    { 49, "Eclipse", 5, 0 },
-    { 50, "Gold", 5, 0 },
-    { 51, "Starlight", 5, 0 },
-    { 52, "Supernova", 5, 0 },
-    { 53, "Black Hole", 5, 0 },
-    { 54, "Time", 5, 0 },
-    { 55, "Eternity", 5, 0 }
+    { 42, "Sun", 5, 0, "Blazing solar orb illuminating cosmic space." },
+    { 43, "Moon", 5, 0, "Luminous celestial mirror reflecting solar light." },
+    { 44, "Star", 5, 0, "Distant thermonuclear furnace radiating starlight." },
+    { 45, "Comet", 5, 0, "Icy celestial voyager trailing water and starlight." },
+    { 46, "Meteor", 5, 0, "Flaming cosmic rock hurtling through celestial space." },
+    { 47, "Galaxy", 5, 0, "Spiral vortex of countless stars bound in cloud mist." },
+    { 48, "Cosmos", 5, 0, "The infinite expanse enriched with cosmic magic." },
+    { 49, "Eclipse", 5, 0, "Mystical alignment when moon obscures the sun." },
+    { 50, "Gold", 5, 0, "Precious golden element forged in solar rays." },
+    { 51, "Starlight", 5, 0, "Pure concentrated rays beaming from stars." },
+    { 52, "Supernova", 5, 0, "Cataclysmic explosion seeding cosmos with gold." },
+    { 53, "Black Hole", 5, 0, "Gravitational singularity swallowing light." },
+    { 54, "Time", 5, 0, "Temporal river flowing continuously through cosmos." },
+    { 55, "Eternity", 5, 0, "Infinite timeless state beyond magic and space." }
 };
 
 typedef struct {
@@ -226,6 +227,10 @@ typedef struct {
     int buffInvisibilityTimer;
     int buffManaTimer;
     int buffLifeTimer;
+    int craftCounts[TOTAL_ELEMENTS];
+    int useCounts[TOTAL_ELEMENTS];
+    int codexFilter; // 0 = All, 1 = Discovered, 2 = Missing
+    int selectedCodexElem;
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
@@ -238,7 +243,8 @@ static const int g_CatalystSpeedCosts[5] = { 45, 90, 180, 320, 500 };
 static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
-static HWND g_hEquipButtons[7];
+static HWND g_hEquipButtons[8];
+static HWND g_hCodexFilterBtns[3];
 static HWND g_hPotionDrinkButtons[4];
 static HWND g_hQuestTurnInButtons[3];
 static HWND g_hQuestRerollButton = NULL;
@@ -325,9 +331,18 @@ static void UpdateGrimoireGrid() {
     int matchCount = 0;
 
     for (int i = 0; i < TOTAL_ELEMENTS; i++) {
-        if (!g_State.discovered[i]) continue;
+        int isDisc = g_State.discovered[i];
+        if (g_State.selectedEquipment == 7) {
+            // Codex Mode
+            if (g_State.codexFilter == 1 && !isDisc) continue;
+            if (g_State.codexFilter == 2 && isDisc) continue;
+        } else {
+            // Standard Grimoire Mode
+            if (!isDisc) continue;
+        }
+
         if (g_State.selectedTierFilter > 0 && g_Elements[i].tier != g_State.selectedTierFilter) continue;
-        if (g_State.searchFilter[0] != '\0' && !StrContainsIgnoreCase(g_Elements[i].name, g_State.searchFilter)) continue;
+        if (g_State.searchFilter[0] != '\0' && !StrContainsIgnoreCase(g_Elements[i].name, g_State.searchFilter) && !StrContainsIgnoreCase(g_Elements[i].lore, g_State.searchFilter)) continue;
 
         matches[matchCount++] = i;
     }
@@ -345,7 +360,15 @@ static void UpdateGrimoireGrid() {
             int elemIdx = matches[matchIdx];
             g_State.buttonElemMap[k] = elemIdx;
             char btnText[64];
-            wsprintfA(btnText, "[T%d] %s", g_Elements[elemIdx].tier, g_Elements[elemIdx].name);
+            if (g_State.discovered[elemIdx]) {
+                if (g_State.selectedEquipment == 7) {
+                    wsprintfA(btnText, "[T%d] %s (x%d)", g_Elements[elemIdx].tier, g_Elements[elemIdx].name, g_State.craftCounts[elemIdx]);
+                } else {
+                    wsprintfA(btnText, "[T%d] %s", g_Elements[elemIdx].tier, g_Elements[elemIdx].name);
+                }
+            } else {
+                wsprintfA(btnText, "[T%d] ??? (Locked)", g_Elements[elemIdx].tier);
+            }
             SetWindowTextA(g_hGridButtons[k], btnText);
             ShowWindow(g_hGridButtons[k], SW_SHOW);
         } else {
@@ -412,7 +435,22 @@ static void UpdateEquipmentUI(HWND hwnd) {
     int isQuests = (g_State.selectedEquipment == 4);
     int isWorkshop = (g_State.selectedEquipment == 5);
     int isBrewing = (g_State.selectedEquipment == 6);
+    int isCodex = (g_State.selectedEquipment == 7);
     int isCrucible = (g_State.selectedEquipment == 0);
+
+    if (isQuests || isWorkshop || isCodex) {
+        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
+        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
+        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
+    } else {
+        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_SHOW);
+        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_SHOW);
+        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_SHOW);
+    }
+
+    for (int cb = 0; cb < 3; cb++) {
+        if (g_hCodexFilterBtns[cb]) ShowWindow(g_hCodexFilterBtns[cb], isCodex ? SW_SHOW : SW_HIDE);
+    }
 
     if (isQuests || isWorkshop) {
         if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
@@ -601,6 +639,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hEquipButtons[4] = CreateWindowA("BUTTON", "Quests", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 406, 96, 34, 22, hwnd, (HMENU)704, NULL, NULL);
             g_hEquipButtons[5] = CreateWindowA("BUTTON", "Shop", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 441, 96, 31, 22, hwnd, (HMENU)705, NULL, NULL);
             g_hEquipButtons[6] = CreateWindowA("BUTTON", "Potions", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 473, 96, 35, 22, hwnd, (HMENU)706, NULL, NULL);
+            g_hEquipButtons[7] = CreateWindowA("BUTTON", "Codex", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 509, 96, 35, 22, hwnd, (HMENU)707, NULL, NULL);
+
+            // Codex Filter Buttons (Initially hidden)
+            g_hCodexFilterBtns[0] = CreateWindowA("BUTTON", "All", WS_CHILD | BS_PUSHBUTTON, 282, 120, 36, 22, hwnd, (HMENU)1100, NULL, NULL);
+            g_hCodexFilterBtns[1] = CreateWindowA("BUTTON", "Disc", WS_CHILD | BS_PUSHBUTTON, 320, 120, 38, 22, hwnd, (HMENU)1101, NULL, NULL);
+            g_hCodexFilterBtns[2] = CreateWindowA("BUTTON", "Lock", WS_CHILD | BS_PUSHBUTTON, 360, 120, 38, 22, hwnd, (HMENU)1102, NULL, NULL);
 
             // Potion Drink Buttons (Initially hidden)
             g_hPotionDrinkButtons[0] = CreateWindowA("BUTTON", "Drink Strength", WS_CHILD | BS_PUSHBUTTON, 282, 140, 108, 26, hwnd, (HMENU)1000, NULL, NULL);
@@ -677,17 +721,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id >= 100 && id < 100 + GRID_SIZE) {
                 int btnIdx = id - 100;
                 int elemIdx = g_State.buttonElemMap[btnIdx];
-                if (elemIdx >= 0 && elemIdx < TOTAL_ELEMENTS && g_State.discovered[elemIdx]) {
-                    if (g_State.slot1 == -1) {
-                        g_State.slot1 = elemIdx;
-                    } else if (g_State.slot2 == -1) {
-                        g_State.slot2 = elemIdx;
-                    } else {
-                        g_State.slot1 = elemIdx; // override slot 1
+                if (elemIdx >= 0 && elemIdx < TOTAL_ELEMENTS) {
+                    if (g_State.selectedEquipment == 7) {
+                        g_State.selectedCodexElem = elemIdx;
+                        InvalidateRect(hwnd, NULL, TRUE);
+                        Beep(600, 50);
+                    } else if (g_State.discovered[elemIdx]) {
+                        if (g_State.slot1 == -1) {
+                            g_State.slot1 = elemIdx;
+                        } else if (g_State.slot2 == -1) {
+                            g_State.slot2 = elemIdx;
+                        } else {
+                            g_State.slot1 = elemIdx;
+                        }
+                        UpdateSlotButtonText();
+                        Beep(520, 60);
+                        InvalidateRect(hwnd, NULL, TRUE);
                     }
-                    UpdateSlotButtonText();
-                    Beep(520, 60);
-                    InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
             // Page navigation
@@ -1544,6 +1594,115 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
 
                 SelectObject(hdc, oldP);
+            } else if (g_State.selectedEquipment == 7) {
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(241, 196, 15));
+                TextOutA(hdc, 282, 145, "Master Alchemist Codex & Recipe Book", 36);
+
+                // Draw Tier Discovery & Missing Breakdown Summary
+                int yT = 165;
+                SelectObject(hdc, hBadgeFont);
+                for (int t = 1; t <= TOTAL_TIERS; t++) {
+                    int discT = 0, totalT = 0;
+                    for (int e = 0; e < TOTAL_ELEMENTS; e++) {
+                        if (g_Elements[e].tier == t) {
+                            totalT++;
+                            if (g_State.discovered[e]) discT++;
+                        }
+                    }
+                    int missingT = totalT - discT;
+                    SetTextColor(hdc, g_Tiers[t-1].color);
+                    char tSummary[64];
+                    wsprintfA(tSummary, "T%d %s: %d/%d Disc (%d Missing)", t, g_Tiers[t-1].name, discT, totalT, missingT);
+                    TextOutA(hdc, 282, yT, tSummary, lstrlenA(tSummary));
+                    yT += 16;
+                }
+
+                // Draw Codex Inspector Detail Card
+                int selIdx = g_State.selectedCodexElem;
+                if (selIdx >= 0 && selIdx < TOTAL_ELEMENTS) {
+                    RECT cCard = { 282, 255, 502, 435 };
+                    FillRect(hdc, &cCard, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, cCard.left, cCard.top, cCard.right, cCard.bottom);
+
+                    int isDisc = g_State.discovered[selIdx];
+
+                    // Title & Tier
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, isDisc ? RGB(241, 196, 15) : RGB(140, 150, 165));
+                    char eTitle[64];
+                    wsprintfA(eTitle, "%s (T%d %s)", isDisc ? g_Elements[selIdx].name : "Undiscovered Element", g_Elements[selIdx].tier, g_Elements[selIdx].isBasic ? "Basic" : "Compound");
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 8, eTitle, lstrlenA(eTitle));
+
+                    // Lore Text Quote
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(220, 225, 235));
+                    RECT loreRect = { cCard.left + 8, cCard.top + 28, cCard.right - 8, cCard.top + 78 };
+                    DrawTextA(hdc, isDisc ? g_Elements[selIdx].lore : "Lore locked. Transmute elements to discover formulas.", -1, &loreRect, DT_WORDBREAK);
+
+                    // Synthesis Recipe
+                    SetTextColor(hdc, RGB(243, 156, 18));
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 82, "SYNTHESIS RECIPE:", 17);
+
+                    SetTextColor(hdc, RGB(200, 210, 225));
+                    if (g_Elements[selIdx].isBasic) {
+                        TextOutA(hdc, cCard.left + 8, cCard.top + 98, "Primordial Element (Found naturally)", 36);
+                    } else {
+                        // Find recipe
+                        int foundR = 0;
+                        for (int r = 0; r < TOTAL_RECIPES; r++) {
+                            if (g_Recipes[r].result == selIdx) {
+                                int i1 = g_Recipes[r].ingredient1;
+                                int i2 = g_Recipes[r].ingredient2;
+                                char rStr[128];
+                                wsprintfA(rStr, "%s + %s -> %s",
+                                    g_State.discovered[i1] ? g_Elements[i1].name : "???",
+                                    g_State.discovered[i2] ? g_Elements[i2].name : "???",
+                                    g_Elements[selIdx].name);
+                                TextOutA(hdc, cCard.left + 8, cCard.top + 98, rStr, lstrlenA(rStr));
+                                foundR = 1;
+                                break;
+                            }
+                        }
+                        if (!foundR) TextOutA(hdc, cCard.left + 8, cCard.top + 98, "Unknown Formula", 15);
+                    }
+
+                    // Transmutation Uses
+                    SetTextColor(hdc, RGB(243, 156, 18));
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 118, "TRANSMUTATION USES:", 19);
+
+                    int yUse = cCard.top + 134;
+                    int useCount = 0;
+                    for (int r = 0; r < TOTAL_RECIPES; r++) {
+                        if (g_Recipes[r].ingredient1 == selIdx || g_Recipes[r].ingredient2 == selIdx) {
+                            int res = g_Recipes[r].result;
+                            int otherIng = (g_Recipes[r].ingredient1 == selIdx) ? g_Recipes[r].ingredient2 : g_Recipes[r].ingredient1;
+                            char uStr[128];
+                            wsprintfA(uStr, "+ %s -> %s [%s]",
+                                g_Elements[otherIng].name,
+                                g_Elements[res].name,
+                                g_State.discovered[res] ? "Discovered" : "Locked");
+                            SetTextColor(hdc, g_State.discovered[res] ? RGB(46, 204, 113) : RGB(140, 150, 165));
+                            TextOutA(hdc, cCard.left + 8, yUse, uStr, lstrlenA(uStr));
+                            yUse += 16;
+                            useCount++;
+                            if (useCount >= 2) break; // fit in box
+                        }
+                    }
+                    if (useCount == 0) {
+                        SetTextColor(hdc, RGB(160, 170, 185));
+                        TextOutA(hdc, cCard.left + 8, yUse, "Apex Element (No further combinations)", 38);
+                    }
+
+                    // Combination Stats
+                    SetTextColor(hdc, RGB(180, 160, 220));
+                    char sStr[128];
+                    wsprintfA(sStr, "Crafted: x%d | Used in Crucible: x%d", g_State.craftCounts[selIdx], g_State.useCounts[selIdx]);
+                    TextOutA(hdc, cCard.left + 8, cCard.top + 164, sStr, lstrlenA(sStr));
+
+                    SelectObject(hdc, oldP);
+                }
             } else {
                 // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
                 SelectObject(hdc, hGoldPen);
