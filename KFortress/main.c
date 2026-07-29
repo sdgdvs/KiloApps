@@ -1,7 +1,16 @@
 #include <windows.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+
+int _fltused = 1;
+
+
+float custom_sqrtf(float val) {
+    if (val <= 0.0f) return 0.0f;
+    float guess = val / 2.0f;
+    for (int i = 0; i < 8; i++) {
+        guess = 0.5f * (guess + val / guess);
+    }
+    return guess;
+}
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -98,7 +107,7 @@ void AddFloatingText(float x, float y, const char* txt, COLORREF color) {
             g_floatingTexts[i].y = y;
             g_floatingTexts[i].color = color;
             g_floatingTexts[i].life = 25;
-            snprintf(g_floatingTexts[i].text, sizeof(g_floatingTexts[i].text), "%s", txt);
+            lstrcpynA(g_floatingTexts[i].text, txt, 32);
             break;
         }
     }
@@ -187,7 +196,7 @@ void UpdateGameLogic() {
         Point targetWP = g_waypoints[g_enemies[i].waypointIndex + 1];
         float dx = targetWP.x - g_enemies[i].x;
         float dy = targetWP.y - g_enemies[i].y;
-        float dist = sqrtf(dx * dx + dy * dy);
+        float dist = custom_sqrtf(dx * dx + dy * dy);
 
         if (dist < g_enemies[i].speed) {
             g_enemies[i].x = (float)targetWP.x;
@@ -231,7 +240,7 @@ void UpdateGameLogic() {
 
                 float edx = g_enemies[e].x - g_slots[i].x;
                 float edy = g_enemies[e].y - g_slots[i].y;
-                float edist = sqrtf(edx * edx + edy * edy);
+                float edist = custom_sqrtf(edx * edx + edy * edy);
 
                 if (edist <= g_slots[i].range) {
                     float progress = g_enemies[e].waypointIndex * 1000.0f + edist;
@@ -281,7 +290,7 @@ void UpdateGameLogic() {
 
         float dx = g_projectiles[p].targetX - g_projectiles[p].x;
         float dy = g_projectiles[p].targetY - g_projectiles[p].y;
-        float dist = sqrtf(dx * dx + dy * dy);
+        float dist = custom_sqrtf(dx * dx + dy * dy);
 
         if (dist < g_projectiles[p].speed) {
             // Hit target
@@ -320,7 +329,7 @@ void UpdateGameLogic() {
         g_gold += bonus;
 
         char buf[32];
-        sprintf(buf, "WAVE CLEAR! +%dg", bonus);
+        wsprintfA(buf, "WAVE CLEAR! +%dg", bonus);
         AddFloatingText((float)(WINDOW_WIDTH / 2 - 50), (float)(WINDOW_HEIGHT / 2), buf, RGB(16, 185, 129));
 
         g_wave++;
@@ -376,7 +385,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontSub);
     SetTextColor(memDC, TEXT_MUTED);
-    TextOutA(memDC, 140, 26, "Phase 2: Siege Path & Archer Defense", 36);
+    TextOutA(memDC, 140, 26, "Phase 3: Native C Parity", 24);
 
     // Stats HUD
     char buf[128];
@@ -385,16 +394,16 @@ void Render(HDC hdc, HWND hwnd) {
     SelectObject(memDC, hFontStat);
 
     SetTextColor(memDC, TEXT_GOLD);
-    sprintf(buf, "Gold: %d", g_gold);
-    TextOutA(memDC, w - 320, 24, buf, (int)strlen(buf));
+    wsprintfA(buf, "Gold: %d", g_gold);
+    TextOutA(memDC, w - 320, 24, buf, (int)lstrlenA(buf));
 
     SetTextColor(memDC, RGB(239, 68, 68));
-    sprintf(buf, "Base HP: %d/%d", g_baseHp, g_maxBaseHp);
-    TextOutA(memDC, w - 210, 24, buf, (int)strlen(buf));
+    wsprintfA(buf, "Base HP: %d/%d", g_baseHp, g_maxBaseHp);
+    TextOutA(memDC, w - 210, 24, buf, (int)lstrlenA(buf));
 
     SetTextColor(memDC, TEXT_WHITE);
-    sprintf(buf, "Wave: %d", g_wave);
-    TextOutA(memDC, w - 90, 24, buf, (int)strlen(buf));
+    wsprintfA(buf, "Wave: %d", g_wave);
+    TextOutA(memDC, w - 90, 24, buf, (int)lstrlenA(buf));
 
     DeleteObject(hFontTitle);
     DeleteObject(hFontSub);
@@ -535,7 +544,7 @@ void Render(HDC hdc, HWND hwnd) {
     for (int f = 0; f < MAX_FLOATING_TEXTS; f++) {
         if (!g_floatingTexts[f].active) continue;
         SetTextColor(memDC, g_floatingTexts[f].color);
-        TextOutA(memDC, (int)g_floatingTexts[f].x, (int)g_floatingTexts[f].y, g_floatingTexts[f].text, (int)strlen(g_floatingTexts[f].text));
+        TextOutA(memDC, (int)g_floatingTexts[f].x, (int)g_floatingTexts[f].y, g_floatingTexts[f].text, (int)lstrlenA(g_floatingTexts[f].text));
     }
 
     // Game Over Overlay Banner
@@ -581,8 +590,8 @@ void Render(HDC hdc, HWND hwnd) {
     DrawRoundedRect(memDC, sbX + 15, sbY + 120, sbX + sbW - 15, sbY + 165, btnBg, BORDER_COLOR, 6);
     SetTextColor(memDC, TEXT_WHITE);
     SelectObject(memDC, hFontHeader);
-    sprintf(buf, g_waveActive ? "WAVE IN PROGRESS" : "START WAVE %d", g_wave);
-    TextOutA(memDC, sbX + 25, sbY + 134, buf, (int)strlen(buf));
+    wsprintfA(buf, g_waveActive ? "WAVE IN PROGRESS" : "START WAVE %d", g_wave);
+    TextOutA(memDC, sbX + 25, sbY + 134, buf, (int)lstrlenA(buf));
 
     // Button: Reset Game
     DrawRoundedRect(memDC, sbX + 15, sbY + 180, sbX + sbW - 15, sbY + 220, RGB(225, 29, 72), BORDER_COLOR, 6);
@@ -594,7 +603,7 @@ void Render(HDC hdc, HWND hwnd) {
         OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
     SelectObject(memDC, hFontBody);
     SetTextColor(memDC, TEXT_GOLD);
-    TextOutA(memDC, sbX + 25, sbY + 245, "Phase 2 Rules:", 14);
+    TextOutA(memDC, sbX + 25, sbY + 245, "Phase 3 Rules:", 14);
     SetTextColor(memDC, TEXT_MUTED);
     TextOutA(memDC, sbX + 25, sbY + 268, "- Click (+) slots to", 20);
     TextOutA(memDC, sbX + 25, sbY + 284, "  build Archer (50g)", 20);
