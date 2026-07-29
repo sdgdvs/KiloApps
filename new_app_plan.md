@@ -53,24 +53,24 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 
 ## Current App
 
-**App:** KAlchemy (Fantasy crafting & element discovery)
-**Phase:** 14 (next to do)
-**Status:** Phases 1-13 complete
+**App:** KFortress (Fantasy Tower Defense & Siege Defense)
+**Phase:** 1 (next to do)
+**Status:** Ready to start Phase 1
 
-- [x] Phase 1: Scaffold KAlchemy directory (`KAlchemy/`), create web HTML skeleton (`KiloOS/public/apps/kalchemy.html`), register in App.jsx.
-- [x] Phase 2: Core web HTML element discovery game (4 basic elements: Fire, Water, Earth, Air; Transmutation Crucible combining 2 elements; inventory grid & discovery counter).
-- [x] Phase 3: Native C version (`KAlchemy/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
-- [x] Phase 4: Dark theme UI styling (mystical arcane laboratory theme: deep violet/slate background, glowing rune borders, golden element badges).
-- [x] Phase 5: Expanded Recipe Matrix & Tiering — Add 50+ secondary elements across 5 tiers (Basic, Nature, Metallurgy, Arcane, Celestial) with tier unlock thresholds and discovery notifications.
-- [x] Phase 6: Alchemist's Research Hints & Oracle System — Add hint system offering vague or specific combination clues using Alchemical Dust earned per new discovery.
-- [x] Phase 7: Element Essence Distillation & Extraction — Add Laboratory Equipment (Retort, Alembic, Crucible, Anvil) allowing players to break down complex elements back into base essences.
-- [x] Phase 8: Master Alchemist Guild Quests — Add procedural quest board where guild patrons request specific potions, metals, or magical artifacts for Gold and XP rewards.
-- [x] Phase 9: Laboratory Upgrades & Enchanter Workshop — Add shop to upgrade Crucible capacity, Essence extraction yield, Auto-sorter, and Catalyst speed using Gold.
-- [x] Phase 10: Potion Brewing & Effect Tester — Add Potion Brewing cauldrons combining discoverable herbs and essences to create usable buff elixirs (Strength, Invisibility, Mana, Elixir of Life).
-- [x] Phase 11: Master Alchemist Codex & Recipe Book — Add comprehensive searchable grimoire tracking discovered elements, combination histories, flavor lore text, and missing combinations per tier.
-- [x] Phase 12: Multiple Game Modes & Challenges — Add 3 Game Modes (Classic Discovery, Timed Alchemy Blitz, Puzzle Crucible mode with target element goals) and High Score tracking.
-- [x] Phase 13: Add Sound Effects — Web Audio API bubble simmers, glass clinkers, transmutation zaps, magic fanfares, discovery chimes. Native: Win32 Beep() equivalents.
-- [ ] Phase 14: Add Comprehensive Help & Grandmaster Manual — How-to-play modal overlay, element tier guide, lab controls reference, and alchemy lore encyclopedia.
+- [ ] Phase 1: Scaffold KFortress directory (`KFortress/`), create web HTML skeleton (`KiloOS/public/apps/kfortress.html`), register in App.jsx.
+- [ ] Phase 2: Core web HTML 2D grid path layout, basic Archer Tower placement, Gold economy, starting enemy wave spawning (Goblins), base HP & pathfinding.
+- [ ] Phase 3: Native C version (`KFortress/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
+- [ ] Phase 4: Dark fantasy UI styling (stone castle battlements theme, neon health bars, glowing range indicators, golden coin counters).
+- [ ] Phase 5: Multiple Tower Types — Add Mage Towers (splash magic damage), Cannon Towers (heavy armor-piercing damage), and Slow Frost Towers (freezing field aura).
+- [ ] Phase 6: Tower Upgrade System — Add 3 upgrade levels per tower type enhancing range, attack speed, damage, and special abilities using Gold.
+- [ ] Phase 7: Diverse Enemy Bestiary — Add Orc Warriors (heavy armor), Shadow Hounds (fast sprint speed), Flying Gargoyles (bypass ground paths), and Siege Ogre Bosses with health bars.
+- [ ] Phase 8: Hero Unit & Active Abilities — Add controllable Paladin Hero unit on the battlefield with active spell cooldowns (Holy Light Heal, Shield Wall, Meteor Strike).
+- [ ] Phase 9: Fortress Research Workshop — Add persistent Academy tech tree upgrading starting Gold, base wall durability, Hero cooldowns, and tower damage multipliers.
+- [ ] Phase 10: Traps & Consumable Defenses — Add placeable ground traps (Spike Pit, Oil Slick, Barricade) and instant consumable spell scrolls (Firestorm, Blizzard, Gold Magnet).
+- [ ] Phase 11: Multi-Stage Campaign Map — Add 10 distinct battleground maps (Forest Outpost, Desert Pass, Frozen Fortress, Volcanic Citadel) with unique paths and terrain obstacles.
+- [ ] Phase 12: Multiple Game Modes & Challenges — Add 3 Game Modes (Campaign Mode, Endless Horde Mode, Boss Blitz Mode) with High Score Leaderboards.
+- [ ] Phase 13: Add Sound Effects — Web Audio API arrow WHOOSH, cannon BOOM, magic ZAP, monster GROWL, victory FANFARE. Native: Win32 Beep() equivalents.
+- [ ] Phase 14: Add Comprehensive Help & Commander's Field Guide — How-to-play modal, tower spec sheet, enemy bestiary encyclopedia, and tactical defense strategies manual.
 
 ### How to execute the next phase:
 1. Read the unchecked phase description above — it tells you EXACTLY what feature to add.
@@ -156,6 +156,7 @@ Use the game/utility feature priority lists above for inspiration, but write spe
 - KReversi (Phase 14 completed: Added Comprehensive Help / How-to-Play modal & Strategy Guide to both versions)
 - KQuest (Phase 14 completed: Added Comprehensive Help / Lore Codex & Recipe Reference to both versions)
 - KStarship (Phase 14 completed: Added Comprehensive Help & Star Captain Codex to both versions)
+- KAlchemy (Phase 14 completed: Added Comprehensive Help & Grandmaster Manual to both versions)
 
 ## Possible Future Apps (pick from here or invent your own)
 
