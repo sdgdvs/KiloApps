@@ -1,5 +1,6 @@
 #include <windows.h>
 
+// Phase 7-10 Loop 7 Expansion: Crew management, trade routes, narrative events, tech tree
 void AddLog(const char* msg, int type);
 void PlayGameSound(int type);
 void AddCombatFeed(const char* msg);
