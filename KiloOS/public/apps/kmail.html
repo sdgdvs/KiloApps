@@ -13,355 +13,393 @@
     --accent: #3b82f6;
     --accent-hover: #2563eb;
     --danger: #ef4444;
+    --tag-bg: #475569;
   }
-  body {
-    margin: 0;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg-main);
-    color: var(--text-primary);
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-  }
-  /* Sidebar */
-  .sidebar {
-    width: 200px;
-    background: var(--bg-glass);
-    border-right: 1px solid var(--border);
-    backdrop-filter: blur(10px);
-    display: flex;
-    flex-direction: column;
-    padding: 20px 0;
-  }
-  .compose-btn {
-    margin: 0 15px 20px 15px;
-    padding: 10px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s;
-  }
+  body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
+  .sidebar { width: 200px; background: var(--bg-glass); border-right: 1px solid var(--border); backdrop-filter: blur(10px); display: flex; flex-direction: column; padding: 20px 0; }
+  .compose-btn { margin: 0 15px 20px 15px; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
   .compose-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-  .folder {
-    padding: 10px 20px;
-    cursor: pointer;
-    color: var(--text-sec);
-    transition: background 0.2s, color 0.2s;
-  }
-  .folder:hover, .folder.active {
-    background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
-  }
-  /* Email List */
-  .list {
-    width: 300px;
-    background: rgba(15, 23, 42, 0.8);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-  .item {
-    padding: 15px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-  }
+  .folder { padding: 10px 20px; cursor: pointer; color: var(--text-sec); transition: background 0.2s, color 0.2s; }
+  .folder:hover, .folder.active { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
+  .list { width: 300px; background: rgba(15, 23, 42, 0.8); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+  .item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; }
   .item:hover { background: rgba(255,255,255,0.03); }
   .item.selected { background: rgba(59, 130, 246, 0.2); border-left: 3px solid var(--accent); }
   .item.unread .subject { font-weight: 700; color: #fff; }
-  .item.unread::after {
-    content: '';
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    width: 8px;
-    height: 8px;
-    background: var(--accent);
-    border-radius: 50%;
-  }
+  .item.unread::after { content: ''; position: absolute; top: 15px; right: 15px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .item-tags { margin-top: 5px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .tag { font-size: 10px; background: var(--tag-bg); padding: 2px 6px; border-radius: 4px; }
   .subject { font-weight: 500; margin-bottom: 4px; font-size: 14px; }
   .sender { font-size: 12px; color: var(--text-sec); }
-  
-  /* Pane */
-  .pane {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: rgba(15, 23, 42, 0.95);
-    position: relative;
-  }
-  .pane-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-  }
+  .pane { flex: 1; display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.95); position: relative; }
+  .tabs { display: flex; background: #1e293b; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .tab { padding: 10px 15px; cursor: pointer; border-right: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-sec); }
+  .tab.active { background: var(--bg-main); color: var(--text-primary); border-bottom: 2px solid var(--accent); }
+  .tab-close { cursor: pointer; font-size: 14px; color: var(--text-sec); }
+  .tab-close:hover { color: var(--danger); }
+  .pane-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
   .pane-subject { font-size: 22px; font-weight: 600; margin: 0 0 10px 0; }
   .pane-sender { font-size: 14px; color: var(--text-sec); margin: 0; }
-  .pane-actions button {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-left: 5px;
-    transition: 0.2s;
-  }
+  .pane-actions button { background: rgba(255, 255, 255, 0.1); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 5px; transition: 0.2s; }
   .pane-actions button:hover { background: rgba(255,255,255,0.2); }
-  .pane-actions .del-btn:hover { background: var(--danger); }
-  .pane-body {
-    padding: 20px;
-    flex: 1;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    font-size: 15px;
-    line-height: 1.6;
-    color: #cbd5e1;
-  }
+  .pane-body { padding: 20px; flex: 1; overflow-y: auto; white-space: pre-wrap; font-size: 15px; line-height: 1.6; color: #cbd5e1; }
   
-  /* Compose Modal */
-  .modal {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(4px);
-  }
-  .modal.active { display: flex; animation: fadeIn 0.2s ease-out; }
-  .compose-box {
-    background: #1e293b;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: 500px;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  }
-  .compose-header {
-    padding: 15px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-  }
-  .compose-header span { cursor: pointer; color: var(--text-sec); }
-  .compose-header span:hover { color: white; }
-  .compose-body { padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-  .compose-body input, .compose-body textarea {
-    background: rgba(0,0,0,0.2);
-    border: 1px solid var(--border);
-    color: white;
-    padding: 10px;
-    border-radius: 6px;
-    font-family: inherit;
-  }
-  .compose-body textarea { height: 150px; resize: none; }
-  .compose-footer { padding: 15px; text-align: right; border-top: 1px solid var(--border); }
-  
-  @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .compose-body { display: flex; flex-direction: column; gap: 10px; height: 100%; padding: 20px; }
+  .compose-body input, .compose-body textarea { background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; font-family: inherit; }
+  .compose-body textarea { flex: 1; resize: none; }
+  .compose-actions { display: flex; justify-content: space-between; }
   
   #empty-state { display: flex; flex: 1; align-items: center; justify-content: center; color: var(--text-sec); flex-direction: column; }
-  #empty-state h3 { margin-bottom: 5px; }
+  .search-container { padding: 15px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+  .search-container input { width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit; margin-bottom: 8px; }
+  .search-container select { width: 100%; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 5px; border-radius: 4px; }
 </style>
 </head>
 <body>
 
 <div class="sidebar">
-  <button class="compose-btn" onclick="openCompose()">New Message</button>
-  <div class="folder active" tabindex="0" role="button" onkeydown="if(event.key==='Enter') switchFolder('inbox')" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
-  <div class="folder" tabindex="0" role="button" onkeydown="if(event.key==='Enter') switchFolder('sent')" onclick="switchFolder('sent')" id="f-sent">Sent</div>
-  <div class="folder" tabindex="0" role="button" onkeydown="if(event.key==='Enter') switchFolder('trash')" onclick="switchFolder('trash')" id="f-trash">Trash</div>
-  <div style="padding: 15px; border-bottom: 1px solid var(--border); margin-bottom: 10px;">
-    <input type="text" id="search-box" aria-label="Search emails" placeholder="Search..." onkeyup="handleSearch()" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.2); border: 1px solid var(--border); color: white; padding: 8px; border-radius: 6px; font-family: inherit;">
+  <button class="compose-btn" onclick="newComposeTab()">New Message</button>
+  <div class="folder active" onclick="switchFolder('inbox')" id="f-inbox">Inbox</div>
+  <div class="folder" onclick="switchFolder('sent')" id="f-sent">Sent</div>
+  <div class="folder" onclick="switchFolder('trash')" id="f-trash">Trash</div>
+  
+  <div class="search-container">
+    <input type="text" id="search-box" placeholder="Search emails..." onkeyup="handleSearch()">
+    <select id="tag-filter" onchange="handleSearch()">
+      <option value="">All Tags</option>
+      <option value="Urgent">Urgent</option>
+      <option value="Work">Work</option>
+      <option value="Personal">Personal</option>
+    </select>
   </div>
-  <button class="compose-btn" style="background:var(--danger); margin-bottom: 20px;" onclick="emptyTrash()">Empty Trash</button>
+  
+  <div style="flex:1"></div>
+  <button class="compose-btn" style="background:#059669;" onclick="document.getElementById('import-file').click()">Import JSON</button>
+  <input type="file" id="import-file" style="display:none" onchange="importJson(event)" accept=".json">
+  <button class="compose-btn" style="background:#0284c7; margin-top:-10px;" onclick="exportJson()">Export JSON</button>
+  <button class="compose-btn" style="background:var(--danger); margin-top:-10px;" onclick="emptyTrash()">Empty Trash</button>
 </div>
 
 <div class="list" id="list"></div>
 
-<div class="pane" id="pane">
-  <div id="empty-state">
-    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-    <h3>No message selected</h3>
-    <p>Select an email from the list to read</p>
-  </div>
-  <div id="content-state" style="display: none; height: 100%; flex-direction: column;">
-    <div class="pane-header">
-      <div>
-        <h2 class="pane-subject" id="p-sub"></h2>
-        <p class="pane-sender" id="p-sen"></p>
-      </div>
-      <div class="pane-actions">
-        <button onclick="replyEmail()">Reply</button>
-        <button class="del-btn" onclick="deleteEmail()">Delete</button>
-      </div>
-    </div>
-    <div class="pane-body" id="p-body"></div>
-  </div>
-</div>
-
-<div class="modal" id="compose-modal">
-  <div class="compose-box">
-    <div class="compose-header">
-      New Message
-      <span tabindex="0" role="button" aria-label="Close" onkeydown="if(event.key==='Enter') closeCompose()" onclick="closeCompose()">✕</span>
-    </div>
-    <div class="compose-body">
-      <input type="text" id="c-to" placeholder="To" />
-      <input type="text" id="c-sub" placeholder="Subject" />
-      <textarea id="c-body" placeholder="Write your message here..."></textarea>
-    </div>
-    <div class="compose-footer">
-      <button class="compose-btn" style="margin:0" onclick="sendEmail()">Send</button>
+<div class="pane">
+  <div class="tabs" id="tabs"></div>
+  <div id="pane-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+    <div id="empty-state">
+      <h3>No tab selected</h3>
+      <p>Select an email from the list or compose a new one.</p>
     </div>
   </div>
 </div>
 
 <script>
+  // Simple AES-GCM encryption/decryption using Web Crypto API
+  async function generateKey(password) {
+    const enc = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw", enc.encode(password), { name: "PBKDF2" }, false, ["deriveBits", "deriveKey"]
+    );
+    return crypto.subtle.deriveKey(
+      { name: "PBKDF2", salt: enc.encode("kilo-salt"), iterations: 100000, hash: "SHA-256" },
+      keyMaterial, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]
+    );
+  }
+  async function encryptText(text, password) {
+    const key = await generateKey(password);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const enc = new TextEncoder();
+    const cipher = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, enc.encode(text));
+    const cipherArray = Array.from(new Uint8Array(cipher));
+    const ivArray = Array.from(iv);
+    return JSON.stringify({ iv: ivArray, cipher: cipherArray });
+  }
+  async function decryptText(encryptedStr, password) {
+    try {
+      const data = JSON.parse(encryptedStr);
+      const key = await generateKey(password);
+      const iv = new Uint8Array(data.iv);
+      const cipher = new Uint8Array(data.cipher);
+      const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, cipher);
+      return new TextDecoder().decode(decrypted);
+    } catch(e) {
+      return null;
+    }
+  }
+
   let emails = [
-    { id: 1, folder: 'inbox', subject: "Welcome to KiloOS", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment. We have installed several micro-apps for your convenience.\n\nEnjoy your stay!\n- SysAdmin", unread: true },
-    { id: 2, folder: 'inbox', subject: "Meeting at 3PM", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM in the conference room. We need to discuss the Q3 roadmap.\n\nRegards,\nBoss", unread: false },
-    { id: 3, folder: 'inbox', subject: "URGENT: Server down", sender: "alerts@kilo.os", body: "The primary database server is unresponsive. Please investigate immediately. This is not a drill.", unread: true },
-    { id: 4, folder: 'inbox', subject: "Newsletter #42", sender: "news@kilo.os", body: "Here is your weekly digest of what's new in the world of retro computing...", unread: false },
-    { id: 5, folder: 'sent', subject: "Re: Meeting at 3PM", sender: "me@kilo.os", body: "I'll be there.\n\n- Me", unread: false }
+    { id: 1, folder: 'inbox', subject: "Welcome to KiloOS", sender: "sysadmin@kilo.os", body: "Hello User,\n\nWelcome to KiloOS, your new minimalist operating environment.\n\n- SysAdmin", unread: true, tags: ["Work"], encrypted: false },
+    { id: 2, folder: 'inbox', subject: "Meeting at 3PM", sender: "boss@kilo.os", body: "Don't forget our meeting at 3PM.", unread: false, tags: ["Urgent", "Work"], encrypted: false },
+    { id: 3, folder: 'inbox', subject: "Top Secret Info", sender: "agent@kilo.os", body: '{"iv":[1,2,3,4,5,6,7,8,9,10,11,12],"cipher":[...]}', unread: true, tags: ["Personal"], encrypted: true } // mock encrypted
   ];
   
   let currentFolder = 'inbox';
-  let selectedId = null;
-  let nextId = 6;
-  let searchQuery = "";
+  let nextId = 4;
+  let tabs = [];
+  let activeTabId = null;
 
-  function handleSearch() {
-    searchQuery = document.getElementById('search-box').value.toLowerCase();
-    renderList();
-  }
+  function handleSearch() { renderList(); }
 
   function renderList() {
     const list = document.getElementById('list');
     list.innerHTML = '';
+    const sq = document.getElementById('search-box').value.toLowerCase();
+    const tagF = document.getElementById('tag-filter').value;
+    
     const filtered = emails.filter(e => 
       e.folder === currentFolder && 
-      (e.subject.toLowerCase().includes(searchQuery) || e.sender.toLowerCase().includes(searchQuery) || e.body.toLowerCase().includes(searchQuery))
+      (e.subject.toLowerCase().includes(sq) || e.sender.toLowerCase().includes(sq)) &&
+      (tagF === "" || (e.tags && e.tags.includes(tagF)))
     );
     
     if (filtered.length === 0) {
-      list.innerHTML = '<div style="padding: 20px; color: #64748b; text-align: center; font-size: 14px;">Folder is empty</div>';
+      list.innerHTML = '<div style="padding: 20px; color: #64748b; text-align: center; font-size: 14px;">No emails found</div>';
     }
 
     filtered.forEach(em => {
       let d = document.createElement('div');
-      d.className = `item ${em.unread ? 'unread' : ''} ${selectedId === em.id ? 'selected' : ''}`;
+      // If there's an active tab showing this email, highlight it
+      let isSelected = activeTabId && tabs.find(t => t.id === activeTabId && t.emailId === em.id);
+      d.className = `item ${em.unread ? 'unread' : ''} ${isSelected ? 'selected' : ''}`;
       
-      let subjDiv = document.createElement('div');
-      subjDiv.className = 'subject';
-      subjDiv.textContent = em.subject;
-      
-      let senderDiv = document.createElement('div');
-      senderDiv.className = 'sender';
-      senderDiv.textContent = em.folder === 'sent' ? 'To: ' + em.sender : em.sender;
-      
-      d.appendChild(subjDiv);
-      d.appendChild(senderDiv);
-      
-      d.tabIndex = 0;
-      d.setAttribute('role', 'button');
-      d.onclick = () => selectEmail(em.id);
-      d.onkeydown = (e) => { if (e.key === 'Enter') selectEmail(em.id); };
+      let html = `<div class="subject">${em.encrypted ? '🔒 ' : ''}${em.subject}</div>
+                  <div class="sender">${em.folder === 'sent' ? 'To: ' + em.sender : em.sender}</div>
+                  <div class="item-tags">`;
+      if(em.tags) em.tags.forEach(t => { html += `<span class="tag">${t}</span>`; });
+      html += `</div>`;
+      d.innerHTML = html;
+      d.onclick = () => openEmailTab(em.id);
       list.appendChild(d);
     });
   }
 
-  function selectEmail(id) {
-    selectedId = id;
-    let em = emails.find(e => e.id === id);
-    if(em && em.unread) {
-      em.unread = false;
-    }
-    renderList();
-    
-    if(em) {
-      document.getElementById('empty-state').style.display = 'none';
-      document.getElementById('content-state').style.display = 'flex';
-      document.getElementById('p-sub').textContent = em.subject;
-      document.getElementById('p-sen').textContent = em.folder==='sent' ? `To: ${em.sender}` : `From: ${em.sender}`;
-      document.getElementById('p-body').textContent = em.body;
-    } else {
-      document.getElementById('empty-state').style.display = 'flex';
-      document.getElementById('content-state').style.display = 'none';
-    }
+  function renderTabs() {
+    const tb = document.getElementById('tabs');
+    tb.innerHTML = '';
+    tabs.forEach(t => {
+      let d = document.createElement('div');
+      d.className = `tab ${t.id === activeTabId ? 'active' : ''}`;
+      d.innerHTML = `<span>${t.title}</span><span class="tab-close" onclick="closeTab('${t.id}', event)">✕</span>`;
+      d.onclick = () => switchTab(t.id);
+      tb.appendChild(d);
+    });
+    renderPane();
+    renderList(); // update highlights
   }
 
-  function switchFolder(folder) {
+  function openEmailTab(id) {
+    let em = emails.find(e => e.id === id);
+    if(!em) return;
+    if(em.unread) { em.unread = false; }
+    
+    let existingTab = tabs.find(t => t.type === 'read' && t.emailId === id);
+    if(existingTab) {
+      activeTabId = existingTab.id;
+    } else {
+      let tid = 't_' + Date.now();
+      tabs.push({ id: tid, type: 'read', emailId: id, title: em.subject });
+      activeTabId = tid;
+    }
+    renderTabs();
+  }
+
+  window.newComposeTab = function(replyToEm = null) {
+    let tid = 't_' + Date.now();
+    let to = replyToEm ? (replyToEm.folder === 'sent' ? replyToEm.sender : replyToEm.sender) : '';
+    let sub = replyToEm ? (replyToEm.subject.startsWith('Re:') ? replyToEm.subject : 'Re: ' + replyToEm.subject) : '';
+    let body = replyToEm ? `\n\n--- Original Message ---\n${replyToEm.body}` : '';
+    
+    tabs.push({ id: tid, type: 'compose', title: 'New Message', data: { to, sub, body, encrypted: false, password: '' } });
+    activeTabId = tid;
+    renderTabs();
+  }
+
+  function closeTab(tid, e) {
+    if(e) e.stopPropagation();
+    let idx = tabs.findIndex(t => t.id === tid);
+    if(idx > -1) {
+      tabs.splice(idx, 1);
+      if(activeTabId === tid) {
+        activeTabId = tabs.length > 0 ? tabs[tabs.length-1].id : null;
+      }
+    }
+    renderTabs();
+  }
+
+  function switchTab(tid) {
+    activeTabId = tid;
+    renderTabs();
+  }
+
+  window.switchFolder = function(folder) {
     currentFolder = folder;
-    selectedId = null;
-    searchQuery = "";
-    document.getElementById('search-box').value = "";
     document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
     document.getElementById(`f-${folder}`).classList.add('active');
     renderList();
-    selectEmail(null);
   }
 
-  function emptyTrash() {
-    emails = emails.filter(e => e.folder !== 'trash');
-    if(currentFolder === 'trash') {
-      renderList();
-      selectEmail(null);
+  function renderPane() {
+    const pane = document.getElementById('pane-content');
+    if(!activeTabId) {
+      pane.innerHTML = `<div id="empty-state"><h3>No tab selected</h3><p>Select an email from the list or compose a new one.</p></div>`;
+      return;
     }
-    alert("Trash emptied.");
+    let tab = tabs.find(t => t.id === activeTabId);
+    if(tab.type === 'read') {
+      let em = emails.find(e => e.id === tab.emailId);
+      if(!em) { closeTab(tab.id); return; }
+      
+      let tagsHtml = (em.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+      
+      let actionsHtml = `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))">Reply</button>`;
+      actionsHtml += `<button onclick="addTag(${em.id})">+ Tag</button>`;
+      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})">Delete</button>`;
+
+      let bodyHtml = em.body;
+      if (em.encrypted) {
+        bodyHtml = `<div style="background:rgba(0,0,0,0.3); padding:20px; border-radius:8px; text-align:center;">
+          <p>🔒 This message is encrypted.</p>
+          <input type="password" id="dec-pass-${em.id}" placeholder="Password" style="padding:8px; border-radius:4px; border:1px solid var(--border); background:rgba(255,255,255,0.1); color:white;">
+          <button onclick="attemptDecrypt(${em.id})" style="padding:8px 15px; background:var(--accent); border:none; color:white; border-radius:4px; cursor:pointer;">Decrypt</button>
+        </div><div id="dec-res-${em.id}" style="margin-top:20px; display:none;"></div>`;
+      }
+
+      pane.innerHTML = `
+        <div class="pane-header">
+          <div>
+            <h2 class="pane-subject">${em.encrypted ? '🔒 ' : ''}${em.subject}</h2>
+            <p class="pane-sender">${em.folder==='sent' ? 'To: ' + em.sender : 'From: ' + em.sender}</p>
+            <div class="item-tags" style="margin-top:10px;">${tagsHtml}</div>
+          </div>
+          <div class="pane-actions">${actionsHtml}</div>
+        </div>
+        <div class="pane-body">${bodyHtml}</div>
+      `;
+    } else if (tab.type === 'compose') {
+      pane.innerHTML = `
+        <div class="compose-body">
+          <input type="text" id="c-to-${tab.id}" placeholder="To" value="${tab.data.to}" oninput="updateTabData('${tab.id}', 'to', this.value)">
+          <input type="text" id="c-sub-${tab.id}" placeholder="Subject" value="${tab.data.sub}" oninput="updateTabData('${tab.id}', 'sub', this.value)">
+          <textarea id="c-body-${tab.id}" placeholder="Write your message here...">${tab.data.body}</textarea>
+          <div class="compose-actions">
+            <div>
+              <label style="font-size:13px; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="c-enc-${tab.id}" ${tab.data.encrypted ? 'checked' : ''} onchange="toggleEncrypt('${tab.id}', this.checked)"> Encrypt with Password
+              </label>
+              <input type="password" id="c-pass-${tab.id}" placeholder="Password" style="display:${tab.data.encrypted ? 'inline-block' : 'none'}; margin-left:10px; width:150px;" value="${tab.data.password}" oninput="updateTabData('${tab.id}', 'password', this.value)">
+            </div>
+            <button class="compose-btn" style="margin:0" onclick="sendEmail('${tab.id}')">Send</button>
+          </div>
+        </div>
+      `;
+      // Attach the textarea event via js to avoid escaping hell
+      setTimeout(() => {
+        const ta = document.getElementById(`c-body-${tab.id}`);
+        if(ta) ta.oninput = (e) => updateTabData(tab.id, 'body', e.target.value);
+      }, 0);
+    }
   }
 
-  function deleteEmail() {
-    if(!selectedId) return;
-    let em = emails.find(e => e.id === selectedId);
+  window.updateTabData = function(tid, field, val) {
+    let t = tabs.find(t => t.id === tid);
+    if(t) {
+      t.data[field] = val;
+      if(field === 'sub') {
+        t.title = val || 'New Message';
+        renderTabs(); // minimal re-render just to update tab title
+      }
+    }
+  }
+
+  window.toggleEncrypt = function(tid, checked) {
+    updateTabData(tid, 'encrypted', checked);
+    document.getElementById(`c-pass-${tid}`).style.display = checked ? 'inline-block' : 'none';
+  }
+
+  window.sendEmail = async function(tid) {
+    let t = tabs.find(t => t.id === tid);
+    if(!t) return;
+    let data = t.data;
+    let finalBody = data.body;
+    let isEncrypted = data.encrypted;
+    
+    if (isEncrypted) {
+      if(!data.password) { alert("Please enter a password for encryption."); return; }
+      finalBody = await encryptText(data.body, data.password);
+    }
+
+    emails.unshift({
+      id: nextId++, folder: 'sent', subject: data.sub || 'No Subject', sender: data.to || 'unknown@kilo.os', body: finalBody, unread: false, tags: [], encrypted: isEncrypted
+    });
+    closeTab(tid);
+    if(currentFolder === 'sent') renderList();
+  }
+
+  window.attemptDecrypt = async function(eid) {
+    let em = emails.find(e => e.id === eid);
+    let pass = document.getElementById(`dec-pass-${eid}`).value;
+    if(!pass) return;
+    let dec = await decryptText(em.body, pass);
+    if(dec !== null) {
+      let resDiv = document.getElementById(`dec-res-${eid}`);
+      resDiv.style.display = 'block';
+      resDiv.innerHTML = `<strong>Decrypted Content:</strong><br><br>${dec.replace(/\\n/g, '<br>')}`;
+    } else {
+      alert("Incorrect password or corrupted data.");
+    }
+  }
+
+  window.addTag = function(eid) {
+    let tag = prompt("Enter tag name:");
+    if(tag) {
+      let em = emails.find(e => e.id === eid);
+      if(!em.tags) em.tags = [];
+      if(!em.tags.includes(tag)) em.tags.push(tag);
+      renderList();
+      renderPane();
+    }
+  }
+
+  window.deleteEmail = function(eid) {
+    let em = emails.find(e => e.id === eid);
     if(em.folder === 'trash') {
-      emails = emails.filter(e => e.id !== selectedId);
+      emails = emails.filter(e => e.id !== eid);
     } else {
       em.folder = 'trash';
     }
-    selectedId = null;
+    let t = tabs.find(t => t.type === 'read' && t.emailId === eid);
+    if(t) closeTab(t.id);
     renderList();
-    selectEmail(null);
   }
 
-  function openCompose() {
-    document.getElementById('c-to').value = '';
-    document.getElementById('c-sub').value = '';
-    document.getElementById('c-body').value = '';
-    document.getElementById('compose-modal').classList.add('active');
-    document.getElementById('c-to').focus();
+  window.emptyTrash = function() {
+    emails = emails.filter(e => e.folder !== 'trash');
+    if(currentFolder === 'trash') renderList();
+    alert("Trash emptied.");
   }
-  function closeCompose() {
-    document.getElementById('compose-modal').classList.remove('active');
+
+  window.exportJson = function() {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(emails));
+    const a = document.createElement('a');
+    a.href = dataStr; a.download = "kmail_backup.json"; a.click();
   }
-  function sendEmail() {
-    let to = document.getElementById('c-to').value || 'unknown@kilo.os';
-    let sub = document.getElementById('c-sub').value || 'No Subject';
-    let body = document.getElementById('c-body').value;
-    
-    emails.unshift({
-      id: nextId++, folder: 'sent', subject: sub, sender: to, body: body, unread: false
-    });
-    closeCompose();
-    if(currentFolder === 'sent') renderList();
-  }
-  function replyEmail() {
-    let em = emails.find(e => e.id === selectedId);
-    if(!em) return;
-    openCompose();
-    document.getElementById('c-to').value = em.folder === 'sent' ? em.sender : em.sender;
-    document.getElementById('c-sub').value = em.subject.startsWith('Re:') ? em.subject : 'Re: ' + em.subject;
-    document.getElementById('c-body').value = `\n\n--- Original Message ---\n${em.body}`;
-    document.getElementById('c-body').focus();
+
+  window.importJson = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if(Array.isArray(imported)) {
+          emails = imported;
+          nextId = Math.max(...emails.map(m=>m.id), 0) + 1;
+          renderList();
+          alert("Mailbox imported successfully.");
+        }
+      } catch(err) { alert("Invalid JSON file."); }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // reset
   }
 
   renderList();
