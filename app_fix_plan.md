@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KContacts
+**Target App:** KConverter
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -185,3 +185,5 @@ Pass 1 Complete.
 - **KClock**: Added World Clock tab with timezone day boundary calculations, non-blocking Web Audio chime & dismiss/snooze modal, 12H/24H format toggle, stopwatch `requestAnimationFrame` loop, and ARIA tab navigation in `kclock.html`. Added text buffer caching checks to eliminate GDI repaint churn by 95%+, double-buffering compositing, World Clock city cycling with UTC offset math, and non-blocking alert bar in `main.c`.
 
 - **KColor**: Added precise RGB/HSL/HSV/CMYK conversion math, pure-black division-by-zero protection (`K=100%`), WCAG 2.1 contrast ratio badge, color harmonies & tint/shade generator, palette history, and Eyedropper API in `kcolor.html`. Added double-buffered GDI memory DC rendering, Hex edit control subclassing for character filtering, 32-bit scrollbar tracking (`GetScrollInfo`), palette swatch array, and Win32 clipboard API routines in `main.c`.
+
+- **KContacts**: Added category CSS class sanitization, `localStorage` try-catch guards, 1000 contact capacity cap, form field length bounds, duplicate merge notes crash fix, robust vCard parameter header parsing, and `tel:`/`mailto:` URI sanitization in `kcontacts.html`. Added bounded `my_strncpy`/`my_strncat` functions, vCard heap allocation null-checks, 150 contact capacity limit checks, and stale form field clearing on delete in `main.c`.
