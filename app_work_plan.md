@@ -24,13 +24,12 @@
 
 ---
 
-**Target App:** KAudio
+**Target App:** KClock
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature (update BOTH web and native versions), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. Each pass through the list should add deeper, more substantial features. You have up to **999KB per app** — use that budget to build genuinely feature-rich applications. If new apps appear (created by other agents), add them to the queue.
-- KAudio (Added Sequencer - Record and Playback)
 - KClock (Added Alarms feature)
 - KPong (Added Difficulty Levels)
 - KDB (Added ability to add and delete records)
@@ -77,6 +76,7 @@ Pick the top app from this list, add a meaningful new feature (update BOTH web a
 - KChess (Added PGN Move History Export & Import, FEN Board Position Loader & Exporter, AI Engine Difficulty Levels [Easy, Medium, Hard, Master], Interactive Undo/Redo Move Stack, Best Move Hint arrow/system, and Material Advantage & Captured Pieces Counter)
 - KChat (Added Multi-Room/Channel Support, AI Persona Selector [5 Personalities], Real-time Search & Filtering, Message Pinning & Reactions, and Chat History Export/Import [JSON/TXT])
 - KBBS (Added Door Games Mini-Suite [LORD/TradeWars text adventure], ANSI Color & Art Viewer Mode, Multi-Node Dialing Directory Manager, Session Log Capture & Export [ANSI/TXT], and Custom BBS Script Macro Auto-Login)
+- KAudio (Added Sound FX Generator Presets, ADSR Envelope & Filter Controls, 16-Step Multi-Track Sequencer, Waveform Visualizer, and WAV/JSON Export & Import)
 
 
 
