@@ -1,139 +1,305 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>KPong</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KPong - Ultimate Arcade Pong</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-color: hsl(210, 15%, 8%);
-    --card-bg: rgba(30, 40, 50, 0.4);
-    --primary: hsl(200, 85%, 60%);
-    --secondary: hsl(300, 85%, 60%);
+    --bg-color: #050a10;
+    --bg-gradient: radial-gradient(circle at center, #1a2a3a 0%, #050a10 100%);
+    --card-bg: rgba(30, 40, 50, 0.45);
+    --primary: #00e5ff;
+    --secondary: #ff00cc;
+    --accent: #ffd700;
+    --text-color: #ffffff;
+    --canvas-bg: rgba(0, 0, 0, 0.35);
   }
+
+  body.theme-retro {
+    --bg-color: #020d04;
+    --bg-gradient: radial-gradient(circle at center, #0a260f 0%, #020d04 100%);
+    --card-bg: rgba(10, 35, 15, 0.5);
+    --primary: #00ff66;
+    --secondary: #33ff99;
+    --accent: #ccff00;
+    --canvas-bg: rgba(0, 20, 5, 0.5);
+  }
+
+  body.theme-vaporwave {
+    --bg-color: #1a0826;
+    --bg-gradient: radial-gradient(circle at center, #38124d 0%, #1a0826 100%);
+    --card-bg: rgba(50, 20, 70, 0.45);
+    --primary: #ff71ce;
+    --secondary: #01cdfe;
+    --accent: #05ffa1;
+    --canvas-bg: rgba(20, 5, 30, 0.5);
+  }
+
+  body.theme-matrix {
+    --bg-color: #000500;
+    --bg-gradient: radial-gradient(circle at center, #002200 0%, #000500 100%);
+    --card-bg: rgba(0, 30, 0, 0.5);
+    --primary: #00ff41;
+    --secondary: #008f11;
+    --accent: #00ffaa;
+    --canvas-bg: rgba(0, 10, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
   body { 
-    margin: 0; background-color: var(--bg-color); overflow: hidden; 
-    display: flex; justify-content: center; align-items: center; height: 100vh; 
-    color: white; font-family: 'Inter', sans-serif; 
-    background: radial-gradient(circle at center, #1a2a3a 0%, #050a10 100%);
+    margin: 0; background-color: var(--bg-color); overflow-x: hidden; 
+    display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+    color: var(--text-color); font-family: 'Inter', sans-serif; 
+    background: var(--bg-gradient); transition: background 0.3s ease;
   }
+
   .container {
-    padding: 20px;
+    padding: 18px;
     background: var(--card-bg);
     border-radius: 16px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    max-width: 520px; width: 100%;
   }
+
+  .header-bar {
+    display: flex; width: 100%; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 600;
+  }
+
+  .game-title {
+    font-size: 20px; font-weight: 900; letter-spacing: 1.5px;
+    background: linear-gradient(45deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+
+  .top-controls {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+  }
+
+  .btn-sm {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .btn-sm:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--primary); color: var(--primary);
+  }
+
   .score-board {
-    display: flex; width: 400px; justify-content: space-between; font-size: 32px; font-weight: 700;
+    display: flex; width: 100%; justify-content: space-between; font-size: 28px; font-weight: 900;
+    padding: 0 20px;
   }
-  .p1-score { color: var(--primary); text-shadow: 0 0 15px var(--primary); }
-  .p2-score { color: var(--secondary); text-shadow: 0 0 15px var(--secondary); }
-  
+  .p1-score { color: var(--primary); text-shadow: 0 0 12px var(--primary); }
+  .p2-score { color: var(--secondary); text-shadow: 0 0 12px var(--secondary); }
+
+  .mode-badge {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    background: rgba(0, 0, 0, 0.3); padding: 4px 10px; border-radius: 20px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+  }
+
   canvas { 
-    background-color: rgba(0, 0, 0, 0.3); 
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+    background-color: var(--canvas-bg); 
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 24px rgba(0,0,0,0.8);
+    touch-action: none;
   }
 
   .skills-bar {
-    display: flex; gap: 10px; width: 400px; justify-content: center;
+    display: flex; gap: 8px; width: 100%; justify-content: center; flex-wrap: wrap;
   }
   .skill-btn {
     background: rgba(10, 20, 35, 0.7);
-    border: 1px solid rgba(0, 229, 255, 0.4);
-    color: #00e5ff;
+    border: 1px solid var(--primary);
+    color: var(--primary);
     padding: 6px 12px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 11px; font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
-    display: flex; align-items: center; gap: 6px;
+    display: flex; align-items: center; gap: 5px;
   }
   .skill-btn:hover:not(:disabled) {
-    background: rgba(0, 229, 255, 0.2);
-    box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    background: rgba(0, 229, 255, 0.25);
+    box-shadow: 0 0 12px var(--primary);
   }
   .skill-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-    border-color: rgba(255, 255, 255, 0.1);
-    color: #888;
+    opacity: 0.4; cursor: not-allowed; border-color: rgba(255, 255, 255, 0.15); color: #888;
   }
   .skill-btn.active {
-    border-color: #ffd700;
-    color: #ffd700;
-    box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+    border-color: var(--accent); color: var(--accent); box-shadow: 0 0 14px var(--accent);
   }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(8px); z-index: 100; justify-content: center; align-items: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #0d1520; border: 1px solid var(--primary); border-radius: 14px;
+    padding: 20px; max-width: 440px; width: 90%; color: white;
+    box-shadow: 0 0 30px rgba(0, 229, 255, 0.3);
+  }
+  .modal h2 { margin-top: 0; color: var(--primary); font-size: 20px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+  .modal table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+  .modal th, .modal td { padding: 6px 8px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .modal th { color: var(--accent); font-size: 11px; text-transform: uppercase; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+
+  .toast {
+    position: fixed; bottom: 20px; right: 20px; background: rgba(0, 229, 255, 0.9);
+    color: #000; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 13px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s ease; pointer-events: none;
+    z-index: 200;
+  }
+  .toast.active { opacity: 1; }
 </style>
 </head>
-<body>
+<body class="theme-cyberpunk">
+
 <div class="container">
+  <div class="header-bar">
+    <div class="game-title">KPONG</div>
+    <div class="top-controls">
+      <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp">👥 1P vs AI</button>
+      <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode">🎮 Mode: Classic</button>
+      <button class="btn-sm" onclick="cycleTheme()" id="btn-theme">🎨 Theme</button>
+      <button class="btn-sm" onclick="openStatsModal()">🏆 Stats</button>
+      <button class="btn-sm" onclick="saveGameState()">💾 Save</button>
+      <button class="btn-sm" onclick="loadGameState()">📂 Load</button>
+    </div>
+  </div>
+
   <div class="score-board">
     <div class="p1-score" id="s1" aria-label="Player 1 Score" aria-live="polite">0</div>
+    <div class="mode-badge" id="hud-mode-badge">1P VS AI • CLASSIC</div>
     <div class="p2-score" id="s2" aria-label="Player 2 Score" aria-live="polite">0</div>
   </div>
-  <canvas id="gameCanvas" width="400" height="300" aria-label="Pong Game Canvas" tabindex="0"></canvas>
+
+  <canvas id="gameCanvas" width="450" height="320" aria-label="Pong Game Canvas" tabindex="0"></canvas>
+
   <div class="skills-bar">
     <button class="skill-btn" id="btn-slow" onclick="triggerSkill('slow')">⚡ [F] Slow-Mo</button>
-    <button class="skill-btn" id="btn-mega" onclick="triggerSkill('mega')">🛡️ [P] Mega</button>
+    <button class="skill-btn" id="btn-mega" onclick="triggerSkill('mega')">🛡️ [E] Mega</button>
     <button class="skill-btn" id="btn-fire" onclick="triggerSkill('fire')">🔥 [B] Fireball</button>
+    <button class="btn-sm" style="padding: 6px 12px; height: auto;" onclick="togglePause()" id="btn-pause">⏸️ Pause (Space)</button>
   </div>
 </div>
+
+<!-- Stats Modal -->
+<div class="modal-overlay" id="statsModal">
+  <div class="modal">
+    <h2>🏆 Statistics & High Scores</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; margin-bottom: 14px; background: rgba(255,255,255,0.04); padding: 10px; border-radius: 8px;">
+      <div>Total Games: <strong id="stat-games">0</strong></div>
+      <div>Wins: <strong id="stat-wins">0</strong></div>
+      <div>Losses: <strong id="stat-losses">0</strong></div>
+      <div>Win Rate: <strong id="stat-winrate">0%</strong></div>
+      <div style="grid-column: span 2;">Highest Rally: <strong id="stat-rally" style="color: var(--accent);">0</strong></div>
+    </div>
+
+    <h3 style="margin: 10px 0 4px 0; font-size: 14px; color: var(--primary);">Leaderboard - Top Rallies</h3>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Rally</th><th>Mode</th><th>Date</th></tr>
+      </thead>
+      <tbody id="leaderboard-body">
+        <tr><td colspan="4">No scores recorded yet.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="modal-actions">
+      <button class="btn-sm" onclick="resetStatsData()" style="color: #ff5555;">Reset Stats</button>
+      <button class="btn-sm" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Message</div>
+
 <script>
+  // Audio System
   let audioCtx = null;
   function playSound(freq, type) {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.value = freq;
-      osc.type = type === 'score' ? 'sawtooth' : (type === 'hit' ? 'sine' : 'triangle');
-      osc.start();
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + (type === 'score' ? 0.5 : 0.12));
-      osc.stop(audioCtx.currentTime + 0.5);
+      try {
+          if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          osc.type = type === 'score' ? 'sawtooth' : (type === 'hit' ? 'sine' : 'triangle');
+          osc.start();
+          gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + (type === 'score' ? 0.5 : 0.12));
+          osc.stop(audioCtx.currentTime + 0.5);
+      } catch (e) {}
+  }
+
+  function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg;
+      t.classList.add('active');
+      setTimeout(() => t.classList.remove('active'), 2500);
   }
 
   const canvas = document.getElementById('gameCanvas');
   const ctx = canvas.getContext('2d');
   
-  const W = 400, H = 300;
+  const W = 450, H = 320;
   const PAD_W = 10, BALL_SIZE = 10;
-  const MAX_BALLS = 5;
+  const MAX_BALLS = 6;
+
+  // Game Modes
+  // 0: Classic, 1: Obstacle Arena, 2: Power-Up Frenzy, 3: Multi-Ball, 4: Campaign
+  let gameMode = 0; 
+  const MODE_NAMES = ["Classic", "Obstacle Arena", "Power-Up Frenzy", "Multi-Ball", "Campaign"];
   
+  // PvP vs AI
+  let isPvP = false; // false: 1P vs AI, true: 2P Local PvP
+
+  // Themes: 0: Cyberpunk, 1: Retro, 2: Vaporwave, 3: Matrix
+  let themeIndex = 0;
+  const THEME_CLASSES = ['theme-cyberpunk', 'theme-retro', 'theme-vaporwave', 'theme-matrix'];
+
   let p1PadH = 50, p2PadH = 50;
-  let campaignMode = false;
   let campaignLevel = 1;
   let winScreen = false;
-  let lastHitter = 0;
+  let isPaused = false;
 
   let powerupX = -1, powerupY = -1;
-  let powerupActive = 0, powerupType = 0;
+  let powerupActive = 0, powerupType = 0; // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball, 4: Speed Boost, 5: Shield
 
   let p1BuffTimer = 0, p2BuffTimer = 0;
   let p1DebuffTimer = 0, p2DebuffTimer = 0;
   let p1FreezeTimer = 0, p2FreezeTimer = 0;
+  let p1ShieldTimer = 0, p2ShieldTimer = 0;
 
-  // Active Skills
+  // Skills
   let skillSlowTimer = 0, skillSlowCooldown = 0;
   let skillMegaTimer = 0, skillMegaCooldown = 0;
   let skillFireballReady = false, skillFireballCooldown = 0;
 
-  let highRally = parseInt(localStorage.getItem('kpong_high_rally')) || 0;
-  let lifetimeWins = parseInt(localStorage.getItem('kpong_wins')) || 0;
+  // Stats & Persistence
+  let stats = JSON.parse(localStorage.getItem('kpong_stats_v2')) || {
+      games: 0, wins: 0, losses: 0, highRally: 0
+  };
+  let leaderboard = JSON.parse(localStorage.getItem('kpong_leaderboard_v2')) || [];
 
-  // Dynamic Arena Features
+  // Arena Features
   let obsY = H/2 - 20, obsDy = 3, obs1Active = true, obs1Respawn = 0;
   let obs2X = W/2 - 20, obs2Dx = 4, obs2Active = true, obs2Respawn = 0;
-  
   let gwX = W/2, gwY = H/2;
   let portal1X = W/4 + 20, portal1Y = H/4;
   let portal2X = 3*W/4 - 20, portal2Y = 3*H/4;
@@ -148,8 +314,8 @@
   let s1 = 0, s2 = 0;
   let rally = 0;
   let difficulty = 2; // 1: Easy, 2: Normal, 3: Hard
-  const aiSpeeds = [0, 2, 4, 6];
-  const startSpeeds = [0, 4, 5, 7];
+  const aiSpeeds = [0, 2.5, 4.5, 6.5];
+  const startSpeeds = [0, 4, 5.5, 7.5];
   let gameOver = false;
 
   let particles = [];
@@ -158,23 +324,29 @@
 
   function resetBalls() {
       balls = [];
-      let spd = campaignMode ? Math.min(11, 4 + Math.floor(campaignLevel / 2)) : startSpeeds[difficulty];
-      balls.push({
-          x: W/2 - BALL_SIZE/2,
-          y: H/2 - BALL_SIZE/2,
-          dx: Math.random() < 0.5 ? spd : -spd,
-          dy: Math.random() < 0.5 ? 3 : -3,
-          active: true,
-          isFireball: false,
-          lastHitter: 0,
-          trail: []
-      });
+      let baseSpd = (gameMode === 4) ? Math.min(11, 4 + Math.floor(campaignLevel / 2)) : startSpeeds[difficulty];
+      let ballCount = (gameMode === 3) ? 3 : 1;
+      
+      for (let i = 0; i < ballCount; i++) {
+          let angle = (Math.random() - 0.5) * Math.PI * 0.5;
+          let dir = (i % 2 === 0) ? 1 : -1;
+          balls.push({
+              x: W/2 - BALL_SIZE/2,
+              y: H/2 - BALL_SIZE/2 + (i * 15 - 15),
+              dx: dir * (baseSpd + Math.random() * 1.5),
+              dy: Math.sin(angle) * baseSpd,
+              active: true,
+              isFireball: false,
+              lastHitter: 0,
+              trail: []
+          });
+      }
   }
 
   function spawnExtraBall() {
       if (balls.filter(b => b.active).length >= MAX_BALLS) return;
       let angle = Math.random() * Math.PI * 2;
-      let spd = 5 + Math.random() * 3;
+      let spd = 5.5 + Math.random() * 3;
       let dx = Math.cos(angle) * spd;
       if (Math.abs(dx) < 2.5) dx = dx < 0 ? -4.5 : 4.5;
       balls.push({
@@ -187,14 +359,28 @@
           lastHitter: 0,
           trail: []
       });
-      createShockwave(W/2, H/2, '#c832ff');
-      createParticles(W/2, H/2, '#c832ff', 15, 6);
+      createShockwave(W/2, H/2, getPrimaryColor());
+      createParticles(W/2, H/2, getPrimaryColor(), 15, 6);
   }
 
   function activeBallCount() {
       return balls.filter(b => b.active).length;
   }
-  
+
+  function getPrimaryColor() {
+      if (themeIndex === 1) return '#00ff66';
+      if (themeIndex === 2) return '#ff71ce';
+      if (themeIndex === 3) return '#00ff41';
+      return '#00e5ff';
+  }
+
+  function getSecondaryColor() {
+      if (themeIndex === 1) return '#33ff99';
+      if (themeIndex === 2) return '#01cdfe';
+      if (themeIndex === 3) return '#008f11';
+      return '#ff00cc';
+  }
+
   function createParticles(x, y, color, count = 15, speed = 8) {
       for (let i = 0; i < count; i++) {
           let angle = Math.random() * Math.PI * 2;
@@ -203,8 +389,7 @@
               x: x, y: y,
               vx: Math.cos(angle) * spd,
               vy: Math.sin(angle) * spd,
-              life: 1.0,
-              maxLife: 1.0,
+              life: 1.0, maxLife: 1.0,
               size: 2 + Math.random() * 3,
               color: color
           });
@@ -216,11 +401,11 @@
   }
 
   function triggerSkill(skill) {
-      if (gameOver) return;
+      if (gameOver || isPaused) return;
       if (skill === 'slow' && skillSlowCooldown === 0) {
           skillSlowTimer = 180;
           skillSlowCooldown = 360;
-          createShockwave(W/2, H/2, '#00e5ff');
+          createShockwave(W/2, H/2, getPrimaryColor());
           playSound(1200, 'hit');
       } else if (skill === 'mega' && skillMegaCooldown === 0) {
           skillMegaTimer = 240;
@@ -234,19 +419,167 @@
           playSound(1400, 'hit');
       }
   }
-  
+
+  function togglePvPMode() {
+      isPvP = !isPvP;
+      document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP" : "👤 1P vs AI";
+      updateBadge();
+      showToast(isPvP ? "2-Player Local PvP Mode (P1: W/S, P2: Up/Down)" : "1-Player vs AI Mode Activated");
+  }
+
+  function cycleGameMode() {
+      gameMode = (gameMode + 1) % MODE_NAMES.length;
+      document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode];
+      s1 = 0; s2 = 0; rally = 0; gameOver = false; winScreen = false;
+      document.getElementById('s1').innerText = s1;
+      document.getElementById('s2').innerText = s2;
+      updateBadge();
+      resetBalls();
+      showToast("Game Mode: " + MODE_NAMES[gameMode]);
+  }
+
+  function updateBadge() {
+      const modeStr = MODE_NAMES[gameMode].toUpperCase();
+      const pStr = isPvP ? "2P PVP" : "1P VS AI";
+      document.getElementById('hud-mode-badge').innerText = `${pStr} • ${modeStr}`;
+  }
+
+  function cycleTheme() {
+      themeIndex = (themeIndex + 1) % THEME_CLASSES.length;
+      document.body.className = THEME_CLASSES[themeIndex];
+      const themeNames = ["Cyberpunk", "Retro CRT", "Vaporwave", "Matrix Code"];
+      showToast("Theme: " + themeNames[themeIndex]);
+  }
+
+  function togglePause() {
+      isPaused = !isPaused;
+      document.getElementById('btn-pause').innerText = isPaused ? "▶️ Resume (Space)" : "⏸️ Pause (Space)";
+      showToast(isPaused ? "Game Paused" : "Game Resumed");
+  }
+
+  // Keyboard Inputs
   const keys = {};
   document.addEventListener('keydown', e => { 
-      keys[e.key] = true; 
-      if(['ArrowUp','ArrowDown','w','s','W','S'].includes(e.key)) e.preventDefault();
+      keys[e.key] = true;
+      if(['ArrowUp','ArrowDown','w','s','W','S',' '].includes(e.key)) e.preventDefault();
       if(e.key === 'f' || e.key === 'F') triggerSkill('slow');
-      if(e.key === 'p' || e.key === 'P') triggerSkill('mega');
+      if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
       if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
+      if(e.key === ' ') togglePause();
+      if(e.key === 'm' || e.key === 'M') cycleGameMode();
+      if(e.key === 'v' || e.key === 'V') togglePvPMode();
+      if(e.key === 't' || e.key === 'T') cycleTheme();
+      if(e.key === 'F5') { e.preventDefault(); saveGameState(); }
+      if(e.key === 'F9') { e.preventDefault(); loadGameState(); }
   });
   document.addEventListener('keyup', e => { keys[e.key] = false; });
   window.addEventListener('blur', () => { for(let k in keys) keys[k] = false; });
 
+  // Persistence: Save / Load State
+  function saveGameState() {
+      const state = {
+          s1, s2, rally, p1y, p2y, gameMode, isPvP, campaignLevel,
+          balls, difficulty, themeIndex,
+          p1BuffTimer, p2BuffTimer, p1FreezeTimer, p2FreezeTimer, p1ShieldTimer, p2ShieldTimer,
+          skillSlowTimer, skillSlowCooldown, skillMegaTimer, skillMegaCooldown, skillFireballReady, skillFireballCooldown
+      };
+      localStorage.setItem('kpong_saved_state', JSON.stringify(state));
+      showToast("Game State Saved (F5)!");
+  }
+
+  function loadGameState() {
+      const raw = localStorage.getItem('kpong_saved_state');
+      if (!raw) { showToast("No Saved Game Found!"); return; }
+      try {
+          const state = JSON.parse(raw);
+          s1 = state.s1 || 0; s2 = state.s2 || 0; rally = state.rally || 0;
+          p1y = state.p1y || H/2 - 25; p2y = state.p2y || H/2 - 25;
+          gameMode = state.gameMode || 0; isPvP = !!state.isPvP;
+          campaignLevel = state.campaignLevel || 1;
+          balls = state.balls || [];
+          difficulty = state.difficulty || 2;
+          themeIndex = state.themeIndex || 0;
+          p1BuffTimer = state.p1BuffTimer || 0; p2BuffTimer = state.p2BuffTimer || 0;
+          p1FreezeTimer = state.p1FreezeTimer || 0; p2FreezeTimer = state.p2FreezeTimer || 0;
+          p1ShieldTimer = state.p1ShieldTimer || 0; p2ShieldTimer = state.p2ShieldTimer || 0;
+          skillSlowTimer = state.skillSlowTimer || 0; skillSlowCooldown = state.skillSlowCooldown || 0;
+          skillMegaTimer = state.skillMegaTimer || 0; skillMegaCooldown = state.skillMegaCooldown || 0;
+          skillFireballReady = !!state.skillFireballReady; skillFireballCooldown = state.skillFireballCooldown || 0;
+
+          document.body.className = THEME_CLASSES[themeIndex];
+          document.getElementById('s1').innerText = s1;
+          document.getElementById('s2').innerText = s2;
+          document.getElementById('btn-pvp').innerText = isPvP ? "👥 2P Local PvP" : "👤 1P vs AI";
+          document.getElementById('btn-mode').innerText = "🎮 Mode: " + MODE_NAMES[gameMode];
+          updateBadge();
+          gameOver = false; isPaused = false;
+          showToast("Game State Loaded (F9)!");
+      } catch (e) {
+          showToast("Failed to load saved state.");
+      }
+  }
+
+  // Record Leaderboard Entry
+  function recordScore(scoreRally) {
+      stats.games++;
+      if (scoreRally > stats.highRally) stats.highRally = scoreRally;
+      
+      const newEntry = {
+          rally: scoreRally,
+          mode: MODE_NAMES[gameMode],
+          date: new Date().toLocaleDateString()
+      };
+      leaderboard.push(newEntry);
+      leaderboard.sort((a, b) => b.rally - a.rally);
+      leaderboard = leaderboard.slice(0, 5);
+
+      localStorage.setItem('kpong_stats_v2', JSON.stringify(stats));
+      localStorage.setItem('kpong_leaderboard_v2', JSON.stringify(leaderboard));
+  }
+
+  function openStatsModal() {
+      document.getElementById('stat-games').innerText = stats.games;
+      document.getElementById('stat-wins').innerText = stats.wins;
+      document.getElementById('stat-losses').innerText = stats.losses;
+      let wr = stats.games > 0 ? Math.round((stats.wins / stats.games) * 100) : 0;
+      document.getElementById('stat-winrate').innerText = wr + "%";
+      document.getElementById('stat-rally').innerText = stats.highRally;
+
+      const tbody = document.getElementById('leaderboard-body');
+      if (leaderboard.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4">No scores recorded yet.</td></tr>`;
+      } else {
+          tbody.innerHTML = leaderboard.map((e, idx) => `
+              <tr>
+                <td><strong>#${idx + 1}</strong></td>
+                <td style="color: var(--accent); font-weight: 700;">${e.rally}</td>
+                <td>${e.mode}</td>
+                <td style="color: #aaa;">${e.date}</td>
+              </tr>
+          `).join('');
+      }
+      document.getElementById('statsModal').classList.add('active');
+  }
+
+  function closeStatsModal() {
+      document.getElementById('statsModal').classList.remove('active');
+  }
+
+  function resetStatsData() {
+      if (confirm("Reset all KPong statistics and leaderboard data?")) {
+          stats = { games: 0, wins: 0, losses: 0, highRally: 0 };
+          leaderboard = [];
+          localStorage.removeItem('kpong_stats_v2');
+          localStorage.removeItem('kpong_leaderboard_v2');
+          openStatsModal();
+          showToast("Stats reset cleanly.");
+      }
+  }
+
+  // Update Game Logic Loop
   function update() {
+      if (isPaused) return;
+
       if (gameOver) {
           if (keys['r'] || keys['R']) {
               s1 = 0; s2 = 0; rally = 0; winScreen = false;
@@ -263,382 +596,320 @@
           return;
       }
 
-      if (keys['1']) { difficulty = 1; }
-      if (keys['2']) { difficulty = 2; }
-      if (keys['3']) { difficulty = 3; }
-      if ((keys['c'] || keys['C']) && !campaignMode) {
-          campaignMode = true; campaignLevel = 1; s1 = 0; s2 = 0; rally = 0;
-          bossShieldHp = 3; bossShieldTimer = 0;
-          obs1Active = true; obs2Active = true;
-          document.getElementById('s1').innerText = s1;
-          document.getElementById('s2').innerText = s2;
-          resetBalls();
-      }
+      if (keys['1']) difficulty = 1;
+      if (keys['2']) difficulty = 2;
+      if (keys['3']) difficulty = 3;
 
-      // Skill Timers & Cooldowns
+      // Skill Timers
       if (skillSlowTimer > 0) skillSlowTimer--;
       if (skillSlowCooldown > 0) skillSlowCooldown--;
       if (skillMegaTimer > 0) skillMegaTimer--;
       if (skillMegaCooldown > 0) skillMegaCooldown--;
       if (skillFireballCooldown > 0) skillFireballCooldown--;
 
-      // Buffs & Debuffs
+      // Buffs & Timers
       if (p1BuffTimer > 0) p1BuffTimer--;
       if (p2BuffTimer > 0) p2BuffTimer--;
       if (p1DebuffTimer > 0) p1DebuffTimer--;
       if (p2DebuffTimer > 0) p2DebuffTimer--;
       if (p1FreezeTimer > 0) p1FreezeTimer--;
       if (p2FreezeTimer > 0) p2FreezeTimer--;
+      if (p1ShieldTimer > 0) p1ShieldTimer--;
+      if (p2ShieldTimer > 0) p2ShieldTimer--;
 
-      // Paddle Heights
-      p1PadH = 50 - (rally * 2); if (p1PadH < 20) p1PadH = 20;
-      p2PadH = 50 - (rally * 2); if (p2PadH < 20) p2PadH = 20;
+      // Paddle Heights Calculation
+      p1PadH = 50 - (rally * 1.5); if (p1PadH < 22) p1PadH = 22;
+      p2PadH = 50 - (rally * 1.5); if (p2PadH < 22) p2PadH = 22;
 
-      if (campaignMode && campaignLevel >= 3 && campaignLevel < 20) { p2PadH -= 10; }
-      if (campaignMode && (campaignLevel === 10 || campaignLevel === 15)) { p2PadH += 40; }
-      if (campaignMode && campaignLevel === 20) { p2PadH = 75; }
+      if (gameMode === 4 && campaignLevel >= 3 && campaignLevel < 20) { p2PadH -= 10; }
+      if (gameMode === 4 && (campaignLevel === 10 || campaignLevel === 15)) { p2PadH += 40; }
+      if (gameMode === 4 && campaignLevel === 20) { p2PadH = 75; }
 
       if (p1BuffTimer > 0) p1PadH += 30;
       if (p2BuffTimer > 0) p2PadH += 30;
       if (p1DebuffTimer > 0) p1PadH = 15;
       if (p2DebuffTimer > 0) p2PadH = 15;
-
-      if (skillMegaTimer > 0) { p1PadH = Math.floor(p1PadH * 2.5); }
+      if (skillMegaTimer > 0) p1PadH = Math.floor(p1PadH * 2.5);
 
       if (p1PadH < 15) p1PadH = 15;
       if (p2PadH < 15) p2PadH = 15;
 
-      // P1 Control
+      // Player 1 Movement (W/S or Up/Down if 1P mode)
       let p1PrevY = p1y;
       if (p1FreezeTimer === 0) {
-          if (keys['ArrowUp'] || keys['w'] || keys['W']) p1y -= 6;
-          if (keys['ArrowDown'] || keys['s'] || keys['S']) p1y += 6;
+          if (keys['w'] || keys['W'] || (!isPvP && (keys['ArrowUp']))) p1y -= 6.5;
+          if (keys['s'] || keys['S'] || (!isPvP && (keys['ArrowDown']))) p1y += 6.5;
       }
       if (p1y < 0) p1y = 0;
       if (p1y > H - p1PadH) p1y = H - p1PadH;
       p1Vy = p1y - p1PrevY;
 
-      // P2 AI Speed across 20 stages
-      let aiSpeed = aiSpeeds[difficulty];
-      if (campaignMode) {
-          if (campaignLevel === 1) aiSpeed = 2;
-          else if (campaignLevel === 2) aiSpeed = 3;
-          else if (campaignLevel === 3) aiSpeed = 4;
-          else if (campaignLevel === 4) aiSpeed = 5;
-          else if (campaignLevel === 5) aiSpeed = 6;
-          else if (campaignLevel === 6) aiSpeed = 7;
-          else if (campaignLevel === 7) aiSpeed = 8;
-          else if (campaignLevel === 8) aiSpeed = 9;
-          else if (campaignLevel === 9) aiSpeed = 10;
-          else if (campaignLevel <= 12) aiSpeed = 12;
-          else if (campaignLevel <= 15) aiSpeed = 15;
-          else if (campaignLevel <= 19) aiSpeed = 18;
-          else aiSpeed = 22; // Stage 20 Boss
-      }
-
-      // Find closest active ball heading right
-      let targetBall = balls.find(b => b.active && b.dx > 0) || balls.find(b => b.active) || { y: H/2 };
-
+      // Player 2 / AI Movement
       let p2PrevY = p2y;
       if (p2FreezeTimer === 0) {
-          if (targetBall.y > p2y + p2PadH/2 + 8) p2y += aiSpeed;
-          if (targetBall.y < p2y + p2PadH/2 - 8) p2y -= aiSpeed;
+          if (isPvP) {
+              // 2-Player Local PvP Mode
+              if (keys['ArrowUp']) p2y -= 6.5;
+              if (keys['ArrowDown']) p2y += 6.5;
+          } else {
+              // AI Logic
+              let aiSpeed = aiSpeeds[difficulty];
+              if (gameMode === 4) { // Campaign stages
+                  if (campaignLevel <= 2) aiSpeed = 3;
+                  else if (campaignLevel <= 5) aiSpeed = 5;
+                  else if (campaignLevel <= 9) aiSpeed = 7;
+                  else if (campaignLevel <= 15) aiSpeed = 12;
+                  else if (campaignLevel <= 19) aiSpeed = 16;
+                  else aiSpeed = 22; // Boss stage
+              }
+              let targetBall = balls.find(b => b.active && b.dx > 0) || balls.find(b => b.active) || { y: H/2 };
+              if (targetBall.y > p2y + p2PadH/2 + 8) p2y += aiSpeed;
+              if (targetBall.y < p2y + p2PadH/2 - 8) p2y -= aiSpeed;
+          }
       }
       if (p2y < 0) p2y = 0;
       if (p2y > H - p2PadH) p2y = H - p2PadH;
       p2Vy = p2y - p2PrevY;
 
-      // Powerup Pickup Spawning
-      if (powerupActive > 0) powerupActive--;
-      if (powerupX === -1 && Math.random() < 0.006) {
-          powerupX = W/4 + Math.random()*(W/2);
-          powerupY = H/4 + Math.random()*(H/2);
-          powerupActive = 250;
-          powerupType = Math.floor(Math.random() * 4); // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball
+      // Power-up Pickups (Modes 1, 2, 3, 4)
+      if (gameMode === 2 || (gameMode !== 0 && Math.random() < 0.007)) {
+          if (powerupActive > 0) powerupActive--;
+          if (powerupX === -1 && Math.random() < 0.015) {
+              powerupX = W/4 + Math.random()*(W/2);
+              powerupY = H/4 + Math.random()*(H/2);
+              powerupActive = 260;
+              powerupType = Math.floor(Math.random() * 6); // 0: Expand, 1: Shrink, 2: Freeze, 3: Multi-Ball, 4: Speed Boost, 5: Shield
+          }
       }
       if (powerupActive <= 0) { powerupX = -1; powerupY = -1; }
 
-      // Obstacle Respawns
+      // Obstacles Updates (Obstacle Arena or Campaign >= Stage 5)
+      const hasObstacles = (gameMode === 1 || (gameMode === 4 && campaignLevel >= 5));
       if (!obs1Active) { obs1Respawn--; if (obs1Respawn <= 0) obs1Active = true; }
       if (!obs2Active) { obs2Respawn--; if (obs2Respawn <= 0) obs2Active = true; }
 
-      // Obstacle 1 Movement (Stage >= 5)
-      if (campaignMode && campaignLevel >= 5 && obs1Active) {
+      if (hasObstacles && obs1Active) {
           obsY += obsDy;
           if (obsY < 10) { obsY = 10; obsDy = -obsDy; }
           if (obsY > H - 50) { obsY = H - 50; obsDy = -obsDy; }
       }
-
-      // Obstacle 2 Movement (Stage >= 8)
-      if (campaignMode && campaignLevel >= 8 && obs2Active) {
+      if (hasObstacles && obs2Active) {
           obs2X += obs2Dx;
           if (obs2X < 60) { obs2X = 60; obs2Dx = -obs2Dx; }
           if (obs2X > W - 100) { obs2X = W - 100; obs2Dx = -obs2Dx; }
       }
 
-      // Stage 20 Boss Shield Movement & Recharge
-      if (campaignMode && campaignLevel === 20) {
+      // Boss Shield (Campaign Stage 20)
+      if (gameMode === 4 && campaignLevel === 20) {
           if (bossShieldHp > 0) {
               bossShieldY += bossShieldDy;
               if (bossShieldY < 10) { bossShieldY = 10; bossShieldDy = -bossShieldDy; }
               if (bossShieldY > H - bossShieldH - 10) { bossShieldY = H - bossShieldH - 10; bossShieldDy = -bossShieldDy; }
           } else {
               bossShieldTimer--;
-              if (bossShieldTimer <= 0) {
-                  bossShieldHp = 3;
-                  createShockwave(W - 55, H/2, '#00ffc8');
-              }
+              if (bossShieldTimer <= 0) { bossShieldHp = 3; createShockwave(W - 55, H/2, '#00ffc8'); }
           }
       }
 
       if (portalCooldown > 0) portalCooldown--;
-
       let speedScale = skillSlowTimer > 0 ? 0.5 : 1.0;
 
-      // Balls Physics & Collisions
+      // Ball Physics Loop
       for (let b of balls) {
           if (!b.active) continue;
 
-          // Gravity Well Attraction (Stage >= 9)
-          if (campaignMode && campaignLevel >= 9) {
-              let dxGw = gwX - b.x;
-              let dyGw = gwY - b.y;
-              let distSq = dxGw * dxGw + dyGw * dyGw;
-              if (distSq < 90 * 90 && distSq > 25) {
+          // Gravity Well (Campaign Stage >= 9 or Obstacle Arena)
+          if ((gameMode === 1 || (gameMode === 4 && campaignLevel >= 9))) {
+              let dxGw = gwX - b.x, dyGw = gwY - b.y;
+              let distSq = dxGw*dxGw + dyGw*dyGw;
+              if (distSq < 95*95 && distSq > 25) {
                   let dist = Math.sqrt(distSq);
-                  b.dx += (dxGw / dist) * 0.28 * speedScale;
-                  b.dy += (dyGw / dist) * 0.28 * speedScale;
+                  b.dx += (dxGw / dist) * 0.3 * speedScale;
+                  b.dy += (dyGw / dist) * 0.3 * speedScale;
               }
           }
 
           b.x += b.dx * speedScale;
           b.y += b.dy * speedScale;
 
-          // Warp Portals (Stage >= 13)
-          if (campaignMode && campaignLevel >= 13 && portalCooldown === 0) {
+          // Warp Portals (Campaign Stage >= 13 or Obstacle Arena)
+          if ((gameMode === 1 || (gameMode === 4 && campaignLevel >= 13)) && portalCooldown === 0) {
               let d1 = Math.hypot(b.x - portal1X, b.y - portal1Y);
               if (d1 < 18) {
-                  b.x = portal2X + (b.dx > 0 ? 18 : -18);
-                  b.y = portal2Y;
+                  b.x = portal2X + (b.dx > 0 ? 18 : -18); b.y = portal2Y;
                   portalCooldown = 30;
-                  createShockwave(portal1X, portal1Y, '#00e5ff');
-                  createShockwave(portal2X, portal2Y, '#ff00cc');
-                  createParticles(portal2X, portal2Y, '#ff00cc', 15, 6);
+                  createShockwave(portal1X, portal1Y, getPrimaryColor());
+                  createShockwave(portal2X, portal2Y, getSecondaryColor());
                   playSound(900, 'hit');
               } else {
                   let d2 = Math.hypot(b.x - portal2X, b.y - portal2Y);
                   if (d2 < 18) {
-                      b.x = portal1X + (b.dx > 0 ? 18 : -18);
-                      b.y = portal1Y;
+                      b.x = portal1X + (b.dx > 0 ? 18 : -18); b.y = portal1Y;
                       portalCooldown = 30;
-                      createShockwave(portal2X, portal2Y, '#ff00cc');
-                      createShockwave(portal1X, portal1Y, '#00e5ff');
-                      createParticles(portal1X, portal1Y, '#00e5ff', 15, 6);
+                      createShockwave(portal2X, portal2Y, getSecondaryColor());
+                      createShockwave(portal1X, portal1Y, getPrimaryColor());
                       playSound(900, 'hit');
                   }
               }
           }
 
           // Motion Trail
-          let ballColor = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? '#00e5ff' : (b.lastHitter === 2 ? '#ff00cc' : '#ffffff'));
+          let ballColor = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? getPrimaryColor() : (b.lastHitter === 2 ? getSecondaryColor() : '#ffffff'));
           b.trail.unshift({ x: b.x + BALL_SIZE/2, y: b.y + BALL_SIZE/2, color: ballColor });
           if (b.trail.length > 10) b.trail.pop();
 
-          // Powerup Capsule Collision
+          // Powerup Capsule Pickup
           if (powerupX !== -1 && b.x < powerupX+18 && b.x+BALL_SIZE > powerupX && b.y < powerupY+18 && b.y+BALL_SIZE > powerupY) {
-              let pColor = powerupType === 0 ? '#ffd700' : (powerupType === 1 ? '#ff3366' : (powerupType === 2 ? '#00e5ff' : '#c832ff'));
+              let pColor = getPrimaryColor();
               createParticles(powerupX + 9, powerupY + 9, pColor, 20, 7);
               createShockwave(powerupX + 9, powerupY + 9, pColor);
-              if (powerupType === 0) {
-                  if (b.lastHitter === 1) p1BuffTimer = 200;
-                  else if (b.lastHitter === 2) p2BuffTimer = 200;
-              } else if (powerupType === 1) {
-                  if (b.lastHitter === 1) p2DebuffTimer = 200;
-                  else if (b.lastHitter === 2) p1DebuffTimer = 200;
-              } else if (powerupType === 2) {
-                  if (b.lastHitter === 1) p2FreezeTimer = 100;
-                  else if (b.lastHitter === 2) p1FreezeTimer = 100;
-              } else if (powerupType === 3) {
-                  spawnExtraBall();
-                  spawnExtraBall();
+              
+              if (powerupType === 0) { // Expand
+                  if (b.lastHitter === 1) p1BuffTimer = 220; else if (b.lastHitter === 2) p2BuffTimer = 220;
+              } else if (powerupType === 1) { // Shrink
+                  if (b.lastHitter === 1) p2DebuffTimer = 220; else if (b.lastHitter === 2) p1DebuffTimer = 220;
+              } else if (powerupType === 2) { // Freeze
+                  if (b.lastHitter === 1) p2FreezeTimer = 110; else if (b.lastHitter === 2) p1FreezeTimer = 110;
+              } else if (powerupType === 3) { // Multi-Ball
+                  spawnExtraBall(); spawnExtraBall();
+              } else if (powerupType === 4) { // Speed Boost
+                  b.dx *= 1.4; b.dy *= 1.4;
+              } else if (powerupType === 5) { // Shield
+                  if (b.lastHitter === 1) p1ShieldTimer = 300; else if (b.lastHitter === 2) p2ShieldTimer = 300;
               }
               powerupX = -1; powerupY = -1;
-              playSound(1000, 'score');
+              playSound(1100, 'score');
           }
 
-          // Top/Bottom Walls
+          // Top/Bottom Wall Collisions
           if (b.y < 0) {
               b.y = 0; b.dy = -b.dy;
               createParticles(b.x + BALL_SIZE/2, 0, '#ffffff', 8, 4);
-              createShockwave(b.x + BALL_SIZE/2, 0, '#00e5ff');
+              createShockwave(b.x + BALL_SIZE/2, 0, getPrimaryColor());
               playSound(800, 'hit');
           }
           if (b.y > H - BALL_SIZE) {
               b.y = H - BALL_SIZE; b.dy = -b.dy;
               createParticles(b.x + BALL_SIZE/2, H, '#ffffff', 8, 4);
-              createShockwave(b.x + BALL_SIZE/2, H, '#ff00cc');
+              createShockwave(b.x + BALL_SIZE/2, H, getSecondaryColor());
               playSound(800, 'hit');
           }
 
-          // Obstacle 1 Collision (Vertical Bumper)
-          if (campaignMode && campaignLevel >= 5 && obs1Active &&
-              b.x + BALL_SIZE > W/2 - 10 && b.x < W/2 + 10 &&
-              b.y + BALL_SIZE > obsY && b.y < obsY + 40) {
-              if (b.isFireball) {
-                  obs1Active = false; obs1Respawn = 150;
-                  createParticles(W/2, obsY + 20, '#ff6400', 25, 8);
-                  createShockwave(W/2, obsY + 20, '#ff6400');
-                  playSound(1200, 'hit');
-              } else {
-                  b.dx = -b.dx;
-                  createParticles(W/2, b.y + BALL_SIZE/2, '#00ffff', 10, 4);
-                  createShockwave(W/2, b.y + BALL_SIZE/2, '#00ffff');
-                  playSound(800, 'hit');
-              }
+          // Obstacles Collisions
+          if (hasObstacles && obs1Active && b.x + BALL_SIZE > W/2 - 10 && b.x < W/2 + 10 && b.y + BALL_SIZE > obsY && b.y < obsY + 40) {
+              if (b.isFireball) { obs1Active = false; obs1Respawn = 150; createParticles(W/2, obsY + 20, '#ff6400', 25, 8); }
+              else { b.dx = -b.dx; createParticles(W/2, b.y + BALL_SIZE/2, getPrimaryColor(), 10, 4); }
+              playSound(800, 'hit');
+          }
+          if (hasObstacles && obs2Active && b.x + BALL_SIZE > obs2X && b.x < obs2X + 40 && b.y + BALL_SIZE > H/2 - 10 && b.y < H/2 + 10) {
+              if (b.isFireball) { obs2Active = false; obs2Respawn = 150; createParticles(obs2X + 20, H/2, '#ff6400', 25, 8); }
+              else { b.dy = -b.dy; createParticles(obs2X + 20, H/2, getSecondaryColor(), 10, 4); }
+              playSound(800, 'hit');
           }
 
-          // Obstacle 2 Collision (Horizontal Bumper)
-          if (campaignMode && campaignLevel >= 8 && obs2Active &&
-              b.x + BALL_SIZE > obs2X && b.x < obs2X + 40 &&
-              b.y + BALL_SIZE > H/2 - 10 && b.y < H/2 + 10) {
-              if (b.isFireball) {
-                  obs2Active = false; obs2Respawn = 150;
-                  createParticles(obs2X + 20, H/2, '#ff6400', 25, 8);
-                  createShockwave(obs2X + 20, H/2, '#ff6400');
-                  playSound(1200, 'hit');
-              } else {
-                  b.dy = -b.dy;
-                  createParticles(obs2X + 20, H/2, '#ff00ff', 10, 4);
-                  createShockwave(obs2X + 20, H/2, '#ff00ff');
-                  playSound(800, 'hit');
-              }
-          }
-
-          // Stage 20 Boss Shield Collision
-          if (campaignMode && campaignLevel === 20 && bossShieldHp > 0 &&
+          // Boss Shield Barrier
+          if (gameMode === 4 && campaignLevel === 20 && bossShieldHp > 0 &&
               b.x + BALL_SIZE >= W - 55 && b.x <= W - 45 &&
-              b.y + BALL_SIZE >= bossShieldY && b.y <= bossShieldY + bossShieldH &&
-              b.dx > 0) {
-              if (b.isFireball) {
-                  bossShieldHp = 0; bossShieldTimer = 360;
-                  createParticles(W - 50, b.y + BALL_SIZE/2, '#ff3200', 30, 10);
-                  createShockwave(W - 50, b.y + BALL_SIZE/2, '#ff3200');
-                  playSound(1300, 'hit');
-              } else {
-                  bossShieldHp--;
-                  b.dx = -b.dx;
-                  createParticles(W - 50, b.y + BALL_SIZE/2, '#ffd700', 15, 6);
-                  createShockwave(W - 50, b.y + BALL_SIZE/2, '#ffd700');
-                  playSound(800, 'hit');
-                  if (bossShieldHp <= 0) bossShieldTimer = 360;
-              }
+              b.y + BALL_SIZE >= bossShieldY && b.y <= bossShieldY + bossShieldH && b.dx > 0) {
+              if (b.isFireball) { bossShieldHp = 0; bossShieldTimer = 360; createShockwave(W - 50, b.y + BALL_SIZE/2, '#ff3200'); }
+              else { bossShieldHp--; b.dx = -b.dx; createShockwave(W - 50, b.y + BALL_SIZE/2, '#ffd700'); }
+              playSound(850, 'hit');
+          }
+
+          // Player Protective Shields (Power-up)
+          if (p1ShieldTimer > 0 && b.x < 10 && b.dx < 0) {
+              b.dx = Math.abs(b.dx);
+              createShockwave(5, b.y, getPrimaryColor());
+              createParticles(5, b.y, getPrimaryColor(), 15, 6);
+              playSound(1000, 'hit');
+          }
+          if (p2ShieldTimer > 0 && b.x > W - 10 - BALL_SIZE && b.dx > 0) {
+              b.dx = -Math.abs(b.dx);
+              createShockwave(W - 5, b.y, getSecondaryColor());
+              createParticles(W - 5, b.y, getSecondaryColor(), 15, 6);
+              playSound(1000, 'hit');
           }
 
           // P1 Paddle Collision
           if (b.x < 20 + PAD_W && b.y + BALL_SIZE > p1y && b.y < p1y + p1PadH) {
-              b.x = 20 + PAD_W; b.dx = -b.dx;
-              b.lastHitter = 1;
-              if (skillFireballReady) {
-                  b.isFireball = true;
-                  skillFireballReady = false;
-                  createShockwave(b.x, b.y + BALL_SIZE/2, '#ff6400');
-              }
+              b.x = 20 + PAD_W; b.dx = -b.dx; b.lastHitter = 1;
+              if (skillFireballReady) { b.isFireball = true; skillFireballReady = false; createShockwave(b.x, b.y + BALL_SIZE/2, '#ff6400'); }
               let hitPos = ((b.y + BALL_SIZE/2) - (p1y + p1PadH/2)) / (p1PadH/2);
               b.dy += hitPos * 5.0;
-              if (b.dy > 10) b.dy = 10;
-              if (b.dy < -10) b.dy = -10;
+              if (b.dy > 11) b.dy = 11; if (b.dy < -11) b.dy = -11;
               b.dx *= 1.08;
-              rally++; if (rally > highRally) { highRally = rally; localStorage.setItem("kpong_high_rally", highRally); }
-              let pColor = b.isFireball ? '#ff6400' : '#00e5ff';
-              createParticles(b.x, b.y + BALL_SIZE/2, pColor, 18, 9);
+              rally++;
+              recordScore(rally);
+              let pColor = b.isFireball ? '#ff6400' : getPrimaryColor();
+              createParticles(b.x, b.y + BALL_SIZE/2, pColor, 16, 8);
               createShockwave(b.x, b.y + BALL_SIZE/2, pColor);
               playSound(600, 'hit');
           }
 
           // P2 Paddle Collision
           if (b.x + BALL_SIZE > W - 20 - PAD_W && b.y + BALL_SIZE > p2y && b.y < p2y + p2PadH) {
-              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx;
-              b.lastHitter = 2;
-              b.isFireball = false; // Extinguished
+              b.x = W - 20 - PAD_W - BALL_SIZE; b.dx = -b.dx; b.lastHitter = 2;
+              b.isFireball = false;
               let hitPos = ((b.y + BALL_SIZE/2) - (p2y + p2PadH/2)) / (p2PadH/2);
               b.dy += hitPos * 5.0;
-
-              // Stage 20 Boss Adaptive Spin
-              if (campaignMode && campaignLevel === 20) {
-                  b.dy += p2Vy * 0.8;
-              }
-
-              if (b.dy > 12) b.dy = 12;
-              if (b.dy < -12) b.dy = -12;
+              if (gameMode === 4 && campaignLevel === 20) b.dy += p2Vy * 0.8;
+              if (b.dy > 12) b.dy = 12; if (b.dy < -12) b.dy = -12;
               b.dx *= 1.08;
-              rally++; if (rally > highRally) { highRally = rally; localStorage.setItem("kpong_high_rally", highRally); }
-              createParticles(b.x + BALL_SIZE, b.y + BALL_SIZE/2, '#ff00cc', 18, 9);
-              createShockwave(b.x + BALL_SIZE, b.y + BALL_SIZE/2, '#ff00cc');
+              rally++;
+              recordScore(rally);
+              createParticles(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor(), 16, 8);
+              createShockwave(b.x + BALL_SIZE, b.y + BALL_SIZE/2, getSecondaryColor());
               playSound(600, 'hit');
           }
 
-          // Out-of-bounds / Scoring
+          // Out of Bounds / Scoring
           if (b.x < -15) {
               b.active = false; s2++; rally = 0;
-              createParticles(0, b.y + BALL_SIZE/2, '#ff00cc', 35, 12);
-              createShockwave(0, b.y + BALL_SIZE/2, '#ff00cc');
+              createParticles(0, b.y + BALL_SIZE/2, getSecondaryColor(), 30, 10);
               playSound(200, 'score');
               document.getElementById('s2').innerText = s2;
               if (activeBallCount() === 0) resetBalls();
           }
           if (b.x > W + 15) {
               b.active = false; s1++; rally = 0;
-              createParticles(W, b.y + BALL_SIZE/2, '#00e5ff', 35, 12);
-              createShockwave(W, b.y + BALL_SIZE/2, '#00e5ff');
+              createParticles(W, b.y + BALL_SIZE/2, getPrimaryColor(), 30, 10);
               playSound(200, 'score');
               document.getElementById('s1').innerText = s1;
               if (activeBallCount() === 0) resetBalls();
           }
       }
 
-      // Update Particle Physics & Shockwaves
+      // Update Particles & Shockwaves
       for (let i = particles.length - 1; i >= 0; i--) {
-          particles[i].x += particles[i].vx;
-          particles[i].y += particles[i].vy;
+          particles[i].x += particles[i].vx; particles[i].y += particles[i].vy;
           particles[i].life -= 0.04;
           if (particles[i].life <= 0) particles.splice(i, 1);
       }
-
       for (let i = shockwaves.length - 1; i >= 0; i--) {
-          shockwaves[i].radius += 1.8;
-          shockwaves[i].alpha -= 0.05;
+          shockwaves[i].radius += 1.8; shockwaves[i].alpha -= 0.05;
           if (shockwaves[i].alpha <= 0) shockwaves.splice(i, 1);
       }
 
-      // Win / Stage Transition Logic
-      let targetScore = (campaignMode && campaignLevel === 20) ? 7 : (campaignMode ? 5 : 11);
+      // Win Conditions
+      let targetScore = (gameMode === 4 && campaignLevel === 20) ? 7 : (gameMode === 4 ? 5 : 11);
       if (s1 >= targetScore) {
-          if (campaignMode) {
-              campaignLevel++; s1 = 0; s2 = 0; rally = 0;
-              bossShieldHp = 3; bossShieldTimer = 0;
-              obs1Active = true; obs2Active = true;
-              document.getElementById('s1').innerText = s1;
-              document.getElementById('s2').innerText = s2;
+          if (gameMode === 4) {
+              campaignLevel++; s1 = 0; s2 = 0; rally = 0; bossShieldHp = 3; bossShieldTimer = 0;
+              document.getElementById('s1').innerText = s1; document.getElementById('s2').innerText = s2;
               if (campaignLevel > 20) {
-                  winScreen = true; campaignMode = false; gameOver = true;
-                  lifetimeWins++; localStorage.setItem('kpong_wins', lifetimeWins);
-              } else if (campaignLevel >= 17) {
-                  resetBalls();
-                  spawnExtraBall();
-              } else {
-                  resetBalls();
-              }
+                  winScreen = true; gameOver = true; stats.wins++;
+              } else { resetBalls(); }
           } else {
-              gameOver = true;
-              lifetimeWins++; localStorage.setItem('kpong_wins', lifetimeWins);
+              gameOver = true; stats.wins++;
           }
+          localStorage.setItem('kpong_stats_v2', JSON.stringify(stats));
       }
       if (s2 >= targetScore) {
-          gameOver = true;
-          campaignMode = false;
+          gameOver = true; stats.losses++;
+          localStorage.setItem('kpong_stats_v2', JSON.stringify(stats));
       }
 
-      // Update Skill Buttons State
+      // Skills UI State
       let btnSlow = document.getElementById('btn-slow');
       let btnMega = document.getElementById('btn-mega');
       let btnFire = document.getElementById('btn-fire');
@@ -651,7 +922,7 @@
       if (btnMega) {
           btnMega.disabled = skillMegaCooldown > 0;
           btnMega.classList.toggle('active', skillMegaTimer > 0);
-          btnMega.innerText = skillMegaTimer > 0 ? "🛡️ MEGA ACTIVE" : (skillMegaCooldown > 0 ? `🛡️ [P] (${Math.ceil(skillMegaCooldown/30)}s)` : "🛡️ [P] Mega");
+          btnMega.innerText = skillMegaTimer > 0 ? "🛡️ MEGA ACTIVE" : (skillMegaCooldown > 0 ? `🛡️ [E] (${Math.ceil(skillMegaCooldown/30)}s)` : "🛡️ [E] Mega");
       }
       if (btnFire) {
           btnFire.disabled = skillFireballCooldown > 0;
@@ -660,91 +931,73 @@
       }
   }
 
-  function drawPaddle(x, y, w, h, isP1, vy, freezeTimer, buffTimer, debuffTimer) {
-      let baseColor = isP1 ? (skillMegaTimer > 0 ? '#ffd700' : '#00e5ff') : (campaignMode && campaignLevel === 20 ? '#ff3200' : '#ff00cc');
-      let darkColor = isP1 ? (skillMegaTimer > 0 ? '#665000' : '#004466') : (campaignMode && campaignLevel === 20 ? '#660a00' : '#660044');
+  function drawPaddle(x, y, w, h, isP1, freezeTimer, buffTimer, shieldTimer) {
+      let baseColor = isP1 ? (skillMegaTimer > 0 ? '#ffd700' : getPrimaryColor()) : getSecondaryColor();
+      let darkColor = isP1 ? (skillMegaTimer > 0 ? '#665000' : '#004466') : '#660044';
 
       if (buffTimer > 0 || (isP1 && skillMegaTimer > 0)) {
           ctx.save();
-          ctx.shadowBlur = 18;
-          ctx.shadowColor = '#ffd700';
-          ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)';
-          ctx.lineWidth = 2;
+          ctx.shadowBlur = 18; ctx.shadowColor = '#ffd700';
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.8)'; ctx.lineWidth = 2;
           ctx.strokeRect(x - 3, y - 3, w + 6, h + 6);
           ctx.restore();
       }
 
       ctx.save();
       let grad = ctx.createLinearGradient(x, y, x + w, y);
-      grad.addColorStop(0, darkColor);
-      grad.addColorStop(0.3, '#ffffff');
-      grad.addColorStop(0.7, baseColor);
-      grad.addColorStop(1, darkColor);
+      grad.addColorStop(0, darkColor); grad.addColorStop(0.3, '#ffffff');
+      grad.addColorStop(0.7, baseColor); grad.addColorStop(1, darkColor);
       
-      ctx.shadowBlur = 16;
-      ctx.shadowColor = baseColor;
+      ctx.shadowBlur = 16; ctx.shadowColor = baseColor;
       ctx.fillStyle = grad;
 
       let r = 4;
       ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
+      ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r);
       ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      ctx.fill();
+      ctx.closePath(); ctx.fill();
 
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
-      ctx.shadowBlur = 8;
-      ctx.shadowColor = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(x + w / 2, y + 4);
-      ctx.lineTo(x + w / 2, y + h - 4);
-      ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.shadowBlur = 8; ctx.shadowColor = '#ffffff';
+      ctx.beginPath(); ctx.moveTo(x + w / 2, y + 4); ctx.lineTo(x + w / 2, y + h - 4); ctx.stroke();
       ctx.restore();
+
+      // Render Protective Energy Shield (Power-up)
+      if (shieldTimer > 0) {
+          ctx.save();
+          let shX = isP1 ? 4 : W - 8;
+          ctx.shadowBlur = 15; ctx.shadowColor = baseColor;
+          ctx.strokeStyle = baseColor; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(shX, 0); ctx.lineTo(shX, H); ctx.stroke();
+          ctx.restore();
+      }
   }
 
   function drawObstacle(x, y, w, h, isHoriz = false) {
       ctx.save();
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = isHoriz ? '#ff00ff' : '#00ffff';
-
-      ctx.fillStyle = '#1a2230';
+      ctx.shadowBlur = 10; ctx.shadowColor = isHoriz ? getSecondaryColor() : getPrimaryColor();
+      ctx.fillStyle = 'rgba(20, 30, 45, 0.9)';
       ctx.fillRect(x, y, w, h);
-      ctx.strokeStyle = isHoriz ? '#ff00ff' : '#00ffff';
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x, y, w, h);
-
+      ctx.strokeStyle = isHoriz ? getSecondaryColor() : getPrimaryColor();
+      ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
       ctx.restore();
   }
 
   function drawPowerup(x, y, type) {
       ctx.save();
-      let color = type === 0 ? '#ffd700' : (type === 1 ? '#ff3366' : (type === 2 ? '#00e5ff' : '#c832ff'));
-      let iconStr = type === 0 ? '+' : (type === 1 ? '!' : (type === 2 ? '*' : 'M'));
+      let colors = ['#ffd700', '#ff3366', '#00e5ff', '#c832ff', '#ff9900', '#00ffaa'];
+      let icons = ['+', '!', '*', 'M', '⚡', '🛡️'];
+      let color = colors[type] || getPrimaryColor();
+      let iconStr = icons[type] || '+';
 
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = color;
-      ctx.fillStyle = 'rgba(20, 25, 35, 0.85)';
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
+      ctx.shadowBlur = 15; ctx.shadowColor = color;
+      ctx.fillStyle = 'rgba(20, 25, 35, 0.9)'; ctx.strokeStyle = color; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x + 9, y + 9, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-      ctx.beginPath();
-      ctx.arc(x + 9, y + 9, 9, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.font = 'bold 10px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = color;
-      ctx.fillText(iconStr, x + 9, y + 9.5);
+      ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = color; ctx.fillText(iconStr, x + 9, y + 9.5);
       ctx.restore();
   }
 
@@ -752,204 +1005,131 @@
       ctx.clearRect(0, 0, W, H);
       
       // CRT Scanlines
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.06)';
-      for (let i = 0; i < H; i += 4) {
-          ctx.fillRect(0, i, W, 1.5);
-      }
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+      for (let i = 0; i < H; i += 4) ctx.fillRect(0, i, W, 1.5);
 
-      // Border Neon Accent Lines
-      ctx.strokeStyle = skillSlowTimer > 0 ? 'rgba(0, 229, 255, 0.8)' : 'rgba(0, 229, 255, 0.25)';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(2, 2, W - 4, H - 4);
+      // Border Neon Lines
+      ctx.strokeStyle = skillSlowTimer > 0 ? getPrimaryColor() : 'rgba(255, 255, 255, 0.15)';
+      ctx.lineWidth = 2; ctx.strokeRect(2, 2, W - 4, H - 4);
 
       // Center Line
-      ctx.setLineDash([8, 12]);
-      ctx.beginPath();
-      ctx.moveTo(W/2, 0);
-      ctx.lineTo(W/2, H);
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.setLineDash([8, 12]); ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
 
-      // Center circle
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(W/2, H/2, 45, 0, Math.PI * 2);
-      ctx.stroke();
+      // Center Circle
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(W/2, H/2, 45, 0, Math.PI * 2); ctx.stroke();
 
-      // Gravity Well (Stage >= 9)
-      if (campaignMode && campaignLevel >= 9) {
+      // Gravity Well
+      if (gameMode === 1 || (gameMode === 4 && campaignLevel >= 9)) {
           ctx.save();
-          ctx.strokeStyle = 'rgba(180, 50, 255, 0.6)';
-          ctx.lineWidth = 1.5;
-          ctx.shadowBlur = 12;
-          ctx.shadowColor = '#b432ff';
+          ctx.strokeStyle = getSecondaryColor(); ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 12; ctx.shadowColor = getSecondaryColor();
           let pulse = 35 + Math.sin(Date.now() * 0.008) * 5;
-          ctx.beginPath();
-          ctx.arc(gwX, gwY, pulse, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(gwX, gwY, 12, 0, Math.PI * 2);
-          ctx.stroke();
+          ctx.beginPath(); ctx.arc(gwX, gwY, pulse, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(gwX, gwY, 12, 0, Math.PI * 2); ctx.stroke();
           ctx.restore();
       }
 
-      // Warp Portals (Stage >= 13)
-      if (campaignMode && campaignLevel >= 13) {
-          ctx.save();
-          ctx.shadowBlur = 14;
-          ctx.lineWidth = 2;
-
-          ctx.strokeStyle = '#00e5ff';
-          ctx.shadowColor = '#00e5ff';
-          ctx.beginPath();
-          ctx.arc(portal1X, portal1Y, 14, 0, Math.PI * 2);
-          ctx.stroke();
-
-          ctx.strokeStyle = '#ff00cc';
-          ctx.shadowColor = '#ff00cc';
-          ctx.beginPath();
-          ctx.arc(portal2X, portal2Y, 14, 0, Math.PI * 2);
-          ctx.stroke();
-
+      // Warp Portals
+      if (gameMode === 1 || (gameMode === 4 && campaignLevel >= 13)) {
+          ctx.save(); ctx.shadowBlur = 14; ctx.lineWidth = 2;
+          ctx.strokeStyle = getPrimaryColor(); ctx.shadowColor = getPrimaryColor();
+          ctx.beginPath(); ctx.arc(portal1X, portal1Y, 14, 0, Math.PI * 2); ctx.stroke();
+          ctx.strokeStyle = getSecondaryColor(); ctx.shadowColor = getSecondaryColor();
+          ctx.beginPath(); ctx.arc(portal2X, portal2Y, 14, 0, Math.PI * 2); ctx.stroke();
           ctx.restore();
       }
 
       // Obstacles
-      if (campaignMode && campaignLevel >= 5 && obs1Active) {
-          drawObstacle(W/2 - 10, obsY, 20, 40, false);
-      }
-      if (campaignMode && campaignLevel >= 8 && obs2Active) {
-          drawObstacle(obs2X, H/2 - 10, 40, 20, true);
-      }
+      const hasObstacles = (gameMode === 1 || (gameMode === 4 && campaignLevel >= 5));
+      if (hasObstacles && obs1Active) drawObstacle(W/2 - 10, obsY, 20, 40, false);
+      if (hasObstacles && obs2Active) drawObstacle(obs2X, H/2 - 10, 40, 20, true);
 
-      // Stage 20 Boss Shield Barrier
-      if (campaignMode && campaignLevel === 20 && bossShieldHp > 0) {
+      // Boss Shield
+      if (gameMode === 4 && campaignLevel === 20 && bossShieldHp > 0) {
           ctx.save();
-          let shCol = bossShieldHp === 3 ? '#00e5ff' : (bossShieldHp === 2 ? '#ffd700' : '#ff3366');
-          ctx.fillStyle = shCol;
-          ctx.shadowBlur = 16;
-          ctx.shadowColor = shCol;
+          let shCol = bossShieldHp === 3 ? getPrimaryColor() : (bossShieldHp === 2 ? '#ffd700' : '#ff3366');
+          ctx.fillStyle = shCol; ctx.shadowBlur = 16; ctx.shadowColor = shCol;
           ctx.fillRect(W - 55, bossShieldY, 10, bossShieldH);
           ctx.restore();
       }
 
-      // Render Balls Motion Trails & Spheres
+      // Motion Trails & Balls
       for (let b of balls) {
           if (!b.active) continue;
-
           for (let i = b.trail.length - 1; i >= 0; i--) {
               let pt = b.trail[i];
               let alpha = (1 - (i / b.trail.length)) * 0.45;
               let radius = (BALL_SIZE / 2) * (1 - (i / b.trail.length) * 0.5);
-              ctx.save();
-              ctx.fillStyle = pt.color;
-              ctx.globalAlpha = alpha;
-              ctx.shadowBlur = 8;
-              ctx.shadowColor = pt.color;
-              ctx.beginPath();
-              ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.restore();
+              ctx.save(); ctx.fillStyle = pt.color; ctx.globalAlpha = alpha;
+              ctx.shadowBlur = 8; ctx.shadowColor = pt.color;
+              ctx.beginPath(); ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2); ctx.fill(); ctx.restore();
           }
 
           ctx.save();
-          let ballGlow = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? '#00e5ff' : (b.lastHitter === 2 ? '#ff00cc' : '#ffffff'));
-          ctx.shadowBlur = b.isFireball ? 22 : 16;
-          ctx.shadowColor = ballGlow;
+          let ballGlow = b.isFireball ? '#ff6400' : (b.lastHitter === 1 ? getPrimaryColor() : (b.lastHitter === 2 ? getSecondaryColor() : '#ffffff'));
+          ctx.shadowBlur = b.isFireball ? 22 : 16; ctx.shadowColor = ballGlow;
           ctx.fillStyle = b.isFireball ? '#ffc832' : '#ffffff';
-          ctx.beginPath();
-          ctx.arc(b.x + BALL_SIZE/2, b.y + BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI * 2);
-          ctx.fill();
+          ctx.beginPath(); ctx.arc(b.x + BALL_SIZE/2, b.y + BALL_SIZE/2, BALL_SIZE/2, 0, Math.PI * 2); ctx.fill();
           ctx.restore();
       }
 
       // Render Paddles
-      drawPaddle(20, p1y, PAD_W, p1PadH, true, p1Vy, p1FreezeTimer, p1BuffTimer, p1DebuffTimer);
-      drawPaddle(W - 20 - PAD_W, p2y, PAD_W, p2PadH, false, p2Vy, p2FreezeTimer, p2BuffTimer, p2DebuffTimer);
+      drawPaddle(20, p1y, PAD_W, p1PadH, true, p1FreezeTimer, p1BuffTimer, p1ShieldTimer);
+      drawPaddle(W - 20 - PAD_W, p2y, PAD_W, p2PadH, false, p2FreezeTimer, p2BuffTimer, p2ShieldTimer);
       
-      // Powerup
-      if (powerupX !== -1) {
-          drawPowerup(powerupX, powerupY, powerupType);
-      }
-      
-      // Shockwaves
+      // Powerup Capsule
+      if (powerupX !== -1) drawPowerup(powerupX, powerupY, powerupType);
+
+      // Shockwaves & Particles
       for (let sw of shockwaves) {
-          ctx.save();
-          ctx.strokeStyle = sw.color;
-          ctx.globalAlpha = sw.alpha;
-          ctx.lineWidth = 2;
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = sw.color;
-          ctx.beginPath();
-          ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
+          ctx.save(); ctx.strokeStyle = sw.color; ctx.globalAlpha = sw.alpha; ctx.lineWidth = 2;
+          ctx.shadowBlur = 10; ctx.shadowColor = sw.color;
+          ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       }
-
-      // Particles
       for (let p of particles) {
-          ctx.save();
-          ctx.fillStyle = p.color;
-          ctx.globalAlpha = p.life / p.maxLife;
-          ctx.shadowBlur = 6;
-          ctx.shadowColor = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
+          ctx.save(); ctx.fillStyle = p.color; ctx.globalAlpha = p.life / p.maxLife;
+          ctx.shadowBlur = 6; ctx.shadowColor = p.color;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       }
       
-      // Score / HUD
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = '13px Inter';
-      ctx.textAlign = 'center';
-      ctx.fillText("RALLY: " + rally + "  HIGH: " + highRally + "  WINS: " + lifetimeWins, W/2, 20);
+      // HUD Header Overlay
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.font = '12px Inter'; ctx.textAlign = 'center';
+      ctx.fillText("RALLY: " + rally + "  HIGH: " + stats.highRally + "  WINS: " + stats.wins, W/2, 20);
 
-      if (campaignMode) {
+      if (gameMode === 4) {
           ctx.fillStyle = '#ffd700';
-          if (campaignLevel === 20) ctx.fillText("STAGE 20: HYPER-CPU BOSS", W/2, 40);
-          else ctx.fillText("CAMPAIGN: STAGE " + campaignLevel + " / 20", W/2, 40);
-      } else {
-          let diffStr = difficulty === 1 ? "EASY" : (difficulty === 2 ? "NORMAL" : "HARD");
-          ctx.fillText("DIFF: " + diffStr + " (1-3)", W/2, 40);
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-          ctx.fillText("Press 'C' for Campaign", W/2, 60);
+          if (campaignLevel === 20) ctx.fillText("STAGE 20: HYPER-CPU BOSS", W/2, 38);
+          else ctx.fillText("CAMPAIGN: STAGE " + campaignLevel + " / 20", W/2, 38);
+      }
+
+      if (isPaused) {
+          ctx.fillStyle = 'rgba(5, 10, 20, 0.75)'; ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = 'white'; ctx.font = 'bold 22px Inter'; ctx.textAlign = 'center';
+          ctx.fillText("GAME PAUSED", W/2, H/2);
+          ctx.font = '13px Inter'; ctx.fillText("Press Space to Resume", W/2, H/2 + 25);
       }
 
       if (gameOver) {
-          ctx.fillStyle = 'rgba(5, 10, 20, 0.85)';
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = 'white';
-          ctx.font = 'bold 24px Inter';
-          ctx.textAlign = 'center';
+          ctx.fillStyle = 'rgba(5, 10, 20, 0.88)'; ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = 'white'; ctx.font = 'bold 24px Inter'; ctx.textAlign = 'center';
           if (winScreen) {
-              ctx.fillStyle = '#ffd700';
-              ctx.shadowBlur = 20;
-              ctx.shadowColor = '#ffd700';
+              ctx.fillStyle = '#ffd700'; ctx.shadowBlur = 20; ctx.shadowColor = '#ffd700';
               ctx.fillText("CAMPAIGN VICTORY!", W/2, H/2 - 15);
-              ctx.font = '14px Inter';
-              ctx.fillText("20 STAGES CLEARED!", W/2, H/2 + 10);
+              ctx.font = '14px Inter'; ctx.fillText("20 STAGES CLEARED!", W/2, H/2 + 10);
           } else {
-              ctx.fillStyle = s1 > s2 ? '#00e5ff' : '#ff00cc';
-              ctx.shadowBlur = 20;
-              ctx.shadowColor = ctx.fillStyle;
-              ctx.fillText(s1 > s2 ? "P1 WINS!" : "P2 WINS!", W/2, H/2 - 10);
+              ctx.fillStyle = s1 > s2 ? getPrimaryColor() : getSecondaryColor();
+              ctx.shadowBlur = 20; ctx.shadowColor = ctx.fillStyle;
+              ctx.fillText(s1 > s2 ? (isPvP ? "PLAYER 1 WINS!" : "YOU WIN!") : (isPvP ? "PLAYER 2 WINS!" : "CPU WINS!"), W/2, H/2 - 10);
           }
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = 'white';
-          ctx.font = '14px Inter';
+          ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
           ctx.fillText("Press 'R' to Restart", W/2, H/2 + 35);
       }
   }
 
   resetBalls();
-  setInterval(() => {
-      update();
-      draw();
-  }, 30);
+  setInterval(() => { update(); draw(); }, 30);
 </script>
 </body>
 </html>
