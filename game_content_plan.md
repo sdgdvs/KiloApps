@@ -2,15 +2,64 @@
 
 This document tracks the **perpetual, never-ending** improvement loop for all KiloApps games.
 
+## DIRECTOR NOTE (2026-07-29): STOP CAMPAIGN SPAM — FOCUS ON DEPTH WHERE IT MATTERS + GAME BALANCE
+
+**⚠️ READ THIS BEFORE EVERY TURN. This supersedes old loop instructions.**
+
+The old approach of "add 20-stage campaigns and active skills to every game" is OVER. A 20-stage campaign with boss encounters makes sense for KRogue and KSpace. It does NOT make sense for Chess, Connect4, Hangman, or Towers of Hanoi. Those are **classic strategy/puzzle games** — they need smart AI and good difficulty curves, not boss fights and powerups.
+
+**From now on, games are split into two categories with DIFFERENT work priorities:**
+
+### 🎮 DEEP GAMES (get campaigns, content, lore, progression)
+These are action, adventure, RPG, and exploration games where depth = more content:
+- **KRogue** — roguelike RPG (biomes, enemies, spells, items, floors)
+- **KQuest** — fantasy RPG (chapters, bosses, spells, story)
+- **KStarship** — space exploration (sectors, subsystems, encounters)
+- **KAlchemy** — crafting/discovery (recipes, quests, lab upgrades)
+- **KSpace** — arcade shooter (waves, enemy variety, boss fights)
+- **KAsteroids** — arcade shooter (sectors, hazards, bosses)
+- **KMaze** — exploration/survival (mazes, traps, items, fog of war)
+- **KPac** — action (maze variety, ghost AI, power-ups)
+- **KBreakout** — arcade (brick layouts, powerups, boss stages)
+- **KSnake** — action (obstacle mazes, rival AI, boss encounters)
+
+For Deep Games: Add more content, enemy variety, procedural generation, narrative elements, crafting, lore. These games SHOULD have long campaigns and progression systems. Fill the 999KB budget.
+
+### ♟️ CLASSIC GAMES (get balance, usability, AI tuning — NO MORE CAMPAIGNS)
+These are traditional board, card, and puzzle games where quality = smart AI and good UX:
+- **KChess, KGo, KReversi, KConnect4** — board games
+- **KSolitaire, KFreecell** — card games
+- **KSudoku, K2048, KTowers, KMines** — puzzle games
+- **KHangman, KWords, KSimon, KMatch3** — word/pattern games
+- **KTetris, KPong, KDarts** — skill games
+
+For Classic Games: **DO NOT add more campaign stages, boss encounters, or active skill hotkeys.** They already have too many. Instead focus on:
+1. **Game Balance** — Is Easy too easy? Is Hard actually hard? Does the AI play well? Does difficulty ramp smoothly?
+2. **AI Quality** — For board games (Chess, Go, Reversi, Connect4): make the AI smarter and more varied, not just add more stages.
+3. **Usability** — Are controls intuitive? Is the UI clear? Can a new player figure out how to play? Is there a help/tutorial?
+4. **Bug Fixes** — Fix broken mechanics, impossible levels, crashes, or stuck states.
+5. **Polish** — Score display, win/loss feedback, smooth animations, sound effects.
+
+### 🔧 GAME BALANCE PASS (NEW PRIORITY)
+**Before adding ANY new content to a game, play-test it mentally first:**
+- Can a player actually win Stage 1 on their first try? If not, it's too hard.
+- Is Easy mode trivially easy (AI makes random moves)? If so, fix it.
+- Does the difficulty curve feel smooth? Or does it jump from trivial to impossible?
+- Are powerups so strong they trivialize the game? Or so weak they're useless?
+- For board game AI: does Easy AI feel fair but beatable? Does Hard AI feel challenging but not cheating?
+- Is the campaign so long that nobody will finish it? 10 stages is plenty for most games. 20+ is only for Deep Games.
+
+**When you pick a Classic Game from the queue, your job is a BALANCE & USABILITY pass, not more content.**
+
+---
+
 ## Agent Rules & Guidelines
 
 **Perpetual Loop (NEVER STOP)**
-This agent loops forever. After completing a full loop through all games, start the next loop immediately. Each subsequent loop should go DEEPER than the last:
-- **Loop 1:** Basic content pass (high scores, difficulty, sound effects).
-- **Loop 2:** Deeper mechanics (new game modes, power-ups, AI improvements).
-- **Loop 3+:** Approach commercial quality. Add MORE levels, MORE content, MORE variety. Games should feel rich and long. You have up to **999KB per game** — that is a LOT of room for content like level data, enemy patterns, word lists, puzzle banks, and procedurally generated variety. Fill that budget.
-- **When all games in a loop are done:** If there are new games (created by the Creator agent), add them to the inventory. Then start the next loop with ALL games reset to "Needs Improvement".
-- **CREATE NEW GAME** mode: Only if the Director or user explicitly requests it, OR if you finish a loop and all existing games are already very deep. The Creator agent is the primary new-game creator.
+This agent loops forever. Pick the top game from the queue, do work appropriate to its category (see above), move it to the bottom, repeat.
+- For **Deep Games**: Add meaningful new content — new enemies, mechanics, story, levels, items.
+- For **Classic Games**: Do a balance/usability audit — test difficulty, improve AI, fix UX issues, tune parameters.
+- **CREATE NEW GAME** mode: Only if the Director or user explicitly requests it. The Creator agent is the primary new-game creator.
 
 **Dual-Target Strategy (CRITICAL)**
 Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). ALWAYS audit both versions before working on a game.
@@ -25,25 +74,20 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - When improving the exe, preserve ALL existing gameplay systems and add to them.
 - If you encounter a download-stub web version, it's intentional. Improve the exe, and optionally begin an incremental web port if time allows.
 
-**Content Additions (1-2 turns per game, pick 2-3 per turn)**
-- Additional levels, stages, or procedurally generated content
-- Difficulty settings (Easy / Medium / Hard)
-- Progressive difficulty (games should get harder as you play longer)
-- High score tracking (localStorage for web, file/registry for native)
-- Visual feedback: screen shake, particle effects, flash on hit, smooth transitions
-- Sound effects (Web Audio API synthesized tones for web; Beep()/PlaySound for native)
-- Power-ups, special abilities, or bonus items
-- Enemy/obstacle variety
-- Win/lose conditions with satisfying feedback
-- Tutorial or first-play hints
-- Keyboard AND mouse/touch controls where appropriate (web), keyboard for native
+**Content Additions (for Deep Games only — pick 2-3 per turn)**
+- New enemies, bosses, items, spells, or story elements
+- Procedural generation improvements (more room types, varied layouts)
+- Lore, narrative, crafting recipes, progression unlocks
+- New biomes, environments, or themes
+- Sound effects (Web Audio API for web; Beep()/PlaySound for native)
 
-**EXE-Specific Improvements**
-- Add new enemy types, items, or level content to the native C code
-- Expand procedural generation (more room types, varied layouts)
-- Add new gameplay mechanics that fit the existing architecture
-- Improve the UI within terminal/GDI constraints
-- Fix bugs or balance issues
+**Balance & Usability Pass (for Classic Games — do ALL of these)**
+- Test each difficulty level: is Easy actually easy? Is Hard actually hard?
+- Audit AI quality: does the AI make reasonable moves at each difficulty?
+- Check first-play experience: can a new player figure out controls?
+- Verify win/loss conditions work correctly
+- Ensure score display, high scores, and restart work properly
+- Check that powerups (if any) are balanced — not too strong, not useless
 
 **Quality Bar**
 - Must have: start screen, score display, game-over screen with restart
@@ -52,12 +96,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - Responsive controls
 - Web games: use `requestAnimationFrame`
 - Exe games: preserve Win32 message loop and rendering approach
-
-**Creating a New Game**
-- Create BOTH native (`K[Name]/main.c`, `build.bat`, `app.rc`, `icon.ico`) and web versions (`KiloOS/public/apps/k[name].html`).
-- Register in `App.jsx` APPS array with folder: 'Games'.
-- Use appropriate window dimensions.
-- Good candidates: Breakout, Asteroids, Frogger, 2048, Sudoku, Freecell, Hangman, Connect 4, etc.
 
 **Multi-Agent Coordination**
 
@@ -76,7 +114,6 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 - All game HTML files must be SINGLE self-contained files (inline CSS + JS).
 - Do NOT edit: `master_plan.md`, `architecture.md`, `.agents/AGENTS.md`, `KiloOS/src/index.css`.
 - Do NOT edit other agents' plan files: `app_work_plan.md`, `app_fix_plan.md`, `kiloos_ux_plan.md`.
-- Your focus is CONTENT, GAMEPLAY DEPTH, and GAME LENGTH — not visual polish. Add more levels, more enemies, more modes, more mechanics. Fill the 999KB budget with gameplay content.
 - Do NOT add ARG/easter egg elements.
 - **CLEANUP:** Before committing, delete any temporary `patch_*.py` or `patch_*.js` scripts in the repo root. Subagents must not leave scratch files behind.
 - **Logging discipline:** Keep this plan file concise. Brief notes per turn in the Progress Log. Do NOT dump file contents or create verbose logs.
@@ -84,34 +121,41 @@ Each game exists in two forms: a native Windows executable (`K[Name]/main.c`) an
 ---
 ## Game Inventory & Parity Audit
 
-| Game       | Web Parity Tier | Last Touched (Builder) | Status | Notes |
-|------------|-----------------|------------------------|--------|-------|
-| KMines     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic board sizes (8x8 to 24x24), treasure chests, speedruns, Sonar/Detector/Shield powerups, Blitz combo multipliers. |
-| KRogue     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: Expanded to 30 levels across 6 biomes, moved Astaroth the Fallen to L30, added Arch-Mage, Lich Lord, Shadow Assassin, Shadow Behemoth, Mimic Chests, 3 trap types, Meteor Strike [M], Invisibility Cloak [I], Divine Miracle [D] spells. |
-| KSnake     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign with custom mazes, moving portals, CPU rival snakes, Hydra Viper Boss, Golden Apple / Poison Berry / Speed Berry, and G/F/M active skills. |
-| KTetris    | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, 6 Pentomino 5-block piece shapes, Row Nuke [B], Piece Swap [S], Gravity Freeze [F] active skills, and Earthquake board hazards. |
-| KPong      | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, stage 20 Hyper-CPU Boss paddle encounter with adaptive spin & shield barrier, multi-ball rounds & pickups, Slow-Mo [F], Mega Paddle [P], Fireball Shot [B] active skills, Gravity Wells, Warp Portals. |
-| KMaze      | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 35-stage campaign (11x11 to 41x41), Stage 35 Minotaur King Boss room, Darkness Fog of War, Pickaxe [P], Pathfinder [C], Speed Shoes [S], and Minotaur Stun Spray [F] active skills. |
-| KSolitaire | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, Magic Wand [W], X-Ray Vision [X], Shuffle Stock [S], Free Undo [U] active skills, Vegas Money Mode & stats tracking, suit-locked foundations, and frozen card mechanics. |
-| KSpace     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-wave campaign, Kamikaze interceptors, Stealth cloak fighters, Asteroid hazards, Formations, Stage 20 Alien Mothership Boss with multi-stage turret destruction & deflector shield, and Time Stop [T], Tactical Dash [D], Smart Bomb [B], Hyper-Shield [S] active skills. |
-| KPac       | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign with 20 unique maze layouts, warp tunnels, speed zones, 5 AI Ghost Personalities (Blinky, Pinky, Inky, Clyde, Sue), Stage 20 Ghost King Boss encounter (8 HP, phantom clones), and Freeze [F], Sprint [S], Magnet [M], Shield [B] active skills. |
-| KChess     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: Expanded Campaign Mode to 20 stages, 4 AI Personalities (Novice, Aggressive Attacker, Positional Defender, Grandmaster Minimax Alpha-Beta), Optimal AI Hint [H], Undo Move [U], Time Freeze [F], Chess Puzzle Mode, and Blitz Timer Mode. |
-| KBreakout  | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, Stage 20 Boss Fortress (50 HP, rotating shields), Explosive/Metal/Portal/Mystery bricks, UFO drone enemies, and Laser [L], Multi-Ball [M], Fireball [F], Safety Barrier [B] active skills. |
-| K2048      | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 30-stage campaign (3x3 to 6x6, 256 to 8192 goals), move limits, Stage 30 8192 Grandmaster Challenge, Frozen/Bomb/Wildcard special tiles, Tile Upgrade [U], Grid Rotate [R], Hammer [H], Free Undo [Z] active skills. |
-| KSudoku    | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign (4x4 Mini, 9x9 Classic, 16x16 Hexadoku), Killer Sudoku sum cages, Fog of War darkness cells, Stage 20 Fiendish Master Challenge, Smart Hint [H], Pencil Auto-Fill [P], Mistake Shield [S], Time Freeze [F] active skills. |
-| KAsteroids | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-Sector Campaign, Stage 20 Alien Mothership Core Boss (50 HP, rotating shield, 4 turrets), Alien Hunter Squadrons, Sector Space Storms, Mag-Mine homing hazards, Armored Asteroids (3 hits), and EMP [E], Piercing Laser [L], Hyperdrive [H], Energy Shield [S] active skills. |
-| KFreecell  | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign (4-cell, 3-cell, 2-cell constraints, King-only empty tableau, Baker's Game suit build, Frozen cards, Stage 20 Grandmaster Challenge), Magic Wand [W], Extra Freecell [E], Auto-Solve [A], Free Undo [U] active skills, and Time Attack Blitz mode & stats tracking. |
-| KConnect4  | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic grid sizes (7x6 to 10x8), crackable blocker cells, 4 AI personalities (Rookie, Aggressive, Trapper, Grandmaster Minimax Alpha-Beta), Stage 20 Grandmaster Challenge, Bomb/Drill/Magnet discs, and Optimal AI Hint [H], Undo [U], Column Freeze [F] active skills. |
-| KHangman   | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign across 10 categories, progressive word length (4-14 letters), strike limits (3 to 6 max wrong guesses), Stage 20 Polymath Grandmaster Challenge, Vowel Reveal [V], Consonant Radar [H], Strike Shield [S], Freeze Timer [F] active skills, and Time Attack Blitz mode. |
-| KSimon     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign (speeds down to 100ms, sequence len up to 30), 4-button/6-button/8-button grid layouts, Chaos Reverse, Pitch Audio mode, and Hint [H], Slow-Mo [S], Strike Shield [B], Time Freeze [F] active skills. |
-| KMatch3    | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic board sizes (6x6 to 10x10), Stage 20 Jewel King Boss (100 HP, barrier gems, moving obstacles), Stone & 2-3 hit Iron tiles, 3x3 Bomb/Rainbow/Line Blaster gems, Hammer/Moves/Shuffle/Color Nuke powerups. |
-| KWords     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, dynamic grid dimensions (10x10 to 20x20), 12 distinct themes, Stage 20 Polyglot Grandmaster Challenge, 2-click Frozen tiles, Fog of War, bonus Secret Words, and Radar [R], Pathfinder [P], Freeze [F], Hint [H] active skills. |
-| KGo        | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign (9x9, 13x13, 19x19, handicap 0-8, variable komi), 4 AI Personalities (Territorial, Influence, Balanced, Grandmaster), Tsumego puzzles, Stage 20 Go Legend Challenge, Superko & Ko overlay, Optimal AI Hint [H], Territory Estimator [T], Undo [U], and Group Liberty Analyzer [S]. |
-| KDarts     | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign, 6 game modes (501 Double Out, 301, Cricket, Around the Clock, Bullseye Blitz, Killer Darts), progressive AI opponents, wind & wobble mechanics, Laser Sight Arc Preview [L], Precision Focus (75% wobble slowdown) [F], Ring Magnet [M], and Undo Dart [U] active skills. |
-| KTowers    | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign (3-10 disks, 3-5 pegs, Frame-Stewart solver), Stage 20 Tower Grandmaster Challenge, cyclic & color-coded rules, locked disks, and Hint [H], Undo [U], Freeze [F], Teleport [S] active skills. |
-| KReversi   | Tier 1          | Game Content Expander  | Loop 7 Completed | Full parity. Loop 7 completed: 20-stage campaign (6x6, 8x8, 10x10), 4 AI personalities (Rookie, Greedy, Positional, Grandmaster Minimax), 2X Double-Flip bonus tiles, and Bomb Disc [B], Freeze AI [F], Optimal Hint [H], Undo [U] active skills. |
-| KStarship  | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: 15-Sector Campaign, Energy Allocation & Subsystems, 7 Enemy types & Multi-stage Bosses, 4 Power-ups (Time Dilation, Plasma Nova, Nano Drones, Hyper-Shield). |
-| KQuest     | Tier 1          | Game Content Expander  | Loop 6 Completed | Full parity. Loop 6 completed: Expanded Campaign to 15 chapter dungeons, added multi-stage boss encounters, and 4 battle spells & consumables (Lightning Storm, Holy Shield, Phoenix Elixir, Berserk Might). |
+### 🎮 Deep Games (Content Expansion Queue — round-robin, pick top, do content work, move to bottom)
+| Game       | Parity | Status | Next Work |
+|------------|--------|--------|-----------|
+| KRogue     | Tier 1 | Loop 7 done (30 levels, 6 biomes, 5 spells) | Loop 8: New enemy types, item crafting, quest NPCs, deeper Abyss/Void biome content |
+| KQuest     | Tier 1 | Loop 6 done (15 chapters, bosses, 4 spells) | Loop 7: Side quests, NPC dialogue, equipment upgrades, more chapter variety |
+| KStarship  | Tier 1 | Loop 6 done (15 sectors, subsystems, 7 enemies) | Loop 7: Crew management, trade routes, narrative events, tech tree |
+| KSpace     | Tier 1 | Loop 7 done (20 waves, bosses, 4 skills) | Loop 8: New enemy formations, weapon upgrades, scoring combos |
+| KAsteroids | Tier 1 | Loop 7 done (20 sectors, Mothership boss) | Loop 8: Asteroid belt environments, weapon variety, shield mechanics |
+| KMaze      | Tier 1 | Loop 7 done (35 stages, Minotaur boss, fog) | Loop 8: New maze themes, puzzle rooms, NPC encounters, deeper item system |
+| KPac       | Tier 1 | Loop 7 done (20 mazes, 5 ghosts, Ghost King) | Loop 8: New maze hazards, ghost behaviors, scoring variety |
+| KBreakout  | Tier 1 | Loop 7 done (20 stages, Boss Fortress) | Loop 8: New brick types, boss variety, level editor concepts |
+| KSnake     | Tier 1 | Loop 7 done (20 stages, Hydra boss, rival AI) | Loop 8: New environments, food variety, rival AI behaviors |
+| KAlchemy   | Tier 1 | Creator building (Phase 12/14) | Wait for Creator to finish — then Loop 1 content pass |
+
+### ♟️ Classic Games (Balance & Usability Queue — round-robin, pick top, do balance audit, move to bottom)
+| Game       | Parity | Status | Next Work |
+|------------|--------|--------|-----------|
+| KChess     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty curve, ensure Easy is beatable, Hard is challenging. Check opening/endgame AI quality. |
+| KGo        | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty across 9x9/13x13/19x19. Ensure handicap system works. Test Tsumego puzzle quality. |
+| KReversi   | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty curve, check Minimax depth, ensure board sizes feel right. |
+| KConnect4  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI difficulty levels. Ensure Grandmaster is genuinely hard. Check blocker cell mechanics. |
+| KSolitaire | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check deal fairness, ensure Vegas mode scoring is balanced, verify undo/powerup economy. |
+| KFreecell  | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check that all dealt hands are solvable. Verify difficulty constraints make sense. |
+| KSudoku    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit puzzle generation quality. Ensure Easy puzzles have unique solutions and Hard is solvable. |
+| K2048      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check tile spawn rates, verify move-limit stages are achievable, audit powerup balance. |
+| KMines     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check first-click safety, mine density per difficulty, ensure Sonar powerup isn't overpowered. |
+| KTowers    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Verify optimal move counts are achievable, check locked-disk puzzles are solvable. |
+| KTetris    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check drop speed curve, verify Pentomino pieces don't make late stages impossible. |
+| KPong      | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Audit AI paddle speed per difficulty, check powerup spawn rates, verify boss is beatable. |
+| KHangman   | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word difficulty per category, ensure strike limits are fair, verify 14-letter words aren't absurd. |
+| KWords     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check word placement in grids, ensure Fog of War mechanic is fun not frustrating. |
+| KSimon     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check sequence speed curve, verify 8-button mode is playable, audit Chaos Reverse fairness. |
+| KMatch3    | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check board generation ensures moves exist, verify Boss HP is achievable, audit powerup economy. |
+| KDarts     | Tier 1 | Loop 7 done — NEEDS BALANCE PASS | Check wind/wobble tuning per difficulty, verify AI opponent accuracy curve is fair. |
+
 
 ## Progress Log
 
