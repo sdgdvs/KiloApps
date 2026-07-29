@@ -231,6 +231,15 @@ typedef struct {
     int useCounts[TOTAL_ELEMENTS];
     int codexFilter; // 0 = All, 1 = Discovered, 2 = Missing
     int selectedCodexElem;
+    int gameMode;           // 0 = Classic, 1 = Blitz, 2 = Puzzle
+    int blitzTimeLeft;      // Remaining Blitz seconds (60)
+    int blitzScore;         // Current Blitz score
+    int blitzHighScore;     // Blitz High Score
+    int blitzActive;        // 1 if active, 0 if inactive
+    int puzzleTargetId;     // Target element ID
+    int puzzleMoves;        // Moves taken in current puzzle
+    int puzzleSolvedCount;  // Puzzles solved count
+    int puzzleHighScore;    // Puzzle High Score
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
@@ -244,6 +253,9 @@ static AlchemyState g_State;
 static HWND g_hGridButtons[GRID_SIZE];
 static HWND g_hTierButtons[TOTAL_TIERS + 1];
 static HWND g_hEquipButtons[8];
+static HWND g_hModeButtons[3];
+static HWND g_hBlitzStartButton = NULL;
+static HWND g_hPuzzleSkipButton = NULL;
 static HWND g_hCodexFilterBtns[3];
 static HWND g_hPotionDrinkButtons[4];
 static HWND g_hQuestTurnInButtons[3];
@@ -530,10 +542,16 @@ static void UpdateEquipmentUI(HWND hwnd) {
                 }
             }
         }
-    } else {
         for (int u = 0; u < 4; u++) {
             if (g_hUpgradeButtons[u]) ShowWindow(g_hUpgradeButtons[u], SW_HIDE);
         }
+    }
+
+    if (g_hBlitzStartButton) {
+        ShowWindow(g_hBlitzStartButton, (g_State.gameMode == 1) ? SW_SHOW : SW_HIDE);
+    }
+    if (g_hPuzzleSkipButton) {
+        ShowWindow(g_hPuzzleSkipButton, (g_State.gameMode == 2) ? SW_SHOW : SW_HIDE);
     }
 }
 
@@ -556,6 +574,15 @@ static void InitGameState() {
     g_State.slot2 = -1;
     g_State.selectedTierFilter = 0;
     g_State.currentPage = 0;
+    g_State.gameMode = 0;
+    g_State.blitzTimeLeft = 60;
+    g_State.blitzScore = 0;
+    g_State.blitzHighScore = 0;
+    g_State.blitzActive = 0;
+    g_State.puzzleTargetId = 4; // Steam
+    g_State.puzzleMoves = 0;
+    g_State.puzzleSolvedCount = 0;
+    g_State.puzzleHighScore = 0;
     lstrcpyA(g_State.lastStatus, "Transmutation Crucible Ready");
     g_State.searchFilter[0] = '\0';
     for (int q = 0; q < 3; q++) {
@@ -631,6 +658,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             UpdateGrimoireGrid();
 
+            // Game Mode Selection Buttons
+            g_hModeButtons[0] = CreateWindowA("BUTTON", "Classic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 70, 48, 22, hwnd, (HMENU)1200, NULL, NULL);
+            g_hModeButtons[1] = CreateWindowA("BUTTON", "Blitz", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 327, 70, 42, 22, hwnd, (HMENU)1201, NULL, NULL);
+            g_hModeButtons[2] = CreateWindowA("BUTTON", "Puzzle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 372, 70, 48, 22, hwnd, (HMENU)1202, NULL, NULL);
+
+            g_hBlitzStartButton = CreateWindowA("BUTTON", "▶️ Start Blitz", WS_CHILD | BS_PUSHBUTTON, 423, 70, 85, 22, hwnd, (HMENU)1203, NULL, NULL);
+            g_hPuzzleSkipButton = CreateWindowA("BUTTON", "🔄 Skip Target", WS_CHILD | BS_PUSHBUTTON, 423, 70, 85, 22, hwnd, (HMENU)1204, NULL, NULL);
+
             // Laboratory Equipment Nav Buttons
             g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 96, 33, 22, hwnd, (HMENU)700, NULL, NULL);
             g_hEquipButtons[1] = CreateWindowA("BUTTON", "Retort", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 310, 96, 31, 22, hwnd, (HMENU)701, NULL, NULL);
@@ -696,6 +731,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_State.buffInvisibilityTimer > 0) { g_State.buffInvisibilityTimer--; changed = 1; }
             if (g_State.buffManaTimer > 0) { g_State.buffManaTimer--; changed = 1; }
             if (g_State.buffLifeTimer > 0) { g_State.buffLifeTimer--; changed = 1; }
+
+            if (g_State.gameMode == 1 && g_State.blitzActive) {
+                if (g_State.blitzTimeLeft > 0) {
+                    g_State.blitzTimeLeft--;
+                    if (g_State.blitzTimeLeft == 0) {
+                        g_State.blitzActive = 0;
+                        if (g_State.blitzScore > g_State.blitzHighScore) {
+                            g_State.blitzHighScore = g_State.blitzScore;
+                            char logMsg[256];
+                            wsprintfA(logMsg, "🏆 NEW BLITZ HIGH SCORE! You achieved %d Blitz Points!", g_State.blitzScore);
+                            AddJournalLog(logMsg);
+                            PlayDiscoveryFanfare();
+                        } else {
+                            char logMsg[256];
+                            wsprintfA(logMsg, "⏰ BLITZ TIME'S UP! Final Score: %d Pts (High Score: %d Pts)", g_State.blitzScore, g_State.blitzHighScore);
+                            AddJournalLog(logMsg);
+                            Beep(350, 150);
+                        }
+                    }
+                }
+                changed = 1;
+            }
             if (changed) InvalidateRect(hwnd, NULL, FALSE);
             break;
         }
@@ -936,6 +993,52 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
             }
+            // Game Mode Commands (1200 = Classic, 1201 = Blitz, 1202 = Puzzle, 1203 = Start Blitz, 1204 = Skip Target)
+            else if (id == 1200) {
+                g_State.gameMode = 0;
+                g_State.blitzActive = 0;
+                AddJournalLog("Switched to Classic Discovery Mode.");
+                lstrcpyA(g_State.lastStatus, "Classic Mode Active");
+                UpdateEquipmentUI(hwnd);
+                Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id == 1201) {
+                g_State.gameMode = 1;
+                AddJournalLog("⚡ TIMED ALCHEMY BLITZ: Click 'Start Blitz' to begin the 60s challenge!");
+                lstrcpyA(g_State.lastStatus, "Blitz Challenge Ready");
+                UpdateEquipmentUI(hwnd);
+                Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id == 1202) {
+                g_State.gameMode = 2;
+                AddJournalLog("🧩 PUZZLE CRUCIBLE: Synthesize the target element goal!");
+                lstrcpyA(g_State.lastStatus, "Puzzle Crucible Active");
+                UpdateEquipmentUI(hwnd);
+                Beep(450, 40);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id == 1203) { // Start/Restart Blitz
+                g_State.blitzTimeLeft = 60;
+                g_State.blitzScore = 0;
+                g_State.blitzActive = 1;
+                AddJournalLog("⚡ BLITZ STARTED! Discover compounds before 60s expires!");
+                lstrcpyA(g_State.lastStatus, "Blitz Challenge Active!");
+                Beep(880, 80);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            else if (id == 1204) { // Skip Puzzle Target
+                int r = FastRand() % TOTAL_RECIPES;
+                g_State.puzzleTargetId = g_Recipes[r].result;
+                g_State.puzzleMoves = 0;
+                char logMsg[128];
+                wsprintfA(logMsg, "🧩 NEW PUZZLE TARGET: Synthesize %s (Tier %d)!",
+                    g_Elements[g_State.puzzleTargetId].name, g_Elements[g_State.puzzleTargetId].tier);
+                AddJournalLog(logMsg);
+                Beep(554, 60);
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             // Main Action (Transmute / Distill / Extract / Crush)
             else if (id == 201) {
                 if (g_State.selectedEquipment == 0) { // Crucible Transmute
@@ -968,49 +1071,85 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                     g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, reqThreshold);
                                 AddJournalLog(logMsg);
                                 Beep(180, 150);
-                            } else if (!g_State.discovered[res]) {
-                                g_State.discovered[res] = 1;
-                                g_State.discoveredCount++;
+                            } else {
+                                int isNew = !g_State.discovered[res];
 
-                                int capMult = 100 + (g_State.upgradeCrucibleCap * 15);
-                                int essGain = 25 * capMult / 100;
-                                int dustGain = 25 * capMult / 100;
-
-                                if (g_State.buffStrengthTimer > 0) essGain = essGain * 150 / 100;
-                                if (g_State.buffInvisibilityTimer > 0) dustGain += 25;
-
-                                g_State.essence += essGain;
-                                g_State.dust += dustGain;
-
-                                int critChance = g_State.upgradeCatalystSpeed * 15;
-                                int isCrit = (g_State.buffLifeTimer > 0) || ((FastRand() % 100) < critChance);
-                                char critLogStr[64] = "";
-                                if (isCrit) {
-                                    g_State.essence += 20;
-                                    g_State.gold += 15;
-                                    lstrcpyA(critLogStr, " [CRITICAL TRANSMUTE! +20 Ess, +15 Gold]");
+                                // Phase 12 Mode Checks
+                                if (g_State.gameMode == 1 && g_State.blitzActive) {
+                                    int pts = resTier * 50;
+                                    if (isNew) pts += 100;
+                                    g_State.blitzScore += pts;
+                                    if (g_State.blitzScore > g_State.blitzHighScore) g_State.blitzHighScore = g_State.blitzScore;
                                 }
 
-                                CheckTierUnlocks();
-                                UpdateGrimoireGrid();
+                                if (g_State.gameMode == 2) {
+                                    g_State.puzzleMoves++;
+                                    if (res == g_State.puzzleTargetId) {
+                                        g_State.puzzleSolvedCount++;
+                                        if (g_State.puzzleSolvedCount > g_State.puzzleHighScore) g_State.puzzleHighScore = g_State.puzzleSolvedCount;
+                                        char logMsg[256];
+                                        wsprintfA(logMsg, "🧩 PUZZLE SOLVED! Successfully synthesized %s in %d moves! (Solved: %d)",
+                                            g_Elements[res].name, g_State.puzzleMoves, g_State.puzzleSolvedCount);
+                                        AddJournalLog(logMsg);
+                                        PlayDiscoveryFanfare();
 
-                                wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
+                                        int rNext = FastRand() % TOTAL_RECIPES;
+                                        g_State.puzzleTargetId = g_Recipes[rNext].result;
+                                        g_State.puzzleMoves = 0;
+                                    }
+                                }
 
-                                char logMsg[320];
-                                wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
-                                    g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name, dustGain, critLogStr);
-                                AddJournalLog(logMsg);
+                                if (isNew) {
+                                    g_State.discovered[res] = 1;
+                                    g_State.discoveredCount++;
 
-                                PlayDiscoveryFanfare();
-                            } else {
-                                wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
-                                char logMsg[256];
-                                wsprintfA(logMsg, "Created %s (%s + %s). Already recorded in Grimoire.",
-                                    g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
-                                AddJournalLog(logMsg);
-                                Beep(659, 120);
+                                    int capMult = 100 + (g_State.upgradeCrucibleCap * 15);
+                                    int essGain = 25 * capMult / 100;
+                                    int dustGain = 25 * capMult / 100;
+
+                                    if (g_State.buffStrengthTimer > 0) essGain = essGain * 150 / 100;
+                                    if (g_State.buffInvisibilityTimer > 0) dustGain += 25;
+
+                                    g_State.essence += essGain;
+                                    g_State.dust += dustGain;
+
+                                    int critChance = g_State.upgradeCatalystSpeed * 15;
+                                    int isCrit = (g_State.buffLifeTimer > 0) || ((FastRand() % 100) < critChance);
+                                    char critLogStr[64] = "";
+                                    if (isCrit) {
+                                        g_State.essence += 20;
+                                        g_State.gold += 15;
+                                        lstrcpyA(critLogStr, " [CRITICAL TRANSMUTE! +20 Ess, +15 Gold]");
+                                        if (g_State.gameMode == 1 && g_State.blitzActive) {
+                                            g_State.blitzScore += 50;
+                                            if (g_State.blitzScore > g_State.blitzHighScore) g_State.blitzHighScore = g_State.blitzScore;
+                                        }
+                                    }
+
+                                    CheckTierUnlocks();
+                                    UpdateGrimoireGrid();
+
+                                    wsprintfA(g_State.lastStatus, "DISCOVERY! Created %s!", g_Elements[res].name);
+
+                                    char logMsg[320];
+                                    wsprintfA(logMsg, "✨ NEW DISCOVERY! You created %s [Tier %d %s] by combining %s + %s! (+%d Dust)%s",
+                                        g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name, dustGain, critLogStr);
+                                    AddJournalLog(logMsg);
+
+                                    PlayDiscoveryFanfare();
+                                } else {
+                                    wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
+                                    char logMsg[256];
+                                    wsprintfA(logMsg, "Created %s (%s + %s). Already recorded in Grimoire.",
+                                        g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
+                                    AddJournalLog(logMsg);
+                                    Beep(659, 120);
+                                }
                             }
                         } else {
+                            if (g_State.gameMode == 2) {
+                                g_State.puzzleMoves++;
+                            }
                             wsprintfA(g_State.lastStatus, "Reaction Fizzled!");
                             char logMsg[256];
                             wsprintfA(logMsg, "Reaction fizzled! No transmutation for %s + %s.",
@@ -1704,19 +1843,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, oldP);
                 }
             } else {
+                // Phase 12 Mode HUD Drawing
+                if (g_State.gameMode == 1) {
+                    RECT blitzBox = { 280, 120, 505, 142 };
+                    FillRect(hdc, &blitzBox, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, blitzBox.left, blitzBox.top, blitzBox.right, blitzBox.bottom);
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char bHudStr[128];
+                    wsprintfA(bHudStr, "Time: %ds | Score: %d | Best: %d", g_State.blitzTimeLeft, g_State.blitzScore, g_State.blitzHighScore);
+                    DrawTextA(hdc, bHudStr, -1, &blitzBox, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                    SelectObject(hdc, oldP);
+                } else if (g_State.gameMode == 2) {
+                    RECT puzzleBox = { 280, 120, 505, 142 };
+                    FillRect(hdc, &puzzleBox, hPanelBrush);
+                    HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                    Rectangle(hdc, puzzleBox.left, puzzleBox.top, puzzleBox.right, puzzleBox.bottom);
+                    SelectObject(hdc, hBadgeFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    char pHudStr[128];
+                    int tId = g_State.puzzleTargetId;
+                    wsprintfA(pHudStr, "Target: %s (T%d) | Moves: %d | Solved: %d (Best: %d)",
+                        g_Elements[tId].name, g_Elements[tId].tier, g_State.puzzleMoves, g_State.puzzleSolvedCount, g_State.puzzleHighScore);
+                    DrawTextA(hdc, pHudStr, -1, &puzzleBox, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+                    SelectObject(hdc, oldP);
+                }
+
                 // Draw Outer Glowing Arcane Rune Ring & Crucible Vessel
                 SelectObject(hdc, hGoldPen);
                 HGDIOBJ pNullB = GetStockObject(NULL_BRUSH);
                 SelectObject(hdc, pNullB);
-                Ellipse(hdc, 340, 122, 445, 193); // Outer golden rune ring
+                Ellipse(hdc, 340, 145, 445, 193); // Outer golden rune ring
 
                 SelectObject(hdc, hVesselBrush);
                 SelectObject(hdc, hPurplePen);
-                Ellipse(hdc, 350, 126, 435, 189); // Core vessel ellipse
+                Ellipse(hdc, 350, 148, 435, 189); // Core vessel ellipse
 
                 SelectObject(hdc, hSlotFont);
                 SetTextColor(hdc, RGB(241, 196, 15));
-                RECT vLabelRect = { 350, 138, 435, 175 };
+                RECT vLabelRect = { 350, 150, 435, 185 };
                 DrawTextA(hdc, vesselLabel, -1, &vLabelRect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
 
                 // Status message centered below crucible buttons

@@ -1470,6 +1470,95 @@
       border-radius: 8px;
       border: 1px solid var(--border-color);
     }
+
+    /* Phase 12: Multiple Game Modes & Challenges Styles */
+    .mode-selector-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      background: rgba(9, 9, 20, 0.85);
+      padding: 4px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border-gold);
+      z-index: 2;
+    }
+
+    .mode-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-tab:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .mode-tab.active {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.3), rgba(155, 89, 182, 0.3));
+      color: var(--accent-gold-light);
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.4);
+    }
+
+    .mode-hud-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: linear-gradient(135deg, rgba(22, 21, 46, 0.95), rgba(45, 30, 75, 0.95));
+      border: 1px solid var(--border-gold);
+      border-radius: 12px;
+      padding: 8px 14px;
+      width: 95%;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6), 0 0 12px var(--glow-gold);
+      z-index: 2;
+    }
+
+    .hud-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hud-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .hud-val {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      text-shadow: 0 0 6px rgba(241, 196, 15, 0.5);
+    }
+
+    .btn-mode-action {
+      background: linear-gradient(135deg, #f39c12, #d4ac0d);
+      border: 1px solid #f1c40f;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(243, 156, 18, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-mode-action:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 14px rgba(243, 156, 18, 0.6);
+    }
   </style>
 </head>
 <body>
@@ -1509,6 +1598,14 @@
       <div class="stat-badge">
         <span class="label">Rank:</span>
         <span class="val" id="stat-rank">Apprentice</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Blitz Best:</span>
+        <span class="val" id="stat-blitz-high">0</span>
+      </div>
+      <div class="stat-badge">
+        <span class="label">Puzzle Best:</span>
+        <span class="val" id="stat-puzzle-high">0</span>
       </div>
     </div>
   </header>
@@ -1550,6 +1647,30 @@
 
     <!-- Center: Laboratory Panel -->
     <div class="panel crucible-panel">
+      <!-- Game Mode Selector Bar -->
+      <div class="mode-selector-bar">
+        <button class="mode-tab active" id="mode-tab-0" onclick="setGameMode(0)">🧪 Classic</button>
+        <button class="mode-tab" id="mode-tab-1" onclick="setGameMode(1)">⚡ Timed Blitz</button>
+        <button class="mode-tab" id="mode-tab-2" onclick="setGameMode(2)">🧩 Puzzle Crucible</button>
+      </div>
+
+      <!-- Timed Blitz HUD Banner -->
+      <div class="mode-hud-banner" id="blitz-hud" style="display: none;">
+        <div class="hud-stat"><span class="hud-label">⏳ Time Left</span><span class="hud-val" id="blitz-timer-val">60s</span></div>
+        <div class="hud-stat"><span class="hud-label">🏆 Blitz Score</span><span class="hud-val" id="blitz-score-val">0</span></div>
+        <div class="hud-stat"><span class="hud-label">👑 Best Score</span><span class="hud-val" id="blitz-high-val">0</span></div>
+        <button class="btn-mode-action" id="btn-blitz-start" onclick="startBlitzMode()">▶️ Start Blitz</button>
+      </div>
+
+      <!-- Puzzle Crucible HUD Banner -->
+      <div class="mode-hud-banner" id="puzzle-hud" style="display: none;">
+        <div class="hud-stat"><span class="hud-label">🎯 Target Goal</span><span class="hud-val" id="puzzle-target-val">Steam ♨️ (T2)</span></div>
+        <div class="hud-stat"><span class="hud-label">👣 Moves</span><span class="hud-val" id="puzzle-moves-val">0</span></div>
+        <div class="hud-stat"><span class="hud-label">⭐ Solved</span><span class="hud-val" id="puzzle-solved-val">0</span></div>
+        <div class="hud-stat"><span class="hud-label">👑 Best Solved</span><span class="hud-val" id="puzzle-high-val">0</span></div>
+        <button class="btn-mode-action" onclick="nextPuzzleTarget()">🔄 Skip Target</button>
+      </div>
+
       <!-- Equipment Selector Nav -->
       <div class="equipment-nav">
         <button class="equip-tab active" id="equip-crucible" onclick="selectEquipment('crucible')">🫕 Crucible</button>
@@ -1801,6 +1922,135 @@
     let potions = { strength: 0, invisibility: 0, mana: 0, life: 0 };
     let activeBuffs = { strength: 0, invisibility: 0, mana: 0, life: 0 };
 
+    // Phase 12: Multiple Game Modes & Challenges State
+    let gameMode = 0; // 0 = Classic, 1 = Timed Blitz, 2 = Puzzle Crucible
+    let blitzTimeLeft = 60;
+    let blitzScore = 0;
+    let blitzHighScore = 0;
+    let blitzActive = false;
+    let blitzTimerId = null;
+
+    let puzzleTargetId = 'steam';
+    let puzzleMoves = 0;
+    let puzzleSolvedCount = 0;
+    let puzzleHighScore = 0;
+
+    function setGameMode(mode) {
+      gameMode = mode;
+      document.querySelectorAll('.mode-tab').forEach((tab, idx) => {
+        if (idx === mode) tab.classList.add('active');
+        else tab.classList.remove('active');
+      });
+
+      const blitzHud = document.getElementById('blitz-hud');
+      const puzzleHud = document.getElementById('puzzle-hud');
+
+      if (mode === 1) {
+        if (blitzHud) blitzHud.style.display = 'flex';
+        if (puzzleHud) puzzleHud.style.display = 'none';
+        updateBlitzHUD();
+        addLog("⚡ <strong>TIMED ALCHEMY BLITZ:</strong> Click 'Start Blitz' to begin the 60-second element discovery challenge!", false, false, false, 'oracle');
+      } else if (mode === 2) {
+        if (blitzHud) blitzHud.style.display = 'none';
+        if (puzzleHud) puzzleHud.style.display = 'flex';
+        if (!puzzleTargetId) nextPuzzleTarget(false);
+        updatePuzzleHUD();
+        addLog("🧩 <strong>PUZZLE CRUCIBLE MODE:</strong> Synthesize the target element goal in as few moves as possible!", false, false, false, 'oracle');
+      } else {
+        if (blitzHud) blitzHud.style.display = 'none';
+        if (puzzleHud) puzzleHud.style.display = 'none';
+        addLog("🧪 Switched to <strong>Classic Discovery Mode</strong>.", false, false, false);
+      }
+      updateStats();
+      saveState();
+    }
+
+    function startBlitzMode() {
+      if (blitzTimerId) clearInterval(blitzTimerId);
+      blitzTimeLeft = 60;
+      blitzScore = 0;
+      blitzActive = true;
+      updateBlitzHUD();
+      const btn = document.getElementById('btn-blitz-start');
+      if (btn) btn.innerText = "🔄 Restart Blitz";
+      addLog("⚡ <strong>BLITZ STARTED!</strong> Discover and craft compounds before the 60s timer expires!", true, false, false);
+      playChime(880, 'sine', 0.2);
+
+      blitzTimerId = setInterval(() => {
+        if (!blitzActive) return;
+        blitzTimeLeft--;
+        updateBlitzHUD();
+        if (blitzTimeLeft <= 0) {
+          blitzTimeLeft = 0;
+          blitzActive = false;
+          clearInterval(blitzTimerId);
+          blitzTimerId = null;
+
+          let isHigh = false;
+          if (blitzScore > blitzHighScore) {
+            blitzHighScore = blitzScore;
+            isHigh = true;
+          }
+          saveState();
+          updateStats();
+          updateBlitzHUD();
+
+          if (isHigh) {
+            triggerToast("🏆 NEW BLITZ HIGH SCORE!", `Final Score: ${blitzScore} Pts! (New Record!)`, '👑');
+            addLog(`🏆 <strong>NEW BLITZ HIGH SCORE!</strong> You achieved ${blitzScore} Blitz Points!`, true, false, false, 'oracle');
+            playFanfareDiscovery();
+          } else {
+            triggerToast("⏰ Blitz Time's Up!", `Final Score: ${blitzScore} Pts (Record: ${blitzHighScore})`, '⏰');
+            addLog(`⏰ <strong>BLITZ FINISHED!</strong> Final Score: ${blitzScore} Pts (High Score: ${blitzHighScore} Pts)`, false, false, false);
+            playChime(350, 'square', 0.4);
+          }
+        }
+      }, 1000);
+    }
+
+    function updateBlitzHUD() {
+      const tEl = document.getElementById('blitz-timer-val');
+      if (tEl) tEl.innerText = `${blitzTimeLeft}s`;
+      const sEl = document.getElementById('blitz-score-val');
+      if (sEl) sEl.innerText = blitzScore;
+      const hEl = document.getElementById('blitz-high-val');
+      if (hEl) hEl.innerText = blitzHighScore;
+    }
+
+    function nextPuzzleTarget(logChange = true) {
+      const undiscovered = RECIPES.filter(r => !discoveredIds.has(r.result));
+      let chosen = null;
+      if (undiscovered.length > 0) {
+        chosen = undiscovered[Math.floor(Math.random() * undiscovered.length)];
+      } else {
+        chosen = RECIPES[Math.floor(Math.random() * RECIPES.length)];
+      }
+      if (chosen) {
+        puzzleTargetId = chosen.result;
+        puzzleMoves = 0;
+        updatePuzzleHUD();
+        const targetEl = ALL_ELEMENTS.find(e => e.id === puzzleTargetId);
+        if (logChange && targetEl) {
+          addLog(`🧩 <strong>NEW PUZZLE TARGET:</strong> Synthesize <strong>${targetEl.name}</strong> ${targetEl.icon} (Tier ${targetEl.tier})!`, false, false, false, 'oracle');
+          playChime(554, 'sine', 0.15);
+        }
+      }
+    }
+
+    function updatePuzzleHUD() {
+      const targetEl = ALL_ELEMENTS.find(e => e.id === puzzleTargetId);
+      const targetVal = document.getElementById('puzzle-target-val');
+      if (targetVal && targetEl) {
+        targetVal.innerText = `${targetEl.name} ${targetEl.icon} (T${targetEl.tier})`;
+      }
+      const mEl = document.getElementById('puzzle-moves-val');
+      if (mEl) mEl.innerText = puzzleMoves;
+      const sEl = document.getElementById('puzzle-solved-val');
+      if (sEl) sEl.innerText = puzzleSolvedCount;
+      const hEl = document.getElementById('puzzle-high-val');
+      if (hEl) hEl.innerText = puzzleHighScore;
+    }
+
     const PATRONS = [
       { name: 'Archmage Vaelen', icon: '🧙' },
       { name: 'Royal Blacksmith Thorin', icon: '🛡️' },
@@ -1858,9 +2108,13 @@
         localStorage.setItem('kalchemy_quests', JSON.stringify(quests));
         localStorage.setItem('kalchemy_upgrades', JSON.stringify(upgrades));
         localStorage.setItem('kalchemy_potions', JSON.stringify(potions));
-                localStorage.setItem('kalchemy_buffs', JSON.stringify(activeBuffs));
+        localStorage.setItem('kalchemy_buffs', JSON.stringify(activeBuffs));
         localStorage.setItem('kalchemy_craftCounts', JSON.stringify(elementCraftCounts));
         localStorage.setItem('kalchemy_useCounts', JSON.stringify(elementUseCounts));
+        localStorage.setItem('kalchemy_gameMode', gameMode);
+        localStorage.setItem('kalchemy_blitzHighScore', blitzHighScore);
+        localStorage.setItem('kalchemy_puzzleHighScore', puzzleHighScore);
+        localStorage.setItem('kalchemy_puzzleSolvedCount', puzzleSolvedCount);
       } catch(e){}
     }
 
@@ -1874,9 +2128,14 @@
         const savedQuests = localStorage.getItem('kalchemy_quests');
         const savedUpgrades = localStorage.getItem('kalchemy_upgrades');
         const savedPotions = localStorage.getItem('kalchemy_potions');
-                const savedBuffs = localStorage.getItem('kalchemy_buffs');
+        const savedBuffs = localStorage.getItem('kalchemy_buffs');
         const savedCrafts = localStorage.getItem('kalchemy_craftCounts');
         const savedUses = localStorage.getItem('kalchemy_useCounts');
+        const savedMode = localStorage.getItem('kalchemy_gameMode');
+        const savedBlitzHigh = localStorage.getItem('kalchemy_blitzHighScore');
+        const savedPuzzleHigh = localStorage.getItem('kalchemy_puzzleHighScore');
+        const savedPuzzleSolved = localStorage.getItem('kalchemy_puzzleSolvedCount');
+
         if (savedDisc) {
           const arr = JSON.parse(savedDisc);
           if (Array.isArray(arr) && arr.length > 0) {
@@ -1887,6 +2146,11 @@
         if (savedEssence !== null) essence = parseInt(savedEssence, 10) || 100;
         if (savedGold !== null) gold = parseInt(savedGold, 10) || 100;
         if (savedXP !== null) guildXP = parseInt(savedXP, 10) || 0;
+        if (savedMode !== null) gameMode = parseInt(savedMode, 10) || 0;
+        if (savedBlitzHigh !== null) blitzHighScore = parseInt(savedBlitzHigh, 10) || 0;
+        if (savedPuzzleHigh !== null) puzzleHighScore = parseInt(savedPuzzleHigh, 10) || 0;
+        if (savedPuzzleSolved !== null) puzzleSolvedCount = parseInt(savedPuzzleSolved, 10) || 0;
+
         if (savedQuests) {
           const qArr = JSON.parse(savedQuests);
           if (Array.isArray(qArr) && qArr.length === 3) quests = qArr;
@@ -2320,6 +2584,11 @@
       else if (size >= 12) rank = "Journeyman";
       else if (size >= 4) rank = "Adept";
       document.getElementById('stat-rank').innerText = rank;
+
+      const blitzElem = document.getElementById('stat-blitz-high');
+      if (blitzElem) blitzElem.innerText = blitzHighScore;
+      const puzzleElem = document.getElementById('stat-puzzle-high');
+      if (puzzleElem) puzzleElem.innerText = puzzleHighScore;
     }
 
     function setTierFilter(tierId) {
@@ -2600,6 +2869,32 @@
           }
 
           const isNew = !discoveredIds.has(resElement.id);
+          recordElementUsage(resElement.id, id1, id2);
+
+          // Phase 12 Mode Checks
+          if (gameMode === 1 && blitzActive) {
+            let pts = resElement.tier * 50;
+            if (isNew) pts += 100;
+            blitzScore += pts;
+            if (blitzScore > blitzHighScore) blitzHighScore = blitzScore;
+            updateBlitzHUD();
+          }
+
+          if (gameMode === 2) {
+            puzzleMoves++;
+            if (match.result === puzzleTargetId) {
+              puzzleSolvedCount++;
+              if (puzzleSolvedCount > puzzleHighScore) puzzleHighScore = puzzleSolvedCount;
+              saveState();
+              updatePuzzleHUD();
+              triggerToast("🧩 PUZZLE SOLVED!", `Synthesized ${resElement.name} in ${puzzleMoves} moves!`, resElement.icon);
+              addLog(`🧩 <strong>PUZZLE SOLVED!</strong> Successfully synthesized <strong>${resElement.name}</strong> ${resElement.icon} in ${puzzleMoves} moves! (Solved: ${puzzleSolvedCount})`, true, false, false, 'oracle');
+              playFanfareDiscovery();
+              setTimeout(() => nextPuzzleTarget(true), 1500);
+            } else {
+              updatePuzzleHUD();
+            }
+          }
 
           if (isNew) {
             discoveredIds.add(resElement.id);
@@ -2622,6 +2917,11 @@
               essence += 20;
               gold += 15;
               critStr = ` 🔥 <strong>CRITICAL TRANSMUTATION!</strong> (+20 Essence, +15 Gold)`;
+              if (gameMode === 1 && blitzActive) {
+                blitzScore += 50;
+                if (blitzScore > blitzHighScore) blitzHighScore = blitzScore;
+                updateBlitzHUD();
+              }
             }
 
             saveState();
@@ -2640,6 +2940,10 @@
             playChime(659, 'sine', 0.25);
           }
         } else {
+          if (gameMode === 2) {
+            puzzleMoves++;
+            updatePuzzleHUD();
+          }
           orb.innerText = '💨';
           addLog(`The reaction fizzles! No transmutation found for ${selectedSlots[0].name} + ${selectedSlots[1].name}.`, false, true, false);
           playChime(180, 'sawtooth', 0.3);
@@ -3123,6 +3427,7 @@
     updateStats();
     renderGrimoire();
     updateSlotsUI();
+    setGameMode(gameMode);
   </script>
 
   <!-- Master Alchemist Codex Inspector Modal -->
