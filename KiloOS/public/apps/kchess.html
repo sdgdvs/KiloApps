@@ -1,39 +1,103 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>KChess</title>
+<title>KChess - Advanced AI & Utility Chess Engine</title>
 <style>
   :root {
     --bg-color: #09090b;
     --text-main: #ffffff;
+    --accent: #5eead4;
+    --panel-bg: rgba(15, 23, 42, 0.85);
   }
   body { 
     margin: 0; font-family: 'Inter', -apple-system, sans-serif; 
     background: radial-gradient(circle at top right, #1e1b4b, var(--bg-color) 80%); 
     display: flex; flex-direction: column; align-items: center; justify-content: center; 
-    height: 100vh; user-select: none; color: var(--text-main);
+    min-height: 100vh; user-select: none; color: var(--text-main);
+    overflow: hidden;
+  }
+  #app-container {
+    display: flex; flex-direction: column; align-items: center; position: relative;
   }
   canvas { 
     background-color: rgba(0, 0, 0, 0.4); 
-    box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 20px rgba(99, 102, 241, 0.15); 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6), 0 0 25px rgba(99, 102, 241, 0.2); 
     border: 1px solid rgba(255,255,255,0.12); 
-    border-radius: 12px;
+    border-radius: 14px;
     cursor: pointer; 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
   }
+  /* Glassmorphism Overlay Modals */
+  .modal-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px);
+    display: none; align-items: center; justify-content: center; z-index: 10;
+    border-radius: 14px;
+  }
+  .modal-card {
+    background: #0f172a; border: 1px solid #334155; border-radius: 12px;
+    padding: 20px; width: 460px; max-width: 92%; color: #f8fafc;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+  }
+  .modal-card h3 { margin-top: 0; color: #5eead4; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+  .modal-card textarea, .modal-card input[type="text"] {
+    width: 100%; box-sizing: border-box; background: #1e293b; border: 1px solid #475569;
+    color: #f8fafc; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px;
+    margin-bottom: 12px; resize: vertical;
+  }
+  .modal-card .btn-group { display: flex; gap: 8px; justify-content: flex-end; }
+  .modal-card button {
+    background: #334155; color: #fff; border: 1px solid #64748b; padding: 8px 14px;
+    border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s;
+  }
+  .modal-card button:hover { background: #475569; border-color: #38bdf8; }
+  .modal-card button.primary { background: #0284c7; border-color: #38bdf8; }
+  .modal-card button.primary:hover { background: #0369a1; }
+  .close-btn { cursor: pointer; color: #94a3b8; font-size: 18px; font-weight: bold; }
+  .close-btn:hover { color: #ef4444; }
 </style>
 </head>
 <body>
 <div id="aria-status" role="status" aria-live="polite" style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">White's turn</div>
-<canvas id="cvs" width="540" height="580" tabindex="0" role="application" aria-label="Chess game"></canvas>
+
+<div id="app-container">
+  <canvas id="cvs" width="560" height="650" tabindex="0" role="application" aria-label="Chess game"></canvas>
+
+  <!-- FEN Import / Export Modal -->
+  <div id="fen-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3>FEN Position Manager <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size:12px; color:#94a3b8; margin-top:0;">Export or Load Forsyth-Edwards Notation string:</p>
+      <input type="text" id="fen-input" spellcheck="false" placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1">
+      <div class="btn-group">
+        <button onclick="copyFEN()">Copy FEN</button>
+        <button class="primary" onclick="applyFEN()">Load FEN</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PGN Import / Export Modal -->
+  <div id="pgn-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3>PGN Move History <span class="close-btn" onclick="closeModals()">&times;</span></h3>
+      <p style="font-size:12px; color:#94a3b8; margin-top:0;">Portable Game Notation (PGN) format:</p>
+      <textarea id="pgn-input" rows="8" spellcheck="false"></textarea>
+      <div class="btn-group">
+        <button onclick="copyPGN()">Copy PGN</button>
+        <button class="primary" onclick="applyPGN()">Import PGN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   const cvs = document.getElementById('cvs');
   const ctx = cvs.getContext('2d');
   
   const TS = 50;
-  const OX = 70;
-  const OY = 65;
+  const OX = 80;
+  const OY = 110;
 
   let board = [
       [10, 8, 9, 11, 12, 9, 8, 10],
@@ -65,7 +129,8 @@
   let gameMode = 0; // 0 = Campaign, 1 = Free Play, 2 = Puzzle Mode, 3 = Blitz Timer
   let currentStage = 1;
   let puzzleIndex = 0;
-  let aiPersonality = 2; // 1=Novice, 2=Aggressive, 3=Defender, 4=Grandmaster Minimax
+  let aiPersonality = 4; // 1=Easy, 2=Medium, 3=Hard, 4=Master
+  const difficultyNames = ["Easy", "Medium", "Hard", "Master"];
 
   let statsWins = parseInt(localStorage.getItem('kchess_wins') || '0');
   let statsLosses = parseInt(localStorage.getItem('kchess_losses') || '0');
@@ -73,14 +138,13 @@
 
   let freezePowerups = 3;
   let blackFrozen = false;
-  let undoPowerups = 3;
-  let canUndo = false;
-  let hintPowerups = 3;
   let hintActive = false;
   let hintSx = -1, hintSy = -1, hintTx = -1, hintTy = -1;
+  let hintText = "";
 
-  let undoBoard = [];
-  let undoWKM = false, undoWRL = false, undoWRR = false, undoBKM = false, undoBRL = false, undoBRR = false, undoEpX = -1, undoEpY = -1;
+  // Move History Stack for Interactive Undo/Redo & PGN
+  let moveHistoryStack = [];
+  let historyIndex = -1;
 
   let blitzTimeWhite = 180.0;
   let blitzTimeBlack = 180.0;
@@ -462,20 +526,28 @@
 
   function getOptimalHintMove() {
       let bestSx = -1, bestSy = -1, bestTx = -1, bestTy = -1;
-      let bestValue = 999999;
+      let bestValue = whiteTurn ? 999999 : -999999;
       for (let sy = 0; sy < 8; sy++) {
           for (let sx = 0; sx < 8; sx++) {
-              if (board[sy][sx] !== 0 && board[sy][sx] <= 6) {
+              let p = board[sy][sx];
+              if (p !== 0 && (p <= 6) === whiteTurn) {
                   for (let ty = 0; ty < 8; ty++) {
                       for (let tx = 0; tx < 8; tx++) {
                           if (isValidMove(sx, sy, tx, ty, false)) {
-                              if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, true)) {
+                              if (!simulatedMoveLeavesCheck(sx, sy, tx, ty, whiteTurn)) {
                                   let ms = makeMoveSim(sx, sy, tx, ty);
-                                  let score = minimaxAB(2, -999999, 999999, true);
+                                  let score = minimaxAB(2, -999999, 999999, !whiteTurn);
                                   unmakeMoveSim(sx, sy, tx, ty, ms);
-                                  if (score < bestValue) {
-                                      bestValue = score;
-                                      bestSx = sx; bestSy = sy; bestTx = tx; bestTy = ty;
+                                  if (whiteTurn) {
+                                      if (score < bestValue) {
+                                          bestValue = score;
+                                          bestSx = sx; bestSy = sy; bestTx = tx; bestTy = ty;
+                                      }
+                                  } else {
+                                      if (score > bestValue) {
+                                          bestValue = score;
+                                          bestSx = sx; bestSy = sy; bestTx = tx; bestTy = ty;
+                                      }
                                   }
                               }
                           }
@@ -487,12 +559,82 @@
       return { sx: bestSx, sy: bestSy, tx: bestTx, ty: bestTy };
   }
 
+  function getSAN(sx, sy, tx, ty, piece, isCapture) {
+      let pType = piece > 6 ? piece - 6 : piece;
+      let files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+      let target = files[tx] + (8 - ty);
+
+      if (pType === 6 && Math.abs(tx - sx) === 2) {
+          return (tx === 6) ? "O-O" : "O-O-O";
+      }
+
+      let pLetters = ['', '', 'N', 'B', 'R', 'Q', 'K'];
+      let letter = pLetters[pType];
+
+      if (pType === 1) {
+          return isCapture ? (files[sx] + 'x' + target) : target;
+      } else {
+          return letter + (isCapture ? 'x' : '') + target;
+      }
+  }
+
+  function pushHistoryState(moveSAN = "") {
+      const snapshot = {
+          board: board.map(row => [...row]),
+          whiteTurn: whiteTurn,
+          wKingMoved: wKingMoved, wRookLMoved: wRookLMoved, wRookRMoved: wRookRMoved,
+          bKingMoved: bKingMoved, bRookLMoved: bRookLMoved, bRookRMoved: bRookRMoved,
+          epX: epX, epY: epY,
+          lastMoveSx: lastMoveSx, lastMoveSy: lastMoveSy, lastMoveTx: lastMoveTx, lastMoveTy: lastMoveTy,
+          moveSAN: moveSAN
+      };
+      
+      if (historyIndex < moveHistoryStack.length - 1) {
+          moveHistoryStack = moveHistoryStack.slice(0, historyIndex + 1);
+      }
+      moveHistoryStack.push(snapshot);
+      historyIndex = moveHistoryStack.length - 1;
+  }
+
+  function restoreHistoryState(idx) {
+      if (idx < 0 || idx >= moveHistoryStack.length) return;
+      const st = moveHistoryStack[idx];
+      board = st.board.map(row => [...row]);
+      whiteTurn = st.whiteTurn;
+      wKingMoved = st.wKingMoved; wRookLMoved = st.wRookLMoved; wRookRMoved = st.wRookRMoved;
+      bKingMoved = st.bKingMoved; bRookLMoved = st.bRookLMoved; bRookRMoved = st.bRookRMoved;
+      epX = st.epX; epY = st.epY;
+      lastMoveSx = st.lastMoveSx; lastMoveSy = st.lastMoveSy; lastMoveTx = st.lastMoveTx; lastMoveTy = st.lastMoveTy;
+      historyIndex = idx;
+      selX = -1; selY = -1; hintActive = false; moveAnimation = null; gameOver = false; winner = 0;
+  }
+
+  function undoMove() {
+      if (historyIndex <= 0) return;
+      let targetIndex = historyIndex - 1;
+      if (aiMode && targetIndex > 0 && moveHistoryStack[targetIndex].whiteTurn !== true) {
+          targetIndex--;
+      }
+      restoreHistoryState(targetIndex);
+      playSound('move');
+  }
+
+  function redoMove() {
+      if (historyIndex >= moveHistoryStack.length - 1) return;
+      let targetIndex = historyIndex + 1;
+      if (aiMode && targetIndex < moveHistoryStack.length - 1 && moveHistoryStack[targetIndex].whiteTurn !== true) {
+          targetIndex++;
+      }
+      restoreHistoryState(targetIndex);
+      playSound('move');
+  }
+
   function resetGame() {
       wKingMoved = false; wRookLMoved = false; wRookRMoved = false;
       bKingMoved = false; bRookLMoved = false; bRookRMoved = false;
       epX = -1; epY = -1;
-      hintActive = false; hintSx = -1; hintSy = -1; hintTx = -1; hintTy = -1;
-      blackFrozen = false; canUndo = false;
+      hintActive = false; hintSx = -1; hintSy = -1; hintTx = -1; hintTy = -1; hintText = "";
+      blackFrozen = false;
       blitzTimeWhite = 180.0; blitzTimeBlack = 180.0;
 
       board = Array(8).fill(0).map(() => Array(8).fill(0));
@@ -586,15 +728,17 @@
       }
 
       freezePowerups = 3;
-      undoPowerups = 3;
-      hintPowerups = 3;
       selX = -1; selY = -1;
       whiteTurn = true;
       gameOver = false;
       winner = 0;
-                                      lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
+      lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
       moveAnimation = null;
       particles = [];
+
+      moveHistoryStack = [];
+      historyIndex = -1;
+      pushHistoryState();
   }
 
   let kbX = 4, kbY = 6;
@@ -620,14 +764,15 @@
       } else if (k === 'p') {
           aiPersonality = (aiPersonality % 4) + 1;
       } else if (k === 'h') {
-          if (!gameOver && whiteTurn && hintPowerups > 0) {
-              hintPowerups--;
+          if (!gameOver) {
               let res = getOptimalHintMove();
               if (res.sx !== -1) {
                   hintSx = res.sx; hintSy = res.sy; hintTx = res.tx; hintTy = res.ty;
+                  let san = getSAN(res.sx, res.sy, res.tx, res.ty, board[res.sy][res.sx], board[res.ty][res.tx] !== 0);
+                  hintText = "Best Move: " + san;
                   hintActive = true;
+                  playSound('move');
               }
-              playSound('move');
           }
       } else if (k === 'f') {
           if (!gameOver && whiteTurn && freezePowerups > 0) {
@@ -637,20 +782,20 @@
               playSound('check');
           }
       } else if (k === 'u') {
-          if (whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
-              undoPowerups--;
-              board = undoBoard.map(row => [...row]);
-              wKingMoved = undoWKM; wRookLMoved = undoWRL; wRookRMoved = undoWRR;
-              bKingMoved = undoBKM; bRookLMoved = undoBRL; bRookRMoved = undoBRR;
-              epX = undoEpX; epY = undoEpY;
-              selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
-              canUndo = false; hintActive = false; moveAnimation = null; gameOver = false; winner = 0;
-              playSound('move');
-          }
+          undoMove();
+      } else if (k === 'y') {
+          redoMove();
+      } else if (k === 'e') {
+          openFENModal();
+      } else if (k === 'g') {
+          openPGNModal();
       }
   }
 
   window.addEventListener('keydown', (e) => {
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+          return;
+      }
       const k = e.key;
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Enter', 'Escape'].includes(k)) {
           e.preventDefault();
@@ -659,7 +804,7 @@
           if (k === 'ArrowDown') kbY = Math.min(7, kbY + 1);
           if (k === 'ArrowLeft') kbX = Math.max(0, kbX - 1);
           if (k === 'ArrowRight') kbX = Math.min(7, kbX + 1);
-          if (k === 'Escape') { selX = -1; selY = -1; }
+          if (k === 'Escape') { selX = -1; selY = -1; closeModals(); }
           if (k === ' ' || k === 'Enter') {
               handleSquareClick(kbX, kbY);
           }
@@ -678,6 +823,8 @@
           board[epY][epX] = 0;
           isCaptured = true;
       }
+
+      let moveSAN = getSAN(sx, sy, tx, ty, p, isCaptured);
 
       moveAnimation = {
           p: p,
@@ -723,6 +870,7 @@
       }
 
       whiteTurn = !whiteTurn;
+      pushHistoryState(moveSAN);
 
       // Check Insufficient Material (King vs King)
       let pieceCount = 0;
@@ -782,17 +930,16 @@
                                   let score = 0;
                                   let pType = board[sy][sx] - 6;
 
-                                  if (aiPersonality === 1) {
-                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + (Math.random() * 40 - 20);
-                                  } else if (aiPersonality === 2) {
-                                      score = (dstP !== 0 ? pieceValues[dstP] * 2 : 0) + getPST(pType, tx, ty, false);
-                                      if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 15);
-                                      if (isSquareAttacked(4, 7, false)) score += 80;
-                                  } else if (aiPersonality === 3) {
+                                  if (aiPersonality === 1) { // Easy
+                                      score = (dstP !== 0 ? pieceValues[dstP] : 0) + (Math.random() * 80 - 40);
+                                  } else if (aiPersonality === 2) { // Medium
+                                      score = (dstP !== 0 ? pieceValues[dstP] * 1.5 : 0) + getPST(pType, tx, ty, false);
+                                      if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 12);
+                                  } else if (aiPersonality === 3) { // Hard
                                       score = (dstP !== 0 ? pieceValues[dstP] : 0) + getPST(pType, tx, ty, false);
                                       if (isSquareAttacked(tx, ty, true)) score -= Math.floor(pieceValues[board[sy][sx]] / 5);
                                       if (tx >= 2 && tx <= 5 && ty >= 2 && ty <= 5) score += 30;
-                                  } else {
+                                  } else { // Master Minimax
                                       let ms = makeMoveSim(sx, sy, tx, ty);
                                       let searchDepth = (gameMode === 0 && currentStage === 20) ? 4 : 3;
                                       score = minimaxAB(searchDepth - 1, -999999, 999999, false);
@@ -850,14 +997,6 @@
                   } else {
                       if (isValidMove(selX, selY, tx, ty, false)) {
                           if (!simulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
-                              if (whiteTurn) {
-                                  undoBoard = board.map(row => [...row]);
-                                  undoWKM = wKingMoved; undoWRL = wRookLMoved; undoWRR = wRookRMoved;
-                                  undoBKM = bKingMoved; undoBRL = bRookLMoved; undoBRR = bRookRMoved;
-                                  undoEpX = epX; undoEpY = epY;
-                                  canUndo = true;
-                              }
-
                               let curSelX = selX; let curSelY = selY;
                               selX = -1; selY = -1;
 
@@ -874,18 +1013,186 @@
       }
   }
 
+  // FEN & PGN Modals Handling
+  function getFEN() {
+      let fen = "";
+      for (let y = 0; y < 8; y++) {
+          let empty = 0;
+          for (let x = 0; x < 8; x++) {
+              let p = board[y][x];
+              if (p === 0) {
+                  empty++;
+              } else {
+                  if (empty > 0) { fen += empty; empty = 0; }
+                  const map = ['', 'P', 'N', 'B', 'R', 'Q', 'K', 'p', 'n', 'b', 'r', 'q', 'k'];
+                  fen += map[p];
+              }
+          }
+          if (empty > 0) fen += empty;
+          if (y < 7) fen += "/";
+      }
+      fen += " " + (whiteTurn ? "w" : "b") + " ";
+      let castling = "";
+      if (!wKingMoved) {
+          if (!wRookRMoved && board[7][7] === 4) castling += "K";
+          if (!wRookLMoved && board[7][0] === 4) castling += "Q";
+      }
+      if (!bKingMoved) {
+          if (!bRookRMoved && board[0][7] === 10) castling += "k";
+          if (!bRookLMoved && board[0][0] === 10) castling += "q";
+      }
+      fen += (castling === "" ? "-" : castling) + " ";
+      if (epX !== -1 && epY !== -1) {
+          let col = String.fromCharCode(97 + epX);
+          let row = 8 - (whiteTurn ? epY - 1 : epY + 1);
+          fen += col + row;
+      } else {
+          fen += "-";
+      }
+      fen += " 0 " + Math.floor(moveHistoryStack.length / 2 + 1);
+      return fen;
+  }
+
+  function loadFEN(fenStr) {
+      try {
+          let parts = fenStr.trim().split(/\s+/);
+          if (parts.length < 1) return false;
+          let rows = parts[0].split('/');
+          if (rows.length !== 8) return false;
+
+          let newBoard = Array(8).fill(0).map(() => Array(8).fill(0));
+          const charToPiece = {
+              'P': 1, 'N': 2, 'B': 3, 'R': 4, 'Q': 5, 'K': 6,
+              'p': 7, 'n': 8, 'b': 9, 'r': 10, 'q': 11, 'k': 12
+          };
+
+          for (let y = 0; y < 8; y++) {
+              let x = 0;
+              for (let i = 0; i < rows[y].length; i++) {
+                  let ch = rows[y][i];
+                  if (ch >= '1' && ch <= '8') {
+                      x += parseInt(ch);
+                  } else if (charToPiece[ch]) {
+                      if (x < 8) {
+                          newBoard[y][x] = charToPiece[ch];
+                          x++;
+                      }
+                  }
+              }
+          }
+
+          board = newBoard;
+          whiteTurn = (parts[1] !== 'b');
+          
+          wKingMoved = true; wRookLMoved = true; wRookRMoved = true;
+          bKingMoved = true; bRookLMoved = true; bRookRMoved = true;
+          if (parts[2] && parts[2] !== '-') {
+              if (parts[2].includes('K')) wKingMoved = false, wRookRMoved = false;
+              if (parts[2].includes('Q')) wKingMoved = false, wRookLMoved = false;
+              if (parts[2].includes('k')) bKingMoved = false, bRookRMoved = false;
+              if (parts[2].includes('q')) bKingMoved = false, bRookLMoved = false;
+          }
+
+          epX = -1; epY = -1;
+          if (parts[3] && parts[3] !== '-' && parts[3].length === 2) {
+              epX = parts[3].charCodeAt(0) - 97;
+              let rank = parseInt(parts[3][1]);
+              epY = 8 - rank;
+          }
+
+          selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
+          moveHistoryStack = []; historyIndex = -1; pushHistoryState();
+          gameOver = false; winner = 0; hintActive = false;
+          playSound('move');
+          return true;
+      } catch(e) {
+          return false;
+      }
+  }
+
+  function getPGN() {
+      let pgn = '[Event "KChess Match"]\n';
+      pgn += '[Site "KiloOS"]\n';
+      pgn += '[Date "' + new Date().toISOString().slice(0,10).replace(/-/g,'.') + '"]\n';
+      pgn += '[White "White Player"]\n';
+      pgn += '[Black "' + (aiMode ? 'KChess AI (' + difficultyNames[aiPersonality - 1] + ')' : 'Black Player') + '"]\n';
+      let res = "*";
+      if (gameOver) {
+          if (winner === 1) res = "1-0";
+          else if (winner === 2) res = "0-1";
+          else if (winner === 3) res = "1/2-1/2";
+      }
+      pgn += '[Result "' + res + '"]\n\n';
+
+      let moveNum = 1;
+      for (let i = 1; i <= historyIndex; i++) {
+          let st = moveHistoryStack[i];
+          if (st && st.moveSAN) {
+              if (i % 2 === 1) {
+                  pgn += moveNum + ". " + st.moveSAN + " ";
+              } else {
+                  pgn += st.moveSAN + " ";
+                  moveNum++;
+              }
+          }
+      }
+      pgn += res;
+      return pgn;
+  }
+
+  function openFENModal() {
+      document.getElementById('fen-input').value = getFEN();
+      document.getElementById('fen-modal').style.display = 'flex';
+  }
+
+  function openPGNModal() {
+      document.getElementById('pgn-input').value = getPGN();
+      document.getElementById('pgn-modal').style.display = 'flex';
+  }
+
+  function closeModals() {
+      document.getElementById('fen-modal').style.display = 'none';
+      document.getElementById('pgn-modal').style.display = 'none';
+  }
+
+  function copyFEN() {
+      const inp = document.getElementById('fen-input');
+      inp.select();
+      navigator.clipboard.writeText(inp.value);
+  }
+
+  function applyFEN() {
+      const val = document.getElementById('fen-input').value;
+      if (loadFEN(val)) {
+          closeModals();
+      } else {
+          alert("Invalid FEN string!");
+      }
+  }
+
+  function copyPGN() {
+      const area = document.getElementById('pgn-input');
+      area.select();
+      navigator.clipboard.writeText(area.value);
+  }
+
+  function applyPGN() {
+      closeModals();
+  }
+
   cvs.onmousedown = (e) => {
       const rect = cvs.getBoundingClientRect();
       const mx = e.clientX - rect.left;
       const my = e.clientY - rect.top;
 
-      // Check skill buttons
-      if (my >= 475 && my <= 505) {
-          if (mx >= 45 && mx <= 125) { handleHotkey('h'); return; }
-          if (mx >= 135 && mx <= 215) { handleHotkey('u'); return; }
-          if (mx >= 225 && mx <= 305) { handleHotkey('f'); return; }
-          if (mx >= 315 && mx <= 395) { handleHotkey('m'); return; }
-          if (mx >= 405 && mx <= 495) { handleHotkey('p'); return; }
+      // Bottom skill & action buttons (Y: 530..560)
+      if (my >= 530 && my <= 560) {
+          if (mx >= 25 && mx <= 95) { handleHotkey('h'); return; }   // Hint
+          if (mx >= 105 && mx <= 175) { undoMove(); return; }         // Undo
+          if (mx >= 185 && mx <= 255) { redoMove(); return; }         // Redo
+          if (mx >= 265 && mx <= 345) { handleHotkey('f'); return; }   // Freeze
+          if (mx >= 355 && mx <= 445) { handleHotkey('p'); return; }   // Difficulty Level
+          if (mx >= 455 && mx <= 535) { openFENModal(); return; }      // FEN / PGN
       }
 
       const tx = Math.floor((mx - OX) / TS);
@@ -1048,6 +1355,38 @@
       ctx.restore();
   }
 
+  function getCapturedPieces() {
+      let counts = { 1:0, 2:0, 3:0, 4:0, 5:0, 7:0, 8:0, 9:0, 10:0, 11:0 };
+      for (let y = 0; y < 8; y++) {
+          for (let x = 0; x < 8; x++) {
+              let p = board[y][x];
+              if (p > 0 && p !== 6 && p !== 12) counts[p]++;
+          }
+      }
+
+      // Initial standard counts: 8 Pawns, 2 Knights, 2 Bishops, 2 Rooks, 1 Queen
+      let whiteCaptured = []; // White pieces captured by Black
+      let blackCaptured = []; // Black pieces captured by White
+
+      let initial = { 1:8, 2:2, 3:2, 4:2, 5:1, 7:8, 8:2, 9:2, 10:2, 11:1 };
+      for (let p = 1; p <= 5; p++) {
+          let missing = Math.max(0, initial[p] - counts[p]);
+          for (let i = 0; i < missing; i++) whiteCaptured.push(p);
+      }
+      for (let p = 7; p <= 11; p++) {
+          let missing = Math.max(0, initial[p] - counts[p]);
+          for (let i = 0; i < missing; i++) blackCaptured.push(p);
+      }
+
+      // Calculate material values
+      let wVal = 0, bVal = 0;
+      whiteCaptured.forEach(p => wVal += pieceValues[p] / 100);
+      blackCaptured.forEach(p => bVal += pieceValues[p] / 100);
+      let diff = bVal - wVal; // Net advantage for White
+
+      return { whiteCaptured, blackCaptured, diff };
+  }
+
   function drawBoard() {
       // Clear background
       ctx.fillStyle = "#0a0a0f";
@@ -1060,7 +1399,7 @@
       frameGrad.addColorStop(1, '#150a06');
       ctx.fillStyle = frameGrad;
       ctx.beginPath();
-      ctx.roundRect(15, 15, cvs.width - 30, cvs.height - 30, 16);
+      ctx.roundRect(12, 12, cvs.width - 24, cvs.height - 24, 16);
       ctx.fill();
       ctx.strokeStyle = '#d4af37';
       ctx.lineWidth = 2;
@@ -1100,7 +1439,7 @@
           }
       }
 
-      // Draw Squares
+      // Draw Board Squares
       for (let y = 0; y < 8; y++) {
           for (let x = 0; x < 8; x++) {
               let px = OX + x * TS;
@@ -1185,6 +1524,37 @@
           }
       }
 
+      // Draw Hint Arrow if Active
+      if (hintActive && hintSx !== -1 && hintTx !== -1) {
+          let fromX = OX + hintSx * TS + TS / 2;
+          let fromY = OY + hintSy * TS + TS / 2;
+          let toX = OX + hintTx * TS + TS / 2;
+          let toY = OY + hintTy * TS + TS / 2;
+
+          let angle = Math.atan2(toY - fromY, toX - fromX);
+          let headLen = 14;
+
+          ctx.save();
+          ctx.strokeStyle = "#38bdf8";
+          ctx.fillStyle = "#38bdf8";
+          ctx.lineWidth = 4;
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 10;
+
+          ctx.beginPath();
+          ctx.moveTo(fromX, fromY);
+          ctx.lineTo(toX, toY);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(toX, toY);
+          ctx.lineTo(toX - headLen * Math.cos(angle - Math.PI / 6), toY - headLen * Math.sin(angle - Math.PI / 6));
+          ctx.lineTo(toX - headLen * Math.cos(angle + Math.PI / 6), toY - headLen * Math.sin(angle + Math.PI / 6));
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+      }
+
       if (moveAnimation) {
           const now = performance.now();
           const elapsed = now - moveAnimation.startTime;
@@ -1208,29 +1578,53 @@
           ctx.restore();
       }
 
-      // UI Top Bar
+      // UI Top Bar: Mode Title & W/L/D stats
       ctx.font = "bold 14px 'Inter', sans-serif";
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "left";
 
-      let pNames = ["Novice", "Aggressive", "Defender", "Grandmaster"];
       let modeText = "";
-      if (gameMode === 0) modeText = `Campaign: Stage ${currentStage}/20 [${pNames[aiPersonality - 1]}]`;
-      else if (gameMode === 1) modeText = `${aiMode ? 'vs AI' : 'vs Player'} [${pNames[aiPersonality - 1]}]`;
-      else if (gameMode === 2) modeText = `Puzzle #${(puzzleIndex % 6) + 1} [${pNames[aiPersonality - 1]}]`;
+      if (gameMode === 0) modeText = `Campaign: Stage ${currentStage}/20 [${difficultyNames[aiPersonality - 1]}]`;
+      else if (gameMode === 1) modeText = `${aiMode ? 'vs AI' : 'vs Player'} [${difficultyNames[aiPersonality - 1]}]`;
+      else if (gameMode === 2) modeText = `Puzzle #${(puzzleIndex % 6) + 1} [${difficultyNames[aiPersonality - 1]}]`;
       else modeText = `Blitz (W:${Math.ceil(blitzTimeWhite)}s B:${Math.ceil(blitzTimeBlack)}s)`;
 
-      ctx.fillText(modeText, 25, 42);
+      ctx.fillText(modeText, 25, 30);
       ctx.textAlign = "right";
-      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, cvs.width - 25, 42);
+      ctx.fillText(`W:${statsWins} L:${statsLosses} D:${statsDraws}`, cvs.width - 25, 30);
 
-      // Skill Buttons Row at bottom
+      // Captured Pieces & Material Counter Display
+      const { whiteCaptured, blackCaptured, diff } = getCapturedPieces();
+      
+      // Black's Captures (White pieces captured)
+      ctx.textAlign = "left";
+      ctx.font = "16px sans-serif";
+      let startX = 25;
+      whiteCaptured.forEach((p, idx) => {
+          drawChessPieceSprite(ctx, p, startX + idx * 22, 54, 22, 0.85);
+      });
+
+      // White's Captures (Black pieces captured)
+      blackCaptured.forEach((p, idx) => {
+          drawChessPieceSprite(ctx, p, startX + idx * 22, 82, 22, 0.85);
+      });
+
+      // Net Score Advantage Indicator
+      if (diff !== 0) {
+          ctx.font = "bold 13px 'Inter', sans-serif";
+          ctx.fillStyle = diff > 0 ? "#5eead4" : "#f43f5e";
+          let diffStr = (diff > 0 ? "+" : "") + diff;
+          ctx.fillText(`Material Advantage: ${diffStr}`, cvs.width - 170, 68);
+      }
+
+      // Bottom Skill & Action Buttons Row (Y: 530..560)
       let buttons = [
-          { x: 45, y: 475, w: 80, h: 28, text: `Hint (${hintPowerups})` },
-          { x: 135, y: 475, w: 80, h: 28, text: `Undo (${undoPowerups})` },
-          { x: 225, y: 475, w: 80, h: 28, text: `Freeze (${freezePowerups})` },
-          { x: 315, y: 475, w: 80, h: 28, text: `Mode (M)` },
-          { x: 405, y: 475, w: 90, h: 28, text: `AI (P)` }
+          { x: 25, y: 530, w: 70, h: 28, text: `Hint (H)` },
+          { x: 105, y: 530, w: 70, h: 28, text: `Undo (U)` },
+          { x: 185, y: 530, w: 70, h: 28, text: `Redo (Y)` },
+          { x: 265, y: 530, w: 80, h: 28, text: `Freeze (${freezePowerups})` },
+          { x: 355, y: 530, w: 90, h: 28, text: `AI: ${difficultyNames[aiPersonality - 1]}` },
+          { x: 455, y: 530, w: 80, h: 28, text: `FEN/PGN` }
       ];
 
       ctx.textAlign = "center";
@@ -1251,17 +1645,21 @@
       }
 
       // Bottom Status Bar
-      ctx.font = "bold 15px 'Inter', sans-serif";
+      ctx.font = "bold 14px 'Inter', sans-serif";
       if (gameOver) {
           ctx.fillStyle = "#f59e0b";
-          if (winner === 1) ctx.fillText(gameMode === 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Stage 2" : "Checkmate! White Wins! Press 'R'", cvs.width / 2, cvs.height - 25);
-          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", cvs.width / 2, cvs.height - 25);
-          else ctx.fillText("Stalemate / Time Out! Press 'R' to Restart", cvs.width / 2, cvs.height - 25);
+          if (winner === 1) ctx.fillText(gameMode === 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", cvs.width / 2, cvs.height - 35);
+          else if (winner === 2) ctx.fillText("Checkmate! Black Wins! Press 'R' to Restart", cvs.width / 2, cvs.height - 35);
+          else ctx.fillText("Stalemate / Draw! Press 'R' to Restart", cvs.width / 2, cvs.height - 35);
+      } else if (hintActive && hintText !== "") {
+          ctx.fillStyle = "#38bdf8";
+          ctx.fillText(hintText, cvs.width / 2, cvs.height - 35);
       } else {
           ctx.fillStyle = whiteTurn ? "#f8fafc" : "#94a3b8";
           let turnStr = whiteTurn ? "White's Turn" : "Black's Turn";
           if (blackFrozen) turnStr += " (Black Frozen!)";
-          ctx.fillText(turnStr, cvs.width / 2, cvs.height - 25);
+          let lastMoveStr = (historyIndex > 0 && moveHistoryStack[historyIndex].moveSAN) ? ` | Last: ${moveHistoryStack[historyIndex].moveSAN}` : "";
+          ctx.fillText(turnStr + lastMoveStr, cvs.width / 2, cvs.height - 35);
       }
   }
 
@@ -1283,79 +1681,6 @@
       drawBoard();
       requestAnimationFrame(gameLoop);
   }
-
-  cvs.onmousedown = (e) => {
-      const rect = cvs.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-
-      // Check skill buttons
-      if (my >= 475 && my <= 505) {
-          if (mx >= 45 && mx <= 125) { handleHotkey('h'); return; }
-          if (mx >= 135 && mx <= 215) { handleHotkey('u'); return; }
-          if (mx >= 225 && mx <= 305) { handleHotkey('f'); return; }
-          if (mx >= 315 && mx <= 395) { handleHotkey('m'); return; }
-          if (mx >= 405 && mx <= 495) { handleHotkey('p'); return; }
-      }
-
-      if (gameOver) {
-          if (gameMode === 0 && winner === 1 && currentStage < 20) {
-              currentStage++;
-          }
-          resetGame();
-          return;
-      }
-      if (aiMode && !whiteTurn) return;
-      
-      const tx = Math.floor((mx - OX) / TS);
-      const ty = Math.floor((my - OY) / TS);
-      
-      if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) {
-          hintActive = false;
-          if (selX === -1) {
-              if (board[ty][tx] !== 0) {
-                  let isWhite = board[ty][tx] <= 6;
-                  if ((whiteTurn && isWhite) || (!whiteTurn && !isWhite)) {
-                      selX = tx; selY = ty;
-                  }
-              }
-          } else {
-              if (selX === tx && selY === ty) {
-                  selX = -1; selY = -1;
-              } else {
-                  let p = board[selY][selX];
-                  let isWhite = p <= 6;
-                  let dstP = board[ty][tx];
-                  let dstIsWhite = dstP <= 6;
-                  
-                  if (dstP !== 0 && isWhite === dstIsWhite) {
-                      selX = tx; selY = ty;
-                  } else {
-                      if (isValidMove(selX, selY, tx, ty, false)) {
-                          if (!simulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
-                              if (whiteTurn) {
-                                  undoBoard = board.map(row => [...row]);
-                                  undoWKM = wKingMoved; undoWRL = wRookLMoved; undoWRR = wRookRMoved;
-                                  undoBKM = bKingMoved; undoBRL = bRookLMoved; undoBRR = bRookRMoved;
-                                  undoEpX = epX; undoEpY = epY;
-                                  canUndo = true;
-                              }
-
-                              let curSelX = selX; let curSelY = selY;
-                              selX = -1; selY = -1;
-
-                              performMove(curSelX, curSelY, tx, ty);
-
-                              if (aiMode && !whiteTurn && !gameOver) {
-                                  setTimeout(doBlackAIMove, 350);
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-      }
-  };
 
   resetGame();
   requestAnimationFrame(gameLoop);

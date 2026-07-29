@@ -1,11 +1,11 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 540
-#define H 580
+#define W 560
+#define H 650
 #define TS 50
-#define OX 70
-#define OY 65
+#define OX 80
+#define OY 110
 
 // 0: empty, 1:P, 2:N, 3:B, 4:R, 5:Q, 6:K,  7:p, 8:n, 9:b, 10:r, 11:q, 12:k
 int board[8][8];
@@ -28,7 +28,9 @@ int aiMode = 1; // 1 = vs AI, 0 = vs Player
 int gameMode = 0; // 0 = Campaign, 1 = Free Play, 2 = Puzzle Mode, 3 = Blitz Timer Mode
 int currentStage = 1;
 int puzzleIndex = 0;
-int aiPersonality = 2; // 1=Novice, 2=Aggressive, 3=Defender, 4=Grandmaster Minimax
+int aiPersonality = 4; // 1=Easy, 2=Medium, 3=Hard, 4=Master
+char* diffNames[] = { "Easy", "Medium", "Hard", "Master" };
+
 int statsWins = 0, statsLosses = 0, statsDraws = 0;
 int pieceValues[] = {0, 100, 320, 330, 500, 900, 20000, 100, 320, 330, 500, 900, 20000};
 int lastMoveSx = -1, lastMoveSy = -1, lastMoveTx = -1, lastMoveTy = -1;
@@ -42,14 +44,22 @@ int epX = -1, epY = -1;
 // Active Skills & Powerups
 int freezePowerups = 3;
 int blackFrozen = 0;
-int undoPowerups = 3;
-int canUndo = 0;
-int hintPowerups = 3;
 int hintActive = 0;
 int hintSx = -1, hintSy = -1, hintTx = -1, hintTy = -1;
+char hintText[64] = {0};
 
-int undoBoard[8][8];
-int undoWKM = 0, undoWRL = 0, undoWRR = 0, undoBKM = 0, undoBRL = 0, undoBRR = 0, undoEpX = -1, undoEpY = -1;
+// Move History Stack for Interactive Undo/Redo & PGN
+typedef struct {
+    int board[8][8];
+    int whiteTurn;
+    int wkm, wrl, wrr, bkm, brl, brr;
+    int epX, epY;
+    int lastMoveSx, lastMoveSy, lastMoveTx, lastMoveTy;
+    char san[16];
+} HistoryState;
+
+HistoryState g_historyStack[256];
+int g_historyIndex = -1;
 
 int kbX = 4, kbY = 6;
 int kbActive = 0;
@@ -87,6 +97,52 @@ void* __cdecl memset(void* dest, int c, size_t count) {
     char* bytes = (char*)dest;
     while (count--) *bytes++ = (char)c;
     return dest;
+}
+
+#pragma function(memcpy)
+void* __cdecl memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) *d++ = *s++;
+    return dest;
+}
+
+
+static void CopyTextToClipboard(HWND hwnd, const char* text) {
+    if (!text) return;
+    int len = lstrlenA(text);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem) {
+        char* ptr = (char*)GlobalLock(hMem);
+        if (ptr) {
+            for (int i = 0; i <= len; i++) ptr[i] = text[i];
+            GlobalUnlock(hMem);
+            if (OpenClipboard(hwnd)) {
+                EmptyClipboard();
+                SetClipboardData(CF_TEXT, hMem);
+                CloseClipboard();
+            }
+        }
+    }
+}
+
+static char* GetTextFromClipboard(HWND hwnd) {
+    if (!OpenClipboard(hwnd)) return NULL;
+    HANDLE hData = GetClipboardData(CF_TEXT);
+    char* text = NULL;
+    if (hData) {
+        char* ptr = (char*)GlobalLock(hData);
+        if (ptr) {
+            int len = lstrlenA(ptr);
+            text = (char*)GlobalAlloc(GPTR, len + 1);
+            if (text) {
+                for (int i = 0; i <= len; i++) text[i] = ptr[i];
+            }
+            GlobalUnlock(hData);
+        }
+    }
+    CloseClipboard();
+    return text;
 }
 
 static void LoadStatsFreestanding(void) {
@@ -304,7 +360,6 @@ int HasLegalMoves(int isWhite) {
     return 0;
 }
 
-// Engine Minimax Alpha-Beta Implementation
 int EvaluateBoardStatic(void) {
     int score = 0;
     for (int y = 0; y < 8; y++) {
@@ -459,21 +514,29 @@ int MinimaxAB(int depth, int alpha, int beta, int isMaximizing) {
 
 void GetOptimalHintMove(int* outSx, int* outSy, int* outTx, int* outTy) {
     *outSx = -1; *outSy = -1; *outTx = -1; *outTy = -1;
-    int bestValue = 999999;
+    int bestValue = whiteTurn ? 999999 : -999999;
     for (int sy = 0; sy < 8; sy++) {
         for (int sx = 0; sx < 8; sx++) {
-            if (board[sy][sx] != 0 && board[sy][sx] <= 6) {
+            int p = board[sy][sx];
+            if (p != 0 && (p <= 6) == whiteTurn) {
                 for (int ty = 0; ty < 8; ty++) {
                     for (int tx = 0; tx < 8; tx++) {
                         if (IsValidMove(sx, sy, tx, ty, 0)) {
-                            if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, 1)) {
+                            if (!SimulatedMoveLeavesCheck(sx, sy, tx, ty, whiteTurn)) {
                                 MoveState ms;
                                 MakeMoveSim(sx, sy, tx, ty, &ms);
-                                int score = MinimaxAB(2, -999999, 999999, 1);
+                                int score = MinimaxAB(2, -999999, 999999, !whiteTurn);
                                 UnmakeMoveSim(sx, sy, tx, ty, &ms);
-                                if (score < bestValue) {
-                                    bestValue = score;
-                                    *outSx = sx; *outSy = sy; *outTx = tx; *outTy = ty;
+                                if (whiteTurn) {
+                                    if (score < bestValue) {
+                                        bestValue = score;
+                                        *outSx = sx; *outSy = sy; *outTx = tx; *outTy = ty;
+                                    }
+                                } else {
+                                    if (score > bestValue) {
+                                        bestValue = score;
+                                        *outSx = sx; *outSy = sy; *outTx = tx; *outTy = ty;
+                                    }
                                 }
                             }
                         }
@@ -484,96 +547,322 @@ void GetOptimalHintMove(int* outSx, int* outSy, int* outTx, int* outTy) {
     }
 }
 
+static void GetSAN(int sx, int sy, int tx, int ty, int p, int isCapture, char* outBuf) {
+    int pType = p > 6 ? p - 6 : p;
+    char files[] = "abcdefgh";
+    char targetSquare[4];
+    targetSquare[0] = files[tx];
+    targetSquare[1] = '8' - ty;
+    targetSquare[2] = '\0';
+
+    if (pType == 6 && my_abs(tx - sx) == 2) {
+        if (tx == 6) { wsprintfA(outBuf, "O-O"); }
+        else { wsprintfA(outBuf, "O-O-O"); }
+        return;
+    }
+
+    char pLetters[] = "  NBRQK";
+    char letter = pLetters[pType];
+
+    if (pType == 1) { // Pawn
+        if (isCapture) {
+            wsprintfA(outBuf, "%cx%s", files[sx], targetSquare);
+        } else {
+            wsprintfA(outBuf, "%s", targetSquare);
+        }
+    } else {
+        if (isCapture) {
+            wsprintfA(outBuf, "%cx%s", letter, targetSquare);
+        } else {
+            wsprintfA(outBuf, "%c%s", letter, targetSquare);
+        }
+    }
+}
+
+static void PushHistoryState(const char* san) {
+    if (g_historyIndex < 255) {
+        g_historyIndex++;
+        HistoryState* st = &g_historyStack[g_historyIndex];
+        for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) st->board[y][x] = board[y][x];
+        st->whiteTurn = whiteTurn;
+        st->wkm = wKingMoved; st->wrl = wRookLMoved; st->wrr = wRookRMoved;
+        st->bkm = bKingMoved; st->brl = bRookLMoved; st->brr = bRookRMoved;
+        st->epX = epX; st->epY = epY;
+        st->lastMoveSx = lastMoveSx; st->lastMoveSy = lastMoveSy;
+        st->lastMoveTx = lastMoveTx; st->lastMoveTy = lastMoveTy;
+        if (san) lstrcpyA(st->san, san); else st->san[0] = '\0';
+    }
+}
+
+static void RestoreHistoryState(int idx) {
+    if (idx < 0 || idx > g_historyIndex) return;
+    HistoryState* st = &g_historyStack[idx];
+    for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) board[y][x] = st->board[y][x];
+    whiteTurn = st->whiteTurn;
+    wKingMoved = st->wkm; wRookLMoved = st->wrl; wRookRMoved = st->wrr;
+    bKingMoved = st->bkm; bRookLMoved = st->brl; bRookRMoved = st->brr;
+    epX = st->epX; epY = st->epY;
+    lastMoveSx = st->lastMoveSx; lastMoveSy = st->lastMoveSy;
+    lastMoveTx = st->lastMoveTx; lastMoveTy = st->lastMoveTy;
+    g_historyIndex = idx;
+    selX = -1; selY = -1; hintActive = 0; gameOver = 0; winner = 0;
+}
+
+static void UndoMove(void) {
+    if (g_historyIndex <= 0) return;
+    int target = g_historyIndex - 1;
+    if (aiMode && target > 0 && g_historyStack[target].whiteTurn != 1) {
+        target--;
+    }
+    RestoreHistoryState(target);
+    MessageBeep(MB_OK);
+}
+
+static void RedoMove(void) {
+    if (g_historyIndex >= 255) return;
+    if (g_historyStack[g_historyIndex + 1].san[0] == '\0' && g_historyIndex >= 0) return;
+    int target = g_historyIndex + 1;
+    if (aiMode && target < 255 && g_historyStack[target].whiteTurn != 1) {
+        target++;
+    }
+    RestoreHistoryState(target);
+    MessageBeep(MB_OK);
+}
+
+static void GenerateFEN(char* outFen) {
+    int pos = 0;
+    const char pieceMap[] = " PNBQKpnbqk";
+    for (int y = 0; y < 8; y++) {
+        int empty = 0;
+        for (int x = 0; x < 8; x++) {
+            int p = board[y][x];
+            if (p == 0) {
+                empty++;
+            } else {
+                if (empty > 0) {
+                    outFen[pos++] = '0' + empty;
+                    empty = 0;
+                }
+                outFen[pos++] = pieceMap[p];
+            }
+        }
+        if (empty > 0) outFen[pos++] = '0' + empty;
+        if (y < 7) outFen[pos++] = '/';
+    }
+    outFen[pos++] = ' ';
+    outFen[pos++] = whiteTurn ? 'w' : 'b';
+    outFen[pos++] = ' ';
+
+    int hasCastle = 0;
+    if (!wKingMoved) {
+        if (!wRookRMoved && board[7][7] == 4) { outFen[pos++] = 'K'; hasCastle = 1; }
+        if (!wRookLMoved && board[7][0] == 4) { outFen[pos++] = 'Q'; hasCastle = 1; }
+    }
+    if (!bKingMoved) {
+        if (!bRookRMoved && board[0][7] == 10) { outFen[pos++] = 'k'; hasCastle = 1; }
+        if (!bRookLMoved && board[0][0] == 10) { outFen[pos++] = 'q'; hasCastle = 1; }
+    }
+    if (!hasCastle) outFen[pos++] = '-';
+    outFen[pos++] = ' ';
+
+    if (epX != -1 && epY != -1) {
+        outFen[pos++] = 'a' + epX;
+        outFen[pos++] = '8' - (whiteTurn ? epY - 1 : epY + 1);
+    } else {
+        outFen[pos++] = '-';
+    }
+
+    outFen[pos++] = ' ';
+    outFen[pos++] = '0';
+    outFen[pos++] = ' ';
+    wsprintfA(outFen + pos, "%d", (g_historyIndex > 0 ? g_historyIndex / 2 + 1 : 1));
+}
+
+static int LoadFEN(const char* fen) {
+    if (!fen || lstrlenA(fen) < 5) return 0;
+    int y = 0, x = 0;
+    int pBoard[8][8];
+    for (int r = 0; r < 8; r++) for (int c = 0; c < 8; c++) pBoard[r][c] = 0;
+
+    const char* p = fen;
+    while (*p && y < 8) {
+        if (*p == '/') {
+            y++; x = 0;
+        } else if (*p >= '1' && *p <= '8') {
+            x += (*p - '0');
+        } else {
+            int pVal = 0;
+            switch (*p) {
+                case 'P': pVal = 1; break; case 'N': pVal = 2; break;
+                case 'B': pVal = 3; break; case 'R': pVal = 4; break;
+                case 'Q': pVal = 5; break; case 'K': pVal = 6; break;
+                case 'p': pVal = 7; break; case 'n': pVal = 8; break;
+                case 'b': pVal = 9; break; case 'r': pVal = 10; break;
+                case 'q': pVal = 11; break; case 'k': pVal = 12; break;
+            }
+            if (pVal > 0 && x < 8) {
+                pBoard[y][x] = pVal;
+                x++;
+            }
+        }
+        p++;
+        if (*p == ' ') break;
+    }
+
+    for (int r = 0; r < 8; r++) for (int c = 0; c < 8; c++) board[r][c] = pBoard[r][c];
+
+    while (*p && *p == ' ') p++;
+    if (*p == 'b') whiteTurn = 0; else whiteTurn = 1;
+    while (*p && *p != ' ') p++;
+
+    wKingMoved = 1; wRookLMoved = 1; wRookRMoved = 1;
+    bKingMoved = 1; bRookLMoved = 1; bRookRMoved = 1;
+    while (*p && *p == ' ') p++;
+    if (*p && *p != '-') {
+        while (*p && *p != ' ') {
+            if (*p == 'K') { wKingMoved = 0; wRookRMoved = 0; }
+            if (*p == 'Q') { wKingMoved = 0; wRookLMoved = 0; }
+            if (*p == 'k') { bKingMoved = 0; bRookRMoved = 0; }
+            if (*p == 'q') { bKingMoved = 0; bRookLMoved = 0; }
+            p++;
+        }
+    } else if (*p == '-') { p++; }
+
+    epX = -1; epY = -1;
+    while (*p && *p == ' ') p++;
+    if (*p >= 'a' && *p <= 'h') {
+        epX = *p - 'a';
+        p++;
+        if (*p >= '1' && *p <= '8') {
+            int rank = *p - '0';
+            epY = 8 - rank;
+        }
+    }
+
+    selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
+    g_historyIndex = -1;
+    PushHistoryState("");
+    gameOver = 0; winner = 0; hintActive = 0;
+    return 1;
+}
+
+static void GeneratePGN(char* outBuf, int maxLen) {
+    int pos = wsprintfA(outBuf,
+        "[Event \"KChess Match\"]\r\n"
+        "[Site \"KiloOS\"]\r\n"
+        "[Date \"2026.07.28\"]\r\n"
+        "[White \"White Player\"]\r\n"
+        "[Black \"%s\"]\r\n"
+        "[Result \"%s\"]\r\n\r\n",
+        aiMode ? diffNames[aiPersonality - 1] : "Black Player",
+        gameOver ? (winner == 1 ? "1-0" : (winner == 2 ? "0-1" : "1/2-1/2")) : "*"
+    );
+
+    int moveNum = 1;
+    for (int i = 1; i <= g_historyIndex; i++) {
+        if (g_historyStack[i].san[0] != '\0') {
+            if (i % 2 == 1) {
+                pos += wsprintfA(outBuf + pos, "%d. %s ", moveNum, g_historyStack[i].san);
+            } else {
+                pos += wsprintfA(outBuf + pos, "%s ", g_historyStack[i].san);
+                moveNum++;
+            }
+        }
+        if (pos > maxLen - 64) break;
+    }
+    wsprintfA(outBuf + pos, "%s", gameOver ? (winner == 1 ? "1-0" : (winner == 2 ? "0-1" : "1/2-1/2")) : "*");
+}
+
 void ResetGame(void) {
     wKingMoved = 0; wRookLMoved = 0; wRookRMoved = 0;
     bKingMoved = 0; bRookLMoved = 0; bRookRMoved = 0;
     epX = -1; epY = -1;
-    hintActive = 0; hintSx = -1; hintSy = -1; hintTx = -1; hintTy = -1;
-    blackFrozen = 0; canUndo = 0;
+    hintActive = 0; hintSx = -1; hintSy = -1; hintTx = -1; hintTy = -1; hintText[0] = '\0';
+    blackFrozen = 0;
     blitzTimeWhite = 180.0f; blitzTimeBlack = 180.0f;
 
     for (int y = 0; y < 8; y++) for (int x = 0; x < 8; x++) board[y][x] = 0;
 
     int targetStage = currentStage;
-    if (gameMode == 2) { // Puzzle Mode
+    if (gameMode == 2) {
         int puzzleStageMap[] = { 1, 2, 3, 4, 11, 19 };
         targetStage = puzzleStageMap[puzzleIndex % 6];
     }
 
     if (gameMode == 0 || gameMode == 2) {
         switch (targetStage) {
-            case 1: // Stage 1: Mate-in-1 (Back Rank)
+            case 1:
                 board[0][4] = 12; board[1][0] = 7; board[1][1] = 7; board[1][2] = 7;
                 board[1][5] = 7; board[1][6] = 7; board[1][7] = 7;
                 board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1; board[7][0] = 4;
                 aiPersonality = 1; break;
-            case 2: // Stage 2: Mate-in-1 (Smothered)
+            case 2:
                 board[0][7] = 12; board[0][6] = 10; board[1][6] = 7; board[1][7] = 7;
                 board[7][5] = 6; board[2][4] = 2;
                 aiPersonality = 1; break;
-            case 3: // Stage 3: Mate-in-2 (Queen Sac Back Rank)
+            case 3:
                 board[0][4] = 12; board[0][2] = 10;
                 for(int x=0; x<8; x++) if(x!=3 && x!=4) board[1][x] = 7;
                 board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1;
                 board[1][2] = 5; board[7][0] = 4;
                 aiPersonality = 2; break;
-            case 4: // Stage 4: Mate-in-2 (Greek Gift Sac)
+            case 4:
                 board[0][6] = 12; board[1][5] = 7; board[1][6] = 7; board[1][7] = 7; board[2][5] = 8;
                 board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1;
                 board[5][3] = 3; board[6][2] = 5;
                 aiPersonality = 2; break;
-            case 5: // Stage 5: Endgame Study (Passed Pawn)
+            case 5:
                 board[2][5] = 12; board[3][7] = 7; board[4][2] = 6; board[4][0] = 1;
                 aiPersonality = 3; break;
-            case 6: // Stage 6: Endgame Study (Lucena Position)
+            case 6:
                 board[1][5] = 12; board[6][0] = 10; board[0][3] = 6; board[1][3] = 1; board[7][4] = 4;
                 aiPersonality = 3; break;
-            case 7: // Stage 7: Handicap Game (Rook Odds)
+            case 7:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 board[0][0] = 0; board[0][7] = 0; aiPersonality = 1; break;
-            case 8: // Stage 8: Handicap Game (Queen Odds)
+            case 8:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 board[0][3] = 0; aiPersonality = 2; break;
-            case 9: // Stage 9: Handicap (Pawn Avalanche)
+            case 9:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 board[2][2] = 7; board[2][3] = 7; board[2][4] = 7; board[2][5] = 7;
                 aiPersonality = 3; break;
-            case 10: // Stage 10: Full Match vs Novice AI
+            case 10:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 aiPersonality = 1; break;
-            case 11: // Stage 11: Mate-in-2 (Knight & Bishop Combo)
+            case 11:
                 board[0][7] = 12; board[1][6] = 7; board[1][7] = 7; board[1][5] = 6; board[5][3] = 3; board[2][4] = 2;
                 aiPersonality = 2; break;
-            case 12: // Stage 12: Endgame Study (Queen vs Rook)
+            case 12:
                 board[0][4] = 12; board[1][4] = 10; board[4][4] = 6; board[4][3] = 5;
                 aiPersonality = 3; break;
-            case 13: // Stage 13: Full Match vs Aggressive AI
+            case 13:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 aiPersonality = 2; break;
-            case 14: // Stage 14: Mate-in-2 (Pin & Sacrifice)
+            case 14:
                 board[0][6] = 12; board[0][5] = 10; board[1][6] = 7; board[1][7] = 7;
                 board[7][6] = 6; board[6][5] = 1; board[6][6] = 1; board[6][7] = 1;
                 board[2][5] = 5; board[7][4] = 4;
                 aiPersonality = 3; break;
-            case 15: // Stage 15: Full Match vs Positional AI
+            case 15:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 aiPersonality = 3; break;
-            case 16: // Stage 16: Endgame Study (Double Rook Study)
+            case 16:
                 board[2][4] = 12; board[0][0] = 10; board[0][7] = 10; board[2][3] = 7; board[3][4] = 7;
                 board[5][4] = 6; board[7][0] = 4; board[7][7] = 4; board[4][3] = 1; board[4][4] = 1;
                 aiPersonality = 4; break;
-            case 17: // Stage 17: Boss Handicap (Twin Queens)
+            case 17:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 board[0][3] = 11; board[0][4] = 11; board[0][2] = 12;
                 aiPersonality = 4; break;
-            case 18: // Stage 18: Full Match vs Grandmaster AI
+            case 18:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 aiPersonality = 4; break;
-            case 19: // Stage 19: Ultimate Mate-in-2 (Boden's Mate)
+            case 19:
                 board[0][2] = 12; board[0][3] = 10; board[1][0] = 7; board[1][1] = 7; board[1][2] = 7;
                 board[7][6] = 6; board[4][5] = 3; board[5][4] = 3; board[2][2] = 5;
                 aiPersonality = 4; break;
-            case 20: // Stage 20: Grandmaster Boss Encounter
+            case 20:
             default:
                 for(int y=0;y<8;y++) for(int x=0;x<8;x++) board[y][x] = defaultBoard[y][x];
                 aiPersonality = 4; break;
@@ -583,8 +872,6 @@ void ResetGame(void) {
     }
 
     freezePowerups = 3;
-    undoPowerups = 3;
-    hintPowerups = 3;
     selX = -1; selY = -1;
     whiteTurn = 1;
     gameOver = 0;
@@ -592,6 +879,9 @@ void ResetGame(void) {
     lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
     g_particleCount = 0;
     g_slide.active = 0;
+
+    g_historyIndex = -1;
+    PushHistoryState("");
 }
 
 static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
@@ -733,6 +1023,41 @@ static void DrawChessPiece(HDC hdc, int p, int x, int y, int ts) {
     DeleteObject(goldBrush);
 }
 
+static void DrawHintArrow(HDC hdc, int sx, int sy, int tx, int ty) {
+    int fromX = OX + sx * TS + TS / 2;
+    int fromY = OY + sy * TS + TS / 2;
+    int toX = OX + tx * TS + TS / 2;
+    int toY = OY + ty * TS + TS / 2;
+
+    HPEN cyanPen = CreatePen(PS_SOLID, 4, RGB(56, 189, 248));
+    HGDIOBJ oldPen = SelectObject(hdc, cyanPen);
+    MoveToEx(hdc, fromX, fromY, NULL);
+    LineTo(hdc, toX, toY);
+
+    int dx = toX - fromX;
+    int dy = toY - fromY;
+    float len = (float)my_abs(dx) + (float)my_abs(dy);
+    if (len < 1.0f) len = 1.0f;
+    float ux = (float)dx / len;
+    float uy = (float)dy / len;
+    float px = -uy;
+    float py = ux;
+
+    POINT arrowHead[3] = {
+        { toX, toY },
+        { (int)(toX - ux * 14.0f + px * 7.0f), (int)(toY - uy * 14.0f + py * 7.0f) },
+        { (int)(toX - ux * 14.0f - px * 7.0f), (int)(toY - uy * 14.0f - py * 7.0f) }
+    };
+    HBRUSH cyanBrush = CreateSolidBrush(RGB(56, 189, 248));
+    HGDIOBJ oldBrush = SelectObject(hdc, cyanBrush);
+    Polygon(hdc, arrowHead, 3);
+    SelectObject(hdc, oldBrush);
+    DeleteObject(cyanBrush);
+
+    SelectObject(hdc, oldPen);
+    DeleteObject(cyanPen);
+}
+
 static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     int isCaptured = (board[ty][tx] != 0);
     int p = board[sy][sx];
@@ -743,6 +1068,9 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
         board[epY][epX] = 0;
         isCaptured = 1;
     }
+
+    char san[16];
+    GetSAN(sx, sy, tx, ty, p, isCaptured, san);
 
     // Slide animation
     g_slide.p = p;
@@ -790,6 +1118,7 @@ static void TriggerMove(HWND hwnd, int sx, int sy, int tx, int ty) {
     }
 
     whiteTurn = !whiteTurn;
+    PushHistoryState(san);
 
     int pieceCount = 0;
     for (int r = 0; r < 8; r++) {
@@ -851,17 +1180,16 @@ void DoBlackAIMove(void) {
                                 int dstP = board[ty][tx];
                                 int pType = board[sy][sx] - 6;
 
-                                if (aiPersonality == 1) { // Novice
-                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + (my_rand() % 40 - 20);
-                                } else if (aiPersonality == 2) { // Aggressive Attacker
-                                    score = (dstP != 0 ? pieceValues[dstP] * 2 : 0) + GetPST(pType, tx, ty, 0);
-                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 15);
-                                    if (IsSquareAttacked(4, 7, 0)) score += 80;
-                                } else if (aiPersonality == 3) { // Positional Defender
+                                if (aiPersonality == 1) { // Easy
+                                    score = (dstP != 0 ? pieceValues[dstP] : 0) + (my_rand() % 80 - 40);
+                                } else if (aiPersonality == 2) { // Medium
+                                    score = (int)(dstP != 0 ? pieceValues[dstP] * 1.5f : 0) + GetPST(pType, tx, ty, 0);
+                                    if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 12);
+                                } else if (aiPersonality == 3) { // Hard
                                     score = (dstP != 0 ? pieceValues[dstP] : 0) + GetPST(pType, tx, ty, 0);
                                     if (IsSquareAttacked(tx, ty, 1)) score -= (pieceValues[board[sy][sx]] / 5);
                                     if (tx >= 2 && tx <= 5 && ty >= 2 && ty <= 5) score += 30;
-                                } else { // Grandmaster Minimax Alpha-Beta
+                                } else { // Master Minimax
                                     MoveState ms;
                                     MakeMoveSim(sx, sy, tx, ty, &ms);
                                     int searchDepth = (gameMode == 0 && currentStage == 20) ? 4 : 3;
@@ -914,20 +1242,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(bgBrush);
 
             HBRUSH frameBrush = CreateSolidBrush(RGB(45, 24, 16));
-            RECT frameRc = {15, 15, W - 15, H - 15};
+            RECT frameRc = {12, 12, W - 12, H - 12};
             FillRect(memDC, &frameRc, frameBrush);
             DeleteObject(frameBrush);
 
             HPEN goldPen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
             HGDIOBJ oldPen = SelectObject(memDC, goldPen);
             HGDIOBJ oldNullBrush = SelectObject(memDC, GetStockObject(NULL_BRUSH));
-            RoundRect(memDC, 15, 15, W - 15, H - 15, 16, 16);
+            RoundRect(memDC, 12, 12, W - 12, H - 12, 16, 16);
             Rectangle(memDC, OX - 4, OY - 4, OX + TS * 8 + 4, OY + TS * 8 + 4);
             SelectObject(memDC, oldNullBrush);
             SelectObject(memDC, oldPen);
             DeleteObject(goldPen);
 
-            HFONT labelFont = CreateFontA(14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            HFONT labelFont = CreateFontA(13, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
             HGDIOBJ oldFont = SelectObject(memDC, labelFont);
             SetBkMode(memDC, TRANSPARENT);
             SetTextColor(memDC, RGB(212, 175, 55));
@@ -1032,6 +1360,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             }
 
+            if (hintActive && hintSx != -1 && hintTx != -1) {
+                DrawHintArrow(memDC, hintSx, hintSy, hintTx, hintTy);
+            }
+
             if (g_slide.active) {
                 DrawChessPiece(memDC, g_slide.p, (int)g_slide.curX, (int)g_slide.curY, TS);
             }
@@ -1053,35 +1385,72 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             oldFont = SelectObject(memDC, sFont);
             SetTextColor(memDC, RGB(255, 255, 255));
 
-            RECT modeRc = { 20, 20, W - 150, 45 };
+            RECT modeRc = { 20, 18, W - 150, 42 };
             char modeBuf[128];
-            char* pNames[] = { "Novice", "Aggressive", "Defender", "Grandmaster" };
             if (gameMode == 0) {
-                wsprintfA(modeBuf, "Campaign: Stage %d/20 [%s]", currentStage, pNames[aiPersonality - 1]);
+                wsprintfA(modeBuf, "Campaign: Stage %d/20 [%s]", currentStage, diffNames[aiPersonality - 1]);
             } else if (gameMode == 1) {
-                wsprintfA(modeBuf, "%s [%s]", aiMode ? "vs AI" : "vs Player", pNames[aiPersonality - 1]);
+                wsprintfA(modeBuf, "%s [%s]", aiMode ? "vs AI" : "vs Player", diffNames[aiPersonality - 1]);
             } else if (gameMode == 2) {
-                wsprintfA(modeBuf, "Puzzle #%d [%s]", (puzzleIndex % 6) + 1, pNames[aiPersonality - 1]);
+                wsprintfA(modeBuf, "Puzzle #%d [%s]", (puzzleIndex % 6) + 1, diffNames[aiPersonality - 1]);
             } else {
                 wsprintfA(modeBuf, "Blitz Timer (W:%ds B:%ds)", (int)blitzTimeWhite, (int)blitzTimeBlack);
             }
             DrawTextA(memDC, modeBuf, -1, &modeRc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
 
-            RECT statsRc = { W - 150, 20, W - 20, 45 };
+            RECT statsRc = { W - 150, 18, W - 20, 42 };
             char statsBuf[64];
             wsprintfA(statsBuf, "W:%d L:%d D:%d", statsWins, statsLosses, statsDraws);
             DrawTextA(memDC, statsBuf, -1, &statsRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
 
-            // Skill Buttons Row at bottom
-            struct Button { int x, y, w, h; char* text; } btns[5] = {
-                { 45, 475, 80, 28, "Hint (H)" },
-                { 135, 475, 80, 28, "Undo (U)" },
-                { 225, 475, 80, 28, "Freeze (F)" },
-                { 315, 475, 80, 28, "Mode (M)" },
-                { 405, 475, 90, 28, "AI (P)" }
+            // Captured Pieces & Material Score Summary
+            int pieceCounts[13] = {0};
+            for (int r = 0; r < 8; r++) for (int c = 0; c < 8; c++) if (board[r][c] > 0) pieceCounts[board[r][c]]++;
+            int initialCounts[] = {0, 8, 2, 2, 2, 1, 1, 8, 2, 2, 2, 1, 1};
+
+            int wLossVal = 0, bLossVal = 0;
+            int capX = 25;
+            for (int p = 1; p <= 5; p++) {
+                int lost = initialCounts[p] - pieceCounts[p];
+                if (lost > 0) {
+                    wLossVal += (pieceValues[p] / 100) * lost;
+                    for (int k = 0; k < lost; k++) {
+                        DrawChessPiece(memDC, p, capX, 48, 24);
+                        capX += 20;
+                    }
+                }
+            }
+            capX = 25;
+            for (int p = 7; p <= 11; p++) {
+                int lost = initialCounts[p] - pieceCounts[p];
+                if (lost > 0) {
+                    bLossVal += (pieceValues[p] / 100) * lost;
+                    for (int k = 0; k < lost; k++) {
+                        DrawChessPiece(memDC, p, capX, 76, 24);
+                        capX += 20;
+                    }
+                }
+            }
+            int diff = bLossVal - wLossVal;
+            if (diff != 0) {
+                RECT matRc = { W - 200, 62, W - 20, 82 };
+                char matBuf[32];
+                wsprintfA(matBuf, "Advantage: %+d", diff);
+                SetTextColor(memDC, diff > 0 ? RGB(94, 234, 212) : RGB(244, 63, 94));
+                DrawTextA(memDC, matBuf, -1, &matRc, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+            }
+
+            // Skill & Utility Buttons Row at bottom (Y: 530..560)
+            struct Button { int x, y, w, h; char* text; } btns[6] = {
+                { 25, 530, 70, 28, "Hint (H)" },
+                { 105, 530, 70, 28, "Undo (U)" },
+                { 185, 530, 70, 28, "Redo (Y)" },
+                { 265, 530, 80, 28, "Freeze (F)" },
+                { 355, 530, 90, 28, diffNames[aiPersonality - 1] },
+                { 455, 530, 80, 28, "FEN/PGN" }
             };
 
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 6; i++) {
                 RECT btnRc = { btns[i].x, btns[i].y, btns[i].x + btns[i].w, btns[i].y + btns[i].h };
                 HBRUSH btnBrush = CreateSolidBrush(RGB(30, 41, 59));
                 FillRect(memDC, &btnRc, btnBrush);
@@ -1099,16 +1468,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DrawTextA(memDC, btns[i].text, -1, &btnRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
-            RECT statusRc = { 20, H - 42, W - 20, H - 15 };
+            RECT statusRc = { 20, H - 45, W - 20, H - 15 };
             if (gameOver) {
                 SetTextColor(memDC, RGB(245, 158, 11));
-                if (winner == 1) DrawTextA(memDC, gameMode == 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Stage 2" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                if (winner == 1) DrawTextA(memDC, gameMode == 0 && currentStage < 20 ? "White Wins! Press 'R' / Click for Next Stage" : "Checkmate! White Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 else if (winner == 2) DrawTextA(memDC, "Checkmate! Black Wins! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-                else DrawTextA(memDC, "Stalemate / Time Out / Draw! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                else DrawTextA(memDC, "Stalemate / Draw! Press 'R'", -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            } else if (hintActive && hintText[0] != '\0') {
+                SetTextColor(memDC, RGB(56, 189, 248));
+                DrawTextA(memDC, hintText, -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             } else {
                 SetTextColor(memDC, whiteTurn ? RGB(250, 250, 250) : RGB(148, 163, 184));
                 char turnBuf[128];
-                wsprintfA(turnBuf, "%s %s", whiteTurn ? "White's Turn" : "Black's Turn", blackFrozen ? "(Black Frozen!)" : "");
+                char* lastSAN = (g_historyIndex > 0 && g_historyStack[g_historyIndex].san[0] != '\0') ? g_historyStack[g_historyIndex].san : "";
+                wsprintfA(turnBuf, "%s %s %s%s",
+                    whiteTurn ? "White's Turn" : "Black's Turn",
+                    blackFrozen ? "(Black Frozen!)" : "",
+                    lastSAN[0] != '\0' ? "| Last: " : "",
+                    lastSAN
+                );
                 DrawTextA(memDC, turnBuf, -1, &statusRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             }
 
@@ -1154,12 +1532,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 aiPersonality = (aiPersonality % 4) + 1;
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'H') { // OPTIMAL AI HINT SKILL
-                if (!gameOver && whiteTurn && hintPowerups > 0) {
-                    hintPowerups--;
+                if (!gameOver) {
                     GetOptimalHintMove(&hintSx, &hintSy, &hintTx, &hintTy);
-                    if (hintSx != -1) hintActive = 1;
-                    MessageBeep(MB_OK);
-                    InvalidateRect(hwnd, NULL, FALSE);
+                    if (hintSx != -1) {
+                        hintActive = 1;
+                        char sanBuf[16];
+                        GetSAN(hintSx, hintSy, hintTx, hintTy, board[hintSy][hintSx], board[hintTy][hintTx] != 0, sanBuf);
+                        wsprintfA(hintText, "Best Move: %s", sanBuf);
+                        MessageBeep(MB_OK);
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    }
                 }
             } else if (wParam == 'F') { // TIME FREEZE SKILL
                 if (!gameOver && whiteTurn && freezePowerups > 0) {
@@ -1170,15 +1552,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             } else if (wParam == 'U') { // UNDO MOVE SKILL
-                if (whiteTurn && aiMode && undoPowerups > 0 && canUndo) {
-                    undoPowerups--;
-                    for(int y=0; y<8; y++) for(int x=0; x<8; x++) board[y][x] = undoBoard[y][x];
-                    wKingMoved = undoWKM; wRookLMoved = undoWRL; wRookRMoved = undoWRR;
-                    bKingMoved = undoBKM; bRookLMoved = undoBRL; bRookRMoved = undoBRR;
-                    epX = undoEpX; epY = undoEpY;
-                    selX = -1; selY = -1; lastMoveSx = -1; lastMoveSy = -1; lastMoveTx = -1; lastMoveTy = -1;
-                    canUndo = 0; g_slide.active = 0; hintActive = 0; gameOver = 0; winner = 0;
-                    MessageBeep(MB_OK);
+                UndoMove();
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'Y') { // REDO MOVE SKILL
+                RedoMove();
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'E') { // COPY FEN TO CLIPBOARD
+                char fenBuf[128];
+                GenerateFEN(fenBuf);
+                CopyTextToClipboard(hwnd, fenBuf);
+                wsprintfA(hintText, "FEN Copied to Clipboard!");
+                hintActive = 1;
+                MessageBeep(MB_OK);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'G') { // COPY PGN TO CLIPBOARD
+                char pgnBuf[2048];
+                GeneratePGN(pgnBuf, 2048);
+                CopyTextToClipboard(hwnd, pgnBuf);
+                wsprintfA(hintText, "PGN Copied to Clipboard!");
+                hintActive = 1;
+                MessageBeep(MB_OK);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 'L') { // LOAD FEN FROM CLIPBOARD
+                char* clipText = GetTextFromClipboard(hwnd);
+                if (clipText) {
+                    if (LoadFEN(clipText)) {
+                        wsprintfA(hintText, "FEN Loaded from Clipboard!");
+                        hintActive = 1;
+                        MessageBeep(MB_OK);
+                    } else {
+                        MessageBeep(MB_ICONWARNING);
+                    }
+                    GlobalFree((HGLOBAL)clipText);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
             }
@@ -1237,13 +1642,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
 
-            // Check skill buttons
-            if (my >= 475 && my <= 505) {
-                if (mx >= 45 && mx <= 125) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
-                if (mx >= 135 && mx <= 215) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
-                if (mx >= 225 && mx <= 305) { SendMessage(hwnd, WM_KEYDOWN, 'F', 0); return 0; }
-                if (mx >= 315 && mx <= 395) { SendMessage(hwnd, WM_KEYDOWN, 'M', 0); return 0; }
-                if (mx >= 405 && mx <= 495) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
+            // Check skill & action buttons (Y: 530..560)
+            if (my >= 530 && my <= 560) {
+                if (mx >= 25 && mx <= 95) { SendMessage(hwnd, WM_KEYDOWN, 'H', 0); return 0; }
+                if (mx >= 105 && mx <= 175) { SendMessage(hwnd, WM_KEYDOWN, 'U', 0); return 0; }
+                if (mx >= 185 && mx <= 255) { SendMessage(hwnd, WM_KEYDOWN, 'Y', 0); return 0; }
+                if (mx >= 265 && mx <= 345) { SendMessage(hwnd, WM_KEYDOWN, 'F', 0); return 0; }
+                if (mx >= 355 && mx <= 445) { SendMessage(hwnd, WM_KEYDOWN, 'P', 0); return 0; }
+                if (mx >= 455 && mx <= 535) { SendMessage(hwnd, WM_KEYDOWN, 'E', 0); return 0; }
             }
 
             if (gameOver) {
@@ -1283,14 +1689,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         } else {
                             if (IsValidMove(selX, selY, tx, ty, 0)) {
                                 if (!SimulatedMoveLeavesCheck(selX, selY, tx, ty, whiteTurn)) {
-                                    if (whiteTurn) {
-                                        for(int y=0; y<8; y++) for(int x=0; x<8; x++) undoBoard[y][x] = board[y][x];
-                                        undoWKM = wKingMoved; undoWRL = wRookLMoved; undoWRR = wRookRMoved;
-                                        undoBKM = bKingMoved; undoBRL = bRookLMoved; undoBRR = bRookRMoved;
-                                        undoEpX = epX; undoEpY = epY;
-                                        canUndo = 1;
-                                    }
-
                                     int curSelX = selX; int curSelY = selY;
                                     selX = -1; selY = -1;
 
@@ -1335,7 +1733,7 @@ void MainEntry(void) {
     my_srand(GetTickCount());
     LoadStatsFreestanding();
 
-    HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowEx(0, "KChessApp", "KChess - AI & Utility Chess Engine", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
