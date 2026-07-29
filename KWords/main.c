@@ -6,82 +6,18 @@
 #include <stdbool.h>
 
 #define MAX_GRID_SIZE 26
-#define CELL_SIZE 30
-#define MAX_WORDS 20
-#define NUM_THEMES 11
+#define MAX_WORDS 25
+#define NUM_THEMES 12
 #define THEME_DICT_SIZE 30
+#define NUM_CAMPAIGN_STAGES 20
 
 const char* THEMES[NUM_THEMES] = {
-    "Programming", "Animals", "Countries", "Space", "Food", 
-    "Sports", "Nature", "History", "Elements", "Sci-Fi", "Myth"
+    "Elements", "Sci-Fi", "Myth", "Animals", "Science", 
+    "Geography", "History", "Literature", "Tech", "Food", "Astronomy", "Sports"
 };
 
 const char* DICTIONARIES[NUM_THEMES][THEME_DICT_SIZE] = {
-    { // 0: Programming
-        "ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE", 
-        "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD", 
-        "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT",
-        "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL", 
-        "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD", 
-        "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"
-    },
-    { // 1: Animals
-        "ELEPHANT", "GIRAFFE", "PENGUIN", "KANGAROO", "DOLPHIN",
-        "TIGER", "CHEETAH", "MONKEY", "OSTRICH", "IGUANA",
-        "ZEBRA", "GORILLA", "PANTHER", "LEOPARD", "HIPPO",
-        "RHINO", "CROCODILE", "ALLIGATOR", "CHIMPANZEE", "SNAIL",
-        "OCTOPUS", "SHARK", "WHALE", "WALRUS", "SEAL",
-        "BEAR", "WOLF", "FOX", "RABBIT", "DEER"
-    },
-    { // 2: Countries
-        "CANADA", "BRAZIL", "JAPAN", "FRANCE", "GERMANY",
-        "ITALY", "SPAIN", "INDIA", "CHINA", "RUSSIA",
-        "AUSTRALIA", "MEXICO", "ARGENTINA", "CHILE", "PERU",
-        "EGYPT", "MOROCCO", "NIGERIA", "KENYA", "SWEDEN",
-        "NORWAY", "FINLAND", "DENMARK", "IRELAND", "POLAND",
-        "GREECE", "TURKEY", "THAILAND", "VIETNAM", "INDONESIA"
-    },
-    { // 3: Space
-        "ASTEROID", "COMET", "GALAXY", "NEBULA", "PLANET",
-        "STAR", "ORBIT", "SATELLITE", "ROCKET", "GRAVITY",
-        "ECLIPSE", "METEOR", "UNIVERSE", "COSMOS", "PULSAR",
-        "QUASAR", "SUPERNOVA", "VACUUM", "EQUATOR", "HORIZON",
-        "ZENITH", "LUNAR", "SOLAR", "TELESCOPE", "ASTRONAUT",
-        "SPACECRAFT", "OBSERVATORY", "CONSTELLATION", "ZODIAC", "APOLLO"
-    },
-    { // 4: Food
-        "PIZZA", "BURGER", "SALAD", "PASTA", "SUSHI",
-        "STEAK", "CHEESE", "BREAD", "APPLE", "BANANA",
-        "ORANGE", "GRAPE", "CHICKEN", "BACON", "TOMATO",
-        "POTATO", "ONION", "GARLIC", "PEPPER", "CARROT",
-        "CEREAL", "WAFFLE", "PANCAKE", "MUFFIN", "COOKIE",
-        "CHOCOLATE", "VANILLA", "BUTTER", "YOGURT", "HONEY"
-    },
-    { // 5: Sports
-        "SOCCER", "TENNIS", "BASKETBALL", "BASEBALL", "GOLF",
-        "RUGBY", "CRICKET", "HOCKEY", "VOLLEYBALL", "SWIMMING",
-        "BOXING", "WRESTLING", "CYCLING", "ATHLETICS", "GYMNASTICS",
-        "ARCHERY", "FENCING", "BOWLING", "BILLIARDS", "SNOOKER",
-        "DARTS", "KARATE", "JUDO", "TAEKWONDO", "SURFING",
-        "SKATING", "SKIING", "SNOWBOARD", "ROWING", "SAILING"
-    },
-    { // 6: Nature
-        "FOREST", "RIVER", "MOUNTAIN", "OCEAN", "DESERT",
-        "VALLEY", "CANYON", "VOLCANO", "ISLAND", "JUNGLE",
-        "GLACIER", "TUNDRA", "PRAIRIE", "SAVANNA", "MARSH",
-        "SWAMP", "LAKE", "STREAM", "WATERFALL", "GEYSER",
-        "CAVE", "CLIFF", "BEACH", "DUNE", "REEF",
-        "FLOWER", "TREE", "BUSH", "GRASS", "FERN"
-    },
-    { // 7: History
-        "EMPIRE", "PHARAOH", "PYRAMID", "CASTLE", "KNIGHT",
-        "VIKING", "SAMURAI", "ROMAN", "GREEK", "SPARTAN",
-        "AZTEC", "MAYAN", "INCA", "DYNASTY", "REVOLUTION",
-        "WARRIOR", "GLADIATOR", "CRUSADE", "RENAISSANCE", "COLONY",
-        "TREATY", "ALLIANCE", "MONARCH", "REPUBLIC", "SENATE",
-        "CHIEFTAIN", "EMPEROR", "SULTAN", "TSAR", "KAISER"
-    },
-    { // 8: Elements
+    { // 0: Elements
         "HYDROGEN", "HELIUM", "LITHIUM", "CARBON", "NITROGEN",
         "OXYGEN", "SODIUM", "SILICON", "IRON", "COPPER",
         "GOLD", "SILVER", "PLATINUM", "URANIUM", "TITANIUM",
@@ -89,7 +25,7 @@ const char* DICTIONARIES[NUM_THEMES][THEME_DICT_SIZE] = {
         "ZINC", "NICKEL", "COBALT", "TIN", "LEAD",
         "MERCURY", "CALCIUM", "POTASSIUM", "MAGNESIUM", "ALUMINUM"
     },
-    { // 9: Sci-Fi
+    { // 1: Sci-Fi
         "CYBORG", "ANDROID", "HOLOGRAM", "HYPERDRIVE", "TELEPORT",
         "STARSHIP", "WARP", "MUTANT", "FORCEFIELD", "NANITE",
         "CLONE", "ANTIMATTER", "QUANTUM", "SINGULARITY", "DYSON",
@@ -97,30 +33,149 @@ const char* DICTIONARIES[NUM_THEMES][THEME_DICT_SIZE] = {
         "BIOMECH", "STEALTH", "LASER", "PLASMA", "BLASTER",
         "SERVO", "SYNTHETIC", "METAVERSE", "SIMULATION", "AVATAR"
     },
-    { // 10: Myth
+    { // 2: Myth
         "ZEUS", "HERCULES", "ODYSSEY", "THOR", "ODIN",
         "LOKI", "VALKYRIE", "APOLLO", "ATHENA", "POSEIDON",
         "MEDUSA", "MINOTAUR", "PEGASUS", "PHOENIX", "DRAGON",
         "HYDRA", "TITAN", "NEPTUNE", "VULCAN", "SPHINX",
         "GRIFFIN", "CENTAUR", "KRAKEN", "VALHALLA", "OLYMPUS",
         "HADES", "HERMES", "ACHILLES", "PANDORA", "NEMESIS"
+    },
+    { // 3: Animals
+        "ELEPHANT", "GIRAFFE", "PENGUIN", "KANGAROO", "DOLPHIN",
+        "TIGER", "CHEETAH", "MONKEY", "OSTRICH", "IGUANA",
+        "ZEBRA", "GORILLA", "PANTHER", "LEOPARD", "HIPPO",
+        "RHINO", "CROCODILE", "ALLIGATOR", "CHIMPANZEE", "SNAIL",
+        "OCTOPUS", "SHARK", "WHALE", "WALRUS", "SEAL",
+        "BEAR", "WOLF", "FOX", "RABBIT", "DEER"
+    },
+    { // 4: Science
+        "PHYSICS", "CHEMISTRY", "BIOLOGY", "MOLECULE", "GENETICS",
+        "QUANTUM", "GRAVITY", "MAGNET", "ENERGY", "ELECTRON",
+        "PROTON", "NEUTRON", "NUCLEUS", "FOSSIL", "MICROBE",
+        "VIRUS", "BACTERIA", "GENOME", "ENZYME", "COMPOUND",
+        "PHOSPHATE", "REACTION", "THERMAL", "OPTICS", "ISOTOPE",
+        "LABORATORY", "KINETIC", "CATALYST", "MUTATION", "SPECTRUM"
+    },
+    { // 5: Geography
+        "CONTINENT", "EQUATOR", "MOUNTAIN", "ARCHIPELAGO", "PENINSULA",
+        "CAPITAL", "GLACIER", "VOLCANO", "ISTHMUS", "LATITUDE",
+        "LONGITUDE", "MERIDIAN", "ISLAND", "TUNDRA", "SAVANNA",
+        "TROPIC", "DELTA", "CANYON", "REEF", "FJORD",
+        "PLATEAU", "VALLEY", "DESERT", "CHANNEL", "HARBOR",
+        "BASIN", "ESTUARY", "ATMOSPHERE", "TOPOGRAPHY", "OCEANIC"
+    },
+    { // 6: History
+        "EMPIRE", "PHARAOH", "PYRAMID", "CASTLE", "KNIGHT",
+        "VIKING", "SAMURAI", "ROMAN", "GREEK", "SPARTAN",
+        "AZTEC", "MAYAN", "INCA", "DYNASTY", "REVOLUTION",
+        "WARRIOR", "GLADIATOR", "CRUSADE", "RENAISSANCE", "COLONY",
+        "TREATY", "ALLIANCE", "MONARCH", "REPUBLIC", "SENATE",
+        "CHIEFTAIN", "EMPEROR", "SULTAN", "TSAR", "KAISER"
+    },
+    { // 7: Literature
+        "NOVEL", "POETRY", "FICTION", "CHAPTER", "AUTHOR",
+        "SHAKESPEARE", "TRAGEDY", "COMEDY", "DRAMA", "PROSE",
+        "SONNET", "STANZA", "EPIC", "FOIL", "METAPHOR",
+        "SYMBOL", "NARRATIVE", "DIALOGUE", "HARDBACK", "FOLKLORE",
+        "PARABLE", "MONOLOGUE", "ANTHOLOGY", "MEMOIR", "ESSAY",
+        "ALLEGORY", "SATIRE", "PROTAGONIST", "GENRE", "SOLILOQUY"
+    },
+    { // 8: Tech
+        "ALGORITHM", "COMPILER", "DEBUG", "FUNCTION", "VARIABLE",
+        "POINTER", "SYNTAX", "OBJECT", "CLASS", "METHOD",
+        "ARRAY", "STRING", "BOOLEAN", "INTEGER", "FLOAT",
+        "NETWORK", "SERVER", "DATABASE", "CLIENT", "PROTOCOL",
+        "ROUTER", "BROWSER", "KERNEL", "MEMORY", "THREAD",
+        "PROCESS", "SOCKET", "PACKET", "CACHE", "FRAMEWORK"
+    },
+    { // 9: Food
+        "PIZZA", "BURGER", "SALAD", "PASTA", "SUSHI",
+        "STEAK", "CHEESE", "BREAD", "APPLE", "BANANA",
+        "ORANGE", "GRAPE", "CHICKEN", "BACON", "TOMATO",
+        "POTATO", "ONION", "GARLIC", "PEPPER", "CARROT",
+        "CEREAL", "WAFFLE", "PANCAKE", "MUFFIN", "COOKIE",
+        "CHOCOLATE", "VANILLA", "BUTTER", "YOGURT", "HONEY"
+    },
+    { // 10: Astronomy
+        "ASTEROID", "COMET", "GALAXY", "NEBULA", "PLANET",
+        "STAR", "ORBIT", "SATELLITE", "ROCKET", "GRAVITY",
+        "ECLIPSE", "METEOR", "UNIVERSE", "COSMOS", "PULSAR",
+        "QUASAR", "SUPERNOVA", "VACUUM", "EQUATOR", "HORIZON",
+        "ZENITH", "LUNAR", "SOLAR", "TELESCOPE", "ASTRONAUT",
+        "SPACECRAFT", "OBSERVATORY", "CONSTELLATION", "ZODIAC", "APOLLO"
+    },
+    { // 11: Sports
+        "SOCCER", "TENNIS", "BASKETBALL", "BASEBALL", "GOLF",
+        "RUGBY", "CRICKET", "HOCKEY", "VOLLEYBALL", "SWIMMING",
+        "BOXING", "WRESTLING", "CYCLING", "ATHLETICS", "GYMNASTICS",
+        "ARCHERY", "FENCING", "BOWLING", "BILLIARDS", "SNOOKER",
+        "DARTS", "KARATE", "JUDO", "TAEKWONDO", "SURFING",
+        "SKATING", "SKIING", "SNOWBOARD", "ROWING", "SAILING"
     }
+};
+
+const char* SECRET_WORDS_BANK[] = {
+    "BONUS", "SECRET", "HIDDEN", "JEWEL", "MAGIC",
+    "KILO", "SUPER", "HERO", "LUCKY", "PRIZE"
+};
+#define NUM_SECRET_BANK 10
+
+typedef struct {
+    int grid;
+    int words;
+    int time;
+    int theme; // -1 for Polyglot (mixed)
+    int frozen;
+    int fog; // 0 = false, 1 = true
+    const char* title;
+} CampaignStageDef;
+
+static const CampaignStageDef CAMPAIGN_STAGES_DEF[NUM_CAMPAIGN_STAGES] = {
+    {10,  5, 120,  9, 0, 0, "Stage 1: Culinary Starter"},        // Food
+    {10,  6, 120,  3, 0, 0, "Stage 2: Wildlife Search"},        // Animals
+    {11,  6, 130, 11, 2, 0, "Stage 3: Sports Arena"},           // Sports
+    {11,  7, 130,  5, 2, 0, "Stage 4: Geographic Expedition"},  // Geography
+    {12,  7, 140,  8, 3, 0, "Stage 5: Tech Horizon"},           // Tech
+    {12,  8, 140,  0, 3, 1, "Stage 6: Element Shroud"},         // Elements (Fog)
+    {13,  8, 150,  4, 4, 0, "Stage 7: Scientific Discovery"},   // Science
+    {13,  9, 150,  6, 4, 1, "Stage 8: Ancient History"},        // History (Fog)
+    {14,  9, 160,  7, 5, 0, "Stage 9: Literary Classics"},      // Literature
+    {14, 10, 160,  1, 5, 1, "Stage 10: Cyber Sci-Fi"},          // Sci-Fi (Fog)
+    {15, 10, 170,  2, 6, 0, "Stage 11: Mythic Legends"},        // Myth
+    {15, 11, 170, 10, 6, 1, "Stage 12: Celestial Astronomy"},   // Astronomy (Fog)
+    {16, 11, 180,  9, 7, 0, "Stage 13: Gourmet Feast"},          // Food
+    {16, 12, 180,  3, 7, 1, "Stage 14: Deep Jungle Safari"},    // Animals (Fog)
+    {17, 12, 190,  8, 8, 0, "Stage 15: Quantum Computing"},     // Tech
+    {17, 13, 190,  4, 8, 1, "Stage 16: Genetic Frontier"},      // Science (Fog)
+    {18, 13, 200,  0, 9, 0, "Stage 17: Periodic Master"},       // Elements
+    {18, 14, 210,  1, 10, 1, "Stage 18: Interstellar Warp"},    // Sci-Fi (Fog)
+    {19, 15, 220,  2, 11, 1, "Stage 19: Olympus Ascendant"},     // Myth (Fog)
+    {20, 16, 240, -1, 12, 1, "Stage 20: Polyglot Grandmaster"}  // Mixed themes (Fog)
 };
 
 char grid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 bool foundGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 bool hintedGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
-bool frozenGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+int  frozenGrid[MAX_GRID_SIZE][MAX_GRID_SIZE]; // 0=none, 1=1 layer, 2=2 layers
+bool unfoggedGrid[MAX_GRID_SIZE][MAX_GRID_SIZE]; // Fog of War
+bool radarGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+bool pathfinderGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+bool secretGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+
 int gridSize = 15;
 int numWordsToFind = 8;
 int currentDifficulty = 1; // 0=Easy, 1=Medium, 2=Hard
 int currentThemeIdx = 0;
 int currentGameMode = 0; // 0=Classic, 1=Zen, 2=TimeAttack, 3=Campaign
 int campaignStage = 1;
-int magicWands = 3;    // Radar power-up charges
-int freezeCharges = 3;  // Freeze timer power-up charges
-int hintCharges = 3;    // Hint power-up charges
-int freezeTimer = 0;    // Seconds remaining for timer freeze
+bool isFogStage = false;
+
+int magicWands = 3;        // Radar (R)
+int pathfinderCharges = 3; // Pathfinder (P)
+int freezeCharges = 3;     // Freeze (F)
+int hintCharges = 3;       // Hint (H)
+int freezeTimer = 0;       // Seconds remaining for timer freeze
 int comboMultiplier = 1;
 int timeSinceLastFind = 0;
 
@@ -130,6 +185,12 @@ bool wordsHintedStatus[MAX_WORDS];
 int wordCount = 0;
 int foundCount = 0;
 int currentScore = 0;
+
+char secretWords[2][32];
+bool secretFoundStatus[2];
+int secretCount = 0;
+int secretBannerTimer = 0;
+char secretBannerMsg[64] = "";
 
 bool isSelecting = false;
 int startR = -1, startC = -1;
@@ -162,7 +223,8 @@ int GetCellPx() {
     if (gridSize <= 9) return 40;
     if (gridSize <= 12) return 34;
     if (gridSize <= 15) return 28;
-    return 22;
+    if (gridSize <= 18) return 24;
+    return 21;
 }
 
 typedef struct {
@@ -256,41 +318,26 @@ void SaveStats() {
     }
 }
 
-RECT btnTheme  = {170, 10, 255, 35};
-RECT btnMode   = {260, 10, 345, 35};
-RECT btnEasy   = {350, 10, 395, 35};
-RECT btnMed    = {400, 10, 455, 35};
-RECT btnHard   = {460, 10, 505, 35};
-RECT btnHint   = {510, 10, 555, 35};
-RECT btnWand   = {560, 10, 615, 35};
-RECT btnFreeze = {620, 10, 675, 35};
-RECT btnSave   = {680, 10, 725, 35};
-RECT btnLoad   = {730, 10, 775, 35};
-RECT btnStats  = {780, 10, 830, 35};
-RECT btnHelp   = {835, 10, 880, 35};
+RECT btnTheme  = {170, 10, 245, 35};
+RECT btnMode   = {250, 10, 325, 35};
+RECT btnEasy   = {330, 10, 375, 35};
+RECT btnMed    = {380, 10, 435, 35};
+RECT btnHard   = {440, 10, 485, 35};
+RECT btnHint   = {490, 10, 535, 35};
+RECT btnWand   = {540, 10, 590, 35};
+RECT btnPath   = {595, 10, 645, 35};
+RECT btnFreeze = {650, 10, 700, 35};
+RECT btnSave   = {705, 10, 745, 35};
+RECT btnLoad   = {750, 10, 790, 35};
+RECT btnStats  = {795, 10, 840, 35};
+RECT btnHelp   = {845, 10, 885, 35};
 
 bool showStats = false;
 bool showHelp = false;
 
-DWORD WINAPI SoundTick(LPVOID lpParam) {
-    Beep(1500, 10);
-    return 0;
-}
-
-DWORD WINAPI SoundChime(LPVOID lpParam) {
-    Beep(523, 100);
-    Beep(659, 100);
-    Beep(784, 200);
-    return 0;
-}
-
-DWORD WINAPI SoundFanfare(LPVOID lpParam) {
-    Beep(440, 150);
-    Beep(554, 150);
-    Beep(659, 150);
-    Beep(880, 400);
-    return 0;
-}
+DWORD WINAPI SoundTick(LPVOID lpParam) { Beep(1500, 10); return 0; }
+DWORD WINAPI SoundChime(LPVOID lpParam) { Beep(523, 100); Beep(659, 100); Beep(784, 200); return 0; }
+DWORD WINAPI SoundFanfare(LPVOID lpParam) { Beep(440, 150); Beep(554, 150); Beep(659, 150); Beep(880, 400); return 0; }
 
 void PlaySoundEffect(int type) {
     if (type == 0) CreateThread(NULL, 0, SoundTick, NULL, 0, NULL);
@@ -298,65 +345,97 @@ void PlaySoundEffect(int type) {
     else if (type == 2) CreateThread(NULL, 0, SoundFanfare, NULL, 0, NULL);
 }
 
+void UnfogArea(int centerR, int centerC, int radius) {
+    for (int dr = -radius; dr <= radius; dr++) {
+        for (int dc = -radius; dc <= radius; dc++) {
+            int nr = centerR + dr;
+            int nc = centerC + dc;
+            if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
+                unfoggedGrid[nr][nc] = true;
+            }
+        }
+    }
+}
+
+bool PlaceSingleWord(const char* word) {
+    int dirs[8][2] = {{0,1}, {1,0}, {1,1}, {-1,1}, {1,-1}, {-1,-1}, {0,-1}, {-1,0}};
+    int len = strlen(word);
+    int attempts = 0;
+    while(attempts < 200) {
+        attempts++;
+        int d = rand() % 8;
+        int r = rand() % gridSize;
+        int c = rand() % gridSize;
+        
+        bool canPlace = true;
+        for(int i=0; i<len; i++) {
+            int nr = r + i * dirs[d][0];
+            int nc = c + i * dirs[d][1];
+            if(nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || (grid[nr][nc] != ' ' && grid[nr][nc] != word[i])) {
+                canPlace = false;
+                break;
+            }
+        }
+        if(canPlace) {
+            for(int i=0; i<len; i++) {
+                grid[r + i * dirs[d][0]][c + i * dirs[d][1]] = word[i];
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
 void InitGame() {
     srand((unsigned int)time(NULL));
     memset(foundGrid, 0, sizeof(foundGrid));
     memset(hintedGrid, 0, sizeof(hintedGrid));
     memset(frozenGrid, 0, sizeof(frozenGrid));
+    memset(unfoggedGrid, 0, sizeof(unfoggedGrid));
+    memset(radarGrid, 0, sizeof(radarGrid));
+    memset(pathfinderGrid, 0, sizeof(pathfinderGrid));
+    memset(secretGrid, 0, sizeof(secretGrid));
     memset(wordsFoundStatus, 0, sizeof(wordsFoundStatus));
     memset(wordsHintedStatus, 0, sizeof(wordsHintedStatus));
     memset(cellAnim, 0, sizeof(cellAnim));
     memset(strikeAnim, 0, sizeof(strikeAnim));
+    memset(secretFoundStatus, 0, sizeof(secretFoundStatus));
+    
     foundCount = 0;
     if (!(currentGameMode == 3 && campaignStage > 1)) {
         currentScore = 0;
     }
     freezeTimer = 0;
+    secretBannerTimer = 0;
     
     int numFrozen = 0;
+    isFogStage = false;
     
     if (currentGameMode == 3) {
-        // 15 Campaign Stages:
-        // Stage 1: 8x8, 4 words, 120s, Theme 0 (Programming), 0 frozen
-        // Stage 2: 8x8, 5 words, 120s, Theme 1 (Animals), 0 frozen
-        // Stage 3: 9x9, 5 words, 130s, Theme 2 (Countries), 3 frozen
-        // Stage 4: 9x9, 6 words, 130s, Theme 3 (Space), 3 frozen
-        // Stage 5: 10x10, 6 words, 140s, Theme 8 (Elements), 4 frozen
-        // Stage 6: 10x10, 7 words, 140s, Theme 9 (Sci-Fi), 4 frozen
-        // Stage 7: 10x10, 7 words, 150s, Theme 10 (Myth), 5 frozen
-        // Stage 8: 11x11, 8 words, 150s, Theme 6 (Nature), 5 frozen
-        // Stage 9: 11x11, 8 words, 160s, Theme 4 (Food), 6 frozen
-        // Stage 10: 11x11, 9 words, 160s, Theme 5 (Sports), 6 frozen
-        // Stage 11: 12x12, 9 words, 170s, Theme 7 (History), 7 frozen
-        // Stage 12: 12x12, 10 words, 170s, Theme 8 (Elements), 7 frozen
-        // Stage 13: 12x12, 10 words, 180s, Theme 9 (Sci-Fi), 8 frozen
-        // Stage 14: 12x12, 11 words, 180s, Theme 10 (Myth), 8 frozen
-        // Stage 15: 12x12, 12 words, 200s, Theme 3 (Space), 9 frozen
-        static const int stagesGrid[15]   = {8, 8, 9, 9, 10, 10, 10, 11, 11, 11, 12, 12, 12, 12, 12};
-        static const int stagesWords[15]  = {4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 12};
-        static const int stagesTime[15]   = {120, 120, 130, 130, 140, 140, 150, 150, 160, 160, 170, 170, 180, 180, 200};
-        static const int stagesTheme[15]  = {0, 1, 2, 3, 8, 9, 10, 6, 4, 5, 7, 8, 9, 10, 3};
-        static const int stagesFrozen[15] = {0, 0, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9};
-
         int stg = campaignStage - 1;
         if (stg < 0) stg = 0;
-        if (stg > 14) stg = 14;
+        if (stg >= NUM_CAMPAIGN_STAGES) stg = NUM_CAMPAIGN_STAGES - 1;
 
-        gridSize = stagesGrid[stg];
-        numWordsToFind = stagesWords[stg];
-        timerSeconds = stagesTime[stg];
-        currentThemeIdx = stagesTheme[stg];
-        numFrozen = stagesFrozen[stg];
+        gridSize = CAMPAIGN_STAGES_DEF[stg].grid;
+        numWordsToFind = CAMPAIGN_STAGES_DEF[stg].words;
+        timerSeconds = CAMPAIGN_STAGES_DEF[stg].time;
+        int tIdx = CAMPAIGN_STAGES_DEF[stg].theme;
+        if (tIdx >= 0) currentThemeIdx = tIdx;
+        numFrozen = CAMPAIGN_STAGES_DEF[stg].frozen;
+        isFogStage = (CAMPAIGN_STAGES_DEF[stg].fog == 1);
 
         magicWands = 3;
+        pathfinderCharges = 3;
         freezeCharges = 3;
         hintCharges = 3;
     } else if (currentGameMode == 2) {
         timerSeconds = (gridSize == 10) ? 120 : ((gridSize == 15) ? 180 : 300);
         numFrozen = (currentDifficulty == 0) ? 0 : ((currentDifficulty == 1) ? 3 : 6);
+        isFogStage = (currentDifficulty == 2);
     } else {
         timerSeconds = 0;
         numFrozen = (currentDifficulty == 0) ? 0 : ((currentDifficulty == 1) ? 2 : 4);
+        isFogStage = false;
     }
     comboMultiplier = 1;
     timeSinceLastFind = 0;
@@ -371,49 +450,50 @@ void InitGame() {
         }
     }
     
-    // Pick words
-    int picked[THEME_DICT_SIZE] = {0};
+    // Pick target words
     wordCount = 0;
-    while(wordCount < numWordsToFind) {
-        int idx = rand() % THEME_DICT_SIZE;
-        if(!picked[idx]) {
-            picked[idx] = 1;
-            strcpy(wordsToFind[wordCount], DICTIONARIES[currentThemeIdx][idx]);
-            wordCount++;
+    if (currentGameMode == 3 && campaignStage == 20) {
+        // Polyglot Grandmaster: Pick words from ALL themes
+        while(wordCount < numWordsToFind) {
+            int t = rand() % NUM_THEMES;
+            int idx = rand() % THEME_DICT_SIZE;
+            const char* candidate = DICTIONARIES[t][idx];
+            bool dup = false;
+            for(int k=0; k<wordCount; k++) {
+                if(strcmp(wordsToFind[k], candidate) == 0) { dup = true; break; }
+            }
+            if(!dup) {
+                strcpy(wordsToFind[wordCount++], candidate);
+            }
+        }
+    } else {
+        int picked[THEME_DICT_SIZE] = {0};
+        while(wordCount < numWordsToFind) {
+            int idx = rand() % THEME_DICT_SIZE;
+            if(!picked[idx]) {
+                picked[idx] = 1;
+                strcpy(wordsToFind[wordCount++], DICTIONARIES[currentThemeIdx][idx]);
+            }
         }
     }
     
-    // Place words
-    int dirs[8][2] = {{0,1}, {1,0}, {1,1}, {-1,1}, {1,-1}, {-1,-1}, {0,-1}, {-1,0}};
+    // Place target words
     for(int w=0; w<wordCount; w++) {
-        bool placed = false;
-        int len = strlen(wordsToFind[w]);
-        int attempts = 0;
-        while(!placed && attempts < 200) {
-            attempts++;
-            int d = rand() % 8;
-            int r = rand() % gridSize;
-            int c = rand() % gridSize;
-            
-            bool canPlace = true;
-            for(int i=0; i<len; i++) {
-                int nr = r + i * dirs[d][0];
-                int nc = c + i * dirs[d][1];
-                if(nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || (grid[nr][nc] != ' ' && grid[nr][nc] != wordsToFind[w][i])) {
-                    canPlace = false;
-                    break;
-                }
-            }
-            if(canPlace) {
-                for(int i=0; i<len; i++) {
-                    grid[r + i * dirs[d][0]][c + i * dirs[d][1]] = wordsToFind[w][i];
-                }
-                placed = true;
-            }
-        }
+        PlaceSingleWord(wordsToFind[w]);
     }
     
-    // Fill rest
+    // Place secret bonus words
+    secretCount = 0;
+    int sPicked = rand() % NUM_SECRET_BANK;
+    if (PlaceSingleWord(SECRET_WORDS_BANK[sPicked])) {
+        strcpy(secretWords[secretCount++], SECRET_WORDS_BANK[sPicked]);
+    }
+    int sPicked2 = (sPicked + 1 + (rand() % (NUM_SECRET_BANK - 1))) % NUM_SECRET_BANK;
+    if (PlaceSingleWord(SECRET_WORDS_BANK[sPicked2])) {
+        strcpy(secretWords[secretCount++], SECRET_WORDS_BANK[sPicked2]);
+    }
+
+    // Fill rest of grid with random letters
     for(int r=0; r<gridSize; r++){
         for(int c=0; c<gridSize; c++){
             if(grid[r][c] == ' '){
@@ -422,17 +502,29 @@ void InitGame() {
         }
     }
 
-    // Place frozen obstacle tiles
+    // Place frozen tiles (2 layers of ice each)
     int frozenPlaced = 0;
     int fAttempts = 0;
     while (frozenPlaced < numFrozen && fAttempts < 300) {
         fAttempts++;
         int fr = rand() % gridSize;
         int fc = rand() % gridSize;
-        if (!frozenGrid[fr][fc]) {
-            frozenGrid[fr][fc] = true;
+        if (frozenGrid[fr][fc] == 0) {
+            frozenGrid[fr][fc] = 2; // 2 layers of ice
             frozenPlaced++;
         }
+    }
+
+    // Initialize Fog of War
+    if (!isFogStage) {
+        for(int r=0; r<gridSize; r++) {
+            for(int c=0; c<gridSize; c++) {
+                unfoggedGrid[r][c] = true;
+            }
+        }
+    } else {
+        // Unfog center starting area
+        UnfogArea(gridSize / 2, gridSize / 2, 2);
     }
 }
 
@@ -472,6 +564,7 @@ void EndSelection(HWND hwnd) {
         }
         
         bool found = false;
+        // Check target words
         for(int w=0; w<wordCount; w++) {
             if(!wordsFoundStatus[w]) {
                 if(strcmp(wordsToFind[w], selWord) == 0 || strcmp(wordsToFind[w], revWord) == 0) {
@@ -489,20 +582,21 @@ void EndSelection(HWND hwnd) {
                         timeSinceLastFind = 0;
                     }
                     
-                    // Mark cells as found and thaw touching frozen tiles
+                    // Mark cells as found & thaw adjacent frozen tiles & clear fog
                     for(int i=0; i<count; i++) {
                         int r = selR[i];
                         int c = selC[i];
                         foundGrid[r][c] = true;
+                        if (isFogStage) UnfogArea(r, c, 1);
                         
                         for (int dr = -1; dr <= 1; dr++) {
                             for (int dc = -1; dc <= 1; dc++) {
                                 int nr = r + dr;
                                 int nc = c + dc;
                                 if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-                                    if (frozenGrid[nr][nc]) {
-                                        frozenGrid[nr][nc] = false;
-                                        currentScore += 100; // Bonus points for thawing tiles
+                                    if (frozenGrid[nr][nc] > 0) {
+                                        frozenGrid[nr][nc] = 0;
+                                        currentScore += 100;
                                     }
                                 }
                             }
@@ -512,9 +606,32 @@ void EndSelection(HWND hwnd) {
                 }
             }
         }
+
+        // Check secret words
+        if (!found) {
+            for(int s=0; s<secretCount; s++) {
+                if(!secretFoundStatus[s]) {
+                    if(strcmp(secretWords[s], selWord) == 0 || strcmp(secretWords[s], revWord) == 0) {
+                        secretFoundStatus[s] = true;
+                        currentScore += 500;
+                        secretBannerTimer = 4;
+                        sprintf(secretBannerMsg, "SECRET WORD FOUND: %s! (+500 PTS)", secretWords[s]);
+                        PlaySoundEffect(2);
+                        for(int i=0; i<count; i++) {
+                            int r = selR[i];
+                            int c = selC[i];
+                            secretGrid[r][c] = true;
+                            if (isFogStage) UnfogArea(r, c, 2);
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
         
         if (foundCount == wordCount) {
-            if (currentGameMode == 3 && campaignStage < 15) {
+            if (currentGameMode == 3 && campaignStage < NUM_CAMPAIGN_STAGES) {
                 campaignStage++;
                 PlaySoundEffect(2);
                 InitGame();
@@ -538,7 +655,7 @@ void EndSelection(HWND hwnd) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
-void UseWand(HWND hwnd) {
+void UseRadar(HWND hwnd) {
     if (gameWon || gameOver) return;
     if (currentGameMode == 3 && magicWands <= 0) return;
     if (currentGameMode != 3 && currentScore < 200 && currentGameMode != 1) return;
@@ -546,11 +663,8 @@ void UseWand(HWND hwnd) {
     int unfound[MAX_WORDS];
     int uncount = 0;
     for(int w=0; w<wordCount; w++) {
-        if(!wordsFoundStatus[w]) {
-            unfound[uncount++] = w;
-        }
+        if(!wordsFoundStatus[w]) unfound[uncount++] = w;
     }
-    
     if (uncount == 0) return;
     
     int targetIdx = unfound[rand() % uncount];
@@ -575,50 +689,67 @@ void UseWand(HWND hwnd) {
                         }
                     }
                     if (match) {
-                        for (int i = 0; i < len; i++) {
-                            int fr = r + i * dirs[d][0];
-                            int fc = c + i * dirs[d][1];
-                            foundGrid[fr][fc] = true;
-                            // Thaw adjacent frozen tiles
-                            for (int dr = -1; dr <= 1; dr++) {
-                                for (int dc = -1; dc <= 1; dc++) {
-                                    int nr = fr + dr;
-                                    int nc = fc + dc;
-                                    if (nr >= 0 && nr < gridSize && nc >= 0 && nc < gridSize) {
-                                        if (frozenGrid[nr][nc]) frozenGrid[nr][nc] = false;
-                                    }
-                                }
-                            }
-                        }
-                        wordsFoundStatus[targetIdx] = true;
-                        foundCount++;
-                        PlaySoundEffect(1);
+                        radarGrid[r][c] = true;
+                        if (isFogStage) UnfogArea(r, c, 2);
                         foundInGrid = true;
+                        PlaySoundEffect(1);
                         break;
                     }
                 }
             }
         }
     }
-    
-    if (foundCount == wordCount) {
-        if (currentGameMode == 3 && campaignStage < 15) {
-            campaignStage++;
-            PlaySoundEffect(2);
-            InitGame();
-        } else {
-            gameWon = true;
-            PlaySoundEffect(2);
-            LoadStats();
-            gameStats.completed++;
-            int bTime = gameStats.bestTimes[currentThemeIdx][currentDifficulty];
-            if (bTime == 0 || timerSeconds < bTime) {
-                gameStats.bestTimes[currentThemeIdx][currentDifficulty] = timerSeconds;
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void UsePathfinder(HWND hwnd) {
+    if (gameWon || gameOver) return;
+    if (currentGameMode == 3 && pathfinderCharges <= 0) return;
+    if (currentGameMode != 3 && currentScore < 300 && currentGameMode != 1) return;
+
+    int unfound[MAX_WORDS];
+    int uncount = 0;
+    for(int w=0; w<wordCount; w++) {
+        if(!wordsFoundStatus[w]) unfound[uncount++] = w;
+    }
+    if (uncount == 0) return;
+
+    int targetIdx = unfound[rand() % uncount];
+
+    if (currentGameMode == 3) pathfinderCharges--;
+    else if (currentGameMode != 1) currentScore -= 300;
+
+    int dirs[8][2] = {{0,1}, {1,0}, {1,1}, {-1,1}, {1,-1}, {-1,-1}, {0,-1}, {-1,0}};
+    int len = strlen(wordsToFind[targetIdx]);
+    bool foundInGrid = false;
+    for (int r = 0; r < gridSize && !foundInGrid; r++) {
+        for (int c = 0; c < gridSize && !foundInGrid; c++) {
+            if (grid[r][c] == wordsToFind[targetIdx][0]) {
+                for (int d = 0; d < 8; d++) {
+                    bool match = true;
+                    for (int i = 0; i < len; i++) {
+                        int nr = r + i * dirs[d][0];
+                        int nc = c + i * dirs[d][1];
+                        if (nr < 0 || nr >= gridSize || nc < 0 || nc >= gridSize || grid[nr][nc] != wordsToFind[targetIdx][i]) {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match) {
+                        for (int i = 0; i < len; i++) {
+                            int fr = r + i * dirs[d][0];
+                            int fc = c + i * dirs[d][1];
+                            pathfinderGrid[fr][fc] = true;
+                            if (isFogStage) UnfogArea(fr, fc, 1);
+                        }
+                        foundInGrid = true;
+                        PlaySoundEffect(1);
+                        break;
+                    }
+                }
             }
-            SaveStats();
         }
     }
-    
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
@@ -643,19 +774,8 @@ void UseHint(HWND hwnd) {
     int unfound[MAX_WORDS];
     int uncount = 0;
     for(int w=0; w<wordCount; w++) {
-        if(!wordsFoundStatus[w] && !wordsHintedStatus[w]) {
-            unfound[uncount++] = w;
-        }
+        if(!wordsFoundStatus[w]) unfound[uncount++] = w;
     }
-    
-    if (uncount == 0) {
-        for(int w=0; w<wordCount; w++) {
-            if(!wordsFoundStatus[w]) {
-                unfound[uncount++] = w;
-            }
-        }
-    }
-    
     if (uncount == 0) return;
     
     int targetIdx = unfound[rand() % uncount];
@@ -678,17 +798,11 @@ void UseHint(HWND hwnd) {
                         }
                     }
                     if (match) {
-                        hintedGrid[r][c] = true;
-                        wordsHintedStatus[targetIdx] = true;
-                        if (currentGameMode != 1 && currentGameMode != 3) {
-                            currentScore -= 50;
-                            if (currentScore < 0) currentScore = 0;
-                            if (currentGameMode == 0) timerSeconds += 30;
-                            else if (currentGameMode == 2) {
-                                timerSeconds -= 30;
-                                if (timerSeconds < 0) timerSeconds = 0;
-                            }
-                        }
+                        int randChar = rand() % len;
+                        int hr = r + randChar * dirs[d][0];
+                        int hc = c + randChar * dirs[d][1];
+                        hintedGrid[hr][hc] = true;
+                        if (isFogStage) UnfogArea(hr, hc, 1);
                         foundInGrid = true;
                         PlaySoundEffect(0);
                         break;
@@ -710,6 +824,7 @@ void SaveGame(HWND hwnd) {
         fwrite(&currentGameMode, sizeof(int), 1, fp);
         fwrite(&campaignStage, sizeof(int), 1, fp);
         fwrite(&magicWands, sizeof(int), 1, fp);
+        fwrite(&pathfinderCharges, sizeof(int), 1, fp);
         fwrite(&freezeCharges, sizeof(int), 1, fp);
         fwrite(&hintCharges, sizeof(int), 1, fp);
         fwrite(&wordCount, sizeof(int), 1, fp);
@@ -721,7 +836,8 @@ void SaveGame(HWND hwnd) {
         fwrite(grid, sizeof(char), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fwrite(foundGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fwrite(hintedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
-        fwrite(frozenGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(frozenGrid, sizeof(int), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fwrite(unfoggedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fwrite(wordsToFind, sizeof(char), MAX_WORDS * 32, fp);
         fwrite(wordsFoundStatus, sizeof(bool), MAX_WORDS, fp);
         fwrite(wordsHintedStatus, sizeof(bool), MAX_WORDS, fp);
@@ -742,6 +858,7 @@ void LoadGame(HWND hwnd) {
         fread(&currentGameMode, sizeof(int), 1, fp);
         fread(&campaignStage, sizeof(int), 1, fp);
         fread(&magicWands, sizeof(int), 1, fp);
+        fread(&pathfinderCharges, sizeof(int), 1, fp);
         fread(&freezeCharges, sizeof(int), 1, fp);
         fread(&hintCharges, sizeof(int), 1, fp);
         fread(&wordCount, sizeof(int), 1, fp);
@@ -753,7 +870,8 @@ void LoadGame(HWND hwnd) {
         fread(grid, sizeof(char), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fread(foundGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fread(hintedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
-        fread(frozenGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fread(frozenGrid, sizeof(int), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
+        fread(unfoggedGrid, sizeof(bool), MAX_GRID_SIZE * MAX_GRID_SIZE, fp);
         fread(wordsToFind, sizeof(char), MAX_WORDS * 32, fp);
         fread(wordsFoundStatus, sizeof(bool), MAX_WORDS, fp);
         fread(wordsHintedStatus, sizeof(bool), MAX_WORDS, fp);
@@ -788,6 +906,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_TIMER:
             if(wParam == 1) {
                 if(!gameWon && !gameOver) {
+                    if (secretBannerTimer > 0) secretBannerTimer--;
                     if (freezeTimer > 0) {
                         freezeTimer--;
                     } else {
@@ -832,30 +951,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         case WM_KEYDOWN:
-            if (wParam == 'R' || wParam == 'r') UseWand(hwnd);
+            if (wParam == 'R' || wParam == 'r' || wParam == 'W' || wParam == 'w') UseRadar(hwnd);
+            else if (wParam == 'P' || wParam == 'p') UsePathfinder(hwnd);
             else if (wParam == 'F' || wParam == 'f') UseFreeze(hwnd);
             else if (wParam == 'H' || wParam == 'h') UseHint(hwnd);
-            else if (wParam == 'W' || wParam == 'w') UseWand(hwnd);
             else if (wParam == 'S' || wParam == 's') SaveGame(hwnd);
             else if (wParam == 'L' || wParam == 'l') LoadGame(hwnd);
             break;
         case WM_LBUTTONDOWN: {
-            if (showStats) {
-                showStats = false;
-                InvalidateRect(hwnd, NULL, TRUE);
-                break;
-            }
-            if (showHelp) {
-                showHelp = false;
-                InvalidateRect(hwnd, NULL, TRUE);
-                break;
-            }
+            if (showStats) { showStats = false; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (showHelp) { showHelp = false; InvalidateRect(hwnd, NULL, TRUE); break; }
             POINT pt = {LOWORD(lParam), HIWORD(lParam)};
             if (PtInRect(&btnTheme, pt)) {
                 currentThemeIdx = (currentThemeIdx + 1) % NUM_THEMES; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
             if (PtInRect(&btnMode, pt)) {
-                currentGameMode = (currentGameMode + 1) % 4; if (currentGameMode == 3) { campaignStage = 1; magicWands = 3; freezeCharges = 3; hintCharges = 3; currentScore = 0; } InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
+                currentGameMode = (currentGameMode + 1) % 4;
+                if (currentGameMode == 3) { campaignStage = 1; magicWands = 3; pathfinderCharges = 3; freezeCharges = 3; hintCharges = 3; currentScore = 0; }
+                InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
             if (PtInRect(&btnEasy, pt)) {
                 currentDifficulty = 0; gridSize = 10; numWordsToFind = 5; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
@@ -866,44 +979,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (PtInRect(&btnHard, pt)) {
                 currentDifficulty = 2; gridSize = 20; numWordsToFind = 12; InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
-            if (PtInRect(&btnHint, pt)) {
-                UseHint(hwnd); break;
-            }
-            if (PtInRect(&btnWand, pt)) {
-                UseWand(hwnd); break;
-            }
-            if (PtInRect(&btnFreeze, pt)) {
-                UseFreeze(hwnd); break;
-            }
-            if (PtInRect(&btnSave, pt)) {
-                SaveGame(hwnd); break;
-            }
-            if (PtInRect(&btnLoad, pt)) {
-                LoadGame(hwnd); break;
-            }
-            if (PtInRect(&btnStats, pt)) {
-                LoadStats();
-                showStats = true;
-                InvalidateRect(hwnd, NULL, TRUE);
-                break;
-            }
-            if (PtInRect(&btnHelp, pt)) {
-                showHelp = true;
-                InvalidateRect(hwnd, NULL, TRUE);
-                break;
-            }
+            if (PtInRect(&btnHint, pt)) { UseHint(hwnd); break; }
+            if (PtInRect(&btnWand, pt)) { UseRadar(hwnd); break; }
+            if (PtInRect(&btnPath, pt)) { UsePathfinder(hwnd); break; }
+            if (PtInRect(&btnFreeze, pt)) { UseFreeze(hwnd); break; }
+            if (PtInRect(&btnSave, pt)) { SaveGame(hwnd); break; }
+            if (PtInRect(&btnLoad, pt)) { LoadGame(hwnd); break; }
+            if (PtInRect(&btnStats, pt)) { LoadStats(); showStats = true; InvalidateRect(hwnd, NULL, TRUE); break; }
+            if (PtInRect(&btnHelp, pt)) { showHelp = true; InvalidateRect(hwnd, NULL, TRUE); break; }
 
             if(gameWon || gameOver) {
-                InitGame();
-                InvalidateRect(hwnd, NULL, TRUE);
-                break;
+                InitGame(); InvalidateRect(hwnd, NULL, TRUE); break;
             }
+
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
             int cellPx = GetCellPx();
-            int c = (x - 26) / cellPx;
-            int r = (y - 56) / cellPx;
+            int c = (x - 20 - 6) / cellPx;
+            int r = (y - 50 - 6) / cellPx;
             if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
+                // If tile is frozen, clicking it thaws 1 layer (requires 2 clicks to thaw fully)
+                if (frozenGrid[r][c] > 0) {
+                    frozenGrid[r][c]--;
+                    PlaySoundEffect(0);
+                    if (frozenGrid[r][c] == 0) {
+                        currentScore += 100;
+                        PlaySoundEffect(1);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    break;
+                }
+                
+                // If fog stage, unfog cell and 3x3 surrounding
+                if (isFogStage) UnfogArea(r, c, 1);
+
                 isSelecting = true;
                 startR = curR = r;
                 startC = curC = c;
@@ -917,8 +1026,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int x = LOWORD(lParam);
                 int y = HIWORD(lParam);
                 int cellPx = GetCellPx();
-                int c = (x - 26) / cellPx;
-                int r = (y - 56) / cellPx;
+                int c = (x - 20 - 6) / cellPx;
+                int r = (y - 50 - 6) / cellPx;
                 if(r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
                     if(curR != r || curC != c) {
                         int oldR = curR, oldC = curC;
@@ -931,6 +1040,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         if (oldSelCount != newSelCount) {
                             PlaySoundEffect(0);
                         }
+                        if (isFogStage) UnfogArea(r, c, 1);
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 }
@@ -956,9 +1066,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 sprintf(header, "Found: %d/%d   Score: -   Timer: --:--", foundCount, wordCount);
             } else if (currentGameMode == 3) {
                 if (freezeTimer > 0) {
-                    sprintf(header, "Stage: %d/15   Found: %d/%d   Score: %d   Timer: FROZEN (%ds)   R:%d F:%d H:%d", campaignStage, foundCount, wordCount, currentScore, freezeTimer, magicWands, freezeCharges, hintCharges);
+                    sprintf(header, "Stage: %d/%d   Found: %d/%d   Score: %d   Timer: FROZEN (%ds)   R:%d P:%d F:%d H:%d",
+                            campaignStage, NUM_CAMPAIGN_STAGES, foundCount, wordCount, currentScore, freezeTimer,
+                            magicWands, pathfinderCharges, freezeCharges, hintCharges);
                 } else {
-                    sprintf(header, "Stage: %d/15   Found: %d/%d   Score: %d   Timer: %02d:%02d   R:%d F:%d H:%d", campaignStage, foundCount, wordCount, currentScore, timerSeconds/60, timerSeconds%60, magicWands, freezeCharges, hintCharges);
+                    sprintf(header, "Stage: %d/%d   Found: %d/%d   Score: %d   Timer: %02d:%02d   R:%d P:%d F:%d H:%d",
+                            campaignStage, NUM_CAMPAIGN_STAGES, foundCount, wordCount, currentScore, timerSeconds/60, timerSeconds%60,
+                            magicWands, pathfinderCharges, freezeCharges, hintCharges);
                 }
             } else {
                 if (freezeTimer > 0) {
@@ -986,6 +1100,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HBRUSH wandBrush = CreateSolidBrush(RGB(159, 122, 234));
             FillRect(hdc, &btnWand, wandBrush);
             DeleteObject(wandBrush);
+
+            HBRUSH pathBrush = CreateSolidBrush(RGB(72, 187, 120));
+            FillRect(hdc, &btnPath, pathBrush);
+            DeleteObject(pathBrush);
             
             HBRUSH freezeBtnBrush = CreateSolidBrush(RGB(56, 178, 172));
             FillRect(hdc, &btnFreeze, freezeBtnBrush);
@@ -1017,6 +1135,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(hdc, RGB(255, 255, 255));
             TextOut(hdc, btnWand.left + 5, btnWand.top + 5, "Radar", 5);
             SetTextColor(hdc, RGB(26, 32, 44));
+            TextOut(hdc, btnPath.left + 4, btnPath.top + 5, "Path", 4);
             TextOut(hdc, btnFreeze.left + 4, btnFreeze.top + 5, "Freeze", 6);
             SetTextColor(hdc, RGB(226, 232, 240));
             
@@ -1034,7 +1153,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GetLineCells(startR, startC, curR, curC, selR, selC, &selCount);
             }
             
-            HFONT hFont = CreateFont(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+            HFONT hFont = CreateFont(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
                 CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
             HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
             
@@ -1087,23 +1206,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             isSelected = true; break;
                         }
                     }
+
+                    bool isFogged = (isFogStage && !unfoggedGrid[r][c] && !isSelected);
                     
                     COLORREF bgTop, bgBot, borderHi, borderLo, textColor;
-                    if (isSelected) {
+                    if (isFogged) {
+                        bgTop = RGB(35, 40, 55); bgBot = RGB(20, 24, 35);
+                        borderHi = RGB(55, 60, 80); borderLo = RGB(10, 12, 20);
+                        textColor = RGB(70, 80, 105);
+                    } else if (isSelected) {
                         bgTop = RGB(99, 179, 237); bgBot = RGB(49, 130, 206);
                         borderHi = RGB(190, 227, 249); borderLo = RGB(26, 54, 93);
                         textColor = RGB(255, 255, 255);
+                    } else if (secretGrid[r][c]) {
+                        bgTop = RGB(255, 215, 0); bgBot = RGB(218, 165, 32);
+                        borderHi = RGB(255, 250, 205); borderLo = RGB(139, 101, 8);
+                        textColor = RGB(60, 40, 0);
                     } else if (foundGrid[r][c] || cellAnim[r][c] > 0.0f) {
                         bgTop = RGB(104, 211, 145); bgBot = RGB(56, 161, 105);
                         borderHi = RGB(198, 246, 213); borderLo = RGB(28, 69, 50);
+                        textColor = RGB(255, 255, 255);
+                    } else if (radarGrid[r][c]) {
+                        bgTop = RGB(214, 158, 255); bgBot = RGB(159, 122, 234);
+                        borderHi = RGB(243, 225, 255); borderLo = RGB(90, 40, 160);
+                        textColor = RGB(255, 255, 255);
+                    } else if (pathfinderGrid[r][c]) {
+                        bgTop = RGB(129, 230, 217); bgBot = RGB(49, 151, 149);
+                        borderHi = RGB(220, 255, 250); borderLo = RGB(20, 80, 80);
                         textColor = RGB(255, 255, 255);
                     } else if (hintedGrid[r][c]) {
                         bgTop = RGB(255, 224, 102); bgBot = RGB(214, 158, 46);
                         borderHi = RGB(254, 235, 200); borderLo = RGB(116, 66, 16);
                         textColor = RGB(45, 25, 0);
-                    } else if (frozenGrid[r][c]) {
-                        bgTop = RGB(229, 255, 255); bgBot = RGB(79, 209, 197);
-                        borderHi = RGB(255, 255, 255); borderLo = RGB(40, 94, 97);
+                    } else if (frozenGrid[r][c] > 0) {
+                        if (frozenGrid[r][c] == 2) {
+                            bgTop = RGB(179, 242, 255); bgBot = RGB(49, 180, 206);
+                            borderHi = RGB(230, 255, 255); borderLo = RGB(20, 100, 120);
+                        } else {
+                            bgTop = RGB(210, 250, 255); bgBot = RGB(100, 210, 225);
+                            borderHi = RGB(240, 255, 255); borderLo = RGB(30, 120, 140);
+                        }
                         textColor = RGB(13, 56, 56);
                     } else { // Ivory / Oak Scrabble Keycap
                         bgTop = RGB(247, 241, 227); bgBot = RGB(212, 196, 168);
@@ -1145,29 +1287,40 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Georgia");
                     HFONT oldF1 = (HFONT)SelectObject(hdc, letterFont);
                     SetTextColor(hdc, textColor);
-                    char letterStr[2] = { grid[r][c], 0 };
+                    
+                    char letterStr[2] = { isFogged ? '?' : grid[r][c], 0 };
                     RECT textRc = { tileRc.left, tileRc.top + 1, tileRc.right, tileRc.bottom - 4 };
                     DrawText(hdc, letterStr, 1, &textRc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                     SelectObject(hdc, oldF1);
                     DeleteObject(letterFont);
 
-                    int pts = GetLetterScore(grid[r][c]);
-                    char ptsStr[8];
-                    sprintf(ptsStr, "%d", pts);
-                    HFONT ptsFont = CreateFont(curH / 3, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                        OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
-                    HFONT oldF2 = (HFONT)SelectObject(hdc, ptsFont);
-                    SetTextColor(hdc, textColor);
-                    RECT ptsRc = { tileRc.right - (curW * 4 / 9), tileRc.bottom - (curH * 2 / 5), tileRc.right - 2, tileRc.bottom - 1 };
-                    DrawText(hdc, ptsStr, strlen(ptsStr), &ptsRc, DT_RIGHT | DT_BOTTOM | DT_SINGLELINE);
-                    SelectObject(hdc, oldF2);
-                    DeleteObject(ptsFont);
+                    if (!isFogged) {
+                        int pts = GetLetterScore(grid[r][c]);
+                        char ptsStr[8];
+                        sprintf(ptsStr, "%d", pts);
+                        HFONT ptsFont = CreateFont(curH / 3, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                            OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, "Segoe UI");
+                        HFONT oldF2 = (HFONT)SelectObject(hdc, ptsFont);
+                        SetTextColor(hdc, textColor);
+                        RECT ptsRc = { tileRc.right - (curW * 4 / 9), tileRc.bottom - (curH * 2 / 5), tileRc.right - 2, tileRc.bottom - 1 };
+                        DrawText(hdc, ptsStr, strlen(ptsStr), &ptsRc, DT_RIGHT | DT_BOTTOM | DT_SINGLELINE);
+                        SelectObject(hdc, oldF2);
+                        DeleteObject(ptsFont);
+                    }
                 }
             }
             DeleteObject(socketBg);
             
-            int listX = boardRight + 25;
+            int listX = boardRight + 20;
             int listY = 50;
+
+            if (currentGameMode == 3) {
+                SetTextColor(hdc, RGB(236, 201, 75));
+                TextOut(hdc, listX, listY, CAMPAIGN_STAGES_DEF[campaignStage - 1].title, strlen(CAMPAIGN_STAGES_DEF[campaignStage - 1].title));
+                listY += 22;
+            }
+
+            SetTextColor(hdc, RGB(226, 232, 240));
             TextOut(hdc, listX, listY, "Words to Find:", 14);
             listY += 25;
             
@@ -1189,26 +1342,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(strikePen);
                 }
                 
-                listY += 25;
+                listY += 22;
+            }
+
+            if (secretBannerTimer > 0) {
+                SetTextColor(hdc, RGB(255, 215, 0));
+                TextOut(hdc, listX, listY + 10, secretBannerMsg, strlen(secretBannerMsg));
             }
             
             if(gameWon) {
                 DrawConfettiFX(hdc, 920, 850);
                 SetTextColor(hdc, RGB(255, 215, 0));
-                TextOut(hdc, listX, listY + 20, "YOU WIN!", 8);
+                TextOut(hdc, listX, listY + 30, "YOU WIN!", 8);
                 SetTextColor(hdc, RGB(200, 200, 200));
                 char scoreStr[64];
                 sprintf(scoreStr, "Score: %d", currentScore);
-                TextOut(hdc, listX, listY + 50, scoreStr, strlen(scoreStr));
-                TextOut(hdc, listX, listY + 75, "Click anywhere", 14);
-                TextOut(hdc, listX, listY + 95, "to play again", 13);
+                TextOut(hdc, listX, listY + 55, scoreStr, strlen(scoreStr));
+                TextOut(hdc, listX, listY + 80, "Click anywhere", 14);
+                TextOut(hdc, listX, listY + 100, "to play again", 13);
             } else if (gameOver) {
                 SetTextColor(hdc, RGB(255, 100, 100));
-                TextOut(hdc, listX, listY + 20, "GAME OVER!", 10);
+                TextOut(hdc, listX, listY + 30, "GAME OVER!", 10);
                 SetTextColor(hdc, RGB(200, 200, 200));
-                TextOut(hdc, listX, listY + 50, "Time's up!", 10);
-                TextOut(hdc, listX, listY + 75, "Click anywhere", 14);
-                TextOut(hdc, listX, listY + 95, "to try again", 12);
+                TextOut(hdc, listX, listY + 55, "Time's up!", 10);
+                TextOut(hdc, listX, listY + 80, "Click anywhere", 14);
+                TextOut(hdc, listX, listY + 100, "to try again", 12);
             }
             
             if(showStats) {
@@ -1241,34 +1399,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             
             if(showHelp) {
-                RECT modalRc = { 100, 100, 700, 700 };
+                RECT modalRc = { 80, 80, 720, 720 };
                 HBRUSH modalBrush = CreateSolidBrush(RGB(30, 33, 43));
                 FillRect(hdc, &modalRc, modalBrush);
                 DeleteObject(modalBrush);
                 
                 SetTextColor(hdc, RGB(226, 232, 240));
-                TextOut(hdc, 120, 120, "How to Play KWords", 18);
-                TextOut(hdc, 120, 160, "Goal: Find all the hidden words in the grid!", 44);
-                TextOut(hdc, 140, 200, "- Words can be horizontal, vertical, or diagonal.", 49);
-                TextOut(hdc, 140, 230, "- They can be spelled forwards or backwards.", 44);
-                TextOut(hdc, 140, 260, "- Click and drag to select a word in the grid.", 46);
+                TextOut(hdc, 100, 100, "How to Play KWords - Loop 7 Edition", 35);
+                TextOut(hdc, 100, 135, "Goal: Find all hidden target words and secret bonus words!", 58);
+                TextOut(hdc, 120, 165, "- Words placed horizontally, vertically, or diagonally.", 55);
+                TextOut(hdc, 120, 190, "- Words can be spelled forwards or backwards.", 44);
+                TextOut(hdc, 120, 215, "- Click & drag to select words on the grid.", 43);
                 
-                TextOut(hdc, 120, 300, "Modes & Difficulties", 20);
-                TextOut(hdc, 140, 330, "- Campaign: 15 stages with frozen tiles & power-ups.", 52);
-                TextOut(hdc, 140, 360, "- Time Attack / Zen / Classic modes available.", 46);
+                TextOut(hdc, 100, 250, "Campaign Mode (20 Stages)", 25);
+                TextOut(hdc, 120, 275, "- 20 Progressive Stages with dynamic grid sizes (10x10 to 20x20).", 64);
+                TextOut(hdc, 120, 300, "- 12 Themes + Stage 20 Polyglot Grandmaster Challenge!", 54);
                 
                 SetTextColor(hdc, RGB(214, 158, 46));
-                TextOut(hdc, 120, 400, "Power-Ups (Hotkeys H, R/W, F):", 30);
-                TextOut(hdc, 140, 430, "H: Hint / First Letter - flashes starting letter.", 49);
-                TextOut(hdc, 140, 460, "R/W: Radar / Reveal Word - solves a word.", 41);
-                TextOut(hdc, 140, 490, "F: Freeze Timer - pauses timer for 15s.", 39);
+                TextOut(hdc, 100, 335, "Active Skills & Assistance (Hotkeys):", 37);
+                TextOut(hdc, 120, 360, "R / W: Word Radar - Sonar pulse highlights start of target word.", 64);
+                TextOut(hdc, 120, 385, "P: Word Pathfinder - Outlines full exact path of target word.", 61);
+                TextOut(hdc, 120, 410, "F: Freeze Timer - Pauses timer countdown for 15 seconds.", 55);
+                TextOut(hdc, 120, 435, "H: Hint - Flashes a random hidden letter in target word.", 55);
                 
                 SetTextColor(hdc, RGB(79, 209, 197));
-                TextOut(hdc, 120, 540, "Frozen Tiles:", 13);
-                TextOut(hdc, 140, 570, "Thaw locked tiles by finding words touching them!", 50);
+                TextOut(hdc, 100, 470, "Obstacles & Secret Features:", 28);
+                TextOut(hdc, 120, 495, "- Frozen Tiles: Cyan ice cells require adjacent solves or 2 clicks to thaw.", 74);
+                TextOut(hdc, 120, 520, "- Fog of War: Dark cells reveal letters when searched or scanned.", 65);
+                TextOut(hdc, 120, 545, "- Bonus Secret Words: Hidden bonus words award +500 PTS!", 55);
                 
                 SetTextColor(hdc, RGB(226, 232, 240));
-                TextOut(hdc, 120, 650, "Click anywhere to close help", 28);
+                TextOut(hdc, 100, 660, "Click anywhere to close help", 28);
             }
             
             SelectObject(hdc, hOldFont);
