@@ -29,10 +29,21 @@ long _ftol2(float f) { return (long)f; }
 #define MODE_ENDURANCE 1
 #define MODE_BOSS_RUSH 2
 
+#define MAX_SHOCKWAVES 20
+#define MAX_DEBRIS 35
+#define MAX_RIPPLES 20
+#define MAX_FLASHES 20
+
 typedef struct { float x, y, active, dx, dy, type; int hp, maxHp, timer, cloaked; } Ent;
-typedef struct { float x, y, speed; int size; } Star;
+typedef struct { float x, y, speed; int size, layer; } Star;
 typedef struct { float x, y, vx, vy; int life, maxLife; COLORREF color; } Particle;
 typedef struct { int score, wave, mode; } LeaderEntry;
+
+typedef struct { float x, y, r, maxR, speed, alpha; COLORREF color; int life; } Shockwave;
+typedef struct { float x, y, vx, vy, size, rot, vrot, life, decay; COLORREF color; } Debris;
+typedef struct { float x, y, r, maxR, alpha; COLORREF color; int life; } ShieldRipple;
+typedef struct { float x, y, size; int life, maxLife; COLORREF color; } MuzzleFlash;
+typedef struct { float x, y, r, vx, vy, phase; COLORREF col1; } Nebula;
 
 typedef struct {
     int score, wave, mode;
@@ -64,6 +75,18 @@ Ent eb[MAX_EBULLETS] = {0};
 Ent pu[MAX_POWERUPS] = {0};
 Particle particles[MAX_PARTICLES] = {0};
 Star stars[MAX_STARS] = {0};
+
+// Loop 2 Visual Collections
+Shockwave shockwaves[MAX_SHOCKWAVES] = {0};
+Debris debris[MAX_DEBRIS] = {0};
+ShieldRipple ripples[MAX_RIPPLES] = {0};
+MuzzleFlash flashes[MAX_FLASHES] = {0};
+
+Nebula nebulae[3] = {
+    { W * 0.25f, H * 0.3f, 90.0f, 0.12f, 0.2f, 0.0f, RGB(75, 0, 130) },
+    { W * 0.75f, H * 0.7f, 110.0f, -0.09f, 0.15f, 1.5f, RGB(139, 0, 139) },
+    { W * 0.45f, H * 0.1f, 80.0f, 0.07f, 0.25f, 3.0f, RGB(0, 80, 180) }
+};
 
 int spreadTimer = 0;
 int laserTimer = 0;
@@ -121,7 +144,60 @@ void PlaySnd(int type) {
     if (hThread) CloseHandle(hThread);
 }
 
-// Particle Explosions
+// Loop 2 Visual Effects Generators
+void AddShockwave(float x, float y, float maxR, COLORREF col) {
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+        if (shockwaves[i].life <= 0) {
+            shockwaves[i].x = x; shockwaves[i].y = y;
+            shockwaves[i].r = 4.0f; shockwaves[i].maxR = maxR;
+            shockwaves[i].speed = 2.2f; shockwaves[i].alpha = 1.0f;
+            shockwaves[i].color = col; shockwaves[i].life = 1;
+            break;
+        }
+    }
+}
+
+void AddDebrisChunk(float x, float y, int count, COLORREF col) {
+    int added = 0;
+    for (int i = 0; i < MAX_DEBRIS && added < count; i++) {
+        if (debris[i].life <= 0.0f) {
+            debris[i].x = x; debris[i].y = y;
+            debris[i].vx = (float)((int)(rnd() % 11) - 5) * 0.7f;
+            debris[i].vy = (float)((int)(rnd() % 11) - 5) * 0.7f;
+            debris[i].rot = (float)(rnd() % 628) / 100.0f;
+            debris[i].vrot = (float)((int)(rnd() % 10) - 5) * 0.05f;
+            debris[i].size = 3.0f + (rnd() % 4);
+            debris[i].color = col;
+            debris[i].life = 1.0f;
+            debris[i].decay = 0.02f + (float)(rnd() % 20) / 1000.0f;
+            added++;
+        }
+    }
+}
+
+void AddShieldRipple(float x, float y, COLORREF col) {
+    for (int i = 0; i < MAX_RIPPLES; i++) {
+        if (ripples[i].life <= 0) {
+            ripples[i].x = x; ripples[i].y = y;
+            ripples[i].r = 6.0f; ripples[i].maxR = 26.0f;
+            ripples[i].alpha = 1.0f; ripples[i].color = col; ripples[i].life = 1;
+            break;
+        }
+    }
+}
+
+void AddMuzzleFlash(float x, float y, COLORREF col, float size) {
+    for (int i = 0; i < MAX_FLASHES; i++) {
+        if (flashes[i].life <= 0) {
+            flashes[i].x = x; flashes[i].y = y;
+            flashes[i].size = size; flashes[i].life = 3; flashes[i].maxLife = 3;
+            flashes[i].color = col;
+            break;
+        }
+    }
+}
+
+// Particle Explosions (Loop 2 Enhanced)
 void AddExplosion(float x, float y, int count, COLORREF col) {
     int added = 0;
     for (int i = 0; i < MAX_PARTICLES && added < count; i++) {
@@ -135,6 +211,10 @@ void AddExplosion(float x, float y, int count, COLORREF col) {
             particles[i].color = col;
             added++;
         }
+    }
+    if (count >= 10) {
+        AddShockwave(x, y, (float)count * 2.2f, col);
+        AddDebrisChunk(x, y, (count / 2 > 10 ? 10 : count / 2), col);
     }
 }
 
@@ -545,6 +625,7 @@ void Shoot() {
                 if (spawned >= 3) break;
             }
         }
+        AddMuzzleFlash(p.x + 10.0f, p.y - 2.0f, RGB(0, 229, 255), 8.0f);
     } else if (weaponType == 3) { // Plasma Orb
         for (int i = 0; i < MAX_BULLETS; i++) {
             if (!b[i].active) {
@@ -557,6 +638,7 @@ void Shoot() {
                 break;
             }
         }
+        AddMuzzleFlash(p.x + 10.0f, p.y - 2.0f, RGB(213, 0, 249), 10.0f);
     } else { // Standard Twin Blaster
         int spawned = 0;
         float offsets[] = {3.0f, 13.0f};
@@ -572,6 +654,8 @@ void Shoot() {
                 if (spawned >= 2) break;
             }
         }
+        AddMuzzleFlash(p.x + 4.0f, p.y, RGB(0, 229, 255), 5.0f);
+        AddMuzzleFlash(p.x + 14.0f, p.y, RGB(0, 229, 255), 5.0f);
     }
 }
 
@@ -603,6 +687,10 @@ void StartNewGame(int modeIdx) {
     for (int i = 0; i < MAX_EBULLETS; i++) eb[i].active = 0;
     for (int i = 0; i < MAX_POWERUPS; i++) pu[i].active = 0;
     for (int i = 0; i < MAX_PARTICLES; i++) particles[i].life = 0;
+    for (int i = 0; i < MAX_SHOCKWAVES; i++) shockwaves[i].life = 0;
+    for (int i = 0; i < MAX_DEBRIS; i++) debris[i].life = 0.0f;
+    for (int i = 0; i < MAX_RIPPLES; i++) ripples[i].life = 0;
+    for (int i = 0; i < MAX_FLASHES; i++) flashes[i].life = 0;
 
     gameState = STATE_PLAYING;
     PlaySnd(3);
@@ -615,6 +703,7 @@ void PlayerHit() {
 
     if (shieldActive) {
         shieldActive = 0;
+        AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255));
         AddExplosion(p.x + 10.0f, p.y + 10.0f, 16, RGB(0, 229, 255));
         PlaySnd(1);
     } else {
@@ -632,11 +721,11 @@ void PlayerHit() {
 void ApplyPowerup(int type) {
     if (type == 0) { spreadTimer = 350; weaponType = 1; }
     else if (type == 1) { laserTimer = 300; weaponType = 2; }
-    else if (type == 2) { shieldActive = 1; }
+    else if (type == 2) { shieldActive = 1; AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(0, 229, 255)); }
     else if (type == 3) { if (bombCount < maxBombs) bombCount++; }
     else if (type == 4) { rapidTimer = 350; }
     else if (type == 5) { UseTimeStop(); }
-    else if (type == 6) { UseHyperShield(); }
+    else if (type == 6) { UseHyperShield(); AddShieldRipple(p.x + 10.0f, p.y + 10.0f, RGB(255, 234, 0)); }
     else if (type == 7) { dashCooldown = 0; UseTacticalDash(); }
 }
 
@@ -955,25 +1044,49 @@ void Update() {
     frameCount++;
 }
 
-// GDI Rendering Helpers
+// GDI Rendering Helpers (Loop 2 Visual Upgrades)
 void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
 
-    int flameH = 4 + (frame % 3) * 3;
-    COLORREF flameCol = (frame % 2 == 0) ? RGB(255, 200, 0) : RGB(255, 60, 0);
-    HBRUSH fbr = CreateSolidBrush(flameCol);
-    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, fbr);
+    // Multi-Stage Animated Thruster Flames (Loop 2)
+    int flameH = 5 + (frame % 3) * 3;
+    // Outer flame plume
+    HBRUSH ofbr = CreateSolidBrush((frame % 2 == 0) ? RGB(255, 60, 0) : RGB(255, 145, 0));
+    HBRUSH oldBr = (HBRUSH)SelectObject(hdc, ofbr);
+    POINT outerPts[3] = { {x + 4, y + 20}, {x + 10, y + 23 + flameH}, {x + 16, y + 20} };
+    Polygon(hdc, outerPts, 3);
+    SelectObject(hdc, oldBr); DeleteObject(ofbr);
+
+    // Core flame
+    HBRUSH fbr = CreateSolidBrush(RGB(255, 234, 0));
+    SelectObject(hdc, fbr);
     POINT flamePts[3] = { {x + 6, y + 20}, {x + 10, y + 20 + flameH}, {x + 14, y + 20} };
     Polygon(hdc, flamePts, 3);
     SelectObject(hdc, oldBr); DeleteObject(fbr);
 
+    // White center plasma flame
+    HBRUSH wfbr = CreateSolidBrush(RGB(255, 255, 255));
+    SelectObject(hdc, wfbr);
+    POINT whitePts[3] = { {x + 8, y + 20}, {x + 10, y + 17 + flameH / 2}, {x + 12, y + 20} };
+    Polygon(hdc, whitePts, 3);
+    SelectObject(hdc, oldBr); DeleteObject(wfbr);
+
+    // Wingtip thrusters
+    HBRUSH wtfbr = CreateSolidBrush(RGB(0, 229, 255));
+    SelectObject(hdc, wtfbr);
+    RECT lwt = {x, y + 16, x + 2, y + 20}; FillRect(hdc, &lwt, wtfbr);
+    RECT rwt = {x + 18, y + 16, x + 20, y + 20}; FillRect(hdc, &rwt, wtfbr);
+    SelectObject(hdc, oldBr); DeleteObject(wtfbr);
+
+    // Ship Hull
     HBRUSH wbr = CreateSolidBrush(RGB(0, 176, 255));
     SelectObject(hdc, wbr);
     POINT wingPts[6] = { {x + 10, y}, {x + 20, y + 16}, {x + 15, y + 20}, {x + 10, y + 15}, {x + 5, y + 20}, {x + 0, y + 16} };
     Polygon(hdc, wingPts, 6);
     SelectObject(hdc, oldBr); DeleteObject(wbr);
 
+    // Cockpit
     HBRUSH cbr = CreateSolidBrush(RGB(255, 255, 255));
     SelectObject(hdc, cbr);
     Ellipse(hdc, x + 7, y + 4, x + 13, y + 12);
@@ -996,7 +1109,7 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
     }
 
     if (laserTimer > 0) {
-        HPEN lpen = CreatePen(PS_SOLID, 4, RGB(0, 229, 255));
+        HPEN lpen = CreatePen(PS_SOLID, 5, RGB(0, 229, 255));
         SelectObject(hdc, lpen);
         MoveToEx(hdc, x + 10, y, NULL);
         LineTo(hdc, x + 10, 0);
@@ -1010,6 +1123,17 @@ void DrawEnemyShipGDI(HDC hdc, float fx, float fy, float ftype, int cloaked) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
+
+    // Enemy Rear Thruster Flame
+    if (type != 5 && type != 9) {
+        int eflame = 3 + (frameCount % 3) * 2;
+        COLORREF efcol = (type == 4 ? RGB(0, 229, 255) : (type == 7 ? RGB(255, 235, 59) : RGB(255, 60, 0)));
+        HBRUSH efbr = CreateSolidBrush(efcol);
+        HBRUSH oldBr = (HBRUSH)SelectObject(hdc, efbr);
+        POINT efPts[3] = { {x + 7, y}, {x + 10, y - eflame}, {x + 13, y} };
+        Polygon(hdc, efPts, 3);
+        SelectObject(hdc, oldBr); DeleteObject(efbr);
+    }
 
     COLORREF col = RGB(255, 23, 68);
     if (type == 1) col = RGB(255, 145, 0);
@@ -1055,15 +1179,26 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
     HPEN nullPen = (HPEN)GetStockObject(NULL_PEN);
     HPEN oldPen = (HPEN)SelectObject(hdc, nullPen);
 
+    int isEnraged = (bossHp < bossMaxHp / 2);
+
     if (bossIsMothership) {
         // Stage 20 Alien Mothership Hull
-        HBRUSH br = CreateSolidBrush(RGB(136, 14, 79));
+        HBRUSH br = CreateSolidBrush(isEnraged ? RGB(183, 28, 28) : RGB(136, 14, 79));
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
         POINT pts[8] = { {x + 45, y + 58}, {x + 85, y + 35}, {x + 90, y + 10}, {x + 65, y + 2}, {x + 45, y + 12}, {x + 25, y + 2}, {x + 0, y + 10}, {x + 5, y + 35} };
         Polygon(hdc, pts, 8);
 
-        // Core Eye
-        COLORREF coreCol = (frame % 8 < 4) ? RGB(0, 229, 255) : RGB(255, 23, 68);
+        // Enraged Phase Electric Lightning Arcs
+        if (isEnraged && frame % 2 == 0) {
+            HPEN lpen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+            SelectObject(hdc, lpen);
+            MoveToEx(hdc, x + 45, y + 30, NULL);
+            LineTo(hdc, x + 45 + (rnd() % 60) - 30, y + 30 + (rnd() % 40) - 20);
+            SelectObject(hdc, oldBr); DeleteObject(lpen);
+        }
+
+        // Core Eye Overload
+        COLORREF coreCol = isEnraged ? ((frame % 4 < 2) ? RGB(255, 234, 0) : RGB(255, 23, 68)) : ((frame % 8 < 4) ? RGB(0, 229, 255) : RGB(255, 23, 68));
         HBRUSH cbr = CreateSolidBrush(coreCol);
         SelectObject(hdc, cbr);
         Ellipse(hdc, x + 35, y + 20, x + 55, y + 40);
@@ -1089,13 +1224,21 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
             Ellipse(hdc, x - 10, y - 10, x + 100, y + 68);
             SelectObject(hdc, oldBr); DeleteObject(spen);
         }
-    } else {
-        HBRUSH br = CreateSolidBrush(RGB(183, 28, 28));
+    } else { // Dreadnought Boss
+        HBRUSH br = CreateSolidBrush(isEnraged ? RGB(213, 0, 249) : RGB(183, 28, 28));
         HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
         POINT pts[6] = { {x + 30, y + 48}, {x + 58, y + 12}, {x + 45, y + 2}, {x + 30, y + 14}, {x + 15, y + 2}, {x + 2, y + 12} };
         Polygon(hdc, pts, 6);
 
-        COLORREF coreCol = (frame % 10 < 5) ? RGB(255, 234, 0) : RGB(255, 23, 68);
+        if (isEnraged && frame % 2 == 0) {
+            HPEN lpen = CreatePen(PS_SOLID, 2, RGB(255, 234, 0));
+            SelectObject(hdc, lpen);
+            MoveToEx(hdc, x + 30, y + 24, NULL);
+            LineTo(hdc, x + 30 + (rnd() % 40) - 20, y + 24 + (rnd() % 30) - 15);
+            SelectObject(hdc, oldBr); DeleteObject(lpen);
+        }
+
+        COLORREF coreCol = isEnraged ? ((frame % 4 < 2) ? RGB(255, 255, 255) : RGB(255, 23, 68)) : ((frame % 10 < 5) ? RGB(255, 234, 0) : RGB(255, 23, 68));
         HBRUSH cbr = CreateSolidBrush(coreCol);
         SelectObject(hdc, cbr);
         Ellipse(hdc, x + 20, y + 14, x + 40, y + 34);
@@ -1126,8 +1269,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             for (int i = 0; i < MAX_STARS; i++) {
                 stars[i].x = (float)(rnd() % W);
                 stars[i].y = (float)(rnd() % H);
-                stars[i].speed = 0.8f + (rnd() % 3);
-                stars[i].size = (rnd() % 5 == 0) ? 2 : 1;
+                int layer = (i % 2 == 0) ? 0 : ((i % 5 == 0) ? 2 : 1);
+                stars[i].layer = layer;
+                stars[i].speed = (layer == 0) ? 0.4f : ((layer == 1) ? 1.2f : 2.5f);
+                stars[i].size = (layer == 0) ? 1 : ((layer == 1) ? 1 : 2);
             }
             SetTimer(hwnd, 1, 16, NULL);
             break;
@@ -1195,12 +1340,42 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(memDC, &rc, bg);
                 DeleteObject(bg);
 
-                HBRUSH sbr = CreateSolidBrush(timeStopTimer > 0 ? RGB(0, 229, 255) : RGB(255, 255, 255));
-                for (int i = 0; i < MAX_STARS; i++) {
-                    RECT sr = {(int)stars[i].x, (int)stars[i].y, (int)stars[i].x + stars[i].size, (int)stars[i].y + stars[i].size};
-                    FillRect(memDC, &sr, sbr);
+                // Deep Space Nebulae Rendering (Loop 2)
+                for (int n = 0; n < 3; n++) {
+                    nebulae[n].x += nebulae[n].vx;
+                    nebulae[n].y += nebulae[n].vy;
+                    if (nebulae[n].x < -nebulae[n].r) nebulae[n].x = W + nebulae[n].r;
+                    if (nebulae[n].x > W + nebulae[n].r) nebulae[n].x = -nebulae[n].r;
+                    if (nebulae[n].y < -nebulae[n].r) nebulae[n].y = H + nebulae[n].r;
+                    if (nebulae[n].y > H + nebulae[n].r) nebulae[n].y = -nebulae[n].r;
+
+                    HBRUSH nbr = CreateSolidBrush(nebulae[n].col1);
+                    HBRUSH oldBr = (HBRUSH)SelectObject(memDC, nbr);
+                    int nr = (int)(nebulae[n].r);
+                    Ellipse(memDC, (int)nebulae[n].x - nr, (int)nebulae[n].y - nr, (int)nebulae[n].x + nr, (int)nebulae[n].y + nr);
+                    SelectObject(memDC, oldBr); DeleteObject(nbr);
                 }
-                DeleteObject(sbr);
+
+                // 3-Layer Parallax Starfield Rendering (Loop 2)
+                for (int i = 0; i < MAX_STARS; i++) {
+                    if (stars[i].layer == 2) {
+                        HPEN spen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+                        HPEN oldPen = (HPEN)SelectObject(memDC, spen);
+                        MoveToEx(memDC, (int)stars[i].x, (int)stars[i].y, NULL);
+                        LineTo(memDC, (int)stars[i].x, (int)stars[i].y + 4);
+                        SelectObject(memDC, oldPen); DeleteObject(spen);
+                    } else if (stars[i].layer == 1) {
+                        HBRUSH sbr = CreateSolidBrush(RGB(180, 230, 255));
+                        RECT sr = {(int)stars[i].x, (int)stars[i].y, (int)stars[i].x + 1, (int)stars[i].y + 1};
+                        FillRect(memDC, &sr, sbr);
+                        DeleteObject(sbr);
+                    } else {
+                        HBRUSH sbr = CreateSolidBrush(timeStopTimer > 0 ? RGB(0, 229, 255) : RGB(100, 130, 180));
+                        RECT sr = {(int)stars[i].x, (int)stars[i].y, (int)stars[i].x + 1, (int)stars[i].y + 1};
+                        FillRect(memDC, &sr, sbr);
+                        DeleteObject(sbr);
+                    }
+                }
 
                 SetBkMode(memDC, TRANSPARENT);
 
@@ -1286,6 +1461,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
 
                     DrawParticles(memDC);
+
+                    // Render Visual Effects (Loop 2)
+                    // Debris Chunks
+                    for (int i = 0; i < MAX_DEBRIS; i++) {
+                        if (debris[i].life > 0.0f) {
+                            debris[i].x += debris[i].vx; debris[i].y += debris[i].vy;
+                            debris[i].life -= debris[i].decay;
+                            HBRUSH dbr = CreateSolidBrush(debris[i].color);
+                            int sz = (int)debris[i].size;
+                            RECT dr = {(int)debris[i].x - sz/2, (int)debris[i].y - sz/2, (int)debris[i].x + sz/2, (int)debris[i].y + sz/2};
+                            FillRect(memDC, &dr, dbr);
+                            DeleteObject(dbr);
+                        }
+                    }
+
+                    // Shockwaves & Ripples
+                    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
+                        if (shockwaves[i].life > 0) {
+                            shockwaves[i].r += shockwaves[i].speed;
+                            if (shockwaves[i].r >= shockwaves[i].maxR) shockwaves[i].life = 0;
+                            else {
+                                HPEN swPen = CreatePen(PS_SOLID, 2, shockwaves[i].color);
+                                HPEN oldP = (HPEN)SelectObject(memDC, swPen);
+                                HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                                int r = (int)shockwaves[i].r;
+                                Ellipse(memDC, (int)shockwaves[i].x - r, (int)shockwaves[i].y - r, (int)shockwaves[i].x + r, (int)shockwaves[i].y + r);
+                                SelectObject(memDC, oldP); SelectObject(memDC, oldB); DeleteObject(swPen);
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < MAX_RIPPLES; i++) {
+                        if (ripples[i].life > 0) {
+                            ripples[i].r += 1.8f;
+                            if (ripples[i].r >= ripples[i].maxR) ripples[i].life = 0;
+                            else {
+                                HPEN rPen = CreatePen(PS_SOLID, 2, ripples[i].color);
+                                HPEN oldP = (HPEN)SelectObject(memDC, rPen);
+                                HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(NULL_BRUSH));
+                                int r = (int)ripples[i].r;
+                                Ellipse(memDC, (int)ripples[i].x - r, (int)ripples[i].y - r, (int)ripples[i].x + r, (int)ripples[i].y + r);
+                                SelectObject(memDC, oldP); SelectObject(memDC, oldB); DeleteObject(rPen);
+                            }
+                        }
+                    }
+
+                    // Muzzle Flashes
+                    for (int i = 0; i < MAX_FLASHES; i++) {
+                        if (flashes[i].life > 0) {
+                            flashes[i].life--;
+                            HBRUSH mfBr = CreateSolidBrush(flashes[i].color);
+                            int sz = (int)(flashes[i].size * flashes[i].life / flashes[i].maxLife);
+                            RECT mfr = {(int)flashes[i].x - sz, (int)flashes[i].y - sz, (int)flashes[i].x + sz, (int)flashes[i].y + sz};
+                            FillRect(memDC, &mfr, mfBr);
+                            DeleteObject(mfBr);
+                        }
+                    }
 
                     // HUD
                     SetTextColor(memDC, RGB(255, 255, 255));

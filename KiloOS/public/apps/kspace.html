@@ -142,16 +142,30 @@
   let explosions = [];
   let powerups = [];
 
-  // Boss & Mothership State
-  let boss = null; // { x, y, hp, maxHp, level, isMothership, turrets: [{hp, active}], dx, dy, attackTimer }
+  // Loop 2 Visual FX Collections
+  let shockwaves = [];
+  let debris = [];
+  let shieldRipples = [];
+  let muzzleFlashes = [];
+  let thrusterParticles = [];
 
-  // Init Starfield
-  for (let i = 0; i < 60; i++) {
+  // Deep Space Shifting Nebulae
+  let nebulae = [
+    { x: W * 0.25, y: H * 0.3, r: 100, col1: 'rgba(75, 0, 130, 0.28)', col2: 'rgba(0, 229, 255, 0)', vx: 0.12, vy: 0.2, phase: 0 },
+    { x: W * 0.75, y: H * 0.7, r: 120, col1: 'rgba(139, 0, 139, 0.25)', col2: 'rgba(255, 23, 68, 0)', vx: -0.09, vy: 0.15, phase: 1.5 },
+    { x: W * 0.45, y: H * 0.1, r: 85, col1: 'rgba(0, 80, 180, 0.22)', col2: 'rgba(0, 0, 0, 0)', vx: 0.07, vy: 0.25, phase: 3.0 }
+  ];
+
+  // Init 3-Layer Parallax Starfield
+  for (let i = 0; i < 75; i++) {
+    let layer = Math.random() < 0.5 ? 0 : (Math.random() < 0.8 ? 1 : 2);
     stars.push({
       x: Math.random() * W,
       y: Math.random() * H,
-      speed: 0.8 + Math.random() * 2.5,
-      size: Math.random() < 0.2 ? 2 : 1
+      layer: layer,
+      speed: layer === 0 ? 0.4 : (layer === 1 ? 1.2 : 2.5),
+      size: layer === 0 ? 1 : (layer === 1 ? 1.5 : 2),
+      alpha: 0.3 + Math.random() * 0.7
     });
   }
 
@@ -332,7 +346,37 @@
     } catch (e) {}
   }
 
-  // --- PARTICLES & EXPLOSIONS ---
+  // --- PARTICLES, SHOCKWAVES & DEBRIS (Loop 2) ---
+  function addShockwave(x, y, maxR = 35, color = '#00e5ff', speed = 2.2) {
+    shockwaves.push({ x: x, y: y, r: 4, maxR: maxR, color: color, alpha: 1.0, speed: speed });
+  }
+
+  function addDebrisChunk(x, y, count = 6, color = '#ff9100') {
+    for (let i = 0; i < count; i++) {
+      let angle = Math.random() * Math.PI * 2;
+      let spd = 1.0 + Math.random() * 3.5;
+      debris.push({
+        x: x, y: y,
+        vx: Math.cos(angle) * spd,
+        vy: Math.sin(angle) * spd,
+        rot: Math.random() * Math.PI * 2,
+        vrot: (Math.random() - 0.5) * 0.3,
+        size: 3 + Math.random() * 5,
+        color: color,
+        life: 1.0,
+        decay: 0.02 + Math.random() * 0.03
+      });
+    }
+  }
+
+  function addShieldRipple(x, y, color = '#00e5ff') {
+    shieldRipples.push({ x: x, y: y, r: 6, maxR: 28, color: color, alpha: 1.0 });
+  }
+
+  function addMuzzleFlash(x, y, color = '#00e5ff', size = 6) {
+    muzzleFlashes.push({ x: x, y: y, size: size, life: 3, maxLife: 3, color: color });
+  }
+
   function addExplosion(x, y, count = 14, color = null) {
     for (let i = 0; i < count; i++) {
       let angle = Math.random() * Math.PI * 2;
@@ -346,6 +390,10 @@
         size: 2 + Math.random() * 3.5,
         color: color || (Math.random() < 0.5 ? '#ff4500' : (Math.random() < 0.5 ? '#ffa500' : '#ffff00'))
       });
+    }
+    if (count >= 10) {
+      addShockwave(x, y, count * 2.2, color || '#ff5722');
+      addDebrisChunk(x, y, Math.min(12, Math.floor(count / 2)), color || '#ff9800');
     }
   }
 
@@ -697,11 +745,15 @@
       bullets.push({ x: p.x + 8, y: p.y, dx: -2.5, dy: -8, type: 0 });
       bullets.push({ x: p.x + 8, y: p.y, dx: 0, dy: -9, type: 0 });
       bullets.push({ x: p.x + 8, y: p.y, dx: 2.5, dy: -8, type: 0 });
+      addMuzzleFlash(p.x + 10, p.y - 2, '#00e5ff', 8);
     } else if (p.weaponType === 3) {
       bullets.push({ x: p.x + 6, y: p.y, dx: 0, dy: -5, type: 1 });
+      addMuzzleFlash(p.x + 10, p.y - 2, '#d500f9', 10);
     } else {
       bullets.push({ x: p.x + 3, y: p.y, dx: 0, dy: -8, type: 0 });
       bullets.push({ x: p.x + 13, y: p.y, dx: 0, dy: -8, type: 0 });
+      addMuzzleFlash(p.x + 4, p.y, '#00e5ff', 5);
+      addMuzzleFlash(p.x + 14, p.y, '#00e5ff', 5);
     }
   }
 
@@ -1036,11 +1088,11 @@
   function applyPowerup(type) {
     if (type === 0) { spreadTimer = 350; p.weaponType = 1; }
     else if (type === 1) { laserTimer = 300; p.weaponType = 2; }
-    else if (type === 2) { p.shield = true; }
+    else if (type === 2) { p.shield = true; addShieldRipple(p.x + 10, p.y + 10, '#00e5ff'); }
     else if (type === 3) { p.bombs = Math.min(p.maxBombs, p.bombs + 1); }
     else if (type === 4) { rapidTimer = 350; }
     else if (type === 5) { useTimeStop(); }
-    else if (type === 6) { useHyperShield(); }
+    else if (type === 6) { useHyperShield(); addShieldRipple(p.x + 10, p.y + 10, '#ffea00'); }
     else if (type === 7) { dashCooldown = 0; useTacticalDash(); }
   }
 
@@ -1049,6 +1101,7 @@
 
     if (p.shield) {
       p.shield = false;
+      addShieldRipple(p.x + 10, p.y + 10, '#00e5ff');
       addExplosion(p.x + 10, p.y + 10, 16, '#00e5ff');
       playSound(1);
     } else {
@@ -1064,16 +1117,27 @@
   }
 
   // --- DRAWING FUNCTIONS ---
+  // --- DRAWING FUNCTIONS (Loop 2 Visuals) ---
   function drawPlayerShip(x, y, shield, frame) {
     ctx.save();
     ctx.translate(x, y);
 
-    // Thruster Flame
-    let flameH = 5 + (frame % 4) * 2;
-    ctx.fillStyle = (frame % 2 === 0) ? '#ffea00' : '#ff3d00';
-    ctx.beginPath();
-    ctx.moveTo(6, 20); ctx.lineTo(10, 20 + flameH); ctx.lineTo(14, 20);
-    ctx.closePath(); ctx.fill();
+    // Multi-Stage Animated Thruster Flames (Loop 2)
+    let flameH = 6 + Math.sin(frame * 0.4) * 3;
+    // Outer Flame Plume
+    ctx.fillStyle = (frame % 2 === 0) ? '#ff3d00' : '#ff9100';
+    ctx.beginPath(); ctx.moveTo(4, 20); ctx.lineTo(10, 20 + flameH + 3); ctx.lineTo(16, 20); ctx.closePath(); ctx.fill();
+    // Middle Core Flame
+    ctx.fillStyle = '#ffea00';
+    ctx.beginPath(); ctx.moveTo(6, 20); ctx.lineTo(10, 20 + flameH); ctx.lineTo(14, 20); ctx.closePath(); ctx.fill();
+    // White Plasma Center Core
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.moveTo(8, 20); ctx.lineTo(10, 20 + flameH * 0.6); ctx.lineTo(12, 20); ctx.closePath(); ctx.fill();
+
+    // Wingtip Maneuvering Thrusters
+    ctx.fillStyle = '#00e5ff';
+    ctx.fillRect(0, 16, 2, 4 + (frame % 2) * 2);
+    ctx.fillRect(18, 16, 2, 4 + (frame % 2) * 2);
 
     // Ship Hull
     ctx.fillStyle = '#00b0ff';
@@ -1081,20 +1145,27 @@
     ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
     ctx.closePath(); ctx.fill();
 
-    // Cockpit
+    // Metallic Hull Panels & Details
+    ctx.fillStyle = '#80d8ff';
+    ctx.beginPath(); ctx.moveTo(10, 3); ctx.lineTo(14, 12); ctx.lineTo(10, 10); ctx.lineTo(6, 12); ctx.closePath(); ctx.fill();
+
+    // Cockpit Canopy
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.ellipse(10, 7, 3, 5, 0, 0, Math.PI * 2); ctx.fill();
 
-    // Hyper Shield Barrier Aura
+    // Hyper Shield Barrier / Shield Ripples
     if (hyperShieldTimer > 0) {
+      let rPulse = 20 + Math.sin(frame * 0.3) * 2;
       ctx.strokeStyle = '#ffea00';
       ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(10, 10, 20, 0, Math.PI * 2); ctx.stroke();
+      ctx.shadowBlur = 10; ctx.shadowColor = '#ffea00';
+      ctx.beginPath(); ctx.arc(10, 10, rPulse, 0, Math.PI * 2); ctx.stroke();
     } else if (shield) {
       let rot = (frame * 0.1) % (Math.PI * 2);
       ctx.strokeStyle = '#00e5ff';
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(10, 10, 16, rot, rot + Math.PI * 1.5); ctx.stroke();
+      ctx.shadowBlur = 8; ctx.shadowColor = '#00e5ff';
+      ctx.beginPath(); ctx.arc(10, 10, 16, rot, rot + Math.PI * 1.6); ctx.stroke();
     }
 
     ctx.restore();
@@ -1103,8 +1174,8 @@
     if (laserTimer > 0 && gameState === STATE_PLAYING) {
       ctx.save();
       ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 4 + Math.sin(frame * 0.5) * 2;
-      ctx.shadowBlur = 10; ctx.shadowColor = '#00e5ff';
+      ctx.lineWidth = 5 + Math.sin(frame * 0.5) * 3;
+      ctx.shadowBlur = 14; ctx.shadowColor = '#00e5ff';
       ctx.beginPath(); ctx.moveTo(x + 10, y); ctx.lineTo(x + 10, 0); ctx.stroke();
       ctx.restore();
     }
@@ -1114,6 +1185,15 @@
     ctx.save();
     ctx.translate(e.x, e.y);
     if (e.cloaked) ctx.globalAlpha = 0.25;
+
+    // Enemy Rear Thruster Flames
+    if (e.type !== 5 && e.type !== 9) { // Non-asteroids have engines
+      let eFlame = 4 + (frame % 3) * 2;
+      ctx.fillStyle = (e.type === 4 ? '#00e5ff' : (e.type === 7 ? '#ffea00' : '#ff3d00'));
+      ctx.beginPath();
+      ctx.moveTo(7, 0); ctx.lineTo(10, -eFlame); ctx.lineTo(13, 0);
+      ctx.closePath(); ctx.fill();
+    }
 
     if (e.type === 0) { // Red Interceptor
       ctx.fillStyle = '#ff1744';
@@ -1126,8 +1206,11 @@
     } else if (e.type === 2) { // Purple Saucer
       ctx.fillStyle = '#d500f9';
       ctx.beginPath(); ctx.ellipse(10, 12, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#00e5ff';
+      ctx.beginPath(); ctx.arc(10, 12, 3, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 3) { // Heavy Armored
       ctx.fillStyle = '#78909c'; ctx.fillRect(2, 2, 16, 16);
+      ctx.fillStyle = '#ff1744'; ctx.fillRect(8, 6, 4, 8);
     } else if (e.type === 4) { // Zigzag
       ctx.fillStyle = '#00e5ff';
       ctx.beginPath(); ctx.moveTo(10, 18); ctx.lineTo(20, 0); ctx.lineTo(10, 6); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
@@ -1135,6 +1218,8 @@
       ctx.fillStyle = '#8d6e63';
       let r = (e.type === 9) ? 15 : 9;
       ctx.beginPath(); ctx.arc(r, r, r, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#5d4037';
+      ctx.beginPath(); ctx.arc(r - 2, r - 2, r * 0.4, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 6) { // Frigate
       ctx.fillStyle = '#c62828';
       ctx.beginPath(); ctx.moveTo(18, 34); ctx.lineTo(34, 8); ctx.lineTo(18, 12); ctx.lineTo(2, 8); ctx.closePath(); ctx.fill();
@@ -1153,15 +1238,27 @@
     ctx.save();
     ctx.translate(b.x, b.y);
 
+    let isEnraged = (b.hp < b.maxHp * 0.5);
+
     if (b.isMothership) {
       // Alien Mothership Hull
-      ctx.fillStyle = '#880e4f';
+      ctx.fillStyle = isEnraged ? '#b71c1c' : '#880e4f';
       ctx.beginPath();
       ctx.moveTo(45, 58); ctx.lineTo(85, 35); ctx.lineTo(90, 10); ctx.lineTo(65, 2); ctx.lineTo(45, 12); ctx.lineTo(25, 2); ctx.lineTo(0, 10); ctx.lineTo(5, 35);
       ctx.closePath(); ctx.fill();
 
-      // Core Eye
-      let coreCol = (frame % 8 < 4) ? '#00e5ff' : '#ff1744';
+      // Enraged Phase Electric Lightning Arcs (Loop 2)
+      if (isEnraged && frame % 2 === 0) {
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(45, 30);
+        ctx.lineTo(45 + (Math.random() - 0.5) * 60, 30 + (Math.random() - 0.5) * 40);
+        ctx.stroke();
+      }
+
+      // Core Eye Overload
+      let coreCol = isEnraged ? ((frame % 4 < 2) ? '#ffea00' : '#ff1744') : ((frame % 8 < 4) ? '#00e5ff' : '#ff1744');
       ctx.fillStyle = coreCol;
       ctx.beginPath(); ctx.arc(45, 30, 12, 0, Math.PI * 2); ctx.fill();
 
@@ -1178,15 +1275,25 @@
       if (isMothershipShieldActive()) {
         ctx.strokeStyle = '#00e5ff';
         ctx.lineWidth = 3;
+        ctx.shadowBlur = 12; ctx.shadowColor = '#00e5ff';
         ctx.beginPath(); ctx.arc(45, 30, 50, 0, Math.PI * 2); ctx.stroke();
       }
-    } else {
-      ctx.fillStyle = '#b71c1c';
+    } else { // Dreadnought Boss
+      ctx.fillStyle = isEnraged ? '#d500f9' : '#b71c1c';
       ctx.beginPath();
       ctx.moveTo(30, 48); ctx.lineTo(58, 12); ctx.lineTo(45, 2); ctx.lineTo(30, 14); ctx.lineTo(15, 2); ctx.lineTo(2, 12);
       ctx.closePath(); ctx.fill();
 
-      let coreCol = (frame % 10 < 5) ? '#ffea00' : '#ff1744';
+      if (isEnraged && frame % 2 === 0) {
+        ctx.strokeStyle = '#ffea00';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(30, 24);
+        ctx.lineTo(30 + (Math.random() - 0.5) * 40, 24 + (Math.random() - 0.5) * 30);
+        ctx.stroke();
+      }
+
+      let coreCol = isEnraged ? ((frame % 4 < 2) ? '#ffffff' : '#ff1744') : ((frame % 10 < 5) ? '#ffea00' : '#ff1744');
       ctx.fillStyle = coreCol;
       ctx.beginPath(); ctx.arc(30, 24, 10, 0, Math.PI * 2); ctx.fill();
     }
@@ -1221,15 +1328,44 @@
       return;
     }
 
+    // Dynamic Deep Space Background
     let bgR = 5 + (wave * 4) % 25;
     let bgG = 5 + (wave * 6) % 25;
     let bgB = 18 + (wave * 10) % 40;
     ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
     ctx.fillRect(0, 0, W, H);
 
-    ctx.fillStyle = timeStopTimer > 0 ? '#00e5ff' : '#ffffff';
+    // Deep Space Nebulae Render (Loop 2)
+    for (let n of nebulae) {
+      n.x += n.vx; n.y += n.vy;
+      n.phase += 0.015;
+      if (n.x < -n.r) n.x = W + n.r;
+      if (n.x > W + n.r) n.x = -n.r;
+      if (n.y < -n.r) n.y = H + n.r;
+      if (n.y > H + n.r) n.y = -n.r;
+
+      let pr = n.r + Math.sin(n.phase) * 12;
+      let g = ctx.createRadialGradient(n.x, n.y, 5, n.x, n.y, pr);
+      g.addColorStop(0, n.col1);
+      g.addColorStop(1, n.col2);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(n.x, n.y, pr, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // 3-Layer Parallax Starfield Render
     for (let s of stars) {
-      ctx.fillRect(s.x, s.y, s.size, s.size);
+      if (s.layer === 2) {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${s.alpha})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x, s.y + 4); ctx.stroke();
+      } else if (s.layer === 1) {
+        let tw = 0.5 + Math.sin(frameCount * 0.1 + s.x) * 0.4;
+        ctx.fillStyle = `rgba(180, 230, 255, ${tw})`;
+        ctx.fillRect(s.x, s.y, s.size, s.size);
+      } else {
+        ctx.fillStyle = timeStopTimer > 0 ? '#00e5ff' : `rgba(120, 150, 200, ${s.alpha * 0.7})`;
+        ctx.fillRect(s.x, s.y, s.size, s.size);
+      }
     }
 
     if (gameState === STATE_MENU) drawMenuScreen();
@@ -1238,19 +1374,89 @@
     else if (gameState === STATE_PLAYING || gameState === STATE_PAUSED || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       drawPlayerShip(p.x, p.y, p.shield, frameCount);
 
+      // Player Bullets with Plasma Glow & Trails (Loop 2)
       for (let b of bullets) {
-        ctx.fillStyle = b.type === 1 ? '#d500f9' : '#00e5ff';
-        ctx.fillRect(b.x, b.y, 4, 10);
+        ctx.save();
+        if (b.type === 1) {
+          let grad = ctx.createRadialGradient(b.x + 4, b.y + 4, 1, b.x + 4, b.y + 4, 7);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.5, '#e040fb');
+          grad.addColorStop(1, 'rgba(213, 0, 249, 0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath(); ctx.arc(b.x + 4, b.y + 4, 7, 0, Math.PI * 2); ctx.fill();
+        } else {
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+          ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(b.x + 2, b.y + 5); ctx.lineTo(b.x + 2 - b.dx * 2, b.y + 14); ctx.stroke();
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(b.x, b.y, 4, 10);
+        }
+        ctx.restore();
       }
 
+      // Enemy Bullets with Glow Halo
       for (let eb of eBullets) {
-        ctx.fillStyle = '#ff1744';
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 23, 68, 0.4)';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(eb.x, eb.y); ctx.lineTo(eb.x - eb.dx * 2, eb.y - eb.dy * 2); ctx.stroke();
+        ctx.fillStyle = '#ffea00';
         ctx.beginPath(); ctx.arc(eb.x, eb.y, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
       }
 
       for (let e of enemies) drawEnemyShip(e, frameCount);
       if (boss) drawBoss(boss, frameCount);
       for (let pu of powerups) drawPowerupItem(pu, frameCount);
+
+      // Render Visual Effects (Debris, Shockwaves, Shield Ripples, Muzzle Flashes)
+      // Debris Chunks
+      for (let i = debris.length - 1; i >= 0; i--) {
+        let d = debris[i];
+        d.x += d.vx; d.y += d.vy; d.rot += d.vrot; d.life -= d.decay;
+        if (d.life <= 0) { debris.splice(i, 1); continue; }
+        ctx.save();
+        ctx.translate(d.x, d.y); ctx.rotate(d.rot);
+        ctx.globalAlpha = Math.max(0, d.life);
+        ctx.fillStyle = d.color;
+        ctx.fillRect(-d.size / 2, -d.size / 2, d.size, d.size * 0.6);
+        ctx.restore();
+      }
+
+      // Shockwaves
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        let sw = shockwaves[i];
+        sw.r += sw.speed; sw.alpha -= 0.04;
+        if (sw.alpha <= 0 || sw.r >= sw.maxR) { shockwaves.splice(i, 1); continue; }
+        ctx.save();
+        ctx.strokeStyle = sw.color; ctx.globalAlpha = Math.max(0, sw.alpha); ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      // Shield Impact Ripples
+      for (let i = shieldRipples.length - 1; i >= 0; i--) {
+        let sr = shieldRipples[i];
+        sr.r += 1.8; sr.alpha -= 0.05;
+        if (sr.alpha <= 0 || sr.r >= sr.maxR) { shieldRipples.splice(i, 1); continue; }
+        ctx.save();
+        ctx.strokeStyle = sr.color; ctx.globalAlpha = Math.max(0, sr.alpha); ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(sr.x, sr.y, sr.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
+
+      // Muzzle Flashes
+      for (let i = muzzleFlashes.length - 1; i >= 0; i--) {
+        let mf = muzzleFlashes[i];
+        mf.life--;
+        if (mf.life <= 0) { muzzleFlashes.splice(i, 1); continue; }
+        ctx.save();
+        ctx.fillStyle = mf.color;
+        ctx.beginPath(); ctx.arc(mf.x, mf.y, mf.size * (mf.life / mf.maxLife), 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(mf.x, mf.y, (mf.size * 0.5) * (mf.life / mf.maxLife), 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
 
       drawExplosions();
       drawHUD();
