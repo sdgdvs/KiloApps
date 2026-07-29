@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KClock - Clock, World Clock, Stopwatch, Timer & Alarms</title>
+<title>KClock - Multi-City World Clock, Repeating Alarms, Stopwatch & Timezone Tool</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -12,8 +12,9 @@
     --card-hover: hsl(220, 18%, 20%);
     --primary: hsl(200, 85%, 55%);
     --primary-hover: hsl(200, 85%, 65%);
-    --accent-red: hsl(350, 80%, 60%);
-    --accent-green: hsl(140, 70%, 50%);
+    --accent-red: #ef4444;
+    --accent-green: #22c55e;
+    --accent-yellow: #eab308;
     --border-color: rgba(255, 255, 255, 0.12);
     --text-main: #f0f4f8;
     --text-muted: #94a3b8;
@@ -51,12 +52,13 @@
     display: flex;
     gap: 4px;
     height: 100%;
+    overflow-x: auto;
   }
 
   .tab {
     display: inline-flex;
     align-items: center;
-    padding: 0 16px;
+    padding: 0 14px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -66,6 +68,7 @@
     border-bottom: 3px solid transparent;
     background: transparent;
     outline: none;
+    white-space: nowrap;
   }
 
   .tab:hover, .tab:focus-visible {
@@ -81,7 +84,7 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   .icon-btn {
@@ -115,21 +118,26 @@
     overflow-y: auto;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .tab-panel.active {
     display: flex;
   }
 
+  .center-panel {
+    justify-content: center;
+  }
+
   /* Digital Displays */
   .digital-clock {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 56px;
+    font-size: 52px;
     font-weight: 700;
     letter-spacing: 2px;
     color: #ffffff;
     text-shadow: 0 0 24px rgba(56, 189, 248, 0.25);
+    text-align: center;
   }
 
   .date-display {
@@ -139,6 +147,7 @@
     text-transform: uppercase;
     letter-spacing: 2px;
     font-weight: 500;
+    text-align: center;
   }
 
   .tz-badge {
@@ -146,7 +155,7 @@
     background: rgba(56, 189, 248, 0.1);
     color: var(--primary);
     border: 1px solid rgba(56, 189, 248, 0.2);
-    padding: 4px 12px;
+    padding: 4px 14px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
@@ -155,8 +164,8 @@
   /* Buttons */
   .btn-row {
     display: flex;
-    gap: 12px;
-    margin-top: 24px;
+    gap: 10px;
+    margin-top: 20px;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -165,14 +174,17 @@
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 10px 24px;
-    border-radius: 24px;
+    padding: 9px 20px;
+    border-radius: 20px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     transition: all 0.2s ease;
     outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
 
   button.btn:hover, button.btn:focus-visible {
@@ -201,32 +213,36 @@
     background: rgba(239, 68, 68, 0.4);
   }
 
-  /* Inputs */
-  input[type="number"], input[type="time"], input[type="text"], select {
+  /* Inputs & Selects */
+  input[type="number"], input[type="time"], input[type="date"], input[type="datetime-local"], input[type="text"], select {
     background: rgba(255, 255, 255, 0.08);
     color: #ffffff;
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 8px 12px;
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
+    font-size: 13px;
     outline: none;
     transition: border 0.2s;
+  }
+
+  select option {
+    background: #1e293b;
+    color: #ffffff;
   }
 
   input:focus, select:focus {
     border-color: var(--primary);
   }
 
-  /* World Clock Cards */
+  /* Cards Grid */
   .world-clock-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 16px;
     width: 100%;
     max-width: 900px;
-    overflow-y: auto;
-    padding: 8px;
+    padding: 4px;
   }
 
   .city-card {
@@ -236,8 +252,9 @@
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
     transition: transform 0.2s, background 0.2s;
+    position: relative;
   }
 
   .city-card:hover {
@@ -260,7 +277,7 @@
   .city-daydiff {
     font-size: 11px;
     font-weight: 600;
-    padding: 2px 6px;
+    padding: 2px 8px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
@@ -279,12 +296,22 @@
     color: var(--text-muted);
   }
 
-  /* Stopwatch & Timer Extras */
+  .city-offset-badge {
+    font-size: 11px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  /* Stopwatch & Laps */
   .lap-container {
     margin-top: 20px;
     width: 100%;
-    max-width: 400px;
-    max-height: 180px;
+    max-width: 480px;
+    max-height: 220px;
     overflow-y: auto;
     border: 1px solid var(--border-color);
     border-radius: 8px;
@@ -294,17 +321,42 @@
   .lap-row {
     display: flex;
     justify-content: space-between;
-    padding: 8px 16px;
+    align-items: center;
+    padding: 8px 14px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
     color: var(--text-muted);
   }
 
+  .lap-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .badge-fastest {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.4);
+  }
+
+  .badge-slowest {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+
+  /* Timer Presets */
   .timer-presets {
     display: flex;
     gap: 8px;
     margin-top: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 
   .preset-btn {
@@ -323,15 +375,14 @@
     border-color: var(--primary);
   }
 
-  /* Alarm List */
+  /* Alarms */
   .alarm-list {
     width: 100%;
-    max-width: 500px;
+    max-width: 540px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     margin-top: 16px;
-    overflow-y: auto;
   }
 
   .alarm-card {
@@ -341,21 +392,167 @@
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 12px 20px;
+    padding: 14px 20px;
+    transition: all 0.2s;
+  }
+
+  .alarm-card.disabled {
+    opacity: 0.55;
   }
 
   .alarm-time {
     font-family: 'JetBrains Mono', monospace;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 26px;
+    color: #ffffff;
   }
 
-  .alarm-card.disabled .alarm-time {
-    text-decoration: line-through;
+  .alarm-days-pills {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .day-pill {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
     color: var(--text-muted);
   }
 
-  /* Notification Modal Overlay */
+  .day-pill.active {
+    background: var(--primary);
+    color: #0f172a;
+  }
+
+  .day-selector-row {
+    display: flex;
+    gap: 6px;
+    margin: 8px 0;
+    justify-content: center;
+  }
+
+  .day-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .day-toggle.selected {
+    background: var(--primary);
+    color: #0f172a;
+    border-color: var(--primary);
+  }
+
+  /* Timezone Calculator */
+  .calc-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 580px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .calc-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .calc-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .calc-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .calc-result {
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .calc-diff-title {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  .calc-diff-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 4px;
+  }
+
+  /* Settings Page */
+  .settings-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 540px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .setting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .setting-title {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .setting-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Modal Overlay */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -375,9 +572,9 @@
     background: var(--card-bg);
     border: 2px solid var(--primary);
     border-radius: 16px;
-    padding: 32px;
+    padding: 28px;
     text-align: center;
-    max-width: 360px;
+    max-width: 380px;
     width: 90%;
     box-shadow: 0 0 32px rgba(56, 189, 248, 0.4);
     animation: modalPop 0.3s ease-out;
@@ -389,16 +586,16 @@
   }
 
   .modal-title {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 700;
     color: #ffffff;
     margin-bottom: 8px;
   }
 
   .modal-desc {
-    font-size: 16px;
+    font-size: 15px;
     color: var(--primary);
-    margin-bottom: 24px;
+    margin-bottom: 20px;
     font-weight: 600;
   }
 </style>
@@ -410,9 +607,11 @@
     <div class="tabs" role="tablist" aria-label="Clock Tabs">
       <button class="tab active" role="tab" id="tab-btn-clock" aria-selected="true" aria-controls="tab-clock" onclick="switchTab('clock')">Clock</button>
       <button class="tab" role="tab" id="tab-btn-world" aria-selected="false" aria-controls="tab-world" onclick="switchTab('world')">World Clock</button>
+      <button class="tab" role="tab" id="tab-btn-tzcalc" aria-selected="false" aria-controls="tab-tzcalc" onclick="switchTab('tzcalc')">TZ Calculator</button>
       <button class="tab" role="tab" id="tab-btn-stopwatch" aria-selected="false" aria-controls="tab-stopwatch" onclick="switchTab('stopwatch')">Stopwatch</button>
       <button class="tab" role="tab" id="tab-btn-timer" aria-selected="false" aria-controls="tab-timer" onclick="switchTab('timer')">Timer</button>
       <button class="tab" role="tab" id="tab-btn-alarms" aria-selected="false" aria-controls="tab-alarms" onclick="switchTab('alarms')">Alarms</button>
+      <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings</button>
     </div>
     <div class="header-actions">
       <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 Sound On</button>
@@ -420,37 +619,96 @@
     </div>
   </div>
 
-  <!-- Content Panels -->
+  <!-- Content Area -->
   <div class="content-area">
 
-    <!-- Tab 1: Local Clock -->
-    <div id="tab-clock" class="tab-panel active" role="tabpanel" aria-labelledby="tab-btn-clock">
+    <!-- Tab 1: Clock -->
+    <div id="tab-clock" class="tab-panel center-panel active" role="tabpanel" aria-labelledby="tab-btn-clock">
       <div class="digital-clock" id="main-clock">00:00:00</div>
       <div class="date-display" id="main-date">Loading...</div>
       <div class="tz-badge" id="tz-display">Local Timezone</div>
     </div>
 
     <!-- Tab 2: World Clock -->
-    <div id="tab-world" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-world" style="justify-content: flex-start;">
-      <div style="margin-bottom: 16px; display: flex; gap: 10px; width: 100%; max-width: 900px;">
-        <select id="city-select" style="flex: 1;">
-          <option value="America/New_York">New York (EDT/EST)</option>
-          <option value="Europe/London">London (BST/GMT)</option>
-          <option value="Europe/Paris">Paris (CEST/CET)</option>
-          <option value="Asia/Tokyo">Tokyo (JST)</option>
-          <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
-          <option value="Asia/Kolkata">New Delhi (IST)</option>
-          <option value="Pacific/Honolulu">Honolulu (HST)</option>
-          <option value="America/Los_Angeles">Los Angeles (PDT/PST)</option>
+    <div id="tab-world" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-world">
+      <div style="margin-bottom: 16px; display: flex; gap: 10px; width: 100%; max-width: 900px; flex-wrap: wrap;">
+        <select id="city-select" style="flex: 1; min-width: 220px;">
+          <option value="America/New_York">New York, USA (EDT/EST)</option>
+          <option value="Europe/London">London, UK (BST/GMT)</option>
+          <option value="Europe/Paris">Paris, France (CEST/CET)</option>
+          <option value="Asia/Tokyo">Tokyo, Japan (JST)</option>
+          <option value="Australia/Sydney">Sydney, Australia (AEST/AEDT)</option>
+          <option value="Asia/Kolkata">New Delhi, India (IST)</option>
+          <option value="Asia/Dubai">Dubai, UAE (GST)</option>
+          <option value="Asia/Singapore">Singapore (SGT)</option>
+          <option value="Pacific/Honolulu">Honolulu, USA (HST)</option>
+          <option value="America/Los_Angeles">Los Angeles, USA (PDT/PST)</option>
+          <option value="America/Sao_Paulo">São Paulo, Brazil (BRT)</option>
+          <option value="Africa/Cairo">Cairo, Egypt (EEST)</option>
+          <option value="Pacific/Auckland">Auckland, New Zealand (NZST/NZDT)</option>
           <option value="UTC">UTC (Coordinated Universal Time)</option>
         </select>
-        <button class="btn primary" onclick="addWorldCity()">Add City</button>
+        <button class="btn primary" onclick="addWorldCity()">+ Add City</button>
       </div>
       <div class="world-clock-grid" id="world-grid"></div>
     </div>
 
-    <!-- Tab 3: Stopwatch -->
-    <div id="tab-stopwatch" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-stopwatch">
+    <!-- Tab 3: Timezone Calculator -->
+    <div id="tab-tzcalc" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-tzcalc">
+      <div class="calc-card">
+        <div style="font-weight: 700; font-size: 18px; color: #ffffff;">Timezone Difference Calculator</div>
+        
+        <div class="calc-grid">
+          <div class="calc-box">
+            <span class="calc-label">Source City</span>
+            <select id="calc-src-city" onchange="calculateTzDiff()">
+              <option value="America/New_York">New York (EDT/EST)</option>
+              <option value="Europe/London">London (BST/GMT)</option>
+              <option value="Europe/Paris">Paris (CEST/CET)</option>
+              <option value="Asia/Tokyo">Tokyo (JST)</option>
+              <option value="Australia/Sydney">Sydney (AEST)</option>
+              <option value="Asia/Kolkata">New Delhi (IST)</option>
+              <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="America/Los_Angeles">Los Angeles (PST)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+
+          <button class="btn" onclick="swapCalcCities()" style="padding: 8px 12px; margin-top: 18px;" title="Swap Cities">⇄</button>
+
+          <div class="calc-box">
+            <span class="calc-label">Target City</span>
+            <select id="calc-tgt-city" onchange="calculateTzDiff()">
+              <option value="Asia/Tokyo">Tokyo (JST)</option>
+              <option value="America/New_York">New York (EDT/EST)</option>
+              <option value="Europe/London">London (BST/GMT)</option>
+              <option value="Europe/Paris">Paris (CEST/CET)</option>
+              <option value="Australia/Sydney">Sydney (AEST)</option>
+              <option value="Asia/Kolkata">New Delhi (IST)</option>
+              <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="America/Los_Angeles">Los Angeles (PST)</option>
+              <option value="UTC">UTC</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="calc-box">
+          <span class="calc-label">Source Date & Time</span>
+          <input type="datetime-local" id="calc-datetime" onchange="calculateTzDiff()">
+        </div>
+
+        <div class="calc-result">
+          <div class="calc-diff-title">Time Difference</div>
+          <div class="calc-diff-value" id="calc-diff-text">+0.0 Hours</div>
+          <div style="margin-top: 8px; font-size: 13px; color: var(--text-main);" id="calc-target-result">
+            Target Time: --
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Stopwatch -->
+    <div id="tab-stopwatch" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-stopwatch">
       <div class="digital-clock" id="stopwatch-display">00:00.00</div>
       <div class="btn-row">
         <button onclick="toggleStopwatch()" id="sw-btn" class="btn primary">Start</button>
@@ -462,21 +720,22 @@
       </div>
     </div>
 
-    <!-- Tab 4: Timer -->
-    <div id="tab-timer" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-timer">
+    <!-- Tab 5: Timer -->
+    <div id="tab-timer" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-timer">
       <div class="digital-clock" id="timer-display">05:00</div>
       
       <div class="timer-presets">
-        <button class="preset-btn" onclick="setTimerPreset(1)">1 min</button>
-        <button class="preset-btn" onclick="setTimerPreset(5)">5 min</button>
-        <button class="preset-btn" onclick="setTimerPreset(10)">10 min</button>
-        <button class="preset-btn" onclick="setTimerPreset(15)">15 min</button>
-        <button class="preset-btn" onclick="setTimerPreset(30)">30 min</button>
+        <button class="preset-btn" onclick="setTimerPreset(1)">1m</button>
+        <button class="preset-btn" onclick="setTimerPreset(5)">5m</button>
+        <button class="preset-btn" onclick="setTimerPreset(10)">10m</button>
+        <button class="preset-btn" onclick="setTimerPreset(15)">15m</button>
+        <button class="preset-btn" onclick="setTimerPreset(30)">30m</button>
+        <button class="preset-btn" onclick="setTimerPreset(60)">1h</button>
       </div>
 
       <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
-        <label for="timer-mins" style="font-size: 14px; color: var(--text-muted);">Custom Mins:</label>
-        <input type="number" id="timer-mins" value="5" min="1" max="999" style="width: 70px; text-align: center;">
+        <label for="timer-mins" style="font-size: 13px; color: var(--text-muted);">Custom Mins:</label>
+        <input type="number" id="timer-mins" value="5" min="1" max="999" style="width: 75px; text-align: center;">
       </div>
 
       <div class="btn-row">
@@ -485,35 +744,105 @@
       </div>
     </div>
 
-    <!-- Tab 5: Alarms -->
-    <div id="tab-alarms" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-alarms" style="justify-content: flex-start;">
-      <div style="display: flex; gap: 10px; align-items: center; width: 100%; max-width: 500px;">
-        <input type="time" id="alarm-time" style="flex: 1;" value="08:00">
-        <input type="text" id="alarm-label" placeholder="Alarm label (optional)" style="flex: 1.5;">
-        <button onclick="addAlarm()" class="btn primary">Add Alarm</button>
+    <!-- Tab 6: Alarms -->
+    <div id="tab-alarms" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-alarms">
+      <div class="calc-card" style="max-width: 540px; padding: 20px;">
+        <div style="font-weight: 700; font-size: 16px; color: #ffffff;">Add Repeating Alarm</div>
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="time" id="alarm-time" style="flex: 1;" value="08:00">
+          <input type="text" id="alarm-label" placeholder="Alarm Label (e.g. Work, Gym)" style="flex: 1.5;">
+        </div>
+
+        <div>
+          <span class="calc-label">Repeat Days</span>
+          <div class="day-selector-row">
+            <button class="day-toggle selected" data-day="0" onclick="toggleDaySelect(this)">S</button>
+            <button class="day-toggle selected" data-day="1" onclick="toggleDaySelect(this)">M</button>
+            <button class="day-toggle selected" data-day="2" onclick="toggleDaySelect(this)">T</button>
+            <button class="day-toggle selected" data-day="3" onclick="toggleDaySelect(this)">W</button>
+            <button class="day-toggle selected" data-day="4" onclick="toggleDaySelect(this)">T</button>
+            <button class="day-toggle selected" data-day="5" onclick="toggleDaySelect(this)">F</button>
+            <button class="day-toggle selected" data-day="6" onclick="toggleDaySelect(this)">S</button>
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: center; margin-top: 4px;">
+            <button class="btn" onclick="setPresetDays('daily')" style="padding: 2px 10px; font-size: 11px;">Everyday</button>
+            <button class="btn" onclick="setPresetDays('weekdays')" style="padding: 2px 10px; font-size: 11px;">Weekdays</button>
+            <button class="btn" onclick="setPresetDays('weekends')" style="padding: 2px 10px; font-size: 11px;">Weekends</button>
+          </div>
+        </div>
+
+        <button onclick="addAlarm()" class="btn primary" style="align-self: flex-end;">+ Add Alarm</button>
       </div>
+
       <div class="alarm-list" id="alarm-list"></div>
+    </div>
+
+    <!-- Tab 7: Settings & Backup -->
+    <div id="tab-settings" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-settings">
+      <div class="settings-card">
+        <div style="font-weight: 700; font-size: 18px; color: #ffffff;">Settings & Data Management</div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Time Format</span>
+            <span class="setting-desc">Switch between 12-hour (AM/PM) and 24-hour clock</span>
+          </div>
+          <button class="btn" onclick="toggleFormat()" id="settings-format-btn">12-Hour</button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Audio Chime & Alarm Sound</span>
+            <span class="setting-desc">Enable or mute chime sound effects</span>
+          </div>
+          <button class="btn" onclick="toggleSound()" id="settings-sound-btn">Enabled</button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Export Settings (JSON)</span>
+            <span class="setting-desc">Backup your alarms, world cities & preferences</span>
+          </div>
+          <button class="btn primary" onclick="exportSettingsJSON()">Export JSON</button>
+        </div>
+
+        <div class="setting-row" style="border-bottom: none;">
+          <div class="setting-info">
+            <span class="setting-title">Import Settings (JSON)</span>
+            <span class="setting-desc">Restore settings from a previously saved JSON file</span>
+          </div>
+          <div>
+            <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="importSettingsJSON(event)">
+            <button class="btn" onclick="document.getElementById('import-file-input').click()">Import JSON</button>
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>
 
-  <!-- Non-Blocking Alert Modal Overlay -->
+  <!-- Notification Modal Overlay -->
   <div class="modal-overlay" id="alert-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-box">
       <div class="modal-title" id="modal-title">⏰ Alarm</div>
       <div class="modal-desc" id="modal-desc">Time is up!</div>
       <div class="btn-row" style="margin-top: 0;">
         <button class="btn primary" onclick="dismissModal()">Dismiss</button>
-        <button class="btn" id="snooze-btn" onclick="snoozeAlarm()" style="display:none;">Snooze 5m</button>
+        <button class="btn" id="snooze-btn-5" onclick="snoozeAlarm(5)">Snooze 5m</button>
+        <button class="btn" id="snooze-btn-10" onclick="snoozeAlarm(10)">Snooze 10m</button>
       </div>
     </div>
   </div>
 
   <script>
-    // System & Audio Settings
+    // State Variables
     let soundEnabled = true;
     let use24Hour = false;
     let audioCtx = null;
+
+    const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     function initAudio() {
       if (!audioCtx) {
@@ -557,17 +886,19 @@
       soundEnabled = !soundEnabled;
       const btn = document.getElementById('sound-toggle-btn');
       btn.innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+      document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
     }
 
     function toggleFormat() {
       use24Hour = !use24Hour;
       document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+      document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
       updateClock();
       updateWorldClock();
     }
 
     // Navigation Tabs
-    const tabOrder = ['clock', 'world', 'stopwatch', 'timer', 'alarms'];
+    const tabOrder = ['clock', 'world', 'tzcalc', 'stopwatch', 'timer', 'alarms', 'settings'];
     
     function switchTab(tabId) {
       tabOrder.forEach(id => {
@@ -583,6 +914,7 @@
           panel.classList.remove('active');
         }
       });
+      if (tabId === 'tzcalc') initTzCalcDefaults();
     }
 
     // Keyboard accessibility for tablist
@@ -643,24 +975,33 @@
       updateWorldClock();
     }
 
+    function getTimezoneOffsetMinutes(tzName, date = new Date()) {
+      try {
+        const tzDate = new Date(date.toLocaleString('en-US', { timeZone: tzName }));
+        const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+        return Math.round((tzDate - utcDate) / 60000);
+      } catch (e) {
+        return 0;
+      }
+    }
+
     function updateWorldClock() {
       const grid = document.getElementById('world-grid');
       grid.innerHTML = '';
       const now = new Date();
+      const localOffset = -now.getTimezoneOffset();
 
       worldCities.forEach(tz => {
         try {
           const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !use24Hour });
           const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
           
-          // Calculate day difference bound relative to local day
           const localDay = now.getDate();
           const targetDayStr = now.toLocaleDateString('en-US', { timeZone: tz, day: 'numeric' });
           const targetDay = parseInt(targetDayStr, 10);
           
           let dayDiffLabel = 'Today';
           if (targetDay !== localDay) {
-            // Check month roll boundary roughly
             const localHour = now.getHours();
             const targetHourStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', hour12: false });
             const targetHour = parseInt(targetHourStr, 10);
@@ -671,9 +1012,15 @@
             }
           }
 
+          const cityOffset = getTimezoneOffsetMinutes(tz, now);
+          const diffMinutes = cityOffset - localOffset;
+          const diffHours = (diffMinutes / 60).toFixed(1).replace('.0', '');
+          const diffSign = diffMinutes >= 0 ? '+' : '';
+          const offsetBadgeStr = `${diffSign}${diffHours}h vs Local`;
+
           const card = document.createElement('div');
           card.className = 'city-card';
-          const cityName = tz.split('/')[1] ? tz.split('/')[1].replace('_', ' ') : tz;
+          const cityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
           
           card.innerHTML = `
             <div class="city-header">
@@ -682,23 +1029,71 @@
             </div>
             <div class="city-time">${timeStr}</div>
             <div class="city-date">${dateStr} (${tz})</div>
+            <div class="city-offset-badge">${offsetBadgeStr}</div>
             <button onclick="removeWorldCity('${tz}')" class="btn danger" style="margin-top: 8px; padding: 2px 8px; font-size: 11px; align-self: flex-end;">Remove</button>
           `;
           grid.appendChild(card);
         } catch (e) {
-          console.warn('World clock calculation error for timezone:', tz, e);
+          console.warn('World clock error for timezone:', tz, e);
         }
       });
     }
     setInterval(updateWorldClock, 1000);
     updateWorldClock();
 
-    // --- Tab 3: Stopwatch ---
+    // --- Tab 3: Timezone Calculator ---
+    function initTzCalcDefaults() {
+      const dtInput = document.getElementById('calc-datetime');
+      if (!dtInput.value) {
+        const now = new Date();
+        const isoStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        dtInput.value = isoStr;
+      }
+      calculateTzDiff();
+    }
+
+    function swapCalcCities() {
+      const src = document.getElementById('calc-src-city');
+      const tgt = document.getElementById('calc-tgt-city');
+      const tmp = src.value;
+      src.value = tgt.value;
+      tgt.value = tmp;
+      calculateTzDiff();
+    }
+
+    function calculateTzDiff() {
+      const srcTz = document.getElementById('calc-src-city').value;
+      const tgtTz = document.getElementById('calc-tgt-city').value;
+      const dtVal = document.getElementById('calc-datetime').value;
+
+      if (!dtVal) return;
+
+      const baseDate = new Date(dtVal);
+      const srcOffset = getTimezoneOffsetMinutes(srcTz, baseDate);
+      const tgtOffset = getTimezoneOffsetMinutes(tgtTz, baseDate);
+
+      const diffMins = tgtOffset - srcOffset;
+      const diffHours = diffMins / 60;
+      const signStr = diffHours >= 0 ? '+' : '';
+
+      document.getElementById('calc-diff-text').innerText = `${signStr}${diffHours.toFixed(1).replace('.0', '')} Hours`;
+
+      try {
+        const targetDate = new Date(baseDate.getTime() + diffMins * 60000);
+        const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: !use24Hour };
+        const formattedTgt = targetDate.toLocaleDateString('en-US', options);
+        document.getElementById('calc-target-result').innerHTML = `Target City Time: <strong>${formattedTgt}</strong>`;
+      } catch (e) {
+        document.getElementById('calc-target-result').innerText = 'Calculation Error';
+      }
+    }
+
+    // --- Tab 4: Stopwatch with Fastest / Slowest Badges ---
     let swStart = 0;
     let swElapsed = 0;
     let swRaf = null;
     let swRunning = false;
-    let swLapCount = 0;
+    let swLaps = [];
     let swLastLapTime = 0;
 
     function formatSw(ms) {
@@ -735,19 +1130,65 @@
 
     function lapStopwatch() {
       if (swRunning) {
-        swLapCount++;
         const current = Date.now() - swStart + swElapsed;
         const splitTime = current - swLastLapTime;
         swLastLapTime = current;
 
-        const container = document.getElementById('lap-container');
-        container.style.display = 'block';
-        
-        const list = document.getElementById('lap-list');
+        swLaps.push({
+          num: swLaps.length + 1,
+          split: splitTime,
+          total: current
+        });
+
+        renderLaps();
+      }
+    }
+
+    function renderLaps() {
+      const container = document.getElementById('lap-container');
+      const list = document.getElementById('lap-list');
+
+      if (swLaps.length === 0) {
+        container.style.display = 'none';
+        list.innerHTML = '';
+        return;
+      }
+
+      container.style.display = 'block';
+      list.innerHTML = '';
+
+      let fastestIndex = -1;
+      let slowestIndex = -1;
+
+      if (swLaps.length >= 2) {
+        let minSplit = Infinity;
+        let maxSplit = -1;
+
+        swLaps.forEach((l, idx) => {
+          if (l.split < minSplit) { minSplit = l.split; fastestIndex = idx; }
+          if (l.split > maxSplit) { maxSplit = l.split; slowestIndex = idx; }
+        });
+      }
+
+      // Prepend newest lap first
+      for (let i = swLaps.length - 1; i >= 0; i--) {
+        const lap = swLaps[i];
+        let badgeHtml = '';
+
+        if (i === fastestIndex && swLaps.length >= 2) {
+          badgeHtml = `<span class="lap-badge badge-fastest">⚡ FASTEST</span>`;
+        } else if (i === slowestIndex && swLaps.length >= 2) {
+          badgeHtml = `<span class="lap-badge badge-slowest">🐢 SLOWEST</span>`;
+        }
+
         const row = document.createElement('div');
         row.className = 'lap-row';
-        row.innerHTML = `<span>Lap ${swLapCount}</span> <span>+${formatSw(splitTime)}</span> <span>${formatSw(current)}</span>`;
-        list.prepend(row);
+        row.innerHTML = `
+          <span>Lap ${lap.num} ${badgeHtml}</span>
+          <span>+${formatSw(lap.split)}</span>
+          <span>${formatSw(lap.total)}</span>
+        `;
+        list.appendChild(row);
       }
     }
 
@@ -755,16 +1196,15 @@
       swRunning = false;
       cancelAnimationFrame(swRaf);
       swElapsed = 0;
-      swLapCount = 0;
+      swLaps = [];
       swLastLapTime = 0;
       document.getElementById('stopwatch-display').innerText = '00:00.00';
-      document.getElementById('lap-list').innerHTML = '';
-      document.getElementById('lap-container').style.display = 'none';
+      renderLaps();
       document.getElementById('sw-btn').innerText = 'Start';
       document.getElementById('sw-btn').classList.add('primary');
     }
 
-    // --- Tab 4: Timer ---
+    // --- Tab 5: Timer ---
     let tmStart = 0;
     let tmDuration = 0;
     let tmRemaining = 0;
@@ -841,20 +1281,62 @@
       document.getElementById('tm-btn').classList.add('primary');
     }
 
-    // --- Tab 5: Alarms ---
-    let alarms = [];
+    // --- Tab 6: Repeating Alarms Manager ---
+    let alarms = [
+      { id: '1', time: '07:30', label: 'Morning Alarm', days: [1, 2, 3, 4, 5], active: true, triggered: false },
+      { id: '2', time: '09:00', label: 'Weekend Wakeup', days: [0, 6], active: true, triggered: false }
+    ];
     let activeAlarmIndex = -1;
+
+    function toggleDaySelect(btn) {
+      btn.classList.toggle('selected');
+    }
+
+    function getSelectedDays() {
+      const selected = [];
+      document.querySelectorAll('.day-toggle.selected').forEach(btn => {
+        selected.push(parseInt(btn.getAttribute('data-day'), 10));
+      });
+      return selected;
+    }
+
+    function setPresetDays(preset) {
+      document.querySelectorAll('.day-toggle').forEach(btn => {
+        const day = parseInt(btn.getAttribute('data-day'), 10);
+        if (preset === 'daily') {
+          btn.classList.add('selected');
+        } else if (preset === 'weekdays') {
+          if (day >= 1 && day <= 5) btn.classList.add('selected');
+          else btn.classList.remove('selected');
+        } else if (preset === 'weekends') {
+          if (day === 0 || day === 6) btn.classList.add('selected');
+          else btn.classList.remove('selected');
+        }
+      });
+    }
 
     function addAlarm() {
       const timeVal = document.getElementById('alarm-time').value;
       const labelVal = document.getElementById('alarm-label').value.trim() || 'Alarm';
-      if (!timeVal) return;
+      const days = getSelectedDays();
 
-      if (!alarms.some(a => a.time === timeVal && a.label === labelVal)) {
-        alarms.push({ time: timeVal, label: labelVal, active: true, triggered: false });
-        renderAlarms();
-        document.getElementById('alarm-label').value = '';
+      if (!timeVal) return;
+      if (days.length === 0) {
+        alert('Please select at least one day for the alarm.');
+        return;
       }
+
+      alarms.push({
+        id: 'alarm_' + Date.now(),
+        time: timeVal,
+        label: labelVal,
+        days: days,
+        active: true,
+        triggered: false
+      });
+
+      renderAlarms();
+      document.getElementById('alarm-label').value = '';
     }
 
     function toggleAlarm(index) {
@@ -875,10 +1357,18 @@
       alarms.sort((a, b) => a.time.localeCompare(b.time)).forEach((a, i) => {
         const card = document.createElement('div');
         card.className = `alarm-card ${a.active ? '' : 'disabled'}`;
+        
+        let daysPillsHtml = '';
+        DAY_NAMES.forEach((name, dayIdx) => {
+          const isSel = a.days.includes(dayIdx);
+          daysPillsHtml += `<span class="day-pill ${isSel ? 'active' : ''}">${name[0]}</span>`;
+        });
+
         card.innerHTML = `
           <div>
             <div class="alarm-time">${a.time}</div>
-            <div style="font-size: 12px; color: var(--text-muted);">${a.label}</div>
+            <div style="font-size: 13px; color: var(--text-main); font-weight: 500;">${a.label}</div>
+            <div class="alarm-days-pills">${daysPillsHtml}</div>
           </div>
           <div style="display: flex; gap: 8px;">
             <button class="btn" onclick="toggleAlarm(${i})">${a.active ? 'Disable' : 'Enable'}</button>
@@ -893,13 +1383,14 @@
       const hh = now.getHours().toString().padStart(2, '0');
       const mm = now.getMinutes().toString().padStart(2, '0');
       const hhmm = `${hh}:${mm}`;
+      const currentDay = now.getDay();
 
       alarms.forEach((a, index) => {
-        if (a.active && a.time === hhmm && !a.triggered) {
+        if (a.active && a.days.includes(currentDay) && a.time === hhmm && !a.triggered) {
           a.triggered = true;
           activeAlarmIndex = index;
           playChime([523.25, 659.25, 783.99], 0.35);
-          showModal(`⏰ ${a.label}`, `Alarm set for ${a.time}`, true);
+          showModal(`⏰ ${a.label}`, `Alarm ringing for ${a.time}`, true);
         }
         if (a.time !== hhmm) {
           a.triggered = false;
@@ -907,20 +1398,80 @@
       });
     }
 
-    function snoozeAlarm() {
+    function snoozeAlarm(mins) {
       dismissModal();
       if (activeAlarmIndex >= 0 && alarms[activeAlarmIndex]) {
-        const now = new Date(Date.now() + 5 * 60000);
+        const now = new Date(Date.now() + mins * 60000);
         const hh = now.getHours().toString().padStart(2, '0');
         const mm = now.getMinutes().toString().padStart(2, '0');
+        const snoozedDay = now.getDay();
         alarms.push({
+          id: 'snooze_' + Date.now(),
           time: `${hh}:${mm}`,
-          label: `${alarms[activeAlarmIndex].label} (Snoozed)`,
+          label: `${alarms[activeAlarmIndex].label} (Snoozed ${mins}m)`,
+          days: [snoozedDay],
           active: true,
           triggered: false
         });
         renderAlarms();
       }
+    }
+
+    // --- Tab 7: Settings Export & Import [JSON] ---
+    function exportSettingsJSON() {
+      const data = {
+        version: "1.0",
+        appName: "KClock",
+        exportDate: new Date().toISOString(),
+        settings: {
+          use24Hour: use24Hour,
+          soundEnabled: soundEnabled
+        },
+        worldCities: worldCities,
+        alarms: alarms
+      };
+
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `kclock_config_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importSettingsJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.settings) {
+            if (typeof imported.settings.use24Hour === 'boolean' && imported.settings.use24Hour !== use24Hour) {
+              toggleFormat();
+            }
+            if (typeof imported.settings.soundEnabled === 'boolean' && imported.settings.soundEnabled !== soundEnabled) {
+              toggleSound();
+            }
+          }
+          if (Array.isArray(imported.worldCities)) {
+            worldCities = imported.worldCities;
+            updateWorldClock();
+          }
+          if (Array.isArray(imported.alarms)) {
+            alarms = imported.alarms;
+            renderAlarms();
+          }
+          alert('Settings & Data successfully imported!');
+        } catch (err) {
+          alert('Failed to import JSON file. Please verify file format.');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
     }
 
     // --- Modal Non-Blocking Notification System ---
@@ -929,7 +1480,8 @@
     function showModal(title, desc, allowSnooze = false) {
       document.getElementById('modal-title').innerText = title;
       document.getElementById('modal-desc').innerText = desc;
-      document.getElementById('snooze-btn').style.display = allowSnooze ? 'inline-block' : 'none';
+      document.getElementById('snooze-btn-5').style.display = allowSnooze ? 'inline-block' : 'none';
+      document.getElementById('snooze-btn-10').style.display = allowSnooze ? 'inline-block' : 'none';
       document.getElementById('alert-modal').classList.add('active');
 
       if (soundEnabled) {
@@ -947,6 +1499,9 @@
         alertAudioLoop = null;
       }
     }
+
+    // Initial renders
+    renderAlarms();
   </script>
 </body>
 </html>
