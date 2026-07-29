@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KDB
+**Target App:** KExplorer
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -189,3 +189,5 @@ Pass 1 Complete.
 - **KContacts**: Added category CSS class sanitization, `localStorage` try-catch guards, 1000 contact capacity cap, form field length bounds, duplicate merge notes crash fix, robust vCard parameter header parsing, and `tel:`/`mailto:` URI sanitization in `kcontacts.html`. Added bounded `my_strncpy`/`my_strncat` functions, vCard heap allocation null-checks, 150 contact capacity limit checks, and stale form field clearing on delete in `main.c`.
 
 - **KConverter**: Added double-precision unit factors, scientific notation for numbers `< 1e-5`, absolute zero (0 K) bounds warnings, `escapeHTML()` dynamic render sanitization, and ARIA `aria-selected` tab management in `kconverter.html`. Fixed stack string buffer overflows in `AppendHistory` and `DoConvert`, added zero/negative unit factor division guards, `c < -273.15` temperature warnings, edit control subclassing for Enter key & live typing updates, and DLL module/font cleanup in `main.c`.
+
+- **KDB**: Added field-specific & free-text query parsing (e.g. `dept:engineering`, `id>100`), 500 record capacity limit, `localStorage` quota try-catch wrappers, CSV import/export bounds, record edit modal, and DOM `textContent` XSS protection in `kdb.html`. Added column-specific query filter parser, 200 record capacity cap with alerts, dynamic `AutoScaleListViewColumns` on `WM_SIZE`, Win32 binary file persistence (`kdb_data.dat`), and managed GDI brush cleanup in `main.c`.
