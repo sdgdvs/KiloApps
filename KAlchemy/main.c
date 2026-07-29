@@ -240,6 +240,7 @@ typedef struct {
     int puzzleMoves;        // Moves taken in current puzzle
     int puzzleSolvedCount;  // Puzzles solved count
     int puzzleHighScore;    // Puzzle High Score
+    int soundEnabled;       // 1 = Sound Enabled, 0 = Muted
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
@@ -270,6 +271,7 @@ static HWND g_hJournalEdit = NULL;
 static HWND g_hPrevButton = NULL;
 static HWND g_hNextButton = NULL;
 static HWND g_hPageText = NULL;
+static HWND g_hSoundButton = NULL;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -324,18 +326,60 @@ static int StrContainsIgnoreCase(const char* haystack, const char* needle) {
     return 0;
 }
 
+// Phase 13 Win32 Beep Sound Effects Synthesizer
+static void PlayGlassClink() {
+    if (!g_State.soundEnabled) return;
+    Beep(1800, 30);
+    Beep(2400, 40);
+}
+
+static void PlayTransmuteZap() {
+    if (!g_State.soundEnabled) return;
+    Beep(220, 20);
+    Beep(440, 20);
+    Beep(880, 25);
+    Beep(1760, 30);
+    Beep(660, 20);
+}
+
+static void PlayDiscoveryChime() {
+    if (!g_State.soundEnabled) return;
+    Beep(1046, 50);  // C6
+    Beep(1318, 50);  // E6
+    Beep(1568, 50);  // G6
+    Beep(2093, 80);  // C7
+}
+
+static void PlayMagicFanfare() {
+    if (!g_State.soundEnabled) return;
+    Beep(523, 60);   // C5
+    Beep(659, 60);   // E5
+    Beep(784, 60);   // G5
+    Beep(1046, 90);  // C6
+    Beep(1318, 120); // E6
+}
+
+static void PlayBubbleSimmer() {
+    if (!g_State.soundEnabled) return;
+    Beep(320, 25);
+    Beep(420, 25);
+    Beep(360, 25);
+    Beep(480, 30);
+}
+
+static void PlayAnvilCrushSound() {
+    if (!g_State.soundEnabled) return;
+    Beep(150, 40);
+    Beep(300, 40);
+    Beep(600, 50);
+}
+
 static void PlayDiscoveryFanfare() {
-    Beep(523, 70);   // C5
-    Beep(659, 70);   // E5
-    Beep(784, 70);   // G5
-    Beep(1046, 120); // C6
+    PlayDiscoveryChime();
 }
 
 static void PlayTierUnlockFanfare() {
-    Beep(440, 60);  // A4
-    Beep(554, 60);  // C#5
-    Beep(659, 60);  // E5
-    Beep(880, 150); // A5
+    PlayMagicFanfare();
 }
 
 static void UpdateGrimoireGrid() {
@@ -583,6 +627,7 @@ static void InitGameState() {
     g_State.puzzleMoves = 0;
     g_State.puzzleSolvedCount = 0;
     g_State.puzzleHighScore = 0;
+    g_State.soundEnabled = 1;
     lstrcpyA(g_State.lastStatus, "Transmutation Crucible Ready");
     g_State.searchFilter[0] = '\0';
     for (int q = 0; q < 3; q++) {
@@ -659,12 +704,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             UpdateGrimoireGrid();
 
             // Game Mode Selection Buttons
-            g_hModeButtons[0] = CreateWindowA("BUTTON", "Classic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 70, 48, 22, hwnd, (HMENU)1200, NULL, NULL);
-            g_hModeButtons[1] = CreateWindowA("BUTTON", "Blitz", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 327, 70, 42, 22, hwnd, (HMENU)1201, NULL, NULL);
-            g_hModeButtons[2] = CreateWindowA("BUTTON", "Puzzle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 372, 70, 48, 22, hwnd, (HMENU)1202, NULL, NULL);
+            g_hModeButtons[0] = CreateWindowA("BUTTON", "Classic", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 70, 45, 22, hwnd, (HMENU)1200, NULL, NULL);
+            g_hModeButtons[1] = CreateWindowA("BUTTON", "Blitz", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 323, 70, 38, 22, hwnd, (HMENU)1201, NULL, NULL);
+            g_hModeButtons[2] = CreateWindowA("BUTTON", "Puzzle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 363, 70, 44, 22, hwnd, (HMENU)1202, NULL, NULL);
 
-            g_hBlitzStartButton = CreateWindowA("BUTTON", "▶️ Start Blitz", WS_CHILD | BS_PUSHBUTTON, 423, 70, 85, 22, hwnd, (HMENU)1203, NULL, NULL);
-            g_hPuzzleSkipButton = CreateWindowA("BUTTON", "🔄 Skip Target", WS_CHILD | BS_PUSHBUTTON, 423, 70, 85, 22, hwnd, (HMENU)1204, NULL, NULL);
+            g_hBlitzStartButton = CreateWindowA("BUTTON", "▶️ Start", WS_CHILD | BS_PUSHBUTTON, 409, 70, 50, 22, hwnd, (HMENU)1203, NULL, NULL);
+            g_hPuzzleSkipButton = CreateWindowA("BUTTON", "🔄 Skip", WS_CHILD | BS_PUSHBUTTON, 409, 70, 50, 22, hwnd, (HMENU)1204, NULL, NULL);
+            g_hSoundButton = CreateWindowA("BUTTON", "🔊 ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 461, 70, 48, 22, hwnd, (HMENU)1300, NULL, NULL);
 
             // Laboratory Equipment Nav Buttons
             g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 96, 33, 22, hwnd, (HMENU)700, NULL, NULL);
@@ -767,12 +813,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_State.currentPage = 0;
                 UpdateGrimoireGrid();
             }
+            // Sound Toggle (1300)
+            else if (id == 1300) {
+                g_State.soundEnabled = !g_State.soundEnabled;
+                if (g_hSoundButton) {
+                    SetWindowTextA(g_hSoundButton, g_State.soundEnabled ? "🔊 ON" : "🔇 OFF");
+                }
+                if (g_State.soundEnabled) PlayGlassClink();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             // Tier Filter Buttons (500 = All, 501..505 = T1..T5)
             else if (id >= 500 && id <= 500 + TOTAL_TIERS) {
                 g_State.selectedTierFilter = id - 500;
                 g_State.currentPage = 0;
                 UpdateGrimoireGrid();
-                Beep(450, 40);
+                PlayGlassClink();
             }
             // Grid element buttons (100 to 109)
             else if (id >= 100 && id < 100 + GRID_SIZE) {
@@ -782,7 +837,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_State.selectedEquipment == 7) {
                         g_State.selectedCodexElem = elemIdx;
                         InvalidateRect(hwnd, NULL, TRUE);
-                        Beep(600, 50);
+                        PlayGlassClink();
                     } else if (g_State.discovered[elemIdx]) {
                         if (g_State.slot1 == -1) {
                             g_State.slot1 = elemIdx;
@@ -792,7 +847,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             g_State.slot1 = elemIdx;
                         }
                         UpdateSlotButtonText();
-                        Beep(520, 60);
+                        PlayGlassClink();
                         InvalidateRect(hwnd, NULL, TRUE);
                     }
                 }
@@ -802,26 +857,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_State.currentPage > 0) {
                     g_State.currentPage--;
                     UpdateGrimoireGrid();
-                    Beep(400, 40);
+                    PlayGlassClink();
                 }
             }
             else if (id == 602) { // Next
                 g_State.currentPage++;
                 UpdateGrimoireGrid();
-                Beep(400, 40);
+                PlayGlassClink();
             }
             // Clear Slot 1
             else if (id == 301) {
                 g_State.slot1 = -1;
                 UpdateSlotButtonText();
-                Beep(350, 50);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Clear Slot 2
             else if (id == 302) {
                 g_State.slot2 = -1;
                 UpdateSlotButtonText();
-                Beep(350, 50);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Equipment Selector (700 = Crucible, 701 = Retort, 702 = Alembic, 703 = Anvil, 704 = Quests, 705 = Shop, 706 = Potions)
@@ -835,7 +890,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     else if (g_State.selectedEquipment == 6) SetWindowTextA(g_hMainActionButton, "🥣 Brew Elixir");
                 }
                 UpdateEquipmentUI(hwnd);
-                Beep(450, 40);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Potion Drink Commands (1000 = Strength, 1001 = Invis, 1002 = Mana, 1003 = Life)
@@ -846,28 +901,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_State.buffStrengthTimer += 60;
                     AddJournalLog("🧪 EFFECT TESTER: Consumed Strength Elixir! (+50% Yield Active 60s)");
                     wsprintfA(g_State.lastStatus, "Active Buff: Strength Elixir (60s)");
-                    Beep(300, 50); Beep(500, 50); Beep(700, 70);
+                    PlayBubbleSimmer(); PlayMagicFanfare();
                 } else if (pIdx == 1 && g_State.potionInvisibility > 0) {
                     g_State.potionInvisibility--;
                     g_State.buffInvisibilityTimer += 60;
                     AddJournalLog("🧪 EFFECT TESTER: Consumed Invisibility Elixir! (Stealth Aura Active 60s)");
                     wsprintfA(g_State.lastStatus, "Active Buff: Invisibility Elixir (60s)");
-                    Beep(400, 50); Beep(600, 50); Beep(800, 70);
+                    PlayBubbleSimmer(); PlayMagicFanfare();
                 } else if (pIdx == 2 && g_State.potionMana > 0) {
                     g_State.potionMana--;
                     g_State.buffManaTimer += 60;
                     AddJournalLog("🧪 EFFECT TESTER: Consumed Mana Elixir! (Mana Surge Active 60s)");
                     wsprintfA(g_State.lastStatus, "Active Buff: Mana Elixir (60s)");
-                    Beep(500, 50); Beep(700, 50); Beep(900, 70);
+                    PlayBubbleSimmer(); PlayMagicFanfare();
                 } else if (pIdx == 3 && g_State.potionLife > 0) {
                     g_State.potionLife--;
                     g_State.buffLifeTimer += 60;
                     AddJournalLog("🧪 EFFECT TESTER: Consumed Elixir of Life! (Divine Radiance Active 60s)");
                     wsprintfA(g_State.lastStatus, "Active Buff: Elixir of Life (60s)");
-                    Beep(600, 50); Beep(800, 50); Beep(1000, 90);
+                    PlayBubbleSimmer(); PlayMagicFanfare();
                 } else {
                     AddJournalLog("⚠️ No potions of this type in inventory!");
-                    Beep(220, 100);
+                    PlayGlassClink();
                 }
                 UpdateEquipmentUI(hwnd);
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -893,11 +948,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         wsprintfA(logMsg, "🧙 WORKSHOP UPGRADE: Upgraded %s to Level %d! (-%d Gold)", uName, *pLvl, cost);
                         AddJournalLog(logMsg);
                         wsprintfA(g_State.lastStatus, "Upgraded %s to Lvl %d!", uName, *pLvl);
-                        Beep(523, 60); Beep(659, 60); Beep(784, 80);
+                        PlayGlassClink(); PlayMagicFanfare();
                         UpdateEquipmentUI(hwnd);
                     } else {
                         AddJournalLog("⚠️ Not enough Gold for Workshop Upgrade!");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -906,7 +961,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 904) {
                 if (g_State.upgradeAutoSorter <= 0) {
                     AddJournalLog("⚠️ Unlock Auto-Sorter in the Enchanter Workshop first!");
-                    Beep(220, 100);
+                    PlayGlassClink();
                 } else {
                     int matchIdx = -1;
                     int foundBothDiscovered = -1;
@@ -935,10 +990,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         AddJournalLog(logMsg);
                         wsprintfA(g_State.lastStatus, "Auto-Sorter Loaded %s + %s",
                             g_Elements[g_State.slot1].name, g_Elements[g_State.slot2].name);
-                        Beep(600, 80);
+                        PlayTransmuteZap();
                     } else {
                         AddJournalLog("⚡ Auto-Sorter: No valid ingredient combinations found in Grimoire!");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -964,14 +1019,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     AddJournalLog(logMsg);
                     wsprintfA(g_State.lastStatus, "Fulfilled %s's order!", g_Patrons[g_State.quests[qIdx].patronIdx]);
 
-                    Beep(523, 60); Beep(659, 60); Beep(784, 60); Beep(1046, 100);
+                    PlayMagicFanfare();
 
                     GenerateQuest(qIdx);
                     UpdateEquipmentUI(hwnd);
                     InvalidateRect(hwnd, NULL, TRUE);
                 } else {
                     AddJournalLog("⚠️ You must discover/craft the requested element before turning in!");
-                    Beep(220, 100);
+                    PlayGlassClink();
                 }
             }
             // Quest Reroll Button (803)
@@ -980,7 +1035,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (g_State.gold < COST) {
                     lstrcpyA(g_State.lastStatus, "Need 15 Gold to reroll quests!");
                     AddJournalLog("⚠️ Not enough Gold to reroll quest board! (Cost: 15 Gold)");
-                    Beep(220, 100);
+                    PlayGlassClink();
                 } else {
                     g_State.gold -= COST;
                     GenerateQuest(0);
@@ -988,7 +1043,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     GenerateQuest(2);
                     AddJournalLog("🔄 Rerolled Master Alchemist Guild Quest Board (-15 Gold).");
                     lstrcpyA(g_State.lastStatus, "Guild Quests Rerolled");
-                    Beep(500, 80);
+                    PlayGlassClink();
                     UpdateEquipmentUI(hwnd);
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1000,7 +1055,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddJournalLog("Switched to Classic Discovery Mode.");
                 lstrcpyA(g_State.lastStatus, "Classic Mode Active");
                 UpdateEquipmentUI(hwnd);
-                Beep(450, 40);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (id == 1201) {
@@ -1008,7 +1063,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddJournalLog("⚡ TIMED ALCHEMY BLITZ: Click 'Start Blitz' to begin the 60s challenge!");
                 lstrcpyA(g_State.lastStatus, "Blitz Challenge Ready");
                 UpdateEquipmentUI(hwnd);
-                Beep(450, 40);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (id == 1202) {
@@ -1016,7 +1071,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 AddJournalLog("🧩 PUZZLE CRUCIBLE: Synthesize the target element goal!");
                 lstrcpyA(g_State.lastStatus, "Puzzle Crucible Active");
                 UpdateEquipmentUI(hwnd);
-                Beep(450, 40);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (id == 1203) { // Start/Restart Blitz
@@ -1025,7 +1080,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_State.blitzActive = 1;
                 AddJournalLog("⚡ BLITZ STARTED! Discover compounds before 60s expires!");
                 lstrcpyA(g_State.lastStatus, "Blitz Challenge Active!");
-                Beep(880, 80);
+                PlayMagicFanfare();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             else if (id == 1204) { // Skip Puzzle Target
@@ -1036,7 +1091,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 wsprintfA(logMsg, "🧩 NEW PUZZLE TARGET: Synthesize %s (Tier %d)!",
                     g_Elements[g_State.puzzleTargetId].name, g_Elements[g_State.puzzleTargetId].tier);
                 AddJournalLog(logMsg);
-                Beep(554, 60);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Main Action (Transmute / Distill / Extract / Crush)
@@ -1045,8 +1100,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_State.slot1 < 0 || g_State.slot2 < 0) {
                         lstrcpyA(g_State.lastStatus, "Select 2 elements for Crucible!");
                         AddJournalLog("Place two elements into the Crucible before transmuting.");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     } else {
+                        PlayTransmuteZap();
                         int e1 = g_State.slot1;
                         int e2 = g_State.slot2;
                         int matchIdx = -1;
@@ -1070,7 +1126,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 wsprintfA(logMsg, "🔒 TIER LOCKED! Crafting %s requires Tier %d (%s) - discover %d elements!",
                                     g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, reqThreshold);
                                 AddJournalLog(logMsg);
-                                Beep(180, 150);
+                                PlayGlassClink();
                             } else {
                                 int isNew = !g_State.discovered[res];
 
@@ -1091,7 +1147,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         wsprintfA(logMsg, "🧩 PUZZLE SOLVED! Successfully synthesized %s in %d moves! (Solved: %d)",
                                             g_Elements[res].name, g_State.puzzleMoves, g_State.puzzleSolvedCount);
                                         AddJournalLog(logMsg);
-                                        PlayDiscoveryFanfare();
+                                        PlayMagicFanfare();
 
                                         int rNext = FastRand() % TOTAL_RECIPES;
                                         g_State.puzzleTargetId = g_Recipes[rNext].result;
@@ -1136,14 +1192,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                         g_Elements[res].name, resTier, g_Tiers[resTier - 1].name, g_Elements[e1].name, g_Elements[e2].name, dustGain, critLogStr);
                                     AddJournalLog(logMsg);
 
-                                    PlayDiscoveryFanfare();
+                                    PlayDiscoveryChime();
                                 } else {
                                     wsprintfA(g_State.lastStatus, "Created %s (Known)", g_Elements[res].name);
                                     char logMsg[256];
                                     wsprintfA(logMsg, "Created %s (%s + %s). Already recorded in Grimoire.",
                                         g_Elements[res].name, g_Elements[e1].name, g_Elements[e2].name);
                                     AddJournalLog(logMsg);
-                                    Beep(659, 120);
+                                    PlayBubbleSimmer();
                                 }
                             }
                         } else {
@@ -1155,20 +1211,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             wsprintfA(logMsg, "Reaction fizzled! No transmutation for %s + %s.",
                                 g_Elements[e1].name, g_Elements[e2].name);
                             AddJournalLog(logMsg);
-                            Beep(180, 150);
+                            PlayGlassClink();
                         }
                     }
                 } else if (g_State.selectedEquipment == 1) { // Retort Distillation
                     if (g_State.slot1 < 0) {
                         lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
                         AddJournalLog("Place a complex element into Slot 1 to distill in the Retort.");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     } else {
                         int e1 = g_State.slot1;
                         if (g_Elements[e1].isBasic || g_Elements[e1].tier == 1) {
                             wsprintfA(g_State.lastStatus, "Primordial %s cannot be distilled!", g_Elements[e1].name);
                             AddJournalLog("⚠️ Primordial base elements cannot be distilled!");
-                            Beep(220, 100);
+                            PlayGlassClink();
                         } else {
                             int matchIdx = -1;
                             for (int r = 0; r < TOTAL_RECIPES; r++) {
@@ -1192,7 +1248,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 wsprintfA(logMsg, "⚗️ RETORT DISTILLATION: Distilled %s to extract primary essence %s! (+%d Essence, +%d Dust)",
                                     g_Elements[e1].name, g_Elements[ing1].name, essGain, dustGain);
                                 AddJournalLog(logMsg);
-                                Beep(350, 50); Beep(440, 50); Beep(554, 50); Beep(659, 70);
+                                PlayBubbleSimmer(); PlayGlassClink();
                             }
                         }
                     }
@@ -1200,13 +1256,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_State.slot1 < 0) {
                         lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
                         AddJournalLog("Place a complex element into Slot 1 to extract in the Alembic.");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     } else {
                         int e1 = g_State.slot1;
                         if (g_Elements[e1].isBasic || g_Elements[e1].tier == 1) {
                             wsprintfA(g_State.lastStatus, "Primordial %s cannot be extracted!", g_Elements[e1].name);
                             AddJournalLog("⚠️ Primordial base elements cannot be extracted!");
-                            Beep(220, 100);
+                            PlayGlassClink();
                         } else {
                             int matchIdx = -1;
                             for (int r = 0; r < TOTAL_RECIPES; r++) {
@@ -1230,7 +1286,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 wsprintfA(logMsg, "🧪 ALEMBIC EXTRACTION: Extracted secondary essence %s from %s! (+%d Essence, +%d Dust)",
                                     g_Elements[ing2].name, g_Elements[e1].name, essGain, dustGain);
                                 AddJournalLog(logMsg);
-                                Beep(523, 50); Beep(659, 50); Beep(784, 50); Beep(1046, 70);
+                                PlayBubbleSimmer(); PlayGlassClink();
                             }
                         }
                     }
@@ -1238,13 +1294,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_State.slot1 < 0) {
                         lstrcpyA(g_State.lastStatus, "Place complex element in Slot 1!");
                         AddJournalLog("Place a complex element into Slot 1 to crush on the Anvil.");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     } else {
                         int e1 = g_State.slot1;
                         if (g_Elements[e1].isBasic || g_Elements[e1].tier == 1) {
                             wsprintfA(g_State.lastStatus, "Primordial %s cannot be crushed!", g_Elements[e1].name);
                             AddJournalLog("⚠️ Primordial base elements cannot be crushed!");
-                            Beep(220, 100);
+                            PlayGlassClink();
                         } else {
                             int tier = g_Elements[e1].tier;
                             int yieldMult = 100 + (g_State.upgradeEssenceYield * 25);
@@ -1257,13 +1313,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             wsprintfA(logMsg, "🔨 ANVIL ESSENCE HARVEST: Smashed %s [Tier %d] into pure base essence! (+%d Essence, +%d Dust)",
                                 g_Elements[e1].name, tier, essGain, dustGain);
                             AddJournalLog(logMsg);
+                            PlayAnvilCrushSound();
                         }
                     }
                 } else if (g_State.selectedEquipment == 6) { // Potion Brewing
                     if (g_State.slot1 < 0 || g_State.slot2 < 0) {
                         lstrcpyA(g_State.lastStatus, "Select herb and essence for brewing!");
                         AddJournalLog("Select an herb/ingredient and essence into slots to brew in Cauldron.");
-                        Beep(220, 100);
+                        PlayGlassClink();
                     } else {
                         int e1 = g_State.slot1;
                         int e2 = g_State.slot2;
@@ -1284,28 +1341,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             g_State.potionStrength++;
                             AddJournalLog("🥣 BREWING: Combined ingredients to brew Strength Elixir (💪)! (+1 Potion)");
                             wsprintfA(g_State.lastStatus, "Brewed Strength Elixir (💪)!");
-                            Beep(440, 50); Beep(554, 50); Beep(659, 70);
+                            PlayBubbleSimmer(); PlayGlassClink();
                         } else if (brewedType == 1) {
                             g_State.potionInvisibility++;
                             AddJournalLog("🥣 BREWING: Combined ingredients to brew Invisibility Elixir (👻)! (+1 Potion)");
                             wsprintfA(g_State.lastStatus, "Brewed Invisibility Elixir (👻)!");
-                            Beep(523, 50); Beep(659, 50); Beep(784, 70);
+                            PlayBubbleSimmer(); PlayGlassClink();
                         } else if (brewedType == 2) {
                             g_State.potionMana++;
                             AddJournalLog("🥣 BREWING: Combined ingredients to brew Mana Elixir (🔮)! (+1 Potion)");
                             wsprintfA(g_State.lastStatus, "Brewed Mana Elixir (🔮)!");
-                            Beep(659, 50); Beep(784, 50); Beep(880, 70);
+                            PlayBubbleSimmer(); PlayGlassClink();
                         } else if (brewedType == 3) {
                             g_State.potionLife++;
                             AddJournalLog("🥣 BREWING: Combined ingredients to brew Elixir of Life (❤️)! (+1 Potion)");
                             wsprintfA(g_State.lastStatus, "Brewed Elixir of Life (❤️)!");
-                            Beep(523, 50); Beep(659, 50); Beep(880, 50); Beep(1046, 90);
+                            PlayBubbleSimmer(); PlayGlassClink();
                         } else {
                             g_State.essence += 15;
                             g_State.dust += 15;
                             AddJournalLog("🧪 BREWING: Brewed Minor Tonic! (+15 Essence, +15 Dust)");
                             wsprintfA(g_State.lastStatus, "Brewed Minor Tonic (+15 Ess, +15 Dust)");
-                            Beep(350, 70);
+                            PlayBubbleSimmer();
                         }
                         UpdateEquipmentUI(hwnd);
                     }
@@ -1318,7 +1375,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 g_State.slot2 = -1;
                 UpdateSlotButtonText();
                 lstrcpyA(g_State.lastStatus, "Crucible Cleared");
-                Beep(300, 60);
+                PlayGlassClink();
                 InvalidateRect(hwnd, NULL, TRUE);
             }
             // Reset Progress
@@ -1330,7 +1387,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     UpdateGrimoireGrid();
                     SetWindowTextA(g_hJournalEdit, "");
                     AddJournalLog("Journal reset. Basic elements restored.");
-                    Beep(400, 100);
+                    PlayGlassClink();
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
             }
@@ -1344,7 +1401,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char msg[256];
                     wsprintfA(msg, "⚠️ Not enough Alchemical Dust! Need %d Dust (You have %d).", COST, g_State.dust);
                     AddJournalLog(msg);
-                    Beep(220, 100);
+                    PlayGlassClink();
                 } else {
                     int matchIdx = -1;
                     int foundBothKnown = -1;
@@ -1369,7 +1426,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     if (matchIdx < 0) {
                         AddJournalLog("🔮 The Oracle Whispers: All elements in the cosmos have already been discovered!");
-                        Beep(880, 150);
+                        PlayDiscoveryChime();
                     } else {
                         g_State.dust -= COST;
                         int res = g_Recipes[matchIdx].result;
@@ -1383,9 +1440,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             COST, g_Elements[res].name, g_Elements[res].tier, g_Elements[knownIng].name);
                         AddJournalLog(logMsg);
 
-                        Beep(349, 80);
-                        Beep(440, 80);
-                        Beep(523, 100);
+                        PlayDiscoveryChime();
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1400,7 +1455,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     char msg[256];
                     wsprintfA(msg, "⚠️ Not enough Alchemical Dust! Need %d Dust (You have %d).", COST, g_State.dust);
                     AddJournalLog(msg);
-                    Beep(220, 100);
+                    PlayGlassClink();
                 } else {
                     int foundBothKnown = -1;
                     int matchIdx = -1;
@@ -1422,7 +1477,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     if (matchIdx < 0) {
                         AddJournalLog("🔮 The Oracle Whispers: All elements in the cosmos have already been discovered!");
-                        Beep(880, 150);
+                        PlayDiscoveryChime();
                     } else {
                         g_State.dust -= COST;
                         int res = g_Recipes[matchIdx].result;
@@ -1446,11 +1501,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             AddJournalLog(logMsg);
                         }
 
-                        Beep(440, 70);
-                        Beep(554, 70);
-                        Beep(659, 70);
-                        Beep(880, 70);
-                        Beep(1108, 120);
+                        PlayMagicFanfare();
                     }
                 }
                 InvalidateRect(hwnd, NULL, TRUE);

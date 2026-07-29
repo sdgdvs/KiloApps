@@ -1599,6 +1599,10 @@
         <span class="label">Rank:</span>
         <span class="val" id="stat-rank">Apprentice</span>
       </div>
+      <div class="stat-badge" style="cursor:pointer;" onclick="toggleSound()" title="Click to Mute/Unmute Audio">
+        <span class="label">Audio:</span>
+        <span class="val" id="stat-sound">🔊 ON</span>
+      </div>
       <div class="stat-badge">
         <span class="label">Blitz Best:</span>
         <span class="val" id="stat-blitz-high">0</span>
@@ -2635,7 +2639,7 @@
         selectedSlots[0] = el;
       }
       updateSlotsUI();
-      playChime(520, 'sine', 0.15);
+      playGlassClinker(1.0);
     }
 
     function updateSlotsUI() {
@@ -2662,7 +2666,7 @@
     function clearSlot(index) {
       selectedSlots[index - 1] = null;
       updateSlotsUI();
-      playChime(350, 'sine', 0.1);
+      playGlassClinker(0.75);
     }
 
     function clearCrucible() {
@@ -2835,9 +2839,11 @@
     function transmute() {
       if (!selectedSlots[0] || !selectedSlots[1]) {
         addLog("Place two elements into the Crucible before transmuting.", false, false, false);
-        playChime(220, 'sawtooth', 0.2);
+        playGlassClinker(0.5);
         return;
       }
+
+      playTransmutationZap();
 
       const id1 = selectedSlots[0].id;
       const id2 = selectedSlots[1].id;
@@ -2863,7 +2869,7 @@
           if (discoveredIds.size < reqTier.threshold) {
             orb.innerText = '🔒';
             addLog(`🔒 <strong>TIER LOCKED!</strong> Crafting <strong>${resElement.name}</strong> requires Tier ${reqTier.id} (${reqTier.name}) - discover ${reqTier.threshold} elements to unlock!`, false, true, false);
-            playChime(180, 'sawtooth', 0.3);
+            playGlassClinker(0.4);
             setTimeout(() => { orb.innerText = '🔮'; }, 1500);
             return;
           }
@@ -2889,7 +2895,8 @@
               updatePuzzleHUD();
               triggerToast("🧩 PUZZLE SOLVED!", `Synthesized ${resElement.name} in ${puzzleMoves} moves!`, resElement.icon);
               addLog(`🧩 <strong>PUZZLE SOLVED!</strong> Successfully synthesized <strong>${resElement.name}</strong> ${resElement.icon} in ${puzzleMoves} moves! (Solved: ${puzzleSolvedCount})`, true, false, false, 'oracle');
-              playFanfareDiscovery();
+              playDiscoveryChime();
+              playMagicFanfare();
               setTimeout(() => nextPuzzleTarget(true), 1500);
             } else {
               updatePuzzleHUD();
@@ -2933,11 +2940,11 @@
 
             triggerToast(`NEW DISCOVERY!`, `Created ${resElement.name} ${resElement.icon} (+${dustGain} Dust)`, resElement.icon);
             addLog(`✨ <strong>NEW DISCOVERY!</strong> You created <strong>${resElement.name}</strong> ${resElement.icon} [Tier ${resElement.tier} ${reqTier.name}] by combining ${selectedSlots[0].name} + ${selectedSlots[1].name}! (+${dustGain} Alchemical Dust)${critStr}`, true, false, false);
-            playFanfareDiscovery();
+            playDiscoveryChime();
           } else {
             orb.innerText = resElement.icon;
             addLog(`Created <strong>${resElement.name}</strong> ${resElement.icon} (${selectedSlots[0].name} + ${selectedSlots[1].name}). Already recorded in Grimoire.`, false, false, false);
-            playChime(659, 'sine', 0.25);
+            playBubbleSimmer();
           }
         } else {
           if (gameMode === 2) {
@@ -2946,7 +2953,7 @@
           }
           orb.innerText = '💨';
           addLog(`The reaction fizzles! No transmutation found for ${selectedSlots[0].name} + ${selectedSlots[1].name}.`, false, true, false);
-          playChime(180, 'sawtooth', 0.3);
+          playGlassClinker(0.5);
         }
 
         setTimeout(() => { orb.innerText = '🔮'; }, 1500);
@@ -3197,24 +3204,41 @@
 
     function playOracleSound(isVision) {
       if (isVision) {
-        const notes = [440, 554.37, 659.25, 880, 1108.73];
-        notes.forEach((freq, idx) => {
-          setTimeout(() => playChime(freq, 'sine', 0.4), idx * 80);
-        });
+        playMagicFanfare();
       } else {
-        const notes = [349.23, 440, 523.25];
-        notes.forEach((freq, idx) => {
-          setTimeout(() => playChime(freq, 'triangle', 0.3), idx * 100);
-        });
+        playDiscoveryChime();
       }
     }
 
-    // Audio Synthesizer
+    // Audio Synthesizer & Sound Effects (Phase 13 Web Audio API)
+    let soundEnabled = true;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!soundEnabled) return null;
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const el = document.getElementById('stat-sound');
+      if (el) el.innerText = soundEnabled ? '🔊 ON' : '🔇 OFF';
+      if (soundEnabled) {
+        playGlassClinker(1.2);
+      }
+    }
+
     function playChime(freq, type = 'sine', duration = 0.2) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
       try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) return;
-        const ctx = new AudioCtx();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = type;
@@ -3228,18 +3252,131 @@
       } catch (e) {}
     }
 
+    function playBubbleSimmer() {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        const now = ctx.currentTime;
+        for (let i = 0; i < 6; i++) {
+          const delay = i * 0.04 + Math.random() * 0.03;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const freq = 260 + Math.random() * 380;
+          osc.type = Math.random() > 0.5 ? 'sine' : 'triangle';
+          osc.frequency.setValueAtTime(freq, now + delay);
+          osc.frequency.exponentialRampToValueAtTime(freq * 1.6, now + delay + 0.045);
+          gain.gain.setValueAtTime(0.08, now + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.05);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + delay);
+          osc.stop(now + delay + 0.06);
+        }
+      } catch (e) {}
+    }
+
+    function playGlassClinker(pitchMult = 1.0) {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        const now = ctx.currentTime;
+        const baseFreq = 1800 * pitchMult;
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+        osc1.frequency.setValueAtTime(baseFreq, now);
+        osc2.frequency.setValueAtTime(baseFreq * 1.48, now);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.0005, now + 0.18);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.2);
+        osc2.stop(now + 0.2);
+      } catch (e) {}
+    }
+
+    function playTransmutationZap() {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(1450, now + 0.12);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.25);
+        gain.gain.setValueAtTime(0.14, now);
+        gain.gain.linearRampToValueAtTime(0.18, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.26);
+      } catch (e) {}
+    }
+
+    function playDiscoveryChime() {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        const freqs = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02];
+        const now = ctx.currentTime;
+        freqs.forEach((f, idx) => {
+          const startTime = now + idx * 0.055;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(f, startTime);
+          gain.gain.setValueAtTime(0.12, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.0005, startTime + 0.38);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.42);
+        });
+      } catch (e) {}
+    }
+
+    function playMagicFanfare() {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      try {
+        const notes = [
+          { f: 523.25, time: 0 },
+          { f: 659.25, time: 0.09 },
+          { f: 783.99, time: 0.18 },
+          { f: 1046.50, time: 0.32 },
+          { f: 1318.51, time: 0.45 }
+        ];
+        const now = ctx.currentTime;
+        notes.forEach(n => {
+          const startTime = now + n.time;
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(n.f, startTime);
+          gain.gain.setValueAtTime(0.14, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.48);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.52);
+        });
+      } catch (e) {}
+    }
+
     function playFanfareDiscovery() {
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, idx) => {
-        setTimeout(() => playChime(freq, 'triangle', 0.35), idx * 110);
-      });
+      playDiscoveryChime();
     }
 
     function playFanfareTier() {
-      const notes = [440, 554.37, 659.25, 880];
-      notes.forEach((freq, idx) => {
-        setTimeout(() => playChime(freq, 'sine', 0.4), idx * 120);
-      });
+      playMagicFanfare();
     }
 
 
