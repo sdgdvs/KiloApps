@@ -89,10 +89,10 @@ KAlchemy Phase 11 complete. Phase 12 (Game Modes & Challenges) next. On track to
 | Game Graphics | Every 2h (:45) | `game_graphics_plan.md` | Gemini 3.6 Flash High |
 | Director #1 | Every 3 days | (reviews all plan files) | Claude Opus 4.6 |
 | Director #2 | Every 3 days (offset) | (reviews all plan files) | Claude Opus 4.6 |
-| ~~Shell & UX~~ | ~~Suspended~~ | `kiloos_ux_plan.md` | — |
+| Usability Agent | Every 2h (:15) | `usability_plan.md` | Gemini 3.6 Flash High |
 
 ## Agent Workflow Rules
-- **Features Only, No Polish:** All agents focus on feature expansion, game content depth, and new app creation. Visual polish is explicitly out of scope (except Graphics agent for game sprites).
+- **Workflow Rules:** Worker agents focus on feature expansion and new app creation. Visual polish is for the Usability agent and Graphics agent only.
 - **Self-Contained Context:** Each agent reads ONLY its own .md plan file. Plan files contain all coordination rules inline.
 - **Subagent Delegation:** Agents dispatch subagents for coding work, passing ONLY their plan .md file as context.
 - **Continuous Deployment:** Commit and push after every turn. CI/CD auto-deploys.

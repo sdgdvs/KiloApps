@@ -16,14 +16,14 @@
 Multiple agents operate on this codebase on overlapping schedules, potentially from different computers. To prevent merge conflicts and data loss:
 
 1. **Always `git pull` first.** Before reading or editing any file, run `git pull` to ensure you have the latest version. Other agents may have pushed changes since your last turn.
-2. **Minimize shared-file edits.** The files `KiloOS/src/App.jsx` and `KiloOS/src/index.css` are owned by the Shell & UX agent. When other agents need to edit App.jsx (e.g., to register a new app):
+2. **Minimize shared-file edits.** The files `KiloOS/src/App.jsx` and `KiloOS/src/index.css` are owned by the Usability agent. When other agents need to edit App.jsx (e.g., to register a new app):
    - Pull immediately before editing.
    - Make surgical, minimal changes — ONLY add entries to the APPS array.
    - Commit and push immediately after editing, before doing other work.
 3. **Own your plan file.** Each agent should only modify its own plan file:
    - `app_work_plan.md` — App Builder agent only.
    - `app_fix_plan.md` — Quality & Build agent only.
-   - `kiloos_ux_plan.md` — Shell & UX agent only.
+   - `usability_plan.md` — Usability agent only.
    - `game_content_plan.md` — Game Content agent only.
    - `new_app_plan.md` — App Creator & Deep Expander agent only.
    - If you need to check another agent's plan (e.g., to avoid working on the same app), read it but do not edit it.

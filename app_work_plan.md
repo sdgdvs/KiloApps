@@ -39,7 +39,7 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 **Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **Feature Expander**.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`app_work_plan.md`).** Read but NEVER edit:
-  - `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `kiloos_ux_plan.md` (inactive)
+  - `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `new_app_plan.md` (Creator agent), `usability_plan.md` (inactive)
 - **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → make minimal APPS-only change → commit and push IMMEDIATELY before doing other work.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **Dual-target model:** Each app has a native C version (`K[Name]/main.c` + `build.bat`) and a web HTML5 version (`KiloOS/public/apps/k[name].html`). Both versions should offer functional parity where feasible. Web HTML files must be single self-contained files (inline CSS + JS, no imports).

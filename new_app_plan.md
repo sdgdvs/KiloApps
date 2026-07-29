@@ -5,7 +5,7 @@
 **Multi-Agent System:** 4 worker agents + 1 director operate on this repo on overlapping schedules. You are the **App Creator & Deep Expander**.
 - **Always `git pull`** before reading or editing files. Other agents push changes between your turns.
 - **Plan file ownership — only edit YOUR file (`new_app_plan.md`).** Read but NEVER edit:
-  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `kiloos_ux_plan.md` (inactive)
+  - `app_work_plan.md` (Feature Expander agent), `app_fix_plan.md` (QA agent), `game_content_plan.md` (Games agent), `usability_plan.md` (inactive)
 - **Shared file `KiloOS/src/App.jsx`** — shared ownership. You may ONLY add entries to the APPS array. Protocol: `git pull` → add APPS entry only → commit and push IMMEDIATELY before doing other work.
 - **`KiloOS/src/index.css`** — Do NOT edit.
 - **App folder categories** for the `folder` property in APPS: `System`, `Media`, `Office`, `Games`, `Network`, `Dev`.
