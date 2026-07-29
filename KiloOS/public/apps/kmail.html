@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KMail</title>
 <style>
   :root {
@@ -16,12 +17,12 @@
     --tag-bg: #475569;
   }
   body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg-main); color: var(--text-primary); display: flex; height: 100vh; overflow: hidden; }
-  .sidebar { width: 200px; background: var(--bg-glass); border-right: 1px solid var(--border); backdrop-filter: blur(10px); display: flex; flex-direction: column; padding: 20px 0; }
+  .sidebar { width: 200px; flex-shrink: 0; background: var(--bg-glass); border-right: 1px solid var(--border); backdrop-filter: blur(10px); display: flex; flex-direction: column; padding: 20px 0; }
   .compose-btn { margin: 0 15px 20px 15px; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
   .compose-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
   .folder { padding: 10px 20px; cursor: pointer; color: var(--text-sec); transition: background 0.2s, color 0.2s; }
   .folder:hover, .folder.active { background: rgba(255, 255, 255, 0.05); color: var(--text-primary); }
-  .list { width: 300px; background: rgba(15, 23, 42, 0.8); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+  .list { width: 300px; flex-shrink: 0; background: rgba(15, 23, 42, 0.8); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
   .item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; position: relative; }
   .item:hover { background: rgba(255,255,255,0.03); }
   .item.selected { background: rgba(59, 130, 246, 0.2); border-left: 3px solid var(--accent); }
@@ -33,6 +34,7 @@
   .sender { font-size: 12px; color: var(--text-sec); }
   .pane { flex: 1; display: flex; flex-direction: column; background: rgba(15, 23, 42, 0.95); position: relative; }
   .tabs { display: flex; background: #1e293b; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  kbd { font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); }
   .tab { padding: 10px 15px; cursor: pointer; border-right: 1px solid var(--border); display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-sec); }
   .tab.active { background: var(--bg-main); color: var(--text-primary); border-bottom: 2px solid var(--accent); }
   .tab-close { cursor: pointer; font-size: 14px; color: var(--text-sec); }
@@ -86,8 +88,9 @@
   <div class="tabs" id="tabs"></div>
   <div id="pane-content" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
     <div id="empty-state">
-      <h3>No tab selected</h3>
+      <h3>No email selected</h3>
       <p>Select an email from the list or compose a new one.</p>
+      <p style="font-size: 13px; color: var(--text-sec); margin-top: 20px;">Press <kbd>h</kbd> for help</p>
     </div>
   </div>
 </div>
@@ -240,7 +243,11 @@
   function renderPane() {
     const pane = document.getElementById('pane-content');
     if(!activeTabId) {
-      pane.innerHTML = `<div id="empty-state"><h3>No tab selected</h3><p>Select an email from the list or compose a new one.</p></div>`;
+      pane.innerHTML = `<div id="empty-state">
+        <h3>No email selected</h3>
+        <p>Select an email from the list or compose a new one.</p>
+        <p style="font-size: 13px; color: var(--text-sec); margin-top: 20px;">Press <kbd>h</kbd> for help</p>
+      </div>`;
       return;
     }
     let tab = tabs.find(t => t.id === activeTabId);
@@ -401,6 +408,12 @@
     reader.readAsText(file);
     event.target.value = ''; // reset
   }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      alert("KMail Help:\n\n- Click 'New Message' to compose.\n- Select folders on the left.\n- Search and filter by tags.\n- Tabs let you open multiple emails.");
+    }
+  });
 
   renderList();
 </script>

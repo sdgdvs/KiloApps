@@ -6,8 +6,8 @@
 #include <stdarg.h>
 #include <ctype.h>
 
-#define W 800
-#define H 550
+#define W 1024
+#define H 768
 
 #define ID_FOLDER_LIST 101
 #define ID_EMAIL_LIST 102
@@ -170,8 +170,8 @@ void CloseCurrentTab() {
 
 void RenderPane() {
     if(currentTabIdx == -1) {
-        SetWindowTextA(hTitle, "No tab selected");
-        SetWindowTextA(hBody, "");
+        SetWindowTextA(hTitle, "No email selected");
+        SetWindowTextA(hBody, "Select an email from the list to read, or click 'Compose' to write a new one.\r\n\r\nFeatures:\r\n- Switch between Inbox, Sent, and Trash folders.\r\n- Search and filter by tags.\r\n- Open multiple emails in tabs.\r\n- Encrypt your messages with a password.");
         ShowWindow(hBtnTag, SW_HIDE);
         ShowWindow(hBtnDecrypt, SW_HIDE);
         SetWindowLong(hBody, GWL_STYLE, GetWindowLong(hBody, GWL_STYLE) | ES_READONLY);
@@ -245,10 +245,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hbgMain = CreateSolidBrush(bgMainCol);
             hbgList = CreateSolidBrush(bgListCol);
 
-            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
-            hBold = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hFont = CreateFontA(16, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
+            hBold = CreateFontA(18, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
-            hBtnCompose = CreateWindowEx(0, "BUTTON", "New Tab", WS_CHILD | WS_VISIBLE, 10, 10, 100, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
+            hBtnCompose = CreateWindowEx(0, "BUTTON", "Compose", WS_CHILD | WS_VISIBLE, 10, 10, 100, 30, hwnd, (HMENU)ID_BTN_COMPOSE, NULL, NULL);
             SendMessage(hBtnCompose, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             hBtnImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE, 115, 10, 60, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
@@ -287,7 +287,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hTab = CreateWindowEx(0, WC_TABCONTROL, "", WS_CHILD | WS_VISIBLE | TCS_TABS, 330, 50, W-360, 25, hwnd, (HMENU)ID_TAB, NULL, NULL);
             SendMessage(hTab, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hTitle = CreateWindowEx(0, "STATIC", "No tab selected",
+            hTitle = CreateWindowEx(0, "STATIC", "No email selected",
                 WS_CHILD | WS_VISIBLE,
                 330, 85, W - 360, 40, hwnd, NULL, NULL, NULL);
             SendMessage(hTitle, WM_SETFONT, (WPARAM)hBold, TRUE);
