@@ -1,8 +1,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#define W 750
-#define H 450
+#define W 800
+#define H 550
 
 HWND hList, hSizeList;
 HWND hCustomText, hBold, hItalic;
@@ -196,7 +196,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             pc.hbrBackground = hPanelBrush;
             RegisterClass(&pc);
             
-            hPanel = CreateWindowEx(WS_EX_CLIENTEDGE, "KFontPanel", "", WS_CHILD | WS_VISIBLE, 170, 40, 550, 360, hwnd, NULL, NULL, NULL);
+            hPanel = CreateWindowEx(WS_EX_CLIENTEDGE, "KFontPanel", "", WS_CHILD | WS_VISIBLE, 170, 40, W - 190, H - 90, hwnd, NULL, NULL, NULL);
             
             hRangeList = CreateWindowEx(0, "COMBOBOX", "", WS_CHILD | CBS_DROPDOWNLIST | WS_VSCROLL, 10, 10, 250, 200, hPanel, (HMENU)14, NULL, NULL);
             const char* blocks[] = {
@@ -315,7 +315,7 @@ void MainEntry() {
     wc.hbrBackground = hBgBrush;
     RegisterClass(&wc);
 
-    HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+    HWND hwnd = CreateWindowEx(0, "KFontApp", "KFont (Press H for Help)", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, W, H, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

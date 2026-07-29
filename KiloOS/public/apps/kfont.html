@@ -2,6 +2,7 @@
 <html>
 <head>
 <title>KFont</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
   .header { background: #2b2b2b; color: white; padding: 10px 20px; display: flex; gap: 20px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
@@ -48,6 +49,12 @@
   
   #canvasMetrics { display: none; }
   .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
+  
+  #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+  #helpOverlay.visible { display: flex; animation: fadeIn 0.2s; }
+  .help-modal { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-width: 450px; font-family: "Segoe UI", sans-serif; }
+  .help-modal h2 { margin-top: 0; border-bottom: none; color: #0078d7; }
+  .help-modal ul { margin-bottom: 20px; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -146,6 +153,20 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   </div>
   
   <canvas id="canvasMetrics"></canvas>
+
+  <div id="helpOverlay">
+    <div class="help-modal">
+      <h2>KFont Help</h2>
+      <p>Welcome to KFont inspector. Use the controls to explore system fonts.</p>
+      <ul>
+        <li><strong>Metrics & OS/2</strong>: Inspect font measurements and bounds.</li>
+        <li><strong>Unicode Ranges</strong>: View glyphs organized by unicode block.</li>
+        <li><strong>Diagnostics</strong>: Check visual kerning and hinting at various sizes.</li>
+        <li><strong>Live Sample</strong>: Test how the font looks with custom text.</li>
+      </ul>
+      <p style="font-size: 12px; color: #777;">Press <strong>H</strong> or click outside this box to dismiss.</p>
+    </div>
+  </div>
   
   <script>
     const fontList = document.getElementById('fontList');
@@ -240,7 +261,18 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       
       const canvas = document.getElementById('hintingCanvas');
       const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const dpr = window.devicePixelRatio || 1;
+      
+      // Crisp text rendering
+      if (canvas.width !== 800 * dpr) {
+        canvas.width = 800 * dpr;
+        canvas.height = 200 * dpr;
+        canvas.style.width = '800px';
+        canvas.style.height = '200px';
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      
+      ctx.clearRect(0, 0, 800, 200);
       
       ctx.fillStyle = '#333';
       const text = "Rasterization & Grid Fitting Test: The quick brown fox jumps over the lazy dog";
@@ -282,6 +314,23 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     
     // Initial call
     updateAll();
+
+    // Help overlay logic
+    document.addEventListener('keydown', (e) => {
+      if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && !e.target.isContentEditable) {
+        document.getElementById('helpOverlay').classList.toggle('visible');
+      }
+    });
+    document.getElementById('helpOverlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('visible');
+    });
+
+    const helpNotif = document.createElement('div');
+    helpNotif.style.cssText = 'position:fixed; bottom:20px; right:20px; background:#333; color:white; padding:10px 15px; border-radius:5px; z-index:999; font-size:14px; opacity:0; transition:opacity 0.5s; pointer-events:none; font-family:sans-serif;';
+    helpNotif.textContent = 'Press H for Help';
+    document.body.appendChild(helpNotif);
+    setTimeout(() => { helpNotif.style.opacity = '1'; }, 500);
+    setTimeout(() => { helpNotif.style.opacity = '0'; }, 4000);
   </script>
 </body>
 </html>
