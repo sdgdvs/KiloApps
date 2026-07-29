@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KColor
+**Target App:** KContacts
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -183,3 +183,5 @@ Pass 1 Complete.
 - **KChess**: Fixed corner Rook castling rights checking, En Passant capture simulation/unmake, checkmate evaluation depth bias, ARIA live announcements, and Arrow key grid navigation in `kchess.html`. Fixed castling/en-passant simulation bugs, checkmate evaluation scoring (`-100000 + depth`), `WM_ERASEBKGND` flicker elimination, and Arrow key board cursor navigation in `main.c`.
 
 - **KClock**: Added World Clock tab with timezone day boundary calculations, non-blocking Web Audio chime & dismiss/snooze modal, 12H/24H format toggle, stopwatch `requestAnimationFrame` loop, and ARIA tab navigation in `kclock.html`. Added text buffer caching checks to eliminate GDI repaint churn by 95%+, double-buffering compositing, World Clock city cycling with UTC offset math, and non-blocking alert bar in `main.c`.
+
+- **KColor**: Added precise RGB/HSL/HSV/CMYK conversion math, pure-black division-by-zero protection (`K=100%`), WCAG 2.1 contrast ratio badge, color harmonies & tint/shade generator, palette history, and Eyedropper API in `kcolor.html`. Added double-buffered GDI memory DC rendering, Hex edit control subclassing for character filtering, 32-bit scrollbar tracking (`GetScrollInfo`), palette swatch array, and Win32 clipboard API routines in `main.c`.
