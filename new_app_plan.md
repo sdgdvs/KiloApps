@@ -54,11 +54,11 @@ When choosing a new app, ask: "Does this do something fundamentally different fr
 ## Current App
 
 **App:** KFortress (Fantasy Tower Defense & Siege Defense)
-**Phase:** 2 (next to do)
-**Status:** Phase 1 completed - Scaffold & registered in App.jsx
+**Phase:** 3 (next to do)
+**Status:** Phases 1-2 complete
 
 - [x] Phase 1: Scaffold KFortress directory (`KFortress/`), create web HTML skeleton (`KiloOS/public/apps/kfortress.html`), register in App.jsx.
-- [ ] Phase 2: Core web HTML 2D grid path layout, basic Archer Tower placement, Gold economy, starting enemy wave spawning (Goblins), base HP & pathfinding.
+- [x] Phase 2: Core web HTML 2D grid path layout, basic Archer Tower placement, Gold economy, starting enemy wave spawning (Goblins), base HP & pathfinding.
 - [ ] Phase 3: Native C version (`KFortress/main.c`, `build.bat`) with Win32 GDI graphics offering functional parity.
 - [ ] Phase 4: Dark fantasy UI styling (stone castle battlements theme, neon health bars, glowing range indicators, golden coin counters).
 - [ ] Phase 5: Multiple Tower Types — Add Mage Towers (splash magic damage), Cannon Towers (heavy armor-piercing damage), and Slow Frost Towers (freezing field aura).
