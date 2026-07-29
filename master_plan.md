@@ -11,10 +11,10 @@ The project aims to return software development to the lightweight, compute-effi
 ## ⚠️ DIRECTOR WARNING: DO NOT MODIFY PATH ⚠️
 **ATTENTION DIRECTORS:** Do NOT instruct subagents to modify, reset, or fix the `$env:Path` (e.g., using `[System.Environment]::GetEnvironmentVariable`). Doing this deletes the injected Antigravity runtime paths from the active agent's environment, causing the agent to immediately crash and enter a termination loop. If a specific tool like `crinkler` is missing, you must only APPEND to the path (e.g. `$env:Path += ";C:\path\to\tool"`), or better yet, simply restart the environment so it inherits the system paths natively. The PATH instructions have been removed from all MD files.
 
-## Current State (as of 2026-07-28)\n⚠️ **FLEET STALLED** — All worker agents offline since July 25 (likely quota exhaustion on both computers). Last worker commit: July 24 21:17. Only director reviews since then.
+## Current State (as of 2026-07-29)
 - **Total Apps:** 73 registered in App.jsx.
-- **KiloOS Version:** 0.3.60
-- **Games:** 27 titles (25 target hit + KStarship + KAlchemy).
+- **KiloOS Version:** 0.3.63
+- **Games:** 27 titles.
 - **Web Environment:** Deployed to Firebase Hosting at `kiloapps.web.app` via GitHub Actions CI/CD.
 - **Desktop Organization:** 6 folders: System, Media, Office, Games, Network, Dev.
 
@@ -22,21 +22,21 @@ The project aims to return software development to the lightweight, compute-effi
 K2048, KAlchemy (Phase 9), KAsteroids, KBreakout, KChess, KConnect4, KDarts, KFreecell, KGo, KHangman, KMatch3, KMaze, KMines, KPac, KPong, KQuest, KReversi, KRogue, KSimon, KSnake, KSolitaire, KSpace, KStarship, KSudoku, KTetris, KTowers, KWords.
 
 ### Content Depth
-- Original 13 games (KMines→KSudoku): **7 loops** of content expansion complete. Campaign modes with 20-35 levels, boss encounters, active skill hotkeys, biomes.
-- Secondary games (KAsteroids→KReversi + KStarship, KQuest): **Loop 6** content passes complete.
-- KAlchemy: Phase 8 complete, Phase 9 in progress (Creator building).
+- 18 games at **Loop 7** complete (original 13 + KAsteroids, KFreecell, KConnect4, KHangman, KSimon). 20-35 stage campaigns, boss encounters, active skill hotkeys.
+- 9 games at **Loop 6** complete (KMatch3, KWords, KGo, KDarts, KTowers, KReversi, KStarship, KQuest). Loop 7 pending.
+- KAlchemy: Phase 11 complete, Phase 12 next (Creator building).
 
 ### Graphics Agent
-**Loop 1 complete for 22 games.** Custom sprites: player/enemy pixel art, 3D boards, card portraits, particle FX, animations. Remaining in queue: KTowers, KWords, KReversi, KQuest, KStarship + KAlchemy.
+**Loop 1 complete for 24/27 games.** Custom sprites for nearly every game. Remaining: KQuest + Loop 2 starts for earlier games.
 
 ### QA
-**Pass 2 complete. Pass 3 started.** Now targeting KChat & KChatServer. ~35+ apps done across passes.
+**Pass 3 in progress.** KChat, KChess, KClock done. Now on KColor. ~40+ apps done across all passes.
 
 ### Feature Expander
-Healthy round-robin. Recent: KGraph, KTimer, KContacts, KRead, KBase, KJournal, KPad all got deep features. Currently targeting KImage.
+Healthy round-robin. Recent: KImage, KHex, KCalc, KCalendar, KChart all got major features. Currently targeting KChess.
 
 ### Creator
-KQuest, KStarship, KDarts, KTowers, KReversi all complete (Phase 14). Now building **KAlchemy** (fantasy crafting game, Phase 8 done, Phase 9 hit quota limit — will retry).
+KAlchemy Phase 11 complete. Phase 12 (Game Modes & Challenges) next. On track to complete by ~Jul 31.
 
 ## Milestones
 
@@ -61,24 +61,24 @@ KQuest, KStarship, KDarts, KTowers, KReversi all complete (Phase 14). Now buildi
 18. VS2022 Build Tools installed for native compilation — July 22.
 
 19. **Games Loop 6 complete for ALL 27 games** — July 23-25.
-20. **Games Loop 7 complete for original 13 games** — July 25.
-21. **Graphics Loop 1 complete for 22/27 games** — July 22-25.
+20. **Games Loop 7 complete for 18/27 games** — July 25-29.
+21. **Graphics Loop 1 complete for 24/27 games** — July 22-29.
 22. **QA Pass 2 complete** — July 25.
 23. **Model migration to Gemini 3.6 Flash High** for all worker agents — July 22. ✅
 
 ### Active 🔄
-24. Games agent: Loop 7 for remaining 14 games (KAsteroids → KQuest).
-25. Graphics agent: Loop 1 remaining (KTowers, KWords, KReversi, KQuest, KStarship, KAlchemy).
-26. Creator: KAlchemy Phase 9 (hit quota limit, will retry).
-27. Feature Expander: Round-robin perpetual (targeting KImage).
-28. QA: Pass 3 deeper checks (targeting KChat & KChatServer).
+24. Games agent: Loop 7 for remaining 9 games (KMatch3 → KQuest).
+25. Graphics agent: Loop 1 finishing (KQuest), then Loop 2 begins.
+26. Creator: KAlchemy Phase 12 of 14.
+27. Feature Expander: Round-robin perpetual (targeting KChess).
+28. QA: Pass 3 deeper checks (targeting KColor).
 
 ### Upcoming 📋
 29. Games Loop 8 for original games — approaching commercial-grade depth.
 30. Graphics Loop 2: animations and environmental art.
 31. Build pipeline improvements: automated size-limit checks.
 
-## Active Agent Fleet (as of 2026-07-26)
+## Active Agent Fleet (as of 2026-07-29)
 
 | Agent | Schedule | Plan File | Model |
 |---|---|---|---|
