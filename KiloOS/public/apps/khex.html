@@ -907,13 +907,20 @@
   function handleFileSelect(e) {
     let file = e.target.files[0];
     if (!file) return;
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB bounds
+    let slice = file;
+    if (file.size > MAX_FILE_SIZE) {
+      alert("File is too large. Loading only the first 10MB to prevent memory issues.");
+      slice = file.slice(0, MAX_FILE_SIZE);
+    }
     let reader = new FileReader();
     reader.onload = function(evt) {
       binaryBuffer = new Uint8Array(evt.target.result);
-      textBuf.value = "[Loaded binary file: " + file.name + " (" + binaryBuffer.length + " bytes)]";
+      let safeName = file.name.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      textBuf.value = "[Loaded binary file: " + safeName + " (" + binaryBuffer.length + " bytes)]";
       renderHexView();
     };
-    reader.readAsArrayBuffer(file);
+    reader.readAsArrayBuffer(slice);
   }
 
   function renderHexView(highlightRange = null) {
@@ -927,7 +934,17 @@
       return;
     }
 
-    let rows = Math.ceil(binaryBuffer.length / 16);
+    const MAX_RENDER_BYTES = 16384; // 16 KB max render to prevent DOM overload
+    let bytesToRender = Math.min(binaryBuffer.length, MAX_RENDER_BYTES);
+    let rows = Math.ceil(bytesToRender / 16);
+
+    if (binaryBuffer.length > MAX_RENDER_BYTES) {
+      let warnRow = document.createElement('div');
+      warnRow.style.color = 'var(--accent-amber)';
+      warnRow.style.padding = '4px';
+      warnRow.innerText = '--- View truncated to first 16KB for performance. Export/Search still operate on full buffer. ---';
+      container.appendChild(warnRow);
+    }
     for (let r = 0; r < rows; r++) {
       let rowEl = document.createElement('div');
       rowEl.className = 'hex-row';
@@ -1239,6 +1256,12 @@
     let preset = document.getElementById('exportPreset').value;
     let box = document.getElementById('exportOutputBox');
     let out = '';
+
+    const MAX_EXPORT_SIZE = 512 * 1024; // 512 KB limit for text exports
+    if (binaryBuffer.length > MAX_EXPORT_SIZE && preset !== 'download') {
+      box.innerText = "Buffer too large for text export (exceeds memory bounds). Please use 'Download RAW Binary' instead.";
+      return;
+    }
 
     if (preset === 'hexdump') {
       let rows = Math.ceil(binaryBuffer.length / 16);
