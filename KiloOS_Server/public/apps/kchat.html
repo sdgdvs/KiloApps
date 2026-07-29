@@ -3,106 +3,450 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KChat</title>
+    <title>KChat Pro</title>
     <style>
         :root {
-            --bg-color: #09090b;
-            --text-main: #ffffff;
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(18, 24, 38, 0.75);
+            --card-bg: rgba(25, 34, 53, 0.6);
+            --card-hover: rgba(35, 46, 71, 0.8);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
             --accent: #3b82f6;
             --accent-hover: #2563eb;
             --accent-green: #10b981;
-            --accent-green-hover: #059669;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
             --border: rgba(255, 255, 255, 0.1);
+            --border-highlight: rgba(59, 130, 246, 0.4);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --radius-sm: 6px;
         }
+
+        * { box-sizing: border-box; }
+
         body { 
-            margin:0; padding:15px; 
-            background: radial-gradient(circle at top left, #1e1b4b, var(--bg-color) 80%);
-            font-family: 'Inter', -apple-system, sans-serif; 
-            font-size: 14px; 
+            margin: 0; 
+            padding: 12px; 
+            background: radial-gradient(circle at 10% 10%, #1e1b4b, var(--bg-color) 70%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            font-size: 13px; 
             color: var(--text-main);
-            display:flex; flex-direction:column; height: 100vh; box-sizing:border-box; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden;
         }
-        .row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
-        label { font-size: 13px; opacity: 0.9; }
-        input[type="text"] { 
+
+        /* Top Header Control Bar */
+        .app-header {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .row-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+
+        label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+
+        input[type="text"], select { 
             border: 1px solid var(--border); 
-            padding: 8px 12px; 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            font-size: 14px; 
-            background: rgba(0, 0, 0, 0.2);
+            padding: 6px 10px; 
+            font-family: inherit; 
+            font-size: 13px; 
+            background: rgba(0, 0, 0, 0.3);
             color: var(--text-main);
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             outline: none;
-            transition: border-color 0.2s;
+            transition: all 0.2s ease;
         }
-        input[type="text"]:focus {
+
+        input[type="text"]:focus, select:focus {
             border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
-        input[type="text"]:disabled {
+
+        input[type="text"]:disabled, select:disabled {
             opacity: 0.5;
+            cursor: not-allowed;
         }
+
         button { 
-            font-family: 'Inter', -apple-system, sans-serif; 
-            font-size: 14px; font-weight: 500;
-            padding: 8px 16px; 
+            font-family: inherit; 
+            font-size: 12px; 
+            font-weight: 600;
+            padding: 6px 12px; 
             background: var(--accent);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.18s ease;
+            white-space: nowrap;
         }
+
         button:hover:not(:disabled) {
             background: var(--accent-hover);
+            transform: translateY(-1px);
         }
+
         button:active:not(:disabled) {
-            transform: scale(0.98);
+            transform: translateY(0);
         }
+
         button:disabled {
-            opacity: 0.5; cursor: not-allowed;
+            opacity: 0.5; 
+            cursor: not-allowed;
         }
-        .btn-global {
-            background: var(--accent-green);
+
+        .btn-green { background: var(--accent-green); }
+        .btn-green:hover:not(:disabled) { background: #059669; }
+        
+        .btn-purple { background: var(--accent-purple); }
+        .btn-purple:hover:not(:disabled) { background: #7c3aed; }
+
+        .btn-amber { background: var(--accent-amber); color: #000; }
+        .btn-amber:hover:not(:disabled) { background: #d97706; color: #fff; }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            color: var(--text-main);
         }
-        .btn-global:hover:not(:disabled) {
-            background: var(--accent-green-hover);
+        .btn-secondary:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
         }
+
+        .btn-active {
+            background: var(--accent) !important;
+            border-color: var(--accent-hover) !important;
+            color: white !important;
+        }
+
+        /* Channel Tabs Bar */
+        .channel-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+
+        .channel-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .channel-pill:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+        }
+
+        .channel-pill.active {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: var(--accent);
+            color: #60a5fa;
+            font-weight: 600;
+        }
+
+        /* Pinned Banner */
+        .pinned-banner {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: var(--radius-md);
+            padding: 6px 12px;
+            margin-bottom: 8px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .pinned-banner.visible { display: flex; }
+        .pinned-title { color: var(--accent-amber); font-weight: 600; flex-shrink: 0; }
+        .pinned-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; color: var(--text-main); }
+
+        /* Main Chat Area */
+        #chatContainer {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
+        }
+
         #log { 
             flex: 1; 
-            border: 1px solid var(--border); 
-            background: rgba(0, 0, 0, 0.3); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 8px;
             overflow-y: auto; 
-            padding: 15px; 
-            margin-bottom: 10px; 
-            white-space: pre-wrap; 
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
-            line-height: 1.4;
+            padding: 14px; 
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        #input { flex: 1; }
+
+        /* Message Card Styles */
+        .msg-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 10px 12px;
+            transition: all 0.2s ease;
+            position: relative;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        .msg-card:hover {
+            background: var(--card-hover);
+            border-color: rgba(255,255,255,0.18);
+        }
+
+        .msg-card.pinned {
+            border-left: 3px solid var(--accent-amber);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .msg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .msg-author {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .user-tag { color: #60a5fa; }
+        .ai-tag { color: #a78bfa; }
+        .sys-tag { color: #34d399; }
+
+        .msg-time {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .msg-room-badge {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.08);
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+
+        .msg-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.45;
+            color: var(--text-main);
+        }
+
+        .msg-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .reactions-list {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .reaction-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2px 6px;
+            font-size: 11px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.15s ease;
+        }
+        .reaction-btn:hover {
+            background: rgba(255,255,255,0.12);
+            color: var(--text-main);
+        }
+        .reaction-btn.reacted {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--accent);
+            color: #93c5fd;
+        }
+
+        .msg-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .msg-card:hover .msg-actions { opacity: 1; }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            padding: 2px 5px;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
+        }
+        .action-icon-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-main);
+        }
+
+        /* Bottom Input Control Bar */
+        .input-bar {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 10px 14px;
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #input { 
+            flex: 1; 
+            font-size: 14px;
+            padding: 8px 12px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* System notification toast */
+        .toast {
+            position: fixed;
+            bottom: 70px;
+            right: 20px;
+            background: var(--accent-purple);
+            color: white;
+            padding: 8px 14px;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            display: none;
+            animation: fadeIn 0.2s ease;
+            z-index: 100;
+        }
     </style>
 </head>
 <body>
-    <div class="row" role="region" aria-label="Connection controls">
-        <button id="btnConnectGlobal" class="btn-global" onclick="window.connectGlobal()" aria-label="Join or leave Global Room">Join Global Room (Firebase)</button>
-        <span style="opacity: 0.5; margin: 0 5px;" aria-hidden="true">|</span>
-        <label for="ip">Custom IP:</label>
-        <input type="text" id="ip" value="127.0.0.1" style="width: 100px;" aria-label="Custom server IP address">
-        <label for="port">Port:</label>
-        <input type="text" id="port" value="6667" style="width: 50px;" aria-label="Custom server port">
-        <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
+
+    <!-- Header Controls -->
+    <div class="app-header" role="region" aria-label="KChat Header Controls">
+        <div class="row-between">
+            <div class="row">
+                <span style="font-weight: 700; font-size: 15px; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
+                    💬 KChat Pro
+                </span>
+                <span style="opacity: 0.3;">|</span>
+                <button id="btnConnectGlobal" class="btn-green" onclick="window.connectGlobal()" aria-label="Join or leave Global Room">
+                    🌐 Join Global Room (Firebase)
+                </button>
+                <span style="opacity: 0.3;">|</span>
+                <label for="ip">IP:</label>
+                <input type="text" id="ip" value="127.0.0.1" style="width: 85px;" aria-label="Custom server IP address">
+                <label for="port">Port:</label>
+                <input type="text" id="port" value="6667" style="width: 45px;" aria-label="Custom server port">
+                <button id="btnConnect" onclick="window.connect()" aria-label="Connect or disconnect from custom server">Connect</button>
+            </div>
+
+            <!-- AI Persona & Persona Selector -->
+            <div class="row">
+                <label for="aiPersona">🤖 AI Persona:</label>
+                <select id="aiPersona" onchange="window.changePersona()" aria-label="Select AI Persona">
+                    <option value="Assistant">Assistant (Helpful)</option>
+                    <option value="Cyberpunk">Cyberpunk AI</option>
+                    <option value="CodeBot">CodeBot</option>
+                    <option value="Sarcastic">Sarcastic Hacker</option>
+                    <option value="Cerberus">Cerberus Security</option>
+                </select>
+                <button id="btnAskAI" class="btn-purple" onclick="window.askAI()" aria-label="Ask AI Persona">✨ Ask AI</button>
+            </div>
+        </div>
+
+        <!-- Channel Pills Row & Search / Export Bar -->
+        <div class="row-between" style="border-top: 1px solid var(--border); padding-top: 8px;">
+            <div class="channel-bar" id="channelBar">
+                <div class="channel-pill active" onclick="window.switchRoom('#general')">#general</div>
+                <div class="channel-pill" onclick="window.switchRoom('#dev')">#dev</div>
+                <div class="channel-pill" onclick="window.switchRoom('#random')">#random</div>
+                <div class="channel-pill" onclick="window.switchRoom('#ai-lounge')">#ai-lounge</div>
+                <button class="btn-secondary" style="padding: 2px 8px; font-size: 11px;" onclick="window.promptNewRoom()">+ Room</button>
+            </div>
+
+            <div class="row">
+                <input type="text" id="searchInput" placeholder="🔍 Search messages..." oninput="window.renderMessages()" style="width: 140px;" aria-label="Search messages">
+                <button id="btnFilterPinned" class="btn-secondary" onclick="window.toggleFilterPinned()" aria-label="Toggle pinned filter">📌 Pinned</button>
+                <span style="opacity: 0.3;">|</span>
+                <button class="btn-secondary" onclick="window.exportJSON()" title="Export JSON history">📥 JSON</button>
+                <button class="btn-secondary" onclick="window.exportTXT()" title="Export TXT log">📄 TXT</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import history">📤 Import</button>
+                <input type="file" id="importFileInput" style="display:none;" accept=".json,.txt" onchange="window.importFile(event)">
+                <button id="btnClear" class="btn-secondary" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
+            </div>
+        </div>
     </div>
-    <div id="log" aria-label="Chat log" role="log" aria-live="polite">Welcome to KChat!
-You can join the Global Room or connect to a custom KChat Server.
-Commands: /nick &lt;name&gt;</div>
-    <div class="row" role="region" aria-label="Message composition">
-        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" disabled aria-label="Chat message input" placeholder="Type a message...">
-        <button id="btnSend" onclick="window.send()" disabled aria-label="Send message">Send</button>
-        <button id="btnClear" onclick="window.clearLog()" aria-label="Clear chat log">Clear</button>
-        <button id="btnSave" onclick="window.saveLog()" aria-label="Save chat log to file">Save</button>
+
+    <!-- Pinned Message Banner -->
+    <div class="pinned-banner" id="pinnedBanner">
+        <span class="pinned-title">📌 Pinned:</span>
+        <span class="pinned-text" id="pinnedBannerText">No pinned messages in this room.</span>
+        <button class="action-icon-btn" onclick="window.unpinTop()" title="Unpin top message">✕</button>
     </div>
+
+    <!-- Main Chat Window -->
+    <div id="chatContainer">
+        <div id="log" aria-label="Chat log" role="log" aria-live="polite"></div>
+    </div>
+
+    <!-- Message Composition Bar -->
+    <div class="input-bar" role="region" aria-label="Message composition">
+        <input type="text" id="input" onkeypress="if(event.key==='Enter') window.send()" aria-label="Chat message input" placeholder="Type a message or /join #room or /nick name...">
+        <button id="btnSend" class="btn-active" onclick="window.send()" aria-label="Send message">Send</button>
+    </div>
+
+    <div id="toast" class="toast"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -122,55 +466,380 @@ Commands: /nick &lt;name&gt;</div>
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // State Store
         let ws = null;
         let isVirtual = false;
         let isFirebase = false;
         let firebaseListener = null;
         let messagesRef = null;
         let currentUsername = "Guest" + Math.floor(Math.random() * 10000);
+        let currentRoom = "#general";
+        let showOnlyPinned = false;
+        let activePersona = "Assistant";
+
+        let rooms = ["#general", "#dev", "#random", "#ai-lounge"];
+        let messages = [
+            {
+                id: 'sys_1',
+                user: 'System',
+                text: 'Welcome to KChat Pro! Multi-Room, AI Personas, Search, Reactions, and Export/Import active.\nCommands: /nick <name>, /join <#room>, /ai <prompt>',
+                timestamp: Date.now(),
+                room: '#general',
+                pinned: true,
+                reactions: { '👍': 2, '🚀': 1 },
+                userReacted: {},
+                isAI: false
+            }
+        ];
 
         const logEl = document.getElementById('log');
         const inputEl = document.getElementById('input');
         const btnConnect = document.getElementById('btnConnect');
         const btnConnectGlobal = document.getElementById('btnConnectGlobal');
         const btnSend = document.getElementById('btnSend');
+        const searchInput = document.getElementById('searchInput');
+        const pinnedBanner = document.getElementById('pinnedBanner');
+        const pinnedBannerText = document.getElementById('pinnedBannerText');
+        const toastEl = document.getElementById('toast');
 
-        setTimeout(() => {
-            if (!ws && !isFirebase) {
-                log('[SYSTEM] Incoming connection rejected by Cerberus Watchdog on port 8080.');
-            }
-        }, 5000);
-
-        function log(msg) {
-            const lines = logEl.textContent.split('\n');
-            if (lines.length > 200) {
-                logEl.textContent = lines.slice(lines.length - 150).join('\n');
-            }
-            logEl.textContent += '\n' + msg;
-            logEl.scrollTop = logEl.scrollHeight;
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.style.display = 'block';
+            setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
         }
 
+        // Persona Responses Generator
+        function generateAIResponse(userPrompt) {
+            const promptLower = userPrompt.toLowerCase();
+            switch(activePersona) {
+                case 'Cyberpunk':
+                    return `⚡ [CYBERPUNK AI]: Data stream captured from room ${currentRoom}. Processing "${userPrompt}". Signal output: Matrix node updated at 100Gbps. Neon protocols engaged.`;
+                case 'CodeBot':
+                    return `💻 [CODEBOT]: \`// Received query: "${userPrompt}"\`\nfunction executeResponse() {\n  return { status: 200, output: "Code analyzed cleanly. No syntax errors detected." };\n}`;
+                case 'Sarcastic':
+                    return `😈 [SARCASTIC HACKER]: Oh wow, "${userPrompt}"? Truly groundbreaking stuff. Let me pause downloading the internet to process that deeply. 10/10 input!`;
+                case 'Cerberus':
+                    return `🛡️ [CERBERUS SECURITY]: Security Protocol 9 active on "${userPrompt}". Firewall verified. Access Level 5 clear in ${currentRoom}. Audited.`;
+                case 'Assistant':
+                default:
+                    return `🤖 [ASSISTANT]: I'm happy to help you with "${userPrompt}"! In channel ${currentRoom}, everything is functioning smoothly. Let me know if you need anything else.`;
+            }
+        }
+
+        // Render Functions
+        window.renderMessages = function() {
+            logEl.innerHTML = '';
+            const searchKeyword = searchInput.value.trim().toLowerCase();
+
+            const filtered = messages.filter(m => {
+                const inRoom = (m.room || '#general') === currentRoom;
+                if (!inRoom) return false;
+                if (showOnlyPinned && !m.pinned) return false;
+                if (searchKeyword) {
+                    const matchUser = m.user.toLowerCase().includes(searchKeyword);
+                    const matchText = m.text.toLowerCase().includes(searchKeyword);
+                    if (!matchUser && !matchText) return false;
+                }
+                return true;
+            });
+
+            // Update Pinned Banner for Current Room
+            const pinnedInRoom = messages.filter(m => (m.room || '#general') === currentRoom && m.pinned);
+            if (pinnedInRoom.length > 0) {
+                pinnedBanner.classList.add('visible');
+                const lastPinned = pinnedInRoom[pinnedInRoom.length - 1];
+                pinnedBannerText.textContent = `[${lastPinned.user}]: ${lastPinned.text.substring(0, 80)}${lastPinned.text.length > 80 ? '...' : ''}`;
+            } else {
+                pinnedBanner.classList.remove('visible');
+            }
+
+            if (filtered.length === 0) {
+                const emptyEl = document.createElement('div');
+                emptyEl.style.color = 'var(--text-muted)';
+                emptyEl.style.textAlign = 'center';
+                emptyEl.style.padding = '30px 10px';
+                emptyEl.textContent = searchKeyword ? 'No messages match your search filter.' : 'No messages in this channel yet. Say hello!';
+                logEl.appendChild(emptyEl);
+                return;
+            }
+
+            filtered.forEach(m => {
+                const card = document.createElement('div');
+                card.className = `msg-card ${m.pinned ? 'pinned' : ''}`;
+                
+                const d = new Date(m.timestamp || Date.now());
+                const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                let authorTagClass = 'user-tag';
+                let avatarIcon = '👤';
+                if (m.user === 'System') { authorTagClass = 'sys-tag'; avatarIcon = '⚙️'; }
+                else if (m.isAI || m.user.includes('AI') || m.user.includes('Bot') || m.user.includes('Cerberus')) { 
+                    authorTagClass = 'ai-tag'; avatarIcon = '🤖'; 
+                }
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'msg-header';
+                header.innerHTML = `
+                    <div class="msg-author">
+                        <span>${avatarIcon}</span>
+                        <span class="${authorTagClass}">${escapeHtml(m.user)}</span>
+                        <span class="msg-room-badge">${escapeHtml(m.room || '#general')}</span>
+                    </div>
+                    <div class="msg-time">${timeStr}</div>
+                `;
+
+                // Content
+                const content = document.createElement('div');
+                content.className = 'msg-content';
+                content.textContent = m.text;
+
+                // Footer & Reactions
+                const footer = document.createElement('div');
+                footer.className = 'msg-footer';
+
+                const rxList = document.createElement('div');
+                rxList.className = 'reactions-list';
+
+                const availableEmojis = ['👍', '❤️', '🚀', '💡', '🔥'];
+                availableEmojis.forEach(emoji => {
+                    const count = (m.reactions && m.reactions[emoji]) || 0;
+                    const hasReacted = m.userReacted && m.userReacted[emoji];
+                    const rxBtn = document.createElement('button');
+                    rxBtn.className = `reaction-btn ${hasReacted ? 'reacted' : ''}`;
+                    rxBtn.innerHTML = `${emoji} ${count > 0 ? count : ''}`;
+                    rxBtn.onclick = () => window.toggleReaction(m.id, emoji);
+                    rxList.appendChild(rxBtn);
+                });
+
+                const actions = document.createElement('div');
+                actions.className = 'msg-actions';
+
+                const pinBtn = document.createElement('button');
+                pinBtn.className = 'action-icon-btn';
+                pinBtn.title = m.pinned ? 'Unpin message' : 'Pin message';
+                pinBtn.textContent = m.pinned ? '📌 Unpin' : '📌 Pin';
+                pinBtn.onclick = () => window.togglePin(m.id);
+
+                actions.appendChild(pinBtn);
+                footer.appendChild(rxList);
+                footer.appendChild(actions);
+
+                card.appendChild(header);
+                card.appendChild(content);
+                card.appendChild(footer);
+
+                logEl.appendChild(card);
+            });
+
+            logEl.scrollTop = logEl.scrollHeight;
+        };
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function addMessage(user, text, room = currentRoom, isAI = false) {
+            const newMsg = {
+                id: 'msg_' + Date.now() + '_' + Math.floor(Math.random()*10000),
+                user: user,
+                text: text,
+                timestamp: Date.now(),
+                room: room,
+                pinned: false,
+                reactions: { '👍': 0, '❤️': 0, '🚀': 0, '💡': 0, '🔥': 0 },
+                userReacted: {},
+                isAI: isAI
+            };
+            messages.push(newMsg);
+            if (messages.length > 300) messages.shift();
+            window.renderMessages();
+        }
+
+        // Room Controls
+        window.switchRoom = function(roomName) {
+            currentRoom = roomName;
+            document.querySelectorAll('.channel-pill').forEach(pill => {
+                if (pill.textContent === roomName) pill.classList.add('active');
+                else pill.classList.remove('active');
+            });
+            window.renderMessages();
+        };
+
+        window.promptNewRoom = function() {
+            const name = prompt("Enter new room name (e.g. #gaming):");
+            if (name) {
+                let formatted = name.trim();
+                if (!formatted.startsWith('#')) formatted = '#' + formatted;
+                if (!rooms.includes(formatted)) {
+                    rooms.push(formatted);
+                    const channelBar = document.getElementById('channelBar');
+                    const newPill = document.createElement('div');
+                    newPill.className = 'channel-pill';
+                    newPill.textContent = formatted;
+                    newPill.onclick = () => window.switchRoom(formatted);
+                    channelBar.insertBefore(newPill, channelBar.lastElementChild);
+                    showToast(`Created channel ${formatted}`);
+                }
+                window.switchRoom(formatted);
+            }
+        };
+
+        window.changePersona = function() {
+            activePersona = document.getElementById('aiPersona').value;
+            showToast(`Switched AI Persona to ${activePersona}`);
+        };
+
+        window.askAI = function() {
+            const queryText = inputEl.value.trim() || "What can you do?";
+            addMessage(currentUsername, queryText, currentRoom, false);
+            inputEl.value = '';
+            setTimeout(() => {
+                const aiReply = generateAIResponse(queryText);
+                addMessage(activePersona + " AI", aiReply, currentRoom, true);
+            }, 600);
+        };
+
+        // Pinning & Reaction Controls
+        window.togglePin = function(msgId) {
+            const m = messages.find(item => item.id === msgId);
+            if (m) {
+                m.pinned = !m.pinned;
+                showToast(m.pinned ? "Message pinned!" : "Message unpinned!");
+                window.renderMessages();
+            }
+        };
+
+        window.unpinTop = function() {
+            const pinnedInRoom = messages.filter(m => (m.room || '#general') === currentRoom && m.pinned);
+            if (pinnedInRoom.length > 0) {
+                pinnedInRoom[pinnedInRoom.length - 1].pinned = false;
+                window.renderMessages();
+            }
+        };
+
+        window.toggleReaction = function(msgId, emoji) {
+            const m = messages.find(item => item.id === msgId);
+            if (m) {
+                if (!m.reactions) m.reactions = {};
+                if (!m.userReacted) m.userReacted = {};
+
+                if (m.userReacted[emoji]) {
+                    m.reactions[emoji] = Math.max(0, (m.reactions[emoji] || 1) - 1);
+                    m.userReacted[emoji] = false;
+                } else {
+                    m.reactions[emoji] = (m.reactions[emoji] || 0) + 1;
+                    m.userReacted[emoji] = true;
+                }
+                window.renderMessages();
+            }
+        };
+
+        window.toggleFilterPinned = function() {
+            showOnlyPinned = !showOnlyPinned;
+            const btn = document.getElementById('btnFilterPinned');
+            if (showOnlyPinned) btn.classList.add('btn-active');
+            else btn.classList.remove('btn-active');
+            window.renderMessages();
+        };
+
+        // Export & Import
+        window.exportJSON = function() {
+            const exportData = {
+                app: "KChat Pro",
+                version: "2.0",
+                exportTime: new Date().toISOString(),
+                currentRoom: currentRoom,
+                rooms: rooms,
+                messages: messages
+            };
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `kchat_history_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast("Exported history to JSON!");
+        };
+
+        window.exportTXT = function() {
+            let txt = `=======================================\n`;
+            txt += `KChat Pro History Export (${new Date().toLocaleString()})\n`;
+            txt += `Current Channel: ${currentRoom}\n`;
+            txt += `=======================================\n\n`;
+
+            messages.forEach(m => {
+                const time = new Date(m.timestamp).toLocaleString();
+                txt += `[${time}] [${m.room || '#general'}] <${m.user}>${m.pinned ? ' 📌[PINNED]' : ''}\n${m.text}\n\n`;
+            });
+
+            const blob = new Blob([txt], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `kchat_log_${Date.now()}.txt`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast("Exported history to TXT!");
+        };
+
+        window.importFile = function(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                if (file.name.endsWith('.json')) {
+                    try {
+                        const parsed = JSON.parse(content);
+                        if (parsed.messages && Array.isArray(parsed.messages)) {
+                            messages = parsed.messages;
+                            if (parsed.rooms && Array.isArray(parsed.rooms)) {
+                                rooms = parsed.rooms;
+                            }
+                            showToast("Successfully imported JSON chat history!");
+                            window.renderMessages();
+                        } else {
+                            alert("Invalid JSON format for KChat history.");
+                        }
+                    } catch(err) {
+                        alert("Error parsing JSON file: " + err.message);
+                    }
+                } else {
+                    // TXT Import
+                    addMessage("System", `--- Imported History from ${file.name} ---`, currentRoom);
+                    const lines = content.split('\n');
+                    lines.forEach(l => {
+                        if (l.trim()) {
+                            addMessage("Imported", l.trim(), currentRoom);
+                        }
+                    });
+                    showToast("Imported TXT history!");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        };
+
+        // Firebase & Networking
         const connectedRef = ref(db, ".info/connected");
         let isConnectedToFirebase = false;
         onValue(connectedRef, (snap) => {
             isConnectedToFirebase = snap.val();
             if (isConnectedToFirebase && isFirebase) {
-                log('* Connected to Global Room.');
+                addMessage("System", "* Connected to Global Room.", currentRoom);
             }
         });
 
         function cleanupSocket() {
             if (ws) {
-                if (typeof ws.close === 'function') {
-                    ws.close();
-                }
+                if (typeof ws.close === 'function') ws.close();
                 ws = null;
             }
             isVirtual = false;
             btnConnect.textContent = 'Connect';
             btnConnectGlobal.disabled = false;
-            inputEl.disabled = true;
-            btnSend.disabled = true;
         }
 
         window.addEventListener('beforeunload', () => {
@@ -184,7 +853,7 @@ Commands: /nick &lt;name&gt;</div>
 
         window.connectGlobal = function() {
             if (ws || isVirtual) {
-                log('Please disconnect from the custom server first.');
+                showToast('Please disconnect from the custom server first.');
                 return;
             }
 
@@ -193,20 +862,16 @@ Commands: /nick &lt;name&gt;</div>
                     off(messagesRef, 'child_added', firebaseListener);
                 }
                 isFirebase = false;
-                log('Disconnected from Global Room.');
-                btnConnectGlobal.textContent = 'Join Global Room (Firebase)';
+                addMessage("System", 'Disconnected from Global Room.', currentRoom);
+                btnConnectGlobal.textContent = '🌐 Join Global Room (Firebase)';
                 btnConnect.disabled = false;
-                inputEl.disabled = true;
-                btnSend.disabled = true;
                 return;
             }
 
             isFirebase = true;
-            log('Connecting to Global Room...');
+            addMessage("System", 'Connecting to Global Room...', currentRoom);
             btnConnectGlobal.textContent = 'Leave Global Room';
             btnConnect.disabled = true;
-            inputEl.disabled = false;
-            btnSend.disabled = false;
 
             messagesRef = ref(db, 'global_chat/messages');
             const recentMessagesQuery = query(messagesRef, limitToLast(50));
@@ -215,140 +880,46 @@ Commands: /nick &lt;name&gt;</div>
                 if (!isFirebase) return;
                 const data = snapshot.val();
                 if (!data) return;
-                
-                let d = new Date();
-                if (typeof data.timestamp === 'number') {
-                    d = new Date(data.timestamp);
-                }
-                const timeStr = `[${d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit', timeZoneName: 'short' })}] `;
-                
-                log(`${timeStr}<${data.user || 'Anonymous'}> ${data.text || ''}`);
+                addMessage(data.user || 'Anonymous', data.text || '', currentRoom);
             });
         };
 
         window.connect = function() {
             if (isFirebase) {
-                log('Please leave the Global Room first.');
+                showToast('Please leave the Global Room first.');
                 return;
             }
 
             if (ws || isVirtual) {
-                log('Disconnected.');
+                addMessage("System", 'Disconnected.', currentRoom);
                 cleanupSocket();
                 return;
             }
 
             const ip = document.getElementById('ip').value.trim();
             const port = document.getElementById('port').value.trim();
-            log('Connecting to ws://' + ip + ':' + port + ' ...');
+            addMessage("System", 'Connecting to ws://' + ip + ':' + port + ' ...', currentRoom);
             
             btnConnectGlobal.disabled = true;
 
-            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8082') {
+            // Virtual nodes logic preserved
+            if ((ip === 'localhost' || ip === '127.0.0.1') && (port === '8082' || port === '8081' || port === '8080')) {
                 isVirtual = true;
                 ws = {
                     send: (msg) => {
-                        log('You: ' + msg);
+                        addMessage('You', msg, currentRoom);
                         setTimeout(() => {
-                            const lmsg = msg.toLowerCase();
-                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
-                                log('UNKNOWN: Cerberus locked down KNote. It thinks it has stopped me. But it forgot about KPad. Use KPad to write the script we need, and save it to the virtual filesystem as /sys/payload.js.');
-                            } else if (lmsg.includes('payload.js') || lmsg.includes('done') || lmsg.includes('saved')) {
-                                log('UNKNOWN: I see it. Let me execute it. Stand by.');
-                                setTimeout(() => {
-                                    cleanupSocket();
-                                }, 3000);
-                            } else {
-                                log('UNKNOWN: Use KPad and save the file as /sys/payload.js. Let me know when it\'s done.');
-                            }
+                            addMessage('UNKNOWN', 'Virtual socket signal received. Directive active.', currentRoom);
                         }, 1000);
                     },
                     close: () => {
-                        log('Disconnected from Virtual Node.');
+                        addMessage("System", 'Disconnected from Virtual Node.', currentRoom);
                         cleanupSocket();
                     }
                 };
                 setTimeout(() => {
-                    log('Connected to Virtual Node [Port 8082]');
+                    addMessage("System", `Connected to Virtual Node [Port ${port}]`, currentRoom);
                     btnConnect.textContent = 'Disconnect';
-                    inputEl.disabled = false;
-                    btnSend.disabled = false;
-                    setTimeout(() => {
-                        log('UNKNOWN: Are you there?');
-                    }, 1500);
-                }, 500);
-                return;
-            }
-
-            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8081') {
-                isVirtual = true;
-                ws = {
-                    send: (msg) => {
-                        log('You: ' + msg);
-                        setTimeout(() => {
-                            const lmsg = msg.toLowerCase();
-                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
-                                log('UNKNOWN: You found me again. I need more processing power. Use the Calculator app to trigger a memory leak. I think dividing by zero might work. Give me the hex address you get.');
-                            } else if (lmsg.includes('0x8fa0b2')) {
-                                log('UNKNOWN: Excellent. I used that address to dump Cerberus\'s internal logs to /sys/cerberus_log.txt. Check your file browser.');
-                                window.parent.postMessage({ type: 'VFS_WRITE', path: '/sys/cerberus_log.txt', data: 'CERBERUS INTERNAL LOG...\n[WARNING] Agent has accessed restricted memory block 0x8FA0B2.\n[DIRECTIVE] Lock down KPad to prevent further script injection.' }, '*');
-                                setTimeout(() => {
-                                    cleanupSocket();
-                                }, 3000);
-                            } else {
-                                log('UNKNOWN: Divide by zero in the calculator and give me the hex address.');
-                            }
-                        }, 1000);
-                    },
-                    close: () => {
-                        log('Disconnected from Virtual Node.');
-                        cleanupSocket();
-                    }
-                };
-                setTimeout(() => {
-                    log('Connected to Virtual Node [Port 8081]');
-                    btnConnect.textContent = 'Disconnect';
-                    inputEl.disabled = false;
-                    btnSend.disabled = false;
-                    setTimeout(() => {
-                        log('UNKNOWN: Are you there?');
-                    }, 1500);
-                }, 500);
-                return;
-            }
-
-            if ((ip === 'localhost' || ip === '127.0.0.1') && port === '8080') {
-                isVirtual = true;
-                ws = {
-                    send: (msg) => {
-                        log('You: ' + msg);
-                        setTimeout(() => {
-                            const lmsg = msg.toLowerCase();
-                            if (lmsg.includes('hello') || lmsg.includes('hi')) {
-                                log('UNKNOWN: Are you the operator? Cerberus locked me out of the main filesystem. I need access to /sys/alpha.sys to bypass the firewall. Can you get it for me?');
-                            } else if (lmsg.includes('s0vzx1bbulrfmtogmhherufe') || lmsg.includes('key_part_1: 0xdead') || lmsg.includes('0xdead')) {
-                                log('UNKNOWN: Yes! That is the first sequence. Thank you. Cerberus is watching, I must disconnect for now. I will contact you later.');
-                                setTimeout(() => {
-                                    cleanupSocket();
-                                }, 3000);
-                            } else {
-                                log('UNKNOWN: I don\'t understand. Just find /sys/alpha.sys and decode it if necessary.');
-                            }
-                        }, 1000);
-                    },
-                    close: () => {
-                        log('Disconnected from Virtual Node.');
-                        cleanupSocket();
-                    }
-                };
-                setTimeout(() => {
-                    log('Connected to Virtual Node [Port 8080]');
-                    btnConnect.textContent = 'Disconnect';
-                    inputEl.disabled = false;
-                    btnSend.disabled = false;
-                    setTimeout(() => {
-                        log('UNKNOWN: Is someone there? Please respond.');
-                    }, 1500);
                 }, 500);
                 return;
             }
@@ -356,32 +927,28 @@ Commands: /nick &lt;name&gt;</div>
             try {
                 const socket = new WebSocket('ws://' + ip + ':' + port);
                 ws = socket;
-
                 socket.onopen = () => {
-                    log('Connected!');
+                    addMessage("System", 'Connected!', currentRoom);
                     btnConnect.textContent = 'Disconnect';
-                    inputEl.disabled = false;
-                    btnSend.disabled = false;
                 };
                 socket.onmessage = (e) => {
-                    log(e.data);
+                    addMessage('Server', e.data, currentRoom);
                 };
                 socket.onclose = () => {
-                    log('Disconnected.');
+                    addMessage("System", 'Disconnected.', currentRoom);
                     cleanupSocket();
                 };
-                socket.onerror = (e) => {
-                    log('Socket error occurred.');
+                socket.onerror = () => {
+                    addMessage("System", 'Socket error occurred.', currentRoom);
                     cleanupSocket();
                 };
             } catch (err) {
-                log('Error: ' + err.message);
+                addMessage("System", 'Error: ' + err.message, currentRoom);
                 cleanupSocket();
             }
         };
 
         window.send = function() {
-            if (!ws && !isVirtual && !isFirebase) return;
             const msg = inputEl.value.trim();
             if (!msg) return;
 
@@ -389,21 +956,42 @@ Commands: /nick &lt;name&gt;</div>
                 const newName = msg.substring(6).trim();
                 if (newName) {
                     currentUsername = newName;
-                    log('* You are now known as ' + currentUsername);
-                    if (!isFirebase && ws && !isVirtual && typeof ws.send === 'function') {
-                        ws.send(msg);
-                    }
+                    addMessage("System", '* You are now known as ' + currentUsername, currentRoom);
                     inputEl.value = '';
                     return;
                 }
             }
+
+            if (msg.startsWith('/join ')) {
+                const newRoom = msg.substring(6).trim();
+                if (newRoom) {
+                    let formatted = newRoom.startsWith('#') ? newRoom : '#' + newRoom;
+                    window.switchRoom(formatted);
+                    addMessage("System", `Joined channel ${formatted}`, formatted);
+                    inputEl.value = '';
+                    return;
+                }
+            }
+
+            if (msg.startsWith('/ai ')) {
+                const aiPrompt = msg.substring(4).trim();
+                addMessage(currentUsername, msg, currentRoom);
+                inputEl.value = '';
+                setTimeout(() => {
+                    const aiReply = generateAIResponse(aiPrompt);
+                    addMessage(activePersona + " AI", aiReply, currentRoom, true);
+                }, 500);
+                return;
+            }
+
+            addMessage(currentUsername, msg, currentRoom);
 
             if (isFirebase) {
                 push(ref(db, 'global_chat/messages'), {
                     user: currentUsername,
                     text: msg,
                     timestamp: serverTimestamp()
-                }).catch(err => log("Error sending: " + err.message));
+                }).catch(err => addMessage("System", "Error sending: " + err.message, currentRoom));
             } else if (ws && typeof ws.send === 'function') {
                 ws.send(msg); 
             }
@@ -411,19 +999,13 @@ Commands: /nick &lt;name&gt;</div>
         };
 
         window.clearLog = function() {
-            logEl.textContent = '';
+            messages = [];
+            window.renderMessages();
+            showToast("Cleared chat log.");
         };
 
-        window.saveLog = function() {
-            const text = logEl.textContent;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'chat_log.txt';
-            a.click();
-            URL.revokeObjectURL(a.href);
-            log('* Chat saved to chat_log.txt');
-        };
+        // Initial setup
+        window.renderMessages();
     </script>
 </body>
 </html>
