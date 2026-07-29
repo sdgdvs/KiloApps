@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #define EMPTY 0
 #define BLACK 1
@@ -205,6 +206,239 @@ typedef struct {
 
 HistoryState history[300];
 int historyCount = 0;
+
+typedef struct {
+    float x, y;
+    float vx, vy;
+    int life;
+    int maxLife;
+    COLORREF color;
+    int size;
+} GdiParticle;
+
+#define MAX_GDI_PARTICLES 150
+static GdiParticle g_particles[MAX_GDI_PARTICLES];
+static int g_numParticles = 0;
+
+void SpawnSparksGDI(float x, float y, int count, COLORREF color) {
+    for (int i = 0; i < count; i++) {
+        if (g_numParticles >= MAX_GDI_PARTICLES) break;
+        float angle = ((float)rand() / (float)RAND_MAX) * 6.28318f;
+        float speed = 1.5f + ((float)rand() / (float)RAND_MAX) * 4.5f;
+        g_particles[g_numParticles].x = x;
+        g_particles[g_numParticles].y = y;
+        g_particles[g_numParticles].vx = cosf(angle) * speed;
+        g_particles[g_numParticles].vy = sinf(angle) * speed - 1.0f;
+        g_particles[g_numParticles].life = 15 + rand() % 15;
+        g_particles[g_numParticles].maxLife = g_particles[g_numParticles].life;
+        g_particles[g_numParticles].color = color;
+        g_particles[g_numParticles].size = 2 + rand() % 3;
+        g_numParticles++;
+    }
+}
+
+void SpawnVictoryFireworksGDI(int w, int h) {
+    COLORREF colors[6] = { RGB(255, 215, 0), RGB(255, 0, 127), RGB(0, 245, 212), RGB(255, 255, 255), RGB(255, 150, 0), RGB(50, 255, 50) };
+    for (int i = 0; i < 80; i++) {
+        if (g_numParticles >= MAX_GDI_PARTICLES) break;
+        g_particles[g_numParticles].x = (float)(rand() % w);
+        g_particles[g_numParticles].y = (float)(rand() % (h / 3 + 10));
+        g_particles[g_numParticles].vx = -3.0f + ((float)rand() / (float)RAND_MAX) * 6.0f;
+        g_particles[g_numParticles].vy = 1.5f + ((float)rand() / (float)RAND_MAX) * 4.0f;
+        g_particles[g_numParticles].life = 30 + rand() % 25;
+        g_particles[g_numParticles].maxLife = g_particles[g_numParticles].life;
+        g_particles[g_numParticles].color = colors[rand() % 6];
+        g_particles[g_numParticles].size = 3 + rand() % 3;
+        g_numParticles++;
+    }
+}
+
+void UpdateAndDrawParticlesGDI(HDC hdc) {
+    for (int i = g_numParticles - 1; i >= 0; i--) {
+        g_particles[i].x += g_particles[i].vx;
+        g_particles[i].y += g_particles[i].vy;
+        g_particles[i].life--;
+        if (g_particles[i].life <= 0) {
+            g_particles[i] = g_particles[--g_numParticles];
+            continue;
+        }
+        HBRUSH pBrush = CreateSolidBrush(g_particles[i].color);
+        HPEN pPen = CreatePen(PS_SOLID, 1, g_particles[i].color);
+        SelectObject(hdc, pBrush);
+        SelectObject(hdc, pPen);
+        int s = g_particles[i].size;
+        int px = (int)g_particles[i].x;
+        int py = (int)g_particles[i].y;
+        Ellipse(hdc, px - s, py - s, px + s, py + s);
+        DeleteObject(pBrush);
+        DeleteObject(pPen);
+    }
+}
+
+void DrawDisc3D(HDC hdc, int cx, int cy, int radius, int colorType, int scaleXWidth, int yOffset) {
+    int w = scaleXWidth;
+    if (w < 2) w = 2;
+    int rX = w / 2;
+    int rY = radius;
+    int drawCy = cy + yOffset;
+
+    // Drop Shadow
+    HBRUSH shadowBrush = CreateSolidBrush(RGB(10, 10, 10));
+    HPEN shadowPen = CreatePen(PS_SOLID, 1, RGB(10, 10, 10));
+    SelectObject(hdc, shadowBrush);
+    SelectObject(hdc, shadowPen);
+    Ellipse(hdc, cx - rX + 3, drawCy - rY + 4, cx + rX + 3, drawCy + rY + 4);
+    DeleteObject(shadowBrush);
+    DeleteObject(shadowPen);
+
+    if (colorType == BLACK) {
+        // Obsidian Black Disc
+        HBRUSH rimBrush = CreateSolidBrush(RGB(25, 25, 25));
+        HPEN rimPen = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
+        SelectObject(hdc, rimBrush);
+        SelectObject(hdc, rimPen);
+        Ellipse(hdc, cx - rX, drawCy - rY, cx + rX, drawCy + rY);
+        DeleteObject(rimBrush);
+        DeleteObject(rimPen);
+
+        for (int step = 0; step < 3; step++) {
+            int stepRX = rX - (step * rX / 4) - 2;
+            int stepRY = rY - (step * rY / 4) - 2;
+            if (stepRX < 1 || stepRY < 1) break;
+            int offsetShiftX = cx - (step * rX / 8);
+            int offsetShiftY = drawCy - (step * rY / 8);
+            COLORREF col = RGB(20 + step * 25, 20 + step * 25, 20 + step * 25);
+            HBRUSH cBrush = CreateSolidBrush(col);
+            HPEN cPen = CreatePen(PS_SOLID, 1, col);
+            SelectObject(hdc, cBrush);
+            SelectObject(hdc, cPen);
+            Ellipse(hdc, offsetShiftX - stepRX, offsetShiftY - stepRY, offsetShiftX + stepRX, offsetShiftY + stepRY);
+            DeleteObject(cBrush);
+            DeleteObject(cPen);
+        }
+
+        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(180, 180, 180));
+        SelectObject(hdc, specPen);
+        Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
+        DeleteObject(specPen);
+
+        if (rX >= 10) {
+            POINT crownPts[7];
+            crownPts[0].x = cx - rX / 3;     crownPts[0].y = drawCy + rY / 3;
+            crownPts[1].x = cx - rX * 4 / 10; crownPts[1].y = drawCy - rY / 5;
+            crownPts[2].x = cx - rX / 6;     crownPts[2].y = drawCy;
+            crownPts[3].x = cx;           crownPts[3].y = drawCy - rY / 3;
+            crownPts[4].x = cx + rX / 6;     crownPts[4].y = drawCy;
+            crownPts[5].x = cx + rX * 4 / 10; crownPts[5].y = drawCy - rY / 5;
+            crownPts[6].x = cx + rX / 3;     crownPts[6].y = drawCy + rY / 3;
+
+            HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
+            HPEN goldPen = CreatePen(PS_SOLID, 1, RGB(180, 140, 20));
+            SelectObject(hdc, goldBrush);
+            SelectObject(hdc, goldPen);
+            Polygon(hdc, crownPts, 7);
+            DeleteObject(goldBrush);
+            DeleteObject(goldPen);
+        }
+    } else {
+        // Pearl White Disc
+        HBRUSH rimBrush = CreateSolidBrush(RGB(240, 245, 250));
+        HPEN rimPen = CreatePen(PS_SOLID, 2, RGB(180, 190, 200));
+        SelectObject(hdc, rimBrush);
+        SelectObject(hdc, rimPen);
+        Ellipse(hdc, cx - rX, drawCy - rY, cx + rX, drawCy + rY);
+        DeleteObject(rimBrush);
+        DeleteObject(rimPen);
+
+        for (int step = 0; step < 3; step++) {
+            int stepRX = rX - (step * rX / 4) - 2;
+            int stepRY = rY - (step * rY / 4) - 2;
+            if (stepRX < 1 || stepRY < 1) break;
+            int offsetShiftX = cx - (step * rX / 8);
+            int offsetShiftY = drawCy - (step * rY / 8);
+            COLORREF col = RGB(220 + step * 12, 225 + step * 10, 230 + step * 8);
+            HBRUSH cBrush = CreateSolidBrush(col);
+            HPEN cPen = CreatePen(PS_SOLID, 1, col);
+            SelectObject(hdc, cBrush);
+            SelectObject(hdc, cPen);
+            Ellipse(hdc, offsetShiftX - stepRX, offsetShiftY - stepRY, offsetShiftX + stepRX, offsetShiftY + stepRY);
+            DeleteObject(cBrush);
+            DeleteObject(cPen);
+        }
+
+        HPEN specPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        SelectObject(hdc, specPen);
+        Arc(hdc, cx - rX + 4, drawCy - rY + 4, cx + rX - 4, drawCy + rY - 4, cx, drawCy - rY, cx - rX, drawCy);
+        DeleteObject(specPen);
+
+        if (rX >= 10) {
+            POINT starPts[10];
+            starPts[0].x = cx;             starPts[0].y = drawCy - rY / 3;
+            starPts[1].x = cx + rX / 10;     starPts[1].y = drawCy - rY / 10;
+            starPts[2].x = cx + rX / 3;      starPts[2].y = drawCy - rY / 12;
+            starPts[3].x = cx + rX / 7;      starPts[3].y = drawCy + rY / 12;
+            starPts[4].x = cx + rX / 4;      starPts[4].y = drawCy + rY / 3;
+            starPts[5].x = cx;             starPts[5].y = drawCy + rY / 5;
+            starPts[6].x = cx - rX / 4;      starPts[6].y = drawCy + rY / 3;
+            starPts[7].x = cx - rX / 7;      starPts[7].y = drawCy + rY / 12;
+            starPts[8].x = cx - rX / 3;      starPts[8].y = drawCy - rY / 12;
+            starPts[9].x = cx - rX / 10;     starPts[9].y = drawCy - rY / 10;
+
+            HBRUSH starBrush = CreateSolidBrush(RGB(80, 95, 115));
+            HPEN starPen = CreatePen(PS_SOLID, 1, RGB(50, 65, 85));
+            SelectObject(hdc, starBrush);
+            SelectObject(hdc, starPen);
+            Polygon(hdc, starPts, 10);
+            DeleteObject(starBrush);
+            DeleteObject(starPen);
+        }
+    }
+}
+
+void DrawMahoganyFrame(HDC hdc, int boardX, int boardY, int boardW, int boardH) {
+    int padding = 16;
+    RECT frameRect = { boardX - padding, boardY - padding, boardX + boardW + padding, boardY + boardH + padding };
+
+    HBRUSH m1Brush = CreateSolidBrush(RGB(74, 31, 10));
+    HPEN m1Pen = CreatePen(PS_SOLID, 3, RGB(140, 60, 20));
+    SelectObject(hdc, m1Brush);
+    SelectObject(hdc, m1Pen);
+    RoundRect(hdc, frameRect.left, frameRect.top, frameRect.right, frameRect.bottom, 14, 14);
+    DeleteObject(m1Brush);
+    DeleteObject(m1Pen);
+
+    RECT innerFrame = { boardX - 3, boardY - 3, boardX + boardW + 3, boardY + boardH + 3 };
+    HBRUSH m2Brush = CreateSolidBrush(RGB(25, 10, 4));
+    HPEN m2Pen = CreatePen(PS_SOLID, 2, RGB(90, 35, 12));
+    SelectObject(hdc, m2Brush);
+    SelectObject(hdc, m2Pen);
+    Rectangle(hdc, innerFrame.left, innerFrame.top, innerFrame.right, innerFrame.bottom);
+    DeleteObject(m2Brush);
+    DeleteObject(m2Pen);
+
+    int studCoords[4][2] = {
+        { frameRect.left + 8, frameRect.top + 8 },
+        { frameRect.right - 8, frameRect.top + 8 },
+        { frameRect.left + 8, frameRect.bottom - 8 },
+        { frameRect.right - 8, frameRect.bottom - 8 }
+    };
+    for (int i = 0; i < 4; i++) {
+        int sx = studCoords[i][0];
+        int sy = studCoords[i][1];
+        HBRUSH studBrush = CreateSolidBrush(RGB(220, 180, 50));
+        HPEN studPen = CreatePen(PS_SOLID, 1, RGB(120, 90, 20));
+        SelectObject(hdc, studBrush);
+        SelectObject(hdc, studPen);
+        Ellipse(hdc, sx - 4, sy - 4, sx + 4, sy + 4);
+        DeleteObject(studBrush);
+        DeleteObject(studPen);
+
+        HBRUSH hlBrush = CreateSolidBrush(RGB(255, 240, 180));
+        SelectObject(hdc, hlBrush);
+        Ellipse(hdc, sx - 2, sy - 2, sx, sy);
+        DeleteObject(hlBrush);
+    }
+}
 
 const int* GetWeightMatrix(int W, int H) {
     if (W == 6) return g_weights6;
@@ -609,6 +843,16 @@ void DoMove(int index, int player, HWND hwnd) {
         flipProgress = 0;
         SetTimer(hwnd, 2, 30, NULL);
         
+        int cellSize = (g_boardWidth == 6) ? 55 : ((g_boardWidth == 8) ? 45 : 38);
+        int boardStartX = 20;
+        int boardStartY = 95;
+        int r = index / g_boardWidth;
+        int c = index % g_boardWidth;
+        float cx = (float)(boardStartX + c * cellSize + cellSize / 2);
+        float cy = (float)(boardStartY + r * cellSize + cellSize / 2);
+        SpawnSparksGDI(cx, cy, 14, player == BLACK ? RGB(255, 215, 0) : RGB(0, 245, 212));
+        if (hwnd) SetTimer(hwnd, 4, 25, NULL);
+
         for(int i = 0; i < count; i++) {
             board[animatingFlips[i]] = player;
         }
@@ -628,6 +872,14 @@ void DoBombMove(int index, int player, HWND hwnd) {
     int opponent = (player == BLACK) ? WHITE : BLACK;
     int flippableCount = 0;
     
+    int cellSize = (g_boardWidth == 6) ? 55 : ((g_boardWidth == 8) ? 45 : 38);
+    int boardStartX = 20;
+    int boardStartY = 95;
+    float cx = (float)(boardStartX + c * cellSize + cellSize / 2);
+    float cy = (float)(boardStartY + r * cellSize + cellSize / 2);
+    SpawnSparksGDI(cx, cy, 35, RGB(255, 69, 0));
+    if (hwnd) SetTimer(hwnd, 4, 25, NULL);
+
     for (int d = 0; d < 8; d++) {
         int nr = r + dirs[d][0];
         int nc = c + dirs[d][1];
@@ -943,6 +1195,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         InvalidateRect(hwnd, NULL, FALSE);
                     }
                 }
+            } else if (wParam == 4) {
+                if (g_numParticles > 0) {
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else {
+                    KillTimer(hwnd, 4);
+                }
             }
             break;
         }
@@ -1007,6 +1265,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (gameMode == MODE_CAMPAIGN) {
                         sprintf(winMsg, "STAGE %d CLEARED! WINNER!", campaignStage);
                     } else sprintf(winMsg, "%s WINS!", theme->p1Name);
+                    SpawnVictoryFireworksGDI(clientRect.right, clientRect.bottom);
+                    SetTimer(hwnd, 4, 25, NULL);
                 } else if (wCount > bCount) {
                     sprintf(winMsg, "%s WINS!", theme->p2Name);
                 } else sprintf(winMsg, "DRAW!");
@@ -1040,17 +1300,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             TextOut(hdc, 10, 68, evalStr, strlen(evalStr));
 
-            HBRUSH boardBrush = CreateSolidBrush(theme->boardCell);
-            HBRUSH disc1Brush = CreateSolidBrush(theme->disc1);
-            HBRUSH disc2Brush = CreateSolidBrush(theme->disc2);
             HBRUSH blockedBrush = CreateHatchBrush(HS_DIAGCROSS, RGB(100, 100, 100));
-            HPEN gridPen = CreatePen(PS_SOLID, 2, theme->gridPen);
-            
-            SelectObject(hdc, gridPen);
             
             int cellSize = (g_boardWidth == 6) ? 55 : ((g_boardWidth == 8) ? 45 : 38);
             int boardStartX = 20;
             int boardStartY = 95;
+
+            // 3D Mahogany Frame Surround
+            DrawMahoganyFrame(hdc, boardStartX, boardStartY, g_boardWidth * cellSize, g_boardHeight * cellSize);
 
             for(int r = 0; r < g_boardHeight; r++) {
                 for(int c = 0; c < g_boardWidth; c++) {
@@ -1066,8 +1323,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         SelectObject(hdc, blockedBrush);
                         Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
                     } else {
-                        SelectObject(hdc, boardBrush);
+                        HBRUSH cFeltBrush = CreateSolidBrush(theme->boardCell);
+                        HPEN cHiPen = CreatePen(PS_SOLID, 1, RGB(40, 110, 55));
+                        HPEN cShPen = CreatePen(PS_SOLID, 1, RGB(10, 40, 18));
+                        SelectObject(hdc, cFeltBrush);
+                        SelectObject(hdc, cHiPen);
                         Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+                        
+                        SelectObject(hdc, cShPen);
+                        MoveToEx(hdc, rect.right - 1, rect.top, NULL);
+                        LineTo(hdc, rect.right - 1, rect.bottom - 1);
+                        LineTo(hdc, rect.left, rect.bottom - 1);
+
+                        DeleteObject(cFeltBrush);
+                        DeleteObject(cHiPen);
+                        DeleteObject(cShPen);
+                    }
+
+                    int h1 = g_boardWidth == 6 ? 1 : 2;
+                    int h2 = g_boardWidth == 6 ? 4 : (g_boardWidth == 8 ? 5 : 7);
+                    if (board[idx] != BLOCKED && (r == h1 || r == h2) && (c == h1 || c == h2)) {
+                        HBRUSH hoshiBrush = CreateSolidBrush(RGB(212, 175, 55));
+                        HPEN hoshiPen = CreatePen(PS_SOLID, 1, RGB(160, 120, 20));
+                        SelectObject(hdc, hoshiBrush);
+                        SelectObject(hdc, hoshiPen);
+                        int hcx = rect.left + cellSize / 2;
+                        int hcy = rect.top + cellSize / 2;
+                        Ellipse(hdc, hcx - 3, hcy - 3, hcx + 3, hcy + 3);
+                        DeleteObject(hoshiBrush);
+                        DeleteObject(hoshiPen);
                     }
                     
                     if (board[idx] == BLACK || board[idx] == WHITE) {
@@ -1078,24 +1362,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                         
+                        int radius = (cellSize - (cellSize >= 45 ? 10 : 6)) / 2;
+                        int cx = rect.left + cellSize / 2;
+                        int cy = rect.top + cellSize / 2;
+
                         if (isAnimating) {
                             int oldColor = (board[idx] == BLACK) ? WHITE : BLACK;
                             int newColor = board[idx];
                             int displayColor = (flipProgress < 5) ? oldColor : newColor;
-                            SelectObject(hdc, displayColor == BLACK ? disc1Brush : disc2Brush);
                             
-                            int baseMargin = (cellSize >= 45) ? 5 : 3;
-                            int discSize = cellSize - baseMargin * 2;
-                            int currentWidth = discSize;
-                            if (flipProgress < 5) currentWidth = discSize - (flipProgress * (discSize / 5)); 
-                            else currentWidth = (flipProgress - 5) * (discSize / 5); 
-                            if (currentWidth < 2) currentWidth = 2;
-                            int margin = (discSize - currentWidth) / 2;
-                            Ellipse(hdc, rect.left + baseMargin + margin, rect.top + baseMargin, rect.right - baseMargin - margin, rect.bottom - baseMargin);
+                            int fullW = radius * 2;
+                            int currentW = fullW;
+                            if (flipProgress < 5) currentW = fullW - (flipProgress * (fullW / 5)); 
+                            else currentW = (flipProgress - 5) * (fullW / 5); 
+                            if (currentW < 2) currentW = 2;
+
+                            int yOff = (flipProgress < 5) ? -flipProgress * 2 : -(10 - flipProgress) * 2;
+                            DrawDisc3D(hdc, cx, cy, radius, displayColor, currentW, yOff);
                         } else {
-                            SelectObject(hdc, board[idx] == BLACK ? disc1Brush : disc2Brush);
-                            int baseMargin = (cellSize >= 45) ? 5 : 3;
-                            Ellipse(hdc, rect.left + baseMargin, rect.top + baseMargin, rect.right - baseMargin, rect.bottom - baseMargin);
+                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, 0);
                         }
                     } else if (currentPlayer == BLACK && !gameEnded && board[idx] == EMPTY) {
                         int dummy[100];
@@ -1107,31 +1392,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             DeleteObject(bombPen);
                         } else if (GetFlippable(idx, BLACK, dummy) > 0) {
                             if (showHint && idx == bestMoveIdx) {
-                                HBRUSH hintBrush = CreateSolidBrush(theme->hintPen);
-                                HPEN hintPen = CreatePen(PS_SOLID, 2, theme->hintPen);
+                                HBRUSH hintBrush = CreateSolidBrush(RGB(255, 215, 0));
+                                HPEN hintPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 180));
                                 SelectObject(hdc, hintBrush);
                                 SelectObject(hdc, hintPen);
-                                Ellipse(hdc, rect.left + 12, rect.top + 12, rect.right - 12, rect.bottom - 12);
+                                int hcx = rect.left + cellSize / 2;
+                                int hcy = rect.top + cellSize / 2;
+                                Ellipse(hdc, hcx - 7, hcy - 7, hcx + 7, hcy + 7);
                                 DeleteObject(hintBrush);
                                 DeleteObject(hintPen);
                             } else {
-                                SelectObject(hdc, GetStockObject(NULL_BRUSH));
-                                HPEN hintPen = CreatePen(PS_SOLID, 1, theme->hintPen);
+                                HBRUSH hintBrush = CreateSolidBrush(RGB(255, 215, 0));
+                                HPEN hintPen = CreatePen(PS_SOLID, 1, RGB(200, 160, 0));
+                                SelectObject(hdc, hintBrush);
                                 SelectObject(hdc, hintPen);
-                                int margin = cellSize / 3;
-                                Ellipse(hdc, rect.left + margin, rect.top + margin, rect.right - margin, rect.bottom - margin);
+                                int hcx = rect.left + cellSize / 2;
+                                int hcy = rect.top + cellSize / 2;
+                                Ellipse(hdc, hcx - 4, hcy - 4, hcx + 4, hcy + 4);
+                                DeleteObject(hintBrush);
                                 DeleteObject(hintPen);
                             }
                         }
                     }
                 }
             }
-            DeleteObject(boardBrush);
-            DeleteObject(disc1Brush);
-            DeleteObject(disc2Brush);
             DeleteObject(blockedBrush);
-            DeleteObject(gridPen);
             
+            UpdateAndDrawParticlesGDI(hdc);
+
             EndPaint(hwnd, &ps);
             break;
         }

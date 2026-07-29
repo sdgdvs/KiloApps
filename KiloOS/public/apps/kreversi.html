@@ -14,37 +14,43 @@
         select, input[type="checkbox"] { background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px 6px; font-size: 12px; }
         select:focus { outline: none; border-color: var(--hint-outline, #ffd700); }
         
-        .board-wrapper { position: relative; padding: 4px; background: var(--board-bg, #222); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); margin-bottom: 10px; }
-        .board { display: grid; gap: 2px; background: var(--board-bg, #222); border-radius: 6px; }
-        .cell { background: var(--cell-bg, #1a562c); width: var(--cell-size, 45px); height: var(--cell-size, 45px); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s, transform 0.1s; position: relative; border-radius: 3px; }
-        .cell:hover { background: var(--cell-hover, #23783b); }
-        .cell.blocked { background: #222 !important; cursor: not-allowed; opacity: 0.8; }
-        .cell.blocked::after { content: '✕'; color: #555; font-size: 18px; font-weight: bold; }
+        .board-wrapper { position: relative; padding: 18px; background: linear-gradient(135deg, #4a1f0a 0%, #2b0f03 50%, #5c280d 100%); border-radius: 12px; box-shadow: 0 12px 36px rgba(0,0,0,0.8), inset 0 2px 3px rgba(255,220,180,0.3), inset 0 -2px 4px rgba(0,0,0,0.8); border: 4px solid #7c3a13; margin-bottom: 10px; }
+        .stud { position: absolute; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffeeaa, #cc9900 60%, #664400); box-shadow: 0 1px 3px rgba(0,0,0,0.8); z-index: 2; }
+        .stud.tl { top: 4px; left: 4px; }
+        .stud.tr { top: 4px; right: 4px; }
+        .stud.bl { bottom: 4px; left: 4px; }
+        .stud.br { bottom: 4px; right: 4px; }
+
+        .board { display: grid; gap: 3px; background: #0f361a; padding: 3px; border-radius: 6px; box-shadow: inset 0 0 12px rgba(0,0,0,0.85); position: relative; z-index: 1; }
+        .cell { background: radial-gradient(circle at 40% 40%, var(--cell-bg-light, #236c39), var(--cell-bg, #144623)); width: var(--cell-size, 45px); height: var(--cell-size, 45px); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: background 0.2s, transform 0.1s; position: relative; border-radius: 3px; box-shadow: inset 1px 1px 2px rgba(255,255,255,0.15), inset -1px -1px 3px rgba(0,0,0,0.5); }
+        .cell:hover { background: radial-gradient(circle at 40% 40%, #2f8e4b, #1a562c); }
+        .cell.blocked { background: #1a1a1a !important; cursor: not-allowed; opacity: 0.8; box-shadow: inset 0 0 6px #000; }
+        .cell.blocked::after { content: '✕'; color: #666; font-size: 18px; font-weight: bold; }
+        .cell.hoshi::before { content: ''; position: absolute; width: 6px; height: 6px; background: #d4af37; border-radius: 50%; box-shadow: 0 0 3px rgba(0,0,0,0.8); opacity: 0.7; pointer-events: none; }
         
-        .disc { width: calc(var(--cell-size, 45px) * 0.8); height: calc(var(--cell-size, 45px) * 0.8); border-radius: 50%; display: none; transition: transform 0.2s; }
-        .disc.black { display: block; background: var(--disc-black, #111); box-shadow: var(--disc-black-shadow, 1px 1px 4px rgba(0,0,0,0.8)); }
-        .disc.white { display: block; background: var(--disc-white, #eee); box-shadow: var(--disc-white-shadow, 1px 1px 4px rgba(0,0,0,0.8)); }
+        .disc { width: calc(var(--cell-size, 45px) * 0.84); height: calc(var(--cell-size, 45px) * 0.84); border-radius: 50%; display: none; transition: transform 0.2s; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); }
+        .disc.black { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="bg" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="%23444444"/><stop offset="50%" stop-color="%23181818"/><stop offset="100%" stop-color="%23050505"/></radialGradient><linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23d4af37"/><stop offset="50%" stop-color="%238a7322"/><stop offset="100%" stop-color="%23ffd700"/></linearGradient><linearGradient id="crown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23ffe680"/><stop offset="100%" stop-color="%23cc9900"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23rim)"/><circle cx="32" cy="32" r="27" fill="url(%23bg)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23d4af37" stroke-width="0.8" opacity="0.6"/><path d="M 14,24 A 20,20 0 0,1 32,10" fill="none" stroke="%23ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/><path d="M 22,38 L 20,26 L 26,30 L 32,24 L 38,30 L 44,26 L 42,38 Z" fill="url(%23crown)" stroke="%238a7322" stroke-width="1"/><circle cx="20" cy="25" r="1.5" fill="%23ffe680"/><circle cx="32" cy="23" r="1.8" fill="%23ffe680"/><circle cx="44" cy="25" r="1.5" fill="%23ffe680"/></svg>'); }
+        .disc.white { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="wbg" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="65%" stop-color="%23e2e8f0"/><stop offset="100%" stop-color="%23cbd5e1"/></radialGradient><linearGradient id="wrim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23e2e8f0"/><stop offset="50%" stop-color="%2394a3b8"/><stop offset="100%" stop-color="%23f8fafc"/></linearGradient><linearGradient id="star" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%2364748b"/><stop offset="100%" stop-color="%23334155"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23wrim)"/><circle cx="32" cy="32" r="27" fill="url(%23wbg)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%2394a3b8" stroke-width="0.8" opacity="0.6"/><path d="M 14,24 A 20,20 0 0,1 32,10" fill="none" stroke="%23ffffff" stroke-width="3" stroke-linecap="round" opacity="0.8"/><path d="M 32,22 L 35,28 L 41,29 L 36.5,33 L 38,39 L 32,35.5 L 26,39 L 27.5,33 L 23,29 L 29,28 Z" fill="url(%23star)" stroke="%23475569" stroke-width="0.8"/></svg>'); }
         
-        .valid-move::after { content: ''; position: absolute; width: 10px; height: 10px; background: var(--valid-dot, rgba(255,255,255,0.35)); border-radius: 50%; }
-        .bomb-target::after { content: '💣'; position: absolute; font-size: 14px; opacity: 0.7; }
+        .valid-move::after { content: ''; position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #ffffaa 0%, #ffd700 70%, #ffaa00 100%); border-radius: 50%; box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.7); animation: pulseDot 1.2s infinite alternate ease-in-out; }
+        @keyframes pulseDot { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.2); opacity: 1; } }
+        .bomb-target::after { content: '💣'; position: absolute; font-size: 16px; opacity: 0.85; filter: drop-shadow(0 0 6px #ff4500); }
         
-        @keyframes flipToWhite {
-            0% { transform: scaleX(1); background: var(--disc-black, #111); }
-            50% { transform: scaleX(0); background: var(--disc-black, #111); }
-            51% { transform: scaleX(0); background: var(--disc-white, #eee); }
-            100% { transform: scaleX(1); background: var(--disc-white, #eee); }
+        @keyframes flip3DToWhite {
+            0% { transform: perspective(350px) rotateY(0deg) translateY(0); }
+            50% { transform: perspective(350px) rotateY(90deg) translateY(-10px) scale(1.15); }
+            100% { transform: perspective(350px) rotateY(180deg) translateY(0); }
         }
-        @keyframes flipToBlack {
-            0% { transform: scaleX(1); background: var(--disc-white, #eee); }
-            50% { transform: scaleX(0); background: var(--disc-white, #eee); }
-            51% { transform: scaleX(0); background: var(--disc-black, #111); }
-            100% { transform: scaleX(1); background: var(--disc-black, #111); }
+        @keyframes flip3DToBlack {
+            0% { transform: perspective(350px) rotateY(0deg) translateY(0); }
+            50% { transform: perspective(350px) rotateY(90deg) translateY(-10px) scale(1.15); }
+            100% { transform: perspective(350px) rotateY(180deg) translateY(0); }
         }
-        .disc.flip-to-white { animation: flipToWhite 0.3s forwards; }
-        .disc.flip-to-black { animation: flipToBlack 0.3s forwards; }
+        .disc.flip-to-white { animation: flip3DToWhite 0.35s ease-in-out forwards; }
+        .disc.flip-to-black { animation: flip3DToBlack 0.35s ease-in-out forwards; }
         
-        .recommended-hint { outline: 3px solid var(--hint-outline, #ffd700); box-shadow: 0 0 10px var(--hint-outline, #ffd700) inset; background: var(--hint-bg, #3c7349) !important; }
-        .recommended-hint::after { background: var(--hint-outline, #ffd700) !important; width: 14px !important; height: 14px !important; box-shadow: 0 0 6px var(--hint-outline, #ffd700); }
+        .recommended-hint { outline: 3px solid var(--hint-outline, #ffd700); box-shadow: 0 0 14px var(--hint-outline, #ffd700) inset; background: var(--hint-bg, #2a7a42) !important; }
+        .recommended-hint::after { background: radial-gradient(circle, #ffffff, #ffd700) !important; width: 14px !important; height: 14px !important; box-shadow: 0 0 10px #ffd700; }
         
         #message { min-height: 24px; font-size: 16px; font-weight: bold; color: #55ff55; text-shadow: 0 1px 2px #000; margin-bottom: 8px; text-align: center; }
         
@@ -56,25 +62,25 @@
         
         /* Themes */
         body.theme-classic {
-            --bg-color: #121212; --board-bg: #222222; --cell-bg: #1a562c; --cell-hover: #23783b;
+            --bg-color: #121212; --board-bg: #222222; --cell-bg: #144623; --cell-bg-light: #236c39; --cell-hover: #23783b;
             --disc-black: #111111; --disc-white: #eeeeee; --disc-black-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-            --disc-white-shadow: 1px 1px 3px rgba(0,0,0,0.8); --valid-dot: rgba(255,255,255,0.35);
-            --hint-outline: #ffd700; --hint-bg: #3c7349; --eval-bg: #1a1a1a; --text-color: #e0e0e0; --h1-color: #ffffff;
+            --disc-white-shadow: 1px 1px 3px rgba(0,0,0,0.8); --valid-dot: rgba(255,215,0,0.7);
+            --hint-outline: #ffd700; --hint-bg: #2a7a42; --eval-bg: #1a1a1a; --text-color: #e0e0e0; --h1-color: #ffffff;
         }
         body.theme-cyber {
-            --bg-color: #060b19; --board-bg: #00f5d4; --cell-bg: #0b132b; --cell-hover: #1c2541;
+            --bg-color: #060b19; --board-bg: #00f5d4; --cell-bg: #0b132b; --cell-bg-light: #15274d; --cell-hover: #1c2541;
             --disc-black: #00f5d4; --disc-white: #ff007f; --disc-black-shadow: 0 0 10px #00f5d4;
             --disc-white-shadow: 0 0 10px #ff007f; --valid-dot: rgba(0,245,212,0.45);
             --hint-outline: #ff007f; --hint-bg: #152f5e; --eval-bg: #0d1b2a; --text-color: #e0e6ed; --h1-color: #00f5d4;
         }
         body.theme-crimson {
-            --bg-color: #140306; --board-bg: #5a0c18; --cell-bg: #3a0810; --cell-hover: #540c17;
+            --bg-color: #140306; --board-bg: #5a0c18; --cell-bg: #3a0810; --cell-bg-light: #5e111d; --cell-hover: #540c17;
             --disc-black: #ffd700; --disc-white: #d90429; --disc-black-shadow: 0 0 8px #ffd700;
             --disc-white-shadow: 0 0 8px #d90429; --valid-dot: rgba(255,215,0,0.45);
             --hint-outline: #ffd700; --hint-bg: #6e101f; --eval-bg: #28060c; --text-color: #f7d6d8; --h1-color: #ffd700;
         }
         body.theme-terminal {
-            --bg-color: #020b02; --board-bg: #00ff66; --cell-bg: #071c07; --cell-hover: #113611;
+            --bg-color: #020b02; --board-bg: #00ff66; --cell-bg: #071c07; --cell-bg-light: #113611; --cell-hover: #113611;
             --disc-black: #ffb000; --disc-white: #33ff33; --disc-black-shadow: 0 0 8px #ffb000;
             --disc-white-shadow: 0 0 8px #33ff33; --valid-dot: rgba(51,255,51,0.45);
             --hint-outline: #ffb000; --hint-bg: #1a4a1a; --eval-bg: #092009; --text-color: #33ff33; --h1-color: #33ff33;
@@ -158,7 +164,10 @@
     </div>
     
     <div id="message"></div>
-    <div class="board-wrapper">
+    <div class="board-wrapper" id="board-wrapper">
+        <div class="stud tl"></div><div class="stud tr"></div>
+        <div class="stud bl"></div><div class="stud br"></div>
+        <canvas id="fx-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></canvas>
         <div id="board" class="board"></div>
     </div>
 
@@ -518,6 +527,83 @@
             resetTimer();
         }
 
+        // Particle FX system
+        let particles = [];
+        let animFrameId = null;
+
+        function spawnSparks(x, y, count = 12, color = '#ffd700') {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.5 + Math.random() * 4;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 0.8,
+                    life: 1.0,
+                    decay: 0.03 + Math.random() * 0.04,
+                    size: 2.5 + Math.random() * 3.5,
+                    color
+                });
+            }
+            if (!animFrameId) updateParticles();
+        }
+
+        function spawnVictoryConfetti() {
+            const colors = ['#ffd700', '#ff007f', '#00f5d4', '#ffffff', '#ffaa00', '#33ff33'];
+            const canvas = document.getElementById('fx-canvas');
+            if (!canvas) return;
+            const w = canvas.width, h = canvas.height;
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * (h * 0.3),
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: 2 + Math.random() * 4,
+                    life: 1.0,
+                    decay: 0.01 + Math.random() * 0.015,
+                    size: 4 + Math.random() * 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    shape: Math.random() > 0.5 ? 'rect' : 'circle'
+                });
+            }
+            if (!animFrameId) updateParticles();
+        }
+
+        function updateParticles() {
+            const canvas = document.getElementById('fx-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= p.decay;
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+                ctx.save();
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                if (p.shape === 'rect') {
+                    ctx.fillRect(p.x, p.y, p.size, p.size * 1.4);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+            
+            if (particles.length > 0) {
+                animFrameId = requestAnimationFrame(updateParticles);
+            } else {
+                animFrameId = null;
+            }
+        }
+
         function initBoardDOM() {
             boardEl.innerHTML = '';
             boardEl.style.gridTemplateColumns = `repeat(${boardWidth}, var(--cell-size, 45px))`;
@@ -526,9 +612,17 @@
             const cellSize = boardWidth === 6 ? '55px' : (boardWidth === 8 ? '45px' : '38px');
             document.documentElement.style.setProperty('--cell-size', cellSize);
 
+            const h1 = boardWidth === 6 ? 1 : (boardWidth === 8 ? 2 : 2);
+            const h2 = boardWidth === 6 ? 4 : (boardWidth === 8 ? 5 : 7);
+
             for (let i = 0; i < boardWidth * boardHeight; i++) {
+                const r = Math.floor(i / boardWidth);
+                const c = i % boardWidth;
                 const cell = document.createElement('div');
                 cell.className = 'cell';
+                if ((r === h1 || r === h2) && (c === h1 || c === h2)) {
+                    cell.classList.add('hoshi');
+                }
                 cell.id = 'cell-' + i;
                 
                 const disc = document.createElement('div');
@@ -539,6 +633,15 @@
                 cell.onclick = () => { if (currentPlayer === BLACK && !gameEnded) handleCellClick(i); };
                 boardEl.appendChild(cell);
             }
+            
+            setTimeout(() => {
+                const wrapper = document.getElementById('board-wrapper');
+                const canvas = document.getElementById('fx-canvas');
+                if (wrapper && canvas) {
+                    canvas.width = wrapper.clientWidth;
+                    canvas.height = wrapper.clientHeight;
+                }
+            }, 50);
         }
 
         function pushHistory() {
@@ -649,8 +752,10 @@
                 
                 if (!gameEnded) {
                     gameEnded = true;
-                    if (b > w) stats.wins++;
-                    else if (w > b) stats.losses++;
+                    if (b > w) {
+                        stats.wins++;
+                        spawnVictoryConfetti();
+                    } else if (w > b) stats.losses++;
                     else stats.draws++;
                     saveStats();
                     playSound('over');
@@ -885,6 +990,14 @@
                     disc.className = 'disc ' + (boardState[i] === BLACK ? 'black' : 'white');
                     if (flippedIndices.includes(i)) {
                         disc.classList.add(boardState[i] === BLACK ? 'flip-to-black' : 'flip-to-white');
+                        const wrapper = document.getElementById('board-wrapper');
+                        if (wrapper && cell) {
+                            const rect = wrapper.getBoundingClientRect();
+                            const cRect = cell.getBoundingClientRect();
+                            const cx = cRect.left - rect.left + cRect.width / 2;
+                            const cy = cRect.top - rect.top + cRect.height / 2;
+                            spawnSparks(cx, cy, 8, boardState[i] === BLACK ? '#ffd700' : '#00f5d4');
+                        }
                     }
                 }
             }

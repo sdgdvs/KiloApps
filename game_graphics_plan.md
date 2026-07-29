@@ -82,7 +82,6 @@ After completing a full loop through all games, do ONE icon audit turn before st
 ## Game Queue (round-robin — pick top, work on it, move to bottom)
 **If new games exist that aren't listed here or in the Completed Work Log, add them to the bottom before picking.**
 
-- KReversi
 - KQuest
 - KSpace
 - KPac
@@ -108,9 +107,11 @@ After completing a full loop through all games, do ONE icon audit turn before st
 - KDarts
 - KTowers
 - KWords
+- KReversi
 
 ## Completed Work Log
 
+- **KReversi (Loop 1):** Implemented 3D casino felt board with mahogany wood surround frame & corner studs, 3D double-sided convex discs (Obsidian Black with gold crown emblem & Pearl White with silver star emblem & drop shadows), 3D 180° disc flip scale-X rotation animation when captured, glowing neon yellow valid move hint dots, particle spark bursts on multi-disc flip cascades, and victory celebration fireworks for both Web Canvas/SVG (kreversi.html) and Native C Win32 GDI (KReversi/main.c).
 - **KWords (Loop 1):** Implemented 3D wooden/ivory Scrabble tile keycaps with beveled edges, engraved serif typography, subscript letter point values (A-1, Z-10), polished mahogany board rack frame, recessed 3D cell sockets with inset shadows, smooth 3D tile flip & bounce reveal animations on selection/solve, glowing color state badging (emerald green found, amber gold hint, ice cyan frozen, electric blue selected), and celebration victory confetti particle FX for both Web Canvas/HTML (kwords.html) and Native C Win32 GDI (KWords/main.c).
 - **KTowers (Loop 1):** Implemented 3D isometric & perspective skyscraper block sprites for all tower levels 1-10 with metallic/glass curtain wall textures, rooftop helipads ('H'), solar panels, top antenna spires with blinking red aviation lights, dynamic window lighting animation grids (flickering warm yellow & cyan neon lights), steel cage armor overlays for locked foundation disks, 3D asphalt & cobblestone street grid base frame with sidewalk kerbs, street lamp glow cones, compass clues ([WEST]/[EAST]), camera perspective viewing arrows, placement drop physics smooth interpolation, vertical anti-grav elevator selection beams, and celebratory victory fireworks particle FX for both Web Canvas (ktowers.html) and Native C Win32 GDI (KTowers/main.c).
 - **KDarts (Loop 1):** Implemented 3D Sisal Dartboard with rich red/green double & triple rings, black/ivory single beds, golden bullseye, metallic wire spider lines, wire staples at ring joints, 1-20 metal number wire ring; detailed 3D dart sprites with steel points, brass/tungsten knurled grip barrels, aluminum shafts, and 4-fin 3D perspective tail flights (cyan/red/gold); parabolic throwing trajectory animation with flight pitch tilt & motion trail sparks; impact thud camera shake, landed dart wobble vibration, and score spark particle bursts / floating text popups (+60 TRIPLE 20!, +50 BULLSEYE!) for both Web Canvas (kdarts.html) and Native C Win32 GDI (KDarts/main.c).
