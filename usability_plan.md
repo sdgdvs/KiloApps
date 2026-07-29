@@ -16,7 +16,7 @@
 - **Logging discipline:** Keep this plan file concise. A few lines per completed item. Do NOT dump file contents or create verbose logs.
 
 **WORK FOCUS (CRITICAL): USABILITY, UI, AND UX**
-- Most apps have UI and usability problems, such as auto-opening in a size that doesn't show the full UI, not showing controls, lacking a visible "press h for help" prompt on startup, blurry text, or bad layout.
+- Most apps have UI and usability problems, such as auto-opening in a size that doesn't show the full UI, not showing controls, lacking a visible "press h for help" prompt (or any other appropriate opening instructions) on startup, blurry text, or bad layout.
 - **Your Job:** Fix these issues! Ensure each app opens at an appropriate size, has clear instructions or help menus, crisp text rendering (e.g., canvas scaling issues), and intuitive controls.
 - You also maintain and polish the KiloOS web UI itself (Start menu, taskbar, window manager, desktop).
 
@@ -26,8 +26,8 @@
 **Status:** In Queue
 **Current Phase:** In Queue
 
-## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
-Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. When you reach the end, you'll be back at the top — the cycle never ends. If new apps appear, add them to the queue.
+## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever via cron)
+Pick the top app from this list, identify and fix usability and UI problems (update BOTH web and native versions if applicable), and then move it to the very bottom of the list. Complete exactly ONE app per cron turn (using a single subagent if needed), commit your changes, and then stop your execution. Let the recurring cron schedule wake you up to process the next app. When you reach the end of the list, you'll be back at the top — the cron cycle never ends. If new apps appear, add them to the queue.
 
 - KiloOS Web UI (Shell & Apps)
 - KDB
