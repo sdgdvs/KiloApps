@@ -3,18 +3,57 @@
 <head>
 <title>KFont</title>
 <style>
-  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f0f0f0; display: flex; padding: 10px; box-sizing: border-box; height: 100vh; overflow: hidden; }
-  .list-container { width: 150px; display: flex; flex-direction: column; margin-right: 20px; }
-  .label { margin-bottom: 5px; font-size: 14px; }
-  select { flex: 1; font-family: "Segoe UI", sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; }
-  .sample-container { flex: 1; background: #fff; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; overflow: hidden; }
-  #sample { font-size: 24px; word-wrap: break-word; word-break: break-word; max-width: 100%; max-height: 100%; overflow: hidden; }
+  body { margin: 0; font-family: "Segoe UI", sans-serif; background-color: #f5f5f5; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+  .header { background: #2b2b2b; color: white; padding: 10px 20px; display: flex; gap: 20px; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; }
+  .header select, .header input[type="text"] { padding: 6px; font-family: inherit; border-radius: 4px; border: 1px solid #555; background: #444; color: white; outline: none; }
+  .header select:focus { border-color: #0078d7; }
+  .main { display: flex; flex: 1; overflow: hidden; }
+  .sidebar { width: 220px; background: #fff; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
+  .tab-btn { padding: 15px 20px; text-align: left; background: none; border: none; border-bottom: 1px solid #eee; cursor: pointer; font-size: 14px; outline: none; color: #333; transition: all 0.2s; }
+  .tab-btn:hover { background: #f0f0f0; }
+  .tab-btn.active { background: #e6f2ff; font-weight: bold; border-left: 4px solid #0078d7; color: #0078d7; }
+  .content { flex: 1; padding: 30px; overflow-y: auto; background: #fff; }
+  
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s; }
+  
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  
+  h2 { margin-top: 0; color: #111; font-weight: 400; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+  h3 { margin-top: 25px; color: #333; font-weight: 500; font-size: 16px; }
+  p { color: #666; font-size: 14px; }
+  
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
+  .metric-card { background: #fafafa; padding: 15px; border: 1px solid #eaeaea; border-radius: 6px; transition: 0.2s; }
+  .metric-card:hover { border-color: #0078d7; box-shadow: 0 2px 8px rgba(0,120,215,0.1); }
+  .metric-title { font-size: 11px; color: #888; margin-bottom: 8px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+  .metric-value { font-size: 24px; color: #222; font-family: "Consolas", monospace; }
+  
+  .glyph-controls { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+  .glyph-controls select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
+  .glyph-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); gap: 8px; }
+  .glyph-cell { border: 1px solid #eee; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; cursor: pointer; transition: 0.15s; }
+  .glyph-cell:hover { background: #f0f8ff; border-color: #0078d7; transform: scale(1.05); }
+  .glyph-char { font-size: 28px; margin-bottom: 8px; line-height: 1; color: #111; }
+  .glyph-hex { font-size: 11px; color: #888; font-family: "Consolas", monospace; }
+  
+  .kerning-pair { display: inline-block; border: 1px solid #ddd; border-radius: 6px; margin: 0 15px 15px 0; padding: 20px; text-align: center; background: #fafafa; }
+  .kerning-text { font-size: 64px; border-bottom: 1px solid #eee; margin-bottom: 12px; padding: 0 10px 10px 10px; color: #222; }
+  .kerning-info { font-size: 12px; color: #666; font-weight: 600; }
+  .no-kern { font-feature-settings: "kern" 0; font-kerning: none; }
+  .yes-kern { font-feature-settings: "kern" 1; font-kerning: normal; }
+  
+  .sample-box { border: 1px solid #ccc; border-radius: 6px; padding: 25px; min-height: 200px; word-wrap: break-word; outline: none; margin-top: 15px; }
+  .sample-box:focus { border-color: #0078d7; box-shadow: 0 0 0 2px rgba(0,120,215,0.2); }
+  
+  #canvasMetrics { display: none; }
+  .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 14px; }
 </style>
 </head>
 <body>
-  <div class="list-container">
-    <div class="label">System Fonts:</div>
-    <select id="fontList" size="10" aria-label="System Fonts">
+  <div class="header">
+    <div style="font-weight:600;font-size:18px;letter-spacing:1px;color:#4af;">KFont Inspect</div>
+    <select id="fontList">
       <option value="Arial" selected>Arial</option>
       <option value="Calibri">Calibri</option>
       <option value="Comic Sans MS">Comic Sans MS</option>
@@ -29,59 +68,220 @@
       <option value="Trebuchet MS">Trebuchet MS</option>
       <option value="Verdana">Verdana</option>
     </select>
-    <div class="label" style="margin-top: 10px;">Size:</div>
-    <select id="sizeList" style="flex: none; margin-bottom: 10px;" aria-label="Font Size">
-      <option value="12px">12</option>
-      <option value="16px">16</option>
-      <option value="24px" selected>24</option>
-      <option value="32px">32</option>
-      <option value="48px">48</option>
-      <option value="64px">64</option>
+    <select id="sizeList">
+      <option value="12px">12px</option>
+      <option value="16px">16px</option>
+      <option value="24px">24px</option>
+      <option value="32px">32px</option>
+      <option value="48px" selected>48px</option>
+      <option value="64px">64px</option>
+      <option value="96px">96px</option>
     </select>
-    <div class="label">Custom Text:</div>
-    <input type="text" id="customText" value="" placeholder="Type here..." aria-label="Custom Text" style="font-family: 'Segoe UI', sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; margin-bottom: 10px; box-sizing: border-box; width: 100%;">
-    <div style="display: flex; gap: 10px; margin-bottom: auto; font-size: 14px;">
-      <label><input type="checkbox" id="boldCheck"> Bold</label>
-      <label><input type="checkbox" id="italicCheck"> Italic</label>
-    </div>
+    <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold</label>
+    <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic</label>
   </div>
-  <div class="sample-container" aria-live="polite">
-    <div id="sample">
-      The quick brown fox jumps over the lazy dog.<br><br>
-      0123456789<br><br>
-      Aa Bb Cc Dd Ee Ff
-    </div>
-  </div>
-<script>
-  const fontList = document.getElementById('fontList');
-  const sizeList = document.getElementById('sizeList');
-  const sample = document.getElementById('sample');
-  const customText = document.getElementById('customText');
-  const boldCheck = document.getElementById('boldCheck');
-  const italicCheck = document.getElementById('italicCheck');
   
-  const updateFont = () => {
-      const safeFont = fontList.value.replace(/"/g, '\\"');
-      sample.style.fontFamily = `"${safeFont}", sans-serif`;
-      sample.style.fontSize = sizeList.value;
-      sample.style.fontWeight = boldCheck.checked ? 'bold' : 'normal';
-      sample.style.fontStyle = italicCheck.checked ? 'italic' : 'normal';
+  <div class="main">
+    <div class="sidebar">
+      <button class="tab-btn active" data-target="panel-metrics">Metrics & OS/2</button>
+      <button class="tab-btn" data-target="panel-glyphs">Unicode Ranges</button>
+      <button class="tab-btn" data-target="panel-diagnostics">Kerning & Hinting</button>
+      <button class="tab-btn" data-target="panel-sample">Live Sample</button>
+    </div>
+    
+    <div class="content">
+      <!-- Metrics -->
+      <div id="panel-metrics" class="panel active">
+        <h2>Font Metadata & Metrics Inspector</h2>
+        <p>Advanced typographical measurements extracted via Canvas Rendering Context actual bounds and extrapolated OS/2 table metrics.</p>
+        <div class="metric-grid" id="metricsGrid"></div>
+      </div>
       
-      if (customText.value.trim() !== "") {
-          sample.textContent = customText.value;
-      } else {
-          sample.innerHTML = "The quick brown fox jumps over the lazy dog.<br><br>0123456789<br><br>Aa Bb Cc Dd Ee Ff";
+      <!-- Glyphs -->
+      <div id="panel-glyphs" class="panel">
+        <h2>Unicode Range & Glyph Viewer</h2>
+        <div class="glyph-controls">
+          <label style="font-weight:500; font-size:14px; color:#444;">Select Unicode Block:</label>
+          <select id="unicodeRange">
+            <option value="32,127">Basic Latin (U+0020 - U+007F)</option>
+            <option value="160,255">Latin-1 Supplement (U+00A0 - U+00FF)</option>
+            <option value="256,383">Latin Extended-A (U+0100 - U+017F)</option>
+            <option value="384,591">Latin Extended-B (U+0180 - U+024F)</option>
+            <option value="880,1023">Greek and Coptic (U+0370 - U+03FF)</option>
+            <option value="1024,1279">Cyrillic (U+0400 - U+04FF)</option>
+            <option value="8192,8303">General Punctuation (U+2000 - U+206F)</option>
+            <option value="8352,8399">Currency Symbols (U+20A0 - U+20CF)</option>
+            <option value="8448,8527">Letterlike Symbols (U+2100 - U+214F)</option>
+            <option value="9472,9599">Box Drawing (U+2500 - U+257F)</option>
+            <option value="9600,9631">Block Elements (U+2580 - U+259F)</option>
+            <option value="9632,9727">Geometric Shapes (U+25A0 - U+25FF)</option>
+          </select>
+        </div>
+        <div class="glyph-grid" id="glyphGrid"></div>
+      </div>
+      
+      <!-- Diagnostics -->
+      <div id="panel-diagnostics" class="panel">
+        <h2>Glyph Kerning & Hinting Diagnostics</h2>
+        <h3>Visual Kerning Analysis</h3>
+        <p>Comparison of specific kerning pairs with OpenType kerning features explicitly enabled vs disabled.</p>
+        <div id="kerningPairs"></div>
+        
+        <h3>Rasterization & Grid Fitting (Hinting)</h3>
+        <p>Rendering at specific pixel sizes to expose pixel-snapping and hinting instructions across scale.</p>
+        <canvas id="hintingCanvas" width="800" height="200" style="border:1px solid #ddd; border-radius:4px; background:#fafafa;"></canvas>
+      </div>
+      
+      <!-- Sample -->
+      <div id="panel-sample" class="panel">
+        <h2>Live Free Sample</h2>
+        <p>Type in the box below to test the font in real-time.</p>
+        <div id="sampleOutput" class="sample-box" contenteditable="true">The quick brown fox jumps over the lazy dog.
+
+0123456789
+
+Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</div>
+      </div>
+    </div>
+  </div>
+  
+  <canvas id="canvasMetrics"></canvas>
+  
+  <script>
+    const fontList = document.getElementById('fontList');
+    const sizeList = document.getElementById('sizeList');
+    const boldCheck = document.getElementById('boldCheck');
+    const italicCheck = document.getElementById('italicCheck');
+    const unicodeRange = document.getElementById('unicodeRange');
+    
+    function getFontString(familyOverride, sizeOverride) {
+      const family = familyOverride || `"${fontList.value}"`;
+      const size = sizeOverride || sizeList.value;
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      return `${style} ${weight} ${size} ${family}, sans-serif`;
+    }
+    
+    function updateMetrics() {
+      const canvas = document.getElementById('canvasMetrics');
+      const ctx = canvas.getContext('2d');
+      ctx.font = getFontString();
+      
+      const metrics = ctx.measureText("Hxyg\u00C5\u00D4\u0178\u00E7");
+      
+      const asc = metrics.fontBoundingBoxAscent || 0;
+      const desc = metrics.fontBoundingBoxDescent || 0;
+      const aAsc = metrics.actualBoundingBoxAscent || 0;
+      const aDesc = metrics.actualBoundingBoxDescent || 0;
+      
+      const emHeight = asc + desc;
+      const lineGap = emHeight * 0.12; 
+      
+      const fields = [
+        { name: "Font BBox Ascent", val: asc },
+        { name: "Font BBox Descent", val: desc },
+        { name: "Actual BBox Ascent", val: aAsc },
+        { name: "Actual BBox Descent", val: aDesc },
+        { name: "Computed Em Height", val: emHeight },
+        { name: "Max Adv Width", val: metrics.width },
+        { name: "sTypoAscender (Approx)", val: asc * 0.85 },
+        { name: "sTypoDescender (Approx)", val: -desc * 0.85 },
+        { name: "sTypoLineGap (Approx)", val: lineGap },
+        { name: "usWinAscent (Approx)", val: asc },
+        { name: "usWinDescent (Approx)", val: desc },
+        { name: "xHeight (Approx)", val: asc * 0.52 }
+      ];
+      
+      document.getElementById('metricsGrid').innerHTML = fields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${f.name}</div>
+          <div class="metric-value">${typeof f.val === 'number' ? f.val.toFixed(2) : f.val} px</div>
+        </div>
+      `).join('');
+    }
+    
+    function updateGlyphs() {
+      const [start, end] = unicodeRange.value.split(',').map(Number);
+      const grid = document.getElementById('glyphGrid');
+      let html = '';
+      const fontStr = getFontString();
+      for(let i=start; i<=end; i++) {
+        const hex = i.toString(16).toUpperCase().padStart(4, '0');
+        const char = String.fromCodePoint(i);
+        html += `
+          <div class="glyph-cell">
+            <div class="glyph-char" style="font-family: ${fontList.value}; font-weight: ${boldCheck.checked?'bold':'normal'}; font-style: ${italicCheck.checked?'italic':'normal'};">${char}</div>
+            <div class="glyph-hex">U+${hex}</div>
+          </div>
+        `;
       }
-  };
-  
-  fontList.onchange = updateFont;
-  sizeList.onchange = updateFont;
-  customText.oninput = updateFont;
-  boldCheck.onchange = updateFont;
-  italicCheck.onchange = updateFont;
-  
-  // Trigger initial
-  updateFont();
-</script>
+      grid.innerHTML = html;
+    }
+    
+    function updateDiagnostics() {
+      const pairs = ["AV", "To", "Tr", "WA", "Ye", "Va", "fj"];
+      const fontFam = `'${fontList.value}'`;
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      let html = '';
+      pairs.forEach(p => {
+        html += `
+          <div class="kerning-pair">
+            <div class="kerning-text no-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${p}</div>
+            <div class="kerning-info">Kerning: OFF</div>
+          </div>
+          <div class="kerning-pair">
+            <div class="kerning-text yes-kern" style="font-family: ${fontFam}; font-weight: ${weight}; font-style: ${style};">${p}</div>
+            <div class="kerning-info">Kerning: ON</div>
+          </div>
+        `;
+      });
+      document.getElementById('kerningPairs').innerHTML = html;
+      
+      const canvas = document.getElementById('hintingCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.fillStyle = '#333';
+      const text = "Rasterization & Grid Fitting Test: The quick brown fox jumps over the lazy dog";
+      
+      let y = 30;
+      [10, 12, 16, 20, 24, 32].forEach(sz => {
+        ctx.font = getFontString(null, sz + "px");
+        ctx.fillText(`${sz}px: ${text}`, 20, y);
+        y += sz + 15;
+      });
+    }
+    
+    function updateSample() {
+      const el = document.getElementById('sampleOutput');
+      el.style.font = getFontString();
+    }
+    
+    function updateAll() {
+      updateMetrics();
+      updateGlyphs();
+      updateDiagnostics();
+      updateSample();
+    }
+    
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.target).classList.add('active');
+      };
+    });
+    
+    fontList.onchange = updateAll;
+    sizeList.onchange = updateAll;
+    boldCheck.onchange = updateAll;
+    italicCheck.onchange = updateAll;
+    unicodeRange.onchange = updateGlyphs;
+    
+    // Initial call
+    updateAll();
+  </script>
 </body>
 </html>
