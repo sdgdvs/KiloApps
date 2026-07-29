@@ -241,6 +241,8 @@ typedef struct {
     int puzzleSolvedCount;  // Puzzles solved count
     int puzzleHighScore;    // Puzzle High Score
     int soundEnabled;       // 1 = Sound Enabled, 0 = Muted
+    int showHelpModal;      // 1 = Help Modal Overlay active, 0 = inactive
+    int helpActiveTab;      // 0 = How to Play, 1 = Element Tiers, 2 = Lab Controls, 3 = Alchemy Lore
     char lastStatus[128];
     char searchFilter[64];
 } AlchemyState;
@@ -272,6 +274,9 @@ static HWND g_hPrevButton = NULL;
 static HWND g_hNextButton = NULL;
 static HWND g_hPageText = NULL;
 static HWND g_hSoundButton = NULL;
+static HWND g_hHelpButton = NULL;
+static HWND g_hHelpTabButtons[4] = { NULL };
+static HWND g_hHelpCloseButton = NULL;
 
 static HBRUSH hBgBrush = NULL;
 static HBRUSH hPanelBrush = NULL;
@@ -488,6 +493,54 @@ static void GenerateQuest(int slotIdx) {
 }
 
 static void UpdateEquipmentUI(HWND hwnd) {
+    if (g_State.showHelpModal) {
+        for (int t = 0; t < 4; t++) {
+            if (g_hHelpTabButtons[t]) ShowWindow(g_hHelpTabButtons[t], SW_SHOW);
+        }
+        if (g_hHelpCloseButton) ShowWindow(g_hHelpCloseButton, SW_SHOW);
+
+        for (int k = 0; k < GRID_SIZE; k++) if (g_hGridButtons[k]) ShowWindow(g_hGridButtons[k], SW_HIDE);
+        for (int t = 0; t <= TOTAL_TIERS; t++) if (g_hTierButtons[t]) ShowWindow(g_hTierButtons[t], SW_HIDE);
+        for (int e = 0; e < 8; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_HIDE);
+        for (int m = 0; m < 3; m++) if (g_hModeButtons[m]) ShowWindow(g_hModeButtons[m], SW_HIDE);
+        if (g_hBlitzStartButton) ShowWindow(g_hBlitzStartButton, SW_HIDE);
+        if (g_hPuzzleSkipButton) ShowWindow(g_hPuzzleSkipButton, SW_HIDE);
+        if (g_hSoundButton) ShowWindow(g_hSoundButton, SW_HIDE);
+        if (g_hHelpButton) ShowWindow(g_hHelpButton, SW_HIDE);
+        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
+        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
+        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
+        if (g_hAutoFillButton) ShowWindow(g_hAutoFillButton, SW_HIDE);
+        if (g_hSearchEdit) ShowWindow(g_hSearchEdit, SW_HIDE);
+        if (g_hJournalEdit) ShowWindow(g_hJournalEdit, SW_HIDE);
+        if (g_hPrevButton) ShowWindow(g_hPrevButton, SW_HIDE);
+        if (g_hNextButton) ShowWindow(g_hNextButton, SW_HIDE);
+        if (g_hPageText) ShowWindow(g_hPageText, SW_HIDE);
+        if (g_hQuestRerollButton) ShowWindow(g_hQuestRerollButton, SW_HIDE);
+        for (int c = 0; c < 3; c++) if (g_hCodexFilterBtns[c]) ShowWindow(g_hCodexFilterBtns[c], SW_HIDE);
+        for (int p = 0; p < 4; p++) if (g_hPotionDrinkButtons[p]) ShowWindow(g_hPotionDrinkButtons[p], SW_HIDE);
+        for (int q = 0; q < 3; q++) if (g_hQuestTurnInButtons[q]) ShowWindow(g_hQuestTurnInButtons[q], SW_HIDE);
+        for (int u = 0; u < 4; u++) if (g_hUpgradeButtons[u]) ShowWindow(g_hUpgradeButtons[u], SW_HIDE);
+        return;
+    } else {
+        for (int t = 0; t < 4; t++) {
+            if (g_hHelpTabButtons[t]) ShowWindow(g_hHelpTabButtons[t], SW_HIDE);
+        }
+        if (g_hHelpCloseButton) ShowWindow(g_hHelpCloseButton, SW_HIDE);
+
+        for (int t = 0; t <= TOTAL_TIERS; t++) if (g_hTierButtons[t]) ShowWindow(g_hTierButtons[t], SW_SHOW);
+        for (int e = 0; e < 8; e++) if (g_hEquipButtons[e]) ShowWindow(g_hEquipButtons[e], SW_SHOW);
+        for (int m = 0; m < 3; m++) if (g_hModeButtons[m]) ShowWindow(g_hModeButtons[m], SW_SHOW);
+        if (g_hSoundButton) ShowWindow(g_hSoundButton, SW_SHOW);
+        if (g_hHelpButton) ShowWindow(g_hHelpButton, SW_SHOW);
+        if (g_hSearchEdit) ShowWindow(g_hSearchEdit, SW_SHOW);
+        if (g_hJournalEdit) ShowWindow(g_hJournalEdit, SW_SHOW);
+        if (g_hPrevButton) ShowWindow(g_hPrevButton, SW_SHOW);
+        if (g_hNextButton) ShowWindow(g_hNextButton, SW_SHOW);
+        if (g_hPageText) ShowWindow(g_hPageText, SW_SHOW);
+        UpdateGrimoireGrid();
+    }
+
     int isQuests = (g_State.selectedEquipment == 4);
     int isWorkshop = (g_State.selectedEquipment == 5);
     int isBrewing = (g_State.selectedEquipment == 6);
@@ -506,16 +559,6 @@ static void UpdateEquipmentUI(HWND hwnd) {
 
     for (int cb = 0; cb < 3; cb++) {
         if (g_hCodexFilterBtns[cb]) ShowWindow(g_hCodexFilterBtns[cb], isCodex ? SW_SHOW : SW_HIDE);
-    }
-
-    if (isQuests || isWorkshop) {
-        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_HIDE);
-        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_HIDE);
-        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_HIDE);
-    } else {
-        if (g_hSlot1Button) ShowWindow(g_hSlot1Button, SW_SHOW);
-        if (g_hSlot2Button) ShowWindow(g_hSlot2Button, SW_SHOW);
-        if (g_hMainActionButton) ShowWindow(g_hMainActionButton, SW_SHOW);
     }
 
     if (g_hAutoFillButton) {
@@ -586,6 +629,7 @@ static void UpdateEquipmentUI(HWND hwnd) {
                 }
             }
         }
+    } else {
         for (int u = 0; u < 4; u++) {
             if (g_hUpgradeButtons[u]) ShowWindow(g_hUpgradeButtons[u], SW_HIDE);
         }
@@ -628,6 +672,8 @@ static void InitGameState() {
     g_State.puzzleSolvedCount = 0;
     g_State.puzzleHighScore = 0;
     g_State.soundEnabled = 1;
+    g_State.showHelpModal = 0;
+    g_State.helpActiveTab = 0;
     lstrcpyA(g_State.lastStatus, "Transmutation Crucible Ready");
     g_State.searchFilter[0] = '\0';
     for (int q = 0; q < 3; q++) {
@@ -710,7 +756,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             g_hBlitzStartButton = CreateWindowA("BUTTON", "▶️ Start", WS_CHILD | BS_PUSHBUTTON, 409, 70, 50, 22, hwnd, (HMENU)1203, NULL, NULL);
             g_hPuzzleSkipButton = CreateWindowA("BUTTON", "🔄 Skip", WS_CHILD | BS_PUSHBUTTON, 409, 70, 50, 22, hwnd, (HMENU)1204, NULL, NULL);
-            g_hSoundButton = CreateWindowA("BUTTON", "🔊 ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 461, 70, 48, 22, hwnd, (HMENU)1300, NULL, NULL);
+            g_hSoundButton = CreateWindowA("BUTTON", "🔊 ON", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 451, 70, 48, 22, hwnd, (HMENU)1300, NULL, NULL);
+            g_hHelpButton = CreateWindowA("BUTTON", "📘 Manual", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 502, 70, 56, 22, hwnd, (HMENU)1400, NULL, NULL);
+
+            // Help Modal Tab Buttons & Close Button (Initially hidden)
+            g_hHelpTabButtons[0] = CreateWindowA("BUTTON", "🎮 How to Play", WS_CHILD | BS_PUSHBUTTON, 35, 55, 110, 26, hwnd, (HMENU)1401, NULL, NULL);
+            g_hHelpTabButtons[1] = CreateWindowA("BUTTON", "📊 Element Tiers", WS_CHILD | BS_PUSHBUTTON, 150, 55, 110, 26, hwnd, (HMENU)1402, NULL, NULL);
+            g_hHelpTabButtons[2] = CreateWindowA("BUTTON", "⚗️ Lab Controls", WS_CHILD | BS_PUSHBUTTON, 265, 55, 110, 26, hwnd, (HMENU)1403, NULL, NULL);
+            g_hHelpTabButtons[3] = CreateWindowA("BUTTON", "📜 Alchemy Lore", WS_CHILD | BS_PUSHBUTTON, 380, 55, 110, 26, hwnd, (HMENU)1404, NULL, NULL);
+            g_hHelpCloseButton = CreateWindowA("BUTTON", "✕ Close Manual", WS_CHILD | BS_PUSHBUTTON, 640, 55, 105, 26, hwnd, (HMENU)1405, NULL, NULL);
 
             // Laboratory Equipment Nav Buttons
             g_hEquipButtons[0] = CreateWindowA("BUTTON", "Crucible", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 276, 96, 33, 22, hwnd, (HMENU)700, NULL, NULL);
@@ -771,6 +825,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
 
+        case WM_KEYDOWN: {
+            int key = (int)wParam;
+            if (key == VK_ESCAPE) {
+                if (g_State.showHelpModal) {
+                    g_State.showHelpModal = 0;
+                    UpdateEquipmentUI(hwnd);
+                    PlayGlassClink();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (key == 'H' || key == 'h') {
+                g_State.showHelpModal = !g_State.showHelpModal;
+                UpdateEquipmentUI(hwnd);
+                PlayGlassClink();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (!g_State.showHelpModal) {
+                if (key == 'C' || key == 'c') {
+                    g_State.slot1 = -1;
+                    g_State.slot2 = -1;
+                    UpdateSlotButtonText();
+                    PlayGlassClink();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (key == 'A' || key == 'a') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(904, 0), 0);
+                } else if (key >= '0' && key <= '5') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(500 + (key - '0'), 0), 0);
+                }
+            }
+            break;
+        }
+
         case WM_TIMER: {
             int changed = 0;
             if (g_State.buffStrengthTimer > 0) { g_State.buffStrengthTimer--; changed = 1; }
@@ -807,8 +891,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int id = LOWORD(wParam);
             int code = HIWORD(wParam);
 
+            // Open / Toggle Help Modal (1400)
+            if (id == 1400) {
+                g_State.showHelpModal = !g_State.showHelpModal;
+                UpdateEquipmentUI(hwnd);
+                PlayGlassClink();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Switch Help Modal Tabs (1401..1404)
+            else if (id >= 1401 && id <= 1404) {
+                g_State.helpActiveTab = id - 1401;
+                PlayGlassClink();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            // Close Help Modal (1405)
+            else if (id == 1405) {
+                g_State.showHelpModal = 0;
+                UpdateEquipmentUI(hwnd);
+                PlayGlassClink();
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
             // Search filter edit box changed
-            if (id == 401 && code == EN_CHANGE) {
+            else if (id == 401 && code == EN_CHANGE) {
                 GetWindowTextA(g_hSearchEdit, g_State.searchFilter, sizeof(g_State.searchFilter));
                 g_State.currentPage = 0;
                 UpdateGrimoireGrid();
@@ -1950,6 +2054,157 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SelectObject(hdc, hHeaderFont);
             SetTextColor(hdc, RGB(243, 156, 18));
             TextOutA(hdc, 535, 74, "Alchemist's Journal", 19);
+
+            // Phase 14: Grandmaster Help & Manual Modal Overlay Drawing
+            if (g_State.showHelpModal) {
+                RECT modalBg = { 20, 20, 765, 523 };
+                FillRect(hdc, &modalBg, hBgBrush);
+
+                HGDIOBJ oldP = SelectObject(hdc, hGoldPen);
+                Rectangle(hdc, modalBg.left, modalBg.top, modalBg.right, modalBg.bottom);
+                SelectObject(hdc, hPurplePen);
+                Rectangle(hdc, modalBg.left + 2, modalBg.top + 2, modalBg.right - 2, modalBg.bottom - 2);
+
+                SelectObject(hdc, hTitleFont);
+                SetTextColor(hdc, RGB(243, 156, 18));
+                TextOutA(hdc, 35, 26, "GRANDMASTER ALCHEMY MANUAL & LAB REFERENCE", 42);
+
+                SelectObject(hdc, hBadgeFont);
+                SetTextColor(hdc, RGB(176, 92, 219));
+                TextOutA(hdc, 500, 30, "Arcane Knowledge Codex", 22);
+
+                // Tab Separator Line
+                SelectObject(hdc, hGoldPen);
+                MoveToEx(hdc, 25, 87, NULL);
+                LineTo(hdc, 760, 87);
+
+                SelectObject(hdc, hUIFont);
+                SetTextColor(hdc, RGB(226, 232, 240));
+
+                if (g_State.helpActiveTab == 0) { // How to Play
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 98, "Core Alchemy Loop & Transmutation Rules:", 41);
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 122, "1. Select Slot 1 and Slot 2 from your Elemental Grimoire.", 57);
+                    TextOutA(hdc, 35, 140, "2. Click 'Transmute Elements' to forge new compounds in the Crucible.", 69);
+                    TextOutA(hdc, 35, 158, "3. Discovered elements unlock permanently across 5 Alchemical Tiers.", 67);
+                    TextOutA(hdc, 35, 176, "4. Failed combinations yield Slag or Smoke (+5 Arcane Dust research bonus).", 74);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 205, "Laboratory Equipment & Workstations:", 36);
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 228, "• Crucible: Standard 2-element synthesis vessel.", 48);
+                    TextOutA(hdc, 35, 246, "• Retort: Purifies elements into Arcane Essence & Dust.", 55);
+                    TextOutA(hdc, 35, 264, "• Alembic: Distills magical reagents into potent elixirs.", 56);
+                    TextOutA(hdc, 35, 282, "• Anvil: Shatters high-tier artifacts into base components.", 58);
+                    TextOutA(hdc, 35, 300, "• Quests: Fulfill Guild patron orders for Gold & XP rewards.", 58);
+                    TextOutA(hdc, 35, 318, "• Shop: Upgrade lab equipment capacity & unlock Auto-Sorter.", 59);
+                    TextOutA(hdc, 35, 336, "• Potions: Consume elixirs for temporary yield & XP boosts.", 57);
+                    TextOutA(hdc, 35, 354, "• Codex: Comprehensive elemental directory with full recipes & lore.", 67);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 385, "Challenge Game Modes & Alchemist's Oracle:", 42);
+
+                    SelectObject(hdc, hUIFont);
+                    SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 408, "• Classic: Sandbox element discovery at your own pace.", 54);
+                    TextOutA(hdc, 35, 426, "• Timed Blitz: 60-second speed challenge to rack up high scores!", 64);
+                    TextOutA(hdc, 35, 444, "• Puzzle Crucible: Synthesize target elements in minimum moves.", 63);
+                    TextOutA(hdc, 35, 462, "• Oracle: Spend Arcane Dust for Vague Hints (20 Dust) or Vision (50 Dust).", 72);
+
+                } else if (g_State.helpActiveTab == 1) { // Element Tiers Guide
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(52, 152, 219));
+                    TextOutA(hdc, 35, 98, "Tier 1 — Primordial Basics (4 Elements)", 39);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 120, "Fire, Water, Earth, Air — Natural building blocks provided at apprenticeship start.", 82);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(46, 204, 113));
+                    TextOutA(hdc, 35, 155, "Tier 2 — Nature & Raw Resources (10 Elements)", 45);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 178, "Steam, Mud, Lava, Dust, Energy, Rain, Plant, Metal, Pressure, Stone.", 68);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(230, 126, 34));
+                    TextOutA(hdc, 35, 215, "Tier 3 — Metallurgy & Crafting Reagents (14 Elements)", 53);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 238, "Glass, Steel, Life, Lightning, Firestorm, Clay, Charcoal, Cloud, etc.", 69);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(155, 89, 182));
+                    TextOutA(hdc, 35, 275, "Tier 4 — Arcane Transmutations (16 Elements)", 44);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 298, "Golem, Electricity, Crystal, Magma Orb, Phoenix, Mana Core, etc.", 64);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 335, "Tier 5 — Celestial Apex Artifacts (12 Elements)", 47);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 358, "Philosopher's Stone, Elixir of Life, Celestial Star, Primal Void, Cosmarch Orb.", 79);
+
+                } else if (g_State.helpActiveTab == 2) { // Lab Controls Reference
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 98, "Mouse & Workstation Controls:", 29);
+
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 122, "• Click Grimoire Element: Auto-loads element into active Crucible slot.", 70);
+                    TextOutA(hdc, 35, 142, "• Click Slot 1 / Slot 2: Clears element from that slot.", 55);
+                    TextOutA(hdc, 35, 162, "• Auto-Fill Button: (Requires Auto-Sorter) Loads valid missing recipe.", 70);
+                    TextOutA(hdc, 35, 182, "• Sound Button: Click top 'ON' / 'OFF' button to toggle audio FX.", 64);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 222, "Keyboard Shortcuts Reference:", 29);
+
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 246, "[1] - [5]  : Switch Tier Filters (T1 to T5)", 42);
+                    TextOutA(hdc, 35, 269, "[0]        : Show All Grimoire Elements", 38);
+                    TextOutA(hdc, 35, 292, "[C]        : Clear Crucible Slots", 33);
+                    TextOutA(hdc, 35, 315, "[A]        : Trigger Auto-Sorter Fill", 37);
+                    TextOutA(hdc, 35, 338, "[H]        : Open / Toggle Grandmaster Manual", 45);
+                    TextOutA(hdc, 35, 361, "[ESC]      : Close Manual Overlay", 33);
+
+                } else if (g_State.helpActiveTab == 3) { // Alchemy Lore Encyclopedia
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 98, "The Dawn of the Great Synthesis:", 31);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 120, "In the dawn of creation, the Primal Tetrahedron split into Fire, Water, Earth, and Air.", 86);
+                    TextOutA(hdc, 35, 138, "Alchemists discovered that all physical matter is but a transient state awaiting elevation.", 91);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 175, "The Guild of Grandmaster Alchemists:", 35);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 198, "Founded in the Citadel of Aethelgard, the Guild maps all 56 Sacred Reagents across 5 Tiers.", 90);
+                    TextOutA(hdc, 35, 216, "Only those who forge the Philosopher's Stone attain the supreme rank of Grandmaster.", 84);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 255, "The Law of Equivalent Harmonics:", 31);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 278, "No essence is lost during synthesis. When two reagents react in harmonic resonance,", 83);
+                    TextOutA(hdc, 35, 296, "their molecular structures realign, yielding a higher compound and Arcane Dust.", 79);
+
+                    SelectObject(hdc, hHeaderFont);
+                    SetTextColor(hdc, RGB(241, 196, 15));
+                    TextOutA(hdc, 35, 335, "Secrets of Apex Celestial Reagents:", 34);
+                    SelectObject(hdc, hUIFont); SetTextColor(hdc, RGB(226, 232, 240));
+                    TextOutA(hdc, 35, 358, "Tier 5 Reagents transcend earthly physical matter, fusing physical essence with cosmic soul", 92);
+                    TextOutA(hdc, 35, 376, "energy to produce artifacts capable of reshaping reality.", 57);
+                }
+
+                SelectObject(hdc, oldP);
+            }
 
             EndPaint(hwnd, &ps);
             break;

@@ -1559,6 +1559,175 @@
       transform: scale(1.05);
       box-shadow: 0 0 14px rgba(243, 156, 18, 0.6);
     }
+
+    /* Phase 14: Grandmaster Help Modal Overlay & Tabs */
+    .help-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(4, 4, 12, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .help-modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .help-modal-card {
+      background: linear-gradient(145deg, #16152e 0%, #0d0c1d 100%);
+      border: 2px solid var(--accent-gold);
+      border-radius: 16px;
+      padding: 24px;
+      width: 92%;
+      max-width: 720px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 40px var(--glow-gold);
+      position: relative;
+      transform: scale(0.92);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .help-modal-overlay.show .help-modal-card {
+      transform: scale(1);
+    }
+
+    .help-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+    }
+
+    .help-modal-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      text-shadow: 0 0 12px rgba(243, 156, 18, 0.4);
+    }
+
+    .help-tab-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      overflow-x: auto;
+    }
+
+    .help-tab-btn {
+      background: rgba(15, 16, 33, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .help-tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .help-tab-btn.active {
+      background: linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(155, 89, 182, 0.25));
+      color: var(--accent-gold-light);
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 10px rgba(243, 156, 18, 0.3);
+    }
+
+    .help-tab-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 6px;
+      line-height: 1.6;
+      font-size: 0.88rem;
+      color: var(--text-main);
+    }
+
+    .help-section {
+      display: none;
+    }
+
+    .help-section.active {
+      display: block;
+      animation: fadeInHelp 0.25s ease-in-out;
+    }
+
+    @keyframes fadeInHelp {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .help-card-box {
+      background: rgba(9, 9, 20, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .help-card-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--accent-gold-light);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .help-grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .help-list-item {
+      margin-bottom: 8px;
+      padding-left: 18px;
+      position: relative;
+    }
+
+    .help-list-item::before {
+      content: '✦';
+      position: absolute;
+      left: 0;
+      color: var(--accent-gold);
+      font-size: 0.75rem;
+    }
+
+    .key-badge {
+      background: rgba(155, 89, 182, 0.2);
+      border: 1px solid var(--accent-purple);
+      color: var(--accent-gold-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
@@ -1610,6 +1779,9 @@
       <div class="stat-badge">
         <span class="label">Puzzle Best:</span>
         <span class="val" id="stat-puzzle-high">0</span>
+      </div>
+      <div class="stat-badge" style="cursor:pointer; background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(243, 156, 18, 0.3)); border-color: var(--accent-gold-light);" onclick="openHelpModal()" title="Open Grandmaster Manual & Help">
+        <span class="label" style="color:var(--accent-gold-light)">📘 Manual</span>
       </div>
     </div>
   </header>
@@ -3559,6 +3731,56 @@
       if (modal) modal.classList.remove('show');
     }
 
+    /* Phase 14: Grandmaster Manual & Help Modal Functions */
+    function openHelpModal(tab = 'howtoplay') {
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal) {
+        modal.classList.add('show');
+        switchHelpTab(tab);
+        playChime(550, 'sine', 0.15);
+      }
+    }
+
+    function closeHelpModal(evt) {
+      if (evt && evt.target && evt.target.id !== 'help-modal-overlay' && !evt.target.classList.contains('codex-modal-close')) return;
+      const modal = document.getElementById('help-modal-overlay');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function switchHelpTab(tabName) {
+      const tabs = document.querySelectorAll('.help-tab-btn');
+      const sections = document.querySelectorAll('.help-section');
+      tabs.forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tabName);
+      });
+      sections.forEach(s => {
+        s.classList.toggle('active', s.id === `help-sec-${tabName}`);
+      });
+    }
+
+    // Keyboard Shortcuts
+    document.addEventListener('keydown', (evt) => {
+      if (evt.target.tagName === 'INPUT' || evt.target.tagName === 'TEXTAREA') return;
+      const key = evt.key.toLowerCase();
+      if (key === 'h' || key === '?') {
+        const modal = document.getElementById('help-modal-overlay');
+        if (modal && modal.classList.contains('show')) {
+          closeHelpModal();
+        } else {
+          openHelpModal();
+        }
+      } else if (key === 'escape') {
+        closeHelpModal();
+        closeCodexModal();
+      } else if (key === 'c') {
+        clearCrucible();
+      } else if (key === 'a') {
+        autoFillCrucible();
+      } else if (key >= '0' && key <= '5') {
+        setTierFilter(parseInt(key, 10));
+      }
+    });
+
     // Initialize
     loadState();
     updateStats();
@@ -3573,6 +3795,154 @@
       <button class="codex-modal-close" onclick="closeCodexModal()">✕</button>
       <div id="codex-modal-content">
         <!-- Injected by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Phase 14: Grandmaster Help & Manual Modal Overlay -->
+  <div class="help-modal-overlay" id="help-modal-overlay" onclick="closeHelpModal(event)">
+    <div class="help-modal-card" onclick="event.stopPropagation()">
+      <button class="codex-modal-close" onclick="closeHelpModal()">✕</button>
+      <div class="help-modal-header">
+        <div class="help-modal-title">
+          <span style="font-size:1.6rem">📘</span>
+          <div>
+            <div>Grandmaster Alchemy Manual</div>
+            <div style="font-size:0.75rem; color:var(--accent-purple-glow); font-weight:600; text-transform:uppercase; letter-spacing:1px">Arcane Laboratory & Transmutation Reference</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="help-tab-bar">
+        <button class="help-tab-btn active" data-tab="howtoplay" onclick="switchHelpTab('howtoplay')">🎮 How to Play</button>
+        <button class="help-tab-btn" data-tab="tiers" onclick="switchHelpTab('tiers')">📊 Element Tiers</button>
+        <button class="help-tab-btn" data-tab="controls" onclick="switchHelpTab('controls')">⚗️ Lab Controls</button>
+        <button class="help-tab-btn" data-tab="lore" onclick="switchHelpTab('lore')">📜 Alchemy Lore</button>
+      </div>
+
+      <div class="help-tab-content">
+        <!-- Section 1: How to Play -->
+        <div class="help-section active" id="help-sec-howtoplay">
+          <div class="help-card-box">
+            <div class="help-card-title">🧪 Core Alchemy Loop</div>
+            <p>Welcome, Apprentice! Your goal is to uncover all 56 hidden elements across 5 alchemical tiers by combining reagents in your lab crucible.</p>
+            <div style="margin-top:8px">
+              <div class="help-list-item">Select <strong>Slot 1</strong> and <strong>Slot 2</strong> from your Grimoire on the left panel.</div>
+              <div class="help-list-item">Click <strong>✨ Transmute Elements</strong> to perform synthesis.</div>
+              <div class="help-list-item">If successful, a new element will be permanently unlocked and added to your Grimoire!</div>
+              <div class="help-list-item">Failure yields <strong>Slag</strong> or <strong>Smoke</strong> while granting <strong>+5 Arcane Dust</strong>.</div>
+            </div>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title">🔬 Laboratory Equipment Navigation</div>
+            <div class="help-grid-2col">
+              <div>
+                <div class="help-list-item"><strong>🫕 Crucible:</strong> Primary 2-element synthesis chamber.</div>
+                <div class="help-list-item"><strong>⚗️ Retort:</strong> Purifies elements into Arcane Essence & Dust.</div>
+                <div class="help-list-item"><strong>🧪 Alembic:</strong> Distills potent magic reagents.</div>
+                <div class="help-list-item"><strong>🔨 Anvil:</strong> Crushes high-tier items back to base components.</div>
+              </div>
+              <div>
+                <div class="help-list-item"><strong>📜 Quests:</strong> Fulfill Guild orders for Gold & Guild XP.</div>
+                <div class="help-list-item"><strong>🧙 Workshop:</strong> Upgrade lab tools & unlock Auto-Sorter.</div>
+                <div class="help-list-item"><strong>🥣 Potions:</strong> Brew elixirs for temporary yield & XP boosts.</div>
+                <div class="help-list-item"><strong>📖 Codex:</strong> Inspect detailed recipes, lore & craft metrics.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title">⚡ Challenge Game Modes</div>
+            <div class="help-list-item"><strong>🧪 Classic Mode:</strong> Unrestricted sandbox discovery and lab progression.</div>
+            <div class="help-list-item"><strong>⚡ Timed Blitz:</strong> 60-second speed challenge! Discover compounds before time expires to build high scores.</div>
+            <div class="help-list-item"><strong>🧩 Puzzle Crucible:</strong> Synthesize specific target elements in minimum moves for extra rewards.</div>
+          </div>
+        </div>
+
+        <!-- Section 2: Element Tiers Guide -->
+        <div class="help-section" id="help-sec-tiers">
+          <div class="help-card-box">
+            <div class="help-card-title" style="color:var(--tier-1-color)">🌊 Tier 1 — Primordial Basic Elements</div>
+            <p><strong>Elements (4):</strong> Fire 🔥, Water 💧, Earth 🌍, Air 💨</p>
+            <p style="margin-top:4px; color:var(--text-muted)">The fundamental building blocks of creation. Available from the start of your apprenticeship.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title" style="color:var(--tier-2-color)">🌿 Tier 2 — Nature & Raw Resources</div>
+            <p><strong>Elements (10):</strong> Steam ♨️, Mud 💩, Lava 🌋, Dust 🌫️, Energy ⚡, Rain 🌧️, Plant 🌿, Metal ⚙️, Pressure 🗜️, Stone 🪨</p>
+            <p style="margin-top:4px; color:var(--text-muted)">Crafted directly by combining two Primordial T1 elements. Forms natural phenomena and mineral deposits.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title" style="color:var(--tier-3-color)">🛡️ Tier 3 — Metallurgy & Crafting Reagents</div>
+            <p><strong>Elements (14):</strong> Glass 🥛, Steel 🛡️, Life 🧬, Lightning 🌩️, Firestorm 🌪️, Clay 🏺, Charcoal 🪵, Cloud ☁️, etc.</p>
+            <p style="margin-top:4px; color:var(--text-muted)">Forged through intense heat, biological crystallization, and industrial processing.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title" style="color:var(--tier-4-color)">🔮 Tier 4 — Arcane Transmutations</div>
+            <p><strong>Elements (16):</strong> Golem 🗿, Electricity 🔋, Crystal 💎, Magma Orb 🔮, Phoenix 🐦‍羽, Mana Core 🧿, etc.</p>
+            <p style="margin-top:4px; color:var(--text-muted)">High-tier enchanted compounds requiring rare T2 & T3 ingredients and alchemical precision.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title" style="color:var(--tier-5-color)">🌟 Tier 5 — Celestial Apex Artifacts</div>
+            <p><strong>Elements (12):</strong> Philosopher's Stone 💎✨, Elixir of Life 🧪💫, Celestial Star 🌟, Primal Void 🌌, Cosmarch Orb 🪐, etc.</p>
+            <p style="margin-top:4px; color:var(--text-muted)">The pinnacle of transmutation. Forged only by Master Alchemists possessing ancient recipes.</p>
+          </div>
+        </div>
+
+        <!-- Section 3: Lab Controls Reference -->
+        <div class="help-section" id="help-sec-controls">
+          <div class="help-card-box">
+            <div class="help-card-title">🖱️ Mouse & UI Controls</div>
+            <div class="help-list-item"><strong>Click Element Card:</strong> Auto-loads the element into the active Crucible slot.</div>
+            <div class="help-list-item"><strong>Click Crucible Slot:</strong> Clears the selected element from that slot.</div>
+            <div class="help-list-item"><strong>⚡ Auto-Fill Button:</strong> (Unlocked via Workshop Auto-Sorter Lvl 1+) Scans your Grimoire and automatically places valid missing recipe pairs into the Crucible!</div>
+            <div class="help-list-item"><strong>🔮 Oracle & Research:</strong> Spend Arcane Dust to request a Vague Hint (20 Dust) or Oracle Vision (50 Dust).</div>
+            <div class="help-list-item"><strong>🔊 Audio Toggle:</strong> Click header badge to mute or restore laboratory sound effects.</div>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title">⌨️ Keyboard Shortcuts</div>
+            <div class="help-grid-2col">
+              <div>
+                <div class="help-list-item"><span class="key-badge">1</span> - <span class="key-badge">5</span> Switch Tier Filters (T1 - T5)</div>
+                <div class="help-list-item"><span class="key-badge">0</span> Show All Elements</div>
+                <div class="help-list-item"><span class="key-badge">C</span> Clear Crucible Slots</div>
+              </div>
+              <div>
+                <div class="help-list-item"><span class="key-badge">A</span> Trigger Auto-Fill (if unlocked)</div>
+                <div class="help-list-item"><span class="key-badge">H</span> Open Grandmaster Manual</div>
+                <div class="help-list-item"><span class="key-badge">ESC</span> Close Modals / Help Overlay</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: Alchemy Lore Encyclopedia -->
+        <div class="help-section" id="help-sec-lore">
+          <div class="help-card-box">
+            <div class="help-card-title">📜 The Dawn of the Great Synthesis</div>
+            <p>Before kingdoms arose and magic was codified into spells, the primordial cosmos existed as a swirling vortex of raw chaos. Four Great Spirits channeled the chaos into Fire, Water, Earth, and Air — establishing the physical foundation of the world.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title">🏰 The Guild of Grandmaster Alchemists</div>
+            <p>Founded centuries ago in the Citadel of Aethelgard, the Guild seeks to unlock the secrets of universal transfiguration. Guild members dedicate their lives to mapping the 56 Sacred Reagents and constructing the ultimate catalyst: The Philosopher's Stone.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title">⚖️ The Law of Equivalent Harmonics</div>
+            <p>Matter is never destroyed in the Crucible. When two elements combine under harmonic resonance, their molecular structures realign, elevating the compound into a higher tier of power while shedding residual Arcane Dust.</p>
+          </div>
+
+          <div class="help-card-box">
+            <div class="help-card-title">🌟 Secrets of Apex Alchemy</div>
+            <p>Grandmaster alchemists whisper of Tier 5 Celestial Reagents — elements so pure that they transcend physical matter, granting infinite life, boundless essence, and mastery over space and time.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
