@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KFont
+**Target App:** KHex
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -193,3 +193,5 @@ Pass 1 Complete.
 - **KDB**: Added field-specific & free-text query parsing (e.g. `dept:engineering`, `id>100`), 500 record capacity limit, `localStorage` quota try-catch wrappers, CSV import/export bounds, record edit modal, and DOM `textContent` XSS protection in `kdb.html`. Added column-specific query filter parser, 200 record capacity cap with alerts, dynamic `AutoScaleListViewColumns` on `WM_SIZE`, Win32 binary file persistence (`kdb_data.dat`), and managed GDI brush cleanup in `main.c`.
 
 - **KExplorer**: Added path normalization (`normalizePath`) for directory traversal safety, VFS file bounds limit (`RENDER_LIMIT = 500`), real-time search & filter bar, address bar navigation & breadcrumbs, new file/folder creation controls, expanded file type dispatches (audio/archive/text/images), full 2D grid/list arrow key navigation, and ARIA grid/status live-region accessibility in `kexplorer.html` (Web-only app).
+
+- **KFont**: Changed DOM insertion from `innerText` to safer `textContent`, added double quote escaping `/"/g` for font string parsing protection, and implemented `word-wrap: break-word` layout bounds in `kfont.html`. Added `LB_FINDSTRINGEXACT` duplication checks in `EnumFontFamExProc` to prevent listbox memory bounds bloat, and fixed GDI resource leaks by correctly re-ordering `WM_SETFONT` and `DeleteObject` in `main.c`.
