@@ -1,71 +1,193 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>KDB</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KDB - Database Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-color: hsl(210, 15%, 12%);
-    --card-bg: rgba(255, 255, 255, 0.05);
-    --primary: hsl(200, 85%, 60%);
-    --border-color: rgba(255, 255, 255, 0.1);
-    --text-main: #ffffff;
-    --text-muted: #aaaaaa;
+    --bg-color: #0f141c;
+    --card-bg: rgba(22, 28, 38, 0.75);
+    --primary: #38bdf8;
+    --primary-hover: #0284c7;
+    --border-color: rgba(255, 255, 255, 0.12);
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --danger: #ef4444;
+    --danger-hover: #dc2626;
+    --success: #10b981;
   }
+  * { box-sizing: border-box; }
   body { 
-    margin: 0; font-family: "Inter", sans-serif; background-color: var(--bg-color); 
-    padding: 20px; height: 100vh; box-sizing: border-box; color: var(--text-main);
-    display: flex; flex-direction: column;
+    margin: 0; 
+    font-family: "Inter", sans-serif; 
+    background-color: var(--bg-color); 
+    background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.08), transparent 70%);
+    padding: 16px; 
+    height: 100vh; 
+    color: var(--text-main);
+    display: flex; 
+    flex-direction: column;
   }
   .container {
     background: var(--card-bg);
     border-radius: 12px;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
     overflow: hidden;
     display: flex;
     flex-direction: column;
     flex-grow: 1;
   }
   .header {
-    padding: 15px 20px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--border-color);
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.25);
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
   }
-  .header h2 { margin: 0; font-size: 18px; font-weight: 600; color: var(--primary); white-space: nowrap; }
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header h1 { 
+    margin: 0; 
+    font-size: 18px; 
+    font-weight: 700; 
+    color: var(--primary); 
+    letter-spacing: 0.5px;
+  }
+  .badge {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-grow: 1;
+    max-width: 500px;
+  }
   .search-box {
     flex-grow: 1;
-    max-width: 300px;
+    position: relative;
   }
   .search-box input {
     width: 100%;
     padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background: rgba(255,255,255,0.05);
+    background: rgba(0, 0, 0, 0.3);
     color: var(--text-main);
     font-family: inherit;
-    box-sizing: border-box;
+    font-size: 13px;
   }
   .search-box input:focus {
     outline: none;
     border-color: var(--primary);
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+  }
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.25);
   }
   .table-container {
     overflow-y: auto;
     flex-grow: 1;
   }
-  .add-form {
+  table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 13px; 
+  }
+  th, td { 
+    padding: 12px 16px; 
+    text-align: left; 
+    border-bottom: 1px solid var(--border-color); 
+  }
+  th { 
+    background-color: rgba(15, 20, 28, 0.9); 
+    color: var(--text-muted); 
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.8px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+  tr { transition: background-color 0.15s ease; }
+  tr:hover { background-color: rgba(255, 255, 255, 0.04); }
+  td { color: #e5e7eb; }
+  .tag {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #cbd5e1;
+    display: inline-block;
+  }
+  .actions-cell {
     display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+  }
+  .btn-action {
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+  }
+  .edit-btn {
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+    border-color: rgba(56, 189, 248, 0.25);
+  }
+  .edit-btn:hover { background: rgba(56, 189, 248, 0.25); }
+  .del-btn {
+    background: rgba(239, 68, 68, 0.12);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+  .del-btn:hover { background: rgba(239, 68, 68, 0.25); }
+  
+  .add-form {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr 1fr auto;
     gap: 10px;
-    padding: 15px;
-    background: rgba(0,0,0,0.2);
+    padding: 14px 20px;
+    background: rgba(0,0,0,0.3);
     border-top: 1px solid var(--border-color);
+    align-items: center;
   }
   .add-form input {
     padding: 8px 12px;
@@ -74,144 +196,535 @@
     background: rgba(255,255,255,0.05);
     color: var(--text-main);
     font-family: inherit;
-    flex: 1;
+    font-size: 13px;
   }
-  .add-form input#addId { flex: 0.5; }
-  .add-form button {
-    padding: 8px 15px;
+  .add-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  .btn-primary {
+    padding: 8px 16px;
     border-radius: 6px;
     border: none;
     background: var(--primary);
-    color: var(--bg-color);
+    color: #0f141c;
     font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
     font-family: inherit;
+    transition: background 0.2s;
   }
-  .add-form button:hover { opacity: 0.9; }
-  .del-btn {
-    background: rgba(255, 50, 50, 0.2);
-    color: #ffaaaa;
-    border: 1px solid rgba(255,50,50,0.3);
-    border-radius: 4px;
-    padding: 2px 8px;
-    cursor: pointer;
-    font-size: 12px;
+  .btn-primary:hover { background: var(--primary-hover); }
+
+  .status-bar {
+    padding: 8px 20px;
+    background: rgba(0,0,0,0.4);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .del-btn:hover { background: rgba(255, 50, 50, 0.4); }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid var(--border-color); }
-  th { 
-    background-color: rgba(255,255,255,0.02); 
-    color: var(--text-muted); 
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.5px;
-    position: sticky;
-    top: 0;
-    backdrop-filter: blur(10px);
+  .status-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
-  tr { transition: background-color 0.2s ease; }
-  tr:hover { background-color: rgba(255, 255, 255, 0.08); }
-  tr:last-child td { border-bottom: none; }
-  td { color: #e0e0e0; }
-  .tag {
-    background: rgba(255,255,255,0.1);
-    padding: 4px 8px;
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+  .query-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 20px;
+    background: rgba(0,0,0,0.15);
+    border-bottom: 1px solid var(--border-color);
+  }
+  /* Edit Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #1a202c;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 20px;
+    width: 360px;
+    max-width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+  }
+  .modal h3 { margin-top: 0; margin-bottom: 14px; color: var(--primary); font-size: 16px; }
+  .modal-field { margin-bottom: 12px; }
+  .modal-field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .modal-field input {
+    width: 100%;
+    padding: 8px 10px;
     border-radius: 6px;
-    font-size: 12px;
+    border: 1px solid var(--border-color);
+    background: rgba(0,0,0,0.3);
+    color: var(--text-main);
+    font-family: inherit;
   }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="header">
-    <h2>Employee Database</h2>
-    <div class="search-box">
-      <input type="text" id="searchInput" aria-label="Search employees" placeholder="Search employees..." onkeyup="filterTable()">
+    <div class="header-title">
+      <h1>KDB Employee Database</h1>
+      <span class="badge" id="recordBadge">0 records</span>
     </div>
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" aria-label="Search or query employees" placeholder="Search or query (e.g. dept:engineering, id>102)..." maxlength="100" onkeyup="handleSearchKey(event)" oninput="filterTable()">
+      </div>
+      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">Export CSV</button>
+      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">Import CSV</button>
+      <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
+      <button class="btn-secondary" onclick="resetToDefaults()" title="Reset database to default sample data">Reset</button>
+    </div>
+  </div>
+  <div class="query-hint">
+    Syntax tips: Plain text search OR <code>dept:engineering</code>, <code>role:lead</code>, <code>id:101</code>, <code>id>102</code>, <code>id<105</code>
   </div>
   <div class="table-container">
     <table id="empTable">
       <thead>
         <tr>
-          <th style="width: 60px;">ID</th>
+          <th style="width: 80px;">ID</th>
           <th>Name</th>
           <th>Department</th>
           <th>Role</th>
-          <th style="width: 50px;"></th>
+          <th style="width: 110px; text-align: right;">Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <tr><td>101</td><td>Alice Smith</td><td><span class="tag">Engineering</span></td><td>Developer</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>102</td><td>Bob Johnson</td><td><span class="tag">Marketing</span></td><td>Designer</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>103</td><td>Charlie Davis</td><td><span class="tag">Sales</span></td><td>Executive</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>104</td><td>Diana Prince</td><td><span class="tag">Engineering</span></td><td>Lead</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
-        <tr><td>105</td><td>Evan Wright</td><td><span class="tag">HR</span></td><td>Manager</td><td><button class="del-btn" aria-label="Delete record" onclick="this.closest('tr').remove()">Del</button></td></tr>
+      <tbody id="empTableBody">
       </tbody>
     </table>
   </div>
-  <div class="add-form">
-    <input type="text" id="addId" aria-label="ID" placeholder="ID">
-    <input type="text" id="addName" aria-label="Name" placeholder="Name">
-    <input type="text" id="addDept" aria-label="Department" placeholder="Department">
-    <input type="text" id="addRole" aria-label="Role" placeholder="Role">
-    <button aria-label="Add record" onclick="addRecord()">Add</button>
+  <form class="add-form" onsubmit="event.preventDefault(); addRecord();">
+    <input type="text" id="addId" aria-label="ID" placeholder="ID (e.g. 106)" maxlength="10" required>
+    <input type="text" id="addName" aria-label="Name" placeholder="Full Name" maxlength="50" required>
+    <input type="text" id="addDept" aria-label="Department" placeholder="Department" maxlength="50" required>
+    <input type="text" id="addRole" aria-label="Role" placeholder="Role" maxlength="50" required>
+    <button type="submit" class="btn-primary" aria-label="Add record">Add Record</button>
+  </form>
+  <div class="status-bar">
+    <div class="status-message">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Database ready</span>
+    </div>
+    <div id="storageQuotaText">Storage: LocalStorage Active (Limit 500 records)</div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>Edit Employee Record</h3>
+    <input type="hidden" id="editOriginalId">
+    <div class="modal-field">
+      <label for="editId">ID</label>
+      <input type="text" id="editId" maxlength="10">
+    </div>
+    <div class="modal-field">
+      <label for="editName">Name</label>
+      <input type="text" id="editName" maxlength="50">
+    </div>
+    <div class="modal-field">
+      <label for="editDept">Department</label>
+      <input type="text" id="editDept" maxlength="50">
+    </div>
+    <div class="modal-field">
+      <label for="editRole">Role</label>
+      <input type="text" id="editRole" maxlength="50">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveEditedRecord()">Save Changes</button>
+    </div>
   </div>
 </div>
 
 <script>
-function addRecord() {
-  const id = document.getElementById('addId').value;
-  const name = document.getElementById('addName').value;
-  const dept = document.getElementById('addDept').value;
-  const role = document.getElementById('addRole').value;
-  if (!id || !name) return;
+const MAX_RECORDS = 500;
+const STORAGE_KEY = 'kdb_employees_v1';
 
-  const tbody = document.querySelector('#empTable tbody');
-  const tr = document.createElement('tr');
-  const tdId = document.createElement('td'); tdId.textContent = id;
-  const tdName = document.createElement('td'); tdName.textContent = name;
-  const tdDept = document.createElement('td'); 
-  const spanDept = document.createElement('span'); spanDept.className = 'tag'; spanDept.textContent = dept;
-  tdDept.appendChild(spanDept);
-  const tdRole = document.createElement('td'); tdRole.textContent = role;
-  const tdAction = document.createElement('td');
-  tdAction.innerHTML = '<button class="del-btn" aria-label="Delete record" onclick="this.closest(\'tr\').remove()">Del</button>';
-  
-  tr.appendChild(tdId);
-  tr.appendChild(tdName);
-  tr.appendChild(tdDept);
-  tr.appendChild(tdRole);
-  tr.appendChild(tdAction);
-  tbody.appendChild(tr);
+const DEFAULT_RECORDS = [
+  { id: '101', name: 'Alice Smith', dept: 'Engineering', role: 'Developer' },
+  { id: '102', name: 'Bob Johnson', dept: 'Marketing', role: 'Designer' },
+  { id: '103', name: 'Charlie Davis', dept: 'Sales', role: 'Executive' },
+  { id: '104', name: 'Diana Prince', dept: 'Engineering', role: 'Lead' },
+  { id: '105', name: 'Evan Wright', dept: 'HR', role: 'Manager' }
+];
 
-  document.getElementById('addId').value = '';
-  document.getElementById('addName').value = '';
-  document.getElementById('addDept').value = '';
-  document.getElementById('addRole').value = '';
+let records = [];
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
-function filterTable() {
-  const input = document.getElementById("searchInput");
-  const filter = input.value.toLowerCase();
-  const table = document.getElementById("empTable");
-  const tr = table.getElementsByTagName("tr");
 
-  for (let i = 1; i < tr.length; i++) { // Skip header row
-    let showRow = false;
-    const tds = tr[i].getElementsByTagName("td");
-    for (let j = 0; j < tds.length; j++) {
-      if (tds[j]) {
-        const textValue = tds[j].textContent || tds[j].innerText;
-        if (textValue.toLowerCase().indexOf(filter) > -1) {
-          showRow = true;
-          break;
-        }
+function updateStatus(msg, isError = false) {
+  const statusText = document.getElementById('statusText');
+  const statusDot = document.getElementById('statusDot');
+  statusText.textContent = msg;
+  statusDot.style.background = isError ? 'var(--danger)' : 'var(--success)';
+}
+
+function loadRecords() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) {
+        records = parsed.slice(0, MAX_RECORDS);
+      } else {
+        records = [...DEFAULT_RECORDS];
       }
+    } else {
+      records = [...DEFAULT_RECORDS];
+      saveRecords();
     }
-    tr[i].style.display = showRow ? "" : "none";
+  } catch (e) {
+    console.warn('LocalStorage unavailable, using in-memory store:', e);
+    records = [...DEFAULT_RECORDS];
+    updateStatus('LocalStorage error, running in memory mode', true);
+  }
+  renderTable();
+}
+
+function saveRecords() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    updateStatus('Changes saved automatically');
+  } catch (e) {
+    console.error('LocalStorage save failed:', e);
+    updateStatus('Storage quota exceeded! Cannot persist.', true);
   }
 }
+
+function renderTable(filteredRecords = null) {
+  const displayList = filteredRecords || records;
+  const tbody = document.getElementById('empTableBody');
+  tbody.innerHTML = '';
+
+  document.getElementById('recordBadge').textContent = `${displayList.length} of ${records.length} records`;
+
+  if (displayList.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">No matching employee records found.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  displayList.forEach(rec => {
+    const tr = document.createElement('tr');
+    
+    const tdId = document.createElement('td');
+    tdId.textContent = rec.id;
+
+    const tdName = document.createElement('td');
+    tdName.textContent = rec.name;
+
+    const tdDept = document.createElement('td');
+    const spanDept = document.createElement('span');
+    spanDept.className = 'tag';
+    spanDept.textContent = rec.dept;
+    tdDept.appendChild(spanDept);
+
+    const tdRole = document.createElement('td');
+    tdRole.textContent = rec.role;
+
+    const tdActions = document.createElement('td');
+    tdActions.className = 'actions-cell';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-action edit-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.setAttribute('aria-label', `Edit record ${rec.id}`);
+    editBtn.onclick = () => openEditModal(rec.id);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-action del-btn';
+    delBtn.textContent = 'Del';
+    delBtn.setAttribute('aria-label', `Delete record ${rec.id}`);
+    delBtn.onclick = () => deleteRecord(rec.id);
+
+    tdActions.appendChild(editBtn);
+    tdActions.appendChild(delBtn);
+
+    tr.appendChild(tdId);
+    tr.appendChild(tdName);
+    tr.appendChild(tdDept);
+    tr.appendChild(tdRole);
+    tr.appendChild(tdActions);
+
+    tbody.appendChild(tr);
+  });
+}
+
+function addRecord() {
+  if (records.length >= MAX_RECORDS) {
+    alert(`Maximum table capacity reached (${MAX_RECORDS} records).`);
+    return;
+  }
+
+  const idInput = document.getElementById('addId');
+  const nameInput = document.getElementById('addName');
+  const deptInput = document.getElementById('addDept');
+  const roleInput = document.getElementById('addRole');
+
+  const id = idInput.value.trim();
+  const name = nameInput.value.trim();
+  const dept = deptInput.value.trim();
+  const role = roleInput.value.trim();
+
+  if (!id || !name || !dept || !role) {
+    updateStatus('All fields are required to add an employee.', true);
+    return;
+  }
+
+  if (records.some(r => r.id.toLowerCase() === id.toLowerCase())) {
+    updateStatus(`Duplicate ID '${id}' is not allowed.`, true);
+    alert(`An employee with ID '${id}' already exists.`);
+    return;
+  }
+
+  records.push({ id, name, dept, role });
+  saveRecords();
+  
+  idInput.value = '';
+  nameInput.value = '';
+  deptInput.value = '';
+  roleInput.value = '';
+
+  filterTable();
+  updateStatus(`Added employee ${name} (${id})`);
+}
+
+function deleteRecord(id) {
+  const index = records.findIndex(r => r.id === id);
+  if (index !== -1) {
+    const deleted = records.splice(index, 1)[0];
+    saveRecords();
+    filterTable();
+    updateStatus(`Deleted record ${deleted.id} (${deleted.name})`);
+  }
+}
+
+function openEditModal(id) {
+  const rec = records.find(r => r.id === id);
+  if (!rec) return;
+
+  document.getElementById('editOriginalId').value = rec.id;
+  document.getElementById('editId').value = rec.id;
+  document.getElementById('editName').value = rec.name;
+  document.getElementById('editDept').value = rec.dept;
+  document.getElementById('editRole').value = rec.role;
+  document.getElementById('editModal').classList.add('active');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.remove('active');
+}
+
+function saveEditedRecord() {
+  const origId = document.getElementById('editOriginalId').value;
+  const newId = document.getElementById('editId').value.trim();
+  const newName = document.getElementById('editName').value.trim();
+  const newDept = document.getElementById('editDept').value.trim();
+  const newRole = document.getElementById('editRole').value.trim();
+
+  if (!newId || !newName || !newDept || !newRole) {
+    alert('All fields are required.');
+    return;
+  }
+
+  if (newId.toLowerCase() !== origId.toLowerCase() && records.some(r => r.id.toLowerCase() === newId.toLowerCase())) {
+    alert(`An employee with ID '${newId}' already exists.`);
+    return;
+  }
+
+  const rec = records.find(r => r.id === origId);
+  if (rec) {
+    rec.id = newId;
+    rec.name = newName;
+    rec.dept = newDept;
+    rec.role = newRole;
+    saveRecords();
+    filterTable();
+    closeEditModal();
+    updateStatus(`Updated record ${newId}`);
+  }
+}
+
+function filterTable() {
+  const rawQuery = document.getElementById('searchInput').value.trim();
+  if (!rawQuery) {
+    renderTable(records);
+    return;
+  }
+
+  // Parse structured query expressions safely with bounds
+  const query = rawQuery.slice(0, 100);
+  let filtered = records;
+
+  if (query.includes(':')) {
+    const parts = query.split(':');
+    const field = parts[0].trim().toLowerCase();
+    const val = parts.slice(1).join(':').trim().toLowerCase();
+
+    if (field === 'dept' || field === 'department') {
+      filtered = records.filter(r => r.dept.toLowerCase().includes(val));
+    } else if (field === 'role') {
+      filtered = records.filter(r => r.role.toLowerCase().includes(val));
+    } else if (field === 'id') {
+      filtered = records.filter(r => r.id.toLowerCase().includes(val));
+    } else if (field === 'name') {
+      filtered = records.filter(r => r.name.toLowerCase().includes(val));
+    }
+  } else if (query.startsWith('id>')) {
+    const num = parseInt(query.replace('id>', '').trim(), 10);
+    if (!isNaN(num)) {
+      filtered = records.filter(r => parseInt(r.id, 10) > num);
+    }
+  } else if (query.startsWith('id<')) {
+    const num = parseInt(query.replace('id<', '').trim(), 10);
+    if (!isNaN(num)) {
+      filtered = records.filter(r => parseInt(r.id, 10) < num);
+    }
+  } else {
+    const term = query.toLowerCase();
+    filtered = records.filter(r => 
+      r.id.toLowerCase().includes(term) ||
+      r.name.toLowerCase().includes(term) ||
+      r.dept.toLowerCase().includes(term) ||
+      r.role.toLowerCase().includes(term)
+    );
+  }
+
+  renderTable(filtered);
+}
+
+function handleSearchKey(e) {
+  if (e.key === 'Escape') {
+    document.getElementById('searchInput').value = '';
+    filterTable();
+  }
+}
+
+function exportCSV() {
+  if (records.length === 0) {
+    alert('No records available to export.');
+    return;
+  }
+  let csv = 'ID,Name,Department,Role\n';
+  records.forEach(r => {
+    const escapeCsv = val => `"${String(val).replace(/"/g, '""')}"`;
+    csv += `${escapeCsv(r.id)},${escapeCsv(r.name)},${escapeCsv(r.dept)},${escapeCsv(r.role)}\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kdb_employees_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  updateStatus('Exported database CSV file');
+}
+
+function triggerImportCSV() {
+  document.getElementById('csvFileInput').click();
+}
+
+function importCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 500000) {
+    alert('File size too large. Max allowed CSV size is 500KB.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const text = evt.target.result;
+      const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+      if (lines.length <= 1) {
+        alert('CSV file is empty or missing headers.');
+        return;
+      }
+
+      let importedCount = 0;
+      let skippedCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        if (records.length >= MAX_RECORDS) break;
+        // Simple regex CSV line split with quotes handling
+        const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+        if (cols.length >= 4) {
+          const clean = val => val.replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+          const id = clean(cols[0]);
+          const name = clean(cols[1]);
+          const dept = clean(cols[2]);
+          const role = clean(cols[3]);
+
+          if (id && name && !records.some(r => r.id.toLowerCase() === id.toLowerCase())) {
+            records.push({ id: id.slice(0,10), name: name.slice(0,50), dept: dept.slice(0,50), role: role.slice(0,50) });
+            importedCount++;
+          } else {
+            skippedCount++;
+          }
+        }
+      }
+
+      saveRecords();
+      filterTable();
+      updateStatus(`Imported ${importedCount} records (${skippedCount} skipped/duplicates)`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to parse CSV file format.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function resetToDefaults() {
+  if (confirm('Are you sure you want to reset all employee data to default records?')) {
+    records = [...DEFAULT_RECORDS];
+    saveRecords();
+    document.getElementById('searchInput').value = '';
+    filterTable();
+    updateStatus('Database reset to defaults');
+  }
+}
+
+// Initial load
+loadRecords();
 </script>
 </body>
 </html>
