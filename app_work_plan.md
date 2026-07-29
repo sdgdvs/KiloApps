@@ -52,13 +52,12 @@ The old approach of adding generic "Search, Save/Load, and Import/Export" to eve
 
 ---
 
-**Target App:** KDB
+**Target App:** KFont
 **Status:** In Queue
 **Current Phase:** In Queue
 
 ## Round-Robin Continuous Improvement Queue (NEVER STOP — loop forever)
 Pick the top app from this list, add a meaningful new feature based on its **CATEGORY PRIORITY**, and move it to the bottom. Update BOTH web and native versions. You have up to **999KB per app**.
-- KDB (Added ability to add and delete records)
 - KFont (Added Custom Text, Bold, and Italic options)
 - KMail (Added Search functionality)
 - KMandel (Added Undo/Redo viewport history and Save Image features)
@@ -105,3 +104,4 @@ Pick the top app from this list, add a meaningful new feature based on its **CAT
 - KAudio (Added Sound FX Generator Presets, ADSR Envelope & Filter Controls, 16-Step Multi-Track Sequencer, Waveform Visualizer, and WAV/JSON Export & Import)
 - KClock (Added Multi-City World Clock Selector, Repeating Alarms Manager with Snooze, Lap Split Stopwatch with Fastest/Slowest badges, Timezone Converter, and Settings Export/Import [JSON])
 - KPong (Added 2-Player Local PvP Mode, 5 Game Modes, Power-Up System [Paddle Extend, Speed Boost, Multi-Ball, Shield, Freeze], Leaderboard & Win-Rate Stats Tracker, Theme Switcher, and Save/Resume State)
+- KDB (Added CSV/JSON Import/Export engine, robust real-time search and advanced column filtering, and simple password protection/encryption)
