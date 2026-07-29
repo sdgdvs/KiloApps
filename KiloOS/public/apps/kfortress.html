@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KFortress - Fantasy Tower Defense & Siege Defense</title>
+  <style>
+    :root {
+      --bg-color: #141821;
+      --card-bg: #202634;
+      --card-hover: #293042;
+      --border-color: #3c465f;
+      --gold-color: #ffd700;
+      --gold-glow: rgba(255, 215, 0, 0.3);
+      --red-color: #ef4444;
+      --green-color: #10b981;
+      --text-white: #ebf0f5;
+      --text-muted: #8c96af;
+      --path-color: #2d3446;
+      --path-border: #4b556e;
+      --castle-color: #646e82;
+      --slot-bg: #283246;
+      --slot-border: #4a5878;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-white);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+    }
+
+    .title-group h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--gold-color);
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px var(--gold-glow);
+    }
+
+    .title-group span {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .hud-stats {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .stat-badge {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-gold { color: var(--gold-color); border-color: rgba(255, 215, 0, 0.4); }
+    .stat-hp { color: var(--red-color); border-color: rgba(239, 68, 68, 0.4); }
+    .stat-wave { color: var(--text-white); }
+
+    .main-container {
+      flex: 1;
+      display: flex;
+      padding: 16px;
+      gap: 16px;
+      height: calc(100vh - 65px);
+    }
+
+    .battlefield-card {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: 240px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar h2 {
+      font-size: 15px;
+      color: var(--gold-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .btn {
+      background: var(--card-hover);
+      color: var(--text-white);
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background: #323b50;
+      border-color: var(--gold-color);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: var(--green-color);
+      border-color: #059669;
+    }
+
+    .btn-primary:hover {
+      background: #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-danger {
+      background: var(--red-color);
+      border-color: #dc2626;
+    }
+
+    .btn-danger:hover {
+      background: #f43f5e;
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.4);
+    }
+
+    .info-panel {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .info-panel strong {
+      color: var(--text-white);
+      display: block;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="title-group">
+      <h1>KFORTRESS</h1>
+      <span>Fantasy Tower Defense & Siege Defense</span>
+    </div>
+    <div class="hud-stats">
+      <div class="stat-badge stat-gold">🪙 Gold: <span id="goldVal">100</span></div>
+      <div class="stat-badge stat-hp">❤️ Base HP: <span id="hpVal">20/20</span></div>
+      <div class="stat-badge stat-wave">⚔️ Wave: <span id="waveVal">1</span></div>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <div class="battlefield-card">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div class="sidebar">
+      <h2>COMMAND POST</h2>
+      <button class="btn btn-primary" id="waveBtn">START WAVE 1</button>
+      <button class="btn btn-danger" id="resetBtn">RESET DEFENSE</button>
+
+      <div class="info-panel">
+        <strong>Phase 1 Scaffold</strong>
+        - Click empty <b>[+]</b> slots to place test towers.<br>
+        - Prepare your strategy before launching the wave.<br>
+        - Defend the Castle Fortress from siege monsters!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sound FX Synth
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq = 440, duration = 0.05, type = 'sine') {
+      try {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // State
+    let gold = 100;
+    let baseHp = 20;
+    let maxBaseHp = 20;
+    let wave = 1;
+    let waveActive = false;
+    let selectedSlotIndex = -1;
+
+    const slots = [
+      { x: 140, y: 110, occupied: false },
+      { x: 280, y: 110, occupied: false },
+      { x: 420, y: 110, occupied: false },
+      { x: 560, y: 110, occupied: false },
+      { x: 140, y: 310, occupied: false },
+      { x: 280, y: 310, occupied: false },
+      { x: 420, y: 310, occupied: false },
+      { x: 560, y: 310, occupied: false },
+      { x: 140, y: 480, occupied: false },
+      { x: 280, y: 480, occupied: false },
+      { x: 420, y: 480, occupied: false },
+      { x: 560, y: 480, occupied: false }
+    ];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      render();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      selectedSlotIndex = -1;
+      slots.forEach((slot, index) => {
+        const dx = clickX - slot.x;
+        const dy = clickY - slot.y;
+        if (Math.sqrt(dx * dx + dy * dy) <= 24) {
+          selectedSlotIndex = index;
+          slot.occupied = !slot.occupied;
+          playBeep(650, 0.06, 'triangle');
+        }
+      });
+      render();
+    });
+
+    document.getElementById('waveBtn').addEventListener('click', () => {
+      waveActive = !waveActive;
+      document.getElementById('waveBtn').textContent = waveActive ? "WAVE IN PROGRESS" : `START WAVE ${wave}`;
+      playBeep(waveActive ? 520 : 380, 0.08, 'square');
+      render();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      gold = 100;
+      baseHp = 20;
+      wave = 1;
+      waveActive = false;
+      selectedSlotIndex = -1;
+      slots.forEach(s => s.occupied = false);
+      document.getElementById('goldVal').textContent = gold;
+      document.getElementById('hpVal').textContent = `${baseHp}/${maxBaseHp}`;
+      document.getElementById('waveVal').textContent = wave;
+      document.getElementById('waveBtn').textContent = "START WAVE 1";
+      playBeep(250, 0.1, 'sawtooth');
+      render();
+    });
+
+    function render() {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Background
+      ctx.fillStyle = '#202634';
+      ctx.fillRect(0, 0, w, h);
+
+      // Path
+      const pathPoints = [
+        { x: 40, y: 200 },
+        { x: 330, y: 200 },
+        { x: 330, y: 390 },
+        { x: 520, y: 390 },
+        { x: 520, y: 220 },
+        { x: w - 70, y: 220 }
+      ];
+
+      ctx.beginPath();
+      ctx.moveTo(pathPoints[0].x, pathPoints[0].y);
+      for (let i = 1; i < pathPoints.length; i++) {
+        ctx.lineTo(pathPoints[i].x, pathPoints[i].y);
+      }
+      ctx.strokeStyle = '#2d3446';
+      ctx.lineWidth = 44;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+
+      ctx.strokeStyle = '#4b556e';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Spawn Gate
+      ctx.fillStyle = '#ef4444';
+      ctx.strokeStyle = '#f87171';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(15, 175, 50, 50, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 12px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillText('GATE', 40, 205);
+
+      // Castle Base
+      ctx.fillStyle = '#646e82';
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(w - 90, 185, 75, 70, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffd700';
+      ctx.font = 'bold 13px Segoe UI';
+      ctx.fillText('CASTLE', w - 52, 225);
+
+      // Slots
+      slots.forEach((slot, index) => {
+        const isSelected = selectedSlotIndex === index;
+        ctx.fillStyle = isSelected ? '#3c4a68' : '#283246';
+        ctx.strokeStyle = isSelected ? '#ffd700' : '#3c465f';
+        ctx.lineWidth = isSelected ? 3 : 2;
+
+        ctx.beginPath();
+        ctx.arc(slot.x, slot.y, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        if (slot.occupied) {
+          ctx.fillStyle = '#ffd700';
+          ctx.beginPath();
+          ctx.arc(slot.x, slot.y, 12, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = '#8c96af';
+          ctx.font = 'bold 16px Segoe UI';
+          ctx.fillText('+', slot.x, slot.y + 5);
+        }
+      });
+    }
+
+    // Initialize
+    setTimeout(resizeCanvas, 50);
+  </script>
+</body>
+</html>
