@@ -1,54 +1,307 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>File Browser</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: hsl(210, 15%, 12%);
-    --card-bg: hsl(210, 15%, 20%);
+    --card-bg: hsl(210, 15%, 18%);
+    --card-hover: hsl(210, 15%, 24%);
     --primary: hsl(200, 85%, 60%);
-    --border-color: rgba(255, 255, 255, 0.1);
+    --primary-hover: hsl(200, 85%, 50%);
+    --border-color: rgba(255, 255, 255, 0.12);
     --text-main: #ffffff;
+    --text-muted: #a0aec0;
+    --focus-ring: 0 0 0 2px hsl(200, 85%, 60%);
   }
-  body, html { margin: 0; padding: 0; width: 100%; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); }
-  .toolbar { background: var(--card-bg); border-bottom: 1px solid var(--border-color); padding: 8px; font-size: 13px; display: flex; gap: 10px; }
-  .toolbar button { cursor: pointer; padding: 4px 10px; font-family: 'Inter', sans-serif; font-size: 13px; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; transition: all 0.15s ease; }
-  .toolbar button:hover { background: var(--primary); color: #111; border-color: var(--primary); }
-  .file-list { padding: 15px; display: flex; flex-wrap: wrap; gap: 15px; }
-  .file-item { width: 75px; display: flex; flex-direction: column; align-items: center; cursor: pointer; padding: 5px; transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1); border: 1px solid transparent; }
-  .file-item:hover { background: rgba(255,255,255,0.08); border-radius: 8px; transform: translateY(-2px); border-color: rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-  .file-icon { width: 40px; height: 40px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 8px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--text-main); }
-  .file-name { font-size: 12px; text-align: center; word-break: break-word; line-height: 1.2; flex: 1; }
-  
+
+  * { box-sizing: border-box; }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .toolbar {
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 8px 12px;
+    font-size: 13px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  button, select, input {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text-main);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 12px;
+    transition: all 0.15s ease;
+    outline: none;
+  }
+
+  button {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+
+  button:hover, button:focus-visible {
+    background: var(--primary);
+    color: #111;
+    border-color: var(--primary);
+  }
+
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    box-shadow: var(--focus-ring);
+  }
+
+  .address-bar {
+    flex: 1;
+    min-width: 180px;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  .address-bar input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 4px;
+    color: var(--text-main);
+  }
+
+  .search-box {
+    width: 160px;
+  }
+
+  .breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .crumb {
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--primary);
+  }
+
+  .crumb:hover {
+    background: rgba(255, 255, 255, 0.1);
+    text-decoration: underline;
+  }
+
+  .main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  /* Grid View (Default) */
+  .file-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 16px;
+    outline: none;
+  }
+
+  .file-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px 6px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+    user-select: none;
+    outline: none;
+  }
+
+  .file-item:hover {
+    background: var(--card-hover);
+    border-color: var(--border-color);
+    transform: translateY(-1px);
+  }
+
+  .file-item.selected, .file-item:focus-visible {
+    background: rgba(56, 189, 248, 0.18);
+    border-color: var(--primary);
+    box-shadow: var(--focus-ring);
+  }
+
+  .file-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  .file-name {
+    font-size: 12px;
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.25;
+    max-width: 100%;
+    color: var(--text-main);
+  }
+
   /* List View Overrides */
-  .file-list.list-view { flex-direction: column; gap: 4px; padding: 10px; }
-  .file-list.list-view .file-item { width: 100%; flex-direction: row; align-items: center; padding: 4px 10px; box-sizing: border-box; }
-  .file-list.list-view .file-icon { margin-bottom: 0; margin-right: 12px; width: 28px; height: 28px; font-size: 8px; flex-shrink: 0; }
-  .file-list.list-view .file-icon svg { width: 18px; height: 18px; }
-  .file-list.list-view .file-name { text-align: left; }
+  .file-list.list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .file-list.list-view .file-item {
+    flex-direction: row;
+    align-items: center;
+    padding: 6px 12px;
+    width: 100%;
+  }
+
+  .file-list.list-view .file-icon {
+    margin-bottom: 0;
+    margin-right: 12px;
+    width: 32px;
+    height: 32px;
+    font-size: 9px;
+    flex-shrink: 0;
+    border-radius: 6px;
+  }
+
+  .file-list.list-view .file-name {
+    text-align: left;
+    font-size: 13px;
+  }
+
+  /* Status Bar */
+  .status-bar {
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .empty-msg {
+    grid-column: 1 / -1;
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 40px 20px;
+  }
 </style>
 </head>
 <body>
-  <div class="toolbar">
-    <button onclick="refresh()" aria-label="Refresh">Refresh</button>
-    <div style="flex: 1"></div>
-    <select id="view-mode" onchange="toggleViewMode(this.value)" aria-label="View Mode" style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px; font-family: 'Inter', sans-serif; font-size: 12px;">
+  <header class="toolbar" role="toolbar" aria-label="Explorer Toolbar">
+    <div class="btn-group">
+      <button onclick="goUp()" id="btn-up" aria-label="Go Up Directory" title="Go Up (Alt+Up)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        Up
+      </button>
+      <button onclick="refresh()" aria-label="Refresh Directory" title="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Refresh
+      </button>
+      <button onclick="createNewFile()" aria-label="New File" title="New File">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        New File
+      </button>
+      <button onclick="createNewFolder()" aria-label="New Folder" title="New Folder">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+        New Folder
+      </button>
+    </div>
+
+    <div class="address-bar">
+      <span style="font-size:12px; color: var(--text-muted); margin-right:4px;">Path:</span>
+      <input type="text" id="path-input" aria-label="Current Directory Path" spellcheck="false">
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search..." aria-label="Search files and folders" oninput="onSearchChange()">
+    </div>
+
+    <select id="view-mode" onchange="toggleViewMode(this.value)" aria-label="View Mode">
       <option value="icon">Icon View</option>
       <option value="list">List View</option>
     </select>
-  </div>
-  <div class="file-list" id="list"></div>
+  </header>
+
+  <main class="main-content">
+    <div class="file-list" id="list" tabindex="0" role="grid" aria-label="File List"></div>
+  </main>
+
+  <footer class="status-bar" id="status-bar" aria-live="polite" role="status">
+    <span id="status-left">Loading VFS...</span>
+    <span id="status-right">Path: /</span>
+  </footer>
 
   <script>
     let currentReqId = 0;
     const callbacks = {};
+    let allVfsFiles = [];
+    let currentPath = '/';
+    let viewMode = 'icon';
+    let selectedIndex = -1;
+    let currentRenderedItems = [];
+
+    const RENDER_LIMIT = 500; // File bound limit to prevent DOM freeze
 
     window.addEventListener('message', (e) => {
       const msg = e.data;
-      if (msg.type === 'VFS_LIST_DONE' && callbacks[msg.requestId]) {
-        callbacks[msg.requestId](msg.files);
+      if (msg && msg.type === 'VFS_LIST_DONE' && callbacks[msg.requestId]) {
+        callbacks[msg.requestId](msg.files || []);
+        delete callbacks[msg.requestId];
+      } else if (msg && msg.type === 'VFS_WRITE_DONE' && callbacks[msg.requestId]) {
+        callbacks[msg.requestId](true);
         delete callbacks[msg.requestId];
       }
     });
@@ -57,12 +310,34 @@
       return new Promise((resolve) => {
         const id = ++currentReqId;
         callbacks[id] = resolve;
-        window.parent.postMessage({ ...msg, requestId: id }, '*');
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ ...msg, requestId: id }, '*');
+        } else {
+          // Local fallback simulation if running standalone
+          setTimeout(() => {
+            if (msg.type === 'VFS_LIST') resolve(allVfsFiles.length ? allVfsFiles : ['/welcome.txt', '/docs/readme.md']);
+            else resolve(true);
+          }, 50);
+        }
       });
     }
 
-    let currentPath = '/';
-    let viewMode = 'icon';
+    // Path normalization and path traversal security guard
+    function normalizePath(p) {
+      if (typeof p !== 'string') return '/';
+      let clean = p.replace(/\\/g, '/');
+      const parts = clean.split('/').filter(Boolean);
+      const stack = [];
+      for (const seg of parts) {
+        if (seg === '.' || seg === '') continue;
+        if (seg === '..') {
+          if (stack.length > 0) stack.pop();
+        } else {
+          stack.push(seg);
+        }
+      }
+      return stack.length === 0 ? '/' : '/' + stack.join('/') + '/';
+    }
 
     function toggleViewMode(mode) {
       viewMode = mode;
@@ -74,119 +349,255 @@
       }
     }
 
-    async function refresh() {
-      const allFiles = await sendToOS({ type: 'VFS_LIST' });
-      const list = document.getElementById('list');
-      list.innerHTML = '';
-      if (allFiles.length === 0) {
-        list.innerHTML = '<div style="color:#777; font-size:12px;">Virtual Filesystem is empty.</div>';
-        return;
-      }
+    function goUp() {
+      if (currentPath === '/') return;
+      currentPath = normalizePath(currentPath + '../');
+      refresh();
+    }
 
-      // If not at root, add an "Up" folder
-      if (currentPath !== '/') {
-        const upItem = document.createElement('div');
-        upItem.className = 'file-item';
-        upItem.tabIndex = 0;
-        upItem.setAttribute('role', 'button');
-        upItem.setAttribute('aria-label', 'Go up one directory');
-        upItem.innerHTML = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="none" stroke="#ffd700" stroke-width="2"/><path d="M12 16V10M9 13l3-3 3 3" fill="none" stroke="#ffd700" stroke-width="2"/></svg></div><div class="file-name">..</div>`;
-        upItem.ondblclick = () => {
-          const parts = currentPath.split('/').filter(Boolean);
-          parts.pop();
-          currentPath = parts.length === 0 ? '/' : '/' + parts.join('/') + '/';
-          refresh();
-        };
-        upItem.onkeydown = (e) => {
-          if (e.key === 'Enter') upItem.ondblclick();
-        };
-        list.appendChild(upItem);
+    document.getElementById('path-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        currentPath = normalizePath(e.target.value);
+        refresh();
       }
+    });
+
+    function onSearchChange() {
+      renderCurrentView();
+    }
+
+    async function createNewFile() {
+      const name = prompt('Enter new file name:', 'new_document.txt');
+      if (!name || !name.trim()) return;
+      const cleanName = name.trim().replace(/[\\/]/g, '');
+      const fullPath = normalizePath(currentPath) + cleanName;
+      await sendToOS({ type: 'VFS_WRITE', path: fullPath, data: '' });
+      await refresh();
+    }
+
+    async function createNewFolder() {
+      const name = prompt('Enter new folder name:', 'New Folder');
+      if (!name || !name.trim()) return;
+      const cleanName = name.trim().replace(/[\\/]/g, '');
+      const fullPath = normalizePath(currentPath + cleanName + '/') + '.keep';
+      await sendToOS({ type: 'VFS_WRITE', path: fullPath, data: '' });
+      await refresh();
+    }
+
+    async function refresh() {
+      currentPath = normalizePath(currentPath);
+      document.getElementById('path-input').value = currentPath;
+      document.getElementById('btn-up').disabled = (currentPath === '/');
+
+      const files = await sendToOS({ type: 'VFS_LIST' });
+      allVfsFiles = files || [];
+      renderCurrentView();
+    }
+
+    function renderCurrentView() {
+      const list = document.getElementById('list');
+      const searchVal = document.getElementById('search-input').value.trim().toLowerCase();
+      list.innerHTML = '';
+      selectedIndex = -1;
+      currentRenderedItems = [];
 
       const itemsInDir = new Set();
       const filesToShow = [];
       const foldersToShow = [];
 
-      allFiles.forEach(f => {
-        // Ensure path starts with /
-        const normalizedF = f.startsWith('/') ? f : '/' + f;
-        
-        if (normalizedF.startsWith(currentPath)) {
-          const remaining = normalizedF.substring(currentPath.length);
-          if (remaining === '') return;
-          
-          const parts = remaining.split('/');
-          if (parts.length === 1) {
-            // It's a file in this directory
-            filesToShow.push({ name: parts[0], fullPath: f });
-          } else {
-            // It's a folder in this directory
-            const folderName = parts[0];
-            if (!itemsInDir.has(folderName)) {
-              itemsInDir.add(folderName);
-              foldersToShow.push(folderName);
+      allVfsFiles.forEach(f => {
+        const normF = f.startsWith('/') ? f : '/' + f;
+
+        if (searchVal) {
+          // Search mode across all files
+          const fileName = normF.split('/').pop();
+          if (fileName.toLowerCase().includes(searchVal)) {
+            filesToShow.push({ name: fileName, fullPath: normF, isFolder: false });
+          }
+        } else {
+          // Folder navigation mode
+          if (normF.startsWith(currentPath)) {
+            const remaining = normF.substring(currentPath.length);
+            if (remaining === '') return;
+
+            const parts = remaining.split('/');
+            if (parts.length === 1) {
+              if (parts[0] !== '.keep') {
+                filesToShow.push({ name: parts[0], fullPath: f, isFolder: false });
+              }
+            } else {
+              const folderName = parts[0];
+              if (!itemsInDir.has(folderName)) {
+                itemsInDir.add(folderName);
+                foldersToShow.push(folderName);
+              }
             }
           }
         }
       });
 
-      foldersToShow.forEach(folderName => {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.tabIndex = 0;
-        item.setAttribute('role', 'button');
-        item.setAttribute('aria-label', `Folder: ${folderName}`);
-        const escFolder = folderName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        item.innerHTML = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" fill="none" stroke="#ffd700" stroke-width="2"/></svg></div><div class="file-name">${escFolder}</div>`;
-        item.ondblclick = () => {
-          currentPath = currentPath + folderName + '/';
-          refresh();
-        };
-        item.onkeydown = (e) => {
-          if (e.key === 'Enter') item.ondblclick();
-        };
-        list.appendChild(item);
+      // Sort folders and files alphabetically
+      foldersToShow.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+      filesToShow.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+
+      // Add ".." up item if not at root and not searching
+      if (currentPath !== '/' && !searchVal) {
+        currentRenderedItems.push({ name: '..', isUp: true });
+      }
+
+      foldersToShow.forEach(fName => {
+        currentRenderedItems.push({ name: fName, isFolder: true, fullPath: currentPath + fName + '/' });
       });
 
       filesToShow.forEach(fileObj => {
-        const { name, fullPath } = fileObj;
-        const lowerName = name.toLowerCase();
-        const escName = name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.tabIndex = 0;
-        item.setAttribute('role', 'button');
-        item.setAttribute('aria-label', `File: ${name}`);
-        let iconHtml;
-        if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log')) {
-          iconHtml = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="var(--primary)" stroke-width="2" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline fill="none" stroke="var(--primary)" stroke-width="2" points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13" stroke="var(--primary)" stroke-width="2"/><line x1="8" y1="17" x2="16" y2="17" stroke="var(--primary)" stroke-width="2"/><line x1="8" y1="9" x2="10" y2="9" stroke="var(--primary)" stroke-width="2"/></svg></div>`;
-        } else if (lowerName.endsWith('.js') || lowerName.endsWith('.json')) {
-          iconHtml = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="#e8d44d" stroke-width="2" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline fill="none" stroke="#e8d44d" stroke-width="2" points="14 2 14 8 20 8"/><polyline fill="none" stroke="#e8d44d" stroke-width="2" points="10 13 8 15 10 17"/><polyline fill="none" stroke="#e8d44d" stroke-width="2" points="14 13 16 15 14 17"/></svg></div>`;
-        } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.ico')) {
-          iconHtml = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="none" stroke="#4caf50" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="none" stroke="#4caf50" stroke-width="2"/><polyline points="21 15 16 10 5 21" fill="none" stroke="#4caf50" stroke-width="2"/></svg></div>`;
-        } else if (lowerName.endsWith('.html')) {
-          iconHtml = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" stroke="#e34f26" stroke-width="2" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline fill="none" stroke="#e34f26" stroke-width="2" points="14 2 14 8 20 8"/><circle cx="12" cy="14" r="3" fill="none" stroke="#e34f26" stroke-width="2"/></svg></div>`;
-        } else if (!lowerName.includes('.')) {
-          // Assume executable without extension or just a binary
-          iconHtml = `<div class="file-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2" fill="none" stroke="#ff5722" stroke-width="2"/><polyline points="9 9 15 15 15 9" fill="none" stroke="#ff5722" stroke-width="2"/><line x1="9" y1="15" x2="15" y2="9" stroke="#ff5722" stroke-width="2"/></svg></div>`;
-        } else {
-          const ext = name.split('.').pop().toUpperCase();
-          iconHtml = `<div class="file-icon">${ext}</div>`;
-        }
-        item.innerHTML = `${iconHtml}<div class="file-name" title="${escName}">${escName}</div>`;
-        item.ondblclick = () => {
-          let appId = lowerName.endsWith('.png') || lowerName.endsWith('.jpg') ? 'kpaint' : 'kpad';
-          if (lowerName.endsWith('quarantine.exe')) appId = 'kquarantine';
-          window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: appId, path: fullPath }, '*');
-        };
-        item.onkeydown = (e) => {
-          if (e.key === 'Enter') item.ondblclick();
-        };
-        list.appendChild(item);
+        currentRenderedItems.push(fileObj);
       });
+
+      // VFS File Bounds Limit check
+      const totalItems = currentRenderedItems.length;
+      const itemsToRender = currentRenderedItems.slice(0, RENDER_LIMIT);
+
+      if (itemsToRender.length === 0) {
+        list.innerHTML = `<div class="empty-msg">${searchVal ? 'No matching files found.' : 'Directory is empty.'}</div>`;
+        updateStatus(0, totalItems);
+        return;
+      }
+
+      itemsToRender.forEach((item, index) => {
+        const domItem = document.createElement('div');
+        domItem.className = 'file-item';
+        domItem.tabIndex = 0;
+        domItem.setAttribute('role', 'row');
+        domItem.setAttribute('aria-rowindex', index + 1);
+
+        let iconSvg = '';
+        let labelName = item.name;
+        const escName = item.name.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+
+        if (item.isUp) {
+          domItem.setAttribute('aria-label', 'Go up one directory');
+          iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/><path d="M12 16V10M9 13l3-3 3 3"/></svg></div>`;
+          domItem.ondblclick = goUp;
+        } else if (item.isFolder) {
+          domItem.setAttribute('aria-label', `Folder: ${item.name}`);
+          iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffd700" stroke-width="2"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg></div>`;
+          domItem.ondblclick = () => {
+            currentPath = normalizePath(currentPath + item.name + '/');
+            document.getElementById('search-input').value = '';
+            refresh();
+          };
+        } else {
+          domItem.setAttribute('aria-label', `File: ${item.name}`);
+          const lowerName = item.name.toLowerCase();
+          if (lowerName.endsWith('.txt') || lowerName.endsWith('.md') || lowerName.endsWith('.log') || lowerName.endsWith('.json') || lowerName.endsWith('.js') || lowerName.endsWith('.c')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg></div>`;
+          } else if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.gif') || lowerName.endsWith('.ico') || lowerName.endsWith('.bmp')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4caf50" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`;
+          } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg') || lowerName.endsWith('.mid')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
+          } else if (lowerName.endsWith('.zip') || lowerName.endsWith('.gz') || lowerName.endsWith('.tar')) {
+            iconSvg = `<div class="file-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9800" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>`;
+          } else {
+            const ext = item.name.includes('.') ? item.name.split('.').pop().toUpperCase() : 'FILE';
+            iconSvg = `<div class="file-icon">${ext.substring(0, 4)}</div>`;
+          }
+
+          domItem.ondblclick = () => {
+            let appId = 'kpad';
+            if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg') || lowerName.endsWith('.ico') || lowerName.endsWith('.bmp')) {
+              appId = 'kpaint';
+            } else if (lowerName.endsWith('.wav') || lowerName.endsWith('.mp3') || lowerName.endsWith('.ogg') || lowerName.endsWith('.mid')) {
+              appId = 'kaudio';
+            } else if (lowerName.endsWith('.zip')) {
+              appId = 'kzip';
+            } else if (lowerName.endsWith('quarantine.exe')) {
+              appId = 'kquarantine';
+            }
+            window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: appId, path: item.fullPath }, '*');
+          };
+        }
+
+        domItem.onclick = () => selectItem(index);
+        domItem.onfocus = () => selectItem(index);
+        domItem.onkeydown = (e) => handleKeyNavigation(e, index, item);
+
+        domItem.innerHTML = `${iconSvg}<div class="file-name" title="${escName}">${escName}</div>`;
+        list.appendChild(domItem);
+      });
+
+      updateStatus(itemsToRender.length, totalItems);
     }
 
-    // Auto-refresh on load
+    function selectItem(index) {
+      const items = document.querySelectorAll('.file-item');
+      items.forEach((el, idx) => {
+        if (idx === index) {
+          el.classList.add('selected');
+          el.setAttribute('aria-selected', 'true');
+        } else {
+          el.classList.remove('selected');
+          el.setAttribute('aria-selected', 'false');
+        }
+      });
+      selectedIndex = index;
+    }
+
+    function handleKeyNavigation(e, index, item) {
+      const items = document.querySelectorAll('.file-item');
+      if (!items.length) return;
+
+      let nextIndex = index;
+      const columns = viewMode === 'list' ? 1 : Math.floor(document.getElementById('list').clientWidth / 100) || 1;
+
+      if (e.key === 'ArrowRight') {
+        nextIndex = Math.min(items.length - 1, index + 1);
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft') {
+        nextIndex = Math.max(0, index - 1);
+        e.preventDefault();
+      } else if (e.key === 'ArrowDown') {
+        nextIndex = Math.min(items.length - 1, index + columns);
+        e.preventDefault();
+      } else if (e.key === 'ArrowUp') {
+        if (e.altKey) {
+          goUp();
+          return;
+        }
+        nextIndex = Math.max(0, index - columns);
+        e.preventDefault();
+      } else if (e.key === 'Home') {
+        nextIndex = 0;
+        e.preventDefault();
+      } else if (e.key === 'End') {
+        nextIndex = items.length - 1;
+        e.preventDefault();
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        items[index].ondblclick ? items[index].ondblclick() : null;
+        return;
+      } else if (e.key === 'Backspace') {
+        if (document.activeElement.tagName !== 'INPUT') {
+          e.preventDefault();
+          goUp();
+          return;
+        }
+      }
+
+      if (nextIndex !== index && items[nextIndex]) {
+        items[nextIndex].focus();
+        selectItem(nextIndex);
+      }
+    }
+
+    function updateStatus(renderedCount, totalCount) {
+      const leftStr = totalCount > RENDER_LIMIT 
+        ? `Showing ${renderedCount} of ${totalCount} items (Limit ${RENDER_LIMIT})` 
+        : `${totalCount} item${totalCount === 1 ? '' : 's'}`;
+      document.getElementById('status-left').textContent = leftStr;
+      document.getElementById('status-right').textContent = `Path: ${currentPath}`;
+    }
+
+    // Initialize
     refresh();
   </script>
 </body>

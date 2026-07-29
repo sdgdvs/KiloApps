@@ -21,7 +21,7 @@
 
 ---
 
-**Target App:** KExplorer
+**Target App:** KFont
 **Status:** Next (Pass 3)
 
 ## Perpetual Workflow (NEVER STOP — loop forever)
@@ -191,3 +191,5 @@ Pass 1 Complete.
 - **KConverter**: Added double-precision unit factors, scientific notation for numbers `< 1e-5`, absolute zero (0 K) bounds warnings, `escapeHTML()` dynamic render sanitization, and ARIA `aria-selected` tab management in `kconverter.html`. Fixed stack string buffer overflows in `AppendHistory` and `DoConvert`, added zero/negative unit factor division guards, `c < -273.15` temperature warnings, edit control subclassing for Enter key & live typing updates, and DLL module/font cleanup in `main.c`.
 
 - **KDB**: Added field-specific & free-text query parsing (e.g. `dept:engineering`, `id>100`), 500 record capacity limit, `localStorage` quota try-catch wrappers, CSV import/export bounds, record edit modal, and DOM `textContent` XSS protection in `kdb.html`. Added column-specific query filter parser, 200 record capacity cap with alerts, dynamic `AutoScaleListViewColumns` on `WM_SIZE`, Win32 binary file persistence (`kdb_data.dat`), and managed GDI brush cleanup in `main.c`.
+
+- **KExplorer**: Added path normalization (`normalizePath`) for directory traversal safety, VFS file bounds limit (`RENDER_LIMIT = 500`), real-time search & filter bar, address bar navigation & breadcrumbs, new file/folder creation controls, expanded file type dispatches (audio/archive/text/images), full 2D grid/list arrow key navigation, and ARIA grid/status live-region accessibility in `kexplorer.html` (Web-only app).
