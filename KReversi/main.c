@@ -9,6 +9,7 @@
 #define BLACK 1
 #define WHITE 2
 #define BLOCKED 3
+#define DOUBLE_FLIP 4
 
 #define MODE_FREEPLAY 0
 #define MODE_CAMPAIGN 1
@@ -37,6 +38,11 @@
 #define IDM_STAGE_13 1113
 #define IDM_STAGE_14 1114
 #define IDM_STAGE_15 1115
+#define IDM_STAGE_16 1116
+#define IDM_STAGE_17 1117
+#define IDM_STAGE_18 1118
+#define IDM_STAGE_19 1119
+#define IDM_STAGE_20 1120
 
 #define IDM_AI_ROOKIE 1200
 #define IDM_AI_GREEDY 1201
@@ -50,6 +56,7 @@
 #define IDM_UNDO 1004
 #define IDM_HINT 1009
 #define IDM_BOMB 1018
+#define IDM_FREEZE 1019
 
 #define IDM_SOUND 1005
 #define IDM_STATS 1006
@@ -60,12 +67,6 @@
 #define IDM_TIME_UNTIMED 1010
 #define IDM_TIME_BLITZ 1011
 #define IDM_TIME_RAPID 1012
-
-#define IDM_HANDICAP_STD 1013
-#define IDM_HANDICAP_BLACK_CORNER 1014
-#define IDM_HANDICAP_WHITE_CORNER 1015
-#define IDM_HANDICAP_BLACK_ADV 1016
-#define IDM_HANDICAP_4CORNERS 1017
 
 #define IDM_THEME_CLASSIC 1020
 #define IDM_THEME_CYBER 1021
@@ -110,6 +111,7 @@ int maxUnlockedStage = 1;
 
 int aiDifficulty = AI_POSITIONAL;
 int bombCount = 2;
+int freezeCount = 1;
 int isBombActive = 0;
 
 int soundEnabled = 1;
@@ -169,29 +171,37 @@ typedef struct {
     int height;
     int aiDifficulty;
     int bombs;
+    int freezes;
     const char* desc;
     int numHoles;
     int holes[16][2];
+    int numBonusTiles;
+    int bonusTiles[16][2];
     int customSetupCount;
     int customDiscs[16][3];
 } CampaignStageData;
 
-static const CampaignStageData g_campaignStages[15] = {
-    { 1, "Initiation", 6, 6, AI_ROOKIE, 1, "Small 6x6 board. Master the basics.", 0, {}, 0, {} },
-    { 2, "Outpost Duel", 6, 6, AI_GREEDY, 1, "6x6 board against an aggressive Greedy AI.", 0, {}, 0, {} },
-    { 3, "The Vault", 6, 6, AI_ROOKIE, 1, "6x6 board with 4 obstacle holes blocking corners.", 4, {{1,1},{1,4},{4,1},{4,4}}, 0, {} },
-    { 4, "Classic Arena", 8, 8, AI_GREEDY, 1, "Standard 8x8 battle vs Greedy AI.", 0, {}, 0, {} },
-    { 5, "Fortress Gates", 8, 8, AI_POSITIONAL, 1, "8x8 board with blocked corners! Watch your mobility.", 4, {{0,0},{0,7},{7,0},{7,7}}, 0, {} },
-    { 6, "Crossfire Zone", 8, 8, AI_POSITIONAL, 1, "4 inner obstacle holes split the center.", 4, {{2,2},{2,5},{5,2},{5,5}}, 0, {} },
-    { 7, "Vanguard Siege", 8, 8, AI_GRANDMASTER, 2, "Face Grandmaster AI! You start with 2 extra discs.", 0, {}, 2, {{2,3,BLACK},{5,4,BLACK}} },
-    { 8, "Great Colosseum", 10, 10, AI_ROOKIE, 2, "Massive 10x10 arena! Control the expansive board.", 0, {}, 0, {} },
-    { 9, "Greedy Leviathan", 10, 10, AI_GREEDY, 2, "10x10 board vs high-disc Greedy AI.", 0, {}, 0, {} },
-    { 10, "Citadel Runes", 10, 10, AI_POSITIONAL, 2, "10x10 board with 8 corner & subcorner holes.", 8, {{0,0},{0,9},{9,0},{9,9},{1,1},{1,8},{8,1},{8,8}}, 0, {} },
-    { 11, "Diamond Ring", 8, 8, AI_POSITIONAL, 2, "8x8 board with an outer ring of obstacles.", 8, {{1,3},{1,4},{3,1},{4,1},{3,6},{4,6},{6,3},{6,4}}, 0, {} },
-    { 12, "Labyrinth Grid", 10, 10, AI_GRANDMASTER, 2, "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", 8, {{2,2},{2,7},{7,2},{7,7},{4,2},{4,7},{2,4},{7,4}}, 0, {} },
-    { 13, "Blitz Trench", 6, 6, AI_GRANDMASTER, 2, "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", 0, {}, 0, {} },
-    { 14, "Dragon's Den", 8, 8, AI_GRANDMASTER, 2, "8x8 board with 4 dragon holes on edge centers.", 4, {{0,3},{3,0},{4,7},{7,4}}, 0, {} },
-    { 15, "Grandmaster Showdown", 10, 10, AI_GRANDMASTER, 3, "The ultimate 10x10 finale against Grandmaster Minimax AI!", 0, {}, 0, {} }
+static const CampaignStageData g_campaignStages[20] = {
+    { 1, "Initiation", 6, 6, AI_ROOKIE, 1, 1, "Small 6x6 board. Master the basics.", 0, {}, 0, {}, 0, {} },
+    { 2, "Outpost Duel", 6, 6, AI_GREEDY, 1, 1, "6x6 board against an aggressive Greedy AI.", 0, {}, 0, {}, 0, {} },
+    { 3, "The Vault", 6, 6, AI_ROOKIE, 1, 1, "6x6 board with 4 obstacle holes blocking corners.", 4, {{1,1},{1,4},{4,1},{4,4}}, 0, {}, 0, {} },
+    { 4, "Classic Arena", 8, 8, AI_GREEDY, 1, 1, "Standard 8x8 battle vs Greedy AI.", 0, {}, 0, {}, 0, {} },
+    { 5, "Fortress Gates", 8, 8, AI_POSITIONAL, 1, 1, "8x8 board with blocked corners and 2x bonus tiles!", 4, {{0,0},{0,7},{7,0},{7,7}}, 2, {{2,2},{5,5}}, 0, {} },
+    { 6, "Crossfire Zone", 8, 8, AI_POSITIONAL, 1, 1, "4 inner obstacle holes split the center.", 4, {{2,2},{2,5},{5,2},{5,5}}, 2, {{1,3},{6,4}}, 0, {} },
+    { 7, "Vanguard Siege", 8, 8, AI_GRANDMASTER, 2, 1, "Face Grandmaster AI! You start with 2 extra discs.", 0, {}, 0, {}, 2, {{2,3,BLACK},{5,4,BLACK}} },
+    { 8, "Great Colosseum", 10, 10, AI_ROOKIE, 2, 2, "Massive 10x10 arena! Control the expansive board.", 0, {}, 4, {{3,3},{3,6},{6,3},{6,6}}, 0, {} },
+    { 9, "Greedy Leviathan", 10, 10, AI_GREEDY, 2, 2, "10x10 board vs high-disc Greedy AI.", 0, {}, 4, {{2,4},{4,7},{7,5},{5,2}}, 0, {} },
+    { 10, "Citadel Runes", 10, 10, AI_POSITIONAL, 2, 2, "10x10 board with 8 corner & subcorner holes.", 8, {{0,0},{0,9},{9,0},{9,9},{1,1},{1,8},{8,1},{8,8}}, 4, {{3,4},{4,5},{5,4},{6,5}}, 0, {} },
+    { 11, "Diamond Ring", 8, 8, AI_POSITIONAL, 2, 2, "8x8 board with an outer ring of obstacles.", 8, {{1,3},{1,4},{3,1},{4,1},{3,6},{4,6},{6,3},{6,4}}, 4, {{2,2},{2,5},{5,2},{5,5}}, 0, {} },
+    { 12, "Labyrinth Grid", 10, 10, AI_GRANDMASTER, 2, 2, "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", 8, {{2,2},{2,7},{7,2},{7,7},{4,2},{4,7},{2,4},{7,4}}, 4, {{3,3},{3,6},{6,3},{6,6}}, 0, {} },
+    { 13, "Blitz Trench", 6, 6, AI_GRANDMASTER, 2, 2, "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", 0, {}, 2, {{1,2},{4,3}}, 0, {} },
+    { 14, "Dragon's Den", 8, 8, AI_GRANDMASTER, 2, 2, "8x8 board with 4 dragon holes on edge centers.", 4, {{0,3},{3,0},{4,7},{7,4}}, 4, {{2,3},{3,5},{5,2},{4,4}}, 0, {} },
+    { 15, "Eclipse Chamber", 10, 10, AI_POSITIONAL, 2, 2, "10x10 board with 12 obstacles surrounding center.", 12, {{1,1},{1,8},{8,1},{8,8},{3,1},{6,1},{3,8},{6,8},{1,3},{1,6},{8,3},{8,6}}, 4, {{4,2},{5,7},{2,5},{7,4}}, 0, {} },
+    { 16, "Phantom Matrix", 8, 8, AI_GRANDMASTER, 2, 2, "8x8 board with 6 staggered holes and 4 bonus tiles.", 6, {{0,2},{2,7},{5,0},{7,5},{3,3},{4,4}}, 4, {{1,1},{1,6},{6,1},{6,6}}, 0, {} },
+    { 17, "Warlord's Gambit", 10, 10, AI_POSITIONAL, 3, 2, "10x10 battlefield with 8 holes and 6 bonus tiles.", 8, {{0,4},{4,0},{5,9},{9,5},{2,2},{2,7},{7,2},{7,7}}, 6, {{3,2},{2,3},{6,7},{7,6},{3,7},{7,3}}, 0, {} },
+    { 18, "Titan Crucible", 10, 10, AI_GRANDMASTER, 3, 2, "10x10 arena with 10 holes vs Grandmaster Minimax.", 10, {{1,4},{1,5},{8,4},{8,5},{4,1},{5,1},{4,8},{5,8},{0,0},{9,9}}, 6, {{2,4},{7,5},{4,2},{5,7},{3,3},{6,6}}, 0, {} },
+    { 19, "Iron Apex", 8, 8, AI_GRANDMASTER, 3, 2, "Tight 8x8 board with 4 holes vs ruthless Grandmaster AI.", 4, {{1,2},{2,5},{5,2},{6,5}}, 4, {{0,1},{1,6},{6,1},{7,6}}, 0, {} },
+    { 20, "Reversi Grandmaster Challenge", 10, 10, AI_GRANDMASTER, 3, 3, "The ultimate 10x10 stage against the Supreme Reversi Grandmaster!", 12, {{0,0},{0,9},{9,0},{9,9},{2,2},{2,7},{7,2},{7,7},{4,1},{5,8},{1,5},{8,4}}, 6, {{3,4},{4,3},{5,6},{6,5},{1,1},{8,8}}, 0, {} }
 };
 
 typedef struct {
@@ -200,6 +210,7 @@ typedef struct {
     int boardHeight;
     int currentPlayer;
     int bombCount;
+    int freezeCount;
     int isBombActive;
     int gameEnded;
 } HistoryState;
@@ -485,7 +496,7 @@ void SaveStats() {
 void UpdateStats(int bCount, int wCount) {
     if (bCount > wCount) {
         stats[0]++;
-        if (gameMode == MODE_CAMPAIGN && campaignStage == maxUnlockedStage && maxUnlockedStage < 15) {
+        if (gameMode == MODE_CAMPAIGN && campaignStage == maxUnlockedStage && maxUnlockedStage < 20) {
             maxUnlockedStage++;
         }
     } else if (wCount > bCount) {
@@ -498,7 +509,7 @@ void UpdateStats(int bCount, int wCount) {
 
 void ShowStats(HWND hwnd) {
     char msg[256];
-    sprintf(msg, "Games Played: %d\nWins: %d\nLosses: %d\nDraws: %d\nMax Campaign Stage: %d / 15",
+    sprintf(msg, "Games Played: %d\nWins: %d\nLosses: %d\nDraws: %d\nMax Campaign Stage: %d / 20",
             stats[0]+stats[1]+stats[2], stats[0], stats[1], stats[2], maxUnlockedStage);
     MessageBox(hwnd, msg, "KReversi Statistics", MB_OK | MB_ICONINFORMATION);
 }
@@ -509,13 +520,15 @@ void ShowHelp(HWND hwnd) {
         "1. CORE RULES & OBJECTIVE\n"
         "• Objective: Have the majority of your colored discs when neither player has legal moves.\n"
         "• Sandwich & Flip: Trap opponent discs horizontally, vertically, or diagonally.\n"
-        "• Blocked Cells: Obstacle holes cannot hold discs and block flips across them.\n\n"
+        "• Blocked Cells: Obstacle holes cannot hold discs and block flips across them.\n"
+        "• Double-Flip Bonus Tiles (2X): Landing or flipping onto a 2X tile triggers an explosive 3x3 bonus flip!\n\n"
         "2. POWER-UPS & SHORTCUTS\n"
-        "• Hint (H): Highlights top-evaluated move based on positional weights & minimax.\n"
-        "• Undo (U): Reverts last move pair against AI.\n"
-        "• Bomb Disc (B): Place a disc on ANY empty cell to flip 3x3 surrounding enemy discs!\n\n"
-        "3. CAMPAIGN MODE (15 STAGES)\n"
-        "• Face 15 diverse stages with dynamic 6x6, 8x8, and 10x10 boards, blocked holes, and 4 AI personalities (Rookie, Greedy, Positional, Grandmaster Minimax).\n\n"
+        "• Optimal Hint (H): Highlights top-evaluated move based on positional weights & minimax.\n"
+        "• Undo Move (U): Reverts last turn move pair against AI.\n"
+        "• Bomb Disc (B): Place a disc on ANY empty cell to flip 3x3 surrounding enemy discs!\n"
+        "• Freeze AI (F): Forces the AI to skip 1 turn, giving you an extra turn!\n\n"
+        "3. CAMPAIGN MODE (20 STAGES)\n"
+        "• Conquer 20 diverse stages with dynamic 6x6, 8x8, and 10x10 boards, blocked holes, 2X bonus tiles, and 4 AI personalities (Rookie, Greedy, Positional, Grandmaster Minimax).\n\n"
         "4. CORNER & MOBILITY STRATEGY\n"
         "• Corners (A1, H1, etc.) can NEVER be flipped once captured.\n"
         "• Avoid X-squares (B2, G2) adjacent to open corners!";
@@ -533,6 +546,13 @@ void PlaySoundEffect(int type) {
     } else if (type == 3) { // Bomb
         Beep(220, 80);
         Beep(140, 120);
+    } else if (type == 4) { // Freeze
+        Beep(800, 80);
+        Beep(1200, 120);
+    } else if (type == 5) { // Bonus
+        Beep(1000, 60);
+        Beep(1400, 80);
+        Beep(1800, 100);
     }
 }
 
@@ -546,6 +566,7 @@ void SetupBoard() {
         g_boardHeight = stage->height;
         aiDifficulty = stage->aiDifficulty;
         bombCount = stage->bombs;
+        freezeCount = stage->freezes;
         moveTimeMode = (campaignStage == 13 ? 5 : 0);
 
         for (int i = 0; i < g_boardWidth * g_boardHeight; i++) board[i] = EMPTY;
@@ -556,6 +577,17 @@ void SetupBoard() {
             int hc = stage->holes[i][1];
             if (hr >= 0 && hr < g_boardHeight && hc >= 0 && hc < g_boardWidth) {
                 board[hr * g_boardWidth + hc] = BLOCKED;
+            }
+        }
+
+        // Apply bonus double-flip tiles
+        for (int i = 0; i < stage->numBonusTiles; i++) {
+            int br = stage->bonusTiles[i][0];
+            int bc = stage->bonusTiles[i][1];
+            if (br >= 0 && br < g_boardHeight && bc >= 0 && bc < g_boardWidth) {
+                if (board[br * g_boardWidth + bc] == EMPTY) {
+                    board[br * g_boardWidth + bc] = DOUBLE_FLIP;
+                }
             }
         }
 
@@ -579,6 +611,7 @@ void SetupBoard() {
     } else {
         // Free play mode
         bombCount = 2;
+        freezeCount = 2;
         int midR = g_boardHeight / 2;
         int midC = g_boardWidth / 2;
         board[(midR - 1) * g_boardWidth + (midC - 1)] = WHITE;
@@ -632,6 +665,7 @@ void PushHistory() {
         history[historyCount].boardHeight = g_boardHeight;
         history[historyCount].currentPlayer = currentPlayer;
         history[historyCount].bombCount = bombCount;
+        history[historyCount].freezeCount = freezeCount;
         history[historyCount].isBombActive = isBombActive;
         history[historyCount].gameEnded = gameEnded;
         historyCount++;
@@ -655,6 +689,7 @@ void UndoMove(HWND hwnd) {
     for(int i = 0; i < g_boardWidth * g_boardHeight; i++) board[i] = lastState.board[i];
     currentPlayer = lastState.currentPlayer;
     bombCount = lastState.bombCount;
+    freezeCount = lastState.freezeCount;
     gameEnded = 0;
     gameOverSoundPlayed = 0;
     
@@ -662,9 +697,24 @@ void UndoMove(HWND hwnd) {
     InvalidateRect(hwnd, NULL, TRUE);
 }
 
+void DoFreezeAI(HWND hwnd) {
+    if (freezeCount <= 0 || gameEnded || currentPlayer != BLACK) return;
+    freezeCount--;
+    if (hwnd) KillTimer(hwnd, 1);
+    currentPlayer = BLACK;
+    PlaySoundEffect(4);
+    RECT clientRect;
+    if (hwnd) GetClientRect(hwnd, &clientRect);
+    else { clientRect.right = 480; clientRect.bottom = 560; }
+    SpawnSparksGDI((float)(clientRect.right / 2), (float)(clientRect.bottom / 2), 35, RGB(0, 245, 212));
+    if (hwnd) SetTimer(hwnd, 4, 25, NULL);
+    ResetMoveTimer(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 int GetFlippableOnBoard(const int* b, int W, int H, int index, int player, int* flippable) {
     if (index < 0 || index >= W * H) return 0;
-    if (b[index] != EMPTY) return 0;
+    if (b[index] != EMPTY && b[index] != DOUBLE_FLIP) return 0;
     int r = index / W;
     int c = index % W;
     int opponent = (player == BLACK) ? WHITE : BLACK;
@@ -697,7 +747,7 @@ int GetFlippable(int index, int player, int* flippable) {
 int HasValidMovesOnBoard(const int* b, int W, int H, int player) {
     int dummy[100];
     for(int i = 0; i < W * H; i++) {
-        if(b[i] == EMPTY && GetFlippableOnBoard(b, W, H, i, player, dummy) > 0) return 1;
+        if((b[i] == EMPTY || b[i] == DOUBLE_FLIP) && GetFlippableOnBoard(b, W, H, i, player, dummy) > 0) return 1;
     }
     return 0;
 }
@@ -735,7 +785,7 @@ int Minimax(int* b, int W, int H, int depth, int alpha, int beta, int isMaxPlaye
     int moves[100];
     int moveCount = 0;
     for (int i = 0; i < W * H; i++) {
-        if (b[i] == EMPTY) {
+        if (b[i] == EMPTY || b[i] == DOUBLE_FLIP) {
             int dummy[100];
             if (GetFlippableOnBoard(b, W, H, i, currPlayer, dummy) > 0) {
                 moves[moveCount++] = i;
@@ -793,7 +843,7 @@ int GetBestMoveForPlayer(int player) {
     int moves[100];
     int moveCount = 0;
     for (int i = 0; i < g_boardWidth * g_boardHeight; i++) {
-        if (board[i] == EMPTY) {
+        if (board[i] == EMPTY || board[i] == DOUBLE_FLIP) {
             int dummy[100];
             if (GetFlippable(i, player, dummy) > 0) {
                 moves[moveCount++] = i;
@@ -838,6 +888,11 @@ int GetBestMoveForPlayer(int player) {
 void DoMove(int index, int player, HWND hwnd) {
     int count = GetFlippable(index, player, animatingFlips);
     if (count > 0) {
+        int hasBonusTile = (board[index] == DOUBLE_FLIP);
+        for (int i = 0; i < count; i++) {
+            if (board[animatingFlips[i]] == DOUBLE_FLIP) hasBonusTile = 1;
+        }
+
         board[index] = player;
         numAnimatingFlips = count;
         flipProgress = 0;
@@ -850,18 +905,38 @@ void DoMove(int index, int player, HWND hwnd) {
         int c = index % g_boardWidth;
         float cx = (float)(boardStartX + c * cellSize + cellSize / 2);
         float cy = (float)(boardStartY + r * cellSize + cellSize / 2);
-        SpawnSparksGDI(cx, cy, 14, player == BLACK ? RGB(255, 215, 0) : RGB(0, 245, 212));
+
+        if (hasBonusTile) {
+            SpawnSparksGDI(cx, cy, 30, RGB(255, 215, 0));
+            PlaySoundEffect(5);
+            // Double Flip Bonus Ripple: flip adjacent 8-neighbor opponent discs
+            int opponent = (player == BLACK) ? WHITE : BLACK;
+            for (int d = 0; d < 8; d++) {
+                int nr = r + dirs[d][0];
+                int nc = c + dirs[d][1];
+                if (nr >= 0 && nr < g_boardHeight && nc >= 0 && nc < g_boardWidth) {
+                    int nidx = nr * g_boardWidth + nc;
+                    if (board[nidx] == opponent) {
+                        board[nidx] = player;
+                        if (numAnimatingFlips < 100) animatingFlips[numAnimatingFlips++] = nidx;
+                    }
+                }
+            }
+        } else {
+            SpawnSparksGDI(cx, cy, 14, player == BLACK ? RGB(255, 215, 0) : RGB(0, 245, 212));
+            PlaySoundEffect(1);
+        }
+
         if (hwnd) SetTimer(hwnd, 4, 25, NULL);
 
         for(int i = 0; i < count; i++) {
             board[animatingFlips[i]] = player;
         }
-        PlaySoundEffect(1);
     }
 }
 
 void DoBombMove(int index, int player, HWND hwnd) {
-    if (board[index] != EMPTY || bombCount <= 0) return;
+    if ((board[index] != EMPTY && board[index] != DOUBLE_FLIP) || bombCount <= 0) return;
     PushHistory();
     board[index] = player;
     bombCount--;
@@ -930,6 +1005,7 @@ void SaveGame(HWND hwnd) {
         fwrite(board, sizeof(int), g_boardWidth * g_boardHeight, f);
         fwrite(&currentPlayer, sizeof(int), 1, f);
         fwrite(&bombCount, sizeof(int), 1, f);
+        fwrite(&freezeCount, sizeof(int), 1, f);
         fwrite(&aiDifficulty, sizeof(int), 1, f);
         fwrite(&historyCount, sizeof(int), 1, f);
         fwrite(history, sizeof(HistoryState), historyCount, f);
@@ -951,6 +1027,7 @@ void LoadGame(HWND hwnd) {
         fread(board, sizeof(int), g_boardWidth * g_boardHeight, f);
         fread(&currentPlayer, sizeof(int), 1, f);
         fread(&bombCount, sizeof(int), 1, f);
+        fread(&freezeCount, sizeof(int), 1, f);
         fread(&aiDifficulty, sizeof(int), 1, f);
         fread(&historyCount, sizeof(int), 1, f);
         fread(history, sizeof(HistoryState), historyCount, f);
@@ -983,11 +1060,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             HMENU hModeMenu = CreatePopupMenu();
             AppendMenu(hModeMenu, MF_STRING | (gameMode == MODE_FREEPLAY ? MF_CHECKED : 0), IDM_FREEPLAY_MODE, "Free Play");
-            AppendMenu(hModeMenu, MF_STRING | (gameMode == MODE_CAMPAIGN ? MF_CHECKED : 0), IDM_CAMPAIGN_MODE, "Campaign Mode (15 Stages)");
+            AppendMenu(hModeMenu, MF_STRING | (gameMode == MODE_CAMPAIGN ? MF_CHECKED : 0), IDM_CAMPAIGN_MODE, "Campaign Mode (20 Stages)");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hModeMenu, "Mode");
 
             HMENU hStageMenu = CreatePopupMenu();
-            for (int s = 1; s <= 15; s++) {
+            for (int s = 1; s <= 20; s++) {
                 char stageName[64];
                 sprintf(stageName, "Stage %d: %s %s", s, g_campaignStages[s-1].name, s <= maxUnlockedStage ? "" : "(Locked)");
                 AppendMenu(hStageMenu, MF_STRING | (s <= maxUnlockedStage ? 0 : MF_GRAYED), IDM_STAGE_BASE + s, stageName);
@@ -1022,6 +1099,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             HMENU hActionMenu = CreatePopupMenu();
             AppendMenu(hActionMenu, MF_STRING, IDM_BOMB, "Activate Bomb Disc (B)");
+            AppendMenu(hActionMenu, MF_STRING, IDM_FREEZE, "Freeze AI (F)");
             AppendMenu(hActionMenu, MF_STRING, IDM_HINT, "Optimal Hint (H)");
             AppendMenu(hActionMenu, MF_STRING, IDM_UNDO, "Undo Move (U)");
             AppendMenu(hActionMenu, MF_SEPARATOR, 0, NULL);
@@ -1042,7 +1120,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND: {
             int id = LOWORD(wParam);
-            if (id >= IDM_STAGE_1 && id <= IDM_STAGE_15) {
+            if (id >= IDM_STAGE_1 && id <= IDM_STAGE_20) {
                 int selectedStage = id - IDM_STAGE_BASE;
                 if (selectedStage <= maxUnlockedStage) {
                     campaignStage = selectedStage;
@@ -1093,6 +1171,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     break;
                 }
+                case IDM_FREEZE: DoFreezeAI(hwnd); break;
                 case IDM_HINT: showHint = !showHint; InvalidateRect(hwnd, NULL, TRUE); break;
                 case IDM_UNDO: UndoMove(hwnd); break;
                 case IDM_STATS: ShowStats(hwnd); break;
@@ -1109,6 +1188,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     isBombActive = !isBombActive;
                     InvalidateRect(hwnd, NULL, TRUE);
                 }
+            } else if (wParam == 'F' || wParam == 'f') {
+                DoFreezeAI(hwnd);
             } else if (wParam == 'H' || wParam == 'h') {
                 showHint = !showHint;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -1134,7 +1215,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (r >= 0 && r < g_boardHeight && c >= 0 && c < g_boardWidth) {
                 int idx = r * g_boardWidth + c;
                 if (isBombActive) {
-                    if (board[idx] == EMPTY && bombCount > 0) {
+                    if ((board[idx] == EMPTY || board[idx] == DOUBLE_FLIP) && bombCount > 0) {
                         DoBombMove(idx, BLACK, hwnd);
                         currentPlayer = WHITE;
                         if (!HasValidMoves(WHITE)) {
@@ -1229,15 +1310,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char headerStr[128];
             if (gameMode == MODE_CAMPAIGN) {
                 const CampaignStageData* stg = &g_campaignStages[campaignStage - 1];
-                sprintf(headerStr, "Stage %d: %s | AI: %s | Bombs: %d",
+                sprintf(headerStr, "Stage %d: %s | AI: %s | Bombs: %d | Freezes: %d",
                         campaignStage, stg->name,
                         aiDifficulty == 0 ? "Rookie" : (aiDifficulty == 1 ? "Greedy" : (aiDifficulty == 2 ? "Positional" : "Grandmaster")),
-                        bombCount);
+                        bombCount, freezeCount);
             } else {
-                sprintf(headerStr, "Free Play (%dx%d) | AI: %s | Bombs: %d",
+                sprintf(headerStr, "Free Play (%dx%d) | AI: %s | Bombs: %d | Freezes: %d",
                         g_boardWidth, g_boardHeight,
                         aiDifficulty == 0 ? "Rookie" : (aiDifficulty == 1 ? "Greedy" : (aiDifficulty == 2 ? "Positional" : "Grandmaster")),
-                        bombCount);
+                        bombCount, freezeCount);
             }
             TextOut(hdc, 10, 8, headerStr, strlen(headerStr));
 
@@ -1292,10 +1373,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (bestMoveIdx != -1 && showHint) {
                 int col = bestMoveIdx % g_boardWidth;
                 int row = bestMoveIdx / g_boardWidth;
-                sprintf(evalStr, "Eval: %+d | Best: %c%d | %s | [H]int [U]ndo [B]omb", 
+                sprintf(evalStr, "Eval: %+d | Best: %c%d | %s | [H]int [U]ndo [B]omb [F]reeze", 
                         evalScore, 'A' + col, row + 1, clockStr);
             } else {
-                sprintf(evalStr, "Eval: %+d | Best: - | %s | [H]int [U]ndo [B]omb", 
+                sprintf(evalStr, "Eval: %+d | Best: - | %s | [H]int [U]ndo [B]omb [F]reeze", 
                         evalScore, clockStr);
             }
             TextOut(hdc, 10, 68, evalStr, strlen(evalStr));
@@ -1322,6 +1403,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (board[idx] == BLOCKED) {
                         SelectObject(hdc, blockedBrush);
                         Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+                    } else if (board[idx] == DOUBLE_FLIP) {
+                        HBRUSH goldCellBrush = CreateSolidBrush(RGB(70, 55, 10));
+                        HPEN goldBorderPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+                        SelectObject(hdc, goldCellBrush);
+                        SelectObject(hdc, goldBorderPen);
+                        Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+                        DeleteObject(goldCellBrush);
+                        DeleteObject(goldBorderPen);
+
+                        SetBkMode(hdc, TRANSPARENT);
+                        SetTextColor(hdc, RGB(255, 215, 0));
+                        RECT tRect = rect;
+                        DrawText(hdc, "2X", 2, &tRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                        SetBkMode(hdc, OPAQUE);
+                        SetBkColor(hdc, theme->bg);
+                        SetTextColor(hdc, theme->text);
                     } else {
                         HBRUSH cFeltBrush = CreateSolidBrush(theme->boardCell);
                         HPEN cHiPen = CreatePen(PS_SOLID, 1, RGB(40, 110, 55));
@@ -1382,7 +1479,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         } else {
                             DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, 0);
                         }
-                    } else if (currentPlayer == BLACK && !gameEnded && board[idx] == EMPTY) {
+                    } else if (currentPlayer == BLACK && !gameEnded && (board[idx] == EMPTY || board[idx] == DOUBLE_FLIP)) {
                         int dummy[100];
                         if (isBombActive) {
                             HPEN bombPen = CreatePen(PS_SOLID, 2, RGB(255, 69, 0));
@@ -1429,8 +1526,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
     return 0;
 }
-
-
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     WNDCLASSEX wc;

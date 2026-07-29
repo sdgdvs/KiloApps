@@ -6,7 +6,7 @@
     <style>
         body { margin: 0; padding: 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg-color, #121212); color: var(--text-color, #e0e0e0); display: flex; flex-direction: column; align-items: center; transition: background-color 0.3s, color 0.3s; user-select: none; }
         h1 { font-size: 24px; color: var(--h1-color, #fff); margin-top: 0; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-        .header-panel { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 440px; gap: 6px; margin-bottom: 10px; }
+        .header-panel { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 480px; gap: 6px; margin-bottom: 10px; }
         .info { display: flex; justify-content: space-between; width: 100%; font-weight: bold; font-size: 15px; background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: 6px; box-sizing: border-box; }
         .eval-panel { font-size: 13px; font-weight: bold; color: var(--hint-outline, #ffd700); display: flex; gap: 12px; justify-content: center; width: 100%; background: var(--eval-bg, #1a1a1a); padding: 6px 12px; border-radius: 6px; border: 1px solid #333; box-sizing: border-box; flex-wrap: wrap; text-align: center; }
         .controls-grid { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; background: rgba(0,0,0,0.15); padding: 8px; border-radius: 6px; box-sizing: border-box; }
@@ -26,15 +26,17 @@
         .cell:hover { background: radial-gradient(circle at 40% 40%, #2f8e4b, #1a562c); }
         .cell.blocked { background: #1a1a1a !important; cursor: not-allowed; opacity: 0.8; box-shadow: inset 0 0 6px #000; }
         .cell.blocked::after { content: '✕'; color: #666; font-size: 18px; font-weight: bold; }
+        .cell.double-flip { background: radial-gradient(circle at 40% 40%, #5a4a10, #2a2000) !important; border: 1.5px solid #ffd700; box-shadow: 0 0 8px rgba(255, 215, 0, 0.6) inset; }
+        .cell.double-flip::after { content: '2x'; color: #ffd700; font-size: 14px; font-weight: bold; text-shadow: 0 0 6px #ffaa00; }
         .cell.hoshi::before { content: ''; position: absolute; width: 6px; height: 6px; background: #d4af37; border-radius: 50%; box-shadow: 0 0 3px rgba(0,0,0,0.8); opacity: 0.7; pointer-events: none; }
         
-        .disc { width: calc(var(--cell-size, 45px) * 0.84); height: calc(var(--cell-size, 45px) * 0.84); border-radius: 50%; display: none; transition: transform 0.2s; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); }
+        .disc { width: calc(var(--cell-size, 45px) * 0.84); height: calc(var(--cell-size, 45px) * 0.84); border-radius: 50%; display: none; transition: transform 0.2s; background-size: contain; background-repeat: no-repeat; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.75)); z-index: 2; }
         .disc.black { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="bg" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="%23444444"/><stop offset="50%" stop-color="%23181818"/><stop offset="100%" stop-color="%23050505"/></radialGradient><linearGradient id="rim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23d4af37"/><stop offset="50%" stop-color="%238a7322"/><stop offset="100%" stop-color="%23ffd700"/></linearGradient><linearGradient id="crown" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%23ffe680"/><stop offset="100%" stop-color="%23cc9900"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23rim)"/><circle cx="32" cy="32" r="27" fill="url(%23bg)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%23d4af37" stroke-width="0.8" opacity="0.6"/><path d="M 14,24 A 20,20 0 0,1 32,10" fill="none" stroke="%23ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/><path d="M 22,38 L 20,26 L 26,30 L 32,24 L 38,30 L 44,26 L 42,38 Z" fill="url(%23crown)" stroke="%238a7322" stroke-width="1"/><circle cx="20" cy="25" r="1.5" fill="%23ffe680"/><circle cx="32" cy="23" r="1.8" fill="%23ffe680"/><circle cx="44" cy="25" r="1.5" fill="%23ffe680"/></svg>'); }
         .disc.white { display: block; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><radialGradient id="wbg" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="%23ffffff"/><stop offset="65%" stop-color="%23e2e8f0"/><stop offset="100%" stop-color="%23cbd5e1"/></radialGradient><linearGradient id="wrim" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%23e2e8f0"/><stop offset="50%" stop-color="%2394a3b8"/><stop offset="100%" stop-color="%23f8fafc"/></linearGradient><linearGradient id="star" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="%2364748b"/><stop offset="100%" stop-color="%23334155"/></linearGradient></defs><circle cx="32" cy="32" r="30" fill="url(%23wrim)"/><circle cx="32" cy="32" r="27" fill="url(%23wbg)"/><circle cx="32" cy="32" r="25" fill="none" stroke="%2394a3b8" stroke-width="0.8" opacity="0.6"/><path d="M 14,24 A 20,20 0 0,1 32,10" fill="none" stroke="%23ffffff" stroke-width="3" stroke-linecap="round" opacity="0.8"/><path d="M 32,22 L 35,28 L 41,29 L 36.5,33 L 38,39 L 32,35.5 L 26,39 L 27.5,33 L 23,29 L 29,28 Z" fill="url(%23star)" stroke="%23475569" stroke-width="0.8"/></svg>'); }
         
-        .valid-move::after { content: ''; position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #ffffaa 0%, #ffd700 70%, #ffaa00 100%); border-radius: 50%; box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.7); animation: pulseDot 1.2s infinite alternate ease-in-out; }
+        .valid-move::after { content: ''; position: absolute; width: 12px; height: 12px; background: radial-gradient(circle, #ffffaa 0%, #ffd700 70%, #ffaa00 100%); border-radius: 50%; box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255, 215, 0, 0.7); animation: pulseDot 1.2s infinite alternate ease-in-out; z-index: 3; }
         @keyframes pulseDot { 0% { transform: scale(0.8); opacity: 0.6; } 100% { transform: scale(1.2); opacity: 1; } }
-        .bomb-target::after { content: '💣'; position: absolute; font-size: 16px; opacity: 0.85; filter: drop-shadow(0 0 6px #ff4500); }
+        .bomb-target::after { content: '💣'; position: absolute; font-size: 16px; opacity: 0.85; filter: drop-shadow(0 0 6px #ff4500); z-index: 3; }
         
         @keyframes flip3DToWhite {
             0% { transform: perspective(350px) rotateY(0deg) translateY(0); }
@@ -54,7 +56,7 @@
         
         #message { min-height: 24px; font-size: 16px; font-weight: bold; color: #55ff55; text-shadow: 0 1px 2px #000; margin-bottom: 8px; text-align: center; }
         
-        .button-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 440px; }
+        .button-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 480px; }
         button { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; background: #2d2d2d; color: #fff; border: 1px solid #444; border-radius: 5px; transition: background 0.2s, transform 0.1s; }
         button:hover { background: #3d3d3d; border-color: #666; }
         button:active { transform: scale(0.97); }
@@ -109,13 +111,14 @@
         <div class="eval-panel">
             <span id="eval-score">Eval: +0</span>
             <span id="clock-display" style="color: #ffaa00;">Clock: Off</span>
-            <span id="hint-text">Best Move: -</span>
+            <span id="hint-text">Best: -</span>
             <span id="bomb-text" style="color: #ff6600;">Bombs: 2</span>
+            <span id="freeze-text" style="color: #00f5d4;">Freezes: 1</span>
         </div>
         <div class="controls-grid">
             <label for="mode-select">Mode:
                 <select id="mode-select" onchange="changeGameMode()">
-                    <option value="campaign" selected>Campaign (15 Stages)</option>
+                    <option value="campaign" selected>Campaign (20 Stages)</option>
                     <option value="freeplay">Free Play</option>
                 </select>
             </label>
@@ -173,6 +176,7 @@
 
     <div class="button-bar">
         <button id="bomb-btn" onclick="toggleBomb()" style="border-color: #ff6600; color: #ff9933;">Bomb Disc (B)</button>
+        <button id="freeze-btn" onclick="useFreezeAI()" style="border-color: #00f5d4; color: #00f5d4;">Freeze AI (F)</button>
         <button onclick="undoMove()">Undo (U)</button>
         <button onclick="saveGame()">Save</button>
         <button onclick="loadGame()">Load</button>
@@ -189,12 +193,14 @@
         const messageEl = document.getElementById('message');
         const clockDisplayEl = document.getElementById('clock-display');
         const bombTextEl = document.getElementById('bomb-text');
+        const freezeTextEl = document.getElementById('freeze-text');
         const bombBtnEl = document.getElementById('bomb-btn');
 
         const EMPTY = 0;
         const BLACK = 1;
         const WHITE = 2;
         const BLOCKED = 3;
+        const DOUBLE_FLIP = 4;
 
         const DIRS = [
             [-1,-1], [-1,0], [-1,1],
@@ -243,21 +249,26 @@
         ];
 
         const CAMPAIGN_STAGES = [
-            { stage: 1, name: "Initiation", width: 6, height: 6, ai: "rookie", bombs: 1, desc: "Small 6x6 board. Master the basics.", holes: [], custom: [] },
-            { stage: 2, name: "Outpost Duel", width: 6, height: 6, ai: "greedy", bombs: 1, desc: "6x6 board against an aggressive Greedy AI.", holes: [], custom: [] },
-            { stage: 3, name: "The Vault", width: 6, height: 6, ai: "rookie", bombs: 1, desc: "6x6 board with 4 obstacle holes blocking corners.", holes: [[1,1],[1,4],[4,1],[4,4]], custom: [] },
-            { stage: 4, name: "Classic Arena", width: 8, height: 8, ai: "greedy", bombs: 1, desc: "Standard 8x8 battle vs Greedy AI.", holes: [], custom: [] },
-            { stage: 5, name: "Fortress Gates", width: 8, height: 8, ai: "positional", bombs: 1, desc: "8x8 board with blocked corners! Watch your mobility.", holes: [[0,0],[0,7],[7,0],[7,7]], custom: [] },
-            { stage: 6, name: "Crossfire Zone", width: 8, height: 8, ai: "positional", bombs: 1, desc: "4 inner obstacle holes split the center.", holes: [[2,2],[2,5],[5,2],[5,5]], custom: [] },
-            { stage: 7, name: "Vanguard Siege", width: 8, height: 8, ai: "grandmaster", bombs: 2, desc: "Face Grandmaster AI! You start with 2 extra discs.", holes: [], custom: [[2,3,BLACK],[5,4,BLACK]] },
-            { stage: 8, name: "Great Colosseum", width: 10, height: 10, ai: "rookie", bombs: 2, desc: "Massive 10x10 arena! Control the expansive board.", holes: [], custom: [] },
-            { stage: 9, name: "Greedy Leviathan", width: 10, height: 10, ai: "greedy", bombs: 2, desc: "10x10 board vs high-disc Greedy AI.", holes: [], custom: [] },
-            { stage: 10, name: "Citadel Runes", width: 10, height: 10, ai: "positional", bombs: 2, desc: "10x10 board with 8 corner & subcorner holes.", holes: [[0,0],[0,9],[9,0],[9,9],[1,1],[1,8],[8,1],[8,8]], custom: [] },
-            { stage: 11, name: "Diamond Ring", width: 8, height: 8, ai: "positional", bombs: 2, desc: "8x8 board with an outer ring of obstacles.", holes: [[1,3],[1,4],[3,1],[4,1],[3,6],[4,6],[6,3],[6,4]], custom: [] },
-            { stage: 12, name: "Labyrinth Grid", width: 10, height: 10, ai: "grandmaster", bombs: 2, desc: "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", holes: [[2,2],[2,7],[7,2],[7,7],[4,2],[4,7],[2,4],[7,4]], custom: [] },
-            { stage: 13, name: "Blitz Trench", width: 6, height: 6, ai: "grandmaster", bombs: 2, desc: "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", holes: [], custom: [], timeMode: 5 },
-            { stage: 14, name: "Dragon's Den", width: 8, height: 8, ai: "grandmaster", bombs: 2, desc: "8x8 board with 4 dragon holes on edge centers.", holes: [[0,3],[3,0],[4,7],[7,4]], custom: [] },
-            { stage: 15, name: "Grandmaster Showdown", width: 10, height: 10, ai: "grandmaster", bombs: 3, desc: "The ultimate 10x10 finale against Grandmaster Minimax AI!", holes: [], custom: [] }
+            { stage: 1, name: "Initiation", width: 6, height: 6, ai: "rookie", bombs: 1, freezes: 1, desc: "Small 6x6 board. Master the basic sandwich mechanics.", holes: [], bonus: [], custom: [] },
+            { stage: 2, name: "Outpost Duel", width: 6, height: 6, ai: "greedy", bombs: 1, freezes: 1, desc: "6x6 board against an aggressive Greedy AI.", holes: [], bonus: [], custom: [] },
+            { stage: 3, name: "The Vault", width: 6, height: 6, ai: "rookie", bombs: 1, freezes: 1, desc: "6x6 board with 4 obstacle holes blocking corners.", holes: [[1,1],[1,4],[4,1],[4,4]], bonus: [], custom: [] },
+            { stage: 4, name: "Classic Arena", width: 8, height: 8, ai: "greedy", bombs: 1, freezes: 1, desc: "Standard 8x8 battle vs Greedy AI.", holes: [], bonus: [], custom: [] },
+            { stage: 5, name: "Fortress Gates", width: 8, height: 8, ai: "positional", bombs: 1, freezes: 1, desc: "8x8 board with blocked corners and 2x bonus tiles!", holes: [[0,0],[0,7],[7,0],[7,7]], bonus: [[2,2],[5,5]], custom: [] },
+            { stage: 6, name: "Crossfire Zone", width: 8, height: 8, ai: "positional", bombs: 1, freezes: 1, desc: "4 inner obstacle holes split the center.", holes: [[2,2],[2,5],[5,2],[5,5]], bonus: [[1,3],[6,4]], custom: [] },
+            { stage: 7, name: "Vanguard Siege", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 1, desc: "Face Grandmaster AI! You start with 2 extra discs.", holes: [], bonus: [], custom: [[2,3,BLACK],[5,4,BLACK]] },
+            { stage: 8, name: "Great Colosseum", width: 10, height: 10, ai: "rookie", bombs: 2, freezes: 2, desc: "Massive 10x10 arena! Control the expansive board.", holes: [], bonus: [[3,3],[3,6],[6,3],[6,6]], custom: [] },
+            { stage: 9, name: "Greedy Leviathan", width: 10, height: 10, ai: "greedy", bombs: 2, freezes: 2, desc: "10x10 board vs high-disc Greedy AI.", holes: [], bonus: [[2,4],[4,7],[7,5],[5,2]], custom: [] },
+            { stage: 10, name: "Citadel Runes", width: 10, height: 10, ai: "positional", bombs: 2, freezes: 2, desc: "10x10 board with 8 corner & subcorner holes.", holes: [[0,0],[0,9],[9,0],[9,9],[1,1],[1,8],[8,1],[8,8]], bonus: [[3,4],[4,5],[5,4],[6,5]], custom: [] },
+            { stage: 11, name: "Diamond Ring", width: 8, height: 8, ai: "positional", bombs: 2, freezes: 2, desc: "8x8 board with an outer ring of obstacles.", holes: [[1,3],[1,4],[3,1],[4,1],[3,6],[4,6],[6,3],[6,4]], bonus: [[2,2],[2,5],[5,2],[5,5]], custom: [] },
+            { stage: 12, name: "Labyrinth Grid", width: 10, height: 10, ai: "grandmaster", bombs: 2, freezes: 2, desc: "10x10 maze layout with 8 obstacle blocks vs Grandmaster.", holes: [[2,2],[2,7],[7,2],[7,7],[4,2],[4,7],[2,4],[7,4]], bonus: [[3,3],[3,6],[6,3],[6,6]], custom: [] },
+            { stage: 13, name: "Blitz Trench", width: 6, height: 6, ai: "grandmaster", bombs: 2, freezes: 2, desc: "Fast 6x6 board with 5s Blitz timer vs Grandmaster!", holes: [], bonus: [[1,2],[4,3]], custom: [], timeMode: 5 },
+            { stage: 14, name: "Dragon's Den", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 2, desc: "8x8 board with 4 dragon holes on edge centers.", holes: [[0,3],[3,0],[4,7],[7,4]], bonus: [[2,3],[3,5],[5,2],[4,4]], custom: [] },
+            { stage: 15, name: "Eclipse Chamber", width: 10, height: 10, ai: "positional", bombs: 2, freezes: 2, desc: "10x10 board with 12 obstacles surrounding center.", holes: [[1,1],[1,8],[8,1],[8,8],[3,1],[6,1],[3,8],[6,8],[1,3],[1,6],[8,3],[8,6]], bonus: [[4,2],[5,7],[2,5],[7,4]], custom: [] },
+            { stage: 16, name: "Phantom Matrix", width: 8, height: 8, ai: "grandmaster", bombs: 2, freezes: 2, desc: "8x8 board with 6 staggered holes and 4 bonus tiles.", holes: [[0,2],[2,7],[5,0],[7,5],[3,3],[4,4]], bonus: [[1,1],[1,6],[6,1],[6,6]], custom: [] },
+            { stage: 17, name: "Warlord's Gambit", width: 10, height: 10, ai: "positional", bombs: 3, freezes: 2, desc: "10x10 battlefield with 8 holes and 6 bonus tiles.", holes: [[0,4],[4,0],[5,9],[9,5],[2,2],[2,7],[7,2],[7,7]], bonus: [[3,2],[2,3],[6,7],[7,6],[3,7],[7,3]], custom: [] },
+            { stage: 18, name: "Titan Crucible", width: 10, height: 10, ai: "grandmaster", bombs: 3, freezes: 2, desc: "10x10 arena with 10 holes vs Grandmaster Minimax.", holes: [[1,4],[1,5],[8,4],[8,5],[4,1],[5,1],[4,8],[5,8],[0,0],[9,9]], bonus: [[2,4],[7,5],[4,2],[5,7],[3,3],[6,6]], custom: [] },
+            { stage: 19, name: "Iron Apex", width: 8, height: 8, ai: "grandmaster", bombs: 3, freezes: 2, desc: "Tight 8x8 board with 4 holes vs ruthless Grandmaster AI.", holes: [[1,2],[2,5],[5,2],[6,5]], bonus: [[0,1],[1,6],[6,1],[7,6]], custom: [] },
+            { stage: 20, name: "Reversi Grandmaster Challenge", width: 10, height: 10, ai: "grandmaster", bombs: 3, freezes: 3, desc: "The ultimate 10x10 stage against the Supreme Reversi Grandmaster!", holes: [[0,0],[0,9],[9,0],[9,9],[2,2],[2,7],[7,2],[7,7],[4,1],[5,8],[1,5],[8,4]], bonus: [[3,4],[4,3],[5,6],[6,5],[1,1],[8,8]], custom: [] }
         ];
 
         let currentThemeKey = 'classic';
@@ -272,6 +283,7 @@
         let validMoves = [];
         let history = [];
         let bombCount = 2;
+        let freezeCount = 1;
         let isBombActive = false;
 
         let aiTimeoutId = null;
@@ -344,13 +356,13 @@
 
         function showStats() {
             const total = stats.wins + stats.losses + stats.draws;
-            alert(`KReversi Statistics\n\nGames Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}\nMax Campaign Stage: ${maxUnlockedStage} / 15`);
+            alert(`KReversi Statistics\n\nGames Played: ${total}\nWins: ${stats.wins}\nLosses: ${stats.losses}\nDraws: ${stats.draws}\nMax Campaign Stage: ${maxUnlockedStage} / 20`);
         }
 
         function saveGame() {
             const state = {
                 boardState, boardWidth, boardHeight, currentPlayer, history,
-                gameEnded, bombCount, isBombActive, gameMode, currentStage, theme: currentThemeKey
+                gameEnded, bombCount, freezeCount, isBombActive, gameMode, currentStage, theme: currentThemeKey
             };
             localStorage.setItem('kreversi_save', JSON.stringify(state));
             messageEl.textContent = 'Game Saved!';
@@ -367,6 +379,7 @@
                 history = state.history || [];
                 gameEnded = state.gameEnded || false;
                 bombCount = state.bombCount || 2;
+                freezeCount = state.freezeCount || 1;
                 isBombActive = state.isBombActive || false;
                 gameMode = state.gameMode || 'campaign';
                 currentStage = state.currentStage || 1;
@@ -424,6 +437,23 @@
                     gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
                     osc.start();
                     osc.stop(audioCtx.currentTime + 0.2);
+                } else if (type === 'freeze') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.25);
+                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
+                } else if (type === 'bonus') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(1400, audioCtx.currentTime + 0.08);
+                    osc.frequency.setValueAtTime(1800, audioCtx.currentTime + 0.16);
+                    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                    gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.25);
                 }
             } catch (e) {}
         }
@@ -473,6 +503,7 @@
                 boardWidth = stageData.width;
                 boardHeight = stageData.height;
                 bombCount = stageData.bombs;
+                freezeCount = stageData.freezes || 1;
                 if (stageData.timeMode) document.getElementById('time-mode').value = stageData.timeMode;
                 else document.getElementById('time-mode').value = "0";
 
@@ -481,6 +512,15 @@
                 // Apply holes
                 for (let [hr, hc] of stageData.holes) {
                     if (hr < boardHeight && hc < boardWidth) boardState[hr * boardWidth + hc] = BLOCKED;
+                }
+
+                // Apply bonus tiles
+                if (stageData.bonus) {
+                    for (let [br, bc] of stageData.bonus) {
+                        if (br < boardHeight && bc < boardWidth && boardState[br * boardWidth + bc] === EMPTY) {
+                            boardState[br * boardWidth + bc] = DOUBLE_FLIP;
+                        }
+                    }
                 }
 
                 // Center discs
@@ -499,6 +539,7 @@
                 boardWidth = size;
                 boardHeight = size;
                 bombCount = 2;
+                freezeCount = 2;
                 boardState = Array(boardWidth * boardHeight).fill(EMPTY);
 
                 const midR = Math.floor(boardHeight / 2), midC = Math.floor(boardWidth / 2);
@@ -649,6 +690,7 @@
                 board: [...boardState],
                 player: currentPlayer,
                 bombCount,
+                freezeCount,
                 isBombActive,
                 gameEnded
             });
@@ -665,6 +707,7 @@
             boardState = lastState.board;
             currentPlayer = lastState.player;
             bombCount = lastState.bombCount;
+            freezeCount = lastState.freezeCount || 1;
             isBombActive = false;
             gameEnded = false;
             messageEl.textContent = '';
@@ -681,9 +724,23 @@
             }
         }
 
+        function useFreezeAI() {
+            if (freezeCount > 0 && !gameEnded && currentPlayer === BLACK) {
+                freezeCount--;
+                if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
+                currentPlayer = BLACK;
+                messageEl.textContent = '❄️ AI FROZEN! You get an extra turn!';
+                playSound('freeze');
+                const wrapper = document.getElementById('board-wrapper');
+                if (wrapper) spawnSparks(wrapper.clientWidth / 2, wrapper.clientHeight / 2, 35, '#00f5d4');
+                renderBoard();
+                resetTimer();
+            }
+        }
+
         function getFlippableOnBoard(b, w, h, index, player) {
             if (index < 0 || index >= w * h) return [];
-            if (b[index] !== EMPTY) return [];
+            if (b[index] !== EMPTY && b[index] !== DOUBLE_FLIP) return [];
             const r = Math.floor(index / w);
             const c = index % w;
             const opponent = player === BLACK ? WHITE : BLACK;
@@ -711,7 +768,7 @@
         function getValidMoves(player) {
             const moves = [];
             for (let i = 0; i < boardWidth * boardHeight; i++) {
-                if (boardState[i] === EMPTY && getFlippable(i, player).length > 0) {
+                if ((boardState[i] === EMPTY || boardState[i] === DOUBLE_FLIP) && getFlippable(i, player).length > 0) {
                     moves.push(i);
                 }
             }
@@ -740,7 +797,7 @@
                 if (b > w) {
                     if (gameMode === 'campaign') {
                         messageEl.textContent = `🎉 STAGE ${currentStage} CLEARED! WINNER!`;
-                        if (currentStage === maxUnlockedStage && maxUnlockedStage < 15) {
+                        if (currentStage === maxUnlockedStage && maxUnlockedStage < 20) {
                             maxUnlockedStage++;
                             saveStats();
                             updateStageDropdown();
@@ -770,7 +827,7 @@
             if (gameEnded) return;
 
             if (isBombActive) {
-                if (boardState[index] === EMPTY && bombCount > 0) {
+                if ((boardState[index] === EMPTY || boardState[index] === DOUBLE_FLIP) && bombCount > 0) {
                     pushHistory();
                     boardState[index] = BLACK;
                     bombCount--;
@@ -801,10 +858,33 @@
 
             const flips = getFlippable(index, currentPlayer);
             if (flips.length > 0) {
+                let hasBonusTile = (boardState[index] === DOUBLE_FLIP);
+                for (let f of flips) {
+                    if (boardState[f] === DOUBLE_FLIP) hasBonusTile = true;
+                }
+
                 pushHistory();
                 boardState[index] = currentPlayer;
                 for (let f of flips) boardState[f] = currentPlayer;
-                playSound('place');
+                
+                if (hasBonusTile) {
+                    playSound('bonus');
+                    const r = Math.floor(index / boardWidth);
+                    const c = index % boardWidth;
+                    const opponent = currentPlayer === BLACK ? WHITE : BLACK;
+                    for (let [dr, dc] of DIRS) {
+                        let nr = r + dr, nc = c + dc;
+                        if (nr >= 0 && nr < boardHeight && nc >= 0 && nc < boardWidth) {
+                            let nidx = nr * boardWidth + nc;
+                            if (boardState[nidx] === opponent) {
+                                boardState[nidx] = currentPlayer;
+                                flips.push(nidx);
+                            }
+                        }
+                    }
+                } else {
+                    playSound('place');
+                }
                 
                 currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
                 if (getValidMoves(currentPlayer).length === 0) {
@@ -849,7 +929,7 @@
 
             const moves = [];
             for (let i = 0; i < w * h; i++) {
-                if (b[i] === EMPTY && getFlippableOnBoard(b, w, h, i, currPlayer).length > 0) {
+                if ((b[i] === EMPTY || b[i] === DOUBLE_FLIP) && getFlippableOnBoard(b, w, h, i, currPlayer).length > 0) {
                     moves.push(i);
                 }
             }
@@ -937,9 +1017,33 @@
                 pushHistory();
                 const bestMove = getBestMove(WHITE);
                 const flips = getFlippable(bestMove, WHITE);
+                
+                let hasBonusTile = (boardState[bestMove] === DOUBLE_FLIP);
+                for (let f of flips) {
+                    if (boardState[f] === DOUBLE_FLIP) hasBonusTile = true;
+                }
+
                 boardState[bestMove] = WHITE;
                 for (let f of flips) boardState[f] = WHITE;
-                playSound('place');
+
+                if (hasBonusTile) {
+                    playSound('bonus');
+                    const r = Math.floor(bestMove / boardWidth);
+                    const c = bestMove % boardWidth;
+                    for (let [dr, dc] of DIRS) {
+                        let nr = r + dr, nc = c + dc;
+                        if (nr >= 0 && nr < boardHeight && nc >= 0 && nc < boardWidth) {
+                            let nidx = nr * boardWidth + nc;
+                            if (boardState[nidx] === BLACK) {
+                                boardState[nidx] = WHITE;
+                                flips.push(nidx);
+                            }
+                        }
+                    }
+                } else {
+                    playSound('place');
+                }
+
                 currentPlayer = BLACK;
                 if (getValidMoves(BLACK).length === 0) currentPlayer = WHITE;
                 renderBoard(flips);
@@ -971,9 +1075,11 @@
                     cell.classList.add('blocked');
                     disc.className = 'disc';
                     continue;
+                } else if (boardState[i] === DOUBLE_FLIP) {
+                    cell.classList.add('double-flip');
                 }
 
-                if (boardState[i] === EMPTY && currentPlayer === BLACK && !gameEnded) {
+                if ((boardState[i] === EMPTY || boardState[i] === DOUBLE_FLIP) && currentPlayer === BLACK && !gameEnded) {
                     if (isBombActive) {
                         cell.classList.add('bomb-target');
                     } else if (validMoves.includes(i)) {
@@ -984,7 +1090,7 @@
                     }
                 }
                 
-                if (boardState[i] === EMPTY) {
+                if (boardState[i] === EMPTY || boardState[i] === DOUBLE_FLIP) {
                     disc.className = 'disc';
                 } else {
                     disc.className = 'disc ' + (boardState[i] === BLACK ? 'black' : 'white');
@@ -1005,6 +1111,7 @@
             updateScores();
 
             bombTextEl.textContent = `Bombs: ${bombCount}`;
+            freezeTextEl.textContent = `Freezes: ${freezeCount}`;
             bombBtnEl.className = isBombActive ? 'active-btn' : '';
 
             const evalScore = evaluateBoardState(boardState, boardWidth, boardHeight, BLACK);
@@ -1030,6 +1137,7 @@
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeHelp();
             else if (e.key === 'b' || e.key === 'B') toggleBomb();
+            else if (e.key === 'f' || e.key === 'F') useFreezeAI();
             else if (e.key === 'h' || e.key === 'H') {
                 const chk = document.getElementById('hint-toggle');
                 chk.checked = !chk.checked;
@@ -1052,17 +1160,19 @@
                 <p><strong>Objective:</strong> Control the majority of discs on the board when no legal moves remain.</p>
                 <p><strong>Flipping & Sandwiching:</strong> Trap opponent discs between your newly placed disc and an existing disc of your color.</p>
                 <p><strong>Blocked Cells (Holes):</strong> Dark unplayable cells that block line flips and cannot hold discs.</p>
+                <p><strong>Double-Flip Bonus Tiles (2X):</strong> Landing or flipping onto a 2X tile triggers an explosive 3x3 bonus flip!</p>
             </div>
             <div class="guide-section">
                 <h3>2. Campaign Mode & AI Personalities</h3>
-                <p><strong>15 Stages:</strong> Progress across dynamic 6x6, 8x8, and 10x10 boards with unique obstacle setups.</p>
+                <p><strong>20 Stages:</strong> Conquer 20 dynamic stages with 6x6, 8x8, and 10x10 boards, obstacles, and 2X bonus tiles.</p>
                 <p><strong>4 AI Difficulties:</strong> Rookie, Greedy, Positional, and Grandmaster Minimax AI!</p>
             </div>
             <div class="guide-section">
-                <h3>3. Power-ups & Shortcuts</h3>
+                <h3>3. Power-ups & Active Skills</h3>
                 <p><strong>Optimal Hint (H):</strong> Highlights top positional / minimax move choice.</p>
                 <p><strong>Undo Move (U):</strong> Reverts last move pair against AI.</p>
                 <p><strong>Bomb Disc (B):</strong> Detonates a 3x3 explosion flipping surrounding enemy discs!</p>
+                <p><strong>Freeze AI (F):</strong> Forces the AI to skip 1 turn, giving you an extra turn!</p>
             </div>
         </div>
     </div>
