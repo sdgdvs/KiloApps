@@ -29,6 +29,7 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 #define STATE_SAVE_LOAD     12
 #define STATE_ACHIEVEMENTS   13
 #define STATE_HELP          14
+#define STATE_TAVERN        15
 
 static int g_HelpTab = 0; // 0: How to Play, 1: Controls, 2: Bestiary, 3: Crafting
 void RenderHelpTabLog();
@@ -113,7 +114,7 @@ typedef struct {
     int maxPhases;
 } BiomeDef;
 
-static const BiomeDef g_Biomes[15] = {
+static const BiomeDef g_Biomes[17] = {
     {
         "Goblin Outpost", "Cave-In",
         {
@@ -293,6 +294,30 @@ static const BiomeDef g_Biomes[15] = {
         },
         {"Void Overlord Malakor (Boss)", 900, 900, 90, 40, 3000, 1800},
         3
+    },
+    {
+        "Crystal Caverns", "Crystal Shards",
+        {
+            {"Crystal Golem", 180, 180, 42, 20, 260, 140},
+            {"Gem Sprite", 210, 210, 46, 22, 320, 170},
+            {"Quartz Weaver", 250, 250, 50, 25, 400, 210},
+            {"Diamond Sentinel", 300, 300, 55, 29, 490, 260},
+            {"Prismatic Behemoth", 350, 350, 60, 34, 590, 310}
+        },
+        {"Crystal Overlord (Boss)", 1000, 1000, 100, 45, 3500, 2000},
+        1
+    },
+    {
+        "Ruined Castle", "Falling Debris",
+        {
+            {"Spectral Knight", 200, 200, 45, 23, 290, 160},
+            {"Cursed Mage", 230, 230, 50, 25, 360, 190},
+            {"Gargoyle", 280, 280, 54, 28, 450, 240},
+            {"Castle Guard", 330, 330, 59, 32, 550, 290},
+            {"Fallen King", 380, 380, 65, 37, 650, 340}
+        },
+        {"King's Wraith (Boss)", 1100, 1100, 110, 50, 4000, 2500},
+        2
     }
 };
 
@@ -1081,7 +1106,32 @@ void UpdateUI() {
         locStr = "Save/Load Manager";
     } else if (gameState == STATE_ACHIEVEMENTS) {
         locStr = "Achievements Hub";
-    } else if (gameState == STATE_HELP) {
+    } else if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_TAVERN) {
+        if (player.gold >= 5) {
+            player.gold -= 5;
+            player.hp += 15;
+            if (player.hp > player.maxHp) player.hp = player.maxHp;
+            LogMessage("🍺 Drank Ale. Recovered 15 HP.");
+            UpdateUI();
+        } else {
+            LogMessage("Not enough gold for Ale.");
+        }
+        return;
+    }
+    if (gameState == STATE_TAVERN) {
+        if (player.ironScrap >= 3) {
+            player.ironScrap -= 3;
+            player.gold += 60;
+            LogMessage("Side Quest Complete! Traded 3 Scrap for 60 Gold.");
+            UpdateUI();
+        } else {
+            LogMessage("Side Quest: 'Bring me 3 Iron Scrap, I'll pay 60 Gold.'");
+        }
+        return;
+    }
+    if (gameState == STATE_HELP) {
         locStr = "Help & Lore Codex";
     }
 
@@ -1100,6 +1150,8 @@ void UpdateUI() {
         if (player.companion.active == 2) bonusInt += 5;
     }
 
+    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         wsprintfA(statusBuf, "=== COMPREHENSIVE HELP & LORE CODEX (Tab %d/4: %s) ===",
             g_HelpTab + 1,
@@ -1398,20 +1450,29 @@ void SetupButtons() {
             SetWindowTextA(hBtn6, "Back to Town");
             break;
 
-        case STATE_SHOP:
+                case STATE_SHOP:
             SetWindowTextA(hBtn1, "Buy HP Potion (15G)");
             SetWindowTextA(hBtn2, "Buy MP Potion (15G)");
-            SetWindowTextA(hBtn3, "Steel Sword (+8 STR, 60G)");
+            SetWindowTextA(hBtn3, "Steel Sword (+6 STR, 50G)");
             SetWindowTextA(hBtn4, "Plate Armor (+9 DEF, 75G)");
+            SetWindowTextA(hBtn5, "Back to Town");
+            SetWindowTextA(hBtn6, "🍻 Tavern (NPC)");
+            break;
+            
+        case STATE_TAVERN:
+            SetWindowTextA(hBtn1, "Talk to Barkeep");
+            SetWindowTextA(hBtn2, "Listen to Rumors");
+            SetWindowTextA(hBtn3, "Buy Ale (5G)");
+            SetWindowTextA(hBtn4, "Ask for Side Quest");
             SetWindowTextA(hBtn5, "Back to Town");
             SetWindowTextA(hBtn6, "---");
             break;
 
-        case STATE_CRAFTING:
+                case STATE_CRAFTING:
             SetWindowTextA(hBtn1, "Salvage Loot (20G)");
             SetWindowTextA(hBtn2, "Craft Fire Bomb");
             SetWindowTextA(hBtn3, "Craft Greater HP");
-            SetWindowTextA(hBtn4, "Craft Elixir Might");
+            SetWindowTextA(hBtn4, "Upgrade Gear(30G,3S)");
             SetWindowTextA(hBtn5, "Imbue Weapon/Armor");
             SetWindowTextA(hBtn6, "Back to Town");
             break;
@@ -1876,6 +1937,8 @@ void UsePhoenixElixir() {
 }
 
 void HandleButton1() {
+    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         g_HelpTab = 0;
         SetupButtons();
@@ -1955,6 +2018,11 @@ void HandleButton1() {
         LogMessage(msg);
         SetupButtons();
         UpdateUI();
+    } else if (gameState == STATE_TAVERN) {
+        gameState = STATE_TOWN;
+        LogMessage("Returned to Town.");
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_MERCENARY) {
         if (player.gold >= 80) {
             player.gold -= 80;
@@ -1983,15 +2051,22 @@ void HandleButton1() {
         } else {
             LogMessage("Not enough gold!");
         }
+    } else if (gameState == STATE_SHOP) {
+        gameState = STATE_TAVERN;
+        LogMessage("Entered the Rusty Dragon Tavern.");
+        SetupButtons();
+        UpdateUI();
     } else if (gameState == STATE_CRAFTING) {
-        if (player.gold >= 20) {
-            player.gold -= 20;
-            player.ironScrap += 2;
-            player.arcaneDust += 1;
-            LogMessage("♻️ Salvaged spare gear for 20 Gold! Gained +2 Iron Scrap & +1 Arcane Dust.");
+        if (player.gold >= 30 && player.ironScrap >= 3) {
+            player.gold -= 30;
+            player.ironScrap -= 3;
+            player.weaponBonusStr += 2;
+            player.armorBonusDef += 2;
+            SfxSpellCast();
+            LogMessage("⬆️ Upgraded Gear! Weapon STR +2, Armor DEF +2!");
             UpdateUI();
         } else {
-            LogMessage("Not enough gold to salvage!");
+            LogMessage("Need 30 Gold and 3 Iron Scrap to Upgrade Gear!");
         }
     } else if (gameState == STATE_DUNGEON) {
         int r = xrand() % 100;
@@ -2102,6 +2177,8 @@ void HandleButton1() {
 }
 
 void HandleButton2() {
+    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         g_HelpTab = 1;
         SetupButtons();
@@ -2241,15 +2318,16 @@ void HandleButton2() {
             LogMessage("Not enough gold!");
         }
     } else if (gameState == STATE_CRAFTING) {
-        if (player.ironScrap >= 1 && player.elementalCore >= 1) {
-            player.ironScrap -= 1;
-            player.elementalCore -= 1;
-            player.fireBombs++;
-            LogMessage("💣 Crafted 1x Fire Bomb (Deals 45 fire damage in combat)!");
-            UnlockAchievement(3); // Master Crafter
+        if (player.gold >= 30 && player.ironScrap >= 3) {
+            player.gold -= 30;
+            player.ironScrap -= 3;
+            player.weaponBonusStr += 2;
+            player.armorBonusDef += 2;
+            SfxSpellCast();
+            LogMessage("⬆️ Upgraded Gear! Weapon STR +2, Armor DEF +2!");
             UpdateUI();
         } else {
-            LogMessage("Need 1 Iron Scrap & 1 Elemental Core for Fire Bomb!");
+            LogMessage("Need 30 Gold and 3 Iron Scrap to Upgrade Gear!");
         }
     } else if (gameState == STATE_DUNGEON) {
         player.floor++;
@@ -2328,6 +2406,8 @@ void HandleButton2() {
 }
 
 void HandleButton3() {
+    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         g_HelpTab = 2;
         SetupButtons();
@@ -2428,14 +2508,16 @@ void HandleButton3() {
             LogMessage("Not enough gold!");
         }
     } else if (gameState == STATE_CRAFTING) {
-        if (player.arcaneDust >= 2 && player.ironScrap >= 1) {
-            player.arcaneDust -= 2;
-            player.ironScrap -= 1;
-            player.greaterHpPotions++;
-            LogMessage("🧪 Crafted 1x Greater HP Elixir (+70 HP)!");
+        if (player.gold >= 30 && player.ironScrap >= 3) {
+            player.gold -= 30;
+            player.ironScrap -= 3;
+            player.weaponBonusStr += 2;
+            player.armorBonusDef += 2;
+            SfxSpellCast();
+            LogMessage("⬆️ Upgraded Gear! Weapon STR +2, Armor DEF +2!");
             UpdateUI();
         } else {
-            LogMessage("Need 2 Arcane Dust & 1 Iron Scrap for Greater HP Elixir!");
+            LogMessage("Need 30 Gold and 3 Iron Scrap to Upgrade Gear!");
         }
     } else if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
         if (player.greaterHpPotions > 0) {
@@ -2459,6 +2541,8 @@ void HandleButton3() {
 }
 
 void HandleButton4() {
+    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         g_HelpTab = 3;
         SetupButtons();
@@ -2575,16 +2659,16 @@ void HandleButton4() {
             LogMessage("Not enough gold!");
         }
     } else if (gameState == STATE_CRAFTING) {
-        if (player.arcaneDust >= 2 && player.elementalCore >= 1) {
-            player.arcaneDust -= 2;
-            player.elementalCore -= 1;
-            player.powerElixirs++;
-            player.mp = (player.mp + 40 > player.maxMp) ? player.maxMp : player.mp + 40;
-            player.str += 3;
-            LogMessage("⚡ Crafted & drank 1x Elixir of Might! +40 MP & +3 STR boost!");
+        if (player.gold >= 30 && player.ironScrap >= 3) {
+            player.gold -= 30;
+            player.ironScrap -= 3;
+            player.weaponBonusStr += 2;
+            player.armorBonusDef += 2;
+            SfxSpellCast();
+            LogMessage("⬆️ Upgraded Gear! Weapon STR +2, Armor DEF +2!");
             UpdateUI();
         } else {
-            LogMessage("Need 2 Arcane Dust & 1 Elemental Core for Elixir of Might!");
+            LogMessage("Need 30 Gold and 3 Iron Scrap to Upgrade Gear!");
         }
     } else if (gameState == STATE_DUNGEON) {
         if (player.mpPotions > 0) {
@@ -2620,6 +2704,8 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
     if (gameState == STATE_HELP) {
         g_HelpTab = (g_HelpTab + 1) % 4;
         SetupButtons();
@@ -3336,7 +3422,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
-                if (gameState == STATE_HELP) {
+                if (gameState == STATE_TAVERN) { LogMessage("Barkeep: 'Welcome! The Ruined Castle is dangerous!'"); return; }
+    if (gameState == STATE_TAVERN) { LogMessage("Rumor: 'Equipment can be upgraded at the forge now.'"); return; }
+    if (gameState == STATE_HELP) {
                     gameState = STATE_TOWN;
                     LogMessage("Closed Help Overlay. Returned to Town.");
                 } else {
@@ -3384,7 +3472,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetupButtons();
                 UpdateUI();
             } else if (wParam == VK_ESCAPE) {
-                if (gameState == STATE_HELP || gameState == STATE_INVENTORY || gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_QUEST_BOARD || gameState == STATE_TRAINING_HALL || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_MERCENARY || gameState == STATE_BOSS_RUSH) {
+                if (gameState == STATE_HELP || gameState == STATE_INVENTORY || gameState == STATE_SAVE_LOAD || gameState == STATE_ACHIEVEMENTS || gameState == STATE_QUEST_BOARD || gameState == STATE_TRAINING_HALL || gameState == STATE_SHOP || gameState == STATE_CRAFTING || gameState == STATE_TAVERN || gameState == STATE_MERCENARY || gameState == STATE_BOSS_RUSH) {
                     gameState = STATE_TOWN;
                     LogMessage("Returned to Town Square.");
                     SetupButtons();
