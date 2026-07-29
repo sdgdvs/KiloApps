@@ -477,6 +477,8 @@
             if (lvl <= 15) return 'crypt';
             if (lvl <= 20) return 'inferno';
             if (lvl <= 25) return 'void';
+            if (lvl <= 30) return 'celestial';
+            return 'abyss';
             return 'celestial';
         }
 
@@ -486,6 +488,8 @@
             if (lvl <= 15) return 'Crypt';
             if (lvl <= 20) return 'Inferno';
             if (lvl <= 25) return 'Void';
+            if (lvl <= 30) return 'Celestial Sanctuary';
+            return 'The Abyss';
             return 'Celestial Sanctuary';
         }
 
@@ -562,7 +566,7 @@
 
             state = 1;
             addMsg(`Journey Begun! Class: ${cls.toUpperCase()} | Seed: ${seedStr}`, 'good');
-            addMsg("Descend 30 floors & conquer Astaroth the Fallen!");
+            addMsg("Descend 40 floors & conquer Astaroth the Fallen!");
             initMap();
         }
 
@@ -580,7 +584,7 @@
             map[2][2] = '.';
             
             // Stairs
-            if (dlevel < 30) {
+            if (dlevel < 40) {
                 items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
                 map[ROWS - 3][COLS - 3] = '.';
             } else {
@@ -606,6 +610,14 @@
             }
 
             // Traps
+            if (rng() < 0.05) { // Anvil
+                let cx = rngRange(2, COLS - 3), cy = rngRange(2, ROWS - 3);
+                items.push({ x: cx, y: cy, ch: 'T', type: 'anvil', name: 'Crafting Anvil' });
+            }
+            if (rng() < 0.1) { // NPC
+                let nx = rngRange(2, COLS - 3), ny = rngRange(2, ROWS - 3);
+                monsters.push({ x: nx, y: ny, hp: 100, max_hp: 100, ch: 'N', name: 'Quest NPC', npc: true, reward_ready: true, turn: 0 });
+            }
             for (let t = 0; t < 4 + Math.floor(dlevel / 4); t++) {
                 let tx = rngRange(2, COLS - 3), ty = rngRange(2, ROWS - 3);
                 let trapType = rng() < 0.4 ? 'poison' : (rng() < 0.7 ? 'teleport' : 'root');
@@ -642,11 +654,16 @@
                     else if (r < 0.50) { type = 'V'; hp = 50; name = 'Vampire'; }
                     else if (r < 0.75) { type = 'L'; hp = 45; name = 'Lich'; }
                     else { type = 'd'; hp = 60; name = 'Demon'; }
-                } else {
+                } else if (dlevel <= 25) {
                     if (r < 0.25) { type = 'B'; hp = 110; name = 'Balrog'; }
                     else if (r < 0.50) { type = 't'; hp = 130; name = 'Titan'; }
                     else if (r < 0.75) { type = 'E'; hp = 80; name = 'Beholder'; }
                     else { type = 'U'; hp = 150; name = 'Shadow Behemoth'; }
+                } else {
+                    if (r < 0.25) { type = 'v'; hp = 180; name = 'Void Walker'; }
+                    else if (r < 0.50) { type = 'f'; hp = 250; name = 'Abyss Fiend'; }
+                    else if (r < 0.75) { type = 'w'; hp = 300; name = 'Deep Worm'; }
+                    else { type = 'O'; hp = 400; name = 'Abyssal Overlord'; }
                 }
 
                 hp = Math.floor(hp * (1 + difficulty * 0.4 + dlevel * 0.05));
@@ -677,6 +694,7 @@
             else if (biome === 'inferno') { baseColor = '#9b2c2c'; accentColor = '#c53030'; }
             else if (biome === 'void') { baseColor = '#553c9a'; accentColor = '#44337a'; }
             else if (biome === 'celestial') { baseColor = '#d69e2e'; accentColor = '#b7791f'; }
+            else if (biome === 'abyss') { baseColor = '#2d004b'; accentColor = '#1a0033'; mortarColor = '#0d001a'; }
 
             ctx.fillStyle = mortarColor; ctx.fillRect(px, py, TILE, TILE);
             ctx.fillStyle = baseColor;
@@ -696,6 +714,7 @@
             else if (biome === 'inferno') bg = '#2a1414';
             else if (biome === 'void') bg = '#1e1427';
             else if (biome === 'celestial') bg = '#1a2733';
+            else if (biome === 'abyss') bg = '#0d001a';
 
             ctx.fillStyle = bg; ctx.fillRect(px, py, TILE, TILE);
             ctx.fillStyle = 'rgba(255,255,255,0.04)';
@@ -730,7 +749,17 @@
             let cx = px + TILE / 2, cy = py + TILE / 2;
             let bob = Math.sin(frameCount * 0.12 + px) * 1.2;
 
-            if (type === 'r') {
+            if (type === 'N') {
+                ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2); ctx.fill();
+            } else if (type === 'v') {
+                ctx.fillStyle = '#800080'; ctx.fillRect(cx - 5, cy - 8 + bob, 10, 16);
+            } else if (type === 'f') {
+                ctx.fillStyle = '#ff0000'; ctx.fillRect(cx - 7, cy - 7 + bob, 14, 14);
+            } else if (type === 'w') {
+                ctx.fillStyle = '#0000ff'; ctx.fillRect(cx - 8, cy - 4, 16, 8);
+            } else if (type === 'O') {
+                ctx.fillStyle = '#555555'; ctx.fillRect(cx - 10, cy - 10 + bob, 20, 20);
+            } else if (type === 'r') {
                 ctx.fillStyle = '#d69e2e'; ctx.beginPath(); ctx.ellipse(cx, cy + 2 + bob, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
             } else if (type === 'b') {
                 ctx.fillStyle = '#805ad5'; ctx.beginPath(); ctx.arc(cx, cy + bob, 6, 0, Math.PI * 2); ctx.fill();

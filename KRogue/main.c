@@ -63,6 +63,7 @@
 #define B_COWARD 4
 #define B_SMART 5
 #define B_SHOPKEEPER 6
+#define B_NPC 7
 
 typedef struct {
     char ch;
@@ -128,6 +129,8 @@ typedef struct {
 #define TYPE_GOLD 7
 #define TYPE_SHRINE 8
 #define TYPE_FOOD 9
+#define TYPE_ANVIL 10
+#define TYPE_NPC_ITEM 11
 
 #define W_SWORD 0
 #define W_HAMMER 1
@@ -345,6 +348,7 @@ void spawn_monster(int x, int y) {
             if(g.dlevel >= 12) max_tier = 4;
             if(g.dlevel >= 18) max_tier = 5;
             if(g.dlevel >= 24) max_tier = 6;
+            if(g.dlevel >= 31) max_tier = 7;
             
             if(rand_range(0, 100) < 5) {
                 e->ch = '$'; e->fg = C_SHOPKEEPER; str_cpy(e->name, "Shopkeeper");
@@ -395,7 +399,7 @@ void spawn_monster(int x, int y) {
                 else if(m5 == 3) { e->ch = 'M'; e->fg = C_MINDFLAYER; str_cpy(e->name, "Mind Flayer"); e->hp = e->max_hp = 60 + g.dlevel*5; e->atk = 20; e->def = 5; e->xp = 160; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
                 else if(m5 == 4) { e->ch = 'a'; e->fg = C_ASSASSIN; str_cpy(e->name, "Shadow Assassin"); e->hp = e->max_hp = 45 + g.dlevel*4; e->atk = 35; e->def = 4; e->xp = 140; e->behavior = B_FAST; }
                 else { e->ch = 'U'; e->fg = C_BEHEMOTH; str_cpy(e->name, "Shadow Behemoth"); e->hp = e->max_hp = 140 + g.dlevel*6; e->atk = 40; e->def = 16; e->xp = 300; e->behavior = B_NORMAL; }
-            } else {
+            } else if(tier == 5) {
                 int m6 = rand_range(0, 6);
                 if(m6 == 0) { e->ch = 'A'; e->fg = C_ARCHMAGE; str_cpy(e->name, "Arch-Mage"); e->hp = e->max_hp = 70 + g.dlevel*5; e->atk = 28; e->def = 8; e->xp = 220; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
                 else if(m6 == 1) { e->ch = 'L'; e->fg = C_LICHLORD; str_cpy(e->name, "Lich Lord"); e->hp = e->max_hp = 110 + g.dlevel*6; e->atk = 32; e->def = 12; e->xp = 350; e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON; }
@@ -404,6 +408,12 @@ void spawn_monster(int x, int y) {
                 else if(m6 == 4) { e->ch = 'U'; e->fg = C_BEHEMOTH; str_cpy(e->name, "Shadow Behemoth"); e->hp = e->max_hp = 160 + g.dlevel*6; e->atk = 45; e->def = 18; e->xp = 350; e->behavior = B_NORMAL; }
                 else if(m6 == 5) { e->ch = 'B'; e->fg = C_BALROG; str_cpy(e->name, "Balrog"); e->hp = e->max_hp = 120 + g.dlevel*5; e->atk = 34; e->def = 14; e->xp = 250; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
                 else { e->ch = 't'; e->fg = C_TITAN; str_cpy(e->name, "Titan"); e->hp = e->max_hp = 150 + g.dlevel*5; e->atk = 40; e->def = 18; e->xp = 300; e->behavior = B_NORMAL; }
+            } else if (tier == 7) {
+                int m7 = rand_range(0, 3);
+                if(m7 == 0) { e->ch = 'v'; e->fg = RGB(100,0,150); str_cpy(e->name, "Void Walker"); e->hp = e->max_hp = 180 + g.dlevel*6; e->atk = 50; e->def = 20; e->xp = 400; e->behavior = B_FAST; }
+                else if(m7 == 1) { e->ch = 'f'; e->fg = RGB(255,0,0); str_cpy(e->name, "Abyss Fiend"); e->hp = e->max_hp = 250 + g.dlevel*6; e->atk = 60; e->def = 25; e->xp = 500; e->behavior = B_SMART; e->special_ability = ABILITY_BREATHE_FIRE; }
+                else if(m7 == 2) { e->ch = 'w'; e->fg = RGB(0,0,255); str_cpy(e->name, "Deep Worm"); e->hp = e->max_hp = 300 + g.dlevel*8; e->atk = 70; e->def = 10; e->xp = 600; e->behavior = B_SLUGGISH; }
+                else { e->ch = 'O'; e->fg = RGB(50,50,50); str_cpy(e->name, "Abyssal Overlord"); e->hp = e->max_hp = 400 + g.dlevel*8; e->atk = 80; e->def = 30; e->xp = 1000; e->behavior = B_NORMAL; e->special_ability = ABILITY_SUMMON; }
             }
             
             if(e->behavior != B_SHOPKEEPER) {
@@ -574,7 +584,7 @@ void generate_map() {
     get_player()->x = cx;
     get_player()->y = cy;
     
-    if(g.dlevel == 30) {
+    if(g.dlevel == 40) {
         g.stair_x = -1;
         g.stair_y = -1;
         for(int i=1; i<MAX_ENTITIES; i++) {
@@ -632,6 +642,26 @@ void generate_map() {
                             break;
                         }
                     }
+                } else if(rand_range(0, 100) < 1) {
+                    for(int i=0; i<MAX_ITEMS; i++) {
+                        if(!g.items[i].active) {
+                            Item* it = &g.items[i];
+                            it->active = 1; it->x = x; it->y = y;
+                            it->ch = 'T'; it->fg = RGB(150, 150, 150); it->type = 10;
+                            str_cpy(it->name, "Crafting Anvil");
+                            break;
+                        }
+                    }
+                } else if(rand_range(0, 100) < 2) {
+                    for(int i=1; i<MAX_ENTITIES; i++) {
+                        if(!g.entities[i].active) {
+                            Entity* e = &g.entities[i];
+                            e->active = 1; e->x = x; e->y = y;
+                            e->ch = 'N'; e->fg = RGB(0, 255, 255); str_cpy(e->name, "Quest NPC");
+                            e->hp = e->max_hp = 100; e->behavior = B_NPC;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -644,7 +674,8 @@ void generate_map() {
     else if(g.dlevel >= 11 && g.dlevel <= 15) { cur_wall = RGB(110, 80, 140); cur_floor = RGB(45, 30, 60); } // Crypt
     else if(g.dlevel >= 16 && g.dlevel <= 20) { cur_wall = RGB(180, 40, 20); cur_floor = RGB(80, 20, 10); } // Inferno
     else if(g.dlevel >= 21 && g.dlevel <= 25) { cur_wall = RGB(70, 20, 120); cur_floor = RGB(30, 10, 50); } // Void
-    else if(g.dlevel >= 26) { cur_wall = RGB(220, 180, 60); cur_floor = RGB(40, 80, 100); } // Celestial Sanctuary
+    else if(g.dlevel >= 26 && g.dlevel <= 30) { cur_wall = RGB(220, 180, 60); cur_floor = RGB(40, 80, 100); } // Celestial Sanctuary
+    else if(g.dlevel >= 31) { cur_wall = RGB(20, 0, 40); cur_floor = RGB(10, 0, 20); } // Abyss
     for(int y=0; y<H; y++) {
         for(int x=0; x<W; x++) {
             if(g.map[y][x].ch == '#') g.map[y][x].fg = cur_wall;
@@ -1086,6 +1117,17 @@ void move_player(int dx, int dy) {
     
     Entity* target = get_entity_at(nx, ny);
     if(target) {
+        if (target->behavior == B_NPC) {
+            if (target->hp == 100) { // Needs item or gives reward
+                add_msg("NPC: Thank you for finding me! Here's a reward!");
+                p->gold += 50 * g.dlevel;
+                gain_xp(p, 100 * g.dlevel);
+                target->hp = 1; // finished
+            } else {
+                add_msg("NPC: Good luck in the Abyss!");
+            }
+            return;
+        }
         if(target->behavior == B_SHOPKEEPER) {
             g.active_shopkeeper = target;
             g.state = 9; // shop
@@ -1121,7 +1163,14 @@ void move_player(int dx, int dy) {
                 char buf[100];
                 wsprintfA(buf, "You pick up %d gold pieces.", it->val);
                 add_msg(buf);
-            } else if(it->type == TYPE_SHRINE) {
+            } else if(it->type == 10) { // TYPE_ANVIL
+                add_msg("You use the Crafting Anvil!");
+                if(g.equip_weapon.active) { g.equip_weapon.val += 2; add_msg("Weapon upgraded!"); }
+                else if(g.equip_armor.active) { g.equip_armor.val += 2; add_msg("Armor upgraded!"); }
+                it->active = 0;
+                return;
+            }
+            if(it->type == TYPE_SHRINE) {
                 it->active = 0;
                 int buff = rand_range(0, 2);
                 if(buff == 0) {
