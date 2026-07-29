@@ -570,8 +570,12 @@
         <div class="screen-title" id="location-title">🏰 Oakhaven Town Square</div>
         <div class="screen-desc" id="location-desc">Welcome to Oakhaven. Create your hero or venture forth into the Obsidian Spire!</div>
         
+        <!-- Graphical Viewport Canvas -->
+        <canvas id="kquest-gfx-canvas" width="680" height="220" style="width:100%; height:220px; border-radius:8px; border:1px solid #313244; background:#0f0f17; display:block; margin-top:8px; box-shadow:0 4px 12px rgba(0,0,0,0.5);"></canvas>
+        
         <!-- Dynamic Interactive Area -->
         <div id="dynamic-content"></div>
+
       </div>
 
       <!-- Text Log Panel -->
@@ -673,7 +677,531 @@
   </div>
 
   <script>
+    // --- GRAPHICS & ANIMATION ENGINE ---
+    const GFX = {
+      canvas: null,
+      ctx: null,
+      frame: 0,
+      floatingTexts: [],
+      particles: [],
+      spellAnim: null,
+      heroAction: 'idle',
+      heroActionTimer: 0,
+      monsterAction: 'idle',
+      monsterActionTimer: 0,
+      victoryBanner: { active: false, timer: 0, title: '' },
+      confetti: []
+    };
+
+    function initGFX() {
+      GFX.canvas = document.getElementById('kquest-gfx-canvas');
+      if (!GFX.canvas) return;
+      GFX.ctx = GFX.canvas.getContext('2d');
+      requestAnimationFrame(gfxLoop);
+    }
+
+    function addFloatingText(text, x, y, color = '#f9e2af', fontSize = 16) {
+      GFX.floatingTexts.push({
+        text: text,
+        x: x,
+        y: y,
+        startY: y,
+        color: color,
+        fontSize: fontSize,
+        life: 0,
+        maxLife: 45
+      });
+    }
+
+    function addParticles(x, y, color, count = 15) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 4 + 1;
+        GFX.particles.push({
+          x: x,
+          y: y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 1,
+          color: color,
+          radius: Math.random() * 3 + 2,
+          life: 0,
+          maxLife: 30 + Math.random() * 20
+        });
+      }
+    }
+
+    function triggerSpellFX(type) {
+      if (type === 'fireball') {
+        GFX.spellAnim = { type: 'fireball', progress: 0, maxProgress: 25 };
+      } else if (type === 'heal') {
+        GFX.spellAnim = { type: 'heal', progress: 0, maxProgress: 30 };
+        addParticles(140, 130, '#a6e3a1', 25);
+      } else if (type === 'lightning') {
+        GFX.spellAnim = { type: 'lightning', progress: 0, maxProgress: 20 };
+        addParticles(520, 110, '#89dceb', 30);
+      } else if (type === 'berserk') {
+        GFX.spellAnim = { type: 'berserk', progress: 0, maxProgress: 35 };
+        addParticles(140, 130, '#f38ba8', 25);
+      }
+    }
+
+    function triggerVictoryBanner(title = 'VICTORY!') {
+      GFX.victoryBanner.active = true;
+      GFX.victoryBanner.timer = 0;
+      GFX.victoryBanner.title = title;
+      GFX.confetti = [];
+      const colors = ['#f38ba8', '#89b4fa', '#a6e3a1', '#f9e2af', '#cba6f7'];
+      for (let i = 0; i < 60; i++) {
+        GFX.confetti.push({
+          x: Math.random() * 680,
+          y: -10 - Math.random() * 50,
+          vx: (Math.random() - 0.5) * 3,
+          vy: Math.random() * 3 + 2,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: Math.random() * 6 + 4,
+          rotation: Math.random() * Math.PI
+        });
+      }
+    }
+
+    function gfxLoop() {
+      GFX.frame++;
+      if (GFX.ctx && GFX.canvas) {
+        renderGFXScene(GFX.ctx);
+      }
+      requestAnimationFrame(gfxLoop);
+    }
+
+    function renderGFXScene(ctx) {
+      const w = GFX.canvas.width;
+      const h = GFX.canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // 1. Draw Environment Background
+      drawEnvironmentBG(ctx, player.biome, currentState);
+
+      // 2. Determine animation poses
+      let heroX = 140;
+      let heroY = 120;
+      let monsterX = 520;
+      let monsterY = 110;
+
+      if (GFX.heroActionTimer > 0) {
+        GFX.heroActionTimer--;
+        if (GFX.heroAction === 'attack') heroX += Math.sin((1 - GFX.heroActionTimer / 15) * Math.PI) * 30;
+        else if (GFX.heroAction === 'hurt') heroX -= Math.sin((1 - GFX.heroActionTimer / 15) * Math.PI) * 15;
+      } else { GFX.heroAction = 'idle'; }
+
+      if (GFX.monsterActionTimer > 0) {
+        GFX.monsterActionTimer--;
+        if (GFX.monsterAction === 'attack') monsterX -= Math.sin((1 - GFX.monsterActionTimer / 15) * Math.PI) * 30;
+        else if (GFX.monsterAction === 'hurt') monsterX += Math.sin((1 - GFX.monsterActionTimer / 15) * Math.PI) * 15;
+      } else { GFX.monsterAction = 'idle'; }
+
+      // 3. Draw Hero Sprite
+      drawHeroSprite(ctx, heroX, heroY, player.class, GFX.frame, GFX.heroAction);
+
+      // 4. Draw Monster Sprite if in Combat or Boss Rush
+      if ((currentState === STATE.COMBAT || currentState === STATE.BOSS_RUSH) && currentEnemy) {
+        drawMonsterSprite(ctx, monsterX, monsterY, currentEnemy.name, GFX.frame, GFX.monsterAction);
+      } else if (currentState === STATE.TOWN || currentState === STATE.SHOP || currentState === STATE.CRAFTING) {
+        drawNPCSprite(ctx, 520, 120, GFX.frame);
+      }
+
+      // 5. Draw Spell FX & Projectiles
+      if (GFX.spellAnim) {
+        GFX.spellAnim.progress++;
+        const p = GFX.spellAnim.progress / GFX.spellAnim.maxProgress;
+        if (GFX.spellAnim.type === 'fireball') {
+          const fx = heroX + 40 + p * (monsterX - heroX - 60);
+          const fy = heroY - 20;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(fx, fy, 16, 0, Math.PI * 2);
+          ctx.fillStyle = '#fab387';
+          ctx.shadowColor = '#f38ba8';
+          ctx.shadowBlur = 15;
+          ctx.fill();
+          ctx.restore();
+          addParticles(fx, fy, '#f38ba8', 2);
+          if (p >= 1) {
+            addParticles(monsterX, monsterY, '#fab387', 30);
+            GFX.spellAnim = null;
+          }
+        } else if (GFX.spellAnim.type === 'lightning') {
+          ctx.save();
+          ctx.strokeStyle = '#89dceb';
+          ctx.lineWidth = 4;
+          ctx.shadowColor = '#89b4fa';
+          ctx.shadowBlur = 20;
+          ctx.beginPath();
+          ctx.moveTo(monsterX, 0);
+          ctx.lineTo(monsterX - 15, 30);
+          ctx.lineTo(monsterX + 10, 60);
+          ctx.lineTo(monsterX - 10, 90);
+          ctx.lineTo(monsterX, monsterY + 20);
+          ctx.stroke();
+          ctx.restore();
+          if (p >= 1) GFX.spellAnim = null;
+        } else if (GFX.spellAnim.type === 'heal' || GFX.spellAnim.type === 'berserk') {
+          if (p >= 1) GFX.spellAnim = null;
+        }
+      }
+
+      // 6. Render Particles
+      for (let i = GFX.particles.length - 1; i >= 0; i--) {
+        const pt = GFX.particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.life++;
+        const alpha = 1 - (pt.life / pt.maxLife);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = pt.color;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        if (pt.life >= pt.maxLife) GFX.particles.splice(i, 1);
+      }
+
+      // 7. Render Floating Damage / Heal Numbers
+      for (let i = GFX.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = GFX.floatingTexts[i];
+        ft.life++;
+        ft.y = ft.startY - (ft.life * 1.2);
+        const alpha = 1 - (ft.life / ft.maxLife);
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.font = `bold ${ft.fontSize || 16}px 'Segoe UI', sans-serif`;
+        ctx.fillStyle = ft.color;
+        ctx.strokeStyle = '#11111b';
+        ctx.lineWidth = 3;
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+        if (ft.life >= ft.maxLife) GFX.floatingTexts.splice(i, 1);
+      }
+
+      // 8. Render Victory Banner & Confetti
+      if (GFX.victoryBanner.active) {
+        GFX.victoryBanner.timer++;
+        const bannerY = Math.min(40, GFX.victoryBanner.timer * 4);
+
+        ctx.save();
+        ctx.fillStyle = '#f9e2af';
+        ctx.shadowColor = '#fab387';
+        ctx.shadowBlur = 12;
+        ctx.fillRect(w / 2 - 140, bannerY, 280, 44);
+        ctx.strokeStyle = '#11111b';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(w / 2 - 140, bannerY, 280, 44);
+
+        ctx.font = 'bold 20px "Segoe UI", sans-serif';
+        ctx.fillStyle = '#11111b';
+        ctx.textAlign = 'center';
+        ctx.fillText(GFX.victoryBanner.title, w / 2, bannerY + 28);
+        ctx.restore();
+
+        for (let i = GFX.confetti.length - 1; i >= 0; i--) {
+          const c = GFX.confetti[i];
+          c.x += c.vx;
+          c.y += c.vy;
+          c.rotation += 0.1;
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(c.rotation);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size);
+          ctx.restore();
+          if (c.y > h + 20) GFX.confetti.splice(i, 1);
+        }
+
+        if (GFX.victoryBanner.timer > 120) GFX.victoryBanner.active = false;
+      }
+    }
+
+    function drawEnvironmentBG(ctx, biomeIdx, state) {
+      const w = GFX.canvas.width;
+      const h = GFX.canvas.height;
+      const b = BIOMES[biomeIdx] || BIOMES[0];
+
+      if (state === STATE.TOWN || state === STATE.SHOP || state === STATE.CRAFTING || state === STATE.CHAR_CREATE) {
+        let grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#1e1e2e');
+        grad.addColorStop(0.7, '#313244');
+        grad.addColorStop(1, '#181825');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = '#45475a';
+        ctx.fillRect(0, 160, w, 60);
+        ctx.fillStyle = '#585b70';
+        for (let i = 0; i < w; i += 30) {
+          ctx.fillRect(i, 160, 28, 4);
+          ctx.fillRect(i + 15, 180, 28, 4);
+        }
+
+        ctx.fillStyle = '#1e1e2e';
+        ctx.fillRect(40, 60, 100, 100);
+        ctx.fillRect(30, 40, 30, 30);
+        ctx.fillRect(110, 40, 30, 30);
+
+        ctx.fillStyle = '#a6e3a1';
+        ctx.beginPath();
+        ctx.arc(600, 100, 35, 0, Math.PI * 2);
+        ctx.arc(630, 120, 30, 0, Math.PI * 2);
+        ctx.fill();
+        return;
+      }
+
+      let bgTop = '#11111b', bgBot = '#181825';
+      if (b.id === 'infernal_volcano' || b.id === 'spire') { bgTop = '#2e181e'; bgBot = '#451e24'; }
+      else if (b.id === 'crypt' || b.id === 'blood_citadel') { bgTop = '#1c1c2e'; bgBot = '#2b1c38'; }
+      else if (b.id === 'frostpeak') { bgTop = '#182438'; bgBot = '#24384a'; }
+      else if (b.id === 'forest' || b.id === 'serpent_swamp') { bgTop = '#182e22'; bgBot = '#1c3d2a'; }
+
+      let grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, bgTop);
+      grad.addColorStop(1, bgBot);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = '#313244';
+      ctx.lineWidth = 1;
+      for (let y = 10; y < 160; y += 24) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+        const offset = (y % 48 === 0) ? 0 : 30;
+        for (let x = offset; x < w; x += 60) {
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 24); ctx.stroke();
+        }
+      }
+
+      ctx.fillStyle = '#1e1e2e';
+      ctx.fillRect(0, 160, w, 60);
+
+      if (b.id === 'infernal_volcano' || b.id === 'spire') {
+        ctx.fillStyle = '#f38ba8';
+        ctx.fillRect(0, 195, w, 25);
+        if (Math.random() < 0.3) addParticles(Math.random() * w, 200, '#fab387', 1);
+      } else if (b.id === 'temple' || b.id === 'abyssal_trench') {
+        ctx.fillStyle = '#89b4fa';
+        ctx.fillRect(0, 198, w, 22);
+      } else if (b.id === 'serpent_swamp' || b.id === 'crypt') {
+        ctx.fillStyle = '#a6e3a1';
+        ctx.fillRect(0, 198, w, 22);
+      }
+    }
+
+    function drawHeroSprite(ctx, x, y, className, frame, action) {
+      ctx.save();
+      const bob = Math.sin(frame * 0.15) * 3;
+      const sy = y + bob;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 45, 24, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (className === 'Warrior') {
+        ctx.fillStyle = '#f38ba8';
+        ctx.beginPath();
+        ctx.moveTo(x - 12, sy - 10);
+        ctx.lineTo(x - 24, sy + 30);
+        ctx.lineTo(x - 4, sy + 35);
+        ctx.fill();
+
+        ctx.fillStyle = '#89b4fa';
+        ctx.fillRect(x - 14, sy - 15, 28, 35);
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(x - 14, sy - 15, 28, 4);
+        ctx.fillRect(x - 14, sy + 16, 28, 4);
+
+        ctx.fillStyle = '#45475a';
+        ctx.fillRect(x - 12, sy + 20, 10, 22);
+        ctx.fillRect(x + 2, sy + 20, 10, 22);
+
+        ctx.fillStyle = '#b4befe';
+        ctx.fillRect(x - 12, sy - 35, 24, 22);
+        ctx.fillStyle = '#11111b';
+        ctx.fillRect(x - 6, sy - 26, 16, 4);
+        ctx.fillStyle = '#89dceb';
+        ctx.fillRect(x - 4, sy - 25, 4, 2);
+        ctx.fillRect(x + 4, sy - 25, 4, 2);
+
+        ctx.fillStyle = '#f9e2af';
+        ctx.beginPath();
+        ctx.moveTo(x - 24, sy - 10);
+        ctx.lineTo(x - 8, sy - 10);
+        ctx.lineTo(x - 16, sy + 20);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#11111b'; ctx.lineWidth = 2; ctx.stroke();
+
+        ctx.save();
+        ctx.translate(x + 14, sy + 5);
+        if (action === 'attack') ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = '#cdd6f4';
+        ctx.fillRect(0, -30, 6, 35);
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(-6, 2, 18, 4);
+        ctx.restore();
+
+      } else if (className === 'Mage') {
+        ctx.fillStyle = '#cba6f7';
+        ctx.beginPath();
+        ctx.moveTo(x - 16, sy - 15);
+        ctx.lineTo(x + 16, sy - 15);
+        ctx.lineTo(x + 22, sy + 40);
+        ctx.lineTo(x - 22, sy + 40);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(x - 2, sy - 15, 4, 55);
+
+        ctx.fillStyle = '#f5e0dc';
+        ctx.beginPath(); ctx.arc(x, sy - 22, 10, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#cdd6f4';
+        ctx.beginPath(); ctx.arc(x, sy - 18, 8, 0, Math.PI); ctx.fill();
+
+        ctx.fillStyle = '#b4befe';
+        ctx.beginPath();
+        ctx.moveTo(x - 18, sy - 28);
+        ctx.lineTo(x + 18, sy - 28);
+        ctx.lineTo(x, sy - 55);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#fab387';
+        ctx.fillRect(x + 16, sy - 35, 5, 75);
+        ctx.fillStyle = '#89dceb';
+        ctx.beginPath(); ctx.arc(x + 18, sy - 40, 10, 0, Math.PI * 2); ctx.fill();
+        if (Math.random() < 0.4) addParticles(x + 18, sy - 40, '#89dceb', 1);
+
+      } else if (className === 'Rogue') {
+        ctx.fillStyle = '#313244';
+        ctx.fillRect(x - 14, sy - 15, 28, 38);
+
+        ctx.fillStyle = '#a6e3a1';
+        ctx.fillRect(x - 10, sy - 12, 20, 25);
+
+        ctx.fillStyle = '#1e1e2e';
+        ctx.beginPath(); ctx.arc(x, sy - 24, 12, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#a6e3a1';
+        ctx.fillRect(x - 6, sy - 25, 4, 3);
+        ctx.fillRect(x + 2, sy - 25, 4, 3);
+
+        ctx.fillStyle = '#94e2d5';
+        ctx.fillRect(x - 20, sy - 5, 4, 25);
+        ctx.fillRect(x + 16, sy - 5, 4, 25);
+      }
+
+      ctx.restore();
+    }
+
+    function drawMonsterSprite(ctx, x, y, name, frame, action) {
+      ctx.save();
+      const bob = Math.sin(frame * 0.12) * 4;
+      const my = y + bob;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(x, y + 45, 28, 9, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      const n = name.toLowerCase();
+
+      if (n.includes('slime') || n.includes('scuttler') || n.includes('spider')) {
+        ctx.fillStyle = '#a6e3a1';
+        ctx.beginPath();
+        ctx.ellipse(x, my + 10, 32, 26 + Math.sin(frame * 0.2) * 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#cdd6f4';
+        ctx.beginPath(); ctx.arc(x - 10, my - 5, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#11111b';
+        ctx.fillRect(x - 8, my + 5, 5, 5); ctx.fillRect(x + 5, my + 5, 5, 5);
+
+      } else if (n.includes('goblin') || n.includes('slinger') || n.includes('taskmaster')) {
+        ctx.fillStyle = '#a6e3a1';
+        ctx.fillRect(x - 14, my - 10, 28, 32);
+        ctx.beginPath(); ctx.moveTo(x - 14, my - 25); ctx.lineTo(x - 30, my - 20); ctx.lineTo(x - 14, my - 15); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x + 14, my - 25); ctx.lineTo(x + 30, my - 20); ctx.lineTo(x + 14, my - 15); ctx.fill();
+        ctx.fillRect(x - 12, my - 30, 24, 20);
+        ctx.fillStyle = '#f38ba8';
+        ctx.fillRect(x - 8, my - 24, 5, 4); ctx.fillRect(x + 3, my - 24, 5, 4);
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(x - 24, my - 20, 8, 40);
+
+      } else if (n.includes('skeleton') || n.includes('ghoul') || n.includes('bone') || n.includes('lich')) {
+        ctx.fillStyle = '#e6e9ef';
+        ctx.fillRect(x - 10, my - 10, 20, 30);
+        for (let i = my - 8; i < my + 15; i += 6) {
+          ctx.fillStyle = '#11111b'; ctx.fillRect(x - 8, i, 16, 2);
+        }
+        ctx.fillStyle = '#e6e9ef';
+        ctx.fillRect(x - 12, my - 34, 24, 22);
+        ctx.fillStyle = '#89dceb';
+        ctx.fillRect(x - 8, my - 26, 6, 6); ctx.fillRect(x + 2, my - 26, 6, 6);
+
+      } else if (n.includes('orc') || n.includes('berserk') || n.includes('ogre') || n.includes('grommash')) {
+        ctx.fillStyle = '#40a02b';
+        ctx.fillRect(x - 22, my - 20, 44, 45);
+        ctx.fillStyle = '#585b70';
+        ctx.fillRect(x - 28, my - 24, 14, 14); ctx.fillRect(x + 14, my - 24, 14, 14);
+        ctx.fillStyle = '#313244';
+        ctx.fillRect(x - 14, my - 42, 28, 22);
+        ctx.fillStyle = '#f9e2af';
+        ctx.beginPath(); ctx.moveTo(x - 14, my - 40); ctx.lineTo(x - 32, my - 55); ctx.lineTo(x - 10, my - 34); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x + 14, my - 40); ctx.lineTo(x + 32, my - 55); ctx.lineTo(x + 10, my - 34); ctx.fill();
+        ctx.fillStyle = '#89b4fa';
+        ctx.fillRect(x + 22, my - 45, 8, 65);
+        ctx.fillRect(x + 12, my - 45, 28, 16);
+
+      } else if (n.includes('dragon') || n.includes('drake') || n.includes('wyrm') || n.includes('bahamut')) {
+        ctx.fillStyle = '#f38ba8';
+        ctx.beginPath(); ctx.ellipse(x, my, 35, 25, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#f9e2af';
+        ctx.beginPath(); ctx.ellipse(x - 5, my + 5, 20, 14, 0, 0, Math.PI * 2); ctx.fill();
+        const wingY = my - 20 + Math.sin(frame * 0.2) * 12;
+        ctx.fillStyle = '#e78284';
+        ctx.beginPath(); ctx.moveTo(x - 10, my - 10); ctx.lineTo(x - 55, wingY); ctx.lineTo(x - 25, my + 10); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(x + 10, my - 10); ctx.lineTo(x + 55, wingY); ctx.lineTo(x + 25, my + 10); ctx.fill();
+        ctx.fillStyle = '#ea999c';
+        ctx.fillRect(x - 30, my - 30, 26, 20);
+        ctx.fillStyle = '#fab387';
+        if (Math.random() < 0.4) addParticles(x - 35, my - 20, '#fab387', 2);
+
+      } else {
+        ctx.fillStyle = '#1e1e2e';
+        ctx.beginPath(); ctx.arc(x, my, 38, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#cba6f7';
+        ctx.lineWidth = 4; ctx.strokeStyle = '#cba6f7';
+        ctx.beginPath(); ctx.arc(x, my, 46 + Math.sin(frame * 0.1) * 6, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#f38ba8';
+        ctx.beginPath(); ctx.arc(x - 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x + 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawNPCSprite(ctx, x, y, frame) {
+      ctx.save();
+      const bob = Math.sin(frame * 0.1) * 2;
+      ctx.fillStyle = '#f9e2af';
+      ctx.fillRect(x - 12, y - 10 + bob, 24, 34);
+      ctx.fillStyle = '#f5e0dc';
+      ctx.beginPath(); ctx.arc(x, y - 20 + bob, 10, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#cba6f7';
+      ctx.fillRect(x - 14, y - 30 + bob, 28, 8);
+      ctx.restore();
+    }
+
+    window.addEventListener('load', initGFX);
+
     // --- PHASE 13: WEB AUDIO API SOUND EFFECTS ENGINE ---
+
     let audioCtx = null;
     let soundEnabled = true;
 
@@ -3139,6 +3667,9 @@
     function playerAttack() {
       if (!currentEnemy) return;
 
+      GFX.heroAction = 'attack'; GFX.heroActionTimer = 15;
+      GFX.monsterAction = 'hurt'; GFX.monsterActionTimer = 15;
+
       sfxCombatHit();
       const offMult = 1.0 + (player.offensePoints * 0.08);
       const totalStr = player.str + (player.weapon ? player.weapon.bonusStr : 0);
@@ -3147,12 +3678,17 @@
       if (player.berserkTurns > 0) dmg *= 2;
 
       const critChance = (player.agi * 0.02) + (player.offensePoints >= 2 ? 0.10 : 0);
-      if (Math.random() < critChance) {
+      const isCrit = Math.random() < critChance;
+      if (isCrit) {
         dmg = Math.floor(dmg * 1.75);
         logMsg(`🎯 CRITICAL STRIKE! You strike ${currentEnemy.name} for ${dmg} damage!`, 'combat');
       } else {
         logMsg(`⚔️ You attack ${currentEnemy.name} dealing ${dmg} damage.`, 'combat');
       }
+
+      addFloatingText((isCrit ? 'CRIT! -' : '-') + dmg, 520, 90, isCrit ? '#f9e2af' : '#f38ba8', isCrit ? 22 : 18);
+      addParticles(520, 110, '#f38ba8', 12);
+
 
       // Weapon Enchantment Bonuses
       if (player.weapon && player.weapon.prefix === 'Flaming') {
@@ -3193,6 +3729,10 @@
 
     function playerSpell() {
       if (!currentEnemy) return;
+
+      GFX.heroAction = 'attack'; GFX.heroActionTimer = 15;
+      GFX.monsterAction = 'hurt'; GFX.monsterActionTimer = 15;
+      triggerSpellFX('fireball');
 
       sfxSpellCast();
       let bonusInt = (player.companion && !player.companion.isDown && player.companion.id === 'archmage') ? 5 : 0;
@@ -3239,6 +3779,8 @@
         logMsg(`🗡️ Shadow Strike! You strike from darkness for ${dmg} critical damage!`, 'spell');
       }
 
+      addFloatingText('-' + dmg, 520, 90, '#fab387', 22);
+
       if (currentEnemy.hp <= 0) {
         currentEnemy.hp = 0;
         combatVictory();
@@ -3262,6 +3804,9 @@
 
       setTimeout(() => {
         if (!currentEnemy || currentEnemy.hp <= 0) return;
+
+        GFX.monsterAction = 'attack'; GFX.monsterActionTimer = 15;
+        GFX.heroAction = 'hurt'; GFX.heroActionTimer = 15;
 
         if (player.lightningDazeTurns > 0) {
           player.lightningDazeTurns--;
@@ -3310,6 +3855,9 @@
 
         player.hp -= enemyDmg;
         logMsg(`💥 ${currentEnemy.name} hits you for ${enemyDmg} damage!`, 'combat');
+        addFloatingText('-' + enemyDmg, 140, 90, '#f38ba8', 20);
+        addParticles(140, 130, '#f38ba8', 12);
+
 
         // Spiked Armor Reflection
         if (player.armor && player.armor.prefix === 'Spiked') {
@@ -3366,7 +3914,9 @@
       }
 
       logMsg(`🎉 VICTORY! You defeated ${currentEnemy.name}!`, 'loot');
+      triggerVictoryBanner('VICTORY!');
       player.gold += currentEnemy.gold;
+
       player.xp += currentEnemy.xp;
       
       // Pay companion upkeep after combat victory

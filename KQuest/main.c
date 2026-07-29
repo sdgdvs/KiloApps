@@ -2864,23 +2864,455 @@ void HandleButton6() {
     }
 }
 
+// --- GRAPHICS & ANIMATION ENGINE (WIN32 GDI) ---
+static int g_GfxFrame = 0;
+static HWND hGfxCanvas = NULL;
+static WNDPROC g_OldCanvasProc = NULL;
+
+typedef struct {
+    char text[32];
+    int x, y, startY;
+    COLORREF color;
+    int life, maxLife;
+} GdiFloatText;
+
+static GdiFloatText g_GdiFloatTexts[16];
+static int g_GdiFloatCount = 0;
+
+void AddGdiFloatText(const char* text, int x, int y, COLORREF color) {
+    if (g_GdiFloatCount < 16) {
+        lstrcpyA(g_GdiFloatTexts[g_GdiFloatCount].text, text);
+        g_GdiFloatTexts[g_GdiFloatCount].x = x;
+        g_GdiFloatTexts[g_GdiFloatCount].y = y;
+        g_GdiFloatTexts[g_GdiFloatCount].startY = y;
+        g_GdiFloatTexts[g_GdiFloatCount].color = color;
+        g_GdiFloatTexts[g_GdiFloatCount].life = 0;
+        g_GdiFloatTexts[g_GdiFloatCount].maxLife = 40;
+        g_GdiFloatCount++;
+    }
+}
+
+typedef struct {
+    int x, y, vx, vy;
+    COLORREF color;
+    int life, maxLife;
+} GdiParticle;
+
+static GdiParticle g_GdiParticles[32];
+static int g_GdiParticleCount = 0;
+
+void AddGdiParticles(int x, int y, COLORREF color, int count) {
+    for (int i = 0; i < count && g_GdiParticleCount < 32; i++) {
+        g_GdiParticles[g_GdiParticleCount].x = x;
+        g_GdiParticles[g_GdiParticleCount].y = y;
+        g_GdiParticles[g_GdiParticleCount].vx = (xrand() % 9) - 4;
+        g_GdiParticles[g_GdiParticleCount].vy = (xrand() % 7) - 4;
+        g_GdiParticles[g_GdiParticleCount].color = color;
+        g_GdiParticles[g_GdiParticleCount].life = 0;
+        g_GdiParticles[g_GdiParticleCount].maxLife = 20 + (xrand() % 15);
+        g_GdiParticleCount++;
+    }
+}
+
+static int g_GdiSpellFxType = 0;
+static int g_GdiSpellFxProgress = 0;
+static int g_GdiSpellFxMax = 20;
+
+void TriggerGdiSpellFX(int type) {
+    g_GdiSpellFxType = type;
+    g_GdiSpellFxProgress = 0;
+    if (type == 1) g_GdiSpellFxMax = 20;
+    else if (type == 2) g_GdiSpellFxMax = 15;
+    else g_GdiSpellFxMax = 25;
+}
+
+static int g_GdiBannerActive = 0;
+static int g_GdiBannerTimer = 0;
+static char g_GdiBannerTitle[32] = "VICTORY!";
+
+void TriggerGdiVictoryBanner(const char* title) {
+    g_GdiBannerActive = 1;
+    g_GdiBannerTimer = 0;
+    lstrcpyA(g_GdiBannerTitle, title);
+}
+
+void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame) {
+    int bob = (frame % 8 < 4) ? 0 : 2;
+    int sy = y + bob;
+
+    HBRUSH hShB = CreateSolidBrush(RGB(15, 15, 20));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShB);
+    Ellipse(hdc, x - 18, y + 30, x + 18, y + 40);
+    SelectObject(hdc, hOldB); DeleteObject(hShB);
+
+    if (lstrcmpA(heroClass, "Mage") == 0) {
+        HBRUSH hRobeB = CreateSolidBrush(RGB(203, 166, 247));
+        SelectObject(hdc, hRobeB);
+        POINT pts[4] = {{x - 14, sy - 10}, {x + 14, sy - 10}, {x + 18, sy + 32}, {x - 18, sy + 32}};
+        Polygon(hdc, pts, 4);
+        DeleteObject(hRobeB);
+
+        HBRUSH hFaceB = CreateSolidBrush(RGB(245, 224, 220));
+        SelectObject(hdc, hFaceB);
+        Ellipse(hdc, x - 8, sy - 24, x + 8, sy - 8);
+        DeleteObject(hFaceB);
+
+        HBRUSH hHatB = CreateSolidBrush(RGB(180, 190, 254));
+        SelectObject(hdc, hHatB);
+        POINT hpts[3] = {{x - 16, sy - 22}, {x + 16, sy - 22}, {x, sy - 48}};
+        Polygon(hdc, hpts, 3);
+        DeleteObject(hHatB);
+
+        HPEN hStP = CreatePen(PS_SOLID, 3, RGB(250, 179, 135));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hStP);
+        MoveToEx(hdc, x + 16, sy - 25, NULL); LineTo(hdc, x + 16, sy + 32);
+        SelectObject(hdc, hOldP); DeleteObject(hStP);
+
+        HBRUSH hOrbB = CreateSolidBrush(RGB(137, 220, 235));
+        SelectObject(hdc, hOrbB);
+        Ellipse(hdc, x + 11, sy - 35, x + 21, sy - 25);
+        DeleteObject(hOrbB);
+
+    } else if (lstrcmpA(heroClass, "Rogue") == 0) {
+        HBRUSH hCloakB = CreateSolidBrush(RGB(49, 50, 68));
+        SelectObject(hdc, hCloakB);
+        RECT rR = {x - 12, sy - 10, x + 12, sy + 32};
+        FillRect(hdc, &rR, hCloakB);
+        DeleteObject(hCloakB);
+
+        HBRUSH hVestB = CreateSolidBrush(RGB(166, 227, 161));
+        SelectObject(hdc, hVestB);
+        RECT vR = {x - 8, sy - 8, x + 8, sy + 18};
+        FillRect(hdc, &vR, hVestB);
+        DeleteObject(hVestB);
+
+        HBRUSH hHoodB = CreateSolidBrush(RGB(30, 30, 46));
+        SelectObject(hdc, hHoodB);
+        Ellipse(hdc, x - 10, sy - 25, x + 10, sy - 5);
+        DeleteObject(hHoodB);
+
+        HPEN hDagP = CreatePen(PS_SOLID, 2, RGB(148, 226, 213));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hDagP);
+        MoveToEx(hdc, x - 16, sy - 2, NULL); LineTo(hdc, x - 16, sy + 20);
+        MoveToEx(hdc, x + 16, sy - 2, NULL); LineTo(hdc, x + 16, sy + 20);
+        SelectObject(hdc, hOldP); DeleteObject(hDagP);
+
+    } else { // Warrior
+        HBRUSH hCapeB = CreateSolidBrush(RGB(243, 139, 168));
+        SelectObject(hdc, hCapeB);
+        POINT cpts[3] = {{x - 10, sy - 5}, {x - 20, sy + 28}, {x - 2, sy + 30}};
+        Polygon(hdc, cpts, 3);
+        DeleteObject(hCapeB);
+
+        HBRUSH hArmB = CreateSolidBrush(RGB(137, 180, 250));
+        SelectObject(hdc, hArmB);
+        RECT aR = {x - 12, sy - 10, x + 12, sy + 22};
+        FillRect(hdc, &aR, hArmB);
+        DeleteObject(hArmB);
+
+        HBRUSH hHelmB = CreateSolidBrush(RGB(180, 190, 254));
+        SelectObject(hdc, hHelmB);
+        RECT hR = {x - 10, sy - 28, x + 10, sy - 10};
+        FillRect(hdc, &hR, hHelmB);
+        DeleteObject(hHelmB);
+
+        HBRUSH hVisB = CreateSolidBrush(RGB(137, 220, 235));
+        SelectObject(hdc, hVisB);
+        RECT visR = {x - 5, sy - 20, x + 5, sy - 17};
+        FillRect(hdc, &visR, hVisB);
+        DeleteObject(hVisB);
+
+        HBRUSH hShldB = CreateSolidBrush(RGB(249, 226, 175));
+        SelectObject(hdc, hShldB);
+        POINT spts[3] = {{x - 22, sy - 8}, {x - 8, sy - 8}, {x - 15, sy + 18}};
+        Polygon(hdc, spts, 3);
+        DeleteObject(hShldB);
+
+        HPEN hSwP = CreatePen(PS_SOLID, 3, RGB(205, 214, 244));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hSwP);
+        MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 14, sy - 20);
+        SelectObject(hdc, hOldP); DeleteObject(hSwP);
+    }
+}
+
+void DrawGdiMonsterSprite(HDC hdc, int x, int y, const char* name, int frame) {
+    int bob = (frame % 6 < 3) ? 0 : 3;
+    int my = y + bob;
+
+    HBRUSH hShB = CreateSolidBrush(RGB(15, 15, 20));
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hShB);
+    Ellipse(hdc, x - 22, y + 32, x + 22, y + 42);
+    SelectObject(hdc, hOldB); DeleteObject(hShB);
+
+    if (ContainsSubstr(name, "Slime") || ContainsSubstr(name, "Spider") || ContainsSubstr(name, "Scuttler")) {
+        HBRUSH hSlmB = CreateSolidBrush(RGB(166, 227, 161));
+        SelectObject(hdc, hSlmB);
+        Ellipse(hdc, x - 25, my - 10, x + 25, my + 30);
+        DeleteObject(hSlmB);
+
+        HBRUSH hEyeB = CreateSolidBrush(RGB(17, 17, 27));
+        SelectObject(hdc, hEyeB);
+        RECT e1 = {x - 8, my, x - 4, my + 6}; FillRect(hdc, &e1, hEyeB);
+        RECT e2 = {x + 4, my, x + 8, my + 6}; FillRect(hdc, &e2, hEyeB);
+        DeleteObject(hEyeB);
+
+    } else if (ContainsSubstr(name, "Goblin") || ContainsSubstr(name, "Slinger") || ContainsSubstr(name, "Taskmaster")) {
+        HBRUSH hGobB = CreateSolidBrush(RGB(166, 227, 161));
+        SelectObject(hdc, hGobB);
+        RECT bodyR = {x - 12, my - 5, x + 12, my + 25}; FillRect(hdc, &bodyR, hGobB);
+        RECT headR = {x - 10, my - 22, x + 10, my - 5}; FillRect(hdc, &headR, hGobB);
+        POINT e1[3] = {{x - 10, my - 20}, {x - 24, my - 16}, {x - 10, my - 10}}; Polygon(hdc, e1, 3);
+        POINT e2[3] = {{x + 10, my - 20}, {x + 24, my - 16}, {x + 10, my - 10}}; Polygon(hdc, e2, 3);
+        DeleteObject(hGobB);
+
+        HBRUSH hClbB = CreateSolidBrush(RGB(249, 226, 175));
+        SelectObject(hdc, hClbB);
+        RECT cR = {x - 22, my - 15, x - 15, my + 20}; FillRect(hdc, &cR, hClbB);
+        DeleteObject(hClbB);
+
+    } else if (ContainsSubstr(name, "Skeleton") || ContainsSubstr(name, "Ghoul") || ContainsSubstr(name, "Bone") || ContainsSubstr(name, "Lich")) {
+        HBRUSH hBoneB = CreateSolidBrush(RGB(230, 233, 239));
+        SelectObject(hdc, hBoneB);
+        RECT bR = {x - 8, my - 5, x + 8, my + 25}; FillRect(hdc, &bR, hBoneB);
+        RECT sR = {x - 10, my - 25, x + 10, my - 5}; FillRect(hdc, &sR, hBoneB);
+        DeleteObject(hBoneB);
+
+        HBRUSH hSoulB = CreateSolidBrush(RGB(137, 220, 235));
+        SelectObject(hdc, hSoulB);
+        RECT e1 = {x - 6, my - 18, x - 2, my - 13}; FillRect(hdc, &e1, hSoulB);
+        RECT e2 = {x + 2, my - 18, x + 6, my - 13}; FillRect(hdc, &e2, hSoulB);
+        DeleteObject(hSoulB);
+
+    } else if (ContainsSubstr(name, "Orc") || ContainsSubstr(name, "Berserk") || ContainsSubstr(name, "Ogre") || ContainsSubstr(name, "Grommash")) {
+        HBRUSH hOrcB = CreateSolidBrush(RGB(64, 160, 43));
+        SelectObject(hdc, hOrcB);
+        RECT bR = {x - 18, my - 12, x + 18, my + 28}; FillRect(hdc, &bR, hOrcB);
+        DeleteObject(hOrcB);
+
+        HBRUSH hHelmB = CreateSolidBrush(RGB(49, 50, 68));
+        SelectObject(hdc, hHelmB);
+        RECT hR = {x - 12, my - 32, x + 12, my - 12}; FillRect(hdc, &hR, hHelmB);
+        DeleteObject(hHelmB);
+
+        HPEN hAxeP = CreatePen(PS_SOLID, 4, RGB(137, 180, 250));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hAxeP);
+        MoveToEx(hdc, x + 22, my - 35, NULL); LineTo(hdc, x + 22, my + 25);
+        SelectObject(hdc, hOldP); DeleteObject(hAxeP);
+
+    } else if (ContainsSubstr(name, "Dragon") || ContainsSubstr(name, "Drake") || ContainsSubstr(name, "Wyrm") || ContainsSubstr(name, "Bahamut")) {
+        HBRUSH hDraB = CreateSolidBrush(RGB(243, 139, 168));
+        SelectObject(hdc, hDraB);
+        Ellipse(hdc, x - 28, my - 15, x + 28, my + 25);
+        POINT w1[3] = {{x - 10, my - 5}, {x - 45, my - 25}, {x - 20, my + 15}}; Polygon(hdc, w1, 3);
+        POINT w2[3] = {{x + 10, my - 5}, {x + 45, my - 25}, {x + 20, my + 15}}; Polygon(hdc, w2, 3);
+        DeleteObject(hDraB);
+
+    } else {
+        HBRUSH hDemB = CreateSolidBrush(RGB(30, 30, 46));
+        SelectObject(hdc, hDemB);
+        Ellipse(hdc, x - 26, my - 20, x + 26, my + 26);
+        DeleteObject(hDemB);
+
+        HPEN hPurpP = CreatePen(PS_SOLID, 3, RGB(203, 166, 247));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hPurpP);
+        Ellipse(hdc, x - 32, my - 26, x + 32, my + 32);
+        SelectObject(hdc, hOldP); DeleteObject(hPurpP);
+    }
+}
+
+void DrawGdiNPCSprite(HDC hdc, int x, int y, int frame) {
+    int bob = (frame % 8 < 4) ? 0 : 2;
+    HBRUSH hNpcB = CreateSolidBrush(RGB(249, 226, 175));
+    RECT nR = {x - 10, y - 8 + bob, x + 10, y + 25 + bob};
+    FillRect(hdc, &nR, hNpcB);
+    DeleteObject(hNpcB);
+
+    HBRUSH hFaceB = CreateSolidBrush(RGB(245, 224, 220));
+    SelectObject(hdc, hFaceB);
+    Ellipse(hdc, x - 8, y - 22 + bob, x + 8, y - 8 + bob);
+    DeleteObject(hFaceB);
+}
+
+void RenderGdiScene(HDC hdc, int w, int h) {
+    g_GfxFrame++;
+
+    COLORREF bgTop = RGB(17, 17, 27);
+    COLORREF bgBot = RGB(24, 24, 37);
+
+    if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+        if (player.biome == 8 || player.biome == 9) { bgTop = RGB(46, 24, 30); bgBot = RGB(69, 30, 36); }
+        else if (player.biome == 1 || player.biome == 12) { bgTop = RGB(28, 28, 46); bgBot = RGB(43, 28, 56); }
+        else if (player.biome == 6) { bgTop = RGB(24, 36, 56); bgBot = RGB(36, 56, 74); }
+        else if (player.biome == 3 || player.biome == 7) { bgTop = RGB(24, 46, 34); bgBot = RGB(28, 61, 42); }
+    }
+
+    RECT bgRect = {0, 0, w, h};
+    HBRUSH hBgB = CreateSolidBrush(bgTop);
+    FillRect(hdc, &bgRect, hBgB);
+    DeleteObject(hBgB);
+
+    HPEN hGridPen = CreatePen(PS_SOLID, 1, RGB(49, 50, 68));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hGridPen);
+    for (int y = 10; y < 90; y += 20) {
+        MoveToEx(hdc, 0, y, NULL); LineTo(hdc, w, y);
+    }
+    SelectObject(hdc, hOldPen); DeleteObject(hGridPen);
+
+    RECT floorRect = {0, 90, w, h};
+    HBRUSH hFloorB = CreateSolidBrush(RGB(30, 30, 46));
+    FillRect(hdc, &floorRect, hFloorB);
+    DeleteObject(hFloorB);
+
+    if (gameState == STATE_DUNGEON || gameState == STATE_COMBAT) {
+        if (player.biome == 8 || player.biome == 9) {
+            RECT lavaR = {0, 115, w, h};
+            HBRUSH hLavaB = CreateSolidBrush(RGB(243, 139, 168));
+            FillRect(hdc, &lavaR, hLavaB);
+            DeleteObject(hLavaB);
+        } else if (player.biome == 2 || player.biome == 13) {
+            RECT waterR = {0, 118, w, h};
+            HBRUSH hWaterB = CreateSolidBrush(RGB(137, 180, 250));
+            FillRect(hdc, &waterR, hWaterB);
+            DeleteObject(hWaterB);
+        }
+    }
+
+    int heroX = 140;
+    int heroY = 70;
+    int monsterX = 560;
+    int monsterY = 65;
+
+    DrawGdiHeroSprite(hdc, heroX, heroY, player.heroClass, g_GfxFrame);
+
+    if ((gameState == STATE_COMBAT || gameState == STATE_BOSS_RUSH) && currentEnemy.hp > 0) {
+        DrawGdiMonsterSprite(hdc, monsterX, monsterY, currentEnemy.name, g_GfxFrame);
+    } else if (gameState == STATE_TOWN || gameState == STATE_SHOP || gameState == STATE_CRAFTING) {
+        DrawGdiNPCSprite(hdc, 560, 70, g_GfxFrame);
+    }
+
+    if (g_GdiSpellFxType > 0) {
+        g_GdiSpellFxProgress++;
+        float p = (float)g_GdiSpellFxProgress / g_GdiSpellFxMax;
+        if (g_GdiSpellFxType == 1) {
+            int fx = (int)(heroX + 40 + p * (monsterX - heroX - 60));
+            int fy = heroY - 10;
+            HBRUSH hFbB = CreateSolidBrush(RGB(250, 179, 135));
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hFbB);
+            Ellipse(hdc, fx - 12, fy - 12, fx + 12, fy + 12);
+            SelectObject(hdc, hOldB); DeleteObject(hFbB);
+            AddGdiParticles(fx, fy, RGB(243, 139, 168), 2);
+        } else if (g_GdiSpellFxType == 2) {
+            HPEN hLtP = CreatePen(PS_SOLID, 3, RGB(137, 220, 235));
+            HPEN hOldP = (HPEN)SelectObject(hdc, hLtP);
+            MoveToEx(hdc, monsterX, 0, NULL);
+            LineTo(hdc, monsterX - 10, 20);
+            LineTo(hdc, monsterX + 10, 40);
+            LineTo(hdc, monsterX, monsterY + 10);
+            SelectObject(hdc, hOldP); DeleteObject(hLtP);
+        }
+        if (g_GdiSpellFxProgress >= g_GdiSpellFxMax) g_GdiSpellFxType = 0;
+    }
+
+    for (int i = g_GdiParticleCount - 1; i >= 0; i--) {
+        GdiParticle* pt = &g_GdiParticles[i];
+        pt->x += pt->vx;
+        pt->y += pt->vy;
+        pt->life++;
+        HBRUSH hPtB = CreateSolidBrush(pt->color);
+        HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hPtB);
+        Ellipse(hdc, pt->x - 2, pt->y - 2, pt->x + 3, pt->y + 3);
+        SelectObject(hdc, hOldB); DeleteObject(hPtB);
+        if (pt->life >= pt->maxLife) {
+            g_GdiParticles[i] = g_GdiParticles[g_GdiParticleCount - 1];
+            g_GdiParticleCount--;
+        }
+    }
+
+    SetBkMode(hdc, TRANSPARENT);
+    HFONT hFont = CreateFontA(16, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+    for (int i = g_GdiFloatCount - 1; i >= 0; i--) {
+        GdiFloatText* ft = &g_GdiFloatTexts[i];
+        ft->life++;
+        ft->y = ft->startY - (ft->life * 1);
+        SetTextColor(hdc, ft->color);
+        TextOutA(hdc, ft->x, ft->y, ft->text, lstrlenA(ft->text));
+        if (ft->life >= ft->maxLife) {
+            g_GdiFloatTexts[i] = g_GdiFloatTexts[g_GdiFloatCount - 1];
+            g_GdiFloatCount--;
+        }
+    }
+    SelectObject(hdc, hOldFont); DeleteObject(hFont);
+
+    if (g_GdiBannerActive) {
+        g_GdiBannerTimer++;
+        int bannerY = (g_GdiBannerTimer * 4 < 25) ? g_GdiBannerTimer * 4 : 25;
+        RECT bannerR = {w / 2 - 120, bannerY, w / 2 + 120, bannerY + 36};
+        HBRUSH hBanB = CreateSolidBrush(RGB(249, 226, 175));
+        FillRect(hdc, &bannerR, hBanB);
+        DeleteObject(hBanB);
+        FrameRect(hdc, &bannerR, (HBRUSH)GetStockObject(BLACK_BRUSH));
+
+        SetTextColor(hdc, RGB(17, 17, 27));
+        SetBkMode(hdc, TRANSPARENT);
+        HFONT hBanFont = CreateFontA(20, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+        HFONT hOldF = (HFONT)SelectObject(hdc, hBanFont);
+        DrawTextA(hdc, g_GdiBannerTitle, -1, &bannerR, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        SelectObject(hdc, hOldF); DeleteObject(hBanFont);
+
+        if (g_GdiBannerTimer > 90) g_GdiBannerActive = 0;
+    }
+}
+
+LRESULT CALLBACK GfxCanvasProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    if (msg == WM_PAINT) {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        RECT rc;
+        GetClientRect(hwnd, &rc);
+        int w = rc.right - rc.left;
+        int h = rc.bottom - rc.top;
+
+        HDC hMemDC = CreateCompatibleDC(hdc);
+        HBITMAP hMemBmp = CreateCompatibleBitmap(hdc, w, h);
+        HBITMAP hOldBmp = (HBITMAP)SelectObject(hMemDC, hMemBmp);
+
+        RenderGdiScene(hMemDC, w, h);
+
+        BitBlt(hdc, 0, 0, w, h, hMemDC, 0, 0, SRCCOPY);
+
+        SelectObject(hMemDC, hOldBmp);
+        DeleteObject(hMemBmp);
+        DeleteDC(hMemDC);
+
+        EndPaint(hwnd, &ps);
+        return 0;
+    }
+    if (msg == WM_ERASEBKGND) return 1;
+    return CallWindowProcA(g_OldCanvasProc, hwnd, msg, wParam, lParam);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
             hBgBrush = CreateSolidBrush(RGB(17, 17, 27));
             hPanelBrush = CreateSolidBrush(RGB(30, 30, 46));
 
+            hGfxCanvas = CreateWindowA("STATIC", "", WS_CHILD | WS_VISIBLE, 15, 10, 755, 130, hwnd, (HMENU)100, GetModuleHandle(NULL), NULL);
+            g_OldCanvasProc = (WNDPROC)SetWindowLongPtrA(hGfxCanvas, GWLP_WNDPROC, (LONG_PTR)GfxCanvasProc);
+
             hStatusText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                15, 10, 755, 25, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
+                15, 145, 755, 20, hwnd, (HMENU)101, GetModuleHandle(NULL), NULL);
 
             hInfoText = CreateWindowA("STATIC", "",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
-                15, 35, 755, 75, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
+                15, 168, 755, 55, hwnd, (HMENU)102, GetModuleHandle(NULL), NULL);
 
             hLogEdit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "",
                 WS_CHILD | WS_VISIBLE | WS_VSCROLL | ES_MULTILINE | ES_READONLY | ES_AUTOVSCROLL,
-                15, 115, 755, 300, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
+                15, 228, 755, 190, hwnd, (HMENU)103, GetModuleHandle(NULL), NULL);
 
             hBtn1 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 15,  430, 118, 38, hwnd, (HMENU)201, GetModuleHandle(NULL), NULL);
             hBtn2 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 142, 430, 118, 38, hwnd, (HMENU)202, GetModuleHandle(NULL), NULL);
@@ -2889,6 +3321,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtn5 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 523, 430, 118, 38, hwnd, (HMENU)205, GetModuleHandle(NULL), NULL);
             hBtn6 = CreateWindowA("BUTTON", "", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 650, 430, 118, 38, hwnd, (HMENU)206, GetModuleHandle(NULL), NULL);
 
+            SetTimer(hwnd, 1, 40, NULL);
+
             InitHero(0);
             SetupButtons();
             UpdateUI();
@@ -2896,6 +3330,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LogMessage("Phase 14: Comprehensive Help & Lore Codex Active (Press F1 / H or click Help)!");
             break;
         }
+        case WM_TIMER:
+            if (hGfxCanvas) InvalidateRect(hGfxCanvas, NULL, FALSE);
+            break;
+
         case WM_KEYDOWN: {
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 if (gameState == STATE_HELP) {
