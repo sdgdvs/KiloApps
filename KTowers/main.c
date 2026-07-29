@@ -5,7 +5,7 @@
 
 #define MAX_DISCS 10
 #define MAX_PEGS 5
-#define TOTAL_STAGES 15
+#define TOTAL_STAGES 20
 #define MAX_PARTICLES 250
 
 typedef struct {
@@ -16,27 +16,34 @@ typedef struct {
     int timeLimit;
     int moveLimit;
     BOOL adjOnly;
+    BOOL cyclic;
+    int colorRestr; // 0 = None, 1 = Peg 2 accepts even disks only
     int lockedDisk;
     int lockDuration;
     int par;
 } StageConfig;
 
 StageConfig CAMPAIGN_STAGES[TOTAL_STAGES] = {
-    { 1,  "Beginner's Stack", 3, 3, 0,  0,  FALSE, 0, 0, 7 },
-    { 2,  "Step Up",          4, 3, 0,  0,  FALSE, 0, 0, 15 },
-    { 3,  "Linear Steps",      3, 3, 0,  0,  TRUE,  0, 0, 26 },
-    { 4,  "Reve's Intro",      5, 4, 0,  0,  FALSE, 0, 0, 13 },
-    { 5,  "Sprint Trial",      4, 3, 40, 0,  FALSE, 0, 0, 15 },
-    { 6,  "Move Efficiency",  4, 3, 0,  20, FALSE, 0, 0, 15 },
-    { 7,  "Quad Towers",       6, 4, 0,  0,  FALSE, 0, 0, 17 },
-    { 8,  "Locked Foundation", 4, 3, 0,  0,  FALSE, 4, 5, 15 },
-    { 9,  "Penta Realm",       7, 5, 0,  0,  FALSE, 0, 0, 19 },
-    { 10, "Chain Migration",   4, 4, 0,  0,  TRUE,  0, 0, 15 },
-    { 11, "Clockwork Tower",   5, 3, 60, 0,  FALSE, 0, 0, 31 },
-    { 12, "Reve's Master",     8, 4, 0,  0,  FALSE, 0, 0, 33 },
-    { 13, "Precision Stack",   5, 3, 0,  38, FALSE, 0, 0, 31 },
-    { 14, "Heavy Chains",      5, 4, 0,  0,  TRUE,  5, 8, 21 },
-    { 15, "Grandmaster Summit",10,5, 0,  0,  FALSE, 0, 0, 31 }
+    { 1,  "Beginner's Stack",  3, 3, 0,  0,  FALSE, FALSE, 0, 0, 0, 7 },
+    { 2,  "Step Up",           4, 3, 0,  0,  FALSE, FALSE, 0, 0, 0, 15 },
+    { 3,  "Linear Steps",       3, 3, 0,  0,  TRUE,  FALSE, 0, 0, 0, 26 },
+    { 4,  "Reve's Intro",       5, 4, 0,  0,  FALSE, FALSE, 0, 0, 0, 13 },
+    { 5,  "Sprint Trial",       4, 3, 40, 0,  FALSE, FALSE, 0, 0, 0, 15 },
+    { 6,  "Move Efficiency",   4, 3, 0,  20, FALSE, FALSE, 0, 0, 0, 15 },
+    { 7,  "Quad Towers",        6, 4, 0,  0,  FALSE, FALSE, 0, 0, 0, 17 },
+    { 8,  "Locked Foundation",  4, 3, 0,  0,  FALSE, FALSE, 0, 4, 5, 15 },
+    { 9,  "Penta Realm",        7, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 19 },
+    { 10, "Chain Migration",    4, 4, 0,  0,  TRUE,  FALSE, 0, 0, 0, 15 },
+    { 11, "Clockwork Tower",    5, 3, 60, 0,  FALSE, FALSE, 0, 0, 0, 31 },
+    { 12, "Cyclic Orbit",       4, 3, 0,  0,  FALSE, TRUE,  0, 0, 0, 25 },
+    { 13, "Reve's Master",      8, 4, 0,  0,  FALSE, FALSE, 0, 0, 0, 33 },
+    { 14, "Spectrum Filter",    4, 4, 0,  0,  FALSE, FALSE, 1, 0, 0, 17 },
+    { 15, "Precision Stack",    5, 3, 0,  38, FALSE, FALSE, 0, 0, 0, 31 },
+    { 16, "Heavy Chains",       5, 4, 0,  0,  TRUE,  FALSE, 0, 5, 8, 21 },
+    { 17, "Cyclic Cascade",     5, 4, 0,  0,  FALSE, TRUE,  0, 0, 0, 35 },
+    { 18, "Chromatic Citadel",  6, 4, 90, 0,  FALSE, FALSE, 1, 0, 0, 25 },
+    { 19, "Pentagonal Matrix",  9, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 25 },
+    { 20, "Tower Grandmaster", 10, 5, 0,  0,  FALSE, FALSE, 0, 0, 0, 31 }
 };
 
 typedef struct {
@@ -104,6 +111,7 @@ int historyCount = 0;
 int elapsedSeconds = 0;
 int freezeSeconds = 0;
 int freezeCharges = 3;
+int swapCharges = 3;
 BOOL timerRunning = FALSE;
 BOOL autoSolving = FALSE;
 
@@ -129,7 +137,7 @@ int particleCount = 0;
 // Controls
 HWND hModeBtn, hStageMinusBtn, hStagePlusBtn, hStageLabel;
 HWND hPegMinusBtn, hPegPlusBtn, hDiscMinusBtn, hDiscPlusBtn;
-HWND hUndoBtn, hHintBtn, hFreezeBtn, hAutoBtn, hRestartBtn, hHelpBtn;
+HWND hUndoBtn, hHintBtn, hFreezeBtn, hSwapBtn, hAutoBtn, hRestartBtn, hHelpBtn;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(INT_PTR)lpParam;
@@ -195,11 +203,22 @@ StageConfig GetCurrentConfig() {
         cfg.timeLimit = 0;
         cfg.moveLimit = 0;
         cfg.adjOnly = FALSE;
+        cfg.cyclic = FALSE;
+        cfg.colorRestr = 0;
         cfg.lockedDisk = 0;
         cfg.lockDuration = 0;
         cfg.par = FS_DP[numDiscs][numPegs];
         return cfg;
     }
+}
+
+BOOL IsValidMove(StageConfig cfg, int f, int t, int topDisc, int currentMoves) {
+    if (f == t) return FALSE;
+    if (cfg.adjOnly && abs(f - t) != 1) return FALSE;
+    if (cfg.cyclic && ((f + 1) % cfg.pegs != t)) return FALSE;
+    if (cfg.lockedDisk > 0 && topDisc == cfg.lockedDisk && currentMoves < cfg.lockDuration) return FALSE;
+    if (cfg.colorRestr == 1 && t == 1 && (topDisc % 2 != 0)) return FALSE;
+    return TRUE;
 }
 
 // BFS Solver for arbitrary state
@@ -249,6 +268,8 @@ BOOL GetBFSNextMove(int* outFrom, int* outTo) {
             for (int t = 0; t < numPegs; t++) {
                 if (f == t) continue;
                 if (cfg.adjOnly && abs(f - t) != 1) continue;
+                if (cfg.cyclic && ((f + 1) % numPegs != t)) continue;
+                if (cfg.colorRestr == 1 && t == 1 && (topDisc % 2 != 0)) continue;
 
                 if (curr.pegCounts[t] == 0 || curr.pegs[t][curr.pegCounts[t] - 1] > topDisc) {
                     BFSState nextState = curr;
@@ -271,6 +292,12 @@ BOOL GetBFSNextMove(int* outFrom, int* outTo) {
 }
 
 void UpdateControlsVisibility() {
+    char buf[64];
+    sprintf(buf, "Freeze [F] (%d)", freezeCharges);
+    SetWindowText(hFreezeBtn, buf);
+    sprintf(buf, "Swap [S] (%d)", swapCharges);
+    SetWindowText(hSwapBtn, buf);
+
     if (mode == 0) {
         ShowWindow(hStageMinusBtn, SW_SHOW);
         ShowWindow(hStagePlusBtn, SW_SHOW);
@@ -280,11 +307,10 @@ void UpdateControlsVisibility() {
         ShowWindow(hDiscMinusBtn, SW_HIDE);
         ShowWindow(hDiscPlusBtn, SW_HIDE);
 
-        char buf[64];
         StageSaveData st = stageStats[CAMPAIGN_STAGES[currentStageIdx].id];
         char starStr[8] = "";
         for (int i = 0; i < st.stars; i++) strcat(starStr, "*");
-        sprintf(buf, "Stage %d / 15 %s", currentStageIdx + 1, starStr);
+        sprintf(buf, "Stage %d / 20 %s", currentStageIdx + 1, starStr);
         SetWindowText(hStageLabel, buf);
         SetWindowText(hModeBtn, "Mode: Campaign");
     } else {
@@ -296,7 +322,6 @@ void UpdateControlsVisibility() {
         ShowWindow(hDiscMinusBtn, SW_SHOW);
         ShowWindow(hDiscPlusBtn, SW_SHOW);
 
-        char buf[64];
         sprintf(buf, "%d Discs | %d Pegs", numDiscs, numPegs);
         SetWindowText(hStageLabel, buf);
         SetWindowText(hModeBtn, "Mode: Free Play");
@@ -355,6 +380,7 @@ void InitGame(HWND hwnd) {
     elapsedSeconds = 0;
     freezeSeconds = 0;
     freezeCharges = 3;
+    swapCharges = 3;
     hintFrom = -1;
     hintTo = -1;
     particleCount = 0;
@@ -446,8 +472,24 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
             InvalidateRect(hwnd, NULL, FALSE);
             return;
         }
+        if (cfg.cyclic && ((selectedPeg + 1) % numPegs != clickedPeg)) {
+            strcpy(statusMessage, "Cyclic Move Only (Clockwise)!");
+            selectedPeg = -1;
+            PlaySoundEffect(3);
+            InvalidateRect(hwnd, NULL, FALSE);
+            return;
+        }
 
         int movingDisc = pegs[selectedPeg][pegCounts[selectedPeg] - 1];
+
+        if (cfg.colorRestr == 1 && clickedPeg == 1 && (movingDisc % 2 != 0)) {
+            strcpy(statusMessage, "Peg 2 accepts Even Disks only!");
+            selectedPeg = -1;
+            PlaySoundEffect(3);
+            InvalidateRect(hwnd, NULL, FALSE);
+            return;
+        }
+
         BOOL canMove = FALSE;
         if (pegCounts[clickedPeg] == 0) {
             canMove = TRUE;
@@ -532,7 +574,78 @@ void UseTimeFreeze(HWND hwnd) {
         timerRunning = TRUE;
         SetTimer(hwnd, 1, 1000, NULL);
     }
+    UpdateControlsVisibility();
     InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void UseDiskSwap(HWND hwnd) {
+    if (won || gameOver) return;
+    if (swapCharges <= 0) {
+        strcpy(statusMessage, "No Swap charges remaining!");
+        PlaySoundEffect(3);
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+
+    StageConfig cfg = GetCurrentConfig();
+    int srcPeg = -1, targetPeg = -1;
+
+    if (selectedPeg != -1 && pegCounts[selectedPeg] > 0) {
+        srcPeg = selectedPeg;
+        int topDisc = pegs[srcPeg][pegCounts[srcPeg] - 1];
+        int defaultTarget = numPegs - 1;
+        if (defaultTarget != srcPeg && IsValidMove(cfg, srcPeg, defaultTarget, topDisc, moves)) {
+            if (pegCounts[defaultTarget] == 0 || pegs[defaultTarget][pegCounts[defaultTarget] - 1] > topDisc) {
+                targetPeg = defaultTarget;
+            }
+        }
+        if (targetPeg == -1) {
+            for (int p = 0; p < numPegs; p++) {
+                if (p == srcPeg) continue;
+                if (IsValidMove(cfg, srcPeg, p, topDisc, moves)) {
+                    if (pegCounts[p] == 0 || pegs[p][pegCounts[p] - 1] > topDisc) {
+                        targetPeg = p;
+                        break;
+                    }
+                }
+            }
+        }
+    } else {
+        if (!GetBFSNextMove(&srcPeg, &targetPeg)) {
+            strcpy(statusMessage, "No valid teleport available!");
+            PlaySoundEffect(3);
+            InvalidateRect(hwnd, NULL, FALSE);
+            return;
+        }
+    }
+
+    if (srcPeg != -1 && targetPeg != -1) {
+        int movingDisc = pegs[srcPeg][pegCounts[srcPeg] - 1];
+        historyFrom[historyCount] = srcPeg;
+        historyTo[historyCount] = targetPeg;
+        historyCount++;
+        pegCounts[srcPeg]--;
+        pegs[targetPeg][pegCounts[targetPeg]++] = movingDisc;
+        moves++;
+        swapCharges--;
+        selectedPeg = -1;
+        hintFrom = -1; hintTo = -1;
+        strcpy(statusMessage, "DISK TELEPORTED!");
+        PlaySoundEffect(4);
+
+        if (!timerRunning) {
+            timerRunning = TRUE;
+            SetTimer(hwnd, 1, 1000, NULL);
+        }
+
+        UpdateControlsVisibility();
+        CheckWinOrLoss(hwnd);
+        InvalidateRect(hwnd, NULL, FALSE);
+    } else {
+        strcpy(statusMessage, "No valid target peg for Teleport!");
+        PlaySoundEffect(3);
+        InvalidateRect(hwnd, NULL, FALSE);
+    }
 }
 
 // ----------------------------------------------------
@@ -649,7 +762,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                   10, 10, 120, 28, hwnd, (HMENU)101, NULL, NULL);
             hStageMinusBtn = CreateWindow("BUTTON", "<", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                          140, 10, 25, 28, hwnd, (HMENU)102, NULL, NULL);
-            hStageLabel = CreateWindow("STATIC", "Stage 1 / 15", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
+            hStageLabel = CreateWindow("STATIC", "Stage 1 / 20", WS_CHILD | WS_VISIBLE | SS_CENTER | SS_CENTERIMAGE,
                                        170, 10, 140, 28, hwnd, (HMENU)103, NULL, NULL);
             hStagePlusBtn = CreateWindow("BUTTON", ">", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
                                         315, 10, 25, 28, hwnd, (HMENU)104, NULL, NULL);
@@ -659,12 +772,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hDiscMinusBtn = CreateWindow("BUTTON", "-D", WS_CHILD | BS_PUSHBUTTON, 415, 10, 30, 28, hwnd, (HMENU)107, NULL, NULL);
             hDiscPlusBtn = CreateWindow("BUTTON", "+D", WS_CHILD | BS_PUSHBUTTON, 450, 10, 30, 28, hwnd, (HMENU)108, NULL, NULL);
 
-            hUndoBtn = CreateWindow("BUTTON", "Undo [U]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 80, 28, hwnd, (HMENU)1, NULL, NULL);
-            hHintBtn = CreateWindow("BUTTON", "Hint [H]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 95, 45, 80, 28, hwnd, (HMENU)2, NULL, NULL);
-            hFreezeBtn = CreateWindow("BUTTON", "Freeze [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 180, 45, 85, 28, hwnd, (HMENU)3, NULL, NULL);
-            hAutoBtn = CreateWindow("BUTTON", "Auto-Solve", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 270, 45, 95, 28, hwnd, (HMENU)4, NULL, NULL);
-            hRestartBtn = CreateWindow("BUTTON", "Restart [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 370, 45, 85, 28, hwnd, (HMENU)5, NULL, NULL);
-            hHelpBtn = CreateWindow("BUTTON", "Help [?]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 460, 45, 75, 28, hwnd, (HMENU)6, NULL, NULL);
+            hUndoBtn = CreateWindow("BUTTON", "Undo [U]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 45, 75, 28, hwnd, (HMENU)1, NULL, NULL);
+            hHintBtn = CreateWindow("BUTTON", "Hint [H]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 90, 45, 75, 28, hwnd, (HMENU)2, NULL, NULL);
+            hFreezeBtn = CreateWindow("BUTTON", "Freeze [F]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 170, 45, 85, 28, hwnd, (HMENU)3, NULL, NULL);
+            hSwapBtn = CreateWindow("BUTTON", "Swap [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 260, 45, 80, 28, hwnd, (HMENU)7, NULL, NULL);
+            hAutoBtn = CreateWindow("BUTTON", "Auto-Solve", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 45, 90, 28, hwnd, (HMENU)4, NULL, NULL);
+            hRestartBtn = CreateWindow("BUTTON", "Restart [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 440, 45, 85, 28, hwnd, (HMENU)5, NULL, NULL);
+            hHelpBtn = CreateWindow("BUTTON", "Help [?]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 530, 45, 70, 28, hwnd, (HMENU)6, NULL, NULL);
 
             SetTimer(hwnd, 3, 30, NULL); // 30fps animation timer
             InitGame(hwnd);
@@ -735,6 +849,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 1) UndoMove(hwnd);
             else if (id == 2) ApplyHint(hwnd);
             else if (id == 3) UseTimeFreeze(hwnd);
+            else if (id == 7) UseDiskSwap(hwnd);
             else if (id == 4) {
                 if (autoSolving) {
                     autoSolving = FALSE;
@@ -750,18 +865,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 5) InitGame(hwnd);
             else if (id == 6) {
                 MessageBox(hwnd,
-                    "How to Play KTowers\n\n"
+                    "How to Play KTowers (Loop 7 Expanded)\n\n"
                     "Goal: Move all skyscraper blocks to the target (last) peg.\n\n"
-                    "Rules:\n"
+                    "Rules & Modifiers:\n"
                     "- Only top skyscraper blocks can be moved.\n"
                     "- Larger blocks cannot be placed on smaller blocks.\n"
                     "- Adjacent Only: Blocks can only move to neighboring pegs.\n"
+                    "- Cyclic Move: Blocks can only move clockwise (Peg 1->2->3->1).\n"
+                    "- Color Restriction: Peg 2 accepts even-numbered disks only.\n"
                     "- Locked Disks: Cannot move until turn requirement is met.\n\n"
-                    "Controls:\n"
+                    "Controls & Skills:\n"
                     "- Click peg to pick/drop block or use keys 1 to 5.\n"
                     "- [U] Undo last move.\n"
-                    "- [H] Optimal Hint.\n"
-                    "- [F] Time Freeze (pauses timer for 15s).",
+                    "- [H] Optimal Frame-Stewart Hint.\n"
+                    "- [F] Time Freeze (pauses timer for 15s).\n"
+                    "- [S] Disk Swap / Instant Teleport to valid peg.",
                     "Help / Instructions", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -773,6 +891,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == 'U' || wParam == 'u') UndoMove(hwnd);
             else if (wParam == 'H' || wParam == 'h') ApplyHint(hwnd);
             else if (wParam == 'F' || wParam == 'f') UseTimeFreeze(hwnd);
+            else if (wParam == 'S' || wParam == 's') UseDiskSwap(hwnd);
             else if (wParam == 'R' || wParam == 'r') InitGame(hwnd);
             else if (wParam == 'A' || wParam == 'a') {
                 SendMessage(hwnd, WM_COMMAND, 4, 0);
@@ -827,6 +946,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char line1[256];
             char rulesStr[128] = "";
             if (cfg.adjOnly) strcat(rulesStr, " [Adjacent Only]");
+            if (cfg.cyclic) strcat(rulesStr, " [Cyclic Moves]");
+            if (cfg.colorRestr == 1) strcat(rulesStr, " [Peg 2 Even Only]");
             if (cfg.moveLimit > 0) sprintf(rulesStr + strlen(rulesStr), " [Max %d Moves]", cfg.moveLimit);
             if (cfg.timeLimit > 0) sprintf(rulesStr + strlen(rulesStr), " [Time Limit %ds]", cfg.timeLimit);
             if (cfg.lockedDisk > 0) sprintf(rulesStr + strlen(rulesStr), " [Disk %d Locked %dm]", cfg.lockedDisk, cfg.lockDuration);
@@ -841,8 +962,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             char line2[256];
             char freezeStr[32] = "";
             if (freezeSeconds > 0) sprintf(freezeStr, " | FROZEN (%ds)", freezeSeconds);
-            sprintf(line2, "Time: %02d:%02d%s | Moves: %d / Par: %d | Freeze Charges: %d",
-                    elapsedSeconds/60, elapsedSeconds%60, freezeStr, moves, cfg.par, freezeCharges);
+            sprintf(line2, "Time: %02d:%02d%s | Moves: %d / Par: %d | Freeze: %d | Swap: %d",
+                    elapsedSeconds/60, elapsedSeconds%60, freezeStr, moves, cfg.par, freezeCharges, swapCharges);
             SetTextColor(memDC, freezeSeconds > 0 ? RGB(6, 182, 212) : RGB(148, 163, 184));
             TextOut(memDC, 15, 105, line2, strlen(line2));
 
@@ -909,10 +1030,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 FillRect(memDC, &bRect, baseBrush);
 
                 // Label
-                char pLabel[32];
-                sprintf(pLabel, "Peg %d%s", i + 1, (i == numPegs - 1) ? " (Target)" : "");
-                SetTextColor(memDC, RGB(226, 232, 240));
-                TextOut(memDC, baseX - 30, groundY + 12, pLabel, strlen(pLabel));
+                char pLabel[48];
+                if (cfg.colorRestr == 1 && i == 1) {
+                    sprintf(pLabel, "Peg %d (EVEN ONLY)", i + 1);
+                } else {
+                    sprintf(pLabel, "Peg %d%s", i + 1, (i == numPegs - 1) ? " (Target)" : "");
+                }
+                SetTextColor(memDC, (cfg.colorRestr == 1 && i == 1) ? RGB(236, 72, 153) : RGB(226, 232, 240));
+                TextOut(memDC, baseX - 40, groundY + 12, pLabel, strlen(pLabel));
             }
 
             DeleteObject(poleBrush);

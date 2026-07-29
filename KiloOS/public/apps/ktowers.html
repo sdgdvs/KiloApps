@@ -168,6 +168,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .stats-bar {
@@ -180,6 +181,7 @@
             border-radius: 8px;
             border: 1px solid var(--border-color);
             margin-bottom: 15px;
+            flex-wrap: wrap;
         }
 
         .stat-item {
@@ -350,6 +352,7 @@
         <button class="btn-powerup" onclick="undoMove()" id="undoBtn" disabled>↩️ Undo [U]</button>
         <button class="btn-powerup" onclick="applyHint()" id="hintBtn">💡 Hint [H]</button>
         <button class="btn-freeze" onclick="useTimeFreeze()" id="freezeBtn">🧊 Freeze [F] (<span id="freezeChargesDisplay">3</span>)</button>
+        <button class="btn-powerup" onclick="useDiskSwap()" id="swapBtn">⚡ Swap [S] (<span id="swapChargesDisplay">3</span>)</button>
         <button onclick="toggleAutoSolve()" id="autoBtn">🤖 Auto-Solve [A]</button>
         <button onclick="initGame()">🔄 Restart [R]</button>
         <button onclick="showHelp()">❓ Help</button>
@@ -367,24 +370,29 @@
 
     <script>
         // ----------------------------------------------------
-        // Stage Definitions (15 Campaign Stages)
+        // Stage Definitions (20 Campaign Stages)
         // ----------------------------------------------------
         const CAMPAIGN_STAGES = [
-            { id: 1,  name: "Beginner's Stack", disks: 3, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 7 },
-            { id: 2,  name: "Step Up",          disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 15 },
-            { id: 3,  name: "Linear Steps",      disks: 3, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  lockedDisk: 0, lockDuration: 0, par: 26 },
-            { id: 4,  name: "Reve's Intro",      disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 13 },
-            { id: 5,  name: "Sprint Trial",      disks: 4, pegs: 3, timeLimit: 40, moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 15 },
-            { id: 6,  name: "Move Efficiency",  disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 20, adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 15 },
-            { id: 7,  name: "Quad Towers",       disks: 6, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 17 },
-            { id: 8,  name: "Locked Foundation", disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 4, lockDuration: 5, par: 15 },
-            { id: 9,  name: "Penta Realm",       disks: 7, pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 19 },
-            { id: 10, name: "Chain Migration",   disks: 4, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  lockedDisk: 0, lockDuration: 0, par: 15 },
-            { id: 11, name: "Clockwork Tower",   disks: 5, pegs: 3, timeLimit: 60, moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 },
-            { id: 12, name: "Reve's Master",     disks: 8, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 33 },
-            { id: 13, name: "Precision Stack",   disks: 5, pegs: 3, timeLimit: 0,  moveLimit: 38, adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 },
-            { id: 14, name: "Heavy Chains",      disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  lockedDisk: 5, lockDuration: 8, par: 21 },
-            { id: 15, name: "Grandmaster Summit",disks: 10,pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, lockedDisk: 0, lockDuration: 0, par: 31 }
+            { id: 1,  name: "Beginner's Stack", disks: 3, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 7 },
+            { id: 2,  name: "Step Up",          disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 3,  name: "Linear Steps",      disks: 3, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 26 },
+            { id: 4,  name: "Reve's Intro",      disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 13 },
+            { id: 5,  name: "Sprint Trial",      disks: 4, pegs: 3, timeLimit: 40, moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 6,  name: "Move Efficiency",  disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 20, adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 7,  name: "Quad Towers",       disks: 6, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 17 },
+            { id: 8,  name: "Locked Foundation", disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 4, lockDuration: 5, par: 15 },
+            { id: 9,  name: "Penta Realm",       disks: 7, pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 19 },
+            { id: 10, name: "Chain Migration",   disks: 4, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 15 },
+            { id: 11, name: "Clockwork Tower",   disks: 5, pegs: 3, timeLimit: 60, moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 31 },
+            { id: 12, name: "Cyclic Orbit",       disks: 4, pegs: 3, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: true,  colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 25 },
+            { id: 13, name: "Reve's Master",     disks: 8, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 33 },
+            { id: 14, name: "Spectrum Filter",    disks: 4, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 1, lockedDisk: 0, lockDuration: 0, par: 17 },
+            { id: 15, name: "Precision Stack",   disks: 5, pegs: 3, timeLimit: 0,  moveLimit: 38, adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 31 },
+            { id: 16, name: "Heavy Chains",      disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: true,  cyclic: false, colorRestr: 0, lockedDisk: 5, lockDuration: 8, par: 21 },
+            { id: 17, name: "Cyclic Cascade",     disks: 5, pegs: 4, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: true,  colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 35 },
+            { id: 18, name: "Chromatic Citadel",  disks: 6, pegs: 4, timeLimit: 90, moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 1, lockedDisk: 0, lockDuration: 0, par: 25 },
+            { id: 19, name: "Pentagonal Matrix",  disks: 9, pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 25 },
+            { id: 20, name: "Tower Grandmaster", disks: 10,pegs: 5, timeLimit: 0,  moveLimit: 0,  adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0, par: 31 }
         ];
 
         const DISK_THEMES = [
@@ -445,17 +453,18 @@
         let currentStageIdx = 0;
         let numPegs = 3;
         let numDiscs = 4;
-        
+
         let pegs = [];
         let selectedPeg = null;
         let moves = 0;
         let won = false;
         let gameOver = false;
         let moveHistory = [];
-        
+
         let elapsedSeconds = 0;
         let freezeSeconds = 0;
         let freezeCharges = 3;
+        let swapCharges = 3;
         let timerInterval = null;
         let autoSolveInterval = null;
         let hintHighlight = null;
@@ -476,7 +485,7 @@
                 if (!window.AudioContext && !window.webkitAudioContext) return;
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                
+
                 let now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
@@ -570,10 +579,19 @@
                 return {
                     id: 0, name: `Free Play (${d} Discs, ${p} Pegs)`,
                     disks: d, pegs: p, timeLimit: 0, moveLimit: 0,
-                    adjOnly: false, lockedDisk: 0, lockDuration: 0,
+                    adjOnly: false, cyclic: false, colorRestr: 0, lockedDisk: 0, lockDuration: 0,
                     par: getOptimalMovesCount(d, p)
                 };
             }
+        }
+
+        function isValidMove(config, from, to, topDisc, currentMoves) {
+            if (from === to) return false;
+            if (config.adjOnly && Math.abs(from - to) !== 1) return false;
+            if (config.cyclic && ((from + 1) % numPegs !== to)) return false;
+            if (config.lockedDisk > 0 && topDisc === config.lockedDisk && currentMoves < config.lockDuration) return false;
+            if (config.colorRestr === 1 && to === 1 && (topDisc % 2 !== 0)) return false;
+            return true;
         }
 
         function initGame() {
@@ -594,6 +612,7 @@
             elapsedSeconds = 0;
             freezeSeconds = 0;
             freezeCharges = 3;
+            swapCharges = 3;
             hintHighlight = null;
             fireworks = [];
             discAnimPos = {};
@@ -610,6 +629,8 @@
             document.getElementById('stageTitle').innerText = config.name;
             let rulesText = [];
             if (config.adjOnly) rulesText.push("⚡ Adjacent Pegs Only");
+            if (config.cyclic) rulesText.push("🔄 Cyclic Move Rule");
+            if (config.colorRestr === 1) rulesText.push("🎨 Peg 2 Even Disks Only");
             if (config.moveLimit > 0) rulesText.push(`🎯 Max ${config.moveLimit} Moves`);
             if (config.timeLimit > 0) rulesText.push(`⏳ ${config.timeLimit}s Time Limit`);
             if (config.lockedDisk > 0) rulesText.push(`🔒 Disk ${config.lockedDisk} Locked for ${config.lockDuration} moves`);
@@ -617,6 +638,7 @@
 
             document.getElementById('parDisplay').innerText = config.par;
             document.getElementById('freezeChargesDisplay').innerText = freezeCharges;
+            document.getElementById('swapChargesDisplay').innerText = swapCharges;
             document.getElementById('messageToast').innerText = '';
             document.getElementById('modalOverlay').style.display = 'none';
 
@@ -679,6 +701,76 @@
             if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
         }
 
+        function useDiskSwap() {
+            if (won || gameOver) return;
+            if (swapCharges <= 0) {
+                document.getElementById('messageToast').innerText = "No Swap charges remaining!";
+                playSound('error');
+                return;
+            }
+
+            const config = getCurrentStageConfig();
+            let srcPeg = -1, targetPeg = -1;
+
+            if (selectedPeg !== null && pegs[selectedPeg].length > 0) {
+                srcPeg = selectedPeg;
+                const topDisc = pegs[srcPeg][pegs[srcPeg].length - 1];
+                const defaultTarget = numPegs - 1;
+                if (defaultTarget !== srcPeg && isValidMove(config, srcPeg, defaultTarget, topDisc, moves)) {
+                    const destPeg = pegs[defaultTarget];
+                    if (destPeg.length === 0 || destPeg[destPeg.length - 1] > topDisc) {
+                        targetPeg = defaultTarget;
+                    }
+                }
+                if (targetPeg === -1) {
+                    for (let p = 0; p < numPegs; p++) {
+                        if (p === srcPeg) continue;
+                        if (isValidMove(config, srcPeg, p, topDisc, moves)) {
+                            const destPeg = pegs[p];
+                            if (destPeg.length === 0 || destPeg[destPeg.length - 1] > topDisc) {
+                                targetPeg = p;
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                const nextMove = getBFSNextMove();
+                if (nextMove) {
+                    srcPeg = nextMove.from;
+                    targetPeg = nextMove.to;
+                }
+            }
+
+            if (srcPeg !== -1 && targetPeg !== -1) {
+                const movingDisc = pegs[srcPeg][pegs[srcPeg].length - 1];
+                moveHistory.push({ from: srcPeg, to: targetPeg });
+                pegs[targetPeg].push(pegs[srcPeg].pop());
+                moves++;
+                swapCharges--;
+                selectedPeg = null;
+                hintHighlight = null;
+                document.getElementById('swapChargesDisplay').innerText = swapCharges;
+                document.getElementById('messageToast').innerText = "⚡ Disk Teleported!";
+                playSound('freeze');
+
+                if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
+
+                if (config.moveLimit > 0 && moves > config.moveLimit && pegs[numPegs - 1].length !== numDiscs) {
+                    render();
+                    triggerGameOver(`Exceeded move limit of ${config.moveLimit}!`);
+                    return;
+                }
+
+                if (!checkWin()) {
+                    render();
+                }
+            } else {
+                document.getElementById('messageToast').innerText = "No valid target peg for Teleport!";
+                playSound('error');
+            }
+        }
+
         function undoMove() {
             if (moveHistory.length === 0 || won || gameOver) return;
             const lastMove = moveHistory.pop();
@@ -725,10 +817,25 @@
                     render();
                     return;
                 }
+                if (config.cyclic && ((selectedPeg + 1) % numPegs !== pegIdx)) {
+                    document.getElementById('messageToast').innerText = "🔄 Cyclic Move Only (Clockwise)!";
+                    playSound('error');
+                    selectedPeg = null;
+                    render();
+                    return;
+                }
 
                 const fromPeg = pegs[selectedPeg];
                 const toPeg = pegs[pegIdx];
                 const movingDisc = fromPeg[fromPeg.length - 1];
+
+                if (config.colorRestr === 1 && pegIdx === 1 && (movingDisc % 2 !== 0)) {
+                    document.getElementById('messageToast').innerText = "🎨 Peg 2 accepts Even Disks only!";
+                    playSound('error');
+                    selectedPeg = null;
+                    render();
+                    return;
+                }
 
                 if (toPeg.length === 0 || toPeg[toPeg.length - 1] > movingDisc) {
                     moveHistory.push({ from: selectedPeg, to: pegIdx });
@@ -806,6 +913,8 @@
                     for (let to = 0; to < numPegs; to++) {
                         if (from === to) continue;
                         if (config.adjOnly && Math.abs(from - to) !== 1) continue;
+                        if (config.cyclic && ((from + 1) % numPegs !== to)) continue;
+                        if (config.colorRestr === 1 && to === 1 && (topDisc % 2 !== 0)) continue;
 
                         if (state[to].length === 0 || state[to][state[to].length - 1] > topDisc) {
                             const nextState = state.map(p => [...p]);
@@ -1017,6 +1126,7 @@
             document.getElementById('undoBtn').disabled = moveHistory.length === 0 || won || gameOver;
             document.getElementById('hintBtn').disabled = won || gameOver || !!autoSolveInterval;
             document.getElementById('freezeBtn').disabled = won || gameOver || freezeCharges <= 0;
+            document.getElementById('swapBtn').disabled = won || gameOver || swapCharges <= 0;
         }
 
         function draw3DSkyscraperBlock(ctx, x, y, width, height, theme, discSize, isLocked, isTopDisc) {
@@ -1204,7 +1314,6 @@
             // ----------------------------------------------------
             // 2. 3D Asphalt Street Grid & Sidewalk Kerbs
             // ----------------------------------------------------
-            // Asphalt Road Base
             const roadGrad = ctx.createLinearGradient(0, groundY, 0, h);
             roadGrad.addColorStop(0, '#1e293b');
             roadGrad.addColorStop(1, '#0f172a');
@@ -1217,7 +1326,7 @@
             ctx.fillStyle = '#334155';
             ctx.fillRect(0, groundY, w, 3);
 
-            // Yellow Lane Markings & Crosswalk Stripes
+            // Yellow Lane Markings
             ctx.strokeStyle = '#f59e0b';
             ctx.lineWidth = 3;
             ctx.setLineDash([16, 12]);
@@ -1247,7 +1356,7 @@
                 ctx.fill();
             });
 
-            // Compass Clues & Viewing Directions along street grid edge
+            // Compass Clues
             ctx.fillStyle = '#94a3b8';
             ctx.font = 'bold 11px Segoe UI, monospace';
             ctx.textAlign = 'left';
@@ -1263,7 +1372,7 @@
                 const isTarget = (p === numPegs - 1);
                 const isHovered = (hoverPeg === p);
 
-                // Peg Selection Beam (Anti-Grav Vertical Shaft)
+                // Peg Selection Beam
                 if (selectedPeg === p || hintHighlight?.from === p || hintHighlight?.to === p || isHovered) {
                     let beamColor = 'rgba(56, 189, 248, 0.15)';
                     let borderColor = 'rgba(56, 189, 248, 0.5)';
@@ -1312,8 +1421,16 @@
                 ctx.arc(baseX, groundY - 220, 5, 0, Math.PI * 2);
                 ctx.fill();
 
+                // Color Restriction Badge on Peg 2
+                if (config.colorRestr === 1 && p === 1) {
+                    ctx.fillStyle = '#ec4899';
+                    ctx.font = 'bold 10px Segoe UI, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🎨 EVEN DISKS ONLY', baseX, groundY - 228);
+                }
+
                 // Peg Label Badge below foundation
-                ctx.fillStyle = isTarget ? '#38bdf8' : '#e2e8f0';
+                ctx.fillStyle = isTarget ? '#38bdf8' : (config.colorRestr === 1 && p === 1 ? '#ec4899' : '#e2e8f0');
                 ctx.font = 'bold 12px Segoe UI, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText(`PEG ${p + 1}${isTarget ? ' (TARGET)' : ''}`, baseX, groundY + 18);
@@ -1344,7 +1461,7 @@
                     // Key for tracking drop physics interpolation
                     const key = `${pIdx}_${discSize}`;
                     if (discAnimPos[key] === undefined) {
-                        discAnimPos[key] = targetY - 40; // start slightly higher
+                        discAnimPos[key] = targetY - 40;
                     }
                     // Smooth lerp physics towards target Y
                     discAnimPos[key] += (targetY - discAnimPos[key]) * 0.3;
@@ -1382,6 +1499,8 @@
                 applyHint();
             } else if (e.key === 'f' || e.key === 'F') {
                 useTimeFreeze();
+            } else if (e.key === 's' || e.key === 'S') {
+                useDiskSwap();
             } else if (e.key === 'r' || e.key === 'R') {
                 initGame();
             } else if (e.key === 'a' || e.key === 'A') {
@@ -1395,11 +1514,13 @@
             document.getElementById('modalStars').innerText = "🏰";
             document.getElementById('modalBody').innerHTML = `
                 <p><strong>Goal:</strong> Move all skyscraper blocks to the target peg (last peg).</p>
-                <p><strong>Rules:</strong></p>
+                <p><strong>Rules & Modifiers:</strong></p>
                 <ul>
                     <li>Only top skyscraper blocks can be moved.</li>
                     <li>Cannot place a larger block on a smaller block.</li>
                     <li><strong>Adjacent Only:</strong> Blocks can only move to neighboring pegs.</li>
+                    <li><strong>Cyclic Move:</strong> Blocks can only move clockwise (Peg 1 ➔ 2 ➔ 3 ➔ 1).</li>
+                    <li><strong>Color Restriction:</strong> Peg 2 accepts even-numbered disks only.</li>
                     <li><strong>Locked Disks:</strong> Certain blocks cannot move until turn requirement is met.</li>
                 </ul>
                 <p><strong>Power-ups & Keys:</strong></p>
@@ -1408,6 +1529,7 @@
                     <li><strong>[U] Undo:</strong> Takes back last move.</li>
                     <li><strong>[H] Hint:</strong> Highlights optimal next move.</li>
                     <li><strong>[F] Freeze:</strong> Pauses timer for 15s.</li>
+                    <li><strong>[S] Swap:</strong> Teleports top disk to valid peg.</li>
                 </ul>
             `;
             document.getElementById('modalBtns').innerHTML = `<button onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>`;
