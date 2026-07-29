@@ -8,7 +8,7 @@
   .label { margin-bottom: 5px; font-size: 14px; }
   select { flex: 1; font-family: "Segoe UI", sans-serif; border: 1px solid #ccc; padding: 5px; outline: none; }
   .sample-container { flex: 1; background: #fff; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; overflow: hidden; }
-  #sample { font-size: 24px; }
+  #sample { font-size: 24px; word-wrap: break-word; word-break: break-word; max-width: 100%; max-height: 100%; overflow: hidden; }
 </style>
 </head>
 <body>
@@ -61,13 +61,14 @@
   const italicCheck = document.getElementById('italicCheck');
   
   const updateFont = () => {
-      sample.style.fontFamily = `"${fontList.value}", sans-serif`;
+      const safeFont = fontList.value.replace(/"/g, '\\"');
+      sample.style.fontFamily = `"${safeFont}", sans-serif`;
       sample.style.fontSize = sizeList.value;
       sample.style.fontWeight = boldCheck.checked ? 'bold' : 'normal';
       sample.style.fontStyle = italicCheck.checked ? 'italic' : 'normal';
       
       if (customText.value.trim() !== "") {
-          sample.innerText = customText.value;
+          sample.textContent = customText.value;
       } else {
           sample.innerHTML = "The quick brown fox jumps over the lazy dog.<br><br>0123456789<br><br>Aa Bb Cc Dd Ee Ff";
       }

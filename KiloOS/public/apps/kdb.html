@@ -99,6 +99,25 @@
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
   }
+  .pwd-box {
+    position: relative;
+    width: 150px;
+  }
+  .pwd-box input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: rgba(0, 0, 0, 0.3);
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .pwd-box input:focus {
+    outline: none;
+    border-color: var(--danger);
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+  }
   .btn-secondary {
     background: rgba(255, 255, 255, 0.08);
     color: var(--text-main);
@@ -291,14 +310,20 @@
       <div class="search-box">
         <input type="text" id="searchInput" aria-label="Search or query employees" placeholder="Search or query (e.g. dept:engineering, id>102)..." maxlength="100" onkeyup="handleSearchKey(event)" oninput="filterTable()">
       </div>
-      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">Export CSV</button>
-      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">Import CSV</button>
+      <div class="pwd-box">
+        <input type="password" id="dbPassword" aria-label="Database Encryption Password" placeholder="Encryption Key..." onchange="loadRecords()" title="Set password to encrypt/decrypt database">
+      </div>
+      <button class="btn-secondary" onclick="exportCSV()" title="Export database as CSV">CSV</button>
+      <button class="btn-secondary" onclick="triggerImportCSV()" title="Import CSV file">↓ CSV</button>
       <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSV(event)">
+      <button class="btn-secondary" onclick="exportJSON()" title="Export database as JSON">JSON</button>
+      <button class="btn-secondary" onclick="triggerImportJSON()" title="Import JSON file">↓ JSON</button>
+      <input type="file" id="jsonFileInput" accept=".json" style="display:none;" onchange="importJSON(event)">
       <button class="btn-secondary" onclick="resetToDefaults()" title="Reset database to default sample data">Reset</button>
     </div>
   </div>
   <div class="query-hint">
-    Syntax tips: Plain text search OR <code>dept:engineering</code>, <code>role:lead</code>, <code>id:101</code>, <code>id>102</code>, <code>id<105</code>
+    Syntax tips: Combine terms (e.g. <code>dept:engineering role:lead</code>). Supports <code>id>102</code>, <code>id<105</code>, <code>name:alice</code>. Encryption key auto-saves encrypted payload.
   </div>
   <div class="table-container">
     <table id="empTable">
@@ -390,13 +415,44 @@ function updateStatus(msg, isError = false) {
   statusDot.style.background = isError ? 'var(--danger)' : 'var(--success)';
 }
 
+function getPassword() {
+  return document.getElementById('dbPassword').value;
+}
+
+function cryptData(text, key) {
+  if (!key) return text;
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    out += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+  }
+  return out;
+}
+
 function loadRecords() {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    let data = localStorage.getItem(STORAGE_KEY);
     if (data) {
+      if (data.startsWith('ENC:')) {
+        const key = getPassword();
+        if (!key) {
+          updateStatus('Database is encrypted. Please enter key.', true);
+          records = [];
+          renderTable();
+          return;
+        }
+        try {
+          const dec = cryptData(atob(data.substring(4)), key);
+          data = dec;
+        } catch(e) {
+          updateStatus('Failed to decrypt. Wrong key?', true);
+          return;
+        }
+      }
+      
       const parsed = JSON.parse(data);
       if (Array.isArray(parsed)) {
         records = parsed.slice(0, MAX_RECORDS);
+        updateStatus('Database loaded successfully', false);
       } else {
         records = [...DEFAULT_RECORDS];
       }
@@ -405,17 +461,22 @@ function loadRecords() {
       saveRecords();
     }
   } catch (e) {
-    console.warn('LocalStorage unavailable, using in-memory store:', e);
-    records = [...DEFAULT_RECORDS];
-    updateStatus('LocalStorage error, running in memory mode', true);
+    console.warn('Load error (wrong key or corrupted):', e);
+    records = [];
+    updateStatus('Error loading data. Wrong key?', true);
   }
-  renderTable();
+  filterTable(); // Render table with filters applied
 }
 
 function saveRecords() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    updateStatus('Changes saved automatically');
+    let data = JSON.stringify(records);
+    const key = getPassword();
+    if (key) {
+      data = 'ENC:' + btoa(cryptData(data, key));
+    }
+    localStorage.setItem(STORAGE_KEY, data);
+    updateStatus('Changes saved automatically ' + (key ? '(Encrypted)' : ''));
   } catch (e) {
     console.error('LocalStorage save failed:', e);
     updateStatus('Storage quota exceeded! Cannot persist.', true);
@@ -584,43 +645,39 @@ function filterTable() {
     return;
   }
 
-  // Parse structured query expressions safely with bounds
-  const query = rawQuery.slice(0, 100);
-  let filtered = records;
+  // Parse structured query expressions, support multiple conditions
+  const queryTerms = rawQuery.slice(0, 100).match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+  
+  const filtered = records.filter(r => {
+    return queryTerms.every(term => {
+      term = term.replace(/"/g, '').toLowerCase();
+      
+      if (term.includes(':')) {
+        const parts = term.split(':');
+        const field = parts[0].trim();
+        const val = parts.slice(1).join(':').trim();
 
-  if (query.includes(':')) {
-    const parts = query.split(':');
-    const field = parts[0].trim().toLowerCase();
-    const val = parts.slice(1).join(':').trim().toLowerCase();
-
-    if (field === 'dept' || field === 'department') {
-      filtered = records.filter(r => r.dept.toLowerCase().includes(val));
-    } else if (field === 'role') {
-      filtered = records.filter(r => r.role.toLowerCase().includes(val));
-    } else if (field === 'id') {
-      filtered = records.filter(r => r.id.toLowerCase().includes(val));
-    } else if (field === 'name') {
-      filtered = records.filter(r => r.name.toLowerCase().includes(val));
-    }
-  } else if (query.startsWith('id>')) {
-    const num = parseInt(query.replace('id>', '').trim(), 10);
-    if (!isNaN(num)) {
-      filtered = records.filter(r => parseInt(r.id, 10) > num);
-    }
-  } else if (query.startsWith('id<')) {
-    const num = parseInt(query.replace('id<', '').trim(), 10);
-    if (!isNaN(num)) {
-      filtered = records.filter(r => parseInt(r.id, 10) < num);
-    }
-  } else {
-    const term = query.toLowerCase();
-    filtered = records.filter(r => 
-      r.id.toLowerCase().includes(term) ||
-      r.name.toLowerCase().includes(term) ||
-      r.dept.toLowerCase().includes(term) ||
-      r.role.toLowerCase().includes(term)
-    );
-  }
+        if (field === 'dept' || field === 'department') return r.dept.toLowerCase().includes(val);
+        if (field === 'role') return r.role.toLowerCase().includes(val);
+        if (field === 'id') return r.id.toLowerCase().includes(val);
+        if (field === 'name') return r.name.toLowerCase().includes(val);
+      } 
+      else if (term.startsWith('id>')) {
+        const num = parseInt(term.replace('id>', '').trim(), 10);
+        if (!isNaN(num)) return parseInt(r.id, 10) > num;
+      } 
+      else if (term.startsWith('id<')) {
+        const num = parseInt(term.replace('id<', '').trim(), 10);
+        if (!isNaN(num)) return parseInt(r.id, 10) < num;
+      } 
+      
+      // Fallback general text search
+      return r.id.toLowerCase().includes(term) ||
+             r.name.toLowerCase().includes(term) ||
+             r.dept.toLowerCase().includes(term) ||
+             r.role.toLowerCase().includes(term);
+    });
+  });
 
   renderTable(filtered);
 }
@@ -707,6 +764,98 @@ function importCSV(e) {
     } catch (err) {
       console.error(err);
       alert('Failed to parse CSV file format.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function exportJSON() {
+  if (records.length === 0) {
+    alert('No records available to export.');
+    return;
+  }
+  
+  let data = JSON.stringify(records, null, 2);
+  const key = getPassword();
+  if (key) {
+    data = 'ENC:' + btoa(cryptData(data, key));
+  }
+  
+  const blob = new Blob([data], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `kdb_employees_${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  updateStatus('Exported database JSON file ' + (key ? '(Encrypted)' : ''));
+}
+
+function triggerImportJSON() {
+  document.getElementById('jsonFileInput').click();
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (file.size > 500000) {
+    alert('File size too large. Max allowed JSON size is 500KB.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      let data = evt.target.result;
+      
+      if (data.startsWith('ENC:')) {
+        const key = getPassword();
+        if (!key) {
+          alert('File is encrypted. Please enter the encryption key in the password box first.');
+          return;
+        }
+        try {
+          data = cryptData(atob(data.substring(4)), key);
+        } catch (e) {
+          alert('Failed to decrypt file. Wrong key?');
+          return;
+        }
+      }
+
+      const parsed = JSON.parse(data);
+      if (!Array.isArray(parsed)) {
+        alert('Invalid JSON format. Expected an array of records.');
+        return;
+      }
+
+      let importedCount = 0;
+      let skippedCount = 0;
+
+      for (const rec of parsed) {
+        if (records.length >= MAX_RECORDS) break;
+        if (rec.id && rec.name && !records.some(r => r.id.toLowerCase() === String(rec.id).toLowerCase())) {
+          records.push({
+            id: String(rec.id).slice(0,10),
+            name: String(rec.name).slice(0,50),
+            dept: String(rec.dept || '').slice(0,50),
+            role: String(rec.role || '').slice(0,50)
+          });
+          importedCount++;
+        } else {
+          skippedCount++;
+        }
+      }
+
+      saveRecords();
+      filterTable();
+      updateStatus(`Imported ${importedCount} JSON records (${skippedCount} skipped/duplicates)`);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to parse JSON file format. Make sure it is a valid array of objects.');
     }
   };
   reader.readAsText(file);

@@ -15,7 +15,9 @@ HBRUSH hBrush = NULL;
 HBRUSH hBgBrush = NULL;
 
 int CALLBACK EnumFontFamExProc(const LOGFONT *lpelfe, const TEXTMETRIC *lpntme, DWORD FontType, LPARAM lParam) {
-    SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)lpelfe->lfFaceName);
+    if (SendMessage(hList, LB_FINDSTRINGEXACT, -1, (LPARAM)lpelfe->lfFaceName) == LB_ERR) {
+        SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)lpelfe->lfFaceName);
+    }
     return 1;
 }
 
@@ -83,9 +85,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         for (int i = 0; sizeStr[i]; i++) currentSize = currentSize * 10 + (sizeStr[i] - '0');
                     }
                     
-                    if (hCurrentFont) DeleteObject(hCurrentFont);
+                    HFONT hOldFont = hCurrentFont;
                     hCurrentFont = CreateFontA(currentSize, 0, 0, 0, isBold ? FW_BOLD : FW_NORMAL, isItalic, 0, 0, DEFAULT_CHARSET, 0, 0, DEFAULT_QUALITY, DEFAULT_PITCH, fontName);
                     SendMessage(hSample, WM_SETFONT, (WPARAM)hCurrentFont, TRUE);
+                    if (hOldFont) DeleteObject(hOldFont);
                 }
                 
                 char customText[256];
